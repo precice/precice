@@ -4,22 +4,20 @@
 
 #include <action/RecorderAction.hpp>
 #include <precice/precice.hpp>
-
 #include <vector>
 
 /**
- * @brief Test to make sure that actions are called in the right order for implicit coupling via RecorderAction
+ * @brief Test to make sure that actions are called in the right order for explicit coupling via RecorderAction
  */
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(ActionTimings)
-BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
+BOOST_AUTO_TEST_CASE(ActionTimingsSerialExplicit)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   using namespace precice;
-
-  Participant interface(context.name, context.config(), context.rank, context.size);
+  Participant interface(context.name, context.config(), 0, 1);
 
   std::string meshName;
   std::string writeDataName;
@@ -60,28 +58,21 @@ BOOST_AUTO_TEST_CASE(ActionTimingsImplicit)
   BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);
   BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
   action::RecorderAction::reset();
+
   int iteration = 0;
 
   while (interface.isCouplingOngoing()) {
     interface.readData(meshName, readDataName, {&vertexID, 1}, dt, readData);
     interface.writeData(meshName, writeDataName, {&vertexID, 1}, writeData);
-    if (interface.requiresWritingCheckpoint()) {
-    }
     interface.advance(dt);
     double dt = interface.getMaxTimeStepSize();
-    if (interface.requiresReadingCheckpoint()) {
-    }
-    if (interface.isTimeWindowComplete()) {
-      iteration++;
-    }
-    if (context.isNamed("SolverOne") || iteration < 10) {
-      BOOST_TEST(action::RecorderAction::records.size() == 2);
-      BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);
-      BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
-    } else { // SolverTwo only writes in very last iteration, does not read.
-      BOOST_TEST(action::RecorderAction::records.size() == 1);
-      BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);
-    }
+    BOOST_TEST(interface.isTimeWindowComplete());
+    iteration++;
+
+    BOOST_TEST(action::RecorderAction::records.size() == 2);
+    BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);
+    BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
+
     action::RecorderAction::reset();
   }
   interface.finalize();

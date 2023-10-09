@@ -11,7 +11,6 @@
   </mesh>
 
   <participant name="FluidSolver">
-    <intra-comm:mpi-single />
     <provide-mesh name="CellCenters" />
     <receive-mesh name="Nodes" from="SolidSolver" safety-factor="0.5" />
     <mapping:nearest-projection
@@ -20,13 +19,13 @@
       to="CellCenters"
       constraint="consistent" />
     <read-data name="Data1" mesh="CellCenters" />
-    <export:vtk />
+    <export:vtu />
   </participant>
 
   <participant name="SolidSolver">
     <provide-mesh name="Nodes" />
     <write-data name="Data1" mesh="Nodes" />
-    <export:vtk />
+    <export:vtu />
   </participant>
 
   <m2n:sockets acceptor="FluidSolver" connector="SolidSolver" />

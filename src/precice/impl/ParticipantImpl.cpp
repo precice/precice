@@ -247,7 +247,7 @@ void ParticipantImpl::initialize()
   bool failedToInitialize = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::InitializeData) && not _couplingScheme->isActionFulfilled(cplscheme::CouplingScheme::Action::InitializeData);
   PRECICE_CHECK(not failedToInitialize,
                 "Initial data has to be written to preCICE before calling initialize(). "
-                "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using an appropriate write...Data() function.");
+                "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using the writeData() function.");
 
   _solverInitEvent.reset();
   Event                        e("initialize", profiling::Fundamental, profiling::Synchronize);
@@ -311,14 +311,13 @@ void ParticipantImpl::initialize()
   }
 
   // Initialize coupling state, overwrite these values for restart
-  const double time         = 0.0;
-  const int    timeWindow   = 1;
-  const double relativeTime = time::Storage::WINDOW_START;
+  const double time       = 0.0;
+  const int    timeWindow = 1;
 
   _meshLock.lockAll();
 
   for (auto &context : _accessor->writeDataContexts()) {
-    context.storeBufferedData(relativeTime);
+    context.storeBufferedData(time);
   }
 
   mapWrittenData();
@@ -373,10 +372,9 @@ void ParticipantImpl::advance(
   // Update the coupling scheme time state. Necessary to get correct remainder.
   const bool   isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
   const double time          = _couplingScheme->getTime();
-  const double relativeTime  = _couplingScheme->getNormalizedWindowTime();
 
   for (auto &context : _accessor->writeDataContexts()) {
-    context.storeBufferedData(relativeTime);
+    context.storeBufferedData(time);
   }
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
@@ -386,7 +384,7 @@ void ParticipantImpl::advance(
 
   advanceCouplingScheme();
 
-  if (_couplingScheme->hasDataBeenReceived()) {
+  if (_couplingScheme->hasDataBeenReceived() || _couplingScheme->isTimeWindowComplete()) { // @todo potential to avoid unnecessary mappings here.
     mapReadData();
     performDataActions({action::Action::READ_MAPPING_POST}, time);
   }
@@ -495,7 +493,7 @@ bool ParticipantImpl::isTimeWindowComplete() const
 double ParticipantImpl::getMaxTimeStepSize() const
 {
   PRECICE_CHECK(_state != State::Finalized, "getMaxTimeStepSize() cannot be called after finalize().");
-  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before getMaxTimeStepSize() can be evaluated.");
   return _couplingScheme->getNextTimeStepMaxSize();
 }
 
@@ -991,16 +989,6 @@ void ParticipantImpl::readData(
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimeStepMaxSize(), "readData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readData(...) cannot sample data before the current time.");
 
-  double normalizedReadTime;
-  if (_couplingScheme->hasTimeWindowSize()) {
-    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimeStepMaxSize();
-    double readTime      = timeStepStart + relativeReadTime;
-    normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
-  } else {                                                                  // if this participant defines time window size through participant-first method
-    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimeStepMaxSize(), "Waveform relaxation is not allowed for solver that sets the time step size");
-    normalizedReadTime = 1; // by default read at end of window.
-  }
-
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
 
   // Inconsistent sizes will be handled below
@@ -1023,7 +1011,8 @@ void ParticipantImpl::readData(
                   dataName, meshName, *index);
   }
 
-  context.readValues(vertices, normalizedReadTime, values);
+  double readTime = _couplingScheme->getTime() + relativeReadTime;
+  context.readValues(vertices, readTime, values);
 }
 
 void ParticipantImpl::writeGradientData(

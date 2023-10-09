@@ -349,6 +349,30 @@ ProjectionMatch Index::findTriangleProjection(const Eigen::VectorXd &location, i
   return *min;
 }
 
+mesh::BoundingBox Index::getRtreeBounds()
+{
+  PRECICE_TRACE();
+  // if the mesh is empty, we will most likely hit an assertion in the bounding box class
+  // therefore, we keep the assert here, but might want to return an empty bounding box in case
+  // we want to allow calling this function with empty meshes
+  PRECICE_ASSERT(_mesh->vertices().size() > 0);
+
+  auto            rtreeBox = _pimpl->getVertexRTree(*_mesh)->bounds();
+  int             dim      = _mesh->getDimensions();
+  Eigen::VectorXd min(dim), max(dim);
+
+  min[0] = rtreeBox.min_corner().get<0>();
+  min[1] = rtreeBox.min_corner().get<1>();
+  max[0] = rtreeBox.max_corner().get<0>();
+  max[1] = rtreeBox.max_corner().get<1>();
+
+  if (dim > 2) {
+    min[2] = rtreeBox.min_corner().get<2>();
+    max[2] = rtreeBox.max_corner().get<2>();
+  }
+  return mesh::BoundingBox{min, max};
+}
+
 void Index::clear()
 {
   _pimpl->clear();

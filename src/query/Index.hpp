@@ -103,6 +103,10 @@ public:
   ProjectionMatch findNearestProjection(const Eigen::VectorXd &location, int n);
 
   ProjectionMatch findCellOrProjection(const Eigen::VectorXd &location, int n);
+
+  // Index tree, bounds
+  mesh::BoundingBox getRtreeBounds();
+
   /// Clear the index
   void clear();
 

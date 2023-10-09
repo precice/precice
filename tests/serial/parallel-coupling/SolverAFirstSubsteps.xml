@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="DataAB" />
+  <data:scalar name="DataBA" />
+
+  <mesh name="MeshA" dimensions="2">
+    <use-data name="DataAB" />
+    <use-data name="DataBA" />
+  </mesh>
+
+  <mesh name="MeshB" dimensions="2">
+    <use-data name="DataAB" />
+    <use-data name="DataBA" />
+  </mesh>
+
+  <participant name="SolverA">
+    <provide-mesh name="MeshA" />
+    <write-data name="DataAB" mesh="MeshA" />
+    <read-data name="DataBA" mesh="MeshA" />
+  </participant>
+
+  <participant name="SolverB">
+    <receive-mesh name="MeshA" from="SolverA" />
+    <provide-mesh name="MeshB" />
+    <write-data name="DataBA" mesh="MeshB" />
+    <read-data name="DataAB" mesh="MeshB" />
+    <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshB" constraint="consistent" />
+    <mapping:nearest-neighbor direction="write" from="MeshB" to="MeshA" constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverA" connector="SolverB" />
+
+  <coupling-scheme:parallel-implicit>
+    <participants first="SolverA" second="SolverB" />
+    <max-time-windows value="10" />
+    <time-window-size value="1.0" />
+    <max-iterations value="2" />
+    <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" substeps="true" />
+    <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" substeps="true" />
+    <relative-convergence-measure data="DataBA" mesh="MeshA" limit="1e-4" />
+  </coupling-scheme:parallel-implicit>
+</precice-configuration>
