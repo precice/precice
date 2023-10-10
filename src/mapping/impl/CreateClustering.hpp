@@ -135,7 +135,7 @@ void tagEmptyClusters(Vertices &clusterCenters, double clusterRadius, mesh::PtrM
 {
   // Alternative implementation: mesh->index().getVerticesInsideBox() == 0
   std::for_each(clusterCenters.begin(), clusterCenters.end(), [&](auto &v) {
-    if (!mesh->index()->isAnyVertexInsideBox(v, clusterRadius)) {
+    if (!mesh->index().isAnyVertexInsideBox(v, clusterRadius)) {
       v.tag();
     }
   });
