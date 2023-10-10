@@ -135,9 +135,7 @@ void tagEmptyClusters(Vertices &clusterCenters, double clusterRadius, mesh::PtrM
 {
   // Alternative implementation: mesh->index().getVerticesInsideBox() == 0
   std::for_each(clusterCenters.begin(), clusterCenters.end(), [&](auto &v) {
-    auto id              = mesh->index().getClosestVertex(v.getCoords());
-    auto squaredDistance = computeSquaredDifference(mesh->vertices()[id.index].rawCoords(), v.rawCoords());
-    if (squaredDistance >= math::pow_int<2>(clusterRadius)) {
+    if (mesh->index()->isAnyVertexInsideBox(v, clusterRadius)) {
       v.tag();
     }
   });
