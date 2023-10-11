@@ -192,7 +192,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     mesh::Vertex                                    center(c.getCoords(), vertexID);
     SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _deadAxis, _polynomial, inMesh, outMesh);
 
-    // Consider only non-empty clusters
+    // Consider only non-empty clusters (more of a safeguard here)
     if (!cluster.empty()) {
       PRECICE_ASSERT(center.getID() == static_cast<int>(_clusters.size()), center.getID(), _clusters.size());
       meshVertices.emplace_back(std::move(center));
