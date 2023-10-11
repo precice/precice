@@ -217,26 +217,17 @@ void runTestQNWR(std::string const &config, TestContext const &context)
     readDataName  = "Data1";
   }
 
-  precice::SolverInterface interface(context.name, config, context.rank, context.size);
-  VertexID                 vertexIDs[2];
+  precice::Participant interface(context.name, config, context.rank, context.size);
+  VertexID             vertexIDs[2];
 
   // meshes for rank 0 and rank 1, we use matching meshes for both participants
-  double positions0[8] = {1.0, 0.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.5};
-  double positions1[8] = {2.0, 0.0, 2.0, 0.5, 2.0, 1.0, 2.0, 1.5};
+  double positions0[4] = {1.0, 0.0, 1.0, 0.5};
 
   if (context.isNamed("SolverOne")) {
-    if (context.isPrimary()) {
-      interface.setMeshVertices(meshID, 2, positions0, vertexIDs);
-    } else {
-      interface.setMeshVertices(meshID, 2, positions1, vertexIDs);
-    }
+    interface.setMeshVertices(meshName, positions0, vertexIDs);
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    if (context.isPrimary()) {
-      interface.setMeshVertices(meshID, 2, positions0, vertexIDs);
-    } else {
-      interface.setMeshVertices(meshID, 2, positions1, vertexIDs);
-    }
+    interface.setMeshVertices(meshName, positions0, vertexIDs);
   }
 
   int nSubsteps = 3; // perform subcycling on solvers. 3 steps happen in each window.
@@ -255,7 +246,7 @@ void runTestQNWR(std::string const &config, TestContext const &context)
     }
 
     t += dt;
-    interface.readBlockScalarData(meshName, readDataName, {vertexIDs, 2}, dt, {inValues, 2});
+    interface.readData(meshName, readDataName, {vertexIDs, 2}, dt, {inValues, 2});
 
     /*
       Solves the following linear system
