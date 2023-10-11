@@ -30,7 +30,7 @@ BOOST_FIXTURE_TEST_SUITE(AccelerationSerialTests, AccelerationSerialTestsFixture
 
 #ifndef PRECICE_NO_MPI
 
-BOOST_AUTO_TEST_CASE(testIQNIMVJPP)
+BOOST_AUTO_TEST_CASE(testIQNIMVJPPWithoutSubsteps)
 {
   PRECICE_TEST(1_rank);
   // use two vectors and see if underrelaxation works
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(testIQNIMVJPP)
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->setSampleAtTime(0, forces->sample());
 
-  bool exchangeSubsteps = true;
+  bool exchangeSubsteps = false; // @todo add testIQNIMVJPPWithSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
 
   cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
   cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, exchangeSubsteps));
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(testIQNIMVJPP)
   BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733250157e-02));
 }
 
-BOOST_AUTO_TEST_CASE(testVIQNPP)
+BOOST_AUTO_TEST_CASE(testVIQNPPWithoutSubsteps)
 {
   PRECICE_TEST(1_rank);
   // use two vectors and see if underrelaxation works
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(testVIQNPP)
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->setSampleAtTime(0, forces->sample());
 
-  bool exchangeSubsteps = true;
+  bool exchangeSubsteps = false; // @todo add testVIQNPPWithoutSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
 
   cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
   cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, exchangeSubsteps));
