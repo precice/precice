@@ -2,17 +2,17 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/precice.hpp>
+#include <precice/SolverInterface.hpp>
 #include "../helpers.hpp"
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(QuasiNewton)
 BOOST_AUTO_TEST_SUITE(Serial)
-BOOST_AUTO_TEST_CASE(TestQN4)
+BOOST_AUTO_TEST_CASE(TestQNWithWaveforms)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-  // multi coupling, IQN-ILS, strict QR2 filter
-  runTestQN(context.config(), context);
+  // serial coupling, IQN-ILS, strict QR2 filter
+  runTestQNWR(context.config(), context);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Integration
