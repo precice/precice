@@ -183,6 +183,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   mesh::Mesh centerMesh("pou-centers-" + inMesh->getName(), this->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
   auto &     meshVertices = centerMesh.vertices();
 
+  _clusters.clear();
+  _clusters.reserve(centerCandidates.size());
   for (const auto &c : centerCandidates) {
     // We cannot simply copy the vertex from the container in order to fill the vertices of the centerMesh, as the vertexID of each center needs to match the index
     // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
