@@ -183,6 +183,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   mesh::Mesh centerMesh("pou-centers-" + inMesh->getName(), this->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
   auto &     meshVertices = centerMesh.vertices();
 
+  _clusters.clear();
+  _clusters.reserve(centerCandidates.size());
   for (const auto &c : centerCandidates) {
     // We cannot simply copy the vertex from the container in order to fill the vertices of the centerMesh, as the vertexID of each center needs to match the index
     // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
@@ -190,7 +192,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     mesh::Vertex                                    center(c.getCoords(), vertexID);
     SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _deadAxis, _polynomial, inMesh, outMesh);
 
-    // Consider only non-empty clusters
+    // Consider only non-empty clusters (more of a safeguard here)
     if (!cluster.empty()) {
       PRECICE_ASSERT(center.getID() == static_cast<int>(_clusters.size()), center.getID(), _clusters.size());
       meshVertices.emplace_back(std::move(center));
