@@ -186,7 +186,8 @@ protected:
   bool _resetLS = false;
 
   /// @brief Solver output from last iteration.
-  Eigen::VectorXd _oldXTilde;
+  Eigen::VectorXd                       _oldXTilde;
+  std::map<int, precice::time::Storage> _oldXTildeW;
 
   /// @brief Current iteration residuals of IQN data. Temporary.
   Eigen::VectorXd _residuals;
@@ -194,11 +195,17 @@ protected:
   /// @brief Current iteration residuals of secondary data.
   std::map<int, Eigen::VectorXd> _secondaryResiduals;
 
-  /// @brief Stores residual deltas.
+  /// @brief Stores residual deltas. todo remove when waveforms are supported by all Quasi Newton schemes
   Eigen::MatrixXd _matrixV;
 
-  /// @brief Stores x tilde deltas, where x tilde are values computed by solvers.
+  /// @brief Stores x tilde deltas, where x tilde are values computed by solvers. todo remove when waveforms are supported by all Quasi Newton schemes
   Eigen::MatrixXd _matrixW;
+
+  /// @brief Stores the waveform of x tilde deltas, where x tilde are values computed by solvers
+  std::map<int, std::vector<precice::time::Storage>> _waveformW;
+
+  /// @brief Stores the waveform of the residual deltas
+  std::map<int, std::vector<precice::time::Storage>> _waveformV;
 
   /// @brief Stores the current QR decomposition ov _matrixV, can be updated via deletion/insertion of columns
   impl::QRFactorization _qrV;
@@ -271,6 +278,12 @@ protected:
   int its = 0, tWindows = 0;
 
 private:
+  /**
+  *
+  * @brief Support rutine for handling saving the waveforms.
+  */
+  void addWaveforms(const DataMap &cplData);
+
   /// @brief Concatenation of all coupling data involved in the QN system.
   Eigen::VectorXd _values;
 
@@ -287,6 +300,9 @@ private:
   Eigen::MatrixXd _matrixVBackup;
   Eigen::MatrixXd _matrixWBackup;
   std::deque<int> _matrixColsBackup;
+
+  std::map<int, std::vector<precice::time::Storage>> _waveformWBackup;
+  std::map<int, std::vector<precice::time::Storage>> _waveformVBackup;
 
   /// Number of filtered out columns in this time window
   int _nbDelCols = 0;

@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 
+#include <boost/range/adaptor/map.hpp>
 #include "acceleration/IQNIMVJAcceleration.hpp"
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "acceleration/impl/Preconditioner.hpp"
@@ -95,7 +96,7 @@ void IQNIMVJAcceleration::initialize(
   }
 
   if (not _imvjRestart) {
-    // only need memory for Jacobain of not in restart mode
+    // only need memory for Jacobain if not in restart mode
     _invJacobian    = Eigen::MatrixXd::Zero(global_n, entries);
     _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
   }
@@ -111,8 +112,12 @@ void IQNIMVJAcceleration::initialize(
     _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimeWindows << "\n--------\n"
                       << '\n';
   }
+  for (const auto &data : cplData | boost::adaptors::map_values) {
+    if (data->exchangeSubsteps()) {
+      PRECICE_ERROR("Quasi-Newton IMVJ acceleration does not yet support using data from all substeps. Please set substeps=\"false\" in the exchange tag of data \"{}\" or switch to Quasi-Newton ILS acceleration.", data->getDataName());
+    }
+  }
 }
-
 // ==================================================================================
 void IQNIMVJAcceleration::computeUnderrelaxationSecondaryData(
     const DataMap &cplData)

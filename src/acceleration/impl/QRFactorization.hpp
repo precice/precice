@@ -171,7 +171,7 @@ private:
   *   from v to range of Q, r and its corrections are computed in double
   *   precision.
   *   This method tries to re-orthogonalize the matrix Q for a maximum of 4 iterations
-  *   if ||v_orth|| / ||v|| <= 1/theta is toot small, i.e. the gram schmidt process is iterated.
+  *   if ||v_orth|| / ||v|| <= 1/theta is too small, i.e. the gram schmidt process is iterated.
   *   If ||v_orth|| / ||v|| <= std::numeric_limit, a unit vector that is orthogonal to Q is inserted
   *   and rho is set to 0. i.e., R has a zero on the diagonal in the respective column.
   */

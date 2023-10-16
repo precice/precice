@@ -84,13 +84,27 @@ void IQNILSAcceleration::updateDifferenceMatrices(
           utils::shiftSetFirst(_secondaryMatricesW[id], _secondaryResiduals[id]);
         }
       }
-
       // Compute delta_x_tilde for secondary data
       for (int id : _secondaryDataIDs) {
         Eigen::MatrixXd &secW = _secondaryMatricesW[id];
         PRECICE_ASSERT(secW.rows() == cplData.at(id)->getSize(), secW.rows(), cplData.at(id)->getSize());
         secW.col(0) = cplData.at(id)->values();
         secW.col(0) -= _secondaryOldXTildes[id];
+
+        std::vector<precice::time::Storage> &vec       = _secondaryWaveformW[id];
+        precice::time::Storage               localCopy = cplData.at(id)->timeStepsStorage();
+
+        if (columnLimitReached || overdetermined) {
+          vec.erase(vec.end());
+        }
+
+        Eigen::VectorXd times = localCopy.getTimes();
+        for (double t : times) {
+          Eigen::VectorXd temp = localCopy.sample(t) - _secondaryOldXTildesW.at(id).sample(t);
+          temp
+              localCopy.setSampleAtTime(t, temp);
+        }
+        vec.insert(vec.begin(), localCopy);
       }
     }
 
@@ -99,8 +113,31 @@ void IQNILSAcceleration::updateDifferenceMatrices(
       PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData.at(id)->getSize(),
                      _secondaryOldXTildes[id].size(), cplData.at(id)->getSize());
       _secondaryOldXTildes[id] = cplData.at(id)->values();
+
+      _secondaryOldXTildesW.clear();
+      for (int id : _dataIDs) {
+        precice::time::Storage localCopy = cplData.at(id)->timeStepsStorage();
+        _secondaryOldXTildesW.insert(std::pair<int, precice::time::Storage>(id, localCopy));
+      }
     }
   }
+
+  //     // Compute delta_x_tilde for secondary data
+  //     for (int id : _secondaryDataIDs) {
+  //       Eigen::MatrixXd &secW = _secondaryMatricesW[id];
+  //       PRECICE_ASSERT(secW.rows() == cplData.at(id)->getSize(), secW.rows(), cplData.at(id)->getSize());
+  //       secW.col(0) = cplData.at(id)->values();
+  //       secW.col(0) -= _secondaryOldXTildes[id];
+  //     }
+  //   }
+
+  //   // Store x_tildes for secondary data
+  //   for (int id : _secondaryDataIDs) {
+  //     PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData.at(id)->getSize(),
+  //                    _secondaryOldXTildes[id].size(), cplData.at(id)->getSize());
+  //     _secondaryOldXTildes[id] = cplData.at(id)->values();
+  //   }
+  // }
 
   // call the base method for common update of V, W matrices
   BaseQNAcceleration::updateDifferenceMatrices(cplData);
@@ -125,6 +162,25 @@ void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
     secResiduals                  = data->previousIteration(); // old
     secResiduals *= 1.0 - _initialRelaxation;                  // (1-omg) * old
     values += secResiduals;                                    // (1-omg) * old + new * omg
+  }
+
+  for (const DataMap::value_type &pair : cplData) {
+    const auto couplingData = pair.second;
+    auto &     values       = couplingData->values();
+    // const auto &oldValues    = couplingData->previousIteration();
+    auto storedTimes = couplingData->getStoredTimesAscending();
+
+    for (auto time : storedTimes) {
+
+      auto oldValues  = couplingData->getPreviousValuesAtTime(time);
+      auto data_value = couplingData->sample(time);
+      data_value *= _initialRelaxation;
+
+      data_value += oldValues * (1 - _initialRelaxation);
+
+      // Apply relaxation to all timesteps and store it in the current waveform
+      couplingData->setSampleAtTime(time, data_value, true);
+    }
   }
 }
 
@@ -204,6 +260,7 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd
   if (not _firstTimeWindow && (getLSSystemCols() < 1) && (_timeWindowsReused == 0) && not _forceInitialRelaxation) {
     PRECICE_DEBUG("   Last time window converged after one iteration. Need to restore the secondaryMatricesW from backup.");
     _secondaryMatricesW = _secondaryMatricesWBackup;
+    _secondaryWaveformW = _secondaryWaveformWBackup;
   }
 
   // Perform QN relaxation for secondary data
@@ -218,15 +275,49 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd
     values += _secondaryResiduals[id];
   }
 
+  for (int id : _dataIDs) {
+
+    precice::time::Storage              localCopy = cplData.at(id)->timeStepsStorage();
+    std::vector<precice::time::Storage> Wlist     = _waveformW[id];
+    Eigen::VectorXd                     times     = localCopy.getTimes();
+    for (double t : times) {
+
+      Eigen::VectorXd temp = localCopy.sample(t);
+
+      for (int i = 0; i < c.size(); i++) {
+        temp += Wlist[i].sample(t) * c[i];
+      }
+      cplData.at(id)->setSampleAtTime(t, temp, true);
+    }
+  }
+
+  for (int id : _secondaryDataIDs) {
+
+    precice::time::Storage              localCopy = cplData.at(id)->timeStepsStorage();
+    std::vector<precice::time::Storage> Wlist     = _secondaryWaveformW[id];
+    Eigen::VectorXd                     times     = localCopy.getTimes();
+    for (double t : times) {
+
+      Eigen::VectorXd temp = localCopy.sample(t);
+      for (int i = 0; i < c.size(); i++) {
+        temp += Wlist[i].sample(t) * c[i];
+      }
+
+      cplData.at(id)->setSampleAtTime(t, temp, true);
+    }
+  }
+
   // pending deletion: delete old secondaryMatricesW
   if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
     // save current secondaryMatrix data in case the coupling for the next time window will terminate
     // after the first iteration (no new data, i.e., V = W = 0)
     if (getLSSystemCols() > 0) {
-      _secondaryMatricesWBackup = _secondaryMatricesW;
+      _secondaryWaveformWBackup = _secondaryWaveformW;
     }
+
     for (int id : _secondaryDataIDs) {
       _secondaryMatricesW[id].resize(0, 0);
+      _secondaryWaveformW.clear();
     }
   }
 }
@@ -270,6 +361,7 @@ void IQNILSAcceleration::removeMatrixColumn(
   // remove column from secondary Data Matrix W
   for (int id : _secondaryDataIDs) {
     utils::removeColumnFromMatrix(_secondaryMatricesW[id], columnIndex);
+    _secondaryWaveformW[id].erase(_secondaryWaveformW[id].begin() + columnIndex);
   }
 
   BaseQNAcceleration::removeMatrixColumn(columnIndex);

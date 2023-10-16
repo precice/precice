@@ -50,13 +50,17 @@ public:
 
 private:
   /// Secondary data solver output from last iteration.
-  std::map<int, Eigen::VectorXd> _secondaryOldXTildes;
+  std::map<int, Eigen::VectorXd>        _secondaryOldXTildes;
+  std::map<int, precice::time::Storage> _secondaryOldXTildesW;
 
   // @brief Secondary data x-tilde deltas.
   //
   // Stores x-tilde deltas for data not involved in least-squares computation.
   std::map<int, Eigen::MatrixXd> _secondaryMatricesW;
   std::map<int, Eigen::MatrixXd> _secondaryMatricesWBackup;
+
+  std::map<int, std::vector<precice::time::Storage>> _secondaryWaveformW;
+  std::map<int, std::vector<precice::time::Storage>> _secondaryWaveformWBackup;
 
   /// updates the V, W matrices (as well as the matrices for the secondary data)
   virtual void updateDifferenceMatrices(const DataMap &cplData);
