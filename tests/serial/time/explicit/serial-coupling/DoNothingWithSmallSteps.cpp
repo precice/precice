@@ -44,6 +44,7 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSmallSteps)
 
   while (precice.isCouplingOngoing()) {
     double dt = precice.getMaxTimeStepSize();
+    precice.readData(meshName, readDataName, {&vertexID, 1}, 0, {&value, 1});
     precice.readData(meshName, readDataName, {&vertexID, 1}, dt, {&value, 1});
     precice.advance(dt);
   }
