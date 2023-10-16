@@ -164,9 +164,20 @@ Eigen::VectorXd Storage::sample(double time) const
   PRECICE_ASSERT(usedDegree >= 1);
 
   auto data = getTimesAndValues();
+
+  auto times  = data.first;
+  auto values = data.second;
+
+  //Return the sample corresponding to time if it exists
+  for (int i = 0; i < times.size(); i++) {
+    if (math::equals(times[i], time)) {
+      return values.col(i);
+    }
+  }
+
   //Create a new bspline if _bspline does not already contain a spline
   if (!_bspline.has_value()) {
-    _bspline.emplace(data.first, data.second, usedDegree);
+    _bspline.emplace(times, values, usedDegree);
   }
 
   return _bspline.value().interpolateAt(time);
