@@ -163,10 +163,7 @@ Eigen::VectorXd Storage::sample(double time) const
 
   PRECICE_ASSERT(usedDegree >= 1);
 
-  auto data = getTimesAndValues();
-
-  auto times  = data.first;
-  auto values = data.second;
+  auto [times, values] = getTimesAndValues();
 
   //Return the sample corresponding to time if it exists
   for (int i = 0; i < times.size(); i++) {
