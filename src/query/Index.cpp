@@ -235,6 +235,23 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::Vertex &centerVert
   return matches;
 }
 
+bool Index::isAnyVertexInsideBox(const mesh::Vertex &centerVertex, double radius)
+{
+  PRECICE_TRACE();
+
+  // Prepare boost::geometry box
+  auto coords    = centerVertex.getCoords();
+  auto searchBox = query::makeBox(coords.array() - radius, coords.array() + radius);
+
+  const auto &rtree = _pimpl->getVertexRTree(*_mesh);
+
+  for (auto it = rtree->qbegin(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) < radius; })); it != rtree->qend(); ++it) {
+    return true;
+  }
+
+  return false;
+}
+
 std::vector<VertexID> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
 {
   PRECICE_TRACE();
