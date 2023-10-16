@@ -185,6 +185,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   mesh::Mesh centerMesh("pou-centers-" + inMesh->getName(), this->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
   auto &     meshVertices = centerMesh.vertices();
 
+  meshVertices.clear();
   _clusters.clear();
   _clusters.reserve(centerCandidates.size());
   for (const auto &c : centerCandidates) {
