@@ -135,9 +135,7 @@ void tagEmptyClusters(Vertices &clusterCenters, double clusterRadius, mesh::PtrM
 {
   // Alternative implementation: mesh->index().getVerticesInsideBox() == 0
   std::for_each(clusterCenters.begin(), clusterCenters.end(), [&](auto &v) {
-    auto id              = mesh->index().getClosestVertex(v.getCoords());
-    auto squaredDistance = computeSquaredDifference(mesh->vertices()[id.index].rawCoords(), v.rawCoords());
-    if (squaredDistance >= math::pow_int<2>(clusterRadius)) {
+    if (!v.isTagged() && !mesh->index().isAnyVertexInsideBox(v, clusterRadius)) {
       v.tag();
     }
   });
@@ -479,6 +477,10 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
     } else {
       tagDuplicateCenters<3>(centers, nClustersLocal, duplicateThreshold);
     }
+    // the tagging here won't filter out a lot of clusters, but finding them anyway allows us to allocate the right amount of
+    // memory for the cluster vector in the mapping, which would otherwise be expensive
+    // we cannot hit any empty vertices in the inputmesh
+    tagEmptyClusters(centers, clusterRadius, outMesh);
     PRECICE_DEBUG("Number of non-tagged centers after duplicate tagging : {}", std::count_if(centers.begin(), centers.end(), [](auto &v) { return !v.isTagged(); }));
   }
   PRECICE_ASSERT(std::all_of(centers.begin(), centers.end(), [idx = 0](auto &v) mutable { return v.getID() == idx++; }));
