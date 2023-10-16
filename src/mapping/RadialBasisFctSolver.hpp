@@ -157,6 +157,11 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
   precice::profiling::Event cluAssembly{"map.rbf.assembleSystemMatrix"};
   Eigen::MatrixXd           matrixCLU(n, n);
 
+  // Required to fill the poly -> poly entries in the matrix, which remain otherwise untouched
+  if (polynomial == Polynomial::ON) {
+    matrixCLU.setZero();
+  }
+
   // Compute RBF matrix entries
   auto         i_iter  = inputIDs.begin();
   Eigen::Index i_index = 0;
