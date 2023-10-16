@@ -262,10 +262,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
   eWeights.stop();
 
-// Add a VTK export for visualization purposes
-#ifndef NDEBUG
-  exportClusterCentersAsVTU(centerMesh);
-#endif
+  // Uncomment to add a VTK export of the cluster center distribution for visualization purposes
+  // exportClusterCentersAsVTU(centerMesh);
 
   this->_hasComputedMapping = true;
 }
