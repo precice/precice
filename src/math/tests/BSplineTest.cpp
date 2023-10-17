@@ -30,6 +30,23 @@ BOOST_AUTO_TEST_CASE(TwoPointsLinear)
   BOOST_TEST(equals(bspline.interpolateAt(1.75), Eigen::Vector3d(1.75, 17.5, 175)));
 }
 
+BOOST_AUTO_TEST_CASE(TwoPointsLinearRoundoff)
+{
+  PRECICE_TEST(1_rank);
+  Eigen::Vector2d ts;
+  ts << 1e-6, 2e-6;
+  Eigen::MatrixXd xs(3, 2);
+  xs << 1, 2, 10, 20, 100, 200;
+
+  BOOST_ASSERT(equals(ts[0], 1e-6 - std::numeric_limits<double>::epsilon()));
+  BOOST_ASSERT(equals(ts[1], 2e-6 + std::numeric_limits<double>::epsilon()));
+
+  precice::math::Bspline bspline(ts, xs, 1);
+  // Limits
+  BOOST_TEST(equals(bspline.interpolateAt(1e-6 - std::numeric_limits<double>::epsilon()), Eigen::Vector3d(1, 10, 100)));
+  BOOST_TEST(equals(bspline.interpolateAt(2e-6 + std::numeric_limits<double>::epsilon()), Eigen::Vector3d(2, 20, 200)));
+}
+
 BOOST_AUTO_TEST_CASE(ThreePointsLinear)
 {
   PRECICE_TEST(1_rank);
