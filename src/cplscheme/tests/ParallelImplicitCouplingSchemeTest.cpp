@@ -14,7 +14,7 @@
 #include "cplscheme/ParallelCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
-#include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
+#include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   // Create the coupling scheme object
   ParallelCouplingScheme cplScheme(
       maxTime, maxTimeWindows, timeWindowSize, 16, nameParticipant0, nameParticipant1,
-      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 100);
+      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, 1, 3);
 
   using Fixture = testing::ParallelCouplingSchemeFixture;
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization, true);
@@ -125,13 +125,12 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   cplScheme.determineInitialDataExchange();
 
   // Add convergence measures
-  int                                    minIterations = 3;
-  cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
-      new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure2(
-      new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(dataID1, false, false, minIterationConvMeasure1, true);
-  cplScheme.addConvergenceMeasure(dataID0, false, false, minIterationConvMeasure2, true);
+  cplscheme::impl::PtrConvergenceMeasure absoluteConvMeasure0(
+      new cplscheme::impl::AbsoluteConvergenceMeasure(10));
+  cplscheme::impl::PtrConvergenceMeasure absoluteConvMeasure1(
+      new cplscheme::impl::AbsoluteConvergenceMeasure(10));
+  cplScheme.addConvergenceMeasure(dataID0, false, false, absoluteConvMeasure0, true);
+  cplScheme.addConvergenceMeasure(dataID1, false, false, absoluteConvMeasure1, true);
 
   if (context.isNamed(nameParticipant0)) {
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(0.0, 0.0, 0.0)));

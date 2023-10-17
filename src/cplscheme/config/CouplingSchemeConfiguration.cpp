@@ -18,7 +18,6 @@
 #include "cplscheme/SerialCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
-#include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
 #include "cplscheme/impl/RelativeConvergenceMeasure.hpp"
 #include "cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp"
 #include "logging/LogMacros.hpp"
@@ -53,7 +52,7 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       TAG_ABS_CONV_MEASURE("absolute-convergence-measure"),
       TAG_REL_CONV_MEASURE("relative-convergence-measure"),
       TAG_RES_REL_CONV_MEASURE("residual-relative-convergence-measure"),
-      TAG_MIN_ITER_CONV_MEASURE("min-iteration-convergence-measure"),
+      TAG_MIN_ITERATIONS("min-iterations"),
       TAG_MAX_ITERATIONS("max-iterations"),
       ATTR_DATA("data"),
       ATTR_MESH("mesh"),
@@ -67,7 +66,6 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       ATTR_VALID_DIGITS("valid-digits"),
       ATTR_METHOD("method"),
       ATTR_LIMIT("limit"),
-      ATTR_MIN_ITERATIONS("min-iterations"),
       ATTR_NAME("name"),
       ATTR_FROM("from"),
       ATTR_TO("to"),
@@ -244,14 +242,6 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addResidualRelativeConvergenceMeasure(dataName, meshName, limit, suffices, strict);
-  } else if (tag.getName() == TAG_MIN_ITER_CONV_MEASURE) {
-    const std::string &dataName      = tag.getStringAttributeValue(ATTR_DATA);
-    const std::string &meshName      = tag.getStringAttributeValue(ATTR_MESH);
-    int                minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
-    bool               suffices      = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    bool               strict        = tag.getBooleanAttributeValue(ATTR_STRICT);
-    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
-    addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices, strict);
   } else if (tag.getName() == TAG_EXCHANGE) {
     std::string nameData            = tag.getStringAttributeValue(ATTR_DATA);
     std::string nameMesh            = tag.getStringAttributeValue(ATTR_MESH);
@@ -279,11 +269,28 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     _meshConfig->addNeededMesh(nameParticipantFrom, nameMesh);
     _meshConfig->addNeededMesh(nameParticipantTo, nameMesh);
     _config.exchanges.emplace_back(std::move(newExchange));
+  } else if (tag.getName() == TAG_MIN_ITERATIONS) {
+    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
+    _config.minIterations = tag.getIntAttributeValue(ATTR_VALUE);
+    PRECICE_CHECK(_config.minIterations > 0,
+                  "Maximum iteration limit has to be larger than zero. Please check the <min-iterations value = \"{}\" /> subtag in the <coupling-scheme:... /> of your precice-config.xml.",
+                  _config.minIterations);
   } else if (tag.getName() == TAG_MAX_ITERATIONS) {
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     _config.maxIterations = tag.getIntAttributeValue(ATTR_VALUE);
     PRECICE_CHECK(_config.maxIterations > 0,
-                  "Maximal iteration limit has to be larger than zero. Please check the <max-iterations value = \"{}\" /> subtag in the <coupling-scheme:... /> of your precice-config.xml.",
+                  "Maximal iteration limit has to be larger than zero. "
+                  "Please check the <max-iterations value=\"{0}\" /> subtag in the <coupling-scheme:... /> of your precice-config.xml. "
+                  "To disable the iteration limit, remove the <max-iterations value=\"{0}\" /> subtag.",
+                  _config.maxIterations);
+  }
+
+  // Additional consistency checks
+  if (_config.minIterations > 0 && _config.maxIterations > 0) {
+    PRECICE_CHECK(_config.minIterations <= _config.maxIterations,
+                  "Maximum iteration limit {1} has to be larger or equal than the minimum iteration limit {0}. "
+                  "Please check the <min-iterations value = \"{0}\" /> and <max-iterations value = \"{1}\" /> subtags in the <coupling-scheme:... /> of your precice-config.xml.",
+                  _config.minIterations,
                   _config.maxIterations);
   }
 }
@@ -403,7 +410,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     addTagAbsoluteConvergenceMeasure(tag);
     addTagRelativeConvergenceMeasure(tag);
     addTagResidualRelativeConvergenceMeasure(tag);
-    addTagMinIterationConvergenceMeasure(tag);
+    addTagMinIterations(tag);
     addTagMaxIterations(tag);
   } else if (type == VALUE_MULTI) {
     addTagParticipant(tag);
@@ -412,7 +419,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     addTagAbsoluteConvergenceMeasure(tag);
     addTagRelativeConvergenceMeasure(tag);
     addTagResidualRelativeConvergenceMeasure(tag);
-    addTagMinIterationConvergenceMeasure(tag);
+    addTagMinIterations(tag);
     addTagMaxIterations(tag);
   } else if (type == VALUE_SERIAL_IMPLICIT) {
     addTagParticipants(tag);
@@ -421,7 +428,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     addTagAbsoluteConvergenceMeasure(tag);
     addTagRelativeConvergenceMeasure(tag);
     addTagResidualRelativeConvergenceMeasure(tag);
-    addTagMinIterationConvergenceMeasure(tag);
+    addTagMinIterations(tag);
     addTagMaxIterations(tag);
   } else {
     // If wrong coupling scheme type is provided, this is already caught by the config parser. If the assertion below is triggered, it's a bug in preCICE, not wrong usage.
@@ -566,21 +573,6 @@ void CouplingSchemeConfiguration::addTagRelativeConvergenceMeasure(
   tag.addSubtag(tagConvergenceMeasure);
 }
 
-void CouplingSchemeConfiguration::addTagMinIterationConvergenceMeasure(
-    xml::XMLTag &tag)
-{
-  xml::XMLTag tagMinIterationConvMeasure(*this,
-                                         TAG_MIN_ITER_CONV_MEASURE, xml::XMLTag::OCCUR_ARBITRARY);
-  tagMinIterationConvMeasure.setDocumentation(
-      "Convergence criterion used to ensure a miminimal amount of iterations. "
-      "Specifying a mesh and data is required for technical reasons and does not influence the measure.");
-  addBaseAttributesTagConvergenceMeasure(tagMinIterationConvMeasure);
-  xml::XMLAttribute<int> attrMinIterations(ATTR_MIN_ITERATIONS);
-  attrMinIterations.setDocumentation("The minimal amount of iterations.");
-  tagMinIterationConvMeasure.addAttribute(attrMinIterations);
-  tag.addSubtag(tagMinIterationConvMeasure);
-}
-
 void CouplingSchemeConfiguration::addBaseAttributesTagConvergenceMeasure(
     xml::XMLTag &tag)
 {
@@ -599,11 +591,24 @@ void CouplingSchemeConfiguration::addBaseAttributesTagConvergenceMeasure(
   tag.addAttribute(attrStrict);
 }
 
+void CouplingSchemeConfiguration::addTagMinIterations(
+    xml::XMLTag &tag)
+{
+  using namespace xml;
+  XMLTag tagMinIterations(*this, TAG_MIN_ITERATIONS, XMLTag::OCCUR_NOT_OR_ONCE);
+  tagMinIterations.setDocumentation("Allows to specify a minimum amount of iterations per time window at from which point convergence measures are considered. "
+                                    "Note that not defining convergence measures is interpreted as \"no convergence\".");
+  XMLAttribute<int> attrValue(ATTR_VALUE);
+  attrValue.setDocumentation("The minimum amount of iterations.");
+  tagMinIterations.addAttribute(attrValue);
+  tag.addSubtag(tagMinIterations);
+}
+
 void CouplingSchemeConfiguration::addTagMaxIterations(
     xml::XMLTag &tag)
 {
   using namespace xml;
-  XMLTag tagMaxIterations(*this, TAG_MAX_ITERATIONS, XMLTag::OCCUR_ONCE);
+  XMLTag tagMaxIterations(*this, TAG_MAX_ITERATIONS, XMLTag::OCCUR_NOT_OR_ONCE);
   tagMaxIterations.setDocumentation("Allows to specify a maximum amount of iterations per time window.");
   XMLAttribute<int> attrValue(ATTR_VALUE);
   attrValue.setDocumentation("The maximum value of iterations.");
@@ -706,25 +711,6 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
-void CouplingSchemeConfiguration::addMinIterationConvergenceMeasure(
-    const std::string &dataName,
-    const std::string &meshName,
-    int                minIterations,
-    bool               suffices,
-    bool               strict)
-{
-  PRECICE_TRACE();
-  impl::PtrConvergenceMeasure measure(new impl::MinIterationConvergenceMeasure(minIterations));
-  ConvergenceMeasureDefintion convMeasureDef;
-  convMeasureDef.data        = getData(dataName, meshName);
-  convMeasureDef.suffices    = suffices;
-  convMeasureDef.strict      = strict;
-  convMeasureDef.meshName    = meshName;
-  convMeasureDef.measure     = std::move(measure);
-  convMeasureDef.doesLogging = false;
-  _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
-}
-
 mesh::PtrData CouplingSchemeConfiguration::getData(
     const std::string &dataName,
     const std::string &meshName) const
@@ -791,7 +777,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   SerialCouplingScheme *scheme = new SerialCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, first, second,
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.minIterations, _config.maxIterations);
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(scheme->hasAnySendData(),
@@ -802,10 +788,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
                 accessor);
 
   // Add convergence measures
-  PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
-                "At least one convergence measure has to be defined for an implicit coupling scheme. "
-                "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
-                "<...-convergence-measure/> subtag in the precice-config.xml.");
+  checkIterationLimits();
   addConvergenceMeasures(scheme, second, _config.convergenceMeasureDefinitions);
 
   // Set acceleration
@@ -829,7 +812,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations);
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.minIterations, _config.maxIterations);
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(scheme->hasAnySendData(),
@@ -839,9 +822,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
                 accessor);
 
   // Add convergence measures
-  PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
-                "At least one convergence measure has to be defined for an implicit coupling scheme. "
-                "Please check your <coupling-scheme ... /> and make sure that you provide at least one <...-convergence-measure/> subtag in the precice-config.xml.");
+  checkIterationLimits();
   addConvergenceMeasures(scheme, _config.participants[1], _config.convergenceMeasureDefinitions);
 
   // Set acceleration
@@ -867,7 +848,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   scheme = new MultiCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
       _config.validDigits, accessor, m2ns, _config.dtMethod,
-      _config.controller, _config.maxIterations);
+      _config.controller, _config.minIterations, _config.maxIterations);
 
   MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
   PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
@@ -880,10 +861,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
                 accessor);
 
   // Add convergence measures
-  PRECICE_CHECK(not _config.convergenceMeasureDefinitions.empty(),
-                "At least one convergence measure has to be defined for an implicit coupling scheme. "
-                "Please check your <coupling-scheme ... /> and make sure that you provide at least one "
-                "<...-convergence-measure/> subtag in the precice-config.xml.");
+  checkIterationLimits();
   if (accessor == _config.controller) {
     addConvergenceMeasures(scheme, _config.controller, _config.convergenceMeasureDefinitions);
   }
@@ -913,6 +891,20 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
   } else {
     // We should never reach this point.
     PRECICE_UNREACHABLE("Unknown timestepping method '{}'.", method);
+  }
+}
+
+void CouplingSchemeConfiguration::checkIterationLimits() const
+{
+  if (_config.convergenceMeasureDefinitions.empty()) {
+    PRECICE_CHECK(_config.maxIterations != -1,
+                  "No convergence measures without a maximum iteration limit leads to endless iterations. "
+                  "Please define a convergence measure or set a maximum iteration limit using <max-iterations value=\"...\" />.");
+
+    PRECICE_INFO("No convergence measures were defined for an implicit coupling scheme. "
+                 "It will always iterate the maximum amount iterations, which is {}."
+                 "You may want to add a convergence measure in your <coupling-scheme:.../> in your configuration.",
+                 _config.maxIterations);
   }
 }
 

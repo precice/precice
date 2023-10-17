@@ -27,10 +27,11 @@ BiCouplingScheme::BiCouplingScheme(
     std::string                   secondParticipant,
     const std::string &           localParticipant,
     m2n::PtrM2N                   m2n,
+    int                           minIterations,
     int                           maxIterations,
     CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, cplMode, dtMethod),
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, minIterations, maxIterations, cplMode, dtMethod),
       _m2n(std::move(m2n)),
       _firstParticipant(std::move(firstParticipant)),
       _secondParticipant(std::move(secondParticipant))

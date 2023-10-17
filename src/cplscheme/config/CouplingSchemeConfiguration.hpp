@@ -94,7 +94,7 @@ private:
   const std::string TAG_ABS_CONV_MEASURE;
   const std::string TAG_REL_CONV_MEASURE;
   const std::string TAG_RES_REL_CONV_MEASURE;
-  const std::string TAG_MIN_ITER_CONV_MEASURE;
+  const std::string TAG_MIN_ITERATIONS;
   const std::string TAG_MAX_ITERATIONS;
 
   const std::string ATTR_DATA;
@@ -109,7 +109,6 @@ private:
   const std::string ATTR_VALID_DIGITS;
   const std::string ATTR_METHOD;
   const std::string ATTR_LIMIT;
-  const std::string ATTR_MIN_ITERATIONS;
   const std::string ATTR_NAME;
   const std::string ATTR_FROM;
   const std::string ATTR_TO;
@@ -156,7 +155,8 @@ private:
     };
     std::vector<Exchange>                    exchanges;
     std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions;
-    int                                      maxIterations = -1;
+    int                                      maxIterations = -1; // infinite by default
+    int                                      minIterations = 1;  // one by default
 
     bool hasExchange(const Exchange &totest) const
     {
@@ -196,9 +196,9 @@ private:
 
   void addTagResidualRelativeConvergenceMeasure(xml::XMLTag &tag);
 
-  void addTagMinIterationConvergenceMeasure(xml::XMLTag &tag);
-
   void addBaseAttributesTagConvergenceMeasure(xml::XMLTag &tag);
+
+  void addTagMinIterations(xml::XMLTag &tag);
 
   void addTagMaxIterations(xml::XMLTag &tag);
 
@@ -222,13 +222,6 @@ private:
       const std::string &dataName,
       const std::string &meshName,
       double             limit,
-      bool               suffices,
-      bool               strict);
-
-  void addMinIterationConvergenceMeasure(
-      const std::string &dataName,
-      const std::string &meshName,
-      int                minIterations,
       bool               suffices,
       bool               strict);
 
@@ -305,6 +298,11 @@ private:
    * @param exchange The Exchange being checked.
    */
   void checkSubstepExchangeWaveformDegree(const Config::Exchange &exchange) const;
+
+  /**
+   * @brief Helper function to check iteration limits in conjunction with convergence measures
+   */
+  void checkIterationLimits() const;
 };
 } // namespace cplscheme
 } // namespace precice
