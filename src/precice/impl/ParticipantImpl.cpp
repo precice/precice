@@ -329,9 +329,11 @@ void ParticipantImpl::initialize()
   mapReadData();
   performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
 
-  resetWrittenData(false, false);
   PRECICE_DEBUG("Plot output");
-  _accessor->exportFinal();
+  _accessor->exportInitial();
+
+  resetWrittenData(false, false);
+
   e.stop();
   sep.pop();
 
@@ -429,8 +431,6 @@ void ParticipantImpl::finalize()
     PRECICE_DEBUG("Finalize coupling scheme");
     _couplingScheme->finalize();
 
-    PRECICE_DEBUG("Handle exports");
-    _accessor->exportFinal();
     closeCommunicationChannels(CloseChannels::All);
   }
 

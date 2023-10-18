@@ -206,7 +206,7 @@ public:
   void computeBoundingBox();
 
   /**
-   * @brief Removes all mesh elements and data values (does not remove data).
+   * @brief Removes all mesh elements and data values (does not remove data or the bounding boxes).
    *
    * A mesh element is a
    * - vertex
@@ -220,6 +220,7 @@ public:
 
   void setVertexDistribution(VertexDistribution vd)
   {
+    PRECICE_ASSERT(std::all_of(vd.begin(), vd.end(), [](const auto &p) { return std::is_sorted(p.second.begin(), p.second.end()); }));
     _vertexDistribution = std::move(vd);
   }
 
@@ -280,6 +281,12 @@ public:
    * @brief Returns the bounding box of the mesh.
    *
    * BoundingBox is a vector of pairs (min, max), one pair for each dimension.
+   * Note that the bounding box does not necessarily need to match the bounding
+   * box of the contained vertices of the mesh. Examples are the direct mesh access
+   * or a computation of the bounding box before applying additional filtering
+   * during the repartitioning. Note that mesh::clear doesn't clear the underlying
+   * bounding box (which is potentially a user input when using and defining
+   * direct mesh access)
    */
   const BoundingBox &getBoundingBox() const;
 
