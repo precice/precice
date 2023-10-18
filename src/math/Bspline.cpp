@@ -57,6 +57,12 @@ Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree
 
 Eigen::VectorXd Bspline::interpolateAt(double t) const
 {
+  if (math::equals(t, _tsMax)) {
+    t = _tsMax; // set t exactly to _tsMax, to avoid artifacts originating from floating-point arithmetic
+  } else if (math::equals(t, _tsMin)) {
+    t = _tsMin; // set t exactly to _tsMin, to avoid artifacts originating from floating-point arithmetic
+  }
+
   // transform t to the relative interval [0; 1]
   const double tRelative = (t - _tsMin) / (_tsMax - _tsMin);
   PRECICE_ASSERT(math::greaterEquals(tRelative, 0.0), "t is before the first sample!", tRelative, 0.0, _tsMin); // Only allowed to use BSpline for interpolation, not extrapolation.

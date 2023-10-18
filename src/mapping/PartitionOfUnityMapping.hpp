@@ -172,8 +172,10 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     outMesh = this->output();
   }
 
+  precice::profiling::Event eClusters("map.pou.computeMapping.createClustering");
   // Step 1: get a tentative clustering consisting of centers and a radius from one of the available algorithms
   auto [clusterRadius, centerCandidates] = impl::createClustering(inMesh, outMesh, _relativeOverlap, _verticesPerCluster, _projectToInput);
+  eClusters.stop();
 
   _clusterRadius = clusterRadius;
   PRECICE_ASSERT(_clusterRadius > 0 || inMesh->vertices().size() == 0 || outMesh->vertices().size() == 0);
@@ -183,6 +185,9 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   mesh::Mesh centerMesh("pou-centers-" + inMesh->getName(), this->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
   auto &     meshVertices = centerMesh.vertices();
 
+  meshVertices.clear();
+  _clusters.clear();
+  _clusters.reserve(centerCandidates.size());
   for (const auto &c : centerCandidates) {
     // We cannot simply copy the vertex from the container in order to fill the vertices of the centerMesh, as the vertexID of each center needs to match the index
     // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
@@ -190,13 +195,15 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     mesh::Vertex                                    center(c.getCoords(), vertexID);
     SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _deadAxis, _polynomial, inMesh, outMesh);
 
-    // Consider only non-empty clusters
+    // Consider only non-empty clusters (more of a safeguard here)
     if (!cluster.empty()) {
       PRECICE_ASSERT(center.getID() == static_cast<int>(_clusters.size()), center.getID(), _clusters.size());
       meshVertices.emplace_back(std::move(center));
       _clusters.emplace_back(std::move(cluster));
     }
   }
+
+  e.addData("n clusters", _clusters.size());
   // Log the average number of resulting clusters
   PRECICE_DEBUG("Partition of unity data mapping between mesh \"{}\" and mesh \"{}\": mesh \"{}\" on rank {} was decomposed into {} clusters.", this->input()->getName(), this->output()->getName(), inMesh->getName(), utils::IntraComm::getRank(), _clusters.size());
 
@@ -206,6 +213,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PRECICE_DEBUG("Minimum number of vertices per cluster {}", std::min_element(_clusters.begin(), _clusters.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices());
   }
 
+  precice::profiling::Event eWeights("map.pou.computeMapping.computeWeights");
   // Log a bounding box of the center mesh
   centerMesh.computeBoundingBox();
   PRECICE_DEBUG("Bounding Box of the cluster centers {}", centerMesh.getBoundingBox());
@@ -252,11 +260,10 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       _clusters[clusterIDs[i]].setNormalizedWeight(weights[i] / weightSum, vertex.getID());
     }
   }
+  eWeights.stop();
 
-// Add a VTK export for visualization purposes
-#ifndef NDEBUG
-  exportClusterCentersAsVTU(centerMesh);
-#endif
+  // Uncomment to add a VTK export of the cluster center distribution for visualization purposes
+  // exportClusterCentersAsVTU(centerMesh);
 
   this->_hasComputedMapping = true;
 }

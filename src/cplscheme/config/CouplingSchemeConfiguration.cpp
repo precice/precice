@@ -511,7 +511,7 @@ void CouplingSchemeConfiguration::addTagExchange(
   tagExchange.addAttribute(participantTo);
   auto attrInitialize = XMLAttribute<bool>(ATTR_INITIALIZE, false).setDocumentation("Should this data be initialized during initialize?");
   tagExchange.addAttribute(attrInitialize);
-  auto attrExchangeSubsteps = XMLAttribute<bool>(ATTR_EXCHANGE_SUBSTEPS, true).setDocumentation("Should this data exchange substeps?");
+  auto attrExchangeSubsteps = XMLAttribute<bool>(ATTR_EXCHANGE_SUBSTEPS, false).setDocumentation("Should this data exchange substeps?");
   tagExchange.addAttribute(attrExchangeSubsteps);
   tag.addSubtag(tagExchange);
 }
