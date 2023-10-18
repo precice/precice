@@ -261,9 +261,6 @@ public:
   /// Exports the initial state of meshes
   void exportInitial();
 
-  /// Exports the final state of meshes
-  void exportFinal();
-
   struct IntermediateExport {
     size_t timewindow;
     size_t iteration;
