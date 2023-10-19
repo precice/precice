@@ -16,7 +16,7 @@ public:
       double           relaxation,
       std::vector<int> dataIDs);
 
-  virtual std::vector<int> getDataIDs() const
+  virtual std::vector<int> getDataIDs() const override
   {
     return _dataIDs;
   }

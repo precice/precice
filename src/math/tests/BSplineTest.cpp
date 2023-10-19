@@ -30,6 +30,28 @@ BOOST_AUTO_TEST_CASE(TwoPointsLinear)
   BOOST_TEST(equals(bspline.interpolateAt(1.75), Eigen::Vector3d(1.75, 17.5, 175)));
 }
 
+BOOST_AUTO_TEST_CASE(TwoPointsLinearRoundoff)
+{
+  PRECICE_TEST(1_rank);
+  Eigen::Vector2d ts;
+  ts << 1e-6, 2e-6;
+
+  // Evaluate Bspline slightly outside of borders of time window.
+  Eigen::Vector2d teval;
+  teval << 1e-6 - std::numeric_limits<double>::epsilon(), 2e-6 + std::numeric_limits<double>::epsilon();
+  // However, cannot distinguish between ts and teval
+  BOOST_ASSERT(equals(ts[0], teval[0]));
+  BOOST_ASSERT(equals(ts[1], teval[1]));
+
+  Eigen::MatrixXd xs(3, 2);
+  xs << 1, 2, 10, 20, 100, 200;
+
+  precice::math::Bspline bspline(ts, xs, 1);
+  // Make sure that evaluating at borders of window (again: with some floating point error within eps) does not introduce observable errors
+  BOOST_TEST(equals(bspline.interpolateAt(teval[0]), Eigen::Vector3d(1, 10, 100)));
+  BOOST_TEST(equals(bspline.interpolateAt(teval[1]), Eigen::Vector3d(2, 20, 200)));
+}
+
 BOOST_AUTO_TEST_CASE(ThreePointsLinear)
 {
   PRECICE_TEST(1_rank);

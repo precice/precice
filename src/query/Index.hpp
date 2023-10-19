@@ -87,6 +87,9 @@ public:
   /// Return all the vertices inside a bounding box
   std::vector<VertexID> getVerticesInsideBox(const mesh::BoundingBox &bb);
 
+  /// Returns
+  bool isAnyVertexInsideBox(const mesh::Vertex &centerVertex, double radius);
+
   /// Return all the tetrahedra whose axis-aligned bounding box contains a vertex
   std::vector<TetrahedronID> getEnclosingTetrahedra(const Eigen::VectorXd &location);
 
