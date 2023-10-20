@@ -29,7 +29,7 @@ inline PetscErrorCode PRECICE_VecFilter(Vec v, PetscReal tol)
 #if ((PETSC_MAJOR > 3) || (PETSC_MAJOR == 3 && PETSC_MINOR >= 20))
   return VecFilter(v, tol);
 #else
-  return VecFilter(v, tol);
+  return VecChop(v, tol);
 #endif
 }
 } // namespace
