@@ -2,7 +2,9 @@
 
 #include <Eigen/Core>
 #include <boost/range.hpp>
+#include <optional>
 #include "logging/Logger.hpp"
+#include "math/Bspline.hpp"
 #include "time/Stample.hpp"
 
 namespace precice::time {
@@ -129,6 +131,8 @@ private:
 
   int _degree;
 
+  mutable std::optional<math::Bspline> _bspline;
+
   /**
    * @brief Computes which degree may be used for interpolation.
    *
@@ -144,6 +148,8 @@ private:
   time::Sample getSampleAtBeginning();
 
   time::Sample getSampleAtEnd();
+
+  int findTimeId(double time) const;
 };
 
 } // namespace precice::time

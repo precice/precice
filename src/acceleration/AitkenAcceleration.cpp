@@ -1,5 +1,6 @@
 #include "acceleration/AitkenAcceleration.hpp"
 #include <Eigen/Core>
+#include <boost/range/adaptor/map.hpp>
 #include <cmath>
 #include <cstddef>
 #include <limits>
@@ -34,6 +35,13 @@ AitkenAcceleration::AitkenAcceleration(double           initialRelaxation,
 void AitkenAcceleration::initialize(const DataMap &cplData)
 {
   checkDataIDs(cplData);
+
+  for (const auto &data : cplData | boost::adaptors::map_values) {
+    if (data->exchangeSubsteps()) {
+      PRECICE_ERROR("Aitken acceleration does not yet support using data from all substeps. Please set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
+    }
+  }
+
   size_t entries = 0;
   if (_dataIDs.size() == 1) {
     entries = cplData.at(_dataIDs.at(0))->getSize();
