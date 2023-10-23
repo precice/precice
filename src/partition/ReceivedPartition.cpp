@@ -603,6 +603,13 @@ void ReceivedPartition::createOwnerInformation()
       }
     }
 
+    // First, insert all comm partnerts, otherwise we end up in a deadlock further down
+    // when exchanging the vector sizes as vertices might be shared from the other
+    // connected rank(s), although the actual size we request here is zero
+    // i.e., we never tell the other ranks that we don't want any vertices
+    for (auto &neighborRank : localConnectedBBMap)
+      sharedVerticesSendMap[neighborRank.first] = std::vector<VertexID>();
+
     // #3: check vertices and keep only those that fit into the current rank's bb
     const int numberOfVertices = _mesh->vertices().size();
     PRECICE_DEBUG("Tag vertices, number of vertices {}", numberOfVertices);
