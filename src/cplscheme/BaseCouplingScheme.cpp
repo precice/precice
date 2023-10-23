@@ -66,7 +66,7 @@ BaseCouplingScheme::BaseCouplingScheme(
   }
 
   if (isExplicitCouplingScheme()) {
-    PRECICE_ASSERT(minIterations == UNDEFINED_MAX_ITERATIONS);
+    PRECICE_ASSERT(minIterations == UNDEFINED_MIN_ITERATIONS);
     PRECICE_ASSERT(maxIterations == UNDEFINED_MAX_ITERATIONS);
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
