@@ -359,29 +359,37 @@ void Vector::fillWithRandoms()
 
 Vector &Vector::copyFrom(precice::span<const double> source)
 {
-  if (source.empty()) {
+  // This is collective, so we can only skip if the global size is 0
+  if (getSize() == 0) {
     return *this;
   }
-  PRECICE_ASSERT(source.size() == getLocalSize());
-  PetscScalar *data;
-  VecGetArray(vector, &data);
+  PRECICE_ASSERT(static_cast<PetscInt>(source.size()) == getLocalSize());
+  PetscScalar *  data;
+  PetscErrorCode ierr = 0;
+  ierr                = VecGetArray(vector, &data);
+  PRECICE_ASSERT(ierr == 0);
   std::copy(source.begin(), source.end(), data);
-  VecRestoreArray(vector, &data);
+  ierr = VecRestoreArray(vector, &data);
+  PRECICE_ASSERT(ierr == 0);
   return *this;
 }
 
 Vector &Vector::copyTo(precice::span<double> destination)
 {
-  if (destination.empty()) {
+  // This is collective, so we can only skip if the global size is 0
+  if (getSize() == 0) {
     return *this;
   }
   auto localSize = getLocalSize();
-  PRECICE_ASSERT(destination.size() == localSize);
-  PetscScalar *data;
-  VecGetArray(vector, &data);
+  PRECICE_ASSERT(static_cast<PetscInt>(destination.size()) == localSize);
+  PetscScalar *  data;
+  PetscErrorCode ierr = 0;
+  ierr                = VecGetArray(vector, &data);
+  PRECICE_ASSERT(ierr == 0);
   auto dataEnd = std::next(data, localSize);
   std::copy(data, dataEnd, destination.begin());
-  VecRestoreArray(vector, &data);
+  ierr = VecRestoreArray(vector, &data);
+  PRECICE_ASSERT(ierr == 0);
   return *this;
 }
 
