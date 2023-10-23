@@ -743,10 +743,8 @@ void ReceivedPartition::createOwnerInformation()
     }
 
     setOwnerInformation(tags);
-    auto filteredVertices = std::count(tags.begin(), tags.end(), 0);
-    if (filteredVertices)
-      PRECICE_WARN("{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.",
-                   filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName());
+    PRECICE_DEBUG("{} of {} vertices of mesh {} have been filtered out on rank {} since they have no influence on the mapping.",
+                  std::count(tags.begin(), tags.end(), 0), tags.size(), _mesh->getName(), utils::IntraComm::getRank());
     // end of two-level initialization section
   } else {
     if (utils::IntraComm::isSecondary()) {
