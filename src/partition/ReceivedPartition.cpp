@@ -607,6 +607,7 @@ void ReceivedPartition::createOwnerInformation()
     // when exchanging the vector sizes as vertices might be shared from the other
     // connected rank(s), although the actual size we request here is zero
     // i.e., we never tell the other ranks that we don't want any vertices
+    // See also test Integration/Parallel/TestBoundingBoxInitializationEmpty
     for (auto &neighborRank : localConnectedBBMap)
       sharedVerticesSendMap[neighborRank.first] = std::vector<VertexID>();
 
