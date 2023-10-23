@@ -7,7 +7,8 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
-// Test to ensure that no exchange of shared vertices doesn't lead to a deadlock
+// Test to ensure that the exchange of shared vertices, which are only required
+// by one participant to actually compute the mapping, doesn't lead to a deadlock
 BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationEmpty)
 {
   PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
