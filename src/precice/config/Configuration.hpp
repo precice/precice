@@ -61,6 +61,12 @@ public:
   {
     return _minTimeStepSize;
   }
+  
+  /// @brief Returns whether participants wait for each other in finalize
+  bool waitInFinalize() const
+  {
+    return _waitInFinalize;
+  }
 
   const mesh::PtrDataConfiguration getDataConfiguration() const
   {
@@ -116,6 +122,9 @@ private:
 
   /// minimal time step allowed by preCICE
   double _minTimeStepSize = math::NUMERICAL_ZERO_DIFFERENCE;
+
+  /// Synchronize participants in finalize
+  bool _waitInFinalize;
 
   // @brief Root tag of preCICE configuration.
   xml::XMLTag _tag;

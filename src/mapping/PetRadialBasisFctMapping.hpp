@@ -532,16 +532,16 @@ std::string PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::getName() const
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::loadInitialGuessForDim(int dimension, int allDimensions, petsc::Vector &destination)
 {
-  auto sizePerDim = destination.getLocalSize();
-  if (sizePerDim == 0) {
+  // Only skip collectively over all MPI ranks as we use collective Vector ops
+  if (destination.getSize() == 0) {
     return;
   }
-  auto totalSize = sizePerDim * allDimensions;
+  auto sizePerDim = destination.getLocalSize();
+  auto totalSize  = sizePerDim * allDimensions;
 
-  if (!this->hasInitialGuess()) {
-    // We don't need to modify the petsc vector
+  if (!this->hasInitialGuess() && (totalSize > 0)) {
+    // We don't need to modify the petsc vector here
     this->initialGuess() = Eigen::VectorXd::Zero(totalSize);
-    return;
   }
 
   PRECICE_ASSERT(this->initialGuess().size() == totalSize, this->initialGuess().size(), totalSize);
@@ -553,12 +553,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::loadInitialGuessForDim(i
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::storeInitialGuessForDim(int dimension, int allDimensions, petsc::Vector &source)
 {
-  auto sizePerDim = source.getLocalSize();
-  if (sizePerDim == 0) {
+  // Only skip collectively over all MPI ranks as we use collective Vector ops
+  if (source.getSize() == 0) {
     return;
   }
+  auto sizePerDim = source.getLocalSize();
 
-  PRECICE_ASSERT(this->hasInitialGuess(), "Call loadInitialGuessForDim first");
+  PRECICE_ASSERT(this->hasInitialGuess() || (sizePerDim == 0), "Call loadInitialGuessForDim first");
   PRECICE_ASSERT(this->initialGuess().size() == sizePerDim * allDimensions, this->initialGuess().size(), sizePerDim * allDimensions);
   auto offset = dimension * sizePerDim;
   auto begin  = std::next(this->initialGuess().data(), offset);

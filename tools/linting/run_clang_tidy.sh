@@ -31,7 +31,7 @@ echo "SRC-DIR=$SRC"
 # -BUILD_TESTING: we don't want to analyze the test targets
 # -PRECICE_BINDINGS_C: naming conventions are different from the code base
 # -PRECICE_BINDINGS_FORTRAN: naming conventions are different from the code base
-ARGS=("-D" "CMAKE_EXPORT_COMPILE_COMMANDS=ON" "-D" "BUILD_TESTING=OFF" "-D" "BUILD_SHARED_LIBS=ON" "-D" "CMAKE_BUILD_TYPE=Debug" "-D" "PRECICE_BINDINGS_C=OFF" "-D" "PRECICE_BINDINGS_FORTRAN=OFF" "-D" "PRECICE_MPICommunication=ON" "-D" "PRECICE_PETScMapping=ON" "-D" "PRECICE_PythonActions=ON" "-D" "PRECICE_CONFIGURE_PACKAGE_GENERATION=OFF" "$@")
+ARGS=("-D" "CMAKE_EXPORT_COMPILE_COMMANDS=ON" "-D" "BUILD_TESTING=OFF" "-D" "BUILD_SHARED_LIBS=ON" "-D" "CMAKE_BUILD_TYPE=Debug" "-D" "PRECICE_BINDINGS_C=OFF" "-D" "PRECICE_BINDINGS_FORTRAN=OFF" "-D" "PRECICE_FEATURE_MPI_COMMUNICATION=ON" "-D" "PRECICE_FEATURE_PETSC_MAPPING=ON" "-D" "PRECICE_FEATURE_PYTHON_ACTIONS=ON" "-D" "PRECICE_CONFIGURE_PACKAGE_GENERATION=OFF" "$@")
 
 
 if ! [ -x "$(command -v run-clang-tidy)" ] || ! [ -x "$(command -v clang++)" ]; then
