@@ -21,6 +21,7 @@
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
+#include "utils/algorithm.hpp"
 #include "utils/assertion.hpp"
 #include "utils/fmt.hpp"
 
@@ -520,23 +521,6 @@ void ReceivedPartition::prepareBoundingBox()
     _boundingBoxPrepared = true;
   }
 }
-namespace {
-template <class InputIt1, class InputIt2, class OutputIt>
-void set_intersection_indices(InputIt1 ref1, InputIt1 first1, InputIt1 last1,
-                              InputIt2 first2, InputIt2 last2, OutputIt d_first)
-{
-  while (first1 != last1 && first2 != last2) {
-    if (*first1 < *first2) {
-      ++first1;
-    } else {
-      if (!(*first2 < *first1)) {
-        *d_first++ = std::distance(ref1, first1++); // *first1 and *first2 are equivalent.
-      }
-      ++first2;
-    }
-  }
-}
-} // namespace
 
 void ReceivedPartition::createOwnerInformation()
 {
@@ -731,8 +715,8 @@ void ReceivedPartition::createOwnerInformation()
         // The set_intersection_indices gives us the indices in the sharedVerticesGlobalIDs, which we
         // can use in the sharedVerticesLocalIDs to get the actual index in the 'tags' vector.
         std::vector<int> res;
-        set_intersection_indices(sharedVerticesGlobalIDs.begin(), sharedVerticesGlobalIDs.begin(), sharedVerticesGlobalIDs.end(),
-                                 sharingRank.second.begin(), sharingRank.second.end(), std::back_inserter(res));
+        precice::utils::set_intersection_indices(sharedVerticesGlobalIDs.begin(), sharedVerticesGlobalIDs.begin(), sharedVerticesGlobalIDs.end(),
+                                                 sharingRank.second.begin(), sharingRank.second.end(), std::back_inserter(res));
         for (auto r : res)
           tags[sharedVerticesLocalIDs[r]] = static_cast<int>(false);
       }
