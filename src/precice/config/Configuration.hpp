@@ -61,7 +61,7 @@ public:
   {
     return _minTimeStepSize;
   }
-  
+
   /// @brief Returns whether participants wait for each other in finalize
   bool waitInFinalize() const
   {

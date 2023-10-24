@@ -71,7 +71,7 @@ void Configuration::xmlTagCallback(const xml::ConfigurationContext &context, xml
   if (tag.getName() == "precice-configuration") {
     _experimental = tag.getBooleanAttributeValue("experimental");
     _participantConfiguration->setExperimental(_experimental);
-   _minTimeStepSize = tag.getDoubleAttributeValue("min-time-step-size");
+    _minTimeStepSize = tag.getDoubleAttributeValue("min-time-step-size");
     PRECICE_CHECK(_minTimeStepSize >= math::NUMERICAL_ZERO_DIFFERENCE, "The minimal time step has to be larger or equal to {}. Please adjust the tag min-time-step-size in the config file.", math::NUMERICAL_ZERO_DIFFERENCE);
     _couplingSchemeConfiguration->setMinTimeStepSize(_minTimeStepSize);
     _waitInFinalize = tag.getBooleanAttributeValue("wait-in-finalize");
