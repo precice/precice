@@ -123,8 +123,7 @@ double XMLTag::getDoubleAttributeValue(const std::string &name, std::optional<do
   if (default_value) {
     return default_value.value();
   }
-  PRECICE_ASSERT(default_value, "The XMLAttribute doesn't exist, check its default.");
-  return default_value.value();
+  PRECICE_UNREACHABLE("The XMLAttribute doesn't exist, check its default.");
 }
 
 int XMLTag::getIntAttributeValue(const std::string &name, std::optional<int> default_value) const
@@ -137,8 +136,7 @@ int XMLTag::getIntAttributeValue(const std::string &name, std::optional<int> def
   if (default_value) {
     return default_value.value();
   }
-  PRECICE_ASSERT(default_value, "The XMLAttribute doesn't exist, check its default.");
-  return default_value.value();
+  PRECICE_UNREACHABLE("The XMLAttribute doesn't exist, check its default.");
 }
 
 std::string XMLTag::getStringAttributeValue(const std::string &name, std::optional<std::string> default_value) const
@@ -151,8 +149,7 @@ std::string XMLTag::getStringAttributeValue(const std::string &name, std::option
   if (default_value) {
     return default_value.value();
   }
-  PRECICE_ASSERT(default_value, "The XMLAttribute doesn't exist, check its default.");
-  return default_value.value();
+  PRECICE_UNREACHABLE("The XMLAttribute doesn't exist, check its default.");
 }
 
 bool XMLTag::getBooleanAttributeValue(const std::string &name, std::optional<bool> default_value) const
@@ -165,8 +162,7 @@ bool XMLTag::getBooleanAttributeValue(const std::string &name, std::optional<boo
   if (default_value) {
     return default_value.value();
   }
-  PRECICE_ASSERT(default_value, "The XMLAttribute doesn't exist, check its default.");
-  return default_value.value();
+  PRECICE_UNREACHABLE("The XMLAttribute doesn't exist, check its default.");
 }
 
 Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue(const std::string &name, int dimensions) const
