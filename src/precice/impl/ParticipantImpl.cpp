@@ -205,6 +205,7 @@ void ParticipantImpl::configure(
   _meshLock.clear();
 
   _allowsExperimental = config.allowsExperimental();
+  _waitInFinalize     = config.waitInFinalize();
   _accessor           = determineAccessingParticipant(config);
   _accessor->setMeshIdManager(config.getMeshConfiguration()->extractMeshIdManager());
 
@@ -329,9 +330,11 @@ void ParticipantImpl::initialize()
   mapReadData();
   performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
 
-  resetWrittenData(false, false);
   PRECICE_DEBUG("Plot output");
-  _accessor->exportFinal();
+  _accessor->exportInitial();
+
+  resetWrittenData(false, false);
+
   e.stop();
   sep.pop();
 
@@ -429,8 +432,6 @@ void ParticipantImpl::finalize()
     PRECICE_DEBUG("Finalize coupling scheme");
     _couplingScheme->finalize();
 
-    PRECICE_DEBUG("Handle exports");
-    _accessor->exportFinal();
     closeCommunicationChannels(CloseChannels::All);
   }
 
@@ -1432,15 +1433,16 @@ void ParticipantImpl::advanceCouplingScheme()
 
 void ParticipantImpl::closeCommunicationChannels(CloseChannels close)
 {
-  // Apply some final ping-pong to sync solver that run e.g. with a uni-directional coupling only
+  // Optionally apply some final ping-pong to sync solver that run e.g. with a uni-directional coupling
   // afterwards close connections
-  PRECICE_INFO("Synchronize participants and close {}communication channels",
+  PRECICE_INFO("{} {}communication channels",
+               (_waitInFinalize ? "Synchronize participants and close" : "Close"),
                (close == CloseChannels::Distributed ? "distributed " : ""));
   std::string ping = "ping";
   std::string pong = "pong";
   for (auto &iter : _m2ns) {
     auto bm2n = iter.second;
-    if (not utils::IntraComm::isSecondary()) {
+    if (_waitInFinalize && not utils::IntraComm::isSecondary()) {
       PRECICE_DEBUG("Synchronizing primary rank with {}", bm2n.remoteName);
       if (bm2n.isRequesting) {
         bm2n.m2n->getPrimaryRankCommunication()->send(ping, 0);

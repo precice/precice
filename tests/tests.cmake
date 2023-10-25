@@ -107,7 +107,9 @@ target_sources(testprecice
     tests/serial/initialize-data/helpers.hpp
     tests/serial/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/serial/lifecycle/ConstructOnly.cpp
+    tests/serial/lifecycle/ConstructOnlyWait.cpp
     tests/serial/lifecycle/Full.cpp
+    tests/serial/lifecycle/FullWait.cpp
     tests/serial/lifecycle/ImplicitFinalize.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalReadScalar.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalReadVector.cpp
@@ -181,6 +183,7 @@ target_sources(testprecice
     tests/serial/time/explicit/compositional/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
+    tests/serial/time/explicit/serial-coupling/DoNothingWithSmallSteps.cpp
     tests/serial/time/explicit/serial-coupling/DoNothingWithSubcycling.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipant.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipantInitData.cpp

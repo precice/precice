@@ -38,23 +38,11 @@
 
   <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
 
-  <coupling-scheme:parallel-explicit>
+  <coupling-scheme:serial-explicit>
     <participants first="SolverOne" second="SolverTwo" />
-    <max-time-windows value="5" />
-    <time-window-size value="2.0" />
-    <exchange
-      data="DataOne"
-      mesh="MeshOne"
-      from="SolverOne"
-      to="SolverTwo"
-      initialize="on"
-      substeps="true" />
-    <exchange
-      data="DataTwo"
-      mesh="MeshOne"
-      from="SolverTwo"
-      to="SolverOne"
-      initialize="on"
-      substeps="true" />
-  </coupling-scheme:parallel-explicit>
+    <max-time value="1e-3" />
+    <time-window-size value="1e-6" />
+    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
+    <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
+  </coupling-scheme:serial-explicit>
 </precice-configuration>
