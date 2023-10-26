@@ -596,8 +596,7 @@ void CouplingSchemeConfiguration::addTagMinIterations(
 {
   using namespace xml;
   XMLTag tagMinIterations(*this, TAG_MIN_ITERATIONS, XMLTag::OCCUR_NOT_OR_ONCE);
-  tagMinIterations.setDocumentation("Allows to specify a minimum amount of iterations per time window at from which point convergence measures are considered. "
-                                    "Note that not defining convergence measures is interpreted as \"no convergence\".");
+  tagMinIterations.setDocumentation("Allows to specify a minimum amount of iterations that must be performed per time window.");
   XMLAttribute<int> attrValue(ATTR_VALUE);
   attrValue.setDocumentation("The minimum amount of iterations.");
   tagMinIterations.addAttribute(attrValue);
