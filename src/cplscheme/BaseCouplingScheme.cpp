@@ -631,11 +631,9 @@ bool BaseCouplingScheme::measureConvergence()
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(not doesFirstStep());
-  const bool reachedMinIterations = _iterations >= _minIterations;
   if (not utils::IntraComm::isSecondary()) {
     _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
     _convergenceWriter->writeData("Iteration", _iterations);
-    _convergenceWriter->writeData("ReachedMinIter", reachedMinIterations ? 1 : 0);
   }
 
   // If no convergence measures are defined, we never converge
@@ -649,6 +647,7 @@ bool BaseCouplingScheme::measureConvergence()
   bool oneSuffices  = false; // at least one convergence measure suffices and did converge
   bool oneStrict    = false; // at least one convergence measure is strict and did not converge
 
+  const bool reachedMinIterations = _iterations >= _minIterations;
   for (const auto &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
@@ -706,7 +705,6 @@ void BaseCouplingScheme::initializeTXTWriters()
     if (not doesFirstStep()) {
       _convergenceWriter->addData("TimeWindow", io::TXTTableWriter::INT);
       _convergenceWriter->addData("Iteration", io::TXTTableWriter::INT);
-      _convergenceWriter->addData("ReachedMinIter", io::TXTTableWriter::INT);
     }
 
     if (not doesFirstStep()) {
