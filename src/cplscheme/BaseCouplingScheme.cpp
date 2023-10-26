@@ -635,7 +635,7 @@ bool BaseCouplingScheme::measureConvergence()
     _convergenceWriter->writeData("ReachedMinIter", reachedMinIterations ? 1 : 0);
   }
 
-  // If no convergence measures are define, we never converge
+  // If no convergence measures are defined, we never converge
   if (_convergenceMeasures.empty()) {
     PRECICE_INFO("No converge measures defined.");
     return false;
