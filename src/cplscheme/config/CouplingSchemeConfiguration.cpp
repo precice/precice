@@ -13,6 +13,7 @@
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/BiCouplingScheme.hpp"
 #include "cplscheme/CompositionalCouplingScheme.hpp"
+#include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/MultiCouplingScheme.hpp"
 #include "cplscheme/ParallelCouplingScheme.hpp"
 #include "cplscheme/SerialCouplingScheme.hpp"
@@ -325,6 +326,7 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_SERIAL_IMPLICIT) {
+      updateConfigForImplicitCoupling();
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialImplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -335,6 +337,7 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_PARALLEL_IMPLICIT) {
+      updateConfigForImplicitCoupling();
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createParallelImplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -343,6 +346,7 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       addCouplingScheme(scheme, accessor);
       _config = Config();
     } else if (_config.type == VALUE_MULTI) {
+      updateConfigForImplicitCoupling();
       PRECICE_CHECK(_config.setController,
                     "One controller per MultiCoupling needs to be defined. "
                     "Please check the <participant name=... /> tags in the <coupling-scheme:... /> of your precice-config.xml. "
@@ -893,6 +897,13 @@ CouplingSchemeConfiguration::getTimesteppingMethod(
   } else {
     // We should never reach this point.
     PRECICE_UNREACHABLE("Unknown timestepping method '{}'.", method);
+  }
+}
+
+void CouplingSchemeConfiguration::updateConfigForImplicitCoupling()
+{
+  if (_config.maxIterations == CouplingScheme::UNDEFINED_MAX_ITERATIONS) {
+    _config.maxIterations = CouplingScheme::INFINITE_MAX_ITERATIONS;
   }
 }
 

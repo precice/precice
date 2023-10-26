@@ -302,6 +302,9 @@ private:
    */
   void checkSubstepExchangeWaveformDegree(const Config::Exchange &exchange) const;
 
+  /// Helper to update some configs which may have a different meaning in implicit coupling
+  void updateConfigForImplicitCoupling();
+
   /**
    * @brief Helper function to check iteration limits in conjunction with convergence measures
    */

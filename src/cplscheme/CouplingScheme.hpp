@@ -49,11 +49,14 @@ public:
   /// To be used, when the time window size is determined dynamically during the coupling.
   static const double UNDEFINED_TIME_WINDOW_SIZE;
 
-  /// To be used, when the number of max iterations is not defined (for explicit coupling) or infinite (for implicit coupling).
+  /// To be used, when the number of max iterations is not defined (for explicit coupling).
   static const int UNDEFINED_MAX_ITERATIONS;
 
   /// To be used, when the number of min iterations is not defined (for explicit coupling).
   static const int UNDEFINED_MIN_ITERATIONS;
+
+  /// To be used, when the number of max iterations is infinite (for implicit coupling).
+  static const int INFINITE_MAX_ITERATIONS;
 
   /// Actions that are required by CouplingSchemes
   enum struct Action {

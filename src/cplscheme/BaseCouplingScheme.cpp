@@ -70,13 +70,16 @@ BaseCouplingScheme::BaseCouplingScheme(
     PRECICE_ASSERT(maxIterations == UNDEFINED_MAX_ITERATIONS);
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
+    PRECICE_ASSERT(minIterations != UNDEFINED_MIN_ITERATIONS);
+    PRECICE_ASSERT(maxIterations != UNDEFINED_MAX_ITERATIONS);
+
     PRECICE_ASSERT(minIterations > 0,
                    minIterations,
                    "Minimal iteration limit has to be larger than zero.");
-    PRECICE_ASSERT((maxIterations == UNDEFINED_MAX_ITERATIONS) || (maxIterations > 0),
+    PRECICE_ASSERT((maxIterations == INFINITE_MAX_ITERATIONS) || (maxIterations > 0),
                    maxIterations,
                    "Maximal iteration limit has to be larger than zero or -1 (unlimited).");
-    PRECICE_ASSERT((maxIterations == UNDEFINED_MAX_ITERATIONS) || (minIterations <= maxIterations),
+    PRECICE_ASSERT((maxIterations == INFINITE_MAX_ITERATIONS) || (minIterations <= maxIterations),
                    "Minimal iteration limit has to be smaller equal compared to the maximal iteration limit.");
   }
 }
@@ -518,10 +521,10 @@ std::string BaseCouplingScheme::printCouplingState() const
 {
   std::ostringstream os;
   os << "iteration: " << _iterations; //_iterations;
-  if (_maxIterations != -1) {
+  if ((_maxIterations != UNDEFINED_MAX_ITERATIONS) && (_maxIterations != INFINITE_MAX_ITERATIONS)) {
     os << " of " << _maxIterations;
   }
-  if (_minIterations != -1) {
+  if (_minIterations != UNDEFINED_MIN_ITERATIONS) {
     os << " (min " << _minIterations << ")";
   }
   os << ", " << printBasicState(_timeWindows, getTime()) << ", " << printActionsState();
@@ -659,6 +662,7 @@ bool BaseCouplingScheme::measureConvergence()
     if (not convMeasure.measure->isConvergence()) {
       allConverged = false;
       if (convMeasure.strict) {
+        PRECICE_ASSERT(_maxIterations > 0);
         oneStrict = true;
         PRECICE_CHECK(_iterations < _maxIterations,
                       "The strict convergence measure for data \"" + convMeasure.couplingData->getDataName() +
@@ -728,8 +732,8 @@ void BaseCouplingScheme::advanceTXTWriters()
     _iterationsWriter->writeData("TimeWindow", _timeWindows - 1);
     _iterationsWriter->writeData("TotalIterations", _totalIterations);
     _iterationsWriter->writeData("Iterations", _iterations);
-    int converged = (_iterations >= _minIterations && _iterations < _maxIterations) ? 1 : 0;
-    _iterationsWriter->writeData("Convergence", converged);
+    bool converged = _iterations >= _minIterations && (_maxIterations < 0 || (_iterations < _maxIterations));
+    _iterationsWriter->writeData("Convergence", converged ? 1 : 0);
 
     if (not doesFirstStep() && _acceleration) {
       _iterationsWriter->writeData("QNColumns", _acceleration->getLSSystemCols());
