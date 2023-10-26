@@ -124,6 +124,9 @@ private:
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
 
+  static const int DEFAULT_MIN_ITERATIONS;
+  static const int DEFAULT_MAX_ITERATIONS;
+
   struct ConvergenceMeasureDefintion {
     mesh::PtrData               data;
     bool                        suffices;
@@ -155,8 +158,8 @@ private:
     };
     std::vector<Exchange>                    exchanges;
     std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions;
-    int                                      maxIterations = -1; // infinite by default
-    int                                      minIterations = 1;  // one by default
+    int                                      maxIterations = DEFAULT_MAX_ITERATIONS;
+    int                                      minIterations = DEFAULT_MIN_ITERATIONS;
 
     bool hasExchange(const Exchange &totest) const
     {

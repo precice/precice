@@ -37,6 +37,9 @@
 
 namespace precice::cplscheme {
 
+const int CouplingSchemeConfiguration::DEFAULT_MIN_ITERATIONS(1);                                        // min 1 iteration
+const int CouplingSchemeConfiguration::DEFAULT_MAX_ITERATIONS(CouplingScheme::UNDEFINED_MAX_ITERATIONS); // max infinite iterations
+
 CouplingSchemeConfiguration::CouplingSchemeConfiguration(
     xml::XMLTag &                        parent,
     mesh::PtrMeshConfiguration           meshConfig,
