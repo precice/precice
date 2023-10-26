@@ -14,7 +14,6 @@
 #include "cplscheme/ParallelCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
-#include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
@@ -123,14 +122,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, dataRequiresInitialization, true);
   CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
   cplScheme.determineInitialDataExchange();
-
-  // Add convergence measures
-  cplscheme::impl::PtrConvergenceMeasure absoluteConvMeasure0(
-      new cplscheme::impl::AbsoluteConvergenceMeasure(10));
-  cplscheme::impl::PtrConvergenceMeasure absoluteConvMeasure1(
-      new cplscheme::impl::AbsoluteConvergenceMeasure(10));
-  cplScheme.addConvergenceMeasure(dataID0, false, false, absoluteConvMeasure0, true);
-  cplScheme.addConvergenceMeasure(dataID1, false, false, absoluteConvMeasure1, true);
 
   if (context.isNamed(nameParticipant0)) {
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(0.0, 0.0, 0.0)));
