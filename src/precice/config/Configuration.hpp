@@ -56,6 +56,12 @@ public:
     return _experimental;
   }
 
+  /// @brief Returns whether participants wait for each other in finalize
+  bool waitInFinalize() const
+  {
+    return _waitInFinalize;
+  }
+
   const mesh::PtrDataConfiguration getDataConfiguration() const
   {
     return _dataConfiguration;
@@ -107,6 +113,9 @@ private:
 
   /// Allow the use of experimental features
   bool _experimental = false;
+
+  /// Synchronize participants in finalize
+  bool _waitInFinalize;
 
   // @brief Root tag of preCICE configuration.
   xml::XMLTag _tag;

@@ -38,6 +38,10 @@ Configuration::Configuration()
                               .setDocumentation("Enable experimental features.");
   _tag.addAttribute(attrExperimental);
 
+  auto attrWaitInFinalize = xml::makeXMLAttribute("wait-in-finalize", false)
+                                .setDocumentation("Connected participants wait for each other in finalize, which can be helpful in SLURM sessions.");
+  _tag.addAttribute(attrWaitInFinalize);
+
   _dataConfiguration = std::make_shared<mesh::DataConfiguration>(
       _tag);
   _meshConfiguration = std::make_shared<mesh::MeshConfiguration>(
@@ -61,6 +65,7 @@ void Configuration::xmlTagCallback(const xml::ConfigurationContext &context, xml
   if (tag.getName() == "precice-configuration") {
     _experimental = tag.getBooleanAttributeValue("experimental");
     _participantConfiguration->setExperimental(_experimental);
+    _waitInFinalize = tag.getBooleanAttributeValue("wait-in-finalize");
   } else {
     PRECICE_UNREACHABLE("Received callback from unknown tag '{}'.", tag.getName());
   }
