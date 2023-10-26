@@ -49,7 +49,7 @@ public:
   /// To be used, when the time window size is determined dynamically during the coupling.
   static const double UNDEFINED_TIME_WINDOW_SIZE;
 
-  /// To be used, when the number of max iterations is not defined (for explicit coupling).
+  /// To be used, when the number of max iterations is not defined (for explicit coupling) or infinite (for implicit coupling).
   static const int UNDEFINED_MAX_ITERATIONS;
 
   /// To be used, when the number of min iterations is not defined (for explicit coupling).
