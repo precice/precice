@@ -36,6 +36,7 @@ public:
       std::string                   secondParticipant,
       const std::string &           localParticipant,
       m2n::PtrM2N                   m2n,
+      int                           minIterations,
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod);

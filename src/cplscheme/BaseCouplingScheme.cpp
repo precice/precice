@@ -36,6 +36,7 @@ BaseCouplingScheme::BaseCouplingScheme(
     double                        timeWindowSize,
     int                           validDigits,
     std::string                   localParticipant,
+    int                           minIterations,
     int                           maxIterations,
     CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod)
@@ -44,6 +45,7 @@ BaseCouplingScheme::BaseCouplingScheme(
       _maxTimeWindows(maxTimeWindows),
       _timeWindows(1),
       _timeWindowSize(timeWindowSize),
+      _minIterations(minIterations),
       _maxIterations(maxIterations),
       _iterations(1),
       _totalIterations(1),
@@ -63,14 +65,22 @@ BaseCouplingScheme::BaseCouplingScheme(
                    "Time window size has to be given when the fixed time window size method is used.");
   }
 
-  PRECICE_ASSERT((maxIterations > 0) || (maxIterations == UNDEFINED_MAX_ITERATIONS),
-                 "Maximal iteration limit has to be larger than zero.");
-
   if (isExplicitCouplingScheme()) {
+    PRECICE_ASSERT(minIterations == UNDEFINED_MIN_ITERATIONS);
     PRECICE_ASSERT(maxIterations == UNDEFINED_MAX_ITERATIONS);
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
-    PRECICE_ASSERT(maxIterations >= 1);
+    PRECICE_ASSERT(minIterations != UNDEFINED_MIN_ITERATIONS);
+    PRECICE_ASSERT(maxIterations != UNDEFINED_MAX_ITERATIONS);
+
+    PRECICE_ASSERT(minIterations > 0,
+                   minIterations,
+                   "Minimal iteration limit has to be larger than zero.");
+    PRECICE_ASSERT((maxIterations == INFINITE_MAX_ITERATIONS) || (maxIterations > 0),
+                   maxIterations,
+                   "Maximal iteration limit has to be larger than zero or -1 (unlimited).");
+    PRECICE_ASSERT((maxIterations == INFINITE_MAX_ITERATIONS) || (minIterations <= maxIterations),
+                   "Minimal iteration limit has to be smaller equal compared to the maximal iteration limit.");
   }
 }
 
@@ -260,9 +270,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   if (isImplicitCouplingScheme()) {
     storeIteration();
     if (not doesFirstStep()) {
-      PRECICE_CHECK(not _convergenceMeasures.empty(),
-                    "At least one convergence measure has to be defined for "
-                    "an implicit coupling scheme.");
       // reserve memory and initialize data with zero
       if (_acceleration) {
         _acceleration->initialize(getAccelerationData());
@@ -514,8 +521,11 @@ std::string BaseCouplingScheme::printCouplingState() const
 {
   std::ostringstream os;
   os << "iteration: " << _iterations; //_iterations;
-  if (_maxIterations != -1) {
+  if ((_maxIterations != UNDEFINED_MAX_ITERATIONS) && (_maxIterations != INFINITE_MAX_ITERATIONS)) {
     os << " of " << _maxIterations;
+  }
+  if (_minIterations != UNDEFINED_MIN_ITERATIONS) {
+    os << " (min " << _minIterations << ")";
   }
   os << ", " << printBasicState(_timeWindows, getTime()) << ", " << printActionsState();
   return os.str();
@@ -621,14 +631,23 @@ bool BaseCouplingScheme::measureConvergence()
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(not doesFirstStep());
-  bool allConverged = true;
-  bool oneSuffices  = false; // at least one convergence measure suffices and did converge
-  bool oneStrict    = false; // at least one convergence measure is strict and did not converge
-  PRECICE_ASSERT(_convergenceMeasures.size() > 0);
   if (not utils::IntraComm::isSecondary()) {
     _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
     _convergenceWriter->writeData("Iteration", _iterations);
   }
+
+  // If no convergence measures are defined, we never converge
+  if (_convergenceMeasures.empty()) {
+    PRECICE_INFO("No converge measures defined.");
+    return false;
+  }
+
+  // There are convergence measures defined, so we need to check them
+  bool allConverged = true;
+  bool oneSuffices  = false; // at least one convergence measure suffices and did converge
+  bool oneStrict    = false; // at least one convergence measure is strict and did not converge
+
+  const bool reachedMinIterations = _iterations >= _minIterations;
   for (const auto &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
@@ -642,6 +661,7 @@ bool BaseCouplingScheme::measureConvergence()
     if (not convMeasure.measure->isConvergence()) {
       allConverged = false;
       if (convMeasure.strict) {
+        PRECICE_ASSERT(_maxIterations > 0);
         oneStrict = true;
         PRECICE_CHECK(_iterations < _maxIterations,
                       "The strict convergence measure for data \"" + convMeasure.couplingData->getDataName() +
@@ -655,13 +675,17 @@ bool BaseCouplingScheme::measureConvergence()
     PRECICE_INFO(convMeasure.measure->printState(convMeasure.couplingData->getDataName()));
   }
 
+  std::string messageSuffix;
+  if (not reachedMinIterations) {
+    messageSuffix = " but hasn't yet reached minimal amount of iterations";
+  }
   if (allConverged) {
-    PRECICE_INFO("All converged");
+    PRECICE_INFO("All converged{}", messageSuffix);
   } else if (oneSuffices && not oneStrict) { // strict overrules suffices
-    PRECICE_INFO("Sufficient measures converged");
+    PRECICE_INFO("Sufficient measures converged{}", messageSuffix);
   }
 
-  return allConverged || (oneSuffices && not oneStrict);
+  return reachedMinIterations && (allConverged || (oneSuffices && not oneStrict));
 }
 
 void BaseCouplingScheme::initializeTXTWriters()
@@ -706,8 +730,8 @@ void BaseCouplingScheme::advanceTXTWriters()
     _iterationsWriter->writeData("TimeWindow", _timeWindows - 1);
     _iterationsWriter->writeData("TotalIterations", _totalIterations);
     _iterationsWriter->writeData("Iterations", _iterations);
-    int converged = _iterations < _maxIterations ? 1 : 0;
-    _iterationsWriter->writeData("Convergence", converged);
+    bool converged = _iterations >= _minIterations && (_maxIterations < 0 || (_iterations < _maxIterations));
+    _iterationsWriter->writeData("Convergence", converged ? 1 : 0);
 
     if (not doesFirstStep() && _acceleration) {
       _iterationsWriter->writeData("QNColumns", _acceleration->getLSSystemCols());
