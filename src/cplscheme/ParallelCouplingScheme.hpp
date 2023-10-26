@@ -52,7 +52,20 @@ public:
       m2n::PtrM2N                   m2n,
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode,
-      int                           maxIterations = UNDEFINED_MAX_ITERATIONS);
+      int                           minIterations,
+      int                           maxIterations);
+
+  ParallelCouplingScheme(
+      double                        maxTime,
+      int                           maxTimeWindows,
+      double                        timeWindowSize,
+      double                        minTimeStepSize,
+      const std::string &           firstParticipant,
+      const std::string &           secondParticipant,
+      const std::string &           localParticipant,
+      m2n::PtrM2N                   m2n,
+      constants::TimesteppingMethod dtMethod,
+      CouplingMode                  cplMode);
 
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};

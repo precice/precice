@@ -69,6 +69,7 @@ public:
       double                        timeWindowSize,
       double                        minTimeStepSize,
       std::string                   localParticipant,
+      int                           minIterations,
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod);
@@ -403,6 +404,9 @@ private:
 
   /// Part of the window that is already computed; _computedTimeWindowPart <= _timeWindowSize
   double _computedTimeWindowPart = 0;
+
+  /// Lower limit of iterations during one time window. Prevents convergence if _iterations < _minIterations.
+  int _minIterations = -1;
 
   /// Limit of iterations during one time window. Continue to next time window, if _iterations == _maxIterations.
   int _maxIterations = -1;
