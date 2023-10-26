@@ -897,7 +897,7 @@ void CouplingSchemeConfiguration::checkIterationLimits() const
 {
   if (_config.convergenceMeasureDefinitions.empty()) {
     PRECICE_CHECK(_config.maxIterations != -1,
-                  "No convergence measures without a maximum iteration limit leads to endless iterations. "
+                  "Not defining convergence measures without providing a maximum iteration limit is forbidden."
                   "Please define a convergence measure or set a maximum iteration limit using <max-iterations value=\"...\" />.");
 
     PRECICE_INFO("No convergence measures were defined for an implicit coupling scheme. "
