@@ -11,7 +11,7 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
-    int                           validDigits,
+    double                        minTimeStepSize,
     const std::string &           firstParticipant,
     const std::string &           secondParticipant,
     const std::string &           localParticipant,
@@ -20,21 +20,21 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     CouplingMode                  cplMode,
     int                           minIterations,
     int                           maxIterations)
-    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
+    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, minTimeStepSize, firstParticipant,
                        secondParticipant, localParticipant, std::move(m2n), minIterations, maxIterations, cplMode, dtMethod) {}
 
 ParallelCouplingScheme::ParallelCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
-    int                           validDigits,
+    double                        minTimeStepSize,
     const std::string &           firstParticipant,
     const std::string &           secondParticipant,
     const std::string &           localParticipant,
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode)
-    : ParallelCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant, secondParticipant, localParticipant, m2n, dtMethod, cplMode, UNDEFINED_MAX_ITERATIONS, UNDEFINED_MAX_ITERATIONS){};
+    : ParallelCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, minTimeStepSize, firstParticipant, secondParticipant, localParticipant, m2n, dtMethod, cplMode, UNDEFINED_MAX_ITERATIONS, UNDEFINED_MAX_ITERATIONS){};
 
 void ParallelCouplingScheme::exchangeInitialData()
 {

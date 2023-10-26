@@ -7,6 +7,7 @@
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "math/differences.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
@@ -38,10 +39,15 @@ Configuration::Configuration()
                               .setDocumentation("Enable experimental features.");
   _tag.addAttribute(attrExperimental);
 
+  auto attrMinTimeStepSize = xml::makeXMLAttribute("min-time-step-size", math::NUMERICAL_ZERO_DIFFERENCE)
+                                 .setDocumentation("The smallest maximal time step that preCICE will return."
+                                                   "This means that preCICE will round up the end of the time window by min-time-step-size, which will  "
+                                                   " introduce an extra coupling error. For more details see https://github.com/precice/precice/issues/1832.");
+  _tag.addAttribute(attrMinTimeStepSize);
+
   auto attrWaitInFinalize = xml::makeXMLAttribute("wait-in-finalize", false)
                                 .setDocumentation("Connected participants wait for each other in finalize, which can be helpful in SLURM sessions.");
   _tag.addAttribute(attrWaitInFinalize);
-
   _dataConfiguration = std::make_shared<mesh::DataConfiguration>(
       _tag);
   _meshConfiguration = std::make_shared<mesh::MeshConfiguration>(
@@ -65,6 +71,9 @@ void Configuration::xmlTagCallback(const xml::ConfigurationContext &context, xml
   if (tag.getName() == "precice-configuration") {
     _experimental = tag.getBooleanAttributeValue("experimental");
     _participantConfiguration->setExperimental(_experimental);
+    _minTimeStepSize = tag.getDoubleAttributeValue("min-time-step-size");
+    PRECICE_CHECK(_minTimeStepSize >= math::NUMERICAL_ZERO_DIFFERENCE, "The minimal time step has to be larger or equal to {}. Please adjust the tag min-time-step-size in the config file.", math::NUMERICAL_ZERO_DIFFERENCE);
+    _couplingSchemeConfiguration->setMinTimeStepSize(_minTimeStepSize);
     _waitInFinalize = tag.getBooleanAttributeValue("wait-in-finalize");
   } else {
     PRECICE_UNREACHABLE("Received callback from unknown tag '{}'.", tag.getName());

@@ -67,7 +67,6 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       ATTR_FIRST("first"),
       ATTR_SECOND("second"),
       ATTR_VALUE("value"),
-      ATTR_VALID_DIGITS("valid-digits"),
       ATTR_METHOD("method"),
       ATTR_LIMIT("limit"),
       ATTR_NAME("name"),
@@ -199,29 +198,24 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                   _config.maxTimeWindows);
   } else if (tag.getName() == TAG_TIME_WINDOW_SIZE) {
     _config.timeWindowSize = tag.getDoubleAttributeValue(ATTR_VALUE);
-    _config.validDigits    = tag.getIntAttributeValue(ATTR_VALID_DIGITS);
-    PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17), "Valid digits of time window size has to be between 1 and 16.");
     // Attribute does not exist for parallel coupling schemes as it is always fixed.
     _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD, VALUE_FIXED));
     if (_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE) {
-      PRECICE_CHECK(_config.timeWindowSize > 0,
-                    "Time window size has to be larger than zero. "
-                    "Please check the <time-window-size value=\"{}\" valid-digits=\"{}\" method=\"{}\" /> tag "
-                    "in the <coupling-scheme:...> of your precice-config.xml",
-                    _config.timeWindowSize, _config.validDigits, tag.getStringAttributeValue(ATTR_METHOD));
+
+      PRECICE_ASSERT(_minTimeStepSize > 0);
+      PRECICE_CHECK(_config.timeWindowSize >= _minTimeStepSize,
+                    "Time window size has to be larger or equal to the minimal time step used by preCICE. "
+                    "Please check the <time-window-size value=\"{}\" method=\"{}\" /> tag "
+                    "in the <coupling-scheme:...> or the min-time-step-size=\"{}\" tag in the <precice-config ...> of your precice-config.xml",
+                    _config.timeWindowSize, tag.getStringAttributeValue(ATTR_METHOD), _minTimeStepSize);
     } else {
       PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE);
       PRECICE_CHECK(_config.timeWindowSize == -1,
                     "Time window size value has to be equal to -1 (default), if method=\"first-participant\" is used. "
-                    "Please check the <time-window-size value=\"{}\" valid-digits=\"{}\" method=\"{}\" /> "
+                    "Please check the <time-window-size value=\"{}\" method=\"{}\" /> "
                     "tag in the <coupling-scheme:...> of your precice-config.xml",
-                    _config.timeWindowSize, _config.validDigits, tag.getStringAttributeValue(ATTR_METHOD));
+                    _config.timeWindowSize, tag.getStringAttributeValue(ATTR_METHOD));
     }
-    PRECICE_CHECK((_config.validDigits >= 1) && (_config.validDigits < 17),
-                  "Valid digits of time window size has to be between 1 and 16. "
-                  "Please check the <time-window-size value=\"{}\" valid-digits=\"{}\" method=\"{}\" /> tag "
-                  "in the <coupling-scheme:...> of your precice-config.xml",
-                  _config.timeWindowSize, _config.validDigits, tag.getStringAttributeValue(ATTR_METHOD));
   } else if (tag.getName() == TAG_ABS_CONV_MEASURE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
     const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
@@ -443,6 +437,11 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
   }
 }
 
+void CouplingSchemeConfiguration::setMinTimeStepSize(double minTimeStepSize)
+{
+  _minTimeStepSize = minTimeStepSize;
+}
+
 void CouplingSchemeConfiguration::addTransientLimitTags(
     const std::string &type,
     xml::XMLTag &      tag)
@@ -468,9 +467,6 @@ void CouplingSchemeConfiguration::addTransientLimitTags(
   auto attrValueTimeWindowSize = makeXMLAttribute(ATTR_VALUE, CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE)
                                      .setDocumentation("The maximum time window size.");
   tagTimeWindowSize.addAttribute(attrValueTimeWindowSize);
-  XMLAttribute<int> attrValidDigits(ATTR_VALID_DIGITS, 10);
-  attrValidDigits.setDocumentation(R"(Precision to use when checking for end of time windows used this many digits. \\(\phi = 10^{-validDigits}\\))");
-  tagTimeWindowSize.addAttribute(attrValidDigits);
   if (type == VALUE_SERIAL_EXPLICIT || type == VALUE_SERIAL_IMPLICIT) {
     // method="first-participant" is only allowed for serial coupling schemes
     auto attrMethod = makeXMLAttribute(ATTR_METHOD, VALUE_FIXED)
@@ -746,7 +742,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
       _config.participants[0], _config.participants[1]);
   SerialCouplingScheme *scheme = new SerialCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _config.validDigits, _config.participants[0], _config.participants[1],
+      _minTimeStepSize, _config.participants[0], _config.participants[1],
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
   addDataToBeExchanged(*scheme, accessor);
@@ -762,7 +758,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
       _config.participants[0], _config.participants[1]);
   ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _config.validDigits, _config.participants[0], _config.participants[1],
+      _minTimeStepSize, _config.participants[0], _config.participants[1],
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
   addDataToBeExchanged(*scheme, accessor);
@@ -782,7 +778,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
       first, second);
   SerialCouplingScheme *scheme = new SerialCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _config.validDigits, first, second,
+      _minTimeStepSize, first, second,
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.minIterations, _config.maxIterations);
 
   addDataToBeExchanged(*scheme, accessor);
@@ -817,7 +813,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
       _config.participants[0], _config.participants[1]);
   ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _config.validDigits, _config.participants[0], _config.participants[1],
+      _minTimeStepSize, _config.participants[0], _config.participants[1],
       accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.minIterations, _config.maxIterations);
 
   addDataToBeExchanged(*scheme, accessor);
@@ -853,7 +849,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
 
   scheme = new MultiCouplingScheme(
       _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _config.validDigits, accessor, m2ns, _config.dtMethod,
+      _minTimeStepSize, accessor, m2ns, _config.dtMethod,
       _config.controller, _config.minIterations, _config.maxIterations);
 
   MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);

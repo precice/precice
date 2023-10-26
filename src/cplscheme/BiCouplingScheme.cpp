@@ -22,7 +22,7 @@ BiCouplingScheme::BiCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
-    int                           validDigits,
+    double                        minTimeStepSize,
     std::string                   firstParticipant,
     std::string                   secondParticipant,
     const std::string &           localParticipant,
@@ -31,7 +31,7 @@ BiCouplingScheme::BiCouplingScheme(
     int                           maxIterations,
     CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, minIterations, maxIterations, cplMode, dtMethod),
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, minTimeStepSize, localParticipant, minIterations, maxIterations, cplMode, dtMethod),
       _m2n(std::move(m2n)),
       _firstParticipant(std::move(firstParticipant)),
       _secondParticipant(std::move(secondParticipant))

@@ -24,6 +24,7 @@
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -513,7 +514,7 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   const int                       minIterations = 1;
   const int                       maxIterations = 100;
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 16, nameParticipant0,
+      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, minIterations, maxIterations);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
@@ -613,7 +614,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   const int                       minIterations = 1;
   const int                       maxIterations = 3;
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, minIterations, maxIterations);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
@@ -670,7 +671,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   const int                       minIterations = 1;
   const int                       maxIterations = 3;
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, minIterations, maxIterations);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
@@ -728,7 +729,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   const int                       minIterations = 1;
   const int                       maxIterations = 3;
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Implicit, minIterations, maxIterations);
   using Fixture = testing::SerialCouplingSchemeFixture;

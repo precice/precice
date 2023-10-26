@@ -60,6 +60,8 @@ public:
 
   void setExperimental(bool experimental);
 
+  void setMinTimeStepSize(double minTimeStepSize);
+
   /// Destructor, empty.
   virtual ~CouplingSchemeConfiguration() {}
 
@@ -106,7 +108,6 @@ private:
   const std::string ATTR_FIRST;
   const std::string ATTR_SECOND;
   const std::string ATTR_VALUE;
-  const std::string ATTR_VALID_DIGITS;
   const std::string ATTR_METHOD;
   const std::string ATTR_LIMIT;
   const std::string ATTR_NAME;
@@ -124,6 +125,7 @@ private:
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
 
+  double           _minTimeStepSize = math::NUMERICAL_ZERO_DIFFERENCE;
   static const int DEFAULT_MIN_ITERATIONS;
   static const int DEFAULT_MAX_ITERATIONS;
 
@@ -145,7 +147,6 @@ private:
     double                        maxTime        = CouplingScheme::UNDEFINED_MAX_TIME;
     int                           maxTimeWindows = CouplingScheme::UNDEFINED_TIME_WINDOWS;
     double                        timeWindowSize = CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE;
-    int                           validDigits    = 16;
     constants::TimesteppingMethod dtMethod       = constants::FIXED_TIME_WINDOW_SIZE;
 
     struct Exchange {

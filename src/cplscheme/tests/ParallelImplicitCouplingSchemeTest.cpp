@@ -17,6 +17,7 @@
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -115,7 +116,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   const int              minIterations = 1;
   const int              maxIterations = 3;
   ParallelCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, minIterations, maxIterations);
 
   using Fixture = testing::ParallelCouplingSchemeFixture;

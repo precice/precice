@@ -14,6 +14,7 @@
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -335,7 +336,7 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
     receiveDataIndex = 0;
   }
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 12, nameParticipant0,
+      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
@@ -709,7 +710,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
     receiveDataIndex = 0;
   }
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 12, nameParticipant0,
+      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
       BaseCouplingScheme::Explicit);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
