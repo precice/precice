@@ -273,7 +273,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     _config.minIterations = tag.getIntAttributeValue(ATTR_VALUE);
     PRECICE_CHECK(_config.minIterations > 0,
-                  "Maximum iteration limit has to be larger than zero. Please check the <min-iterations value = \"{}\" /> subtag in the <coupling-scheme:... /> of your precice-config.xml.",
+                  "Minimum iteration limit has to be larger than zero. Please check the <min-iterations value = \"{}\" /> subtag in the <coupling-scheme:... /> of your precice-config.xml.",
                   _config.minIterations);
   } else if (tag.getName() == TAG_MAX_ITERATIONS) {
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
