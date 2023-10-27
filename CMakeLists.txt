@@ -212,7 +212,6 @@ precice_validate_libxml2()
 
 # libfmt
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt)
-precice_validate_fmtlib()
 
 #
 # Find Configurable Dependencies
@@ -414,7 +413,7 @@ target_compile_definitions(preciceCore PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZ
 target_link_libraries(preciceCore PUBLIC LibXml2::LibXml2)
 
 # Setup FMT
-target_link_libraries(preciceCore PUBLIC fmt-header-only)
+target_link_libraries(preciceCore PUBLIC fmtlib-static)
 
 # Setup MPI
 if (PRECICE_FEATURE_MPI_COMMUNICATION)

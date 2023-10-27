@@ -94,12 +94,3 @@ macro(precice_validate_eigen)
     NAME Eigen
     LINK_LIBRARIES Eigen3::Eigen)
 endmacro()
-
-
-# Validation for fmtlib
-macro(precice_validate_fmtlib)
-  precice_validate_lib(
-    "#include <fmt/format.h>\nint main() { return 0; } "
-    NAME fmtlib
-    LINK_LIBRARIES fmt-header-only)
-endmacro()
