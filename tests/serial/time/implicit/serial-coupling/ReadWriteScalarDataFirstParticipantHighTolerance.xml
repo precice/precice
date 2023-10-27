@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <data:scalar name="DataOne" waveform-degree="1" />
-  <data:scalar name="DataTwo" waveform-degree="1" />
+<precice-configuration min-time-step-size="1e-1">
+  <data:scalar name="DataOne" waveform-degree="2" />
+  <data:scalar name="DataTwo" waveform-degree="2" />
 
   <mesh name="MeshOne" dimensions="3">
     <use-data name="DataOne" />
@@ -40,23 +40,22 @@
 
   <coupling-scheme:serial-implicit>
     <participants first="SolverOne" second="SolverTwo" />
-    <max-time-windows value="5" />
-    <time-window-size value="2" />
-    <max-iterations value="3" />
-    <min-iterations value="3" />
+    <max-time-windows value="2" />
+    <time-window-size value="1" />
+    <max-iterations value="2" />
     <exchange
       data="DataOne"
       mesh="MeshOne"
       from="SolverOne"
       to="SolverTwo"
       initialize="on"
-      substeps="false" />
+      substeps="true" />
     <exchange
       data="DataTwo"
       mesh="MeshOne"
       from="SolverTwo"
       to="SolverOne"
       initialize="on"
-      substeps="false" />
+      substeps="true" />
   </coupling-scheme:serial-implicit>
 </precice-configuration>

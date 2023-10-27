@@ -113,8 +113,6 @@ target_sources(preciceCore
     src/cplscheme/impl/AbsoluteConvergenceMeasure.cpp
     src/cplscheme/impl/AbsoluteConvergenceMeasure.hpp
     src/cplscheme/impl/ConvergenceMeasure.hpp
-    src/cplscheme/impl/MinIterationConvergenceMeasure.cpp
-    src/cplscheme/impl/MinIterationConvergenceMeasure.hpp
     src/cplscheme/impl/RelativeConvergenceMeasure.cpp
     src/cplscheme/impl/RelativeConvergenceMeasure.hpp
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.cpp
