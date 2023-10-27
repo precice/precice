@@ -33,20 +33,6 @@ using precice::testing::operator""_dataID;
   BOOST_TEST_MESSAGE(context.describe());             \
   boost::unit_test::framework::add_context(BOOST_TEST_LAZY_MSG(context.describe()), true);
 
-/// Boost.Test decorator that unconditionally deletes the test.
-class Deleted : public bt::decorator::base {
-private:
-  virtual void apply(bt::test_unit &tu)
-  {
-    bt::framework::get<bt::test_suite>(tu.p_parent_id).remove(tu.p_id);
-  }
-
-  virtual bt::decorator::base_ptr clone() const
-  {
-    return bt::decorator::base_ptr(new Deleted());
-  }
-};
-
 /// struct giving access to the impl of a befriended class or struct
 struct WhiteboxAccessor {
   /** Returns the impl of the obj by reference.
