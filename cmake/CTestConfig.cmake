@@ -190,8 +190,7 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
     PROPERTIES
     RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_RUN_DIR}"
-    FIXTURES_REQUIRED "${PAT_LANG_A}-solverdummy"
-    FIXTURES_REQUIRED "${PAT_LANG_B}-solverdummy"
+    FIXTURES_REQUIRED "${PAT_LANG_A}-solverdummy;${PAT_LANG_B}-solverdummy"
     LABELS "Solverdummy"
     TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
     )
