@@ -2,26 +2,19 @@
 
 #include <Eigen/Core>
 #include <boost/test/unit_test.hpp>
-#include <limits>
 #include <string>
 #include <type_traits>
+
 #include "math/differences.hpp"
 #include "math/math.hpp"
 #include "testing/TestContext.hpp"
 #include "utils/IntraComm.hpp"
-#include "utils/ManageUniqueIDs.hpp"
-#include "utils/assertion.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 namespace bt = boost::unit_test;
 
-constexpr DataID operator"" _dataID(unsigned long long n)
-{
-  PRECICE_ASSERT(n < std::numeric_limits<DataID>::max(), "DataID is too big");
-  return static_cast<DataID>(n);
-}
+DataID operator"" _dataID(unsigned long long n);
 
 namespace inject {
 using precice::testing::Require;
@@ -104,30 +97,18 @@ boost::test_tools::predicate_result equals(const Eigen::MatrixBase<DerivedA> &A,
 }
 
 /// equals to be used in tests. Compares two std::vectors using a given tolerance. Prints both operands on failure
-template <typename NumberType>
-boost::test_tools::predicate_result equals(const std::vector<NumberType> &VectorA,
-                                           const std::vector<NumberType> &VectorB,
-                                           double                         tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
-{
-  PRECICE_ASSERT(VectorA.size() == VectorB.size());
-  Eigen::MatrixXd MatrixA(VectorA.size(), 1);
-  std::copy(VectorA.begin(), VectorA.end(), MatrixA.data());
-  Eigen::MatrixXd MatrixB(VectorB.size(), 1);
-  std::copy(VectorB.begin(), VectorB.end(), MatrixB.data());
-  return equals(MatrixA, MatrixB, tolerance);
-}
+boost::test_tools::predicate_result equals(const std::vector<float> &VectorA,
+                                           const std::vector<float> &VectorB,
+                                           float                     tolerance = math::NUMERICAL_ZERO_DIFFERENCE);
+
+boost::test_tools::predicate_result equals(const std::vector<double> &VectorA,
+                                           const std::vector<double> &VectorB,
+                                           double                     tolerance = math::NUMERICAL_ZERO_DIFFERENCE);
 
 /// equals to be used in tests. Compares two scalar numbers using a given tolerance. Prints both operands on failure
-template <class Scalar>
-typename std::enable_if<std::is_arithmetic<Scalar>::value, boost::test_tools::predicate_result>::type equals(const Scalar a, const Scalar b, const Scalar tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
-{
-  if (not math::equals(a, b, tolerance)) {
-    boost::test_tools::predicate_result res(false);
-    res.message() << "Not equal: " << a << "!=" << b;
-    return res;
-  }
-  return true;
-}
+boost::test_tools::predicate_result equals(float a, float b, float tolerance = math::NUMERICAL_ZERO_DIFFERENCE);
+
+boost::test_tools::predicate_result equals(double a, double b, double tolerance = math::NUMERICAL_ZERO_DIFFERENCE);
 
 /// Returns the base path of the repo.
 std::string getPathToRepository();
@@ -148,11 +129,6 @@ std::string getTestPath();
  *
  * @returns a new unique mesh ID
  */
-inline int nextMeshID()
-{
-  static utils::ManageUniqueIDs manager;
-  return manager.getFreeID();
-}
+int nextMeshID();
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing
