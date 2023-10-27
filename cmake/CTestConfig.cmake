@@ -62,7 +62,6 @@ function(add_precice_test)
   # Setting properties
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
-    RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_WDIR}"
     ENVIRONMENT "OMPI_MCA_rmaps_base_oversubscribe=1;OMP_NUM_THREADS=2"
     )
@@ -115,7 +114,6 @@ function(add_precice_test_build_solverdummy PAT_LANG)
   # Setting properties
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
-    RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_BIN_DIR}"
     FIXTURES_SETUP "${PAT_LANG}-solverdummy"
     LABELS "Solverdummy"
@@ -189,7 +187,6 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
   # Setting properties
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
-    RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_RUN_DIR}"
     FIXTURES_REQUIRED "${PAT_LANG_A}-solverdummy;${PAT_LANG_B}-solverdummy"
     LABELS "Solverdummy"
