@@ -42,7 +42,7 @@
   <coupling-scheme:parallel-explicit>
     <participants first="ParallelSolver" second="SerialSolver" />
     <max-time value="1.0" />
-    <time-window-size value="1.0" valid-digits="8" />
+    <time-window-size value="1.0" />
     <exchange data="MyData1" mesh="SerialMesh" from="ParallelSolver" to="SerialSolver" />
     <exchange data="MyData2" mesh="SerialMesh" from="SerialSolver" to="ParallelSolver" />
   </coupling-scheme:parallel-explicit>

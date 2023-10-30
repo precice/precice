@@ -67,8 +67,9 @@ public:
       double                        maxTime,
       int                           maxTimeWindows,
       double                        timeWindowSize,
-      int                           validDigits,
+      double                        minTimeStepSize,
       std::string                   localParticipant,
+      int                           minIterations,
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod);
@@ -404,6 +405,9 @@ private:
   /// Part of the window that is already computed; _computedTimeWindowPart <= _timeWindowSize
   double _computedTimeWindowPart = 0;
 
+  /// Lower limit of iterations during one time window. Prevents convergence if _iterations < _minIterations.
+  int _minIterations = -1;
+
   /// Limit of iterations during one time window. Continue to next time window, if _iterations == _maxIterations.
   int _maxIterations = -1;
 
@@ -447,8 +451,8 @@ private:
   /// Local participant name.
   std::string _localParticipant = "unknown";
 
-  /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
-  const double _eps;
+  /// Minimal time step allowed by preCICE.
+  const double _minTimeStepSize;
 
   /**
    * @brief Holds meta information to perform a convergence measurement.
@@ -560,6 +564,16 @@ private:
    * @return true, if any CouplingData in dataMap requires initialization
    */
   bool anyDataRequiresInitialization(DataMap &dataMap) const;
+
+  /**
+   * @brief Goes through _allData and duplicate the last available sample and puts it at the end of the time window if there does not exist a sample at the window end.
+   */
+  void addTimeStepAtWindowEnd();
+
+  /**
+   * @return the end of the time window, defined as timeWindowStart + timeWindowSize
+   */
+  double getWindowEndTime() const;
 };
 } // namespace cplscheme
 } // namespace precice

@@ -51,14 +51,6 @@ BOOST_AUTO_TEST_CASE(NumericalTolerance,
   BOOST_TEST(1.0 == 1.01, boost::test_tools::tolerance(0.1));
 }
 
-/// Use testing::Deleted to unconditionally delete the test
-BOOST_AUTO_TEST_CASE(Deleted,
-                     *testing::Deleted())
-{
-  PRECICE_TEST(1_rank);
-  BOOST_TEST(false);
-}
-
 /// Test that requires 4 processors.
 /*
  * If less than 4 procs are available the test will fail.
