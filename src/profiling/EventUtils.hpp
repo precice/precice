@@ -6,6 +6,7 @@
 #include <iosfwd>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -95,13 +96,13 @@ public:
    * @param[in] rank the current number of the parallel instance
    * @param[in] size the total number of a parallel instances
    */
-  void initialize(std::string applicationName, int rank = 0, int size = 1);
+  void initialize(std::string_view applicationName, int rank = 0, int size = 1);
 
   /// Sets the maximum size of the writequeue before calling flush(). Use 0 to flush on destruction.
   void setWriteQueueMax(std::size_t size);
 
   /// Sets the directory where to write the event files to
-  void setDirectory(std::string directory);
+  void setDirectory(std::string_view directory);
 
   /// Sets the operational mode of the registry.
   void setMode(Mode mode);
@@ -127,7 +128,7 @@ public:
     return _mode == Mode::All || (ec == EventClass::Fundamental && _mode == Mode::Fundamental);
   }
 
-  int nameToID(const std::string &name);
+  int nameToID(std::string_view name);
 
   /// Currently active prefix. Changing that applies only to newly created events.
   std::string prefix;
@@ -156,7 +157,7 @@ private:
   /// Private, empty constructor for singleton pattern
   EventRegistry() = default;
 
-  std::map<std::string, int> _nameDict;
+  std::map<std::string, int, std::less<>> _nameDict;
 
   std::vector<PendingEntry> _writeQueue;
   std::size_t               _writeQueueMax = 0;
