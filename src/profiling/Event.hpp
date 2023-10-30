@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <string>
+#include <string_view>
 #include <type_traits>
 
 namespace precice::profiling {
@@ -66,12 +67,12 @@ public:
   }
 
   template <typename... Args>
-  Event(std::string eventName, Args... args)
-      : Event(std::move(eventName), optionsFromTags(args...))
+  Event(std::string_view eventName, Args... args)
+      : Event(eventName, optionsFromTags(args...))
   {
   }
 
-  Event(std::string eventName, Options options);
+  Event(std::string_view eventName, Options options);
 
   Event(Event &&) = default;
   Event &operator=(Event &&) = default;
@@ -90,7 +91,7 @@ public:
   void stop();
 
   /// Adds named integer data, associated to an event.
-  void addData(const std::string &key, int value);
+  void addData(std::string_view key, int value);
 
 private:
   int   _eid;
@@ -102,7 +103,7 @@ private:
 /// Class that changes the prefix in its scope
 class ScopedEventPrefix {
 public:
-  ScopedEventPrefix(const std::string &name);
+  ScopedEventPrefix(std::string_view name);
 
   ~ScopedEventPrefix();
 
