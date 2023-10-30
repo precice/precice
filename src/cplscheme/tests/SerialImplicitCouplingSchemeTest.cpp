@@ -104,10 +104,10 @@ void runCoupling(
         computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
+        BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
-        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
+        BOOST_TEST(iterationCount == *iterValidIterations);
         if (cplScheme.isCouplingOngoing()) {
           BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
           cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
@@ -140,7 +140,7 @@ void runCoupling(
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
-    BOOST_TEST(testing::equals(computedTimesteps, 3));
+    BOOST_TEST(computedTimesteps == 3);
   } else if (nameParticipant == nameParticipant1) {
     mesh->data(1)->setSampleAtTime(0, time::Sample{1, mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
@@ -176,10 +176,10 @@ void runCoupling(
         computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
+        BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
         // The iterations are enforced by the controlled decrease of the
         // change of data written
-        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
+        BOOST_TEST(iterationCount == *iterValidIterations);
         if (cplScheme.isCouplingOngoing()) {
           BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
           cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
@@ -215,7 +215,7 @@ void runCoupling(
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
-    BOOST_TEST(testing::equals(computedTimesteps, 3));
+    BOOST_TEST(computedTimesteps == 3);
   }
 }
 
@@ -282,10 +282,10 @@ void runCouplingWithSubcycling(
         computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
+        BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
-        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
+        BOOST_TEST(iterationCount == *iterValidIterations);
         if (cplScheme.isCouplingOngoing()) {
           BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
           cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
@@ -302,7 +302,7 @@ void runCouplingWithSubcycling(
         // Reset data values, to simulate same convergence behavior of
         // interface values in next time step.
         stepsizeData0 = initialStepsizeData0;
-        BOOST_TEST(testing::equals(subcyclingStep, 1));
+        BOOST_TEST(subcyclingStep == 1);
         subcyclingStep = 0;
       } else { // coupling timestep is not yet complete
         BOOST_TEST(cplScheme.isCouplingOngoing());
@@ -329,7 +329,7 @@ void runCouplingWithSubcycling(
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
-    BOOST_TEST(testing::equals(computedTimesteps, 3));
+    BOOST_TEST(computedTimesteps == 3);
     BOOST_TEST(stepsizeData0 == 5.0);
   }
 
@@ -376,10 +376,10 @@ void runCouplingWithSubcycling(
         computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
+        BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
-        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
+        BOOST_TEST(iterationCount == *iterValidIterations);
         if (cplScheme.isCouplingOngoing()) {
           BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
           cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
@@ -396,7 +396,7 @@ void runCouplingWithSubcycling(
         // Reset data values, to simulate same convergence behavior of
         // interface values in next time step.
         stepsizeData1 = initialStepsizeData1;
-        BOOST_TEST(testing::equals(subcyclingStep, 2));
+        BOOST_TEST(subcyclingStep == 2);
         subcyclingStep = 0;
       } else { // coupling timestep is not yet complete
         BOOST_TEST(cplScheme.isCouplingOngoing());
@@ -423,7 +423,7 @@ void runCouplingWithSubcycling(
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
-    BOOST_TEST(testing::equals(computedTimesteps, 3));
+    BOOST_TEST(computedTimesteps == 3);
   }
 }
 
