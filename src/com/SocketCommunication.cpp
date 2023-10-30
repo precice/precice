@@ -287,7 +287,7 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
         tcp::resolver             resolver(*_ioService);
         tcp::resolver::iterator   endpoint_iterator = resolver.resolve(query);
         boost::system::error_code error             = asio::error::host_not_found;
-        boost::asio::connect(*socket, endpoint_iterator, error);
+        boost::asio::connect(*socket, std::move(endpoint_iterator), error);
 
         _isConnected = not error;
 
