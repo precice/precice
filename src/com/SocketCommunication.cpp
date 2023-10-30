@@ -330,10 +330,10 @@ void SocketCommunication::closeConnection()
 
     try {
       socket.second->shutdown(Socket::shutdown_send);
+      socket.second->close();
     } catch (std::exception &e) {
       PRECICE_WARN("Socket shutdown failed with system error: {}", e.what());
     }
-    socket.second->close();
   }
 
   _isConnected = false;
