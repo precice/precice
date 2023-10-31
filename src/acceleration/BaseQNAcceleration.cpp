@@ -224,6 +224,11 @@ void BaseQNAcceleration::updateDifferenceMatrices(
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
+      std::cout << "\n Column limit reached \n";
+      std::cout << columnLimitReached;
+      std::cout << "\n _matrixW cols\n";
+      std::cout << _matrixW.cols();
+
       if (not columnLimitReached && overdetermined) {
 
         utils::appendFront(_matrixV, deltaR);
@@ -246,8 +251,8 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         // inserts column deltaR at pos. 0 to the QR decomposition and deletes the last column
         // the QR decomposition of V is updated
         _preconditioner->apply(deltaR);
-        _qrV.pushFront(deltaR);
         _qrV.popBack();
+        _qrV.pushFront(deltaR);
 
         _matrixCols.front()++;
         _matrixCols.back()--;
@@ -259,6 +264,12 @@ void BaseQNAcceleration::updateDifferenceMatrices(
     }
     _oldResiduals = _residuals; // Store residuals
     _oldXTilde    = _values;    // Store x_tilde
+
+    _oldXTildeW.clear();
+    for (int id : _dataIDs) {
+      precice::time::Storage localCopy = cplData.at(id)->timeStepsStorage();
+      _oldXTildeW.insert(std::pair<int, precice::time::Storage>(id, localCopy));
+    }
   }
 }
 
@@ -308,20 +319,15 @@ void BaseQNAcceleration::performAcceleration(
     // with residual: x_new = x_old + omega * res
     for (const DataMap::value_type &pair : cplData) {
       const auto couplingData = pair.second;
-      auto &     values       = couplingData->values();
-      // const auto &oldValues    = couplingData->previousIteration();
-      auto storedTimes = couplingData->timeStepsStorage().getTimes();
 
-      for (auto time : storedTimes) {
+      for (auto stamples : couplingData->stamples()) {
 
-        auto oldValues  = couplingData->getPreviousValuesAtTime(time);
-        auto data_value = couplingData->sample(time);
-        data_value *= _initialRelaxation;
-
-        data_value += oldValues * (1 - _initialRelaxation);
+        auto oldValues         = couplingData->getPreviousValuesAtTime(stamples.timestamp);
+        couplingData->values() = _initialRelaxation * stamples.sample.values;
+        couplingData->values() += oldValues * (1 - _initialRelaxation);
 
         // Apply relaxation to all timesteps and store it in the current waveform
-        couplingData->setSampleAtTime(time, data_value, true);
+        couplingData->setSampleAtTime(stamples.timestamp, couplingData->sample());
       }
     }
     computeUnderrelaxationSecondaryData(cplData);
@@ -390,9 +396,14 @@ void BaseQNAcceleration::performAcceleration(
     /**
      * apply quasiNewton update
      */
-    //_values = _oldValues + xUpdate + _residuals; // = x^k + delta_x + r^k - q^k
-    // todo: I am technically committing a crime here and breaking other stuff
+    //_values = _oldValues + xUpdate;
+    std::cout << "\n the values \n";
+    std::cout << _values;
 
+    _values += xUpdate;
+    std::cout << "\n the updated values \n";
+
+    std::cout << _values;
     // pending deletion: delete old V, W matrices if timeWindowsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
     if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
@@ -431,7 +442,7 @@ void BaseQNAcceleration::performAcceleration(
     }
   }
 
-  splitCouplingData(cplData);
+  // splitCouplingData(cplData);
   // number of iterations (usually equals number of columns in LS-system)
   its++;
   _firstIteration = false;
@@ -467,14 +478,11 @@ void BaseQNAcceleration::addWaveforms(
   for (int id : _dataIDs) {
     precice::time::Storage localCopy = cplData.at(id)->timeStepsStorage();
 
-    Eigen::VectorXd times = localCopy.getTimes();
-    for (double t : times) {
-      Eigen::VectorXd temp = localCopy.sample(t) - _oldXTildeW.at(id).sample(t);
-      localCopy.setSampleAtTime(t, temp);
+    for (auto stamples : localCopy.stamples()) {
+      stamples.sample.values -= _oldXTildeW.at(id).sample(stamples.timestamp);
+      localCopy.setSampleAtTime(stamples.timestamp, stamples.sample);
     }
-    precice::time::Storage localSample = precice::time::Storage::Sample()
-                                             _waveformW[id]
-                                                 .insert(_waveformW[id].begin(), localCopy);
+    _waveformW[id].insert(_waveformW[id].begin(), localCopy);
   }
 }
 

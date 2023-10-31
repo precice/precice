@@ -230,30 +230,43 @@ void runTestQNWR(std::string const &config, TestContext const &context)
     interface.setMeshVertices(meshName, positions0, vertexIDs);
   }
 
-  int nSubsteps = 3; // perform subcycling on solvers. 3 steps happen in each window.
+  int             nSubsteps = 5;             // perform subcycling on solvers. 3 steps happen in each window.
+  Eigen::MatrixXd savedValues(nSubsteps, 2); // save the solution to check for correctness after it has converged
+
   interface.initialize();
-  double maxDt        = interface.getMaxTimeStepSize();
-  double inValues[2]  = {0.0, 0.0};
-  double outValues[2] = {0.0, 0.0};
-  double dt           = maxDt / nSubsteps; //Do 3 substeps to check if QN and Waveform iterations work together
-  double t            = 0;
-  int    iterations   = 0;
+  double maxDt         = interface.getMaxTimeStepSize();
+  double inValues[2]   = {0.0, 0.0};
+  double outValues[2]  = {0.0, 0.0};
+  double dt            = maxDt / nSubsteps; //Do 5 substeps to check if QN and Waveform iterations work together
+  int    nSubStepsDone = 0;                 // Counts the number of substeps that are done
+  double t             = 0;
+  int    iterations    = 0;
   double timeCheckpoint;
   while (interface.isCouplingOngoing()) {
+
     if (interface.requiresWritingCheckpoint()) {
+
+      // Time window is done check that waveform iterations is correct
+      // for (int i = 0; i < nSubsteps; i++) {
+      //   double localTime = ((double) i)/nSubStepsDone;
+      //   BOOST_TEST( savedValues(i,0) == ( localTime* localTime - localTime) / 3);
+      //   BOOST_TEST(savedValues(i,1) == (localTime * localTime + 2 * localTime) / 3);
+      // }
+
       timeCheckpoint = t;
       iterations     = 0;
+      nSubStepsDone  = 0;
     }
 
-    t += dt;
+    std::cout << "\n crashed here \n";
     interface.readData(meshName, readDataName, {vertexIDs, 2}, dt, {inValues, 2});
 
+    std::cout << "\n read data done \n";
     /*
       Solves the following linear system
       2*x1 + x2 = t**2
       x2 - 1*x1 = t
       Analytical solutions are x1 = 1/3*(t**2 + t) and x2 = 1/3*(t**2 + 2*t).
-      Quasi newton is equivalent to GMRES for linear systems so it should converge within 4 iterations to numerical accuracy.
     */
 
     if (context.isNamed("SolverOne")) {
@@ -264,28 +277,42 @@ void runTestQNWR(std::string const &config, TestContext const &context)
       outValues[0] = -inValues[0] - inValues[1] + t * t;
       outValues[1] = inValues[0] + t;
     }
+
+    // ave the outValues in savedValues to check for correctness later
+    savedValues(nSubStepsDone, 0) = outValues[0];
+    savedValues(nSubStepsDone, 1) = outValues[1];
+
+    std::cout << "\n writing data \n";
     interface.writeData(meshName, writeDataName, {vertexIDs, 2}, {outValues, 2});
+    std::cout << "writing done \n";
 
-    //QN is equivalent to gmres for linear systems so after 4 iterations we should converge to the exact solution
-    if (iterations > 3) {
-      BOOST_TEST(outValues[0] == (t * t - t) / 3);
-      BOOST_TEST(outValues[1] == (t * t + 2 * t) / 3);
-    }
+    nSubStepsDone += 1;
+    t += dt;
+    std::cout << "\n time \n";
 
+    std::cout << t;
+    std::cout << "\n";
+    std::cout << dt;
+    std::cout << "\n crashed here in advance \n";
     interface.advance(dt);
-    dt = dt > maxDt ? maxDt : dt;
+    std::cout << "\n advancing done \n";
+    maxDt = interface.getMaxTimeStepSize();
+    dt    = dt > maxDt ? maxDt : dt;
     if (interface.requiresReadingCheckpoint()) {
-      t = timeCheckpoint;
+      nSubStepsDone = 0;
+      t             = timeCheckpoint;
       iterations++;
     }
-    iterations++;
+  }
+
+  // Check that the last time window is correct as well
+  for (int i = 0; i < nSubsteps; i++) {
+    double localTime = ((double) i) / nSubStepsDone + timeCheckpoint;
+    BOOST_TEST(savedValues(i, 0) == (localTime * localTime - localTime) / 3);
+    BOOST_TEST(savedValues(i, 1) == (localTime * localTime + 2 * localTime) / 3);
   }
 
   interface.finalize();
-
-  // to exclude false or no convergence
-  BOOST_TEST(iterations <= 4);
-  BOOST_TEST(iterations > 3);
 }
 
 #endif

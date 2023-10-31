@@ -98,11 +98,9 @@ void IQNILSAcceleration::updateDifferenceMatrices(
           vec.erase(vec.end());
         }
 
-        Eigen::VectorXd times = localCopy.getTimes();
-        for (double t : times) {
-          Eigen::VectorXd temp = localCopy.sample(t) - _secondaryOldXTildesW.at(id).sample(t);
-          temp
-              localCopy.setSampleAtTime(t, temp);
+        for (auto stample : localCopy.stamples()) {
+          stample.sample.values -= _secondaryOldXTildesW.at(id).sample(stample.timestamp);
+          localCopy.setSampleAtTime(stample.timestamp, stample.sample);
         }
         vec.insert(vec.begin(), localCopy);
       }
@@ -121,23 +119,6 @@ void IQNILSAcceleration::updateDifferenceMatrices(
       }
     }
   }
-
-  //     // Compute delta_x_tilde for secondary data
-  //     for (int id : _secondaryDataIDs) {
-  //       Eigen::MatrixXd &secW = _secondaryMatricesW[id];
-  //       PRECICE_ASSERT(secW.rows() == cplData.at(id)->getSize(), secW.rows(), cplData.at(id)->getSize());
-  //       secW.col(0) = cplData.at(id)->values();
-  //       secW.col(0) -= _secondaryOldXTildes[id];
-  //     }
-  //   }
-
-  //   // Store x_tildes for secondary data
-  //   for (int id : _secondaryDataIDs) {
-  //     PRECICE_ASSERT(_secondaryOldXTildes[id].size() == cplData.at(id)->getSize(),
-  //                    _secondaryOldXTildes[id].size(), cplData.at(id)->getSize());
-  //     _secondaryOldXTildes[id] = cplData.at(id)->values();
-  //   }
-  // }
 
   // call the base method for common update of V, W matrices
   BaseQNAcceleration::updateDifferenceMatrices(cplData);
@@ -166,20 +147,14 @@ void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
 
   for (const DataMap::value_type &pair : cplData) {
     const auto couplingData = pair.second;
-    auto &     values       = couplingData->values();
-    // const auto &oldValues    = couplingData->previousIteration();
-    auto storedTimes = couplingData->getStoredTimesAscending();
 
-    for (auto time : storedTimes) {
-
-      auto oldValues  = couplingData->getPreviousValuesAtTime(time);
-      auto data_value = couplingData->sample(time);
-      data_value *= _initialRelaxation;
-
-      data_value += oldValues * (1 - _initialRelaxation);
-
+    for (auto &stample : couplingData->stamples()) {
+      auto values            = stample.sample.values;
+      auto oldValues         = couplingData->getPreviousValuesAtTime(stample.timestamp); // IMPORTANT DETAIL: The interpolation that we use for resampling does not necessarily have to be the same interpolation as the interpolation the user accesses via read-data. (But probably it is easier to just use the same)
+      couplingData->values() = values * _initialRelaxation;
+      couplingData->values() += oldValues * (1 - _initialRelaxation);
       // Apply relaxation to all timesteps and store it in the current waveform
-      couplingData->setSampleAtTime(time, data_value, true);
+      couplingData->setSampleAtTime(stample.timestamp, couplingData->sample());
     }
   }
 }
@@ -275,35 +250,37 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd
     values += _secondaryResiduals[id];
   }
 
+  // Perform QN acceleration for the whole waveform iteration
   for (int id : _dataIDs) {
 
-    precice::time::Storage              localCopy = cplData.at(id)->timeStepsStorage();
-    std::vector<precice::time::Storage> Wlist     = _waveformW[id];
-    Eigen::VectorXd                     times     = localCopy.getTimes();
-    for (double t : times) {
+    std::vector<precice::time::Storage> Wlist = _waveformW[id];
 
-      Eigen::VectorXd temp = localCopy.sample(t);
+    for (auto &stample : cplData.at(id)->stamples()) {
+
+      cplData.at(id)->values() = stample.sample.values;
+      double timestamp         = stample.timestamp;
 
       for (int i = 0; i < c.size(); i++) {
-        temp += Wlist[i].sample(t) * c[i];
+        cplData.at(id)->values() += Wlist[i].sample(timestamp) * c[i];
       }
-      cplData.at(id)->setSampleAtTime(t, temp, true);
+
+      cplData.at(id)->setSampleAtTime(timestamp, cplData.at(id)->sample());
     }
   }
 
+  // Perform QN acceleration for the whole waveform iteration for the secondary ids
   for (int id : _secondaryDataIDs) {
 
-    precice::time::Storage              localCopy = cplData.at(id)->timeStepsStorage();
-    std::vector<precice::time::Storage> Wlist     = _secondaryWaveformW[id];
-    Eigen::VectorXd                     times     = localCopy.getTimes();
-    for (double t : times) {
+    std::vector<precice::time::Storage> Wlist = _secondaryWaveformW[id];
+    for (auto &stample : cplData.at(id)->stamples()) {
 
-      Eigen::VectorXd temp = localCopy.sample(t);
+      cplData.at(id)->values() = stample.sample.values;
+      double timestamp         = stample.timestamp;
+
       for (int i = 0; i < c.size(); i++) {
-        temp += Wlist[i].sample(t) * c[i];
+        cplData.at(id)->values() += Wlist[i].sample(timestamp) * c[i];
       }
-
-      cplData.at(id)->setSampleAtTime(t, temp, true);
+      cplData.at(id)->setSampleAtTime(timestamp, cplData.at(id)->sample());
     }
   }
 
