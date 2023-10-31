@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
       {-1, 3, {3, 1}, {8}}};
 
   MeshSpecification in{
-      inVertexList,
+      std::move(inVertexList),
       meshDims2D,
       "inMesh"};
 
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
       {3, -1, {3, 1}, {0}}};
 
   MeshSpecification out{
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
   ReferenceSpecification ref{// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
                                                 {-1, 3, {3, 0}, {7, 10}},
                                                 {-1, 3, {3, 1}, {8, 11}}};
   MeshSpecification                in{// The outMesh is local, distributed among all ranks
-                       inVertexList,
+                       std::move(inVertexList),
                        meshDims2D,
                        "inMesh"};
 
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
                                                  {3, -1, {3, 0}, {0, 0}},
                                                  {3, -1, {3, 1}, {0, 0}}};
   MeshSpecification                out{
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
   ReferenceSpecification ref{// Tests for {0, 1} on the first rank, {1, 2} on the second, ...
@@ -274,7 +274,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
                                                 {-1, 3, {3, 1}, {8}}};
 
   MeshSpecification in = {
-      inVertexList,
+      std::move(inVertexList),
       meshDims2D,
       "inMesh"};
   std::vector<VertexSpecification> outVertexList{// The outMesh is local, rank 1 is empty
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
                                                  {3, -1, {3, 0}, {0}},
                                                  {3, -1, {3, 1}, {0}}};
   MeshSpecification                out = {
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
   ReferenceSpecification                                     ref{// Tests for {0, 1, 2} on the first rank,
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
       {3, 3, {3, 1}, {8}},
   };
   MeshSpecification in{
-      inVertexList,
+      std::move(inVertexList),
       meshDims2D,
       "inMesh"};
   std::vector<VertexSpecification> outVertexList{// The outMesh is local, rank 1 is empty
@@ -354,7 +354,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
                                                  {3, -1, {3, 0}, {0}},
                                                  {3, -1, {3, 1}, {0}}};
   MeshSpecification                out{
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
   ReferenceSpecification ref{// Tests for {0, 1, 2} on the first rank,
@@ -409,7 +409,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
       {3, 3, {3, 1}, {8, 11}},
   };
   MeshSpecification in{
-      inVertexList,
+      std::move(inVertexList),
       meshDims2D,
       "inMesh"};
   std::vector<VertexSpecification> outVertexList{// The outMesh is local, rank 1 is empty
@@ -422,7 +422,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
                                                  {3, -1, {3, 0}, {0, 0}},
                                                  {3, -1, {3, 1}, {0, 0}}};
   MeshSpecification                out{
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
 
@@ -475,7 +475,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
       // Rank 3 has no vertices
   };
   MeshSpecification in{
-      inVertexList,
+      std::move(inVertexList),
       meshDims2D,
       "inMesh"};
   std::vector<VertexSpecification> outVertexList{// The outMesh is local, rank 0 and 3 are empty
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
                                                  {2, -1, {3, 0}, {0}},
                                                  {2, -1, {3, 1}, {0}}};
   MeshSpecification out{
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
   ReferenceSpecification                                        ref{{1, {5}},
@@ -553,7 +553,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
       {3, 3, {3, 1}, {8}},
   };
   MeshSpecification in{
-      inVertexList,
+      std::move(inVertexList),
       meshDims2D,
       "inMesh"};
   std::vector<VertexSpecification> outVertexList{// The outMesh is local, rank 0 and 3 are empty
@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
                                                  {2, -1, {3, 0}, {0}},
                                                  {2, -1, {3, 1}, {0}}};
   MeshSpecification out{
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
   ReferenceSpecification                                        ref{{1, {5}},
@@ -619,7 +619,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
       // Rank 3 has no vertices
   };
   MeshSpecification in{
-      inVertexList,
+      std::move(inVertexList),
       meshDims2D,
       "inMesh"};
   std::vector<VertexSpecification> outVertexList{// The outMesh is local, rank 0 and 3 are empty
@@ -634,7 +634,7 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                                                  {2, -1, {3, 0}, {0}},
                                                  {2, -1, {3, 1}, {0}}};
   MeshSpecification out{
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
   ReferenceSpecification                                        ref{{1, {5}},
@@ -670,7 +670,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
                                                 {3, -1, {3, 0}, {7}},
                                                 {3, -1, {3, 1}, {8}}};
   MeshSpecification                in{
-      inVertexList,
+      std::move(inVertexList),
       meshDims2D,
       "inMesh"};
   std::vector<VertexSpecification> outVertexList{// The outMesh is distributed
@@ -683,7 +683,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
                                                  {-1, 3, {3, 0}, {0}},
                                                  {-1, 3, {3, 1}, {0}}};
   MeshSpecification                out{
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
   ReferenceSpecification ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
@@ -744,7 +744,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
                                                 {3, -1, {3, 0}, {7, 10}},
                                                 {3, -1, {3, 1}, {8, 11}}};
   MeshSpecification                in{
-      inVertexList,
+      std::move(inVertexList),
       meshDims2D,
       "inMesh"};
   std::vector<VertexSpecification> outVertexList{// The outMesh is distributed
@@ -757,7 +757,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
                                                  {-1, 3, {3, 0}, {0, 0}},
                                                  {-1, 3, {3, 1}, {0, 0}}};
   MeshSpecification                out{
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
   ReferenceSpecification                                     ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
@@ -820,7 +820,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
                                                 {3, -1, {3, 0}, {7}},
                                                 {3, -1, {3, 1}, {8}}};
   MeshSpecification                in{
-      inVertexList,
+      std::move(inVertexList),
       meshDims2D,
       "inMesh"};
   std::vector<VertexSpecification> outVertexList{// The outMesh is distributed, rank 0 owns no vertex
@@ -833,7 +833,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
                                                  {-1, 3, {3, 0}, {0}},
                                                  {-1, 3, {3, 1}, {0}}};
   MeshSpecification                out{
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
   ReferenceSpecification ref{// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
@@ -895,7 +895,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
                                                 {3, -1, {3, 0}, {7}},
                                                 {3, -1, {3, 1}, {8}}}; // Sum of all vertices is 34
   MeshSpecification                in{
-      inVertexList,
+      std::move(inVertexList),
       meshDims2D,
       "inMesh"};
   std::vector<VertexSpecification> outVertexList{// The outMesh is distributed, rank 0 owns no vertex
@@ -908,7 +908,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
                                                  {-1, 3, {3, 0}, {0}},
                                                  {-1, 3, {3, 1}, {0}}};
   MeshSpecification                out{
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
   ReferenceSpecification ref{// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
@@ -972,7 +972,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                                                 {3, -1, {3, 0}, {7}},
                                                 {3, -1, {3, 1}, {8}}}; // Sum is 36
   MeshSpecification                in{
-      inVertexList,
+      std::move(inVertexList),
       meshDims2D,
       "inMesh"};
   std::vector<VertexSpecification> outVertexList{// The outMesh is distributed, rank 0 has no vertex at all
@@ -984,7 +984,7 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                                                  {-1, 3, {3, 0}, {0}},
                                                  {-1, 3, {3, 1}, {0}}};
   MeshSpecification                out{
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
   ReferenceSpecification                                        ref{// Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
@@ -1037,7 +1037,7 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
                                                 {3, -1, {3, 0}, {7}},
                                                 {3, -1, {3, 1}, {8}}};
   MeshSpecification                in{
-      inVertexList,
+      std::move(inVertexList),
       meshDims2D,
       "inMesh"};
   std::vector<VertexSpecification> outVertexList{// The outMesh is distributed and non-contigous
@@ -1050,7 +1050,7 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
                                                  {-1, 3, {3, 0}, {0}},
                                                  {-1, 3, {3, 1}, {0}}};
   MeshSpecification                out{
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
   ReferenceSpecification ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
@@ -1112,7 +1112,7 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
                                                 {3, -1, {3, 0}, {7, 10}},
                                                 {3, -1, {3, 1}, {8, 11}}};
   MeshSpecification                in{
-      inVertexList,
+      std::move(inVertexList),
       meshDims2D,
       "inMesh"};
   std::vector<VertexSpecification> outVertexList{// The outMesh is distributed and non-contigous
@@ -1125,7 +1125,7 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
                                                  {-1, 3, {3, 0}, {0, 0}},
                                                  {-1, 3, {3, 1}, {0, 0}}};
   MeshSpecification                out{
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
   ReferenceSpecification                                     ref{// Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
@@ -1239,7 +1239,7 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound)
   std::vector<VertexSpecification> outVertexList{
       {0, -1, {0, 0}, {0}}};
   MeshSpecification outMeshSpec{
-      outVertexList,
+      std::move(outVertexList),
       meshDims2D,
       "outMesh"};
   std::vector<VertexSpecification> inVertexList{
@@ -1253,7 +1253,7 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound)
       {0, -1, {0, 2}, {1}}   // outside
   };
   MeshSpecification inMeshSpec{
-      inVertexList,
+      std::move(inVertexList),
       meshDims2D,
       "inMesh"};
   std::vector<VertexSpecification> firstRoundVertices = {
