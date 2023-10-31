@@ -43,7 +43,7 @@
     <max-time value="2" />
     <time-window-size value="1" />
     <max-iterations value="3" />
-    <min-iteration-convergence-measure min-iterations="3" data="Velocities" mesh="Square" />
+    <min-iterations value="3" />
     <exchange data="Forces" mesh="Square" from="SolverOne" to="SolverTwo" />
     <exchange data="Velocities" mesh="Square" from="SolverTwo" to="SolverOne" />
   </coupling-scheme:parallel-implicit>

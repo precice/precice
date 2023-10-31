@@ -24,7 +24,6 @@ target_sources(testprecice
     src/cplscheme/tests/DummyCouplingScheme.cpp
     src/cplscheme/tests/DummyCouplingScheme.hpp
     src/cplscheme/tests/ExplicitCouplingSchemeTest.cpp
-    src/cplscheme/tests/MinIterationConvergenceMeasureTest.cpp
     src/cplscheme/tests/ParallelImplicitCouplingSchemeTest.cpp
     src/cplscheme/tests/RelativeConvergenceMeasureTest.cpp
     src/cplscheme/tests/ResidualRelativeConvergenceMeasureTest.cpp

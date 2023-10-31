@@ -7,7 +7,7 @@ if(NOT EXISTS ${DUMMY_A})
 endif()
 
 if(NOT EXISTS ${DUMMY_B})
-  message(FATAL_ERROR "CMake was unable to locate solverdummy A at ${DUMMY_B}!")
+  message(FATAL_ERROR "CMake was unable to locate solverdummy B at ${DUMMY_B}!")
 endif()
 
 if(NOT EXISTS ${DUMMY_RUN_DIR})
