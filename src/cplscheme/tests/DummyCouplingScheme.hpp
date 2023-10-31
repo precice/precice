@@ -62,7 +62,7 @@ public:
   bool addComputedTime(double timeToAdd) override final
   {
     PRECICE_ASSERT(false);
-    return false;
+    return true;
   }
 
   /**
@@ -113,11 +113,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  double getTime() const override final
-  {
-    PRECICE_ASSERT(false);
-    return 0;
-  }
+  double getTime() const override final;
 
   /**
    * @brief Not implemented.
@@ -125,7 +121,6 @@ public:
   int getTimeWindows() const override final
   {
     return _timeWindows;
-    return 0;
   }
 
   /**

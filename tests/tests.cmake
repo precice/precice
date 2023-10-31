@@ -179,8 +179,10 @@ target_sources(testprecice
     tests/serial/three-solvers/ThreeSolversFirstParticipant.cpp
     tests/serial/three-solvers/ThreeSolversImplicitExplicit.cpp
     tests/serial/three-solvers/ThreeSolversParallel.cpp
+    tests/serial/three-solvers/ThreeSolversParallelExplicitImplicit.cpp
     tests/serial/three-solvers/helpers.cpp
     tests/serial/three-solvers/helpers.hpp
+    tests/serial/time/explicit/compositional/DoNothingWithSubcycling.cpp
     tests/serial/time/explicit/compositional/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/compositional/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
@@ -191,6 +193,9 @@ target_sources(testprecice
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipantInitData.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
+    tests/serial/time/implicit/compositional/DoNothingWithSubcycling.cpp
+    tests/serial/time/implicit/compositional/ReadWriteScalarDataWithSubcycling.cpp
+    tests/serial/time/implicit/compositional/ReadWriteScalarDataWithWaveformSubcyclingMixed.cpp
     tests/serial/time/implicit/multi-coupling/DoNothingWithSubcycling.cpp
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp

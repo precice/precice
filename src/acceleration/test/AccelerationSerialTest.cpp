@@ -9,6 +9,7 @@
 #include "acceleration/config/AccelerationConfiguration.hpp"
 #include "acceleration/impl/ConstantPreconditioner.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
+#include "acceleration/test/helper.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "testing/TestContext.hpp"
@@ -17,6 +18,8 @@
 
 using namespace precice;
 using namespace precice::acceleration;
+
+using precice::testing::makeCouplingData;
 
 BOOST_AUTO_TEST_SUITE(AccelerationTests)
 
@@ -73,9 +76,9 @@ BOOST_AUTO_TEST_CASE(testIQNIMVJPPWithoutSubsteps)
   forces->setSampleAtTime(0, forces->sample());
 
   bool exchangeSubsteps = false; // @todo add testIQNIMVJPPWithSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
-
-  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, exchangeSubsteps));
+                                 //
+  cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
+  cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
@@ -155,9 +158,10 @@ BOOST_AUTO_TEST_CASE(testVIQNPPWithoutSubsteps)
   forces->setSampleAtTime(0, forces->sample());
 
   bool exchangeSubsteps = false; // @todo add testVIQNPPWithoutSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
+                                 //
+  cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
+  cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
 
-  cplscheme::PtrCouplingData dpcd(new cplscheme::CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-  cplscheme::PtrCouplingData fpcd(new cplscheme::CouplingData(forces, dummyMesh, false, exchangeSubsteps));
   dpcd->storeIteration();
   fpcd->storeIteration();
 
@@ -225,10 +229,8 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->setSampleAtTime(0, forces->sample());
 
-  bool exchangeSubsteps = true;
-
-  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps);
-  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps);
+  cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, false);
+  cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, false);
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
@@ -302,10 +304,8 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
   forces->gradients().setConstant(-2);
   forces->setSampleAtTime(0.0, forces->sample());
 
-  bool exchangeSubsteps = true;
-
-  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps);
-  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps);
+  cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, false);
+  cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, false);
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
@@ -396,10 +396,8 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->setSampleAtTime(0.0, forces->sample());
 
-  bool exchangeSubsteps = false;
-
-  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps);
-  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps);
+  cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, false);
+  cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, false);
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
@@ -473,10 +471,8 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
   forces->gradients().setConstant(-2);
   forces->setSampleAtTime(0, forces->sample());
 
-  bool exchangeSubsteps = false;
-
-  cplscheme::PtrCouplingData dpcd = std::make_shared<cplscheme::CouplingData>(displacements, dummyMesh, false, exchangeSubsteps);
-  cplscheme::PtrCouplingData fpcd = std::make_shared<cplscheme::CouplingData>(forces, dummyMesh, false, exchangeSubsteps);
+  cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, false);
+  cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, false);
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));

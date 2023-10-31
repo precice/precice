@@ -213,14 +213,25 @@ private:
   /// The optional implicit scheme to be handled last
   PtrCouplingScheme _implicitScheme;
 
-  /// Is the implicit scheme still iterating?
-  bool _iterating = false;
+  /** All schemes to run next
+   *
+   * This is the core of the CompositionalCouplingScheme
+   *
+   * All schemes start at t=0, so they all run on the first time step.
+   * This is updated by finishing the complete advance calling secondExchange() using updateActiveSchemes().
+   */
+  std::vector<CouplingScheme *> _activeSchemes;
 
-  /// Returns all schemes at the beginning of a timestep or the implicit one until convergence
-  std::vector<CouplingScheme *> schemesToRun() const;
+  /** Updates _activeSchemes to the next ones that will participate in the upcoming step in time
+   * Called from secondExchange
+   */
+  void updateActiveSchemes();
 
-  /// Returns all schemes
+  /// Returns all schemes in execution order, explicit as well as implicit
   std::vector<CouplingScheme *> allSchemes() const;
+
+  /// Actions also work before initialize is called
+  std::vector<CouplingScheme *> activeOrAllSchemes() const;
 };
 
 } // namespace cplscheme

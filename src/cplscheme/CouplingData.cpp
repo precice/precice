@@ -12,11 +12,13 @@ CouplingData::CouplingData(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
     bool          requiresInitialization,
-    bool          exchangeSubsteps)
+    bool          exchangeSubsteps,
+    Direction     direction)
     : requiresInitialization(requiresInitialization),
       _mesh(std::move(mesh)),
       _data(std::move(data)),
       _exchangeSubsteps(exchangeSubsteps),
+      _direction(direction),
       _previousTimeStepsStorage()
 {
   PRECICE_ASSERT(_data != nullptr);
@@ -145,8 +147,10 @@ std::vector<int> CouplingData::getVertexOffsets()
 
 void CouplingData::moveToNextWindow()
 {
-  _data->moveToNextWindow();
-  _previousTimeStepsStorage = _data->timeStepsStorage();
+  if (_direction == Direction::Receive) {
+    _data->moveToNextWindow();
+    _previousTimeStepsStorage = _data->timeStepsStorage();
+  }
 }
 
 time::Sample &CouplingData::sample()
@@ -165,5 +169,4 @@ bool CouplingData::exchangeSubsteps() const
 {
   return _exchangeSubsteps;
 }
-
 } // namespace precice::cplscheme

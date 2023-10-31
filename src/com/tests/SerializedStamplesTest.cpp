@@ -1,4 +1,5 @@
 #include "com/SerializedStamples.hpp"
+#include "com/tests/helper.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
@@ -9,6 +10,7 @@
 
 using namespace precice;
 using namespace precice::com;
+using precice::testing::makeCouplingData;
 
 BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
@@ -36,8 +38,8 @@ BOOST_AUTO_TEST_CASE(SerializeValues)
   Eigen::VectorXd insert1(nValues);
   insert1 << 100.0, 200.0, 300.0, 400.0;
 
-  cplscheme::PtrCouplingData fromDataPtr(new cplscheme::CouplingData(fromData, dummyMesh, false, true));
-  cplscheme::PtrCouplingData toDataPtr(new cplscheme::CouplingData(toData, dummyMesh, false, true));
+  cplscheme::PtrCouplingData fromDataPtr = makeCouplingData(fromData, dummyMesh, true);
+  cplscheme::PtrCouplingData toDataPtr   = makeCouplingData(toData, dummyMesh, true);
 
   fromDataPtr->setSampleAtTime(0, time::Sample{dataDimensions, insert0});
   fromDataPtr->setSampleAtTime(0.5, time::Sample{dataDimensions, insert05});
@@ -68,8 +70,8 @@ BOOST_AUTO_TEST_CASE(DeserializeValues)
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   mesh::PtrData              toData(new mesh::Data("to", -1, 1));
-  cplscheme::PtrCouplingData toDataPtr(new cplscheme::CouplingData(toData, dummyMesh, false, true));
-  toDataPtr->sample().values = Eigen::VectorXd(nValues);
+  cplscheme::PtrCouplingData toDataPtr = makeCouplingData(toData, dummyMesh, true);
+  toDataPtr->sample().values           = Eigen::VectorXd(nValues);
   toDataPtr->sample().setZero();
 
   toDataPtr->setSampleAtTime(0, toDataPtr->sample());
@@ -142,7 +144,7 @@ BOOST_AUTO_TEST_CASE(SerializeValuesAndGradients)
       311.0, 411.0, 111.0,
       211.0, 311.0, 411.0;
 
-  cplscheme::PtrCouplingData fromDataPtr(new cplscheme::CouplingData(fromData, dummyMesh, false, true));
+  cplscheme::PtrCouplingData fromDataPtr = makeCouplingData(fromData, dummyMesh, true);
 
   fromDataPtr->setSampleAtTime(0, time::Sample{dataDimensions, insert0, insertGradients0});
   fromDataPtr->setSampleAtTime(0.5, time::Sample{dataDimensions, insert05, insertGradients05});
@@ -185,9 +187,9 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
   mesh::PtrData toData(new mesh::Data("to", -1, 1));
   toData->requireDataGradient();
 
-  cplscheme::PtrCouplingData toDataPtr(new cplscheme::CouplingData(toData, dummyMesh, false, true));
-  toDataPtr->sample().values    = Eigen::VectorXd(nValues);
-  toDataPtr->sample().gradients = Eigen::MatrixXd(nValues, meshDimensions);
+  cplscheme::PtrCouplingData toDataPtr = makeCouplingData(toData, dummyMesh, true);
+  toDataPtr->sample().values           = Eigen::VectorXd(nValues);
+  toDataPtr->sample().gradients        = Eigen::MatrixXd(nValues, meshDimensions);
   toDataPtr->sample().setZero();
 
   toDataPtr->setSampleAtTime(0, toDataPtr->sample());

@@ -12,11 +12,15 @@ namespace cplscheme {
 
 class CouplingData {
 public:
+  enum struct Direction : bool { Send,
+                                 Receive };
+
   CouplingData(
       mesh::PtrData data,
       mesh::PtrMesh mesh,
       bool          requiresInitialization,
-      bool          exchangeSubsteps);
+      bool          exchangeSubsteps,
+      Direction     direction);
 
   int getDimensions() const;
 
@@ -112,6 +116,8 @@ private:
 
   /// If true, all substeps will be sent / received for this coupling data
   bool _exchangeSubsteps;
+
+  Direction _direction;
 };
 
 } // namespace cplscheme

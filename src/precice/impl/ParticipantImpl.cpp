@@ -374,22 +374,23 @@ void ParticipantImpl::advance(
 
   // Update the coupling scheme time state. Necessary to get correct remainder.
   const bool   isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
-  const double time          = _couplingScheme->getTime();
+  const double timeSteppedTo = _couplingScheme->getTime();
 
   for (auto &context : _accessor->writeDataContexts()) {
-    context.storeBufferedData(time);
+    context.storeBufferedData(timeSteppedTo);
   }
 
   if (_couplingScheme->willDataBeExchanged(0.0)) {
     mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, time);
+    performDataActions({action::Action::WRITE_MAPPING_POST}, timeSteppedTo);
   }
 
   advanceCouplingScheme();
 
   if (_couplingScheme->hasDataBeenReceived() || _couplingScheme->isTimeWindowComplete()) { // @todo potential to avoid unnecessary mappings here.
+    const double timeAfterAdvance = _couplingScheme->getTime();
     mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, time);
+    performDataActions({action::Action::READ_MAPPING_POST}, timeAfterAdvance);
   }
 
   PRECICE_INFO(_couplingScheme->printCouplingState());

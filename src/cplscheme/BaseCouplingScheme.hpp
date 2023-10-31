@@ -290,9 +290,11 @@ protected:
    * @param mesh mesh the CouplingData is associated with
    * @param requiresInitialization true, if CouplingData requires initialization
    * @param exchangeSubsteps true, if CouplingData exchanges all substeps in send/recv
+   * @param direction is the coupling data send or received?
+   *
    * @return PtrCouplingData pointer to CouplingData owned by the CouplingScheme
    */
-  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool exchangeSubsteps);
+  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool exchangeSubsteps, CouplingData::Direction direction);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
