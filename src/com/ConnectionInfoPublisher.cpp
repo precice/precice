@@ -50,7 +50,7 @@ std::string impl::localDirectory(std::string_view acceptorName, std::string_view
 {
   std::string directional = std::string(acceptorName).append("-").append(requesterName);
 
-  auto p = bfs::path(addressDirectory) / "precice-run" / directional;
+  auto p = bfs::path(addressDirectory.begin(), addressDirectory.end()) / "precice-run" / directional;
 
   return p.string();
 }
