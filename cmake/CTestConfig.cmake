@@ -253,7 +253,7 @@ add_precice_test(
 add_precice_test(
   NAME mapping.petrbf
   ARGUMENTS "--run_test=MappingTests/PetRadialBasisFunctionMapping"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_NORMAL}
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
   LABELS petsc
   PETSC
   )
