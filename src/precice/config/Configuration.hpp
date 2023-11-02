@@ -124,7 +124,7 @@ private:
   double _minTimeStepSize = math::NUMERICAL_ZERO_DIFFERENCE;
 
   /// Synchronize participants in finalize
-  bool _waitInFinalize;
+  bool _waitInFinalize = false;
 
   // @brief Root tag of preCICE configuration.
   xml::XMLTag _tag;

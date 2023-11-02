@@ -10,6 +10,7 @@
 #include <optional>
 #include <ratio>
 #include <string>
+#include <string_view>
 #include <sys/types.h>
 #include <tuple>
 #include <utility>
@@ -51,7 +52,7 @@ EventRegistry &EventRegistry::instance()
   return instance;
 }
 
-void EventRegistry::initialize(std::string applicationName, int rank, int size)
+void EventRegistry::initialize(std::string_view applicationName, int rank, int size)
 {
   auto initClock = Event::Clock::now();
   auto initTime  = std::chrono::system_clock::now();
@@ -75,7 +76,7 @@ void EventRegistry::setWriteQueueMax(std::size_t size)
   _writeQueueMax = size;
 }
 
-void EventRegistry::setDirectory(std::string directory)
+void EventRegistry::setDirectory(std::string_view directory)
 {
   _directory = directory;
 }
@@ -253,13 +254,13 @@ try {
   PRECICE_UNREACHABLE(e.what());
 }
 
-int EventRegistry::nameToID(const std::string &name)
+int EventRegistry::nameToID(std::string_view name)
 {
   if (auto iter = _nameDict.find(name);
       iter == _nameDict.end()) {
     int id = _nameDict.size();
-    _nameDict.insert(iter, {name, id});
-    _writeQueue.emplace_back(NameEntry{name, id});
+    _nameDict.insert(iter, {std::string(name), id});
+    _writeQueue.emplace_back(NameEntry{std::string(name), id});
     return id;
   } else {
     return iter->second;
