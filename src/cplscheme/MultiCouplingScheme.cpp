@@ -23,13 +23,14 @@ MultiCouplingScheme::MultiCouplingScheme(
     double                             maxTime,
     int                                maxTimeWindows,
     double                             timeWindowSize,
-    int                                validDigits,
+    double                             minTimeStepSize,
     const std::string &                localParticipant,
     std::map<std::string, m2n::PtrM2N> m2ns,
     constants::TimesteppingMethod      dtMethod,
     const std::string &                controller,
+    int                                minIterations,
     int                                maxIterations)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, Implicit, dtMethod),
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, minTimeStepSize, localParticipant, minIterations, maxIterations, Implicit, dtMethod),
       _m2ns(std::move(m2ns)), _controller(controller), _isController(controller == localParticipant)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");

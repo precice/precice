@@ -47,7 +47,7 @@
     <max-time value="1.0" />
     <max-time-windows value="10" />
     <max-iterations value="10" />
-    <min-iteration-convergence-measure min-iterations="3" data="Data2" mesh="Mesh" />
+    <min-iterations value="3" />
     <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant2" />
     <exchange data="Data2" mesh="Mesh" from="Participant2" to="Participant1" />
   </coupling-scheme:serial-implicit>
