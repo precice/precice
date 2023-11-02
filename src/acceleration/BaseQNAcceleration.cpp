@@ -97,7 +97,7 @@ void BaseQNAcceleration::initialize(
   }
 
   size_t              entries = 0;
-  std::vector<size_t> subVectorSizes; //needed for preconditioner
+  std::vector<size_t> subVectorSizes; // needed for preconditioner
 
   for (auto &elem : _dataIDs) {
     entries += cplData.at(elem)->getSize();
@@ -194,7 +194,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
                  "Or you just converge much further than actually necessary.");
   }
 
-  //if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
+  // if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
     // do nothing: constant relaxation
   } else {
@@ -223,10 +223,10 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         residualMagnitude /= utils::IntraComm::l2norm(_values);
       }
 
-      PRECICE_CHECK(not math::equals(residualMagnitude, 0.0),
-                    "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residuals "
-                    "in two consecutive iterations are identical. If a relative convergence limit was selected, "
-                    "consider increasing the convergence threshold.");
+      if (math::equals(residualMagnitude, 0.0)) {
+        PRECICE_WARN("Add a zero vector to the quasi-Newton V matrix. This means that the residuals "
+                     "in two consecutive iterations are identical.");
+      }
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
@@ -238,7 +238,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         // insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the
         // QR decomposition and update decomposition
 
-        //apply scaling here
+        // apply scaling here
         _preconditioner->apply(deltaR);
         _qrV.pushFront(deltaR);
 
@@ -341,7 +341,7 @@ void BaseQNAcceleration::performAcceleration(
     _preconditioner->apply(_matrixV);
 
     if (_preconditioner->requireNewQR()) {
-      if (not(_filter == Acceleration::QR2FILTER)) { //for QR2 filter, there is no need to do this twice
+      if (not(_filter == Acceleration::QR2FILTER)) { // for QR2 filter, there is no need to do this twice
         _qrV.reset(_matrixV, getLSSystemRows());
       }
       _preconditioner->newQRfulfilled();
