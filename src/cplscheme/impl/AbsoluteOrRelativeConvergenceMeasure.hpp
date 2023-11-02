@@ -80,9 +80,8 @@ public:
     os << "two-norm diff of data \"" << dataName << "\" = ";
     os << std::scientific << std::setprecision(2) << getNormAbsResidual();
     os << ", limit = " << _convergenceLimit;
-    os << ", conv = ";
 
-    os << "relative convergence measure: ";
+    os << ", relative convergence measure: ";
     os << "relative two-norm diff of data \"" << dataName << "\" = ";
     os << std::scientific << std::setprecision(2) << getNormRelResidual();
     os << ", limit = " << _convergenceLimitPercent;

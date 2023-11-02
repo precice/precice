@@ -22,8 +22,16 @@
   <participant name="SolverTwo">
     <receive-mesh name="MeshOne" from="SolverOne" />
     <provide-mesh name="MeshTwo" />
-    <mapping:nearest-neighbor direction="read" from="MeshOne" to="MeshTwo" constraint="consistent" />
-    <mapping:nearest-neighbor direction="write" from="MeshTwo" to="MeshOne" constraint="conservative" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="MeshOne"
+      to="MeshTwo"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="MeshTwo"
+      to="MeshOne"
+      constraint="conservative" />
     <write-data name="Data2" mesh="MeshTwo" />
     <read-data name="Data1" mesh="MeshTwo" />
   </participant>
@@ -37,7 +45,11 @@
     <exchange data="Data1" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
     <exchange data="Data2" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
     <max-iterations value="100" />
-    <absolute-or-relative-convergence-measure abs-limit="1e-1" rel-limit="1.0" data="Data2" mesh="MeshOne"/>
-    <min-iteration-convergence-measure min-iterations="2" data="Data1" mesh="MeshOne"/>
+    <absolute-or-relative-convergence-measure
+      abs-limit="1e-1"
+      rel-limit="1.0"
+      data="Data2"
+      mesh="MeshOne" />
+    <min-iteration-convergence-measure min-iterations="2" data="Data1" mesh="MeshOne" />
   </coupling-scheme:serial-implicit>
 </precice-configuration>
