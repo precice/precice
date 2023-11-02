@@ -380,11 +380,11 @@ void XMLTag::clear()
   _subtags.clear();
 }
 
-//NoPListener& getNoPListener()
+// NoPListener& getNoPListener()
 //{
-//  static NoPListener listener;
-//  return listener;
-//}
+//   static NoPListener listener;
+//   return listener;
+// }
 
 XMLTag getRootTag()
 {
@@ -423,11 +423,11 @@ std::string XMLTag::getOccurrenceString(XMLTag::Occurrence occurrence)
 }
 } // namespace precice::xml
 
-//std::ostream& operator<<
+// std::ostream& operator<<
 //(
-//  std::ostream&                 os,
-//  const precice::xml::XMLTag& tag )
+//   std::ostream&                 os,
+//   const precice::xml::XMLTag& tag )
 //{
-//  os << tag.printDocumentation(80, 0);
-//  return os;
-//}
+//     os << tag.printDocumentation(80, 0);
+//     return os;
+//   }

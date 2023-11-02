@@ -20,6 +20,7 @@ target_sources(testprecice
     src/com/tests/SerializedStamplesTest.cpp
     src/com/tests/SocketCommunicationTest.cpp
     src/cplscheme/tests/AbsoluteConvergenceMeasureTest.cpp
+    src/cplscheme/tests/AbsoluteOrRelativeConvergenceMeasureTest.cpp
     src/cplscheme/tests/CompositionalCouplingSchemeTest.cpp
     src/cplscheme/tests/DummyCouplingScheme.cpp
     src/cplscheme/tests/DummyCouplingScheme.hpp

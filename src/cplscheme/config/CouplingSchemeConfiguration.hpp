@@ -92,6 +92,7 @@ private:
   const std::string TAG_MAX_TIME_WINDOWS;
   const std::string TAG_TIME_WINDOW_SIZE;
   const std::string TAG_ABS_CONV_MEASURE;
+  const std::string TAG_ABS_OR_REL_CONV_MEASURE;
   const std::string TAG_REL_CONV_MEASURE;
   const std::string TAG_RES_REL_CONV_MEASURE;
   const std::string TAG_MIN_ITER_CONV_MEASURE;
@@ -109,6 +110,8 @@ private:
   const std::string ATTR_VALID_DIGITS;
   const std::string ATTR_METHOD;
   const std::string ATTR_LIMIT;
+  const std::string ATTR_ABS_LIMIT;
+  const std::string ATTR_REL_LIMIT;
   const std::string ATTR_MIN_ITERATIONS;
   const std::string ATTR_NAME;
   const std::string ATTR_FROM;
@@ -192,6 +195,8 @@ private:
 
   void addTagAbsoluteConvergenceMeasure(xml::XMLTag &tag);
 
+  void addTagAbsoluteOrRelativeConvergenceMeasure(xml::XMLTag &tag);
+
   void addTagRelativeConvergenceMeasure(xml::XMLTag &tag);
 
   void addTagResidualRelativeConvergenceMeasure(xml::XMLTag &tag);
@@ -208,6 +213,14 @@ private:
       const std::string &dataName,
       const std::string &meshName,
       double             limit,
+      bool               suffices,
+      bool               strict);
+
+  void addAbsoluteOrRelativeConvergenceMeasure(
+      const std::string &dataName,
+      const std::string &meshName,
+      double             absLimit,
+      double             relLimit,
       bool               suffices,
       bool               strict);
 

@@ -112,6 +112,8 @@ target_sources(preciceCore
     src/cplscheme/config/CouplingSchemeConfiguration.hpp
     src/cplscheme/impl/AbsoluteConvergenceMeasure.cpp
     src/cplscheme/impl/AbsoluteConvergenceMeasure.hpp
+    src/cplscheme/impl/AbsoluteOrRelativeConvergenceMeasure.cpp
+    src/cplscheme/impl/AbsoluteOrRelativeConvergenceMeasure.hpp
     src/cplscheme/impl/ConvergenceMeasure.hpp
     src/cplscheme/impl/MinIterationConvergenceMeasure.cpp
     src/cplscheme/impl/MinIterationConvergenceMeasure.hpp

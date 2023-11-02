@@ -18,6 +18,7 @@
 #include "cplscheme/SerialCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
+#include "cplscheme/impl/AbsoluteOrRelativeConvergenceMeasure.hpp"
 #include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
 #include "cplscheme/impl/RelativeConvergenceMeasure.hpp"
 #include "cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp"
@@ -51,6 +52,7 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       TAG_MAX_TIME_WINDOWS("max-time-windows"),
       TAG_TIME_WINDOW_SIZE("time-window-size"),
       TAG_ABS_CONV_MEASURE("absolute-convergence-measure"),
+      TAG_ABS_OR_REL_CONV_MEASURE("absolute-or-relative-convergence-measure"),
       TAG_REL_CONV_MEASURE("relative-convergence-measure"),
       TAG_RES_REL_CONV_MEASURE("residual-relative-convergence-measure"),
       TAG_MIN_ITER_CONV_MEASURE("min-iteration-convergence-measure"),
@@ -67,6 +69,8 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       ATTR_VALID_DIGITS("valid-digits"),
       ATTR_METHOD("method"),
       ATTR_LIMIT("limit"),
+      ATTR_ABS_LIMIT("abs-limit"),
+      ATTR_REL_LIMIT("rel-limit"),
       ATTR_MIN_ITERATIONS("min-iterations"),
       ATTR_NAME("name"),
       ATTR_FROM("from"),
@@ -228,6 +232,15 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
     PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
     addAbsoluteConvergenceMeasure(dataName, meshName, limit, suffices, strict);
+  } else if (tag.getName() == TAG_ABS_OR_REL_CONV_MEASURE) {
+    const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
+    const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
+    double             absLimit = tag.getDoubleAttributeValue(ATTR_ABS_LIMIT);
+    double             relLimit = tag.getDoubleAttributeValue(ATTR_REL_LIMIT);
+    bool               suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
+    bool               strict   = tag.getBooleanAttributeValue(ATTR_STRICT);
+    PRECICE_ASSERT(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT || _config.type == VALUE_MULTI);
+    addAbsoluteOrRelativeConvergenceMeasure(dataName, meshName, absLimit, relLimit, suffices, strict);
   } else if (tag.getName() == TAG_REL_CONV_MEASURE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
     const std::string &meshName = tag.getStringAttributeValue(ATTR_MESH);
@@ -401,6 +414,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     addTagExchange(tag);
     addTagAcceleration(tag);
     addTagAbsoluteConvergenceMeasure(tag);
+    addTagAbsoluteOrRelativeConvergenceMeasure(tag);
     addTagRelativeConvergenceMeasure(tag);
     addTagResidualRelativeConvergenceMeasure(tag);
     addTagMinIterationConvergenceMeasure(tag);
@@ -410,6 +424,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     addTagExchange(tag);
     addTagAcceleration(tag);
     addTagAbsoluteConvergenceMeasure(tag);
+    addTagAbsoluteOrRelativeConvergenceMeasure(tag);
     addTagRelativeConvergenceMeasure(tag);
     addTagResidualRelativeConvergenceMeasure(tag);
     addTagMinIterationConvergenceMeasure(tag);
@@ -419,6 +434,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     addTagExchange(tag);
     addTagAcceleration(tag);
     addTagAbsoluteConvergenceMeasure(tag);
+    addTagAbsoluteOrRelativeConvergenceMeasure(tag);
     addTagRelativeConvergenceMeasure(tag);
     addTagResidualRelativeConvergenceMeasure(tag);
     addTagMinIterationConvergenceMeasure(tag);
@@ -535,6 +551,24 @@ void CouplingSchemeConfiguration::addTagAbsoluteConvergenceMeasure(
   tag.addSubtag(tagConvergenceMeasure);
 }
 
+void CouplingSchemeConfiguration::addTagAbsoluteOrRelativeConvergenceMeasure(
+    xml::XMLTag &tag)
+{
+  using namespace xml;
+  XMLTag tagConvergenceMeasure(*this, TAG_ABS_OR_REL_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
+  tagConvergenceMeasure.setDocumentation(
+      "Absolute or relative convergence, which is the disjunction of the absolute criterion based on the two-norm difference of data values between iterations and relative criterion based on the relative two-norm difference of data values between iterations."
+      "\\$$\\left\\lVert H(x^k) - x^k \\right\\rVert_2 < \\text{abs-limit}\\quad\\text{or}\\quad\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert_2}{\\left\\lVert H(x^k) \\right\\rVert_2} < \\text{rel-limit} \\$$  ");
+  addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
+  XMLAttribute<double> attrAbsLimit(ATTR_ABS_LIMIT);
+  attrAbsLimit.setDocumentation(R"(Absolute limit under which the measure is considered to have converged.)");
+  tagConvergenceMeasure.addAttribute(attrAbsLimit);
+  XMLAttribute<double> attrRelLimit(ATTR_REL_LIMIT);
+  attrAbsLimit.setDocumentation(R"(Relative limit under which the measure is considered to have converged.Must be in \\((0, 1]\\).)");
+  tagConvergenceMeasure.addAttribute(attrRelLimit);
+  tag.addSubtag(tagConvergenceMeasure);
+}
+
 void CouplingSchemeConfiguration::addTagResidualRelativeConvergenceMeasure(
     xml::XMLTag &tag)
 {
@@ -636,6 +670,36 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 limit, dataName, meshName);
   impl::PtrConvergenceMeasure measure(new impl::AbsoluteConvergenceMeasure(limit));
+  ConvergenceMeasureDefintion convMeasureDef;
+  convMeasureDef.data        = getData(dataName, meshName);
+  convMeasureDef.suffices    = suffices;
+  convMeasureDef.strict      = strict;
+  convMeasureDef.meshName    = meshName;
+  convMeasureDef.measure     = std::move(measure);
+  convMeasureDef.doesLogging = true;
+  _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
+}
+
+void CouplingSchemeConfiguration::addAbsoluteOrRelativeConvergenceMeasure(
+    const std::string &dataName,
+    const std::string &meshName,
+    double             absLimit,
+    double             relLimit,
+    bool               suffices,
+    bool               strict)
+{
+  PRECICE_TRACE();
+  PRECICE_CHECK(math::greater(absLimit, 0.0),
+                "Absolute convergence limit has to be greater than zero. "
+                "Please check the <absolute-or-relative-convergence-measure abs-limit=\"{}\" rel-limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
+                "in your <coupling-scheme ... /> in the preCICE configuration file.",
+                absLimit, relLimit, dataName, meshName);
+  PRECICE_CHECK(math::greater(relLimit, 0.0) && math::greaterEquals(1.0, relLimit),
+                "Relative convergence limit has to be in ]0;1]. "
+                "Please check the <absolute-or-relative-convergence-measure abs-limit=\"{}\" rel-limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
+                "in your <coupling-scheme ... /> in the preCICE configuration file.",
+                absLimit, relLimit, dataName, meshName);
+  impl::PtrConvergenceMeasure measure(new impl::AbsoluteOrRelativeConvergenceMeasure(absLimit, relLimit));
   ConvergenceMeasureDefintion convMeasureDef;
   convMeasureDef.data        = getData(dataName, meshName);
   convMeasureDef.suffices    = suffices;
