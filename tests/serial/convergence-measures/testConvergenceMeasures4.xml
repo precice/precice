@@ -45,11 +45,11 @@
     <exchange data="Data1" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
     <exchange data="Data2" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
     <max-iterations value="100" />
+    <min-iterations value="2" />
     <absolute-or-relative-convergence-measure
       abs-limit="1e-1"
       rel-limit="1.0"
       data="Data2"
       mesh="MeshOne" />
-    <min-iteration-convergence-measure min-iterations="2" data="Data1" mesh="MeshOne" />
   </coupling-scheme:serial-implicit>
 </precice-configuration>
