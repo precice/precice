@@ -22,8 +22,8 @@ NearestNeighborBaseMapping::NearestNeighborBaseMapping(
     std::string mappingName,
     std::string mappingNameShort)
     : Mapping(constraint, dimensions, requiresGradientData, Mapping::InitialGuessRequirement::None),
-      mappingName(mappingName),
-      mappingNameShort(mappingNameShort)
+      mappingName(std::move(mappingName)),
+      mappingNameShort(std::move(mappingNameShort))
 {
 }
 

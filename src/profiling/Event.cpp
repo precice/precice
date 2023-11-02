@@ -5,11 +5,11 @@
 
 namespace precice::profiling {
 
-Event::Event(std::string eventName, Options options)
+Event::Event(std::string_view eventName, Options options)
     : _fundamental(options.fundamental), _synchronize(options.synchronized)
 {
   auto &er = EventRegistry::instance();
-  _eid     = er.nameToID(EventRegistry::instance().prefix + eventName);
+  _eid     = er.nameToID(std::string(EventRegistry::instance().prefix).append(eventName));
   start();
 }
 
@@ -45,7 +45,7 @@ void Event::stop()
   }
 }
 
-void Event::addData(const std::string &key, int value)
+void Event::addData(std::string_view key, int value)
 {
   auto timestamp = Clock::now();
   PRECICE_ASSERT(_state == State::RUNNING, _eid);
@@ -59,7 +59,7 @@ void Event::addData(const std::string &key, int value)
 
 // -----------------------------------------------------------------------
 
-ScopedEventPrefix::ScopedEventPrefix(std::string const &name)
+ScopedEventPrefix::ScopedEventPrefix(std::string_view name)
 {
   previousName = EventRegistry::instance().prefix;
   EventRegistry::instance().prefix += name;

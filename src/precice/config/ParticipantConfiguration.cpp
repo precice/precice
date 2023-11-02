@@ -318,8 +318,7 @@ void ParticipantConfiguration::xmlTagCallback(
     _watchIntegralConfigs.push_back(config);
   } else if (tag.getNamespace() == TAG_INTRA_COMM) {
     com::CommunicationConfiguration comConfig;
-    com::PtrCommunication           com  = comConfig.createCommunication(tag);
-    utils::IntraComm::getCommunication() = com;
+    utils::IntraComm::getCommunication() = comConfig.createCommunication(tag);
     _isIntraCommDefined                  = true;
     _participants.back()->setUsePrimaryRank(true);
   }
