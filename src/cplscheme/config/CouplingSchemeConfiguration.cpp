@@ -20,7 +20,6 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
 #include "cplscheme/impl/AbsoluteOrRelativeConvergenceMeasure.hpp"
-#include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
 #include "cplscheme/impl/RelativeConvergenceMeasure.hpp"
 #include "cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp"
 #include "logging/LogMacros.hpp"
