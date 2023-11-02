@@ -275,7 +275,7 @@ std::string TestContext::describe() const
   } else {
     os << " represents \"" << name << '"';
   }
-  os << " and runs on rank " << rank << " out of " << size << '.';
+  os << " and runs test \"" << testing::getTestName() << "\" on rank " << rank << " out of " << size << '.';
 
   if (_initIntraComm || _events || _petsc) {
     os << " Initialized: {";
