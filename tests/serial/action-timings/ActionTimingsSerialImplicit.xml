@@ -56,7 +56,7 @@
     <max-time-windows value="10" />
     <time-window-size value="1.0" />
     <max-iterations value="3" />
-    <min-iteration-convergence-measure min-iterations="5" data="Forces" mesh="MeshOne" />
+    <min-iterations value="3" />
     <exchange data="Forces" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
     <exchange data="Velocities" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
   </coupling-scheme:serial-implicit>

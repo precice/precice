@@ -30,16 +30,21 @@ void TXTTableWriter::addData(
   data.name = name;
   data.type = type;
   _data.push_back(data);
+
+  std::string delimiter = _data.empty() ? "" : "  ";
   if ((type == INT) || (type == DOUBLE)) {
-    _outputStream << name << "  ";
-  } else if (type == VECTOR2D) {
-    for (int i = 0; i < 2; i++) {
-      _outputStream << name << i << "  ";
-    }
+    _outputStream << delimiter << name;
   } else {
-    PRECICE_ASSERT(type == VECTOR3D);
-    for (int i = 0; i < 3; i++) {
-      _outputStream << name << i << "  ";
+    _outputStream << delimiter << name << 0;
+    if (type == VECTOR2D) {
+      for (int i = 1; i < 2; i++) {
+        _outputStream << "  " << name << i;
+      }
+    } else {
+      PRECICE_ASSERT(type == VECTOR3D);
+      for (int i = 1; i < 3; i++) {
+        _outputStream << "  " << name << i;
+      }
     }
   }
   // Print out everything apart from INT consistently in scientific
@@ -62,7 +67,9 @@ void TXTTableWriter::writeData(
   }
   PRECICE_ASSERT(_writeIterator->name == name, _writeIterator->name, name);
   PRECICE_ASSERT(_writeIterator->type == INT, _writeIterator->type);
-  _outputStream << std::setw(6) << value << "  ";
+
+  std::string delimiter = _writeIterator == _data.begin() ? "" : "  ";
+  _outputStream << delimiter << std::setw(6) << value;
   _writeIterator++;
   if (_writeIterator == _data.end()) {
     _outputStream.flush();
@@ -81,7 +88,9 @@ void TXTTableWriter::writeData(
   }
   PRECICE_ASSERT(_writeIterator->name == name, _writeIterator->name, name);
   PRECICE_ASSERT(_writeIterator->type == DOUBLE, _writeIterator->type);
-  _outputStream << std::setw(15) << value << "  ";
+
+  std::string delimiter = _writeIterator == _data.begin() ? "" : "  ";
+  _outputStream << delimiter << std::setw(15) << value;
   _writeIterator++;
   if (_writeIterator == _data.end()) {
     _outputStream.flush();
@@ -100,8 +109,12 @@ void TXTTableWriter::writeData(
   }
   PRECICE_ASSERT(_writeIterator->name == name, _writeIterator->name, name);
   PRECICE_ASSERT(_writeIterator->type == VECTOR2D, _writeIterator->type);
-  for (int i = 0; i < value.size(); i++) {
-    _outputStream << std::setw(15) << value[i] << "  ";
+
+  std::string delimiter = _writeIterator == _data.begin() ? "" : "  ";
+  _outputStream << delimiter << std::setw(15) << value[0];
+
+  for (int i = 1; i < value.size(); i++) {
+    _outputStream << "  " << std::setw(15) << value[i];
   }
   _writeIterator++;
   if (_writeIterator == _data.end()) {
@@ -121,8 +134,11 @@ void TXTTableWriter::writeData(
   }
   PRECICE_ASSERT(_writeIterator->name == name, _writeIterator->name, name);
   PRECICE_ASSERT(_writeIterator->type == VECTOR3D, _writeIterator->type);
-  for (int i = 0; i < value.size(); i++) {
-    _outputStream << std::setw(15) << value[i] << "  ";
+
+  std::string delimiter = _writeIterator == _data.begin() ? "" : "  ";
+  _outputStream << delimiter << std::setw(15) << value[0];
+  for (int i = 1; i < value.size(); i++) {
+    _outputStream << "  " << std::setw(15) << value[i];
   }
   _writeIterator++;
   if (_writeIterator == _data.end()) {

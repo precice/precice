@@ -62,8 +62,7 @@
     <participants first="SolverOne" second="SolverThree" />
     <max-time-windows value="10" />
     <time-window-size value="1.0" />
-    <max-iterations value="10" />
-    <min-iteration-convergence-measure min-iterations="3" data="Data2" mesh="MeshA" />
+    <max-iterations value="3" />
     <exchange data="Data0" mesh="MeshA" from="SolverOne" to="SolverThree" />
     <exchange data="Data2" mesh="MeshA" from="SolverThree" to="SolverOne" />
   </coupling-scheme:serial-implicit>
