@@ -284,6 +284,12 @@ private:
   */
   void addWaveforms(const DataMap &cplData);
 
+  /**
+  *
+  * @brief transforms the time steps of the waveforms in _waveformW to the new time window. This is done by destroying and recreating _waveformW and _waveformWBackup as well as their waveforms
+  */
+  void rescaleWaveformInTime(const DataMap &cplData);
+
   /// @brief Concatenation of all coupling data involved in the QN system.
   Eigen::VectorXd _values;
 

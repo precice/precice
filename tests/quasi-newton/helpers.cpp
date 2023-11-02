@@ -2,6 +2,7 @@
 
 #include "helpers.hpp"
 
+#include "math/differences.hpp"
 #include "precice/precice.hpp"
 #include "testing/Testing.hpp"
 
@@ -245,28 +246,18 @@ void runTestQNWR(std::string const &config, TestContext const &context)
   while (interface.isCouplingOngoing()) {
 
     if (interface.requiresWritingCheckpoint()) {
-
-      // Time window is done check that waveform iterations is correct
-      // for (int i = 0; i < nSubsteps; i++) {
-      //   double localTime = ((double) i)/nSubStepsDone;
-      //   BOOST_TEST( savedValues(i,0) == ( localTime* localTime - localTime) / 3);
-      //   BOOST_TEST(savedValues(i,1) == (localTime * localTime + 2 * localTime) / 3);
-      // }
-
       timeCheckpoint = t;
       iterations     = 0;
       nSubStepsDone  = 0;
     }
 
-    std::cout << "\n crashed here \n";
     interface.readData(meshName, readDataName, {vertexIDs, 2}, dt, {inValues, 2});
 
-    std::cout << "\n read data done \n";
     /*
       Solves the following linear system
       2*x1 + x2 = t**2
-      x2 - 1*x1 = t
-      Analytical solutions are x1 = 1/3*(t**2 + t) and x2 = 1/3*(t**2 + 2*t).
+      -x1 + x2 = t
+      Analytical solutions are x1 = 1/3*(t**2 - t) and x2 = 1/3*(t**2 + 2*t).
     */
 
     if (context.isNamed("SolverOne")) {
@@ -274,7 +265,7 @@ void runTestQNWR(std::string const &config, TestContext const &context)
         outValues[i] = inValues[i]; //only pushes solution through
       }
     } else {
-      outValues[0] = -inValues[0] - inValues[1] + t * t;
+      outValues[0] = (-inValues[0] - inValues[1] + t * t);
       outValues[1] = inValues[0] + t;
     }
 
@@ -282,37 +273,30 @@ void runTestQNWR(std::string const &config, TestContext const &context)
     savedValues(nSubStepsDone, 0) = outValues[0];
     savedValues(nSubStepsDone, 1) = outValues[1];
 
-    std::cout << "\n writing data \n";
     interface.writeData(meshName, writeDataName, {vertexIDs, 2}, {outValues, 2});
-    std::cout << "writing done \n";
 
     nSubStepsDone += 1;
     t += dt;
-    std::cout << "\n time \n";
 
-    std::cout << t;
-    std::cout << "\n";
-    std::cout << dt;
-    std::cout << "\n crashed here in advance \n";
     interface.advance(dt);
-    std::cout << "\n advancing done \n";
     maxDt = interface.getMaxTimeStepSize();
     dt    = dt > maxDt ? maxDt : dt;
+
     if (interface.requiresReadingCheckpoint()) {
       nSubStepsDone = 0;
       t             = timeCheckpoint;
       iterations++;
     }
   }
+  interface.finalize();
 
   // Check that the last time window is correct as well
   for (int i = 0; i < nSubsteps; i++) {
-    double localTime = ((double) i) / nSubStepsDone + timeCheckpoint;
-    BOOST_TEST(savedValues(i, 0) == (localTime * localTime - localTime) / 3);
-    BOOST_TEST(savedValues(i, 1) == (localTime * localTime + 2 * localTime) / 3);
+    // scaling with the time window length which is equal to 1
+    double localTime = (1.0 * i) / nSubStepsDone + timeCheckpoint;
+    BOOST_TEST(math::equals(savedValues(i, 0), (localTime * localTime - localTime) / 3, 1e-12));
+    BOOST_TEST(math::equals(savedValues(i, 1), (localTime * localTime + 2 * localTime) / 3), 1e-12);
   }
-
-  interface.finalize();
 }
 
 #endif
