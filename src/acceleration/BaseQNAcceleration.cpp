@@ -298,8 +298,6 @@ void BaseQNAcceleration::performAcceleration(
    */
   updateDifferenceMatrices(cplData);
 
-  std::cout << "\n in acceleration \n";
-
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
     PRECICE_DEBUG("   Performing underrelaxation");
     _oldXTilde    = _values;    // Store x tilde
@@ -402,8 +400,6 @@ void BaseQNAcceleration::performAcceleration(
     //_values = _values + xUpdate;
     _values += xUpdate;
 
-    std::cout << _values;
-
     // pending deletion: delete old V, W matrices if timeWindowsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
     if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
@@ -439,7 +435,7 @@ void BaseQNAcceleration::performAcceleration(
                     "filter or increase its threshold (larger epsilon).");
     }
   }
-  // splitCouplingData(cplData);
+  splitCouplingData(cplData);
   // number of iterations (usually equals number of columns in LS-system)
   its++;
   _firstIteration = false;
