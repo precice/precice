@@ -113,7 +113,6 @@ private:
   const std::string ATTR_LIMIT;
   const std::string ATTR_ABS_LIMIT;
   const std::string ATTR_REL_LIMIT;
-  const std::string ATTR_MIN_ITERATIONS;
   const std::string ATTR_NAME;
   const std::string ATTR_FROM;
   const std::string ATTR_TO;

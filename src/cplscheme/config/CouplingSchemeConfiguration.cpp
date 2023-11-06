@@ -73,7 +73,6 @@ CouplingSchemeConfiguration::CouplingSchemeConfiguration(
       ATTR_LIMIT("limit"),
       ATTR_ABS_LIMIT("abs-limit"),
       ATTR_REL_LIMIT("rel-limit"),
-      ATTR_MIN_ITERATIONS("min-iterations"),
       ATTR_NAME("name"),
       ATTR_FROM("from"),
       ATTR_TO("to"),
@@ -568,14 +567,14 @@ void CouplingSchemeConfiguration::addTagAbsoluteOrRelativeConvergenceMeasure(
   using namespace xml;
   XMLTag tagConvergenceMeasure(*this, TAG_ABS_OR_REL_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
   tagConvergenceMeasure.setDocumentation(
-      "Absolute or relative convergence, which is the disjunction of the absolute criterion based on the two-norm difference of data values between iterations and relative criterion based on the relative two-norm difference of data values between iterations."
+      "Absolute or relative convergence, which is the disjunction of an absolute criterion based on the two-norm difference of data values between iterations and a relative criterion based on the relative two-norm difference of data values between iterations,i.e. convergence is reached as soon as one of the both criteria is fulfilled."
       "\\$$\\left\\lVert H(x^k) - x^k \\right\\rVert_2 < \\text{abs-limit}\\quad\\text{or}\\quad\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert_2}{\\left\\lVert H(x^k) \\right\\rVert_2} < \\text{rel-limit} \\$$  ");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrAbsLimit(ATTR_ABS_LIMIT);
   attrAbsLimit.setDocumentation(R"(Absolute limit under which the measure is considered to have converged.)");
   tagConvergenceMeasure.addAttribute(attrAbsLimit);
   XMLAttribute<double> attrRelLimit(ATTR_REL_LIMIT);
-  attrAbsLimit.setDocumentation(R"(Relative limit under which the measure is considered to have converged.Must be in \\((0, 1]\\).)");
+  attrAbsLimit.setDocumentation(R"(Relative limit under which the measure is considered to have converged. Must be in \\((0, 1]\\).)");
   tagConvergenceMeasure.addAttribute(attrRelLimit);
   tag.addSubtag(tagConvergenceMeasure);
 }

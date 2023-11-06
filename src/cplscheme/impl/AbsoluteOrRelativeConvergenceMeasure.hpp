@@ -32,7 +32,8 @@ namespace impl {
  *
  * The convergence is evaluated by looking at the two norm of the differences
  * between each data value from the new and old data set. If the two norm is
- * equal or below a given percentage of the norm of the old data set,
+ * equal or below a given absolute value or a given percentage of the norm of
+ * the new data set,
  * convergence is achieved.
  *
  * For a description of how to perform the measurement, see class
@@ -43,11 +44,14 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param[in] convergenceLimitPercent
+   * @param[in] absLimit
+   *        Limit to define absolute convergence to the norm of the current 
+   *        new dataset. Has to be larger than zero.
+   * @param[in] relLimit
    *        Limit to define convergence relative to the norm of the current
    *        new dataset. Has to be in $] 0 ; 1 ]$.
    */
-  AbsoluteOrRelativeConvergenceMeasure(double convergenceLimit, double convergenceLimitPercent);
+  AbsoluteOrRelativeConvergenceMeasure(double absLimit, double relLimit);
 
   virtual ~AbsoluteOrRelativeConvergenceMeasure(){};
 
