@@ -238,7 +238,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         // insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the
         // QR decomposition and update decomposition
 
-        // apply scaling here
+        //apply scaling here
         _preconditioner->apply(deltaR);
         _qrV.pushFront(deltaR);
 
