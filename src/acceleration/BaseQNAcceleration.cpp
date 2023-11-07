@@ -352,11 +352,11 @@ void BaseQNAcceleration::performAcceleration(
         couplingData->setSampleAtTime(stamples.timestamp, couplingData->sample());
       }
     }
-    computeUnderrelaxationSecondaryData(cplData);
 
+    computeUnderrelaxationSecondaryData(cplData);
   } else {
 
-    if (_firstIteration) {
+    if (_firstIteration && _exchangeSubsteps) {
       rescaleWaveformInTime(cplData);
     }
 

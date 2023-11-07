@@ -240,8 +240,6 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd
           cplData.at(id)->values() += Wlist[i].sample(timestamp) * c[i];
         }
         cplData.at(id)->setSampleAtTime(timestamp, cplData.at(id)->sample());
-        std::cout << "\n sample is \n";
-        std::cout << cplData.at(id)->sample().values;
       }
     }
 
