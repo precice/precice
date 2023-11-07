@@ -62,6 +62,9 @@ private:
   std::map<int, std::vector<precice::time::Storage>> _secondaryWaveformW;
   std::map<int, std::vector<precice::time::Storage>> _secondaryWaveformWBackup;
 
+  /// updates the secondary W waveforms
+  void addSecondaryWaveforms(const DataMap &cplData);
+
   /// updates the V, W matrices (as well as the matrices for the secondary data)
   virtual void updateDifferenceMatrices(const DataMap &cplData);
 

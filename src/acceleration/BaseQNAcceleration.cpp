@@ -88,6 +88,12 @@ void BaseQNAcceleration::initialize(
                  "Consider switching to a different acceleration scheme or a different data mapping scheme.");
   }
 
+  for (const auto &data : cplData | boost::adaptors::map_values) {
+    if (data->exchangeSubsteps()) {
+      _exchangeSubsteps = true;
+    }
+  }
+
   checkDataIDs(cplData);
 
   size_t              entries = 0;
@@ -195,7 +201,11 @@ void BaseQNAcceleration::updateDifferenceMatrices(
     if (not _firstIteration) {
       // Update matrices V, W with newest information
 
-      PRECICE_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
+      if (!_exchangeSubsteps) {
+        PRECICE_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
+      } else {
+        PRECICE_ASSERT((_matrixV.cols() == 0 && _waveformW.empty()) || _matrixV.cols() == _waveformW.at(_dataIDs.front()).size(), _matrixV.cols(), _matrixW.cols());
+      }
       PRECICE_ASSERT(getLSSystemCols() <= _maxIterationsUsed, getLSSystemCols(), _maxIterationsUsed);
 
       if (2 * getLSSystemCols() >= getLSSystemRows())
@@ -227,9 +237,13 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       if (not columnLimitReached && overdetermined) {
 
         utils::appendFront(_matrixV, deltaR);
-        utils::appendFront(_matrixW, deltaXTilde);
 
-        addWaveforms(cplData);
+        // append the data to the W matrix or add the waveform to the W list
+        if (_exchangeSubsteps) {
+          addWaveforms(cplData);
+        } else {
+          utils::appendFront(_matrixW, deltaXTilde);
+        }
 
         // insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the
         // QR decomposition and update decomposition
@@ -239,9 +253,16 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         _matrixCols.front()++;
 
       } else {
+
         utils::shiftSetFirst(_matrixV, deltaR);
-        utils::shiftSetFirst(_matrixW, deltaXTilde);
         addWaveforms(cplData);
+
+        // append the data to the W matrix or add the waveform to the W list
+        if (_exchangeSubsteps) {
+          addWaveforms(cplData);
+        } else {
+          utils::appendFront(_matrixW, deltaXTilde);
+        }
 
         // inserts column deltaR at pos. 0 to the QR decomposition and deletes the last column
         // the QR decomposition of V is updated
@@ -258,12 +279,16 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       }
     }
     _oldResiduals = _residuals; // Store residuals
-    _oldXTilde    = _values;    // Store x_tilde
 
-    _oldXTildeW.clear();
-    for (int id : _dataIDs) {
-      precice::time::Storage localCopy = cplData.at(id)->timeStepsStorage();
-      _oldXTildeW.insert(std::pair<int, precice::time::Storage>(id, localCopy));
+    // Store x_tilde
+    if (_exchangeSubsteps) {
+      _oldXTildeW.clear();
+      for (int id : _dataIDs) {
+        precice::time::Storage localCopy = cplData.at(id)->timeStepsStorage();
+        _oldXTildeW.insert(std::pair<int, precice::time::Storage>(id, localCopy));
+      }
+    } else {
+      _oldXTilde = _values;
     }
   }
 }
@@ -300,16 +325,18 @@ void BaseQNAcceleration::performAcceleration(
 
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
     PRECICE_DEBUG("   Performing underrelaxation");
-    _oldXTilde    = _values;    // Store x tilde
     _oldResiduals = _residuals; // Store current residual
 
-    _oldXTildeW.clear();
-
-    for (int id : _dataIDs) {
-      precice::time::Storage localCopy = cplData.at(id)->timeStepsStorage();
-      _oldXTildeW.insert(std::pair<int, precice::time::Storage>(id, localCopy));
+    // Store x tilde either as vector or as waveform
+    if (_exchangeSubsteps) {
+      _oldXTildeW.clear();
+      for (int id : _dataIDs) {
+        precice::time::Storage localCopy = cplData.at(id)->timeStepsStorage();
+        _oldXTildeW.insert(std::pair<int, precice::time::Storage>(id, localCopy));
+      }
+    } else {
+      _oldXTilde = _values;
     }
-
     // Perform constant relaxation
     // with residual: x_new = x_old + omega * res
     for (const DataMap::value_type &pair : cplData) {
@@ -395,10 +422,12 @@ void BaseQNAcceleration::performAcceleration(
     computeQNUpdate(cplData, xUpdate);
 
     /**
-     * apply quasiNewton update
+     * If not exchanging substeps apply the QN update and save it in coupling data
      */
-    //_values = _values + xUpdate;
-    _values += xUpdate;
+    if (!_exchangeSubsteps) {
+      _values += xUpdate;
+      splitCouplingData(cplData);
+    }
 
     // pending deletion: delete old V, W matrices if timeWindowsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
@@ -435,7 +464,6 @@ void BaseQNAcceleration::performAcceleration(
                     "filter or increase its threshold (larger epsilon).");
     }
   }
-  splitCouplingData(cplData);
   // number of iterations (usually equals number of columns in LS-system)
   its++;
   _firstIteration = false;
@@ -571,8 +599,13 @@ void BaseQNAcceleration::iterationsConverged(
   if (_timeWindowsReused == 0) {
     if (_forceInitialRelaxation) {
       _matrixV.resize(0, 0);
-      _matrixW.resize(0, 0);
-      _waveformW.clear();
+
+      if (_exchangeSubsteps) {
+        _waveformW.clear();
+      } else {
+        _matrixW.resize(0, 0);
+      }
+
       _qrV.reset();
       // set the number of global rows in the QRFactorization.
       _qrV.setGlobalRows(getLSSystemRows());
@@ -589,7 +622,11 @@ void BaseQNAcceleration::iterationsConverged(
     _nbDropCols += toRemove;
     PRECICE_ASSERT(toRemove > 0, toRemove);
     PRECICE_DEBUG("Removing {} cols from least-squares system with {} cols", toRemove, getLSSystemCols());
-    PRECICE_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
+    if (!_exchangeSubsteps) {
+      PRECICE_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
+    } else {
+      PRECICE_ASSERT((_matrixV.cols() == 0 && _waveformW.empty()) || _matrixV.cols() == _waveformW.at(_dataIDs.front()).size(), _matrixV.cols(), _matrixW.cols());
+    }
     PRECICE_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 
     // remove columns
@@ -624,9 +661,12 @@ void BaseQNAcceleration::removeMatrixColumn(
 
   PRECICE_ASSERT(_matrixV.cols() > 1);
   utils::removeColumnFromMatrix(_matrixV, columnIndex);
-  utils::removeColumnFromMatrix(_matrixW, columnIndex);
-  for (int id : _dataIDs) {
-    _waveformW[id].erase(_waveformW[id].begin() + columnIndex);
+  if (_exchangeSubsteps) {
+    for (int id : _dataIDs) {
+      _waveformW[id].erase(_waveformW[id].begin() + columnIndex);
+    }
+  } else {
+    utils::removeColumnFromMatrix(_matrixW, columnIndex);
   }
 
   // Reduce column count
@@ -674,7 +714,11 @@ int BaseQNAcceleration::getLSSystemCols() const
   }
   if (_hasNodesOnInterface) {
     PRECICE_ASSERT(cols == _matrixV.cols(), cols, _matrixV.cols(), _matrixCols, _qrV.cols());
-    PRECICE_ASSERT(cols == _matrixW.cols(), cols, _matrixW.cols());
+    if (!_exchangeSubsteps) {
+      PRECICE_ASSERT(cols == _matrixW.cols(), cols, _matrixW.cols());
+    } else {
+      PRECICE_ASSERT((cols == 0 && _waveformW.empty()) || cols == _waveformW.at(_dataIDs.front()).size(), cols, _matrixV.cols(), _matrixCols, _qrV.cols());
+    }
   }
 
   return cols;

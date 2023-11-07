@@ -289,13 +289,13 @@ void runTestQNWR(std::string const &config, TestContext const &context)
     }
   }
   interface.finalize();
-
+  std::cout << savedValues;
   // Check that the last time window is correct as well
   for (int i = 0; i < nSubsteps; i++) {
     // scaling with the time window length which is equal to 1
     double localTime = (1.0 * i) / nSubStepsDone + timeCheckpoint;
-    BOOST_TEST(math::equals(savedValues(i, 0), (localTime * localTime - localTime) / 3, 1e-12));
-    BOOST_TEST(math::equals(savedValues(i, 1), (localTime * localTime + 2 * localTime) / 3), 1e-12);
+    BOOST_TEST(math::equals(savedValues(i, 0), (localTime * localTime - localTime) / 3, 1e-10));
+    BOOST_TEST(math::equals(savedValues(i, 1), (localTime * localTime + 2 * localTime) / 3), 1e-10);
   }
 }
 

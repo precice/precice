@@ -277,6 +277,9 @@ protected:
 
   int its = 0, tWindows = 0;
 
+  // Bool to switch between the waveform variant of QN
+  bool _exchangeSubsteps = false;
+
 private:
   /**
   *
@@ -316,5 +319,6 @@ private:
   /// Number of dropped columns in this time window (old time window out of scope)
   int _nbDropCols = 0;
 };
+
 } // namespace acceleration
 } // namespace precice
