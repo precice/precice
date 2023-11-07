@@ -289,7 +289,6 @@ void runTestQNWR(std::string const &config, TestContext const &context)
     }
   }
   interface.finalize();
-  std::cout << savedValues;
   // Check that the last time window is correct as well
   for (int i = 0; i < nSubsteps; i++) {
     // scaling with the time window length which is equal to 1
