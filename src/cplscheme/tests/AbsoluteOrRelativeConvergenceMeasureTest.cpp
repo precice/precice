@@ -18,9 +18,8 @@ BOOST_AUTO_TEST_CASE(AbsoluteOrRelativeConvergenceMeasureTest)
   double                                                relLimit1 = 0.05;
   double                                                absLimit2 = 0.2;
   double                                                relLimit2 = 0.2;
-  cplscheme::impl::AbsoluteOrRelativeConvergenceMeasure measure1(absLimit1,relLimit1);
-  cplscheme::impl::AbsoluteOrRelativeConvergenceMeasure measure2(absLimit2,relLimit2);
-
+  cplscheme::impl::AbsoluteOrRelativeConvergenceMeasure measure1(absLimit1, relLimit1);
+  cplscheme::impl::AbsoluteOrRelativeConvergenceMeasure measure2(absLimit2, relLimit2);
 
   // Create data sets for old state of data and new state of data
   Vector3d oldValues0(1, 1, 1);

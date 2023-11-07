@@ -45,7 +45,7 @@ public:
    * @brief Constructor.
    *
    * @param[in] absLimit
-   *        Limit to define absolute convergence to the norm of the current 
+   *        Limit to define absolute convergence to the norm of the current
    *        new dataset. Has to be larger than zero.
    * @param[in] relLimit
    *        Limit to define convergence relative to the norm of the current
