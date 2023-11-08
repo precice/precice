@@ -240,7 +240,6 @@ target_sources(preciceCore
     src/precice/Participant.hpp
     src/precice/Tooling.cpp
     src/precice/Tooling.hpp
-    src/precice/Version.h
     src/precice/config/Configuration.cpp
     src/precice/config/Configuration.hpp
     src/precice/config/ParticipantConfiguration.cpp
@@ -265,7 +264,6 @@ target_sources(preciceCore
     src/precice/impl/WatchPoint.hpp
     src/precice/impl/WriteDataContext.cpp
     src/precice/impl/WriteDataContext.hpp
-    src/precice/impl/versions.hpp
     src/precice/precice.hpp
     src/precice/span.hpp
     src/precice/types.hpp

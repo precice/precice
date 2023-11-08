@@ -83,7 +83,6 @@ target_sources(testprecice
     src/testing/ParallelCouplingSchemeFixture.hpp
     src/testing/SerialCouplingSchemeFixture.cpp
     src/testing/SerialCouplingSchemeFixture.hpp
-    src/testing/SourceLocation.hpp
     src/testing/TestContext.cpp
     src/testing/TestContext.hpp
     src/testing/Testing.cpp
