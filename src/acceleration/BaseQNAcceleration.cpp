@@ -786,13 +786,13 @@ void BaseQNAcceleration::rescaleWaveformInTime(const DataMap &cplData)
     _waveformW.clear();
 
     auto Wlist = _waveformWBackup[id];
-    for (int i = 0; i < Wlist.size(); i++) {
+    for (auto localWaveform : Wlist) {
 
       // Need to change the time steps of the samples in the storage and the only way to do this is by creating a new storage container.
       precice::time::Storage localCopy = cplData.at(id)->timeStepsStorage();
       localCopy.clear();
 
-      for (auto stamples : Wlist[i].stamples()) {
+      for (auto stamples : localWaveform.stamples()) {
 
         localCopy.setSampleAtTime(transformNewTime(stamples.timestamp), stamples.sample);
       }
