@@ -255,7 +255,6 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       } else {
 
         utils::shiftSetFirst(_matrixV, deltaR);
-        addWaveforms(cplData);
 
         // append the data to the W matrix or add the waveform to the W list
         if (_exchangeSubsteps) {
@@ -267,8 +266,8 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         // inserts column deltaR at pos. 0 to the QR decomposition and deletes the last column
         // the QR decomposition of V is updated
         _preconditioner->apply(deltaR);
-        _qrV.pushFront(deltaR);
         _qrV.popBack();
+        _qrV.pushFront(deltaR);
 
         _matrixCols.front()++;
         _matrixCols.back()--;
@@ -334,23 +333,30 @@ void BaseQNAcceleration::performAcceleration(
         precice::time::Storage localCopy = cplData.at(id)->timeStepsStorage();
         _oldXTildeW.insert(std::pair<int, precice::time::Storage>(id, localCopy));
       }
+      // Perform constant relaxation
+      // with residual: x_new = x_old + omega * res
+      for (const DataMap::value_type &pair : cplData) {
+        const auto couplingData = pair.second;
+
+        for (auto stamples : couplingData->stamples()) {
+
+          auto oldValues         = couplingData->getPreviousValuesAtTime(stamples.timestamp);
+          couplingData->values() = _initialRelaxation * stamples.sample.values;
+          couplingData->values() += oldValues * (1 - _initialRelaxation);
+
+          // Apply relaxation to all timesteps and store it in the current waveform
+          couplingData->setSampleAtTime(stamples.timestamp, couplingData->sample());
+        }
+      }
+
     } else {
       _oldXTilde = _values;
-    }
-    // Perform constant relaxation
-    // with residual: x_new = x_old + omega * res
-    for (const DataMap::value_type &pair : cplData) {
-      const auto couplingData = pair.second;
 
-      for (auto stamples : couplingData->stamples()) {
-
-        auto oldValues         = couplingData->getPreviousValuesAtTime(stamples.timestamp);
-        couplingData->values() = _initialRelaxation * stamples.sample.values;
-        couplingData->values() += oldValues * (1 - _initialRelaxation);
-
-        // Apply relaxation to all timesteps and store it in the current waveform
-        couplingData->setSampleAtTime(stamples.timestamp, couplingData->sample());
-      }
+      // Perform constant relaxation
+      // with residual: x_new = x_old + omega * res
+      _residuals *= _initialRelaxation;
+      _residuals += _oldValues;
+      _values = _residuals;
     }
 
     computeUnderrelaxationSecondaryData(cplData);
@@ -426,7 +432,6 @@ void BaseQNAcceleration::performAcceleration(
      */
     if (!_exchangeSubsteps) {
       _values += xUpdate;
-      splitCouplingData(cplData);
     }
 
     // pending deletion: delete old V, W matrices if timeWindowsReused = 0
@@ -467,6 +472,11 @@ void BaseQNAcceleration::performAcceleration(
   // number of iterations (usually equals number of columns in LS-system)
   its++;
   _firstIteration = false;
+
+  //Split the coupling data and update the values in coupling data if we are not doing waveform iteraitons
+  if (!_exchangeSubsteps) {
+    splitCouplingData(cplData);
+  }
 }
 
 void BaseQNAcceleration::applyFilter()
@@ -632,9 +642,12 @@ void BaseQNAcceleration::iterationsConverged(
     // remove columns
     for (int i = 0; i < toRemove; i++) {
       utils::removeColumnFromMatrix(_matrixV, _matrixV.cols() - 1);
-      utils::removeColumnFromMatrix(_matrixW, _matrixW.cols() - 1);
-      for (int id : _dataIDs) {
-        _waveformW[id].erase(_waveformW[id].begin() + _waveformW[id].size());
+      if (!_exchangeSubsteps) {
+        utils::removeColumnFromMatrix(_matrixW, _matrixW.cols() - 1);
+      } else {
+        for (int id : _dataIDs) {
+          _waveformW[id].erase(_waveformW[id].begin() + _waveformW[id].size());
+        }
       }
       // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
       _qrV.popBack();

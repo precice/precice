@@ -1,5 +1,6 @@
 #include <Eigen/Core>
 #include <algorithm>
+#include <boost/test/data/test_case.hpp>
 #include <cmath>
 #include <map>
 #include <memory>
@@ -953,7 +954,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     // Dummy Secondary rank to be able to reuse the 4 proc Intra-participant communication Fixture
   }
 
-  // QN- Update, 5. iteration
+  // QN- Update, 5. iteratidataon
   pp.performAcceleration(data);
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
@@ -1034,7 +1035,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 }
 
 /// Test that runs on 4 processors.
-BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
+BOOST_DATA_TEST_CASE(testColumnsLoggingWithoutSubsteps, boost::unit_test::data::make({false, true}), exchangeSubsteps)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   double           initialRelaxation        = 0.1;
@@ -1075,12 +1076,12 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   }
 
   utils::append(displacements->values(), insert);
-
-  bool exchangeSubsteps = false; // @todo add testColumnsLoggingWithSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
-
   PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
   data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
+
+  // Need at least two samples to get a valid waveform
   dpcd->setSampleAtTime(0, dpcd->sample());
+  dpcd->setSampleAtTime(1, dpcd->sample());
   dpcd->storeIteration();
 
   acc.initialize(data);
@@ -1097,6 +1098,10 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
 
   displacements->values() = insert;
 
+  // Need to update the samples
+  dpcd->setSampleAtTime(0, dpcd->sample());
+  dpcd->setSampleAtTime(1, dpcd->sample());
+
   acc.performAcceleration(data);
 
   Eigen::VectorXd newdvalues1;
@@ -1109,7 +1114,9 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   } else if (context.isRank(3)) {
     utils::append(newdvalues1, 1.0);
   }
+
   data.begin()->second->values() = newdvalues1;
+  dpcd->setSampleAtTime(1, dpcd->sample());
 
   acc.performAcceleration(data);
 
@@ -1123,7 +1130,9 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   } else if (context.isRank(3)) {
     utils::append(newdvalues2, 1.0);
   }
+
   data.begin()->second->values() = newdvalues2;
+  dpcd->setSampleAtTime(1, dpcd->sample());
 
   acc.iterationsConverged(data);
 
@@ -1142,9 +1151,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
     utils::append(newdvalues3, 1.0);
   }
   data.begin()->second->values() = newdvalues3;
-
   acc.performAcceleration(data);
-
   Eigen::VectorXd newdvalues4;
   if (context.isPrimary()) {
     utils::append(newdvalues4, 1.0);
@@ -1155,7 +1162,9 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   } else if (context.isRank(3)) {
     utils::append(newdvalues4, 5.0);
   }
+
   data.begin()->second->values() = newdvalues4;
+  dpcd->setSampleAtTime(1, dpcd->sample());
 
   acc.iterationsConverged(data);
 
