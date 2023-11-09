@@ -112,6 +112,8 @@ public:
    */
   double getTime() const override final;
 
+  double getTimeWindowStart() const override final;
+
   /**
    * @brief getter for _timeWindows
    * @returns the number of currently computed time windows of the coupling scheme.
@@ -383,6 +385,12 @@ protected:
    */
   void determineInitialReceive(DataMap &receiveData);
 
+  /**
+   * @brief Function to check whether end of time window is reached. Does not check for convergence
+   * @returns true if end time of time window is reached or if this participant defines time window size (participant first method)
+   */
+  bool reachedEndOfTimeWindow() const;
+
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
@@ -516,12 +524,6 @@ private:
    * @brief If any required actions are open, an error message is issued.
    */
   void checkCompletenessRequiredActions();
-
-  /**
-   * @brief Function to check whether end of time window is reached. Does not check for convergence
-   * @returns true if end time of time window is reached or if this participant defines time window size (participant first method)
-   */
-  bool reachedEndOfTimeWindow() const;
 
   /**
    * @brief Initialize txt writers for iterations and convergence tracking

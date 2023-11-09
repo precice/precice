@@ -177,6 +177,18 @@ double CompositionalCouplingScheme::getTime() const
   }
 }
 
+double CompositionalCouplingScheme::getTimeWindowStart() const
+{
+  PRECICE_TRACE();
+  // In case of various time window sizes, use the scheme with the earliest start.
+  auto schemes = allSchemes();
+  return std::transform_reduce(
+      schemes.begin(), schemes.end(),
+      std::numeric_limits<double>::max(),
+      ::min<double>,
+      std::mem_fn(&CouplingScheme::getTimeWindowStart));
+}
+
 int CompositionalCouplingScheme::getTimeWindows() const
 {
   PRECICE_TRACE();
@@ -380,6 +392,15 @@ bool CompositionalCouplingScheme::hasConverged() const
   }
 
   return _implicitScheme->hasConverged();
+}
+
+CouplingScheme::ExchangePlan CompositionalCouplingScheme::getExchangePlan() const
+{
+  ExchangePlan plan;
+  for (const auto scheme : _activeSchemes) {
+    plan += scheme->getExchangePlan();
+  }
+  return plan;
 }
 
 } // namespace precice::cplscheme

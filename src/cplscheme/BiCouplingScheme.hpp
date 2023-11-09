@@ -70,6 +70,8 @@ public:
    */
   bool hasSendData(DataID dataID);
 
+  ExchangePlan getExchangePlan() const override;
+
 protected:
   /// Returns all data to be sent.
   DataMap &getSendData();

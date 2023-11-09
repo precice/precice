@@ -473,6 +473,11 @@ double BaseCouplingScheme::getTime() const
   return _timeWindowStartTime + _computedTimeWindowPart;
 }
 
+double BaseCouplingScheme::getTimeWindowStart() const
+{
+  return _timeWindowStartTime;
+}
+
 int BaseCouplingScheme::getTimeWindows() const
 {
   return _timeWindows;

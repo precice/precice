@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <boost/range/adaptor/map.hpp>
+#include <boost/range/algorithm_ext/push_back.hpp>
 #include <map>
 #include <memory>
 #include <ostream>
@@ -152,6 +154,24 @@ bool BiCouplingScheme::hasAnySendData()
 bool BiCouplingScheme::hasSendData(DataID dataID)
 {
   return getSendData(dataID) != nullptr;
+}
+
+CouplingScheme::ExchangePlan BiCouplingScheme::getExchangePlan() const
+{
+  if (!reachedEndOfTimeWindow()) {
+    return {};
+  }
+
+  ExchangePlan plan;
+
+  if (isImplicitCouplingScheme()) {
+    boost::push_back(plan.sendImplicit, _sendData | boost::adaptors::map_keys);
+    boost::push_back(plan.receiveImplicit, _receiveData | boost::adaptors::map_keys);
+  } else {
+    boost::push_back(plan.sendExplicit, _sendData | boost::adaptors::map_keys);
+    boost::push_back(plan.receiveExplicit, _receiveData | boost::adaptors::map_keys);
+  }
+  return plan.tidy();
 }
 
 } // namespace precice::cplscheme

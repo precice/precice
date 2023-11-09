@@ -106,6 +106,18 @@ public:
    */
   virtual bool addComputedTime(double timeToAdd) = 0;
 
+  struct ExchangePlan {
+    std::vector<DataID> receiveImplicit;
+    std::vector<DataID> receiveExplicit;
+    std::vector<DataID> sendImplicit;
+    std::vector<DataID> sendExplicit;
+
+    ExchangePlan &tidy();
+    ExchangePlan &operator+=(const ExchangePlan &other);
+  };
+
+  virtual ExchangePlan getExchangePlan() const = 0;
+
   using ChangedMeshes = std::vector<MeshID>;
 
   /** Synchronizes mesh changes with remote participants.
@@ -170,6 +182,10 @@ public:
 
   /// @brief Returns true, if data has been exchanged in last call of advance().
   virtual bool hasDataBeenReceived() const = 0;
+
+  /// Returns the time window start time of the current time window
+  /// For compositional schemes, this returns the earliest start of an active time window
+  virtual double getTimeWindowStart() const = 0;
 
   /// Returns the currently computed time of the coupling scheme.
   virtual double getTime() const = 0;

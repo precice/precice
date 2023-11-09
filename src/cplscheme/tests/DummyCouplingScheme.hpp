@@ -115,6 +115,8 @@ public:
    */
   double getTime() const override final;
 
+  double getTimeWindowStart() const override final;
+
   /**
    * @brief Not implemented.
    */
@@ -213,6 +215,12 @@ public:
   }
 
   bool hasConverged() const override;
+
+  ExchangePlan getExchangePlan() const override
+  {
+    PRECICE_ASSERT(false);
+    return {};
+  };
 
 private:
   mutable logging::Logger _log{"cplscheme::tests::DummyCouplingScheme"};

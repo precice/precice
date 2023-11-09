@@ -131,6 +131,8 @@ public:
    */
   double getTime() const final override;
 
+  double getTimeWindowStart() const override final;
+
   /**
    * @brief Returns the currently computed time windows of the coupling scheme.
    *
@@ -201,6 +203,8 @@ public:
 
   /// True if the implicit scheme has converged or no implicit scheme is defined
   bool hasConverged() const final;
+
+  ExchangePlan getExchangePlan() const final override;
 
 private:
   mutable logging::Logger _log{"cplscheme::CompositionalCouplingScheme"};

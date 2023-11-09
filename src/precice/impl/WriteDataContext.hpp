@@ -32,7 +32,7 @@ public:
    * @param atEndOfWindow if true, also the Storage will be reset (useful at end of window to trim storage).
    * @param isTimeWindowComplete if true, overwrite sample at front of Storage with sample at back (basically a Storage::move with constant).
    */
-  void resetData(bool atEndOfWindow, bool isTimeWindowComplete);
+  void resetData(); //bool atEndOfWindow, bool isTimeWindowComplete);
 
   /**
    * @brief Store values in _writeDataBuffer
