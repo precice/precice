@@ -309,14 +309,16 @@ void BaseCouplingScheme::firstExchange()
 
     _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
 
-    //If preCICE has stopped before the end of the time window we have to duplicate the last available sample and put it at the end of the time window.
+    // If preCICE has stopped before the end of the time window we have to duplicate the last available sample and put it at the end of the time window.
     // We have to exclude the case where coupling scheme does not have a time window size, since this will cause problem with the interpolation later on
     if (getNextTimeStepMaxSize() > math::NUMERICAL_ZERO_DIFFERENCE && hasTimeWindowSize()) {
-
       addTimeStepAtWindowEnd();
+    }
 
-      // Update the _computedTimeWindowPart in order to keep the time within preCICE synchronised
-      // Has to be done before the second exchange, since the serial coupling scheme moves to the new time window before updating _timeWindowStartTime
+    // Update the _computedTimeWindowPart in order to keep the time within preCICE synchronised
+    // Has to be done before the second exchange, since the serial coupling scheme moves to the new time window before updating _timeWindowStartTime
+    if (hasTimeWindowSize()) {
+      _driftCorrection        = abs(_computedTimeWindowPart - _timeWindowSize);
       _computedTimeWindowPart = _timeWindowSize;
     }
 
@@ -360,6 +362,10 @@ void BaseCouplingScheme::secondExchange()
         _isTimeWindowComplete = true;
         _timeWindowStartTime += _computedTimeWindowPart;
         _computedTimeWindowPart = 0.0; // reset window
+        _totalDriftCorrection += _driftCorrection;
+        if (abs(_totalDriftCorrection) > math::NUMERICAL_ZERO_DIFFERENCE) {
+          PRECICE_WARN("preCICE has corrected the time by a total of {}. This is often necessary, if you are using very many substeps per time window over multiple time windows.", _totalDriftCorrection);
+        }
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
           requireAction(CouplingScheme::Action::WriteCheckpoint);
@@ -376,6 +382,10 @@ void BaseCouplingScheme::secondExchange()
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
       _timeWindowStartTime += _computedTimeWindowPart;
+      _totalDriftCorrection += _driftCorrection;
+      if (abs(_totalDriftCorrection) > math::NUMERICAL_ZERO_DIFFERENCE) {
+        PRECICE_WARN("preCICE has corrected the time by a total of {}. This is often necessary, if you are using very many substeps per time window over multiple time windows.", _totalDriftCorrection);
+      }
       _computedTimeWindowPart = 0.0; // reset window
     }
     if (isCouplingOngoing()) {
