@@ -94,6 +94,9 @@ public:
   /// get vertex offsets of this CouplingData's mesh. See Mesh::getVertexOffsets().
   std::vector<int> getVertexOffsets();
 
+  /// get direction of this coupling data
+  Direction getDirection() const;
+
   ///  True, if the data values of this CouplingData require to be initialized by this participant.
   const bool requiresInitialization;
 

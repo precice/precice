@@ -231,6 +231,7 @@ PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, m
     _allData.emplace(id, ptrCplData);
   } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
     ptrCplData = _allData[id];
+    PRECICE_CHECK(ptrCplData->getDirection() == direction, "Data \"{0}\" cannot be added for sending and for receiving. Please remove either <exchange data=\"{0}\" ... /> tag", data->getName());
   }
   return ptrCplData;
 }

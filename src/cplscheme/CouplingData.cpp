@@ -145,6 +145,11 @@ std::vector<int> CouplingData::getVertexOffsets()
   return _mesh->getVertexOffsets();
 }
 
+CouplingData::Direction CouplingData::getDirection() const
+{
+  return _direction;
+}
+
 void CouplingData::moveToNextWindow()
 {
   if (_direction == Direction::Receive) {
