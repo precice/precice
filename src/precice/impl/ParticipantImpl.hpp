@@ -409,12 +409,14 @@ private:
   /// Syncs the primary ranks of all connected participants
   void closeCommunicationChannels(CloseChannels cc);
 
-  void handleDataBeforeAdvance(const cplscheme::CouplingScheme::ExchangePlan &plan, bool reachedTimeWindowEnd, double timeSteppedTo);
-  void handleDataAfterAdvance(const cplscheme::CouplingScheme::ExchangePlan &plan, bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance);
+  /// Completes everything data-related between adding time to and advancing the coupling scheme
+  void handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo);
+  /// Completes everything data-related after advancing the coupling scheme
+  void handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance);
 
   void samplizeWriteData(double time);
   void trimOldDataBefore(double time);
-  void trimSendDataAfter(const cplscheme::CouplingScheme::ExchangePlan &plan, double time);
+  void trimSendDataAfter(double time);
 
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;

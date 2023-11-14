@@ -66,22 +66,6 @@ bool MultiCouplingScheme::hasAnySendData()
   return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
 }
 
-CouplingScheme::ExchangePlan MultiCouplingScheme::getExchangePlan() const
-{
-  if (!reachedEndOfTimeWindow()) {
-    return {};
-  }
-
-  ExchangePlan plan;
-  for (const auto &dmap : _sendDataVector | boost::adaptors::map_values) {
-    boost::push_back(plan.sendImplicit, dmap | boost::adaptors::map_keys);
-  }
-  for (const auto &dmap : _receiveDataVector | boost::adaptors::map_values) {
-    boost::push_back(plan.receiveImplicit, dmap | boost::adaptors::map_keys);
-  }
-  return plan.tidy();
-}
-
 const DataMap &MultiCouplingScheme::getAccelerationData()
 {
   // MultiCouplingScheme applies acceleration to all CouplingData

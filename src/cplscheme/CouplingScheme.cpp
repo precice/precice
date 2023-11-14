@@ -1,7 +1,5 @@
 #include "CouplingScheme.hpp"
 
-#include <algorithm>
-
 namespace precice::cplscheme {
 
 const double CouplingScheme::UNDEFINED_MAX_TIME = -1.0;
@@ -22,29 +20,6 @@ std::string CouplingScheme::toString(Action action)
       {CouplingScheme::Action::InitializeData, "write-initial-data"}};
 
   return actionNames.at(action);
-}
-
-CouplingScheme::ExchangePlan &CouplingScheme::ExchangePlan::tidy()
-{
-  auto sortUnique = [](auto &c) {
-    std::sort(c.begin(), c.end());
-    c.erase(std::unique(c.begin(), c.end()), c.end());
-  };
-  sortUnique(sendExplicit);
-  sortUnique(sendImplicit);
-  sortUnique(receiveExplicit);
-  sortUnique(receiveImplicit);
-  return *this;
-}
-
-CouplingScheme::ExchangePlan &CouplingScheme::ExchangePlan::operator+=(const ExchangePlan &other)
-{
-  auto append = [](auto &dst, const auto &src) { dst.insert(dst.end(), src.begin(), src.end()); };
-  append(sendExplicit, other.sendExplicit);
-  append(sendImplicit, other.sendImplicit);
-  append(receiveExplicit, other.receiveExplicit);
-  append(receiveImplicit, other.receiveImplicit);
-  return tidy();
 }
 
 } // namespace precice::cplscheme

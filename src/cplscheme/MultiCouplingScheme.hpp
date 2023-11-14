@@ -71,8 +71,6 @@ public:
 
   bool hasAnySendData() override final;
 
-  ExchangePlan getExchangePlan() const final override;
-
 private:
   /**
    * @brief A vector of m2ns. A m2n is a communication device to the other coupling participant.

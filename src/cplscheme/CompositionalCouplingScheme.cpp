@@ -394,13 +394,4 @@ bool CompositionalCouplingScheme::hasConverged() const
   return _implicitScheme->hasConverged();
 }
 
-CouplingScheme::ExchangePlan CompositionalCouplingScheme::getExchangePlan() const
-{
-  ExchangePlan plan;
-  for (const auto scheme : _activeSchemes) {
-    plan += scheme->getExchangePlan();
-  }
-  return plan;
-}
-
 } // namespace precice::cplscheme

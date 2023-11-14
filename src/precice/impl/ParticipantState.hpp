@@ -197,15 +197,6 @@ public:
 
   /// Is the participant allowed to write the data?
   bool isDataWrite(std::string_view mesh, std::string_view data) const;
-
-  struct DataDesignator {
-    std::string mesh;
-    std::string data;
-  };
-
-  DataDesignator lookupDataID(DataID);
-
-  std::vector<DataDesignator> lookupDataIDs(std::vector<DataID>);
   /// @}
 
   /// @name Mesh queries

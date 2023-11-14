@@ -376,9 +376,7 @@ void ParticipantImpl::advance(
   const bool   isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
   const double timeSteppedTo = _couplingScheme->getTime();
 
-  const cplscheme::CouplingScheme::ExchangePlan exchangePlan = _couplingScheme->getExchangePlan();
-
-  handleDataBeforeAdvance(exchangePlan, isAtWindowEnd, timeSteppedTo);
+  handleDataBeforeAdvance(isAtWindowEnd, timeSteppedTo);
 
   advanceCouplingScheme();
 
@@ -386,7 +384,7 @@ void ParticipantImpl::advance(
   const double timeAfterAdvance   = _couplingScheme->getTime();
   const bool   timeWindowComplete = _couplingScheme->isTimeWindowComplete();
 
-  handleDataAfterAdvance(exchangePlan, isAtWindowEnd, timeWindowComplete, timeSteppedTo, timeAfterAdvance);
+  handleDataAfterAdvance(isAtWindowEnd, timeWindowComplete, timeSteppedTo, timeAfterAdvance);
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
 
@@ -397,7 +395,7 @@ void ParticipantImpl::advance(
   _solverAdvanceEvent->start();
 }
 
-void ParticipantImpl::handleDataBeforeAdvance(const cplscheme::CouplingScheme::ExchangePlan &plan, bool reachedTimeWindowEnd, double timeSteppedTo)
+void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo)
 {
   samplizeWriteData(timeSteppedTo);
 
@@ -407,7 +405,7 @@ void ParticipantImpl::handleDataBeforeAdvance(const cplscheme::CouplingScheme::E
   }
 }
 
-void ParticipantImpl::handleDataAfterAdvance(const cplscheme::CouplingScheme::ExchangePlan &plan, bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance)
+void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance)
 {
   if (!reachedTimeWindowEnd) {
     // We are subcycling
@@ -444,7 +442,7 @@ void ParticipantImpl::handleDataAfterAdvance(const cplscheme::CouplingScheme::Ex
   // We are iterating
   PRECICE_ASSERT(math::greater(timeSteppedTo, timeAfterAdvance), "We must have moved back in time!");
 
-  trimSendDataAfter(plan, timeAfterAdvance);
+  trimSendDataAfter(timeAfterAdvance);
 }
 
 void ParticipantImpl::samplizeWriteData(double time)
@@ -465,7 +463,7 @@ void ParticipantImpl::trimOldDataBefore(double time)
   }
 }
 
-void ParticipantImpl::trimSendDataAfter(const cplscheme::CouplingScheme::ExchangePlan &plan, double time)
+void ParticipantImpl::trimSendDataAfter(double time)
 {
   for (auto &context : _accessor->writeDataContexts()) {
     context.trimAfter(time);
