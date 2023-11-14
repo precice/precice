@@ -42,6 +42,15 @@ void WriteDataContext::resetData() //bool atEndOfWindow, bool isTimeWindowComple
   //}
 }
 
+void WriteDataContext::trimAfter(double time)
+{
+  _providedData->timeStepsStorage().trimAfter(time);
+  // reset all toData
+  if (hasWriteMapping()) {
+    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [time](auto &context) { context.toData->timeStepsStorage().trimAfter(time); });
+  }
+}
+
 void WriteDataContext::writeValuesIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> values)
 {
   PRECICE_ASSERT(vertices.size() * getDataDimensions() == values.size());

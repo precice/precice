@@ -190,6 +190,13 @@ std::pair<InputIt, InputIt> find_first_range(InputIt first, InputIt last, Predic
   return {firstMatch, trailing};
 }
 
+template <typename Container, typename T>
+bool contains(const Container &c, T element)
+{
+  auto cend = c.end();
+  return std::find(c.begin(), cend, element) != cend;
+}
+
 } // namespace utils
 } // namespace precice
 

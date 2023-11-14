@@ -333,7 +333,7 @@ void ParticipantImpl::initialize()
   PRECICE_DEBUG("Plot output");
   _accessor->exportInitial();
 
-  resetWrittenData(false, false);
+  resetWrittenData();
 
   e.stop();
   sep.pop();
@@ -376,36 +376,35 @@ void ParticipantImpl::advance(
   const bool   isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
   const double timeSteppedTo = _couplingScheme->getTime();
 
-  for (auto &context : _accessor->writeDataContexts()) {
-    context.storeBufferedData(timeSteppedTo);
-  }
+  const cplscheme::CouplingScheme::ExchangePlan exchangePlan = _couplingScheme->getExchangePlan();
 
-  if (_couplingScheme->willDataBeExchanged(0.0)) {
-    mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, timeSteppedTo);
-  }
+  handleDataBeforeAdvance(exchangePlan, isAtWindowEnd, timeSteppedTo);
 
   advanceCouplingScheme();
 
-  if (_couplingScheme->hasDataBeenReceived() || _couplingScheme->isTimeWindowComplete()) { // @todo potential to avoid unnecessary mappings here.
-    const double timeAfterAdvance = _couplingScheme->getTime();
-    mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, timeAfterAdvance);
-  }
+  // In clase if an implicit scheme, this may be before timeSteppedTo
+  const double timeAfterAdvance   = _couplingScheme->getTime();
+  const bool   timeWindowComplete = _couplingScheme->isTimeWindowComplete();
+
+  handleDataAfterAdvance(exchangePlan, isAtWindowEnd, timeWindowComplete, timeSteppedTo, timeAfterAdvance);
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
 
-  PRECICE_DEBUG("Handle exports");
-  handleExports();
-
-  resetWrittenData(isAtWindowEnd, _couplingScheme->isTimeWindowComplete());
-
-  if (_couplingScheme->isTimeWindowComplete()) {
-    for (auto &context : _accessor->readDataContexts()) {
-      context.resetInitialGuesses();
-    }
-    for (auto &context : _accessor->writeDataContexts()) {
-      context.resetInitialGuesses();
+  {
+    std::ostringstream oss;
+    for (auto context : _accessor->usedMeshContexts()) {
+      auto &mesh = *(context->mesh);
+      for (auto dataName : mesh.availableData()) {
+        if (mesh.data(dataName)->timeStepsStorage().nTimes() == 0) {
+          PRECICE_WARN("TSINFO {}:{} [empty]", mesh.getName(), dataName);
+        } else {
+          auto [times, values] = mesh.data(dataName)->timeStepsStorage().getTimesAndValues();
+          for (int i = 0; i < times.size(); ++i) {
+            Eigen::VectorXd vals = values.col(i);
+            PRECICE_WARN("TSINFO {}:{}@{} {}", mesh.getName(), dataName, times[i], std::vector<double>(vals.data(), vals.data() + vals.size()));
+          }
+        }
+      }
     }
   }
 
@@ -414,6 +413,125 @@ void ParticipantImpl::advance(
   sep.pop();
   e.stop();
   _solverAdvanceEvent->start();
+}
+
+void ParticipantImpl::handleDataBeforeAdvance(const cplscheme::CouplingScheme::ExchangePlan &plan, bool reachedTimeWindowEnd, double timeSteppedTo)
+{
+  PRECICE_WARN("BEFORE advance t={} end={}", timeSteppedTo, reachedTimeWindowEnd);
+  samplizeWriteData(timeSteppedTo);
+
+  // TODO: is this necessary?
+  // Prepare data for receiving, deleting samples. Also follows read mappings.
+  // prepareReceiveData(plan);
+
+  // Prepare data for sending. This includes Write mappings, and actions.
+  // prepareSendData(plan, timeSteppedTo);
+  if (reachedTimeWindowEnd) {
+    mapWrittenData();
+    performDataActions({action::Action::WRITE_MAPPING_POST}, timeSteppedTo);
+  }
+}
+
+void ParticipantImpl::handleDataAfterAdvance(const cplscheme::CouplingScheme::ExchangePlan &plan, bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance)
+{
+  PRECICE_WARN("AFTER advance t={}->{} end={} complete={}", timeSteppedTo, timeAfterAdvance, reachedTimeWindowEnd, isTimeWindowComplete);
+
+  if (!reachedTimeWindowEnd) {
+    // We are subcycling
+    return;
+  }
+
+  // prepare received data including mapping and actions (which are referring to the stepped-to timing)
+  // processReceivedData(plan, timeSteppedTo);
+  // map received data
+  if (reachedTimeWindowEnd) {
+    mapReadData();
+    // FIXME: the actions timing for read mappings doesn't make sense after
+    performDataActions({action::Action::READ_MAPPING_POST}, timeAfterAdvance);
+  }
+
+  if (isTimeWindowComplete) {
+    // Move to next time window
+    PRECICE_ASSERT(math::greaterEquals(timeAfterAdvance, timeSteppedTo), "We must have stayed or moved forwards in time (min-time-step-size).");
+
+    PRECICE_DEBUG("Handle exports");
+    handleExports();
+
+    // As we move forward, there may now be old samples lying around
+    // We know that timeAfterAdvance is the start time of the time window
+    trimOldDataBefore(timeAfterAdvance);
+
+    // Reset initial guesses for iterative mappings
+    for (auto &context : _accessor->readDataContexts()) {
+      context.resetInitialGuesses();
+    }
+    for (auto &context : _accessor->writeDataContexts()) {
+      context.resetInitialGuesses();
+    }
+    return;
+  }
+
+  // We are iterating
+  PRECICE_ASSERT(math::greater(timeSteppedTo, timeAfterAdvance), "We must have moved back in time!");
+
+  trimSendDataAfter(plan, timeAfterAdvance);
+}
+
+void ParticipantImpl::samplizeWriteData(double time)
+{
+  PRECICE_WARN("Samplize write data for t={}", time);
+  // store buffered write data in sample storage and reset the buffer
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.storeBufferedData(time);
+  }
+  resetWrittenData();
+}
+
+void ParticipantImpl::prepareReceiveData(const cplscheme::CouplingScheme::ExchangePlan &plan)
+{
+#if 0
+  auto idsToTrim = _accessor->getDataIDsLeadingFrom(plan.allReceive());
+  auto dataToTrim = _accessor->lookupDataIDs(idsToTrim);
+
+  // Trim senddata itself
+  for (auto& [mesh, data] : dataToTrim) {
+    _accessor->meshContext(mesh)->data(data)->timeStepsStorage().trimAfter(time);
+  }
+#endif
+}
+
+void ParticipantImpl::prepareSendData(const cplscheme::CouplingScheme::ExchangePlan &plan, double timeSteppedTo)
+{
+}
+
+void ParticipantImpl::processReceivedData(const cplscheme::CouplingScheme::ExchangePlan &plan, double timeSteppedTo)
+{
+}
+
+void ParticipantImpl::trimOldDataBefore(double time)
+{
+  PRECICE_WARN("Trimming data before t={}", time);
+  for (auto &context : _accessor->usedMeshContexts()) {
+    for (const auto &name : context->mesh->availableData()) {
+      context->mesh->data(name)->timeStepsStorage().trimBefore(time);
+    }
+  }
+}
+
+void ParticipantImpl::trimSendDataAfter(const cplscheme::CouplingScheme::ExchangePlan &plan, double time)
+{
+  PRECICE_WARN("Trimming write data after t={}", time);
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.trimAfter(time);
+  }
+
+  //auto idsToTrim = _accessor->getDataIDsLeadingTo(plan.sendImplicit);
+  //auto dataToTrim = _accessor->lookupDataIDs(idsToTrim);
+
+  // Trim senddata itself
+  //for (auto& [mesh, data] : dataToTrim) {
+  //  _accessor->meshContext(mesh)->data(data)->timeStepsStorage().trimAfter(time);
+  //}
 }
 
 void ParticipantImpl::finalize()
@@ -1368,11 +1486,11 @@ void ParticipantImpl::handleExports()
   _accessor->exportIntermediate(exp);
 }
 
-void ParticipantImpl::resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComplete)
+void ParticipantImpl::resetWrittenData()
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
-    context.resetData(isAtWindowEnd, isTimeWindowComplete);
+    context.resetData();
   }
 }
 

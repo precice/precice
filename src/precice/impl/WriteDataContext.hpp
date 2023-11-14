@@ -34,6 +34,8 @@ public:
    */
   void resetData(); //bool atEndOfWindow, bool isTimeWindowComplete);
 
+  void trimAfter(double time);
+
   /**
    * @brief Store values in _writeDataBuffer
    *

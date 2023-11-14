@@ -10,6 +10,7 @@
 #include "action/Action.hpp"
 #include "boost/noncopyable.hpp"
 #include "com/Communication.hpp"
+#include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/BoundM2N.hpp"
@@ -384,7 +385,7 @@ private:
    * @param isAtWindowEnd set true, if function is called at end of window to also trim the time sample storage
    * @param isTimeWindowComplete set true, if function is called at end of converged window to trim and move the sample storage.
    */
-  void resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComplete);
+  void resetWrittenData(); //bool isAtWindowEnd, bool isTimeWindowComplete);
 
   /// Determines participant accessing this interface from the configuration.
   impl::PtrParticipant determineAccessingParticipant(
@@ -407,6 +408,16 @@ private:
 
   /// Syncs the primary ranks of all connected participants
   void closeCommunicationChannels(CloseChannels cc);
+
+  void handleDataBeforeAdvance(const cplscheme::CouplingScheme::ExchangePlan &plan, bool reachedTimeWindowEnd, double timeSteppedTo);
+  void handleDataAfterAdvance(const cplscheme::CouplingScheme::ExchangePlan &plan, bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance);
+
+  void samplizeWriteData(double time);
+  void prepareReceiveData(const cplscheme::CouplingScheme::ExchangePlan &plan);
+  void prepareSendData(const cplscheme::CouplingScheme::ExchangePlan &plan, double timeSteppedTo);
+  void processReceivedData(const cplscheme::CouplingScheme::ExchangePlan &plan, double timeSteppedTo);
+  void trimOldDataBefore(double time);
+  void trimSendDataAfter(const cplscheme::CouplingScheme::ExchangePlan &plan, double time);
 
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;

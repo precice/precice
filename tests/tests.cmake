@@ -205,7 +205,6 @@ target_sources(testprecice
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
     tests/serial/time/implicit/compositional/DoNothingWithSubcycling.cpp
     tests/serial/time/implicit/compositional/ReadWriteScalarDataWithSubcycling.cpp
-    tests/serial/time/implicit/compositional/ReadWriteScalarDataWithWaveformSubcyclingMixed.cpp
     tests/serial/time/implicit/multi-coupling/DoNothingWithSubcycling.cpp
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp

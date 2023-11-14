@@ -113,6 +113,10 @@ public:
    */
   void clear();
 
+  void trimBefore(double time);
+
+  void trimAfter(double time);
+
   /**
    * @brief Need to use interpolation for the case with changing time grids
    *

@@ -204,6 +204,24 @@ bool ParticipantState::isDataWrite(std::string_view mesh, std::string_view data)
   return _writeDataContexts.count(MeshDataKey{mesh, data}) > 0;
 }
 
+ParticipantState::DataDesignator ParticipantState::lookupDataID(DataID id)
+{
+  for (auto context : _meshContexts | boost::adaptors::map_values) {
+    auto &mesh = *(context->mesh);
+    if (mesh.hasDataID(id)) {
+      return {mesh.getName(), mesh.data(id)->getName()};
+    }
+  }
+  PRECICE_UNREACHABLE("DataID doesn't exist");
+}
+
+std::vector<ParticipantState::DataDesignator> ParticipantState::lookupDataIDs(std::vector<DataID> ids)
+{
+  std::vector<ParticipantState::DataDesignator> res(ids.size());
+  std::transform(ids.begin(), ids.end(), res.begin(), [&](auto id) { return lookupDataID(id); });
+  return res;
+}
+
 /// Mesh queries
 
 const MeshContext &ParticipantState::meshContext(std::string_view mesh) const
