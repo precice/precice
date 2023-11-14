@@ -390,24 +390,6 @@ void ParticipantImpl::advance(
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
 
-  {
-    std::ostringstream oss;
-    for (auto context : _accessor->usedMeshContexts()) {
-      auto &mesh = *(context->mesh);
-      for (auto dataName : mesh.availableData()) {
-        if (mesh.data(dataName)->timeStepsStorage().nTimes() == 0) {
-          PRECICE_WARN("TSINFO {}:{} [empty]", mesh.getName(), dataName);
-        } else {
-          auto [times, values] = mesh.data(dataName)->timeStepsStorage().getTimesAndValues();
-          for (int i = 0; i < times.size(); ++i) {
-            Eigen::VectorXd vals = values.col(i);
-            PRECICE_WARN("TSINFO {}:{}@{} {}", mesh.getName(), dataName, times[i], std::vector<double>(vals.data(), vals.data() + vals.size()));
-          }
-        }
-      }
-    }
-  }
-
   _meshLock.lockAll();
 
   sep.pop();
@@ -417,7 +399,6 @@ void ParticipantImpl::advance(
 
 void ParticipantImpl::handleDataBeforeAdvance(const cplscheme::CouplingScheme::ExchangePlan &plan, bool reachedTimeWindowEnd, double timeSteppedTo)
 {
-  PRECICE_WARN("BEFORE advance t={} end={}", timeSteppedTo, reachedTimeWindowEnd);
   samplizeWriteData(timeSteppedTo);
 
   // TODO: is this necessary?
@@ -434,8 +415,6 @@ void ParticipantImpl::handleDataBeforeAdvance(const cplscheme::CouplingScheme::E
 
 void ParticipantImpl::handleDataAfterAdvance(const cplscheme::CouplingScheme::ExchangePlan &plan, bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance)
 {
-  PRECICE_WARN("AFTER advance t={}->{} end={} complete={}", timeSteppedTo, timeAfterAdvance, reachedTimeWindowEnd, isTimeWindowComplete);
-
   if (!reachedTimeWindowEnd) {
     // We are subcycling
     return;
@@ -479,7 +458,6 @@ void ParticipantImpl::handleDataAfterAdvance(const cplscheme::CouplingScheme::Ex
 
 void ParticipantImpl::samplizeWriteData(double time)
 {
-  PRECICE_WARN("Samplize write data for t={}", time);
   // store buffered write data in sample storage and reset the buffer
   for (auto &context : _accessor->writeDataContexts()) {
     context.storeBufferedData(time);
@@ -510,7 +488,6 @@ void ParticipantImpl::processReceivedData(const cplscheme::CouplingScheme::Excha
 
 void ParticipantImpl::trimOldDataBefore(double time)
 {
-  PRECICE_WARN("Trimming data before t={}", time);
   for (auto &context : _accessor->usedMeshContexts()) {
     for (const auto &name : context->mesh->availableData()) {
       context->mesh->data(name)->timeStepsStorage().trimBefore(time);
@@ -520,7 +497,6 @@ void ParticipantImpl::trimOldDataBefore(double time)
 
 void ParticipantImpl::trimSendDataAfter(const cplscheme::CouplingScheme::ExchangePlan &plan, double time)
 {
-  PRECICE_WARN("Trimming write data after t={}", time);
   for (auto &context : _accessor->writeDataContexts()) {
     context.trimAfter(time);
   }
