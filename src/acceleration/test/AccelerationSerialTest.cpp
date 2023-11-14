@@ -255,8 +255,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->setSampleAtTime(0, forces->sample());
 
-  cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, false);
-  cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, false);
+  bool exchangeSubsteps = false;
+
+  cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
+  cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
 
   DataMap data;
   data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
