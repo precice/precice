@@ -200,7 +200,6 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
         PRECICE_ASSERT(data->hasGradient());
         m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
       }
-      data->timeStepsStorage().trim();
       data->setSampleAtTime(getTime(), data->sample());
     }
   }
