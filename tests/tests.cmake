@@ -154,6 +154,16 @@ target_sources(testprecice
     tests/serial/mesh-requirements/NearestNeighborB.cpp
     tests/serial/mesh-requirements/NearestProjection2DA.cpp
     tests/serial/mesh-requirements/NearestProjection2DB.cpp
+    tests/serial/mixed-time-window-sizes/explicit/ParallelParallel.cpp
+    tests/serial/mixed-time-window-sizes/explicit/ParallelSerial.cpp
+    tests/serial/mixed-time-window-sizes/explicit/SerialParallel.cpp
+    tests/serial/mixed-time-window-sizes/explicit/SerialSerial.cpp
+    tests/serial/mixed-time-window-sizes/helper.cpp
+    tests/serial/mixed-time-window-sizes/helper.hpp
+    tests/serial/mixed-time-window-sizes/implicit/ParallelParallel.cpp
+    tests/serial/mixed-time-window-sizes/implicit/ParallelSerial.cpp
+    tests/serial/mixed-time-window-sizes/implicit/SerialParallel.cpp
+    tests/serial/mixed-time-window-sizes/implicit/SerialSerial.cpp
     tests/serial/multi-coupling/MultiCoupling.cpp
     tests/serial/multi-coupling/MultiCouplingFourSolvers1.cpp
     tests/serial/multi-coupling/MultiCouplingFourSolvers2.cpp
