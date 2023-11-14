@@ -37,6 +37,8 @@ using DataMap = std::map<int, PtrCouplingData>;
 
 BOOST_AUTO_TEST_SUITE(AccelerationIntraCommTests)
 
+std::cout << "start with this one";
+
 /// Test that runs on 4 processors.
 BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
 {
@@ -268,6 +270,7 @@ BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
   }
 }
 
+std::cout << "change this test";
 /// Test that runs on 4 processors.
 BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 {
