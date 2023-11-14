@@ -413,9 +413,6 @@ private:
   void handleDataAfterAdvance(const cplscheme::CouplingScheme::ExchangePlan &plan, bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance);
 
   void samplizeWriteData(double time);
-  void prepareReceiveData(const cplscheme::CouplingScheme::ExchangePlan &plan);
-  void prepareSendData(const cplscheme::CouplingScheme::ExchangePlan &plan, double timeSteppedTo);
-  void processReceivedData(const cplscheme::CouplingScheme::ExchangePlan &plan, double timeSteppedTo);
   void trimOldDataBefore(double time);
   void trimSendDataAfter(const cplscheme::CouplingScheme::ExchangePlan &plan, double time);
 

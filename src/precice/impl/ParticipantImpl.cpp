@@ -401,12 +401,6 @@ void ParticipantImpl::handleDataBeforeAdvance(const cplscheme::CouplingScheme::E
 {
   samplizeWriteData(timeSteppedTo);
 
-  // TODO: is this necessary?
-  // Prepare data for receiving, deleting samples. Also follows read mappings.
-  // prepareReceiveData(plan);
-
-  // Prepare data for sending. This includes Write mappings, and actions.
-  // prepareSendData(plan, timeSteppedTo);
   if (reachedTimeWindowEnd) {
     mapWrittenData();
     performDataActions({action::Action::WRITE_MAPPING_POST}, timeSteppedTo);
@@ -420,9 +414,6 @@ void ParticipantImpl::handleDataAfterAdvance(const cplscheme::CouplingScheme::Ex
     return;
   }
 
-  // prepare received data including mapping and actions (which are referring to the stepped-to timing)
-  // processReceivedData(plan, timeSteppedTo);
-  // map received data
   if (reachedTimeWindowEnd) {
     mapReadData();
     // FIXME: the actions timing for read mappings doesn't make sense after
@@ -465,27 +456,6 @@ void ParticipantImpl::samplizeWriteData(double time)
   resetWrittenData();
 }
 
-void ParticipantImpl::prepareReceiveData(const cplscheme::CouplingScheme::ExchangePlan &plan)
-{
-#if 0
-  auto idsToTrim = _accessor->getDataIDsLeadingFrom(plan.allReceive());
-  auto dataToTrim = _accessor->lookupDataIDs(idsToTrim);
-
-  // Trim senddata itself
-  for (auto& [mesh, data] : dataToTrim) {
-    _accessor->meshContext(mesh)->data(data)->timeStepsStorage().trimAfter(time);
-  }
-#endif
-}
-
-void ParticipantImpl::prepareSendData(const cplscheme::CouplingScheme::ExchangePlan &plan, double timeSteppedTo)
-{
-}
-
-void ParticipantImpl::processReceivedData(const cplscheme::CouplingScheme::ExchangePlan &plan, double timeSteppedTo)
-{
-}
-
 void ParticipantImpl::trimOldDataBefore(double time)
 {
   for (auto &context : _accessor->usedMeshContexts()) {
@@ -500,14 +470,6 @@ void ParticipantImpl::trimSendDataAfter(const cplscheme::CouplingScheme::Exchang
   for (auto &context : _accessor->writeDataContexts()) {
     context.trimAfter(time);
   }
-
-  //auto idsToTrim = _accessor->getDataIDsLeadingTo(plan.sendImplicit);
-  //auto dataToTrim = _accessor->lookupDataIDs(idsToTrim);
-
-  // Trim senddata itself
-  //for (auto& [mesh, data] : dataToTrim) {
-  //  _accessor->meshContext(mesh)->data(data)->timeStepsStorage().trimAfter(time);
-  //}
 }
 
 void ParticipantImpl::finalize()
