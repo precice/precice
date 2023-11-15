@@ -318,10 +318,6 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   if (outMesh->vertices().empty())
     return; // Ranks not at the interface should never hold interface vertices
 
-  // TODO: Check again the tagging in combination with the partition construction (which mesh to use)
-  // In order to construct the local partitions, we need all vertices with a distance of 2 x radius,
-  // as the relevant partitions centers have a maximum distance of radius, and the proper construction of the
-  // interpolant requires all vertices with a distance of radius from the center.
   // Note that we don't use the corresponding bounding box functions from
   // precice::mesh (e.g. ::getBoundingBox), as the stored bounding box might
   // have the wrong size (e.g. direct access)
@@ -335,10 +331,16 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   }
   PRECICE_ASSERT(bb_check == bb);
 #endif
-  // @TODO: This assert is not completely right, as it checks all dimensions for non-emptyness (which might not be the case).
+  // @TODO: This is assert and the function might run into problems if we have only a single.
+  // vertex in the received mesh
   // However, with the current BB implementation, the expandBy function will just do nothing.
   PRECICE_ASSERT(!bb.empty());
-
+  // This function behaves differently when using single-level initialization or two-level
+  // initiliazation: in 1LI, we look at the complete mesh, whereas in 2LI, we only look at
+  // a fraction of the mesh and we might end up with too few vertices per rank
+  // @TODO we cannot prevent too few vertices from being tagged if we have only a very small number of
+  // vertices sitting on this rank. We could raise a warning, which could be triggered for very small
+  // parallel cases though?!
   if (_clusterRadius == 0)
     _clusterRadius = impl::estimateClusterRadius(_verticesPerCluster, filterMesh, bb);
 

@@ -349,6 +349,9 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   // The single cluster has in principle a radius of inf. We use here twice the
   // length of the longest bounding box edge length and the center of the bounding
   // box for the center point.
+  // @TODO: Consider here a larger value than verticesPerCluster. If we start to cluster
+  // the domain, we end up most probably at least with either 4 (in 2D) or 8 (in 3D).
+  // Thus solving one system which is a bit larger should be fine performance-wise.
   if (inMesh->vertices().size() < verticesPerCluster)
     return {localBB.longestEdgeLength() * 2, Vertices{mesh::Vertex({localBB.center(), 0})}};
 
@@ -364,7 +367,9 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   // maximum distance between cluster centers lying diagonal to each other. The maximum distance takes the overlap condition into
   // account: if the distance between the centers is sqrt(2) * radius, we violate the overlap condition between diagonal clusters
   // 0.3 should be a good default value
-  const double maximumCenterDistance = std::sqrt(2) * clusterRadius * (1 - relativeOverlap);
+  // @todo: most of the 3D experiments ran with the default of 0.3 which would correspond to relativeOverlap of 0, i.e., the limit
+  // Can we use different values for 2D and 3D? Which value should we use?
+  const double maximumCenterDistance = inMesh->getDimensions() == 2 ? std::sqrt(2) * clusterRadius * (1 - relativeOverlap) : clusterRadius * (1 - relativeOverlap);
 
   // Step 3: using the maximum distance and the bounding box, compute the number of clusters in each direction
   // we ceil the number of clusters in order to guarantee the desired overlap
