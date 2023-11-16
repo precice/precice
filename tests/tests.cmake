@@ -113,6 +113,9 @@ target_sources(testprecice
     tests/serial/lifecycle/Full.cpp
     tests/serial/lifecycle/FullWait.cpp
     tests/serial/lifecycle/ImplicitFinalize.cpp
+    tests/serial/lifecycle/reconstruction/ConstructOnly.cpp
+    tests/serial/lifecycle/reconstruction/Full.cpp
+    tests/serial/lifecycle/reconstruction/ImplicitFinalize.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalReadScalar.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalReadVector.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalWriteScalar.cpp
