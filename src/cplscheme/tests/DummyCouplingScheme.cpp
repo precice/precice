@@ -24,6 +24,16 @@ void DummyCouplingScheme::initialize(
   _iterations    = 1;
 }
 
+double DummyCouplingScheme::getTime() const
+{
+  return _timeWindows;
+}
+
+double DummyCouplingScheme::getTimeWindowStart() const
+{
+  return _timeWindows;
+}
+
 CouplingScheme::ChangedMeshes DummyCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
 {
   PRECICE_ASSERT(_isInitialized);

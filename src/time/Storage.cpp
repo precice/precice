@@ -121,6 +121,24 @@ void Storage::clear()
   _bspline.reset();
 }
 
+void Storage::trimBefore(double time)
+{
+  auto beforeTime = [time](const auto &s) { return math::smaller(s.timestamp, time); };
+  _stampleStorage.erase(std::remove_if(_stampleStorage.begin(), _stampleStorage.end(), beforeTime), _stampleStorage.end());
+
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
+}
+
+void Storage::trimAfter(double time)
+{
+  auto afterTime = [time](const auto &s) { return math::greater(s.timestamp, time); };
+  _stampleStorage.erase(std::remove_if(_stampleStorage.begin(), _stampleStorage.end(), afterTime), _stampleStorage.end());
+
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
+}
+
 Sample Storage::getSampleAtOrAfter(double before) const
 {
   PRECICE_TRACE(before);
