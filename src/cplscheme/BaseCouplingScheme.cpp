@@ -340,6 +340,11 @@ void BaseCouplingScheme::secondExchange()
 
   if (reachedEndOfTimeWindow()) {
 
+    if (hasTimeWindowSize()) {
+      _totalTimeDrift += abs(_computedTimeWindowPart - _timeWindowSize);
+      PRECICE_CHECK(abs(_totalTimeDrift) < math::NUMERICAL_ZERO_DIFFERENCE, "preCICE has detected a difference between its internal time and the time of this participant. This can happen, if you are using very many substeps per time window over multiple time windows. Please refer to https://github.com/precice/precice/issues/1866 for strategies to avoid this problem.");
+    }
+
     exchangeSecondData();
 
     if (isImplicitCouplingScheme()) { // check convergence
@@ -358,11 +363,7 @@ void BaseCouplingScheme::secondExchange()
         PRECICE_INFO("Time window completed");
         _isTimeWindowComplete = true;
         _timeWindowStartTime += _computedTimeWindowPart;
-        _totalTimeDrift += abs(_computedTimeWindowPart - _timeWindowSize);
         _computedTimeWindowPart = 0.0; // reset window
-        if (abs(_totalTimeDrift) > math::NUMERICAL_ZERO_DIFFERENCE) {
-          PRECICE_ERROR("preCICE has detected a difference between its internal time and the time of this participant. This can happen, if you are using very many substeps per time window over multiple time windows. Please refer to https://github.com/precice/precice/issues/1866 for strategies to avoid this problem.");
-        }
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
           requireAction(CouplingScheme::Action::WriteCheckpoint);
@@ -379,11 +380,7 @@ void BaseCouplingScheme::secondExchange()
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
       _timeWindowStartTime += _computedTimeWindowPart;
-      _totalTimeDrift += abs(_computedTimeWindowPart - _timeWindowSize);
       _computedTimeWindowPart = 0.0; // reset window
-      if (abs(_totalTimeDrift) > math::NUMERICAL_ZERO_DIFFERENCE) {
-        PRECICE_ERROR("preCICE has detected a difference between its internal time and the time of this participant. This can happen, if you are using very many substeps per time window over multiple time windows. Please refer to https://github.com/precice/precice/issues/1866 for strategies to avoid this problem.");
-      }
     }
     if (isCouplingOngoing()) {
       PRECICE_ASSERT(_hasDataBeenReceived);
