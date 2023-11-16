@@ -313,12 +313,9 @@ void BaseCouplingScheme::firstExchange()
     // We have to exclude the case where coupling scheme does not have a time window size, since this will cause problem with the interpolation later on
     if (getNextTimeStepMaxSize() > math::NUMERICAL_ZERO_DIFFERENCE && hasTimeWindowSize()) {
       addTimeStepAtWindowEnd();
-    }
 
-    // Update the _computedTimeWindowPart in order to keep the time within preCICE synchronised
-    // Has to be done before the second exchange, since the serial coupling scheme moves to the new time window before updating _timeWindowStartTime
-    if (hasTimeWindowSize()) {
-      _driftCorrection        = abs(_computedTimeWindowPart - _timeWindowSize);
+      // Update the _computedTimeWindowPart in order to keep the time within preCICE synchronised
+      // Has to be done before the second exchange, since the serial coupling scheme moves to the new time window before updating _timeWindowStartTime
       _computedTimeWindowPart = _timeWindowSize;
     }
 
@@ -361,10 +358,10 @@ void BaseCouplingScheme::secondExchange()
         PRECICE_INFO("Time window completed");
         _isTimeWindowComplete = true;
         _timeWindowStartTime += _computedTimeWindowPart;
+        _totalTimeDrift += abs(_computedTimeWindowPart - _timeWindowSize);
         _computedTimeWindowPart = 0.0; // reset window
-        _totalDriftCorrection += _driftCorrection;
-        if (abs(_totalDriftCorrection) > math::NUMERICAL_ZERO_DIFFERENCE) {
-          PRECICE_WARN("preCICE has corrected the time by a total of {}. This is often necessary, if you are using very many substeps per time window over multiple time windows. Please note that this can leads to an additional time integration error which might affect the accuracy of the solution.", _totalDriftCorrection);
+        if (abs(_totalTimeDrift) > math::NUMERICAL_ZERO_DIFFERENCE) {
+          PRECICE_ERROR("preCICE has detected a difference between its internal time and the time of this participant. This can happen, if you are using very many substeps per time window over multiple time windows. Please refer to https://github.com/precice/precice/issues/1866 for strategies to avoid this problem.");
         }
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
@@ -382,11 +379,11 @@ void BaseCouplingScheme::secondExchange()
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
       _timeWindowStartTime += _computedTimeWindowPart;
-      _totalDriftCorrection += _driftCorrection;
-      if (abs(_totalDriftCorrection) > math::NUMERICAL_ZERO_DIFFERENCE) {
-        PRECICE_WARN("preCICE has corrected the time by a total of {}. This is often necessary, if you are using very many substeps per time window over multiple time windows.", _totalDriftCorrection);
-      }
+      _totalTimeDrift += abs(_computedTimeWindowPart - _timeWindowSize);
       _computedTimeWindowPart = 0.0; // reset window
+      if (abs(_totalTimeDrift) > math::NUMERICAL_ZERO_DIFFERENCE) {
+        PRECICE_ERROR("preCICE has detected a difference between its internal time and the time of this participant. This can happen, if you are using very many substeps per time window over multiple time windows. Please refer to https://github.com/precice/precice/issues/1866 for strategies to avoid this problem.");
+      }
     }
     if (isCouplingOngoing()) {
       PRECICE_ASSERT(_hasDataBeenReceived);

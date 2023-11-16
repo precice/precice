@@ -454,11 +454,8 @@ private:
   /// Minimal time step allowed by preCICE.
   const double _minTimeStepSize;
 
-  /// @brief Keeps track of correction in time applied by preCICE over multiple windows
-  double _totalDriftCorrection = 0;
-
-  /// @brief  Buffer for drift correction in the current window by setting _computedTimeWindowPart = _timeWindowSize
-  double _driftCorrection = 0;
+  /// @brief Keeps track of drift in time over multiple windows
+  double _totalTimeDrift = 0;
 
   /**
    * @brief Holds meta information to perform a convergence measurement.
