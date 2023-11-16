@@ -1,6 +1,4 @@
 #include <algorithm>
-#include <boost/range/adaptor/map.hpp>
-#include <boost/range/algorithm_ext/push_back.hpp>
 #include <map>
 #include <memory>
 #include <ostream>

@@ -1,7 +1,6 @@
 #include "MultiCouplingScheme.hpp"
 #include <algorithm>
 #include <boost/range/adaptor/map.hpp>
-#include <boost/range/algorithm_ext/push_back.hpp>
 #include <cstddef>
 #include <map>
 #include <memory>
