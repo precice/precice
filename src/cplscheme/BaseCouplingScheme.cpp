@@ -364,7 +364,7 @@ void BaseCouplingScheme::secondExchange()
         _computedTimeWindowPart = 0.0; // reset window
         _totalDriftCorrection += _driftCorrection;
         if (abs(_totalDriftCorrection) > math::NUMERICAL_ZERO_DIFFERENCE) {
-          PRECICE_WARN("preCICE has corrected the time by a total of {}. This is often necessary, if you are using very many substeps per time window over multiple time windows.", _totalDriftCorrection);
+          PRECICE_WARN("preCICE has corrected the time by a total of {}. This is often necessary, if you are using very many substeps per time window over multiple time windows. Please note that this can leads to an additional time integration error which might affect the accuracy of the solution.", _totalDriftCorrection);
         }
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
