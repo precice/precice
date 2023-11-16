@@ -411,11 +411,17 @@ private:
 
   /// Completes everything data-related between adding time to and advancing the coupling scheme
   void handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo);
+
   /// Completes everything data-related after advancing the coupling scheme
   void handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance);
 
+  /// Creates a Stample at the given time for each write Data and zeros the buffers
   void samplizeWriteData(double time);
+
+  /// Discards data before the given time for all meshes and data known by this participant
   void trimOldDataBefore(double time);
+
+  /// Discards send (currently write) data of a participant after a given time when another iteration is required
   void trimSendDataAfter(double time);
 
   /// To allow white box tests.
