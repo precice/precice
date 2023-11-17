@@ -114,6 +114,9 @@ target_sources(testprecice
     tests/serial/lifecycle/Full.cpp
     tests/serial/lifecycle/FullWait.cpp
     tests/serial/lifecycle/ImplicitFinalize.cpp
+    tests/serial/lifecycle/reconstruction/ConstructOnly.cpp
+    tests/serial/lifecycle/reconstruction/Full.cpp
+    tests/serial/lifecycle/reconstruction/ImplicitFinalize.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalReadScalar.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalReadVector.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalWriteScalar.cpp
@@ -155,6 +158,16 @@ target_sources(testprecice
     tests/serial/mesh-requirements/NearestNeighborB.cpp
     tests/serial/mesh-requirements/NearestProjection2DA.cpp
     tests/serial/mesh-requirements/NearestProjection2DB.cpp
+    tests/serial/mixed-time-window-sizes/explicit/ParallelParallel.cpp
+    tests/serial/mixed-time-window-sizes/explicit/ParallelSerial.cpp
+    tests/serial/mixed-time-window-sizes/explicit/SerialParallel.cpp
+    tests/serial/mixed-time-window-sizes/explicit/SerialSerial.cpp
+    tests/serial/mixed-time-window-sizes/helper.cpp
+    tests/serial/mixed-time-window-sizes/helper.hpp
+    tests/serial/mixed-time-window-sizes/implicit/ParallelParallel.cpp
+    tests/serial/mixed-time-window-sizes/implicit/ParallelSerial.cpp
+    tests/serial/mixed-time-window-sizes/implicit/SerialParallel.cpp
+    tests/serial/mixed-time-window-sizes/implicit/SerialSerial.cpp
     tests/serial/multi-coupling/MultiCoupling.cpp
     tests/serial/multi-coupling/MultiCouplingFourSolvers1.cpp
     tests/serial/multi-coupling/MultiCouplingFourSolvers2.cpp
@@ -180,8 +193,10 @@ target_sources(testprecice
     tests/serial/three-solvers/ThreeSolversFirstParticipant.cpp
     tests/serial/three-solvers/ThreeSolversImplicitExplicit.cpp
     tests/serial/three-solvers/ThreeSolversParallel.cpp
+    tests/serial/three-solvers/ThreeSolversParallelExplicitImplicit.cpp
     tests/serial/three-solvers/helpers.cpp
     tests/serial/three-solvers/helpers.hpp
+    tests/serial/time/explicit/compositional/DoNothingWithSubcycling.cpp
     tests/serial/time/explicit/compositional/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/compositional/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
@@ -192,6 +207,8 @@ target_sources(testprecice
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipantInitData.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
+    tests/serial/time/implicit/compositional/DoNothingWithSubcycling.cpp
+    tests/serial/time/implicit/compositional/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/multi-coupling/DoNothingWithSubcycling.cpp
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp

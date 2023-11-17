@@ -253,6 +253,12 @@ public:
   /// Check whether this context has a given rank inside the Participant
   bool isRank(Rank rank) const;
 
+  /// Returns a pointer to the MPI communicator of this context
+  auto comm()
+  {
+    return &(_contextComm->comm);
+  }
+
   /** Check whether this context is the primary rank of a participant
    * @note This is equivalent to `isRank(0)`
    */

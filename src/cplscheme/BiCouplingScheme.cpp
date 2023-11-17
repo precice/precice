@@ -55,7 +55,7 @@ void BiCouplingScheme::addDataToSend(
     bool                 exchangeSubsteps)
 {
   PRECICE_TRACE();
-  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps);
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps, CouplingData::Direction::Send);
 
   if (!utils::contained(data->getID(), _sendData)) {
     PRECICE_ASSERT(_sendData.count(data->getID()) == 0, "Key already exists!");
@@ -72,7 +72,7 @@ void BiCouplingScheme::addDataToReceive(
     bool                 exchangeSubsteps)
 {
   PRECICE_TRACE();
-  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps);
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps, CouplingData::Direction::Receive);
 
   if (!utils::contained(data->getID(), _receiveData)) {
     PRECICE_ASSERT(_receiveData.count(data->getID()) == 0, "Key already exists!");

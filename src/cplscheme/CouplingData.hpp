@@ -12,11 +12,15 @@ namespace cplscheme {
 
 class CouplingData {
 public:
+  enum struct Direction : bool { Send,
+                                 Receive };
+
   CouplingData(
       mesh::PtrData data,
       mesh::PtrMesh mesh,
       bool          requiresInitialization,
-      bool          exchangeSubsteps);
+      bool          exchangeSubsteps,
+      Direction     direction);
 
   int getDimensions() const;
 
@@ -90,6 +94,9 @@ public:
   /// get vertex offsets of this CouplingData's mesh. See Mesh::getVertexOffsets().
   std::vector<int> getVertexOffsets();
 
+  /// get direction of this coupling data
+  Direction getDirection() const;
+
   ///  True, if the data values of this CouplingData require to be initialized by this participant.
   const bool requiresInitialization;
 
@@ -112,6 +119,8 @@ private:
 
   /// If true, all substeps will be sent / received for this coupling data
   bool _exchangeSubsteps;
+
+  Direction _direction;
 };
 
 } // namespace cplscheme
