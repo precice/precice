@@ -342,7 +342,7 @@ void BaseCouplingScheme::secondExchange()
 
     if (hasTimeWindowSize()) {
       _totalTimeDrift += abs(_computedTimeWindowPart - _timeWindowSize);
-      PRECICE_CHECK(abs(_totalTimeDrift) < math::NUMERICAL_ZERO_DIFFERENCE, "preCICE has detected a difference between its internal time and the time of this participant. This can happen, if you are using very many substeps per time window over multiple time windows. Please refer to https://github.com/precice/precice/issues/1866 for strategies to avoid this problem.");
+      PRECICE_CHECK(_totalTimeDrift < math::NUMERICAL_ZERO_DIFFERENCE, "preCICE has detected a difference between its internal time and the time of this participant. This can happen, if you are using very many substeps per time window over multiple time windows. Please refer to https://github.com/precice/precice/issues/1866 for strategies to avoid this problem.");
     }
 
     exchangeSecondData();
