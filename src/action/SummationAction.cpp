@@ -27,7 +27,7 @@ SummationAction::SummationAction(
   }
 }
 
-void SummationAction::performAction(double time)
+void SummationAction::performAction()
 {
   PRECICE_TRACE();
 
