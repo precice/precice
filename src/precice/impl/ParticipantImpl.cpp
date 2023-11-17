@@ -418,12 +418,11 @@ void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isT
     performDataActions({action::Action::READ_MAPPING_POST}, timeAfterAdvance);
   }
 
+  handleExports();
+
   if (isTimeWindowComplete) {
     // Move to next time window
     PRECICE_ASSERT(math::greaterEquals(timeAfterAdvance, timeSteppedTo), "We must have stayed or moved forwards in time (min-time-step-size).");
-
-    PRECICE_DEBUG("Handle exports");
-    handleExports();
 
     // As we move forward, there may now be old samples lying around
     // We know that timeAfterAdvance is the start time of the time window
@@ -1414,6 +1413,7 @@ void ParticipantImpl::performDataActions(
 void ParticipantImpl::handleExports()
 {
   PRECICE_TRACE();
+  PRECICE_DEBUG("Handle exports");
   ParticipantState::IntermediateExport exp;
   exp.timewindow = _couplingScheme->getTimeWindows() - 1;
   exp.iteration  = _numberAdvanceCalls;
