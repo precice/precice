@@ -8,7 +8,7 @@
 #include <numeric>
 #include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mesh/Mesh.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 
 namespace precice {

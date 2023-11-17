@@ -18,7 +18,7 @@
 #include "precice/Participant.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/MultiLock.hpp"
 
 namespace precice {

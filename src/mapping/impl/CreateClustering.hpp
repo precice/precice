@@ -6,7 +6,7 @@
 
 #include "math/math.hpp"
 #include "mesh/Mesh.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "query/Index.hpp"
 // required for the squared distance computation
 #include "mapping/RadialBasisFctSolver.hpp"

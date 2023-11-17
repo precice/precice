@@ -10,7 +10,7 @@
 #include "logging/LogMacros.hpp"
 #include "m2n/DistributedCommunication.hpp"
 #include "mesh/Mesh.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/algorithm.hpp"
 #include "utils/assertion.hpp"

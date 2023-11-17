@@ -18,7 +18,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "partition/Partition.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"

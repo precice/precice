@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 
 #ifndef PRECICE_NO_MPI
 #include <mpi.h>

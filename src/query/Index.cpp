@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 #include "query/Index.hpp"
 #include "query/impl/RTreeAdapter.hpp"
