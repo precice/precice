@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
   using namespace precice;
 
   precice::syncMode = false;
-  utils::Parallel::initializeMPI(&argc, &argv);
+  utils::Parallel::initializeTestingMPI(&argc, &argv);
   const auto rank = utils::Parallel::current()->rank();
   const auto size = utils::Parallel::current()->size();
   logging::setMPIRank(rank);
@@ -81,6 +81,6 @@ int main(int argc, char *argv[])
   }
 
   utils::IntraComm::getCommunication() = nullptr;
-  utils::Parallel::finalizeMPI();
+  utils::Parallel::finalizeTestingMPI();
   return retCode;
 }
