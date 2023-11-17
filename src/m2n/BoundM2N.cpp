@@ -5,7 +5,7 @@
 #include "logging/LogMacros.hpp"
 #include "m2n/BoundM2N.hpp"
 #include "m2n/M2N.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 

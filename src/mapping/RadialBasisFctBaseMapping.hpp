@@ -3,7 +3,7 @@
 #include "impl/BasisFunctions.hpp"
 #include "mapping/Mapping.hpp"
 #include "mesh/Filter.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 
 namespace precice {
 namespace mapping {

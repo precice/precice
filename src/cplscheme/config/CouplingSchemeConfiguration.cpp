@@ -30,7 +30,7 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "precice/config/ParticipantConfiguration.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
 #include "xml/ConfigParser.hpp"
