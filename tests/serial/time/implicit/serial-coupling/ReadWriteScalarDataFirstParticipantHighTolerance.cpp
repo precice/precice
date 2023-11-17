@@ -62,9 +62,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantHighTolerance)
     precice.writeData(meshName, writeDataName, {&vertexID, 1}, data);
   }
   precice.initialize();
-  double preciceDt = precice.getMaxTimeStepSize();
   double dt;
   double solverDt;
+  double preciceDt;
+  double minTimeStepSize   = 0.1;
   double startOfWindowTime = 0;
   double timeInWindow      = 0;
   double totalTime         = 6; // max-time from config
@@ -88,30 +89,36 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantHighTolerance)
       nbrTimeWindows++;
     }
 
-    dt = solverDt > preciceDt ? preciceDt : solverDt;
+    preciceDt = precice.getMaxTimeStepSize();
+
+    if (abs(preciceDt - solverDt) < minTimeStepSize) {
+      dt = preciceDt;
+    } else {
+      dt = solverDt > preciceDt ? preciceDt : solverDt;
+    }
 
     //It is enough to only check this in the first time step and in the second iteration
     if (iterations > 0 && timeInWindow == 0) {
       if (context.isNamed("SolverOne")) {
         precice.readData(meshName, readDataName, {&vertexID, 1}, preciceDt, {&actualDataValue, 1});
-        BOOST_TEST(actualDataValue == readFunction(0.99 * nbrTimeWindows)); // Check that the end of the time window has the correct value
+        BOOST_TEST(actualDataValue == readFunction(nbrTimeWindows)); // Check that the end of the time window has the correct value
 
         precice.readData(meshName, readDataName, {&vertexID, 1}, 0.99, {&actualDataValue, 1});
-        BOOST_TEST(actualDataValue == readFunction(0.99 * nbrTimeWindows)); // Check that the last sample from the solver has the correct value
+        BOOST_TEST(actualDataValue == readFunction(0.99 + nbrTimeWindows - 1)); // Check that the last sample from the solver has the correct value
 
         precice.readData(meshName, readDataName, {&vertexID, 1}, 0.33, {&actualDataValue, 1});
-        BOOST_TEST(math::equals(actualDataValue, readFunction(0.33 + 0.99 * (nbrTimeWindows - 1)), 1e-6)); // We loose accuracy when sampling
+        BOOST_TEST(math::equals(actualDataValue, readFunction(0.33 + nbrTimeWindows - 1)));
 
         precice.readData(meshName, readDataName, {&vertexID, 1}, 0.95, {&actualDataValue, 1});
-        BOOST_TEST(!math::equals(actualDataValue, readFunction(0.95 + 0.99 * (nbrTimeWindows - 1)), 1e-2)); // The waveform has changed here due to the added time step
+        BOOST_TEST(math::equals(actualDataValue, readFunction(0.95 + nbrTimeWindows - 1)));
 
       } else {
 
         precice.readData(meshName, readDataName, {&vertexID, 1}, preciceDt, {&actualDataValue, 1});
-        BOOST_TEST(actualDataValue == readFunction(0.96 * nbrTimeWindows)); // Check that the end of the time window has the correct value
+        BOOST_TEST(actualDataValue == readFunction(nbrTimeWindows)); // Check that the end of the time window has the correct value
 
         precice.readData(meshName, readDataName, {&vertexID, 1}, 0.96, {&actualDataValue, 1});
-        BOOST_TEST(actualDataValue == readFunction(0.96 * nbrTimeWindows)); // Check that the last sample from the solver has the correct value
+        BOOST_TEST(actualDataValue == readFunction(0.96 + nbrTimeWindows - 1)); // Check that the last sample from the solver has the correct value
       }
     }
 
@@ -129,9 +136,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantHighTolerance)
 
     if (precice.isTimeWindowComplete()) {
       if (context.isNamed("SolverOne")) {
-        BOOST_TEST(startOfWindowTime + timeInWindow == 0.96 * nbrTimeWindows); // Check that both solvers have stopped at the correct timestep
+        BOOST_TEST(startOfWindowTime + timeInWindow == nbrTimeWindows); // Check that both solvers have stopped at the correct timestep
       } else {
-        BOOST_TEST(startOfWindowTime + timeInWindow == 0.99 * nbrTimeWindows); // Check that both solvers have stopped at the correct timestep
+        BOOST_TEST(startOfWindowTime + timeInWindow == nbrTimeWindows); // Check that both solvers have stopped at the correct timestep
       }
     }
   }

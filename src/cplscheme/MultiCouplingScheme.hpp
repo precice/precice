@@ -31,7 +31,6 @@ public:
  * @param[in] maxTime Simulation time limit, or UNDEFINED_MAX_TIME.
  * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIME_WINDOWS.
  * @param[in] timeWindowSize Simulation time window size.
- * @param[in] minTimeStepSize Minimum time step size.
  * @param[in] localParticipant Name of participant using this coupling scheme.
  * @param[in] m2ns M2N communications to all other participants of coupling scheme.
  * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
@@ -41,7 +40,6 @@ public:
       double                             maxTime,
       int                                maxTimeWindows,
       double                             timeWindowSize,
-      double                             minTimeStepSize,
       const std::string &                localParticipant,
       std::map<std::string, m2n::PtrM2N> m2ns,
       constants::TimesteppingMethod      dtMethod,

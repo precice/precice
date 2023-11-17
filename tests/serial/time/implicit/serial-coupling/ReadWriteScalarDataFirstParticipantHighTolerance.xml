@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration min-time-step-size="1e-1">
+<precice-configuration>
   <data:scalar name="DataOne" waveform-degree="2" />
   <data:scalar name="DataTwo" waveform-degree="2" />
 

@@ -67,7 +67,6 @@ public:
       double                        maxTime,
       int                           maxTimeWindows,
       double                        timeWindowSize,
-      double                        minTimeStepSize,
       std::string                   localParticipant,
       int                           minIterations,
       int                           maxIterations,
@@ -461,9 +460,6 @@ private:
   /// Local participant name.
   std::string _localParticipant = "unknown";
 
-  /// Minimal time step allowed by preCICE.
-  const double _minTimeStepSize;
-
   /// @brief Buffer for drift in time in current window, will be added to _totalTimeDrift, if window converges in this iteration
   double _currentWindowTimeDrift = 0;
 
@@ -574,11 +570,6 @@ private:
    * @return true, if any CouplingData in dataMap requires initialization
    */
   bool anyDataRequiresInitialization(DataMap &dataMap) const;
-
-  /**
-   * @brief Goes through _allData and duplicate the last available sample and puts it at the end of the time window if there does not exist a sample at the window end.
-   */
-  void addTimeStepAtWindowEnd();
 
   /**
    * @return the end of the time window, defined as timeWindowStart + timeWindowSize

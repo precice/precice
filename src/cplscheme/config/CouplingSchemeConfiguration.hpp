@@ -60,8 +60,6 @@ public:
 
   void setExperimental(bool experimental);
 
-  void setMinTimeStepSize(double minTimeStepSize);
-
   /// Destructor, empty.
   virtual ~CouplingSchemeConfiguration() {}
 
@@ -128,7 +126,6 @@ private:
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
 
-  double           _minTimeStepSize = math::NUMERICAL_ZERO_DIFFERENCE;
   static const int DEFAULT_MIN_ITERATIONS;
   static const int DEFAULT_MAX_ITERATIONS;
 
