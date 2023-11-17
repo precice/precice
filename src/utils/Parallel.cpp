@@ -304,9 +304,9 @@ void Parallel::splitCommunicator(const std::string &groupName)
       std::string name;
       com.receive(name, i); // Receive group name from all ranks
       if (groupMap.find(name) == groupMap.end()) {
-        groupMap[name] = accessorGroups.size();
+        groupMap[name] = static_cast<int>(accessorGroups.size());
         AccessorGroup newGroup;
-        newGroup.id         = accessorGroups.size();
+        newGroup.id         = static_cast<int>(accessorGroups.size());
         newGroup.size       = 1;
         newGroup.leaderRank = i;
         newGroup.name       = name;
@@ -450,7 +450,7 @@ void Parallel::restrictCommunicator(int newSize)
   // Create subgroup, containing processes contained in ranks
   PRECICE_DEBUG("Create restricted group");
   MPI_Group restrictedGroup;
-  MPI_Group_incl(currentGroup, ranks.size(), ranks.data(), &restrictedGroup);
+  MPI_Group_incl(currentGroup, static_cast<int>(ranks.size()), ranks.data(), &restrictedGroup);
 
   // @todo check if it has to go back down to the other group free
   MPI_Group_free(&currentGroup);
