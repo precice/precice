@@ -464,6 +464,9 @@ private:
   /// Minimal time step allowed by preCICE.
   const double _minTimeStepSize;
 
+  /// @brief Buffer for drift in time in current window, will be added to _totalTimeDrift, if window converges in this iteration
+  double _currentWindowTimeDrift = 0;
+
   /// @brief Keeps track of drift in time over multiple windows
   double _totalTimeDrift = 0;
 

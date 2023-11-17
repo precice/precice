@@ -319,6 +319,11 @@ void BaseCouplingScheme::firstExchange()
       _computedTimeWindowPart = _timeWindowSize;
     }
 
+    if (hasTimeWindowSize()) {
+      // Store time between actually _computedTimeWindowPart and _timeWindowSize in buffer to keep track of total time drift in _totalTimeDrift.
+      _currentWindowTimeDrift = abs(_computedTimeWindowPart - _timeWindowSize);
+    }
+
     exchangeFirstData();
   }
 }
@@ -339,11 +344,6 @@ void BaseCouplingScheme::secondExchange()
   PRECICE_ASSERT(!_isTimeWindowComplete);
 
   if (reachedEndOfTimeWindow()) {
-
-    if (hasTimeWindowSize()) {
-      _totalTimeDrift += abs(_computedTimeWindowPart - _timeWindowSize);
-      PRECICE_CHECK(abs(_totalTimeDrift) < math::NUMERICAL_ZERO_DIFFERENCE, "preCICE has detected a difference between its internal time and the time of this participant. This can happen, if you are using very many substeps per time window over multiple time windows. Please refer to https://github.com/precice/precice/issues/1866 for strategies to avoid this problem.");
-    }
 
     exchangeSecondData();
 
@@ -368,6 +368,8 @@ void BaseCouplingScheme::secondExchange()
           PRECICE_DEBUG("Setting require create checkpoint");
           requireAction(CouplingScheme::Action::WriteCheckpoint);
         }
+        _totalTimeDrift += _currentWindowTimeDrift;
+        PRECICE_CHECK(abs(_totalTimeDrift) < math::NUMERICAL_ZERO_DIFFERENCE, "preCICE has detected a difference between its internal time and the time of this participant. This can happen, if you are using very many substeps per time window over multiple time windows. Please refer to https://github.com/precice/precice/issues/1866 for strategies to avoid this problem.");
       }
       //update iterations
       _totalIterations++;
@@ -381,6 +383,8 @@ void BaseCouplingScheme::secondExchange()
       _isTimeWindowComplete = true;
       _timeWindowStartTime += _computedTimeWindowPart;
       _computedTimeWindowPart = 0.0; // reset window
+      _totalTimeDrift += _currentWindowTimeDrift;
+      PRECICE_CHECK(abs(_totalTimeDrift) < math::NUMERICAL_ZERO_DIFFERENCE, "preCICE has detected a difference between its internal time and the time of this participant. This can happen, if you are using very many substeps per time window over multiple time windows. Please refer to https://github.com/precice/precice/issues/1866 for strategies to avoid this problem.");
     }
     if (isCouplingOngoing()) {
       PRECICE_ASSERT(_hasDataBeenReceived);
