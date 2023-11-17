@@ -37,10 +37,8 @@ using DataMap = std::map<int, PtrCouplingData>;
 
 BOOST_AUTO_TEST_SUITE(AccelerationIntraCommTests)
 
-std::cout << "start with this one";
-
 /// Test that runs on 4 processors.
-BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
+BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make({false, true}), exchangeSubsteps)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   double           initialRelaxation        = 0.01;
@@ -66,11 +64,11 @@ BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
   Eigen::VectorXd dcol1;
   Eigen::VectorXd fcol1;
 
-  DataMap       data;
-  mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
-  mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
-
-  bool exchangeSubsteps = false; // @todo add testVIQNILSppWithSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
+  DataMap         data;
+  mesh::PtrData   displacements(new mesh::Data("dvalues", -1, 1));
+  mesh::PtrData   forces(new mesh::Data("fvalues", -1, 1));
+  PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
+  PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
 
   if (context.isPrimary()) { // Primary
     /**
@@ -85,10 +83,11 @@ BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
     insert << 0.2, 0.2, 0.2, 0.2;
     utils::append(forces->values(), insert);
 
-    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
     dpcd->setSampleAtTime(0, dpcd->sample());
-    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
+    dpcd->setSampleAtTime(1, dpcd->sample());
+
     fpcd->setSampleAtTime(0, fpcd->sample());
+    fpcd->setSampleAtTime(1, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -102,6 +101,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
     displacements->values() = insert;
     insert << 0.1, 0.1, 0.1, 0.1;
     forces->values() = insert;
+
+    dpcd->setSampleAtTime(1, dpcd->sample());
+    fpcd->setSampleAtTime(1, fpcd->sample());
 
   } else if (context.isRank(1)) { // SecondaryRank1
 
@@ -117,10 +119,11 @@ BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
     insert << 0.2, 0.2, 0.2, 0.2;
     utils::append(forces->values(), insert);
 
-    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
     dpcd->setSampleAtTime(0, dpcd->sample());
-    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
+    dpcd->setSampleAtTime(1, dpcd->sample());
+
     fpcd->setSampleAtTime(0, fpcd->sample());
+    fpcd->setSampleAtTime(1, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -135,6 +138,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
     insert << 0.1, 0.1, 0.1, 0.1;
     forces->values() = insert;
 
+    dpcd->setSampleAtTime(1, dpcd->sample());
+    fpcd->setSampleAtTime(1, fpcd->sample());
+
   } else if (context.isRank(2)) { // Secondary rank 2
 
     /**
@@ -142,12 +148,12 @@ BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
      */
 
     // init displacements
-    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
     dpcd->setSampleAtTime(0, dpcd->sample());
+    dpcd->setSampleAtTime(1, dpcd->sample());
 
     // init forces
-    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
     fpcd->setSampleAtTime(0, fpcd->sample());
+    fpcd->setSampleAtTime(1, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -156,6 +162,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
     fpcd->storeIteration();
 
     pp.initialize(data);
+
+    dpcd->setSampleAtTime(1, dpcd->sample());
+    fpcd->setSampleAtTime(1, fpcd->sample());
 
   } else if (context.isRank(3)) { // Secondary rank 3
 
@@ -171,10 +180,11 @@ BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
     insert << 0.2, 0.2;
     utils::append(forces->values(), insert);
 
-    PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
     dpcd->setSampleAtTime(0, dpcd->sample());
-    PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
+    dpcd->setSampleAtTime(1, dpcd->sample());
+
     fpcd->setSampleAtTime(0, fpcd->sample());
+    fpcd->setSampleAtTime(1, fpcd->sample());
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -188,6 +198,9 @@ BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
     displacements->values() = insert;
     insert << 0.1, 0.1;
     forces->values() = insert;
+
+    dpcd->setSampleAtTime(1, dpcd->sample());
+    fpcd->setSampleAtTime(1, fpcd->sample());
   }
 
   pp.performAcceleration(data);
@@ -239,6 +252,8 @@ BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
   }
 
   data.begin()->second->values() = newdvalues;
+  dpcd->setSampleAtTime(1, dpcd->sample());
+  fpcd->setSampleAtTime(1, fpcd->sample());
 
   pp.performAcceleration(data);
 
@@ -270,7 +285,6 @@ BOOST_AUTO_TEST_CASE(testVIQNILSppWithoutSubsteps)
   }
 }
 
-std::cout << "change this test";
 /// Test that runs on 4 processors.
 BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 {
