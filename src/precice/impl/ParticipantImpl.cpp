@@ -112,7 +112,9 @@ ParticipantImpl::ParticipantImpl(
 #ifndef PRECICE_NO_MPI
   if (communicator.has_value()) {
     auto commptr = static_cast<utils::Parallel::Communicator *>(communicator.value());
-    utils::Parallel::registerUserProvidedComm(*commptr);
+    utils::Parallel::initializeOrDetectMPI(*commptr);
+  } else {
+    utils::Parallel::initializeOrDetectMPI();
   }
 #endif
 
@@ -168,7 +170,6 @@ void ParticipantImpl::configure(
 {
 
   config::Configuration config;
-  utils::Parallel::initializeManagedMPI(nullptr, nullptr);
   logging::setMPIRank(utils::Parallel::current()->rank());
   xml::ConfigurationContext context{
       _accessorName,
@@ -510,7 +511,7 @@ void ParticipantImpl::finalize()
   profiling::EventRegistry::instance().finalize();
 
   // Finally clear events and finalize MPI
-  utils::Parallel::finalizeManagedMPI();
+  utils::Parallel::finalizeOrCleanupMPI();
   _state = State::Finalized;
 }
 
