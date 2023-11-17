@@ -87,20 +87,22 @@ PythonAction::~PythonAction()
   }
 }
 
-void PythonAction::performAction(double time)
+void PythonAction::performAction()
 {
-  PRECICE_TRACE(time);
+  PRECICE_TRACE();
 
-  if (not _isInitialized)
+  if (not _isInitialized) {
     initialize();
+  }
 
-  PyObject *dataArgs   = PyTuple_New(_numberArguments);
-  PyObject *pythonTime = PyFloat_FromDouble(time);
-  PyTuple_SetItem(dataArgs, 0, pythonTime);
+  PyObject *dataArgs = PyTuple_New(_numberArguments);
 
   int i = 0;
   for (auto &targetStample : _targetData->stamples()) { // iterate over _targetData, because it must always exist
     PRECICE_ASSERT(_targetData);                        // _targetData is mandatory, cannot call setSampleAtTime, if target data is not provided!
+
+    PyObject *pythonTime = PyFloat_FromDouble(targetStample.timestamp);
+    PyTuple_SetItem(dataArgs, 0, pythonTime);
 
     if (_sourceData) {                                     // _sourceData is optional
       auto &sourceStample   = _sourceData->stamples()[i];  // simultaneously iterate over _targetData->stamples()
@@ -130,10 +132,9 @@ void PythonAction::performAction(double time)
                     _moduleName, python_error_as_string());
     }
 
-    Py_DECREF(dataArgs);
-
     _targetData->setSampleAtTime(targetStample.timestamp, _targetData->sample());
   }
+  Py_DECREF(dataArgs);
 }
 
 void PythonAction::initialize()

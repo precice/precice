@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(SummationOneDimensional)
   action::SummationAction sum(
       action::SummationAction::WRITE_MAPPING_POST, sourceDataIDs, targetDataID, mesh);
 
-  sum.performAction(0.0);
+  sum.performAction();
 
   const auto &sourceValues1 = sourceData1->values();
   const auto &sourceValues2 = sourceData2->values();
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
   action::SummationAction sum(
       action::SummationAction::WRITE_MAPPING_POST, sourceDataIDs, targetDataID, mesh);
 
-  sum.performAction(0.0);
+  sum.performAction();
 
   const auto &sourceValues1 = sourceData1->values();
   const auto &sourceValues2 = sourceData2->values();
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensionalSubcycling)
   action::SummationAction sum(
       action::SummationAction::WRITE_MAPPING_POST, sourceDataIDs, targetDataID, mesh);
 
-  sum.performAction(0.0);
+  sum.performAction();
 
   const auto &sourceValues1 = sourceData1->values();
   const auto &sourceValues2 = sourceData2->values();
