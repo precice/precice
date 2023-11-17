@@ -70,8 +70,8 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
   DataMap         data;
   mesh::PtrData   displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData   forces(new mesh::Data("fvalues", -1, 1));
-  PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
-  PtrCouplingData fpcd(new CouplingData(forces, dummyMesh, false, exchangeSubsteps));
+  PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
+  PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
 
   if (context.isPrimary()) { // Primary
     /**
@@ -1096,7 +1096,7 @@ BOOST_DATA_TEST_CASE(testColumnsLoggingWithoutSubsteps, boost::unit_test::data::
   }
 
   utils::append(displacements->values(), insert);
-  PtrCouplingData dpcd(new CouplingData(displacements, dummyMesh, false, exchangeSubsteps));
+  PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
   data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
 
   // Need at least two samples to get a valid waveform
