@@ -88,11 +88,11 @@ void BaseQNAcceleration::initialize(
                  "Consider switching to a different acceleration scheme or a different data mapping scheme.");
   }
 
-  for (const auto &data : cplData | boost::adaptors::map_values) {
-    if (data->exchangeSubsteps()) {
-      _exchangeSubsteps = true;
-    }
-  }
+  // for (const auto &data : cplData | boost::adaptors::map_values) {
+  //   if (data->exchangeSubsteps()) {
+  //     _exchangeSubsteps = true;
+  //   }
+  // }
 
   checkDataIDs(cplData);
 
