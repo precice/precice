@@ -357,6 +357,7 @@ void BaseQNAcceleration::performAcceleration(
       _residuals *= _initialRelaxation;
       _residuals += _oldValues;
       _values = _residuals;
+      splitCouplingData(cplData);
     }
 
     computeUnderrelaxationSecondaryData(cplData);
@@ -424,15 +425,7 @@ void BaseQNAcceleration::performAcceleration(
      * PRECONDITION: All objects are unscaled, except the matrices within the QR-dec of V.
      *               Thus, the pseudo inverse needs to be reverted before using it.
      */
-    Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_residuals.size());
-    computeQNUpdate(cplData, xUpdate);
-
-    /**
-     * If not exchanging substeps apply the QN update and save it in coupling data
-     */
-    if (!_exchangeSubsteps) {
-      _values += xUpdate;
-    }
+    computeQNUpdate(cplData);
 
     // pending deletion: delete old V, W matrices if timeWindowsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
@@ -460,23 +453,10 @@ void BaseQNAcceleration::performAcceleration(
         _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
       }
     }
-
-    if (std::isnan(utils::IntraComm::l2norm(xUpdate))) {
-      PRECICE_ERROR("The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
-                    "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
-                    "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
-                    "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "
-                    "filter or increase its threshold (larger epsilon).");
-    }
   }
   // number of iterations (usually equals number of columns in LS-system)
   its++;
   _firstIteration = false;
-
-  //Split the coupling data and update the values in coupling data if we are not doing waveform iteraitons
-  if (!_exchangeSubsteps) {
-    splitCouplingData(cplData);
-  }
 }
 
 void BaseQNAcceleration::applyFilter()
@@ -548,6 +528,12 @@ void BaseQNAcceleration::splitCouplingData(
       valuesPart(i) = _values(i + offset);
     }
     offset += size;
+
+    //Update the last sample in the waveform as well
+    for (auto &stample : cplData.at(id)->stamples().advance_begin(1)) {
+      double timestamp = stample.timestamp;
+      cplData.at(id)->setSampleAtTime(timestamp, cplData.at(id)->sample());
+    }
   }
 }
 

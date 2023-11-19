@@ -69,7 +69,7 @@ private:
   virtual void updateDifferenceMatrices(const DataMap &cplData);
 
   /// computes the IQN-ILS update using QR decomposition
-  virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate);
+  virtual void computeQNUpdate(const DataMap &cplData);
 
   /// computes underrelaxation for the secondary data
   virtual void computeUnderrelaxationSecondaryData(const DataMap &cplData);

@@ -141,7 +141,7 @@ private:
   /** @brief: computes the IQNIMVJ update using QR decomposition of V,
    *        furthermore it updates the inverse of the system jacobian
    */
-  virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate);
+  virtual void computeQNUpdate(const DataMap &cplData);
 
   /// @brief: updates the V, W matrices (as well as the matrices for the secondary data)
   virtual void updateDifferenceMatrices(const DataMap &cplData);

@@ -105,7 +105,7 @@ void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
   }
 }
 
-void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate)
+void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData)
 {
   PRECICE_TRACE();
   PRECICE_DEBUG("   Compute Newton factors");
