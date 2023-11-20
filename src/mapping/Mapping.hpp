@@ -87,6 +87,11 @@ public:
 
   const mesh::PtrMesh &getOutputMesh() const;
 
+  /// Returns the bounding box used for the tagging in the first round
+  /// By default, that's just the bounding box around the mesh, but for
+  /// more elaborate mappings such as RBFs, the default BB is not sufficient
+  virtual mesh::BoundingBox getTaggingBox(mesh::PtrMesh mesh) const;
+
   /// Returns the constraint (consistent/conservative) of the mapping.
   Constraint getConstraint() const;
 

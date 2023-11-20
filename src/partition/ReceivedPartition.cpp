@@ -487,15 +487,13 @@ void ReceivedPartition::prepareBoundingBox()
 
   // Create BB around all "other" meshes
   for (mapping::PtrMapping &fromMapping : _fromMappings) {
-    auto other_bb = fromMapping->getOutputMesh()->getBoundingBox();
+    auto other_bb = fromMapping->getTaggingBox(fromMapping->getOutputMesh());
     _bb.expandBy(other_bb);
-    _bb.scaleBy(_safetyFactor);
     _boundingBoxPrepared = true;
   }
   for (mapping::PtrMapping &toMapping : _toMappings) {
-    auto other_bb = toMapping->getInputMesh()->getBoundingBox();
+    auto other_bb = toMapping->getTaggingBox(toMapping->getOutputMesh());
     _bb.expandBy(other_bb);
-    _bb.scaleBy(_safetyFactor);
     _boundingBoxPrepared = true;
   }
 

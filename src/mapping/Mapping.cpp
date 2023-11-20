@@ -42,6 +42,11 @@ const mesh::PtrMesh &Mapping::getOutputMesh() const
   return _output;
 }
 
+mesh::BoundingBox Mapping::getTaggingBox(mesh::PtrMesh mesh) const
+{
+  return mesh->getBoundingBox();
+}
+
 Mapping::Constraint Mapping::getConstraint() const
 {
   return _constraint;
