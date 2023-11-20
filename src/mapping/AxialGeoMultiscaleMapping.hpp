@@ -37,7 +37,7 @@ public:
    */
   AxialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleType type, MultiscaleAxis axis, double radius);
 
-  /// Computes the mapping coefficients needed to transfer data between the in- and output mesh.
+  /// Takes care of compute-heavy operations needed only once to set up the mapping.
   void computeMapping() override;
 
   /// Removes a computed mapping.
