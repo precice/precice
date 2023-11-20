@@ -115,6 +115,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
 
     for (size_t i = 0; i < outSize; i++) {
       PRECICE_ASSERT(static_cast<int>((i * outValueDimensions) + effectiveCoordinate) < outputValues.size(), ((i * outValueDimensions) + effectiveCoordinate), outputValues.size());
+      // When adding support for 2D, remember that this should be 1.5 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
       outputValues((i * outValueDimensions) + effectiveCoordinate) = 2 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
     }
   } else {
