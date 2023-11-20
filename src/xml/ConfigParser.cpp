@@ -97,6 +97,12 @@ void OnStructuredErrorFunc(void *userData, const xmlError *error)
   ConfigParser::MessageProxy(error->level, message);
 }
 
+// Required for versions before 2.12.0 of libxml
+void OnStructuredErrorFunc(void *userData, xmlError *error)
+{
+  OnStructuredErrorFunc(userData, static_cast<const xmlError *>(error));
+}
+
 void OnErrorFunc(void *userData, const char *error, ...)
 {
   ConfigParser::MessageProxy(XML_ERR_ERROR, error);
