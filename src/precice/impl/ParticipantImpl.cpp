@@ -112,7 +112,9 @@ ParticipantImpl::ParticipantImpl(
 #ifndef PRECICE_NO_MPI
   if (communicator.has_value()) {
     auto commptr = static_cast<utils::Parallel::Communicator *>(communicator.value());
-    utils::Parallel::registerUserProvidedComm(*commptr);
+    utils::Parallel::initializeOrDetectMPI(*commptr);
+  } else {
+    utils::Parallel::initializeOrDetectMPI();
   }
 #endif
 
@@ -168,7 +170,6 @@ void ParticipantImpl::configure(
 {
 
   config::Configuration config;
-  utils::Parallel::initializeManagedMPI(nullptr, nullptr);
   logging::setMPIRank(utils::Parallel::current()->rank());
   xml::ConfigurationContext context{
       _accessorName,
@@ -333,7 +334,7 @@ void ParticipantImpl::initialize()
   PRECICE_DEBUG("Plot output");
   _accessor->exportInitial();
 
-  resetWrittenData(false, false);
+  resetWrittenData();
 
   e.stop();
   sep.pop();
@@ -374,45 +375,99 @@ void ParticipantImpl::advance(
 
   // Update the coupling scheme time state. Necessary to get correct remainder.
   const bool   isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
-  const double time          = _couplingScheme->getTime();
+  const double timeSteppedTo = _couplingScheme->getTime();
 
-  for (auto &context : _accessor->writeDataContexts()) {
-    context.storeBufferedData(time);
-  }
-
-  if (_couplingScheme->willDataBeExchanged(0.0)) {
-    mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, time);
-  }
+  handleDataBeforeAdvance(isAtWindowEnd, timeSteppedTo);
 
   advanceCouplingScheme();
 
-  if (_couplingScheme->hasDataBeenReceived() || _couplingScheme->isTimeWindowComplete()) { // @todo potential to avoid unnecessary mappings here.
-    mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, time);
-  }
+  // In clase if an implicit scheme, this may be before timeSteppedTo
+  const double timeAfterAdvance   = _couplingScheme->getTime();
+  const bool   timeWindowComplete = _couplingScheme->isTimeWindowComplete();
+
+  handleDataAfterAdvance(isAtWindowEnd, timeWindowComplete, timeSteppedTo, timeAfterAdvance);
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
-
-  PRECICE_DEBUG("Handle exports");
-  handleExports();
-
-  resetWrittenData(isAtWindowEnd, _couplingScheme->isTimeWindowComplete());
-
-  if (_couplingScheme->isTimeWindowComplete()) {
-    for (auto &context : _accessor->readDataContexts()) {
-      context.resetInitialGuesses();
-    }
-    for (auto &context : _accessor->writeDataContexts()) {
-      context.resetInitialGuesses();
-    }
-  }
 
   _meshLock.lockAll();
 
   sep.pop();
   e.stop();
   _solverAdvanceEvent->start();
+}
+
+void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo)
+{
+  samplizeWriteData(timeSteppedTo);
+
+  if (reachedTimeWindowEnd) {
+    mapWrittenData();
+    performDataActions({action::Action::WRITE_MAPPING_POST}, timeSteppedTo);
+  }
+}
+
+void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance)
+{
+  if (!reachedTimeWindowEnd) {
+    // We are subcycling
+    return;
+  }
+
+  if (reachedTimeWindowEnd) {
+    mapReadData();
+    // FIXME: the actions timing for read mappings doesn't make sense after
+    performDataActions({action::Action::READ_MAPPING_POST}, timeAfterAdvance);
+  }
+
+  handleExports();
+
+  if (isTimeWindowComplete) {
+    // Move to next time window
+    PRECICE_ASSERT(math::greaterEquals(timeAfterAdvance, timeSteppedTo), "We must have stayed or moved forwards in time (min-time-step-size).");
+
+    // As we move forward, there may now be old samples lying around
+    // We know that timeAfterAdvance is the start time of the time window
+    trimOldDataBefore(timeAfterAdvance);
+
+    // Reset initial guesses for iterative mappings
+    for (auto &context : _accessor->readDataContexts()) {
+      context.resetInitialGuesses();
+    }
+    for (auto &context : _accessor->writeDataContexts()) {
+      context.resetInitialGuesses();
+    }
+    return;
+  }
+
+  // We are iterating
+  PRECICE_ASSERT(math::greater(timeSteppedTo, timeAfterAdvance), "We must have moved back in time!");
+
+  trimSendDataAfter(timeAfterAdvance);
+}
+
+void ParticipantImpl::samplizeWriteData(double time)
+{
+  // store buffered write data in sample storage and reset the buffer
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.storeBufferedData(time);
+  }
+  resetWrittenData();
+}
+
+void ParticipantImpl::trimOldDataBefore(double time)
+{
+  for (auto &context : _accessor->usedMeshContexts()) {
+    for (const auto &name : context->mesh->availableData()) {
+      context->mesh->data(name)->timeStepsStorage().trimBefore(time);
+    }
+  }
+}
+
+void ParticipantImpl::trimSendDataAfter(double time)
+{
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.trimAfter(time);
+  }
 }
 
 void ParticipantImpl::finalize()
@@ -456,7 +511,7 @@ void ParticipantImpl::finalize()
   profiling::EventRegistry::instance().finalize();
 
   // Finally clear events and finalize MPI
-  utils::Parallel::finalizeManagedMPI();
+  utils::Parallel::finalizeOrCleanupMPI();
   _state = State::Finalized;
 }
 
@@ -1359,6 +1414,7 @@ void ParticipantImpl::performDataActions(
 void ParticipantImpl::handleExports()
 {
   PRECICE_TRACE();
+  PRECICE_DEBUG("Handle exports");
   ParticipantState::IntermediateExport exp;
   exp.timewindow = _couplingScheme->getTimeWindows() - 1;
   exp.iteration  = _numberAdvanceCalls;
@@ -1367,11 +1423,11 @@ void ParticipantImpl::handleExports()
   _accessor->exportIntermediate(exp);
 }
 
-void ParticipantImpl::resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComplete)
+void ParticipantImpl::resetWrittenData()
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
-    context.resetData(isAtWindowEnd, isTimeWindowComplete);
+    context.resetData();
   }
 }
 

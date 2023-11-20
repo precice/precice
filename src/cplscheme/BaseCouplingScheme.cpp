@@ -200,7 +200,6 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
         PRECICE_ASSERT(data->hasGradient());
         m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
       }
-      data->timeStepsStorage().trim();
       data->setSampleAtTime(getTime(), data->sample());
     }
   }
@@ -223,15 +222,16 @@ void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveDat
   }
 }
 
-PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool communicateSubsteps)
+PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool communicateSubsteps, CouplingData::Direction direction)
 {
   int             id = data->getID();
   PtrCouplingData ptrCplData;
   if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps);
+    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps, direction);
     _allData.emplace(id, ptrCplData);
   } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
     ptrCplData = _allData[id];
+    PRECICE_CHECK(ptrCplData->getDirection() == direction, "Data \"{0}\" cannot be added for sending and for receiving. Please remove either <exchange data=\"{0}\" ... /> tag", data->getName());
   }
   return ptrCplData;
 }
@@ -471,6 +471,11 @@ void BaseCouplingScheme::setTimeWindows(int timeWindows)
 double BaseCouplingScheme::getTime() const
 {
   return _timeWindowStartTime + _computedTimeWindowPart;
+}
+
+double BaseCouplingScheme::getTimeWindowStart() const
+{
+  return _timeWindowStartTime;
 }
 
 int BaseCouplingScheme::getTimeWindows() const
