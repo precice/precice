@@ -5,21 +5,58 @@ Return 0 on success, 1 on failure and 125 on compilation failure which tells git
 
 To ensure a clean test it can delete and recreate the ./build/TestOutput/ directories.
 """
-import argparse, os, shutil, subprocess, sys, multiprocessing
+import argparse
+import multiprocessing
+import os
+import shutil
+import subprocess
+import sys
 
+parser = argparse.ArgumentParser(
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    description="All additional arguments are passed to the testprecice binary.",
+)
 
-parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-                                 description = "All additional arguments are passed to the testprecice binary.")
+parser.add_argument(
+    "-s",
+    "--source-dir",
+    help="Source directory of preCICE",
+    dest="source_dir",
+    default=os.getcwd(),
+)
+parser.add_argument(
+    "-b",
+    "--build-dir",
+    help="Build directory of preCICE",
+    dest="build_dir",
+    default=os.path.join(os.getcwd(), "build"),
+)
 
-parser.add_argument('-s', "--source-dir", help="Source directory of preCICE", dest='source_dir', default=os.getcwd())
-parser.add_argument('-b', "--build-dir", help="Build directory of preCICE", dest='build_dir', default=os.path.join(os.getcwd(), "build"))
-
-parser.add_argument('-c', '--compile', help="Compile preCICE", dest='compile', action='store_true')
-parser.add_argument('-r', '--removebuild', help="Remove build/ and .scon* files before compiling", dest='remove_build', action='store_true')
-parser.add_argument('-k', '--keeptest', help="Do not remove test directory for each test run", dest='keep_test', action='store_true')
-parser.add_argument('-t', help="Run tests.", dest='run_tests', action="store_true")
-parser.add_argument('-j', help="Number of CPUs to compile on", dest='compile_cpus', default=multiprocessing.cpu_count())
-parser.add_argument('--logconfig', "-l", help="Log config file", default = "")
+parser.add_argument(
+    "-c", "--compile", help="Compile preCICE", dest="compile", action="store_true"
+)
+parser.add_argument(
+    "-r",
+    "--removebuild",
+    help="Remove build/ and .scon* files before compiling",
+    dest="remove_build",
+    action="store_true",
+)
+parser.add_argument(
+    "-k",
+    "--keeptest",
+    help="Do not remove test directory for each test run",
+    dest="keep_test",
+    action="store_true",
+)
+parser.add_argument("-t", help="Run tests.", dest="run_tests", action="store_true")
+parser.add_argument(
+    "-j",
+    help="Number of CPUs to compile on",
+    dest="compile_cpus",
+    default=multiprocessing.cpu_count(),
+)
+parser.add_argument("--logconfig", "-l", help="Log config file", default="")
 
 
 def wipedir(dir):
@@ -28,6 +65,7 @@ def wipedir(dir):
         os.makedirs(dir)
     except FileNotFoundError:
         pass
+
 
 if len(sys.argv) < 2:
     parser.print_help()
@@ -43,13 +81,17 @@ if args.compile:
     else:
         os.makedirs(args.build_dir, exist_ok=True)
 
-    CONFIGURE_CMD = 'cmake -DPRECICE_MPICommunication=ON -DPRECICE_PETScMapping=ON -DCMAKE_BUILD_TYPE=Debug {src}'.format(src=args.source_dir)
-    if subprocess.call(CONFIGURE_CMD, shell = True, cwd=args.build_dir) != 0:
-        sys.exit(125) # Cannot compile, 125 means to skip that revision
+    CONFIGURE_CMD = "cmake -DPRECICE_MPICommunication=ON -DPRECICE_PETScMapping=ON -DCMAKE_BUILD_TYPE=Debug {src}".format(
+        src=args.source_dir
+    )
+    if subprocess.call(CONFIGURE_CMD, shell=True, cwd=args.build_dir) != 0:
+        sys.exit(125)  # Cannot compile, 125 means to skip that revision
 
-    COMPILE_CMD = 'cmake --build {dir} -- -j {cpus}'.format(dir=args.build_dir, cpus=args.compile_cpus)
-    if subprocess.call(COMPILE_CMD, shell = True) != 0:
-        sys.exit(125) # Cannot compile, 125 means to skip that revision
+    COMPILE_CMD = "cmake --build {dir} -- -j {cpus}".format(
+        dir=args.build_dir, cpus=args.compile_cpus
+    )
+    if subprocess.call(COMPILE_CMD, shell=True) != 0:
+        sys.exit(125)  # Cannot compile, 125 means to skip that revision
 
 if args.run_tests:
     testbase = os.path.join(args.build_dir, "TestOutput")
@@ -65,8 +107,12 @@ if args.run_tests:
         for dst in testdirs:
             shutil.copyfile(args.logconfig, os.path.join(dir, "log.conf"))
 
-    print("Running Tests:", )
-    ret_code = subprocess.call("ctest -VV --output-on-failure", shell = True, cwd=args.build_dir)
+    print(
+        "Running Tests:",
+    )
+    ret_code = subprocess.call(
+        "ctest -VV --output-on-failure", shell=True, cwd=args.build_dir
+    )
 
     if not ret_code == 0:
         sys.exit(1)

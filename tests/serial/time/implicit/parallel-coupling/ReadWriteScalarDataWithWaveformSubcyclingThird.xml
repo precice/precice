@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="3" experimental="true">
+<precice-configuration experimental="true">
   <data:scalar name="DataOne" waveform-degree="3" />
   <data:scalar name="DataTwo" waveform-degree="3" />
 
-  <mesh name="MeshOne">
+  <mesh name="MeshOne" dimensions="3">
     <use-data name="DataOne" />
     <use-data name="DataTwo" />
   </mesh>
 
-  <mesh name="MeshTwo">
+  <mesh name="MeshTwo" dimensions="3">
     <use-data name="DataOne" />
     <use-data name="DataTwo" />
   </mesh>
@@ -43,8 +43,20 @@
     <max-time-windows value="5" />
     <time-window-size value="2" />
     <max-iterations value="3" />
-    <min-iteration-convergence-measure min-iterations="3" data="DataOne" mesh="MeshOne" />
-    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" initialize="on" />
-    <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="on" />
+    <min-iterations value="3" />
+    <exchange
+      data="DataOne"
+      mesh="MeshOne"
+      from="SolverOne"
+      to="SolverTwo"
+      initialize="on"
+      substeps="true" />
+    <exchange
+      data="DataTwo"
+      mesh="MeshOne"
+      from="SolverTwo"
+      to="SolverOne"
+      initialize="on"
+      substeps="true" />
   </coupling-scheme:parallel-implicit>
 </precice-configuration>

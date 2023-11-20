@@ -112,7 +112,9 @@ ParticipantImpl::ParticipantImpl(
 #ifndef PRECICE_NO_MPI
   if (communicator.has_value()) {
     auto commptr = static_cast<utils::Parallel::Communicator *>(communicator.value());
-    utils::Parallel::registerUserProvidedComm(*commptr);
+    utils::Parallel::initializeOrDetectMPI(*commptr);
+  } else {
+    utils::Parallel::initializeOrDetectMPI();
   }
 #endif
 
@@ -168,7 +170,6 @@ void ParticipantImpl::configure(
 {
 
   config::Configuration config;
-  utils::Parallel::initializeManagedMPI(nullptr, nullptr);
   logging::setMPIRank(utils::Parallel::current()->rank());
   xml::ConfigurationContext context{
       _accessorName,
@@ -204,8 +205,8 @@ void ParticipantImpl::configure(
 
   _meshLock.clear();
 
-  _dimensions         = config.getDimensions();
   _allowsExperimental = config.allowsExperimental();
+  _waitInFinalize     = config.waitInFinalize();
   _accessor           = determineAccessingParticipant(config);
   _accessor->setMeshIdManager(config.getMeshConfiguration()->extractMeshIdManager());
 
@@ -248,7 +249,7 @@ void ParticipantImpl::initialize()
   bool failedToInitialize = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::InitializeData) && not _couplingScheme->isActionFulfilled(cplscheme::CouplingScheme::Action::InitializeData);
   PRECICE_CHECK(not failedToInitialize,
                 "Initial data has to be written to preCICE before calling initialize(). "
-                "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using an appropriate write...Data() function.");
+                "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using the writeData() function.");
 
   _solverInitEvent.reset();
   Event                        e("initialize", profiling::Fundamental, profiling::Synchronize);
@@ -312,14 +313,13 @@ void ParticipantImpl::initialize()
   }
 
   // Initialize coupling state, overwrite these values for restart
-  const double time         = 0.0;
-  const int    timeWindow   = 1;
-  const double relativeTime = time::Storage::WINDOW_START;
+  const double time       = 0.0;
+  const int    timeWindow = 1;
 
   _meshLock.lockAll();
 
   for (auto &context : _accessor->writeDataContexts()) {
-    context.storeBufferedData(relativeTime);
+    context.storeBufferedData(time);
   }
 
   mapWrittenData();
@@ -331,9 +331,11 @@ void ParticipantImpl::initialize()
   mapReadData();
   performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
 
-  resetWrittenData(false, false);
   PRECICE_DEBUG("Plot output");
-  _accessor->exportFinal();
+  _accessor->exportInitial();
+
+  resetWrittenData();
+
   e.stop();
   sep.pop();
 
@@ -373,46 +375,99 @@ void ParticipantImpl::advance(
 
   // Update the coupling scheme time state. Necessary to get correct remainder.
   const bool   isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
-  const double time          = _couplingScheme->getTime();
-  const double relativeTime  = _couplingScheme->getNormalizedWindowTime();
+  const double timeSteppedTo = _couplingScheme->getTime();
 
-  for (auto &context : _accessor->writeDataContexts()) {
-    context.storeBufferedData(relativeTime);
-  }
-
-  if (_couplingScheme->willDataBeExchanged(0.0)) {
-    mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, time);
-  }
+  handleDataBeforeAdvance(isAtWindowEnd, timeSteppedTo);
 
   advanceCouplingScheme();
 
-  if (_couplingScheme->hasDataBeenReceived()) {
-    mapReadData();
-    performDataActions({action::Action::READ_MAPPING_POST}, time);
-  }
+  // In clase if an implicit scheme, this may be before timeSteppedTo
+  const double timeAfterAdvance   = _couplingScheme->getTime();
+  const bool   timeWindowComplete = _couplingScheme->isTimeWindowComplete();
+
+  handleDataAfterAdvance(isAtWindowEnd, timeWindowComplete, timeSteppedTo, timeAfterAdvance);
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
-
-  PRECICE_DEBUG("Handle exports");
-  handleExports();
-
-  resetWrittenData(isAtWindowEnd, _couplingScheme->isTimeWindowComplete());
-
-  if (_couplingScheme->isTimeWindowComplete()) {
-    for (auto &context : _accessor->readDataContexts()) {
-      context.resetInitialGuesses();
-    }
-    for (auto &context : _accessor->writeDataContexts()) {
-      context.resetInitialGuesses();
-    }
-  }
 
   _meshLock.lockAll();
 
   sep.pop();
   e.stop();
   _solverAdvanceEvent->start();
+}
+
+void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo)
+{
+  samplizeWriteData(timeSteppedTo);
+
+  if (reachedTimeWindowEnd) {
+    mapWrittenData();
+    performDataActions({action::Action::WRITE_MAPPING_POST}, timeSteppedTo);
+  }
+}
+
+void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance)
+{
+  if (!reachedTimeWindowEnd) {
+    // We are subcycling
+    return;
+  }
+
+  if (reachedTimeWindowEnd) {
+    mapReadData();
+    // FIXME: the actions timing for read mappings doesn't make sense after
+    performDataActions({action::Action::READ_MAPPING_POST}, timeAfterAdvance);
+  }
+
+  handleExports();
+
+  if (isTimeWindowComplete) {
+    // Move to next time window
+    PRECICE_ASSERT(math::greaterEquals(timeAfterAdvance, timeSteppedTo), "We must have stayed or moved forwards in time (min-time-step-size).");
+
+    // As we move forward, there may now be old samples lying around
+    // We know that timeAfterAdvance is the start time of the time window
+    trimOldDataBefore(timeAfterAdvance);
+
+    // Reset initial guesses for iterative mappings
+    for (auto &context : _accessor->readDataContexts()) {
+      context.resetInitialGuesses();
+    }
+    for (auto &context : _accessor->writeDataContexts()) {
+      context.resetInitialGuesses();
+    }
+    return;
+  }
+
+  // We are iterating
+  PRECICE_ASSERT(math::greater(timeSteppedTo, timeAfterAdvance), "We must have moved back in time!");
+
+  trimSendDataAfter(timeAfterAdvance);
+}
+
+void ParticipantImpl::samplizeWriteData(double time)
+{
+  // store buffered write data in sample storage and reset the buffer
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.storeBufferedData(time);
+  }
+  resetWrittenData();
+}
+
+void ParticipantImpl::trimOldDataBefore(double time)
+{
+  for (auto &context : _accessor->usedMeshContexts()) {
+    for (const auto &name : context->mesh->availableData()) {
+      context->mesh->data(name)->timeStepsStorage().trimBefore(time);
+    }
+  }
+}
+
+void ParticipantImpl::trimSendDataAfter(double time)
+{
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.trimAfter(time);
+  }
 }
 
 void ParticipantImpl::finalize()
@@ -432,8 +487,6 @@ void ParticipantImpl::finalize()
     PRECICE_DEBUG("Finalize coupling scheme");
     _couplingScheme->finalize();
 
-    PRECICE_DEBUG("Handle exports");
-    _accessor->exportFinal();
     closeCommunicationChannels(CloseChannels::All);
   }
 
@@ -458,7 +511,7 @@ void ParticipantImpl::finalize()
   profiling::EventRegistry::instance().finalize();
 
   // Finally clear events and finalize MPI
-  utils::Parallel::finalizeManagedMPI();
+  utils::Parallel::finalizeOrCleanupMPI();
   _state = State::Finalized;
 }
 
@@ -496,7 +549,7 @@ bool ParticipantImpl::isTimeWindowComplete() const
 double ParticipantImpl::getMaxTimeStepSize() const
 {
   PRECICE_CHECK(_state != State::Finalized, "getMaxTimeStepSize() cannot be called after finalize().");
-  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before getMaxTimeStepSize() can be evaluated.");
   return _couplingScheme->getNextTimeStepMaxSize();
 }
 
@@ -591,7 +644,7 @@ int ParticipantImpl::setMeshVertex(
   auto &       mesh    = *context.mesh;
   PRECICE_CHECK(position.size() == static_cast<unsigned long>(mesh.getDimensions()),
                 "Cannot set vertex for mesh \"{}\". Expected {} position components but found {}.", meshName, mesh.getDimensions(), position.size());
-  auto index = mesh.createVertex(Eigen::Map<const Eigen::VectorXd>{position.data(), _dimensions}).getID();
+  auto index = mesh.createVertex(Eigen::Map<const Eigen::VectorXd>{position.data(), mesh.getDimensions()}).getID();
   mesh.allocateDataValues();
 
   const auto newSize = mesh.vertices().size();
@@ -622,7 +675,7 @@ void ParticipantImpl::setMeshVertices(
                 meshDims, meshName, ids.size(), positions.size(), expectedPositionSize, ids.size(), meshDims);
 
   const Eigen::Map<const Eigen::MatrixXd> posMatrix{
-      positions.data(), _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
+      positions.data(), mesh.getDimensions(), static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
   for (unsigned long i = 0; i < ids.size(); ++i) {
     ids[i] = mesh.createVertex(posMatrix.col(i)).getID();
   }
@@ -772,10 +825,10 @@ void ParticipantImpl::setMeshQuad(
 {
   PRECICE_TRACE(meshName, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
-  PRECICE_CHECK(_dimensions == 3, "setMeshQuad is only possible for 3D cases."
-                                  " Please set the dimension to 3 in the preCICE configuration file.");
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
+  PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshQuad is only possible for 3D meshes."
+                                                    " Please set the mesh dimension to 3 in the preCICE configuration file.");
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     PRECICE_ASSERT(context.mesh);
     mesh::Mesh &mesh = *(context.mesh);
@@ -887,9 +940,9 @@ void ParticipantImpl::setMeshTetrahedron(
 {
   PRECICE_TRACE(meshName, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
-  PRECICE_CHECK(_dimensions == 3, "setMeshTetrahedron is only possible for 3D cases."
-                                  " Please set the dimension to 3 in the preCICE configuration file.");
   MeshContext &context = _accessor->usedMeshContext(meshName);
+  PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes."
+                                                    " Please set the mesh dimension to 3 in the preCICE configuration file.");
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
@@ -992,16 +1045,6 @@ void ParticipantImpl::readData(
   PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimeStepMaxSize(), "readData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readData(...) cannot sample data before the current time.");
 
-  double normalizedReadTime;
-  if (_couplingScheme->hasTimeWindowSize()) {
-    double timeStepStart = _couplingScheme->getTimeWindowSize() - _couplingScheme->getNextTimeStepMaxSize();
-    double readTime      = timeStepStart + relativeReadTime;
-    normalizedReadTime   = readTime / _couplingScheme->getTimeWindowSize(); //@todo might be moved into coupling scheme
-  } else {                                                                  // if this participant defines time window size through participant-first method
-    PRECICE_CHECK(relativeReadTime == _couplingScheme->getNextTimeStepMaxSize(), "Waveform relaxation is not allowed for solver that sets the time step size");
-    normalizedReadTime = 1; // by default read at end of window.
-  }
-
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
 
   // Inconsistent sizes will be handled below
@@ -1024,7 +1067,8 @@ void ParticipantImpl::readData(
                   dataName, meshName, *index);
   }
 
-  context.readValues(vertices, normalizedReadTime, values);
+  double readTime = _couplingScheme->getTime() + relativeReadTime;
+  context.readValues(vertices, readTime, values);
 }
 
 void ParticipantImpl::writeGradientData(
@@ -1149,7 +1193,7 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
   PRECICE_CHECK(ids.size() <= vertices.size(), "The queried size exceeds the number of available points.");
 
   Eigen::Map<Eigen::MatrixXd> posMatrix{
-      coordinates.data(), _dimensions, static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
+      coordinates.data(), mesh->getDimensions(), static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
 
   for (unsigned long i = 0; i < ids.size(); i++) {
     PRECICE_ASSERT(i < vertices.size(), i, vertices.size());
@@ -1370,6 +1414,7 @@ void ParticipantImpl::performDataActions(
 void ParticipantImpl::handleExports()
 {
   PRECICE_TRACE();
+  PRECICE_DEBUG("Handle exports");
   ParticipantState::IntermediateExport exp;
   exp.timewindow = _couplingScheme->getTimeWindows() - 1;
   exp.iteration  = _numberAdvanceCalls;
@@ -1378,11 +1423,11 @@ void ParticipantImpl::handleExports()
   _accessor->exportIntermediate(exp);
 }
 
-void ParticipantImpl::resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComplete)
+void ParticipantImpl::resetWrittenData()
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
-    context.resetData(isAtWindowEnd, isTimeWindowComplete);
+    context.resetBuffer();
   }
 }
 
@@ -1444,15 +1489,16 @@ void ParticipantImpl::advanceCouplingScheme()
 
 void ParticipantImpl::closeCommunicationChannels(CloseChannels close)
 {
-  // Apply some final ping-pong to sync solver that run e.g. with a uni-directional coupling only
+  // Optionally apply some final ping-pong to sync solver that run e.g. with a uni-directional coupling
   // afterwards close connections
-  PRECICE_INFO("Synchronize participants and close {}communication channels",
+  PRECICE_INFO("{} {}communication channels",
+               (_waitInFinalize ? "Synchronize participants and close" : "Close"),
                (close == CloseChannels::Distributed ? "distributed " : ""));
   std::string ping = "ping";
   std::string pong = "pong";
   for (auto &iter : _m2ns) {
     auto bm2n = iter.second;
-    if (not utils::IntraComm::isSecondary()) {
+    if (_waitInFinalize && not utils::IntraComm::isSecondary()) {
       PRECICE_DEBUG("Synchronizing primary rank with {}", bm2n.remoteName);
       if (bm2n.isRequesting) {
         bm2n.m2n->getPrimaryRankCommunication()->send(ping, 0);

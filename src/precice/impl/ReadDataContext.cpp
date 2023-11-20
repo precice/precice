@@ -23,10 +23,10 @@ void ReadDataContext::appendMappingConfiguration(MappingContext &mappingContext,
   PRECICE_ASSERT(hasReadMapping());
 }
 
-void ReadDataContext::readValues(::precice::span<const VertexID> vertices, double normalizedDt, ::precice::span<double> values) const
+void ReadDataContext::readValues(::precice::span<const VertexID> vertices, double readTime, ::precice::span<double> values) const
 {
   Eigen::Map<Eigen::MatrixXd>       outputData(values.data(), getDataDimensions(), values.size());
-  const Eigen::MatrixXd             sample{_providedData->sampleAtTime(normalizedDt)};
+  const Eigen::MatrixXd             sample{_providedData->sampleAtTime(readTime)};
   Eigen::Map<const Eigen::MatrixXd> localData(sample.data(), getDataDimensions(), getMeshVertexCount());
   for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
     outputData.col(i) = localData.col(vertices[i]);

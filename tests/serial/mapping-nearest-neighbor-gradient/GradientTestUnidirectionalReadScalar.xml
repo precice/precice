@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="3" experimental="on">
+<precice-configuration experimental="on">
   <data:scalar name="DataA" />
   <data:scalar name="DataB" />
 
-  <mesh name="MeshA">
+  <mesh name="MeshA" dimensions="3">
     <use-data name="DataA" />
   </mesh>
 
-  <mesh name="MeshB">
+  <mesh name="MeshB" dimensions="3">
     <use-data name="DataA" />
   </mesh>
 

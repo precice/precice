@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2">
+<precice-configuration>
   <data:scalar name="MyData1" />
   <data:scalar name="MyData2" />
 
-  <mesh name="ParallelMesh">
+  <mesh name="ParallelMesh" dimensions="2">
     <use-data name="MyData1" />
     <use-data name="MyData2" />
   </mesh>
 
-  <mesh name="SerialMesh">
+  <mesh name="SerialMesh" dimensions="2">
     <use-data name="MyData1" />
     <use-data name="MyData2" />
   </mesh>
@@ -42,7 +42,7 @@
   <coupling-scheme:parallel-explicit>
     <participants first="ParallelSolver" second="SerialSolver" />
     <max-time value="1.0" />
-    <time-window-size value="1.0" valid-digits="8" />
+    <time-window-size value="1.0" />
     <exchange data="MyData1" mesh="SerialMesh" from="ParallelSolver" to="SerialSolver" />
     <exchange data="MyData2" mesh="SerialMesh" from="SerialSolver" to="ParallelSolver" />
   </coupling-scheme:parallel-explicit>

@@ -7,6 +7,7 @@
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "math/differences.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
@@ -34,15 +35,19 @@ Configuration::Configuration()
   _tag.addNamespace("coupling-scheme");
   _tag.addNamespace("acceleration");
 
-  auto attrDimensions = xml::makeXMLAttribute("dimensions", 2)
-                            .setDocumentation("Determines the spatial dimensionality of the configuration")
-                            .setOptions({2, 3});
-  _tag.addAttribute(attrDimensions);
-
   auto attrExperimental = xml::makeXMLAttribute("experimental", false)
                               .setDocumentation("Enable experimental features.");
   _tag.addAttribute(attrExperimental);
 
+  auto attrMinTimeStepSize = xml::makeXMLAttribute("min-time-step-size", math::NUMERICAL_ZERO_DIFFERENCE)
+                                 .setDocumentation("The smallest maximal time step that preCICE will return."
+                                                   "This means that preCICE will round up the end of the time window by min-time-step-size, which will  "
+                                                   " introduce an extra coupling error. For more details see https://github.com/precice/precice/issues/1832.");
+  _tag.addAttribute(attrMinTimeStepSize);
+
+  auto attrWaitInFinalize = xml::makeXMLAttribute("wait-in-finalize", false)
+                                .setDocumentation("Connected participants wait for each other in finalize, which can be helpful in SLURM sessions.");
+  _tag.addAttribute(attrWaitInFinalize);
   _dataConfiguration = std::make_shared<mesh::DataConfiguration>(
       _tag);
   _meshConfiguration = std::make_shared<mesh::MeshConfiguration>(
@@ -64,12 +69,12 @@ void Configuration::xmlTagCallback(const xml::ConfigurationContext &context, xml
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == "precice-configuration") {
-    _dimensions = tag.getIntAttributeValue("dimensions");
-    _dataConfiguration->setDimensions(_dimensions);
-    _meshConfiguration->setDimensions(_dimensions);
-    _participantConfiguration->setDimensions(_dimensions);
     _experimental = tag.getBooleanAttributeValue("experimental");
     _participantConfiguration->setExperimental(_experimental);
+    _minTimeStepSize = tag.getDoubleAttributeValue("min-time-step-size");
+    PRECICE_CHECK(_minTimeStepSize >= math::NUMERICAL_ZERO_DIFFERENCE, "The minimal time step has to be larger or equal to {}. Please adjust the tag min-time-step-size in the config file.", math::NUMERICAL_ZERO_DIFFERENCE);
+    _couplingSchemeConfiguration->setMinTimeStepSize(_minTimeStepSize);
+    _waitInFinalize = tag.getBooleanAttributeValue("wait-in-finalize");
   } else {
     PRECICE_UNREACHABLE("Received callback from unknown tag '{}'.", tag.getName());
   }
@@ -100,11 +105,6 @@ void Configuration::xmlEndTagCallback(
       PRECICE_ASSERT(participantFound);
     }
   }
-}
-
-int Configuration::getDimensions() const
-{
-  return _dimensions;
 }
 
 const PtrParticipantConfiguration &

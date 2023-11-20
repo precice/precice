@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2">
+<precice-configuration>
   <data:scalar name="DataAB" />
   <data:scalar name="DataBA" />
   <data:scalar name="DataBC" />
@@ -7,7 +7,7 @@
   <data:scalar name="DataCD" />
   <data:scalar name="DataDC" />
 
-  <mesh name="MeshA">
+  <mesh name="MeshA" dimensions="2">
     <use-data name="DataAB" />
     <use-data name="DataBA" />
     <use-data name="DataCB" />
@@ -16,27 +16,27 @@
     <use-data name="DataDC" />
   </mesh>
 
-  <mesh name="MeshB1">
+  <mesh name="MeshB1" dimensions="2">
     <use-data name="DataAB" />
     <use-data name="DataBA" />
   </mesh>
 
-  <mesh name="MeshB2">
+  <mesh name="MeshB2" dimensions="2">
     <use-data name="DataBC" />
     <use-data name="DataCB" />
   </mesh>
 
-  <mesh name="MeshC1">
+  <mesh name="MeshC1" dimensions="2">
     <use-data name="DataCB" />
     <use-data name="DataBC" />
   </mesh>
 
-  <mesh name="MeshC2">
+  <mesh name="MeshC2" dimensions="2">
     <use-data name="DataCD" />
     <use-data name="DataDC" />
   </mesh>
 
-  <mesh name="MeshD">
+  <mesh name="MeshD" dimensions="2">
     <use-data name="DataCD" />
     <use-data name="DataDC" />
   </mesh>
@@ -116,12 +116,5 @@
     <relative-convergence-measure data="DataBC" mesh="MeshB2" limit="1e-4" />
     <relative-convergence-measure data="DataCD" mesh="MeshC2" limit="1e-4" />
     <relative-convergence-measure data="DataDC" mesh="MeshD" limit="1e-4" />
-    <acceleration:IQN-ILS>
-      <data name="DataAB" mesh="MeshA" />
-      <filter type="QR2" limit="1e-1" />
-      <initial-relaxation value="1.0" />
-      <max-used-iterations value="10" />
-      <time-windows-reused value="0" />
-    </acceleration:IQN-ILS>
   </coupling-scheme:multi>
 </precice-configuration>

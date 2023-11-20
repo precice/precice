@@ -1,25 +1,38 @@
 #pragma once
-#include <iterator>
-#include "logging/LogMacros.hpp"
-#include "utils/IntraComm.hpp"
-#include "utils/assertion.hpp"
 #ifndef PRECICE_NO_PETSC
 
-#include "mapping/RadialBasisFctBaseMapping.hpp"
-
+#include <iterator>
 #include <map>
 #include <numeric>
 #include <vector>
+
 #include "impl/BasisFunctions.hpp"
+#include "logging/LogMacros.hpp"
+#include "mapping/RadialBasisFctBaseMapping.hpp"
 #include "mapping/config/MappingConfigurationTypes.hpp"
 #include "math/math.hpp"
 #include "precice/impl/versions.hpp"
-#include "utils/Petsc.hpp"
-namespace petsc = precice::utils::petsc;
 #include "profiling/Event.hpp"
+#include "utils/IntraComm.hpp"
+#include "utils/Petsc.hpp"
+#include "utils/assertion.hpp"
+
+namespace petsc = precice::utils::petsc;
 
 namespace precice {
 namespace mapping {
+
+namespace {
+// VecChop was deprecated in PETSc 3.20 and is to be replaced by VecFilter
+inline PetscErrorCode PRECICE_VecFilter(Vec v, PetscReal tol)
+{
+#if ((PETSC_MAJOR > 3) || (PETSC_MAJOR == 3 && PETSC_MINOR >= 20))
+  return VecFilter(v, tol);
+#else
+  return VecChop(v, tol);
+#endif
+}
+} // namespace
 
 namespace tests {
 class PetRadialBasisFctMappingTest; // Forward declaration to friend the class
@@ -480,7 +493,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     ierr = MatMult(_matrixA, rescalingCoeffs, oneInterpolant);
     CHKERRV(ierr); // get the output of g(x) = 1
     // set values close to zero to exactly 0.0, s.t. PointwiseDevide doesn't do division on these entries
-    ierr = VecChop(oneInterpolant, 1e-6);
+    ierr = PRECICE_VecFilter(oneInterpolant, 1e-6);
     CHKERRV(ierr);
   }
 
@@ -519,16 +532,16 @@ std::string PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::getName() const
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::loadInitialGuessForDim(int dimension, int allDimensions, petsc::Vector &destination)
 {
-  auto sizePerDim = destination.getLocalSize();
-  if (sizePerDim == 0) {
+  // Only skip collectively over all MPI ranks as we use collective Vector ops
+  if (destination.getSize() == 0) {
     return;
   }
-  auto totalSize = sizePerDim * allDimensions;
+  auto sizePerDim = destination.getLocalSize();
+  auto totalSize  = sizePerDim * allDimensions;
 
-  if (!this->hasInitialGuess()) {
-    // We don't need to modify the petsc vector
+  if (!this->hasInitialGuess() && (totalSize > 0)) {
+    // We don't need to modify the petsc vector here
     this->initialGuess() = Eigen::VectorXd::Zero(totalSize);
-    return;
   }
 
   PRECICE_ASSERT(this->initialGuess().size() == totalSize, this->initialGuess().size(), totalSize);
@@ -540,12 +553,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::loadInitialGuessForDim(i
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::storeInitialGuessForDim(int dimension, int allDimensions, petsc::Vector &source)
 {
-  auto sizePerDim = source.getLocalSize();
-  if (sizePerDim == 0) {
+  // Only skip collectively over all MPI ranks as we use collective Vector ops
+  if (source.getSize() == 0) {
     return;
   }
+  auto sizePerDim = source.getLocalSize();
 
-  PRECICE_ASSERT(this->hasInitialGuess(), "Call loadInitialGuessForDim first");
+  PRECICE_ASSERT(this->hasInitialGuess() || (sizePerDim == 0), "Call loadInitialGuessForDim first");
   PRECICE_ASSERT(this->initialGuess().size() == sizePerDim * allDimensions, this->initialGuess().size(), sizePerDim * allDimensions);
   auto offset = dimension * sizePerDim;
   auto begin  = std::next(this->initialGuess().data(), offset);
@@ -665,7 +679,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time
       ierr = MatMultAdd(_matrixV, a, out, out);
       CHKERRV(ierr);
     }
-    VecChop(out, 1e-9);
+    PRECICE_VecFilter(out, 1e-9);
 
     // Copy mapped data to output data values
     ierr = VecGetArrayRead(out, &vecArray);
@@ -789,7 +803,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const ti
       }
     }
 
-    VecChop(out, 1e-9);
+    PRECICE_VecFilter(out, 1e-9);
 
     // Copy mapped data to output data values
     const PetscScalar *outArray;

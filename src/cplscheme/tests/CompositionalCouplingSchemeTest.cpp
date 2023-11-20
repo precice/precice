@@ -45,17 +45,13 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     std::string nameParticipant0("Participant0");
     std::string nameParticipant1("Participant1");
     std::string nameParticipant2("Participant2");
-    int         dimensions = 3;
 
-    xml::XMLTag          root = xml::getRootTag();
-    PtrDataConfiguration dataConfig(new DataConfiguration(root));
-    dataConfig->setDimensions(dimensions);
-    PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-    meshConfig->setDimensions(dimensions);
+    xml::XMLTag                                  root = xml::getRootTag();
+    PtrDataConfiguration                         dataConfig(new DataConfiguration(root));
+    PtrMeshConfiguration                         meshConfig(new MeshConfiguration(root, dataConfig));
     m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
     precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
-    participantConfig->setDimensions(dimensions);
-    CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
+    CouplingSchemeConfiguration                  cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
     const xml::ConfigurationContext ccontext{context.name, 0, 1};
     xml::configure(root, ccontext, configFilename);
@@ -96,7 +92,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     int    computedTimesteps = 0;
 
     if (participantName == std::string("Participant0")) {
-      mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, mesh->data(0)->values()});
+      mesh->data(0)->setSampleAtTime(0, time::Sample{1, mesh->data(0)->values()});
       cplScheme->initialize(0.0, 1);
       BOOST_TEST(not cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
@@ -107,8 +103,11 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
         if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
-        mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, mesh->data(0)->values()});
-        cplScheme->addComputedTime(cplScheme->getNextTimeStepMaxSize());
+        double stepSize = cplScheme->getNextTimeStepMaxSize();
+        mesh->data(0)->setSampleAtTime(computedTime + stepSize, time::Sample{1, mesh->data(0)->values()});
+        BOOST_TEST(cplScheme->getTime() == computedTime);
+        cplScheme->addComputedTime(stepSize);
+        BOOST_TEST(cplScheme->getTime() == computedTime + stepSize); // ensure that time is correctly updated, even if iterating. See https://github.com/precice/precice/pull/1792.
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
         cplScheme->secondSynchronization();
@@ -117,7 +116,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           cplScheme->markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isTimeWindowComplete());
-          computedTime += cplScheme->getNextTimeStepMaxSize();
+          computedTime += stepSize;
           computedTimesteps++;
         }
         BOOST_TEST(testing::equals(computedTime, cplScheme->getTime()));
@@ -131,7 +130,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(cplScheme->getNextTimeStepMaxSize() > 0.0); // ??
     } else if (participantName == std::string("Participant1")) {
       auto ddims = mesh->data(1)->getDimensions();
-      mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{ddims, mesh->data(1)->values()});
+      mesh->data(1)->setSampleAtTime(0, time::Sample{ddims, mesh->data(1)->values()});
       cplScheme->initialize(0.0, 1);
       BOOST_TEST(cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
@@ -142,8 +141,11 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
         if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
-        mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{ddims, mesh->data(1)->values()});
-        cplScheme->addComputedTime(cplScheme->getNextTimeStepMaxSize());
+        double stepSize = cplScheme->getNextTimeStepMaxSize();
+        mesh->data(1)->setSampleAtTime(computedTime + stepSize, time::Sample{ddims, mesh->data(1)->values()});
+        BOOST_TEST(cplScheme->getTime() == computedTime);
+        cplScheme->addComputedTime(stepSize);
+        BOOST_TEST(cplScheme->getTime() == computedTime + stepSize); // ensure that time is correctly updated, even if iterating. See https://github.com/precice/precice/pull/1792.
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
         cplScheme->secondSynchronization();
@@ -152,7 +154,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           cplScheme->markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isTimeWindowComplete());
-          computedTime += cplScheme->getNextTimeStepMaxSize();
+          computedTime += stepSize;
           computedTimesteps++;
         }
         BOOST_TEST(testing::equals(computedTime, cplScheme->getTime()));
@@ -167,7 +169,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     } else {
       auto ddims = mesh->data(2)->getDimensions();
       BOOST_TEST(participantName == std::string("Participant2"), participantName);
-      mesh->data(2)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{ddims, mesh->data(2)->values()});
+      mesh->data(2)->setSampleAtTime(0, time::Sample{ddims, mesh->data(2)->values()});
       cplScheme->initialize(0.0, 1);
       BOOST_TEST(cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
@@ -178,8 +180,11 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
         if (cplScheme->isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
-        mesh->data(2)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{ddims, mesh->data(2)->values()});
-        cplScheme->addComputedTime(cplScheme->getNextTimeStepMaxSize());
+        double stepSize = cplScheme->getNextTimeStepMaxSize();
+        mesh->data(2)->setSampleAtTime(cplScheme->getNextTimeStepMaxSize(), time::Sample{ddims, mesh->data(2)->values()});
+        BOOST_TEST(cplScheme->getTime() == computedTime);
+        cplScheme->addComputedTime(stepSize);
+        BOOST_TEST(cplScheme->getTime() == computedTime + stepSize); // ensure that time is correctly updated, even if iterating. See https://github.com/precice/precice/pull/1792.
         cplScheme->firstSynchronization({});
         cplScheme->firstExchange();
         cplScheme->secondSynchronization();
@@ -188,7 +193,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           cplScheme->markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
         } else {
           BOOST_TEST(cplScheme->isTimeWindowComplete());
-          computedTime += cplScheme->getNextTimeStepMaxSize();
+          computedTime += stepSize;
           computedTimesteps++;
         }
         BOOST_TEST(testing::equals(computedTime, cplScheme->getTime()));

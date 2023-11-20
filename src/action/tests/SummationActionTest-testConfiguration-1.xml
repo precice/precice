@@ -5,7 +5,7 @@
   <data:scalar name="SourceData3" />
   <data:scalar name="TargetData" />
 
-  <mesh name="Mesh">
+  <mesh name="Mesh" dimensions="3">
     <use-data name="SourceData1" />
     <use-data name="SourceData2" />
     <use-data name="SourceData3" />

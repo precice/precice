@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="LeftData" />
+  <data:scalar name="RightData" />
+
+  <mesh name="LeftMesh" dimensions="2">
+    <use-data name="LeftData" />
+  </mesh>
+
+  <mesh name="RightMesh" dimensions="2">
+    <use-data name="RightData" />
+  </mesh>
+
+  <mesh name="CenterMesh" dimensions="2">
+    <use-data name="LeftData" />
+    <use-data name="RightData" />
+  </mesh>
+
+  <participant name="Left">
+    <provide-mesh name="LeftMesh" />
+    <write-data name="LeftData" mesh="LeftMesh" />
+  </participant>
+
+  <participant name="Right">
+    <provide-mesh name="RightMesh" />
+    <write-data name="RightData" mesh="RightMesh" />
+  </participant>
+
+  <participant name="Center">
+    <receive-mesh name="LeftMesh" from="Left" />
+    <receive-mesh name="RightMesh" from="Right" />
+    <provide-mesh name="CenterMesh" />
+    <read-data name="LeftData" mesh="CenterMesh" />
+    <read-data name="RightData" mesh="CenterMesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="LeftMesh"
+      to="CenterMesh"
+      constraint="conservative" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="RightMesh"
+      to="CenterMesh"
+      constraint="conservative" />
+  </participant>
+
+  <m2n:sockets acceptor="Left" connector="Center" />
+  <m2n:sockets acceptor="Right" connector="Center" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="Center" second="Left" />
+    <max-time value="6.0" />
+    <time-window-size value="2.0" />
+    <exchange data="LeftData" mesh="LeftMesh" from="Left" to="Center" />
+  </coupling-scheme:serial-explicit>
+
+  <coupling-scheme:serial-explicit>
+    <participants first="Center" second="Right" />
+    <max-time value="6.0" />
+    <time-window-size value="3.0" />
+    <exchange data="RightData" mesh="RightMesh" from="Right" to="Center" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

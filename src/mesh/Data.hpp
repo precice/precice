@@ -28,6 +28,12 @@ namespace mesh {
  */
 class Data {
 public:
+  // @brief Data dimensions type (scalar/vector)
+  enum typeName {
+    SCALAR,
+    VECTOR
+  };
+
   // @brief Possible types of data values.
   //  enum DataType {
   //    TYPE_UNDEFINED,
@@ -73,10 +79,10 @@ public:
   /**
    * @brief Samples _waveform at given time
    *
-   * @param normalizedDt Time where the sampling inside the window happens. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
-   * @return Value of _waveform at time normalizedDt.
+   * @param time Time where the sampling happens.
+   * @return Value of _waveform at time \ref time.
    */
-  Eigen::VectorXd sampleAtTime(double normalizedDt) const;
+  Eigen::VectorXd sampleAtTime(double time) const;
 
   /**
    * @brief get degree of _waveform.

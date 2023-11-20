@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="3">
+<precice-configuration>
   <data:scalar name="DataOne" />
   <data:scalar name="DataTwo" />
 
-  <mesh name="MeshOne">
+  <mesh name="MeshOne" dimensions="3">
     <use-data name="DataOne" />
     <use-data name="DataTwo" />
   </mesh>
 
-  <mesh name="MeshTwo">
+  <mesh name="MeshTwo" dimensions="3">
     <use-data name="DataOne" />
     <use-data name="DataTwo" />
   </mesh>
@@ -42,13 +42,25 @@
     <participants first="SolverOne" second="SolverTwo" />
     <max-time-windows value="5" />
     <time-window-size value="2.0" />
-    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" initialize="on" />
+    <exchange
+      data="DataOne"
+      mesh="MeshOne"
+      from="SolverOne"
+      to="SolverTwo"
+      initialize="on"
+      substeps="true" />
   </coupling-scheme:parallel-explicit>
 
   <coupling-scheme:parallel-explicit>
     <participants first="SolverOne" second="SolverTwo" />
     <max-time-windows value="5" />
     <time-window-size value="2.0" />
-    <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="on" />
+    <exchange
+      data="DataTwo"
+      mesh="MeshOne"
+      from="SolverTwo"
+      to="SolverOne"
+      initialize="on"
+      substeps="true" />
   </coupling-scheme:parallel-explicit>
 </precice-configuration>

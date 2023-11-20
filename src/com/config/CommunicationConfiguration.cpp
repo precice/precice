@@ -33,13 +33,6 @@ PtrCommunication CommunicationConfiguration::createCommunication(
 #else
     com = std::make_shared<com::MPIPortsCommunication>(dir);
 #endif
-  } else if (tag.getName() == "mpi-single") {
-#ifdef PRECICE_NO_MPI
-    PRECICE_ERROR("Communication type \"mpi-single\" can only be used if preCICE was compiled with MPI support enabled. "
-                  "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
-#else
-    com = std::make_shared<com::MPIDirectCommunication>();
-#endif
   }
   PRECICE_ASSERT(com != nullptr);
   return com;

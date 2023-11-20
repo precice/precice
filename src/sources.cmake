@@ -16,8 +16,8 @@ target_sources(preciceCore
     src/acceleration/ConstantRelaxationAcceleration.hpp
     src/acceleration/IQNILSAcceleration.cpp
     src/acceleration/IQNILSAcceleration.hpp
-    src/acceleration/MVQNAcceleration.cpp
-    src/acceleration/MVQNAcceleration.hpp
+    src/acceleration/IQNIMVJAcceleration.cpp
+    src/acceleration/IQNIMVJAcceleration.hpp
     src/acceleration/SharedPointer.hpp
     src/acceleration/config/AccelerationConfiguration.cpp
     src/acceleration/config/AccelerationConfiguration.hpp
@@ -112,9 +112,9 @@ target_sources(preciceCore
     src/cplscheme/config/CouplingSchemeConfiguration.hpp
     src/cplscheme/impl/AbsoluteConvergenceMeasure.cpp
     src/cplscheme/impl/AbsoluteConvergenceMeasure.hpp
+    src/cplscheme/impl/AbsoluteOrRelativeConvergenceMeasure.cpp
+    src/cplscheme/impl/AbsoluteOrRelativeConvergenceMeasure.hpp
     src/cplscheme/impl/ConvergenceMeasure.hpp
-    src/cplscheme/impl/MinIterationConvergenceMeasure.cpp
-    src/cplscheme/impl/MinIterationConvergenceMeasure.hpp
     src/cplscheme/impl/RelativeConvergenceMeasure.cpp
     src/cplscheme/impl/RelativeConvergenceMeasure.hpp
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.cpp
@@ -200,6 +200,8 @@ target_sources(preciceCore
     src/mapping/impl/BasisFunctions.hpp
     src/mapping/impl/CreateClustering.hpp
     src/mapping/impl/SphericalVertexCluster.hpp
+    src/math/Bspline.cpp
+    src/math/Bspline.hpp
     src/math/barycenter.cpp
     src/math/barycenter.hpp
     src/math/constants.hpp

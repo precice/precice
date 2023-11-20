@@ -44,8 +44,10 @@ void CompositionalCouplingScheme::initialize(
     int    startTimeWindow)
 {
   PRECICE_TRACE(startTime, startTimeWindow);
+  PRECICE_ASSERT(_activeSchemes.empty());
   for (const auto scheme : allSchemes()) {
     scheme->initialize(startTime, startTimeWindow);
+    _activeSchemes.push_back(scheme);
   }
 }
 
@@ -69,20 +71,22 @@ bool CompositionalCouplingScheme::isInitialized() const
 bool CompositionalCouplingScheme::addComputedTime(double timeToAdd)
 {
   PRECICE_TRACE(timeToAdd);
+  PRECICE_ASSERT(!_activeSchemes.empty(), "Call initialize first");
 
-  bool isAtWindowEnd = false;
-  for (const auto scheme : schemesToRun()) {
-    isAtWindowEnd |= scheme->addComputedTime(timeToAdd); // @todo should be &= ?
+  bool atWindowEnd = false;
+  for (auto &scheme : _activeSchemes) {
+    atWindowEnd |= scheme->addComputedTime(timeToAdd);
   }
-  return isAtWindowEnd;
+  return atWindowEnd;
 }
 
 CouplingScheme::ChangedMeshes CompositionalCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(changes.empty());
+  PRECICE_ASSERT(!_activeSchemes.empty(), "Call initialize first");
   CouplingScheme::ChangedMeshes totalChanges;
-  for (const auto scheme : schemesToRun()) {
+  for (const auto scheme : _activeSchemes) {
     auto remoteChanges = scheme->firstSynchronization(changes);
     totalChanges.insert(totalChanges.end(), remoteChanges.begin(), remoteChanges.end());
   }
@@ -92,7 +96,8 @@ CouplingScheme::ChangedMeshes CompositionalCouplingScheme::firstSynchronization(
 void CompositionalCouplingScheme::firstExchange()
 {
   PRECICE_TRACE();
-  for (const auto scheme : schemesToRun()) {
+  PRECICE_ASSERT(!_activeSchemes.empty(), "Call initialize first");
+  for (const auto scheme : _activeSchemes) {
     scheme->firstExchange();
   }
 }
@@ -100,8 +105,9 @@ void CompositionalCouplingScheme::firstExchange()
 CouplingScheme::ChangedMeshes CompositionalCouplingScheme::secondSynchronization()
 {
   PRECICE_TRACE();
+  PRECICE_ASSERT(!_activeSchemes.empty(), "Call initialize first");
   CouplingScheme::ChangedMeshes totalChanges;
-  for (const auto scheme : schemesToRun()) {
+  for (const auto scheme : _activeSchemes) {
     auto remoteChanges = scheme->secondSynchronization();
     totalChanges.insert(totalChanges.end(), remoteChanges.begin(), remoteChanges.end());
   }
@@ -111,12 +117,12 @@ CouplingScheme::ChangedMeshes CompositionalCouplingScheme::secondSynchronization
 void CompositionalCouplingScheme::secondExchange()
 {
   PRECICE_TRACE();
-  for (const auto scheme : schemesToRun()) {
+  PRECICE_ASSERT(!_activeSchemes.empty(), "Call initialize first");
+  for (const auto scheme : _activeSchemes) {
     scheme->secondExchange();
   }
-  if (_implicitScheme) {
-    _iterating = !_implicitScheme->hasConverged();
-  }
+
+  updateActiveSchemes();
 }
 
 void CompositionalCouplingScheme::finalize()
@@ -141,6 +147,7 @@ std::vector<std::string> CompositionalCouplingScheme::getCouplingPartners() cons
 bool CompositionalCouplingScheme::willDataBeExchanged(double lastSolverTimeStepSize) const
 {
   PRECICE_TRACE(lastSolverTimeStepSize);
+  // @TODO
   auto schemes         = allSchemes();
   bool willBeExchanged = std::any_of(schemes.begin(), schemes.end(),
                                      [lastSolverTimeStepSize](const auto &cpl) { return cpl->willDataBeExchanged(lastSolverTimeStepSize); });
@@ -151,7 +158,7 @@ bool CompositionalCouplingScheme::willDataBeExchanged(double lastSolverTimeStepS
 bool CompositionalCouplingScheme::hasDataBeenReceived() const
 {
   PRECICE_TRACE();
-
+  // @TODO
   auto schemes         = allSchemes();
   bool hasBeenReceived = std::any_of(schemes.begin(), schemes.end(), std::mem_fn(&CouplingScheme::hasDataBeenReceived));
   PRECICE_DEBUG("return {}", hasBeenReceived);
@@ -161,19 +168,31 @@ bool CompositionalCouplingScheme::hasDataBeenReceived() const
 double CompositionalCouplingScheme::getTime() const
 {
   PRECICE_TRACE();
+  if (_implicitScheme) {
+    // Either the implicit scheme is behind while iterating or all schemes are in sync
+    return _implicitScheme->getTime();
+  } else {
+    // Explicit schemes are always in sync
+    return _explicitSchemes.front()->getTime();
+  }
+}
+
+double CompositionalCouplingScheme::getTimeWindowStart() const
+{
+  PRECICE_TRACE();
+  // In case of various time window sizes, use the scheme with the earliest start.
   auto schemes = allSchemes();
-  auto time    = std::transform_reduce(
+  return std::transform_reduce(
       schemes.begin(), schemes.end(),
       std::numeric_limits<double>::max(),
       ::min<double>,
-      std::mem_fn(&CouplingScheme::getTime));
-  PRECICE_DEBUG("return {}", time);
-  return time;
+      std::mem_fn(&CouplingScheme::getTimeWindowStart));
 }
 
 int CompositionalCouplingScheme::getTimeWindows() const
 {
   PRECICE_TRACE();
+  // In case of various time window sizes, use the scheme with the most timeWindows.
   auto schemes     = allSchemes();
   auto timeWindows = std::transform_reduce(
       schemes.begin(), schemes.end(),
@@ -186,43 +205,40 @@ int CompositionalCouplingScheme::getTimeWindows() const
 
 bool CompositionalCouplingScheme::hasTimeWindowSize() const
 {
+  // TODO Move to BaseCouplingScheme
   PRECICE_TRACE();
-  auto schemes = allSchemes();
-  bool hasIt   = std::any_of(schemes.begin(), schemes.end(), std::mem_fn(&CouplingScheme::hasTimeWindowSize));
-  PRECICE_DEBUG("return {}", hasIt);
-  return hasIt;
+  PRECICE_UNREACHABLE("This may not be called for a CompositionalCouplingScheme");
+  return true;
 }
 
 double CompositionalCouplingScheme::getTimeWindowSize() const
 {
+  // TODO Move to BaseCouplingScheme
   PRECICE_TRACE();
-  auto   schemes        = allSchemes();
-  double timeWindowSize = std::transform_reduce(
-      schemes.begin(), schemes.end(), std::numeric_limits<double>::max(),
-      ::min<double>,
-      std::mem_fn(&CouplingScheme::getTimeWindowSize));
-  PRECICE_DEBUG("return {}", timeWindowSize);
-  return timeWindowSize;
-}
-
-double CompositionalCouplingScheme::getNormalizedWindowTime() const
-{
-  PRECICE_TRACE();
-  auto   schemes      = allSchemes();
-  double normalizedDt = std::transform_reduce(
-      schemes.begin(), schemes.end(), std::numeric_limits<double>::max(),
-      ::min<double>,
-      std::mem_fn(&CouplingScheme::getNormalizedWindowTime));
-  PRECICE_DEBUG("return {}", normalizedDt);
-  return normalizedDt;
+  PRECICE_UNREACHABLE("This may not be called for a CompositionalCouplingScheme");
+  return -1.0;
 }
 
 double CompositionalCouplingScheme::getNextTimeStepMaxSize() const
 {
   PRECICE_TRACE();
-  auto   schemes   = allSchemes();
+  PRECICE_ASSERT(!_activeSchemes.empty(), "Call initialize first");
+
+  /* For compositional schemes with mixed time window sizes, this is the max time step size to the next end of a time window.
+   *
+   * As a concrete example we have 3 solvers A,B,C which are coupled A-B with Dt=2 and B-C with Dt=3.
+   *
+   * Then the synchronization points for A-B are (2, 4, 6, 8, ...) and for B-C are (3, 6, 9, ...) .
+   * The compositional scheme has to synchronize at the union of all these points (2, 3, 4, 6, 8, 9, ...)
+   *
+   * Hence the getNextTimeStepMaxSize() is the difference between these points.
+   * Starting at t=0 and always advancing the full getNextTimeStepMaxSize() will lead to time steps of sizes (2,1,1,2,2,1,...)
+   *
+   * Exception is when the implicit scheme is iterating. In that moment the explicit schemes are on hold and the implicit scheme may advance its full max time step size.
+   */
+
   double maxLength = std::transform_reduce(
-      schemes.begin(), schemes.end(), std::numeric_limits<double>::max(),
+      _activeSchemes.begin(), _activeSchemes.end(), std::numeric_limits<double>::max(),
       ::min<double>,
       std::mem_fn(&CouplingScheme::getNextTimeStepMaxSize));
   PRECICE_DEBUG("return {}", maxLength);
@@ -232,19 +248,22 @@ double CompositionalCouplingScheme::getNextTimeStepMaxSize() const
 bool CompositionalCouplingScheme::isCouplingOngoing() const
 {
   PRECICE_TRACE();
-  auto schemes   = allSchemes();
-  bool isOngoing = std::any_of(schemes.begin(), schemes.end(), std::mem_fn(&CouplingScheme::isCouplingOngoing));
-  PRECICE_DEBUG("return {}", isOngoing);
-  return isOngoing;
+  if (_implicitScheme) {
+    // The implicit scheme is either the one that has to catch up, or all schemes are in sync
+    return _implicitScheme->isCouplingOngoing();
+  }
+  // All explicit schemes are always in sync
+  return _explicitSchemes.front()->isCouplingOngoing();
 }
 
 bool CompositionalCouplingScheme::isTimeWindowComplete() const
 {
   PRECICE_TRACE();
-  auto schemes    = allSchemes();
-  bool isComplete = std::all_of(schemes.begin(), schemes.end(), std::mem_fn(&CouplingScheme::isTimeWindowComplete));
-  PRECICE_DEBUG("return {}", isComplete);
-  return isComplete;
+  PRECICE_ASSERT(!_activeSchemes.empty(), "Call initialize first");
+  // Same situation as described in getNextTimeStepMaxSize(), but we are interested in reaching these time windows
+  bool isOneCompleted = std::any_of(_activeSchemes.begin(), _activeSchemes.end(), std::mem_fn(&CouplingScheme::isTimeWindowComplete));
+  PRECICE_DEBUG("return {}", isOneCompleted);
+  return isOneCompleted;
 }
 
 bool CompositionalCouplingScheme::isActionRequired(
@@ -252,7 +271,7 @@ bool CompositionalCouplingScheme::isActionRequired(
 {
   PRECICE_TRACE();
   bool isRequired = false;
-  for (auto scheme : allSchemes()) {
+  for (auto scheme : activeOrAllSchemes()) {
     if (scheme->isActionRequired(action)) {
       isRequired = true;
       break;
@@ -267,7 +286,7 @@ bool CompositionalCouplingScheme::isActionFulfilled(
 {
   PRECICE_TRACE();
   bool isFulfilled = false;
-  for (auto scheme : allSchemes()) {
+  for (auto scheme : activeOrAllSchemes()) {
     if (scheme->isActionFulfilled(action)) {
       isFulfilled = true;
       break;
@@ -281,7 +300,7 @@ void CompositionalCouplingScheme::markActionFulfilled(
     Action action)
 {
   PRECICE_TRACE();
-  for (auto scheme : allSchemes()) {
+  for (auto scheme : activeOrAllSchemes()) {
     if (scheme->isActionRequired(action)) {
       scheme->markActionFulfilled(action);
     }
@@ -292,13 +311,15 @@ void CompositionalCouplingScheme::requireAction(
     Action action)
 {
   PRECICE_TRACE();
-  for (auto scheme : schemesToRun()) {
+  PRECICE_ASSERT(!_activeSchemes.empty(), "Call initialize first");
+  for (auto scheme : _activeSchemes) {
     scheme->requireAction(action);
   }
 }
 
 std::string CompositionalCouplingScheme::printCouplingState() const
 {
+  // TODO is a redesign necessary?
   std::string              state;
   std::vector<std::string> partners;
   for (const auto scheme : allSchemes()) {
@@ -313,14 +334,35 @@ std::string CompositionalCouplingScheme::printCouplingState() const
   return state;
 }
 
-std::vector<CouplingScheme *> CompositionalCouplingScheme::schemesToRun() const
+void CompositionalCouplingScheme::updateActiveSchemes()
 {
-  if (_iterating) {
-    PRECICE_DEBUG("Rerunning implicit scheme");
-    return {_implicitScheme.get()};
+  if (_implicitScheme == nullptr) {
+    // We only have explicit schemes, which are always in sync and thus always run together
+    // Active schemes never change, so there is nothing to do
+    PRECICE_ASSERT(_activeSchemes.size() == _explicitSchemes.size(), "Active scheme haven't been initialized correctly!");
+    return;
   }
-  PRECICE_DEBUG("Running all schemes");
-  return allSchemes();
+
+  // There is an implicit scheme, which may be iterating
+
+  _activeSchemes.clear();
+  PRECICE_DEBUG("Updating active schemes of a mixed compositional coupling scheme");
+
+  double implicitTime = _implicitScheme->getTime();
+  double explicitTime = _explicitSchemes.front()->getTime();
+  bool   iterating    = implicitTime < explicitTime; // TODO numeric check?
+
+  if (!iterating) {
+    // If the implicit scheme isn't currently iterating, then all schemes are in sync
+    for (auto &scheme : _explicitSchemes) {
+      _activeSchemes.push_back(scheme.get());
+    }
+  } else {
+    PRECICE_INFO("Explicit coupling schemes are on hold until the implicit scheme has caught up.");
+  }
+
+  // The implicit scheme is either in sync or has to catch up
+  _activeSchemes.push_back(_implicitScheme.get());
 }
 
 std::vector<CouplingScheme *> CompositionalCouplingScheme::allSchemes() const
@@ -331,6 +373,11 @@ std::vector<CouplingScheme *> CompositionalCouplingScheme::allSchemes() const
     cpls.push_back(_implicitScheme.get());
   }
   return cpls;
+}
+
+std::vector<CouplingScheme *> CompositionalCouplingScheme::activeOrAllSchemes() const
+{
+  return _activeSchemes.empty() ? allSchemes() : _activeSchemes;
 }
 
 bool CompositionalCouplingScheme::isImplicitCouplingScheme() const

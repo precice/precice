@@ -4,7 +4,7 @@
   <data:vector name="Data1" />
   <data:vector name="Data2" />
 
-  <mesh name="Mesh">
+  <mesh name="Mesh" dimensions="3">
     <use-data name="Data0" />
     <use-data name="Data1" />
     <use-data name="Data2" />
@@ -38,7 +38,7 @@
     <max-time value="1.0" />
     <max-time-windows value="10" />
     <max-iterations value="10" />
-    <min-iteration-convergence-measure min-iterations="3" data="Data1" mesh="Mesh" />
+    <min-iterations value="3" />
     <exchange data="Data0" mesh="Mesh" from="Participant0" to="Participant1" />
     <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant0" />
   </coupling-scheme:serial-implicit>

@@ -60,6 +60,8 @@ public:
 
   void setExperimental(bool experimental);
 
+  void setMinTimeStepSize(double minTimeStepSize);
+
   /// Destructor, empty.
   virtual ~CouplingSchemeConfiguration() {}
 
@@ -92,9 +94,10 @@ private:
   const std::string TAG_MAX_TIME_WINDOWS;
   const std::string TAG_TIME_WINDOW_SIZE;
   const std::string TAG_ABS_CONV_MEASURE;
+  const std::string TAG_ABS_OR_REL_CONV_MEASURE;
   const std::string TAG_REL_CONV_MEASURE;
   const std::string TAG_RES_REL_CONV_MEASURE;
-  const std::string TAG_MIN_ITER_CONV_MEASURE;
+  const std::string TAG_MIN_ITERATIONS;
   const std::string TAG_MAX_ITERATIONS;
 
   const std::string ATTR_DATA;
@@ -106,10 +109,10 @@ private:
   const std::string ATTR_FIRST;
   const std::string ATTR_SECOND;
   const std::string ATTR_VALUE;
-  const std::string ATTR_VALID_DIGITS;
   const std::string ATTR_METHOD;
   const std::string ATTR_LIMIT;
-  const std::string ATTR_MIN_ITERATIONS;
+  const std::string ATTR_ABS_LIMIT;
+  const std::string ATTR_REL_LIMIT;
   const std::string ATTR_NAME;
   const std::string ATTR_FROM;
   const std::string ATTR_TO;
@@ -124,6 +127,10 @@ private:
   const std::string VALUE_MULTI;
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
+
+  double           _minTimeStepSize = math::NUMERICAL_ZERO_DIFFERENCE;
+  static const int DEFAULT_MIN_ITERATIONS;
+  static const int DEFAULT_MAX_ITERATIONS;
 
   struct ConvergenceMeasureDefintion {
     mesh::PtrData               data;
@@ -143,7 +150,6 @@ private:
     double                        maxTime        = CouplingScheme::UNDEFINED_MAX_TIME;
     int                           maxTimeWindows = CouplingScheme::UNDEFINED_TIME_WINDOWS;
     double                        timeWindowSize = CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE;
-    int                           validDigits    = 16;
     constants::TimesteppingMethod dtMethod       = constants::FIXED_TIME_WINDOW_SIZE;
 
     struct Exchange {
@@ -156,7 +162,8 @@ private:
     };
     std::vector<Exchange>                    exchanges;
     std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions;
-    int                                      maxIterations = -1;
+    int                                      maxIterations = DEFAULT_MAX_ITERATIONS;
+    int                                      minIterations = DEFAULT_MIN_ITERATIONS;
 
     bool hasExchange(const Exchange &totest) const
     {
@@ -192,13 +199,15 @@ private:
 
   void addTagAbsoluteConvergenceMeasure(xml::XMLTag &tag);
 
+  void addTagAbsoluteOrRelativeConvergenceMeasure(xml::XMLTag &tag);
+
   void addTagRelativeConvergenceMeasure(xml::XMLTag &tag);
 
   void addTagResidualRelativeConvergenceMeasure(xml::XMLTag &tag);
 
-  void addTagMinIterationConvergenceMeasure(xml::XMLTag &tag);
-
   void addBaseAttributesTagConvergenceMeasure(xml::XMLTag &tag);
+
+  void addTagMinIterations(xml::XMLTag &tag);
 
   void addTagMaxIterations(xml::XMLTag &tag);
 
@@ -208,6 +217,14 @@ private:
       const std::string &dataName,
       const std::string &meshName,
       double             limit,
+      bool               suffices,
+      bool               strict);
+
+  void addAbsoluteOrRelativeConvergenceMeasure(
+      const std::string &dataName,
+      const std::string &meshName,
+      double             absLimit,
+      double             relLimit,
       bool               suffices,
       bool               strict);
 
@@ -222,13 +239,6 @@ private:
       const std::string &dataName,
       const std::string &meshName,
       double             limit,
-      bool               suffices,
-      bool               strict);
-
-  void addMinIterationConvergenceMeasure(
-      const std::string &dataName,
-      const std::string &meshName,
-      int                minIterations,
       bool               suffices,
       bool               strict);
 
@@ -305,6 +315,14 @@ private:
    * @param exchange The Exchange being checked.
    */
   void checkSubstepExchangeWaveformDegree(const Config::Exchange &exchange) const;
+
+  /// Helper to update some configs which may have a different meaning in implicit coupling
+  void updateConfigForImplicitCoupling();
+
+  /**
+   * @brief Helper function to check iteration limits in conjunction with convergence measures
+   */
+  void checkIterationLimits() const;
 };
 } // namespace cplscheme
 } // namespace precice

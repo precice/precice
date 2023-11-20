@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(DivideByArea2D)
   mesh->allocateDataValues();
   Eigen::VectorXd v(3);
   v << 2.0, 3.0, 4.0;
-  data->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, v});
+  data->setSampleAtTime(1, time::Sample{1, v});
 
   const auto &values = data->values();
   BOOST_TEST(values(0) == 2.0);
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(DivideByArea3D)
   mesh->allocateDataValues();
   Eigen::VectorXd v(5);
   v << 2.0, 3.0, 6.0, 5.0, 6.0;
-  data->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{1, v});
+  data->setSampleAtTime(1, time::Sample{1, v});
 
   const auto &values = data->values();
   BOOST_TEST(values(0) == 2.0);
@@ -112,12 +112,10 @@ BOOST_AUTO_TEST_CASE(Configuration)
 {
   PRECICE_TEST(1_rank);
   {
-    std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-1.xml";
-    xml::XMLTag                tag      = xml::getRootTag();
-    mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
-    dataConfig->setDimensions(2);
-    mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
-    meshConfig->setDimensions(2);
+    std::string                 filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-1.xml";
+    xml::XMLTag                 tag      = xml::getRootTag();
+    mesh::PtrDataConfiguration  dataConfig(new mesh::DataConfiguration(tag));
+    mesh::PtrMeshConfiguration  meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
     action::ActionConfiguration config(tag, meshConfig);
     xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);
@@ -125,12 +123,10 @@ BOOST_AUTO_TEST_CASE(Configuration)
     BOOST_TEST(static_cast<bool>(action));
   }
   {
-    std::string                filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-2.xml";
-    xml::XMLTag                tag      = xml::getRootTag();
-    mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(tag));
-    dataConfig->setDimensions(2);
-    mesh::PtrMeshConfiguration meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
-    meshConfig->setDimensions(2);
+    std::string                 filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-2.xml";
+    xml::XMLTag                 tag      = xml::getRootTag();
+    mesh::PtrDataConfiguration  dataConfig(new mesh::DataConfiguration(tag));
+    mesh::PtrMeshConfiguration  meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
     action::ActionConfiguration config(tag, meshConfig);
     xml::configure(tag, xml::ConfigurationContext{}, filename);
     BOOST_TEST(config.actions().size() == 1);

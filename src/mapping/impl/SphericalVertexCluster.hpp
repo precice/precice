@@ -139,7 +139,7 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
   PRECICE_TRACE(_center.getCoords(), _radius);
   // Disable integrated polynomial, as it might cause locally singular matrices
   PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.")
-  PRECICE_ASSERT(deadAxis.size() == inputMesh->getDimensions());
+  PRECICE_ASSERT(static_cast<int>(deadAxis.size()) == inputMesh->getDimensions());
 
   // Get vertices to be mapped
   // Subtract a safety margin to exclude the vertices at the edge
@@ -183,7 +183,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::setNormalizedWeight(double
   // The find method of boost flat_set comes with O(log(N)) complexity (the more expensive part here)
   auto localID = _outputIDs.index_of(_outputIDs.find(id));
 
-  PRECICE_ASSERT(localID < _normalizedWeights.size(), localID, _normalizedWeights.size());
+  PRECICE_ASSERT(static_cast<Eigen::Index>(localID) < _normalizedWeights.size(), localID, _normalizedWeights.size());
   _normalizedWeights[localID] = normalizedWeight;
 }
 
@@ -193,7 +193,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
   // First, a few sanity checks. Empty partitions shouldn't be stored at all
   PRECICE_ASSERT(!empty());
   PRECICE_ASSERT(_hasComputedMapping);
-  PRECICE_ASSERT(_normalizedWeights.size() == _outputIDs.size());
+  PRECICE_ASSERT(_normalizedWeights.size() == static_cast<Eigen::Index>(_outputIDs.size()));
 
   // Define an alias for data dimension in order to avoid ambiguity
   const unsigned int nComponents = inData.dataDims;
@@ -216,7 +216,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
 
     // Step 2: solve the system using a conservative constraint
     auto result = _rbfSolver.solveConservative(in, _polynomial);
-    PRECICE_ASSERT(result.size() == _inputIDs.size());
+    PRECICE_ASSERT(result.size() == static_cast<Eigen::Index>(_inputIDs.size()));
 
     // Step 3: now accumulate the result into our global output data
     for (unsigned int i = 0; i < _inputIDs.size(); ++i) {
@@ -233,7 +233,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
   // First, a few sanity checks. Empty partitions shouldn't be stored at all
   PRECICE_ASSERT(!empty());
   PRECICE_ASSERT(_hasComputedMapping);
-  PRECICE_ASSERT(_normalizedWeights.size() == _outputIDs.size());
+  PRECICE_ASSERT(_normalizedWeights.size() == static_cast<Eigen::Index>(_outputIDs.size()));
 
   // Define an alias for data dimension in order to avoid ambiguity
   const unsigned int nComponents = inData.dataDims;
@@ -253,7 +253,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
 
     // Step 2: solve the system using a consistent constraint
     auto result = _rbfSolver.solveConsistent(in, _polynomial);
-    PRECICE_ASSERT(_outputIDs.size() == result.size());
+    PRECICE_ASSERT(static_cast<Eigen::Index>(_outputIDs.size()) == result.size());
 
     // Step 3: now accumulate the result into our global output data
     for (unsigned int i = 0; i < _outputIDs.size(); ++i) {

@@ -91,7 +91,7 @@ void DataContext::mapData()
   // Execute the mapping
   for (auto &context : _mappingContexts) {
     // Reset the toData before mapping any samples
-    context.clearToDataStorage();
+    context.clearToDataStorage(); // @todo needs optimization: We don't need to map the data at the beginning of the window, because it should be known from the last window where it was the data from the window end. Exception: Data initialization. Related to https://github.com/precice/precice/issues/1707
     PRECICE_ASSERT(context.fromData->stamples().size() > 0);
 
     auto &mapping = *context.mapping;

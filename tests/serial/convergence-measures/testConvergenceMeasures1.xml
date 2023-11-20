@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2">
+<precice-configuration>
   <data:scalar name="Data1" />
   <data:scalar name="Data2" />
 
-  <mesh name="MeshOne">
+  <mesh name="MeshOne" dimensions="2">
     <use-data name="Data1" />
     <use-data name="Data2" />
   </mesh>
 
-  <mesh name="MeshTwo">
+  <mesh name="MeshTwo" dimensions="2">
     <use-data name="Data1" />
     <use-data name="Data2" />
   </mesh>
@@ -45,7 +45,6 @@
     <exchange data="Data1" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
     <exchange data="Data2" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
     <max-iterations value="100" />
-    <absolute-convergence-measure limit="1e-1" data="Data2" mesh="MeshOne" suffices="true" />
-    <min-iteration-convergence-measure min-iterations="3" data="Data1" mesh="MeshOne" />
+    <absolute-convergence-measure limit="1e-1" data="Data2" mesh="MeshOne" />
   </coupling-scheme:serial-implicit>
 </precice-configuration>

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2">
+<precice-configuration>
   <data:vector name="Forces" />
   <data:vector name="Velocities" />
 
-  <mesh name="MeshOne">
+  <mesh name="MeshOne" dimensions="2">
     <use-data name="Forces" />
     <use-data name="Velocities" />
   </mesh>
 
-  <mesh name="MeshTwo">
+  <mesh name="MeshTwo" dimensions="2">
     <use-data name="Forces" />
     <use-data name="Velocities" />
   </mesh>
@@ -43,7 +43,6 @@
     <max-time-windows value="10" />
     <time-window-size value="1.0" />
     <max-iterations value="3" />
-    <min-iteration-convergence-measure min-iterations="5" data="Forces" mesh="MeshOne" />
     <exchange data="Forces" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
     <exchange data="Velocities" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="true" />
   </coupling-scheme:serial-implicit>

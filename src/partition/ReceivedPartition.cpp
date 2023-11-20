@@ -219,7 +219,7 @@ void ReceivedPartition::compute()
       vertexDistribution[0] = std::move(vertexIDs);
 
       for (int secondaryRank : utils::IntraComm::allSecondaryRanks()) {
-        PRECICE_DEBUG("Receive partition feedback from slave rank {}", secondaryRank);
+        PRECICE_DEBUG("Receive partition feedback from the secondary rank {}", secondaryRank);
         vertexDistribution[secondaryRank] = utils::IntraComm::getCommunication()->receiveRange(secondaryRank, com::AsVectorTag<VertexID>{});
       }
       PRECICE_ASSERT(_mesh->getVertexDistribution().empty());
@@ -287,7 +287,7 @@ void ReceivedPartition::filterByBoundingBox()
   if (m2n().usesTwoLevelInitialization()) {
     std::string msg = "The received mesh " + _mesh->getName() +
                       " cannot solely be filtered on the primary rank "
-                      "(option \"filter-on-master\") if it is communicated by an m2n communication that uses "
+                      "(option \"filter-on-primary-rank\") if it is communicated by an m2n communication that uses "
                       "two-level initialization. Use \"filter-on-secondary-rank\" or \"no-filter\" instead.";
     PRECICE_CHECK(_geometricFilter != ON_PRIMARY_RANK, msg);
   }
@@ -603,6 +603,14 @@ void ReceivedPartition::createOwnerInformation()
       }
     }
 
+    // First, insert all comm partnerts, otherwise we end up in a deadlock further down
+    // when exchanging the vector sizes as vertices might be shared from the other
+    // connected rank(s), although the actual size we request here is zero
+    // i.e., we never tell the other ranks that we don't want any vertices
+    // See also test Integration/Parallel/TestBoundingBoxInitializationEmpty
+    for (auto &neighborRank : localConnectedBBMap)
+      sharedVerticesSendMap[neighborRank.first] = std::vector<VertexID>();
+
     // #3: check vertices and keep only those that fit into the current rank's bb
     const int numberOfVertices = _mesh->vertices().size();
     PRECICE_DEBUG("Tag vertices, number of vertices {}", numberOfVertices);
@@ -736,10 +744,8 @@ void ReceivedPartition::createOwnerInformation()
     }
 
     setOwnerInformation(tags);
-    auto filteredVertices = std::count(tags.begin(), tags.end(), 0);
-    if (filteredVertices)
-      PRECICE_WARN("{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.",
-                   filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName());
+    PRECICE_DEBUG("{} of {} vertices of mesh {} have been filtered out on rank {} since they have no influence on the mapping.",
+                  std::count(tags.begin(), tags.end(), 0), tags.size(), _mesh->getName(), utils::IntraComm::getRank());
     // end of two-level initialization section
   } else {
     if (utils::IntraComm::isSecondary()) {

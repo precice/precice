@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration dimensions="2">
+<precice-configuration>
   <data:vector name="Data0" />
   <data:scalar name="Data1" />
   <data:vector name="Data2" />
 
-  <mesh name="MeshA">
+  <mesh name="MeshA" dimensions="2">
     <use-data name="Data0" />
     <use-data name="Data1" />
     <use-data name="Data2" />
   </mesh>
 
-  <mesh name="MeshC">
+  <mesh name="MeshC" dimensions="2">
     <use-data name="Data0" />
     <use-data name="Data1" />
     <use-data name="Data2" />
   </mesh>
 
-  <mesh name="MeshD">
+  <mesh name="MeshD" dimensions="2">
     <use-data name="Data0" />
     <use-data name="Data1" />
     <use-data name="Data2" />
@@ -62,8 +62,7 @@
     <participants first="SolverOne" second="SolverThree" />
     <max-time-windows value="10" />
     <time-window-size value="1.0" />
-    <max-iterations value="10" />
-    <min-iteration-convergence-measure min-iterations="3" data="Data2" mesh="MeshA" />
+    <max-iterations value="3" />
     <exchange data="Data0" mesh="MeshA" from="SolverOne" to="SolverThree" />
     <exchange data="Data2" mesh="MeshA" from="SolverThree" to="SolverOne" />
   </coupling-scheme:serial-implicit>

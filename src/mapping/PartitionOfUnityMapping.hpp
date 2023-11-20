@@ -172,8 +172,10 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     outMesh = this->output();
   }
 
+  precice::profiling::Event eClusters("map.pou.computeMapping.createClustering");
   // Step 1: get a tentative clustering consisting of centers and a radius from one of the available algorithms
   auto [clusterRadius, centerCandidates] = impl::createClustering(inMesh, outMesh, _relativeOverlap, _verticesPerCluster, _projectToInput);
+  eClusters.stop();
 
   _clusterRadius = clusterRadius;
   PRECICE_ASSERT(_clusterRadius > 0 || inMesh->vertices().size() == 0 || outMesh->vertices().size() == 0);
@@ -183,6 +185,9 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   mesh::Mesh centerMesh("pou-centers-" + inMesh->getName(), this->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
   auto &     meshVertices = centerMesh.vertices();
 
+  meshVertices.clear();
+  _clusters.clear();
+  _clusters.reserve(centerCandidates.size());
   for (const auto &c : centerCandidates) {
     // We cannot simply copy the vertex from the container in order to fill the vertices of the centerMesh, as the vertexID of each center needs to match the index
     // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
@@ -190,13 +195,15 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     mesh::Vertex                                    center(c.getCoords(), vertexID);
     SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _deadAxis, _polynomial, inMesh, outMesh);
 
-    // Consider only non-empty clusters
+    // Consider only non-empty clusters (more of a safeguard here)
     if (!cluster.empty()) {
       PRECICE_ASSERT(center.getID() == static_cast<int>(_clusters.size()), center.getID(), _clusters.size());
       meshVertices.emplace_back(std::move(center));
       _clusters.emplace_back(std::move(cluster));
     }
   }
+
+  e.addData("n clusters", _clusters.size());
   // Log the average number of resulting clusters
   PRECICE_DEBUG("Partition of unity data mapping between mesh \"{}\" and mesh \"{}\": mesh \"{}\" on rank {} was decomposed into {} clusters.", this->input()->getName(), this->output()->getName(), inMesh->getName(), utils::IntraComm::getRank(), _clusters.size());
 
@@ -206,6 +213,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PRECICE_DEBUG("Minimum number of vertices per cluster {}", std::min_element(_clusters.begin(), _clusters.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices());
   }
 
+  precice::profiling::Event eWeights("map.pou.computeMapping.computeWeights");
   // Log a bounding box of the center mesh
   centerMesh.computeBoundingBox();
   PRECICE_DEBUG("Bounding Box of the cluster centers {}", centerMesh.getBoundingBox());
@@ -224,7 +232,11 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     const auto localNumberOfClusters = clusterIDs.size();
     // Consider the case where we didn't find any cluster (meshes don't match very well)
     if (localNumberOfClusters == 0) {
-      PRECICE_ERROR("Output vertex {} could not be assigned to any cluster. This means that the meshes probably do not match well geometry-wise or the target number of vertices per cluster is too small.", vertex.getCoords());
+      PRECICE_ERROR("Output vertex {} of mesh \"{}\" could not be assigned to any cluster in the rbf-pum mapping. This probably means that the meshes do not match well geometry-wise: Visualize the exported preCICE meshes to confirm."
+                    " If the meshes are fine geometry-wise, you can try to increase the number of \"vertices-per-cluster\" (default is 100), the \"relative-overlap\" (default is 0.3),"
+                    " or disable the option \"project-to-input\"."
+                    "These options are only valid for the <mapping:rbf-pum-direct/> tag.",
+                    vertex.getCoords(), outMesh->getName());
       // In principle, we could assign the vertex to the closest cluster using clusterIDs.emplace_back(clusterIndex.getClosestVertex(vertex.getCoords()).index);
       // However, this leads to a conflict with weights already set in the corresponding cluster, since we insert the ID and, later on, map the ID to a local weight index
       // Of course, we could rearrange the weights, but we want to avoid the case here anyway, i.e., prefer to abort.
@@ -252,11 +264,10 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       _clusters[clusterIDs[i]].setNormalizedWeight(weights[i] / weightSum, vertex.getID());
     }
   }
+  eWeights.stop();
 
-// Add a VTK export for visualization purposes
-#ifndef NDEBUG
-  exportClusterCentersAsVTU(centerMesh);
-#endif
+  // Uncomment to add a VTK export of the cluster center distribution for visualization purposes
+  // exportClusterCentersAsVTU(centerMesh);
 
   this->_hasComputedMapping = true;
 }
@@ -311,9 +322,19 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // In order to construct the local partitions, we need all vertices with a distance of 2 x radius,
   // as the relevant partitions centers have a maximum distance of radius, and the proper construction of the
   // interpolant requires all vertices with a distance of radius from the center.
-  filterMesh->computeBoundingBox();
-  auto bb = filterMesh->getBoundingBox();
+  // Note that we don't use the corresponding bounding box functions from
+  // precice::mesh (e.g. ::getBoundingBox), as the stored bounding box might
+  // have the wrong size (e.g. direct access)
+  precice::mesh::BoundingBox bb = filterMesh->index().getRtreeBounds();
 
+#ifndef NDEBUG
+  // Safety check
+  precice::mesh::BoundingBox bb_check(filterMesh->getDimensions());
+  for (const mesh::Vertex &vertex : filterMesh->vertices()) {
+    bb_check.expandBy(vertex);
+  }
+  PRECICE_ASSERT(bb_check == bb);
+#endif
   // @TODO: This assert is not completely right, as it checks all dimensions for non-emptyness (which might not be the case).
   // However, with the current BB implementation, the expandBy function will just do nothing.
   PRECICE_ASSERT(!bb.empty());

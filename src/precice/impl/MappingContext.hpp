@@ -36,7 +36,7 @@ struct MappingContext {
   void clearToDataStorage()
   {
     if (toData->timeStepsStorage().nTimes() > 0) {
-      toData->timeStepsStorage().trim();
+      toData->timeStepsStorage().clear(); // requires clear, not trim, because otherwise data from the beginning of the window is kept across windows (toData that is no coupling data is never moved)
     }
   }
 };

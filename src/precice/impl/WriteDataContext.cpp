@@ -13,27 +13,20 @@ WriteDataContext::WriteDataContext(mesh::PtrData data,
 {
 }
 
-void WriteDataContext::resetData(bool atEndOfWindow, bool isTimeWindowComplete)
+void WriteDataContext::resetBuffer()
 {
-  // See also https://github.com/precice/precice/issues/1156.
-  _providedData->toZero();
-
-  // reset writeDataBuffer
   _writeDataBuffer.values.setZero();
   _writeDataBuffer.gradients.setZero();
+}
 
-  PRECICE_ASSERT(!hasReadMapping(), "Read mapping is not allowed for WriteDataContext.");
+void WriteDataContext::trimAfter(double time)
+{
+  _providedData->timeStepsStorage().trimAfter(time);
+
   // reset all toData
+  PRECICE_ASSERT(!hasReadMapping(), "Read mapping is not allowed for WriteDataContext.");
   if (hasWriteMapping()) {
-    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [](auto &context) { context.toData->toZero(); });
-  }
-
-  if (isTimeWindowComplete && hasWriteMapping()) { // manually overwrite value at beginning with value from end. Need this exception for WriteDataContext with write mapping, because CouplingScheme is not able to update _providedData, if write mapping sits between _providedData and _toData. CouplingScheme in this case only has access to _toData.
-    PRECICE_ASSERT(atEndOfWindow, "isTimeWindowComplete without atEndOfWindow is forbidden!");
-    _providedData->timeStepsStorage().move();
-    _providedData->timeStepsStorage().trim();
-  } else if (atEndOfWindow) {
-    _providedData->timeStepsStorage().trim();
+    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [time](auto &context) { context.toData->timeStepsStorage().trimAfter(time); });
   }
 }
 

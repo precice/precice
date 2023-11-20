@@ -46,9 +46,9 @@ namespace mapping {
  *
  */
 struct RadialBasisParameters {
-  double parameter1;
-  double parameter2;
-  double parameter3;
+  double parameter1{};
+  double parameter2{};
+  double parameter3{};
 };
 
 /// Base class for RBF with compact support
@@ -248,14 +248,15 @@ public:
                   "Support radius for radial-basis-function gaussian has to be larger than zero. Please update the \"support-radius\" attribute.");
 #endif
 
-    if (supportRadius < std::numeric_limits<double>::infinity()) {
-      _deltaY = evaluate(supportRadius);
-    }
     double threshold   = std::sqrt(-std::log(cutoffThreshold)) / shape;
     _supportRadius     = std::min(supportRadius, threshold);
     _params.parameter1 = _shape;
     _params.parameter2 = _supportRadius;
     _params.parameter3 = _deltaY;
+    if (supportRadius < std::numeric_limits<double>::infinity()) {
+      _deltaY            = evaluate(supportRadius);
+      _params.parameter3 = _deltaY;
+    }
   }
 
   double getSupportRadius() const

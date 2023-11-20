@@ -3,6 +3,7 @@
 #
 
 set(PRECICE_TEST_TIMEOUT_LONG 180 CACHE STRING "The timeout in seconds for longer tests.")
+set(PRECICE_TEST_TIMEOUT_NORMAL 40 CACHE STRING "The timeout in seconds for normal tests.")
 set(PRECICE_TEST_TIMEOUT_SHORT 20 CACHE STRING "The timeout in seconds for shorter tests.")
 
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
@@ -61,7 +62,6 @@ function(add_precice_test)
   # Setting properties
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
-    RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_WDIR}"
     ENVIRONMENT "OMPI_MCA_rmaps_base_oversubscribe=1;OMP_NUM_THREADS=2"
     )
@@ -87,12 +87,12 @@ function(add_precice_test_build_solverdummy PAT_LANG)
 
   # Make sure the required compiler is available
   if(PAT_LANG STREQUAL "fortran")
-    if(NOT CMAKE_Fortran_COMPILER OR NOT PRECICE_ENABLE_FORTRAN)
+    if(NOT CMAKE_Fortran_COMPILER OR NOT PRECICE_BINDINGS_FORTRAN)
       message(STATUS "Test ${PAT_FULL_NAME} - skipped")
       return()
     endif()
   elseif(PAT_LANG STREQUAL "c")
-    if(NOT CMAKE_C_COMPILER OR NOT PRECICE_ENABLE_C)
+    if(NOT CMAKE_C_COMPILER OR NOT PRECICE_BINDINGS_C)
       message(STATUS "Test ${PAT_FULL_NAME} - skipped")
       return()
     endif()
@@ -114,7 +114,6 @@ function(add_precice_test_build_solverdummy PAT_LANG)
   # Setting properties
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
-    RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_BIN_DIR}"
     FIXTURES_SETUP "${PAT_LANG}-solverdummy"
     LABELS "Solverdummy"
@@ -139,12 +138,12 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
   # Make sure all required compilers are available
   foreach(_lang IN ITEMS ${PAT_LANG_A} ${PAT_LANG_B})
     if(_lang STREQUAL "fortran")
-      if(NOT CMAKE_Fortran_COMPILER OR NOT PRECICE_ENABLE_FORTRAN)
+      if(NOT CMAKE_Fortran_COMPILER OR NOT PRECICE_BINDINGS_FORTRAN)
         message(STATUS "Test ${PAT_FULL_NAME} - skipped")
         return()
       endif()
     elseif(_lang STREQUAL "c")
-      if(NOT CMAKE_C_COMPILER OR NOT PRECICE_ENABLE_C)
+      if(NOT CMAKE_C_COMPILER OR NOT PRECICE_BINDINGS_C)
         message(STATUS "Test ${PAT_FULL_NAME} - skipped")
         return()
       endif()
@@ -188,10 +187,8 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
   # Setting properties
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
-    RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_RUN_DIR}"
-    FIXTURES_REQUIRED "${PAT_LANG_A}-solverdummy"
-    FIXTURES_REQUIRED "${PAT_LANG_B}-solverdummy"
+    FIXTURES_REQUIRED "${PAT_LANG_A}-solverdummy;${PAT_LANG_B}-solverdummy"
     LABELS "Solverdummy"
     TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
     )
@@ -229,7 +226,7 @@ add_precice_test(
 add_precice_test(
   NAME cplscheme
   ARGUMENTS "--run_test=CplSchemeTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_NORMAL}
   )
 add_precice_test(
   NAME io
@@ -251,7 +248,7 @@ add_precice_test(
 add_precice_test(
   NAME mapping
   ARGUMENTS "--run_test=MappingTests:\!MappingTests/PetRadialBasisFunctionMapping:\!MappingTests/GinkgoRadialBasisFunctionSolver"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_NORMAL}
   )
 add_precice_test(
   NAME mapping.petrbf

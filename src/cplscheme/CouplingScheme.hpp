@@ -52,6 +52,12 @@ public:
   /// To be used, when the number of max iterations is not defined (for explicit coupling).
   static const int UNDEFINED_MAX_ITERATIONS;
 
+  /// To be used, when the number of min iterations is not defined (for explicit coupling).
+  static const int UNDEFINED_MIN_ITERATIONS;
+
+  /// To be used, when the number of max iterations is infinite (for implicit coupling).
+  static const int INFINITE_MAX_ITERATIONS;
+
   /// Actions that are required by CouplingSchemes
   enum struct Action {
     InitializeData, ///< Is the initialization of coupling data required?
@@ -165,6 +171,10 @@ public:
   /// @brief Returns true, if data has been exchanged in last call of advance().
   virtual bool hasDataBeenReceived() const = 0;
 
+  /// Returns the time window start time of the current time window
+  /// For compositional schemes, this returns the earliest start of an active time window
+  virtual double getTimeWindowStart() const = 0;
+
   /// Returns the currently computed time of the coupling scheme.
   virtual double getTime() const = 0;
 
@@ -181,15 +191,6 @@ public:
    * hasTimeWindowSize().
    */
   virtual double getTimeWindowSize() const = 0;
-
-  /**
-   * @brief Returns the normalized time within the current time window.
-   *
-   * TODO: Where do we define what the normalized time is? Refer this part in the docs!
-   *
-   * @return time normalized to [0,1] w.r.t current time window.
-   */
-  virtual double getNormalizedWindowTime() const = 0;
 
   /**
    * @brief Returns the maximal size of the next time step to be computed.
