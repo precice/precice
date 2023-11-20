@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_CASE(TestQN6)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
-  // serial coupling, IQN-IMVJ (which is identical to IQN-ILS as only first timestep is considered), relaxed QR2 filter
+  // serial coupling, IQN-IMVJ acceleration, to test `RS-0` method for restart;
   runTestQN(context.config(), context);
 }
 
