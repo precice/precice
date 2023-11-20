@@ -32,11 +32,16 @@ void AxialGeoMultiscaleMapping::computeMapping()
       PRECICE_CHECK(input()->vertices().size() == 1, "You can only define an axial geometric multiscale mapping of type spread from a mesh with exactly one vertex.");
 
       // TODO: get rid of hardcoded values via access to mesh dimension
+      const int inValueDimensions  = 1;
+      const int outValueDimensions = 3;
+
+      /* When we add support for 1D meshes (https://github.com/precice/precice/issues/1669)
       const int inValueDimensions  = input()->getDimensions();
       const int outValueDimensions = output()->getDimensions();
 
       PRECICE_CHECK(input()->getDimensions() == 1, "The input mesh on an axial geometric multiscale mapping can only be 1D at the moment, but it was defined to be {}.", input()->getDimensions())
       PRECICE_CHECK(output()->getDimensions() == 3, "The output mesh on an axial geometric multiscale mapping can only be 3D at the moment, but it was defined to be {}.", input()->getDimensions())
+      */
 
       int effectiveCoordinate = _axis;
       PRECICE_ASSERT(effectiveCoordinate == 0 ||

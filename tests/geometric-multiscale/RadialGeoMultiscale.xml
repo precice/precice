@@ -3,7 +3,7 @@
   <data:scalar name="DataOne" />
   <data:scalar name="DataTwo" />
 
-  <mesh name="MeshOne" dimensions="1">
+  <mesh name="MeshOne" dimensions="3">
     <use-data name="DataOne" />
     <use-data name="DataTwo" />
   </mesh>
