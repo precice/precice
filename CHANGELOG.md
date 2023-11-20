@@ -4,7 +4,8 @@ All notable changes to this project will be documented in this file. For future 
 
 ## 2.5.1
 
-- Changed error to warning when trying to add a zero-value column to `V` matrix in QN-acceleration.
+- Changed error to warning when trying to add a zero-value column to `V` matrix in QN-acceleration (https://github.com/precice/precice/pull/1863)
+- Fixed compatibility with libxml version 2.12.0. (https://github.com/precice/precice/pull/1886)
 
 ## 2.5.0
 
