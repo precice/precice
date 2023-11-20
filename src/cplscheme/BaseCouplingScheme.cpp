@@ -370,7 +370,6 @@ void BaseCouplingScheme::secondExchange()
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
           requireAction(CouplingScheme::Action::WriteCheckpoint);
-          _timeWindowSize = _nextTimeWindowSize;
         }
       }
       //update iterations
@@ -388,8 +387,8 @@ void BaseCouplingScheme::secondExchange()
     }
     if (isCouplingOngoing()) {
       PRECICE_ASSERT(_hasDataBeenReceived);
-      _timeWindowSize = _nextTimeWindowSize;
     }
+    _timeWindowSize = _nextTimeWindowSize;
   }
 }
 
