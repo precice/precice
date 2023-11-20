@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="Data" />
+
+  <mesh name="FluidMesh" dimensions="2">
+    <use-data name="Data" />
+  </mesh>
+
+  <mesh name="StructureMesh" dimensions="2">
+    <use-data name="Data" />
+  </mesh>
+
+  <participant name="Fluid">
+    <provide-mesh name="FluidMesh" />
+    <write-data name="Data" mesh="FluidMesh" />
+  </participant>
+
+  <participant name="Structure">
+    <provide-mesh name="StructureMesh" />
+    <receive-mesh name="FluidMesh" from="Fluid" />
+    <read-data name="Data" mesh="StructureMesh" />
+    <mapping:rbf-global-direct
+      polynomial="separate"
+      direction="read"
+      from="FluidMesh"
+      to="StructureMesh"
+      constraint="consistent">
+      <basis-function:compact-polynomial-c0 support-radius="35" />
+    </mapping:rbf-global-direct>
+  </participant>
+
+  <m2n:sockets acceptor="Fluid" connector="Structure" use-two-level-initialization="true" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="Fluid" second="Structure" />
+    <max-time-windows value="1" />
+    <time-window-size value="1.0" />
+    <exchange data="Data" mesh="FluidMesh" from="Fluid" to="Structure" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

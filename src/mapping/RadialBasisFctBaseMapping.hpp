@@ -51,6 +51,9 @@ public:
 
   virtual void tagMeshSecondRound() final;
 
+  /// returns the bounding box enlarged by the support radius
+  virtual mesh::BoundingBox getTaggingBox(mesh::PtrMesh mesh) const final;
+
 protected:
   /// Radial basis function type used in interpolation.
   RADIAL_BASIS_FUNCTION_T _basisFunction;
@@ -141,14 +144,24 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
 
   if (_basisFunction.hasCompactSupport()) {
-    auto bb = otherMesh->getBoundingBox();
-    bb.expandBy(_basisFunction.getSupportRadius());
-
+    auto bb       = getTaggingBox(otherMesh);
     auto vertices = filterMesh->index().getVerticesInsideBox(bb);
     std::for_each(vertices.begin(), vertices.end(), [&filterMesh](size_t v) { filterMesh->vertices()[v].tag(); });
   } else {
     filterMesh->tagAll();
   }
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+mesh::BoundingBox RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::getTaggingBox(mesh::PtrMesh mesh) const
+{
+  auto bb = mesh->getBoundingBox();
+  if (_basisFunction.hasCompactSupport()) {
+    bb.expandBy(_basisFunction.getSupportRadius());
+  }
+  // TODO: what to do with the non-compact case? expanding by numeric_limits
+  // seems like a bad idea
+  return bb;
 }
 
 /*
