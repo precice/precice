@@ -3,7 +3,7 @@
   <data:vector name="DataOne" />
   <data:vector name="DataTwo" />
 
-  <mesh name="MeshOne" dimensions="3">
+  <mesh name="MeshOne" dimensions="1">
     <use-data name="DataOne" />
     <use-data name="DataTwo" />
   </mesh>
