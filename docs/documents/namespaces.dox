@@ -14,6 +14,41 @@
  *  @brief contains the data communication abstraction layer.
  */
 
+
+/** @namespace precice::com::serialize
+ *  @brief contains serialization logic
+ *
+ * Given an instance of type T, one can serialize() it.
+ * This serialized representation of T can now be sent or broadcast.
+ * On the receiving side, one can receive a serialized representation of a type T and then call to<Type>() to build the desired type.
+ * The serialized representation is validated after the serialization and the receive, to detect faulty states close to the communication layer.
+ *
+ * This should simplify debugging faulty communication.
+ *
+ *  @startuml{serializedMesh.png} "Example of SerializedMesh"
+ *  box "Participant A"
+ *  database  Mesh as ma
+ *  collections  SerializedMesh  as sma
+ *  endbox
+ *  box "Participant B"
+ *  collections SerializedMesh as smb
+ *  database Mesh as mb
+ *  endbox
+ *
+ *  activate ma
+ *  ma -> sma : serialize
+ *  activate sma
+ *  sma -> sma : validate
+ *  sma -> smb: (broadcast)\nsend/receive
+ *  activate smb
+ *  sma -> ma
+ *  destroy sma
+ *  smb -> smb : validate
+ *  smb -> mb : toMesh
+ *  activate mb
+ *  @enduml
+ */
+
 /** @namespace precice::constants
  *  @brief contains names for files and common value types.
  */
@@ -50,12 +85,20 @@
  *  @brief contains the partitioning of distributed meshes.
  */
 
+/** @namespace precice::profiling
+ *  @brief contains profiling utilities.
+ */
+
 /** @namespace precice::query
  *  @brief contains geometrical queries.
  */
 
 /** @namespace precice::testing
  *  @brief contains the testing framework.
+ */
+
+/** @namespace precice::time
+ *  @brief contains the time interpolation logic.
  */
 
 /** @namespace precice::utils

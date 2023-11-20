@@ -31,27 +31,29 @@ public:
       double                        maxTime,
       int                           maxTimeWindows,
       double                        timeWindowSize,
-      int                           validDigits,
+      double                        minTimeStepSize,
       std::string                   firstParticipant,
       std::string                   secondParticipant,
       const std::string &           localParticipant,
       m2n::PtrM2N                   m2n,
+      int                           minIterations,
       int                           maxIterations,
       CouplingMode                  cplMode,
-      constants::TimesteppingMethod dtMethod,
-      int                           extrapolationOrder);
+      constants::TimesteppingMethod dtMethod);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend(
       const mesh::PtrData &data,
       mesh::PtrMesh        mesh,
-      bool                 requiresInitialization);
+      bool                 requiresInitialization,
+      bool                 exchangeSubsteps);
 
   /// Adds data to be received on data exchange.
   void addDataToReceive(
       const mesh::PtrData &data,
       mesh::PtrMesh        mesh,
-      bool                 requiresInitialization);
+      bool                 requiresInitialization,
+      bool                 exchangeSubsteps);
 
   void determineInitialDataExchange() override;
 
@@ -61,42 +63,19 @@ public:
   /**
    * @returns true, if coupling scheme has any sendData
    */
-  bool hasAnySendData() override final
-  {
-    return not getSendData().empty();
-  }
+  bool hasAnySendData() override final;
 
   /**
    * @returns true, if coupling scheme has sendData with given DataID
    */
-  bool hasSendData(DataID dataID)
-  {
-    return getSendData(dataID) != nullptr;
-  }
+  bool hasSendData(DataID dataID);
 
 protected:
   /// Returns all data to be sent.
-  DataMap &getSendData()
-  {
-    return _sendData;
-  }
+  DataMap &getSendData();
 
   /// Returns all data to be received.
-  DataMap &getReceiveData()
-  {
-    return _receiveData;
-  }
-
-  /**
-   * @brief BiCouplingScheme has _sendData and _receiveData
-   * @returns DataMap with all data
-   */
-  const DataMap getAllData() override
-  {
-    DataMap allData{_sendData};
-    allData.insert(_receiveData.begin(), _receiveData.end());
-    return allData;
-  }
+  DataMap &getReceiveData();
 
   /// Sets the values
   CouplingData *getSendData(DataID dataID);
@@ -105,16 +84,10 @@ protected:
   CouplingData *getReceiveData(DataID dataID);
 
   /// @return Communication device to the other coupling participant.
-  m2n::PtrM2N getM2N() const
-  {
-    PRECICE_ASSERT(_m2n);
-    return _m2n;
-  }
+  m2n::PtrM2N getM2N() const;
 
-  /**
-   * @brief Exchanges data, if it has to be initialized.
-   */
-  void exchangeInitialData() override final;
+  /// @copydoc cplscheme::BaseCouplingScheme::initializeReceiveDataStorage()
+  void initializeReceiveDataStorage() override final;
 
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};

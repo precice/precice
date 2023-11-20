@@ -18,13 +18,13 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
-#include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -73,49 +73,53 @@ void runCoupling(
   std::vector<int>::const_iterator iterValidIterations = validIterations.begin();
 
   if (nameParticipant == nameParticipant0) {
+    mesh->data(0)->setSampleAtTime(0, time::Sample{1, mesh->data(0)->values()});
     cplScheme.initialize(0.0, 1);
-    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
-    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-    BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+    BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+    BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
 
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
-    cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+    cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
+    BOOST_TEST(cplScheme.isActionFulfilled(CouplingScheme::Action::WriteCheckpoint));
 
     while (cplScheme.isCouplingOngoing()) {
       dataValues0(index) += stepsizeData0;
-      // The max timestep length is required to be obeyed.
-      double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
-      cplScheme.addComputedTime(maxLengthTimestep);
-      cplScheme.advance();
+      // The max time step size is required to be obeyed.
+      double maxTimeStepSize = cplScheme.getNextTimeStepMaxSize();
+      cplScheme.addComputedTime(maxTimeStepSize);
+      mesh->data(0)->setSampleAtTime(cplScheme.getTime(), time::Sample{1, mesh->data(0)->values()});
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       iterationCount++;
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
       // timestep.
       if (cplScheme.isTimeWindowComplete()) {
         // Advance participant time and timestep
-        computedTime += maxLengthTimestep;
+        computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
+        BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
-        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
+        BOOST_TEST(iterationCount == *iterValidIterations);
         if (cplScheme.isCouplingOngoing()) {
-          BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-          cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+          cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
+          BOOST_TEST(cplScheme.isActionFulfilled(CouplingScheme::Action::WriteCheckpoint));
         } else {
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+          BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+          BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
         }
         iterationCount = 0;
         iterValidIterations++;
         if (iterValidIterations == validIterations.end()) {
-          BOOST_TEST(not cplScheme.isCouplingOngoing());
+          BOOST_REQUIRE(not cplScheme.isCouplingOngoing());
         }
         // Reset data values, to simulate same convergence behavior of
         // interface values in next timestep.
@@ -123,9 +127,9 @@ void runCoupling(
       } else { // coupling timestep is not yet complete
         BOOST_TEST(cplScheme.isCouplingOngoing());
         BOOST_TEST(iterationCount < *iterValidIterations);
-        BOOST_TEST(cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
-        cplScheme.markActionFulfilled(constants::actionReadIterationCheckpoint());
-        BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+        BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
+        cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
+        BOOST_TEST(cplScheme.isActionFulfilled(CouplingScheme::Action::ReadCheckpoint));
         // The written data value is decreased in a regular manner, in order
         // to achieve a predictable convergence.
         stepsizeData0 -= 1.0;
@@ -136,54 +140,58 @@ void runCoupling(
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
-    BOOST_TEST(testing::equals(computedTimesteps, 3));
+    BOOST_TEST(computedTimesteps == 3);
   } else if (nameParticipant == nameParticipant1) {
+    mesh->data(1)->setSampleAtTime(0, time::Sample{1, mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
-    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
-    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-    BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+    BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+    BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     BOOST_TEST(cplScheme.hasDataBeenReceived());
 
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
-    cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+    cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
+    BOOST_TEST(cplScheme.isActionFulfilled(CouplingScheme::Action::WriteCheckpoint));
 
     while (cplScheme.isCouplingOngoing()) {
       Eigen::VectorXd currentData(3);
       currentData = dataValues1.segment(index * 3, 3);
       currentData += stepsizeData1;
       dataValues1.segment(index * 3, 3) = currentData;
-      // The max timestep length is required to be obeyed.
-      double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
-      cplScheme.addComputedTime(maxLengthTimestep);
-      cplScheme.advance();
+      // The max time step size is required to be obeyed.
+      double maxTimeStepSize = cplScheme.getNextTimeStepMaxSize();
+      cplScheme.addComputedTime(maxTimeStepSize);
+      mesh->data(1)->setSampleAtTime(cplScheme.getTime(), time::Sample{1, mesh->data(1)->values()});
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       iterationCount++;
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
       // timestep.
       if (cplScheme.isTimeWindowComplete()) {
         // Advance participant time and timestep
-        computedTime += maxLengthTimestep;
+        computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
+        BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
         // The iterations are enforced by the controlled decrease of the
         // change of data written
-        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
+        BOOST_TEST(iterationCount == *iterValidIterations);
         if (cplScheme.isCouplingOngoing()) {
-          BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-          cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+          cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
+          BOOST_TEST(cplScheme.isActionFulfilled(CouplingScheme::Action::WriteCheckpoint));
         } else {
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+          BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+          BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
         }
         iterationCount = 0;
         iterValidIterations++;
         if (iterValidIterations == validIterations.end()) {
-          BOOST_TEST(not cplScheme.isCouplingOngoing());
+          BOOST_REQUIRE(not cplScheme.isCouplingOngoing());
         }
         // Reset data values, to simulate same convergence behavior of
         // interface values in next timestep.
@@ -191,11 +199,11 @@ void runCoupling(
       } else { // coupling timestep is not yet complete
         BOOST_TEST(cplScheme.isCouplingOngoing());
         BOOST_TEST(iterationCount < *iterValidIterations);
-        BOOST_TEST(cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+        BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
         // The load checkpoint action requires to fallback to the cplScheme of the
         // first implicit iteration of the current timestep/time.
-        cplScheme.markActionFulfilled(constants::actionReadIterationCheckpoint());
-        BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+        cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
+        BOOST_TEST(cplScheme.isActionFulfilled(CouplingScheme::Action::ReadCheckpoint));
         // The written data value is decreased in a regular manner, in order
         // to achieve a predictable convergence.
         //stepsizeData1 -= 1.0;
@@ -207,7 +215,7 @@ void runCoupling(
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
-    BOOST_TEST(testing::equals(computedTimesteps, 3));
+    BOOST_TEST(computedTimesteps == 3);
   }
 }
 
@@ -238,65 +246,73 @@ void runCouplingWithSubcycling(
 
   if (nameParticipant == nameParticipant0) {
     iterationCount++; // different handling due to subcycling
+    mesh->data(0)->setSampleAtTime(0, time::Sample{1, mesh->data(0)->values()});
     cplScheme.initialize(0.0, 1);
-    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
-    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-    BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+    BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+    BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
 
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
-    cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+    cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
+    BOOST_TEST(cplScheme.isActionFulfilled(CouplingScheme::Action::WriteCheckpoint));
 
-    double maxTimestepLength      = cplScheme.getNextTimestepMaxLength();
-    double computedTimestepLength = maxTimestepLength / 2.0;
-    int    subcyclingStep         = 0;
+    double maxTimeStepSize      = cplScheme.getNextTimeStepMaxSize();
+    double computedTimeStepSize = maxTimeStepSize / 2.0;
+    int    subcyclingStep       = 0;
+
+    // Clear data for iteration.
+    mesh->data(0)->timeStepsStorage().trim();
 
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
-      cplScheme.addComputedTime(computedTimestepLength);
-      cplScheme.advance();
+      cplScheme.addComputedTime(computedTimeStepSize);
+      mesh->data(0)->setSampleAtTime(cplScheme.getTime(), time::Sample{1, mesh->data(0)->values()});
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
       // timestep.
       if (cplScheme.isTimeWindowComplete()) {
         // Advance participant time and timestep
-        computedTime += maxTimestepLength;
+        mesh->data(0)->timeStepsStorage().trim();
+        computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
+        BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
-        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
+        BOOST_TEST(iterationCount == *iterValidIterations);
         if (cplScheme.isCouplingOngoing()) {
-          BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-          cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+          cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
+          BOOST_TEST(cplScheme.isActionFulfilled(CouplingScheme::Action::WriteCheckpoint));
         } else {
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+          BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+          BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
         }
         iterationCount = 1;
         iterValidIterations++;
         if (iterValidIterations == validIterations.end()) {
-          BOOST_TEST(not cplScheme.isCouplingOngoing());
+          BOOST_REQUIRE(not cplScheme.isCouplingOngoing());
         }
         // Reset data values, to simulate same convergence behavior of
-        // interface values in next timestep.
+        // interface values in next time step.
         stepsizeData0 = initialStepsizeData0;
-        BOOST_TEST(testing::equals(subcyclingStep, 1));
+        BOOST_TEST(subcyclingStep == 1);
         subcyclingStep = 0;
       } else { // coupling timestep is not yet complete
         BOOST_TEST(cplScheme.isCouplingOngoing());
-        // If length of global timestep is reached
+        // If end of time window is reached
         if (cplScheme.hasDataBeenReceived()) {
           BOOST_TEST(iterationCount <= *iterValidIterations);
-          BOOST_TEST(cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-          cplScheme.markActionFulfilled(constants::actionReadIterationCheckpoint());
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+          BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
+          BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+          cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
+          BOOST_TEST(cplScheme.isActionFulfilled(CouplingScheme::Action::ReadCheckpoint));
           // The written data value is decreased in a regular manner, in order
           // to achieve a predictable convergence.
           stepsizeData0 -= 1.0;
@@ -304,8 +320,8 @@ void runCouplingWithSubcycling(
           iterationCount++;   // Implicit coupling iterations
         } else {              // If subcycling
           BOOST_TEST(iterationCount <= *iterValidIterations);
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
+          BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
           BOOST_TEST(subcyclingStep < 2);
           subcyclingStep++;
         }
@@ -313,76 +329,84 @@ void runCouplingWithSubcycling(
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
-    BOOST_TEST(testing::equals(computedTimesteps, 3));
+    BOOST_TEST(computedTimesteps == 3);
     BOOST_TEST(stepsizeData0 == 5.0);
   }
 
   else if (nameParticipant == nameParticipant1) {
     iterationCount++; // different handling due to subcycling
+    mesh->data(1)->setSampleAtTime(0, time::Sample{1, mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
-    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
-    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-    BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+    BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+    BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     BOOST_TEST(cplScheme.hasDataBeenReceived());
 
     // Tells coupling scheme, that a checkpoint has been created.
     // All required actions have to be performed before calling advance().
-    cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+    cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
+    BOOST_TEST(cplScheme.isActionFulfilled(CouplingScheme::Action::WriteCheckpoint));
 
-    double maxTimestepLength       = cplScheme.getNextTimestepMaxLength();
-    double preferredTimestepLength = maxTimestepLength / 2.5;
-    double computedTimestepLength  = preferredTimestepLength;
-    int    subcyclingStep          = 0;
+    double maxTimeStepSize       = cplScheme.getNextTimeStepMaxSize();
+    double preferredTimeStepSize = maxTimeStepSize / 2.5;
+    double computedTimeStepSize  = preferredTimeStepSize;
+    int    subcyclingStep        = 0;
+
+    // Clear data for iteration.
+    mesh->data(1)->timeStepsStorage().trim();
 
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
-      cplScheme.addComputedTime(computedTimestepLength);
-      cplScheme.advance();
-      computedTimestepLength =
-          cplScheme.getNextTimestepMaxLength() < preferredTimestepLength
-              ? cplScheme.getNextTimestepMaxLength()
-              : preferredTimestepLength;
-      // A coupling timestep is complete, when the coupling iterations are
+      cplScheme.addComputedTime(computedTimeStepSize);
+      mesh->data(1)->setSampleAtTime(cplScheme.getTime(), time::Sample{1, mesh->data(1)->values()});
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
+      computedTimeStepSize =
+          cplScheme.getNextTimeStepMaxSize() < preferredTimeStepSize
+              ? cplScheme.getNextTimeStepMaxSize()
+              : preferredTimeStepSize;
+      // A coupling time step is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
-      // timestep.
+      // time step.
       if (cplScheme.isTimeWindowComplete()) {
-        // Advance participant time and timestep
-        computedTime += maxTimestepLength;
+        mesh->data(1)->timeStepsStorage().trim();
+        // Advance participant time and time step
+        computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
+        BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
-        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
+        BOOST_TEST(iterationCount == *iterValidIterations);
         if (cplScheme.isCouplingOngoing()) {
-          BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-          cplScheme.markActionFulfilled(constants::actionWriteIterationCheckpoint());
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+          cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
+          BOOST_TEST(cplScheme.isActionFulfilled(CouplingScheme::Action::WriteCheckpoint));
         } else {
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+          BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+          BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
         }
         iterationCount = 1;
         iterValidIterations++;
         if (iterValidIterations == validIterations.end()) {
-          BOOST_TEST(not cplScheme.isCouplingOngoing());
+          BOOST_REQUIRE(not cplScheme.isCouplingOngoing());
         }
         // Reset data values, to simulate same convergence behavior of
-        // interface values in next timestep.
+        // interface values in next time step.
         stepsizeData1 = initialStepsizeData1;
-        BOOST_TEST(testing::equals(subcyclingStep, 2));
+        BOOST_TEST(subcyclingStep == 2);
         subcyclingStep = 0;
       } else { // coupling timestep is not yet complete
         BOOST_TEST(cplScheme.isCouplingOngoing());
-        // If length of global timestep is reached
+        // If end of time window is reached
         if (cplScheme.hasDataBeenReceived()) {
           BOOST_TEST(iterationCount <= *iterValidIterations);
-          BOOST_TEST(cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
-          cplScheme.markActionFulfilled(constants::actionReadIterationCheckpoint());
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
+          BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
+          BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+          cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
+          BOOST_TEST(cplScheme.isActionFulfilled(CouplingScheme::Action::ReadCheckpoint));
           // The written data value is decreased in a regular manner, in order
           // to achieve a predictable convergence.
           stepsizeData1.array() -= 1.0;
@@ -390,8 +414,8 @@ void runCouplingWithSubcycling(
           iterationCount++;   // Implicit coupling iterations
         } else {              // If subcycling
           BOOST_TEST(iterationCount <= *iterValidIterations);
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()));
-          BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()));
+          BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
+          BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
           BOOST_TEST(subcyclingStep < 3);
           subcyclingStep++;
         }
@@ -399,7 +423,7 @@ void runCouplingWithSubcycling(
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
-    BOOST_TEST(testing::equals(computedTimesteps, 3));
+    BOOST_TEST(computedTimesteps == 3);
   }
 }
 
@@ -423,16 +447,13 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
 
   std::string path(_pathToTests + "serial-implicit-cplscheme-relax-const-config.xml");
 
-  xml::XMLTag          root = xml::getRootTag();
-  PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(dimensions);
-  PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(dimensions);
+  xml::XMLTag                          root = xml::getRootTag();
+  PtrDataConfiguration                 dataConfig(new DataConfiguration(root));
+  PtrMeshConfiguration                 meshConfig(new MeshConfiguration(root, dataConfig));
   m2n::M2NConfiguration::SharedPointer m2nConfig(
       new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
-  participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
+  CouplingSchemeConfiguration                  cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, path);
   BOOST_CHECK(cplSchemeConfig.getData("Data0", "Mesh") != cplSchemeConfig.getData("Data1", "Mesh"));
@@ -442,858 +463,6 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   BOOST_CHECK(cplSchemeConfig.findDataByID(2) == nullptr);                   // nullptr, there are only two pieces of data.
   BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get()); // no nullptr
 }
-
-BOOST_AUTO_TEST_SUITE(Extrapolation)
-BOOST_AUTO_TEST_CASE(FirstOrder)
-{
-  PRECICE_TEST(1_rank);
-  using namespace mesh;
-
-  PtrMesh mesh(new Mesh("MyMesh", 3, testing::nextMeshID()));
-  PtrData data   = mesh->createData("MyData", 1, 0_dataID);
-  int     dataID = data->getID();
-  mesh->createVertex(Eigen::Vector3d::Zero());
-  mesh->allocateDataValues();
-  BOOST_TEST(data->values().size() == 1);
-
-  const double          maxTime      = CouplingScheme::UNDEFINED_TIME;
-  const int             maxTimesteps = 1;
-  const double          dt           = 1.0;
-  std::string           first        = "First";
-  std::string           second       = "Second";
-  std::string           accessor     = second;
-  com::PtrCommunication com(new com::MPIDirectCommunication());
-  m2n::PtrM2N           globalCom(new m2n::M2N(com, m2n::DistributedComFactory::SharedPointer()));
-  const int             maxIterations      = 1;
-  const int             extrapolationOrder = 1;
-
-  // Test first order extrapolation
-  SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second,
-                              accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE,
-                              BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
-
-  using Fixture = testing::SerialCouplingSchemeFixture;
-
-  scheme.addDataToSend(data, mesh, true);
-  Fixture::initializeStorages(scheme);
-  CouplingData *cplData = Fixture::getSendData(scheme, dataID);
-  BOOST_CHECK(cplData); // no nullptr
-  BOOST_TEST(cplData->getSize() == 1);
-  BOOST_TEST(cplData->getPreviousIterationSize() == 1);
-
-  Fixture::moveToNextWindow(scheme);
-
-  // data is uninitialized
-  BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
-
-  // start first window
-  cplData->values()(0) = 1.0; // data provided at end of first window
-  Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
-  BOOST_TEST(testing::equals(cplData->values()(0), 1.0));
-
-  // go to second window
-  Fixture::moveToNextWindow(scheme); // uses first order extrapolation at end of first window
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
-  Fixture::storeIteration(scheme);
-  BOOST_TEST(testing::equals(cplData->values()(0), 2.0)); // = 2*1 - 0
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-  cplData->values()(0) = 4.0; // data provided at end of second window
-  Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
-
-  // go to third window
-  Fixture::moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of second window
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-  Fixture::storeIteration(scheme);
-  BOOST_TEST(testing::equals(cplData->values()(0), 7.0)); // = 2*4 - 1
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
-  cplData->values()(0) = 10.0; // data provided at end of third window
-  Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
-
-  // go to fourth window
-  Fixture::moveToNextWindow(scheme); // uses first order extrapolation (maximum allowed) at end of third window
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 7.0));
-  Fixture::storeIteration(scheme);
-  BOOST_TEST(testing::equals(cplData->values()(0), 16.0)); // = 2*10 - 4
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 16.0));
-}
-
-BOOST_AUTO_TEST_CASE(SecondOrder)
-{
-  PRECICE_TEST(1_rank);
-  using namespace mesh;
-
-  PtrMesh mesh(new Mesh("MyMesh", 3, testing::nextMeshID()));
-  PtrData data   = mesh->createData("MyData", 1, 0_dataID);
-  int     dataID = data->getID();
-  mesh->createVertex(Eigen::Vector3d::Zero());
-  mesh->allocateDataValues();
-  BOOST_TEST(data->values().size() == 1);
-
-  const double          maxTime      = CouplingScheme::UNDEFINED_TIME;
-  const int             maxTimesteps = 1;
-  const double          dt           = 1.0;
-  std::string           first        = "First";
-  std::string           second       = "Second";
-  std::string           accessor     = second;
-  com::PtrCommunication com(new com::MPIDirectCommunication());
-  m2n::PtrM2N           globalCom(new m2n::M2N(com, m2n::DistributedComFactory::SharedPointer()));
-  const int             maxIterations      = 1;
-  const int             extrapolationOrder = 2;
-
-  // Test second order extrapolation
-  SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second, accessor, globalCom, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
-
-  using Fixture = testing::SerialCouplingSchemeFixture;
-
-  scheme.addDataToSend(data, mesh, true);
-  Fixture::initializeStorages(scheme);
-  CouplingData *cplData = Fixture::getSendData(scheme, dataID);
-  BOOST_CHECK(cplData); // no nullptr
-  BOOST_TEST(cplData->getSize() == 1);
-  BOOST_TEST(cplData->getPreviousIterationSize() == 1);
-
-  Fixture::moveToNextWindow(scheme);
-
-  // data is uninitialized
-  BOOST_TEST(testing::equals(cplData->values()(0), 0.0));
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
-
-  // start first window
-  cplData->values()(0) = 1.0; // data provided at end of first window
-  Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
-
-  // go to second window
-  Fixture::moveToNextWindow(scheme); // uses first order extrapolation at end of first window
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 0.0));
-  Fixture::storeIteration(scheme);
-  BOOST_TEST(testing::equals(cplData->values()(0), 2.0)); // = 2*1 - 0
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-  cplData->values()(0) = 4.0; // data provided at end of second window
-  Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
-
-  //go to third window
-  Fixture::moveToNextWindow(scheme); // uses second order extrapolation at end of second window
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.0));
-  Fixture::storeIteration(scheme);
-  BOOST_TEST(testing::equals(cplData->values()(0), 8.0)); // = 2.5*4 - 2*1 + 0.5*0
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 8.0));
-  cplData->values()(0) = 4.0; // data provided at end of third window
-  Fixture::setTimeWindows(scheme, scheme.getTimeWindows() + 1);
-  Fixture::storeExtrapolationData(scheme);
-
-  // go to fourth window
-  Fixture::moveToNextWindow(scheme); // uses second order extrapolation at end of third window
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 8.0));
-  Fixture::storeIteration(scheme);
-  BOOST_TEST(testing::equals(cplData->values()(0), 2.5)); // = 2.5*4 - 2*4 + 0.5*1
-  BOOST_TEST(testing::equals(cplData->previousIteration()(0), 2.5));
-}
-
-/// Test that cplScheme gives correct results when applying extrapolation.
-BOOST_AUTO_TEST_CASE(FirstOrderWithAcceleration)
-{
-  /**
-   * Perform first order and constant relaxation acceleration
-   *
-   * Do two time windows with three iterations each.
-   *
-   * Each participant writes dummy data to other participant, received data is checked.
-   *
-   * Make sure that the following happens, if NOT converged (first two iterations):
-   * 1. acceleration is performed
-   * 2. participants receive correct (accelerated) data
-   *
-   * Make sure that the following happens, if converged (end of third iteration):
-   * 1. old data is stored (we cannot access this from the coupling scheme, but we can deduct this from the extrapolated value)
-   * 2. we move to the next window
-   * 3. initial guess for first participant is computed via extrapolation from old data
-   **/
-
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
-  testing::ConnectionOptions options;
-  options.useOnlyPrimaryCom = true;
-  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
-
-  xml::XMLTag root = xml::getRootTag();
-
-  // Create a data configuration, to simplify configuration of data
-
-  mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  const int                  geometrical_dimensions = 3; // 3d problem
-  const int                  data_dimensions        = 1; // only one sample in data
-  dataConfig->setDimensions(geometrical_dimensions);
-  dataConfig->addData("Data0", data_dimensions);
-  dataConfig->addData("Data1", data_dimensions);
-
-  mesh::MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", geometrical_dimensions, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", data_dimensions, 0_dataID)->getID();
-  const auto    dataID1 = mesh->createData("Data1", data_dimensions, 1_dataID)->getID();
-  mesh->createVertex(Eigen::Vector3d::Zero());
-  mesh->allocateDataValues();
-  meshConfig.addMesh(mesh);
-
-  // Create all parameters necessary to create an ImplicitCouplingScheme object
-  const double maxTime            = CouplingScheme::UNDEFINED_TIME;
-  const int    maxTimeWindows     = 2;
-  const double timeWindowSize     = 0.1;
-  const int    maxIterations      = 3;
-  const int    extrapolationOrder = 1;
-  const double timestepLength     = timeWindowSize;
-  std::string  first("Participant0");
-  std::string  second("Participant1");
-  int          sendDataIndex        = -1;
-  int          receiveDataIndex     = -1;
-  int          convergenceDataIndex = -1;
-
-  BOOST_TEST(dataID0 == 0);
-  BOOST_TEST(dataID1 == 1);
-
-  if (context.isNamed(first)) {
-    sendDataIndex        = dataID0;
-    receiveDataIndex     = dataID1;
-    convergenceDataIndex = receiveDataIndex;
-  } else {
-    sendDataIndex        = dataID1;
-    receiveDataIndex     = dataID0;
-    convergenceDataIndex = sendDataIndex;
-  }
-
-  // Create the coupling scheme object
-  cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
-      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
-  cplScheme.determineInitialDataExchange();
-
-  // Add acceleration
-  acceleration::PtrAcceleration ptrAcceleration(new acceleration::ConstantRelaxationAcceleration(0.5, std::vector<int>({sendDataIndex})));
-  cplScheme.setAcceleration(ptrAcceleration);
-
-  // Add convergence measures
-  const int                              minIterations = maxIterations;
-  cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
-      new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  cplScheme.initialize(0.0, 1);
-  cplScheme.receiveResultOfFirstAdvance();
-
-  Eigen::VectorXd v(1); // buffer for data
-
-  // write data is uninitialized
-  BOOST_TEST(mesh->data(sendDataIndex)->values()(0) == 0);
-
-  // first window
-  for (int i = 0; i < maxIterations; i++) {
-    // first, second and third iteration
-    BOOST_TEST(cplScheme.isCouplingOngoing());
-
-    if (context.isNamed(first)) {
-      if (i == 0) {
-        // data is uninitialized for first participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 0);
-      } else if (i == 1) {
-        // accelerated data from second participant: 0.5 * 0 + 0.5 * 2 = 1
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1);
-      } else if (i == 2) {
-        // accelerated data from second participant: 0.5 * 1 + 0.5 * 2 = 1
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1.5);
-      }
-    } else if (context.isNamed(second)) {
-      // data from first participant
-      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1);
-    }
-
-    if (i == 0) {
-      BOOST_TEST(cplScheme.isActionRequired(writeIterationCheckpoint));
-      cplScheme.markActionFulfilled(writeIterationCheckpoint);
-      BOOST_TEST(not cplScheme.isActionRequired(readIterationCheckpoint));
-    } else {
-      BOOST_TEST(not cplScheme.isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(cplScheme.isActionRequired(readIterationCheckpoint));
-      cplScheme.markActionFulfilled(readIterationCheckpoint);
-    }
-
-    // write data to mesh
-    if (context.isNamed(first)) {
-      v << 1.0;
-    } else if (context.isNamed(second)) {
-      v << 2.0;
-    }
-    mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
-
-    cplScheme.advance();
-
-    if (i < maxIterations - 1) {
-      BOOST_TEST(not cplScheme.isTimeWindowComplete());
-    } else {
-      // window complete since max iterations reached
-      BOOST_TEST(cplScheme.isTimeWindowComplete());
-    }
-  }
-
-  // second window
-  for (int i = 0; i < maxIterations; i++) {
-    // first, second and third iteration
-    BOOST_TEST(cplScheme.isCouplingOngoing());
-    if (context.isNamed(first)) {
-      if (i == 0) {
-        // first order extrapolation
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*2 - 0
-      } else if (i == 1) {
-        // accelerated data from second participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3.5); // = 0.5 * 4 + 0.5 * 3
-      } else if (i == 2) {
-        // accelerated data from second participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3.25); // = 0.5 * 3.5 + 0.5 * 3
-      }
-    } else if (context.isNamed(second)) {
-      // extrapolation only applied to accelerated data. So data written by first participant.
-      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
-    }
-
-    if (i == 0) {
-      BOOST_TEST(cplScheme.isActionRequired(writeIterationCheckpoint));
-      cplScheme.markActionFulfilled(writeIterationCheckpoint);
-      BOOST_TEST(not cplScheme.isActionRequired(readIterationCheckpoint));
-    } else {
-      BOOST_TEST(not cplScheme.isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(cplScheme.isActionRequired(readIterationCheckpoint));
-      cplScheme.markActionFulfilled(readIterationCheckpoint);
-    }
-
-    v << 3.0;
-    mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
-
-    cplScheme.advance();
-
-    if (i < maxIterations - 1) {
-      BOOST_TEST(not cplScheme.isTimeWindowComplete());
-    } else {
-      // window complete since max iterations reached
-      BOOST_TEST(cplScheme.isTimeWindowComplete());
-    }
-  }
-
-  // third window
-  if (context.isNamed(first)) {
-    // first order extrapolation
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*3 - 2
-  } else if (context.isNamed(second)) {
-    // extrapolation only applied to accelerated data. So data written by first participant.
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
-  }
-
-  // reached end of simulation, ready to finalize
-  BOOST_TEST(not cplScheme.isCouplingOngoing());
-
-  cplScheme.finalize();
-}
-
-/// Test that cplScheme gives correct results when applying extrapolation using non-zero initial data.
-BOOST_AUTO_TEST_CASE(FirstOrderWithInitializationAndAcceleration)
-{
-  /**
-   * Perform first order extrapolation and use initialization
-   *
-   * Do two time windows with three iterations each.
-   *
-   * Each participant writes dummy data to other participant, received data is checked.
-   *
-   **/
-
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
-  testing::ConnectionOptions options;
-  options.useOnlyPrimaryCom = true;
-  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
-
-  xml::XMLTag root = xml::getRootTag();
-
-  // Create a data configuration, to simplify configuration of data
-
-  mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  const int                  geometrical_dimensions = 3; // 3d problem
-  const int                  data_dimensions        = 1; // only one sample in data
-  dataConfig->setDimensions(geometrical_dimensions);
-  dataConfig->addData("Data0", data_dimensions);
-  dataConfig->addData("Data1", data_dimensions);
-
-  mesh::MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", geometrical_dimensions, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", data_dimensions, 0_dataID)->getID();
-  const auto    dataID1 = mesh->createData("Data1", data_dimensions, 1_dataID)->getID();
-  mesh->createVertex(Eigen::Vector3d::Zero());
-  mesh->allocateDataValues();
-  meshConfig.addMesh(mesh);
-
-  // Create all parameters necessary to create an ImplicitCouplingScheme object
-  const double maxTime            = CouplingScheme::UNDEFINED_TIME;
-  const int    maxTimeWindows     = 2;
-  const double timeWindowSize     = 0.1;
-  const int    maxIterations      = 3;
-  const int    extrapolationOrder = 1;
-  const double timestepLength     = timeWindowSize;
-  std::string  first("Participant0");
-  std::string  second("Participant1");
-  int          sendDataIndex        = -1;
-  int          receiveDataIndex     = -1;
-  int          convergenceDataIndex = -1;
-
-  BOOST_TEST(dataID0 == 0);
-  BOOST_TEST(dataID1 == 1);
-
-  if (context.isNamed(first)) {
-    sendDataIndex        = dataID0;
-    receiveDataIndex     = dataID1;
-    convergenceDataIndex = receiveDataIndex;
-  } else {
-    sendDataIndex        = dataID1;
-    receiveDataIndex     = dataID0;
-    convergenceDataIndex = sendDataIndex;
-  }
-
-  // Create the coupling scheme object
-  cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
-      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, context.isNamed(second));
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, context.isNamed(first));
-  cplScheme.determineInitialDataExchange();
-
-  // Add acceleration
-  acceleration::PtrAcceleration ptrAcceleration(new acceleration::ConstantRelaxationAcceleration(0.5, std::vector<int>({sendDataIndex})));
-  cplScheme.setAcceleration(ptrAcceleration);
-
-  // Add convergence measures
-  const int                              minIterations = maxIterations;
-  cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
-      new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  Eigen::VectorXd v(1); // buffer for data
-
-  // ensure that data is uninitialized
-  BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
-  BOOST_TEST(testing::equals(mesh->data(receiveDataIndex)->values()(0), 0.0));
-  BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
-  BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 0.0));
-
-  if (context.isNamed(first)) {
-    BOOST_TEST(not cplScheme.isActionRequired(constants::actionWriteInitialData()));
-  } else {
-    BOOST_TEST(context.isNamed(second));
-    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
-    v << 4.0;
-    mesh->data(sendDataIndex)->values() = v;
-    cplScheme.markActionFulfilled(constants::actionWriteInitialData());
-    BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
-    BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 4.0));
-  }
-
-  if (context.isNamed(first)) {
-    // first participant receives initial data = 4 (see above)
-    cplScheme.initialize(0.0, 1);
-    BOOST_TEST(cplScheme.hasDataBeenReceived());
-    cplScheme.receiveResultOfFirstAdvance();
-    BOOST_TEST(!cplScheme.hasDataBeenReceived());
-    BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
-    BOOST_TEST(testing::equals(mesh->data(receiveDataIndex)->values()(0), 4.0));
-    // first participant does not send any data here
-    BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
-    BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 0.0));
-  } else {
-    // second participant result written by first participant in its first window = 1 (see below)
-    cplScheme.initialize(0.0, 1);
-    BOOST_TEST(!cplScheme.hasDataBeenReceived());
-    cplScheme.receiveResultOfFirstAdvance();
-    BOOST_TEST(cplScheme.hasDataBeenReceived());
-    BOOST_TEST(context.isNamed(second));
-    BOOST_TEST(mesh->data(receiveDataIndex)->values().size() == 1);
-    BOOST_TEST(testing::equals(mesh->data(receiveDataIndex)->values()(0), 1.0));
-    // second participant has send data above (should remain untouched)
-    BOOST_TEST(mesh->data(sendDataIndex)->values().size() == 1);
-    BOOST_TEST(testing::equals(mesh->data(sendDataIndex)->values()(0), 4.0));
-  }
-
-  // first window
-  for (int i = 0; i < maxIterations; i++) {
-    // first, second and third iteration
-    BOOST_TEST(cplScheme.isCouplingOngoing());
-
-    if (context.isNamed(first)) {
-      if (i == 0) {
-        // data is uninitialized for first participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4);
-      } else if (i == 1) {
-        // accelerated data from second participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3); // = 0.5 * 4 + 0.5 * 2
-      } else if (i == 2) {
-        // accelerated data from second participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.5); // = 0.5 * 3 + 0.5 * 2
-      }
-    } else if (context.isNamed(second)) {
-      // data from first participant
-      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1);
-    }
-
-    if (i == 0) {
-      BOOST_TEST(cplScheme.isActionRequired(writeIterationCheckpoint));
-      cplScheme.markActionFulfilled(writeIterationCheckpoint);
-      BOOST_TEST(not cplScheme.isActionRequired(readIterationCheckpoint));
-    } else {
-      BOOST_TEST(not cplScheme.isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(cplScheme.isActionRequired(readIterationCheckpoint));
-      cplScheme.markActionFulfilled(readIterationCheckpoint);
-    }
-
-    // write data to mesh
-    if (context.isNamed(first)) {
-      v << 1.0;
-    } else if (context.isNamed(second)) {
-      v << 2.0;
-    }
-    mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
-
-    cplScheme.advance();
-
-    if (i < maxIterations - 1) {
-      BOOST_TEST(not cplScheme.isTimeWindowComplete());
-    } else {
-      // window complete since max iterations reached
-      BOOST_TEST(cplScheme.isTimeWindowComplete());
-    }
-  }
-
-  // second window
-  for (int i = 0; i < maxIterations; i++) {
-    // first, second and third iteration
-    BOOST_TEST(cplScheme.isCouplingOngoing());
-    if (context.isNamed(first)) {
-      if (i == 0) {
-        // first order extrapolation uses initial data and final value from last window.
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 0); // = 2*2 - 4
-      } else if (i == 1) {
-        // accelerated data from second participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1.5); // = 0.5 * 0 + 0.5 * 3
-      } else if (i == 2) {
-        // accelerated data from second participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 2.25); // = 0.5 * 1.5 + 0.5 * 3
-      }
-    } else if (context.isNamed(second)) {
-      // extrapolation only applied to accelerated data. So data written by first participant.
-      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
-    }
-
-    if (i == 0) {
-      BOOST_TEST(cplScheme.isActionRequired(writeIterationCheckpoint));
-      cplScheme.markActionFulfilled(writeIterationCheckpoint);
-      BOOST_TEST(not cplScheme.isActionRequired(readIterationCheckpoint));
-    } else {
-      BOOST_TEST(not cplScheme.isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(cplScheme.isActionRequired(readIterationCheckpoint));
-      cplScheme.markActionFulfilled(readIterationCheckpoint);
-    }
-
-    v << 3.0;
-    mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
-
-    cplScheme.advance();
-
-    if (i < maxIterations - 1) {
-      BOOST_TEST(not cplScheme.isTimeWindowComplete());
-    } else {
-      // window complete since max iterations reached
-      BOOST_TEST(cplScheme.isTimeWindowComplete());
-    }
-  }
-
-  // third window
-  if (context.isNamed(first)) {
-    // first order extrapolation
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*3 - 2
-  } else if (context.isNamed(second)) {
-    // extrapolation only applied to accelerated data. So data written by first participant.
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
-  }
-
-  // reached end of simulation, ready to finalize
-  BOOST_TEST(not cplScheme.isCouplingOngoing());
-
-  cplScheme.finalize();
-}
-
-BOOST_AUTO_TEST_CASE(SecondOrderWithAcceleration)
-{
-  /**
-   * Perform second order extrapolation and constant relaxation acceleration
-   *
-   * Do three time windows with three iterations each.
-   *
-   * Each participant writes dummy data to other participant, received data is checked.
-   *
-   * Make sure that the following happens, if NOT converged (first two iterations):
-   * 1. acceleration is performed
-   * 2. participants receive correct (accelerated) data
-   *
-   * Make sure that the following happens, if converged (end of third iteration):
-   * 1. old data is stored (we cannot access this from the coupling scheme, but we can deduct this from the extrapolated value)
-   * 2. we move to the next window
-   * 3. initial guess for first participant is computed via extrapolation from old data (end of first window only linear extrapolation)
-   **/
-
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
-  testing::ConnectionOptions options;
-  options.useOnlyPrimaryCom = true;
-  auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
-
-  xml::XMLTag root = xml::getRootTag();
-
-  // Create a data configuration, to simplify configuration of data
-
-  mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  const int                  geometrical_dimensions = 3; // 3d problem
-  const int                  data_dimensions        = 1; // only one sample in data
-  dataConfig->setDimensions(geometrical_dimensions);
-  dataConfig->addData("Data0", data_dimensions);
-  dataConfig->addData("Data1", data_dimensions);
-
-  mesh::MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", geometrical_dimensions, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", data_dimensions, 0_dataID)->getID();
-  const auto    dataID1 = mesh->createData("Data1", data_dimensions, 1_dataID)->getID();
-  mesh->createVertex(Eigen::Vector3d::Zero());
-  mesh->allocateDataValues();
-  meshConfig.addMesh(mesh);
-
-  // Create all parameters necessary to create an ImplicitCouplingScheme object
-  const double maxTime            = CouplingScheme::UNDEFINED_TIME;
-  const int    maxTimeWindows     = 3;
-  const double timeWindowSize     = 0.1;
-  const int    maxIterations      = 3;
-  const int    extrapolationOrder = 2;
-  const double timestepLength     = timeWindowSize;
-  std::string  first("Participant0");
-  std::string  second("Participant1");
-  int          sendDataIndex        = -1;
-  int          receiveDataIndex     = -1;
-  int          convergenceDataIndex = -1;
-
-  BOOST_TEST(dataID0 == 0);
-  BOOST_TEST(dataID1 == 1);
-
-  if (context.isNamed(first)) {
-    sendDataIndex        = dataID0;
-    receiveDataIndex     = dataID1;
-    convergenceDataIndex = receiveDataIndex;
-  } else {
-    sendDataIndex        = dataID1;
-    receiveDataIndex     = dataID0;
-    convergenceDataIndex = sendDataIndex;
-  }
-
-  // Create the coupling scheme object
-  cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 16, first, second,
-      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, maxIterations, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
-  cplScheme.determineInitialDataExchange();
-
-  // Add acceleration
-  acceleration::PtrAcceleration ptrAcceleration(new acceleration::ConstantRelaxationAcceleration(0.5, std::vector<int>({sendDataIndex})));
-  cplScheme.setAcceleration(ptrAcceleration);
-
-  // Add convergence measures
-  const int                              minIterations = maxIterations;
-  cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
-      new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
-
-  cplScheme.initialize(0.0, 1);
-  cplScheme.receiveResultOfFirstAdvance();
-
-  Eigen::VectorXd v(1); // buffer for data
-
-  // write data is uninitialized
-  BOOST_TEST(mesh->data(sendDataIndex)->values()(0) == 0);
-
-  // first window
-  for (int i = 0; i < maxIterations; i++) {
-    // first, second and third iteration
-    BOOST_TEST(cplScheme.isCouplingOngoing());
-
-    if (context.isNamed(first)) {
-      if (i == 0) {
-        // data is uninitialized for first participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 0);
-      } else if (i == 1) {
-        // accelerated data from second participant: 0.5 * 0 + 0.5 * 2 = 1
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1);
-      } else if (i == 2) {
-        // accelerated data from second participant: 0.5 * 1 + 0.5 * 2 = 1
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1.5);
-      }
-    } else if (context.isNamed(second)) {
-      // extrapolation only applied to accelerated data. So data written by first participant.
-      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 1);
-    }
-
-    if (i == 0) {
-      BOOST_TEST(cplScheme.isActionRequired(writeIterationCheckpoint));
-      cplScheme.markActionFulfilled(writeIterationCheckpoint);
-      BOOST_TEST(not cplScheme.isActionRequired(readIterationCheckpoint));
-    } else {
-      BOOST_TEST(not cplScheme.isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(cplScheme.isActionRequired(readIterationCheckpoint));
-      cplScheme.markActionFulfilled(readIterationCheckpoint);
-    }
-
-    // write data to mesh
-    if (context.isNamed(first)) {
-      v << 1.0;
-    } else if (context.isNamed(second)) {
-      v << 2.0;
-    }
-    mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
-
-    cplScheme.advance();
-
-    if (i < maxIterations - 1) {
-      BOOST_TEST(not cplScheme.isTimeWindowComplete());
-    } else {
-      // window complete since max iterations reached
-      BOOST_TEST(cplScheme.isTimeWindowComplete());
-    }
-  }
-
-  // second window
-  for (int i = 0; i < maxIterations; i++) {
-    // first, second and third iteration
-    BOOST_TEST(cplScheme.isCouplingOngoing());
-    if (context.isNamed(first)) {
-      if (i == 0) {
-        // first order extrapolation
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4); // = 2*2 - 0
-      } else if (i == 1) {
-        // accelerated data from second participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3.5); // = 0.5 * 4 + 0.5 * 3
-      } else if (i == 2) {
-        // accelerated data from second participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3.25); // = 0.5 * 3.5 + 0.5 * 3 = 3.25
-      }
-    } else if (context.isNamed(second)) {
-      // extrapolation only applied to accelerated data. So data written by first participant.
-      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3);
-    }
-
-    if (i == 0) {
-      BOOST_TEST(cplScheme.isActionRequired(writeIterationCheckpoint));
-      cplScheme.markActionFulfilled(writeIterationCheckpoint);
-      BOOST_TEST(not cplScheme.isActionRequired(readIterationCheckpoint));
-    } else {
-      BOOST_TEST(not cplScheme.isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(cplScheme.isActionRequired(readIterationCheckpoint));
-      cplScheme.markActionFulfilled(readIterationCheckpoint);
-    }
-
-    v << 3.0;
-    mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
-
-    cplScheme.advance();
-
-    if (i < maxIterations - 1) {
-      BOOST_TEST(not cplScheme.isTimeWindowComplete());
-    } else {
-      // window complete since max iterations reached
-      BOOST_TEST(cplScheme.isTimeWindowComplete());
-    }
-  }
-
-  // third window
-  for (int i = 0; i < maxIterations; i++) {
-    // first, second and third iteration
-    BOOST_TEST(cplScheme.isCouplingOngoing());
-    if (context.isNamed(first)) {
-      if (i == 0) {
-        // second order extrapolation
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 3.5); // = 2.5*3 - 2*2 + 0.5 * 0
-      } else if (i == 1) {
-        // accelerated data from second participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4.25); // = 0.5 * 3.5 + 0.5 * 5
-      } else if (i == 2) {
-        // accelerated data from second participant
-        BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 4.625); // = 0.5 * 4.25 + 0.5 * 5
-      }
-    } else if (context.isNamed(second)) {
-      // extrapolation only applied to accelerated data. So data written by first participant.
-      BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5);
-    }
-
-    if (i == 0) {
-      BOOST_TEST(cplScheme.isActionRequired(writeIterationCheckpoint));
-      cplScheme.markActionFulfilled(writeIterationCheckpoint);
-      BOOST_TEST(not cplScheme.isActionRequired(readIterationCheckpoint));
-    } else {
-      BOOST_TEST(not cplScheme.isActionRequired(writeIterationCheckpoint));
-      BOOST_TEST(cplScheme.isActionRequired(readIterationCheckpoint));
-      cplScheme.markActionFulfilled(readIterationCheckpoint);
-    }
-
-    v << 5.0;
-    mesh->data(sendDataIndex)->values() = v;
-    cplScheme.addComputedTime(timestepLength);
-
-    cplScheme.advance();
-
-    if (i < maxIterations - 1) {
-      BOOST_TEST(not cplScheme.isTimeWindowComplete());
-    } else {
-      // window complete since max iterations reached
-      BOOST_TEST(cplScheme.isTimeWindowComplete());
-    }
-  }
-
-  // fourth window
-  if (context.isNamed(first)) {
-    // second order extrapolation
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 7.5); // = 2.5*5 - 2*3 + 0.5*2
-  } else if (context.isNamed(second)) {
-    // extrapolation only applied to accelerated data. So data written by first participant.
-    BOOST_TEST(mesh->data(receiveDataIndex)->values()(0) == 5);
-  }
-
-  // reached end of simulation, ready to finalize
-  BOOST_TEST(not cplScheme.isCouplingOngoing());
-
-  cplScheme.finalize();
-}
-BOOST_AUTO_TEST_SUITE_END()
 
 /// Test that runs on 2 processors.
 BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
@@ -1310,29 +479,27 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
   PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(dimensions);
-  dataConfig->addData("data0", 1);
-  dataConfig->addData("data1", 3);
+  dataConfig->addData("data0", mesh::Data::typeName::SCALAR);
+  dataConfig->addData("data1", mesh::Data::typeName::VECTOR);
 
   MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(dimensions);
-  mesh::PtrMesh mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
+  mesh::PtrMesh     mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createData("data0", 1, 0_dataID);
   mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
+  meshConfig.insertMeshToMeshDimensionsMap(mesh->getName(), mesh->getDimensions());
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  double      maxTime        = 1.0;
-  int         maxTimesteps   = 3;
-  double      timestepLength = 0.1;
-  std::string nameParticipant0("Participant0");
-  std::string nameParticipant1("Participant1");
-  int         sendDataIndex        = -1;
-  int         receiveDataIndex     = -1;
-  int         convergenceDataIndex = -1;
-  int         extrapolationOrder   = 0;
+  const double maxTime        = 1.0;
+  const int    maxTimeWindows = 3;
+  const double timeWindowSize = 0.1;
+  std::string  nameParticipant0("Participant0");
+  std::string  nameParticipant1("Participant1");
+  int          sendDataIndex        = -1;
+  int          receiveDataIndex     = -1;
+  int          convergenceDataIndex = -1;
   if (context.isNamed(nameParticipant0)) {
     sendDataIndex        = 0;
     receiveDataIndex     = 1;
@@ -1344,12 +511,14 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   }
 
   // Create the coupling scheme object
+  const int                       minIterations = 1;
+  const int                       maxIterations = 100;
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
+      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, 100, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+      BaseCouplingScheme::Implicit, minIterations, maxIterations);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
 
   double                                 convergenceLimit1 = sqrt(3.0); // when diff_vector = (1.0, 1.0, 1.0)
@@ -1373,15 +542,12 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
   std::string configurationPath(
       _pathToTests + "serial-implicit-cplscheme-absolute-config.xml");
 
-  xml::XMLTag          root = xml::getRootTag();
-  PtrDataConfiguration dataConfig(new DataConfiguration(root));
-  dataConfig->setDimensions(dimensions);
-  PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
-  meshConfig->setDimensions(dimensions);
+  xml::XMLTag                                  root = xml::getRootTag();
+  PtrDataConfiguration                         dataConfig(new DataConfiguration(root));
+  PtrMeshConfiguration                         meshConfig(new MeshConfiguration(root, dataConfig));
   m2n::M2NConfiguration::SharedPointer         m2nConfig(new m2n::M2NConfiguration(root));
   precice::config::PtrParticipantConfiguration participantConfig(new precice::config::ParticipantConfiguration(root, meshConfig));
-  participantConfig->setDimensions(dimensions);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
+  CouplingSchemeConfiguration                  cplSchemeConfig(root, meshConfig, m2nConfig, participantConfig);
 
   xml::configure(root, xml::ConfigurationContext{}, configurationPath);
   m2n::PtrM2N m2n        = m2nConfig->getM2N("Participant0", "Participant1");
@@ -1416,53 +582,44 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  dataConfig->setDimensions(3);
-  dataConfig->addData("data0", 1);
-  dataConfig->addData("data1", 3);
+  dataConfig->addData("data0", mesh::Data::typeName::SCALAR);
+  dataConfig->addData("data1", mesh::Data::typeName::VECTOR);
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
+  mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createData("data0", 1, 0_dataID);
   mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
+  meshConfig.insertMeshToMeshDimensionsMap(mesh->getName(), mesh->getDimensions());
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  double      maxTime        = 1.0;
-  int         maxTimesteps   = 3;
-  double      timestepLength = 0.1;
-  std::string nameParticipant0("Participant0");
-  std::string nameParticipant1("Participant1");
-  int         sendDataIndex        = -1;
-  int         receiveDataIndex     = -1;
-  int         convergenceDataIndex = -1;
-  int         extrapolationOrder   = 0;
+  const double maxTime        = 1.0;
+  const int    maxTimeWindows = 3;
+  const double timeWindowSize = 0.1;
+  std::string  nameParticipant0("Participant0");
+  std::string  nameParticipant1("Participant1");
+  int          sendDataIndex    = -1;
+  int          receiveDataIndex = -1;
   if (context.isNamed(nameParticipant0)) {
-    sendDataIndex        = 0;
-    receiveDataIndex     = 1;
-    convergenceDataIndex = receiveDataIndex;
+    sendDataIndex    = 0;
+    receiveDataIndex = 1;
   } else {
-    sendDataIndex        = 1;
-    receiveDataIndex     = 0;
-    convergenceDataIndex = sendDataIndex;
+    sendDataIndex    = 1;
+    receiveDataIndex = 0;
   }
 
   // Create the coupling scheme object
+  const int                       minIterations = 1;
+  const int                       maxIterations = 3;
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, 100, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+      BaseCouplingScheme::Implicit, minIterations, maxIterations);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
-
-  // Add convergence measures
-  int                                    minIterations = 3;
-  cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
-      new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
 
   // Expected iterations per implicit timesptep
   std::vector<int> validIterations = {3, 3, 3};
@@ -1479,56 +636,48 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  dataConfig->setDimensions(3);
-  dataConfig->addData("data0", 1);
-  dataConfig->addData("data1", 3);
+  dataConfig->addData("data0", mesh::Data::typeName::SCALAR);
+  dataConfig->addData("data1", mesh::Data::typeName::VECTOR);
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
+  mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createData("data0", 1, 0_dataID);
   mesh->createData("data1", 3, 1_dataID);
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
+  meshConfig.insertMeshToMeshDimensionsMap(mesh->getName(), mesh->getDimensions());
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
   double           maxTime        = 1.0;
-  int              maxTimesteps   = 3;
-  double           timestepLength = 0.1;
+  int              maxTimeWindows = 3;
+  double           timeWindowSize = 0.1;
   std::string      nameParticipant0("Participant0");
   std::string      nameParticipant1("Participant1");
-  int              sendDataIndex        = -1;
-  int              receiveDataIndex     = -1;
-  int              convergenceDataIndex = -1;
-  int              extrapolationOrder   = 0;
+  int              sendDataIndex    = -1;
+  int              receiveDataIndex = -1;
   std::vector<int> validIterations;
   if (context.isNamed(nameParticipant0)) {
-    sendDataIndex        = 0;
-    receiveDataIndex     = 1;
-    validIterations      = {3, 3, 3};
-    convergenceDataIndex = receiveDataIndex;
+    sendDataIndex    = 0;
+    receiveDataIndex = 1;
+    validIterations  = {3, 3, 3};
   } else {
-    sendDataIndex        = 1;
-    receiveDataIndex     = 0;
-    validIterations      = {3, 3, 3};
-    convergenceDataIndex = sendDataIndex;
+    sendDataIndex    = 1;
+    receiveDataIndex = 0;
+    validIterations  = {3, 3, 3};
   }
 
   // Create the coupling scheme object
+  const int                       minIterations = 1;
+  const int                       maxIterations = 3;
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, 100, extrapolationOrder);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false);
+      BaseCouplingScheme::Implicit, minIterations, maxIterations);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
 
-  // Add convergence measures
-  int                                    minIterations = 3;
-  cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
-      new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
   runCouplingWithSubcycling(
       cplScheme, context.name, meshConfig, validIterations);
 }
@@ -1545,80 +694,64 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   // Create a data configuration, to simplify configuration of data
 
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
-  dataConfig->setDimensions(3);
-  dataConfig->addData("Data0", 1);
-  dataConfig->addData("Data1", 3);
+  dataConfig->addData("Data0", mesh::Data::typeName::SCALAR);
+  dataConfig->addData("Data1", mesh::Data::typeName::VECTOR);
 
   mesh::MeshConfiguration meshConfig(root, dataConfig);
-  meshConfig.setDimensions(3);
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-  const auto    dataID0 = mesh->createData("Data0", 1, 0_dataID)->getID();
-  const auto    dataID1 = mesh->createData("Data1", 3, 1_dataID)->getID();
+  mesh::PtrMesh           mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
+  const auto              dataID0 = mesh->createData("Data0", 1, 0_dataID)->getID();
+  const auto              dataID1 = mesh->createData("Data1", 3, 1_dataID)->getID();
   mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
+  meshConfig.insertMeshToMeshDimensionsMap(mesh->getName(), mesh->getDimensions());
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  double      maxTime        = 1.0;
-  int         maxTimesteps   = 3;
-  double      timestepLength = 0.1;
-  std::string nameParticipant0("Participant0");
-  std::string nameParticipant1("Participant1");
-  int         sendDataIndex              = -1;
-  int         receiveDataIndex           = -1;
-  bool        dataRequiresInitialization = false;
-  int         convergenceDataIndex       = -1;
-  int         extrapolationOrder         = 0;
+  const double maxTime        = 1.0;
+  const int    maxTimeWindows = 3;
+  const double timeWindowSize = 0.1;
+  const double timeStepSize   = timeWindowSize; // solver is not subcycling
+  std::string  nameParticipant0("Participant0");
+  std::string  nameParticipant1("Participant1");
+  int          sendDataIndex              = -1;
+  int          receiveDataIndex           = -1;
+  bool         dataRequiresInitialization = false;
   if (context.isNamed(nameParticipant0)) {
-    sendDataIndex        = dataID0;
-    receiveDataIndex     = dataID1;
-    convergenceDataIndex = receiveDataIndex;
+    sendDataIndex    = dataID0;
+    receiveDataIndex = dataID1;
   } else {
     sendDataIndex              = dataID1;
     receiveDataIndex           = dataID0;
     dataRequiresInitialization = true;
-    convergenceDataIndex       = sendDataIndex;
   }
 
   // Create the coupling scheme object
+  const int                       minIterations = 1;
+  const int                       maxIterations = 3;
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, 100, extrapolationOrder);
+      BaseCouplingScheme::Implicit, minIterations, maxIterations);
   using Fixture = testing::SerialCouplingSchemeFixture;
 
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization, true);
   CouplingData *sendCouplingData = Fixture::getSendData(cplScheme, sendDataIndex);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, not dataRequiresInitialization);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, not dataRequiresInitialization, true);
   CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
   cplScheme.determineInitialDataExchange();
-
-  // Add convergence measures
-  int                                    minIterations = 3;
-  cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
-      new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
-
-  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
   if (context.isNamed(nameParticipant0)) {
     // ensure that read data is uninitialized
     BOOST_TEST(receiveCouplingData->getSize() == 3);
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(0.0, 0.0, 0.0)));
-    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 3);
-    BOOST_TEST(testing::equals(receiveCouplingData->previousIteration(), Eigen::Vector3d(0.0, 0.0, 0.0)));
     // ensure that write data is uninitialized
     BOOST_TEST(sendCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
-    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
-    BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
 
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
+    sendCouplingData->setSampleAtTime(0, time::Sample{1, sendCouplingData->values()});
     cplScheme.initialize(0.0, 1);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
-    cplScheme.receiveResultOfFirstAdvance();
-    BOOST_TEST(!cplScheme.hasDataBeenReceived());
     // ensure that initial data was read
     BOOST_TEST(receiveCouplingData->getSize() == 3);
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
@@ -1631,36 +764,35 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration()(0), 0.0));
     BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     // set write data
-    sendCouplingData->values() = Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0);
     while (cplScheme.isCouplingOngoing()) {
-      if (cplScheme.isActionRequired(writeIterationCheckpoint)) {
-        cplScheme.markActionFulfilled(writeIterationCheckpoint);
+      if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
+        cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
       }
-      if (cplScheme.isActionRequired(readIterationCheckpoint)) {
-        cplScheme.markActionFulfilled(readIterationCheckpoint);
-      }
-      cplScheme.addComputedTime(timestepLength);
-      cplScheme.advance();
+      BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == timeStepSize);
+      sendCouplingData->setSampleAtTime(cplScheme.getTime() + timeStepSize, time::Sample{1, Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0)});
+      cplScheme.addComputedTime(timeStepSize);
+      sendCouplingData->setSampleAtTime(cplScheme.getTime(), time::Sample{1, Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0)});
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       BOOST_TEST(cplScheme.hasDataBeenReceived());
+      if (cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
+        cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
+      }
     }
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
-    BOOST_TEST(cplScheme.isActionRequired(constants::actionWriteInitialData()));
+    BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     Eigen::VectorXd v(3);
     v << 1.0, 2.0, 3.0;
-    sendCouplingData->values() = v;
-    cplScheme.markActionFulfilled(constants::actionWriteInitialData());
+    sendCouplingData->setSampleAtTime(0, time::Sample{1, v});
+    cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(receiveCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
-    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1);
-    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1); // here, previousIteration is correctly initialized, see above
     BOOST_TEST(sendCouplingData->getSize() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
-    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 3); // here, previousIteration is correctly initialized, see above
-    BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     cplScheme.initialize(0.0, 1);
-    BOOST_TEST(!cplScheme.hasDataBeenReceived());
-    cplScheme.receiveResultOfFirstAdvance();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(receiveCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
@@ -1671,16 +803,21 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->previousIteration(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     while (cplScheme.isCouplingOngoing()) {
-      if (cplScheme.isActionRequired(writeIterationCheckpoint)) {
-        cplScheme.markActionFulfilled(writeIterationCheckpoint);
+      if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
+        cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
       }
-      cplScheme.addComputedTime(timestepLength);
-      cplScheme.advance();
+      BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == timeStepSize);
+      sendCouplingData->setSampleAtTime(cplScheme.getTime() + timeStepSize, time::Sample{1, v});
+      cplScheme.addComputedTime(timeStepSize);
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       if (cplScheme.isCouplingOngoing()) {
         BOOST_TEST(cplScheme.hasDataBeenReceived());
       }
-      if (cplScheme.isActionRequired(readIterationCheckpoint)) {
-        cplScheme.markActionFulfilled(readIterationCheckpoint);
+      if (cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
+        cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
       }
     }
   }

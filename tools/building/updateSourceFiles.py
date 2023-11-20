@@ -1,28 +1,32 @@
 #!/usr/bin/env python3
 
-import os
-import glob
-import sys
-import subprocess
 import collections
+import glob
+import os
 import pathlib
+import subprocess
+import sys
 
 """ Files matching this pattern will be filtered out """
-IGNORE_PATTERNS = ["drivers"]
+IGNORE_PATTERNS = ["drivers", "mapping/device"]
 
 """ Configured files, which should be ignored by git, yet installed by CMake"""
-CONFIGURED_PUBLIC = ["${CMAKE_BINARY_DIR}/src/precice/Version.h"]
+CONFIGURED_PUBLIC = ["${PROJECT_BINARY_DIR}/src/precice/Version.h"]
 
 """ Configured files, which should be ignored by git """
-CONFIGURED_SOURCES = ["${CMAKE_BINARY_DIR}/src/precice/impl/versions.hpp", "${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp"]
+CONFIGURED_SOURCES = [
+    "${PROJECT_BINARY_DIR}/src/precice/impl/versions.hpp",
+    "${CMAKE_BINARY_DIR}/src/precice/impl/versions.cpp",
+]
 
 
 def get_gitfiles():
-    ret = subprocess.run(["git", "ls-files", "--full-name"],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE,
-                         check=False
-                         )
+    ret = subprocess.run(
+        ["git", "ls-files", "--full-name"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
     if ret.returncode != 0:
         return None
     else:
@@ -104,7 +108,7 @@ SOURCES_BASE = """#
 # This file lists all sources that will be compiles into the precice library
 #
 
-target_sources(precice
+target_sources(preciceCore
     PRIVATE
     {}
     )
@@ -139,22 +143,16 @@ set(PRECICE_TEST_SUITES {})
 
 
 def generate_lib_sources(sources, public):
-    return SOURCES_BASE.format(
-        "\n    ".join(sources),
-        "\n    ".join(public)
-    )
+    return SOURCES_BASE.format("\n    ".join(sources), "\n    ".join(public))
 
 
 def generate_unit_tests(utests):
-    return TESTS_BASE.format(
-        "\n    ".join(utests)
-    )
+    return TESTS_BASE.format("\n    ".join(utests))
 
 
 def generate_integration_tests(itests):
     return ITESTS_BASE.format(
-        "\n    ".join(itests),
-        " ".join(test_suites_from_files(itests))
+        "\n    ".join(itests), " ".join(test_suites_from_files(itests))
     )
 
 
@@ -164,12 +162,17 @@ def main():
         print("Current dir {} is not the root of the precice repository!".format(root))
         return 1
     sources, public, utests, itests = get_file_lists(root)
-    print("Detected files:\n  sources: {}\n  public headers: {}\n  unit tests: {}\n  integration tests: {}".format(len(sources), len(public), len(utests), len(itests)))
+    print(
+        "Detected files:\n  sources: {}\n  public headers: {}\n  unit tests: {}\n  integration tests: {}".format(
+            len(sources), len(public), len(utests), len(itests)
+        )
+    )
 
     gitfiles = get_gitfiles()
     if gitfiles:
         not_tracked = list(
-            set(sources + public + utests + itests) - set(gitfiles + CONFIGURED_SOURCES + CONFIGURED_PUBLIC)
+            set(sources + public + utests + itests)
+            - set(gitfiles + CONFIGURED_SOURCES + CONFIGURED_PUBLIC)
         )
         if not_tracked:
             print("The source tree contains files not tracked by git.")

@@ -15,9 +15,10 @@ namespace precice::utils {
 
 logging::Logger Parallel::_log("utils::Parallel");
 
-bool                   Parallel::_isInitialized           = false;
 Parallel::CommStatePtr Parallel::_currentState            = nullptr;
 bool                   Parallel::_mpiInitializedByPrecice = false;
+
+Parallel::InitializationState Parallel::_initState = Parallel::InitializationState::Uninitialized;
 
 /// BEGIN CommState
 
@@ -162,7 +163,7 @@ void Parallel::resetCommState()
 void Parallel::resetManagedMPI()
 {
   _mpiInitializedByPrecice = false;
-  _isInitialized           = false;
+  _initState               = Parallel::InitializationState::Uninitialized;
 }
 
 void Parallel::pushState(CommStatePtr newState)
@@ -177,87 +178,98 @@ void Parallel::pushState(CommStatePtr newState)
   _currentState    = std::move(newState);
 }
 
-// Parallel::Communicator Parallel::getCommunicatorWorld()
-// {
-// #ifndef PRECICE_NO_MPI
-//   return MPI_COMM_WORLD;
-// #else
-//   return nullptr;
-// #endif
-// }
-
-void Parallel::initializeManagedMPI(
-    int *   argc,
-    char ***argv)
+bool Parallel::isMPIInitialized()
 {
 #ifndef PRECICE_NO_MPI
-  PRECICE_TRACE();
-  PRECICE_ASSERT(!_isInitialized, "A managed MPI session already exists.");
-  PRECICE_ASSERT(!_mpiInitializedByPrecice);
   int isMPIInitialized{-1};
   MPI_Initialized(&isMPIInitialized);
-  if (isMPIInitialized) {
-    PRECICE_DEBUG("Initializing unmanaged MPI.");
-    _mpiInitializedByPrecice = false;
-  } else {
-    PRECICE_DEBUG("Initializing managed MPI");
-    _mpiInitializedByPrecice = true;
-    initializeMPI(argc, argv);
+  return isMPIInitialized != 0;
+#else
+  return false;
+#endif // not PRECICE_NO_MPI
+}
+
+void Parallel::initializeOrDetectMPI(std::optional<Communicator> userProvided)
+{
+#ifndef PRECICE_NO_MPI
+  PRECICE_ASSERT(!_mpiInitializedByPrecice,
+                 "MPI cannot be initialized twice. You need to handle the MPI lifetime yourself.");
+
+  bool isInit = isMPIInitialized();
+
+  // Handle user-provided Communicator first
+  if (userProvided.has_value()) {
+    PRECICE_ASSERT(isInit, "A user-provided comm can only exist if MPI has been initialized.");
+    pushState(Parallel::CommState::fromExtern(*userProvided));
+    _initState = InitializationState::Provided;
+    return;
   }
-  _isInitialized = true;
+
+  // preCICE needs to initialize MPI itself
+  if (!isInit) {
+    MPI_Init(nullptr, nullptr);
+    _currentState            = CommState::world();
+    _initState               = InitializationState::Managed;
+    _mpiInitializedByPrecice = true;
+    return;
+  }
+
+  // preCICE is constructed in testing mode
+  if (_currentState == nullptr) {
+    // User initialized MPI but didn't pass a communicator
+    // We need to use MPI_COMM_WORLD
+    _currentState = CommState::world();
+    _initState    = InitializationState::Unmanaged;
+    return;
+  }
+
+  // We are in testing mode as \ref _currentState has been altered.
+  _initState = InitializationState::Testing;
+  return;
+#endif
+}
+
+void Parallel::finalizeOrCleanupMPI()
+{
+#ifndef PRECICE_NO_MPI
+  // Make sure all com states are freed at this point in time
+  if (_initState == InitializationState::Testing) {
+    resetCommState();
+  } else {
+    _currentState = nullptr;
+  }
+
+  if (_initState == InitializationState::Managed) {
+    MPI_Finalize();
+    PRECICE_ASSERT(_mpiInitializedByPrecice, "Something changed this state!");
+  }
+
+  _initState = InitializationState::Uninitialized;
 #endif // not PRECICE_NO_MPI
 }
 
-void Parallel::initializeMPI(
+void Parallel::initializeTestingMPI(
     int *   argc,
     char ***argv)
 {
 #ifndef PRECICE_NO_MPI
-  int isMPIInitialized{-1};
-  MPI_Initialized(&isMPIInitialized);
-  PRECICE_ASSERT(!isMPIInitialized, "MPI was already initialized.");
-  PRECICE_DEBUG("Initialize MPI");
+  PRECICE_ASSERT(!isMPIInitialized(), "MPI was already initialized.");
   MPI_Init(argc, argv);
+  // By altering the commstate, preCICE will know that it is testing mode
+  _currentState = CommState::world();
 #endif // not PRECICE_NO_MPI
 }
 
-void Parallel::finalizeManagedMPI()
+void Parallel::finalizeTestingMPI()
 {
-  PRECICE_TRACE();
-  // Make sure all com states were freed at this point in time
+  // Make sure all com states are freed at this point in time
   resetCommState();
 #ifndef PRECICE_NO_MPI
-  PRECICE_ASSERT(_isInitialized, "There is no managed MPI session.");
-  if (_mpiInitializedByPrecice) {
-    PRECICE_DEBUG("Finalizing managed MPI.");
-    finalizeMPI();
-  } else {
-    PRECICE_DEBUG("Finalizing unmanaged MPI");
-  }
-  _mpiInitializedByPrecice = false;
-  _isInitialized           = false;
-#endif // not PRECICE_NO_MPI
-}
-
-void Parallel::finalizeMPI()
-{
-#ifndef PRECICE_NO_MPI
-  PRECICE_TRACE();
-  int isMPIInitialized;
-  MPI_Initialized(&isMPIInitialized);
-  PRECICE_ASSERT(isMPIInitialized, "MPI was not initialized.");
-  PRECICE_DEBUG("Finalize MPI");
   MPI_Finalize();
 #endif // not PRECICE_NO_MPI
 }
 
-void Parallel::registerUserProvidedComm(Communicator comm)
-{
-#ifndef PRECICE_NO_MPI
-  PRECICE_TRACE();
-  pushState(Parallel::CommState::fromExtern(comm));
-#endif // not PRECICE_NO_MPI
-}
+// State altering
 
 void Parallel::splitCommunicator(const std::string &groupName)
 {
@@ -292,9 +304,9 @@ void Parallel::splitCommunicator(const std::string &groupName)
       std::string name;
       com.receive(name, i); // Receive group name from all ranks
       if (groupMap.find(name) == groupMap.end()) {
-        groupMap[name] = accessorGroups.size();
+        groupMap[name] = static_cast<int>(accessorGroups.size());
         AccessorGroup newGroup;
-        newGroup.id         = accessorGroups.size();
+        newGroup.id         = static_cast<int>(accessorGroups.size());
         newGroup.size       = 1;
         newGroup.leaderRank = i;
         newGroup.name       = name;
@@ -379,100 +391,15 @@ void Parallel::popState()
   }
 }
 
-// void Parallel::clearGroups()
-// {
-//   _accessorGroups.clear();
-//   _isSplit = false;
-// }
-
 int Parallel::getProcessRank()
 {
   // Do not use TRACE or DEBUG here!
 #ifndef PRECICE_NO_MPI
-  if (!_isInitialized)
-    return 0;
-
-  return getGlobalCommState()->rank();
-#else
-  return 0;
+  if (_currentState) {
+    return _currentState->rank();
+  }
 #endif // not PRECICE_NO_MPI
-}
-
-int Parallel::getLocalProcessRank()
-{
-#ifndef PRECICE_NO_MPI
-  if (!_isInitialized)
-    return 0;
-
-  return getLocalCommState()->rank();
-#else
   return 0;
-#endif // not PRECICE_NO_MPI
-}
-
-// inline int Parallel::getCommunicatorSize()
-// {
-//   return getCommunicatorSize(_globalCommunicator);
-// }
-
-// int Parallel::getCommunicatorSize(Communicator comm)
-// {
-//   PRECICE_TRACE();
-//   int communicatorSize = 1;
-// #ifndef PRECICE_NO_MPI
-//   if (_isInitialized) {
-//     MPI_Comm_size(comm, &communicatorSize);
-//   }
-// #endif // not PRECICE_NO_MPI
-//   return communicatorSize;
-// }
-
-// void Parallel::synchronizeProcesses()
-// {
-// #ifndef PRECICE_NO_MPI
-//   PRECICE_TRACE();
-//   PRECICE_ASSERT(_isInitialized);
-//   MPI_Barrier(_globalCommunicator);
-// #endif // not PRECICE_NO_MPI
-// }
-//
-// void Parallel::synchronizeLocalProcesses()
-// {
-// #ifndef PRECICE_NO_MPI
-//   PRECICE_TRACE();
-//   PRECICE_ASSERT(_isInitialized && _isSplit);
-//   MPI_Barrier(_localCommunicator);
-// #endif // not PRECICE_NO_MPI
-// }
-
-// // @TODO The freeing and cleaning behaviour is weird and needs fixing
-// void Parallel::setGlobalCommunicator(
-//     Parallel::Communicator defaultCommunicator,
-//     bool                   free)
-// {
-// #ifndef PRECICE_NO_MPI
-//   PRECICE_TRACE();
-//   if (free && _globalCommunicator != getCommunicatorWorld() && _globalCommunicator != MPI_COMM_SELF && _globalCommunicator != MPI_COMM_NULL) {
-//     MPI_Comm_free(&_globalCommunicator);
-//   }
-//   _globalCommunicator = defaultCommunicator;
-//   _localCommunicator  = _globalCommunicator;
-//   if (free)
-//     _accessorGroups.clear();
-// #endif // not PRECICE_NO_MPI
-// }
-
-const Parallel::CommStatePtr Parallel::getGlobalCommState()
-{
-  PRECICE_TRACE();
-  auto local = current();
-  return local->parent ? local->parent : CommState::world();
-}
-
-const Parallel::CommStatePtr Parallel::getLocalCommState()
-{
-  PRECICE_TRACE();
-  return current();
 }
 
 void Parallel::restrictCommunicator(int newSize)
@@ -523,7 +450,7 @@ void Parallel::restrictCommunicator(int newSize)
   // Create subgroup, containing processes contained in ranks
   PRECICE_DEBUG("Create restricted group");
   MPI_Group restrictedGroup;
-  MPI_Group_incl(currentGroup, ranks.size(), ranks.data(), &restrictedGroup);
+  MPI_Group_incl(currentGroup, static_cast<int>(ranks.size()), ranks.data(), &restrictedGroup);
 
   // @todo check if it has to go back down to the other group free
   MPI_Group_free(&currentGroup);
@@ -550,13 +477,6 @@ void Parallel::restrictCommunicator(int newSize)
   pushState(CommState::fromComm(restrictedCommunicator));
 #endif // not PRECICE_NO_MPI
 }
-
-// const std::vector<Parallel::AccessorGroup> &Parallel::getAccessorGroups()
-// {
-//   PRECICE_TRACE();
-//   PRECICE_ASSERT(_isInitialized);
-//   return _accessorGroups;
-// }
 
 std::ostream &operator<<(std::ostream &out, const Parallel::CommState &value)
 {

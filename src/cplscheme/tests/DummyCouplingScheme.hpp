@@ -13,37 +13,30 @@ namespace tests {
 /**
  * @brief Used to test CompositionalCouplingScheme.
  */
-class DummyCouplingScheme : public CouplingScheme {
+class DummyCouplingScheme final : public CouplingScheme {
 public:
   /**
    * @brief Constructor.
    *
-   * @param[in] numberIterations If 1, models and explicit coupling scheme,
-   *        otherwise and implicit one.
+   * @param[in] numberIterations If 1, models an explicit coupling scheme,
+   *        otherwise an implicit one.
+   * @param[in] maxTimeWindows Number of time windows this DummyCouplingScheme has to perform.
    */
   DummyCouplingScheme(
       int numberIterations,
-      int maxTimesteps);
+      int maxTimeWindows);
 
   /**
    * @brief Destructor, empty.
    */
-  virtual ~DummyCouplingScheme() {}
+  //virtual ~DummyCouplingScheme() {}
 
   /**
    * @brief
    */
   void initialize(
       double startTime,
-      int    startTimesteps) override final;
-
-  /**
-   * @brief Not implemented.
-   */
-  void receiveResultOfFirstAdvance() override final
-  {
-    PRECICE_ASSERT(false);
-  }
+      int    startTimeWindows) override final;
 
   /**
    * @brief Not implemented.
@@ -66,14 +59,24 @@ public:
   /**
    * @brief Not implemented.
    */
-  void addComputedTime(double timeToAdd) override final
-  { /* Do nothing */
+  bool addComputedTime(double timeToAdd) override final
+  {
+    PRECICE_ASSERT(false);
+    return true;
   }
 
   /**
    * @brief
    */
-  void advance() override final;
+  //void advance() override final;
+
+  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override;
+
+  void firstExchange() override;
+
+  ChangedMeshes secondSynchronization() override;
+
+  void secondExchange() final;
 
   /**
    * @brief
@@ -92,7 +95,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  bool willDataBeExchanged(double lastSolverTimestepLength) const override final
+  bool willDataBeExchanged(double lastSolverTimeStepSize) const override final
   {
     PRECICE_ASSERT(false);
     return false;
@@ -110,19 +113,16 @@ public:
   /**
    * @brief Not implemented.
    */
-  double getTime() const override final
-  {
-    PRECICE_ASSERT(false);
-    return 0;
-  }
+  double getTime() const override final;
+
+  double getTimeWindowStart() const override final;
 
   /**
    * @brief Not implemented.
    */
   int getTimeWindows() const override final
   {
-    return _timesteps;
-    return 0;
+    return _timeWindows;
   }
 
   /**
@@ -146,16 +146,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  double getThisTimeWindowRemainder() const override final
-  {
-    PRECICE_ASSERT(false);
-    return 0;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  double getNextTimestepMaxLength() const override final
+  double getNextTimeStepMaxSize() const override final
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -178,12 +169,17 @@ public:
   /**
    * @brief Not implemented.
    */
-  bool isActionRequired(const std::string &actionName) const override final;
+  bool isActionRequired(Action action) const override final;
+
+  bool isActionFulfilled(Action action) const override final
+  {
+    return true;
+  }
 
   /**
    * @brief Not implemented.
    */
-  void markActionFulfilled(const std::string &actionName) override final
+  void markActionFulfilled(Action action) override final
   {
     PRECICE_ASSERT(false);
   }
@@ -200,7 +196,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  void requireAction(const std::string &actionName) override final
+  void requireAction(Action action) override final
   {
     PRECICE_ASSERT(false);
   }
@@ -213,26 +209,36 @@ public:
     return std::string();
   }
 
+  bool isImplicitCouplingScheme() const override
+  {
+    return _numberIterations > 1;
+  }
+
+  bool hasConverged() const override;
+
 private:
   mutable logging::Logger _log{"cplscheme::tests::DummyCouplingScheme"};
 
-  /// @brief Number of iterations performed per timestep. 1 --> explicit.
+  /// @brief Number of iterations performed per time window. 1 --> explicit.
   int _numberIterations;
 
-  /// @brief Performed iterations in the current timestep.
+  /// @brief Performed iterations in the current time window.
   int _iterations = 0;
 
-  /// @brief Maximal number of timesteps to be performed.
-  int _maxTimesteps;
+  /// @brief Maximal number of time windows to be performed.
+  int _maxTimeWindows;
 
-  /// @brief Performed number of timesteps.
-  int _timesteps = 0;
+  /// @brief Performed number of time windows.
+  int _timeWindows = 0;
 
   /// @brief True, if initialize has been called.
   bool _isInitialized = false;
 
   /// @brief True, if timesteps are left to be performed.
   bool _isOngoing = false;
+
+  /// @brief False, if iterations are left to be performed.
+  bool _hasConverged = false;
 };
 
 } // namespace tests

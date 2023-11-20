@@ -12,23 +12,21 @@
 #include <vector>
 
 #include "PointToPointCommunication.hpp"
-#include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
+#include "com/Extra.hpp"
 #include "com/Request.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/DistributedCommunication.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/types.hpp"
-#include "utils/Event.hpp"
+#include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-using precice::utils::Event;
+using precice::profiling::Event;
 
-namespace precice {
-bool extern syncMode;
-namespace m2n {
+namespace precice::m2n {
 
 void send(mesh::Mesh::VertexDistribution const &m,
           int                                   rankReceiver,
@@ -238,6 +236,41 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
   }
 }
 
+namespace {
+/**
+   * @brief This function is by by and large the same as std::set_intersection().
+   * The only difference is that we don't return the intersection set itself, but
+   * we return the indices of elements in \p InputIt1, which appear in both sets
+   * ( \p InputIt1 and \p InputIt2 )
+   * The implementation was taken from
+   * https://en.cppreference.com/w/cpp/algorithm/set_intersection#Version_1 with the
+   * only difference that we compute and store std::distance() in the output iterator.
+   * Similar to the std function, this function operates on sorted ranges.
+   *
+   * @param ref1 The reference iterator, to which we compute the distance/indices.
+   * @param first1 The begin of the first range we want to compute the intersection with
+   * @param last1 The end of the first range we want to compute the intersection with
+   * @param first1 The begin of the second range we want to compute the intersection with
+   * @param last1 The end of the second range we want to compute the intersection with
+   * @param d_first Beginning of the output range
+   */
+template <class InputIt1, class InputIt2, class OutputIt>
+void set_intersection_indices(InputIt1 ref1, InputIt1 first1, InputIt1 last1,
+                              InputIt2 first2, InputIt2 last2, OutputIt d_first)
+{
+  while (first1 != last1 && first2 != last2) {
+    if (*first1 < *first2) {
+      ++first1;
+    } else {
+      if (!(*first2 < *first1)) {
+        *d_first++ = std::distance(ref1, first1++); // *first1 and *first2 are equivalent.
+      }
+      ++first2;
+    }
+  }
+}
+} // namespace
+
 /** builds the communication map for a local distribution given the global distribution.
  *
  *
@@ -247,12 +280,18 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
  *
  * @returns the resulting communication map for rank thisRank
  *
- * The approximate complexity of this function is:
- * \f$ \mathcal{O}(n \log(n) + m \log(n)) \f$
+ * The worst case complexity of the function is:
+ * \f$ \mathcal{O}(p 2 (2 n)) \f$
  *
- * * n is the total number of data indices for all ranks in `otherVertexDistribution'
- * * m is the number of local data indices for the current rank in `thisVertexDistribution`
+ * which consists of the computation of all intersections.
  *
+ * * n is the number of data indices for each vector in `otherVertexDistribution'
+ * * p number of ranks
+ * * Note that n becomes smaller, if we have more ranks.
+ *
+ * However, in case of a proper partitioning and communication between neighbor
+ * ranks (r), we would most likely end up with a factor r<<p
+ * \f$ \mathcal{O}(r 2 (2 n)) \f$
  */
 std::map<int, std::vector<int>> buildCommunicationMap(
     // `thisVertexDistribution' is input vertex distribution from this participant.
@@ -262,27 +301,40 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     int                                   thisRank = utils::IntraComm::getRank())
 {
   auto iterator = thisVertexDistribution.find(thisRank);
-  if (iterator == thisVertexDistribution.end())
+  if (iterator == thisVertexDistribution.end()) {
     return {};
-
-  // Build lookup table from otherIndex -> rank for the otherVertexDistribution
-  const auto lookupIndexRank = [&otherVertexDistribution] {
-    boost::container::flat_multimap<int, int> lookupIndexRank;
-    for (const auto &other : otherVertexDistribution) {
-      for (const auto &otherIndex : other.second) {
-        lookupIndexRank.emplace(otherIndex, other.first);
-      }
-    }
-    return lookupIndexRank;
-  }();
-
-  auto const &indices = iterator->second;
+  }
 
   std::map<int, std::vector<int>> communicationMap;
-  for (size_t index = 0lu; index < indices.size(); ++index) {
-    auto range = lookupIndexRank.equal_range(indices[index]);
-    for (auto iter = range.first; iter != range.second; ++iter) {
-      communicationMap[iter->second].push_back(index);
+  // first a safety check, that we are actually sorted, as the function below operates
+  // on sorted data sets
+  PRECICE_ASSERT(std::is_sorted(iterator->second.begin(), iterator->second.end()));
+
+  // now we iterate over all other vertex distributions to compute the intersection
+  for (const auto &[rank, vertices] : otherVertexDistribution) {
+    // first a safety check, that we are actually sorted, as the function below operates
+    // on sorted data sets
+    PRECICE_ASSERT(std::is_sorted(vertices.begin(), vertices.end()));
+
+    // before starting to compute an actual intersection, we first check if elements can
+    // possibly be in both data sets by comparing upper and lower index bounds of both
+    // data sets. For typical partitioning schemes, each rank only exchanges data with
+    // a few neighbors such that this check already filters out a significant amount of
+    // computations
+    if (iterator->second.empty() || vertices.empty() || (vertices.back() < iterator->second.at(0)) || (vertices.at(0) > iterator->second.back())) {
+      // in this case there is nothing to be done
+      continue;
+    }
+    // we have an intersection, let's compute it
+    std::vector<int> inters;
+    // the actual worker function, which gives us the indices of intersecting elements
+    // have a look at the documentation of the function for more details
+    precice::m2n::set_intersection_indices(iterator->second.begin(), iterator->second.begin(), iterator->second.end(),
+                                           vertices.begin(), vertices.end(),
+                                           std::back_inserter(inters));
+    // we have the results, now commit it into the final map
+    if (!inters.empty()) {
+      communicationMap.insert({rank, std::move(inters)});
     }
   }
   return communicationMap;
@@ -330,7 +382,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   }
 
   PRECICE_DEBUG("Broadcast vertex distributions");
-  Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
+  Event e1("m2n.broadcastVertexDistributions", profiling::Synchronize);
   m2n::broadcast(vertexDistribution);
   if (utils::IntraComm::isSecondary()) {
     _mesh->setVertexDistribution(vertexDistribution);
@@ -355,7 +407,7 @@ void PointToPointCommunication::acceptConnection(std::string const &acceptorName
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
-  Event                           e2("m2n.buildCommunicationMap", precice::syncMode);
+  Event                           e2("m2n.buildCommunicationMap", profiling::Synchronize);
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
       vertexDistribution, requesterVertexDistribution);
   e2.stop();
@@ -458,7 +510,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   }
 
   PRECICE_DEBUG("Broadcast vertex distributions");
-  Event e1("m2n.broadcastVertexDistributions", precice::syncMode);
+  Event e1("m2n.broadcastVertexDistributions", profiling::Synchronize);
   m2n::broadcast(vertexDistribution);
   if (utils::IntraComm::isSecondary()) {
     _mesh->setVertexDistribution(vertexDistribution);
@@ -483,7 +535,7 @@ void PointToPointCommunication::requestConnection(std::string const &acceptorNam
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
-  Event                           e2("m2n.buildCommunicationMap", precice::syncMode);
+  Event                           e2("m2n.buildCommunicationMap", profiling::Synchronize);
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
       vertexDistribution, acceptorVertexDistribution);
   e2.stop();
@@ -657,14 +709,14 @@ void PointToPointCommunication::broadcastReceiveAll(std::vector<int> &itemToRece
 void PointToPointCommunication::broadcastSendMesh()
 {
   for (auto &connectionData : _connectionDataVector) {
-    com::CommunicateMesh(_communication).sendMesh(*_mesh, connectionData.remoteRank);
+    com::sendMesh(*_communication, connectionData.remoteRank, *_mesh);
   }
 }
 
 void PointToPointCommunication::broadcastReceiveAllMesh()
 {
   for (auto &connectionData : _connectionDataVector) {
-    com::CommunicateMesh(_communication).receiveMesh(*_mesh, connectionData.remoteRank);
+    com::receiveMesh(*_communication, connectionData.remoteRank, *_mesh);
   }
 }
 
@@ -700,5 +752,4 @@ void PointToPointCommunication::checkBufferedRequests(bool blocking)
   } while (blocking);
 }
 
-} // namespace m2n
-} // namespace precice
+} // namespace precice::m2n

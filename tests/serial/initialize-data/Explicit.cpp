@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 using namespace precice;
@@ -23,43 +23,51 @@ BOOST_AUTO_TEST_CASE(Explicit)
 
   using Eigen::Vector3d;
 
-  SolverInterface cplInterface(context.name, context.config(), 0, 1);
+  Participant cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
-    int meshOneID = cplInterface.getMeshID("MeshOne");
-    cplInterface.setMeshVertex(meshOneID, Vector3d(1.0, 2.0, 3.0).data());
-    int    dataAID    = cplInterface.getDataID("DataOne", meshOneID);
-    int    dataBID    = cplInterface.getDataID("DataTwo", meshOneID);
+    auto   meshName   = "MeshOne";
+    double v[]        = {1.0, 2.0, 3.0};
+    auto   vid        = cplInterface.setMeshVertex(meshName, v);
+    auto   dataAID    = "DataOne";
+    auto   dataBID    = "DataTwo";
     double valueDataB = 0.0;
-    double maxDt      = cplInterface.initialize();
-    cplInterface.readScalarData(dataBID, 0, valueDataB);
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
+    cplInterface.readData(meshName, dataBID, {&vid, 1}, maxDt, {&valueDataB, 1});
     BOOST_TEST(2.0 == valueDataB);
     while (cplInterface.isCouplingOngoing()) {
       Vector3d valueDataA(1.0, 1.0, 1.0);
-      cplInterface.writeVectorData(dataAID, 0, valueDataA.data());
-      maxDt = cplInterface.advance(maxDt);
-      cplInterface.readScalarData(dataBID, 0, valueDataB);
+      cplInterface.writeData(meshName, dataAID, {&vid, 1}, valueDataA);
+      cplInterface.advance(maxDt);
+      maxDt = cplInterface.getMaxTimeStepSize();
+      cplInterface.readData(meshName, dataBID, {&vid, 1}, maxDt, {&valueDataB, 1});
       BOOST_TEST(2.5 == valueDataB);
     }
     cplInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    int      meshTwoID = cplInterface.getMeshID("MeshTwo");
-    Vector3d pos       = Vector3d::Zero();
-    cplInterface.setMeshVertex(meshTwoID, pos.data());
-    int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
-    int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
-    cplInterface.writeScalarData(dataBID, 0, 2.0);
+    auto     meshName = "MeshTwo";
+    Vector3d pos      = Vector3d::Zero();
+    auto     vid      = cplInterface.setMeshVertex(meshName, pos);
+
+    BOOST_REQUIRE(cplInterface.requiresInitialData());
+    auto   dataAID      = "DataOne";
+    auto   dataBID      = "DataTwo";
+    double valueDataB[] = {2.0};
+    cplInterface.writeData(meshName, dataBID, {&vid, 1}, valueDataB);
     //tell preCICE that data has been written and call initializeData
-    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    double   maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double   maxDt = cplInterface.getMaxTimeStepSize();
     Vector3d valueDataA;
-    cplInterface.readVectorData(dataAID, 0, valueDataA.data());
+    cplInterface.readData(meshName, dataAID, {&vid, 1}, maxDt, valueDataA);
     Vector3d expected(1.0, 1.0, 1.0);
     BOOST_TEST(valueDataA == expected);
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeScalarData(dataBID, 0, 2.5);
-      maxDt = cplInterface.advance(maxDt);
-      cplInterface.readVectorData(dataAID, 0, valueDataA.data());
+      double valueDataB[] = {2.5};
+      cplInterface.writeData(meshName, dataBID, {&vid, 1}, valueDataB);
+      cplInterface.advance(maxDt);
+      maxDt = cplInterface.getMaxTimeStepSize();
+      cplInterface.readData(meshName, dataAID, {&vid, 1}, maxDt, valueDataA);
       BOOST_TEST(valueDataA == expected);
     }
     cplInterface.finalize();

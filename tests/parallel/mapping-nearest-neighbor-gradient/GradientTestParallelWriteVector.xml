@@ -1,42 +1,40 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <solver-interface dimensions="3" experimental="on">
-    <data:scalar name="Data1" />
-    <data:vector name="Data2" />
+<precice-configuration experimental="on">
+  <data:scalar name="Data1" />
+  <data:vector name="Data2" />
 
-    <mesh name="MeshOne">
-      <use-data name="Data1" />
-      <use-data name="Data2" />
-    </mesh>
+  <mesh name="MeshOne" dimensions="3">
+    <use-data name="Data1" />
+    <use-data name="Data2" />
+  </mesh>
 
-    <mesh name="MeshTwo">
-      <use-data name="Data1" />
-      <use-data name="Data2" />
-    </mesh>
+  <mesh name="MeshTwo" dimensions="3">
+    <use-data name="Data1" />
+    <use-data name="Data2" />
+  </mesh>
 
-    <participant name="SolverOne">
-      <use-mesh name="MeshTwo" from="SolverTwo" />
-      <use-mesh name="MeshOne" provide="yes" />
-      <read-data name="Data2" mesh="MeshOne" />
-      <mapping:nearest-neighbor-gradient
-        direction="read"
-        from="MeshTwo"
-        to="MeshOne"
-        constraint="consistent" />
-    </participant>
+  <participant name="SolverOne">
+    <receive-mesh name="MeshTwo" from="SolverTwo" />
+    <provide-mesh name="MeshOne" />
+    <read-data name="Data2" mesh="MeshOne" />
+    <mapping:nearest-neighbor-gradient
+      direction="read"
+      from="MeshTwo"
+      to="MeshOne"
+      constraint="consistent" />
+  </participant>
 
-    <participant name="SolverTwo">
-      <use-mesh name="MeshTwo" provide="yes" />
-      <write-data name="Data2" mesh="MeshTwo" />
-    </participant>
+  <participant name="SolverTwo">
+    <provide-mesh name="MeshTwo" />
+    <write-data name="Data2" mesh="MeshTwo" />
+  </participant>
 
-    <m2n:sockets from="SolverOne" to="SolverTwo" />
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
 
-    <coupling-scheme:parallel-explicit>
-      <participants first="SolverOne" second="SolverTwo" />
-      <max-time-windows value="1" />
-      <time-window-size value="1.0" />
-      <exchange data="Data2" mesh="MeshTwo" from="SolverTwo" to="SolverOne" />
-    </coupling-scheme:parallel-explicit>
-  </solver-interface>
+  <coupling-scheme:parallel-explicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="1" />
+    <time-window-size value="1.0" />
+    <exchange data="Data2" mesh="MeshTwo" from="SolverTwo" to="SolverOne" />
+  </coupling-scheme:parallel-explicit>
 </precice-configuration>

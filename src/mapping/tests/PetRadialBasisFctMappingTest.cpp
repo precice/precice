@@ -43,8 +43,8 @@ void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0)
 
 void testSerialScaledConsistent(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh, PtrData inData, PtrData outData)
 {
-  auto inputIntegral  = mesh::integrateSurface(inMesh, inData);
-  auto outputIntegral = mesh::integrateSurface(outMesh, outData);
+  auto inputIntegral  = mesh::integrateSurface(inMesh, inData->values());
+  auto outputIntegral = mesh::integrateSurface(outMesh, outData->values());
 
   for (int dim = 0; dim < inputIntegral.size(); ++dim) {
     BOOST_TEST(inputIntegral(dim) == outputIntegral(dim));
@@ -150,19 +150,32 @@ void testDistributed(const TestContext &    context,
 
   mapping.computeMapping();
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  mapping.map(inDataID, outDataID);
-
-  int index = 0;
-  for (auto &referenceVertex : referenceSpec) {
-    if (referenceVertex.first == context.rank or referenceVertex.first == -1) {
-      for (int dim = 0; dim < valueDimension; ++dim) {
-        BOOST_TEST_INFO("Index of vertex: " << index << " - Dimension: " << dim);
-        BOOST_TEST(outData->values()(index * valueDimension + dim) == referenceVertex.second.at(dim));
-      }
-      ++index;
+  Eigen::VectorXd guess;
+  // Rerun the map and see if a different initial guess influences the result
+  // Run 2 uses last solution as initial guess
+  // Run 3 uses a zero initial guess
+  // Run 4 uses a random initial guess
+  for (auto run : {1, 2, 3, 4}) {
+    if (run == 3) {
+      guess.setZero();
     }
+    if (run == 4) {
+      guess.setRandom();
+    }
+    mapping.map(inDataID, outDataID, guess);
+
+    int index = 0;
+    for (auto &referenceVertex : referenceSpec) {
+      if (referenceVertex.first == context.rank or referenceVertex.first == -1) {
+        for (int dim = 0; dim < valueDimension; ++dim) {
+          BOOST_TEST_INFO("Index of vertex: " << index << " - Dimension: " << dim);
+          BOOST_TEST(outData->values()(index * valueDimension + dim) == referenceVertex.second.at(dim));
+        }
+        ++index;
+      }
+    }
+    BOOST_TEST(outData->values().size() == index * valueDimension);
   }
-  BOOST_TEST(outData->values().size() == index * valueDimension);
 }
 
 /// Test with a homogeneous distribution of mesh among ranks
@@ -1028,7 +1041,7 @@ void testTagging(const TestContext &context,
   getDistributedMesh(context, outMeshSpec, outMesh, outData);
   BOOST_TEST_MESSAGE("Mesh sizes in: " << inMesh->vertices().size() << " out: " << outMesh->vertices().size());
 
-  Gaussian fct(4.5); //Support radius approx. 1
+  Gaussian fct(4.5); // Support radius approx. 1
   BOOST_TEST_MESSAGE("Basis function has support radius " << fct.getSupportRadius());
   BOOST_TEST(fct.getSupportRadius() > 1.0);
   BOOST_TEST(fct.hasCompactSupport());
@@ -1086,14 +1099,14 @@ BOOST_AUTO_TEST_CASE(TaggingConsistent)
   MeshSpecification outMeshSpec = {
       {0, -1, {0, 0}, {0}}};
   MeshSpecification inMeshSpec = {
-      {0, -1, {-1, 0}, {1}}, //inside
-      {0, -1, {-2, 0}, {1}}, //outside
-      {0, 0, {1, 0}, {1}},   //inside, owner
-      {0, -1, {2, 0}, {1}},  //outside
-      {0, -1, {0, -1}, {1}}, //inside
-      {0, -1, {0, -2}, {1}}, //outside
-      {0, -1, {0, 1}, {1}},  //inside
-      {0, -1, {0, 2}, {1}}   //outside
+      {0, -1, {-1, 0}, {1}}, // inside
+      {0, -1, {-2, 0}, {1}}, // outside
+      {0, 0, {1, 0}, {1}},   // inside, owner
+      {0, -1, {2, 0}, {1}},  // outside
+      {0, -1, {0, -1}, {1}}, // inside
+      {0, -1, {0, -2}, {1}}, // outside
+      {0, -1, {0, 1}, {1}},  // inside
+      {0, -1, {0, 2}, {1}}   // outside
   };
   MeshSpecification shouldTagFirstRound = {
       {0, -1, {-1, 0}, {1}},
@@ -1116,14 +1129,14 @@ BOOST_AUTO_TEST_CASE(TaggingConservative)
   MeshSpecification outMeshSpec = {
       {0, -1, {0, 0}, {0}}};
   MeshSpecification inMeshSpec = {
-      {0, -1, {-1, 0}, {1}}, //inside
-      {0, -1, {-2, 0}, {1}}, //outside
-      {0, 0, {1, 0}, {1}},   //inside, owner
-      {0, -1, {2, 0}, {1}},  //outside
-      {0, -1, {0, -1}, {1}}, //inside
-      {0, -1, {0, -2}, {1}}, //outside
-      {0, -1, {0, 1}, {1}},  //inside
-      {0, -1, {0, 2}, {1}}   //outside
+      {0, -1, {-1, 0}, {1}}, // inside
+      {0, -1, {-2, 0}, {1}}, // outside
+      {0, 0, {1, 0}, {1}},   // inside, owner
+      {0, -1, {2, 0}, {1}},  // outside
+      {0, -1, {0, -1}, {1}}, // inside
+      {0, -1, {0, -2}, {1}}, // outside
+      {0, -1, {0, 1}, {1}},  // inside
+      {0, -1, {0, 2}, {1}}   // outside
   };
   MeshSpecification shouldTagFirstRound = {
       {0, -1, {0, 0}, {1}}};
@@ -1169,66 +1182,84 @@ void perform2DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Vector2d(0.0, 0.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  Eigen::VectorXd guess;
+  mapping.map(inDataID, outDataID, guess);
   double value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(0.0, 0.5));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(0.0, 1.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(1.0, 0.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 2.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(1.0, 0.5));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 2.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(1.0, 1.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 2.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(0.5, 0.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(0.5, 0.5));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(0.5, 1.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
+  BOOST_TEST(guess.size() > 0);
 }
 
 void perform2DTestConsistentMappingVector(Mapping &mapping)
@@ -1264,84 +1295,102 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
 
   vertex.setCoords(Vector2d(0.0, 0.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  Eigen::VectorXd guess;
+  mapping.map(inDataID, outDataID, guess);
   double value1 = outData->values()(0);
   double value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 1.0);
   BOOST_TEST(value2 == 4.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(0.0, 0.5));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value1 = outData->values()(0);
   value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 1.0);
   BOOST_TEST(value2 == 4.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(0.0, 1.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value1 = outData->values()(0);
   value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 1.0);
   BOOST_TEST(value2 == 4.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(1.0, 0.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value1 = outData->values()(0);
   value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 2.0);
   BOOST_TEST(value2 == 5.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(1.0, 0.5));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value1 = outData->values()(0);
   value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 2.0);
   BOOST_TEST(value2 == 5.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(1.0, 1.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value1 = outData->values()(0);
   value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 2.0);
   BOOST_TEST(value2 == 5.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(0.5, 0.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value1 = outData->values()(0);
   value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 1.5);
   BOOST_TEST(value2 == 4.5);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(0.5, 0.5));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value1 = outData->values()(0);
   value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 1.5);
   BOOST_TEST(value2 == 4.5);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Vector2d(0.5, 1.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value1 = outData->values()(0);
   value2 = outData->values()(1);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value1 == 1.5);
   BOOST_TEST(value2 == 4.5);
+  BOOST_TEST(guess.size() > 0);
 }
 
 void perform3DTestConsistentMapping(Mapping &mapping)
@@ -1380,101 +1429,129 @@ void perform3DTestConsistentMapping(Mapping &mapping)
 
   vertex.setCoords(Eigen::Vector3d(0.0, 0.0, 0.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  Eigen::VectorXd guess;
+  mapping.map(inDataID, outDataID, guess);
   double value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Eigen::Vector3d(0.0, 0.5, 0.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Eigen::Vector3d(0.5, 0.5, 0.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Eigen::Vector3d(1.0, 0.0, 0.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Eigen::Vector3d(1.0, 1.0, 0.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Eigen::Vector3d(0.0, 0.0, 1.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 2.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Eigen::Vector3d(1.0, 0.0, 1.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 2.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Eigen::Vector3d(1.0, 1.0, 1.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 2.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Eigen::Vector3d(0.5, 0.5, 1.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 2.0);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Eigen::Vector3d(0.0, 0.0, 0.5));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value, 1.5);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Eigen::Vector3d(1.0, 0.0, 0.5));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Eigen::Vector3d(0.0, 1.0, 0.5));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Eigen::Vector3d(1.0, 1.0, 0.5));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex.setCoords(Eigen::Vector3d(0.5, 0.5, 0.5));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.5);
+  BOOST_TEST(guess.size() > 0);
 }
 
 void perform2DTestScaledConsistentMapping(Mapping &mapping)
@@ -1522,7 +1599,9 @@ void perform2DTestScaledConsistentMapping(Mapping &mapping)
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  Eigen::VectorXd guess;
+  mapping.map(inDataID, outDataID, guess);
+  BOOST_TEST(guess.size() > 0);
 
   testSerialScaledConsistent(inMesh, outMesh, inData, outData);
 }
@@ -1576,7 +1655,9 @@ void perform3DTestScaledConsistentMapping(Mapping &mapping)
   BOOST_TEST(mapping.hasComputedMapping() == false);
   mapping.computeMapping();
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  mapping.map(inDataID, outDataID);
+  Eigen::VectorXd guess;
+  mapping.map(inDataID, outDataID, guess);
+  BOOST_TEST(guess.size() > 0);
 
   testSerialScaledConsistent(inMesh, outMesh, inData, outData);
 }
@@ -1616,37 +1697,47 @@ void perform2DTestConservativeMapping(Mapping &mapping)
   vertex0.setCoords(Vector2d(0.5, 0.0));
   vertex1.setCoords(Vector2d(0.5, 1.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  Eigen::VectorXd guess;
+  mapping.map(inDataID, outDataID, guess);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(testing::equals(values, Eigen::Vector4d(0.5, 0.5, 1.0, 1.0), tolerance));
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex0.setCoords(Vector2d(0.0, 0.5));
   vertex1.setCoords(Vector2d(1.0, 0.5));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(testing::equals(values, Eigen::Vector4d(0.5, 1.0, 1.0, 0.5), tolerance));
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex0.setCoords(Vector2d(0.0, 1.0));
   vertex1.setCoords(Vector2d(1.0, 0.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(testing::equals(values, Eigen::Vector4d(0.0, 2.0, 0.0, 1.0), tolerance));
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex0.setCoords(Vector2d(0.0, 0.0));
   vertex1.setCoords(Vector2d(1.0, 1.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(testing::equals(values, Eigen::Vector4d(1.0, 0.0, 2.0, 0.0), tolerance));
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex0.setCoords(Vector2d(0.4, 0.5));
   vertex1.setCoords(Vector2d(0.6, 0.5));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(values.sum() == 3.0);
+  BOOST_TEST(guess.size() > 0);
 }
 
 void perform2DTestConservativeMappingVector(Mapping &mapping)
@@ -1684,42 +1775,52 @@ void perform2DTestConservativeMappingVector(Mapping &mapping)
   vertex0.setCoords(Vector2d(0.5, 0.0));
   vertex1.setCoords(Vector2d(0.5, 1.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  Eigen::VectorXd guess;
+  mapping.map(inDataID, outDataID, guess);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   Eigen::VectorXd refValues(8);
   refValues << 0.5, 2, 0.5, 2, 1.0, 2.5, 1.0, 2.5;
   BOOST_TEST(testing::equals(values, refValues, tolerance));
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex0.setCoords(Vector2d(0.0, 0.5));
   vertex1.setCoords(Vector2d(1.0, 0.5));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   refValues << 0.5, 2, 1.0, 2.5, 1.0, 2.5, 0.5, 2;
   BOOST_TEST(testing::equals(values, refValues, tolerance));
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex0.setCoords(Vector2d(0.0, 1.0));
   vertex1.setCoords(Vector2d(1.0, 0.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   refValues << 0.0, 0.0, 2.0, 5.0, 0.0, 0.0, 1.0, 4.0;
   BOOST_TEST(testing::equals(values, refValues, tolerance));
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex0.setCoords(Vector2d(0.0, 0.0));
   vertex1.setCoords(Vector2d(1.0, 1.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   refValues << 1.0, 4.0, 0.0, 0.0, 2.0, 5.0, 0.0, 0.0;
   BOOST_TEST(testing::equals(values, refValues, tolerance));
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   vertex0.setCoords(Vector2d(0.4, 0.5));
   vertex1.setCoords(Vector2d(0.6, 0.5));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataID, outDataID, guess);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(values.sum() == 12.0);
+  BOOST_TEST(guess.size() > 0);
 }
 
 void perform3DTestConservativeMapping(Mapping &mapping)
@@ -1761,9 +1862,11 @@ void perform3DTestConservativeMapping(Mapping &mapping)
   vertex0.setCoords(Vector3d(0.5, 0.0, 0.0));
   vertex1.setCoords(Vector3d(0.5, 1.0, 0.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  Eigen::VectorXd guess;
+  mapping.map(inDataID, outDataID, guess);
   BOOST_TEST(mapping.hasComputedMapping());
   BOOST_TEST(values.sum() == expectedSum);
+  BOOST_TEST(guess.size() > 0);
 }
 
 BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
@@ -1986,10 +2089,12 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
 
   vertex.setCoords(Vector2d(0.0, 3.0));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  Eigen::VectorXd guess;
+  mapping.map(inDataID, outDataID, guess);
   double value = outData->values()(0);
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value == 1.0);
+  BOOST_TEST(guess.size() > 0);
 }
 
 BOOST_AUTO_TEST_CASE(DeadAxis3D)
@@ -2036,65 +2141,16 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  Eigen::VectorXd guess;
+  mapping.map(inDataID, outDataID, guess);
   BOOST_TEST(mapping.hasComputedMapping() == true);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   BOOST_TEST(outData->values()(0) == 1.0);
   BOOST_TEST(outData->values()(1) == 2.0);
   BOOST_TEST(outData->values()(2) == 2.9);
   BOOST_TEST(outData->values()(3) == 4.3);
-}
-
-BOOST_AUTO_TEST_CASE(SolutionCaching)
-{
-  PRECICE_TEST(1_rank, Require::PETSc);
-  using Eigen::Vector2d;
-  int dimensions = 2;
-
-  bool xDead = false, yDead = true, zDead = false;
-
-  ThinPlateSplines                           fct;
-  PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, dimensions, fct,
-                                                     {{xDead, yDead, zDead}});
-
-  // Create mesh to map from
-  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int           inDataID = inData->getID();
-  inMesh->createVertex(Vector2d(0.0, 1.0));
-  inMesh->createVertex(Vector2d(1.0, 1.0));
-  inMesh->createVertex(Vector2d(2.0, 1.0));
-  inMesh->createVertex(Vector2d(3.0, 1.0));
-  inMesh->allocateDataValues();
-  addGlobalIndex(inMesh);
-
-  inData->values() << 1.0, 2.0, 2.0, 1.0;
-
-  // Create mesh to map to
-  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
-  int           outDataID = outData->getID();
-  outMesh->createVertex(Vector2d(0, 3));
-  outMesh->allocateDataValues();
-  addGlobalIndex(outMesh);
-
-  // Setup mapping with mapping coordinates and geometry used
-  mapping.setMeshes(inMesh, outMesh);
-  BOOST_TEST(mapping.hasComputedMapping() == false);
-
-  mapping.computeMapping();
-  BOOST_TEST(mapping.previousSolution.empty());
-  mapping.map(inDataID, outDataID);
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(outData->values()(0) == 1.0);
-
-  PetscInt its;
-  KSPGetIterationNumber(mapping._solver, &its);
-  BOOST_TEST(its == 2);
-  BOOST_TEST(mapping.previousSolution.size() == 1);
-  mapping.map(inDataID, outDataID);
-  KSPGetIterationNumber(mapping._solver, &its);
-  BOOST_TEST(its == 0);
 }
 
 BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
@@ -2135,9 +2191,12 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
                                                 1e-9, Polynomial::OFF);
   mappingOff.setMeshes(inMesh, outMesh);
   mappingOff.computeMapping();
-  mappingOff.map(inDataID, outDataID);
+  Eigen::VectorXd guess;
+  mappingOff.map(inDataID, outDataID, guess);
 
   BOOST_TEST(outData->values()(0) <= 0.01); // Mapping to almost 0 since almost no basis function at (3,3) and no polynomial
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   // Test integrated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingOn(Mapping::CONSISTENT, dimensions, fct,
@@ -2146,9 +2205,11 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
 
   mappingOn.setMeshes(inMesh, outMesh);
   mappingOn.computeMapping();
-  mappingOn.map(inDataID, outDataID);
+  mappingOn.map(inDataID, outDataID, guess);
 
   BOOST_TEST(outData->values()(0) == 1.0); // Mapping to 1 since there is the polynomial
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   // Test separated polynomial
   PetRadialBasisFctMapping<Gaussian> mappingSep(Mapping::CONSISTENT, dimensions, fct,
@@ -2157,9 +2218,10 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
 
   mappingSep.setMeshes(inMesh, outMesh);
   mappingSep.computeMapping();
-  mappingSep.map(inDataID, outDataID);
+  mappingSep.map(inDataID, outDataID, guess);
 
   BOOST_TEST(outData->values()(0) == 1.0); // Mapping to 1 since there is the polynomial
+  BOOST_TEST(guess.size() > 0);
 }
 
 BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
@@ -2202,7 +2264,10 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
                                                 1e-9, Polynomial::OFF);
   mappingOff.setMeshes(inMesh, outMesh);
   mappingOff.computeMapping();
-  mappingOff.map(inDataID, outDataID);
+  Eigen::VectorXd guess;
+  mappingOff.map(inDataID, outDataID, guess);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   BOOST_TEST(outData->values()(0) == 2.119967); // Conservativness is not retained, because no polynomial
   BOOST_TEST(outData->values()(1) == 0.0);      // Mapping to 0 since no basis function at (5,5) and no polynomial
@@ -2215,7 +2280,9 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
 
   mappingOn.setMeshes(inMesh, outMesh);
   mappingOn.computeMapping();
-  mappingOn.map(inDataID, outDataID);
+  mappingOn.map(inDataID, outDataID, guess);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   BOOST_TEST(outData->values()(0) == 0);
   BOOST_TEST(outData->values()(1) == 26.0);
@@ -2228,7 +2295,9 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
 
   mappingSep.setMeshes(inMesh, outMesh);
   mappingSep.computeMapping();
-  mappingSep.map(inDataID, outDataID);
+  mappingSep.map(inDataID, outDataID, guess);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   BOOST_TEST(outData->values()(0) == 0);
   BOOST_TEST(outData->values()(1) == 26.0);
@@ -2309,7 +2378,10 @@ BOOST_AUTO_TEST_CASE(TestNonHomongenousGlobalIndex)
                                               {{xDead, yDead, zDead}});
   mapping1.setMeshes(inMesh, outMesh);
   mapping1.computeMapping();
-  mapping1.map(inDataID, outDataID);
+  Eigen::VectorXd guess;
+  mapping1.map(inDataID, outDataID, guess);
+  BOOST_TEST(guess.size() > 0);
+  guess.resize(0);
 
   BOOST_TEST(outData->values()(0) == 1);
 
@@ -2319,7 +2391,7 @@ BOOST_AUTO_TEST_CASE(TestNonHomongenousGlobalIndex)
   outData->values() << 4;         // used as inData here
   mapping2.setMeshes(outMesh, inMesh);
   mapping2.computeMapping();
-  mapping2.map(outDataID, inDataID);
+  mapping2.map(outDataID, inDataID, guess);
 
   BOOST_TEST(inData->values()(0) == 1.0);
   BOOST_TEST(inData->values()(1) == 1.0);

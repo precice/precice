@@ -7,11 +7,10 @@
 #include "io/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mapping/SharedPointer.hpp"
-#include "mapping/config/MappingConfiguration.hpp"
+#include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
-#include "precice/config/SolverInterfaceConfiguration.hpp"
-#include "precice/impl/Participant.hpp"
+#include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "time/Time.hpp"
 #include "utils/networking.hpp"
@@ -28,8 +27,6 @@ public:
   ParticipantConfiguration(
       xml::XMLTag &              parent,
       mesh::PtrMeshConfiguration meshConfiguration);
-
-  void setDimensions(int dimensions);
 
   void setExperimental(bool experimental);
 
@@ -76,7 +73,8 @@ private:
   const std::string TAG_WRITE          = "write-data";
   const std::string TAG_READ           = "read-data";
   const std::string TAG_DATA_ACTION    = "data-action";
-  const std::string TAG_USE_MESH       = "use-mesh";
+  const std::string TAG_PROVIDE_MESH   = "provide-mesh";
+  const std::string TAG_RECEIVE_MESH   = "receive-mesh";
   const std::string TAG_WATCH_INTEGRAL = "watch-integral";
   const std::string TAG_WATCH_POINT    = "watch-point";
   const std::string TAG_INTRA_COMM     = "intra-comm";
@@ -99,7 +97,6 @@ private:
   const std::string ATTR_NETWORK            = "network";
   const std::string ATTR_EXCHANGE_DIRECTORY = "exchange-directory";
   const std::string ATTR_SCALE_WITH_CONN    = "scale-with-connectivity";
-  const std::string ATTR_ORDER              = "waveform-order";
 
   const std::string VALUE_FILTER_ON_SECONDARY_RANKS = "on-secondary-ranks";
   const std::string VALUE_FILTER_ON_PRIMARY_RANK    = "on-primary-rank";
@@ -109,8 +106,6 @@ private:
   const std::string VALUE_VTU = "vtu";
   const std::string VALUE_VTP = "vtp";
   const std::string VALUE_CSV = "csv";
-
-  int _dimensions = 0;
 
   bool _experimental = false;
 

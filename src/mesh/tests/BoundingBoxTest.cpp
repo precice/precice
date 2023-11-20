@@ -13,6 +13,33 @@ using namespace precice::mesh;
 BOOST_AUTO_TEST_SUITE(MeshTests)
 BOOST_AUTO_TEST_SUITE(BoundingBoxTests)
 
+BOOST_AUTO_TEST_CASE(Constructor)
+{
+  PRECICE_TEST(1_rank);
+  { // 3D
+    Eigen::VectorXd boundMin(3);
+    boundMin << 1.0, 2.0, 3.0;
+    Eigen::VectorXd boundMax(3);
+    boundMax << 4.0, 5.0, 6.0;
+    BoundingBox bb(boundMin, boundMax);
+
+    BOOST_TEST(bb.getDimension() == 3);
+    BOOST_TEST(bb.minCorner() == boundMin);
+    BOOST_TEST(bb.maxCorner() == boundMax);
+  }
+  { // 2D
+    Eigen::VectorXd boundMin(2);
+    boundMin << 1.0, 2.0;
+    Eigen::VectorXd boundMax(2);
+    boundMax << 4.0, 5.0;
+    BoundingBox bb(boundMin, boundMax);
+
+    BOOST_TEST(bb.getDimension() == 2);
+    BOOST_TEST(bb.minCorner() == boundMin);
+    BOOST_TEST(bb.maxCorner() == boundMax);
+  }
+} // Constructor
+
 BOOST_AUTO_TEST_CASE(ExpandByBoundingBox)
 {
   PRECICE_TEST(1_rank);
@@ -159,6 +186,31 @@ BOOST_AUTO_TEST_CASE(MinMaxCorner)
     BOOST_TEST(compareMax == bb.maxCorner());
   }
 } // CenterOfGravity
+
+BOOST_AUTO_TEST_CASE(EdgeLength)
+{
+  PRECICE_TEST(1_rank);
+  { // 3D
+    BoundingBox bb({0.0, 1.0,
+                    -1.0, 3.0,
+                    2.0, 4.0});
+
+    BOOST_TEST(bb.getEdgeLength(0) == 1.0);
+    BOOST_TEST(bb.getEdgeLength(1) == 4.0);
+    BOOST_TEST(bb.getEdgeLength(2) == 2.0);
+
+    BOOST_TEST(bb.longestEdgeLength() == 4.0);
+  }
+  { // 2D
+    BoundingBox bb({-1.0, 3.0,
+                    2.0, 4.0});
+
+    BOOST_TEST(bb.getEdgeLength(0) == 4.0);
+    BOOST_TEST(bb.getEdgeLength(1) == 2.0);
+
+    BOOST_TEST(bb.longestEdgeLength() == 4.0);
+  }
+}
 
 BOOST_AUTO_TEST_CASE(Area)
 {
@@ -309,7 +361,7 @@ BOOST_AUTO_TEST_CASE(Contains)
   }
 } // Contains
 
-BOOST_AUTO_TEST_CASE(EmptyCase)
+BOOST_AUTO_TEST_CASE(DefaultCase)
 {
   PRECICE_TEST(1_rank);
   { // 3D
@@ -318,16 +370,43 @@ BOOST_AUTO_TEST_CASE(EmptyCase)
                      2.0, 4.0});
     BoundingBox bb2(3);
 
-    BOOST_TEST(!bb1.empty());
-    BOOST_TEST(bb2.empty());
+    BOOST_TEST(!bb1.isDefault());
+    BOOST_TEST(bb2.isDefault());
   }
   { // 2D
     BoundingBox bb1({0.0, 1.0,
                      -1.0, 3.0});
     BoundingBox bb2(2);
 
+    BOOST_TEST(!bb1.isDefault());
+    BOOST_TEST(bb2.isDefault());
+  }
+} // DefaultCase
+
+BOOST_AUTO_TEST_CASE(EmptyCase)
+{
+  PRECICE_TEST(1_rank);
+  { // 3D
+    BoundingBox bb1({0.0, 1.0,
+                     -1.0, 3.0,
+                     2.0, 4.0});
+    BoundingBox bb2(3);
+    BoundingBox bb3({1.0, 1.0,
+                     1.0, 1.0,
+                     1.0, 1.0});
     BOOST_TEST(!bb1.empty());
     BOOST_TEST(bb2.empty());
+    BOOST_TEST(bb3.empty());
+  }
+  { // 2D
+    BoundingBox bb1({0.0, 1.0,
+                     -1.0, 3.0});
+    BoundingBox bb2(2);
+    BoundingBox bb3({2.0, 2.0,
+                     1.0, 1.0});
+    BOOST_TEST(!bb1.empty());
+    BOOST_TEST(bb2.empty());
+    BOOST_TEST(bb3.empty());
   }
 } // EmptyCase
 

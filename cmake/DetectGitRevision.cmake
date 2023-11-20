@@ -20,7 +20,7 @@ if(GIT_FOUND)
     DEPENDS src/precice/impl/versions.cpp.in
     VERBATIM
     )
-  add_dependencies(precice GitRevision)
+  add_dependencies(preciceCore GitRevision)
 else(GIT_FOUND)
   set(preCICE_REVISION "no-info [Git not found]")
   configure_file("${PROJECT_SOURCE_DIR}/src/precice/impl/versions.cpp.in" "${PROJECT_BINARY_DIR}/src/precice/impl/versions.cpp" @ONLY)

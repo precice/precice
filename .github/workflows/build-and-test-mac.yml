@@ -10,6 +10,8 @@ on:
       - 'examples/**'
       - 'src/**'
       - 'thirdparty/**'
+      - 'tests/**'
+      - 'tools/profiling/**'
       - 'CMakeLists.txt'
       - 'extras/bindings/**'
       - '.github/workflows/build-and-test-mac.yml'
@@ -35,7 +37,7 @@ jobs:
             TYPE: Release
     steps:
     - name: Check out preCICE
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Setup python
       uses: actions/setup-python@v4
       with:
@@ -44,7 +46,7 @@ jobs:
     - name: Install numpy
       run: pip3 install numpy
     - name: Install preCICE dependencies
-      run: brew install cmake eigen libxml2 boost petsc openmpi
+      run: brew install cmake eigen libxml2 boost petsc openmpi pkg-config
     - name: Generate build directory
       run: mkdir -p build
     - name: Configure
@@ -56,7 +58,7 @@ jobs:
         PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
       run: |
         cmake --version
-        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_MPICommunication=${{ env.MPI }} -DPRECICE_PETScMapping=${{ env.PETSc }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
     - uses: actions/upload-artifact@v3
       if: failure()
       with:

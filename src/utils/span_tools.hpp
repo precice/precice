@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/span.hpp"
+#include "precice/span.hpp"
 
 namespace precice {
 

@@ -84,20 +84,6 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     tag.addAttribute(attrExchangeDirectory);
     tags.push_back(tag);
   }
-  {
-    /// @TODO Remove in Version 3.0
-    XMLTag tag(*this, "mpi-singleports", occ, TAG);
-    doc = "Communication via MPI with startup in separated communication spaces, using a single communicator";
-    tag.setDocumentation(doc);
-
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
-                                     .setDocumentation(
-                                         "Directory where connection information is exchanged. By default, the "
-                                         "directory of startup is chosen, and both solvers have to be started "
-                                         "in the same directory.");
-    tag.addAttribute(attrExchangeDirectory);
-    tags.push_back(tag);
-  }
 
   XMLAttribute<bool> attrEnforce(ATTR_ENFORCE_GATHER_SCATTER, false);
   attrEnforce.setDocumentation("Enforce the distributed communication to a gather-scatter scheme. "
@@ -107,11 +93,11 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
   attrTwoLevel.setDocumentation("Use a two-level initialization scheme. "
                                 "Recommended for large parallel runs (>5000 MPI ranks).");
 
-  auto attrFrom = XMLAttribute<std::string>("from")
+  auto attrFrom = XMLAttribute<std::string>("acceptor")
                       .setDocumentation(
                           "First participant name involved in communication. For performance reasons, we recommend to use "
-                          "the participant with less ranks at the coupling interface as \"from\" in the m2n communication.");
-  auto attrTo = XMLAttribute<std::string>("to")
+                          "the participant with less ranks at the coupling interface as \"acceptor\" in the m2n communication.");
+  auto attrTo = XMLAttribute<std::string>("connector")
                     .setDocumentation("Second participant name involved in communication.");
 
   for (XMLTag &tag : tags) {
@@ -123,33 +109,33 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
   }
 }
 
-m2n::PtrM2N M2NConfiguration::getM2N(const std::string &from, const std::string &to)
+m2n::PtrM2N M2NConfiguration::getM2N(const std::string &acceptor, const std::string &connector)
 {
   using std::get;
   for (M2NTuple &tuple : _m2ns) {
-    if ((get<1>(tuple) == from) && (get<2>(tuple) == to)) {
+    if ((get<1>(tuple) == acceptor) && (get<2>(tuple) == connector)) {
       return get<0>(tuple);
-    } else if ((get<2>(tuple) == from) && (get<1>(tuple) == to)) {
+    } else if ((get<2>(tuple) == acceptor) && (get<1>(tuple) == connector)) {
       return get<0>(tuple);
     }
   }
-  PRECICE_ERROR("There is no m2n communication configured between participants \"" + from + "\" and \"" + to + "\". Please add an appropriate \"<m2n />\" tag.");
+  PRECICE_ERROR("There is no m2n communication configured between participants \"" + acceptor + "\" and \"" + connector + "\". Please add an appropriate \"<m2n />\" tag.");
 }
 
-bool M2NConfiguration::isM2NConfigured(const std::string &from, const std::string &to)
+bool M2NConfiguration::isM2NConfigured(const std::string &acceptor, const std::string &connector)
 {
   return std::any_of(std::begin(_m2ns), std::end(_m2ns),
-                     [from, to](const auto &m2nTuple) {
-                       return ((std::get<1>(m2nTuple) == from) && (std::get<2>(m2nTuple) == to)) || ((std::get<1>(m2nTuple) == to) && (std::get<2>(m2nTuple) == from));
+                     [acceptor, connector](const auto &m2nTuple) {
+                       return ((std::get<1>(m2nTuple) == acceptor) && (std::get<2>(m2nTuple) == connector)) || ((std::get<1>(m2nTuple) == connector) && (std::get<2>(m2nTuple) == acceptor));
                      });
 }
 
 void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
 {
   if (tag.getNamespace() == TAG) {
-    std::string from = tag.getStringAttributeValue("from");
-    std::string to   = tag.getStringAttributeValue("to");
-    checkDuplicates(from, to);
+    std::string acceptor  = tag.getStringAttributeValue("acceptor");
+    std::string connector = tag.getStringAttributeValue("connector");
+    checkDuplicates(acceptor, connector);
     bool enforceGatherScatter = tag.getBooleanAttributeValue(ATTR_ENFORCE_GATHER_SCATTER);
     bool useTwoLevelInit      = tag.getBooleanAttributeValue(ATTR_USE_TWO_LEVEL_INIT);
 
@@ -185,10 +171,7 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
       comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
 #endif
-    } else if (tagName == "mpi" || tagName == "mpi-singleports") {
-      if (tagName == "mpi-singleports") {
-        PRECICE_WARN("You used <m2n:mpi-singleports />, which is deprecated. Please use <m2n:mpi /> instead.");
-      }
+    } else if (tagName == "mpi") {
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
 #ifdef PRECICE_NO_MPI
       PRECICE_ERROR("Communication type \"{}\" can only be used if preCICE was compiled with MPI support enabled. "
@@ -214,21 +197,21 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
     PRECICE_ASSERT(distrFactory.get() != nullptr);
 
     auto m2n = std::make_shared<m2n::M2N>(com, distrFactory, false, useTwoLevelInit);
-    _m2ns.emplace_back(m2n, from, to);
+    _m2ns.emplace_back(m2n, acceptor, connector);
   }
 }
 
 void M2NConfiguration::checkDuplicates(
-    const std::string &from,
-    const std::string &to)
+    const std::string &acceptor,
+    const std::string &connector)
 {
   using std::get;
   bool alreadyAdded = false;
   for (M2NTuple &tuple : _m2ns) {
-    alreadyAdded |= (get<1>(tuple) == from) && (get<2>(tuple) == to);
-    alreadyAdded |= (get<2>(tuple) == from) && (get<1>(tuple) == to);
+    alreadyAdded |= (get<1>(tuple) == acceptor) && (get<2>(tuple) == connector);
+    alreadyAdded |= (get<2>(tuple) == acceptor) && (get<1>(tuple) == connector);
   }
-  PRECICE_CHECK(!alreadyAdded, "Multiple m2n communications between participant \"" + from + "\" and \"" + to + "\" are not allowed. Please remove redundant <m2n /> tags between them.");
+  PRECICE_CHECK(!alreadyAdded, "Multiple m2n communications between participant \"" + acceptor + "\" and \"" + connector + "\" are not allowed. Please remove redundant <m2n /> tags between them.");
 }
 
 } // namespace precice::m2n

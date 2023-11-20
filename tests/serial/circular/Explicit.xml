@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="DAB" />
+  <data:scalar name="DBC" />
+  <data:scalar name="DCA" />
+
+  <mesh name="MA" dimensions="2">
+    <use-data name="DAB" />
+    <use-data name="DCA" />
+  </mesh>
+
+  <mesh name="MB" dimensions="2">
+    <use-data name="DAB" />
+    <use-data name="DBC" />
+  </mesh>
+
+  <mesh name="MC" dimensions="2">
+    <use-data name="DBC" />
+    <use-data name="DCA" />
+  </mesh>
+
+  <participant name="A">
+    <provide-mesh name="MA" />
+    <receive-mesh name="MB" from="B" />
+    <read-data name="DCA" mesh="MA" />
+    <write-data name="DAB" mesh="MA" />
+    <mapping:nearest-neighbor direction="write" from="MA" to="MB" constraint="consistent" />
+  </participant>
+
+  <participant name="B">
+    <provide-mesh name="MB" />
+    <receive-mesh name="MC" from="C" />
+    <read-data name="DAB" mesh="MB" />
+    <write-data name="DBC" mesh="MB" />
+    <mapping:nearest-neighbor direction="write" from="MB" to="MC" constraint="consistent" />
+  </participant>
+
+  <participant name="C">
+    <provide-mesh name="MC" />
+    <receive-mesh name="MA" from="A" />
+    <read-data name="DBC" mesh="MC" />
+    <write-data name="DCA" mesh="MC" />
+    <mapping:nearest-neighbor direction="write" from="MC" to="MA" constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="A" connector="B" />
+  <m2n:sockets acceptor="B" connector="C" />
+  <m2n:sockets acceptor="C" connector="A" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="A" second="B" />
+    <time-window-size value="1" />
+    <max-time-windows value="2" />
+    <exchange data="DAB" mesh="MB" from="A" to="B" />
+  </coupling-scheme:serial-explicit>
+
+  <coupling-scheme:serial-explicit>
+    <participants first="B" second="C" />
+    <time-window-size value="1" />
+    <max-time-windows value="2" />
+    <exchange data="DBC" mesh="MC" from="B" to="C" />
+  </coupling-scheme:serial-explicit>
+
+  <coupling-scheme:serial-explicit>
+    <participants first="A" second="C" />
+    <time-window-size value="1" />
+    <max-time-windows value="2" />
+    <exchange data="DCA" mesh="MA" from="C" to="A" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

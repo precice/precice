@@ -52,12 +52,6 @@ private:
 
   PyObject *_performAction = nullptr;
 
-  PyObject *_vertexCallback = nullptr;
-
-  int _vertexCallbackArgs = 0;
-
-  PyObject *_postAction = nullptr;
-
   void initialize();
 
   int makeNumPyArraysAvailable();

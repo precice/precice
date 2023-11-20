@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
-#include "precice/SolverInterface.hpp"
+#include <vector>
+#include "precice/precice.hpp"
 
 int main(int argc, char **argv)
 {
@@ -8,7 +9,6 @@ int main(int argc, char **argv)
   int commSize = 1;
 
   using namespace precice;
-  using namespace precice::constants;
 
   if (argc != 3) {
     std::cout << "The solverdummy was called with an incorrect number of arguments. Usage: ./solverdummy configFile solverName\n\n";
@@ -26,25 +26,21 @@ int main(int argc, char **argv)
 
   std::cout << "DUMMY: Running solver dummy with preCICE config file \"" << configFileName << "\" and participant name \"" << solverName << "\".\n";
 
-  SolverInterface interface(solverName, configFileName, commRank, commSize);
+  Participant participant(solverName, configFileName, commRank, commSize);
 
   if (solverName == "SolverOne") {
-    dataWriteName = "dataOne";
-    dataReadName  = "dataTwo";
-    meshName      = "MeshOne";
+    dataWriteName = "Data-One";
+    dataReadName  = "Data-Two";
+    meshName      = "SolverOne-Mesh";
   }
   if (solverName == "SolverTwo") {
-    dataReadName  = "dataOne";
-    dataWriteName = "dataTwo";
-    meshName      = "MeshTwo";
+    dataReadName  = "Data-One";
+    dataWriteName = "Data-Two";
+    meshName      = "SolverTwo-Mesh";
   }
 
-  int meshID           = interface.getMeshID(meshName);
-  int dimensions       = interface.getDimensions();
+  int dimensions       = participant.getMeshDimensions(meshName);
   int numberOfVertices = 3;
-
-  const int readDataID  = interface.getDataID(dataReadName, meshID);
-  const int writeDataID = interface.getDataID(dataWriteName, meshID);
 
   std::vector<double> readData(numberOfVertices * dimensions);
   std::vector<double> writeData(numberOfVertices * dimensions);
@@ -59,36 +55,39 @@ int main(int argc, char **argv)
     }
   }
 
-  interface.setMeshVertices(meshID, numberOfVertices, vertices.data(), vertexIDs.data());
+  participant.setMeshVertices(meshName, vertices, vertexIDs);
 
-  double dt = interface.initialize();
+  if (participant.requiresInitialData()) {
+    std::cout << "DUMMY: Writing initial data\n";
+  }
 
-  while (interface.isCouplingOngoing()) {
+  participant.initialize();
 
-    if (interface.isActionRequired(actionWriteIterationCheckpoint())) {
+  while (participant.isCouplingOngoing()) {
+
+    if (participant.requiresWritingCheckpoint()) {
       std::cout << "DUMMY: Writing iteration checkpoint\n";
-      interface.markActionFulfilled(actionWriteIterationCheckpoint());
     }
 
-    interface.readBlockVectorData(readDataID, numberOfVertices, vertexIDs.data(), readData.data());
+    double dt = participant.getMaxTimeStepSize();
+    participant.readData(meshName, dataReadName, vertexIDs, dt, readData);
 
     for (int i = 0; i < numberOfVertices * dimensions; i++) {
       writeData.at(i) = readData.at(i) + 1;
     }
 
-    interface.writeBlockVectorData(writeDataID, numberOfVertices, vertexIDs.data(), writeData.data());
+    participant.writeData(meshName, dataWriteName, vertexIDs, writeData);
 
-    dt = interface.advance(dt);
+    participant.advance(dt);
 
-    if (interface.isActionRequired(actionReadIterationCheckpoint())) {
+    if (participant.requiresReadingCheckpoint()) {
       std::cout << "DUMMY: Reading iteration checkpoint\n";
-      interface.markActionFulfilled(actionReadIterationCheckpoint());
     } else {
       std::cout << "DUMMY: Advancing in time\n";
     }
   }
 
-  interface.finalize();
+  participant.finalize();
   std::cout << "DUMMY: Closing C++ solver dummy...\n";
 
   return 0;

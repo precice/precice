@@ -2,14 +2,11 @@
 
 #include <array>
 #include <iostream>
+#include <tuple>
+
+#include "mesh/Vertex.hpp"
 #include "precice/types.hpp"
 #include "utils/assertion.hpp"
-
-namespace precice {
-namespace mesh {
-class Vertex;
-}
-} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
@@ -19,13 +16,19 @@ namespace mesh {
 /// Tetrahedron of a mesh, defined by 4 vertices
 class Tetrahedron {
 public:
-  /// Constructor, the order of vertices doesn't matter.
+  /// Amount of vertices
+  static constexpr int vertexCount{4};
+
+  /** Constructor based on 4 vertices
+   *
+   * The vertices will be sorted by Vertex::getID().
+   * This allows to weakly order tetrahedra.
+   */
   Tetrahedron(
-      Vertex &      vertexOne,
-      Vertex &      vertexTwo,
-      Vertex &      vertexThree,
-      Vertex &      vertexFour,
-      TetrahedronID id);
+      Vertex &vertexOne,
+      Vertex &vertexTwo,
+      Vertex &vertexThree,
+      Vertex &vertexFour);
 
   /// Returns dimensionalty of space the Tetrahedron is embedded in.
   int getDimensions() const;
@@ -39,9 +42,6 @@ public:
    * @brief Returns const tetrahedron vertex with index 0, 1, 2 or 3.
    */
   const Vertex &vertex(int i) const;
-
-  /// Returns a among Tetrahedrons globally unique ID.
-  TetrahedronID getID() const;
 
   /// Returns the unsigned volume of the tetrahedron
   double getVolume() const;
@@ -62,12 +62,16 @@ public:
   /// Not equal, implemented in terms of equal.
   bool operator!=(const Tetrahedron &other) const;
 
+  /// Weak ordering based on vertex ids
+  bool operator<(const Tetrahedron &other) const
+  {
+    return std::make_tuple(_vertices[0]->getID(), _vertices[1]->getID(), _vertices[2]->getID(), _vertices[3]->getID()) <
+           std::make_tuple(other._vertices[0]->getID(), other._vertices[1]->getID(), other._vertices[2]->getID(), other._vertices[3]->getID());
+  }
+
 private:
   /// Vertices defining the Tetrahedron.
   std::array<Vertex *, 4> _vertices;
-
-  /// ID of the Tetrahedron.
-  TetrahedronID _id;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS
@@ -82,11 +86,6 @@ inline const Vertex &Tetrahedron::vertex(int i) const
 {
   PRECICE_ASSERT((i >= 0) && (i < 4), i);
   return *_vertices[i];
-}
-
-inline TetrahedronID Tetrahedron::getID() const
-{
-  return _id;
 }
 
 std::ostream &operator<<(std::ostream &os, const Tetrahedron &t);

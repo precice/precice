@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 using namespace precice;
@@ -21,17 +21,22 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  SolverInterface precice(context.name, context.config(), 0, 1);
+  double v0[] = {0, 0, 0};
+  double v1[] = {1, 0, 0};
+
+  Participant precice(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
-    MeshID meshID = precice.getMeshID("MeshOne");
-    precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
-    double maxDt     = precice.initialize();
+    auto meshName = "MeshOne";
+    precice.setMeshVertex(meshName, v0);
+    precice.setMeshVertex(meshName, v1);
+    precice.initialize();
+    double maxDt     = precice.getMaxTimeStepSize();
     int    timestep  = 0;
-    double dt        = maxDt / 2.0; // Timestep length desired by solver
-    double currentDt = dt;          // Timestep length used by solver
+    double dt        = maxDt / 2.0; // Time step size desired by solver
+    double currentDt = dt;          // Time step size used by solver
     while (precice.isCouplingOngoing()) {
-      maxDt     = precice.advance(currentDt);
+      precice.advance(currentDt);
+      maxDt     = precice.getMaxTimeStepSize();
       currentDt = dt > maxDt ? maxDt : dt;
       timestep++;
     }
@@ -39,15 +44,17 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
     BOOST_TEST(timestep == 20);
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    MeshID meshID = precice.getMeshID("Test-Square");
-    precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    precice.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
-    double maxDt     = precice.initialize();
+    auto meshName = "Test-Square";
+    precice.setMeshVertex(meshName, v0);
+    precice.setMeshVertex(meshName, v1);
+    precice.initialize();
+    double maxDt     = precice.getMaxTimeStepSize();
     int    timestep  = 0;
-    double dt        = maxDt / 3.0; // Timestep length desired by solver
-    double currentDt = dt;          // Timestep length used by solver
+    double dt        = maxDt / 3.0; // Time step size desired by solver
+    double currentDt = dt;          // Time step size used by solver
     while (precice.isCouplingOngoing()) {
-      maxDt     = precice.advance(currentDt);
+      precice.advance(currentDt);
+      maxDt     = precice.getMaxTimeStepSize();
       currentDt = dt > maxDt ? maxDt : dt;
       timestep++;
     }

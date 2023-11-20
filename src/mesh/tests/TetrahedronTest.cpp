@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(BasicTetra)
   Vertex v3(coords3, 2);
   Vertex v4(coords4, 3);
 
-  Tetrahedron tetra(v1, v2, v3, v4, 0);
+  Tetrahedron tetra(v1, v2, v3, v4);
 
   Vertex &v1ref = tetra.vertex(0);
   BOOST_TEST(v1ref.getID() == v1.getID());
@@ -40,9 +40,6 @@ BOOST_AUTO_TEST_CASE(BasicTetra)
 
   Vertex &v4ref = tetra.vertex(3);
   BOOST_TEST(v4ref.getID() == v4.getID());
-
-  TetrahedronID id = tetra.getID();
-  BOOST_TEST(id == 0);
 
   Vector3d center = tetra.getCenter();
   BOOST_TEST(testing::equals(center, (coords1 + coords2 + coords3 + coords4) / 4));
@@ -73,7 +70,7 @@ BOOST_AUTO_TEST_CASE(WeirdTetra)
   Vertex v3(coords3, 2);
   Vertex v4(coords4, 3);
 
-  Tetrahedron tetra(v1, v2, v3, v4, 0);
+  Tetrahedron tetra(v1, v2, v3, v4);
 
   Vertex &v1ref = tetra.vertex(0);
   BOOST_TEST(v1ref.getID() == v1.getID());
@@ -86,9 +83,6 @@ BOOST_AUTO_TEST_CASE(WeirdTetra)
 
   Vertex &v4ref = tetra.vertex(3);
   BOOST_TEST(v4ref.getID() == v4.getID());
-
-  TetrahedronID id = tetra.getID();
-  BOOST_TEST(id == 0);
 
   Vector3d center = tetra.getCenter();
   BOOST_TEST(testing::equals(center, (coords1 + coords2 + coords3 + coords4) / 4));
@@ -117,9 +111,9 @@ BOOST_AUTO_TEST_CASE(TetrahedronEquality)
   Vertex v4(coords4, 3);
   Vertex v5(coords5, 4);
 
-  Tetrahedron tetra1(v1, v2, v3, v4, 0);
-  Tetrahedron tetra2(v3, v1, v2, v4, 0);
-  Tetrahedron tetra3(v1, v2, v3, v5, 0);
+  Tetrahedron tetra1(v1, v2, v3, v4);
+  Tetrahedron tetra2(v3, v1, v2, v4);
+  Tetrahedron tetra3(v1, v2, v3, v5);
 
   BOOST_TEST(tetra1 == tetra2);
   BOOST_TEST(tetra1 != tetra3);
@@ -134,7 +128,7 @@ BOOST_AUTO_TEST_CASE(TetrahedronWKTPrint)
   Vertex v3(Eigen::Vector3d(0., 1., 0.), 2);
   Vertex v4(Eigen::Vector3d(0., 0., 1.), 3);
 
-  Tetrahedron       t1(v1, v2, v3, v4, 0);
+  Tetrahedron       t1(v1, v2, v3, v4);
   std::stringstream stream;
   stream << t1;
   std::string t1string("MULTILINESTRING ((0 0 0, 1 0 0), (0 0 0, 0 1 0), (0 0 0, 0 0 1), (1 0 0, 0 1 0), (1 0 0, 0 0 1), (0 1 0, 0 0 1))");

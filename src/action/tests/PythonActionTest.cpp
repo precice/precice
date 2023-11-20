@@ -19,7 +19,7 @@ using namespace precice::action;
 BOOST_AUTO_TEST_SUITE(ActionTests)
 BOOST_AUTO_TEST_SUITE(Python)
 
-BOOST_AUTO_TEST_CASE(AllMethods)
+BOOST_AUTO_TEST_CASE(PerformActionWithGlobalIterationsCounter)
 {
   PRECICE_TEST(1_rank);
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
@@ -30,57 +30,24 @@ BOOST_AUTO_TEST_CASE(AllMethods)
   int sourceID = mesh->createData("SourceData", 1, 1_dataID)->getID();
   mesh->allocateDataValues();
   std::string  path = testing::getPathToSources() + "/action/tests/";
-  PythonAction action(PythonAction::WRITE_MAPPING_PRIOR, path, "TestAllAction", mesh, targetID, sourceID);
-  mesh->data(sourceID)->values() << 0.1, 0.2, 0.3;
-  mesh->data(targetID)->values() = Eigen::VectorXd::Zero(mesh->data(targetID)->values().size());
-  action.performAction(0.0);
-  Eigen::Vector3d result(2.1, 3.2, 4.3);
-  BOOST_TEST(testing::equals(mesh->data(targetID)->values(), result));
-  mesh->data(sourceID)->values() = Eigen::VectorXd::Zero(mesh->data(sourceID)->values().size());
-  result << 1.0, 2.0, 3.0;
-  action.performAction(0.0);
-  BOOST_TEST(testing::equals(mesh->data(targetID)->values(), result));
-}
+  PythonAction action(PythonAction::WRITE_MAPPING_POST, path, "TestAction", mesh, targetID, sourceID);
 
-BOOST_AUTO_TEST_CASE(OmitMethods)
-{
-  PRECICE_TEST(1_rank);
-  std::string path = testing::getPathToSources() + "/action/tests/";
-  {
-    mesh::PtrMesh mesh;
-    PythonAction  action(PythonAction::WRITE_MAPPING_PRIOR, path, "TestOmitAction1", mesh, -1, -1);
-    action.performAction(0.0);
-  }
-  {
-    mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-    mesh->createVertex(Eigen::Vector3d::Zero());
-    mesh::PtrData data = mesh->createData("TargetData", 1, 0_dataID);
-    mesh->allocateDataValues();
-    PythonAction action(PythonAction::WRITE_MAPPING_PRIOR, path, "TestOmitAction2", mesh, data->getID(), -1);
-    action.performAction(0.0);
-  }
-  {
-    mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-    mesh->createVertex(Eigen::Vector3d::Zero());
-    mesh::PtrData data = mesh->createData("SourceData", 1, 0_dataID);
-    mesh->allocateDataValues();
-    PythonAction action(PythonAction::WRITE_MAPPING_PRIOR, path, "TestOmitAction3", mesh, -1, data->getID());
-    action.performAction(0.0);
-  }
-}
+  Eigen::VectorXd v(3);
+  v << 0.1, 0.2, 0.3;
+  mesh->data(sourceID)->setSampleAtTime(1, time::Sample{1, v});
+  mesh->data(targetID)->setSampleAtTime(1, time::Sample{1, Eigen::VectorXd::Zero(mesh->vertices().size())});
 
-BOOST_AUTO_TEST_CASE(DeprecatedNormal)
-{
-  PRECICE_TEST(1_rank);
-  std::string path = testing::getPathToSources() + "/action/tests/";
-  {
-    mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
-    mesh->createVertex(Eigen::Vector3d::Zero());
-    mesh::PtrData data = mesh->createData("TargetData", 1, 0_dataID);
-    mesh->allocateDataValues();
-    PythonAction action(PythonAction::WRITE_MAPPING_PRIOR, path, "TestDeprecatedAction", mesh, data->getID(), -1);
-    action.performAction(0.0);
-  }
+  action.performAction(0.0);
+
+  Eigen::VectorXd result(3);
+  result << 1.1, 1.2, 1.3;
+  BOOST_TEST(testing::equals(mesh->data(targetID)->values(), result));
+  mesh->data(sourceID)->setSampleAtTime(1, time::Sample{1, Eigen::VectorXd::Zero(mesh->vertices().size())});
+
+  action.performAction(0.0);
+
+  result << 2.0, 2.0, 2.0;
+  BOOST_TEST(testing::equals(mesh->data(targetID)->values(), result));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Python

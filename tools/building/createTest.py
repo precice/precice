@@ -1,30 +1,35 @@
 #!/usr/bin/env python3
 
-import os
 import argparse
+import collections
+import os
 import pathlib
 import re
-import collections
+import shutil
 
 
 def is_precice_root(dir):
-    detect = [
-        "CHANGELOG.md", "CMakeLists.txt", "LICENSE", "src", "tests", "cmake"
-    ]
+    detect = ["CHANGELOG.md", "CMakeLists.txt", "LICENSE", "src", "tests", "cmake"]
     return all(map(lambda c: os.path.exists(os.path.join(dir, c)), detect))
 
 
 def find_precice_root():
     search_depth = 10
     current = pathlib.Path(os.path.curdir).absolute()
-    candidats = [current] + list(current.parents)[:search_depth]
-    for dir in candidats:
+    candidates = [current] + list(current.parents)[:search_depth]
+    for dir in candidates:
         if is_precice_root(dir):
             return dir
     raise BaseException("Unable to find the root directory of precice")
 
 
-ABREVIATIONS = ["MPI", "QN", "RBF", "NN", "NP"]
+def locateTemplate(filepath):
+    assert filepath is not None
+    base = os.path.splitext(filepath)[0]
+    return (base + ".cpp", base + ".xml")
+
+
+ABBREVIATIONS = ["MPI", "QN", "RBF", "NN", "NP"]
 
 
 def dirToSuite(dir):
@@ -32,9 +37,10 @@ def dirToSuite(dir):
     Takes a kebab-case-directory and transforms it to a CamelCaseDirectory.
     Abbreviations defined above will be all upper case.
     """
+
     def toSuite(s):
         upper = s.upper()
-        if upper in ABREVIATIONS:
+        if upper in ABBREVIATIONS:
             return upper
         else:
             return s.capitalize()
@@ -43,41 +49,44 @@ def dirToSuite(dir):
 
 
 def checkTestSuite(arg):
-    assert (arg)
+    assert arg
     if " " in arg:
         raise argparse.ArgumentTypeError(
-            "The given suite name \"{}\" cannot contain spaces.".format(arg))
+            'The given suite name "{}" cannot contain spaces.'.format(arg)
+        )
     if "." in arg:
         raise argparse.ArgumentTypeError(
-            "The given suite name \"{}\" cannot contain the file extensions.".
-            format(arg))
+            'The given suite name "{}" cannot contain the file extensions.'.format(arg)
+        )
     if re.search(r"[^a-z-]", arg) is not None:
         raise argparse.ArgumentTypeError(
-            "The given suite dir \"{}\" must be dashed-lower-case.".format(
-                arg))
+            'The given suite dir "{}" must be dashed-lower-case.'.format(arg)
+        )
     if re.search(r"^[a-z]", arg) is None:
         raise argparse.ArgumentTypeError(
-            "The given suite dir \"{}\" must start with a lowercase letter".format(
-                arg))
+            'The given suite dir "{}" must start with a lowercase letter'.format(arg)
+        )
     if re.search(r"[a-z]$", arg) is None:
         raise argparse.ArgumentTypeError(
-            "The given suite dir \"{}\" must end with a lowercase letter".format(
-                arg))
+            'The given suite dir "{}" must end with a lowercase letter'.format(arg)
+        )
     return arg
 
 
 def checkTestName(arg):
-    assert (arg)
+    assert arg
     if " " in arg:
         raise argparse.ArgumentTypeError(
-            "The given test name \"{}\" cannot contain spaces.".format(arg))
+            'The given test name "{}" cannot contain spaces.'.format(arg)
+        )
     if "." in arg:
         raise argparse.ArgumentTypeError(
-            "The given test name \"{}\" cannot contain the file extensions.".
-            format(arg))
+            'The given test name "{}" cannot contain the file extensions.'.format(arg)
+        )
     if re.search(r"[^a-zA-Z0-9]", arg) is not None:
         raise argparse.ArgumentTypeError(
-            "The given test name \"{}\" must use CamelCase.".format(arg))
+            'The given test name "{}" must use CamelCase.'.format(arg)
+        )
     return arg
 
 
@@ -105,11 +114,15 @@ def testarg(arg):
     location = tests.joinpath(*dirs)
     if location.exists() and not location.is_dir():
         raise argparse.ArgumentTypeError(
-            "The given test location \"{}\" exists, but is not a directory.".format(location))
+            'The given test location "{}" exists, but is not a directory.'.format(
+                location
+            )
+        )
 
     suites = [dirToSuite(dir) for dir in dirs]
-    return collections.namedtuple("TestSetup","location suites name")(location, suites, name)
-
+    return collections.namedtuple("TestSetup", "location suites name")(
+        location, suites, name
+    )
 
 
 PRECICE_TEST_BODY = """{
@@ -117,7 +130,7 @@ PRECICE_TEST_BODY = """{
 
   // Implement your test here.
   BOOST_TEST(false);
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;
 
@@ -136,11 +149,9 @@ PRECICE_TEST_BODY = """{
 
 def generateTestSource(name, suite, filepath):
     if os.path.exists(filepath):
-        raise BaseException("The test source at \"{}\" already exists.".format(filepath))
+        raise BaseException('The test source at "{}" already exists.'.format(filepath))
 
-    includes = [
-        "<precice/SolverInterface.hpp>", "<vector>", '"testing/Testing.hpp"'
-    ]
+    includes = ["<precice/precice.hpp>", "<vector>", '"testing/Testing.hpp"']
     suites = ["Integration"] + suite
     space = [""]
     lines = ["#ifndef PRECICE_NO_MPI"]
@@ -151,7 +162,7 @@ def generateTestSource(name, suite, filepath):
     lines += space
     lines += ["BOOST_AUTO_TEST_SUITE({})".format(s) for s in suites]
     lines += ["BOOST_AUTO_TEST_CASE({})".format(name), PRECICE_TEST_BODY]
-    lines += ["BOOST_AUTO_TEST_SUITE_END() // " + s for s in suites]
+    lines += ["BOOST_AUTO_TEST_SUITE_END() // " + s for s in reversed(suites)]
     lines += space
     lines += ["#endif // PRECICE_NO_MPI"]
 
@@ -159,29 +170,63 @@ def generateTestSource(name, suite, filepath):
         f.writelines([line + "\n" for line in lines])
 
 
+def generateTestSourceFromExisting(name, suite, filepath, existingSource):
+    if os.path.exists(filepath):
+        raise BaseException('The test source at "{}" already exists.'.format(filepath))
+    if not os.path.exists(existingSource):
+        raise BaseException(
+            'The template source at "{}" does not exist.'.format(existingSource)
+        )
+
+    suites = ["Integration"] + suite
+
+    templateContent = ["BOOST_AUTO_TEST_SUITE({})".format(s) for s in suites]
+    templateContent += [
+        "BOOST_AUTO_TEST_CASE({})".format(name),
+        "/* Test body goes here */",
+    ]
+    templateContent += ["// ORIGINAL START"]
+
+    with open(existingSource) as f:
+        templateContent += [line.rstrip("\n") for line in f.readlines()]
+
+    templateContent += ["// ORIGINAL END"]
+    templateContent += ["BOOST_AUTO_TEST_SUITE_END() // " + s for s in reversed(suites)]
+
+    with open(filepath, "w") as f:
+        f.writelines([line + "\n" for line in templateContent])
+
+
 def generateTestConfig(name, suite, filepath):
     if os.path.exists(filepath):
-        print("The test config at \"{}\" already exists.".format(filepath))
+        print('The test config at "{}" already exists.'.format(filepath))
     else:
-        open(filepath, 'w').close()
+        open(filepath, "w").close()
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="preCICE integration test creation tool.")
+        description="preCICE integration test creation tool."
+    )
     parser.add_argument(
         "test",
-        metavar="[Suite/]TestName",
+        metavar="[test-suite/]TestCase",
         type=testarg,
-        help=
-        "The path to the test, the last component being the test name. "
+        help="The path to the test, the last component being the test name. "
         "If executed within tests/, then the test will be created relative to the local directory. "
-        "Otherwise, the path will be assumed to be relative to the tests directory."
+        "Otherwise, the path will be assumed to be relative to the tests directory.",
     )
-    parser.add_argument("-n",
-                        "--dry-run",
-                        action="store_true",
-                        help="print actions only")
+    parser.add_argument(
+        "-n", "--dry-run", action="store_true", help="print actions only"
+    )
+    parser.add_argument(
+        "-t",
+        "--template",
+        metavar="[test-suite/]TestCase[.cpp|.xml]",
+        type=str,
+        default=None,
+        help="Test to use the given cpp and xml as a template to create a new test. Adds a comment to the top of the test to help changes.",
+    )
     args = parser.parse_args()
 
     print("Create directory {}".format(args.test.location))
@@ -193,15 +238,31 @@ def main():
     sourcePath = args.test.location.joinpath(source)
     configPath = args.test.location.joinpath(config)
 
-    print("Create test source {}".format(source))
-    if not args.dry_run:
-        generateTestSource(args.test.name, args.test.suites, sourcePath)
+    if not args.template:
+        # Generate from scratch
+        print("Create test source {}".format(source))
+        if not args.dry_run:
+            generateTestSource(args.test.name, args.test.suites, sourcePath)
 
-    print("Create test config {}".format(config))
-    if not args.dry_run:
-        generateTestConfig(args.test.name, args.test.suites, configPath)
+        print("Create test config {}".format(config))
+        if not args.dry_run:
+            generateTestConfig(args.test.name, args.test.suites, configPath)
+    else:
+        # Generate from existing
+        existingSource, existingConfig = locateTemplate(args.template)
+
+        print("Create test source {} from {}".format(source, existingSource))
+        if not args.dry_run:
+            generateTestSourceFromExisting(
+                args.test.name, args.test.suites, sourcePath, existingSource
+            )
+
+        print("Copy test config {} from {}".format(config, existingConfig))
+        if not args.dry_run:
+            shutil.copyfile(existingConfig, configPath)
+
     print("Remember to run tools/building/updateSourceFiles.py or make sourcesIndex")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

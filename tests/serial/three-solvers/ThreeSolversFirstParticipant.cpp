@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include "helpers.hpp"
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -16,12 +16,14 @@ BOOST_AUTO_TEST_CASE(ThreeSolversFirstParticipant)
   // SolverOne prescribes these, thus SolverTwo and SolverThree expect these (we use "first-participant" as dt method)
   std::vector<double> timestepSizes{1.0, 2.0, 3.0};
 
-  precice::SolverInterface precice(context.name, config, 0, 1);
+  precice::Participant precice(context.name, config, 0, 1);
+
+  double v0[] = {0, 0};
 
   if (context.isNamed("SolverOne")) {
 
-    int meshID = precice.getMeshID("MeshOne");
-    precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
+    auto meshName = "MeshOne";
+    precice.setMeshVertex(meshName, v0);
 
     precice.initialize();
 
@@ -34,17 +36,19 @@ BOOST_AUTO_TEST_CASE(ThreeSolversFirstParticipant)
 
   } else if (context.isNamed("SolverTwo")) {
 
-    int meshAID = precice.getMeshID("MeshTwoA");
-    precice.setMeshVertex(meshAID, Eigen::Vector2d(0, 0).data());
-    int meshBID = precice.getMeshID("MeshTwoB");
-    precice.setMeshVertex(meshBID, Eigen::Vector2d(0, 0).data());
+    auto meshAID = "MeshTwoA";
+    precice.setMeshVertex(meshAID, v0);
+    auto meshBID = "MeshTwoB";
+    precice.setMeshVertex(meshBID, v0);
 
-    double dt = precice.initialize();
+    precice.initialize();
+    double dt = precice.getMaxTimeStepSize();
 
     for (auto expected_dt : timestepSizes) {
       BOOST_TEST(precice.isCouplingOngoing());
       BOOST_TEST(dt == expected_dt);
-      dt = precice.advance(dt);
+      precice.advance(dt);
+      dt = precice.getMaxTimeStepSize();
     }
 
     BOOST_TEST(not precice.isCouplingOngoing());
@@ -53,15 +57,17 @@ BOOST_AUTO_TEST_CASE(ThreeSolversFirstParticipant)
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
 
-    int meshID = precice.getMeshID("MeshThree");
-    precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
+    auto meshName = "MeshThree";
+    precice.setMeshVertex(meshName, v0);
 
-    double dt = precice.initialize();
+    precice.initialize();
+    double dt = precice.getMaxTimeStepSize();
 
     for (auto expected_dt : timestepSizes) {
       BOOST_TEST(precice.isCouplingOngoing());
       BOOST_TEST(dt == expected_dt);
-      dt = precice.advance(dt);
+      precice.advance(dt);
+      dt = precice.getMaxTimeStepSize();
     }
     BOOST_TEST(not precice.isCouplingOngoing());
     precice.finalize();

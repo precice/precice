@@ -3,8 +3,8 @@
 #include <Eigen/Core>
 #include <vector>
 #include "cplscheme/CouplingScheme.hpp"
-#include "cplscheme/impl/Extrapolation.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "time/Storage.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -12,11 +12,15 @@ namespace cplscheme {
 
 class CouplingData {
 public:
+  enum struct Direction : bool { Send,
+                                 Receive };
+
   CouplingData(
       mesh::PtrData data,
       mesh::PtrMesh mesh,
       bool          requiresInitialization,
-      int           extrapolationOrder = CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER);
+      bool          exchangeSubsteps,
+      Direction     direction);
 
   int getDimensions() const;
 
@@ -29,10 +33,36 @@ public:
   const Eigen::VectorXd &values() const;
 
   /// Returns a reference to the gradient data values.
-  Eigen::MatrixXd &gradientValues();
+  Eigen::MatrixXd &gradients();
 
   /// Returns a const reference to the gradient data values.
-  const Eigen::MatrixXd &gradientValues() const;
+  const Eigen::MatrixXd &gradients() const;
+
+  /// Returns a reference to the gradient data Sample.
+  time::Sample &sample();
+
+  /// Returns a const reference to the data Sample.
+  const time::Sample &sample() const;
+
+  /// Returns a reference to the time step storage of the data.
+  time::Storage &timeStepsStorage();
+
+  /// returns previous data interpolated to the relativeDt time
+  Eigen::VectorXd getPreviousValuesAtTime(double relativeDt);
+
+  Eigen::MatrixXd getPreviousGradientsAtTime(double relativeDt);
+
+  /// Returns a const reference to the time step storage of the data.
+  const time::Storage &timeStepsStorage() const;
+
+  /// Returns the stamples in _timeStepsStorage.
+  auto stamples() const
+  {
+    return timeStepsStorage().stamples();
+  }
+
+  /// Add sample at given time to _timeStepsStorage.
+  void setSampleAtTime(double time, time::Sample sample);
 
   /// Returns if the data contains gradient data
   bool hasGradient() const;
@@ -64,46 +94,33 @@ public:
   /// get vertex offsets of this CouplingData's mesh. See Mesh::getVertexOffsets().
   std::vector<int> getVertexOffsets();
 
+  /// get direction of this coupling data
+  Direction getDirection() const;
+
   ///  True, if the data values of this CouplingData require to be initialized by this participant.
   const bool requiresInitialization;
-
-  /// initialize _extrapolation
-  void initializeExtrapolation();
 
   /// move to next window and initialize data via extrapolation
   void moveToNextWindow();
 
-  /// store current value in _extrapolation
-  void storeExtrapolationData();
+  bool exchangeSubsteps() const;
 
 private:
-  /**
-   * @brief Default constructor, not to be used!
-   *
-   * Necessary when compiler creates template code for std::map::operator[].
-   */
-  CouplingData()
-      : requiresInitialization(false),
-        _extrapolation(CouplingScheme::UNDEFINED_EXTRAPOLATION_ORDER)
-  {
-    PRECICE_ASSERT(false);
-  }
-
-  /// Data values of previous iteration.
-  Eigen::VectorXd _previousIteration;
-
-  /// Gradient data of previous iteration.
-  /// Lazy allocation: only used in case the corresponding data has gradients
-  Eigen::MatrixXd _previousIterationGradients;
-
-  /// Data associated with this CouplingData
-  mesh::PtrData _data;
+  logging::Logger _log{"cplscheme::CouplingData"};
 
   /// Mesh associated with this CouplingData
   mesh::PtrMesh _mesh;
 
-  /// Extrapolation associated with this CouplingData
-  cplscheme::impl::Extrapolation _extrapolation;
+  /// Data associated with this CouplingData
+  mesh::PtrData _data;
+
+  /// Sample values of previous iteration (end of time window).
+  time::Storage _previousTimeStepsStorage;
+
+  /// If true, all substeps will be sent / received for this coupling data
+  bool _exchangeSubsteps;
+
+  Direction _direction;
 };
 
 } // namespace cplscheme

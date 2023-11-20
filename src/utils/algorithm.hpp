@@ -5,6 +5,7 @@
 #include <fmt/ostream.h>
 #include <functional>
 #include <iterator>
+#include <set>
 #include <type_traits>
 #include <utility>
 
@@ -20,10 +21,10 @@ auto make_array(Elements &&... elements) -> std::array<typename std::common_type
 
 /** Checks weather the given elements contains no duplicates.
  *
- * \tparam Container type of the passed container.
- * \tparam BinaryPredicate the predicate used to compare two elements for equality.
- * \param c the container to check for unique elements.
- * \returns weather all elements in c are unique.
+ * @tparam Container type of the passed container.
+ * @tparam BinaryPredicate the predicate used to compare two elements for equality.
+ * @param c the container to check for unique elements.
+ * @returns weather all elements in c are unique.
  */
 template <typename Container, typename BinaryPredicate = std::equal_to<typename Container::value_type>>
 bool unique_elements(const Container &c, BinaryPredicate p = {})
@@ -51,11 +52,11 @@ bool unique_elements(const Container &c, BinaryPredicate p = {})
  *
  * This results in a range [first, elem, first+1, elem, ... , elem, last[
  *
- * \tparam InputIter the type of the input iterators
- * \tparam ElemT the type of the element to intersperse
+ * @tparam InputIter the type of the input iterators
+ * @tparam ElementType the type of the element to intersperse
  */
-template <class InputIter, class ElemT>
-void intersperse(InputIter first, InputIter last, const ElemT &elem, std::ostream &out)
+template <class InputIter, class ElementType>
+void intersperse(InputIter first, InputIter last, const ElementType &elem, std::ostream &out)
 {
   if (first == last)
     return;
@@ -156,6 +157,37 @@ template <class InputIt, class Size, class InOutIt>
 void add_n(InputIt first, Size count, InOutIt result)
 {
   std::transform(first, std::next(first, count), result, result, std::plus{});
+}
+
+/// Calls each value in the range of [first, last[ exactly once.
+template <class InputIt, class Unary>
+void for_each_unique(InputIt first, InputIt last, Unary func)
+{
+  using Inner = std::remove_cv_t<std::remove_reference_t<decltype(*first)>>;
+  std::set<Inner> seen;
+  std::for_each(first, last, [&seen, &func](const auto &elem) {
+    if (seen.count(elem) == 0) {
+      seen.insert(elem);
+      func(elem);
+    }
+  });
+}
+
+/// Finds the first range in [first, last[ that fulfills a predicate
+template <class InputIt, class Predicate>
+std::pair<InputIt, InputIt> find_first_range(InputIt first, InputIt last, Predicate p)
+{
+  auto firstMatch = std::find_if(first, last, p);
+  if (firstMatch == last) { // nothing found
+    return {last, last};
+  }
+  auto trailing = firstMatch;
+  auto next     = std::next(firstMatch);
+  while (next != last && p(*next)) {
+    ++trailing;
+    ++next;
+  }
+  return {firstMatch, trailing};
 }
 
 } // namespace utils

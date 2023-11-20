@@ -54,6 +54,7 @@ function(precice_validate_lib ARG_CODE)
     else()
       message(STATUS "Validating ${ARG_NAME} - success")
       set(${_cache_success} Yes CACHE BOOL "Cached successful validation of ${ARG_NAME}." FORCE)
+      mark_as_advanced(${_cache_success})
     endif()
   endif()
 endfunction()
@@ -92,21 +93,4 @@ macro(precice_validate_eigen)
     "#include <Eigen/Core>\nint main() { return 0; } "
     NAME Eigen
     LINK_LIBRARIES Eigen3::Eigen)
-endmacro()
-
-
-# Validation for JSON
-macro(precice_validate_json)
-  precice_validate_lib(
-    "#include <nlohmann/json.hpp>\nint main() { return 0; } "
-    NAME JSON
-    LINK_LIBRARIES JSON)
-endmacro()
-
-# Validation for fmtlib
-macro(precice_validate_fmtlib)
-  precice_validate_lib(
-    "#include <fmt/format.h>\nint main() { return 0; } "
-    NAME fmtlib
-    LINK_LIBRARIES fmt-header-only)
 endmacro()

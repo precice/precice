@@ -1,0 +1,10 @@
+/** @class precice::span
+ *
+ * @copyright Copyright Tristan Brindle 2018.
+ *
+ * @brief A C++ 11 implementation of the non-owning C++20 std::span type.
+ *
+ * A span represents a non-owning view into a contiguous block of memory of a known size.
+ *
+ * This version contains an additional constructor for `const char *`-style C strings, allowing the span to mimic C++17 std::string_view.
+ */

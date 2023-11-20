@@ -6,8 +6,9 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "com/CommunicateBoundingBox.hpp"
+
 #include "com/Communication.hpp"
+#include "com/Extra.hpp"
 #include "com/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
 #include "mapping/Mapping.hpp"
@@ -376,7 +377,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     }
 
     // we receive global bounding box from other participant!
-    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
+    com::receiveBoundingBoxMap(*m2n->getPrimaryRankCommunication(), 0, receivedGlobalBB);
     // check whether we have received the correct com size
     BOOST_TEST(receivedFeedbackSize == 3);
 
@@ -397,7 +398,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     connectionMap[2].push_back(0);
     connectionMap[2].push_back(1);
 
-    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).sendConnectionMap(connectionMap, 0);
+    com::sendConnectionMap(*m2n->getPrimaryRankCommunication(), 0, connectionMap);
   }
 }
 
@@ -468,7 +469,7 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
     }
 
     // we receive global bounding box from other participant!
-    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
+    com::receiveBoundingBoxMap(*m2n->getPrimaryRankCommunication(), 0, receivedGlobalBB);
 
     // check whether we have received the correct com size
     BOOST_TEST(remoteParComSize == 3);

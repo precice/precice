@@ -4,8 +4,6 @@
 
 #include "DataContext.hpp"
 #include "logging/Logger.hpp"
-#include "time/SharedPointer.hpp"
-#include "time/Time.hpp"
 
 namespace precice {
 namespace impl {
@@ -22,19 +20,17 @@ public:
    *
    * @param data Data associated with this ReadDataContext.
    * @param mesh Mesh associated with this ReadDataContext.
-   * @param interpolationOrder Order of the Waveform stored by this ReadDataContext.
    */
   ReadDataContext(
       mesh::PtrData data,
-      mesh::PtrMesh mesh,
-      int           interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
+      mesh::PtrMesh mesh);
 
   /**
-   * @brief Gets _interpolationOrder of _waveform
+   * @brief Gets degree of waveform
    *
-   * @return _interpolationOrder of _waveform
+   * @return int degree of waveform
    */
-  int getInterpolationOrder() const;
+  int getWaveformDegree() const;
 
   /**
    * @brief Adds a MappingContext and the MeshContext required by the read mapping to the corresponding ReadDataContext data structures.
@@ -49,32 +45,26 @@ public:
   void appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext) override;
 
   /**
-   * @brief Samples data at a given point in time within the current time window
+   * @brief Samples data at a given point in time within the current time window for given indices
    *
-   * @param normalizedDt Point in time where waveform is sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the current time window.
+   * @param[in] vertices vertex ids
+   * @param[in] time Point in time where waveform is sampled.
+   * @param[in] values read data associated with given indices for time \ref time will be returned into this span
    */
-  Eigen::VectorXd sampleWaveformAt(double normalizedDt);
+  void readValues(::precice::span<const VertexID> vertices, double time, ::precice::span<double> values) const;
 
-  /**
-   * @brief Initializes the _waveform as a constant function with values from _providedData.
-   */
-  void initializeWaveform();
+  /// Disable copy construction
+  ReadDataContext(const ReadDataContext &copy) = delete;
 
-  /**
-   * @brief Updates _waveform when moving to the next time window.
-   */
-  void moveToNextWindow();
+  /// Disable assignment construction
+  ReadDataContext &operator=(const ReadDataContext &assign) = delete;
 
-  /**
-   * @brief Stores _providedData as first sample of _waveform.
-   */
-  void storeDataInWaveform();
+  /// Move constructor, use the implicitly declared.
+  ReadDataContext(ReadDataContext &&) = default;
+  ReadDataContext &operator=(ReadDataContext &&) = default;
 
 private:
   static logging::Logger _log;
-
-  /// Waveform wrapped by this ReadDataContext.
-  time::PtrWaveform _waveform;
 };
 
 } // namespace impl

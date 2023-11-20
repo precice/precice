@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 using namespace precice;
@@ -22,64 +22,90 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  SolverInterface precice(context.name, context.config(), 0, 1);
-
-  MeshID meshID;
-  DataID writeDataID;
-  DataID readDataID;
+  Participant precice(context.name, context.config(), 0, 1);
 
   // SolverOne prescribes these, thus SolverTwo expect these (we use "first-participant" as dt method)
-  std::vector<std::vector<double>> timestepSizes{{1.0, 2.0, 1.0}, {2.0, 1.0, 2.0}, {3.0, 2.5, 3.0}};
+  std::vector<std::vector<double>> timestepSizes{{1.0, 1.0, 1.0}, {2.0, 2.0, 2.0}, {3.0, 3.0, 3.0}};
 
   // max number of iterations in implicit coupling
   int maxIterations = 3;
 
   // some dummy values, to check the actual values is not the point of this test,
   // but more to test whether reading / writing is possible at all
-  double expectedDataValue = 2.5;
-  double actualDataValue   = -1.0;
+  const double expectedDataValue = 2.5;
 
+  std::string meshName, writeDataName, readDataName;
   if (context.isNamed("SolverOne")) {
-    meshID      = precice.getMeshID("MeshOne");
-    writeDataID = precice.getDataID("DataOne", meshID);
-    readDataID  = precice.getDataID("DataTwo", meshID);
+    meshName      = "MeshOne";
+    writeDataName = "DataOne";
+    readDataName  = "DataTwo";
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID      = precice.getMeshID("MeshTwo");
-    writeDataID = precice.getDataID("DataTwo", meshID);
-    readDataID  = precice.getDataID("DataOne", meshID);
+    meshName      = "MeshTwo";
+    writeDataName = "DataTwo";
+    readDataName  = "DataOne";
   }
 
-  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-  double   dt       = precice.initialize();
+  double   v0[]     = {0, 0, 0};
+  VertexID vertexID = precice.setMeshVertex(meshName, v0);
+  precice.initialize();
 
-  if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
-    precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
-  }
+  double       startOfWindowTime = 0;
+  double       timeInWindow      = 0;
+  const double totalTime         = 6; // max-time from config
 
+  int tw = 0;
   for (auto iterationSizes : timestepSizes) {
     for (int it = 0; it < maxIterations; it++) {
+      BOOST_TEST_CONTEXT("tw " << tw << ", it " << it)
+      {
+        BOOST_TEST(precice.isCouplingOngoing());
 
-      BOOST_TEST(precice.isCouplingOngoing());
-      precice.writeScalarData(writeDataID, vertexID, expectedDataValue);
+        if (precice.requiresWritingCheckpoint()) {
+          // do nothing
+        }
 
-      if (context.isNamed("SolverOne")) {
-        precice.advance(iterationSizes.at(it));
-      } else if (context.isNamed("SolverTwo")) {
-        BOOST_TEST(dt == iterationSizes.at(it));
-        dt = precice.advance(dt);
+        // deduce timestep to take
+        double dt;
+        if (context.isNamed("SolverOne")) {
+          dt = iterationSizes.at(it);
+          BOOST_TEST(dt <= precice.getMaxTimeStepSize());
+        } else {
+          dt = precice.getMaxTimeStepSize();
+          BOOST_TEST(dt == iterationSizes.at(it));
+        }
+
+        double actualDataValue = -1.0;
+        precice.readData(meshName, readDataName, {&vertexID, 1}, dt, {&actualDataValue, 1});
+        // Account for SolverOne initializing Data to 0
+        if (context.isNamed("SolverOne") && tw == 0 && it == 0) {
+          BOOST_TEST(actualDataValue == 0.0);
+        } else {
+          BOOST_TEST(actualDataValue == expectedDataValue);
+        }
+
+        precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&expectedDataValue, 1});
+
+        precice.advance(dt);
+        if (context.isNamed("SolverOne")) {
+          timeInWindow += dt;
+        }
+
+        if (precice.requiresReadingCheckpoint()) {
+          timeInWindow = 0;
+        }
+        if (precice.isTimeWindowComplete()) {
+          startOfWindowTime += timeInWindow;
+          timeInWindow = 0;
+        }
+
+        if (context.isNamed("SolverOne")) {
+          // Check remainder of simulation time
+          BOOST_TEST(precice.getMaxTimeStepSize() == totalTime - startOfWindowTime - timeInWindow);
+        }
       }
-
-      if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
-        precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
-      }
-      if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
-        precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
-      }
-
-      precice.readScalarData(readDataID, vertexID, actualDataValue);
-      BOOST_TEST(actualDataValue == expectedDataValue);
     }
+    ++tw;
   }
 
   BOOST_TEST(not precice.isCouplingOngoing());

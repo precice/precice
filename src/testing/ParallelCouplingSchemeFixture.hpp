@@ -15,6 +15,14 @@ struct ParallelCouplingSchemeFixture {
   static cplscheme::CouplingData *getReceiveData(cplscheme::ParallelCouplingScheme &cplscheme, int dataID);
 
   static cplscheme::CouplingData *getSendData(cplscheme::ParallelCouplingScheme &cplscheme, int dataID);
+
+  static void setTimeWindows(cplscheme::ParallelCouplingScheme &cplscheme, int timeWindows);
+
+  static void storeIteration(cplscheme::ParallelCouplingScheme &cplscheme);
+
+  static void initializeAcceleration(cplscheme::ParallelCouplingScheme &cplscheme);
+
+  static void moveToNextWindow(cplscheme::ParallelCouplingScheme &cplscheme);
 };
 } // namespace testing
 } // namespace precice

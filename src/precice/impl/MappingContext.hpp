@@ -23,19 +23,21 @@ struct MappingContext {
   /// data which is mapped to mesh
   mesh::PtrData toData = nullptr;
 
-  /// Time of execution of mapping.
-  mapping::MappingConfiguration::Timing timing = mapping::MappingConfiguration::INITIAL;
-
-  /// True, if computation and mapping is done repeatedly for single values.
-  //bool isIncremental;
-
-  /// True, if data has been mapped already.
-  bool hasMappedData = false;
+  /// used the automatic rbf alias tag in order to set the mapping
+  bool configuredWithAliasTag = false;
 
   /// Enables gradient data in the corresponding 'from' data class
   void requireGradientData(const std::string &dataName)
   {
     mapping->getInputMesh()->data(dataName)->requireDataGradient();
+  }
+
+  /// Allows to clear data storage before mapping is performed
+  void clearToDataStorage()
+  {
+    if (toData->timeStepsStorage().nTimes() > 0) {
+      toData->timeStepsStorage().clear(); // requires clear, not trim, because otherwise data from the beginning of the window is kept across windows (toData that is no coupling data is never moved)
+    }
   }
 };
 

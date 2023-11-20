@@ -61,11 +61,11 @@ boost::log::record precice_feature<BaseT>::open_record_unlocked(ArgsT const &arg
     PRECICE_ASSERT(res.second);
   }
   {
-    [[maybe_unused]] auto res = BaseT::add_attribute_unlocked("File", constant<std::string>(file_value));
+    [[maybe_unused]] auto res = BaseT::add_attribute_unlocked("File", constant<std::string>(std::move(file_value)));
     PRECICE_ASSERT(res.second);
   }
   {
-    [[maybe_unused]] auto res = BaseT::add_attribute_unlocked("Function", constant<std::string>(func_value));
+    [[maybe_unused]] auto res = BaseT::add_attribute_unlocked("Function", constant<std::string>(std::move(func_value)));
     PRECICE_ASSERT(res.second);
   }
 
@@ -103,11 +103,11 @@ public:
   /** Creates a Boost logger for the said module.
    * @param[in] module the name of the module.
    */
-  explicit LoggerImpl(const std::string &module);
+  explicit LoggerImpl(std::string_view module);
 };
 
 /// Registers attributes that don't depend on the \ref LogLocation
-Logger::LoggerImpl::LoggerImpl(const std::string &module)
+Logger::LoggerImpl::LoggerImpl(std::string_view module)
 {
   namespace attrs = boost::log::attributes;
 
@@ -117,7 +117,7 @@ Logger::LoggerImpl::LoggerImpl(const std::string &module)
   add_attribute("Rank", attrs::make_function<int>([] { return getGlobalLoggingConfig().rank; }));
 
   // Constant attributes
-  add_attribute("Module", attrs::constant<std::string>(module));
+  add_attribute("Module", attrs::constant<std::string>(std::string{module}));
 
   // Ensure, boost-provided attributes are present
   add_attribute("TimeStamp", attrs::local_clock());
@@ -125,8 +125,8 @@ Logger::LoggerImpl::LoggerImpl(const std::string &module)
   add_attribute("Scope", attrs::named_scope());
 }
 
-Logger::Logger(std::string module)
-    : _impl(new LoggerImpl{std::move(module)}) {}
+Logger::Logger(std::string_view module)
+    : _impl(new LoggerImpl{module}) {}
 
 /// This is required for the std::unique_ptr.
 Logger::~Logger() = default;
@@ -154,7 +154,7 @@ void Logger::swap(Logger &other) noexcept
 #define PRECICE_LOG_IMPL(lg, sev, loc) \
   BOOST_LOG_STREAM_WITH_PARAMS((lg), (boost::log::keywords::severity = (sev))(keywords::line = (loc.line))(keywords::file = (loc.file))(keywords::func = (loc.func)))
 
-void Logger::error(LogLocation loc, const std::string &mess) noexcept
+void Logger::error(LogLocation loc, std::string_view mess) noexcept
 {
   try {
     PRECICE_LOG_IMPL(*_impl, boost::log::trivial::severity_level::error, loc) << mess;
@@ -162,7 +162,7 @@ void Logger::error(LogLocation loc, const std::string &mess) noexcept
   }
 }
 
-void Logger::warning(LogLocation loc, const std::string &mess) noexcept
+void Logger::warning(LogLocation loc, std::string_view mess) noexcept
 {
   try {
     PRECICE_LOG_IMPL(*_impl, boost::log::trivial::severity_level::warning, loc) << mess;
@@ -170,7 +170,7 @@ void Logger::warning(LogLocation loc, const std::string &mess) noexcept
   }
 }
 
-void Logger::info(LogLocation loc, const std::string &mess) noexcept
+void Logger::info(LogLocation loc, std::string_view mess) noexcept
 {
   try {
     PRECICE_LOG_IMPL(*_impl, boost::log::trivial::severity_level::info, loc) << mess;
@@ -178,7 +178,7 @@ void Logger::info(LogLocation loc, const std::string &mess) noexcept
   }
 }
 
-void Logger::debug(LogLocation loc, const std::string &mess) noexcept
+void Logger::debug(LogLocation loc, std::string_view mess) noexcept
 {
   try {
     PRECICE_LOG_IMPL(*_impl, boost::log::trivial::severity_level::debug, loc) << mess;
@@ -186,7 +186,7 @@ void Logger::debug(LogLocation loc, const std::string &mess) noexcept
   }
 }
 
-void Logger::trace(LogLocation loc, const std::string &mess) noexcept
+void Logger::trace(LogLocation loc, std::string_view mess) noexcept
 {
   try {
     PRECICE_LOG_IMPL(*_impl, boost::log::trivial::severity_level::trace, loc) << mess;

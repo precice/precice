@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <iostream>
+#include <tuple>
 
 #include "math/differences.hpp"
 #include "mesh/Edge.hpp"
@@ -39,19 +40,24 @@ public:
   /// Fix for the Boost.Test versions 1.65.1 - 1.67
   using value_type = Vertex::RawCoords;
 
+  /// Amount of vertices
+  static constexpr int vertexCount{3};
+
   /// Constructor based on 3 edges
   Triangle(
-      Edge &     edgeOne,
-      Edge &     edgeTwo,
-      Edge &     edgeThree,
-      TriangleID id);
+      Edge &edgeOne,
+      Edge &edgeTwo,
+      Edge &edgeThree);
 
-  /// Constructor based on 3 vertices
+  /** Constructor based on 3 vertices
+   *
+   * The vertices will be sorted by Vertex::getID().
+   * This allows to weakly order triangles.
+   */
   Triangle(
-      Vertex &   VertexOne,
-      Vertex &   VertexTwo,
-      Vertex &   VertexThree,
-      TriangleID id);
+      Vertex &VertexOne,
+      Vertex &VertexTwo,
+      Vertex &VertexThree);
 
   /// Returns dimensionalty of space the triangle is embedded in.
   int getDimensions() const;
@@ -100,9 +106,6 @@ public:
   /// Computes the normal of the triangle.
   Eigen::VectorXd computeNormal() const;
 
-  /// Returns a among triangles globally unique ID.
-  TriangleID getID() const;
-
   /// Returns the surface area of the triangle
   double getArea() const;
 
@@ -123,12 +126,16 @@ public:
   /// Not equal, implemented in terms of equal.
   bool operator!=(const Triangle &other) const;
 
-private:
-  /// Vertices defining the triangle.
-  std::array<Vertex *, 3> _vertices;
+  /// Weak ordering based on vertex ids
+  bool operator<(const Triangle &other) const
+  {
+    return std::make_tuple(_vertices[0]->getID(), _vertices[1]->getID(), _vertices[2]->getID()) <
+           std::make_tuple(other._vertices[0]->getID(), other._vertices[1]->getID(), other._vertices[2]->getID());
+  }
 
-  /// ID of the triangle.
-  TriangleID _id;
+private:
+  /// Vertices defining the triangle, sorted by Vertex::getID()
+  std::array<Vertex *, 3> _vertices;
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS
@@ -173,11 +180,6 @@ inline Triangle::const_iterator Triangle::cbegin() const
 inline Triangle::const_iterator Triangle::cend() const
 {
   return end();
-}
-
-inline TriangleID Triangle::getID() const
-{
-  return _id;
 }
 
 std::ostream &operator<<(std::ostream &os, const Triangle &t);

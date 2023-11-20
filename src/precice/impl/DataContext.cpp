@@ -1,5 +1,6 @@
 #include "precice/impl/DataContext.hpp"
 #include <memory>
+#include <utility>
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice::impl {
@@ -20,21 +21,23 @@ std::string DataContext::getDataName() const
   return _providedData->getName();
 }
 
-void DataContext::resetData()
+void DataContext::resetInitialGuesses()
 {
-  // See also https://github.com/precice/precice/issues/1156.
-  _providedData->toZero();
-  if (hasMapping()) {
-    PRECICE_ASSERT(hasWriteMapping());
-    PRECICE_ASSERT(!hasReadMapping());
-    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [](auto &context) { context.toData->toZero(); });
+  for (auto &kv : _initialGuesses) {
+    kv.second.setZero();
   }
 }
 
-DataID DataContext::getDataDimensions() const
+int DataContext::getDataDimensions() const
 {
   PRECICE_ASSERT(_providedData);
   return _providedData->getDimensions();
+}
+
+int DataContext::getSpatialDimensions() const
+{
+  PRECICE_ASSERT(_providedData);
+  return _providedData->getSpatialDimensions();
 }
 
 std::string DataContext::getMeshName() const
@@ -43,10 +46,22 @@ std::string DataContext::getMeshName() const
   return _mesh->getName();
 }
 
+int DataContext::getMeshVertexCount() const
+{
+  PRECICE_ASSERT(_mesh);
+  return _mesh->vertices().size();
+}
+
 MeshID DataContext::getMeshID() const
 {
   PRECICE_ASSERT(_mesh);
   return _mesh->getID();
+}
+
+bool DataContext::hasGradient() const
+{
+  PRECICE_ASSERT(_providedData);
+  return _providedData->hasGradient();
 }
 
 void DataContext::appendMapping(MappingContext mappingContext)
@@ -70,31 +85,38 @@ bool DataContext::hasMapping() const
   return hasReadMapping() || hasWriteMapping();
 }
 
-bool DataContext::isMappingRequired()
-{
-  if (not hasMapping()) {
-    return false;
-  }
-
-  PRECICE_ASSERT(std::all_of(_mappingContexts.begin(), _mappingContexts.end(), [this](const auto &context) { return context.timing == _mappingContexts[0].timing; }), "Different mapping timings for the same data context are not supported");
-
-  return std::any_of(_mappingContexts.begin(), _mappingContexts.end(), [](const auto &context) {
-    const auto timing = context.timing;
-    const bool mapNow = (timing == mapping::MappingConfiguration::ON_ADVANCE) || (timing == mapping::MappingConfiguration::INITIAL);
-    return (mapNow && !context.hasMappedData); });
-}
-
 void DataContext::mapData()
 {
   PRECICE_ASSERT(hasMapping());
   // Execute the mapping
   for (auto &context : _mappingContexts) {
-    // Reset the toData before executing the mapping
-    context.toData->toZero();
-    const DataID fromDataID = context.fromData->getID();
-    const DataID toDataID   = context.toData->getID();
-    context.mapping->map(fromDataID, toDataID);
-    PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, context.toData->values()));
+    // Reset the toData before mapping any samples
+    context.clearToDataStorage(); // @todo needs optimization: We don't need to map the data at the beginning of the window, because it should be known from the last window where it was the data from the window end. Exception: Data initialization. Related to https://github.com/precice/precice/issues/1707
+    PRECICE_ASSERT(context.fromData->stamples().size() > 0);
+
+    auto &mapping = *context.mapping;
+
+    const auto dataDims = context.fromData->getDimensions();
+
+    for (const auto &stample : context.fromData->stamples()) {
+      PRECICE_INFO("Mapping \"{}\" for t={} from \"{}\" to \"{}\"",
+                   getDataName(), stample.timestamp, mapping.getInputMesh()->getName(), mapping.getOutputMesh()->getName());
+      time::Sample outSample{
+          dataDims,
+          Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->vertices().size())};
+
+      if (mapping.requiresInitialGuess()) {
+        const FromToDataIDs key{context.fromData->getID(), context.toData->getID()};
+        mapping.map(stample.sample, outSample.values, _initialGuesses[key]);
+      } else {
+        mapping.map(stample.sample, outSample.values);
+      }
+
+      PRECICE_DEBUG("Mapped values (t={}) = {}", stample.timestamp, utils::previewRange(3, outSample.values));
+
+      // Store data from mapping buffer in storage
+      context.toData->setSampleAtTime(stample.timestamp, std::move(outSample));
+    }
   }
 }
 
@@ -106,6 +128,12 @@ bool DataContext::hasReadMapping() const
 bool DataContext::hasWriteMapping() const
 {
   return std::any_of(_mappingContexts.begin(), _mappingContexts.end(), [this](auto &context) { return context.fromData == _providedData; });
+}
+
+bool DataContext::isValidVertexID(const VertexID id) const
+{
+  PRECICE_ASSERT(_mesh);
+  return _mesh->isValidVertexID(id);
 }
 
 } // namespace precice::impl

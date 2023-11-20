@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 
 using namespace precice;
 
@@ -20,48 +20,47 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
 
-  SolverInterface precice(context.name, context.config(), 0, 1);
-
-  MeshID meshID;
-  DataID writeDataID;
+  Participant precice(context.name, context.config(), 0, 1);
 
   int nSubsteps; // let three solvers use different time step sizes
 
+  std::string meshName, writeDataName;
   if (context.isNamed("SolverOne")) {
-    meshID    = precice.getMeshID("MeshOne");
+    meshName  = "MeshOne";
     nSubsteps = 1;
   } else if (context.isNamed("SolverTwo")) {
-    meshID    = precice.getMeshID("MeshTwo");
+    meshName  = "MeshTwo";
     nSubsteps = 2;
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
-    meshID    = precice.getMeshID("MeshThree");
+    meshName  = "MeshThree";
     nSubsteps = 3;
   }
 
-  VertexID vertexID = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   v0[]     = {0, 0, 0};
+  VertexID vertexID = precice.setMeshVertex(meshName, v0);
 
   int totalSolves             = 0;
   int totalCompletedTimesteps = 0;
   int timestepsInThisWindow   = 0;
 
-  double maxDt     = precice.initialize();
+  precice.initialize();
+  double maxDt     = precice.getMaxTimeStepSize();
   double windowDt  = maxDt;
-  double dt        = windowDt / nSubsteps; // Timestep length desired by solver. E.g. 2 steps with size 1/2
-  double currentDt = dt;                   // Timestep length used by solver
+  double dt        = windowDt / nSubsteps; // time step size desired by solver. E.g. 2 steps with size 1/2
+  double currentDt = dt;                   // time step size used by solver
 
   while (precice.isCouplingOngoing()) {
-    if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
+    if (precice.requiresWritingCheckpoint()) {
       totalCompletedTimesteps += timestepsInThisWindow;
       timestepsInThisWindow = 0;
-      precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
-    maxDt     = precice.advance(currentDt);
-    currentDt = dt > maxDt ? maxDt : dt;
+    precice.advance(currentDt);
+    double maxDt = precice.getMaxTimeStepSize();
+    currentDt    = dt > maxDt ? maxDt : dt;
     totalSolves++;
     timestepsInThisWindow++;
-    if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) {
-      precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint());
+    if (precice.requiresReadingCheckpoint()) {
       timestepsInThisWindow = 0;
     }
   }

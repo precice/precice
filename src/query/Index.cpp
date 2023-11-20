@@ -6,13 +6,11 @@
 
 #include "logging/LogMacros.hpp"
 #include "precice/types.hpp"
+#include "profiling/Event.hpp"
 #include "query/Index.hpp"
 #include "query/impl/RTreeAdapter.hpp"
-#include "utils/Event.hpp"
 
-namespace precice {
-extern bool syncMode;
-namespace query {
+namespace precice::query {
 
 precice::logging::Logger Index::_log{"query::Index"};
 
@@ -50,7 +48,7 @@ VertexTraits::Ptr Index::IndexImpl::getVertexRTree(const mesh::Mesh &mesh)
     return indices.vertexRTree;
   }
 
-  precice::utils::Event e("query.index.getVertexIndexTree." + mesh.getName());
+  precice::profiling::Event e("query.index.getVertexIndexTree." + mesh.getName());
 
   // Generating the rtree is expensive, so passing everything in the ctor is
   // the best we can do. Even passing an index range instead of calling
@@ -70,7 +68,7 @@ EdgeTraits::Ptr Index::IndexImpl::getEdgeRTree(const mesh::Mesh &mesh)
     return indices.edgeRTree;
   }
 
-  precice::utils::Event e("query.index.getEdgeIndexTree." + mesh.getName());
+  precice::profiling::Event e("query.index.getEdgeIndexTree." + mesh.getName());
 
   // Generating the rtree is expensive, so passing everything in the ctor is
   // the best we can do. Even passing an index range instead of calling
@@ -91,7 +89,7 @@ TriangleTraits::Ptr Index::IndexImpl::getTriangleRTree(const mesh::Mesh &mesh)
     return indices.triangleRTree;
   }
 
-  precice::utils::Event e("query.index.getTriangleIndexTree." + mesh.getName());
+  precice::profiling::Event e("query.index.getTriangleIndexTree." + mesh.getName());
 
   // We first generate the values for the triangle rtree.
   // The resulting vector is a random access range, which can be passed to the
@@ -119,7 +117,7 @@ TetrahedronTraits::Ptr Index::IndexImpl::getTetraRTree(const mesh::Mesh &mesh)
     return indices.tetraRTree;
   }
 
-  precice::utils::Event e("query.index.getTetraIndexTree." + mesh.getName());
+  precice::profiling::Event e("query.index.getTetraIndexTree." + mesh.getName());
 
   // We first generate the values for the tetra rtree.
   // The resulting vector is a random access range, which can be passed to the
@@ -183,6 +181,19 @@ VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
   return match;
 }
 
+std::vector<VertexID> Index::getClosestVertices(const Eigen::VectorXd &sourceCoord, int n)
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(!(_mesh->vertices().empty()), _mesh->getName());
+  std::vector<VertexID> matches;
+  const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
+
+  rtree->query(bgi::nearest(sourceCoord, n), boost::make_function_output_iterator([&](size_t matchID) {
+                 matches.emplace_back(matchID);
+               }));
+  return matches;
+}
+
 std::vector<EdgeMatch> Index::getClosestEdges(const Eigen::VectorXd &sourceCoord, int n)
 {
   PRECICE_TRACE();
@@ -219,9 +230,27 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::Vertex &centerVert
 
   const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
   std::vector<VertexID> matches;
-  rtree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) <= radius; }),
+  rtree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) < radius; }),
                std::back_inserter(matches));
   return matches;
+}
+
+bool Index::isAnyVertexInsideBox(const mesh::Vertex &centerVertex, double radius)
+{
+  PRECICE_TRACE();
+
+  // Prepare boost::geometry box
+  auto coords    = centerVertex.getCoords();
+  auto searchBox = query::makeBox(coords.array() - radius, coords.array() + radius);
+
+  const auto &rtree = _pimpl->getVertexRTree(*_mesh);
+
+  // We can skip the iterator increment in the loop signature, as it is never executed
+  for (auto it = rtree->qbegin(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) < radius; })); it != rtree->qend();) {
+    return true;
+  }
+
+  return false;
 }
 
 std::vector<VertexID> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
@@ -338,10 +367,33 @@ ProjectionMatch Index::findTriangleProjection(const Eigen::VectorXd &location, i
   return *min;
 }
 
+mesh::BoundingBox Index::getRtreeBounds()
+{
+  PRECICE_TRACE();
+  // if the mesh is empty, we will most likely hit an assertion in the bounding box class
+  // therefore, we keep the assert here, but might want to return an empty bounding box in case
+  // we want to allow calling this function with empty meshes
+  PRECICE_ASSERT(_mesh->vertices().size() > 0);
+
+  auto            rtreeBox = _pimpl->getVertexRTree(*_mesh)->bounds();
+  int             dim      = _mesh->getDimensions();
+  Eigen::VectorXd min(dim), max(dim);
+
+  min[0] = rtreeBox.min_corner().get<0>();
+  min[1] = rtreeBox.min_corner().get<1>();
+  max[0] = rtreeBox.max_corner().get<0>();
+  max[1] = rtreeBox.max_corner().get<1>();
+
+  if (dim > 2) {
+    min[2] = rtreeBox.min_corner().get<2>();
+    max[2] = rtreeBox.max_corner().get<2>();
+  }
+  return mesh::BoundingBox{min, max};
+}
+
 void Index::clear()
 {
   _pimpl->clear();
 }
 
-} // namespace query
-} // namespace precice
+} // namespace precice::query

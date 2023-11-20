@@ -3,7 +3,7 @@
 #include "helpers.hpp"
 #include "testing/Testing.hpp"
 
-#include "precice/SolverInterface.hpp"
+#include "precice/precice.hpp"
 
 /**
  * @brief Three solvers are coupled in a fork S2 <-> S1 <-> S3.
@@ -13,55 +13,51 @@
  */
 void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCallsOfAdvance, TestContext const &context)
 {
-  std::string writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string readIterCheckpoint(constants::actionReadIterationCheckpoint());
-  std::string writeInitData(constants::actionWriteInitialData());
 
   int callsOfAdvance = 0;
 
+  double v0[] = {0, 0};
+  double v1[] = {1, 1};
+
   if (context.isNamed("SolverOne")) {
-    precice::SolverInterface precice(context.name, config, 0, 1);
+    precice::Participant precice(context.name, config, 0, 1);
 
-    int meshAID = precice.getMeshID("MeshA");
-    int meshBID = precice.getMeshID("MeshB");
-    precice.setMeshVertex(meshAID, Eigen::Vector2d(0, 0).data());
-    precice.setMeshVertex(meshBID, Eigen::Vector2d(1, 1).data());
+    auto meshAID = "MeshA";
+    precice.setMeshVertex(meshAID, v0);
 
-    if (precice.isActionRequired(writeInitData)) {
-      precice.markActionFulfilled(writeInitData);
+    if (precice.requiresInitialData()) {
     }
-    double dt = precice.initialize();
+    precice.initialize();
+    double dt = precice.getMaxTimeStepSize();
 
     while (precice.isCouplingOngoing()) {
-      if (precice.isActionRequired(writeIterCheckpoint)) {
-        precice.markActionFulfilled(writeIterCheckpoint);
+      if (precice.requiresWritingCheckpoint()) {
       }
-      dt = precice.advance(dt);
-      if (precice.isActionRequired(readIterCheckpoint)) {
-        precice.markActionFulfilled(readIterCheckpoint);
+      precice.advance(dt);
+      dt = precice.getMaxTimeStepSize();
+      if (precice.requiresReadingCheckpoint()) {
       }
       callsOfAdvance++;
     }
     precice.finalize();
     BOOST_TEST(callsOfAdvance == expectedCallsOfAdvance.at(0));
   } else if (context.isNamed("SolverTwo")) {
-    SolverInterface precice(context.name, config, 0, 1);
+    Participant precice(context.name, config, 0, 1);
 
-    MeshID meshID = precice.getMeshID("MeshC");
-    precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
+    auto meshName = "MeshC";
+    precice.setMeshVertex(meshName, v0);
 
-    if (precice.isActionRequired(writeInitData)) {
-      precice.markActionFulfilled(writeInitData);
+    if (precice.requiresInitialData()) {
     }
-    double dt = precice.initialize();
+    precice.initialize();
+    double dt = precice.getMaxTimeStepSize();
 
     while (precice.isCouplingOngoing()) {
-      if (precice.isActionRequired(writeIterCheckpoint)) {
-        precice.markActionFulfilled(writeIterCheckpoint);
+      if (precice.requiresWritingCheckpoint()) {
       }
-      dt = precice.advance(dt);
-      if (precice.isActionRequired(readIterCheckpoint)) {
-        precice.markActionFulfilled(readIterCheckpoint);
+      precice.advance(dt);
+      dt = precice.getMaxTimeStepSize();
+      if (precice.requiresReadingCheckpoint()) {
       }
       callsOfAdvance++;
     }
@@ -69,23 +65,22 @@ void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCal
     BOOST_TEST(callsOfAdvance == expectedCallsOfAdvance.at(1));
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
-    SolverInterface precice(context.name, config, 0, 1);
+    Participant precice(context.name, config, 0, 1);
 
-    MeshID meshID = precice.getMeshID("MeshD");
-    precice.setMeshVertex(meshID, Eigen::Vector2d(0, 0).data());
+    auto meshName = "MeshD";
+    precice.setMeshVertex(meshName, v0);
 
-    if (precice.isActionRequired(writeInitData)) {
-      precice.markActionFulfilled(writeInitData);
+    if (precice.requiresInitialData()) {
     }
-    double dt = precice.initialize();
+    precice.initialize();
+    double dt = precice.getMaxTimeStepSize();
 
     while (precice.isCouplingOngoing()) {
-      if (precice.isActionRequired(writeIterCheckpoint)) {
-        precice.markActionFulfilled(writeIterCheckpoint);
+      if (precice.requiresWritingCheckpoint()) {
       }
-      dt = precice.advance(dt);
-      if (precice.isActionRequired(readIterCheckpoint)) {
-        precice.markActionFulfilled(readIterCheckpoint);
+      precice.advance(dt);
+      dt = precice.getMaxTimeStepSize();
+      if (precice.requiresReadingCheckpoint()) {
       }
       callsOfAdvance++;
     }

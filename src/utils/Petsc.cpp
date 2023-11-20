@@ -18,8 +18,10 @@
 #include "petscis.h"
 #include "petscksp.h"
 #include "petscsystypes.h"
+#include "petscvec.h"
 #include "petscviewertypes.h"
 #include "utils/Parallel.hpp"
+#include "utils/assertion.hpp"
 
 #endif // not PRECICE_NO_PETSC
 
@@ -65,7 +67,11 @@ PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[]
 } // namespace
 #endif
 
-logging::Logger Petsc::_log("utils::Petsc");
+precice::logging::Logger precice::utils::Petsc::_log("utils::Petsc");
+
+#ifndef PRECICE_NO_PETSC
+precice::logging::Logger precice::utils::petsc::Vector::_log("utils::Petsc::Vector");
+#endif // not PRECICE_NO_PETSC
 
 bool Petsc::weInitialized = false;
 
@@ -349,6 +355,42 @@ void Vector::fillWithRandoms()
   ierr = VecSetRandom(vector, rctx);
   CHKERRV(ierr);
   PetscRandomDestroy(&rctx);
+}
+
+Vector &Vector::copyFrom(precice::span<const double> source)
+{
+  // This is collective, so we can only skip if the global size is 0
+  if (getSize() == 0) {
+    return *this;
+  }
+  PRECICE_ASSERT(static_cast<PetscInt>(source.size()) == getLocalSize());
+  PetscScalar *  data;
+  PetscErrorCode ierr = 0;
+  ierr                = VecGetArray(vector, &data);
+  PRECICE_ASSERT(ierr == 0);
+  std::copy(source.begin(), source.end(), data);
+  ierr = VecRestoreArray(vector, &data);
+  PRECICE_ASSERT(ierr == 0);
+  return *this;
+}
+
+Vector &Vector::copyTo(precice::span<double> destination)
+{
+  // This is collective, so we can only skip if the global size is 0
+  if (getSize() == 0) {
+    return *this;
+  }
+  auto localSize = getLocalSize();
+  PRECICE_ASSERT(static_cast<PetscInt>(destination.size()) == localSize);
+  PetscScalar *  data;
+  PetscErrorCode ierr = 0;
+  ierr                = VecGetArray(vector, &data);
+  PRECICE_ASSERT(ierr == 0);
+  auto dataEnd = std::next(data, localSize);
+  std::copy(data, dataEnd, destination.begin());
+  ierr = VecRestoreArray(vector, &data);
+  PRECICE_ASSERT(ierr == 0);
+  return *this;
 }
 
 void Vector::sort()
