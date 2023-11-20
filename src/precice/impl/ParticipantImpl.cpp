@@ -1427,7 +1427,7 @@ void ParticipantImpl::resetWrittenData()
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
-    context.resetData();
+    context.resetBuffer();
   }
 }
 
