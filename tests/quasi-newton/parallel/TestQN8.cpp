@@ -8,11 +8,11 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(QuasiNewton)
 BOOST_AUTO_TEST_SUITE(Parallel)
-BOOST_AUTO_TEST_CASE(TestQN3EmptyPartition)
+BOOST_AUTO_TEST_CASE(TestQN8)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
-  // parallel coupling, IQN-IMVJ, strict QR2 filter
-  runTestQNEmptyPartition(context.config(), context);
+  // serial coupling, IQN-IMVJ acceleration, to test the feature `always-build-jacobian`;
+  runTestQN(context.config(), context);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Integration
