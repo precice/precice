@@ -58,18 +58,19 @@ SerialCouplingScheme::SerialCouplingScheme(
     CouplingMode                  cplMode)
     : SerialCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, minTimeStepSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), dtMethod, cplMode, UNDEFINED_MAX_ITERATIONS, UNDEFINED_MAX_ITERATIONS){};
 
-void SerialCouplingScheme::setTimeWindowSize(double timeWindowSize)
+void SerialCouplingScheme::setNextTimeWindowSize(double timeWindowSize)
 {
-  PRECICE_ASSERT(not _participantSetsTimeWindowSize);
-  BaseCouplingScheme::setTimeWindowSize(timeWindowSize);
+  BaseCouplingScheme::setNextTimeWindowSize(timeWindowSize);
 }
 
 void SerialCouplingScheme::sendTimeWindowSize()
 {
   PRECICE_TRACE();
   if (_participantSetsTimeWindowSize) {
-    PRECICE_DEBUG("sending time window size of {}", getComputedTimeWindowPart());
-    getM2N()->send(getComputedTimeWindowPart());
+    setTimeWindowSize(getComputedTimeWindowPart());
+    setNextTimeWindowSize(UNDEFINED_TIME_WINDOW_SIZE);
+    PRECICE_DEBUG("sending time window size of {}", getTimeWindowSize());
+    getM2N()->send(getTimeWindowSize());
   }
 }
 
@@ -88,7 +89,7 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
       PRECICE_CHECK(dt == getTimeWindowSize(), "May only use a larger time window size in the first iteration of the window. Otherwise old time window size must equal new time window size.");
     }
 
-    setTimeWindowSize(dt);
+    setNextTimeWindowSize(dt);
   }
 }
 

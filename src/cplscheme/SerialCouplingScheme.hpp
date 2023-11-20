@@ -67,10 +67,10 @@ public:
 
 protected:
   /**
-   * @brief Setter for _timeWindowSize
+   * @brief Setter for _nextTimeWindowSize
    * @param timeWindowSize
    */
-  void setTimeWindowSize(double timeWindowSize);
+  void setNextTimeWindowSize(double timeWindowSize);
 
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};

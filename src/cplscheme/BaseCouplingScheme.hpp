@@ -311,6 +311,12 @@ protected:
   void setTimeWindowSize(double timeWindowSize);
 
   /**
+   * @brief Setter for _nextTimeWindowSize
+   * @param timeWindowSize
+   */
+  void setNextTimeWindowSize(double timeWindowSize);
+
+  /**
    * @brief Getter for _computedTimeWindowPart
    * @returns _computedTimeWindowPart
    */
@@ -410,7 +416,10 @@ private:
   int _timeWindows = 0;
 
   /// size of time window; _timeWindowSize <= _maxTime
-  double _timeWindowSize;
+  double _timeWindowSize = UNDEFINED_TIME_WINDOW_SIZE;
+
+  /// time window size of next window (acts as buffer for time windows size provided by first participant, if using first participant method)
+  double _nextTimeWindowSize = UNDEFINED_TIME_WINDOW_SIZE;
 
   /// Part of the window that is already computed; _computedTimeWindowPart <= _timeWindowSize
   double _computedTimeWindowPart = 0;

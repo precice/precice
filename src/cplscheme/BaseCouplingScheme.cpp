@@ -45,6 +45,7 @@ BaseCouplingScheme::BaseCouplingScheme(
       _maxTimeWindows(maxTimeWindows),
       _timeWindows(1),
       _timeWindowSize(timeWindowSize),
+      _nextTimeWindowSize(timeWindowSize),
       _minIterations(minIterations),
       _maxIterations(maxIterations),
       _iterations(1),
@@ -208,7 +209,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
 void BaseCouplingScheme::receiveDataForWindowEnd(const m2n::PtrM2N &m2n, const DataMap &receiveData)
 {
   const double oldComputedTimeWindowPart = _computedTimeWindowPart;
-  _computedTimeWindowPart += getTimeWindowSize(); // such that getTime() in receiveData returns time at end of window
+  _computedTimeWindowPart += _nextTimeWindowSize; // such that getTime() in receiveData returns time at end of window
   this->receiveData(m2n, receiveData);            // receive data for end of window
   _computedTimeWindowPart = oldComputedTimeWindowPart;
 }
@@ -247,6 +248,11 @@ void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
   _timeWindowSize = timeWindowSize;
 }
 
+void BaseCouplingScheme::setNextTimeWindowSize(double timeWindowSize)
+{
+  _nextTimeWindowSize = timeWindowSize;
+}
+
 void BaseCouplingScheme::finalize()
 {
   PRECICE_TRACE();
@@ -281,7 +287,8 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   exchangeInitialData();
 
-  _isInitialized = true;
+  _timeWindowSize = _nextTimeWindowSize;
+  _isInitialized  = true;
 }
 
 bool BaseCouplingScheme::sendsInitializedData() const
@@ -358,11 +365,12 @@ void BaseCouplingScheme::secondExchange()
         advanceTXTWriters();
         PRECICE_INFO("Time window completed");
         _isTimeWindowComplete = true;
-        _timeWindowStartTime += _computedTimeWindowPart;
+        _timeWindowStartTime += _timeWindowSize;
         _computedTimeWindowPart = 0.0; // reset window
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
           requireAction(CouplingScheme::Action::WriteCheckpoint);
+          _timeWindowSize = _nextTimeWindowSize;
         }
       }
       //update iterations
@@ -375,11 +383,12 @@ void BaseCouplingScheme::secondExchange()
     } else {
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
-      _timeWindowStartTime += _computedTimeWindowPart;
+      _timeWindowStartTime += _timeWindowSize;
       _computedTimeWindowPart = 0.0; // reset window
     }
     if (isCouplingOngoing()) {
       PRECICE_ASSERT(_hasDataBeenReceived);
+      _timeWindowSize = _nextTimeWindowSize;
     }
   }
 }

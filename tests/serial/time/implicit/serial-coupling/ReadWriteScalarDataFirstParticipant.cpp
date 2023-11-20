@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
           timeInWindow = 0;
         }
 
-        if (context.isNamed("SolverOne")) {
+        if (context.isNamed("SolverOne") && precice.isCouplingOngoing()) {
           // Check remainder of simulation time
           BOOST_TEST(precice.getMaxTimeStepSize() == totalTime - startOfWindowTime - timeInWindow);
         }
