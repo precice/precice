@@ -224,8 +224,10 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       }
 
       if (math::equals(residualMagnitude, 0.0)) {
-        PRECICE_WARN("Add a zero vector to the quasi-Newton V matrix. This means that the residuals "
-                     "in two consecutive iterations are identical.");
+        PRECICE_WARN("Adding a vector with a two-norm of {} to the quasi-Newton V matrix, which will lead to "
+                     "ill-conditioning. A filter might delete the column again. Still, this could mean that you are " 
+                     "converging too tightly, that you reached steady-state, or that you are giving by mistake identical "
+                     "data to preCICE in two consecutive iterations.", residualMagnitude);
       }
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
