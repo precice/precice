@@ -42,16 +42,14 @@ void IQNILSAcceleration::initialize(
     const DataMap &cplData)
 {
   _exchangeSubsteps = true;
+
+  //initialize x_tildes for secondary data
+  for (int id : _secondaryDataIDs) {
+    precice::time::Storage localCopy = cplData.at(id)->timeStepsStorage();
+    _secondaryOldXTildesW.insert(std::pair<int, precice::time::Storage>(id, localCopy));
+  }
   // do common QN acceleration initialization
   BaseQNAcceleration::initialize(cplData);
-
-  // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
-  for (const DataMap::value_type &pair : cplData) {
-    if (not utils::contained(pair.first, _dataIDs)) {
-      int secondaryEntries = pair.second->getSize();
-      utils::append(_secondaryOldXTildes[pair.first], Eigen::VectorXd(Eigen::VectorXd::Zero(secondaryEntries)));
-    }
-  }
 }
 
 void IQNILSAcceleration::updateDifferenceMatrices(
@@ -84,10 +82,10 @@ void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
 {
 
   //Store x_tildes for secondary data
+  _secondaryOldXTildesW.clear();
   for (int id : _secondaryDataIDs) {
-    PRECICE_ASSERT(_secondaryOldXTildes.at(id).size() == cplData.at(id)->getSize(),
-                   _secondaryOldXTildes.at(id).size(), cplData.at(id)->getSize());
-    _secondaryOldXTildes[id] = cplData.at(id)->values();
+    precice::time::Storage localCopy = cplData.at(id)->timeStepsStorage();
+    _secondaryOldXTildesW.insert(std::pair<int, precice::time::Storage>(id, localCopy));
   }
 
   // Perform underrelaxation with initial relaxation factor for secondary data can use the waveform variant for both cases
@@ -107,6 +105,14 @@ void IQNILSAcceleration::computeUnderrelaxationSecondaryData(
 
 void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData)
 {
+
+  //Store x_tildes for secondary data
+  _secondaryOldXTildesW.clear();
+  for (int id : _secondaryDataIDs) {
+    precice::time::Storage localCopy = cplData.at(id)->timeStepsStorage();
+    _secondaryOldXTildesW.insert(std::pair<int, precice::time::Storage>(id, localCopy));
+  }
+
   PRECICE_TRACE();
   PRECICE_DEBUG("   Compute Newton factors");
 
@@ -215,8 +221,7 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData)
     //skip the first sample since it always contains the initial data that never changes
     for (auto &stample : cplData.at(id)->stamples().advance_begin(1)) {
 
-      cplData.at(id)->values() = stample.sample.values;
-      double timestamp         = stample.timestamp;
+      double timestamp = stample.timestamp;
 
       for (int i = 0; i < c.size(); i++) {
         cplData.at(id)->values() += Wlist[i].sample(timestamp) * c[i];
