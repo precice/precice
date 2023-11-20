@@ -1,6 +1,7 @@
 #include "RadialGeoMultiscaleMapping.hpp"
 #include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
+#include <numeric>
 #include "mesh/Mesh.hpp"
 
 namespace precice::mapping {
@@ -34,15 +35,17 @@ void RadialGeoMultiscaleMapping::computeMapping()
                  "Unknown multiscale axis type.")
 
   // determine principle axis midpoints as borders to assign 3D vertices to their respective 1D vertex
-  Eigen::VectorXd axisMidpoints(inSize);
-  auto            ordered_vertices = input()->vertices();
-  std::sort(ordered_vertices.begin(), ordered_vertices.end(),
-            [effectiveCoordinate](const mesh::Vertex &a, const mesh::Vertex &b) {
-              return a.getCoords()[effectiveCoordinate] < b.getCoords()[effectiveCoordinate];
+  Eigen::VectorXd     axisMidpoints(inSize);
+  auto &              verticesref = input()->vertices();
+  std::vector<size_t> ordered_vertex_indices(input()->vertices().size());
+  std::iota(ordered_vertex_indices.begin(), ordered_vertex_indices.end(), 0);
+  std::sort(ordered_vertex_indices.begin(), ordered_vertex_indices.end(),
+            [effectiveCoordinate, verticesref](const size_t aindex, const size_t bindex) {
+              return verticesref[aindex].getCoords()[effectiveCoordinate] < verticesref[bindex].getCoords()[effectiveCoordinate];
             });
   for (size_t i = 0; i < (inSize - 1); i++) {
-    auto axisPositionCurrent = ordered_vertices[i].getCoords()[effectiveCoordinate];
-    auto axisPositionNext    = ordered_vertices[i + 1].getCoords()[effectiveCoordinate];
+    auto axisPositionCurrent = verticesref[ordered_vertex_indices[i]].getCoords()[effectiveCoordinate];
+    auto axisPositionNext    = verticesref[ordered_vertex_indices[i] + 1].getCoords()[effectiveCoordinate];
     axisMidpoints(i)         = (axisPositionCurrent + axisPositionNext) / 2;
   }
   axisMidpoints(inSize - 1) = std::numeric_limits<double>::max(); // large number, such that vertices after the last midpoint are still assigned
