@@ -8,7 +8,7 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(QuasiNewton)
 BOOST_AUTO_TEST_SUITE(Parallel)
-BOOST_AUTO_TEST_CASE(TestQN3EmptyPartition)
+BOOST_AUTO_TEST_CASE(TestQN9EmptyPartition)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
   // parallel coupling, IQN-IMVJ, strict QR2 filter

@@ -51,7 +51,7 @@ void checkConfiguration(const std::string &filename, const std::string &particip
   logging::setMPIRank(0);
   const auto wasInitialized = utils::Parallel::isMPIInitialized();
   if (!wasInitialized) {
-    utils::Parallel::initializeMPI(nullptr, nullptr);
+    utils::Parallel::initializeTestingMPI(nullptr, nullptr);
   }
   xml::ConfigurationContext context{
       participant,
@@ -61,7 +61,7 @@ void checkConfiguration(const std::string &filename, const std::string &particip
   fmt::print(fmt::emphasis::bold | fg(fmt::color::green), "No major issues detected\n", filename);
   if (!wasInitialized) {
     utils::Petsc::finalize();
-    utils::Parallel::finalizeMPI();
+    utils::Parallel::finalizeTestingMPI();
   }
 }
 
