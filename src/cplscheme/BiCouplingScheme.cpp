@@ -13,7 +13,7 @@
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/Helpers.hpp"
 
 namespace precice::cplscheme {
@@ -22,15 +22,16 @@ BiCouplingScheme::BiCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
-    int                           validDigits,
+    double                        minTimeStepSize,
     std::string                   firstParticipant,
     std::string                   secondParticipant,
     const std::string &           localParticipant,
     m2n::PtrM2N                   m2n,
+    int                           minIterations,
     int                           maxIterations,
     CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, cplMode, dtMethod),
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, minTimeStepSize, localParticipant, minIterations, maxIterations, cplMode, dtMethod),
       _m2n(std::move(m2n)),
       _firstParticipant(std::move(firstParticipant)),
       _secondParticipant(std::move(secondParticipant))
@@ -54,7 +55,7 @@ void BiCouplingScheme::addDataToSend(
     bool                 exchangeSubsteps)
 {
   PRECICE_TRACE();
-  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps);
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps, CouplingData::Direction::Send);
 
   if (!utils::contained(data->getID(), _sendData)) {
     PRECICE_ASSERT(_sendData.count(data->getID()) == 0, "Key already exists!");
@@ -71,7 +72,7 @@ void BiCouplingScheme::addDataToReceive(
     bool                 exchangeSubsteps)
 {
   PRECICE_TRACE();
-  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps);
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps, CouplingData::Direction::Receive);
 
   if (!utils::contained(data->getID(), _receiveData)) {
     PRECICE_ASSERT(_receiveData.count(data->getID()) == 0, "Key already exists!");

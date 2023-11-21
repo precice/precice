@@ -11,7 +11,7 @@
 
 #include "com/ConnectionInfoPublisher.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 
 namespace bfs = boost::filesystem;
@@ -20,13 +20,13 @@ namespace precice::com {
 
 namespace {
 
-std::string preciceFancyHash(const std::string &s)
+std::string preciceFancyHash(std::string_view s)
 try {
   boost::uuids::string_generator ns_gen;
   auto                           ns = ns_gen("af7ce8f2-a9ee-46cb-38ee-71c318aa3580"); // md5 hash of precice.org as namespace
 
   boost::uuids::name_generator gen{ns};
-  return boost::uuids::to_string(gen(s));
+  return boost::uuids::to_string(gen(s.data(), s.size()));
 
 } catch (const std::runtime_error &e) {
   PRECICE_UNREACHABLE("preCICE hashing failed", e.what());
@@ -34,10 +34,10 @@ try {
 }
 } // namespace
 
-std::string impl::hashedFilePath(const std::string &acceptorName, const std::string &requesterName, const std::string &tag, Rank rank)
+std::string impl::hashedFilePath(std::string_view acceptorName, std::string_view requesterName, std::string_view tag, Rank rank)
 {
   constexpr int     firstLevelLen = 2;
-  std::string const s             = acceptorName + tag + requesterName + std::to_string(rank);
+  std::string const s             = std::string(acceptorName).append(tag).append(requesterName).append(std::to_string(rank));
   std::string       hash          = preciceFancyHash(s);
   hash.erase(std::remove(hash.begin(), hash.end(), '-'), hash.end());
 
@@ -46,11 +46,11 @@ std::string impl::hashedFilePath(const std::string &acceptorName, const std::str
   return p.string();
 }
 
-std::string impl::localDirectory(const std::string &acceptorName, const std::string &requesterName, const std::string &addressDirectory)
+std::string impl::localDirectory(std::string_view acceptorName, std::string_view requesterName, std::string_view addressDirectory)
 {
-  std::string directional = acceptorName + "-" + requesterName;
+  std::string directional = std::string(acceptorName).append("-").append(requesterName);
 
-  auto p = bfs::path(addressDirectory) / "precice-run" / directional;
+  auto p = bfs::path(addressDirectory.begin(), addressDirectory.end()) / "precice-run" / directional;
 
   return p.string();
 }
@@ -119,7 +119,7 @@ ConnectionInfoWriter::~ConnectionInfoWriter()
   }
 }
 
-void ConnectionInfoWriter::write(std::string const &info) const
+void ConnectionInfoWriter::write(std::string_view info) const
 {
   auto path = getFilename();
   auto tmp  = bfs::path(path + "~");

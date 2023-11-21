@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "com/SharedPointer.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -51,6 +51,12 @@ public:
 
   /// To be used, when the number of max iterations is not defined (for explicit coupling).
   static const int UNDEFINED_MAX_ITERATIONS;
+
+  /// To be used, when the number of min iterations is not defined (for explicit coupling).
+  static const int UNDEFINED_MIN_ITERATIONS;
+
+  /// To be used, when the number of max iterations is infinite (for implicit coupling).
+  static const int INFINITE_MAX_ITERATIONS;
 
   /// Actions that are required by CouplingSchemes
   enum struct Action {
@@ -164,6 +170,10 @@ public:
 
   /// @brief Returns true, if data has been exchanged in last call of advance().
   virtual bool hasDataBeenReceived() const = 0;
+
+  /// Returns the time window start time of the current time window
+  /// For compositional schemes, this returns the earliest start of an active time window
+  virtual double getTimeWindowStart() const = 0;
 
   /// Returns the currently computed time of the coupling scheme.
   virtual double getTime() const = 0;

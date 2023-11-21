@@ -17,7 +17,7 @@
 #include "mesh/Tetrahedron.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "query/Index.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/assertion.hpp"

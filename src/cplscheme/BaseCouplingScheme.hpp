@@ -67,8 +67,9 @@ public:
       double                        maxTime,
       int                           maxTimeWindows,
       double                        timeWindowSize,
-      int                           validDigits,
+      double                        minTimeStepSize,
       std::string                   localParticipant,
+      int                           minIterations,
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod);
@@ -110,6 +111,8 @@ public:
    * @returns the currently computed time of the coupling scheme.
    */
   double getTime() const override final;
+
+  double getTimeWindowStart() const override final;
 
   /**
    * @brief getter for _timeWindows
@@ -289,9 +292,11 @@ protected:
    * @param mesh mesh the CouplingData is associated with
    * @param requiresInitialization true, if CouplingData requires initialization
    * @param exchangeSubsteps true, if CouplingData exchanges all substeps in send/recv
+   * @param direction is the coupling data send or received?
+   *
    * @return PtrCouplingData pointer to CouplingData owned by the CouplingScheme
    */
-  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool exchangeSubsteps);
+  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool exchangeSubsteps, CouplingData::Direction direction);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
@@ -380,6 +385,12 @@ protected:
    */
   void determineInitialReceive(DataMap &receiveData);
 
+  /**
+   * @brief Function to check whether end of time window is reached. Does not check for convergence
+   * @returns true if end time of time window is reached or if this participant defines time window size (participant first method)
+   */
+  bool reachedEndOfTimeWindow() const;
+
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
@@ -403,6 +414,9 @@ private:
 
   /// Part of the window that is already computed; _computedTimeWindowPart <= _timeWindowSize
   double _computedTimeWindowPart = 0;
+
+  /// Lower limit of iterations during one time window. Prevents convergence if _iterations < _minIterations.
+  int _minIterations = -1;
 
   /// Limit of iterations during one time window. Continue to next time window, if _iterations == _maxIterations.
   int _maxIterations = -1;
@@ -447,8 +461,8 @@ private:
   /// Local participant name.
   std::string _localParticipant = "unknown";
 
-  /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
-  const double _eps;
+  /// Minimal time step allowed by preCICE.
+  const double _minTimeStepSize;
 
   /**
    * @brief Holds meta information to perform a convergence measurement.
@@ -512,12 +526,6 @@ private:
   void checkCompletenessRequiredActions();
 
   /**
-   * @brief Function to check whether end of time window is reached. Does not check for convergence
-   * @returns true if end time of time window is reached or if this participant defines time window size (participant first method)
-   */
-  bool reachedEndOfTimeWindow() const;
-
-  /**
    * @brief Initialize txt writers for iterations and convergence tracking
    */
   void initializeTXTWriters();
@@ -560,6 +568,16 @@ private:
    * @return true, if any CouplingData in dataMap requires initialization
    */
   bool anyDataRequiresInitialization(DataMap &dataMap) const;
+
+  /**
+   * @brief Goes through _allData and duplicate the last available sample and puts it at the end of the time window if there does not exist a sample at the window end.
+   */
+  void addTimeStepAtWindowEnd();
+
+  /**
+   * @return the end of the time window, defined as timeWindowStart + timeWindowSize
+   */
+  double getWindowEndTime() const;
 };
 } // namespace cplscheme
 } // namespace precice

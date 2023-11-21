@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(DivideByArea2D)
       action::ScaleByAreaAction::WRITE_MAPPING_POST, dataID, mesh,
       action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA);
 
-  scale.performAction(0.0);
+  scale.performAction();
 
   BOOST_TEST(values(0) == 4.0);
   BOOST_TEST(values(1) == 3.0);
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(DivideByArea3D)
       action::ScaleByAreaAction::WRITE_MAPPING_POST, dataID, mesh,
       action::ScaleByAreaAction::SCALING_DIVIDE_BY_AREA);
 
-  scale.performAction(0.0);
+  scale.performAction();
 
   BOOST_TEST(values(0) == 0.5);
   BOOST_TEST(values(1) == 1.5);

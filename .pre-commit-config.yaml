@@ -12,20 +12,25 @@ repos:
   - id: check-xml
   - id: check-merge-conflict
   - id: mixed-line-ending
+    exclude: "^thirdparty"
   - id: trailing-whitespace
     args: [--markdown-linebreak-ext=md]
+    exclude: "^thirdparty"
   - id: end-of-file-fixer
+    exclude: "^thirdparty"
 # isort for python imports
 - repo: https://github.com/pycqa/isort
   rev: 5.12.0
   hooks:
     - id: isort
       name: isort (python)
+      exclude: "^thirdparty"
 # black repo for python formatting
 - repo: https://github.com/ambv/black
   rev: 22.12.0
   hooks:
     - id: black
+      exclude: "^thirdparty"
 # Custom repo for the preCICE configuration formatter
 - repo: https://github.com/precice/precice-pre-commit-hooks
   rev: 'v3.1'
@@ -35,6 +40,7 @@ repos:
   rev: v2.2.2
   hooks:
     - id: codespell
+      exclude: "^thirdparty"
 - repo: local
   hooks:
   - id: update-cmake-sources

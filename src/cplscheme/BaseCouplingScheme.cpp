@@ -22,7 +22,7 @@
 #include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
@@ -34,8 +34,9 @@ BaseCouplingScheme::BaseCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
-    int                           validDigits,
+    double                        minTimeStepSize,
     std::string                   localParticipant,
+    int                           minIterations,
     int                           maxIterations,
     CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod)
@@ -44,11 +45,12 @@ BaseCouplingScheme::BaseCouplingScheme(
       _maxTimeWindows(maxTimeWindows),
       _timeWindows(1),
       _timeWindowSize(timeWindowSize),
+      _minIterations(minIterations),
       _maxIterations(maxIterations),
       _iterations(1),
       _totalIterations(1),
       _localParticipant(std::move(localParticipant)),
-      _eps(std::pow(10.0, -1 * validDigits))
+      _minTimeStepSize(minTimeStepSize)
 {
   PRECICE_ASSERT(not((maxTime != UNDEFINED_MAX_TIME) && (maxTime < 0.0)),
                  "Maximum time has to be larger than zero.");
@@ -56,21 +58,29 @@ BaseCouplingScheme::BaseCouplingScheme(
                  "Maximum number of time windows has to be larger than zero.");
   PRECICE_ASSERT(not(hasTimeWindowSize() && (timeWindowSize < 0.0)),
                  "Time window size has to be larger than zero.");
-  PRECICE_ASSERT((validDigits >= 1) && (validDigits < 17),
-                 "Valid digits of time window size has to be between 1 and 16.");
+  PRECICE_ASSERT((minTimeStepSize >= math::NUMERICAL_ZERO_DIFFERENCE),
+                 "The minimal time step that preCICE allows has to be bigger or equal to the numerical accuracy {}", math::NUMERICAL_ZERO_DIFFERENCE);
   if (dtMethod == constants::FIXED_TIME_WINDOW_SIZE) {
     PRECICE_ASSERT(hasTimeWindowSize(),
                    "Time window size has to be given when the fixed time window size method is used.");
   }
 
-  PRECICE_ASSERT((maxIterations > 0) || (maxIterations == UNDEFINED_MAX_ITERATIONS),
-                 "Maximal iteration limit has to be larger than zero.");
-
   if (isExplicitCouplingScheme()) {
+    PRECICE_ASSERT(minIterations == UNDEFINED_MIN_ITERATIONS);
     PRECICE_ASSERT(maxIterations == UNDEFINED_MAX_ITERATIONS);
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
-    PRECICE_ASSERT(maxIterations >= 1);
+    PRECICE_ASSERT(minIterations != UNDEFINED_MIN_ITERATIONS);
+    PRECICE_ASSERT(maxIterations != UNDEFINED_MAX_ITERATIONS);
+
+    PRECICE_ASSERT(minIterations > 0,
+                   minIterations,
+                   "Minimal iteration limit has to be larger than zero.");
+    PRECICE_ASSERT((maxIterations == INFINITE_MAX_ITERATIONS) || (maxIterations > 0),
+                   maxIterations,
+                   "Maximal iteration limit has to be larger than zero or -1 (unlimited).");
+    PRECICE_ASSERT((maxIterations == INFINITE_MAX_ITERATIONS) || (minIterations <= maxIterations),
+                   "Minimal iteration limit has to be smaller equal compared to the maximal iteration limit.");
   }
 }
 
@@ -190,7 +200,6 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
         PRECICE_ASSERT(data->hasGradient());
         m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
       }
-      data->timeStepsStorage().trim();
       data->setSampleAtTime(getTime(), data->sample());
     }
   }
@@ -213,15 +222,16 @@ void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveDat
   }
 }
 
-PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool communicateSubsteps)
+PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool communicateSubsteps, CouplingData::Direction direction)
 {
   int             id = data->getID();
   PtrCouplingData ptrCplData;
   if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps);
+    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps, direction);
     _allData.emplace(id, ptrCplData);
   } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
     ptrCplData = _allData[id];
+    PRECICE_CHECK(ptrCplData->getDirection() == direction, "Data \"{0}\" cannot be added for sending and for receiving. Please remove either <exchange data=\"{0}\" ... /> tag", data->getName());
   }
   return ptrCplData;
 }
@@ -260,9 +270,6 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   if (isImplicitCouplingScheme()) {
     storeIteration();
     if (not doesFirstStep()) {
-      PRECICE_CHECK(not _convergenceMeasures.empty(),
-                    "At least one convergence measure has to be defined for "
-                    "an implicit coupling scheme.");
       // reserve memory and initialize data with zero
       if (_acceleration) {
         _acceleration->initialize(getAccelerationData());
@@ -301,6 +308,17 @@ void BaseCouplingScheme::firstExchange()
   if (reachedEndOfTimeWindow()) {
 
     _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
+
+    //If preCICE has stopped before the end of the time window we have to duplicate the last available sample and put it at the end of the time window.
+    // We have to exclude the case where coupling scheme does not have a time window size, since this will cause problem with the interpolation later on
+    if (getNextTimeStepMaxSize() > math::NUMERICAL_ZERO_DIFFERENCE && hasTimeWindowSize()) {
+
+      addTimeStepAtWindowEnd();
+
+      // Update the _computedTimeWindowPart in order to keep the time within preCICE synchronised
+      // Has to be done before the second exchange, since the serial coupling scheme moves to the new time window before updating _timeWindowStartTime
+      _computedTimeWindowPart = _timeWindowSize;
+    }
 
     exchangeFirstData();
   }
@@ -400,7 +418,7 @@ bool BaseCouplingScheme::addComputedTime(
   _computedTimeWindowPart += timeToAdd;
 
   // Check validness
-  bool valid = math::greaterEquals(getNextTimeStepMaxSize(), 0.0, _eps);
+  bool valid = math::greaterEquals(getNextTimeStepMaxSize(), 0.0, _minTimeStepSize);
   PRECICE_CHECK(valid,
                 "The time step size given to preCICE in \"advance\" {} exceeds the maximum allowed time step size {} "
                 "in the remaining of this time window. "
@@ -416,7 +434,7 @@ bool BaseCouplingScheme::willDataBeExchanged(
 {
   PRECICE_TRACE(lastSolverTimeStepSize);
   double remainder = getNextTimeStepMaxSize() - lastSolverTimeStepSize;
-  return not math::greater(remainder, 0.0, _eps);
+  return not math::greater(remainder, 0.0, _minTimeStepSize);
 }
 
 bool BaseCouplingScheme::hasDataBeenReceived() const
@@ -455,6 +473,11 @@ double BaseCouplingScheme::getTime() const
   return _timeWindowStartTime + _computedTimeWindowPart;
 }
 
+double BaseCouplingScheme::getTimeWindowStart() const
+{
+  return _timeWindowStartTime;
+}
+
 int BaseCouplingScheme::getTimeWindows() const
 {
   return _timeWindows;
@@ -475,7 +498,7 @@ double BaseCouplingScheme::getNextTimeStepMaxSize() const
 
 bool BaseCouplingScheme::isCouplingOngoing() const
 {
-  bool timeLeft      = math::greater(_maxTime, getTime(), _eps) || math::equals(_maxTime, UNDEFINED_MAX_TIME);
+  bool timeLeft      = math::greater(_maxTime, getTime(), _minTimeStepSize) || math::equals(_maxTime, UNDEFINED_MAX_TIME);
   bool timestepsLeft = (_maxTimeWindows >= _timeWindows) || (_maxTimeWindows == UNDEFINED_TIME_WINDOWS);
   return timeLeft && timestepsLeft;
 }
@@ -514,8 +537,11 @@ std::string BaseCouplingScheme::printCouplingState() const
 {
   std::ostringstream os;
   os << "iteration: " << _iterations; //_iterations;
-  if (_maxIterations != -1) {
+  if ((_maxIterations != UNDEFINED_MAX_ITERATIONS) && (_maxIterations != INFINITE_MAX_ITERATIONS)) {
     os << " of " << _maxIterations;
+  }
+  if (_minIterations != UNDEFINED_MIN_ITERATIONS) {
+    os << " (min " << _minIterations << ")";
   }
   os << ", " << printBasicState(_timeWindows, getTime()) << ", " << printActionsState();
   return os.str();
@@ -621,14 +647,23 @@ bool BaseCouplingScheme::measureConvergence()
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(not doesFirstStep());
-  bool allConverged = true;
-  bool oneSuffices  = false; // at least one convergence measure suffices and did converge
-  bool oneStrict    = false; // at least one convergence measure is strict and did not converge
-  PRECICE_ASSERT(_convergenceMeasures.size() > 0);
   if (not utils::IntraComm::isSecondary()) {
     _convergenceWriter->writeData("TimeWindow", _timeWindows - 1);
     _convergenceWriter->writeData("Iteration", _iterations);
   }
+
+  // If no convergence measures are defined, we never converge
+  if (_convergenceMeasures.empty()) {
+    PRECICE_INFO("No converge measures defined.");
+    return false;
+  }
+
+  // There are convergence measures defined, so we need to check them
+  bool allConverged = true;
+  bool oneSuffices  = false; // at least one convergence measure suffices and did converge
+  bool oneStrict    = false; // at least one convergence measure is strict and did not converge
+
+  const bool reachedMinIterations = _iterations >= _minIterations;
   for (const auto &convMeasure : _convergenceMeasures) {
     PRECICE_ASSERT(convMeasure.couplingData != nullptr);
     PRECICE_ASSERT(convMeasure.measure.get() != nullptr);
@@ -642,6 +677,7 @@ bool BaseCouplingScheme::measureConvergence()
     if (not convMeasure.measure->isConvergence()) {
       allConverged = false;
       if (convMeasure.strict) {
+        PRECICE_ASSERT(_maxIterations > 0);
         oneStrict = true;
         PRECICE_CHECK(_iterations < _maxIterations,
                       "The strict convergence measure for data \"" + convMeasure.couplingData->getDataName() +
@@ -655,13 +691,17 @@ bool BaseCouplingScheme::measureConvergence()
     PRECICE_INFO(convMeasure.measure->printState(convMeasure.couplingData->getDataName()));
   }
 
+  std::string messageSuffix;
+  if (not reachedMinIterations) {
+    messageSuffix = " but hasn't yet reached minimal amount of iterations";
+  }
   if (allConverged) {
-    PRECICE_INFO("All converged");
+    PRECICE_INFO("All converged{}", messageSuffix);
   } else if (oneSuffices && not oneStrict) { // strict overrules suffices
-    PRECICE_INFO("Sufficient measures converged");
+    PRECICE_INFO("Sufficient measures converged{}", messageSuffix);
   }
 
-  return allConverged || (oneSuffices && not oneStrict);
+  return reachedMinIterations && (allConverged || (oneSuffices && not oneStrict));
 }
 
 void BaseCouplingScheme::initializeTXTWriters()
@@ -706,8 +746,8 @@ void BaseCouplingScheme::advanceTXTWriters()
     _iterationsWriter->writeData("TimeWindow", _timeWindows - 1);
     _iterationsWriter->writeData("TotalIterations", _totalIterations);
     _iterationsWriter->writeData("Iterations", _iterations);
-    int converged = _iterations < _maxIterations ? 1 : 0;
-    _iterationsWriter->writeData("Convergence", converged);
+    bool converged = _iterations >= _minIterations && (_maxIterations < 0 || (_iterations < _maxIterations));
+    _iterationsWriter->writeData("Convergence", converged ? 1 : 0);
 
     if (not doesFirstStep() && _acceleration) {
       _iterationsWriter->writeData("QNColumns", _acceleration->getLSSystemCols());
@@ -719,7 +759,7 @@ void BaseCouplingScheme::advanceTXTWriters()
 
 bool BaseCouplingScheme::reachedEndOfTimeWindow() const
 {
-  return math::equals(_timeWindowSize - _computedTimeWindowPart, 0.0, _eps) || not hasTimeWindowSize();
+  return math::equals(_timeWindowSize - _computedTimeWindowPart, 0.0, _minTimeStepSize) || not hasTimeWindowSize();
 }
 
 void BaseCouplingScheme::storeIteration()
@@ -806,6 +846,25 @@ void BaseCouplingScheme::receiveConvergence(const m2n::PtrM2N &m2n)
   PRECICE_ASSERT(isImplicitCouplingScheme());
   PRECICE_ASSERT(doesFirstStep(), "For convergence information the receiving participant is always the first one.");
   m2n->receive(_hasConverged);
+}
+
+void BaseCouplingScheme::addTimeStepAtWindowEnd()
+{
+
+  for (auto &data : _allData | boost::adaptors::map_values) {
+    auto   timeStepStorage = data->timeStepsStorage();
+    double lastSampleT     = timeStepStorage.maxStoredTime();
+    double endOfTimeWindow = getWindowEndTime();
+    //If there does not exist a sample at the window end duplicate the last available sample and put it at the end of the time window.
+    if (lastSampleT < endOfTimeWindow - math::NUMERICAL_ZERO_DIFFERENCE) {
+      data->setSampleAtTime(endOfTimeWindow, timeStepStorage.getSampleAtOrAfter(lastSampleT));
+    }
+  }
+}
+
+double BaseCouplingScheme::getWindowEndTime() const
+{
+  return _timeWindowStartTime + getTimeWindowSize();
 }
 
 } // namespace precice::cplscheme

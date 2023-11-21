@@ -18,13 +18,13 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
-#include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -104,10 +104,10 @@ void runCoupling(
         computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
+        BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
-        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
+        BOOST_TEST(iterationCount == *iterValidIterations);
         if (cplScheme.isCouplingOngoing()) {
           BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
           cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
@@ -140,7 +140,7 @@ void runCoupling(
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
-    BOOST_TEST(testing::equals(computedTimesteps, 3));
+    BOOST_TEST(computedTimesteps == 3);
   } else if (nameParticipant == nameParticipant1) {
     mesh->data(1)->setSampleAtTime(0, time::Sample{1, mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
@@ -176,10 +176,10 @@ void runCoupling(
         computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
+        BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
         // The iterations are enforced by the controlled decrease of the
         // change of data written
-        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
+        BOOST_TEST(iterationCount == *iterValidIterations);
         if (cplScheme.isCouplingOngoing()) {
           BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
           cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
@@ -215,7 +215,7 @@ void runCoupling(
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
-    BOOST_TEST(testing::equals(computedTimesteps, 3));
+    BOOST_TEST(computedTimesteps == 3);
   }
 }
 
@@ -282,10 +282,10 @@ void runCouplingWithSubcycling(
         computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
+        BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
-        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
+        BOOST_TEST(iterationCount == *iterValidIterations);
         if (cplScheme.isCouplingOngoing()) {
           BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
           cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
@@ -302,7 +302,7 @@ void runCouplingWithSubcycling(
         // Reset data values, to simulate same convergence behavior of
         // interface values in next time step.
         stepsizeData0 = initialStepsizeData0;
-        BOOST_TEST(testing::equals(subcyclingStep, 1));
+        BOOST_TEST(subcyclingStep == 1);
         subcyclingStep = 0;
       } else { // coupling timestep is not yet complete
         BOOST_TEST(cplScheme.isCouplingOngoing());
@@ -329,7 +329,7 @@ void runCouplingWithSubcycling(
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
-    BOOST_TEST(testing::equals(computedTimesteps, 3));
+    BOOST_TEST(computedTimesteps == 3);
     BOOST_TEST(stepsizeData0 == 5.0);
   }
 
@@ -376,10 +376,10 @@ void runCouplingWithSubcycling(
         computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-        BOOST_TEST(testing::equals(computedTimesteps, cplScheme.getTimeWindows() - 1));
+        BOOST_TEST(computedTimesteps == cplScheme.getTimeWindows() - 1);
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
-        BOOST_TEST(testing::equals(iterationCount, *iterValidIterations));
+        BOOST_TEST(iterationCount == *iterValidIterations);
         if (cplScheme.isCouplingOngoing()) {
           BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
           cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
@@ -396,7 +396,7 @@ void runCouplingWithSubcycling(
         // Reset data values, to simulate same convergence behavior of
         // interface values in next time step.
         stepsizeData1 = initialStepsizeData1;
-        BOOST_TEST(testing::equals(subcyclingStep, 2));
+        BOOST_TEST(subcyclingStep == 2);
         subcyclingStep = 0;
       } else { // coupling timestep is not yet complete
         BOOST_TEST(cplScheme.isCouplingOngoing());
@@ -423,7 +423,7 @@ void runCouplingWithSubcycling(
     }
     cplScheme.finalize(); // Ends the coupling scheme
     BOOST_TEST(testing::equals(computedTime, 0.3));
-    BOOST_TEST(testing::equals(computedTimesteps, 3));
+    BOOST_TEST(computedTimesteps == 3);
   }
 }
 
@@ -511,10 +511,12 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   }
 
   // Create the coupling scheme object
+  const int                       minIterations = 1;
+  const int                       maxIterations = 100;
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 16, nameParticipant0,
+      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0,
       nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, 100);
+      BaseCouplingScheme::Implicit, minIterations, maxIterations);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
@@ -598,33 +600,26 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   const double timeWindowSize = 0.1;
   std::string  nameParticipant0("Participant0");
   std::string  nameParticipant1("Participant1");
-  int          sendDataIndex        = -1;
-  int          receiveDataIndex     = -1;
-  int          convergenceDataIndex = -1;
+  int          sendDataIndex    = -1;
+  int          receiveDataIndex = -1;
   if (context.isNamed(nameParticipant0)) {
-    sendDataIndex        = 0;
-    receiveDataIndex     = 1;
-    convergenceDataIndex = receiveDataIndex;
+    sendDataIndex    = 0;
+    receiveDataIndex = 1;
   } else {
-    sendDataIndex        = 1;
-    receiveDataIndex     = 0;
-    convergenceDataIndex = sendDataIndex;
+    sendDataIndex    = 1;
+    receiveDataIndex = 0;
   }
 
   // Create the coupling scheme object
+  const int                       minIterations = 1;
+  const int                       maxIterations = 3;
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, 100);
+      BaseCouplingScheme::Implicit, minIterations, maxIterations);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
-
-  // Add convergence measures
-  int                                    minIterations = 3;
-  cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
-      new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
 
   // Expected iterations per implicit timesptep
   std::vector<int> validIterations = {3, 3, 3};
@@ -659,36 +654,30 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   double           timeWindowSize = 0.1;
   std::string      nameParticipant0("Participant0");
   std::string      nameParticipant1("Participant1");
-  int              sendDataIndex        = -1;
-  int              receiveDataIndex     = -1;
-  int              convergenceDataIndex = -1;
+  int              sendDataIndex    = -1;
+  int              receiveDataIndex = -1;
   std::vector<int> validIterations;
   if (context.isNamed(nameParticipant0)) {
-    sendDataIndex        = 0;
-    receiveDataIndex     = 1;
-    validIterations      = {3, 3, 3};
-    convergenceDataIndex = receiveDataIndex;
+    sendDataIndex    = 0;
+    receiveDataIndex = 1;
+    validIterations  = {3, 3, 3};
   } else {
-    sendDataIndex        = 1;
-    receiveDataIndex     = 0;
-    validIterations      = {3, 3, 3};
-    convergenceDataIndex = sendDataIndex;
+    sendDataIndex    = 1;
+    receiveDataIndex = 0;
+    validIterations  = {3, 3, 3};
   }
 
   // Create the coupling scheme object
+  const int                       minIterations = 1;
+  const int                       maxIterations = 3;
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, 100);
+      BaseCouplingScheme::Implicit, minIterations, maxIterations);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
 
-  // Add convergence measures
-  int                                    minIterations = 3;
-  cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
-      new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
   runCouplingWithSubcycling(
       cplScheme, context.name, meshConfig, validIterations);
 }
@@ -727,23 +716,22 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   int          sendDataIndex              = -1;
   int          receiveDataIndex           = -1;
   bool         dataRequiresInitialization = false;
-  int          convergenceDataIndex       = -1;
   if (context.isNamed(nameParticipant0)) {
-    sendDataIndex        = dataID0;
-    receiveDataIndex     = dataID1;
-    convergenceDataIndex = receiveDataIndex;
+    sendDataIndex    = dataID0;
+    receiveDataIndex = dataID1;
   } else {
     sendDataIndex              = dataID1;
     receiveDataIndex           = dataID0;
     dataRequiresInitialization = true;
-    convergenceDataIndex       = sendDataIndex;
   }
 
   // Create the coupling scheme object
+  const int                       minIterations = 1;
+  const int                       maxIterations = 3;
   cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 16, nameParticipant0, nameParticipant1,
+      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0, nameParticipant1,
       context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, 100);
+      BaseCouplingScheme::Implicit, minIterations, maxIterations);
   using Fixture = testing::SerialCouplingSchemeFixture;
 
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization, true);
@@ -751,12 +739,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, not dataRequiresInitialization, true);
   CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
   cplScheme.determineInitialDataExchange();
-
-  // Add convergence measures
-  int                                    minIterations = 3;
-  cplscheme::impl::PtrConvergenceMeasure minIterationConvMeasure1(
-      new cplscheme::impl::MinIterationConvergenceMeasure(minIterations));
-  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, minIterationConvMeasure1, true);
 
   if (context.isNamed(nameParticipant0)) {
     // ensure that read data is uninitialized

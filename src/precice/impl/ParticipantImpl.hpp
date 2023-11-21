@@ -10,6 +10,7 @@
 #include "action/Action.hpp"
 #include "boost/noncopyable.hpp"
 #include "com/Communication.hpp"
+#include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/BoundM2N.hpp"
@@ -17,7 +18,7 @@
 #include "precice/Participant.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/MultiLock.hpp"
 
 namespace precice {
@@ -372,11 +373,8 @@ private:
    * @brief Performs all data actions with given timing.
    *
    * @param[in] timings the timings of the action.
-   * @param[in] time the current total simulation time.
    */
-  void performDataActions(
-      const std::set<action::Action::Timing> &timings,
-      double                                  time);
+  void performDataActions(const std::set<action::Action::Timing> &timings);
 
   /**
    * @brief Resets written data.
@@ -384,7 +382,7 @@ private:
    * @param isAtWindowEnd set true, if function is called at end of window to also trim the time sample storage
    * @param isTimeWindowComplete set true, if function is called at end of converged window to trim and move the sample storage.
    */
-  void resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComplete);
+  void resetWrittenData(); //bool isAtWindowEnd, bool isTimeWindowComplete);
 
   /// Determines participant accessing this interface from the configuration.
   impl::PtrParticipant determineAccessingParticipant(
@@ -407,6 +405,21 @@ private:
 
   /// Syncs the primary ranks of all connected participants
   void closeCommunicationChannels(CloseChannels cc);
+
+  /// Completes everything data-related between adding time to and advancing the coupling scheme
+  void handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo);
+
+  /// Completes everything data-related after advancing the coupling scheme
+  void handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance);
+
+  /// Creates a Stample at the given time for each write Data and zeros the buffers
+  void samplizeWriteData(double time);
+
+  /// Discards data before the given time for all meshes and data known by this participant
+  void trimOldDataBefore(double time);
+
+  /// Discards send (currently write) data of a participant after a given time when another iteration is required
+  void trimSendDataAfter(double time);
 
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;

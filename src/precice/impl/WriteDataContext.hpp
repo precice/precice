@@ -26,13 +26,15 @@ public:
       mesh::PtrData data,
       mesh::PtrMesh mesh);
 
+  /// Resets writeDataBuffer
+  void resetBuffer();
+
   /**
-   * @brief Resets provided data, writeDataBuffer, (if mapping exists) fromData or toData, and (optionally) storage.
+   * @brief Removes stample before \ref time and (if mapping exists) fromData or toData
    *
-   * @param atEndOfWindow if true, also the Storage will be reset (useful at end of window to trim storage).
-   * @param isTimeWindowComplete if true, overwrite sample at front of Storage with sample at back (basically a Storage::move with constant).
+   * @param time the point in time after which to remove samples
    */
-  void resetData(bool atEndOfWindow, bool isTimeWindowComplete);
+  void trimAfter(double time);
 
   /**
    * @brief Store values in _writeDataBuffer

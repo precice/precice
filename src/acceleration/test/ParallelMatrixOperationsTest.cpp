@@ -114,14 +114,14 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
   utils::IntraComm::reduceSum(iaa, ires1);
 
   BOOST_TEST(testing::equals(res1, 10.));
-  BOOST_TEST(testing::equals(ires2, 10));
+  BOOST_TEST(ires2 == 10);
   BOOST_TEST(testing::equals(res2.at(0), 10.));
   BOOST_TEST(testing::equals(res2.at(1), 10.));
 
   if (utils::IntraComm::isPrimary()) {
     BOOST_TEST(testing::equals(res3.at(0), 10.));
     BOOST_TEST(testing::equals(res3.at(1), 10.));
-    BOOST_TEST(testing::equals(ires1, 10));
+    BOOST_TEST(ires1 == 10);
   }
   // ---------------------------------------------------------
 

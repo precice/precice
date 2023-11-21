@@ -8,6 +8,7 @@ target_sources(testprecice
     src/acceleration/test/ParallelMatrixOperationsTest.cpp
     src/acceleration/test/PreconditionerTest.cpp
     src/acceleration/test/QRFactorizationTest.cpp
+    src/acceleration/test/helper.hpp
     src/action/tests/PythonActionTest.cpp
     src/action/tests/ScaleActionTest.cpp
     src/action/tests/SummationActionTest.cpp
@@ -19,12 +20,13 @@ target_sources(testprecice
     src/com/tests/MPISinglePortsCommunicationTest.cpp
     src/com/tests/SerializedStamplesTest.cpp
     src/com/tests/SocketCommunicationTest.cpp
+    src/com/tests/helper.hpp
     src/cplscheme/tests/AbsoluteConvergenceMeasureTest.cpp
+    src/cplscheme/tests/AbsoluteOrRelativeConvergenceMeasureTest.cpp
     src/cplscheme/tests/CompositionalCouplingSchemeTest.cpp
     src/cplscheme/tests/DummyCouplingScheme.cpp
     src/cplscheme/tests/DummyCouplingScheme.hpp
     src/cplscheme/tests/ExplicitCouplingSchemeTest.cpp
-    src/cplscheme/tests/MinIterationConvergenceMeasureTest.cpp
     src/cplscheme/tests/ParallelImplicitCouplingSchemeTest.cpp
     src/cplscheme/tests/RelativeConvergenceMeasureTest.cpp
     src/cplscheme/tests/ResidualRelativeConvergenceMeasureTest.cpp

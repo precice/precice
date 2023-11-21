@@ -9,7 +9,7 @@
 #include "SocketCommunication.hpp"
 #include "SocketRequest.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
 #include "utils/span_tools.hpp"
@@ -287,7 +287,7 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
         tcp::resolver             resolver(*_ioService);
         tcp::resolver::iterator   endpoint_iterator = resolver.resolve(query);
         boost::system::error_code error             = asio::error::host_not_found;
-        boost::asio::connect(*socket, endpoint_iterator, error);
+        boost::asio::connect(*socket, std::move(endpoint_iterator), error);
 
         _isConnected = not error;
 
@@ -330,10 +330,10 @@ void SocketCommunication::closeConnection()
 
     try {
       socket.second->shutdown(Socket::shutdown_send);
+      socket.second->close();
     } catch (std::exception &e) {
       PRECICE_WARN("Socket shutdown failed with system error: {}", e.what());
     }
-    socket.second->close();
   }
 
   _isConnected = false;

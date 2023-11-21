@@ -1,5 +1,9 @@
-add_library(fmt-header-only INTERFACE IMPORTED GLOBAL)
-set_target_properties(fmt-header-only
+add_library(fmtlib-static STATIC src/format.cc src/os.cc)
+target_include_directories(fmtlib-static PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include")
+set_target_properties(fmtlib-static
   PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_LIST_DIR}/include"
-  INTERFACE_COMPILE_DEFINITIONS FMT_HEADER_ONLY=1)
+  POSITION_INDEPENDENT_CODE ON
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED YES
+  CXX_EXTENSIONS NO
+  )
