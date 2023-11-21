@@ -168,6 +168,8 @@ public:
     _phi.conservativeResize(_rows, _cols);
     _sigma.conservativeResize(_cols);
     PRECICE_ASSERT(_sigma(0) >= 0.0);
+    std::cout << "sigma size is:" << _sigma.size() << std::endl;
+    std::cout << "psi size is:" << _psi.cols() << "x" << _psi.rows() << std::endl;
     PRECICE_ASSERT(_sigma.size() == std::min(_psi.cols(), _psi.rows()));
     PRECICE_DEBUG("SVD factorization of Jacobian is truncated to {} DOFs. Cut off {} DOFs", _cols, waste);
 
@@ -186,7 +188,7 @@ public:
   void reset();
 
   /**
-   * @brief: returns a matrix representation of the orthogonal matrix Psi, A = Psi * Sigma * Phi^T
+   * @brief: returns a matrix representation of the orthogonal matrix Psi, A = Psi * Sigma * Phi^bs
    */
   Matrix &matrixPsi();
 
