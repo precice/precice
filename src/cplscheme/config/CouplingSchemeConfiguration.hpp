@@ -16,7 +16,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "precice/impl/MeshContext.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice {

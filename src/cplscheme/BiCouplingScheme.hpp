@@ -9,7 +9,7 @@
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {

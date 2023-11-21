@@ -6,7 +6,7 @@
 #include "Communication.hpp"
 #include "Request.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::com {

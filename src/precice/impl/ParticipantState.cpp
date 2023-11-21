@@ -18,7 +18,7 @@
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/String.hpp"
 #include "utils/assertion.hpp"

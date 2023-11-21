@@ -201,13 +201,11 @@ void AccelerationConfiguration::xmlTagCallback(
     _config.precond_nbNonConstTWindows         = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIME_WINDOWS);
   } else if (callingTag.getName() == TAG_IMVJRESTART) {
 
-    if (_config.alwaysBuildJacobian)
-      PRECICE_ERROR("IMVJ cannot be in restart mode while parameter always-build-jacobian is set to true. "
-                    "Please remove 'always-build-jacobian' from the configuration file or do not run in restart mode.");
-
 #ifndef PRECICE_NO_MPI
     _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);
     const auto &f         = callingTag.getStringAttributeValue(ATTR_TYPE);
+    PRECICE_CHECK((f == VALUE_NO_RESTART) || (!_config.alwaysBuildJacobian), "IMVJ cannot be in restart mode while parameter always-build-jacobian is set to true. "
+                                                                             "Please remove 'always-build-jacobian' from the configuration file or do not run in restart mode.");
     if (f == VALUE_NO_RESTART) {
       _config.imvjRestartType = IQNIMVJAcceleration::NO_RESTART;
     } else if (f == VALUE_ZERO_RESTART) {
