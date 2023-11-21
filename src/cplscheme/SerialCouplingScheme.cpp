@@ -58,11 +58,6 @@ SerialCouplingScheme::SerialCouplingScheme(
     CouplingMode                  cplMode)
     : SerialCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, minTimeStepSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), dtMethod, cplMode, UNDEFINED_MAX_ITERATIONS, UNDEFINED_MAX_ITERATIONS){};
 
-void SerialCouplingScheme::setNextTimeWindowSize(double timeWindowSize)
-{
-  BaseCouplingScheme::setNextTimeWindowSize(timeWindowSize);
-}
-
 void SerialCouplingScheme::sendTimeWindowSize()
 {
   PRECICE_TRACE();

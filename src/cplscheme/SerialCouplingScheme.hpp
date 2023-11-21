@@ -65,13 +65,6 @@ public:
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode);
 
-protected:
-  /**
-   * @brief Setter for _nextTimeWindowSize
-   * @param timeWindowSize
-   */
-  void setNextTimeWindowSize(double timeWindowSize);
-
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
 
