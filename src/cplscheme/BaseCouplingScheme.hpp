@@ -310,6 +310,12 @@ protected:
   void setTimeWindowSize(double timeWindowSize);
 
   /**
+   * @brief Getter for _nextTimeWindowSize
+   * @param timeWindowSize
+   */
+  double getNextTimeWindowSize() const;
+
+  /**
    * @brief Setter for _nextTimeWindowSize
    * @param timeWindowSize
    */
