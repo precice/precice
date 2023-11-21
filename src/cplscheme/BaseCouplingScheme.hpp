@@ -475,11 +475,8 @@ private:
   /// Local participant name.
   std::string _localParticipant = "unknown";
 
-  // /// @brief Buffer for drift in time in current window, will be added to _totalTimeDrift, if window converges in this iteration
-  // double _currentWindowTimeDrift = 0;
-
-  // /// @brief Keeps track of drift in time over multiple windows
-  // double _totalTimeDrift = 0;
+  /// @brief Keeps track of drift in time over multiple windows
+  double _totalTimeDrift = 0;
 
   /**
    * @brief Holds meta information to perform a convergence measurement.
