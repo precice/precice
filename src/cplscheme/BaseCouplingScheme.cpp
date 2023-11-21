@@ -359,14 +359,12 @@ void BaseCouplingScheme::secondExchange()
         // coupling iteration.
         PRECICE_ASSERT(math::greater(_computedTimeWindowPart, 0.0));
         _timeWindows -= 1;
-        _computedTimeWindowPart = 0.0; // reset window
-      } else {                         // write output, prepare for next window
+        _isTimeWindowComplete = false;
+      } else { // write output, prepare for next window
         PRECICE_DEBUG("Convergence achieved");
         advanceTXTWriters();
         PRECICE_INFO("Time window completed");
         _isTimeWindowComplete = true;
-        _timeWindowStartTime += _timeWindowSize;
-        _computedTimeWindowPart = 0.0; // reset window
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
           requireAction(CouplingScheme::Action::WriteCheckpoint);
@@ -380,15 +378,20 @@ void BaseCouplingScheme::secondExchange()
         _iterations = 1;
       }
     } else {
+      PRECICE_ASSERT(isExplicitCouplingScheme());
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
-      _timeWindowStartTime += _timeWindowSize;
-      _computedTimeWindowPart = 0.0; // reset window
     }
     if (isCouplingOngoing()) {
       PRECICE_ASSERT(_hasDataBeenReceived);
     }
-    _timeWindowSize = _nextTimeWindowSize;
+
+    // Update internal time tracking
+    if (_isTimeWindowComplete) {
+      _timeWindowStartTime += _timeWindowSize;
+    }
+    _computedTimeWindowPart = 0.0; // reset window
+    _timeWindowSize         = _nextTimeWindowSize;
   }
 }
 
