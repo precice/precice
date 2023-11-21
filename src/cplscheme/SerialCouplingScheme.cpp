@@ -111,6 +111,7 @@ void SerialCouplingScheme::exchangeInitialData()
     // similar to SerialCouplingScheme::exchangeSecondData()
     PRECICE_DEBUG("Receiving data...");
     receiveAndSetTimeWindowSize();
+    setTimeWindowSize(getNextTimeWindowSize()); // Needed, because second participant just received _timeWindowSize from first participant, if serial coupling scheme using first participant method.
     receiveDataForWindowEnd(getM2N(), getReceiveData());
     notifyDataHasBeenReceived();
   }

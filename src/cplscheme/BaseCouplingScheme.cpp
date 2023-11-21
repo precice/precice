@@ -208,10 +208,17 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
 
 void BaseCouplingScheme::receiveDataForWindowEnd(const m2n::PtrM2N &m2n, const DataMap &receiveData)
 {
+  // buffer current time state
   const double oldComputedTimeWindowPart = _computedTimeWindowPart;
-  _computedTimeWindowPart += _nextTimeWindowSize; // such that getTime() in receiveData returns time at end of window
-  this->receiveData(m2n, receiveData);            // receive data for end of window
+  const double oldTimeWindowStartTime    = _timeWindowStartTime;
+  // set time state to point to end of this window such that getTime() in receiveData returns time at end of window
+  _timeWindowStartTime    = getTime() + _nextTimeWindowSize;
+  _computedTimeWindowPart = 0;
+  // receive data for end of window
+  this->receiveData(m2n, receiveData);
+  // reset time state;
   _computedTimeWindowPart = oldComputedTimeWindowPart;
+  _timeWindowStartTime    = oldTimeWindowStartTime;
 }
 
 void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveData)
@@ -287,8 +294,7 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
 
   exchangeInitialData();
 
-  _timeWindowSize = _nextTimeWindowSize;
-  _isInitialized  = true;
+  _isInitialized = true;
 }
 
 bool BaseCouplingScheme::sendsInitializedData() const
@@ -412,6 +418,11 @@ double BaseCouplingScheme::getTimeWindowSize() const
 {
   PRECICE_ASSERT(hasTimeWindowSize());
   return _timeWindowSize;
+}
+
+double BaseCouplingScheme::getNextTimeWindowSize() const
+{
+  return _nextTimeWindowSize;
 }
 
 bool BaseCouplingScheme::isInitialized() const
