@@ -3,7 +3,7 @@
 
 #include "Edge.hpp"
 #include "math/differences.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/EigenIO.hpp"
 
 namespace precice::mesh {

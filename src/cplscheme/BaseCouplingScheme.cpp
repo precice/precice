@@ -22,7 +22,7 @@
 #include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
@@ -318,10 +318,6 @@ void BaseCouplingScheme::firstExchange()
 
     _timeWindows += 1; // increment window counter. If not converged, will be decremented again later.
 
-    // // Store time between actually _computedTimeWindowPart and _timeWindowSize in buffer to keep track of total time drift in _totalTimeDrift.
-    // PRECICE_ASSERT(hasTimeWindowSize())
-    // _currentWindowTimeDrift = abs(_computedTimeWindowPart - _timeWindowSize);
-
     exchangeFirstData();
   }
 }
@@ -387,8 +383,6 @@ void BaseCouplingScheme::secondExchange()
     }
     _computedTimeWindowPart = 0.0; // reset window
     _timeWindowSize         = _nextTimeWindowSize;
-    // _totalTimeDrift += _currentWindowTimeDrift;
-    // PRECICE_CHECK(abs(_totalTimeDrift) < math::NUMERICAL_ZERO_DIFFERENCE, "preCICE has detected a difference between its internal time and the time of this participant. This can happen, if you are using very many substeps per time window over multiple time windows. Please refer to https://github.com/precice/precice/issues/1866 for strategies to avoid this problem.");
   }
 }
 

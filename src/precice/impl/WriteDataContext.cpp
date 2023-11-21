@@ -13,12 +13,8 @@ WriteDataContext::WriteDataContext(mesh::PtrData data,
 {
 }
 
-void WriteDataContext::resetData()
+void WriteDataContext::resetBuffer()
 {
-  // See also https://github.com/precice/precice/issues/1156.
-  _providedData->toZero();
-
-  // reset writeDataBuffer
   _writeDataBuffer.values.setZero();
   _writeDataBuffer.gradients.setZero();
 }

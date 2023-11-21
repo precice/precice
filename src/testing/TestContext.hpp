@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "m2n/SharedPointer.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/Parallel.hpp"
 
 namespace precice {

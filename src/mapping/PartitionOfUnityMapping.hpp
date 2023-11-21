@@ -8,7 +8,7 @@
 #include "mapping/impl/CreateClustering.hpp"
 #include "mapping/impl/SphericalVertexCluster.hpp"
 #include "mesh/Filter.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 #include "query/Index.hpp"
 #include "utils/IntraComm.hpp"

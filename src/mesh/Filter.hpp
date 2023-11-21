@@ -3,7 +3,7 @@
 #include <boost/container/flat_map.hpp>
 
 #include "mesh/Mesh.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 
 namespace precice {
 namespace mesh {

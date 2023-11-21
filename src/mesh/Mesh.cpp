@@ -18,7 +18,7 @@
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "query/Index.hpp"
 #include "utils/assertion.hpp"
 

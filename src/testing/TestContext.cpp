@@ -18,7 +18,7 @@
 #include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
 #include "mesh/Data.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "profiling/EventUtils.hpp"
 #include "query/Index.hpp"
 #include "testing/TestContext.hpp"
