@@ -87,29 +87,11 @@ private:
   void serializeValues(const cplscheme::PtrCouplingData data);
 
   /**
-   * @brief Serializes values like serializedValues(...), but uses value from WINDOW_START for WINDOW_START and WINDOW_END
-   *
-   * This function is exclusively used during initialization, if there is only a single time step available.
-   *
-   * @param data the data that is serialized
-   */
-  void serializeValuesInitialization(const cplscheme::PtrCouplingData data);
-
-  /**
    * @brief Serialize gradients from timeStepsStorage of data into _gradients
    *
    * @param data the data that is serialized
    */
   void serializeGradients(const cplscheme::PtrCouplingData data);
-
-  /**
-   * @brief Serializes gradients like serializeGradients(...), but uses gradients from WINDOW_START for WINDOW_START and WINDOW_END
-   *
-   * This function is exclusively used during initialization, if there is only a single time step available.
-   *
-   * @param data the data that is serialized
-   */
-  void serializeGradientsInitialization(const cplscheme::PtrCouplingData data);
 
   /**
      * @brief Deserialize _values and (if required by data) _gradients into  timeStepsStorage of data. Use provided timeStamps.

@@ -136,13 +136,11 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   if (context.isNamed(nameParticipant0)) {
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(0.0, 0.0, 0.0)));
     BOOST_TEST(receiveCouplingData->values().size() == 3);
-    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
     BOOST_TEST(sendCouplingData->values().size() == 1);
-    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 1);
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
-    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{1, Eigen::VectorXd::Constant(1, 4.0)});
+    sendCouplingData->setSampleAtTime(0, time::Sample{1, Eigen::VectorXd::Constant(1, 4.0)});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     cplScheme.initialize(0.0, 0);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
@@ -155,29 +153,29 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
       }
-      if (cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
-        cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
-      }
+      BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == timeStepSize);
+      sendCouplingData->setSampleAtTime(cplScheme.getTime() + timeStepSize, time::Sample{1, Eigen::VectorXd::Constant(1, 4.0)});
       cplScheme.addComputedTime(timeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
       cplScheme.secondExchange();
       BOOST_TEST(cplScheme.hasDataBeenReceived());
+      if (cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint)) {
+        cplScheme.markActionFulfilled(CouplingScheme::Action::ReadCheckpoint);
+      }
     }
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     Eigen::VectorXd v(3);
     v << 1.0, 2.0, 3.0;
-    sendCouplingData->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{3, v});
+    sendCouplingData->setSampleAtTime(0, time::Sample{3, v});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
     BOOST_TEST(receiveCouplingData->values().size() == 1);
-    BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     BOOST_TEST(sendCouplingData->values().size() == 3);
-    BOOST_TEST(sendCouplingData->getPreviousIterationSize() == 3);
     cplScheme.initialize(0.0, 0);
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
@@ -190,6 +188,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
       if (cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint)) {
         cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
       }
+      BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == timeStepSize);
+      sendCouplingData->setSampleAtTime(cplScheme.getTime() + timeStepSize, time::Sample{3, v});
       cplScheme.addComputedTime(timeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();

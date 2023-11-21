@@ -219,7 +219,7 @@ void ReceivedPartition::compute()
       vertexDistribution[0] = std::move(vertexIDs);
 
       for (int secondaryRank : utils::IntraComm::allSecondaryRanks()) {
-        PRECICE_DEBUG("Receive partition feedback from slave rank {}", secondaryRank);
+        PRECICE_DEBUG("Receive partition feedback from the secondary rank {}", secondaryRank);
         vertexDistribution[secondaryRank] = utils::IntraComm::getCommunication()->receiveRange(secondaryRank, com::AsVectorTag<VertexID>{});
       }
       PRECICE_ASSERT(_mesh->getVertexDistribution().empty());
@@ -287,7 +287,7 @@ void ReceivedPartition::filterByBoundingBox()
   if (m2n().usesTwoLevelInitialization()) {
     std::string msg = "The received mesh " + _mesh->getName() +
                       " cannot solely be filtered on the primary rank "
-                      "(option \"filter-on-master\") if it is communicated by an m2n communication that uses "
+                      "(option \"filter-on-primary-rank\") if it is communicated by an m2n communication that uses "
                       "two-level initialization. Use \"filter-on-secondary-rank\" or \"no-filter\" instead.";
     PRECICE_CHECK(_geometricFilter != ON_PRIMARY_RANK, msg);
   }

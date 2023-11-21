@@ -45,10 +45,10 @@ BOOST_AUTO_TEST_CASE(SummationOneDimensional)
   v1 << 2.0, 3.0, 4.0;
   v2 << 1.0, 2.0, 3.0;
   v3 << 2.0, 3.0, 4.0;
-  sourceData1->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimensions, v1});
-  sourceData2->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimensions, v2});
-  sourceData3->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimensions, v3});
-  // targetData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimensions,Eigen::VectorXd::Zero(targetValues.size())});
+  sourceData1->setSampleAtTime(0, time::Sample{dimensions, v1});
+  sourceData2->setSampleAtTime(0, time::Sample{dimensions, v2});
+  sourceData3->setSampleAtTime(0, time::Sample{dimensions, v3});
+  // targetData->setSampleAtTime(0, time::Sample{dimensions,Eigen::VectorXd::Zero(targetValues.size())});
 
   action::SummationAction sum(
       action::SummationAction::WRITE_MAPPING_POST, sourceDataIDs, targetDataID, mesh);
@@ -93,9 +93,9 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
   v1 << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0;
   v2 << 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0;
 
-  sourceData1->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimensions, v1});
-  sourceData2->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimensions, v2});
-  // targetData->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimensions,Eigen::VectorXd::Zero(targetValues.size())})
+  sourceData1->setSampleAtTime(0, time::Sample{dimensions, v1});
+  sourceData2->setSampleAtTime(0, time::Sample{dimensions, v2});
+  // targetData->setSampleAtTime(0, time::Sample{dimensions,Eigen::VectorXd::Zero(targetValues.size())})
 
   action::SummationAction sum(
       action::SummationAction::WRITE_MAPPING_POST, sourceDataIDs, targetDataID, mesh);
@@ -164,17 +164,15 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensionalSubcycling)
   v1_1 << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0;
   v2_1 << 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0;
 
-  sourceData1->setSampleAtTime(time::Storage::WINDOW_END * 0.5, time::Sample{dimensions, v1_05});
-  sourceData2->setSampleAtTime(time::Storage::WINDOW_END * 0.5, time::Sample{dimensions, v2_05});
-  sourceData1->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimensions, v1_1});
-  sourceData2->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dimensions, v2_1});
+  sourceData1->setSampleAtTime(0.5, time::Sample{dimensions, v1_05});
+  sourceData2->setSampleAtTime(0.5, time::Sample{dimensions, v2_05});
+  sourceData1->setSampleAtTime(1.0, time::Sample{dimensions, v1_1});
+  sourceData2->setSampleAtTime(1.0, time::Sample{dimensions, v2_1});
 
   action::SummationAction sum(
       action::SummationAction::WRITE_MAPPING_POST, sourceDataIDs, targetDataID, mesh);
 
   sum.performAction(0.0);
-
-  // By default data buffers after action hold samples from WINDOW_END
 
   const auto &sourceValues1 = sourceData1->values();
   const auto &sourceValues2 = sourceData2->values();
@@ -215,18 +213,18 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensionalSubcycling)
   BOOST_TEST(sourceValues2(8) == 10.0);
   BOOST_TEST(targetValues(8) == 19.0);
 
-  // Load and check data from 0.5 * time::Storage::WINDOW_END
+  // Load and check data from 0.5
 
   auto &loadedStample1 = sourceData1->stamples().front();
-  BOOST_TEST(loadedStample1.timestamp == time::Storage::WINDOW_END * 0.5);
+  BOOST_TEST(loadedStample1.timestamp == 0.5);
   sourceData1->values() = loadedStample1.sample.values;
 
   auto &loadedStample2 = sourceData2->stamples().front();
-  BOOST_TEST(loadedStample2.timestamp == time::Storage::WINDOW_END * 0.5);
+  BOOST_TEST(loadedStample2.timestamp == 0.5);
   sourceData2->values() = loadedStample2.sample.values;
 
   auto &loadedStample3 = targetData->stamples().front();
-  BOOST_TEST(loadedStample3.timestamp == time::Storage::WINDOW_END * 0.5);
+  BOOST_TEST(loadedStample3.timestamp == 0.5);
   targetData->values() = loadedStample3.sample.values;
 
   BOOST_TEST(sourceValues1(0) == 11.0);

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
+<precice-configuration experimental="true">
   <data:scalar name="DataOne" />
   <data:scalar name="DataTwo" />
 
@@ -40,11 +40,14 @@
 
   <coupling-scheme:serial-implicit>
     <participants first="SolverOne" second="SolverTwo" />
-    <max-time-windows value="3" />
-    <time-window-size method="first-participant" />
-    <max-iterations value="3" />
-    <min-iteration-convergence-measure min-iterations="3" data="DataOne" mesh="MeshOne" />
+    <max-time-windows value="1" />
+    <time-window-size value="1" />
+    <max-iterations value="4" />
+    <min-iteration-convergence-measure min-iterations="4" data="DataOne" mesh="MeshOne" />
     <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
     <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
+    <acceleration:constant>
+      <relaxation value="0.1" />
+    </acceleration:constant>
   </coupling-scheme:serial-implicit>
 </precice-configuration>

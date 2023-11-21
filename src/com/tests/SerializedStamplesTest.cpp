@@ -39,9 +39,9 @@ BOOST_AUTO_TEST_CASE(SerializeValues)
   cplscheme::PtrCouplingData fromDataPtr(new cplscheme::CouplingData(fromData, dummyMesh, false, true));
   cplscheme::PtrCouplingData toDataPtr(new cplscheme::CouplingData(toData, dummyMesh, false, true));
 
-  fromDataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{dataDimensions, insert0});
-  fromDataPtr->setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{dataDimensions, insert05});
-  fromDataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dataDimensions, insert1});
+  fromDataPtr->setSampleAtTime(0, time::Sample{dataDimensions, insert0});
+  fromDataPtr->setSampleAtTime(0.5, time::Sample{dataDimensions, insert05});
+  fromDataPtr->setSampleAtTime(1, time::Sample{dataDimensions, insert1});
 
   const auto serialized = serialize::SerializedStamples::serialize(fromDataPtr);
 
@@ -72,10 +72,10 @@ BOOST_AUTO_TEST_CASE(DeserializeValues)
   toDataPtr->sample().values = Eigen::VectorXd(nValues);
   toDataPtr->sample().setZero();
 
-  toDataPtr->setSampleAtTime(time::Storage::WINDOW_START, toDataPtr->sample());
+  toDataPtr->setSampleAtTime(0, toDataPtr->sample());
 
   Eigen::VectorXd timeStamps(nTimeSteps);
-  timeStamps << time::Storage::WINDOW_START, 0.5 * time::Storage::WINDOW_END, time::Storage::WINDOW_END;
+  timeStamps << 0, 0.5, 1;
 
   auto serialized = serialize::SerializedStamples::empty(timeStamps, toDataPtr);
 
@@ -144,9 +144,9 @@ BOOST_AUTO_TEST_CASE(SerializeValuesAndGradients)
 
   cplscheme::PtrCouplingData fromDataPtr(new cplscheme::CouplingData(fromData, dummyMesh, false, true));
 
-  fromDataPtr->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{dataDimensions, insert0, insertGradients0});
-  fromDataPtr->setSampleAtTime(0.5 * time::Storage::WINDOW_END, time::Sample{dataDimensions, insert05, insertGradients05});
-  fromDataPtr->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{dataDimensions, insert1, insertGradients1});
+  fromDataPtr->setSampleAtTime(0, time::Sample{dataDimensions, insert0, insertGradients0});
+  fromDataPtr->setSampleAtTime(0.5, time::Sample{dataDimensions, insert05, insertGradients05});
+  fromDataPtr->setSampleAtTime(1, time::Sample{dataDimensions, insert1, insertGradients1});
 
   const auto serialized = serialize::SerializedStamples::serialize(fromDataPtr);
 
@@ -190,10 +190,10 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
   toDataPtr->sample().gradients = Eigen::MatrixXd(nValues, meshDimensions);
   toDataPtr->sample().setZero();
 
-  toDataPtr->setSampleAtTime(time::Storage::WINDOW_START, toDataPtr->sample());
+  toDataPtr->setSampleAtTime(0, toDataPtr->sample());
 
   Eigen::VectorXd timeStamps(nTimeSteps);
-  timeStamps << time::Storage::WINDOW_START, 0.5 * time::Storage::WINDOW_END, time::Storage::WINDOW_END;
+  timeStamps << 0, 0.5, 1;
 
   auto serialized = serialize::SerializedStamples::empty(timeStamps, toDataPtr);
 

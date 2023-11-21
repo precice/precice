@@ -38,13 +38,11 @@
 
   <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
 
-  <coupling-scheme:serial-implicit>
+  <coupling-scheme:serial-explicit>
     <participants first="SolverOne" second="SolverTwo" />
-    <max-time value="6" />
-    <time-window-size method="first-participant" />
-    <max-iterations value="3" />
-    <min-iteration-convergence-measure min-iterations="3" data="DataOne" mesh="MeshOne" />
-    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" initialize="True" />
-    <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="True" />
-  </coupling-scheme:serial-implicit>
+    <max-time value="1e-3" />
+    <time-window-size value="1e-6" />
+    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
+    <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
+  </coupling-scheme:serial-explicit>
 </precice-configuration>

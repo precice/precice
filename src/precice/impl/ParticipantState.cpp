@@ -350,21 +350,6 @@ void ParticipantState::exportInitial()
   }
 }
 
-void ParticipantState::exportFinal()
-{
-  for (const io::ExportContext &context : exportContexts()) {
-    if (context.everyNTimeWindows < 1) {
-      continue;
-    }
-
-    for (const MeshContext *meshContext : usedMeshContexts()) {
-      auto &mesh = *meshContext->mesh;
-      PRECICE_DEBUG("Exporting final mesh {} to location \"{}\"", mesh.getName(), context.location);
-      context.exporter->doExport(fmt::format("{}-{}.final", mesh.getName(), getName()), context.location, mesh);
-    }
-  }
-}
-
 void ParticipantState::exportIntermediate(IntermediateExport exp)
 {
   for (const io::ExportContext &context : exportContexts()) {

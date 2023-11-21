@@ -213,7 +213,7 @@ void TestContext::initializeEvents()
   er.initialize(name, rank, size);
   if (_events) { // Enable them if they are requested
     er.setMode(precice::profiling::Mode::All);
-    er.setDirectory("./precice-events");
+    er.setDirectory("./precice-profiling");
   } else {
     er.setMode(precice::profiling::Mode::Off);
   }

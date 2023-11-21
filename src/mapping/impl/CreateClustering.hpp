@@ -135,9 +135,7 @@ void tagEmptyClusters(Vertices &clusterCenters, double clusterRadius, mesh::PtrM
 {
   // Alternative implementation: mesh->index().getVerticesInsideBox() == 0
   std::for_each(clusterCenters.begin(), clusterCenters.end(), [&](auto &v) {
-    auto id              = mesh->index().getClosestVertex(v.getCoords());
-    auto squaredDistance = computeSquaredDifference(mesh->vertices()[id.index].rawCoords(), v.rawCoords());
-    if (squaredDistance >= math::pow_int<2>(clusterRadius)) {
+    if (!v.isTagged() && !mesh->index().isAnyVertexInsideBox(v, clusterRadius)) {
       v.tag();
     }
   });
@@ -327,12 +325,23 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_DEBUG("Relative overlap: {}", relativeOverlap);
   PRECICE_DEBUG("Vertices per cluster: {}", verticesPerCluster);
 
-  // Step 1: Get the (global) bounding box of the input mesh
+  // Step 1: Compute the local bounding box of the input mesh manually
+  // Note that we don't use the corresponding bounding box functions from
+  // precice::mesh (e.g. ::getBoundingBox), as the stored bounding box might
+  // have the wrong size (e.g. direct access)
   // @todo: Which mesh should be used in order to determine the cluster centers:
   // pro outMesh: we want perfectly fitting clusters around our output vertices
   // however, this makes the cluster distribution/mapping dependent on the output
-  inMesh->computeBoundingBox();
-  auto localBB = inMesh->getBoundingBox();
+  precice::mesh::BoundingBox localBB = inMesh->index().getRtreeBounds();
+
+#ifndef NDEBUG
+  // Safety check
+  precice::mesh::BoundingBox bb_check(inMesh->getDimensions());
+  for (const mesh::Vertex &vertex : inMesh->vertices()) {
+    bb_check.expandBy(vertex);
+  }
+  PRECICE_ASSERT(bb_check == localBB);
+#endif
 
   // If we have less vertices in the whole domain than our target cluster size,
   // we just use a single cluster. The clustering result of the algorithm further
@@ -468,6 +477,10 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
     } else {
       tagDuplicateCenters<3>(centers, nClustersLocal, duplicateThreshold);
     }
+    // the tagging here won't filter out a lot of clusters, but finding them anyway allows us to allocate the right amount of
+    // memory for the cluster vector in the mapping, which would otherwise be expensive
+    // we cannot hit any empty vertices in the inputmesh
+    tagEmptyClusters(centers, clusterRadius, outMesh);
     PRECICE_DEBUG("Number of non-tagged centers after duplicate tagging : {}", std::count_if(centers.begin(), centers.end(), [](auto &v) { return !v.isTagged(); }));
   }
   PRECICE_ASSERT(std::all_of(centers.begin(), centers.end(), [idx = 0](auto &v) mutable { return v.getID() == idx++; }));

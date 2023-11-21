@@ -314,6 +314,9 @@ private:
   /// Are experimental API calls allowed?
   bool _allowsExperimental = false;
 
+  /// Are participants waiting for each other in finalize?
+  bool _waitInFinalize = false;
+
   /// setMeshAccessRegion may only be called once
   mutable bool _accessRegionDefined = false;
 
