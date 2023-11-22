@@ -103,7 +103,7 @@ public:
    *
    * Has to be called after every implicit coupling iteration.
    */
-  virtual void performAcceleration(const DataMap &cplData);
+  virtual void performAcceleration(DataMap &cplData);
 
   /**
    * @brief Marks a iteration sequence as converged.
