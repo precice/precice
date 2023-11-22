@@ -60,7 +60,7 @@ void AitkenAcceleration::initialize(const DataMap &cplData)
 }
 
 void AitkenAcceleration::performAcceleration(
-    const DataMap &cplData)
+    DataMap &cplData)
 {
   PRECICE_TRACE();
 

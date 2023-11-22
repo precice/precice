@@ -34,7 +34,7 @@ public:
 
   virtual void initialize(const DataMap &cpldata) = 0;
 
-  virtual void performAcceleration(const DataMap &cpldata) = 0;
+  virtual void performAcceleration(DataMap &cpldata) = 0;
 
   virtual void iterationsConverged(const DataMap &cpldata) = 0;
 
@@ -68,7 +68,7 @@ protected:
   void concatenateCouplingData(const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const;
 
   /// performs a relaxation given a relaxation factor omega
-  void applyRelaxation(double omega, const DataMap &cplData) const;
+  static void applyRelaxation(double omega, DataMap &cplData);
 };
 } // namespace acceleration
 } // namespace precice

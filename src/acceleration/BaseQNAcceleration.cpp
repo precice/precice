@@ -273,7 +273,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::performAcceleration(
-    const DataMap &cplData)
+    DataMap &cplData)
 {
   PRECICE_TRACE(_dataIDs.size(), cplData.size());
 

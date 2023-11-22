@@ -160,6 +160,17 @@ Eigen::VectorXd Storage::getTimes() const
   return times;
 }
 
+bool Storage::empty() const
+{
+  return _stampleStorage.empty();
+}
+
+const time::Stample &Storage::last() const
+{
+  PRECICE_ASSERT(!_stampleStorage.empty());
+  return _stampleStorage[_stampleStorage.size() - 1];
+}
+
 std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
 {
   auto times  = Eigen::VectorXd(nTimes());

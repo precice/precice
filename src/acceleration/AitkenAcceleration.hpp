@@ -31,7 +31,7 @@ public:
       const DataMap &cpldata);
 
   virtual void performAcceleration(
-      const DataMap &cpldata);
+      DataMap &cpldata);
 
   virtual void iterationsConverged(
       const DataMap &cpldata);
