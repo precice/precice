@@ -22,8 +22,16 @@
   <participant name="SolverTwo">
     <receive-mesh name="MeshOne" from="SolverOne" safety-factor="0.1" />
     <provide-mesh name="MeshTwo" />
-    <mapping:nearest-neighbor direction="read" from="MeshOne" to="MeshTwo" constraint="consistent" />
-    <mapping:nearest-neighbor direction="write" from="MeshTwo" to="MeshOne" constraint="conservative" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="MeshOne"
+      to="MeshTwo"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="MeshTwo"
+      to="MeshOne"
+      constraint="conservative" />
     <write-data name="Data2" mesh="MeshTwo" />
     <read-data name="Data1" mesh="MeshTwo" />
   </participant>
