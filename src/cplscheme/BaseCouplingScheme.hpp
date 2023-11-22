@@ -322,12 +322,6 @@ protected:
   void setNextTimeWindowSize(double timeWindowSize);
 
   /**
-   * @brief Getter for time computed in the current window
-   * @returns time difference between window start and current time
-   */
-  double getComputedTimeWindowPart() const;
-
-  /**
    * @brief Setter for _doesFirstStep
    */
   void setDoesFirstStep(bool doesFirstStep);

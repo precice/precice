@@ -446,11 +446,6 @@ bool BaseCouplingScheme::hasDataBeenReceived() const
   return _hasDataBeenReceived;
 }
 
-double BaseCouplingScheme::getComputedTimeWindowPart() const
-{
-  return _time - _timeWindowStartTime;
-}
-
 void BaseCouplingScheme::setDoesFirstStep(bool doesFirstStep)
 {
   _doesFirstStep = doesFirstStep;
