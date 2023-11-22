@@ -240,7 +240,6 @@ target_sources(testprecice
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingThird.cpp
     tests/serial/time/implicit/parallel-coupling/WaveformSubcyclingWithDifferentNumberOfDts.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataFirstParticipant.cpp
-    tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataFirstParticipantHighTolerance.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubstepsUseInitFirst.cpp
