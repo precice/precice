@@ -380,7 +380,7 @@ void BaseCouplingScheme::secondExchange()
     // Update internal time tracking
     if (_isTimeWindowComplete) {
       _timeWindowStartTime += _timeWindowSize;
-      // Store time between actually _computedTimeWindowPart and _timeWindowSize in buffer to keep track of total time drift in _totalTimeDrift.
+      // Compute difference between actually computed _computedTimeWindowPart and required _timeWindowSize to keep track of total time drift in _totalTimeDrift.
       PRECICE_ASSERT(hasTimeWindowSize())
       _totalTimeDrift += abs(_computedTimeWindowPart - _timeWindowSize);
       PRECICE_CHECK(abs(_totalTimeDrift) < math::NUMERICAL_ZERO_DIFFERENCE, "preCICE has detected a difference between its internal time and the time of this participant. This can happen, if you are using very many substeps per time window over multiple time windows. Please refer to https://precice.org/couple-your-code-time-step-sizes.html for strategies to avoid this problem.");
