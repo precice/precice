@@ -205,12 +205,11 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     // Attribute does not exist for parallel coupling schemes as it is always fixed.
     _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD, VALUE_FIXED));
     if (_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE) {
-
       PRECICE_CHECK(_config.timeWindowSize >= math::NUMERICAL_ZERO_DIFFERENCE,
-                    "Time window size has to be larger or equal to the minimal time step supported by preCICE. "
-                    "Please check the <time-window-size value=\"{}\" method=\"{}\" /> tag "
-                    "in the <coupling-scheme:...> in the <precice-config ...> of your precice-config.xml",
-                    _config.timeWindowSize, tag.getStringAttributeValue(ATTR_METHOD));
+                    "The minimal time window size supported by preCICE is {}. "
+                    "Please check the <time-window-size value=\"{}\" /> tag "
+                    "in the <coupling-scheme:...> of your precice-config.xml and pick an appropriate time window size.",
+                    math::NUMERICAL_ZERO_DIFFERENCE, _config.timeWindowSize);
     } else {
       PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE);
       PRECICE_CHECK(_config.timeWindowSize == -1,
