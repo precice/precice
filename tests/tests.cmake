@@ -13,6 +13,7 @@ target_sources(testprecice
     tests/parallel/PrimaryRankSockets.cpp
     tests/parallel/TestBoundingBoxInitialization.cpp
     tests/parallel/TestBoundingBoxInitializationEmpty.cpp
+    tests/parallel/TestBoundingBoxInitializationPUM.cpp
     tests/parallel/TestBoundingBoxInitializationTwoWay.cpp
     tests/parallel/TestFinalize.cpp
     tests/parallel/UserDefinedMPICommunicator.cpp

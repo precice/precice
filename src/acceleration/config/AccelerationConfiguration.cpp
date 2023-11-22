@@ -235,8 +235,8 @@ void AccelerationConfiguration::xmlEndTagCallback(
   PRECICE_TRACE(callingTag.getName());
   if (callingTag.getNamespace() == TAG) {
 
-    // create preconditioner
-    if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_IQNIMVJ) {
+    //create preconditioner
+    if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_IQNIMVJ || callingTag.getName() == VALUE_AITKEN) {
 
       // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time windows is limited by the chunksize
       if (callingTag.getName() == VALUE_IQNIMVJ && _config.imvjRestartType > 0)
@@ -267,7 +267,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
     } else if (callingTag.getName() == VALUE_AITKEN) {
       _acceleration = PtrAcceleration(
           new AitkenAcceleration(
-              _config.relaxationFactor, _config.dataIDs));
+              _config.relaxationFactor, _config.dataIDs, _preconditioner));
     } else if (callingTag.getName() == VALUE_IQNILS) {
       _config.relaxationFactor  = (_userDefinitions.definedRelaxationFactor) ? _config.relaxationFactor : _defaultValuesIQNILS.relaxationFactor;
       _config.maxIterationsUsed = (_userDefinitions.definedMaxIterationsUsed) ? _config.maxIterationsUsed : _defaultValuesIQNILS.maxIterationsUsed;
@@ -385,9 +385,35 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     attrName.setDocumentation("The name of the data.");
     XMLAttribute<std::string> attrMesh(ATTR_MESH);
     attrMesh.setDocumentation("The name of the mesh which holds the data.");
+    auto attrScaling = makeXMLAttribute(ATTR_SCALING, 1.0)
+                           .setDocumentation(
+                               "To improve the numerical stability of multiple data vectors, "
+                               "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
+    tagData.addAttribute(attrScaling);
     tagData.addAttribute(attrName);
     tagData.addAttribute(attrMesh);
     tag.addSubtag(tagData);
+
+    XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
+    tagPreconditioner.setDocumentation("To improve the numerical stability of multiple data vectors a preconditioner"
+                                       " can be applied. A constant preconditioner scales every acceleration data by a constant value, which you can define as"
+                                       " an attribute of data. "
+                                       " A value preconditioner scales every acceleration data by the norm of the data in the previous time window."
+                                       " A residual preconditioner scales every acceleration data by the current residual."
+                                       " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.");
+    auto attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
+                                      .setOptions({VALUE_CONSTANT_PRECONDITIONER,
+                                                   VALUE_VALUE_PRECONDITIONER,
+                                                   VALUE_RESIDUAL_PRECONDITIONER,
+                                                   VALUE_RESIDUAL_SUM_PRECONDITIONER})
+                                      .setDocumentation("The type of the preconditioner.");
+    tagPreconditioner.addAttribute(attrPreconditionerType);
+    auto nonconstTWindows = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
+                                .setDocumentation(
+                                    "After the given number of time windows, the preconditioner weights "
+                                    "are frozen and the preconditioner acts like a constant preconditioner.");
+    tagPreconditioner.addAttribute(nonconstTWindows);
+    tag.addSubtag(tagPreconditioner);
   } else if (tag.getName() == VALUE_IQNILS) {
 
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_NOT_OR_ONCE);
