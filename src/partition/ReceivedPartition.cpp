@@ -21,6 +21,7 @@
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
+#include "utils/algorithm.hpp"
 #include "utils/assertion.hpp"
 #include "utils/fmt.hpp"
 
@@ -614,7 +615,7 @@ void ReceivedPartition::createOwnerInformation()
     // #3: check vertices and keep only those that fit into the current rank's bb
     const int numberOfVertices = _mesh->vertices().size();
     PRECICE_DEBUG("Tag vertices, number of vertices {}", numberOfVertices);
-    std::vector<int>      tags(numberOfVertices, -1);
+    std::vector<int>      tags(numberOfVertices, 1);
     std::vector<VertexID> globalIDs(numberOfVertices, -1);
     int                   ownedVerticesCount = 0; // number of vertices owned by this rank
     for (int i = 0; i < numberOfVertices; i++) {
@@ -625,18 +626,17 @@ void ReceivedPartition::createOwnerInformation()
           if (neighborRank.second.contains(_mesh->vertices()[i])) {
             vertexIsShared = true;
             sharedVerticesSendMap[neighborRank.first].push_back(globalIDs[i]);
-            sharedVerticesGlobalIDs.push_back(globalIDs[i]);
-            sharedVerticesLocalIDs.push_back(i);
           }
         }
 
         if (not vertexIsShared) {
           tags[i] = 1;
           ownedVerticesCount++;
+        } else {
+          sharedVerticesGlobalIDs.push_back(globalIDs[i]);
+          sharedVerticesLocalIDs.push_back(i);
         }
-      }
-
-      else {
+      } else {
         tags[i] = 0;
       }
     }
@@ -698,49 +698,28 @@ void ReceivedPartition::createOwnerInformation()
     }
 
     // #5: Second round assignment according to the number of owned vertices
+    // In case that a vertex can be shared between two ranks, the rank with lower
+    // vertex count will own the vertex.
+    // If both ranks have same vertex count, the lower rank will own the vertex.
 
-    /* In case that a vertex can be shared between two ranks, the rank with lower
-       vertex count will own the vertex.
-       If both ranks have same vertex count, the lower rank will own the vertex.
-    */
-
-    for (size_t i = 0; i < sharedVerticesGlobalIDs.size(); i++) {
-      bool owned = true;
-
-      for (auto &sharingRank : sharedVerticesReceiveMap) {
-        std::vector<int> vec = sharingRank.second;
-        if (std::find(vec.begin(), vec.end(), sharedVerticesGlobalIDs[i]) != vec.end()) {
-          if ((ownedVerticesCount > neighborRanksVertexCount[sharingRank.first]) ||
-              (ownedVerticesCount == neighborRanksVertexCount[sharingRank.first] && utils::IntraComm::getRank() > sharingRank.first)) {
-            owned = false;
-
-            // // Decide upon owners,
-            // PRECICE_DEBUG("Decide owners, first round by rough load balancing");
-            // // Provide a more descriptive error message if direct access was enabled
-            // PRECICE_CHECK(!(ranksAtInterface == 0 && _allowDirectAccess),
-            //               "After repartitioning of mesh \"{}\" all ranks are empty. "
-            //               "Please check the dimensions of the provided bounding box "
-            //               "(in \"setMeshAccessRegion\") and verify that it covers vertices "
-            //               "in the mesh or check the definition of the provided meshes.",
-            //               _mesh->getName());
-            // PRECICE_ASSERT(ranksAtInterface != 0);
-            // int localGuess = _mesh->getGlobalNumberOfVertices() / ranksAtInterface; // Guess for a decent load balancing
-            // // First round: every secondary rank gets localGuess vertices
-            // for (Rank rank : utils::IntraComm::allRanks()) {
-            //   int counter = 0;
-            //   for (size_t i = 0; i < secondaryOwnerVecs[rank].size(); i++) {
-            //     // Vertex has no owner yet and rank could be owner
-            //     if (globalOwnerVec[secondaryGlobalIDs[rank][i]] == 0 && secondaryTags[rank][i] == 1) {
-            //       secondaryOwnerVecs[rank][i]                 = 1; // Now rank is owner
-            //       globalOwnerVec[secondaryGlobalIDs[rank][i]] = 1; // Vertex now has owner
-            //       counter++;
-            //       if (counter == localGuess)
-
-            break;
-          }
-        }
+    // To do so, we look at all vertices shared with all neighbors
+    for (auto &sharingRank : sharedVerticesReceiveMap) {
+      // First, check if we would change the ownership at all (by default initialization
+      // above, we would be considered as owner of the shared vertices)
+      // If this is fulfilled, we need to set the ownership to false
+      if ((ownedVerticesCount > neighborRanksVertexCount[sharingRank.first]) ||
+          (ownedVerticesCount == neighborRanksVertexCount[sharingRank.first] && utils::IntraComm::getRank() > sharingRank.first)) {
+        // In such a case, we need to find out the tags we need to switch to 'false', as we don't want
+        // to own them any longer. We compute the intersection of all globalIDs this rank shares with
+        // others and the globalIDs of the neighbor rank we are just considering.
+        // The set_intersection_indices gives us the indices in the sharedVerticesGlobalIDs, which we
+        // can use in the sharedVerticesLocalIDs to get the actual index in the 'tags' vector.
+        std::vector<int> res;
+        precice::utils::set_intersection_indices(sharedVerticesGlobalIDs.begin(), sharedVerticesGlobalIDs.begin(), sharedVerticesGlobalIDs.end(),
+                                                 sharingRank.second.begin(), sharingRank.second.end(), std::back_inserter(res));
+        for (auto r : res)
+          tags[sharedVerticesLocalIDs[r]] = static_cast<int>(false);
       }
-      tags[sharedVerticesLocalIDs[i]] = owned ? 1 : 0;
     }
 
     setOwnerInformation(tags);
