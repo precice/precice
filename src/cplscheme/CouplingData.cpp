@@ -107,7 +107,7 @@ void CouplingData::storeIteration()
   _previousTimeStepsStorage = _data->timeStepsStorage();
 }
 
-const Eigen::VectorXd CouplingData::previousIteration() const
+const Eigen::VectorXd &CouplingData::previousIteration() const
 {
   PRECICE_ASSERT(!_previousTimeStepsStorage.stamples().empty());
   return _previousTimeStepsStorage.stamples().back().sample.values;
