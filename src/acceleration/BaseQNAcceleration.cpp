@@ -222,7 +222,6 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       if (not math::equals(utils::IntraComm::l2norm(_values), 0.0)) {
         residualMagnitude /= utils::IntraComm::l2norm(_values);
       }
-
       if (math::equals(residualMagnitude, 0.0)) {
         PRECICE_WARN("Adding a vector with a two-norm of {} to the quasi-Newton V matrix, which will lead to "
                      "ill-conditioning. A filter might delete the column again. Still, this could mean that you are " 
