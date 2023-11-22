@@ -19,6 +19,7 @@ enum class BasisFunction {
   WendlandC2,
   WendlandC4,
   WendlandC6,
+  WendlandC8,
   ThinPlateSplines,
   Multiquadrics,
   InverseMultiquadrics,
