@@ -285,6 +285,7 @@ MappingConfiguration::MappingConfiguration(
       XMLTag{*this, RBF_CPOLYNOMIAL_C2, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C2 function"),
       XMLTag{*this, RBF_CPOLYNOMIAL_C4, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C4 function"),
       XMLTag{*this, RBF_CPOLYNOMIAL_C6, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C6 function"),
+      XMLTag{*this, RBF_CPOLYNOMIAL_C8, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C8 function"),
       XMLTag{*this, RBF_CTPS_C2, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Compact thin-plate-spline C2")};
 
   auto attrSupportRadius = XMLAttribute<double>(ATTR_SUPPORT_RADIUS)
@@ -671,6 +672,8 @@ BasisFunction MappingConfiguration::parseBasisFunctions(const std::string &basis
     basisFunction = BasisFunction::WendlandC4;
   else if (basisFctName == RBF_CPOLYNOMIAL_C6)
     basisFunction = BasisFunction::WendlandC6;
+  else if (basisFctName == RBF_CPOLYNOMIAL_C8)
+    basisFunction = BasisFunction::WendlandC8;
   else
     PRECICE_UNREACHABLE("Unknown basis function \"{}\".", basisFctName);
   return basisFunction;

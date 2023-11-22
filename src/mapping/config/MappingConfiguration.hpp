@@ -172,6 +172,7 @@ private:
   const std::string RBF_CPOLYNOMIAL_C2    = "compact-polynomial-c2";
   const std::string RBF_CPOLYNOMIAL_C4    = "compact-polynomial-c4";
   const std::string RBF_CPOLYNOMIAL_C6    = "compact-polynomial-c6";
+  const std::string RBF_CPOLYNOMIAL_C8    = "compact-polynomial-c8";
 
   // Attributes for the subtag
   const std::string ATTR_SHAPE_PARAM    = "shape-parameter";
