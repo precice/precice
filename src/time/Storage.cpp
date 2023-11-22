@@ -210,20 +210,8 @@ Eigen::MatrixXd Storage::sampleGradients(double time) const
 
 int Storage::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const
 {
-  int usedDegree = -1;
   PRECICE_ASSERT(requestedDegree <= Time::MAX_WAVEFORM_DEGREE);
-  if (requestedDegree == 0 || numberOfAvailableSamples < 2) {
-    usedDegree = 0;
-  } else if (requestedDegree == 1 || numberOfAvailableSamples < 3) {
-    usedDegree = 1;
-  } else if (requestedDegree == 2 || numberOfAvailableSamples < 4) {
-    usedDegree = 2;
-  } else if (requestedDegree == 3 || numberOfAvailableSamples < 5) {
-    usedDegree = 3;
-  } else {
-    PRECICE_ASSERT(false); // not supported
-  }
-  return usedDegree;
+  return std::min(requestedDegree, numberOfAvailableSamples - 1);
 }
 
 time::Sample Storage::getSampleAtBeginning()
