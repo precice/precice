@@ -425,7 +425,7 @@ bool BaseCouplingScheme::addComputedTime(
   _computedTimeWindowPart += timeToAdd;
 
   // Check validness
-  bool valid = math::greaterEquals(getNextTimeStepMaxSize(), 0.0, math::NUMERICAL_ZERO_DIFFERENCE);
+  bool valid = math::greaterEquals(getNextTimeStepMaxSize(), 0.0);
   PRECICE_CHECK(valid,
                 "The time step size given to preCICE in \"advance\" {} exceeds the maximum allowed time step size {} "
                 "in the remaining of this time window. "
@@ -441,7 +441,7 @@ bool BaseCouplingScheme::willDataBeExchanged(
 {
   PRECICE_TRACE(lastSolverTimeStepSize);
   double remainder = getNextTimeStepMaxSize() - lastSolverTimeStepSize;
-  return not math::greater(remainder, 0.0, math::NUMERICAL_ZERO_DIFFERENCE);
+  return not math::greater(remainder, 0.0);
 }
 
 bool BaseCouplingScheme::hasDataBeenReceived() const
@@ -505,7 +505,7 @@ double BaseCouplingScheme::getNextTimeStepMaxSize() const
 
 bool BaseCouplingScheme::isCouplingOngoing() const
 {
-  bool timeLeft      = math::greater(_maxTime, getTime(), math::NUMERICAL_ZERO_DIFFERENCE) || math::equals(_maxTime, UNDEFINED_MAX_TIME);
+  bool timeLeft      = math::greater(_maxTime, getTime()) || math::equals(_maxTime, UNDEFINED_MAX_TIME);
   bool timestepsLeft = (_maxTimeWindows >= _timeWindows) || (_maxTimeWindows == UNDEFINED_TIME_WINDOWS);
   return timeLeft && timestepsLeft;
 }
@@ -766,7 +766,7 @@ void BaseCouplingScheme::advanceTXTWriters()
 
 bool BaseCouplingScheme::reachedEndOfTimeWindow() const
 {
-  return math::equals(_timeWindowSize - _computedTimeWindowPart, 0.0, math::NUMERICAL_ZERO_DIFFERENCE) || not hasTimeWindowSize();
+  return math::equals(_timeWindowSize - _computedTimeWindowPart, 0.0) || not hasTimeWindowSize();
 }
 
 void BaseCouplingScheme::storeIteration()
