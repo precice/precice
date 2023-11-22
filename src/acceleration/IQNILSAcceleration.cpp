@@ -235,32 +235,35 @@ void IQNILSAcceleration::specializedIterationsConverged(
     const DataMap &cplData)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(_matrixCols.size() > 0, "The IQN matrix has no columns.");
-  if (_matrixCols.front() == 0) { // Did only one iteration
-    _matrixCols.pop_front();
-  }
+  if (_matrixCols.size() > 0) {
+    if (_matrixCols.front() == 0) { // Did only one iteration
+      _matrixCols.pop_front();
+    }
 
-  if (_timeWindowsReused == 0) {
-    if (_forceInitialRelaxation) {
+    if (_timeWindowsReused == 0) {
+      if (_forceInitialRelaxation) {
+        for (int id : _secondaryDataIDs) {
+          _secondaryMatricesW[id].resize(0, 0);
+        }
+      } else {
+        /**
+         * pending deletion (after first iteration of next time window
+         * Using the matrices from the old time window for the first iteration
+         * is better than doing underrelaxation as first iteration of every time window
+         */
+      }
+    } else if (static_cast<int>(_matrixCols.size()) > _timeWindowsReused) {
+      int toRemove = _matrixCols.back();
       for (int id : _secondaryDataIDs) {
-        _secondaryMatricesW[id].resize(0, 0);
-      }
-    } else {
-      /**
-       * pending deletion (after first iteration of next time window
-       * Using the matrices from the old time window for the first iteration
-       * is better than doing underrelaxation as first iteration of every time window
-       */
-    }
-  } else if (static_cast<int>(_matrixCols.size()) > _timeWindowsReused) {
-    int toRemove = _matrixCols.back();
-    for (int id : _secondaryDataIDs) {
-      Eigen::MatrixXd &secW = _secondaryMatricesW[id];
-      PRECICE_ASSERT(secW.cols() > toRemove, secW, toRemove, id);
-      for (int i = 0; i < toRemove; i++) {
-        utils::removeColumnFromMatrix(secW, secW.cols() - 1);
+        Eigen::MatrixXd &secW = _secondaryMatricesW[id];
+        PRECICE_ASSERT(secW.cols() > toRemove, secW, toRemove, id);
+        for (int i = 0; i < toRemove; i++) {
+          utils::removeColumnFromMatrix(secW, secW.cols() - 1);
+        }
       }
     }
+  } else {
+    PRECICE_WARN("The IQN matrix has no columns.");
   }
 }
 
