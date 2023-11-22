@@ -9,7 +9,7 @@
 
 #include "com/MPICommunication.hpp"
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 
 namespace precice {
 namespace com {

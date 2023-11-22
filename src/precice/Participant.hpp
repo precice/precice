@@ -4,7 +4,7 @@
 #include <precice/Version.h>
 #include <precice/export.h>
 #include <precice/span.hpp>
-#include "precice/types.hpp"
+#include "precice/Types.hpp"
 
 /**
  * forward declarations.

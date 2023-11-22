@@ -13,7 +13,7 @@
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/Helpers.hpp"
 
 namespace precice::cplscheme {

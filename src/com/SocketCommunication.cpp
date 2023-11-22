@@ -9,7 +9,7 @@
 #include "SocketCommunication.hpp"
 #include "SocketRequest.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
 #include "utils/span_tools.hpp"

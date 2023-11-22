@@ -22,7 +22,7 @@
 #include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
@@ -45,6 +45,7 @@ BaseCouplingScheme::BaseCouplingScheme(
       _maxTimeWindows(maxTimeWindows),
       _timeWindows(1),
       _timeWindowSize(timeWindowSize),
+      _nextTimeWindowSize(timeWindowSize),
       _minIterations(minIterations),
       _maxIterations(maxIterations),
       _iterations(1),
@@ -207,10 +208,17 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
 
 void BaseCouplingScheme::receiveDataForWindowEnd(const m2n::PtrM2N &m2n, const DataMap &receiveData)
 {
+  // buffer current time state
   const double oldComputedTimeWindowPart = _computedTimeWindowPart;
-  _computedTimeWindowPart += getTimeWindowSize(); // such that getTime() in receiveData returns time at end of window
-  this->receiveData(m2n, receiveData);            // receive data for end of window
+  const double oldTimeWindowStartTime    = _timeWindowStartTime;
+  // set time state to point to end of this window such that getTime() in receiveData returns time at end of window
+  _timeWindowStartTime    = getTime() + _nextTimeWindowSize;
+  _computedTimeWindowPart = 0;
+  // receive data for end of window
+  this->receiveData(m2n, receiveData);
+  // reset time state;
   _computedTimeWindowPart = oldComputedTimeWindowPart;
+  _timeWindowStartTime    = oldTimeWindowStartTime;
 }
 
 void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveData)
@@ -245,6 +253,11 @@ bool BaseCouplingScheme::isExplicitCouplingScheme() const
 void BaseCouplingScheme::setTimeWindowSize(double timeWindowSize)
 {
   _timeWindowSize = timeWindowSize;
+}
+
+void BaseCouplingScheme::setNextTimeWindowSize(double timeWindowSize)
+{
+  _nextTimeWindowSize = timeWindowSize;
 }
 
 void BaseCouplingScheme::finalize()
@@ -352,14 +365,12 @@ void BaseCouplingScheme::secondExchange()
         // coupling iteration.
         PRECICE_ASSERT(math::greater(_computedTimeWindowPart, 0.0));
         _timeWindows -= 1;
-        _computedTimeWindowPart = 0.0; // reset window
-      } else {                         // write output, prepare for next window
+        _isTimeWindowComplete = false;
+      } else { // write output, prepare for next window
         PRECICE_DEBUG("Convergence achieved");
         advanceTXTWriters();
         PRECICE_INFO("Time window completed");
         _isTimeWindowComplete = true;
-        _timeWindowStartTime += _computedTimeWindowPart;
-        _computedTimeWindowPart = 0.0; // reset window
         if (isCouplingOngoing()) {
           PRECICE_DEBUG("Setting require create checkpoint");
           requireAction(CouplingScheme::Action::WriteCheckpoint);
@@ -373,14 +384,20 @@ void BaseCouplingScheme::secondExchange()
         _iterations = 1;
       }
     } else {
+      PRECICE_ASSERT(isExplicitCouplingScheme());
       PRECICE_INFO("Time window completed");
       _isTimeWindowComplete = true;
-      _timeWindowStartTime += _computedTimeWindowPart;
-      _computedTimeWindowPart = 0.0; // reset window
     }
     if (isCouplingOngoing()) {
       PRECICE_ASSERT(_hasDataBeenReceived);
     }
+
+    // Update internal time tracking
+    if (_isTimeWindowComplete) {
+      _timeWindowStartTime += _timeWindowSize;
+    }
+    _computedTimeWindowPart = 0.0; // reset window
+    _timeWindowSize         = _nextTimeWindowSize;
   }
 }
 
@@ -401,6 +418,11 @@ double BaseCouplingScheme::getTimeWindowSize() const
 {
   PRECICE_ASSERT(hasTimeWindowSize());
   return _timeWindowSize;
+}
+
+double BaseCouplingScheme::getNextTimeWindowSize() const
+{
+  return _nextTimeWindowSize;
 }
 
 bool BaseCouplingScheme::isInitialized() const
