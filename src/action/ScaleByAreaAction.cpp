@@ -23,7 +23,7 @@ ScaleByAreaAction::ScaleByAreaAction(
 {
 }
 
-void ScaleByAreaAction::performAction(double time)
+void ScaleByAreaAction::performAction()
 {
   PRECICE_TRACE();
   const int meshDimensions = getMesh()->getDimensions();

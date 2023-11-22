@@ -10,7 +10,7 @@
 #include "com/Communication.hpp"
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 #include "utils/span_tools.hpp"
 

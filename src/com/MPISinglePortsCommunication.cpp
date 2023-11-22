@@ -9,7 +9,7 @@
 #include "com/ConnectionInfoPublisher.hpp"
 #include "com/MPISinglePortsCommunication.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/MPIResult.hpp"
 #include "utils/Parallel.hpp"

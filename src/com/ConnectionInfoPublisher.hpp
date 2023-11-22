@@ -4,7 +4,7 @@
 #include <utility>
 
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 
 namespace precice::com {
 
