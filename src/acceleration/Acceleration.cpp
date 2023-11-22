@@ -59,24 +59,3 @@ void Acceleration::concatenateCouplingData(
   }
 }
 } // namespace precice::acceleration
-//
-//
-
-#if 0
-
-  for (auto &pair : cplData) {
-    auto &couplingData = *(pair.second);
-
-    for (auto &stample : couplingData.timeStepsStorage().stamples()) {
-      auto &values    = stample.sample.values;
-      auto  oldValues = couplingData.getPreviousValuesAtTime(stample.timestamp); // IMPORTANT DETAIL: The interpolation that we use for resampling does not necessarily have to be the same interpolation as the interpolation the user accesses via read-data. (But probably it is easier to just use the same)
-      values          = values * omega + oldValues * (1.0 - omega);
-
-      if (couplingData.hasGradient()) {
-        auto &gradients    = stample.sample.gradients;
-        auto  oldGradients = couplingData.getPreviousGradientsAtTime(stample.timestamp); // IMPORTANT DETAIL: The interpolation that we use for resampling does not necessarily have to be the same interpolation as the interpolation the user accesses via read-data. (But probably it is easier to just use the same)
-        gradients          = gradients * omega + oldGradients * (1.0 - omega);
-      }
-    }
-  }
-#endif
