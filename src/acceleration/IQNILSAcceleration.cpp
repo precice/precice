@@ -235,6 +235,7 @@ void IQNILSAcceleration::specializedIterationsConverged(
     const DataMap &cplData)
 {
   PRECICE_TRACE();
+  PRECICE_ASSERT(_matrixCols.size() > 0, "The IQN matrix has no columns.");
   if (_matrixCols.front() == 0) { // Did only one iteration
     _matrixCols.pop_front();
   }
