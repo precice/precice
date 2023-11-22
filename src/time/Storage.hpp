@@ -77,6 +77,15 @@ public:
     return boost::make_iterator_range(_stampleStorage);
   }
 
+  auto stamples()
+  {
+    return boost::make_iterator_range(_stampleStorage);
+  }
+
+  bool empty() const;
+
+  const time::Stample &last() const;
+
   /**
    * @brief Get all normalized dts and values in ascending order (with respect to normalized dts)
    *

@@ -153,9 +153,11 @@ CouplingData::Direction CouplingData::getDirection() const
 void CouplingData::moveToNextWindow()
 {
   if (_direction == Direction::Receive) {
-    _data->moveToNextWindow();
-    _previousTimeStepsStorage = _data->timeStepsStorage();
+    //_data->moveToNextWindow();
+    // _previousTimeStepsStorage = _data->timeStepsStorage();
   }
+  _data->moveToNextWindow();
+  _previousTimeStepsStorage = _data->timeStepsStorage();
 }
 
 time::Sample &CouplingData::sample()

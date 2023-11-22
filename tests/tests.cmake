@@ -56,6 +56,8 @@ target_sources(testprecice
     tests/quasi-newton/helpers.cpp
     tests/quasi-newton/helpers.hpp
     tests/quasi-newton/parallel/TestQN1.cpp
+    tests/quasi-newton/parallel/TestQN10.cpp
+    tests/quasi-newton/parallel/TestQN10EmptyPartition.cpp
     tests/quasi-newton/parallel/TestQN1EmptyPartition.cpp
     tests/quasi-newton/parallel/TestQN2.cpp
     tests/quasi-newton/parallel/TestQN2EmptyPartition.cpp
@@ -75,6 +77,7 @@ target_sources(testprecice
     tests/quasi-newton/parallel/TestQN9EmptyPartition.cpp
     tests/quasi-newton/serial/DefaultConfig.cpp
     tests/quasi-newton/serial/TestQN1.cpp
+    tests/quasi-newton/serial/TestQN10.cpp
     tests/quasi-newton/serial/TestQN2.cpp
     tests/quasi-newton/serial/TestQN3.cpp
     tests/quasi-newton/serial/TestQN4.cpp
