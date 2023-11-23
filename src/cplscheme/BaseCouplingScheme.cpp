@@ -345,7 +345,7 @@ void BaseCouplingScheme::secondExchange()
         // The computed time window part equals the time window size, since the
         // time window remainder is zero. Subtract the time window size and do another
         // coupling iteration.
-        PRECICE_ASSERT(math::greater(_time - _timeWindowStartTime, 0.0));
+        PRECICE_ASSERT(math::greater(_time, _timeWindowStartTime));
         _timeWindows -= 1;
         _isTimeWindowComplete = false;
       } else { // write output, prepare for next window
@@ -758,7 +758,7 @@ void BaseCouplingScheme::advanceTXTWriters()
 
 bool BaseCouplingScheme::reachedEndOfTimeWindow() const
 {
-  return math::equals(_timeWindowStartTime + _timeWindowSize - _time, 0.0) || not hasTimeWindowSize();
+  return math::equals(_timeWindowStartTime + _timeWindowSize, _time) || not hasTimeWindowSize();
 }
 
 void BaseCouplingScheme::storeIteration()
