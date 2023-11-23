@@ -124,6 +124,7 @@ void EventRegistry::startBackend()
   _output.open(filename);
   PRECICE_CHECK(_output, "Unable to open the events-file: \"{}\"", filename);
   _globalId = nameToID("_GLOBAL");
+  PRECICE_ASSERT(_globalId.has_value());
   _writeQueue.emplace_back(StartEntry{_globalId.value(), _initClock});
 
   // write header
@@ -155,7 +156,9 @@ void EventRegistry::stopBackend()
   }
   // create end of global event
   auto now = Event::Clock::now();
-  put(StopEntry{_globalId.value(), now});
+  if (_globalId) {
+    put(StopEntry{_globalId.value(), now});
+  }
   // flush the queue
   flush();
   _output << "]}";
