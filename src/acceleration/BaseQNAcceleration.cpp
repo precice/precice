@@ -350,6 +350,7 @@ void BaseQNAcceleration::performAcceleration(
       }
 
     } else {
+
       _oldXTilde = _values;
 
       // Perform constant relaxation
@@ -528,12 +529,6 @@ void BaseQNAcceleration::splitCouplingData(
       valuesPart(i) = _values(i + offset);
     }
     offset += size;
-
-    //Update the last sample in the waveform as well
-    for (auto &stample : cplData.at(id)->stamples().advance_begin(1)) {
-      double timestamp = stample.timestamp;
-      cplData.at(id)->setSampleAtTime(timestamp, cplData.at(id)->sample());
-    }
   }
 }
 

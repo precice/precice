@@ -188,48 +188,46 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData)
     _secondaryWaveformW = _secondaryWaveformWBackup;
   }
 
-  // for (int id : _dataIDs) {
+  for (int id : _dataIDs) {
 
-  //   std::vector<precice::time::Storage> Wlist = _waveformW[id];
+    std::vector<precice::time::Storage> Wlist = _waveformW[id];
+    //skip the first sample since it always contains the initial data that never changes
+    for (auto &stample : cplData.at(id)->stamples()) {
 
-  //   //skip the first sample since it always contains the initial data that never changes
-  //   for (auto &stample : cplData.at(id)->stamples().advance_begin(1)) {
+      cplData.at(id)->values() = stample.sample.values;
+      double timestamp         = stample.timestamp;
+      for (int i = 0; i < c.size(); i++) {
+        cplData.at(id)->values() += Wlist[i].sample(timestamp) * c[i];
+      }
 
-  //     cplData.at(id)->values() = stample.sample.values;
-  //     double timestamp         = stample.timestamp;
-  //     for (int i = 0; i < c.size(); i++) {
-  //       cplData.at(id)->values() += Wlist[i].sample(timestamp) * c[i];
-  //     }
+      //  if the updates resulted in Nan values
+      if ((cplData.at(id)->values().array() != cplData.at(id)->values().array()).any()) {
+        PRECICE_ERROR("The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
+                      "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
+                      "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
+                      "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "
+                      "fTerminateilter or increase its threshold (larger epsilon).");
+      }
+      cplData.at(id)->setSampleAtTime(timestamp, cplData.at(id)->sample());
+    }
+  }
 
-  //     //  if the updates resulted in Nan values
-  //     if ((cplData.at(id)->values().array() != cplData.at(id)->values().array()).any()) {
-  //       PRECICE_ERROR("The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
-  //                     "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
-  //                     "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
-  //                     "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "
-  //                     "fTerminateilter or increase its threshold (larger epsilon).");
-  //     }
-  //     cplData.at(id)->setSampleAtTime(timestamp, cplData.at(id)->sample());
-  //   }
-  // }
+  //Perform QN acceleration for the whole waveform iteration for the secondary ids
+  for (int id : _secondaryDataIDs) {
 
-  // Perform QN acceleration for the whole waveform iteration for the secondary ids
-  // for (int id : _secondaryDataIDs) {
+    std::vector<precice::time::Storage> Wlist = _secondaryWaveformW[id];
 
-  //   std::vector<precice::time::Storage> Wlist = _secondaryWaveformW[id];
+    //skip the first sample since it always contains the initial data that never changes
+    for (auto &stample : cplData.at(id)->stamples()) {
 
-  //   //skip the first sample since it always contains the initial data that never changes
-  //   for (auto &stample : cplData.at(id)->stamples().advance_begin(1)) {
+      double timestamp = stample.timestamp;
 
-  //     double timestamp = stample.timestamp;
-
-  //     for (int i = 0; i < c.size(); i++) {
-  //       cplData.at(id)->values() += Wlist[i].sample(timestamp) * c[i];
-  //     }
-  //     cplData.at(id)->setSampleAtTime(timestamp, cplData.at(id)->sample());
-  //   }
-  // }
-
+      for (int i = 0; i < c.size(); i++) {
+        cplData.at(id)->values() += Wlist[i].sample(timestamp) * c[i];
+      }
+      cplData.at(id)->setSampleAtTime(timestamp, cplData.at(id)->sample());
+    }
+  }
   // pending deletion: delete old secondaryMatricesW
   if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
     // save current secondaryMatrix data in case the coupling for the next time window will terminate

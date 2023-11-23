@@ -213,6 +213,7 @@ void IQNIMVJAcceleration::updateDifferenceMatrices(
 void IQNIMVJAcceleration::computeQNUpdate(
     const DataMap &cplData)
 {
+
   /**
    * The inverse Jacobian
    *
