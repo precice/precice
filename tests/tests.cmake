@@ -137,6 +137,35 @@ target_sources(testprecice
     tests/serial/lifecycle/reconstruction/ConstructOnly.cpp
     tests/serial/lifecycle/reconstruction/Full.cpp
     tests/serial/lifecycle/reconstruction/ImplicitFinalize.cpp
+    tests/serial/map-if-necessary/three-solvers/helper.hpp
+    tests/serial/map-if-necessary/three-solvers/mixed-substeps/Multi.cpp
+    tests/serial/map-if-necessary/three-solvers/mixed-substeps/ParallelExplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/mixed-substeps/ParallelImplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/mixed-substeps/SerialExplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/mixed-substeps/SerialImplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/with-substeps/Multi.cpp
+    tests/serial/map-if-necessary/three-solvers/with-substeps/ParallelExplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/with-substeps/ParallelImplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/with-substeps/SerialExplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/with-substeps/SerialImplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/without-substeps/Multi.cpp
+    tests/serial/map-if-necessary/three-solvers/without-substeps/ParallelExplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/without-substeps/ParallelImplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/without-substeps/SerialExplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/without-substeps/SerialImplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/helper.hpp
+    tests/serial/map-if-necessary/two-solvers/mixed-substeps/ParallelExplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/mixed-substeps/ParallelImplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/mixed-substeps/SerialExplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/mixed-substeps/SerialImplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/with-substeps/ParallelExplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/with-substeps/ParallelImplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/with-substeps/SerialExplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/with-substeps/SerialImplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/without-substeps/ParallelExplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/without-substeps/ParallelImplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/without-substeps/SerialExplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/without-substeps/SerialImplicit.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalReadScalar.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalReadVector.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalWriteScalar.cpp

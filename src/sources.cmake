@@ -101,6 +101,8 @@ target_sources(preciceCore
     src/cplscheme/CouplingData.hpp
     src/cplscheme/CouplingScheme.cpp
     src/cplscheme/CouplingScheme.hpp
+    src/cplscheme/ImplicitData.cpp
+    src/cplscheme/ImplicitData.hpp
     src/cplscheme/MultiCouplingScheme.cpp
     src/cplscheme/MultiCouplingScheme.hpp
     src/cplscheme/ParallelCouplingScheme.cpp

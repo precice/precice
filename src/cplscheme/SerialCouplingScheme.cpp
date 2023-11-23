@@ -1,15 +1,16 @@
-#include "SerialCouplingScheme.hpp"
+#include <boost/range/adaptor/map.hpp>
 #include <cmath>
 #include <memory>
 #include <ostream>
 #include <utility>
-
 #include <vector>
+
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/SharedPointer.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/BiCouplingScheme.hpp"
 #include "cplscheme/CouplingScheme.hpp"
+#include "cplscheme/SerialCouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
 #include "math/differences.hpp"
@@ -201,6 +202,21 @@ DataMap &SerialCouplingScheme::getAccelerationData()
 {
   // SerialCouplingSchemes applies acceleration to send data
   return getSendData();
+}
+
+ImplicitData SerialCouplingScheme::implicitDataToReceive() const
+{
+  if (!isImplicitCouplingScheme()) {
+    return {};
+  }
+
+  const auto isSecond = !doesFirstStep();
+
+  ImplicitData idata;
+  for (auto cpldata : getReceiveData() | boost::adaptors::map_values) {
+    idata.add(cpldata->getDataID(), isSecond);
+  }
+  return idata;
 }
 
 } // namespace precice::cplscheme

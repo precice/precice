@@ -116,6 +116,17 @@ void Storage::clear()
   _bspline.reset();
 }
 
+void Storage::clearExceptLast()
+{
+  if (_stampleStorage.empty()) {
+    return;
+  }
+  _stampleStorage.erase(_stampleStorage.begin(), --_stampleStorage.end());
+
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
+}
+
 void Storage::trimBefore(double time)
 {
   auto beforeTime = [time](const auto &s) { return math::smaller(s.timestamp, time); };

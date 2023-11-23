@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 
 #include "DataContext.hpp"
+#include "cplscheme/ImplicitData.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -62,6 +63,18 @@ public:
   /// Move constructor, use the implicitly declared.
   ReadDataContext(ReadDataContext &&) = default;
   ReadDataContext &operator=(ReadDataContext &&) = default;
+
+  /**
+   * @brief Removes all toData samples from mappings
+   */
+  void clearToDataFor(const cplscheme::ImplicitData &from);
+
+  /**
+   * @brief Trims all toData of associated mappings after the given t
+   *
+   * @param[in] t the time after which to trim data
+   */
+  void trimToDataAfterFor(const cplscheme::ImplicitData &from, double t);
 
 private:
   static logging::Logger _log;
