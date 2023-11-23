@@ -31,14 +31,6 @@ struct MappingContext {
   {
     mapping->getInputMesh()->data(dataName)->requireDataGradient();
   }
-
-  /// Allows to clear data storage before mapping is performed
-  void clearToDataStorage()
-  {
-    if (toData->timeStepsStorage().nTimes() > 0) {
-      toData->timeStepsStorage().clear(); // requires clear, not trim, because otherwise data from the beginning of the window is kept across windows (toData that is no coupling data is never moved)
-    }
-  }
 };
 
 } // namespace impl

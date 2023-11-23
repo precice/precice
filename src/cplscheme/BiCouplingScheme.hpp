@@ -76,6 +76,9 @@ protected:
   /// Returns all data to be received.
   DataMap &getReceiveData();
 
+  /// Returns all data to be received.
+  const DataMap &getReceiveData() const;
+
   /// Sets the values
   CouplingData *getSendData(DataID dataID);
 

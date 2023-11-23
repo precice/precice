@@ -1,6 +1,8 @@
-#include "precice/impl/DataContext.hpp"
+#include <iterator>
 #include <memory>
 #include <utility>
+
+#include "precice/impl/DataContext.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 namespace precice::impl {
@@ -85,20 +87,41 @@ bool DataContext::hasMapping() const
   return hasReadMapping() || hasWriteMapping();
 }
 
-void DataContext::mapData()
+int DataContext::mapData(std::optional<double> after)
 {
+  PRECICE_TRACE(getMeshName(), getDataName());
   PRECICE_ASSERT(hasMapping());
-  // Execute the mapping
+
+  int executedMappings{0};
+
+  // Execute the mappings
   for (auto &context : _mappingContexts) {
-    // Reset the toData before mapping any samples
-    context.clearToDataStorage(); // @todo needs optimization: We don't need to map the data at the beginning of the window, because it should be known from the last window where it was the data from the window end. Exception: Data initialization. Related to https://github.com/precice/precice/issues/1707
-    PRECICE_ASSERT(context.fromData->stamples().size() > 0);
+    PRECICE_ASSERT(!context.fromData->stamples().empty(),
+                   "There must be samples at this point!");
+
+    // linear lookup should be sufficient here
+    const auto timestampExists = [times = context.toData->timeStepsStorage().getTimes()](double lookup) -> bool {
+      return std::any_of(times.data(), std::next(times.data(), times.size()), [lookup](double time) {
+        return math::equals(time, lookup);
+      });
+    };
 
     auto &mapping = *context.mapping;
 
     const auto dataDims = context.fromData->getDimensions();
 
     for (const auto &stample : context.fromData->stamples()) {
+      // skip stamples before given time
+      if (after && math::smallerEquals(stample.timestamp, *after)) {
+        PRECICE_DEBUG("Skipping stample t={} (not after {})", stample.timestamp, *after);
+        continue;
+      }
+      // skip existing stamples
+      if (timestampExists(stample.timestamp)) {
+        PRECICE_DEBUG("Skipping stample t={} (exists)", stample.timestamp);
+        continue;
+      }
+
       PRECICE_INFO("Mapping \"{}\" for t={} from \"{}\" to \"{}\"",
                    getDataName(), stample.timestamp, mapping.getInputMesh()->getName(), mapping.getOutputMesh()->getName());
       time::Sample outSample{
@@ -116,8 +139,10 @@ void DataContext::mapData()
 
       // Store data from mapping buffer in storage
       context.toData->setSampleAtTime(stample.timestamp, std::move(outSample));
+      ++executedMappings;
     }
   }
+  return executedMappings;
 }
 
 bool DataContext::hasReadMapping() const
