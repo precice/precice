@@ -80,7 +80,6 @@ void AitkenAcceleration::performAcceleration(
     // preconditioner not necessary
     _aitkenFactor = math::sign(_aitkenFactor) * std::min(_initialRelaxation, std::abs(_aitkenFactor));
   } else {
-    // Todo: make this conditional for dataIDs > 1
     _preconditioner->update(false, _values, residuals);
     _preconditioner->apply(residualDeltas);
     _preconditioner->apply(_oldResiduals);
