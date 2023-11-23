@@ -22,7 +22,8 @@ void Acceleration::applyRelaxation(double omega, DataMap &cplData)
     if (couplingData.timeStepsStorage().empty()) {
       continue;
     }
-
+    // @todo: This will apply the scaling to the sample at t=0 and t=1 when
+    // calling performAcceleration the first time. Is that intended?
     for (auto &stample : couplingData.timeStepsStorage().stamples()) {
       auto &values    = stample.sample.values;
       auto  oldValues = couplingData.getPreviousValuesAtTime(stample.timestamp); // IMPORTANT DETAIL: The interpolation that we use for resampling does not necessarily have to be the same interpolation as the interpolation the user accesses via read-data. (But probably it is easier to just use the same)
