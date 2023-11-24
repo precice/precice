@@ -616,7 +616,7 @@ void BaseQNAcceleration::iterationsConverged(
     if (!_exchangeSubsteps) {
       PRECICE_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
     } else {
-      PRECICE_ASSERT((_matrixV.cols() == 0 && _waveformW.empty()) || _matrixV.cols() == _waveformW.at(_dataIDs.front()).size(), _matrixV.cols(), _matrixW.cols());
+      PRECICE_ASSERT((_matrixV.cols() == 0 && _waveformW.empty()) || _matrixV.cols() == _waveformW.at(_dataIDs.front()).size(), _matrixV.cols(), _waveformW.at(_dataIDs.front()).size());
     }
     PRECICE_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 

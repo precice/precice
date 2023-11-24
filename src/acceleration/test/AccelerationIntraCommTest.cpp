@@ -1064,7 +1064,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 }
 
 /// Test that runs on 4 processors.
-BOOST_DATA_TEST_CASE(testColumnsLoggingWithoutSubsteps, boost::unit_test::data::make({false}), exchangeSubsteps)
+BOOST_DATA_TEST_CASE(testColumnsLoggingWithoutSubsteps, boost::unit_test::data::make({false, true}), exchangeSubsteps)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
   double           initialRelaxation        = 0.1;
