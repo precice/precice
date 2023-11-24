@@ -12,7 +12,7 @@
 #include "com/SharedPointer.hpp"
 #include "com/SocketSendQueue.hpp"
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/networking.hpp"
 
 namespace precice {

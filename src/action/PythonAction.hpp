@@ -9,8 +9,7 @@
 struct _object;
 using PyObject = _object;
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 /// Action whose implementation is given in a Python file.
 class PythonAction : public Action {
@@ -25,7 +24,7 @@ public:
 
   virtual ~PythonAction();
 
-  virtual void performAction(double time) override;
+  virtual void performAction() final override;
 
 private:
   logging::Logger _log{"action::PythonAction"};
@@ -57,7 +56,6 @@ private:
   int makeNumPyArraysAvailable();
 };
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action
 
 #endif

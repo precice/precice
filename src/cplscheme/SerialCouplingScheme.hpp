@@ -30,7 +30,6 @@ public:
  * @param[in] maxTime Simulation time limit, or UNDEFINED_MAX_TIME.
  * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIME_WINDOWS.
  * @param[in] timeWindowSize Simulation time window size.
- * @param[in] minTimeStepSize Minimum time step size.
  * @param[in] firstParticipant Name of participant starting simulation.
  * @param[in] secondParticipant Name of second participant in coupling.
  * @param[in] localParticipant Name of participant using this coupling scheme.
@@ -43,7 +42,6 @@ public:
       double                        maxTime,
       int                           maxTimeWindows,
       double                        timeWindowSize,
-      double                        minTimeStepSize,
       const std::string &           firstParticipant,
       const std::string &           secondParticipant,
       const std::string &           localParticipant,
@@ -57,20 +55,12 @@ public:
       double                        maxTime,
       int                           maxTimeWindows,
       double                        timeWindowSize,
-      double                        minTimeStepSize,
       const std::string &           firstParticipant,
       const std::string &           secondParticipant,
       const std::string &           localParticipant,
       m2n::PtrM2N                   m2n,
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode);
-
-protected:
-  /**
-   * @brief Setter for _timeWindowSize
-   * @param timeWindowSize
-   */
-  void setTimeWindowSize(double timeWindowSize);
 
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
@@ -94,7 +84,7 @@ private:
 
   void exchangeSecondData() override final;
 
-  const DataMap &getAccelerationData() override final;
+  DataMap &getAccelerationData() override final;
 };
 
 } // namespace cplscheme

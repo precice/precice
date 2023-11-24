@@ -1,11 +1,8 @@
 #pragma once
 
-namespace precice {
+#include "precice/Types.hpp"
 
-/**
- * Type used for the IDs of vertices
- */
-using VertexID = int;
+namespace precice {
 
 /**
  * Type used for the IDs of edges

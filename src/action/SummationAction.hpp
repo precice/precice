@@ -6,8 +6,7 @@
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 /// Action that adds multiple source data into target data
 class SummationAction : public Action {
@@ -26,10 +25,8 @@ public:
       int                     targetDataID,
       const mesh::PtrMesh &   mesh);
 
-  virtual ~SummationAction() {}
-
   /// Adding data and applying them to target
-  virtual void performAction(double time) override;
+  void performAction() final override;
 
 private:
   logging::Logger _log{"action::SummationAction"};
@@ -38,5 +35,4 @@ private:
   std::vector<mesh::PtrData> _sourceDataVector;
 };
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action

@@ -16,7 +16,7 @@
 #include "precice/Participant.hpp"
 #include "precice/config/Configuration.hpp"
 #include "precice/impl/ParticipantImpl.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/IntraComm.hpp"

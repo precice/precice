@@ -8,7 +8,7 @@
 #include "m2n/M2N.hpp"
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Mesh.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/IntraComm.hpp"

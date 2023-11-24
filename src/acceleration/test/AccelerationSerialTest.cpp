@@ -1,6 +1,7 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include "acceleration/Acceleration.hpp"
+#include "acceleration/AitkenAcceleration.hpp"
 #include "acceleration/BaseQNAcceleration.hpp"
 #include "acceleration/ConstantRelaxationAcceleration.hpp"
 #include "acceleration/IQNILSAcceleration.hpp"
@@ -298,6 +299,74 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
   BOOST_TEST(data.at(1)->values()(1) == 0.184);
   BOOST_TEST(data.at(1)->values()(2) == 0.184);
   BOOST_TEST(data.at(1)->values()(3) == 0.184);
+}
+
+BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxation)
+{
+  PRECICE_TEST(1_rank);
+
+  double              relaxation = 0.4;
+  std::vector<int>    dataIDs{0, 1};
+  std::vector<double> factors{1, 1};
+  mesh::PtrMesh       dummyMesh = std::make_shared<mesh::Mesh>("DummyMesh", 3, testing::nextMeshID());
+
+  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
+  AitkenAcceleration      acc(relaxation, dataIDs, prec);
+
+  mesh::PtrData displacements = std::make_shared<mesh::Data>("dvalues", -1, 1);
+  mesh::PtrData forces        = std::make_shared<mesh::Data>("fvalues", -1, 1);
+
+  // //init displacements
+  displacements->values().resize(4);
+  displacements->values() << 1.0, 2.0, 3.0, 4.0;
+  displacements->setSampleAtTime(0.0, displacements->sample());
+
+  // //init forces
+  forces->values().resize(4);
+  forces->values() << 0.2, 0.2, 0.2, 0.2;
+  forces->setSampleAtTime(0.0, forces->sample());
+
+  cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, false);
+  cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, false);
+
+  DataMap data;
+  data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
+  data.insert(std::pair<int, cplscheme::PtrCouplingData>(1, fpcd));
+  dpcd->storeIteration();
+  fpcd->storeIteration();
+
+  acc.initialize(data);
+
+  displacements->values() << 3.5, 2.0, 2.0, 1.0;
+  displacements->setSampleAtTime(1.0, displacements->sample());
+  forces->values() << 0.1, 0.1, 0.1, 0.1;
+  forces->setSampleAtTime(1.0, forces->sample());
+
+  acc.performAcceleration(data);
+
+  BOOST_TEST(data.at(0)->values()(0) == 2);
+  BOOST_TEST(data.at(0)->values()(1) == 2);
+  BOOST_TEST(data.at(0)->values()(2) == 2.6);
+  BOOST_TEST(data.at(0)->values()(3) == 2.8);
+  BOOST_TEST(data.at(1)->values()(0) == 0.16);
+  BOOST_TEST(data.at(1)->values()(1) == 0.16);
+  BOOST_TEST(data.at(1)->values()(2) == 0.16);
+  BOOST_TEST(data.at(1)->values()(3) == 0.16);
+
+  data.begin()->second->values() << 10, 10, 10, 10;
+  displacements->setSampleAtTime(1.0, displacements->sample());
+  forces->setSampleAtTime(1.0, forces->sample());
+
+  acc.performAcceleration(data);
+
+  BOOST_TEST(data.at(0)->values()(0) == 1.2689851805508461);
+  BOOST_TEST(data.at(0)->values()(1) == 2.2390979382674185);
+  BOOST_TEST(data.at(0)->values()(2) == 3.2092106959839914);
+  BOOST_TEST(data.at(0)->values()(3) == 4.1793234537005644);
+  BOOST_TEST(data.at(1)->values()(0) == 0.19880451030866292);
+  BOOST_TEST(data.at(1)->values()(1) == 0.19880451030866292);
+  BOOST_TEST(data.at(1)->values()(2) == 0.19880451030866292);
+  BOOST_TEST(data.at(1)->values()(3) == 0.19880451030866292);
 }
 
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)

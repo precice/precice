@@ -24,8 +24,8 @@
 #include "precice/impl/ParticipantImpl.hpp"
 #include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/SharedPointer.hpp"
+#include "precice/impl/Types.hpp"
 #include "precice/precice.hpp"
-#include "precice/types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 

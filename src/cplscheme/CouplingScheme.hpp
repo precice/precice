@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "com/SharedPointer.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 
 namespace precice {
 namespace cplscheme {

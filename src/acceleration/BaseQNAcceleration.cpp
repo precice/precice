@@ -91,7 +91,7 @@ void BaseQNAcceleration::initialize(
   checkDataIDs(cplData);
 
   size_t              entries = 0;
-  std::vector<size_t> subVectorSizes; //needed for preconditioner
+  std::vector<size_t> subVectorSizes; // needed for preconditioner
 
   for (auto &elem : _dataIDs) {
     entries += cplData.at(elem)->getSize();
@@ -187,7 +187,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
                  "Or you just converge much further than actually necessary.");
   }
 
-  //if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
+  // if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
     // do nothing: constant relaxation
   } else {
@@ -219,11 +219,13 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       if (not math::equals(utils::IntraComm::l2norm(_values), 0.0)) {
         residualMagnitude /= utils::IntraComm::l2norm(_values);
       }
-
-      PRECICE_CHECK(not math::equals(residualMagnitude, 0.0),
-                    "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residuals "
-                    "in two consecutive iterations are identical. If a relative convergence limit was selected, "
-                    "consider increasing the convergence threshold.");
+      if (math::equals(residualMagnitude, 0.0)) {
+        PRECICE_WARN("Adding a vector with a two-norm of {} to the quasi-Newton V matrix, which will lead to "
+                     "ill-conditioning. A filter might delete the column again. Still, this could mean that you are "
+                     "converging too tightly, that you reached steady-state, or that you are giving by mistake identical "
+                     "data to preCICE in two consecutive iterations.",
+                     residualMagnitude);
+      }
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
@@ -293,7 +295,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::performAcceleration(
-    const DataMap &cplData)
+    DataMap &cplData)
 {
   PRECICE_TRACE(_dataIDs.size(), cplData.size());
 
@@ -307,7 +309,7 @@ void BaseQNAcceleration::performAcceleration(
   // assume data structures associated with the LS system can be updated easily.
 
   // scale data values (and secondary data values)
-  concatenateCouplingData(cplData);
+  concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
 
   /** update the difference matrices V,W  includes:
    * scaling of values
@@ -396,7 +398,7 @@ void BaseQNAcceleration::performAcceleration(
     _preconditioner->apply(_matrixV);
 
     if (_preconditioner->requireNewQR()) {
-      if (not(_filter == Acceleration::QR2FILTER)) { //for QR2 filter, there is no need to do this twice
+      if (not(_filter == Acceleration::QR2FILTER)) { // for QR2 filter, there is no need to do this twice
         _qrV.reset(_matrixV, getLSSystemRows());
       }
       _preconditioner->newQRfulfilled();
@@ -476,7 +478,7 @@ void BaseQNAcceleration::applyFilter()
   }
 }
 
-void BaseQNAcceleration::addWaveforms(
+ void BaseQNAcceleration::addWaveforms(
     const DataMap &cplData)
 {
   PRECICE_TRACE();
@@ -510,7 +512,7 @@ void BaseQNAcceleration::concatenateCouplingData(
   }
 }
 
-void BaseQNAcceleration::splitCouplingData(
+ssssssssssssssssssssssssssssssssvoid BaseQNAcceleration::splitCouplingData(
     const DataMap &cplData)
 {
   PRECICE_TRACE();
@@ -549,7 +551,7 @@ void BaseQNAcceleration::iterationsConverged(
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if
   // convergence was achieved
-  concatenateCouplingData(cplData);
+  concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
   updateDifferenceMatrices(cplData);
 
   if (not _matrixCols.empty() && _matrixCols.front() == 0) { // Did only one iteration

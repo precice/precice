@@ -2,11 +2,12 @@
 
 #include <iosfwd>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 
 #ifndef PRECICE_NO_MPI
 #include <mpi.h>
@@ -133,46 +134,47 @@ public:
   /// Return true if MPI is initialized
   static bool isMPIInitialized();
 
-  /**
-   * @brief Initializes the MPI environment and manages it.
+  /** Initializes or detects an existing MPI environment
    *
-   * This keeps track of the state when called by setting _isInitialized and _mpiInitializedByPrecice
-   * To finalize the managed MPI call @ref finalizeManagedMPI().
+   * If a custom MPI Communicator is provided via \ref userProvided then this registers a user-provided MPI session.
+   *
+   * If MPI has already been initialized, then preCICE uses MPI_COMM_WORLD as communicator
+   * and registers a unmanaged MPI session.
+   * If \ref _currentState isn't nullptr, then this signals launch inside a test.
+   *
+   * If MPI hasn't been initialized yet, then preCICE takes ownership.
+   * It initializes the environment and will later destroy it.
+   * As MPI forbids reinitialization, this prevents reconstruction.
+   *
+   * @param[in] userProvided an optional user-provided Communicator
+   *
+   * @see finalizeOrCleanupMPI()
+   */
+  static void initializeOrDetectMPI(std::optional<Communicator> userProvided = std::nullopt);
+
+  /**
+   * @brief Finalized a managed MPI environment or cleans up after an non-managed session.
+   *
+   * To initialize the managed MPI call @ref initializeOrDetectMPI().
+   * This finalizes MPI only if the preCICE initialized the MPI session itself.
+   *
+   * @see initializeOrDetectMPI()
+   */
+  static void finalizeOrCleanupMPI();
+
+  /** Unconditionally initializes the MPI environment.
+   *
+   * Alters the \ref _currentState, which indicates a testing session.
    *
    * @param[in] argc Parameter count
    * @param[in] argv Parameter values, is passed to MPI_Init
-   *
-   * @see finalizeManagedMPI
    */
-  static void initializeManagedMPI(
+  static void initializeTestingMPI(
       int *   argc,
       char ***argv);
-
-  /**
-   * @brief Unconditionally initializes the MPI environment.
-   *
-   * @param[in] argc Parameter count
-   * @param[in] argv Parameter values, is passed to MPI_Init
-   */
-  static void initializeMPI(
-      int *   argc,
-      char ***argv);
-
-  /**
-   * @brief Finalized a managed MPI environment.
-   *
-   * To initialize the managed MPI call @ref initializeManagedMPI().
-   * This finalizes MPI only if it was not initialized before the call to @ref initializeManagedMPI()
-   *
-   * @see InitializeManagedMPI
-   */
-  static void finalizeManagedMPI();
 
   /// Unconditionally finalizes MPI environment.
-  static void finalizeMPI();
-
-  /// Registers a user-provided communicator
-  static void registerUserProvidedComm(Communicator comm);
+  static void finalizeTestingMPI();
 
   /// @}
 
@@ -222,83 +224,13 @@ public:
   static void popState();
   /// @}
 
-  /// @name State Access
-  /// @{
-
-  /// clears groups for communicator splitting
-  // @todo remove
-  // static void clearGroups(){};
-
-  /// Returns the global process rank.
-  //@todo remove
-  static Rank getProcessRank();
-
-  /**
-   * @brief Returns the local process rank.
-   *
-   * If only one accessor group is present, returns getProcessRank().
-   */
-  //@todo remove
-  static Rank getLocalProcessRank();
-
-  /// Returns the number of processes in the global communicator.
-  //@todo remove
-  // static int getCommunicatorSize();
-
-  /// Returns the number of processes in the given communicator.
-  //@todo remove
-  // static int getCommunicatorSize(Communicator comm);
-
-  /// Synchronizes all processes.
-  //@todo remove
-  // static void synchronizeProcesses();
-
-  /**
-   * @brief Synchronizes all local processes.
-   *
-   * If only one accessor group is present, calls synchcronizeProcesses().
-   */
-  //@todo remove
-  // static void synchronizeLocalProcesses();
-
-  /**
-   * @brief Switches precice communication away from global space to given one.
-   *
-   * The switch has only effects on communication means created after the
-   * switch. The ones before stay in their old communication universe.
-   * Standard communication space is MPI_COMM_WORLD. The local process rank
-   * and communicator size is recomputed, relative to the new default
-   * communicator.
-   *
-   * @param[in] defaultCommunicator The new global/default Communicator
-   * @param[in] free free the old communicator?
-   *
-   * @attention Will result in an error, if called by a process not in the new
-   *            default communicator!
-   */
-  //static void setGlobalCommunicator(Communicator defaultCommunicator, bool free = true);
-
-  /// @}
-
   /// @name Misc
   /// @{
 
-  /** Returns an owning pointer to the global CommState, being the parent of the current CommState
-   *
-   * @note Calling this on World returns World.
-   *
-   * @see getLocalCommunicator()
+  /** Returns the global process rank or 0
+   * used in assertions.
    */
-  static const CommStatePtr getGlobalCommState();
-
-  /**
-   * @brief Returns an owning pointer to the local CommState, being the current CommState
-   *
-   * @note equivalent to calling current()
-   *
-   * @see getGlobalCommunicator()
-   */
-  static const CommStatePtr getLocalCommState();
+  static Rank getProcessRank();
 
   /// Returns an owning pointer to the current CommState.
   static CommStatePtr current();
@@ -310,9 +242,19 @@ private:
 
   static CommStatePtr _currentState;
 
-  static bool _isInitialized;
-
+  /// Flag to saveguard against reinitializing MPI, which is forbidden
   static bool _mpiInitializedByPrecice;
+
+  /// Kind of initialization that took place
+  enum struct InitializationState {
+    Uninitialized, /// Not initialized
+    Provided,      /// Communicator was provided by the user
+    Managed,       /// preCICE manages the lifetime of the MPI environment
+    Unmanaged,     /// preCICE was initialized in an existing MPI environment
+    Testing        /// preCICE was initialized in a testing environment initialized with \ref initializeTestingMPI()
+  };
+
+  static InitializationState _initState;
 
   /** Pushes a new state on the state stack
    *
