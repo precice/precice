@@ -215,11 +215,13 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       if (not math::equals(utils::IntraComm::l2norm(_values), 0.0)) {
         residualMagnitude /= utils::IntraComm::l2norm(_values);
       }
-
-      PRECICE_CHECK(not math::equals(residualMagnitude, 0.0),
-                    "Attempting to add a zero vector to the quasi-Newton V matrix. This means that the residuals "
-                    "in two consecutive iterations are identical. If a relative convergence limit was selected, "
-                    "consider increasing the convergence threshold.");
+      if (math::equals(residualMagnitude, 0.0)) {
+        PRECICE_WARN("Adding a vector with a two-norm of {} to the quasi-Newton V matrix, which will lead to "
+                     "ill-conditioning. A filter might delete the column again. Still, this could mean that you are "
+                     "converging too tightly, that you reached steady-state, or that you are giving by mistake identical "
+                     "data to preCICE in two consecutive iterations.",
+                     residualMagnitude);
+      }
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
