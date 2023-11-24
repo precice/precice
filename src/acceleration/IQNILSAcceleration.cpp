@@ -235,7 +235,9 @@ void IQNILSAcceleration::specializedIterationsConverged(
     const DataMap &cplData)
 {
   PRECICE_TRACE();
-  if (_matrixCols.size() > 0) {
+  if (_matrixCols.empty()) {
+    PRECICE_WARN("The IQN matrix has no columns.");
+  } else {
     if (_matrixCols.front() == 0) { // Did only one iteration
       _matrixCols.pop_front();
     }
@@ -262,8 +264,6 @@ void IQNILSAcceleration::specializedIterationsConverged(
         }
       }
     }
-  } else {
-    PRECICE_WARN("The IQN matrix has no columns.");
   }
 }
 
