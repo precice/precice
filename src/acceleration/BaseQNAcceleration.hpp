@@ -267,7 +267,7 @@ protected:
   virtual void computeUnderrelaxationSecondaryData(const DataMap &cplData) = 0;
 
   /// Computes the quasi-Newton update using the specified pp scheme (IQNIMVJ, IQNILS)
-  virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate) = 0;
+  virtual void computeQNUpdate(const DataMap &cplData) = 0;
 
   /// Removes one iteration from V,W matrices and adapts _matrixCols.
   virtual void removeMatrixColumn(int columnIndex);
@@ -277,8 +277,11 @@ protected:
 
   int its = 0, tWindows = 0;
 
-  // Bool to switch between the waveform variant of QN
-  bool _exchangeSubsteps = false;
+  // Bool to switch to the waveform variant of QN for the acceleration schemes that support it
+  bool _supportWaveform = false;
+
+  /// @brief Concatenation of the last time step of all coupling data involved in the QN system.
+  Eigen::VectorXd _values;
 
 private:
   /**
@@ -292,9 +295,6 @@ private:
   * @brief transforms the time steps of the waveforms in _waveformW to the new time window. This is done by destroying and recreating _waveformW and _waveformWBackup as well as their waveforms
   */
   void rescaleWaveformInTime(const DataMap &cplData);
-
-  /// @brief Concatenation of all coupling data involved in the QN system.
-  Eigen::VectorXd _values;
 
   /// @brief Concatenation of all (old) coupling data involved in the QN system.
   Eigen::VectorXd _oldValues;

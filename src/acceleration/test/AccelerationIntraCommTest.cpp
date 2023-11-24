@@ -343,10 +343,13 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
     insert << 0.2, 0.2, 0.2, 0.2;
     utils::append(forces->values(), insert);
 
+    //Need to store 2 values in the waveform iteration
     PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
     dpcd->setSampleAtTime(0, dpcd->sample());
+    dpcd->setSampleAtTime(1, dpcd->sample());
     PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
     fpcd->setSampleAtTime(0, fpcd->sample());
+    fpcd->setSampleAtTime(1, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -397,8 +400,10 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 
     PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
     dpcd->setSampleAtTime(0, dpcd->sample());
+    dpcd->setSampleAtTime(1, dpcd->sample());
     PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
     fpcd->setSampleAtTime(0, fpcd->sample());
+    fpcd->setSampleAtTime(1, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -441,10 +446,12 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
     // init displacements
     PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
     dpcd->setSampleAtTime(0, dpcd->sample());
+    dpcd->setSampleAtTime(1, dpcd->sample());
 
     // init forces
     PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
     fpcd->setSampleAtTime(0, fpcd->sample());
+    fpcd->setSampleAtTime(1, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -472,8 +479,10 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 
     PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
     dpcd->setSampleAtTime(0, dpcd->sample());
+    dpcd->setSampleAtTime(1, dpcd->sample());
     PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
     fpcd->setSampleAtTime(0, fpcd->sample());
+    dpcd->setSampleAtTime(1, dpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -1170,7 +1179,10 @@ BOOST_DATA_TEST_CASE(testColumnsLoggingWithoutSubsteps, boost::unit_test::data::
   } else if (context.isRank(3)) {
     utils::append(newdvalues3, 1.0);
   }
+
   data.begin()->second->values() = newdvalues3;
+  dpcd->setSampleAtTime(1, dpcd->sample());
+
   acc.performAcceleration(data);
   Eigen::VectorXd newdvalues4;
   if (context.isPrimary()) {

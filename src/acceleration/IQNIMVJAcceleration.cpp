@@ -211,9 +211,9 @@ void IQNIMVJAcceleration::updateDifferenceMatrices(
 
 // ==================================================================================
 void IQNIMVJAcceleration::computeQNUpdate(
-    const DataMap &  cplData,
-    Eigen::VectorXd &xUpdate)
+    const DataMap &cplData)
 {
+
   /**
    * The inverse Jacobian
    *
@@ -231,11 +231,24 @@ void IQNIMVJAcceleration::computeQNUpdate(
    *             Only the QR-decomposition of V is scaled and thus needs to be unscaled before
    *             using it in multiplications with the other matrices.
    */
+  Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_residuals.size());
+
   if (_alwaysBuildJacobian) {
     computeNewtonUpdate(cplData, xUpdate);
   } else {
     computeNewtonUpdateEfficient(cplData, xUpdate);
   }
+  if (std::isnan(utils::IntraComm::l2norm(xUpdate))) {
+    PRECICE_ERROR("The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
+                  "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
+                  "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
+                  "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "
+                  "filter or increase its threshold (larger epsilon).");
+  }
+  _values += xUpdate;
+
+  //Split the coupling data and update the values in coupling data
+  BaseQNAcceleration::splitCouplingData(cplData);
 }
 
 // ==================================================================================
