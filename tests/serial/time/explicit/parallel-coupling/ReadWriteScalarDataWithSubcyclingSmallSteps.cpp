@@ -1,5 +1,6 @@
 #ifndef PRECICE_NO_MPI
 
+#include "math/differences.hpp"
 #include "testing/Testing.hpp"
 
 #include <precice/precice.hpp>
@@ -67,7 +68,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingSmallSteps)
 
     // Correct strategy to compute solver dt that users should apply to avoid PRECICE_ERROR
     double currentDt;
-    if (preciceDt - solverDt < 1e-14) {
+    if (preciceDt - solverDt < math::NUMERICAL_ZERO_DIFFERENCE) {
       currentDt = preciceDt;
     } else {
       currentDt = solverDt > preciceDt ? preciceDt : solverDt;

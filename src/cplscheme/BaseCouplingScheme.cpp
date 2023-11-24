@@ -377,10 +377,10 @@ void BaseCouplingScheme::secondExchange()
     // Update internal time tracking
     if (_isTimeWindowComplete) {
       _timeWindowStartTime += _timeWindowSize;
-      // Compute difference between actually computed _time - _timeWindowStartTime and required _timeWindowSize to keep track of total time drift in _totalTimeDrift.
+      // Compute difference between actually computed _time and _timeWindowStartTime set for the next window to keep track of total time drift in _totalTimeDrift.
       PRECICE_ASSERT(hasTimeWindowSize())
-      _totalTimeDrift += abs(_time - _timeWindowStartTime - _timeWindowSize);
-      PRECICE_CHECK(math::equals(_totalTimeDrift, 0.0), "preCICE has detected a difference between its internal time and the time of this participant. This can happen, if you are using many substeps per time window over multiple time windows due to added-up differences of machine precision.");
+      _totalTimeDrift += abs(_time - _timeWindowStartTime);
+      PRECICE_CHECK(math::equals(_totalTimeDrift, 0.0), "preCICE has detected a difference of {} between its internal time and the time of this participant. This can happen, if you are using many substeps per time window over multiple time windows due to added-up differences of machine precision.", _totalTimeDrift);
     }
     _time           = _timeWindowStartTime;
     _timeWindowSize = _nextTimeWindowSize;
