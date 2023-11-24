@@ -69,16 +69,15 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingSmallSteps)
     }
     double preciceDt = precice.getMaxTimeStepSize();
 
-    double tol = math::NUMERICAL_ZERO_DIFFERENCE; // **Should** lead to a PRECICE_ERROR after some time windows. As soon as https://github.com/precice/precice/issues/280 is merged, we should check for the error.
-    // double tol = 10 * math::NUMERICAL_ZERO_DIFFERENCE;
-
     // Correct strategy to compute solver dt that users should apply to avoid PRECICE_ERROR
+    double tol = math::NUMERICAL_ZERO_DIFFERENCE;
     double currentDt;
     if (abs(preciceDt - solverDt) < tol) {
       currentDt = preciceDt;
     } else {
       currentDt = solverDt > preciceDt ? preciceDt : solverDt;
     }
+    currentDt = solverDt > preciceDt ? preciceDt : solverDt; // Bypasses safeguard above and triggers a PRECICE_ERROR after some time windows. As soon as https://github.com/precice/precice/issues/280 is merged, we should check for the error.
 
     precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
     precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
