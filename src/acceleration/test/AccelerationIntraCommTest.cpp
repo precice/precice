@@ -1179,6 +1179,7 @@ BOOST_DATA_TEST_CASE(testColumnsLoggingWithoutSubsteps, boost::unit_test::data::
   } else if (context.isRank(3)) {
     utils::append(newdvalues3, 1.0);
   }
+
   data.begin()->second->values() = newdvalues3;
   dpcd->setSampleAtTime(1, dpcd->sample());
 

@@ -274,9 +274,7 @@ void IQNILSAcceleration::removeMatrixColumn(
   PRECICE_ASSERT(_matrixV.cols() > 1);
   // remove column from secondary Data Matrix W
   for (int id : _secondaryDataIDs) {
-    for (int id : _secondaryDataIDs) {
-      _secondaryWaveformW[id].erase(_secondaryWaveformW[id].begin() + columnIndex);
-    }
+    _secondaryWaveformW[id].erase(_secondaryWaveformW[id].begin() + columnIndex);
   }
   BaseQNAcceleration::removeMatrixColumn(columnIndex);
 }
