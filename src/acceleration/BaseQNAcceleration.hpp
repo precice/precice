@@ -277,8 +277,8 @@ protected:
 
   int its = 0, tWindows = 0;
 
-  // Bool to switch between the waveform variant of QN
-  bool _exchangeSubsteps = false;
+  // Bool to switch to the waveform variant of QN for the acceleration schemes that support it
+  bool _supportWaveform = false;
 
   /// @brief Concatenation of the last time step of all coupling data involved in the QN system.
   Eigen::VectorXd _values;

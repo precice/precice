@@ -41,7 +41,7 @@ IQNILSAcceleration::IQNILSAcceleration(
 void IQNILSAcceleration::initialize(
     const DataMap &cplData)
 {
-  _exchangeSubsteps = true;
+  _supportWaveform = true;
 
   //initialize x_tildes for secondary data
   for (int id : _secondaryDataIDs) {
