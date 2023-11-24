@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 2.5.1
+
+- Changed error to warning when trying to add a zero-value column to `V` matrix in QN-acceleration.
+
 ## 2.5.0
 
 - Added 3D support to Linear Cell Interpolation mapping (`<mapping:linear-cell-interpolation >/`) using tetrahedra. (https://github.com/precice/precice/pull/1337)
