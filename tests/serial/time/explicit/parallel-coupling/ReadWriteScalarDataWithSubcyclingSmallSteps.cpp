@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingSmallSteps)
 
     // Correct strategy to compute solver dt that users should apply to avoid PRECICE_ERROR
     double currentDt;
-    if (preciceDt - solverDt < 10e-14) {
+    if (preciceDt - solverDt < 1e-14) {
       currentDt = preciceDt;
     } else {
       currentDt = solverDt > preciceDt ? preciceDt : solverDt;
