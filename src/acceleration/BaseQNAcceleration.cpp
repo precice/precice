@@ -309,7 +309,7 @@ void BaseQNAcceleration::performAcceleration(
   // assume data structures associated with the LS system can be updated easily.
 
   // scale data values (and secondary data values)
-  concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
+  Acceleration::concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
 
   /** update the difference matrices V,W  includes:
    * scaling of values
@@ -478,7 +478,7 @@ void BaseQNAcceleration::applyFilter()
   }
 }
 
- void BaseQNAcceleration::addWaveforms(
+void BaseQNAcceleration::addWaveforms(
     const DataMap &cplData)
 {
   PRECICE_TRACE();
@@ -494,25 +494,7 @@ void BaseQNAcceleration::applyFilter()
   }
 }
 
-void BaseQNAcceleration::concatenateCouplingData(
-    const DataMap &cplData)
-{
-  PRECICE_TRACE();
-
-  int offset = 0;
-  for (int id : _dataIDs) {
-    int         size      = cplData.at(id)->getSize();
-    auto &      values    = cplData.at(id)->values();
-    const auto &oldValues = cplData.at(id)->previousIteration();
-    for (int i = 0; i < size; i++) {
-      _values(i + offset)    = values(i);
-      _oldValues(i + offset) = oldValues(i);
-    }
-    offset += size;
-  }
-}
-
-ssssssssssssssssssssssssssssssssvoid BaseQNAcceleration::splitCouplingData(
+void BaseQNAcceleration::splitCouplingData(
     const DataMap &cplData)
 {
   PRECICE_TRACE();
@@ -551,7 +533,7 @@ void BaseQNAcceleration::iterationsConverged(
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if
   // convergence was achieved
-  concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
+  Acceleration::concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
   updateDifferenceMatrices(cplData);
 
   if (not _matrixCols.empty() && _matrixCols.front() == 0) { // Did only one iteration
