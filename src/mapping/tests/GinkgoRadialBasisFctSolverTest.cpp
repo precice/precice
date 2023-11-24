@@ -112,6 +112,13 @@ BOOST_AUTO_TEST_SUITE(GinkgoRadialBasisFunctionSolver)
     double              supportRadius = 1.2;                                             \
     CompactPolynomialC6 fct(supportRadius);                                              \
     doLocalCode(CompactPolynomialC6, fct, Polynomial::SEPARATE, EXECUTOR, SOLVER);       \
+  }                                                                                      \
+  BOOST_AUTO_TEST_CASE(MapCompactPolynomialC8)                                           \
+  {                                                                                      \
+    PRECICE_TEST(1_rank);                                                                \
+    double              supportRadius = 1.2;                                             \
+    CompactPolynomialC8 fct(supportRadius);                                              \
+    doLocalCode(CompactPolynomialC8, fct, Polynomial::SEPARATE, EXECUTOR, SOLVER);       \
   }
 
 BOOST_AUTO_TEST_SUITE(Reference)

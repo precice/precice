@@ -322,12 +322,6 @@ protected:
   void setNextTimeWindowSize(double timeWindowSize);
 
   /**
-   * @brief Getter for _computedTimeWindowPart
-   * @returns _computedTimeWindowPart
-   */
-  double getComputedTimeWindowPart() const;
-
-  /**
    * @brief Setter for _doesFirstStep
    */
   void setDoesFirstStep(bool doesFirstStep);
@@ -426,8 +420,8 @@ private:
   /// time window size of next window (acts as buffer for time windows size provided by first participant, if using first participant method)
   double _nextTimeWindowSize = UNDEFINED_TIME_WINDOW_SIZE;
 
-  /// Part of the window that is already computed; _computedTimeWindowPart <= _timeWindowSize
-  double _computedTimeWindowPart = 0;
+  /// Current time
+  double _time = 0;
 
   /// Lower limit of iterations during one time window. Prevents convergence if _iterations < _minIterations.
   int _minIterations = -1;
@@ -444,7 +438,7 @@ private:
   /// True, if local participant is the one starting the explicit scheme.
   bool _doesFirstStep = false;
 
-  /// True, if _computedTimeWindowPart == _timeWindowSize and (coupling has converged or _iterations == _maxIterations)
+  /// True, if _time == _timeWindowStartTime + _timeWindowSize and (coupling has converged or _iterations == _maxIterations)
   bool _isTimeWindowComplete = false;
 
   /// True, if this participant has to send initialized data.
@@ -532,7 +526,7 @@ private:
    * @brief interface to provide accelerated data, depending on coupling scheme being used
    * @return data being accelerated
    */
-  virtual const DataMap &getAccelerationData() = 0;
+  virtual DataMap &getAccelerationData() = 0;
 
   /**
    * @brief If any required actions are open, an error message is issued.

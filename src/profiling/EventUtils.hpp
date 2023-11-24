@@ -168,6 +168,8 @@ private:
 
   bool _finalized = false;
 
+  bool _isBackendRunning = false;
+
   /// The initial time clock, used to take runtime measurements.
   Event::Clock::time_point _initClock;
 
