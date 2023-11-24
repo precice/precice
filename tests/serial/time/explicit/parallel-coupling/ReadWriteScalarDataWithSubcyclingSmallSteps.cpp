@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingSmallSteps)
     meshName      = "MeshOne";
     writeDataName = "DataOne";
     readDataName  = "DataTwo";
-    nSubsteps     = 640;
+    nSubsteps     = 640; // We get problems now for 6400
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     meshName      = "MeshTwo";
@@ -59,16 +59,22 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingSmallSteps)
   BOOST_TEST(precice.getMaxTimeStepSize() == 0.2);
   double windowDt = precice.getMaxTimeStepSize();
   double solverDt = windowDt / nSubsteps;
+  int    didSteps = 0;
 
   while (precice.isCouplingOngoing()) {
+    if (precice.isTimeWindowComplete()) {
+      BOOST_TEST(didSteps == nSubsteps);
+      std::cout << "did " << didSteps << " steps" << std::endl;
+      didSteps = 0;
+    }
     double preciceDt = precice.getMaxTimeStepSize();
 
-    // // Wrong strategy to compute solver dt: Leads to PRECICE_ERROR after some time windows. As soon as https://github.com/precice/precice/issues/280 is merged, we should check for the error.
-    // double currentDt = solverDt > preciceDt ? preciceDt : solverDt;
+    double tol = math::NUMERICAL_ZERO_DIFFERENCE; // **Should** lead to a PRECICE_ERROR after some time windows. As soon as https://github.com/precice/precice/issues/280 is merged, we should check for the error.
+    // double tol = 10 * math::NUMERICAL_ZERO_DIFFERENCE;
 
     // Correct strategy to compute solver dt that users should apply to avoid PRECICE_ERROR
     double currentDt;
-    if (preciceDt - solverDt < math::NUMERICAL_ZERO_DIFFERENCE) {
+    if (abs(preciceDt - solverDt) < tol) {
       currentDt = preciceDt;
     } else {
       currentDt = solverDt > preciceDt ? preciceDt : solverDt;
@@ -77,6 +83,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingSmallSteps)
     precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
     precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
     precice.advance(currentDt);
+    didSteps++;
   }
 
   precice.finalize();
