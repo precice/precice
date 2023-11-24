@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
     precice.advance(currentDt);
     double maxDt = precice.getMaxTimeStepSize();
     currentDt    = dt > maxDt ? maxDt : dt;
-    BOOST_CHECK(currentDt == windowDt / nSubsteps); // no subcycling.
+    BOOST_CHECK(math::equals(currentDt, windowDt / nSubsteps)); // no subcycling.
     timestep++;
     if (precice.requiresReadingCheckpoint()) { // at end of window and we have to repeat it.
       iterations++;

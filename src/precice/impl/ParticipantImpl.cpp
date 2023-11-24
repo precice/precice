@@ -1042,7 +1042,7 @@ void ParticipantImpl::readData(
 {
   PRECICE_TRACE(meshName, dataName, vertices.size(), relativeReadTime);
   PRECICE_CHECK(_state != State::Finalized, "readData(...) cannot be called after finalize().");
-  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimeStepMaxSize(), "readData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(math::smallerEquals(relativeReadTime, _couplingScheme->getNextTimeStepMaxSize()), "readData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readData(...) cannot sample data before the current time.");
 
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
