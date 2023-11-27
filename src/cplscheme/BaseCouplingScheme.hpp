@@ -469,10 +469,6 @@ private:
   /// Local participant name.
   std::string _localParticipant = "unknown";
 
-  /// @brief Keeps track of drift in time over multiple windows
-  double _totalTimeDrift         = 0;
-  double _computedTimeWindowPart = 0;
-
   /**
    * @brief Holds meta information to perform a convergence measurement.
    * @param data Associated data field

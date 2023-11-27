@@ -379,13 +379,9 @@ void BaseCouplingScheme::secondExchange()
       PRECICE_ASSERT(hasTimeWindowSize())
       _timeWindowStartTime += _timeWindowSize;
       PRECICE_ASSERT(math::equals(_time, _timeWindowStartTime), _time, _timeWindowStartTime);
-      // Compute difference between actually computed _time and _timeWindowStartTime set for the next window to keep track of total time drift in _totalTimeDrift.
-      _totalTimeDrift += abs(_computedTimeWindowPart - _timeWindowSize);
-      PRECICE_CHECK(math::equals(_totalTimeDrift, 0.0), "preCICE has detected a difference of {} between its internal time and the time of this participant. This can happen, if you are using many substeps per time window over multiple time windows due to added-up differences of machine precision.", _totalTimeDrift);
     }
-    _time                   = _timeWindowStartTime;
-    _computedTimeWindowPart = 0;
-    _timeWindowSize         = _nextTimeWindowSize;
+    _time           = _timeWindowStartTime;
+    _timeWindowSize = _nextTimeWindowSize;
   }
 }
 
@@ -426,7 +422,6 @@ bool BaseCouplingScheme::addComputedTime(
 
   // add time interval that has been computed in the solver to get the correct time remainder
   _time += timeToAdd;
-  _computedTimeWindowPart += timeToAdd;
 
   // Check validness
   bool valid = math::greaterEquals(getNextTimeStepMaxSize(), 0.0);
