@@ -47,7 +47,6 @@ public:
       Mapping::Constraint     constraint,
       int                     dimension,
       RADIAL_BASIS_FUNCTION_T function,
-      std::array<bool, 3>     deadAxis,
       Polynomial              polynomial,
       unsigned int            verticesPerCluster,
       double                  relativeOverlap,
@@ -100,10 +99,6 @@ private:
   /// derived parameter based on the input above: the radius of each cluster
   double _clusterRadius = 0;
 
-  /// true if the mapping along some axis should be ignored
-  /// has currently only dim x false entries, as integrated polynomials are irrelevant
-  std::vector<bool> _deadAxis;
-
   /// polynomial treatment of the RBF system
   Polynomial _polynomial;
 
@@ -123,7 +118,6 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
     Mapping::Constraint     constraint,
     int                     dimension,
     RADIAL_BASIS_FUNCTION_T function,
-    std::array<bool, 3>     deadAxis,
     Polynomial              polynomial,
     unsigned int            verticesPerCluster,
     double                  relativeOverlap,
@@ -143,13 +137,6 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
     setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   }
-
-  _deadAxis.clear();
-  std::copy_n(deadAxis.begin(), getDimensions(), std::back_inserter(_deadAxis));
-  if (getDimensions() == 2 && deadAxis[2]) {
-    PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect. Please remove the respective mapping's \"z-dead\" attribute.");
-  }
-  PRECICE_CHECK(std::any_of(_deadAxis.begin(), _deadAxis.end(), [](const auto &ax) { return ax == false; }), "You cannot set all axes to dead for an RBF mapping. Please remove one of the respective mapping's \"x-dead\", \"y-dead\", or \"z-dead\" attributes.");
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -193,7 +180,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
     const VertexID                                  vertexID = meshVertices.size();
     mesh::Vertex                                    center(c.getCoords(), vertexID);
-    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _deadAxis, _polynomial, inMesh, outMesh);
+    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _polynomial, inMesh, outMesh);
 
     // Consider only non-empty clusters (more of a safeguard here)
     if (!cluster.empty()) {

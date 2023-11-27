@@ -232,7 +232,7 @@ MappingConfiguration::MappingConfiguration(
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
   addAttributes(rbfDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead});
   addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol});
-  addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, attrXDead, attrYDead, attrZDead, verticesPerCluster, relativeOverlap, projectToInput});
+  addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, verticesPerCluster, relativeOverlap, projectToInput});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
 
   // Now we take care of the subtag executor. We repeat some of the subtags in order to add individual documentation
@@ -597,7 +597,7 @@ void MappingConfiguration::finishRBFConfiguration()
       PRECICE_CHECK(false, "The global-iterative RBF solver on a CPU requires a preCICE build with PETSc enabled.");
 #endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
+      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
     } else {
       PRECICE_UNREACHABLE("Unknown RBF solver.");
     }
