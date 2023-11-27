@@ -218,8 +218,12 @@ target_sources(testprecice
     tests/serial/time/explicit/compositional/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/compositional/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
+    tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling6400Steps.cpp
+    tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling640Steps.cpp
+    tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling64Steps.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
-    tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcyclingSmallSteps.cpp
+    tests/serial/time/explicit/parallel-coupling/helpers.cpp
+    tests/serial/time/explicit/parallel-coupling/helpers.hpp
     tests/serial/time/explicit/serial-coupling/DoNothingWithSmallSteps.cpp
     tests/serial/time/explicit/serial-coupling/DoNothingWithSubcycling.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipant.cpp

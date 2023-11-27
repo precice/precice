@@ -6,7 +6,7 @@
 namespace precice {
 namespace math {
 
-constexpr double NUMERICAL_ZERO_DIFFERENCE = 1.0e-12;
+constexpr double NUMERICAL_ZERO_DIFFERENCE = 1.0e-14;
 
 /// Compares two Eigen::MatrixBase for equality up to tolerance
 template <class DerivedA, class DerivedB>

@@ -377,7 +377,7 @@ void BaseCouplingScheme::secondExchange()
     // Update internal time tracking
     if (_isTimeWindowComplete) {
       PRECICE_ASSERT(hasTimeWindowSize())
-      _timeWindowStartTime += _computedTimeWindowPart;
+      _timeWindowStartTime += _timeWindowSize;
       PRECICE_ASSERT(math::equals(_time, _timeWindowStartTime), _time, _timeWindowStartTime);
       // Compute difference between actually computed _time and _timeWindowStartTime set for the next window to keep track of total time drift in _totalTimeDrift.
       _totalTimeDrift += abs(_computedTimeWindowPart - _timeWindowSize);
@@ -492,7 +492,7 @@ int BaseCouplingScheme::getTimeWindows() const
 double BaseCouplingScheme::getNextTimeStepMaxSize() const
 {
   if (hasTimeWindowSize()) {
-    return _timeWindowSize - _computedTimeWindowPart;
+    return _timeWindowStartTime + _timeWindowSize - _time;
   } else {
     if (math::equals(_maxTime, UNDEFINED_MAX_TIME)) {
       return std::numeric_limits<double>::max();
@@ -765,7 +765,7 @@ void BaseCouplingScheme::advanceTXTWriters()
 
 bool BaseCouplingScheme::reachedEndOfTimeWindow() const
 {
-  return math::equals(_computedTimeWindowPart, _timeWindowSize) || not hasTimeWindowSize();
+  return math::equals(getNextTimeStepMaxSize(), 0.0) || not hasTimeWindowSize();
 }
 
 void BaseCouplingScheme::storeIteration()

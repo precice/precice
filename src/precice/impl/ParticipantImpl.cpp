@@ -550,7 +550,10 @@ double ParticipantImpl::getMaxTimeStepSize() const
 {
   PRECICE_CHECK(_state != State::Finalized, "getMaxTimeStepSize() cannot be called after finalize().");
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before getMaxTimeStepSize() can be evaluated.");
-  return _couplingScheme->getNextTimeStepMaxSize();
+  const double nextTimeStepSize = _couplingScheme->getNextTimeStepMaxSize();
+  PRECICE_ASSERT(!math::equals(nextTimeStepSize, 0.0));
+  PRECICE_ASSERT(math::greater(nextTimeStepSize, 0.0));
+  return nextTimeStepSize;
 }
 
 bool ParticipantImpl::requiresInitialData()
@@ -1483,6 +1486,10 @@ void ParticipantImpl::advanceCouplingScheme()
   // Orchestrate remote mesh changes (local ones were handled in the first sync)
   [[maybe_unused]] auto remoteChanges2 = _couplingScheme->secondSynchronization();
   _couplingScheme->secondExchange();
+
+  const double nextTimeStepSize = _couplingScheme->getNextTimeStepMaxSize();
+  PRECICE_ASSERT(!math::equals(nextTimeStepSize, 0.0));
+  PRECICE_ASSERT(math::greater(nextTimeStepSize, 0.0));
 }
 
 void ParticipantImpl::closeCommunicationChannels(CloseChannels close)
