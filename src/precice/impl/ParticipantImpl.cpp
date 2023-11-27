@@ -1489,10 +1489,6 @@ void ParticipantImpl::advanceCouplingScheme()
   // Orchestrate remote mesh changes (local ones were handled in the first sync)
   [[maybe_unused]] auto remoteChanges2 = _couplingScheme->secondSynchronization();
   _couplingScheme->secondExchange();
-
-  const double nextTimeStepSize = _couplingScheme->getNextTimeStepMaxSize();
-  PRECICE_ASSERT(!math::equals(nextTimeStepSize, 0.0));
-  PRECICE_ASSERT(math::greater(nextTimeStepSize, 0.0));
 }
 
 void ParticipantImpl::closeCommunicationChannels(CloseChannels close)

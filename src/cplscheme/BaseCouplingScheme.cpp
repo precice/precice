@@ -376,9 +376,7 @@ void BaseCouplingScheme::secondExchange()
 
     // Update internal time tracking
     if (_isTimeWindowComplete) {
-      PRECICE_ASSERT(hasTimeWindowSize())
       _timeWindowStartTime += _timeWindowSize;
-      PRECICE_ASSERT(math::equals(_time, _timeWindowStartTime), _time, _timeWindowStartTime);
     }
     _time           = _timeWindowStartTime;
     _timeWindowSize = _nextTimeWindowSize;
@@ -760,7 +758,7 @@ void BaseCouplingScheme::advanceTXTWriters()
 
 bool BaseCouplingScheme::reachedEndOfTimeWindow() const
 {
-  return math::equals(getNextTimeStepMaxSize(), 0.0) || not hasTimeWindowSize();
+  return math::equals(_timeWindowStartTime + _timeWindowSize, _time) || not hasTimeWindowSize();
 }
 
 void BaseCouplingScheme::storeIteration()
