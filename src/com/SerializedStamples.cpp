@@ -28,7 +28,7 @@ SerializedStamples SerializedStamples::empty(Eigen::VectorXd timeStamps, const c
   return result;
 }
 
-void SerializedStamples::deserializeInto(Eigen::VectorXd timeStamps, const cplscheme::PtrCouplingData data)
+void SerializedStamples::deserializeInto(const Eigen::VectorXd &timeStamps, const cplscheme::PtrCouplingData data)
 {
   PRECICE_ASSERT(_timeSteps == timeStamps.size());
 
