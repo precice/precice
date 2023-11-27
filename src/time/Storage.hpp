@@ -32,12 +32,12 @@ public:
   /**
    * @brief Store Sample at a specific time.
    *
-   * It is only allowed to store a Sample in time that comes after a Sample that was already stored. Therefore, time has to be larger than maxStoredTime. Overwriting existing samples is forbidden. The function trim() should be used before providing new samples.
+   * It is only allowed to store a Sample in time that comes after a Sample that was already stored. Therefore, time has to be larger than maxStoredTime. The function trim() should be used before providing new samples.
    *
    * @param time the time associated with the sample
    * @param sample stored sample
    */
-  void setSampleAtTime(double time, Sample sample);
+  void setSampleAtTime(double time, const Sample &sample);
 
   void setInterpolationDegree(int interpolationDegree);
 
