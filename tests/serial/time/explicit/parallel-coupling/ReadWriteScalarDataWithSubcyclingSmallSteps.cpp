@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingSmallSteps)
     meshName      = "MeshOne";
     writeDataName = "DataOne";
     readDataName  = "DataTwo";
-    nSubsteps     = 640; // We get problems now for 6400
+    nSubsteps     = 6400; // We get problems now for 6400
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     meshName      = "MeshTwo";
@@ -57,15 +57,17 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingSmallSteps)
 
   precice.initialize();
   BOOST_TEST(precice.getMaxTimeStepSize() == 0.2);
-  double windowDt = precice.getMaxTimeStepSize();
-  double solverDt = windowDt / nSubsteps;
-  int    didSteps = 0;
+  double           windowDt = precice.getMaxTimeStepSize();
+  double           solverDt = windowDt / nSubsteps;
+  std::vector<int> expectedSteps{nSubsteps, nSubsteps, nSubsteps, nSubsteps, nSubsteps};
+  int              didSteps = 0;
+  int              nWindows = 0;
 
   while (precice.isCouplingOngoing()) {
     if (precice.isTimeWindowComplete()) {
-      BOOST_TEST(didSteps == nSubsteps);
-      std::cout << "did " << didSteps << " steps" << std::endl;
+      BOOST_TEST(didSteps == expectedSteps[nWindows]);
       didSteps = 0;
+      nWindows++;
     }
     double preciceDt = precice.getMaxTimeStepSize();
 
