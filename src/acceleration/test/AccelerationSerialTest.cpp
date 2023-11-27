@@ -479,6 +479,29 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
   data4->setSampleAtTime(1.0, data4->sample());
 
   acc.iterationsConverged(data);
+
+  data1->values() << 3, 16;
+  data1->setSampleAtTime(2.0, data1->sample());
+  data2->values() << 7, 7;
+  data2->setSampleAtTime(2.0, data2->sample());
+  data3->values() << 18, 19, 20;
+  data3->setSampleAtTime(2.0, data3->sample());
+  data4->values() << 50, 70, 90, 110;
+  data4->setSampleAtTime(2.0, data4->sample());
+
+  acc.performAcceleration(data);
+
+  BOOST_TEST(data.at(0)->values()(0) == 10.4);
+  BOOST_TEST(data.at(0)->values()(1) == 28.8);
+  BOOST_TEST(data.at(1)->values()(0) == 6.6);
+  BOOST_TEST(data.at(1)->values()(1) == 6.6);
+  BOOST_TEST(data.at(2)->values()(0) == 14.6);
+  BOOST_TEST(data.at(2)->values()(1) == 15.6);
+  BOOST_TEST(data.at(2)->values()(2) == 16.6);
+  BOOST_TEST(data.at(3)->values()(0) == 44);
+  BOOST_TEST(data.at(3)->values()(1) == 64);
+  BOOST_TEST(data.at(3)->values()(2) == 84);
+  BOOST_TEST(data.at(3)->values()(3) == 104);
 }
 
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
