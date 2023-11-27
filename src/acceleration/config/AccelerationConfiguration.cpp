@@ -243,11 +243,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
         if (_config.precond_nbNonConstTWindows > _config.imvjChunkSize)
           _config.precond_nbNonConstTWindows = _config.imvjChunkSize;
       if (_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER) {
-        std::vector<double> factors;
-        for (int id : _config.dataIDs) {
-          factors.push_back(_config.scalings[id]);
-        }
-        _preconditioner = PtrPreconditioner(new ConstantPreconditioner(factors));
+        _preconditioner = PtrPreconditioner(new ConstantPreconditioner(_config.scalingFactorsInOrder()));
       } else if (_config.preconditionerType == VALUE_VALUE_PRECONDITIONER) {
         _preconditioner = PtrPreconditioner(new ValuePreconditioner(_config.precond_nbNonConstTWindows));
       } else if (_config.preconditionerType == VALUE_RESIDUAL_PRECONDITIONER) {
@@ -539,4 +535,14 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     PRECICE_ERROR("Acceleration of type \"{}\" is unknown. Please choose a valid acceleration scheme or check the spelling in the configuration file.", tag.getName());
   }
 }
+
+std::vector<double> AccelerationConfiguration::ConfigurationData::scalingFactorsInOrder() const
+{
+  std::vector<double> factors;
+  for (int id : dataIDs) {
+    factors.push_back(scalings.at(id));
+  }
+  return factors;
+}
+
 } // namespace precice::acceleration

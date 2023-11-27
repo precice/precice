@@ -114,6 +114,8 @@ private:
     bool                  estimateJacobian           = false;
     bool                  alwaysBuildJacobian        = false;
     std::string           preconditionerType;
+
+    std::vector<double> scalingFactorsInOrder() const;
   } _config;
 
   const struct DefaultValuesIQN {
