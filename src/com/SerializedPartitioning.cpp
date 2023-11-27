@@ -157,7 +157,7 @@ mesh::BoundingBox SerializedBoundingBox::toBoundingBox() const
     buffer[offset]     = coords[1 + d];        // min
     buffer[offset + 1] = coords[1 + d + dims]; // max
   }
-  return mesh::BoundingBox(buffer);
+  return mesh::BoundingBox(std::move(buffer));
 }
 
 void SerializedBoundingBox::assertValid() const
