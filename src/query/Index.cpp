@@ -245,12 +245,9 @@ bool Index::isAnyVertexInsideBox(const mesh::Vertex &centerVertex, double radius
 
   const auto &rtree = _pimpl->getVertexRTree(*_mesh);
 
-  // We can skip the iterator increment in the loop signature, as it is never executed
-  for (auto it = rtree->qbegin(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) < radius; })); it != rtree->qend();) {
-    return true;
-  }
-
-  return false;
+  auto queryIter = rtree->qbegin(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) < radius; }));
+  bool hasMatch  = queryIter != rtree->qend();
+  return hasMatch;
 }
 
 std::vector<VertexID> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)

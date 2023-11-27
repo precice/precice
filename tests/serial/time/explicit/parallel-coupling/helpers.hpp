@@ -7,6 +7,6 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-void subcyclingWithNSteps(TestContext const &context, int nSubsteps, std::vector<int> expectedSteps, bool useAdvancedDtStrategy = false);
+void subcyclingWithNSteps(TestContext const &context, int nSubsteps, bool useAdvancedDtStrategy = false);
 
 #endif

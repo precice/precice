@@ -6,7 +6,7 @@
 #include <fstream>
 #include "precice/precice.hpp"
 
-void subcyclingWithNSteps(TestContext const &context, int nSubsteps, std::vector<int> expectedSteps, bool useAdvancedDtStrategy)
+void subcyclingWithNSteps(TestContext const &context, int nSubsteps, bool useAdvancedDtStrategy)
 {
   Participant precice(context.name, context.config(), 0, 1);
 
@@ -46,7 +46,7 @@ void subcyclingWithNSteps(TestContext const &context, int nSubsteps, std::vector
 
   while (precice.isCouplingOngoing()) {
     if (precice.isTimeWindowComplete()) {
-      BOOST_TEST(didSteps == expectedSteps[nWindows]);
+      BOOST_TEST(didSteps == nSubsteps);
       didSteps = 0; // reset counter for next window
       nWindows++;
     }
@@ -60,18 +60,14 @@ void subcyclingWithNSteps(TestContext const &context, int nSubsteps, std::vector
       currentDt = solverDt > preciceDt ? preciceDt : solverDt;
     } else {
       // Advanced strategy for determining time step size considers round of errors
-      double tol = 100 * math::NUMERICAL_ZERO_DIFFERENCE;
+      double tol = 10 * math::NUMERICAL_ZERO_DIFFERENCE;
 
       if (abs(preciceDt - solverDt) < tol) {
         currentDt = preciceDt;
       } else {
         currentDt = solverDt > preciceDt ? preciceDt : solverDt;
       }
-      currentDt = solverDt > preciceDt ? preciceDt : solverDt;
     }
-
-    precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
-    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
     precice.advance(currentDt);
     didSteps++;
   }

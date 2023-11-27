@@ -23,15 +23,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling640Steps)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  bool useAdvancedDtStrategy = true;
+  bool useAdvancedDtStrategy = false;
 
   if (context.isNamed("SolverOne")) {
-    const int nSubsteps = 640;
-    subcyclingWithNSteps(context, nSubsteps, std::vector<int>{nSubsteps, nSubsteps, nSubsteps, nSubsteps, nSubsteps}, useAdvancedDtStrategy);
+    subcyclingWithNSteps(context, 640, useAdvancedDtStrategy);
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    const int nSubsteps = 1;
-    subcyclingWithNSteps(context, nSubsteps, std::vector<int>{nSubsteps, nSubsteps, nSubsteps, nSubsteps, nSubsteps}, useAdvancedDtStrategy);
+    subcyclingWithNSteps(context, 1, useAdvancedDtStrategy);
   }
 }
 

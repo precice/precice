@@ -26,12 +26,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling64Steps)
   bool useAdvancedDtStrategy = false;
 
   if (context.isNamed("SolverOne")) {
-    const int nSubsteps = 64;
-    subcyclingWithNSteps(context, nSubsteps, std::vector<int>{nSubsteps, nSubsteps, nSubsteps, nSubsteps, nSubsteps}, useAdvancedDtStrategy);
+    subcyclingWithNSteps(context, 64, useAdvancedDtStrategy);
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    const int nSubsteps = 1;
-    subcyclingWithNSteps(context, nSubsteps, std::vector<int>{nSubsteps, nSubsteps, nSubsteps, nSubsteps, nSubsteps}, useAdvancedDtStrategy);
+    subcyclingWithNSteps(context, 1, useAdvancedDtStrategy);
   }
 }
 

@@ -27,15 +27,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling6400Steps)
   bool useAdvancedDtStrategy = true;
 
   if (context.isNamed("SolverOne")) {
-    const int              nSubsteps = 6400;
-    const std::vector<int> expectedSubsteps{nSubsteps,
-                                            (useAdvancedDtStrategy) ? nSubsteps + 1 : nSubsteps + 1, // @todo performing 6401 instead of 6400 steps in second window due to round-off errors inside preCICE, see https://github.com/precice/precice/issues/1866. At least with useAdvancedDtStrategy = true, a user should be able to work-around this problem (currently not possible!)
-                                            nSubsteps, nSubsteps, nSubsteps};
-    subcyclingWithNSteps(context, nSubsteps, expectedSubsteps, useAdvancedDtStrategy);
+    subcyclingWithNSteps(context, 6400, useAdvancedDtStrategy);
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    const int nSubsteps = 1;
-    subcyclingWithNSteps(context, nSubsteps, std::vector<int>{nSubsteps, nSubsteps, nSubsteps, nSubsteps, nSubsteps}, useAdvancedDtStrategy);
+    subcyclingWithNSteps(context, 1, useAdvancedDtStrategy);
   }
 }
 
