@@ -18,7 +18,7 @@
 #include "precice/Participant.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/MultiLock.hpp"
 
 namespace precice {
@@ -373,11 +373,8 @@ private:
    * @brief Performs all data actions with given timing.
    *
    * @param[in] timings the timings of the action.
-   * @param[in] time the current total simulation time.
    */
-  void performDataActions(
-      const std::set<action::Action::Timing> &timings,
-      double                                  time);
+  void performDataActions(const std::set<action::Action::Timing> &timings);
 
   /**
    * @brief Resets written data.

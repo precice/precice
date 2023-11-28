@@ -23,14 +23,13 @@ MultiCouplingScheme::MultiCouplingScheme(
     double                             maxTime,
     int                                maxTimeWindows,
     double                             timeWindowSize,
-    double                             minTimeStepSize,
     const std::string &                localParticipant,
     std::map<std::string, m2n::PtrM2N> m2ns,
     constants::TimesteppingMethod      dtMethod,
     const std::string &                controller,
     int                                minIterations,
     int                                maxIterations)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, minTimeStepSize, localParticipant, minIterations, maxIterations, Implicit, dtMethod),
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, localParticipant, minIterations, maxIterations, Implicit, dtMethod),
       _m2ns(std::move(m2ns)), _controller(controller), _isController(controller == localParticipant)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
@@ -65,7 +64,7 @@ bool MultiCouplingScheme::hasAnySendData()
   return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
 }
 
-const DataMap &MultiCouplingScheme::getAccelerationData()
+DataMap &MultiCouplingScheme::getAccelerationData()
 {
   // MultiCouplingScheme applies acceleration to all CouplingData
   return _allData;

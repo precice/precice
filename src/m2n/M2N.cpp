@@ -6,7 +6,7 @@
 #include "com/Communication.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Mesh.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
@@ -202,8 +202,7 @@ void M2N::createDistributedCommunication(const mesh::PtrMesh &mesh)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(not _useOnlyPrimaryCom);
-  DistributedCommunication::SharedPointer distCom = _distrFactory->newDistributedCommunication(mesh);
-  _distComs[mesh->getID()]                        = distCom;
+  _distComs[mesh->getID()] = _distrFactory->newDistributedCommunication(mesh);
 }
 
 void M2N::send(

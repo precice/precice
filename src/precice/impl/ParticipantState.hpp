@@ -19,8 +19,8 @@
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "precice/impl/ReadDataContext.hpp"
+#include "precice/impl/Types.hpp"
 #include "precice/impl/WriteDataContext.hpp"
-#include "precice/types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 

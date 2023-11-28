@@ -244,6 +244,7 @@ target_sources(preciceCore
     src/precice/Participant.hpp
     src/precice/Tooling.cpp
     src/precice/Tooling.hpp
+    src/precice/Types.hpp
     src/precice/config/Configuration.cpp
     src/precice/config/Configuration.hpp
     src/precice/config/ParticipantConfiguration.cpp
@@ -261,6 +262,7 @@ target_sources(preciceCore
     src/precice/impl/ReadDataContext.cpp
     src/precice/impl/ReadDataContext.hpp
     src/precice/impl/SharedPointer.hpp
+    src/precice/impl/Types.hpp
     src/precice/impl/ValidationMacros.hpp
     src/precice/impl/WatchIntegral.cpp
     src/precice/impl/WatchIntegral.hpp
@@ -270,7 +272,6 @@ target_sources(preciceCore
     src/precice/impl/WriteDataContext.hpp
     src/precice/precice.hpp
     src/precice/span.hpp
-    src/precice/types.hpp
     src/profiling/Event.cpp
     src/profiling/Event.hpp
     src/profiling/EventUtils.cpp
@@ -343,7 +344,7 @@ set_property(TARGET precice PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/Version.h
     src/precice/Participant.hpp
     src/precice/Tooling.hpp
+    src/precice/Types.hpp
     src/precice/precice.hpp
     src/precice/span.hpp
-    src/precice/types.hpp
     )

@@ -36,7 +36,7 @@ public:
    * @param timeStamps Corresponding time stamps for deserialized data
    * @param data pointer to CouplingData the SerializedStampes will be deserialized into
    */
-  void deserializeInto(Eigen::VectorXd timeStamps, const cplscheme::PtrCouplingData data);
+  void deserializeInto(const Eigen::VectorXd &timeStamps, const cplscheme::PtrCouplingData data);
 
   /**
    * @brief const reference to serialized values. Used for sending serialized values.

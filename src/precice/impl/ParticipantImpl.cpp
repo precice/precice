@@ -53,12 +53,12 @@
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/ReadDataContext.hpp"
+#include "precice/impl/Types.hpp"
 #include "precice/impl/ValidationMacros.hpp"
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "precice/impl/WriteDataContext.hpp"
 #include "precice/impl/versions.hpp"
-#include "precice/types.hpp"
 #include "profiling/Event.hpp"
 #include "profiling/EventUtils.hpp"
 #include "profiling/config/ProfilingConfiguration.hpp"
@@ -323,13 +323,13 @@ void ParticipantImpl::initialize()
   }
 
   mapWrittenData();
-  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
+  performDataActions({action::Action::WRITE_MAPPING_POST});
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timeWindow);
 
   mapReadData();
-  performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
+  performDataActions({action::Action::READ_MAPPING_POST});
 
   PRECICE_DEBUG("Plot output");
   _accessor->exportInitial();
@@ -402,7 +402,7 @@ void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double 
 
   if (reachedTimeWindowEnd) {
     mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, timeSteppedTo);
+    performDataActions({action::Action::WRITE_MAPPING_POST});
   }
 }
 
@@ -416,7 +416,7 @@ void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isT
   if (reachedTimeWindowEnd) {
     mapReadData();
     // FIXME: the actions timing for read mappings doesn't make sense after
-    performDataActions({action::Action::READ_MAPPING_POST}, timeAfterAdvance);
+    performDataActions({action::Action::READ_MAPPING_POST});
   }
 
   handleExports();
@@ -1042,7 +1042,7 @@ void ParticipantImpl::readData(
 {
   PRECICE_TRACE(meshName, dataName, vertices.size(), relativeReadTime);
   PRECICE_CHECK(_state != State::Finalized, "readData(...) cannot be called after finalize().");
-  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimeStepMaxSize(), "readData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(math::smallerEquals(relativeReadTime, _couplingScheme->getNextTimeStepMaxSize()), "readData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readData(...) cannot sample data before the current time.");
 
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
@@ -1399,14 +1399,12 @@ void ParticipantImpl::mapReadData()
   }
 }
 
-void ParticipantImpl::performDataActions(
-    const std::set<action::Action::Timing> &timings,
-    double                                  time)
+void ParticipantImpl::performDataActions(const std::set<action::Action::Timing> &timings)
 {
   PRECICE_TRACE();
   for (action::PtrAction &action : _accessor->actions()) {
     if (timings.find(action->getTiming()) != timings.end()) {
-      action->performAction(time);
+      action->performAction();
     }
   }
 }

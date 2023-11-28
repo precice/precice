@@ -10,7 +10,7 @@
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 #ifdef PRECICE_WITH_HIP
 #include "mapping/device/HipQRSolver.hip.hpp"

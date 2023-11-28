@@ -23,7 +23,7 @@ public:
 
   virtual void initialize(const DataMap &cplData) override;
 
-  virtual void performAcceleration(const DataMap &cplData) override;
+  virtual void performAcceleration(DataMap &cplData) override;
 
   virtual void iterationsConverged(const DataMap &cplData) override
   {

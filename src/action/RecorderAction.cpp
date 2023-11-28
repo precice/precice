@@ -10,10 +10,9 @@ RecorderAction::RecorderAction(
     const mesh::PtrMesh &mesh)
     : Action(timing, mesh) {}
 
-void RecorderAction::performAction(double time)
+void RecorderAction::performAction()
 {
-  records.push_back(Record{
-      getTiming(), time});
+  records.push_back(Record{getTiming()});
 }
 
 std::vector<RecorderAction::Record> RecorderAction::records{};

@@ -12,6 +12,7 @@
   <mesh name="TestMeshTen" dimensions="3" />
   <mesh name="TestMeshEleven" dimensions="3" />
   <mesh name="TestMeshTwelve" dimensions="3" />
+  <mesh name="TestMeshThirteen" dimensions="3" />
 
   <mapping:rbf-global-direct
     direction="read"
@@ -66,7 +67,7 @@
     from="TestMeshEight"
     to="TestMeshSeven"
     constraint="consistent">
-    <basis-function:multiquadrics shape-parameter="0.3" />
+    <basis-function:compact-polynomial-c8 support-radius="0.3" />
   </mapping:rbf-global-direct>
 
   <mapping:rbf-global-direct
@@ -74,7 +75,7 @@
     from="TestMeshNine"
     to="TestMeshEight"
     constraint="consistent">
-    <basis-function:inverse-multiquadrics shape-parameter="0.3" />
+    <basis-function:multiquadrics shape-parameter="0.3" />
   </mapping:rbf-global-direct>
 
   <mapping:rbf-global-direct
@@ -82,7 +83,7 @@
     from="TestMeshTen"
     to="TestMeshNine"
     constraint="consistent">
-    <basis-function:compact-tps-c2 support-radius="0.3" />
+    <basis-function:inverse-multiquadrics shape-parameter="0.3" />
   </mapping:rbf-global-direct>
 
   <mapping:rbf-global-direct
@@ -90,13 +91,21 @@
     from="TestMeshEleven"
     to="TestMeshTen"
     constraint="consistent">
-    <basis-function:gaussian support-radius="0.3" />
+    <basis-function:compact-tps-c2 support-radius="0.3" />
   </mapping:rbf-global-direct>
 
   <mapping:rbf-global-direct
     direction="read"
     from="TestMeshTwelve"
     to="TestMeshEleven"
+    constraint="consistent">
+    <basis-function:gaussian support-radius="0.3" />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshThirteen"
+    to="TestMeshTwelve"
     constraint="consistent"
     polynomial="off"
     x-dead="true"

@@ -587,7 +587,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
                     _participants.back()->getName(), exportContext.type);
     }
-    exportContext.exporter = exporter;
+    exportContext.exporter = std::move(exporter);
 
     _participants.back()->addExportContext(exportContext);
   }
@@ -605,9 +605,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                   "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
 
-    std::string         filename = "precice-" + participant->getName() + "-watchpoint-" + config.name + ".log";
-    impl::PtrWatchPoint watchPoint(new impl::WatchPoint(config.coordinates, meshContext.mesh, filename));
-    participant->addWatchPoint(watchPoint);
+    std::string filename = "precice-" + participant->getName() + "-watchpoint-" + config.name + ".log";
+    participant->addWatchPoint(std::make_shared<impl::WatchPoint>(config.coordinates, meshContext.mesh, std::move(filename)));
   }
   _watchPointConfigs.clear();
 
@@ -623,9 +622,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                   "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
 
-    std::string            filename = "precice-" + participant->getName() + "-watchintegral-" + config.name + ".log";
-    impl::PtrWatchIntegral watchIntegral(new impl::WatchIntegral(meshContext.mesh, filename, config.isScalingOn));
-    participant->addWatchIntegral(watchIntegral);
+    std::string filename = "precice-" + participant->getName() + "-watchintegral-" + config.name + ".log";
+    participant->addWatchIntegral(std::make_shared<impl::WatchIntegral>(meshContext.mesh, std::move(filename), config.isScalingOn));
   }
   _watchIntegralConfigs.clear();
 
@@ -635,8 +633,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     PRECICE_ERROR("Implicit intra-participant communications for parallel participants are only available if preCICE was built with MPI. "
                   "Either explicitly define an intra-participant communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
-    com::PtrCommunication com            = std::make_shared<com::MPIDirectCommunication>();
-    utils::IntraComm::getCommunication() = com;
+    utils::IntraComm::getCommunication() = std::make_shared<com::MPIDirectCommunication>();
     participant->setUsePrimaryRank(true);
 #endif
   }

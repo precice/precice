@@ -335,10 +335,7 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
     sendDataIndex    = 1;
     receiveDataIndex = 0;
   }
-  cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0,
-      nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Explicit);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Explicit);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
@@ -709,10 +706,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
     sendDataIndex    = 1;
     receiveDataIndex = 0;
   }
-  cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0,
-      nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Explicit);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Explicit);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();

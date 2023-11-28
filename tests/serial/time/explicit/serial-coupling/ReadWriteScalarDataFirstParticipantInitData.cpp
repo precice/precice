@@ -46,11 +46,19 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantInitData)
 
   double   v0[]     = {0, 0, 0};
   VertexID vertexID = precice.setMeshVertex(meshName, v0);
-  precice.requiresInitialData(); // TODO fix
+  if (context.isNamed("SolverOne")) {
+    BOOST_TEST(not precice.requiresInitialData());
+  } else if (context.isNamed("SolverTwo")) {
+    BOOST_TEST(precice.requiresInitialData());
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&expectedDataValue, 1});
+  }
   precice.initialize();
-  double dt = precice.getMaxTimeStepSize();
 
   for (int i = 0; i < timestepSizes.size(); i++) {
+    double dt = precice.getMaxTimeStepSize();
+
+    precice.readData(meshName, readDataName, {&vertexID, 1}, dt, {&actualDataValue, 1});
+    BOOST_TEST(actualDataValue == expectedDataValue);
     BOOST_TEST(precice.isCouplingOngoing());
     precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&expectedDataValue, 1});
 
@@ -60,10 +68,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantInitData)
       BOOST_TEST(dt == timestepSizes.at(i));
       precice.advance(dt);
     }
-    dt = precice.getMaxTimeStepSize();
-
-    precice.readData(meshName, readDataName, {&vertexID, 1}, dt, {&actualDataValue, 1});
-    BOOST_TEST(actualDataValue == expectedDataValue);
   }
 
   BOOST_TEST(not precice.isCouplingOngoing());

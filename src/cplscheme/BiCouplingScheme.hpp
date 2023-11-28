@@ -9,7 +9,7 @@
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -31,7 +31,6 @@ public:
       double                        maxTime,
       int                           maxTimeWindows,
       double                        timeWindowSize,
-      double                        minTimeStepSize,
       std::string                   firstParticipant,
       std::string                   secondParticipant,
       const std::string &           localParticipant,

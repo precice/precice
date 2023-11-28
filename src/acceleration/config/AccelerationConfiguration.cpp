@@ -201,13 +201,11 @@ void AccelerationConfiguration::xmlTagCallback(
     _config.precond_nbNonConstTWindows         = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIME_WINDOWS);
   } else if (callingTag.getName() == TAG_IMVJRESTART) {
 
-    if (_config.alwaysBuildJacobian)
-      PRECICE_ERROR("IMVJ cannot be in restart mode while parameter always-build-jacobian is set to true. "
-                    "Please remove 'always-build-jacobian' from the configuration file or do not run in restart mode.");
-
 #ifndef PRECICE_NO_MPI
     _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);
     const auto &f         = callingTag.getStringAttributeValue(ATTR_TYPE);
+    PRECICE_CHECK((f == VALUE_NO_RESTART) || (!_config.alwaysBuildJacobian), "IMVJ cannot be in restart mode while parameter always-build-jacobian is set to true. "
+                                                                             "Please remove 'always-build-jacobian' from the configuration file or do not run in restart mode.");
     if (f == VALUE_NO_RESTART) {
       _config.imvjRestartType = IQNIMVJAcceleration::NO_RESTART;
     } else if (f == VALUE_ZERO_RESTART) {
@@ -237,19 +235,15 @@ void AccelerationConfiguration::xmlEndTagCallback(
   PRECICE_TRACE(callingTag.getName());
   if (callingTag.getNamespace() == TAG) {
 
-    // create preconditioner
-    if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_IQNIMVJ) {
+    //create preconditioner
+    if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_IQNIMVJ || callingTag.getName() == VALUE_AITKEN) {
 
       // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time windows is limited by the chunksize
       if (callingTag.getName() == VALUE_IQNIMVJ && _config.imvjRestartType > 0)
         if (_config.precond_nbNonConstTWindows > _config.imvjChunkSize)
           _config.precond_nbNonConstTWindows = _config.imvjChunkSize;
       if (_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER) {
-        std::vector<double> factors;
-        for (int id : _config.dataIDs) {
-          factors.push_back(_config.scalings[id]);
-        }
-        _preconditioner = PtrPreconditioner(new ConstantPreconditioner(factors));
+        _preconditioner = PtrPreconditioner(new ConstantPreconditioner(_config.scalingFactorsInOrder()));
       } else if (_config.preconditionerType == VALUE_VALUE_PRECONDITIONER) {
         _preconditioner = PtrPreconditioner(new ValuePreconditioner(_config.precond_nbNonConstTWindows));
       } else if (_config.preconditionerType == VALUE_RESIDUAL_PRECONDITIONER) {
@@ -269,7 +263,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
     } else if (callingTag.getName() == VALUE_AITKEN) {
       _acceleration = PtrAcceleration(
           new AitkenAcceleration(
-              _config.relaxationFactor, _config.dataIDs));
+              _config.relaxationFactor, _config.dataIDs, _preconditioner));
     } else if (callingTag.getName() == VALUE_IQNILS) {
       _config.relaxationFactor  = (_userDefinitions.definedRelaxationFactor) ? _config.relaxationFactor : _defaultValuesIQNILS.relaxationFactor;
       _config.maxIterationsUsed = (_userDefinitions.definedMaxIterationsUsed) ? _config.maxIterationsUsed : _defaultValuesIQNILS.maxIterationsUsed;
@@ -335,7 +329,8 @@ void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
   auto attrScaling = makeXMLAttribute(ATTR_SCALING, 1.0)
                          .setDocumentation(
                              "To improve the performance of a parallel or a multi coupling schemes, "
-                             "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
+                             "each data set can be manually scaled using this scaling factor with preconditioner type = \"constant\". For all other preconditioner types, the factor is ignored. "
+                             "We recommend, however, to use an automatic scaling via a preconditioner.");
   tagData.addAttribute(attrScaling);
   tagData.addAttribute(attrName);
   tagData.addAttribute(attrMesh);
@@ -387,9 +382,36 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     attrName.setDocumentation("The name of the data.");
     XMLAttribute<std::string> attrMesh(ATTR_MESH);
     attrMesh.setDocumentation("The name of the mesh which holds the data.");
+    auto attrScaling = makeXMLAttribute(ATTR_SCALING, 1.0)
+                           .setDocumentation(
+                               "To improve the performance of a parallel or a multi coupling schemes, "
+                               "each data set can be manually scaled using this scaling factor with preconditioner type = \"constant\". For all other preconditioner types, the factor is ignored. "
+                               "We recommend, however, to use an automatic scaling via a preconditioner.");
+    tagData.addAttribute(attrScaling);
     tagData.addAttribute(attrName);
     tagData.addAttribute(attrMesh);
     tag.addSubtag(tagData);
+
+    XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
+    tagPreconditioner.setDocumentation("To improve the numerical stability of multiple data vectors a preconditioner"
+                                       " can be applied. A constant preconditioner scales every acceleration data by a constant value, which you can define as"
+                                       " an attribute of data. "
+                                       " A value preconditioner scales every acceleration data by the norm of the data in the previous time window."
+                                       " A residual preconditioner scales every acceleration data by the current residual."
+                                       " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.");
+    auto attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
+                                      .setOptions({VALUE_CONSTANT_PRECONDITIONER,
+                                                   VALUE_VALUE_PRECONDITIONER,
+                                                   VALUE_RESIDUAL_PRECONDITIONER,
+                                                   VALUE_RESIDUAL_SUM_PRECONDITIONER})
+                                      .setDocumentation("The type of the preconditioner.");
+    tagPreconditioner.addAttribute(attrPreconditionerType);
+    auto nonconstTWindows = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
+                                .setDocumentation(
+                                    "After the given number of time windows, the preconditioner weights "
+                                    "are frozen and the preconditioner acts like a constant preconditioner.");
+    tagPreconditioner.addAttribute(nonconstTWindows);
+    tag.addSubtag(tagPreconditioner);
   } else if (tag.getName() == VALUE_IQNILS) {
 
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_NOT_OR_ONCE);
@@ -515,4 +537,14 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     PRECICE_ERROR("Acceleration of type \"{}\" is unknown. Please choose a valid acceleration scheme or check the spelling in the configuration file.", tag.getName());
   }
 }
+
+std::vector<double> AccelerationConfiguration::ConfigurationData::scalingFactorsInOrder() const
+{
+  std::vector<double> factors;
+  for (int id : dataIDs) {
+    factors.push_back(scalings.at(id));
+  }
+  return factors;
+}
+
 } // namespace precice::acceleration

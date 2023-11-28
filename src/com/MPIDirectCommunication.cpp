@@ -5,7 +5,7 @@
 
 #include "com/MPIDirectCommunication.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 #include "utils/span_tools.hpp"

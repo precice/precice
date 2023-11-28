@@ -42,7 +42,7 @@ private:
   /// The queue, containing items to asynchronously send using boost.asio.
   std::deque<SendItem> _itemQueue;
   /// The mutex protecting access to the queue
-  std::mutex _queueMutex;
+  std::mutex _queueMutex{};
   /// Is the queue allowed to start another asynchronous send?
   bool _ready = true;
 };

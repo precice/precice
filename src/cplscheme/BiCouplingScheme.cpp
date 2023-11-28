@@ -13,7 +13,7 @@
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/Data.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/Helpers.hpp"
 
 namespace precice::cplscheme {
@@ -22,7 +22,6 @@ BiCouplingScheme::BiCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
-    double                        minTimeStepSize,
     std::string                   firstParticipant,
     std::string                   secondParticipant,
     const std::string &           localParticipant,
@@ -31,7 +30,7 @@ BiCouplingScheme::BiCouplingScheme(
     int                           maxIterations,
     CouplingMode                  cplMode,
     constants::TimesteppingMethod dtMethod)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, minTimeStepSize, localParticipant, minIterations, maxIterations, cplMode, dtMethod),
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, localParticipant, minIterations, maxIterations, cplMode, dtMethod),
       _m2n(std::move(m2n)),
       _firstParticipant(std::move(firstParticipant)),
       _secondParticipant(std::move(secondParticipant))

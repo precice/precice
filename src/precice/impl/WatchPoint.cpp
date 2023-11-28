@@ -15,7 +15,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
