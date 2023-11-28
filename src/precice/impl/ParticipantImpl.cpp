@@ -551,8 +551,8 @@ double ParticipantImpl::getMaxTimeStepSize() const
   PRECICE_CHECK(_state != State::Finalized, "getMaxTimeStepSize() cannot be called after finalize().");
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before getMaxTimeStepSize() can be evaluated.");
   const double nextTimeStepSize = _couplingScheme->getNextTimeStepMaxSize();
-  PRECICE_ASSERT(!math::equals(nextTimeStepSize, 0.0));
-  PRECICE_ASSERT(math::greater(nextTimeStepSize, 0.0));
+  PRECICE_ASSERT(!math::equals(nextTimeStepSize, 0.0), nextTimeStepSize);
+  PRECICE_ASSERT(math::greater(nextTimeStepSize, 0.0), nextTimeStepSize);
   if (not math::greater(nextTimeStepSize, 0.0, 100 * math::NUMERICAL_ZERO_DIFFERENCE)) {
     PRECICE_WARN("preCICE just returned a maximum time step size of {}. Such a small value can happen if you use many substeps per time window over multiple time windows due to added-up differences of machine precision.", nextTimeStepSize);
   }
