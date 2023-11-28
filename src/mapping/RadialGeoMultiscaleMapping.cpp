@@ -29,9 +29,9 @@ void RadialGeoMultiscaleMapping::computeMapping()
   size_t const outSize = output()->vertices().size();
 
   int effectiveCoordinate = _axis;
-  PRECICE_ASSERT(effectiveCoordinate == 0 ||
-                     effectiveCoordinate == 1 ||
-                     effectiveCoordinate == 2,
+  PRECICE_ASSERT(effectiveCoordinate == MultiscaleAxis::X ||
+                     effectiveCoordinate == MultiscaleAxis::Y ||
+                     effectiveCoordinate == MultiscaleAxis::Z,
                  "Unknown multiscale axis type.")
 
   if (getConstraint() == CONSISTENT) {

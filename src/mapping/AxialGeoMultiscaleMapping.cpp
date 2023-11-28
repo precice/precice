@@ -44,9 +44,9 @@ void AxialGeoMultiscaleMapping::computeMapping()
       */
 
       int effectiveCoordinate = _axis;
-      PRECICE_ASSERT(effectiveCoordinate == 0 ||
-                         effectiveCoordinate == 1 ||
-                         effectiveCoordinate == 2,
+      PRECICE_ASSERT(effectiveCoordinate == MultiscaleAxis::X ||
+                         effectiveCoordinate == MultiscaleAxis::Y ||
+                         effectiveCoordinate == MultiscaleAxis::Z,
                      "Unknown multiscale axis type.")
 
       // compute distances between 1D vertex and 3D vertices
@@ -98,9 +98,9 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
   const int outValueDimensions = outData.size() / output()->vertices().size();
 
   int effectiveCoordinate = _axis;
-  PRECICE_ASSERT(effectiveCoordinate == 0 ||
-                     effectiveCoordinate == 1 ||
-                     effectiveCoordinate == 2,
+  PRECICE_ASSERT(effectiveCoordinate == MultiscaleAxis::X ||
+                     effectiveCoordinate == MultiscaleAxis::Y ||
+                     effectiveCoordinate == MultiscaleAxis::Z,
                  "Unknown multiscale axis type.")
 
   PRECICE_ASSERT((inputValues.size() / inValueDimensions == static_cast<int>(input()->vertices().size())),
