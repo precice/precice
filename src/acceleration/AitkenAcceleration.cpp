@@ -77,12 +77,9 @@ void AitkenAcceleration::performAcceleration(
   // Compute residual deltas (= residuals - oldResiduals) and store it in _oldResiduals
   Eigen::VectorXd residualDeltas = residuals - _oldResiduals;
 
-  // If we have more than one data set, we scale the data to get a better approximation
-  // of the Aitken factor
+  // We need to update the preconditioner in every iteration
   if (_dataIDs.size() > 1) {
     _preconditioner->update(false, _values, residuals);
-    _preconditioner->apply(residualDeltas);
-    _preconditioner->apply(_oldResiduals);
   }
 
   // Select/compute aitken factor depending on current iteration count
@@ -90,6 +87,12 @@ void AitkenAcceleration::performAcceleration(
     // preconditioner not necessary
     _aitkenFactor = math::sign(_aitkenFactor) * std::min(_initialRelaxation, std::abs(_aitkenFactor));
   } else {
+    // If we have more than one data set, we scale the data to get a better approximation
+    // of the Aitken factor
+    if (_dataIDs.size() > 1) {
+      _preconditioner->apply(residualDeltas);
+      _preconditioner->apply(_oldResiduals);
+    }
     // compute fraction of aitken factor with residuals and residual deltas
     double nominator   = utils::IntraComm::dot(_oldResiduals, residualDeltas);
     double denominator = utils::IntraComm::dot(residualDeltas, residualDeltas);
