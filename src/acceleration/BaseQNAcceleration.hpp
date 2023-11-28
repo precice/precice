@@ -103,7 +103,7 @@ public:
    *
    * Has to be called after every implicit coupling iteration.
    */
-  virtual void performAcceleration(const DataMap &cplData);
+  virtual void performAcceleration(DataMap &cplData);
 
   /**
    * @brief Marks a iteration sequence as converged.
@@ -246,9 +246,6 @@ protected:
 
   /// Updates the V, W matrices (as well as the matrices for the secondary data)
   virtual void updateDifferenceMatrices(const DataMap &cplData);
-
-  /// Concatenates all coupling data involved in the QN system in a single vector
-  virtual void concatenateCouplingData(const DataMap &cplData);
 
   /// Splits up QN system vector back into the coupling data
   virtual void splitCouplingData(const DataMap &cplData);

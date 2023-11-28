@@ -98,6 +98,10 @@ template void create_rbf_system_matrix<double, precice::mapping::CompactPolynomi
                                                                                       double *, double *, double *, precice::mapping::CompactPolynomialC6, const RadialBasisParameters,
                                                                                       const std::size_t, const std::size_t, const bool, const unsigned int);
 
+template void create_rbf_system_matrix<double, precice::mapping::CompactPolynomialC8>(std::shared_ptr<const DefaultExecutor>, const std::size_t, const std::size_t, const std::size_t, const std::array<bool, 3>,
+                                                                                      double *, double *, double *, precice::mapping::CompactPolynomialC8, const RadialBasisParameters,
+                                                                                      const std::size_t, const std::size_t, const bool, const unsigned int);
+
 template <typename ValueType>
 void fill_polynomial_matrix(std::shared_ptr<const DefaultExecutor> exec,
                             const std::size_t n1, const std::size_t n2, ValueType *mtx, ValueType *x, const std::size_t supportPointsRowLength, const unsigned int dims = 4)

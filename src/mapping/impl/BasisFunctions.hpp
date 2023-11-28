@@ -567,5 +567,58 @@ private:
   double                _r_inv;
   RadialBasisParameters _params;
 };
+
+/**
+ * @brief Wendland radial basis function with compact support.
+ *
+ * To be used as template parameter for RadialBasisFctMapping.
+ * Takes the support radius (> 0.0) on construction.
+ *
+ *
+ * Evaluates to: (1 - rn)^10 * (1287*rn^4 + 1350*rn^3 + 630*rn^2 + 150*rn + 15),
+ * where rn is the radius r normalized over the support radius sr: rn = r/sr.
+ */
+class CompactPolynomialC8 : public CompactSupportBase,
+                            public DefiniteFunction<true> {
+public:
+  explicit CompactPolynomialC8(double supportRadius)
+  {
+#if !defined(__NVCC__) || !defined(__HIPCC__)
+    logging::Logger _log{"mapping::CompactPolynomialC8"};
+    PRECICE_CHECK(math::greater(supportRadius, 0.0),
+                  "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute.");
+#endif
+    _r_inv             = 1. / supportRadius;
+    _params.parameter1 = _r_inv;
+  }
+
+  double getSupportRadius() const
+  {
+    return 1. / _r_inv;
+  }
+
+  double evaluate(double radius) const
+  {
+    return operator()(radius, _params);
+  }
+
+  PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
+  {
+    double       r_inv = params.parameter1;
+    const double p     = radius * r_inv;
+    if (p >= 1)
+      return 0.0;
+    return math::pow_int<10>(1.0 - p) * (1287.0 * math::pow_int<4>(p) + 1350.0 * math::pow_int<3>(p) + 630.0 * math::pow_int<2>(p) + 150.0 * p + 15);
+  };
+
+  const RadialBasisParameters getFunctionParameters()
+  {
+    return _params;
+  }
+
+private:
+  double                _r_inv;
+  RadialBasisParameters _params;
+};
 } // namespace mapping
 } // namespace precice

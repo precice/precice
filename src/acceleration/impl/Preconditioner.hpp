@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <numeric>
 #include <vector>
 
 #include "cplscheme/SharedPointer.hpp"
@@ -42,10 +43,8 @@ public:
     PRECICE_ASSERT(_weights.empty());
     _subVectorSizes = svs;
 
-    size_t N = 0;
-    for (auto elem : _subVectorSizes) {
-      N += elem;
-    }
+    size_t N = std::accumulate(_subVectorSizes.begin(), _subVectorSizes.end(), static_cast<std::size_t>(0));
+
     // cannot do this already in the constructor as the size is unknown at that point
     _weights.resize(N, 1.0);
     _invWeights.resize(N, 1.0);

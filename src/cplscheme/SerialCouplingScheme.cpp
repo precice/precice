@@ -21,7 +21,6 @@ SerialCouplingScheme::SerialCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
-    double                        minTimeStepSize,
     const std::string &           firstParticipant,
     const std::string &           secondParticipant,
     const std::string &           localParticipant,
@@ -30,7 +29,7 @@ SerialCouplingScheme::SerialCouplingScheme(
     CouplingMode                  cplMode,
     int                           minIterations,
     int                           maxIterations)
-    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, minTimeStepSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), minIterations, maxIterations, cplMode, dtMethod)
+    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), minIterations, maxIterations, cplMode, dtMethod)
 {
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
     if (doesFirstStep()) {
@@ -49,20 +48,19 @@ SerialCouplingScheme::SerialCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
-    double                        minTimeStepSize,
     const std::string &           firstParticipant,
     const std::string &           secondParticipant,
     const std::string &           localParticipant,
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode)
-    : SerialCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, minTimeStepSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), dtMethod, cplMode, UNDEFINED_MAX_ITERATIONS, UNDEFINED_MAX_ITERATIONS){};
+    : SerialCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), dtMethod, cplMode, UNDEFINED_MAX_ITERATIONS, UNDEFINED_MAX_ITERATIONS){};
 
 void SerialCouplingScheme::sendTimeWindowSize()
 {
   PRECICE_TRACE();
   if (_participantSetsTimeWindowSize) {
-    setTimeWindowSize(getComputedTimeWindowPart());
+    setTimeWindowSize(getTime() - getTimeWindowStart());
     setNextTimeWindowSize(UNDEFINED_TIME_WINDOW_SIZE);
     PRECICE_DEBUG("sending time window size of {}", getTimeWindowSize());
     getM2N()->send(getTimeWindowSize());
@@ -199,7 +197,7 @@ void SerialCouplingScheme::exchangeSecondData()
   }
 }
 
-const DataMap &SerialCouplingScheme::getAccelerationData()
+DataMap &SerialCouplingScheme::getAccelerationData()
 {
   // SerialCouplingSchemes applies acceleration to send data
   return getSendData();

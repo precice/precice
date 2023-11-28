@@ -56,12 +56,6 @@ public:
     return _experimental;
   }
 
-  /// @brief Returns the minimal time step that preCICE allows
-  double minTimeStepSize()
-  {
-    return _minTimeStepSize;
-  }
-
   /// @brief Returns whether participants wait for each other in finalize
   bool waitInFinalize() const
   {
@@ -119,9 +113,6 @@ private:
 
   /// Allow the use of experimental features
   bool _experimental = false;
-
-  /// minimal time step allowed by preCICE
-  double _minTimeStepSize = math::NUMERICAL_ZERO_DIFFERENCE;
 
   /// Synchronize participants in finalize
   bool _waitInFinalize = false;

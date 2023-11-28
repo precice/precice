@@ -58,8 +58,8 @@ BOOST_AUTO_TEST_CASE(RBFDirectConfiguration)
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, file);
 
-  BOOST_TEST(meshConfig->meshes().size() == 12);
-  BOOST_TEST(mappingConfig.mappings().size() == 11);
+  BOOST_TEST(meshConfig->meshes().size() == 13);
+  BOOST_TEST(mappingConfig.mappings().size() == 12);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
     BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
@@ -94,8 +94,8 @@ BOOST_AUTO_TEST_CASE(RBFPUMConfiguration)
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, file);
 
-  BOOST_TEST(meshConfig->meshes().size() == 12);
-  BOOST_TEST(mappingConfig.mappings().size() == 11);
+  BOOST_TEST(meshConfig->meshes().size() == 13);
+  BOOST_TEST(mappingConfig.mappings().size() == 12);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
     BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
@@ -135,8 +135,8 @@ BOOST_AUTO_TEST_CASE(RBFIterativeConfiguration)
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, file);
 
-  BOOST_TEST(meshConfig->meshes().size() == 12);
-  BOOST_TEST(mappingConfig.mappings().size() == 11);
+  BOOST_TEST(meshConfig->meshes().size() == 13);
+  BOOST_TEST(mappingConfig.mappings().size() == 12);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
     BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));

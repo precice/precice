@@ -513,10 +513,7 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   // Create the coupling scheme object
   const int                       minIterations = 1;
   const int                       maxIterations = 100;
-  cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0,
-      nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, minIterations, maxIterations);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, minIterations, maxIterations);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
@@ -613,10 +610,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   // Create the coupling scheme object
   const int                       minIterations = 1;
   const int                       maxIterations = 3;
-  cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0, nameParticipant1,
-      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, minIterations, maxIterations);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, minIterations, maxIterations);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
@@ -670,10 +664,7 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   // Create the coupling scheme object
   const int                       minIterations = 1;
   const int                       maxIterations = 3;
-  cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0, nameParticipant1,
-      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, minIterations, maxIterations);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, minIterations, maxIterations);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
@@ -728,10 +719,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   // Create the coupling scheme object
   const int                       minIterations = 1;
   const int                       maxIterations = 3;
-  cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, math::NUMERICAL_ZERO_DIFFERENCE, nameParticipant0, nameParticipant1,
-      context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Implicit, minIterations, maxIterations);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, minIterations, maxIterations);
   using Fixture = testing::SerialCouplingSchemeFixture;
 
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization, true);

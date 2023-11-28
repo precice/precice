@@ -103,7 +103,7 @@ public:
   }
 
   /// Add sample at given time to _timeStepsStorage.
-  void setSampleAtTime(double time, time::Sample sample);
+  void setSampleAtTime(double time, const time::Sample &sample);
 
   /// Returns the name of the data set, as set in the config file.
   const std::string &getName() const;
