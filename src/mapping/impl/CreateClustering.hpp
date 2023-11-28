@@ -343,16 +343,14 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_ASSERT(bb_check == localBB);
 #endif
 
-  // If we have less vertices in the whole domain than our target cluster size,
-  // we just use a single cluster. The clustering result of the algorithm further
-  // down is in this case not optimal.
+  // If we have very few vertices in the domain, (in this case twice our cluster
+  // size as we decompose most probably at least in 4 clusters) we just use a
+  // single cluster. The clustering result of the algorithm further down is in
+  // this case not optimal and might lead to too many clusters.
   // The single cluster has in principle a radius of inf. We use here twice the
   // length of the longest bounding box edge length and the center of the bounding
   // box for the center point.
-  // @TODO: Consider here a larger value than verticesPerCluster. If we start to cluster
-  // the domain, we end up most probably at least with either 4 (in 2D) or 8 (in 3D).
-  // Thus solving one system which is a bit larger should be fine performance-wise.
-  if (inMesh->vertices().size() < verticesPerCluster)
+  if (inMesh->vertices().size() < verticesPerCluster * 2)
     return {localBB.longestEdgeLength() * 2, Vertices{mesh::Vertex({localBB.center(), 0})}};
 
   // We define a convenience alias for the localBB. In case we need to synchronize the clustering across ranks later on, we need
