@@ -554,7 +554,7 @@ double ParticipantImpl::getMaxTimeStepSize() const
   PRECICE_ASSERT(!math::equals(nextTimeStepSize, 0.0));
   PRECICE_ASSERT(math::greater(nextTimeStepSize, 0.0));
   if (not math::greater(nextTimeStepSize, 0.0, 100 * math::NUMERICAL_ZERO_DIFFERENCE)) {
-    PRECICE_WARN("preCICE just returned a maximum time step size of {}. This can happen, if you are using many substeps per time window over multiple time windows due to added-up differences of machine precision. Please check your criterion for setting the time step size in your adapter.", nextTimeStepSize);
+    PRECICE_WARN("preCICE just returned a maximum time step size of {}. Such a small value can happen if you use many substeps per time window over multiple time windows due to added-up differences of machine precision.", nextTimeStepSize);
   }
   return nextTimeStepSize;
 }
