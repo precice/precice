@@ -329,7 +329,8 @@ void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
   auto attrScaling = makeXMLAttribute(ATTR_SCALING, 1.0)
                          .setDocumentation(
                              "To improve the performance of a parallel or a multi coupling schemes, "
-                             "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
+                             "each data set can be manually scaled using this scaling factor with preconditioner type = \"constant\". For all other preconditioner types, the factor is ignored. "
+                             "We recommend, however, to use an automatic scaling via a preconditioner.");
   tagData.addAttribute(attrScaling);
   tagData.addAttribute(attrName);
   tagData.addAttribute(attrMesh);
@@ -383,8 +384,9 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     attrMesh.setDocumentation("The name of the mesh which holds the data.");
     auto attrScaling = makeXMLAttribute(ATTR_SCALING, 1.0)
                            .setDocumentation(
-                               "To improve the numerical stability of multiple data vectors, "
-                               "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
+                               "To improve the performance of a parallel or a multi coupling schemes, "
+                               "each data set can be manually scaled using this scaling factor with preconditioner type = \"constant\". For all other preconditioner types, the factor is ignored. "
+                               "We recommend, however, to use an automatic scaling via a preconditioner.");
     tagData.addAttribute(attrScaling);
     tagData.addAttribute(attrName);
     tagData.addAttribute(attrMesh);

@@ -56,7 +56,9 @@ void AitkenAcceleration::initialize(const DataMap &cplData)
   _oldResiduals = Eigen::VectorXd::Zero(entries);
   _values       = Eigen::VectorXd::Zero(entries);
   _oldValues    = Eigen::VectorXd::Zero(entries);
-  _preconditioner->initialize(subVectorSizes);
+  if (_dataIDs.size() > 1) {
+    _preconditioner->initialize(subVectorSizes);
+  }
 }
 
 void AitkenAcceleration::performAcceleration(
@@ -75,15 +77,22 @@ void AitkenAcceleration::performAcceleration(
   // Compute residual deltas (= residuals - oldResiduals) and store it in _oldResiduals
   Eigen::VectorXd residualDeltas = residuals - _oldResiduals;
 
+  // We need to update the preconditioner in every iteration
+  if (_dataIDs.size() > 1) {
+    _preconditioner->update(false, _values, residuals);
+  }
+
   // Select/compute aitken factor depending on current iteration count
   if (_iterationCounter == 0) {
     // preconditioner not necessary
     _aitkenFactor = math::sign(_aitkenFactor) * std::min(_initialRelaxation, std::abs(_aitkenFactor));
   } else {
-    // Todo: make this conditional for dataIDs > 1
-    _preconditioner->update(false, _values, residuals);
-    _preconditioner->apply(residualDeltas);
-    _preconditioner->apply(_oldResiduals);
+    // If we have more than one data set, we scale the data to get a better approximation
+    // of the Aitken factor
+    if (_dataIDs.size() > 1) {
+      _preconditioner->apply(residualDeltas);
+      _preconditioner->apply(_oldResiduals);
+    }
     // compute fraction of aitken factor with residuals and residual deltas
     double nominator   = utils::IntraComm::dot(_oldResiduals, residualDeltas);
     double denominator = utils::IntraComm::dot(residualDeltas, residualDeltas);
@@ -105,7 +114,9 @@ void AitkenAcceleration::iterationsConverged(
     const DataMap &cplData)
 {
   _iterationCounter = 0;
-  _preconditioner->update(true, _values, _oldResiduals);
+  if (_dataIDs.size() > 1) {
+    _preconditioner->update(true, _values, _oldResiduals);
+  }
   _oldResiduals = Eigen::VectorXd::Constant(_oldResiduals.size(), std::numeric_limits<double>::max());
 }
 
