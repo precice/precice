@@ -436,7 +436,7 @@ void ReceivedPartition::compareBoundingBoxes()
     PRECICE_ASSERT(_mesh->getConnectedRanks().empty());
     _mesh->setConnectedRanks(connectedRanks);
     if (not connectedRanks.empty()) {
-      connectionMap[0] = connectedRanks;
+      connectionMap.emplace(0, std::move(connectedRanks));
       connectedRanksList.push_back(0);
     }
 
@@ -445,7 +445,7 @@ void ReceivedPartition::compareBoundingBoxes()
       std::vector<Rank> secondaryConnectedRanks = utils::IntraComm::getCommunication()->receiveRange(rank, com::AsVectorTag<Rank>{});
       if (!secondaryConnectedRanks.empty()) {
         connectedRanksList.push_back(rank);
-        connectionMap[rank] = secondaryConnectedRanks;
+        connectionMap.emplace(rank, std::move(secondaryConnectedRanks));
       }
     }
 

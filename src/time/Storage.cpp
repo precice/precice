@@ -24,7 +24,7 @@ Storage &Storage::operator=(const Storage &other)
   return *this;
 }
 
-void Storage::setSampleAtTime(double time, Sample sample)
+void Storage::setSampleAtTime(double time, const Sample &sample)
 {
   // The spline has to be recomputed, since the underlying data has changed
   _bspline.reset();
@@ -43,14 +43,9 @@ void Storage::setSampleAtTime(double time, Sample sample)
   if (existingSample == _stampleStorage.end()) { // key does not exist yet
     PRECICE_ASSERT(math::smaller(maxStoredTime(), time), maxStoredTime(), time, "Trying to write sample with a time that is too small. Please use clear(), if you want to write new samples to the storage.");
     _stampleStorage.emplace_back(Stample{time, sample});
-  } else { // overwrite sample at "time"
-    for (auto &stample : _stampleStorage) {
-      if (math::equals(stample.timestamp, time)) {
-        stample.sample = sample;
-        return;
-      }
-    }
-    PRECICE_ASSERT(false, "unreachable!");
+  } else {
+    // Overriding sample
+    existingSample->sample = sample;
   }
 }
 
@@ -160,6 +155,17 @@ Eigen::VectorXd Storage::getTimes() const
   return times;
 }
 
+bool Storage::empty() const
+{
+  return _stampleStorage.empty();
+}
+
+const time::Stample &Storage::last() const
+{
+  PRECICE_ASSERT(!_stampleStorage.empty());
+  return _stampleStorage[_stampleStorage.size() - 1];
+}
+
 std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
 {
   auto times  = Eigen::VectorXd(nTimes());
@@ -210,20 +216,8 @@ Eigen::MatrixXd Storage::sampleGradients(double time) const
 
 int Storage::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const
 {
-  int usedDegree = -1;
   PRECICE_ASSERT(requestedDegree <= Time::MAX_WAVEFORM_DEGREE);
-  if (requestedDegree == 0 || numberOfAvailableSamples < 2) {
-    usedDegree = 0;
-  } else if (requestedDegree == 1 || numberOfAvailableSamples < 3) {
-    usedDegree = 1;
-  } else if (requestedDegree == 2 || numberOfAvailableSamples < 4) {
-    usedDegree = 2;
-  } else if (requestedDegree == 3 || numberOfAvailableSamples < 5) {
-    usedDegree = 3;
-  } else {
-    PRECICE_ASSERT(false); // not supported
-  }
-  return usedDegree;
+  return std::min(requestedDegree, numberOfAvailableSamples - 1);
 }
 
 time::Sample Storage::getSampleAtBeginning()
