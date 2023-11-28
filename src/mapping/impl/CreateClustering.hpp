@@ -367,6 +367,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   // 0.3 should be a good default value
   // @todo: most of the 3D experiments ran with the default of 0.3 which would correspond to relativeOverlap of 0, i.e., the limit
   // Can we use different values for 2D and 3D? Which value should we use?
+  PRECICE_ASSERT(inMesh->getDimensions() >= 2);
   const double maximumCenterDistance = inMesh->getDimensions() == 2 ? std::sqrt(2) * clusterRadius * (1 - relativeOverlap) : clusterRadius * (1 - relativeOverlap);
 
   // Step 3: using the maximum distance and the bounding box, compute the number of clusters in each direction
