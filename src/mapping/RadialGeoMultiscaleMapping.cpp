@@ -34,25 +34,27 @@ void RadialGeoMultiscaleMapping::computeMapping()
                      effectiveCoordinate == 2,
                  "Unknown multiscale axis type.")
 
-  // determine principle axis midpoints as borders to assign 3D vertices to their respective 1D vertex
-  Eigen::VectorXd     axisMidpoints(inSize);
-  auto &              verticesref = input()->vertices();
-  std::vector<size_t> ordered_vertex_indices(input()->vertices().size());
-  std::iota(ordered_vertex_indices.begin(), ordered_vertex_indices.end(), 0);
-  std::sort(ordered_vertex_indices.begin(), ordered_vertex_indices.end(),
-            [effectiveCoordinate, verticesref](const size_t aindex, const size_t bindex) {
-              return verticesref[aindex].getCoords()[effectiveCoordinate] < verticesref[bindex].getCoords()[effectiveCoordinate];
-            });
-  for (size_t i = 0; i < (inSize - 1); i++) {
-    auto axisPositionCurrent = verticesref[ordered_vertex_indices[i]].getCoords()[effectiveCoordinate];
-    auto axisPositionNext    = verticesref[ordered_vertex_indices[i] + 1].getCoords()[effectiveCoordinate];
-    axisMidpoints(i)         = (axisPositionCurrent + axisPositionNext) / 2;
-  }
-  axisMidpoints(inSize - 1) = std::numeric_limits<double>::max(); // large number, such that vertices after the last midpoint are still assigned
-
   if (getConstraint() == CONSISTENT) {
     PRECICE_DEBUG("Compute consistent mapping");
     if (_type == SPREAD) {
+      // Determine principle axis midpoints as borders to assign 3D vertices to their respective 1D vertex
+      Eigen::VectorXd axisMidpoints(inSize);
+      auto &          inputVerticesRef = input()->vertices();
+      // Order the vertices of the 1D input mesh, to correctly compute the midpoints of the segments between neighboring vertices
+      std::vector<size_t> ordered_vertex_indices(input()->vertices().size());
+      std::iota(ordered_vertex_indices.begin(), ordered_vertex_indices.end(), 0);
+      std::sort(ordered_vertex_indices.begin(), ordered_vertex_indices.end(),
+                [effectiveCoordinate, inputVerticesRef](const size_t aindex, const size_t bindex) {
+                  return inputVerticesRef[aindex].getCoords()[effectiveCoordinate] < inputVerticesRef[bindex].getCoords()[effectiveCoordinate];
+                });
+      // Compute the midpoints of the 1D input mesh
+      for (size_t i = 0; i < (inSize - 1); i++) {
+        auto axisPositionCurrent = inputVerticesRef[ordered_vertex_indices[i]].getCoords()[effectiveCoordinate];
+        auto axisPositionNext    = inputVerticesRef[ordered_vertex_indices[i] + 1].getCoords()[effectiveCoordinate];
+        axisMidpoints(i)         = (axisPositionCurrent + axisPositionNext) / 2;
+      }
+      axisMidpoints(inSize - 1) = std::numeric_limits<double>::max(); // large number, such that vertices after the last midpoint are still assigned
+
       /*
         3D vertices are projected onto the 1D axis and the data is then mapped
         to the nearest neighbors of the 1D vertices in projection space.
@@ -72,12 +74,19 @@ void RadialGeoMultiscaleMapping::computeMapping()
         3D vertices are projected onto the 1D axis and the data is then mapped
         to (and averaged at) the nearest 1D vertex in projection space.
       */
-      size_t const inSize  = input()->vertices().size();
-      size_t const outSize = output()->vertices().size();
 
       // determine principle axis midpoints as borders to assign 3D vertices to their respective 1D vertex
       Eigen::VectorXd axisMidpoints(outSize);
-      axisMidpoints = axisMidpoints;
+      auto &          outputVerticesRef = output()->vertices();
+
+      // Order the vertices of the 1D output mesh, to correctly compute the midpoints of the segments between neighboring vertices
+      std::vector<size_t> ordered_vertex_indices(output()->vertices().size());
+      std::iota(ordered_vertex_indices.begin(), ordered_vertex_indices.end(), 0);
+      std::sort(ordered_vertex_indices.begin(), ordered_vertex_indices.end(),
+                [effectiveCoordinate, outputVerticesRef](const size_t aindex, const size_t bindex) {
+                  return outputVerticesRef[aindex].getCoords()[effectiveCoordinate] < outputVerticesRef[bindex].getCoords()[effectiveCoordinate];
+                });
+      // Compute the midpoints of the 1D output mesh
       for (size_t i = 0; i < (outSize - 1); i++) {
         auto axisPositionCurrent = output()->vertices()[i].getCoords()[effectiveCoordinate];
         auto axisPositionNext    = output()->vertices()[i + 1].getCoords()[effectiveCoordinate];
