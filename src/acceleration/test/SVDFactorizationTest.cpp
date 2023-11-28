@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(testSVDFactorization)
   Eigen::VectorXd     b(m);
 
   // prepare preConditioner to be used to construct a SVD factorization class
-  impl::PtrPreconditioner prec(std::make_shared<impl::ConstantPreconditioner>(factors));
+  auto prec(std::make_shared<impl::ConstantPreconditioner>(factors));
 
   // prepare matrix operation to be used in SVD update
   ParallelMatrixOperations matOperation;
