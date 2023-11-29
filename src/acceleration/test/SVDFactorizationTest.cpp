@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(testSVDFactorization)
   auto prec(std::make_shared<impl::ConstantPreconditioner>(factors));
 
   // prepare matrix operation to be used in SVD update
-  ParallelMatrixOperations matOperation;
+  precice::acceleration::impl::ParallelMatrixOperations matOperation;
   matOperation.initialize(cyclicCommunication);
   auto ptrParMatrixOp = std::make_shared<ParallelMatrixOperations>(matOperation);
 
