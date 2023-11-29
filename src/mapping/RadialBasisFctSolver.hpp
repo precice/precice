@@ -173,7 +173,6 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
       matrixCLU(i_index, j_index)   = basisFunction.evaluate(std::sqrt(squaredDifference));
     }
   }
-  cluAssembly.stop();
 
   // Add potentially the polynomial contribution in the matrix
   if (polynomial == Polynomial::ON) {
@@ -210,8 +209,6 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
       matrixA(i.index(), j.index()) = basisFunction.evaluate(std::sqrt(squaredDifference));
     }
   }
-
-  outputAssembly.stop();
 
   // Add potentially the polynomial contribution in the matrix
   if (polynomial == Polynomial::ON) {
