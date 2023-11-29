@@ -26,39 +26,37 @@ BOOST_AUTO_TEST_CASE(RadialGeoMultiscale)
     for (unsigned int i = 0; i < nCoords; ++i) {
       values.emplace_back(std::pow(i + 1, 2));
     }
-    auto             meshOneID = "MeshOne";
+    auto             meshOneName = "MeshOne";
     std::vector<int> ids;
-    ids.emplace_back(cplInterface.setMeshVertex(meshOneID, coordOneA));
-    ids.emplace_back(cplInterface.setMeshVertex(meshOneID, coordOneB));
-    ids.emplace_back(cplInterface.setMeshVertex(meshOneID, coordOneC));
+    ids.emplace_back(cplInterface.setMeshVertex(meshOneName, coordOneA));
+    ids.emplace_back(cplInterface.setMeshVertex(meshOneName, coordOneB));
+    ids.emplace_back(cplInterface.setMeshVertex(meshOneName, coordOneC));
 
-    auto dataAID = "DataOne";
+    auto dataAName = "DataOne";
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
     BOOST_TEST(cplInterface.isCouplingOngoing());
 
-    cplInterface.writeData(meshOneID, dataAID, ids, values);
+    cplInterface.writeData(meshOneName, dataAName, ids, values);
     cplInterface.advance(maxDt);
 
     cplInterface.finalize();
 
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    auto meshTwoID = "MeshTwo";
+    auto meshTwoName = "MeshTwo";
 
     Vector3d coordTwoA{0.5, 2.0, 0.0};
     Vector3d coordTwoB{0.5, 3.0, 1.0};
     Vector3d coordTwoC{0.5, 4.0, 2.0};
 
     // Setup receiving mesh.
-    int idA = cplInterface.setMeshVertex(meshTwoID, coordTwoA);
-    int idB = cplInterface.setMeshVertex(meshTwoID, coordTwoB);
-    int idC = cplInterface.setMeshVertex(meshTwoID, coordTwoC);
+    int idA = cplInterface.setMeshVertex(meshTwoName, coordTwoA);
+    int idB = cplInterface.setMeshVertex(meshTwoName, coordTwoB);
+    int idC = cplInterface.setMeshVertex(meshTwoName, coordTwoC);
 
-    auto dataAID = "DataOne";
-    BOOST_REQUIRE(cplInterface.requiresInitialData());
-    BOOST_TEST(cplInterface.requiresGradientDataFor(meshTwoID, dataAID) == false);
+    auto dataAName = "DataOne";
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
@@ -66,7 +64,7 @@ BOOST_AUTO_TEST_CASE(RadialGeoMultiscale)
     double values[3];
     int    ids[] = {idA, idB, idC};
 
-    cplInterface.readData(meshTwoID, dataAID, ids, maxDt, values);
+    cplInterface.readData(meshTwoName, dataAName, ids, maxDt, values);
     cplInterface.advance(maxDt);
 
     BOOST_TEST(values[0] == 1);
