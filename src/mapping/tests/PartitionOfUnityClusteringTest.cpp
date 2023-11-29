@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(createClustering3D)
       }
     }
   }
-  double       relativeOverlap      = 0.3;
+  double       relativeOverlap      = 0.01;
   unsigned int verticesPerPartition = 10;
   bool         projectToInput       = false;
   {

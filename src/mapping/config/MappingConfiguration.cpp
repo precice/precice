@@ -221,10 +221,10 @@ MappingConfiguration::MappingConfiguration(
   // auto attrMaxIterations = makeXMLAttribute(ATTR_MAX_ITERATIONS, 1e6)
   //                              .setDocumentation("Maximum number of iterations of the solver");
 
-  auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER, 100)
+  auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER, 50)
                                 .setDocumentation("Average number of vertices per cluster (partition) applied in the rbf partition of unity method.");
-  auto relativeOverlap = makeXMLAttribute(ATTR_RELATIVE_OVERLAP, 0.3)
-                             .setDocumentation("Value between 0 and 1 indicating the relative overlap between clusters. A value of 0.3 is usually a good trade-off between accuracy and efficiency.");
+  auto relativeOverlap = makeXMLAttribute(ATTR_RELATIVE_OVERLAP, 0.15)
+                             .setDocumentation("Value between 0 and 1 indicating the relative overlap between clusters. A value of 0.15 is usually a good trade-off between accuracy and efficiency.");
   auto projectToInput = XMLAttribute<bool>(ATTR_PROJECT_TO_INPUT, true)
                             .setDocumentation("If enabled, places the cluster centers at the closest vertex of the input mesh. Should be enabled in case of non-uniform point distributions such as for shell structures.");
 
