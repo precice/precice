@@ -1,4 +1,3 @@
-#include <iostream>
 #ifndef PRECICE_NO_MPI
 
 #include <Eigen/Core>
