@@ -3,6 +3,7 @@
 #include <Eigen/src/Core/Matrix.h>
 
 #include "acceleration/impl/ConstantPreconditioner.hpp"
+#include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "acceleration/impl/SVDFactorization.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
@@ -27,7 +28,7 @@ BOOST_AUTO_TEST_CASE(testSVDFactorization)
   auto prec(std::make_shared<impl::ConstantPreconditioner>(factors));
 
   // prepare matrix operation to be used in SVD update
-  precice::acceleration::impl::ParallelMatrixOperations matOperation;
+  ParallelMatrixOperations matOperation;
   matOperation.initialize(cyclicCommunication);
   auto ptrParMatrixOp = std::make_shared<ParallelMatrixOperations>(matOperation);
 
