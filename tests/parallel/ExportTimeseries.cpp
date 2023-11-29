@@ -48,19 +48,21 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
       interface.writeData(meshName, sdataName, vertexIds, sdata);
       interface.writeData(meshName, vdataName, vertexIds, vdata);
 
+      BOOST_TEST(interface.getMaxTimeStepSize() == 1);
+      dt = interface.getMaxTimeStepSize();
       time += dt;
       interface.advance(dt);
-      dt = interface.getMaxTimeStepSize();
     }
   } else {
     while (interface.isCouplingOngoing()) {
+      BOOST_TEST(interface.getMaxTimeStepSize() == 1);
+      dt = interface.getMaxTimeStepSize();
       time += dt;
       interface.advance(dt);
-      dt = interface.getMaxTimeStepSize();
     };
   }
   BOOST_TEST(time == 5);
-  BOOST_TEST(dt == 1);
+  BOOST_TEST(interface.getMaxTimeStepSize() == 0);
   interface.finalize();
 }
 

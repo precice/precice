@@ -1006,6 +1006,7 @@ void ParticipantImpl::writeData(
 {
   PRECICE_TRACE(meshName, dataName, vertices.size());
   PRECICE_CHECK(_state != State::Finalized, "writeData(...) cannot be called after finalize().");
+  PRECICE_CHECK(_state == State::Constructed || (_state == State::Initialized && isCouplingOngoing()), "Calling writeData(...) is forbidden if coupling is not ongoing, because the data you are trying to write will not be used anymore. You can fix this by always calling writeData(...) before the advance(...) call in your simulation loop or by using Participant::isCouplingOngoing() to implement a safeguard.");
   PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
   // Inconsistent sizes will be handled below
   if (vertices.empty() && values.empty()) {
@@ -1041,9 +1042,11 @@ void ParticipantImpl::readData(
     ::precice::span<double>         values) const
 {
   PRECICE_TRACE(meshName, dataName, vertices.size(), relativeReadTime);
+  PRECICE_CHECK(_state != State::Constructed, "readData(...) cannot be called before initialize().");
   PRECICE_CHECK(_state != State::Finalized, "readData(...) cannot be called after finalize().");
   PRECICE_CHECK(math::smallerEquals(relativeReadTime, _couplingScheme->getNextTimeStepMaxSize()), "readData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readData(...) cannot sample data before the current time.");
+  PRECICE_CHECK(isCouplingOngoing() || relativeReadTime == 0, "Calling readData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only relativeReadTime = 0 is allowed. Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.", relativeReadTime);
 
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
 
