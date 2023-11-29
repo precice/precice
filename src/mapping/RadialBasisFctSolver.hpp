@@ -9,7 +9,6 @@
 #include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
-#include "profiling/Event.hpp"
 
 namespace precice {
 namespace mapping {
@@ -154,8 +153,7 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
   PRECICE_ASSERT((inputMesh.getDimensions() == 3) || activeAxis[2] == false);
   PRECICE_ASSERT((inputSize >= 1 + polyparams) || polynomial != Polynomial::ON, inputSize);
 
-  precice::profiling::Event cluAssembly{"map.rbf.assembleSystemMatrix"};
-  Eigen::MatrixXd           matrixCLU(n, n);
+  Eigen::MatrixXd matrixCLU(n, n);
 
   // Required to fill the poly -> poly entries in the matrix, which remain otherwise untouched
   if (polynomial == Polynomial::ON) {
@@ -201,8 +199,7 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
   PRECICE_ASSERT((inputMesh.getDimensions() == 3) || activeAxis[2] == false);
   PRECICE_ASSERT((inputSize >= 1 + polyparams) || polynomial != Polynomial::ON, inputSize);
 
-  precice::profiling::Event outputAssembly{"map.rbf.assembleOutputMatrix"};
-  Eigen::MatrixXd           matrixA(outputSize, n);
+  Eigen::MatrixXd matrixA(outputSize, n);
 
   // Compute RBF values for matrix A
   for (const auto &i : outputIDs | boost::adaptors::indexed()) {

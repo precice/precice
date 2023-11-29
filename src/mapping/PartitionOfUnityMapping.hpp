@@ -159,7 +159,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     outMesh = this->output();
   }
 
-  precice::profiling::Event eClusters("map.pou.computeMapping.createClustering");
+  precice::profiling::Event eClusters("map.pou.computeMapping.createClustering.From" + this->input()->getName() + "To" + this->output()->getName());
   // Step 1: get a tentative clustering consisting of centers and a radius from one of the available algorithms
   auto [clusterRadius, centerCandidates] = impl::createClustering(inMesh, outMesh, _relativeOverlap, _verticesPerCluster, _projectToInput);
   eClusters.stop();
