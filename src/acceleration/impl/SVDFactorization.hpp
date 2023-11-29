@@ -42,15 +42,15 @@ public:
       PtrPreconditioner preconditioner);
 
   /**
-    * @brief Destructor, empty.
-    */
+   * @brief Destructor, empty.
+   */
   virtual ~SVDFactorization() {}
 
   /** @brief: updates the SVD decomposition with the rank-1 update A*B^T, i.e.,
-    *               _psi * _sigma * _phi^T + A*B^T
-    *  and overrides the internal SVD representation. After the update, the SVD is
-    *  truncated according to the threshold _truncationEps
-    */
+   *               _psi * _sigma * _phi^T + A*B^T
+   *  and overrides the internal SVD representation. After the update, the SVD is
+   *  truncated according to the threshold _truncationEps
+   */
   template <typename Derived1, typename Derived2>
   void update(
       const Eigen::MatrixBase<Derived1> &A,
@@ -59,10 +59,10 @@ public:
     PRECICE_TRACE();
     PRECICE_ASSERT(_initialized);
     /** updates the truncated svd factorization of the Jacobian with a rank-1 modification
-      *
-      * \psi * \sigma * \phi <-- \psi * \sigma * \phi + A * B^T
-      *
-      */
+     *
+     * \psi * \sigma * \phi <-- \psi * \sigma * \phi + A * B^T
+     *
+     */
     if (_initialSVD) {
       PRECICE_ASSERT(A.rows() == _rows, A.rows(), _rows);
       PRECICE_ASSERT(B.rows() == _rows, B.rows(), _rows);
@@ -77,7 +77,7 @@ public:
     }
 
     /** (1): compute orthogonal basis P of (I-\psi\psi^T)A
-      */
+     */
     Matrix Atil(_psi.cols(), A.cols()); // Atil is of size (K_bar x m)
 
     // Atil := \psi^T *A
@@ -93,7 +93,7 @@ public:
     computeQRdecomposition(Ptil, P, R_A);
 
     /**  (2): compute orthogonal basis Q of (I-\phi\phi^T)B
-      */
+     */
     Matrix Btil(_phi.cols(), B.cols()); // Btil is of size (K_bar x m)
     // Btil := \phi^T *B
     _parMatrixOps->multiply(_phi.transpose(), B, Btil, (int) _phi.cols(), _globalRows, (int) B.cols());
@@ -107,13 +107,13 @@ public:
     //     e_orthModes.stop(true);
 
     /** (3) construct matrix \f$ K \in (K_bar + m -x) x (K_bar +m -y) \f$ if
-      *      x .. deleted columns in P -> (m-x) new modes from A (rows of R_A)
-      *      y .. deleted columns in Q -> (m-y) new modes from B (rows of R_B)
-      *
-      *      [ \sigma  0] + [ Atil ] * [ Btil ]^T
-      *      [    0    0]   [ R_A  ]   [ R_B  ]
-      *  (stored local on each proc).
-      */
+     *      x .. deleted columns in P -> (m-x) new modes from A (rows of R_A)
+     *      y .. deleted columns in Q -> (m-y) new modes from B (rows of R_B)
+     *
+     *      [ \sigma  0] + [ Atil ] * [ Btil ]^T
+     *      [    0    0]   [ R_A  ]   [ R_B  ]
+     *  (stored local on each proc).
+     */
     Matrix K = Matrix::Zero(_psi.cols() + R_A.rows(), _psi.cols() + R_B.rows());
     Matrix K_A(_psi.cols() + R_A.rows(), Atil.cols());
     Matrix K_B(_phi.cols() + R_B.rows(), Btil.cols());
@@ -135,7 +135,7 @@ public:
     //     e_matK.stop(true);
 
     /** (4) rotate left and right subspaces
-      */
+     */
     Matrix rotLeft(_rows, _psi.cols() + P.cols());
     Matrix rotRight(_rows, _phi.cols() + Q.cols());
 
@@ -151,12 +151,12 @@ public:
     //     e_rot.stop(true);
 
     /** (5) truncation of SVD
-      */
+     */
     _cols = _sigma.size();
 
     int waste = 0;
     for (int i = 0; i < (int) _sigma.size(); i++) {
-      if (_sigma(i) < (int) _sigma(0) * _truncationEps) {
+      if (_sigma(i) < _sigma(0) * _truncationEps) {
         _cols = i;
         waste = _sigma.size() - i;
         break;
@@ -167,35 +167,36 @@ public:
     _psi.conservativeResize(_rows, _cols);
     _phi.conservativeResize(_rows, _cols);
     _sigma.conservativeResize(_cols);
+    PRECICE_ASSERT(_sigma(0) >= 0.0);
     PRECICE_DEBUG("SVD factorization of Jacobian is truncated to {} DOFs. Cut off {} DOFs", _cols, waste);
 
     _initialSVD = true;
   }
 
   /**
-    * @brief: initializes the updated SVD factorization, i.e., sets the object for
-    * parallel matrix-matrix operations and the number of global rows.
-    */
+   * @brief: initializes the updated SVD factorization, i.e., sets the object for
+   * parallel matrix-matrix operations and the number of global rows.
+   */
   void initialize(PtrParMatrixOps parMatOps, int globalRows);
 
   /**
-    * @brief: resets the SVD factorization
-    */
+   * @brief: resets the SVD factorization
+   */
   void reset();
 
   /**
-    * @brief: returns a matrix representation of the orthogonal matrix Psi, A = Psi * Sigma * Phi^T
-    */
+   * @brief: returns a matrix representation of the orthogonal matrix Psi, A = Psi * Sigma * Phi^bs
+   */
   Matrix &matrixPsi();
 
   /**
-    * @brief: returns a matrix representation of the orthogonal matrix Sigma, A = Psi * Sigma * Phi^T
-    */
+   * @brief: returns a matrix representation of the orthogonal matrix Sigma, A = Psi * Sigma * Phi^T
+   */
   Vector &singularValues();
 
   /**
-    * @brief: returns a matrix representation of the orthogonal matrix Phi, A = Psi * Sigma * Phi^T
-    */
+   * @brief: returns a matrix representation of the orthogonal matrix Phi, A = Psi * Sigma * Phi^T
+   */
   Matrix &matrixPhi();
 
   /// @brief: returns the number of columns in the QR-decomposition
@@ -217,17 +218,17 @@ public:
   double getThreshold();
 
   /// @brief: applies the preconditioner to the factorized and truncated representation of the Jacobian matrix
-  //void applyPreconditioner();
+  // void applyPreconditioner();
 
   /// @brief: appplies the inverse preconditioner to the factorized and truncated representation of the Jacobian matrix
-  //void revertPreconditioner();
+  // void revertPreconditioner();
 
   void setPrecondApplied(bool b);
 
   /// @brief: enables or disables an additional QR-2 filter for the QR-decomposition
   void setApplyFilterQR(bool b, double eps = 1e-3);
 
-  //bool isPrecondApplied();
+  // bool isPrecondApplied();
 
   bool isSVDinitialized();
 
