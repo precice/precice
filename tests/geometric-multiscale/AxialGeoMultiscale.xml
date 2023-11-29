@@ -15,6 +15,15 @@
 
   <participant name="SolverOne">
     <provide-mesh name="MeshOne" />
+    <receive-mesh name="MeshTwo" from="SolverTwo" />
+    <mapping:axial-geometric-multiscale
+      direction="read"
+      multiscale-type="collect"
+      multiscale-radius="1.0"
+      multiscale-axis="Z"
+      from="MeshTwo"
+      to="MeshOne"
+      constraint="consistent" />
     <write-data name="DataOne" mesh="MeshOne" />
     <read-data name="DataTwo" mesh="MeshOne" />
   </participant>
@@ -22,14 +31,6 @@
   <participant name="SolverTwo">
     <receive-mesh name="MeshOne" from="SolverOne" />
     <provide-mesh name="MeshTwo" />
-    <mapping:axial-geometric-multiscale
-      direction="write"
-      multiscale-type="spread"
-      multiscale-radius="1.0"
-      multiscale-axis="Z"
-      from="MeshTwo"
-      to="MeshOne"
-      constraint="consistent" />
     <mapping:axial-geometric-multiscale
       direction="read"
       multiscale-type="spread"
@@ -49,6 +50,6 @@
     <max-time-windows value="5" />
     <time-window-size value="1.0" />
     <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
-    <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="on" />
+    <exchange data="DataTwo" mesh="MeshTwo" from="SolverTwo" to="SolverOne" initialize="on" />
   </coupling-scheme:serial-explicit>
 </precice-configuration>
