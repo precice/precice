@@ -381,6 +381,14 @@ void MappingConfiguration::xmlTagCallback(
     std::string geoMultiscaleAxis = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_AXIS, "");
     double      multiscaleRadius  = tag.getDoubleAttributeValue(ATTR_GEOMETRIC_MULTISCALE_RADIUS, 1.0);
 
+    if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE && context.size > 1) {
+      throw std::runtime_error{"Axial geometric multiscale mapping is not available for parallel participants."};
+    }
+
+    if (type == TYPE_RADIAL_GEOMETRIC_MULTISCALE && context.size > 1) {
+      throw std::runtime_error{"Radial geometric multiscale mapping is not available for parallel participants."};
+    }
+
     // pum related tags
     int    verticesPerCluster = tag.getIntAttributeValue(ATTR_VERTICES_PER_CLUSTER, 100);
     double relativeOverlap    = tag.getDoubleAttributeValue(ATTR_RELATIVE_OVERLAP, 0.3);
@@ -557,7 +565,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
   } else if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE) {
 
-    // Geometric multiscale is not applicable with the conservative constraint
+    // Axial geometric multiscale is not applicable with the conservative constraint
     PRECICE_CHECK(constraintValue != Mapping::CONSERVATIVE,
                   "Axial geometric multiscale mapping is not implemented for the \"conservative\" constraint. "
                   "Please select constraint=\" consistent\" or a different mapping method.");
@@ -587,7 +595,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
   } else if (type == TYPE_RADIAL_GEOMETRIC_MULTISCALE) {
 
-    // Geometric multiscale is not applicable with the conservative constraint
+    // Radial geometric multiscale is not applicable with the conservative constraint
     PRECICE_CHECK(constraintValue != Mapping::CONSERVATIVE,
                   "Radial geometric multiscale mapping is not implemented for the \"conservative\" constraint. "
                   "Please select constraint=\" consistent\" or a different mapping method.");
