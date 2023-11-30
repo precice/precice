@@ -1,169 +1,160 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface>
-    <data:scalar name="Stretch1" />
-    <data:scalar name="Stretch2" />
-    <data:scalar name="Activation1" />
-    <data:scalar name="Traction1" />
-    <data:scalar name="Displacement1" />
-    <data:scalar name="Traction2" />
-    <data:scalar name="Displacement2" />
+  <data:scalar name="Activation1" />
+  <data:scalar name="stretch1" />
+  <data:scalar name="stretch2" />
+  <data:scalar name="Traction1" />
+  <data:scalar name="Displacement1" />
+  <data:scalar name="Traction2" />
+  <data:scalar name="Displacement2" />
 
-    <mesh name="Surface_Mesh1">
-      <use-data name="Traction1" />
-      <use-data name="Displacement1" />
-    </mesh>
+  <mesh name="Activation_M1_Mesh" dimensions="2">
+    <use-data name="Activation1" />
+  </mesh>
 
-    <mesh name="SurfaceTendon_Mesh1">
-      <use-data name="Traction1" />
-      <use-data name="Displacement1" />
-    </mesh>
+  <mesh name="Activation_M1SM_Mesh" dimensions="2">
+    <use-data name="Activation1" />
+  </mesh>
 
-    <mesh name="Surface_Mesh2">
-      <use-data name="Traction2" />
-      <use-data name="Displacement2" />
-    </mesh>
+ <mesh name="Stretch_M1SM_Mesh" dimensions="2">
+    <use-data name="stretch1" />
+  </mesh>
 
-    <mesh name="SurfaceTendon_Mesh2">
-      <use-data name="Traction2" />
-      <use-data name="Displacement2" />
-    </mesh>
+  <mesh name="Stretch_M2SM_Mesh" dimensions="2">
+    <use-data name="stretch2" />
+  </mesh>
 
-    <mesh name="Activation_M1_Mesh">
-      <use-data name="Activation1" />
-    </mesh>
+  <mesh name="Stretch_M1_Mesh" dimensions="2">
+    <use-data name="stretch1" />
+    <use-data name="stretch2" />
+  </mesh>
 
-    <mesh name="Activation_M1SM_Mesh">
-      <use-data name="Activation1" />
-    </mesh>
+  <mesh name="Surface_M1SM_Mesh" dimensions="2">
+    <use-data name="Traction1" />
+    <use-data name="Displacement1" />
+  </mesh>
 
-    <mesh name="Stretch_M1_Mesh">
-      <use-data name="Stretch1" />
-    </mesh>
+  <mesh name="SurfaceTendon_M1SM_Mesh" dimensions="2">
+    <use-data name="Traction1" />
+    <use-data name="Displacement1" />
+  </mesh>
 
-    <mesh name="Stretch_M1_Cross_Mesh">
-      <use-data name="Stretch2" />
-    </mesh>
+  <mesh name="Surface_M2SM_Mesh" dimensions="2">
+    <use-data name="Traction2" />
+    <use-data name="Displacement2" />
+  </mesh>
 
-    <mesh name="Stretch_M1SM_Mesh">
-      <use-data name="Stretch1" />
-    </mesh>
+  <mesh name="SurfaceTendon_M2SM_Mesh" dimensions="2">
+    <use-data name="Traction2" />
+    <use-data name="Displacement2" />
+  </mesh>
 
-    <mesh name="Stretch_M2SM_Mesh">
-      <use-data name="Stretch2" />
-    </mesh>
+  <participant name="M1">
+    <provide-mesh name="Activation_M1_Mesh" />
+    <receive-mesh name="Activation_M1SM_Mesh" from="M1SM" />
+    <provide-mesh name="Stretch_M1_Mesh" />
+    <receive-mesh name="Stretch_M1SM_Mesh" from="M1SM" />
+    <receive-mesh name="Stretch_M2SM_Mesh" from="M2SM" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="Activation_M1_Mesh"
+      to="Activation_M1SM_Mesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Stretch_M1SM_Mesh"
+      to="Stretch_M1_Mesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Stretch_M2SM_Mesh"
+      to="Stretch_M1_Mesh"
+      constraint="consistent" />
+    <write-data name="Activation1" mesh="Activation_M1_Mesh" /> 
+    <read-data name="stretch1" mesh="Stretch_M1_Mesh" /> 
+    <read-data name="stretch2" mesh="Stretch_M1_Mesh" /> 
+  </participant>
 
-    <participant name="M1SM">
-      <provide-mesh name="Surface_Mesh1" />
-      <receive-mesh name="SurfaceTendon_Mesh1" from="Tendon" />
-      <provide-mesh name="Activation_M1SM_Mesh" />
-      <provide-mesh name="Stretch_M1SM_Mesh" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="Surface_Mesh1"
-        to="SurfaceTendon_Mesh1"
-        constraint="consistent" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="SurfaceTendon_Mesh1"
-        to="Surface_Mesh1"
-        constraint="consistent" />
-      <read-data name="Activation1" mesh="Activation_M1SM_Mesh" />
-      <write-data name="Stretch1" mesh="Stretch_M1SM_Mesh" />
-      <write-data name="Displacement1" mesh="Surface_Mesh1" />
-      <read-data name="Traction1" mesh="Surface_Mesh1" />
-    </participant>
+  <participant name="M1SM">
+    <provide-mesh name="Surface_M1SM_Mesh" />
+    <provide-mesh name="Activation_M1SM_Mesh" />
+    <provide-mesh name="Stretch_M1SM_Mesh" />
+    <receive-mesh name="SurfaceTendon_M1SM_Mesh" from="Tendon" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="Surface_M1SM_Mesh"
+      to="SurfaceTendon_M1SM_Mesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="SurfaceTendon_M1SM_Mesh"
+      to="Surface_M1SM_Mesh"
+      constraint="consistent" />
+    <write-data name="Displacement1" mesh="Surface_M1SM_Mesh" />
+    <read-data name="Traction1" mesh="Surface_M1SM_Mesh" />
+    <read-data name="Activation1" mesh="Activation_M1SM_Mesh" />
+    <write-data name="stretch1" mesh="Stretch_M1SM_Mesh" />
+  </participant>
 
-    <participant name="M2SM">
-      <provide-mesh name="Surface_Mesh2" />
-      <receive-mesh name="SurfaceTendon_Mesh2" from="Tendon" />
-      <provide-mesh name="Stretch_M2SM_Mesh" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="Surface_Mesh2"
-        to="SurfaceTendon_Mesh2"
-        constraint="consistent" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="SurfaceTendon_Mesh2"
-        to="Surface_Mesh2"
-        constraint="consistent" />
-      <write-data name="Stretch2" mesh="Stretch_M2SM_Mesh" />
-      <read-data name="Displacement2" mesh="Surface_Mesh2" />
-      <write-data name="Traction2" mesh="Surface_Mesh2" />
-    </participant>
+  <participant name="M2SM">
+    <provide-mesh name="Surface_M2SM_Mesh" />
+    <receive-mesh name="SurfaceTendon_M2SM_Mesh" from="Tendon" />
+    <provide-mesh name="Stretch_M2SM_Mesh" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="Surface_M2SM_Mesh"
+      to="SurfaceTendon_M2SM_Mesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="SurfaceTendon_M2SM_Mesh"
+      to="Surface_M2SM_Mesh"
+      constraint="consistent" />
+    <read-data name="Displacement2" mesh="Surface_M2SM_Mesh" />
+    <write-data name="Traction2" mesh="Surface_M2SM_Mesh" />
+    <write-data name="stretch2" mesh="Stretch_M2SM_Mesh" />
+  </participant>
 
-    <participant name="Tendon">
-      <provide-mesh name="SurfaceTendon_Mesh1" />
-      <provide-mesh name="SurfaceTendon_Mesh2" />
-      <read-data name="Displacement1" mesh="SurfaceTendon_Mesh1" />
-      <write-data name="Traction1" mesh="SurfaceTendon_Mesh1" />
-      <write-data name="Displacement2" mesh="SurfaceTendon_Mesh2" />
-      <read-data name="Traction2" mesh="SurfaceTendon_Mesh2" />
-    </participant>
+  <participant name="Tendon">
+    <provide-mesh name="SurfaceTendon_M1SM_Mesh" />
+    <provide-mesh name="SurfaceTendon_M2SM_Mesh" />
+    <read-data name="Displacement1" mesh="SurfaceTendon_M1SM_Mesh" />
+    <write-data name="Traction1" mesh="SurfaceTendon_M1SM_Mesh" />
+    <write-data name="Displacement2" mesh="SurfaceTendon_M2SM_Mesh" />
+    <read-data name="Traction2" mesh="SurfaceTendon_M2SM_Mesh" />
+  </participant>
 
-    <participant name="M1">
-      <use-mesh name="Activation_M1_Mesh" provide="yes" />
-      <use-mesh name="Activation_M1SM_Mesh" from="M1SM" />
-      <use-mesh name="Stretch_M1_Mesh" provide="yes" />
-      <use-mesh name="Stretch_M1_Cross_Mesh" provide="yes" />
-      <use-mesh name="Stretch_M1SM_Mesh" from="M1SM" />
-      <use-mesh name="Stretch_M2SM_Mesh" from="M2SM" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="Activation_M1_Mesh"
-        to="Activation_M1SM_Mesh"
-        constraint="consistent" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="Stretch_M2SM_Mesh"
-        to="Stretch_M1_Cross_Mesh"
-        constraint="consistent" />
-      <mapping:nearest-neighbor
-        direction="read"
-        from="Stretch_M1SM_Mesh"
-        to="Stretch_M1_Mesh"
-        constraint="consistent" />
-      <read-data name="Stretch2" mesh="Stretch_M1_Cross_Mesh" />
-      <read-data name="Stretch1" mesh="Stretch_M1_Mesh" />
-      <write-data name="Activation1" mesh="Activation_M1_Mesh" />
-    </participant>
+  <m2n:sockets acceptor="M2SM" connector="M1" />
+  <m2n:sockets acceptor="M1" connector="M1SM" />
+  <m2n:sockets acceptor="Tendon" connector="M1SM" />
+  <m2n:sockets acceptor="Tendon" connector="M2SM" />
 
-    <m2n:sockets from="M1" to="M1SM" />
-    <m2n:sockets from="M1SM" to="Tendon" />
-    <m2n:sockets from="Tendon" to="M2SM" />
-    <m2n:sockets from="M2SM" to="M1" />
+  <coupling-scheme:serial-explicit>
+    <participants first="M2SM" second="M1" />
+    <time-window-size value="1" />
+    <max-time-windows value="2" />
+    <exchange data="stretch2" mesh="Stretch_M2SM_Mesh" from="M2SM" to="M1" />
+  </coupling-scheme:serial-explicit>
 
-    <coupling-scheme:serial-explicit>
-      <participants first="M2SM" second="M1" />
-      <time-window-size value="1" />
-      <max-time-windows value="2" />
-      <exchange data="Stretch2" mesh="Stretch_M2SM_Mesh" from="M2SM" to="M1" />
-    </coupling-scheme:serial-explicit>
+  <coupling-scheme:serial-explicit>
+    <participants first="M1" second="M1SM" />
+    <time-window-size value="1" />
+    <max-time-windows value="2" />
+    <exchange data="Activation1" mesh="Activation_M1SM_Mesh" from="M1" to="M1SM" />
+    <exchange data="stretch1" mesh="Stretch_M1SM_Mesh" from="M1SM" to="M1" />
+  </coupling-scheme:serial-explicit>
 
-    <coupling-scheme:serial-explicit>
-      <participants first="M1SM" second="M1" />
-      <time-window-size value="1" />
-      <max-time-windows value="2" />
-      <exchange data="Stretch1" mesh="Stretch_M1SM_Mesh" from="M1SM" to="M1" />
-      <exchange data="Activation1" mesh="Activation_M1SM_Mesh" from="M1" to="M1SM" />
-    </coupling-scheme:serial-explicit>
-
-    <coupling-scheme:multi>
-      <participant name="Tendon" control="yes" />
-      <participant name="M1SM" />
-      <participant name="M2SM" />
-      <time-window-size value="1" />
-      <max-time-windows value="2" />
-      <exchange data="Displacement1" mesh="SurfaceTendon_Mesh1" from="M1SM" to="Tendon" />
-      <exchange data="Traction1" mesh="SurfaceTendon_Mesh1" from="Tendon" to="M1SM" />
-      <exchange data="Displacement2" mesh="SurfaceTendon_Mesh2" from="Tendon" to="M2SM" />
-      <exchange data="Traction2" mesh="SurfaceTendon_Mesh2" from="M2SM" to="Tendon" />
-      <max-iterations value="1" />
-      <min-iteration-convergence-measure
-        min-iterations="1"
-        data="Displacement2"
-        mesh="SurfaceTendon_Mesh2" />
-    </coupling-scheme:multi>
-  </solver-interface>
+  <coupling-scheme:multi>
+    <participant name="Tendon" control="yes" />
+    <participant name="M1SM" />
+    <participant name="M2SM" />
+    <time-window-size value="1" />
+    <max-time-windows value="2" />
+    <exchange data="Displacement1" mesh="SurfaceTendon_M1SM_Mesh" from="M1SM" to="Tendon" />
+    <exchange data="Traction1" mesh="SurfaceTendon_M1SM_Mesh" from="Tendon" to="M1SM" />
+    <exchange data="Displacement2" mesh="SurfaceTendon_M2SM_Mesh" from="Tendon" to="M2SM" />
+    <exchange data="Traction2" mesh="SurfaceTendon_M2SM_Mesh" from="M2SM" to="Tendon" />
+    <max-iterations value="1" />
+    <min-iterations value="1" />
+  </coupling-scheme:multi>
 </precice-configuration>
