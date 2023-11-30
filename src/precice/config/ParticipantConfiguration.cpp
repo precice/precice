@@ -237,6 +237,7 @@ void ParticipantConfiguration::setExperimental(
     bool experimental)
 {
   _experimental = experimental;
+  _mappingConfig->setExperimental(_experimental);
 }
 
 void ParticipantConfiguration::xmlTagCallback(

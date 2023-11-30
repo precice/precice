@@ -53,6 +53,8 @@ public:
       xml::XMLTag &              parent,
       mesh::PtrMeshConfiguration meshConfiguration);
 
+  void setExperimental(bool experimental);
+
   /**
    * @brief Callback function required for use of automatic configuration.
    *
@@ -117,6 +119,8 @@ public:
 
 private:
   mutable logging::Logger _log{"config:MappingConfiguration"};
+
+  bool _experimental = false;
 
   const std::string TAG = "mapping";
 

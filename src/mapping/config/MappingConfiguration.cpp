@@ -354,6 +354,12 @@ MappingConfiguration::MappingConfiguration(
   parent.addSubtags(geoMultiscaleTags);
 }
 
+void MappingConfiguration::setExperimental(
+    bool experimental)
+{
+  _experimental = experimental;
+}
+
 void MappingConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
     xml::XMLTag &                    tag)
@@ -380,6 +386,10 @@ void MappingConfiguration::xmlTagCallback(
     std::string geoMultiscaleType = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_TYPE, "");
     std::string geoMultiscaleAxis = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_AXIS, "");
     double      multiscaleRadius  = tag.getDoubleAttributeValue(ATTR_GEOMETRIC_MULTISCALE_RADIUS, 1.0);
+
+    if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE || type == TYPE_RADIAL_GEOMETRIC_MULTISCALE) {
+      PRECICE_CHECK(_experimental, "Axial geometric multiscale is experimental and the configuration can change between minor releases. Set experimental=\"on\" in the precice-configuration tag.")
+    }
 
     if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE && context.size > 1) {
       throw std::runtime_error{"Axial geometric multiscale mapping is not available for parallel participants."};
