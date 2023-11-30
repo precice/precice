@@ -63,6 +63,7 @@ void AxialGeoMultiscaleMapping::computeMapping()
     } else {
       PRECICE_ASSERT(_type == COLLECT);
       PRECICE_CHECK(output()->vertices().size() == 1, "You can only define an axial geometric multiscale mapping of type spread from a mesh with exactly one vertex.");
+      // Nothing to do here: A consistent collect mapping only averages all the values, independently of their locations, and this is done in the mapConsistent() method.
     }
   } else {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
