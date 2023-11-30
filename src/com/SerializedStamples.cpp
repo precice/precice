@@ -28,7 +28,7 @@ SerializedStamples SerializedStamples::empty(Eigen::VectorXd timeStamps, const c
   return result;
 }
 
-void SerializedStamples::deserializeInto(Eigen::VectorXd timeStamps, const cplscheme::PtrCouplingData data)
+void SerializedStamples::deserializeInto(const Eigen::VectorXd &timeStamps, const cplscheme::PtrCouplingData data)
 {
   PRECICE_ASSERT(_timeSteps == timeStamps.size());
 
@@ -87,18 +87,17 @@ void SerializedStamples::deserialize(const Eigen::VectorXd timeStamps, cplscheme
       slice(valueId) = _values(valueId * timeStamps.size() + timeId);
     }
 
-    if (not data->hasGradient()) {
-      data->setSampleAtTime(time, time::Sample{dataDims, slice});
-    } else {
-      PRECICE_ASSERT(data->hasGradient());
-
-      Eigen::MatrixXd gradientSlice(data->sample().gradients.rows(), data->sample().gradients.cols());
-      auto            gradientView = Eigen::VectorXd::Map(gradientSlice.data(), gradientSlice.rows() * gradientSlice.cols());
-      for (int gradientId = 0; gradientId < gradientView.size(); gradientId++) {
-        gradientView(gradientId) = _gradients(gradientId * timeStamps.size() + timeId);
-      }
-      data->setSampleAtTime(time, time::Sample{dataDims, slice, gradientSlice});
+    if (!data->hasGradient()) {
+      data->setSampleAtTime(time, time::Sample{dataDims, std::move(slice)});
+      continue;
     }
+
+    Eigen::MatrixXd gradientSlice(data->sample().gradients.rows(), data->sample().gradients.cols());
+    auto            gradientView = Eigen::VectorXd::Map(gradientSlice.data(), gradientSlice.rows() * gradientSlice.cols());
+    for (int gradientId = 0; gradientId < gradientView.size(); gradientId++) {
+      gradientView(gradientId) = _gradients(gradientId * timeStamps.size() + timeId);
+    }
+    data->setSampleAtTime(time, time::Sample{dataDims, std::move(slice), std::move(gradientSlice)});
   }
 }
 

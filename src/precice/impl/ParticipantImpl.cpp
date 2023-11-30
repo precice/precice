@@ -53,12 +53,12 @@
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/ReadDataContext.hpp"
+#include "precice/impl/Types.hpp"
 #include "precice/impl/ValidationMacros.hpp"
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "precice/impl/WriteDataContext.hpp"
 #include "precice/impl/versions.hpp"
-#include "precice/types.hpp"
 #include "profiling/Event.hpp"
 #include "profiling/EventUtils.hpp"
 #include "profiling/config/ProfilingConfiguration.hpp"
@@ -112,7 +112,9 @@ ParticipantImpl::ParticipantImpl(
 #ifndef PRECICE_NO_MPI
   if (communicator.has_value()) {
     auto commptr = static_cast<utils::Parallel::Communicator *>(communicator.value());
-    utils::Parallel::registerUserProvidedComm(*commptr);
+    utils::Parallel::initializeOrDetectMPI(*commptr);
+  } else {
+    utils::Parallel::initializeOrDetectMPI();
   }
 #endif
 
@@ -168,7 +170,6 @@ void ParticipantImpl::configure(
 {
 
   config::Configuration config;
-  utils::Parallel::initializeManagedMPI(nullptr, nullptr);
   logging::setMPIRank(utils::Parallel::current()->rank());
   xml::ConfigurationContext context{
       _accessorName,
@@ -322,13 +323,13 @@ void ParticipantImpl::initialize()
   }
 
   mapWrittenData();
-  performDataActions({action::Action::WRITE_MAPPING_POST}, 0.0);
+  performDataActions({action::Action::WRITE_MAPPING_POST});
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timeWindow);
 
   mapReadData();
-  performDataActions({action::Action::READ_MAPPING_POST}, 0.0);
+  performDataActions({action::Action::READ_MAPPING_POST});
 
   PRECICE_DEBUG("Plot output");
   _accessor->exportInitial();
@@ -401,7 +402,7 @@ void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double 
 
   if (reachedTimeWindowEnd) {
     mapWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST}, timeSteppedTo);
+    performDataActions({action::Action::WRITE_MAPPING_POST});
   }
 }
 
@@ -415,15 +416,14 @@ void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isT
   if (reachedTimeWindowEnd) {
     mapReadData();
     // FIXME: the actions timing for read mappings doesn't make sense after
-    performDataActions({action::Action::READ_MAPPING_POST}, timeAfterAdvance);
+    performDataActions({action::Action::READ_MAPPING_POST});
   }
+
+  handleExports();
 
   if (isTimeWindowComplete) {
     // Move to next time window
     PRECICE_ASSERT(math::greaterEquals(timeAfterAdvance, timeSteppedTo), "We must have stayed or moved forwards in time (min-time-step-size).");
-
-    PRECICE_DEBUG("Handle exports");
-    handleExports();
 
     // As we move forward, there may now be old samples lying around
     // We know that timeAfterAdvance is the start time of the time window
@@ -511,7 +511,7 @@ void ParticipantImpl::finalize()
   profiling::EventRegistry::instance().finalize();
 
   // Finally clear events and finalize MPI
-  utils::Parallel::finalizeManagedMPI();
+  utils::Parallel::finalizeOrCleanupMPI();
   _state = State::Finalized;
 }
 
@@ -550,7 +550,13 @@ double ParticipantImpl::getMaxTimeStepSize() const
 {
   PRECICE_CHECK(_state != State::Finalized, "getMaxTimeStepSize() cannot be called after finalize().");
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before getMaxTimeStepSize() can be evaluated.");
-  return _couplingScheme->getNextTimeStepMaxSize();
+  const double nextTimeStepSize = _couplingScheme->getNextTimeStepMaxSize();
+  // PRECICE_ASSERT(!math::equals(nextTimeStepSize, 0.0), nextTimeStepSize); // @todo requires https://github.com/precice/precice/issues/1904
+  // PRECICE_ASSERT(math::greater(nextTimeStepSize, 0.0), nextTimeStepSize); // @todo requires https://github.com/precice/precice/issues/1904
+  if (not math::greater(nextTimeStepSize, 0.0, 100 * math::NUMERICAL_ZERO_DIFFERENCE)) {
+    PRECICE_WARN("preCICE just returned a maximum time step size of {}. Such a small value can happen if you use many substeps per time window over multiple time windows due to added-up differences of machine precision.", nextTimeStepSize);
+  }
+  return nextTimeStepSize;
 }
 
 bool ParticipantImpl::requiresInitialData()
@@ -1006,6 +1012,7 @@ void ParticipantImpl::writeData(
 {
   PRECICE_TRACE(meshName, dataName, vertices.size());
   PRECICE_CHECK(_state != State::Finalized, "writeData(...) cannot be called after finalize().");
+  PRECICE_CHECK(_state == State::Constructed || (_state == State::Initialized && isCouplingOngoing()), "Calling writeData(...) is forbidden if coupling is not ongoing, because the data you are trying to write will not be used anymore. You can fix this by always calling writeData(...) before the advance(...) call in your simulation loop or by using Participant::isCouplingOngoing() to implement a safeguard.");
   PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
   // Inconsistent sizes will be handled below
   if (vertices.empty() && values.empty()) {
@@ -1041,9 +1048,11 @@ void ParticipantImpl::readData(
     ::precice::span<double>         values) const
 {
   PRECICE_TRACE(meshName, dataName, vertices.size(), relativeReadTime);
+  PRECICE_CHECK(_state != State::Constructed, "readData(...) cannot be called before initialize().");
   PRECICE_CHECK(_state != State::Finalized, "readData(...) cannot be called after finalize().");
-  PRECICE_CHECK(relativeReadTime <= _couplingScheme->getNextTimeStepMaxSize(), "readData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(math::smallerEquals(relativeReadTime, _couplingScheme->getNextTimeStepMaxSize()), "readData(...) cannot sample data outside of current time window.");
   PRECICE_CHECK(relativeReadTime >= 0, "readData(...) cannot sample data before the current time.");
+  PRECICE_CHECK(isCouplingOngoing() || math::equals(relativeReadTime, 0.0), "Calling readData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only data for relativeReadTime = 0 is available. Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.", relativeReadTime);
 
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
 
@@ -1399,14 +1408,12 @@ void ParticipantImpl::mapReadData()
   }
 }
 
-void ParticipantImpl::performDataActions(
-    const std::set<action::Action::Timing> &timings,
-    double                                  time)
+void ParticipantImpl::performDataActions(const std::set<action::Action::Timing> &timings)
 {
   PRECICE_TRACE();
   for (action::PtrAction &action : _accessor->actions()) {
     if (timings.find(action->getTiming()) != timings.end()) {
-      action->performAction(time);
+      action->performAction();
     }
   }
 }
@@ -1414,6 +1421,7 @@ void ParticipantImpl::performDataActions(
 void ParticipantImpl::handleExports()
 {
   PRECICE_TRACE();
+  PRECICE_DEBUG("Handle exports");
   ParticipantState::IntermediateExport exp;
   exp.timewindow = _couplingScheme->getTimeWindows() - 1;
   exp.iteration  = _numberAdvanceCalls;
@@ -1426,7 +1434,7 @@ void ParticipantImpl::resetWrittenData()
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
-    context.resetData();
+    context.resetBuffer();
   }
 }
 

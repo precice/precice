@@ -5,8 +5,8 @@
 #include "boost/range/irange.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
+#include "precice/impl/Types.hpp"
 #include "precice/span.hpp"
-#include "precice/types.hpp"
 
 namespace precice {
 namespace logging {

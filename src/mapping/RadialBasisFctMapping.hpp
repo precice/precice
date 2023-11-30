@@ -8,7 +8,7 @@
 #include "config/MappingConfiguration.hpp"
 #include "mapping/RadialBasisFctBaseMapping.hpp"
 #include "mesh/Filter.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 

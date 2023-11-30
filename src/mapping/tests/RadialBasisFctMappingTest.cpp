@@ -1379,6 +1379,14 @@ BOOST_AUTO_TEST_CASE(MapCompactPolynomialC6)
   CompactPolynomialC6 fct(supportRadius);
   doLocalCode(CompactPolynomialC6, fct, Polynomial::SEPARATE);
 }
+
+BOOST_AUTO_TEST_CASE(MapCompactPolynomialC8)
+{
+  PRECICE_TEST(1_rank);
+  double              supportRadius = 1.2;
+  CompactPolynomialC8 fct(supportRadius);
+  doLocalCode(CompactPolynomialC8, fct, Polynomial::SEPARATE);
+}
 #undef doLocalCode
 
 void testDeadAxis2d(Polynomial polynomial, Mapping::Constraint constraint)

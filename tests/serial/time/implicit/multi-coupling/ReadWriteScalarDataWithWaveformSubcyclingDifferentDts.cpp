@@ -129,13 +129,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
+    maxDt     = precice.getMaxTimeStepSize();
+    currentDt = dt > maxDt ? maxDt : dt;
+    BOOST_CHECK(math::equals(currentDt, windowDt / nSubsteps)); // subcycling.
     time += currentDt;
     writeData = writeFunction(time);
     precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
     precice.advance(currentDt);
-    double maxDt = precice.getMaxTimeStepSize();
-    currentDt    = dt > maxDt ? maxDt : dt;
-    BOOST_CHECK(currentDt == windowDt / nSubsteps); // no subcycling.
     timestep++;
     if (precice.requiresReadingCheckpoint()) { // at end of window and we have to repeat it.
       iterations++;

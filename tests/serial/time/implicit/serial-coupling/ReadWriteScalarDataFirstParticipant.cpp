@@ -76,6 +76,10 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
         }
 
         double actualDataValue = -1.0;
+        if (context.isNamed("SolverOne")) {
+          // Check remainder of simulation time
+          BOOST_TEST(precice.getMaxTimeStepSize() == totalTime - startOfWindowTime - timeInWindow);
+        }
         precice.readData(meshName, readDataName, {&vertexID, 1}, dt, {&actualDataValue, 1});
         // Account for SolverOne initializing Data to 0
         if (context.isNamed("SolverOne") && tw == 0 && it == 0) {
@@ -97,11 +101,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
         if (precice.isTimeWindowComplete()) {
           startOfWindowTime += timeInWindow;
           timeInWindow = 0;
-        }
-
-        if (context.isNamed("SolverOne")) {
-          // Check remainder of simulation time
-          BOOST_TEST(precice.getMaxTimeStepSize() == totalTime - startOfWindowTime - timeInWindow);
         }
       }
     }

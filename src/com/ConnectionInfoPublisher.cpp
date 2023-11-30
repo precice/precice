@@ -11,7 +11,7 @@
 
 #include "com/ConnectionInfoPublisher.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 
 namespace bfs = boost::filesystem;

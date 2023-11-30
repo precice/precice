@@ -30,7 +30,7 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "precice/config/ParticipantConfiguration.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
 #include "xml/ConfigParser.hpp"
@@ -205,13 +205,11 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     // Attribute does not exist for parallel coupling schemes as it is always fixed.
     _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD, VALUE_FIXED));
     if (_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE) {
-
-      PRECICE_ASSERT(_minTimeStepSize > 0);
-      PRECICE_CHECK(_config.timeWindowSize >= _minTimeStepSize,
-                    "Time window size has to be larger or equal to the minimal time step used by preCICE. "
-                    "Please check the <time-window-size value=\"{}\" method=\"{}\" /> tag "
-                    "in the <coupling-scheme:...> or the min-time-step-size=\"{}\" tag in the <precice-config ...> of your precice-config.xml",
-                    _config.timeWindowSize, tag.getStringAttributeValue(ATTR_METHOD), _minTimeStepSize);
+      PRECICE_CHECK(_config.timeWindowSize >= math::NUMERICAL_ZERO_DIFFERENCE,
+                    "The minimal time window size supported by preCICE is {}. "
+                    "Please check the <time-window-size value=\"{}\" /> tag "
+                    "in the <coupling-scheme:...> of your precice-config.xml and pick an appropriate time window size.",
+                    math::NUMERICAL_ZERO_DIFFERENCE, _config.timeWindowSize);
     } else {
       PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE);
       PRECICE_CHECK(_config.timeWindowSize == -1,
@@ -451,11 +449,6 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     // If wrong coupling scheme type is provided, this is already caught by the config parser. If the assertion below is triggered, it's a bug in preCICE, not wrong usage.
     PRECICE_ASSERT(false, "Unknown coupling scheme.");
   }
-}
-
-void CouplingSchemeConfiguration::setMinTimeStepSize(double minTimeStepSize)
-{
-  _minTimeStepSize = minTimeStepSize;
 }
 
 void CouplingSchemeConfiguration::addTransientLimitTags(
@@ -804,10 +797,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
   PRECICE_TRACE(accessor);
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
-  SerialCouplingScheme *scheme = new SerialCouplingScheme(
-      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _minTimeStepSize, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
+  SerialCouplingScheme *scheme = new SerialCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.participants[0], _config.participants[1], accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
   addDataToBeExchanged(*scheme, accessor);
 
@@ -820,10 +810,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
   PRECICE_TRACE(accessor);
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
-  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
-      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _minTimeStepSize, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
+  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.participants[0], _config.participants[1], accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
   addDataToBeExchanged(*scheme, accessor);
 
@@ -840,10 +827,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
 
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       first, second);
-  SerialCouplingScheme *scheme = new SerialCouplingScheme(
-      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _minTimeStepSize, first, second,
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.minIterations, _config.maxIterations);
+  SerialCouplingScheme *scheme = new SerialCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, first, second, accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.minIterations, _config.maxIterations);
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(scheme->hasAnySendData(),
@@ -875,10 +859,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   PRECICE_TRACE(accessor);
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
-  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(
-      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _minTimeStepSize, _config.participants[0], _config.participants[1],
-      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.minIterations, _config.maxIterations);
+  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.participants[0], _config.participants[1], accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.minIterations, _config.maxIterations);
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(scheme->hasAnySendData(),
@@ -912,9 +893,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   }
 
   scheme = new MultiCouplingScheme(
-      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize,
-      _minTimeStepSize, accessor, m2ns, _config.dtMethod,
-      _config.controller, _config.minIterations, _config.maxIterations);
+      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, accessor, m2ns, _config.dtMethod, _config.controller, _config.minIterations, _config.maxIterations);
 
   MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
   PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");

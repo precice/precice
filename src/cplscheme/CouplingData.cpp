@@ -107,7 +107,7 @@ void CouplingData::storeIteration()
   _previousTimeStepsStorage = _data->timeStepsStorage();
 }
 
-const Eigen::VectorXd CouplingData::previousIteration() const
+const Eigen::VectorXd &CouplingData::previousIteration() const
 {
   PRECICE_ASSERT(!_previousTimeStepsStorage.stamples().empty());
   return _previousTimeStepsStorage.stamples().back().sample.values;
@@ -153,9 +153,11 @@ CouplingData::Direction CouplingData::getDirection() const
 void CouplingData::moveToNextWindow()
 {
   if (_direction == Direction::Receive) {
-    _data->moveToNextWindow();
-    _previousTimeStepsStorage = _data->timeStepsStorage();
+    //_data->moveToNextWindow();
+    // _previousTimeStepsStorage = _data->timeStepsStorage();
   }
+  _data->moveToNextWindow();
+  _previousTimeStepsStorage = _data->timeStepsStorage();
 }
 
 time::Sample &CouplingData::sample()

@@ -127,7 +127,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(computedTimesteps == 10);
       BOOST_TEST(cplScheme->isTimeWindowComplete());
       BOOST_TEST(not cplScheme->isCouplingOngoing());
-      BOOST_TEST(cplScheme->getNextTimeStepMaxSize() > 0.0); // ??
+      BOOST_TEST(cplScheme->getNextTimeStepMaxSize() == 0.0);
     } else if (participantName == std::string("Participant1")) {
       auto ddims = mesh->data(1)->getDimensions();
       mesh->data(1)->setSampleAtTime(0, time::Sample{ddims, mesh->data(1)->values()});
@@ -165,7 +165,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(computedTimesteps == 10);
       BOOST_TEST(cplScheme->isTimeWindowComplete());
       BOOST_TEST(not cplScheme->isCouplingOngoing());
-      BOOST_TEST(cplScheme->getNextTimeStepMaxSize() > 0.0); // ??
+      BOOST_TEST(cplScheme->getNextTimeStepMaxSize() == 0.0);
     } else {
       auto ddims = mesh->data(2)->getDimensions();
       BOOST_TEST(participantName == std::string("Participant2"), participantName);
@@ -205,7 +205,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(computedTimesteps == 10);
       BOOST_TEST(cplScheme->isTimeWindowComplete());
       BOOST_TEST(not cplScheme->isCouplingOngoing());
-      BOOST_TEST(cplScheme->getNextTimeStepMaxSize() > 0.0); // ??
+      BOOST_TEST(cplScheme->getNextTimeStepMaxSize() == 0.0);
     }
   }
 

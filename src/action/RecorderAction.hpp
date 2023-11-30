@@ -4,8 +4,7 @@
 #include "action/Action.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 /// Action that records invocations for testing purposes
 class RecorderAction : public Action {
@@ -22,11 +21,10 @@ public:
       const mesh::PtrMesh &mesh);
 
   /// Records the invocation and appends it to the records
-  virtual void performAction(double time) override;
+  virtual void performAction() final override;
 
   struct Record {
     Timing timing;
-    double time;
   };
 
   /// resets the saved records.
@@ -35,5 +33,4 @@ public:
   static std::vector<Record> records;
 };
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action

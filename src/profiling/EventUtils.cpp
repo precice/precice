@@ -69,6 +69,9 @@ void EventRegistry::initialize(std::string_view applicationName, int rank, int s
 
   _initialized = true;
   _finalized   = false;
+  if (_isBackendRunning) {
+    stopBackend();
+  }
 }
 
 void EventRegistry::setWriteQueueMax(std::size_t size)
@@ -107,6 +110,9 @@ void EventRegistry::startBackend()
     PRECICE_DEBUG("Profiling is turned off. Backend will not start.");
     return;
   }
+
+  PRECICE_ASSERT(!_isBackendRunning);
+
   // Create the directory if necessary
   bool isLocal = _directory.empty() || _directory == ".";
   if (!isLocal) {
@@ -146,27 +152,31 @@ void EventRegistry::startBackend()
              timepoint_to_string(_initTime),
              toString(_mode));
   _output.flush();
+  _isBackendRunning = true;
 }
 
 void EventRegistry::stopBackend()
 {
-  if (_mode == Mode::Off) {
+  if (_mode == Mode::Off || !_isBackendRunning) {
     return;
   }
   // create end of global event
   auto now = Event::Clock::now();
-  put(StopEntry{_globalId.value(), now});
+  put(StopEntry{*_globalId, now});
   // flush the queue
   flush();
   _output << "]}";
   _output.close();
   _nameDict.clear();
+
+  _isBackendRunning = false;
 }
 
 void EventRegistry::finalize()
 {
-  if (_finalized)
+  if (_finalized || !_initialized) {
     return;
+  }
 
   stopBackend();
 

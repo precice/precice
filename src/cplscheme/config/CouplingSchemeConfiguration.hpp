@@ -16,7 +16,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "precice/impl/MeshContext.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice {
@@ -59,8 +59,6 @@ public:
       config::PtrParticipantConfiguration  participantConfig);
 
   void setExperimental(bool experimental);
-
-  void setMinTimeStepSize(double minTimeStepSize);
 
   /// Destructor, empty.
   virtual ~CouplingSchemeConfiguration() {}
@@ -128,7 +126,6 @@ private:
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
 
-  double           _minTimeStepSize = math::NUMERICAL_ZERO_DIFFERENCE;
   static const int DEFAULT_MIN_ITERATIONS;
   static const int DEFAULT_MAX_ITERATIONS;
 

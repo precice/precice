@@ -3,7 +3,7 @@
 #include <utility>
 
 #include "math/differences.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/assertion.hpp"
 
@@ -79,7 +79,7 @@ void Data::moveToNextWindow()
   }
 }
 
-void Data::setSampleAtTime(double time, time::Sample sample)
+void Data::setSampleAtTime(double time, const time::Sample &sample)
 {
   _sample = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _waveform.timeStepsStorage().setSampleAtTime(time, sample);
