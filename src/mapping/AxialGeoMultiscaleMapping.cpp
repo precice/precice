@@ -31,18 +31,16 @@ void AxialGeoMultiscaleMapping::computeMapping()
     if (_type == SPREAD) {
       PRECICE_CHECK(input()->vertices().size() == 1, "You can only define an axial geometric multiscale mapping of type spread from a mesh with exactly one vertex.");
 
-      // TODO: get rid of hardcoded values via access to mesh dimension
-      // Needs support for 1D meshes (https://github.com/precice/precice/issues/1669)
-      const int inValueDimensions  = 1;
-      const int outValueDimensions = 3;
+      /* When we add support for 1D meshes (https://github.com/precice/precice/issues/1669),
+        we should check for valid dimensions combination.
 
-      /* When we add support for 1D meshes (https://github.com/precice/precice/issues/1669)
-      const int inValueDimensions  = input()->getDimensions();
-      const int outValueDimensions = output()->getDimensions();
+        const int inValueDimensions  = input()->getDimensions();
+        const int outValueDimensions = output()->getDimensions();
 
-      PRECICE_CHECK(input()->getDimensions() == 1, "The input mesh on an axial geometric multiscale mapping can only be 1D at the moment, but it was defined to be {}.", input()->getDimensions())
-      PRECICE_CHECK(output()->getDimensions() == 3, "The output mesh on an axial geometric multiscale mapping can only be 3D at the moment, but it was defined to be {}.", input()->getDimensions())
+        PRECICE_CHECK(input()->getDimensions() == 1, "The input mesh on an axial geometric multiscale mapping can only be 1D at the moment, but it was defined to be {}.", input()->getDimensions())
+        PRECICE_CHECK(output()->getDimensions() == 3, "The output mesh on an axial geometric multiscale mapping can only be 3D at the moment, but it was defined to be {}.", input()->getDimensions())
       */
+      const int outValueDimensions = 3;
 
       int effectiveCoordinate = _axis;
       PRECICE_ASSERT(effectiveCoordinate == MultiscaleAxis::X ||
@@ -116,8 +114,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
       Currently, a Hagen-Poiseuille profile determines the velocity value.
     */
     PRECICE_ASSERT(input()->vertices().size() == 1);
-    mesh::Vertex &v0      = input()->vertices()[0];
-    size_t const  outSize = output()->vertices().size();
+    size_t const outSize = output()->vertices().size();
 
     for (size_t i = 0; i < outSize; i++) {
       PRECICE_ASSERT(static_cast<int>((i * outValueDimensions) + effectiveCoordinate) < outputValues.size(), ((i * outValueDimensions) + effectiveCoordinate), outputValues.size());
