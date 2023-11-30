@@ -36,10 +36,9 @@
   <mesh name="Stretch_M1_Mesh" dimensions="2">
     <use-data name="stretch1" />
     <use-data name="stretch2" />
-
   </mesh>
 
-  <mesh name="Stretch_M1SM_Mesh"  dimensions="2">
+  <mesh name="Stretch_M1SM_Mesh" dimensions="2">
     <use-data name="stretch1" />
   </mesh>
 
@@ -50,7 +49,7 @@
   <mesh name="Stretch_M2SM_Mesh" dimensions="2">
     <use-data name="stretch2" />
   </mesh>
-  
+
   <participant name="M1SM">
     <provide-mesh name="Surface_M1SM_Mesh" />
     <receive-mesh name="Surface_M2SM_Mesh" from="M2SM" />
@@ -70,7 +69,6 @@
     <read-data name="Traction" mesh="Surface_M1SM_Mesh" />
     <read-data name="Activation1" mesh="Activation_M1SM_Mesh" />
     <write-data name="stretch1" mesh="Stretch_M1SM_Mesh" />
-
   </participant>
 
   <participant name="M2SM">

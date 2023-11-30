@@ -16,7 +16,7 @@
     <use-data name="Activation1" />
   </mesh>
 
- <mesh name="Stretch_M1SM_Mesh" dimensions="2">
+  <mesh name="Stretch_M1SM_Mesh" dimensions="2">
     <use-data name="stretch1" />
   </mesh>
 
@@ -70,9 +70,9 @@
       from="Stretch_M2SM_Mesh"
       to="Stretch_M1_Mesh"
       constraint="consistent" />
-    <write-data name="Activation1" mesh="Activation_M1_Mesh" /> 
-    <read-data name="stretch1" mesh="Stretch_M1_Mesh" /> 
-    <read-data name="stretch2" mesh="Stretch_M1_Mesh" /> 
+    <write-data name="Activation1" mesh="Activation_M1_Mesh" />
+    <read-data name="stretch1" mesh="Stretch_M1_Mesh" />
+    <read-data name="stretch2" mesh="Stretch_M1_Mesh" />
   </participant>
 
   <participant name="M1SM">

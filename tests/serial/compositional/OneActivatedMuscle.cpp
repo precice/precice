@@ -23,82 +23,77 @@ BOOST_AUTO_TEST_CASE(OneActivatedMuscle)
   std::vector<int> activationVertexIDs(1);
   std::vector<int> stretchVertexIDs(1);
 
-
   double timestepSize = 1.0;
- 
-  if (context.isNamed("M1")){
 
-    participant.setMeshVertices("Activation_M1_Mesh", neuralCoords , activationVertexIDs );
-    participant.setMeshVertices("Stretch_M1_Mesh", neuralCoords , stretchVertexIDs );
+  if (context.isNamed("M1")) {
 
-  }
-  else if (context.isNamed("M1SM")) {
+    participant.setMeshVertices("Activation_M1_Mesh", neuralCoords, activationVertexIDs);
+    participant.setMeshVertices("Stretch_M1_Mesh", neuralCoords, stretchVertexIDs);
 
-    participant.setMeshVertices("Surface_M1SM_Mesh", surfaceCoords , surface1VertexIDs );
-    participant.setMeshVertices("Activation_M1SM_Mesh", neuralCoords , activationVertexIDs );
-    participant.setMeshVertices("Stretch_M1SM_Mesh", neuralCoords , stretchVertexIDs );
+  } else if (context.isNamed("M1SM")) {
+
+    participant.setMeshVertices("Surface_M1SM_Mesh", surfaceCoords, surface1VertexIDs);
+    participant.setMeshVertices("Activation_M1SM_Mesh", neuralCoords, activationVertexIDs);
+    participant.setMeshVertices("Stretch_M1SM_Mesh", neuralCoords, stretchVertexIDs);
 
   } else if (context.isNamed("M2SM")) {
 
-    participant.setMeshVertices("Surface_M2SM_Mesh", surfaceCoords , surface2VertexIDs );
-    participant.setMeshVertices("Stretch_M2SM_Mesh", neuralCoords , stretchVertexIDs );
+    participant.setMeshVertices("Surface_M2SM_Mesh", surfaceCoords, surface2VertexIDs);
+    participant.setMeshVertices("Stretch_M2SM_Mesh", neuralCoords, stretchVertexIDs);
 
   } else {
 
     BOOST_TEST(context.isNamed("Tendon"));
 
-    participant.setMeshVertices("SurfaceTendon_M1SM_Mesh", surfaceCoords , surface1VertexIDs );
-    participant.setMeshVertices("SurfaceTendon_M2SM_Mesh", surfaceCoords , surface2VertexIDs );
-
+    participant.setMeshVertices("SurfaceTendon_M1SM_Mesh", surfaceCoords, surface1VertexIDs);
+    participant.setMeshVertices("SurfaceTendon_M2SM_Mesh", surfaceCoords, surface2VertexIDs);
   }
 
-    std::vector<double> activation1{1.0};
-    std::vector<double> stretch1{1.1};
-    std::vector<double> stretch2{2.2};
-    std::vector<double> tractions1{1.2, 3.4};
-    std::vector<double> displacements1{4.2, 1.4};
-    std::vector<double> tractions2{1.2, 3.7};
-    std::vector<double> displacements2{4.1, 1.4};
-    
-    std::vector<double> receivedDisplacements{0.0, 0.0};
-    std::vector<double> receivedActivation1{0.0};
-    std::vector<double> receivedStretch1{0.0};
-    std::vector<double> receivedStretch2{0.0};
+  std::vector<double> activation1{1.0};
+  std::vector<double> stretch1{1.1};
+  std::vector<double> stretch2{2.2};
+  std::vector<double> tractions1{1.2, 3.4};
+  std::vector<double> displacements1{4.2, 1.4};
+  std::vector<double> tractions2{1.2, 3.7};
+  std::vector<double> displacements2{4.1, 1.4};
+
+  std::vector<double> receivedDisplacements{0.0, 0.0};
+  std::vector<double> receivedActivation1{0.0};
+  std::vector<double> receivedStretch1{0.0};
+  std::vector<double> receivedStretch2{0.0};
 
   participant.initialize();
 
   for (int timestep = 0; timestep < 2; ++timestep) {
 
-    if (context.isNamed("M1")){
-      participant.writeData("Activation_M1_Mesh","Activation1", activationVertexIDs , activation1 );
-      participant.readData( "Stretch_M1_Mesh","stretch1", stretchVertexIDs, timestepSize, receivedStretch1 );
-      participant.readData( "Stretch_M1_Mesh","stretch2", stretchVertexIDs, timestepSize, receivedStretch2 );
+    if (context.isNamed("M1")) {
+      participant.writeData("Activation_M1_Mesh", "Activation1", activationVertexIDs, activation1);
+      participant.readData("Stretch_M1_Mesh", "stretch1", stretchVertexIDs, timestepSize, receivedStretch1);
+      participant.readData("Stretch_M1_Mesh", "stretch2", stretchVertexIDs, timestepSize, receivedStretch2);
     } else if (context.isNamed("M1SM")) {
-      participant.readData( "Activation_M1SM_Mesh","Activation1", activationVertexIDs, timestepSize, receivedActivation1 );
-      participant.writeData("Stretch_M1SM_Mesh","stretch1", stretchVertexIDs , stretch1 );
-      participant.writeData("Surface_M1SM_Mesh","Displacement1", surface1VertexIDs , displacements1 );
+      participant.readData("Activation_M1SM_Mesh", "Activation1", activationVertexIDs, timestepSize, receivedActivation1);
+      participant.writeData("Stretch_M1SM_Mesh", "stretch1", stretchVertexIDs, stretch1);
+      participant.writeData("Surface_M1SM_Mesh", "Displacement1", surface1VertexIDs, displacements1);
     } else if (context.isNamed("Tendon")) {
-      participant.readData("SurfaceTendon_M1SM_Mesh","Displacement1", surface1VertexIDs, timestepSize, receivedDisplacements );
+      participant.readData("SurfaceTendon_M1SM_Mesh", "Displacement1", surface1VertexIDs, timestepSize, receivedDisplacements);
     } else {
       BOOST_TEST(context.isNamed("M2SM"));
-      participant.writeData("Stretch_M2SM_Mesh","stretch2", stretchVertexIDs , stretch2 );
-
+      participant.writeData("Stretch_M2SM_Mesh", "stretch2", stretchVertexIDs, stretch2);
     }
-    
+
     if (participant.requiresWritingCheckpoint()) {
     }
     participant.advance(timestepSize);
-    if (participant.requiresReadingCheckpoint()){
-    }  
-
+    if (participant.requiresReadingCheckpoint()) {
+    }
   }
 
   // Test read and write
   if (context.isNamed("Tendon")) {
     BOOST_TEST(receivedDisplacements == displacements1, boost::test_tools::per_element());
-  } else if (context.isNamed("M1SM")){
+  } else if (context.isNamed("M1SM")) {
     BOOST_TEST(receivedActivation1 == activation1, boost::test_tools::per_element());
-  } else if (context.isNamed("M1")){
+  } else if (context.isNamed("M1")) {
     BOOST_TEST(receivedStretch1 == stretch1, boost::test_tools::per_element());
     BOOST_TEST(receivedStretch2 == stretch2, boost::test_tools::per_element());
   }
