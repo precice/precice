@@ -46,7 +46,7 @@ public:
   void tagMeshFirstRound() override;
   void tagMeshSecondRound() override;
 
-  /// Returns name of the mapping - TODO: needed for porting to develop
+  /// Returns name of the mapping
   std::string getName() const final override;
 
 protected:
