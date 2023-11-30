@@ -61,6 +61,7 @@ void runSimpleExplicitCoupling(
     BOOST_TEST(cplScheme.isCouplingOngoing());
     while (cplScheme.isCouplingOngoing()) {
       dataValues0(vertex.getID()) = valueData0;
+      BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
       computedTime += cplScheme.getNextTimeStepMaxSize();
       computedTimesteps++;
       cplScheme.addComputedTime(cplScheme.getNextTimeStepMaxSize());
@@ -95,7 +96,7 @@ void runSimpleExplicitCoupling(
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     BOOST_TEST(cplScheme.isTimeWindowComplete());
     BOOST_TEST(not cplScheme.isCouplingOngoing());
-    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
+    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == 0.0);
   } else if (participantName == std::string("Participant1")) {
     mesh->data(1)->setSampleAtTime(0, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
     cplScheme.initialize(0.0, 1);
@@ -109,6 +110,7 @@ void runSimpleExplicitCoupling(
     BOOST_TEST(cplScheme.isCouplingOngoing());
     while (cplScheme.isCouplingOngoing()) {
       dataValues1.segment(vertex.getID() * 3, 3) = valueData1;
+      BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
       computedTime += cplScheme.getNextTimeStepMaxSize();
       computedTimesteps++;
       cplScheme.addComputedTime(cplScheme.getNextTimeStepMaxSize());
@@ -140,7 +142,7 @@ void runSimpleExplicitCoupling(
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     BOOST_TEST(cplScheme.isTimeWindowComplete());
     BOOST_TEST(not cplScheme.isCouplingOngoing());
-    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
+    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == 0.0);
   }
 }
 
@@ -176,6 +178,15 @@ void runExplicitCouplingWithSubcycling(
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isCouplingOngoing());
     while (cplScheme.isCouplingOngoing()) {
+      // If the dt from preCICE is larger than the desired one, do subcycling,
+      // else, use the dt from preCICE
+      BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
+      dtUsed = cplScheme.getNextTimeStepMaxSize() > dtDesired
+                   ? dtDesired
+                   : cplScheme.getNextTimeStepMaxSize();
+      BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
+      BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
+      BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
       dataValues0(vertex.getID()) = valueData0;
       computedTime += dtUsed;
       computedTimesteps++;
@@ -185,14 +196,6 @@ void runExplicitCouplingWithSubcycling(
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
       cplScheme.secondExchange();
-      // If the dt from preCICE is larger than the desired one, do subcycling,
-      // else, use the dt from preCICE
-      dtUsed = cplScheme.getNextTimeStepMaxSize() > dtDesired
-                   ? dtDesired
-                   : cplScheme.getNextTimeStepMaxSize();
-      BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
-      BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
-      BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
       if (computedTimesteps % 2 == 0) {
         // Data exchange takes only place at every second local timestep,
         // since a subcycling of 2 is used.
@@ -220,7 +223,7 @@ void runExplicitCouplingWithSubcycling(
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     BOOST_TEST(cplScheme.isTimeWindowComplete());
     BOOST_TEST(not cplScheme.isCouplingOngoing());
-    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
+    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == 0.0);
   } else if (participantName == nameParticipant1) {
     // Start coupling
     mesh->data(1)->setSampleAtTime(0, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
@@ -235,6 +238,7 @@ void runExplicitCouplingWithSubcycling(
     BOOST_TEST(cplScheme.isCouplingOngoing());
     while (cplScheme.isCouplingOngoing()) {
       dataValues1.segment(vertex.getID() * 3, 3) = valueData1;
+      BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
       computedTime += cplScheme.getNextTimeStepMaxSize();
       computedTimesteps++;
       cplScheme.addComputedTime(cplScheme.getNextTimeStepMaxSize());
@@ -265,7 +269,7 @@ void runExplicitCouplingWithSubcycling(
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     BOOST_TEST(cplScheme.isTimeWindowComplete());
     BOOST_TEST(not cplScheme.isCouplingOngoing());
-    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
+    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == 0.0);
   }
 }
 
