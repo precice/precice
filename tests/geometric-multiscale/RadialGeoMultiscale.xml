@@ -1,40 +1,40 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration experimental="on">
-  <data:scalar name="DataOne" />
+  <data:scalar name="HeatFluxLike" />
 
-  <mesh name="MeshOne" dimensions="3">
-    <use-data name="DataOne" />
+  <mesh name="Mesh1D" dimensions="3">
+    <use-data name="HeatFluxLike" />
   </mesh>
 
-  <mesh name="MeshTwo" dimensions="3">
-    <use-data name="DataOne" />
+  <mesh name="Mesh3D" dimensions="3">
+    <use-data name="HeatFluxLike" />
   </mesh>
 
-  <participant name="SolverOne">
-    <provide-mesh name="MeshOne" />
-    <write-data name="DataOne" mesh="MeshOne" />
+  <participant name="Fluid1D">
+    <provide-mesh name="Mesh1D" />
+    <write-data name="HeatFluxLike" mesh="Mesh1D" />
   </participant>
 
-  <participant name="SolverTwo">
-    <receive-mesh name="MeshOne" from="SolverOne" />
-    <provide-mesh name="MeshTwo" />
+  <participant name="Solid3D">
+    <receive-mesh name="Mesh1D" from="Fluid1D" />
+    <provide-mesh name="Mesh3D" />
     <mapping:radial-geometric-multiscale
       direction="read"
       multiscale-type="spread"
       multiscale-radius=""
       multiscale-axis="Z"
-      from="MeshOne"
-      to="MeshTwo"
+      from="Mesh1D"
+      to="Mesh3D"
       constraint="consistent" />
-    <read-data name="DataOne" mesh="MeshTwo" />
+    <read-data name="HeatFluxLike" mesh="Mesh3D" />
   </participant>
 
-  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+  <m2n:sockets acceptor="Fluid1D" connector="Solid3D" />
 
   <coupling-scheme:serial-explicit>
-    <participants first="SolverOne" second="SolverTwo" />
+    <participants first="Fluid1D" second="Solid3D" />
     <max-time-windows value="1" />
     <time-window-size value="1.0" />
-    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
+    <exchange data="HeatFluxLike" mesh="Mesh1D" from="Fluid1D" to="Solid3D" />
   </coupling-scheme:serial-explicit>
 </precice-configuration>

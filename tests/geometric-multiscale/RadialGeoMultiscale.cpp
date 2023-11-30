@@ -13,11 +13,11 @@ BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(GeometricMultiscale)
 BOOST_AUTO_TEST_CASE(RadialGeoMultiscale)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST("Fluid1D"_on(1_rank), "Solid3D"_on(1_rank));
   using Eigen::Vector3d;
 
   Participant cplInterface(context.name, context.config(), 0, 1);
-  if (context.isNamed("SolverOne")) {
+  if (context.isNamed("Fluid1D")) {
     Vector3d            coordOneA{0.0, 0.0, 0.0};
     Vector3d            coordOneB{0.0, 0.0, 1.0};
     Vector3d            coordOneC{0.0, 0.0, 2.0};
@@ -26,13 +26,13 @@ BOOST_AUTO_TEST_CASE(RadialGeoMultiscale)
     for (unsigned int i = 0; i < nCoords; ++i) {
       values.emplace_back(std::pow(i + 1, 2));
     }
-    auto             meshOneName = "MeshOne";
+    auto             meshOneName = "Mesh1D";
     std::vector<int> ids;
     ids.emplace_back(cplInterface.setMeshVertex(meshOneName, coordOneA));
     ids.emplace_back(cplInterface.setMeshVertex(meshOneName, coordOneB));
     ids.emplace_back(cplInterface.setMeshVertex(meshOneName, coordOneC));
 
-    auto dataAName = "DataOne";
+    auto dataAName = "HeatFluxLike";
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
@@ -44,8 +44,8 @@ BOOST_AUTO_TEST_CASE(RadialGeoMultiscale)
     cplInterface.finalize();
 
   } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    auto meshTwoName = "MeshTwo";
+    BOOST_TEST(context.isNamed("Solid3D"));
+    auto meshTwoName = "Mesh3D";
 
     Vector3d coordTwoA{0.5, 2.0, 0.0};
     Vector3d coordTwoB{0.5, 3.0, 1.0};
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(RadialGeoMultiscale)
     int idB = cplInterface.setMeshVertex(meshTwoName, coordTwoB);
     int idC = cplInterface.setMeshVertex(meshTwoName, coordTwoC);
 
-    auto dataAName = "DataOne";
+    auto dataAName = "HeatFluxLike";
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();

@@ -13,9 +13,9 @@ BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(GeometricMultiscale)
 BOOST_AUTO_TEST_CASE(AxialGeoMultiscale)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
+  PRECICE_TEST("Fluid1D"_on(1_rank), "Fluid3D"_on(1_rank))
 
-  /*  In this test case, SolverOne is the 1D code (despite having 3D vertices, due to current shortcomings)
+  /*  In this test case, Fluid1D is the 1D code (despite having 3D vertices, due to current shortcomings)
       and we're testing the AxialGeoMultiscaleMapping feature with a parabolic inlet profile at the (downstream) 3D inlet.
 
       We are assuming that the exchanged data follows a parabolic velocity profile, which means that a 3D
@@ -26,12 +26,12 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscale)
   using Eigen::Vector3d;
 
   Participant cplInterface(context.name, context.config(), 0, 1);
-  if (context.isNamed("SolverOne")) {
-    auto     meshName  = "MeshOne";
+  if (context.isNamed("Fluid1D")) {
+    auto     meshName  = "Mesh1D";
     Vector3d posOne    = Vector3d::Constant(0.0);
     auto     vid       = cplInterface.setMeshVertex(meshName, posOne);
-    auto     dataAName = "DataOne";
-    auto     dataBName = "DataTwo";
+    auto     dataAName = "VelocityLike";
+    auto     dataBName = "PressureLike";
 
     Vector3d valueDataB;
 
@@ -54,15 +54,15 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscale)
     cplInterface.finalize();
 
   } else {
-    BOOST_TEST(context.isNamed("SolverTwo"));
-    auto meshName = "MeshTwo";
+    BOOST_TEST(context.isNamed("Fluid3D"));
+    auto meshName = "Mesh3D";
     // This test is only defining one vertex in the 3D mesh, and the collect operation
     // is averaging. Therefore, the mapped value will always be the same, since we
     // are only defining one point.
     Vector3d pos       = Vector3d::Constant(0.0);
     auto     vid       = cplInterface.setMeshVertex(meshName, pos);
-    auto     dataAName = "DataOne";
-    auto     dataBName = "DataTwo";
+    auto     dataAName = "VelocityLike";
+    auto     dataBName = "PressureLike";
 
     BOOST_REQUIRE(cplInterface.requiresInitialData());
     Vector3d valueDataB(0.0, 0.0, 8.0); // Written, to be averaged (collect) to 8.0
