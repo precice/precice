@@ -464,7 +464,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     }
 
     // @TODO: is this still correct?
-    if (confMapping.requiresBasisFunction) {
+    if (!confMapping.allowsGeometricFilter) {
       fromMeshContext.geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
       toMeshContext.geoFilter   = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
     }
