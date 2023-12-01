@@ -30,6 +30,8 @@ public:
     mesh::PtrMesh toMesh;
     /// Direction of mapping (important to set input and output mesh).
     Direction direction;
+    /// allows to filter the mesh before the first round of tagging
+    bool allowsGeometricFilter = true;
     /// true for RBF mapping
     bool requiresBasisFunction;
     /// used the automatic rbf alias tag in order to set the mapping
