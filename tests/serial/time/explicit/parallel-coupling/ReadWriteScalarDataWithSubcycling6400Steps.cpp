@@ -25,6 +25,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling6400Steps)
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   bool useAdvancedDtStrategy = true;
+  // bool useAdvancedDtStrategy = false;  // Triggers warning, because preciceDt becomes very small. Test also fails for second window with 6401 substeps.
 
   if (context.isNamed("SolverOne")) {
     subcyclingWithNSteps(context, 6400, useAdvancedDtStrategy);

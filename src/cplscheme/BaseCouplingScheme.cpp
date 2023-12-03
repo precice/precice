@@ -484,6 +484,10 @@ int BaseCouplingScheme::getTimeWindows() const
 
 double BaseCouplingScheme::getNextTimeStepMaxSize() const
 {
+  if (!isCouplingOngoing()) {
+    return 0.0; // if coupling is not ongoing (i.e. coupling scheme reached end of window) the maximum time step size is zero
+  }
+
   if (hasTimeWindowSize()) {
     return _timeWindowStartTime + _timeWindowSize - _time;
   } else {

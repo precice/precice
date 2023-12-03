@@ -82,7 +82,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     Eigen::VectorXd readData(1);
     // Expected value in the middle of the triangle is the average of inputs (1, 10, 100)
     expected << 111.0 / 3;
-
+    dt = participant.getMaxTimeStepSize();
     participant.readData(meshName, dataName, vertexIDs, dt, readData);
     BOOST_CHECK(equals(expected, readData));
 
