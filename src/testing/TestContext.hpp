@@ -316,10 +316,11 @@ private:
   }
   /// @}
 
-  /** set the context from a Participants and a given rank
+  /** set the context from a Participants and the current com
    * Both uniquely identify a context.
+   * @see Par::current()
    */
-  void setContextFrom(const ParticipantState &p, Rank rank);
+  void setContextFrom(const ParticipantState &p);
 
   /// @{
   /// @name Initialization
