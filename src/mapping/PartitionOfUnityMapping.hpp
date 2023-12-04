@@ -322,12 +322,22 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // vertex in the received mesh
   // However, with the current BB implementation, the expandBy function will just do nothing.
   PRECICE_ASSERT(!bb.empty());
-  // This function behaves differently when using single-level initialization or two-level
-  // initiliazation: in 1LI, we look at the complete mesh, whereas in 2LI, we only look at
+  // This function behaves differently when disabling the geometric filtering
+  // without filter, we look at the complete mesh, whereas otherwise, we look at
   // a fraction of the mesh and we might end up with too few vertices per rank
-  // @TODO we cannot prevent too few vertices from being tagged if we have only a very small number of
-  // vertices sitting on this rank. We could raise a warning, which could be triggered for very small
-  // parallel cases though?!
+  // We cannot prevent too few vertices from being tagged, if we have filtered too much
+  // vertices, but the user could increase the safety-factor or disable the filtering.
+  // When no geometric filter is applid, vertices().size() is here the same as
+  // getGlobalNumberOfVertices
+  if (filterMesh->vertices().size() < _verticesPerCluster &&
+      filterMesh->vertices().size() < filterMesh->getGlobalNumberOfVertices()) {
+    PRECICE_WARN("The repartitioning of the received mesh \"{}\" resulted in {} vertices on this "
+                 "rank, which is less than the desired number of vertices per cluster configured "
+                 "in the partition of unity mapping ({}). Consider increasing the safety-factor "
+                 "or switching off the geometric filter (<receive-mesh: ... geometric-filter=\"no-filter\" .../>)",
+                 filterMesh->getName(), filterMesh->vertices().size(), _verticesPerCluster);
+  }
+
   if (_clusterRadius == 0)
     _clusterRadius = impl::estimateClusterRadius(_verticesPerCluster, filterMesh, bb);
 
