@@ -363,10 +363,8 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_DEBUG("Vertex cluster radius: {}", clusterRadius);
 
   // maximum distance between cluster centers lying diagonal to each other. The maximum distance takes the overlap condition into
-  // account: if the distance between the centers is sqrt(2) * radius, we violate the overlap condition between diagonal clusters
-  // 0.3 should be a good default value
-  // @todo: most of the 3D experiments ran with the default of 0.3 which would correspond to relativeOverlap of 0, i.e., the limit
-  // Can we use different values for 2D and 3D? Which value should we use?
+  // account: for 2D: if the distance between the centers is sqrt(2) * radius, we violate the overlap condition between diagonal clusters
+  // for 3D, we have a stricter condition as we have another dimension over which clusters span
   PRECICE_ASSERT(inMesh->getDimensions() >= 2);
   const double maximumCenterDistance = inMesh->getDimensions() == 2 ? std::sqrt(2) * clusterRadius * (1 - relativeOverlap) : clusterRadius * (1 - relativeOverlap);
 

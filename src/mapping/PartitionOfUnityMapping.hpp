@@ -330,7 +330,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // When no geometric filter is applid, vertices().size() is here the same as
   // getGlobalNumberOfVertices
   if (filterMesh->vertices().size() < _verticesPerCluster &&
-      filterMesh->vertices().size() < filterMesh->getGlobalNumberOfVertices()) {
+      filterMesh->vertices().size() < static_cast<std::size_t>(filterMesh->getGlobalNumberOfVertices())) {
     PRECICE_WARN("The repartitioning of the received mesh \"{}\" resulted in {} vertices on this "
                  "rank, which is less than the desired number of vertices per cluster configured "
                  "in the partition of unity mapping ({}). Consider increasing the safety-factor "
