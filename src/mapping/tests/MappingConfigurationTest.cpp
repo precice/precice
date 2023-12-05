@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(RBFPUMConfiguration)
 
 BOOST_AUTO_TEST_CASE(RBFIterativeConfiguration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST(1_rank, Require::PETSc);
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-iterative-config.xml");
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(RBFIterativeConfiguration)
 
 BOOST_AUTO_TEST_CASE(RBFAliasConfiguration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST(1_rank, Require::PETSc);
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-alias-config.xml");
