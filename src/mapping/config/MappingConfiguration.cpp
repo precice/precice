@@ -585,12 +585,7 @@ void MappingConfiguration::finishRBFConfiguration()
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
 #ifndef PRECICE_NO_PETSC
       // for petsc initialization
-      int   argc = 1;
-      char *arg  = new char[8];
-      strcpy(arg, "precice");
-      char **argv = &arg;
-      utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
-      delete[] arg;
+      utils::Petsc::initialize(utils::Parallel::current()->comm);
 
       mapping.mapping = getRBFMapping<RBFBackend::PETSc>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial);
 #else
