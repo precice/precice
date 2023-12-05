@@ -148,7 +148,8 @@ jobs:
         env:
           CTEST_OUTPUT_ON_FAILURE: 1
           BOOST_TEST_LOG_LEVEL: all
-          OMPI_MCA_btl_tcp_if_include: lo
+          OMPI_MCA_btl_tcp_if_include: lo # required for arch
+          PSM3_HAL: loopback # required for fedora
         working-directory: build
         run: su -c "ctest" $PRECICE_USER
       - name: Coverage Report
