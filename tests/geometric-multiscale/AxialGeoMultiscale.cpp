@@ -25,7 +25,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscale)
 
   using Eigen::Vector3d;
 
-  Participant cplInterface(context.name, context.config(), 0, 1);
+  Participant cplInterface(context.name, context.config(), context.rank, context.size);
   if (context.isNamed("Fluid1D")) {
     auto     meshName  = "Mesh1D";
     Vector3d posOne    = Vector3d::Constant(0.0);

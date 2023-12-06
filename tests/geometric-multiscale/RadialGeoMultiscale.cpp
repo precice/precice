@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(RadialGeoMultiscale)
   PRECICE_TEST("Fluid1D"_on(1_rank), "Solid3D"_on(1_rank));
   using Eigen::Vector3d;
 
-  Participant cplInterface(context.name, context.config(), 0, 1);
+  Participant cplInterface(context.name, context.config(), context.rank, context.size);
   if (context.isNamed("Fluid1D")) {
     Vector3d            coordOneA{0.0, 0.0, 0.0};
     Vector3d            coordOneB{0.0, 0.0, 1.0};
