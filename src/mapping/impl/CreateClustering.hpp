@@ -343,13 +343,14 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_ASSERT(bb_check == localBB);
 #endif
 
-  // If we have less vertices in the whole domain than our target cluster size,
-  // we just use a single cluster. The clustering result of the algorithm further
-  // down is in this case not optimal.
+  // If we have very few vertices in the domain, (in this case twice our cluster
+  // size as we decompose most probably at least in 4 clusters) we just use a
+  // single cluster. The clustering result of the algorithm further down is in
+  // this case not optimal and might lead to too many clusters.
   // The single cluster has in principle a radius of inf. We use here twice the
   // length of the longest bounding box edge length and the center of the bounding
   // box for the center point.
-  if (inMesh->vertices().size() < verticesPerCluster)
+  if (inMesh->vertices().size() < verticesPerCluster * 2)
     return {localBB.longestEdgeLength() * 2, Vertices{mesh::Vertex({localBB.center(), 0})}};
 
   // We define a convenience alias for the localBB. In case we need to synchronize the clustering across ranks later on, we need
@@ -362,9 +363,10 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_DEBUG("Vertex cluster radius: {}", clusterRadius);
 
   // maximum distance between cluster centers lying diagonal to each other. The maximum distance takes the overlap condition into
-  // account: if the distance between the centers is sqrt(2) * radius, we violate the overlap condition between diagonal clusters
-  // 0.3 should be a good default value
-  const double maximumCenterDistance = std::sqrt(2) * clusterRadius * (1 - relativeOverlap);
+  // account: for 2D: if the distance between the centers is sqrt(2) * radius, we violate the overlap condition between diagonal clusters
+  // for 3D, we have a stricter condition as we have another dimension over which clusters span
+  PRECICE_ASSERT(inMesh->getDimensions() >= 2);
+  const double maximumCenterDistance = inMesh->getDimensions() == 2 ? std::sqrt(2) * clusterRadius * (1 - relativeOverlap) : clusterRadius * (1 - relativeOverlap);
 
   // Step 3: using the maximum distance and the bounding box, compute the number of clusters in each direction
   // we ceil the number of clusters in order to guarantee the desired overlap
