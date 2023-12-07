@@ -59,6 +59,8 @@ void RadialGeoMultiscaleMapping::computeMapping()
         3D vertices are projected onto the 1D axis and the data is then mapped
         to the nearest neighbors of the 1D vertices in projection space.
       */
+      _vertexIndicesSpread.clear();
+      _vertexIndicesSpread.reserve(output()->vertices().size());
       for (size_t i = 0; i < outSize; i++) {
         auto vertexCoord = output()->vertices()[i].getCoords()[effectiveCoordinate];
         int  index       = 0;
@@ -100,6 +102,8 @@ void RadialGeoMultiscaleMapping::computeMapping()
       }
 
       // assign the 1D vertex the average of all 3D vertex values in vicinity
+      _vertexIndicesCollect.clear();
+      _vertexIndicesCollect.reserve(input()->vertices().size());
       for (size_t i = 0; i < inSize; i++) {
         auto vertexCoords = input()->vertices()[i].getCoords()[effectiveCoordinate];
         int  index        = 0;

@@ -53,6 +53,9 @@ void AxialGeoMultiscaleMapping::computeMapping()
       size_t const     outSize                      = output()->vertices().size();
       constexpr double distance_to_radius_threshold = 1.05;
 
+      _vertexDistances.clear();
+      _vertexDistances.reserve(output()->vertices().size());
+
       for (size_t i = 0; i < outSize; i++) {
         Eigen::VectorXd difference(outValueDimensions);
         difference = v0.getCoords();
