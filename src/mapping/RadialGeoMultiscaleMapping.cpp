@@ -114,7 +114,7 @@ void RadialGeoMultiscaleMapping::computeMapping()
         _vertexIndicesCollect.push_back(index);
         counter(index) += 1;
       }
-      _vertexCounter = counter;
+      _vertexCounter = std::move(counter);
     }
 
   } else {
