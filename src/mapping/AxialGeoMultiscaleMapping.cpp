@@ -71,7 +71,7 @@ void AxialGeoMultiscaleMapping::computeMapping()
     }
   } else {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
-    PRECICE_ASSERT(false, "Not yet implemented");
+    PRECICE_UNREACHABLE("Axial conservative geometric multiscale mapping is not implemented");
     PRECICE_DEBUG("Compute conservative mapping");
   }
   _hasComputedMapping = true;
@@ -87,7 +87,7 @@ void AxialGeoMultiscaleMapping::clear()
 void AxialGeoMultiscaleMapping::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
-  PRECICE_ASSERT(false, "Not yet implemented");
+  PRECICE_UNREACHABLE("Axial conservative geometric multiscale mapping is not implemented");
   PRECICE_DEBUG("Map conservative");
 }
 
@@ -157,7 +157,7 @@ void AxialGeoMultiscaleMapping::tagMeshFirstRound()
 
   } else {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
-    PRECICE_ASSERT(false, "Not yet implemented");
+    PRECICE_UNREACHABLE("Axial conservative geometric multiscale mapping is not implemented");
   }
 
   clear();
