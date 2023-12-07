@@ -44,7 +44,7 @@ void RadialGeoMultiscaleMapping::computeMapping()
       std::vector<size_t> ordered_vertex_indices(input()->vertices().size());
       std::iota(ordered_vertex_indices.begin(), ordered_vertex_indices.end(), 0);
       std::sort(ordered_vertex_indices.begin(), ordered_vertex_indices.end(),
-                [effectiveCoordinate, inputVerticesRef](const size_t aindex, const size_t bindex) {
+                [effectiveCoordinate, &inputVerticesRef](const size_t aindex, const size_t bindex) {
                   return inputVerticesRef[aindex].getCoords()[effectiveCoordinate] < inputVerticesRef[bindex].getCoords()[effectiveCoordinate];
                 });
       // Compute the midpoints of the 1D input mesh
