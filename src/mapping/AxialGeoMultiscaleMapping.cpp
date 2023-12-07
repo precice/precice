@@ -49,16 +49,17 @@ void AxialGeoMultiscaleMapping::computeMapping()
                      "Unknown multiscale axis type.")
 
       // compute distances between 1D vertex and 3D vertices
-      mesh::Vertex &v0      = input()->vertices()[0];
-      size_t const  outSize = output()->vertices().size();
+      mesh::Vertex &   v0                           = input()->vertices()[0];
+      size_t const     outSize                      = output()->vertices().size();
+      constexpr double distance_to_radius_threshold = 1.05;
 
       for (size_t i = 0; i < outSize; i++) {
         Eigen::VectorXd difference(outValueDimensions);
         difference = v0.getCoords();
         difference -= output()->vertices()[i].getCoords();
-        double distance = difference.norm() / _radius;
-        PRECICE_CHECK(distance <= 1.05, "Output mesh has vertices that do not coincide with the geometric multiscale interface defined by the input mesh. Ratio of vertex distance to radius is {} (which is larger than the assumed threshold of 1.05).", distance);
-        _vertexDistances.push_back(distance);
+        double distance_to_radius = difference.norm() / _radius;
+        PRECICE_CHECK(distance_to_radius <= distance_to_radius_threshold, "Output mesh has vertices that do not coincide with the geometric multiscale interface defined by the input mesh. Ratio of vertex distance to radius is {} (which is larger than the assumed threshold of distance_to_radius_threshold).", distance_to_radius);
+        _vertexDistances.push_back(distance_to_radius);
       }
     } else {
       PRECICE_ASSERT(_type == MultiscaleType::COLLECT);
