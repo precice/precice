@@ -28,7 +28,7 @@ void AxialGeoMultiscaleMapping::computeMapping()
 
   if (getConstraint() == CONSISTENT) {
     PRECICE_DEBUG("Compute consistent mapping");
-    if (_type == SPREAD) {
+    if (_type == MultiscaleType::SPREAD) {
       PRECICE_CHECK(input()->vertices().size() == 1, "You can only define an axial geometric multiscale mapping of type spread from a mesh with exactly one vertex.");
 
       /* When we add support for 1D meshes (https://github.com/precice/precice/issues/1669),
@@ -42,10 +42,10 @@ void AxialGeoMultiscaleMapping::computeMapping()
       */
       const int outValueDimensions = 3;
 
-      int effectiveCoordinate = _axis;
-      PRECICE_ASSERT(effectiveCoordinate == MultiscaleAxis::X ||
-                         effectiveCoordinate == MultiscaleAxis::Y ||
-                         effectiveCoordinate == MultiscaleAxis::Z,
+      int effectiveCoordinate = static_cast<std::underlying_type_t<MultiscaleType>>(_axis); // Convert enum struct to int
+      PRECICE_ASSERT(effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::X) ||
+                         effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Y) ||
+                         effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Z),
                      "Unknown multiscale axis type.")
 
       // compute distances between 1D vertex and 3D vertices
@@ -61,7 +61,7 @@ void AxialGeoMultiscaleMapping::computeMapping()
         _vertexDistances.push_back(distance);
       }
     } else {
-      PRECICE_ASSERT(_type == COLLECT);
+      PRECICE_ASSERT(_type == MultiscaleType::COLLECT);
       PRECICE_CHECK(output()->vertices().size() == 1, "You can only define an axial geometric multiscale mapping of type spread from a mesh with exactly one vertex.");
       // Nothing to do here: A consistent collect mapping only averages all the values, independently of their locations, and this is done in the mapConsistent() method.
     }
@@ -97,10 +97,10 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
   // TODO: check if this needs to change when access to mesh dimension is possible
   const int outValueDimensions = outData.size() / output()->vertices().size();
 
-  int effectiveCoordinate = _axis;
-  PRECICE_ASSERT(effectiveCoordinate == MultiscaleAxis::X ||
-                     effectiveCoordinate == MultiscaleAxis::Y ||
-                     effectiveCoordinate == MultiscaleAxis::Z,
+  int effectiveCoordinate = static_cast<std::underlying_type_t<MultiscaleType>>(_axis);
+  PRECICE_ASSERT(effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::X) ||
+                     effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Y) ||
+                     effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Z),
                  "Unknown multiscale axis type.")
 
   PRECICE_ASSERT((inputValues.size() / inValueDimensions == static_cast<int>(input()->vertices().size())),
@@ -109,7 +109,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
                  outputValues.size(), outValueDimensions, output()->vertices().size());
 
   PRECICE_DEBUG("Map consistent");
-  if (_type == SPREAD) {
+  if (_type == MultiscaleType::SPREAD) {
     /*
       3D vertices are assigned a value based on distance from the 1D vertex.
       Currently, a Hagen-Poiseuille profile determines the velocity value.
@@ -123,7 +123,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
       outputValues((i * outValueDimensions) + effectiveCoordinate) = 2 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
     }
   } else {
-    PRECICE_ASSERT(_type == COLLECT);
+    PRECICE_ASSERT(_type == MultiscaleType::COLLECT);
     /*
       1D vertex is assigned the averaged value over all 3D vertices at the outlet,
       but only of the effectiveCoordinate component of the velocity vector.
@@ -146,7 +146,7 @@ void AxialGeoMultiscaleMapping::tagMeshFirstRound()
   computeMapping();
 
   if (getConstraint() == CONSISTENT) {
-    PRECICE_ASSERT(_type == SPREAD, "Not yet implemented");
+    PRECICE_ASSERT(_type == MultiscaleType::SPREAD, "Not yet implemented");
     PRECICE_ASSERT(input()->vertices().size() == 1);
 
     input()->vertices()[0].tag();

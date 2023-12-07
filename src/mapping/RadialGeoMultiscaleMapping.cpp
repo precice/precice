@@ -28,15 +28,15 @@ void RadialGeoMultiscaleMapping::computeMapping()
   size_t const inSize  = input()->vertices().size();
   size_t const outSize = output()->vertices().size();
 
-  int effectiveCoordinate = _axis;
-  PRECICE_ASSERT(effectiveCoordinate == MultiscaleAxis::X ||
-                     effectiveCoordinate == MultiscaleAxis::Y ||
-                     effectiveCoordinate == MultiscaleAxis::Z,
+  int effectiveCoordinate = static_cast<std::underlying_type_t<MultiscaleType>>(_axis);
+  PRECICE_ASSERT(effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::X) ||
+                     effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Y) ||
+                     effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Z),
                  "Unknown multiscale axis type.")
 
   if (getConstraint() == CONSISTENT) {
     PRECICE_DEBUG("Compute consistent mapping");
-    if (_type == SPREAD) {
+    if (_type == MultiscaleType::SPREAD) {
       // Determine principle axis midpoints as borders to assign 3D vertices to their respective 1D vertex
       Eigen::VectorXd axisMidpoints(inSize);
       auto &          inputVerticesRef = input()->vertices();
@@ -69,7 +69,7 @@ void RadialGeoMultiscaleMapping::computeMapping()
         _vertexIndicesSpread.push_back(index);
       }
     } else {
-      PRECICE_ASSERT(_type == COLLECT)
+      PRECICE_ASSERT(_type == MultiscaleType::COLLECT)
       /*
         3D vertices are projected onto the 1D axis and the data is then mapped
         to (and averaged at) the nearest 1D vertex in projection space.
@@ -154,13 +154,13 @@ void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen
   PRECICE_ASSERT(valueDimensions == 1);
 
   PRECICE_DEBUG("Map consistent");
-  if (_type == SPREAD) {
+  if (_type == MultiscaleType::SPREAD) {
     // assign 1D vertex value to all 3D vertices in vicinity
     for (size_t i = 0; i < outSize; i++) {
       outputValues((i * valueDimensions)) = inputValues(_vertexIndicesSpread[i]);
     }
   } else {
-    PRECICE_ASSERT(_type == COLLECT);
+    PRECICE_ASSERT(_type == MultiscaleType::COLLECT);
     /*
       3D vertices are projected onto the 1D axis and the data is then mapped
       to (and averaged at) the nearest 1D vertex in projection space.
@@ -188,7 +188,7 @@ void RadialGeoMultiscaleMapping::tagMeshFirstRound()
   computeMapping();
 
   if (getConstraint() == CONSISTENT) {
-    PRECICE_ASSERT(_type == SPREAD, "Not yet implemented");
+    PRECICE_ASSERT(_type == MultiscaleType::SPREAD, "Not yet implemented");
 
     // tag all vertices of the 1D mesh
     size_t const inSize = input()->vertices().size();

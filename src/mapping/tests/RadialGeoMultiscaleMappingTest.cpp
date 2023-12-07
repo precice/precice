@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadX)
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::RadialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::RadialGeoMultiscaleMapping::SPREAD, mapping::RadialGeoMultiscaleMapping::X);
+  precice::mapping::RadialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::RadialGeoMultiscaleMapping::MultiscaleType::SPREAD, mapping::RadialGeoMultiscaleMapping::MultiscaleAxis::X);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::RadialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::RadialGeoMultiscaleMapping::SPREAD, mapping::RadialGeoMultiscaleMapping::Z);
+  precice::mapping::RadialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::RadialGeoMultiscaleMapping::MultiscaleType::SPREAD, mapping::RadialGeoMultiscaleMapping::MultiscaleAxis::Z);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectX)
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::RadialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::RadialGeoMultiscaleMapping::COLLECT, mapping::RadialGeoMultiscaleMapping::X);
+  precice::mapping::RadialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::RadialGeoMultiscaleMapping::MultiscaleType::COLLECT, mapping::RadialGeoMultiscaleMapping::MultiscaleAxis::X);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::RadialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::RadialGeoMultiscaleMapping::COLLECT, mapping::RadialGeoMultiscaleMapping::Z);
+  precice::mapping::RadialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::RadialGeoMultiscaleMapping::MultiscaleType::COLLECT, mapping::RadialGeoMultiscaleMapping::MultiscaleAxis::Z);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
