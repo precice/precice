@@ -153,7 +153,7 @@ void AxialGeoMultiscaleMapping::tagMeshFirstRound()
     PRECICE_ASSERT(_type == MultiscaleType::SPREAD, "Not yet implemented");
     PRECICE_ASSERT(input()->vertices().size() == 1);
 
-    input()->vertices()[0].tag();
+    input()->tagAll();
 
   } else {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
