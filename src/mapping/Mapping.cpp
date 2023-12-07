@@ -133,10 +133,6 @@ void Mapping::map(int inputDataID,
                  input()->getDimensions(), output()->getDimensions());
   PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
                  getDimensions(), output()->getDimensions());
-  PRECICE_ASSERT((input()->data(inputDataID)->getDimensions() == output()->data(outputDataID)->getDimensions()) ||
-                     (input()->data(inputDataID)->getDimensions() == output()->data(outputDataID)->getDimensions() / 3) ||
-                     (input()->data(inputDataID)->getDimensions() == output()->data(outputDataID)->getDimensions() * 3),
-                 input()->data(inputDataID)->getDimensions(), output()->data(outputDataID)->getDimensions());
   PRECICE_ASSERT(input()->data(inputDataID)->values().size() / input()->data(inputDataID)->getDimensions() == static_cast<int>(input()->vertices().size()),
                  input()->data(inputDataID)->values().size(), input()->data(inputDataID)->getDimensions(), input()->vertices().size());
   PRECICE_ASSERT(output()->data(outputDataID)->values().size() / output()->data(outputDataID)->getDimensions() == static_cast<int>(output()->vertices().size()),
