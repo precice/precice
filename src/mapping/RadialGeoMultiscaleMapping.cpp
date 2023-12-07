@@ -96,10 +96,8 @@ void RadialGeoMultiscaleMapping::computeMapping()
       }
       axisMidpoints(outSize - 1) = std::numeric_limits<double>::max(); // large number, such that vertices after the last midpoint are still assigned
 
-      Eigen::VectorXd counter(outSize); // counts number of vertices in between midpoints for averaging
-      for (size_t i = 0; i < outSize; i++) {
-        counter(i) = 0;
-      }
+      Eigen::VectorXi counters(outSize); // counts number of vertices in between midpoints for averaging
+      counters = Eigen::VectorXi::Zero(outSize);
 
       // assign the 1D vertex the average of all 3D vertex values in vicinity
       _vertexIndicesCollect.clear();
@@ -112,9 +110,9 @@ void RadialGeoMultiscaleMapping::computeMapping()
           PRECICE_ASSERT(index < static_cast<int>(outSize));
         }
         _vertexIndicesCollect.push_back(index);
-        counter(index) += 1;
+        counters(index) += 1;
       }
-      _vertexCounter = std::move(counter);
+      _vertexCounter = std::move(counters);
     }
 
   } else {
@@ -171,7 +169,6 @@ void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen
     */
     PRECICE_ASSERT(outputValues.size() == static_cast<int>(output()->vertices().size()), outputValues.size(), valueDimensions, output()->vertices().size());
 
-    Eigen::VectorXd counter(outSize); // set output to zero
     for (size_t i = 0; i < outSize; i++) {
       outputValues((i * valueDimensions)) = 0;
     }
