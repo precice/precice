@@ -22,7 +22,7 @@
       direction="read"
       multiscale-type="spread"
       multiscale-radius=""
-      multiscale-axis="Z"
+      multiscale-axis="z"
       from="Mesh1D"
       to="Mesh3D"
       constraint="consistent" />

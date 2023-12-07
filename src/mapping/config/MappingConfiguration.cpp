@@ -234,9 +234,11 @@ MappingConfiguration::MappingConfiguration(
                             .setDocumentation("If enabled, places the cluster centers at the closest vertex of the input mesh. Should be enabled in case of non-uniform point distributions such as for shell structures.");
 
   auto attrGeoMultiscaleType = XMLAttribute<std::string>(ATTR_GEOMETRIC_MULTISCALE_TYPE)
-                                   .setDocumentation("Type of geometric multiscale mapping. Either 'spread' or 'collect'.");
+                                   .setDocumentation("Type of geometric multiscale mapping. Either 'spread' or 'collect'.")
+                                   .setOptions({GEOMETRIC_MULTISCALE_TYPE_SPREAD, GEOMETRIC_MULTISCALE_TYPE_COLLECT});
   auto attrGeoMultiscaleAxis = XMLAttribute<std::string>(ATTR_GEOMETRIC_MULTISCALE_AXIS)
-                                   .setDocumentation("Principle axis along which geometric multiscale mapping is performed.");
+                                   .setDocumentation("Principle axis along which geometric multiscale mapping is performed.")
+                                   .setOptions({GEOMETRIC_MULTISCALE_AXIS_X, GEOMETRIC_MULTISCALE_AXIS_Y, GEOMETRIC_MULTISCALE_AXIS_Z});
   auto attrGeoMultiscaleRadius = XMLAttribute<double>(ATTR_GEOMETRIC_MULTISCALE_RADIUS)
                                      .setDocumentation("Radius of the circular interface between the 1D and 3D participant.");
 
@@ -582,11 +584,11 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
     // Convert strings into enums
     AxialGeoMultiscaleMapping::MultiscaleAxis multiscaleAxis;
-    if (geoMultiscaleAxis == "X") {
+    if (geoMultiscaleAxis == "x") {
       multiscaleAxis = AxialGeoMultiscaleMapping::MultiscaleAxis::X;
-    } else if (geoMultiscaleAxis == "Y") {
+    } else if (geoMultiscaleAxis == "y") {
       multiscaleAxis = AxialGeoMultiscaleMapping::MultiscaleAxis::Y;
-    } else if (geoMultiscaleAxis == "Z") {
+    } else if (geoMultiscaleAxis == "z") {
       multiscaleAxis = AxialGeoMultiscaleMapping::MultiscaleAxis::Z;
     } else {
       PRECICE_UNREACHABLE("Unknown geometric multiscale axis \"{}\".", geoMultiscaleAxis);
@@ -612,11 +614,11 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
 
     // Convert strings into enums
     RadialGeoMultiscaleMapping::MultiscaleAxis multiscaleAxis;
-    if (geoMultiscaleAxis == "X") {
+    if (geoMultiscaleAxis == "x") {
       multiscaleAxis = RadialGeoMultiscaleMapping::MultiscaleAxis::X;
-    } else if (geoMultiscaleAxis == "Y") {
+    } else if (geoMultiscaleAxis == "y") {
       multiscaleAxis = RadialGeoMultiscaleMapping::MultiscaleAxis::Y;
-    } else if (geoMultiscaleAxis == "Z") {
+    } else if (geoMultiscaleAxis == "z") {
       multiscaleAxis = RadialGeoMultiscaleMapping::MultiscaleAxis::Z;
     } else {
       PRECICE_UNREACHABLE("Unknown geometric multiscale axis \"{}\".", geoMultiscaleAxis);

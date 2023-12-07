@@ -20,7 +20,7 @@
       direction="read"
       multiscale-type="collect"
       multiscale-radius="1.0"
-      multiscale-axis="Z"
+      multiscale-axis="z"
       from="Mesh3D"
       to="Mesh1D"
       constraint="consistent" />
@@ -35,7 +35,7 @@
       direction="read"
       multiscale-type="spread"
       multiscale-radius="1.0"
-      multiscale-axis="Z"
+      multiscale-axis="z"
       from="Mesh1D"
       to="Mesh3D"
       constraint="consistent" />
