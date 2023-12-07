@@ -16,11 +16,11 @@ public:
    * A geometric multiscale mapping can either go from the 1D to the 2D/3D solver. Then, we call it "spread".
    * Or from the 2D/3D to the 1D solver, which we call "collect".
    */
-  enum MultiscaleType {
+  enum struct MultiscaleType {
     SPREAD,
     COLLECT
   };
-  enum MultiscaleAxis {
+  enum struct MultiscaleAxis {
     X = 0,
     Y = 1,
     Z = 2
