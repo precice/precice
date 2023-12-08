@@ -26,14 +26,103 @@ namespace precice {
 using string_view = ::precice::span<const char>;
 
 /**
- * @brief Main Application Programming Interface of preCICE
+ * @brief Main Application Programming Interface of preCICE. Include using  `#include <precice/precice.hpp>`.
  *
- * To adapt a solver to preCICE, follow the following main structure:
+ * @hidecollaborationgraph
  *
- * -# Create an object of Participant with Participant()
- * -# Initialize preCICE with Participant::initialize()
- * -# Advance to the next (time)step with Participant::advance()
- * -# Finalize preCICE with Participant::finalize()
+ * The flow of the API looks as follows:
+ *
+ * @startuml
+ * skinparam conditionEndStyle hline
+ * start
+ * :Participant();
+ * note right: Create a participant
+ * :setMeshVertices();
+ * note right: Define your meshes
+ * rectangle {
+ * note right
+ * //Define mesh connectivity//
+ * ----
+ * Only required for
+ * * projection mappings
+ * * cell mappings
+ * * watch integrals
+ * * scaled-consistent mappings
+ * end note
+ * if ( requiresMeshConnectivityFor()) then (yes)
+ * :setMeshEdges()
+ * setMeshTriangles()
+ * setMeshTetrahedra();
+ * else (no)
+ * endif
+ * }
+ *
+ * rectangle {
+ *
+ * note right
+ * //Provide initial data//
+ * ----
+ * Only required for non-zero
+ * boundary conditions.
+ * end note
+ *
+ * if (requiresInitialData()) then (yes)
+ * :writeData();
+ * else (no)
+ * endif
+ * }
+ *
+ * :initialize();
+ * note right: Initialize coupling
+ *
+ * while (isCouplingOnGoing()) is (yes)
+ *
+ * rectangle {
+ * note right
+ * //Implicit coupling//
+ * ----
+ * New time window
+ * Save solver state
+ * end note
+ * if (requiresWritingCheckpoint()) then (yes)
+ * :solver writes checkpoint;
+ * else (no)
+ * endif
+ * }
+ *
+ * :precice_dt = getMaxTimeStepSize()
+ * solver_dt = solverGetAdaptiveDt()
+ * dt = min(precice_dt, solver_dt);
+ * note right: Agree on time step size
+ *
+ * :readData()
+ * solverDoTimeStep(dt)
+ * writeData()
+ * advance(dt);
+ * note right: Compute time step
+ *
+ * rectangle {
+ * note right
+ * //Implicit coupling//
+ * ----
+ * Iteration didn't converge
+ * Restore solver state
+ * ----
+ * Iteration converged
+ * Move solver to next time window
+ * end note
+ * if (requiresReadingCheckpoint()) then (yes)
+ * :solver reads checkpoint;
+ * else (no)
+ * :solver moves in time;
+ * endif
+ * }
+ *
+ * endwhile (no)
+ *
+ * stop
+ * @enduml
+ *
  *
  *  @note
  *  We use solver, simulation code, and participant as synonyms.
@@ -41,8 +130,23 @@ using string_view = ::precice::span<const char>;
  */
 class PRECICE_API Participant {
 public:
-  ///@name Construction and Configuration
-  ///@{
+  /**
+   * @name Construction and Configuration
+   *
+   * The API of preCICE is accessible via the \ref Participant class.
+   * A constructed \ref Participant directly corresponds to a participant in the configuration file.
+   *
+   * Constructors require defining the parallel context of the Participant by providing
+   * index and size of the current process, which are equivalent to rank and size in the MPI terminology.
+   *
+   * If preCICE is compiled with MPI, then there are multiple ways for it to be used:
+   * 1. if the participant is configured to use an intra-comm using sockets, preCICE ignores MPI
+   * 2. if a custom communicator is provided, preCICE uses it
+   * 3. if MPI is already initialized, preCICE uses the MPI_COMM_WORLD
+   * 4. otherwise, preCICE initializes MPI itself and uses the MPI_COMM_WORLD
+   *
+   * @{
+   */
 
   /**
    * @brief Constructs a Participant for the given participant
@@ -84,24 +188,35 @@ public:
 
   ///@}
 
-  /// @name Steering Methods
-  ///@{
+  /** @name Steering Methods
+   *
+   * The steering methods are responsible for the coupling logic in preCICE.
+   *
+   * 1. \ref initialize() connects participants, handles partitioned meshes, initializes coupling data, and computes mappings.
+   * 2. \ref advance() steps the participant forwards in time, exchanging data, applying acceleration,
+   * and transparently handling subcycling as well as implicit coupling.
+   * 3. \ref finalize() closes down communication and optionally waits for other participants.
+   * This is implicitly called in \ref ~Participant().
+   *
+   * @{
+   */
 
   /**
    * @brief Fully initializes preCICE and coupling data.
    *
    * - Sets up a connection to the other participants of the coupled simulation.
-   * - Creates all meshes, solver meshes need to be submitted before.
+   * - Pre-processes defined meshes and handles partitions in parallel.
    * - Receives first coupling data. The starting values for coupling data are zero by default.
    * - Determines maximum allowed size of the first time step to be computed.
-   *
-   * @see getMaxTimeStepSize
    *
    * @pre initialize() has not yet been called.
    *
    * @post Parallel communication to the coupling partner(s) is setup.
    * @post Meshes are exchanged between coupling partners and the parallel partitions are created.
    * @post Initial coupling data was exchanged.
+   *
+   * @see getMaxTimeStepSize()
+   * @see requiresInitialData()
    */
   void initialize();
 
@@ -162,8 +277,97 @@ public:
 
   ///@}
 
-  ///@name Status Queries
-  ///@{
+  /** @name Implicit Coupling
+   *
+   * These functions are only required when you configure implicit coupling schemes.
+   *
+   * Implicitly-coupled solvers may iterate each time step until convergence is achieved.
+   * This generally results in an outer loop handling time steps and an inner loop handling iterations.
+   *
+   * The preCICE abstracts the inner loop away by managing the iteration logic in advance.
+   * If implicit coupling is configured, the adapter is required to either read or
+   * write checkpoints using the API \ref requiresWritingCheckpoint() and \ref requiresReadingCheckpoint().
+   *
+   * The general flow looks as follows:
+   *
+   * @startuml
+   * skinparam ConditionEndStyle hline
+   * start
+   * :initialize();
+   *
+   * while (isCouplingOngoing()) is (yes)
+   *
+   * if (requiresWritingCheckpoint()) then (yes)
+   * :save solver checkpoint;
+   * else (no)
+   * endif
+   *
+   * :readData()
+   * solve time step
+   * writeData()
+   * advance();
+   *
+   * if (requiresReadingCheckpoint()) then (yes)
+   * : restore solver checkpoint;
+   * else (no)
+   * :move to next time window;
+   * endif
+   *
+   *
+   * endwhile (no)
+   *
+   * stop
+   *
+   * @enduml
+   *
+   *
+   * @{
+   */
+
+  /** Checks if the participant is required to write an iteration checkpoint.
+   *
+   * If true, the participant is required to write an iteration checkpoint before
+   * calling advance().
+   *
+   * preCICE refuses to proceed if writing a checkpoint is required,
+   * but this method isn't called prior to advance().
+   *
+   * @pre initialize() has been called
+   *
+   * @see requiresReadingCheckpoint()
+   */
+  bool requiresWritingCheckpoint();
+
+  /** Checks if the participant is required to read an iteration checkpoint.
+   *
+   * If true, the participant is required to read an iteration checkpoint before
+   * calling advance().
+   *
+   * preCICE refuses to proceed if reading a checkpoint is required,
+   * but this method isn't called prior to advance().
+   *
+   * @note This function returns false before the first call to advance().
+   *
+   * @pre initialize() has been called
+   *
+   * @see requiresWritingCheckpoint()
+   */
+  bool requiresReadingCheckpoint();
+
+  ///@}
+
+  /**
+   * @name Status Queries
+   *
+   * In addition to the steering methods, the participant still needs some information regarding the coupling state.
+   * Use \ref isCouplingOngoing() to check if the simulation has reached its end.
+   * Control your time stepping using \ref getMaxTimeStepSize().
+   *
+   * To correctly size input and output buffers, you can access the dimensionality
+   * of meshes using \ref getMeshDimensions() and data using \ref getDataDimensions().
+   *
+   * @{
+   */
 
   /**
    * @brief Returns the spatial dimensionality of the given mesh.
@@ -238,50 +442,6 @@ public:
    * @pre initialize() has been called successfully.
    */
   double getMaxTimeStepSize() const;
-
-  ///@}
-
-  ///@name Requirements
-  ///@{
-
-  /** Checks if the participant is required to provide initial data.
-   *
-   * If true, then the participant needs to write initial data to defined vertices
-   * prior to calling initialize().
-   *
-   * @pre initialize() has not yet been called
-   */
-  bool requiresInitialData();
-
-  /** Checks if the participant is required to write an iteration checkpoint.
-   *
-   * If true, the participant is required to write an iteration checkpoint before
-   * calling advance().
-   *
-   * preCICE refuses to proceed if writing a checkpoint is required,
-   * but this method isn't called prior to advance().
-   *
-   * @pre initialize() has been called
-   *
-   * @see requiresReadingCheckpoint()
-   */
-  bool requiresWritingCheckpoint();
-
-  /** Checks if the participant is required to read an iteration checkpoint.
-   *
-   * If true, the participant is required to read an iteration checkpoint before
-   * calling advance().
-   *
-   * preCICE refuses to proceed if reading a checkpoint is required,
-   * but this method isn't called prior to advance().
-   *
-   * @note This function returns false before the first call to advance().
-   *
-   * @pre initialize() has been called
-   *
-   * @see requiresWritingCheckpoint()
-   */
-  bool requiresReadingCheckpoint();
 
   ///@}
 
@@ -555,8 +715,38 @@ public:
 
   ///@}
 
-  ///@name Data Access
-  ///@{
+  /**
+   * @name Data Access
+   *
+   * Data in preCICE is always associated to vertices on a \ref precice-mesh-access "defined mesh".
+   * Use \ref getDataDimensions() to get the dimensionality of a data on a mesh.
+   *
+   * In each time step, you can access data on a mesh using \ref writeData() and \ref readData().
+   * Calling \ref advance() may use written data to create a new sample in time, maps data between meshes, and communicates between participants.
+   *
+   * If you perform multiple time steps per time window, then preCICE may decide to keep samples of written data
+   * to enable configured higher-order time interpolation in coupled participants.
+   * The time interpolation is implemented by the relative time in \ref readData().
+   * Written data is reset to 0 after each call to \ref advance().
+   *
+   * All data is initialized to 0 by default.
+   * If you configure preCICE to provide custom initial data, then participants need to provide this data before calling \ref initialize().
+   * After you defined the meshes, use \ref requiresInitialData() to check if initial data is required.
+   * Then use \ref writeData() to specify your initial data and continue to \ref initialize().
+   *
+   * @{
+   */
+
+  /** Checks if the participant is required to provide initial data.
+   *
+   * If true, then the participant needs to write initial data to defined vertices
+   * prior to calling initialize().
+   *
+   * @note If initial data is configured, then this function **needs** to be called.
+   *
+   * @pre initialize() has not yet been called
+   */
+  bool requiresInitialData();
 
   /**
    * @brief Writes data to a mesh.
@@ -627,6 +817,16 @@ public:
   ///@}
 
   /** @name Direct Access
+   *
+   * If you want or need to provide your own data mapping scheme, then you
+   * can use direct mesh access to directly modify data on a received mesh.
+   *
+   * This requires to specify a region of interest using \ref setMeshAccessRegion() before calling \ref initialize().
+   *
+   * After \ref initialize(), you can use \ref getMeshVertexIDsAndCoordinates() to receive information on the received mesh.
+   * Use the coordinates to compute your own data mapping scheme, and use the vertex IDs to read data form and write data to the mesh.
+   *
+   * @{
    */
 
   /**
@@ -637,8 +837,6 @@ public:
    *        navigate manually to the page  Docs->Couple your code
    *        -> Advanced topics -> Accessing received meshes directly for
    *        a comprehensive documentation
-   *
-   * @experimental
    *
    * This function is required if you don't want to use the mapping
    * schemes in preCICE, but rather want to use your own solver for
@@ -695,8 +893,6 @@ public:
    *        interest defined by bounding boxes and reads the corresponding
    *        coordinates omitting the mapping.
    *
-   * @experimental
-   *
    * @param[in]  meshName corresponding mesh name
    * @param[out] ids ids corresponding to the coordinates
    * @param[out] coordinates the coordinates associated to the \p ids and
@@ -717,6 +913,8 @@ public:
       ::precice::string_view    meshName,
       ::precice::span<VertexID> ids,
       ::precice::span<double>   coordinates) const;
+
+  ///@}
 
   /** @name Experimental: Gradient Data
    * These API functions are \b experimental and may change in future versions.
