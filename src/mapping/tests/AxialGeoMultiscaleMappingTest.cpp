@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadX)
   */
 
   PRECICE_TEST(1_rank);
-  int dimensions = 3;
+  constexpr int dimensions = 3;
   using testing::equals;
 
   // Create mesh to map from
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
   */
 
   PRECICE_TEST(1_rank);
-  int dimensions = 3;
+  constexpr int dimensions = 3;
   using testing::equals;
 
   // Create mesh to map from
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectX)
   */
 
   PRECICE_TEST(1_rank);
-  int dimensions = 3;
+  constexpr int dimensions = 3;
   using testing::equals;
 
   // Create mesh to map from
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
   */
 
   PRECICE_TEST(1_rank);
-  int dimensions = 3;
+  constexpr int dimensions = 3;
   using testing::equals;
 
   // Create mesh to map from
