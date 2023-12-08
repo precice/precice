@@ -34,19 +34,13 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadX)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int     inDataID = inData->getID();
   inMesh->createVertex(Eigen::Vector3d::Constant(0.0));
   inMesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
   inMesh->createVertex(Eigen::Vector3d(6.0, 0.0, 0.0));
   inMesh->allocateDataValues();
-  Eigen::VectorXd &inValues = inData->values();
-  inValues << 1.0, 2.0, 3.0;
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData   = outMesh->createData("OutData", 1, 2_dataID);
-  int     outDataID = outData->getID();
   outMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0)); // closest to first 1D vertex
   outMesh->createVertex(Eigen::Vector3d(0.5, 0.5, 0.0)); // closest to first 1D vertex
   outMesh->createVertex(Eigen::Vector3d(4.0, 2.0, 0.0)); // closest to second 1D vertex
@@ -60,19 +54,27 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadX)
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
+  // Create data to map
+  Eigen::VectorXd inValues(9);
+  inValues << 1.0, 0.0, 0.0,
+      2.0, 0.0, 0.0,
+      3.0, 0.0, 0.0;
+  const time::Sample inSample{3, inValues};
+  Eigen::VectorXd    outValues(18);
+  outValues = Eigen::VectorXd::Zero(18);
+
   // Map data
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  const Eigen::VectorXd &outValues = outData->values();
+  mapping.map(inSample, outValues);
 
   // Check if data is mapped to closest vertex
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(outValues(0) == inValues(0));
-  BOOST_TEST(outValues(1) == inValues(0));
-  BOOST_TEST(outValues(2) == inValues(1));
-  BOOST_TEST(outValues(3) == inValues(1));
-  BOOST_TEST(outValues(4) == inValues(2));
-  BOOST_TEST(outValues(5) == inValues(2));
+  BOOST_TEST(outValues(0) == inSample.values(0));
+  BOOST_TEST(outValues(3) == inSample.values(0));
+  BOOST_TEST(outValues(6) == inSample.values(3));
+  BOOST_TEST(outValues(6) == inSample.values(3));
+  BOOST_TEST(outValues(12) == inSample.values(6));
+  BOOST_TEST(outValues(15) == inSample.values(6));
 }
 
 BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
@@ -90,19 +92,13 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int     inDataID = inData->getID();
   inMesh->createVertex(Eigen::Vector3d::Constant(0.0));
   inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 3.0));
   inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 6.0));
   inMesh->allocateDataValues();
-  Eigen::VectorXd &inValues = inData->values();
-  inValues << 1.0, 2.0, 3.0;
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData   = outMesh->createData("OutData", 1, 2_dataID);
-  int     outDataID = outData->getID();
   outMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 1.0)); // closest to first 1D vertex
   outMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.5)); // closest to first 1D vertex
   outMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 4.0)); // closest to second 1D vertex
@@ -116,19 +112,27 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
+  // Create data to map
+  Eigen::VectorXd inValues(9);
+  inValues << 1.0, 0.0, 0.0,
+      2.0, 0.0, 0.0,
+      3.0, 0.0, 0.0;
+  const time::Sample inSample{3, inValues};
+  Eigen::VectorXd    outValues(18);
+  outValues = Eigen::VectorXd::Zero(18);
+
   // Map data
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  const Eigen::VectorXd &outValues = outData->values();
+  mapping.map(inSample, outValues);
 
   // Check if data is mapped to closest vertex
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(outValues(0) == inValues(0));
-  BOOST_TEST(outValues(1) == inValues(0));
-  BOOST_TEST(outValues(2) == inValues(1));
-  BOOST_TEST(outValues(3) == inValues(1));
-  BOOST_TEST(outValues(4) == inValues(2));
-  BOOST_TEST(outValues(5) == inValues(2));
+  BOOST_TEST(outValues(0) == inSample.values(0));
+  BOOST_TEST(outValues(3) == inSample.values(0));
+  BOOST_TEST(outValues(6) == inSample.values(3));
+  BOOST_TEST(outValues(9) == inSample.values(3));
+  BOOST_TEST(outValues(12) == inSample.values(6));
+  BOOST_TEST(outValues(15) == inSample.values(6));
 }
 
 BOOST_AUTO_TEST_CASE(testConsistentCollectX)
@@ -146,8 +150,6 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectX)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int     inDataID = inData->getID();
   inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
   inMesh->createVertex(Eigen::Vector3d(1.0, 2.0, 0.0));
   inMesh->createVertex(Eigen::Vector3d(2.0, 1.0, 0.0));
@@ -155,13 +157,9 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectX)
   inMesh->createVertex(Eigen::Vector3d(5.0, 2.0, 0.0));
   inMesh->createVertex(Eigen::Vector3d(7.0, 1.0, 0.0));
   inMesh->allocateDataValues();
-  Eigen::VectorXd &inValues = inData->values();
-  inValues << 1.0, 3.0, 5.0, 7.0, 2.0, 4.0;
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData   = outMesh->createData("OutData", 1, 2_dataID);
-  int     outDataID = outData->getID();
   outMesh->createVertex(Eigen::Vector3d::Constant(0.0));
   outMesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
   outMesh->createVertex(Eigen::Vector3d(6.0, 0.0, 0.0));
@@ -172,16 +170,27 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectX)
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
+  // Create data to map
+  Eigen::VectorXd inValues(18);
+  inValues << 1.0, 0.0, 0.0,
+      3.0, 0.0, 0.0,
+      5.0, 0.0, 0.0,
+      7.0, 0.0, 0.0,
+      2.0, 0.0, 0.0,
+      4.0, 0.0, 0.0;
+  const time::Sample inSample{3, inValues};
+  Eigen::VectorXd    outValues(9);
+  outValues = Eigen::VectorXd::Zero(9);
+
   // Map data
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  const Eigen::VectorXd &outValues = outData->values();
+  mapping.map(inSample, outValues);
 
   // Check if data is mapped to closest vertex
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(outValues(0) == (inValues(0) + inValues(1)) / 2);
-  BOOST_TEST(outValues(1) == (inValues(2) + inValues(3)) / 2);
-  BOOST_TEST(outValues(2) == (inValues(4) + inValues(5)) / 2);
+  BOOST_TEST(outValues(0) == (inSample.values(0) + inSample.values(3)) / 2);
+  BOOST_TEST(outValues(3) == (inSample.values(6) + inSample.values(9)) / 2);
+  BOOST_TEST(outValues(6) == (inSample.values(12) + inSample.values(15)) / 2);
 }
 
 BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
@@ -198,8 +207,6 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
-  int     inDataID = inData->getID();
   inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 1.0));
   inMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 1.0));
   inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 2.0));
@@ -207,13 +214,9 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
   inMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 5.0));
   inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 7.0));
   inMesh->allocateDataValues();
-  Eigen::VectorXd &inValues = inData->values();
-  inValues << 1.0, 3.0, 5.0, 7.0, 2.0, 4.0;
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData   = outMesh->createData("OutData", 1, 2_dataID);
-  int     outDataID = outData->getID();
   outMesh->createVertex(Eigen::Vector3d::Constant(0.0));
   outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 3.0));
   outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 6.0));
@@ -224,16 +227,27 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
+  // Create data to map
+  Eigen::VectorXd inValues(18);
+  inValues << 1.0, 0.0, 0.0,
+      3.0, 0.0, 0.0,
+      5.0, 0.0, 0.0,
+      7.0, 0.0, 0.0,
+      2.0, 0.0, 0.0,
+      4.0, 0.0, 0.0;
+  const time::Sample inSample{3, inValues};
+  Eigen::VectorXd    outValues(9);
+  outValues = Eigen::VectorXd::Zero(9);
+
   // Map data
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  const Eigen::VectorXd &outValues = outData->values();
+  mapping.map(inSample, outValues);
 
   // Check if data is mapped to closest vertex
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(outValues(0) == (inValues(0) + inValues(1)) / 2);
-  BOOST_TEST(outValues(1) == (inValues(2) + inValues(3)) / 2);
-  BOOST_TEST(outValues(2) == (inValues(4) + inValues(5)) / 2);
+  BOOST_TEST(outValues(0) == (inSample.values(0) + inSample.values(3)) / 2);
+  BOOST_TEST(outValues(3) == (inSample.values(6) + inSample.values(9)) / 2);
+  BOOST_TEST(outValues(6) == (inSample.values(12) + inSample.values(15)) / 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
