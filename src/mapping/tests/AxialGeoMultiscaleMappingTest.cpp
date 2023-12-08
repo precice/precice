@@ -33,41 +33,41 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadX)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData   = inMesh->createData("InData", 3, 0_dataID);
-  int     inDataID = inData->getID();
   inMesh->createVertex(Eigen::Vector3d::Constant(0.0));
   inMesh->allocateDataValues();
-  Eigen::VectorXd &inValues = inData->values();
-  inValues << 2.0, 0.0, 0.0;
-
-  double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData   = outMesh->createData("OutData", 3, 2_dataID);
-  int     outDataID = outData->getID();
   outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // center, equal to incoming mesh node
   outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0)); // distance of 1.0 = r to center
   outMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // distance of 0.5 = r/2 to center
   outMesh->allocateDataValues();
+
+  double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
   // Setup mapping with mapping coordinates and geometry used
   precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::MultiscaleType::SPREAD, mapping::AxialGeoMultiscaleMapping::MultiscaleAxis::X, radius);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
+  // Create data to map
+  Eigen::VectorXd inValues(3);
+  inValues << 2.0, 0.0, 0.0;
+  const time::Sample inSample{3, inValues};
+  Eigen::VectorXd    outValues(9);
+  outValues = Eigen::VectorXd::Zero(9);
+
   // Map data
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  const Eigen::VectorXd &outValues = outData->values();
+  mapping.map(inSample, outValues);
 
   // Check if x axis data is doubled at center node
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(outValues(0) == 2 * inValues(0));
+  BOOST_TEST(outValues(0) == 2 * inSample.values(0));
   // Check if x axis data at distance = r is equal to zero
   BOOST_TEST(outValues(3) == 0.0);
   // Check if x axis data at distance = r/2 is 3/2 times invalue data
-  BOOST_TEST(outValues(6) == 1.5 * inValues(0));
+  BOOST_TEST(outValues(6) == 1.5 * inSample.values(0));
 }
 
 BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
@@ -84,41 +84,41 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData   = inMesh->createData("InData", 3, 0_dataID);
-  int     inDataID = inData->getID();
   inMesh->createVertex(Eigen::Vector3d::Constant(0.0));
   inMesh->allocateDataValues();
-  Eigen::VectorXd &inValues = inData->values();
-  inValues << 0.0, 0.0, 2.0;
-
-  double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData   = outMesh->createData("OutData", 3, 2_dataID);
-  int     outDataID = outData->getID();
   outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // center, equal to incoming mesh node
   outMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)); // distance of 1.0 = r to center
   outMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // distance of 0.5 = r/2 to center
   outMesh->allocateDataValues();
+
+  double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
   // Setup mapping with mapping coordinates and geometry used
   precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::MultiscaleType::SPREAD, mapping::AxialGeoMultiscaleMapping::MultiscaleAxis::Z, radius);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
+  // Create data to map
+  Eigen::VectorXd inValues(3);
+  inValues << 0.0, 0.0, 2.0;
+  const time::Sample inSample{3, inValues};
+  Eigen::VectorXd    outValues(9);
+  outValues = Eigen::VectorXd::Zero(9);
+
   // Map data
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  const Eigen::VectorXd &outValues = outData->values();
+  mapping.map(inSample, outValues);
 
   // Check if x axis data is doubled at center node
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(outValues(2) == 2 * inValues(2));
+  BOOST_TEST(outValues(2) == 2 * inSample.values(2));
   // Check if x axis data at distance = r is equal to zero
   BOOST_TEST(outValues(5) == 0.0);
   // Check if x axis data at distance = r/2 is 3/2 times invalue data
-  BOOST_TEST(outValues(8) == 1.5 * inValues(2));
+  BOOST_TEST(outValues(8) == 1.5 * inSample.values(2));
 }
 
 BOOST_AUTO_TEST_CASE(testConsistentCollectX)
@@ -135,37 +135,37 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectX)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData   = inMesh->createData("InData", 3, 0_dataID);
-  int     inDataID = inData->getID();
   inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // center
   inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0)); // distance of 1.0 = r to center
   inMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // distance of 0.5 = r/2 to center
   inMesh->allocateDataValues();
-  Eigen::VectorXd &inValues = inData->values();
-  inValues << 1.0, 0.0, 0.0, 2.0, 0.0, 0.0, 3.0, 0.0, 0.0;
-
-  double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData   = outMesh->createData("OutData", 3, 2_dataID);
-  int     outDataID = outData->getID();
   outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // equal to center of incoming mesh
   outMesh->allocateDataValues();
+
+  double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
   // Setup mapping with mapping coordinates and geometry used
   precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::MultiscaleType::COLLECT, mapping::AxialGeoMultiscaleMapping::MultiscaleAxis::X, radius);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
+  // Create data to map
+  Eigen::VectorXd inValues(9);
+  inValues << 1.0, 0.0, 0.0, 2.0, 0.0, 0.0, 3.0, 0.0, 0.0;
+  const time::Sample inSample{3, inValues};
+  Eigen::VectorXd    outValues(3);
+  outValues = Eigen::VectorXd::Zero(3);
+
   // Map data
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  const Eigen::VectorXd &outValues = outData->values();
+  mapping.map(inSample, outValues);
 
   // Check if data is averaged at center node
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(outValues(0) == (1 / 3.0) * (inValues(0) + inValues(3) + inValues(6)));
+  BOOST_TEST(outValues(0) == (1 / 3.0) * (inSample.values(0) + inSample.values(3) + inSample.values(6)));
 }
 
 BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
@@ -182,37 +182,37 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  PtrData inData   = inMesh->createData("InData", 3, 0_dataID);
-  int     inDataID = inData->getID();
   inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // center
   inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)); // distance of 1.0 = r to center
   inMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // distance of 0.5 = r/2 to center
   inMesh->allocateDataValues();
-  Eigen::VectorXd &inValues = inData->values();
-  inValues << 0.0, 0.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.0, 3.0;
-
-  double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  PtrData outData   = outMesh->createData("OutData", 3, 2_dataID);
-  int     outDataID = outData->getID();
   outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // equal to center of incoming mesh
   outMesh->allocateDataValues();
+
+  double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
   // Setup mapping with mapping coordinates and geometry used
   precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::MultiscaleType::COLLECT, mapping::AxialGeoMultiscaleMapping::MultiscaleAxis::Z, radius);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
+  // Create data to map
+  Eigen::VectorXd inValues(9);
+  inValues << 0.0, 0.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.0, 3.0;
+  const time::Sample inSample{3, inValues};
+  Eigen::VectorXd    outValues(3);
+  outValues = Eigen::VectorXd::Zero(3);
+
   // Map data
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  const Eigen::VectorXd &outValues = outData->values();
+  mapping.map(inSample, outValues);
 
   // Check if data is averaged at center node
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST(outValues(2) == (1 / 3.0) * (inValues(2) + inValues(5) + inValues(8)));
+  BOOST_TEST(outValues(2) == (1 / 3.0) * (inSample.values(2) + inSample.values(5) + inSample.values(8)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
