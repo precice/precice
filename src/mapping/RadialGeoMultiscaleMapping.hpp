@@ -69,7 +69,7 @@ private:
   std::vector<int> _vertexIndicesCollect;
 
   /// counts number of vertices between midpoints for averaging
-  Eigen::VectorXi _vertexCounter;
+  std::vector<int> _vertexCounter;
 };
 
 } // namespace mapping
