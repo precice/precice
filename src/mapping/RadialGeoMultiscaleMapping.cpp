@@ -99,7 +99,7 @@ void RadialGeoMultiscaleMapping::computeMapping()
       Eigen::VectorXi counters(outSize); // counts number of vertices in between midpoints for averaging
       counters = Eigen::VectorXi::Zero(outSize);
 
-      // assign the 1D vertex the average of all 3D vertex values in vicinity
+      // Identify which vertex (index) of the 3D mesh corresponds to which vertex (index) of the 1D meesh
       _vertexIndicesCollect.clear();
       _vertexIndicesCollect.reserve(input()->vertices().size());
       for (size_t i = 0; i < inSize; i++) {

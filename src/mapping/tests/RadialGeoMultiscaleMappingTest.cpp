@@ -34,19 +34,19 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadX)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point a
-  inMesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0)); // Point b
-  inMesh->createVertex(Eigen::Vector3d(6.0, 0.0, 0.0)); // Point c
+  inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point a (1D)
+  inMesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0)); // Point b (1D)
+  inMesh->createVertex(Eigen::Vector3d(6.0, 0.0, 0.0)); // Point c (1D)
   inMesh->allocateDataValues();
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  outMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0)); // Point A : closest to Point a
-  outMesh->createVertex(Eigen::Vector3d(0.5, 0.5, 0.0)); // Point B : closest to Point a
-  outMesh->createVertex(Eigen::Vector3d(4.0, 2.0, 0.0)); // Point C : closest to Point b
-  outMesh->createVertex(Eigen::Vector3d(3.0, 1.0, 0.0)); // Point D : closest to Point b
-  outMesh->createVertex(Eigen::Vector3d(7.0, 3.0, 0.0)); // Point E : closest to Point c
-  outMesh->createVertex(Eigen::Vector3d(6.0, 2.0, 0.0)); // Point F : closest to Point c
+  outMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0)); // Point A (3D): closest to Point a
+  outMesh->createVertex(Eigen::Vector3d(0.5, 0.5, 0.0)); // Point B (3D): closest to Point a
+  outMesh->createVertex(Eigen::Vector3d(4.0, 2.0, 0.0)); // Point C (3D): closest to Point b
+  outMesh->createVertex(Eigen::Vector3d(3.0, 1.0, 0.0)); // Point D (3D): closest to Point b
+  outMesh->createVertex(Eigen::Vector3d(7.0, 3.0, 0.0)); // Point E (3D): closest to Point c
+  outMesh->createVertex(Eigen::Vector3d(6.0, 2.0, 0.0)); // Point F (3D): closest to Point c
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
@@ -69,12 +69,36 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadX)
 
   // Check if data is mapped to closest vertex
   BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // Point A (1D) == Point a (3D)
   BOOST_TEST(outValues(0) == inSample.values(0));
+  BOOST_TEST(outValues(1) == inSample.values(1));
+  BOOST_TEST(outValues(2) == inSample.values(2));
+
+  // Point B (1D) == Point a (3D)
   BOOST_TEST(outValues(3) == inSample.values(0));
+  BOOST_TEST(outValues(4) == inSample.values(1));
+  BOOST_TEST(outValues(5) == inSample.values(2));
+
+  // Point C (1D) == Point b (3D)
   BOOST_TEST(outValues(6) == inSample.values(3));
+  BOOST_TEST(outValues(7) == inSample.values(4));
+  BOOST_TEST(outValues(8) == inSample.values(5));
+
+  // Point D (1D) = Point b (3D)
   BOOST_TEST(outValues(9) == inSample.values(3));
+  BOOST_TEST(outValues(10) == inSample.values(4));
+  BOOST_TEST(outValues(11) == inSample.values(5));
+
+  // Point E (1D) == Point c (3D)
   BOOST_TEST(outValues(12) == inSample.values(6));
+  BOOST_TEST(outValues(13) == inSample.values(7));
+  BOOST_TEST(outValues(14) == inSample.values(8));
+
+  // Point F (1D) == Point c (3D)
   BOOST_TEST(outValues(15) == inSample.values(6));
+  BOOST_TEST(outValues(16) == inSample.values(7));
+  BOOST_TEST(outValues(16) == inSample.values(8));
 }
 
 BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
@@ -92,19 +116,19 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point a
-  inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 3.0)); // Point b
-  inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 6.0)); // Point c
+  inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point a (1D)
+  inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 3.0)); // Point b (1D)
+  inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 6.0)); // Point c (1D)
   inMesh->allocateDataValues();
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  outMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 1.0)); // Point A: closest to Point a
-  outMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.5)); // Point B: closest to Point a
-  outMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 4.0)); // Point C: closest to Point b
-  outMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 3.0)); // Point D: closest to Point b
-  outMesh->createVertex(Eigen::Vector3d(0.0, 3.0, 7.0)); // Point E: closest to Point c
-  outMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 6.0)); // Point F: closest to Point c
+  outMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 1.0)); // Point A (3D): closest to Point a
+  outMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.5)); // Point B (3D): closest to Point a
+  outMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 4.0)); // Point C (3D): closest to Point b
+  outMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 3.0)); // Point D (3D): closest to Point b
+  outMesh->createVertex(Eigen::Vector3d(0.0, 3.0, 7.0)); // Point E (3D): closest to Point c
+  outMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 6.0)); // Point F (3D): closest to Point c
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
@@ -127,12 +151,36 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
 
   // Check if data is mapped to closest vertex
   BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // Point A (1D) == Point a (3D)
   BOOST_TEST(outValues(0) == inSample.values(0));
+  BOOST_TEST(outValues(1) == inSample.values(1));
+  BOOST_TEST(outValues(2) == inSample.values(2));
+
+  // Point B (1D) == Point a (3D)
   BOOST_TEST(outValues(3) == inSample.values(0));
+  BOOST_TEST(outValues(4) == inSample.values(1));
+  BOOST_TEST(outValues(5) == inSample.values(2));
+
+  // Point C (1D) == Point b (3D)
   BOOST_TEST(outValues(6) == inSample.values(3));
+  BOOST_TEST(outValues(7) == inSample.values(4));
+  BOOST_TEST(outValues(8) == inSample.values(5));
+
+  // Point D (1D) = Point b (3D)
   BOOST_TEST(outValues(9) == inSample.values(3));
+  BOOST_TEST(outValues(10) == inSample.values(4));
+  BOOST_TEST(outValues(11) == inSample.values(5));
+
+  // Point E (1D) == Point c (3D)
   BOOST_TEST(outValues(12) == inSample.values(6));
+  BOOST_TEST(outValues(13) == inSample.values(7));
+  BOOST_TEST(outValues(14) == inSample.values(8));
+
+  // Point F (1D) == Point c (3D)
   BOOST_TEST(outValues(15) == inSample.values(6));
+  BOOST_TEST(outValues(16) == inSample.values(7));
+  BOOST_TEST(outValues(16) == inSample.values(8));
 }
 
 BOOST_AUTO_TEST_CASE(testConsistentCollectX)
@@ -150,19 +198,19 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectX)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0)); // Point a
-  inMesh->createVertex(Eigen::Vector3d(1.0, 2.0, 0.0)); // Point b
-  inMesh->createVertex(Eigen::Vector3d(2.0, 1.0, 0.0)); // Point c
-  inMesh->createVertex(Eigen::Vector3d(4.0, 1.0, 0.0)); // Point d
-  inMesh->createVertex(Eigen::Vector3d(5.0, 2.0, 0.0)); // Point e
-  inMesh->createVertex(Eigen::Vector3d(7.0, 1.0, 0.0)); // Point f
+  inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0)); // Point a (3D)
+  inMesh->createVertex(Eigen::Vector3d(1.0, 2.0, 0.0)); // Point b (3D)
+  inMesh->createVertex(Eigen::Vector3d(2.0, 1.0, 0.0)); // Point c (3D)
+  inMesh->createVertex(Eigen::Vector3d(4.0, 1.0, 0.0)); // Point d (3D)
+  inMesh->createVertex(Eigen::Vector3d(5.0, 2.0, 0.0)); // Point e (3D)
+  inMesh->createVertex(Eigen::Vector3d(7.0, 1.0, 0.0)); // Point f (3D)
   inMesh->allocateDataValues();
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point A: Averaging from points a,b
-  outMesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0)); // Point B: Averaging from points c,d
-  outMesh->createVertex(Eigen::Vector3d(6.0, 0.0, 0.0)); // Point C: Averaging from points e,f
+  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point A (1D): Averaging from points a,b
+  outMesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0)); // Point B (1D): Averaging from points c,d
+  outMesh->createVertex(Eigen::Vector3d(6.0, 0.0, 0.0)); // Point C (1D): Averaging from points e,f
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
@@ -188,9 +236,21 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectX)
 
   // Check if data is mapped to closest vertex
   BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // Point A (1D) == average of Points a,b (3D)
   BOOST_TEST(outValues(0) == (inSample.values(0) + inSample.values(3)) / 2);
+  BOOST_TEST(outValues(1) == 0.0);
+  BOOST_TEST(outValues(2) == 0.0);
+
+  // Point B (1D) == average of Points c,d (3D)
   BOOST_TEST(outValues(3) == (inSample.values(6) + inSample.values(9)) / 2);
+  BOOST_TEST(outValues(4) == 0.0);
+  BOOST_TEST(outValues(5) == 0.0);
+
+  // Point C (1D) == average of Points e,f (3D)
   BOOST_TEST(outValues(6) == (inSample.values(12) + inSample.values(15)) / 2);
+  BOOST_TEST(outValues(7) == 0.0);
+  BOOST_TEST(outValues(8) == 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
@@ -207,19 +267,19 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 1.0)); // Point a
-  inMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 1.0)); // Point b
-  inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 2.0)); // Point c
-  inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 4.0)); // Point d
-  inMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 5.0)); // Point e
-  inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 7.0)); // Point f
+  inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 1.0)); // Point a (3D)
+  inMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 1.0)); // Point b (3D)
+  inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 2.0)); // Point c (3D)
+  inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 4.0)); // Point d (3D)
+  inMesh->createVertex(Eigen::Vector3d(0.0, 2.0, 5.0)); // Point e (3D)
+  inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 7.0)); // Point f (3D)
   inMesh->allocateDataValues();
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point A: Averaging from points a,b
-  outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 3.0)); // Point B: Averaging from points c,d
-  outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 6.0)); // Point C: Averaging from points e,f
+  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point A (1D): Averaging from points a,b
+  outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 3.0)); // Point B (1D): Averaging from points c,d
+  outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 6.0)); // Point C (1D): Averaging from points e,f
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
@@ -245,9 +305,21 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
 
   // Check if data is mapped to closest vertex
   BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // Point A (1D) == average of Points a,b (3D)
   BOOST_TEST(outValues(0) == (inSample.values(0) + inSample.values(3)) / 2);
+  BOOST_TEST(outValues(1) == 0.0);
+  BOOST_TEST(outValues(2) == 0.0);
+
+  // Point B (1D) == average of Points c,d (3D)
   BOOST_TEST(outValues(3) == (inSample.values(6) + inSample.values(9)) / 2);
+  BOOST_TEST(outValues(4) == 0.0);
+  BOOST_TEST(outValues(5) == 0.0);
+
+  // Point C (1D) == average of Points e,f (3D)
   BOOST_TEST(outValues(6) == (inSample.values(12) + inSample.values(15)) / 2);
+  BOOST_TEST(outValues(7) == 0.0);
+  BOOST_TEST(outValues(8) == 0.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

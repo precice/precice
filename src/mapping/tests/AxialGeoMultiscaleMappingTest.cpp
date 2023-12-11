@@ -32,15 +32,15 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadX)
   using testing::equals;
 
   // Create mesh to map from
-  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID())); // Point a (1D)
   inMesh->createVertex(Eigen::Vector3d::Constant(0.0));
   inMesh->allocateDataValues();
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // center, equal to incoming mesh node
-  outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0)); // distance of 1.0 = r to center
-  outMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // distance of 0.5 = r/2 to center
+  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point A (3D): center, equal to incoming mesh node
+  outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0)); // Point B (3D): distance of 1.0 = r to center
+  outMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // Point C (3D): distance of 0.5 = r/2 to center
   outMesh->allocateDataValues();
 
   double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
@@ -61,13 +61,22 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadX)
   mapping.computeMapping();
   mapping.map(inSample, outValues);
 
-  // Check if x axis data is doubled at center node
   BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // Point A (3D): Check if x axis data is doubled at center node (parabolic profile)
   BOOST_TEST(outValues(0) == 2 * inSample.values(0));
-  // Check if x axis data at distance = r is equal to zero
+  BOOST_TEST(outValues(1) == 0);
+  BOOST_TEST(outValues(2) == 0);
+
+  // Point B (3D): Check if x axis data at distance = r is equal to zero
   BOOST_TEST(outValues(3) == 0.0);
-  // Check if x axis data at distance = r/2 is 3/2 times invalue data
+  BOOST_TEST(outValues(4) == 0.0);
+  BOOST_TEST(outValues(5) == 0.0);
+
+  // Point C (3D): Check if x axis data at distance = r/2 is 3/2 times invalue data
   BOOST_TEST(outValues(6) == 1.5 * inSample.values(0));
+  BOOST_TEST(outValues(7) == 0.0);
+  BOOST_TEST(outValues(8) == 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
@@ -84,14 +93,14 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  inMesh->createVertex(Eigen::Vector3d::Constant(0.0));
+  inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point a (1D)
   inMesh->allocateDataValues();
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // center, equal to incoming mesh node
-  outMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)); // distance of 1.0 = r to center
-  outMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // distance of 0.5 = r/2 to center
+  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point A (3D): center, equal to incoming mesh node
+  outMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)); // Point B (3D): distance of 1.0 = r to center
+  outMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // Point C (3D): distance of 0.5 = r/2 to center
   outMesh->allocateDataValues();
 
   double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
@@ -112,12 +121,21 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
   mapping.computeMapping();
   mapping.map(inSample, outValues);
 
-  // Check if x axis data is doubled at center node
   BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // Point A (3D): Check if x axis data is doubled at center node
+  BOOST_TEST(outValues(0) == 0.0);
+  BOOST_TEST(outValues(1) == 0.0);
   BOOST_TEST(outValues(2) == 2 * inSample.values(2));
-  // Check if x axis data at distance = r is equal to zero
+
+  // Point B (3D): Check if x axis data at distance = r is equal to zero
+  BOOST_TEST(outValues(3) == 0.0);
+  BOOST_TEST(outValues(4) == 0.0);
   BOOST_TEST(outValues(5) == 0.0);
-  // Check if x axis data at distance = r/2 is 3/2 times invalue data
+
+  // Point C (3D): Check if x axis data at distance = r/2 is 3/2 times invalue data
+  BOOST_TEST(outValues(6) == 0.0);
+  BOOST_TEST(outValues(7) == 0.0);
   BOOST_TEST(outValues(8) == 1.5 * inSample.values(2));
 }
 
@@ -135,14 +153,14 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectX)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // center
-  inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0)); // distance of 1.0 = r to center
-  inMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // distance of 0.5 = r/2 to center
+  inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point a (3D): center
+  inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0)); // Point b (3D): distance of 1.0 = r to center
+  inMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // Point c (3D): distance of 0.5 = r/2 to center
   inMesh->allocateDataValues();
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // equal to center of incoming mesh
+  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point A (1D): equal to center of incoming mesh (averaging)
   outMesh->allocateDataValues();
 
   double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
@@ -163,9 +181,12 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectX)
   mapping.computeMapping();
   mapping.map(inSample, outValues);
 
-  // Check if data is averaged at center node
   BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // Point A (1D): Check if data is averaged at center node
   BOOST_TEST(outValues(0) == (1 / 3.0) * (inSample.values(0) + inSample.values(3) + inSample.values(6)));
+  BOOST_TEST(outValues(1) == 0.0);
+  BOOST_TEST(outValues(2) == 0.0);
 }
 
 BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
@@ -182,14 +203,14 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // center
-  inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)); // distance of 1.0 = r to center
-  inMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // distance of 0.5 = r/2 to center
+  inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point a (3D): center
+  inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)); // Point b (3D): distance of 1.0 = r to center
+  inMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // Point c (3D): distance of 0.5 = r/2 to center
   inMesh->allocateDataValues();
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // equal to center of incoming mesh
+  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point A (1D): equal to center of incoming mesh
   outMesh->allocateDataValues();
 
   double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
@@ -210,8 +231,11 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
   mapping.computeMapping();
   mapping.map(inSample, outValues);
 
-  // Check if data is averaged at center node
   BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // Point A (1D): Check if data is averaged at center node
+  BOOST_TEST(outValues(0) == 0.0);
+  BOOST_TEST(outValues(1) == 0.0);
   BOOST_TEST(outValues(2) == (1 / 3.0) * (inSample.values(2) + inSample.values(5) + inSample.values(8)));
 }
 
