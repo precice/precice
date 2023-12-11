@@ -142,24 +142,23 @@ void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen
 {
   PRECICE_TRACE();
 
-  const int              valueDimensions = inData.dataDims;
-  const Eigen::VectorXd &inputValues     = inData.values;
-  Eigen::VectorXd &      outputValues    = outData;
+  const int              inDataDimensions = inData.dataDims;
+  const Eigen::VectorXd &inputValues      = inData.values;
+  Eigen::VectorXd &      outputValues     = outData;
 
   size_t const inSize  = input()->vertices().size();
   size_t const outSize = output()->vertices().size();
 
-  PRECICE_ASSERT((inputValues.size() / valueDimensions == static_cast<int>(input()->vertices().size())),
-                 inputValues.size(), valueDimensions, input()->vertices().size());
-  PRECICE_ASSERT((outputValues.size() / valueDimensions == static_cast<int>(output()->vertices().size())),
-                 outputValues.size(), valueDimensions, output()->vertices().size());
-  PRECICE_ASSERT(valueDimensions == 1);
+  PRECICE_ASSERT((inputValues.size() / inDataDimensions == static_cast<int>(input()->vertices().size())),
+                 inputValues.size(), inDataDimensions, input()->vertices().size());
+  PRECICE_ASSERT((outputValues.size() / inDataDimensions == static_cast<int>(output()->vertices().size())),
+                 outputValues.size(), inDataDimensions, output()->vertices().size());
 
   PRECICE_DEBUG("Map consistent");
   if (_type == MultiscaleType::SPREAD) {
     // assign 1D vertex value to all 3D vertices in vicinity
     for (size_t i = 0; i < outSize; i++) {
-      outputValues((i * valueDimensions)) = inputValues(_vertexIndicesSpread[i]);
+      outputValues((i * inDataDimensions)) = inputValues(_vertexIndicesSpread[i]);
     }
   } else {
     PRECICE_ASSERT(_type == MultiscaleType::COLLECT);
@@ -167,14 +166,14 @@ void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen
       3D vertices are projected onto the 1D axis and the data is then mapped
       to (and averaged at) the nearest 1D vertex in projection space.
     */
-    PRECICE_ASSERT(outputValues.size() == static_cast<int>(output()->vertices().size()), outputValues.size(), valueDimensions, output()->vertices().size());
+    PRECICE_ASSERT(outputValues.size() == static_cast<int>(output()->vertices().size()), outputValues.size(), inDataDimensions, output()->vertices().size());
 
     for (size_t i = 0; i < outSize; i++) {
-      outputValues((i * valueDimensions)) = 0;
+      outputValues((i * inDataDimensions)) = 0;
     }
     // assign the 1D vertex the average of all 3D vertex values in vicinity
     for (size_t i = 0; i < inSize; i++) {
-      outputValues(_vertexIndicesCollect[i]) += inputValues(i * valueDimensions);
+      outputValues(_vertexIndicesCollect[i]) += inputValues(i * inDataDimensions);
     }
     for (size_t i = 0; i < outSize; i++) {
       outputValues(i) = outputValues(i) / _vertexCounter(i);
