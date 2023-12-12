@@ -248,7 +248,7 @@ public:
    * @pre initialize() has been called successfully.
    * @pre The solver has computed one time step.
    * @pre The solver has written all coupling data.
-   * @pre isCouplngOngoing() returns true.
+   * @pre isCouplingOngoing() returns true.
    * @pre finalize() has not yet been called.
    *
    * @post Coupling data values specified in the configuration are exchanged.
