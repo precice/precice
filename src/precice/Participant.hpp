@@ -223,14 +223,25 @@ public:
   /**
    * @brief Advances preCICE after the solver has computed one time step.
    *
-   * - Sends and resets coupling data written by solver to coupling partners.
-   * - Receives coupling data read by solver.
-   * - Computes and applies data mappings.
-   * - Computes acceleration of coupling data.
-   * - Exchanges and computes information regarding the state of the coupled
-   *   simulation.
+   * There are two cases to distinguish at this point.
+   * If \p computedTimeStepSize == \ref getMaxTimeStepSize(), then the solver has reached
+   * the end of a time window and proceeds the coupling.
+   * This call is a computationally expensive process as it involves among other tasks:
+   *
+   * - Sending and resetting coupling data written by solver to coupling partners.
+   * - Receiving coupling data read by solver.
+   * - Computing and applying data mappings.
+   * - Computing convergence measures in implicit coupling schemes.
+   * - Computing acceleration of coupling data.
+   * - Exchanging and computing information regarding the state of the coupled simulation.
+   *
+   * If \p computedTimeStepSize < \ref getMaxTimeStepSize(), then the solver hasn't reached the end of a time window and it is subcycling.
+   * Depending on the configuration, written data can be used by preCICE to generate additional samples allowing for time interpolation using \ref readData().
+   * This call is computationally inexpensive.
    *
    * @param[in] computedTimeStepSize Size of time step used by the solver.
+   *
+   * @attention All ranks of participants running in parallel \b must pass the same \p computedTimeStep to advance().
    *
    * @see getMaxTimeStepSize to get the maximum allowed value for \p computedTimeStepSize.
    *
@@ -326,11 +337,9 @@ public:
 
   /** Checks if the participant is required to write an iteration checkpoint.
    *
-   * If true, the participant is required to write an iteration checkpoint before
-   * calling advance().
+   * If true, the participant is required to write an iteration checkpoint before calling advance().
    *
-   * preCICE refuses to proceed if writing a checkpoint is required,
-   * but this method isn't called prior to advance().
+   * @note If implicit coupling is configured for this Participant, then this function **needs** to be called.
    *
    * @pre initialize() has been called
    *
@@ -340,11 +349,9 @@ public:
 
   /** Checks if the participant is required to read an iteration checkpoint.
    *
-   * If true, the participant is required to read an iteration checkpoint before
-   * calling advance().
+   * If true, the participant is required to read an iteration checkpoint before calling advance().
    *
-   * preCICE refuses to proceed if reading a checkpoint is required,
-   * but this method isn't called prior to advance().
+   * @note If implicit coupling is configured for this Participant, then this function **needs** to be called.
    *
    * @note This function returns false before the first call to advance().
    *
