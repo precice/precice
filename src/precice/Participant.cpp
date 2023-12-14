@@ -119,9 +119,9 @@ bool Participant::requiresGradientDataFor(::precice::string_view meshName,
 
 int Participant::setMeshVertex(
     ::precice::string_view        meshName,
-    ::precice::span<const double> position)
+    ::precice::span<const double> coordinates)
 {
-  return _impl->setMeshVertex(toSV(meshName), position);
+  return _impl->setMeshVertex(toSV(meshName), coordinates);
 }
 
 int Participant::getMeshVertexSize(
@@ -132,10 +132,10 @@ int Participant::getMeshVertexSize(
 
 void Participant::setMeshVertices(
     ::precice::string_view        meshName,
-    ::precice::span<const double> positions,
+    ::precice::span<const double> coordinates,
     ::precice::span<VertexID>     ids)
 {
-  _impl->setMeshVertices(toSV(meshName), positions, ids);
+  _impl->setMeshVertices(toSV(meshName), coordinates, ids);
 }
 
 void Participant::setMeshEdge(
@@ -148,9 +148,9 @@ void Participant::setMeshEdge(
 
 void Participant::setMeshEdges(
     ::precice::string_view          meshName,
-    ::precice::span<const VertexID> vertices)
+    ::precice::span<const VertexID> ids)
 {
-  _impl->setMeshEdges(toSV(meshName), vertices);
+  _impl->setMeshEdges(toSV(meshName), ids);
 }
 
 void Participant::setMeshTriangle(
@@ -164,9 +164,9 @@ void Participant::setMeshTriangle(
 
 void Participant::setMeshTriangles(
     ::precice::string_view          meshName,
-    ::precice::span<const VertexID> vertices)
+    ::precice::span<const VertexID> ids)
 {
-  _impl->setMeshTriangles(toSV(meshName), vertices);
+  _impl->setMeshTriangles(toSV(meshName), ids);
 }
 
 void Participant::setMeshQuad(
@@ -182,9 +182,9 @@ void Participant::setMeshQuad(
 
 void Participant::setMeshQuads(
     ::precice::string_view          meshName,
-    ::precice::span<const VertexID> vertices)
+    ::precice::span<const VertexID> ids)
 {
-  _impl->setMeshQuads(toSV(meshName), vertices);
+  _impl->setMeshQuads(toSV(meshName), ids);
 }
 
 void Participant::setMeshTetrahedron(
@@ -200,28 +200,28 @@ void Participant::setMeshTetrahedron(
 
 void Participant::setMeshTetrahedra(
     ::precice::string_view          meshName,
-    ::precice::span<const VertexID> vertices)
+    ::precice::span<const VertexID> ids)
 {
-  _impl->setMeshTetrahedra(toSV(meshName), vertices);
+  _impl->setMeshTetrahedra(toSV(meshName), ids);
 }
 
 void Participant::writeData(
     ::precice::string_view          meshName,
     ::precice::string_view          dataName,
-    ::precice::span<const VertexID> vertices,
+    ::precice::span<const VertexID> ids,
     ::precice::span<const double>   values)
 {
-  _impl->writeData(toSV(meshName), toSV(dataName), vertices, values);
+  _impl->writeData(toSV(meshName), toSV(dataName), ids, values);
 }
 
 void Participant::readData(
     ::precice::string_view          meshName,
     ::precice::string_view          dataName,
-    ::precice::span<const VertexID> vertices,
+    ::precice::span<const VertexID> ids,
     double                          relativeReadTime,
     ::precice::span<double>         values) const
 {
-  _impl->readData(toSV(meshName), toSV(dataName), vertices, relativeReadTime, values);
+  _impl->readData(toSV(meshName), toSV(dataName), ids, relativeReadTime, values);
 }
 
 void Participant::setMeshAccessRegion(::precice::string_view        meshName,
@@ -240,10 +240,10 @@ void Participant::getMeshVertexIDsAndCoordinates(::precice::string_view    meshN
 void Participant::writeGradientData(
     ::precice::string_view          meshName,
     ::precice::string_view          dataName,
-    ::precice::span<const VertexID> vertices,
+    ::precice::span<const VertexID> ids,
     ::precice::span<const double>   gradients)
 {
-  _impl->writeGradientData(toSV(meshName), toSV(dataName), vertices, gradients);
+  _impl->writeGradientData(toSV(meshName), toSV(dataName), ids, gradients);
 }
 
 } // namespace precice

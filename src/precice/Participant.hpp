@@ -531,20 +531,20 @@ public:
    * @brief Creates multiple mesh vertices
    *
    * @param[in] meshName the name of the mesh to add the vertices to.
-   * @param[in] positions a span to the coordinates of the vertices
+   * @param[in] coordinates a span to the coordinates of the vertices
    *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    *            The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    *
    * @param[out] ids The ids of the created vertices
    *
    * @pre initialize() has not yet been called
-   * @pre position.size() == getMeshDimensions(meshName) * ids.size()
+   * @pre \p coordinates.size() == getMeshDimensions(meshName) * ids.size()
    *
    * @see getDimensions()
    */
   void setMeshVertices(
       ::precice::string_view        meshName,
-      ::precice::span<const double> positions,
+      ::precice::span<const double> coordinates,
       ::precice::span<VertexID>     ids);
 
   /**
@@ -575,16 +575,16 @@ public:
    * @note The order of vertices per edge does not matter.
    *
    * @param[in] meshName the name of the mesh to add the edges to
-   * @param[in] vertices an array containing 2*size vertex IDs
+   * @param[in] ids an array containing 2*size vertex IDs
    *
-   * @pre vertices were added to the mesh with the name meshName
-   * @pre vertices.size() is multiple of 2
+   * @pre vertices in \p ids were added to the mesh with the name meshName
+   * @pre \p ids.size() is multiple of 2
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshEdges(
       ::precice::string_view          meshName,
-      ::precice::span<const VertexID> vertices);
+      ::precice::span<const VertexID> ids);
 
   /**
    * @brief Sets mesh triangle from vertex IDs.
@@ -618,16 +618,16 @@ public:
    * @note The order of vertices per triangle does not matter.
    *
    * @param[in] meshName name of the mesh to add the triangles to
-   * @param[in] vertices an array containing 3*size vertex IDs
+   * @param[in] ids an array containing 3*size vertex IDs
    *
-   * @pre vertices were added to the mesh with the name meshName
-   * @pre vertices.size() is multiple of 3
+   * @pre vertices in \p ids were added to the mesh with the name meshName
+   * @pre \p ids.size() is multiple of 3
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTriangles(
       ::precice::string_view          meshName,
-      ::precice::span<const VertexID> vertices);
+      ::precice::span<const VertexID> ids);
 
   /**
    * @brief Sets a planar surface mesh quadrangle from vertex IDs.
@@ -666,16 +666,16 @@ public:
    * @warning The order of vertices per quad does not matter, however, only planar quads are allowed.
    *
    * @param[in] meshName name of the mesh to add the quad to
-   * @param[in] vertices an array containing 4*size vertex IDs
+   * @param[in] ids an array containing 4*size vertex IDs
    *
-   * @pre vertices were added to the mesh with the name meshName
-   * @pre vertices.size() is multiple of 4
+   * @pre vertices in \p ids were added to the mesh with the name meshName
+   * @pre \p ids.size() is multiple of 4
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshQuads(
       ::precice::string_view          meshName,
-      ::precice::span<const VertexID> vertices);
+      ::precice::span<const VertexID> ids);
 
   /**
    * @brief Set tetrahedron in 3D mesh from vertex ID
@@ -709,16 +709,16 @@ public:
    * @note The order of vertices per tetrahedron does not matter.
    *
    * @param[in] meshName name of the mesh to add the tetrahedra to
-   * @param[in] vertices an array containing 4*size vertex IDs
+   * @param[in] ids an array containing 4*size vertex IDs
    *
-   * @pre vertices were added to the mesh with the name meshName
-   * @pre vertices.size() is multiple of 4
+   * @pre vertices in \p ids were added to the mesh with the name meshName
+   * @pre ids.size() is multiple of 4
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTetrahedra(
       ::precice::string_view          meshName,
-      ::precice::span<const VertexID> vertices);
+      ::precice::span<const VertexID> ids);
 
   ///@}
 
@@ -768,11 +768,11 @@ public:
    *
    * @param[in] meshName the name of mesh that hold the data.
    * @param[in] dataName the name of the data to write to.
-   * @param[in] vertices the vertex ids of the vertices to write data to.
+   * @param[in] ids the vertex ids of the vertices to write data to.
    * @param[in] values the values to write to preCICE.
    *
-   * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
-   * @pre values.size() == getDataDimensions(meshName, dataName) * vertices.size()
+   * @pre every VertexID in \p ids is a return value of setMeshVertex or setMeshVertices
+   * @pre values.size() == getDataDimensions(meshName, dataName) * ids.size()
    *
    * @see Participant::setMeshVertex()
    * @see Participant::setMeshVertices()
@@ -781,7 +781,7 @@ public:
   void writeData(
       ::precice::string_view          meshName,
       ::precice::string_view          dataName,
-      ::precice::span<const VertexID> vertices,
+      ::precice::span<const VertexID> ids,
       ::precice::span<const double>   values);
 
   /**
@@ -801,12 +801,12 @@ public:
    *
    * @param[in] meshName the name of mesh that hold the data.
    * @param[in] dataName the name of the data to read from.
-   * @param[in] vertices the vertex ids of the vertices to read data from.
+   * @param[in] ids the vertex ids of the vertices to read data from.
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
    * @param[out] values the destination memory to read the data from.
    *
-   * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
-   * @pre values.size() == getDataDimensions(meshName, dataName) * vertices.size()
+   * @pre every VertexID in ids is a return value of setMeshVertex or setMeshVertices
+   * @pre values.size() == getDataDimensions(meshName, dataName) * ids.size()
    *
    * @post values contain the read data as specified in the above format.
    *
@@ -817,7 +817,7 @@ public:
   void readData(
       ::precice::string_view          meshName,
       ::precice::string_view          dataName,
-      ::precice::span<const VertexID> vertices,
+      ::precice::span<const VertexID> ids,
       double                          relativeReadTime,
       ::precice::span<double>         values) const;
 
@@ -974,12 +974,12 @@ public:
    *
    * @param[in] meshName the name of mesh that hold the data.
    * @param[in] dataName the name of the data to write to.
-   * @param[in] vertices the vertex ids of the vertices to write gradient data to.
+   * @param[in] ids the vertex ids of the vertices to write gradient data to.
    * @param[in] gradients the linearised gradient data to write to preCICE.
    *
    * @pre Data has attribute hasGradient = true
    * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
-   * @pre gradients.size() == vertices.size() * getMeshDimensions(meshName) * getDataDimensions(meshName, dataName)
+   * @pre gradients.size() == ids.size() * getMeshDimensions(meshName) * getDataDimensions(meshName, dataName)
    *
    * @see Participant::setMeshVertex()
    * @see Participant::setMeshVertices()
@@ -990,7 +990,7 @@ public:
   void writeGradientData(
       ::precice::string_view          meshName,
       ::precice::string_view          dataName,
-      ::precice::span<const VertexID> vertices,
+      ::precice::span<const VertexID> ids,
       ::precice::span<const double>   gradients);
 
   ///@}
