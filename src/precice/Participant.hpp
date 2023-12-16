@@ -22,7 +22,56 @@ struct WhiteboxAccessor;
 
 namespace precice {
 
-/// convenience type for compatibility
+/** @brief forwards-compatible typedef for C++17 \ref std::string_view.
+ *
+ * The \ref string_view is a read-only view into sequence of characters.
+ *
+ * A good mental model for this type is a struct containing a pointer and a size like the following:
+ *
+ * @code cpp
+ * struct string_view {
+ *   const char* first;
+ *   size_t size;
+ * };
+ * @endcode
+ *
+ * It can be constructed from:
+ * - a pointer to a NULL-terminated C-string
+ * - a pointer and a size
+ * - a pointer to the first and one past the last element
+ * - \ref std::string can directly convert itself to \ref std::string_view.
+ *
+ * In practise, using a function such as \ref Participant::getMeshDimensions() that expects a string_view looks like this:
+ *
+ * You can directly pass the string literal:
+ *
+ * @code{.cpp}
+ * getMeshDimensions("MyMesh");
+ * @endcode
+ *
+ * Or you can pass something string-like:
+ *
+ * @code{.cpp}
+ * // one of
+ * const char*      meshName = "MyMesh";
+ * std::string      meshName = "MyMesh";
+ * std::string_view meshName = "MyMesh";
+ * // followed by
+ * getMeshDimensions(meshName);
+ * @endcode
+ *
+ * For more complex settings, you can pass pointer + size:
+ *
+ * @code{.cpp}
+ * const char* meshName     = ...;
+ * int         meshNameSize = ...;
+ * // followed by either directly constructing
+ * getMeshDimensions(::precice::string_view{meshName, meshNameSize});
+ * // or without naming the type
+ * getMeshDimensions({meshName, meshNameSize});
+ * @endcode
+ *
+ */
 using string_view = ::precice::span<const char>;
 
 /**
