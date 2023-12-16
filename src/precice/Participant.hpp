@@ -28,7 +28,7 @@ namespace precice {
  *
  * A good mental model for this type is a struct containing a pointer and a size like the following:
  *
- * @code cpp
+ * @code{cpp}
  * struct string_view {
  *   const char* first;
  *   size_t size;

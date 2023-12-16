@@ -10,7 +10,7 @@
  * A simple mental model is an object that holds a pointer and size, so it knows how many elements it is allowed to access after the initial pointer.
  * You can imagine a `span<double>` to look like this:
  *
- * @code cpp
+ * @code{cpp}
  * class span {
  *   double* begin;
  *   size_t size;
@@ -19,7 +19,7 @@
  *
  * This type can also be read-only aka `const`. You can imagine a `span<const double>` to look like this:
  *
- * @code cpp
+ * @code{cpp}
  * class span {
  *   double const* begin;
  *   size_t size;
