@@ -641,7 +641,7 @@ void ParticipantImpl::resetMesh(
   context.mesh->clear();
 }
 
-int ParticipantImpl::setMeshVertex(
+VertexID ParticipantImpl::setMeshVertex(
     std::string_view              meshName,
     ::precice::span<const double> position)
 {
@@ -698,8 +698,8 @@ void ParticipantImpl::setMeshVertices(
 
 void ParticipantImpl::setMeshEdge(
     std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID)
+    VertexID         firstVertexID,
+    VertexID         secondVertexID)
 {
   PRECICE_TRACE(meshName, firstVertexID, secondVertexID);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
@@ -751,9 +751,9 @@ void ParticipantImpl::setMeshEdges(
 
 void ParticipantImpl::setMeshTriangle(
     std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID,
-    int              thirdVertexID)
+    VertexID         firstVertexID,
+    VertexID         secondVertexID,
+    VertexID         thirdVertexID)
 {
   PRECICE_TRACE(meshName, firstVertexID,
                 secondVertexID, thirdVertexID);
@@ -825,10 +825,10 @@ void ParticipantImpl::setMeshTriangles(
 
 void ParticipantImpl::setMeshQuad(
     std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID,
-    int              thirdVertexID,
-    int              fourthVertexID)
+    VertexID         firstVertexID,
+    VertexID         secondVertexID,
+    VertexID         thirdVertexID,
+    VertexID         fourthVertexID)
 {
   PRECICE_TRACE(meshName, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
@@ -940,10 +940,10 @@ void ParticipantImpl::setMeshQuads(
 
 void ParticipantImpl::setMeshTetrahedron(
     std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID,
-    int              thirdVertexID,
-    int              fourthVertexID)
+    VertexID         firstVertexID,
+    VertexID         secondVertexID,
+    VertexID         thirdVertexID,
+    VertexID         fourthVertexID)
 {
   PRECICE_TRACE(meshName, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);

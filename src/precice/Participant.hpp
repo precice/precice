@@ -548,7 +548,7 @@ public:
    *
    * @see getMeshDimensions()
    */
-  int setMeshVertex(
+  VertexID setMeshVertex(
       ::precice::string_view        meshName,
       ::precice::span<const double> position);
 
@@ -600,8 +600,8 @@ public:
    */
   void setMeshEdge(
       ::precice::string_view meshName,
-      int                    firstVertexID,
-      int                    secondVertexID);
+      VertexID               firstVertexID,
+      VertexID               secondVertexID);
 
   /**
    * @brief Sets multiple mesh edges from vertex IDs
@@ -642,9 +642,9 @@ public:
    */
   void setMeshTriangle(
       ::precice::string_view meshName,
-      int                    firstVertexID,
-      int                    secondVertexID,
-      int                    thirdVertexID);
+      VertexID               firstVertexID,
+      VertexID               secondVertexID,
+      VertexID               thirdVertexID);
 
   /**
    * @brief Sets multiple mesh triangles from vertex IDs
@@ -687,10 +687,10 @@ public:
    */
   void setMeshQuad(
       ::precice::string_view meshName,
-      int                    firstVertexID,
-      int                    secondVertexID,
-      int                    thirdVertexID,
-      int                    fourthVertexID);
+      VertexID               firstVertexID,
+      VertexID               secondVertexID,
+      VertexID               thirdVertexID,
+      VertexID               fourthVertexID);
 
   /**
    * @brief Sets multiple mesh quads from vertex IDs
@@ -732,10 +732,10 @@ public:
    */
   void setMeshTetrahedron(
       ::precice::string_view meshName,
-      int                    firstVertexID,
-      int                    secondVertexID,
-      int                    thirdVertexID,
-      int                    fourthVertexID);
+      VertexID               firstVertexID,
+      VertexID               secondVertexID,
+      VertexID               thirdVertexID,
+      VertexID               fourthVertexID);
 
   /**
    * @brief Sets multiple mesh tetrahedra from vertex IDs

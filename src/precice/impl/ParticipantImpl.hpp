@@ -154,7 +154,7 @@ public:
                                std::string_view dataName) const;
 
   /// @copydoc Participant::setMeshVertex
-  int setMeshVertex(
+  VertexID setMeshVertex(
       std::string_view              meshName,
       ::precice::span<const double> position);
 
@@ -170,8 +170,8 @@ public:
   /// @copydoc Participant::setMeshEdge
   void setMeshEdge(
       std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID);
+      VertexID         firstVertexID,
+      VertexID         secondVertexID);
 
   /// @copydoc Participant::setMeshEdges
   void setMeshEdges(
@@ -181,9 +181,9 @@ public:
   /// @copydoc Participant::setMeshTriangle
   void setMeshTriangle(
       std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID,
-      int              thirdVertexID);
+      VertexID         firstVertexID,
+      VertexID         secondVertexID,
+      VertexID         thirdVertexID);
 
   /// @copydoc Participant::setMeshTriangles
   void setMeshTriangles(
@@ -193,10 +193,10 @@ public:
   /// @copydoc Participant::setMeshQuad
   void setMeshQuad(
       std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID,
-      int              thirdVertexID,
-      int              fourthVertexID);
+      VertexID         firstVertexID,
+      VertexID         secondVertexID,
+      VertexID         thirdVertexID,
+      VertexID         fourthVertexID);
 
   /// @copydoc Participant::setMeshQuads
   void setMeshQuads(
@@ -206,10 +206,10 @@ public:
   /// @copydoc Participant::setMeshTetrahedron
   void setMeshTetrahedron(
       std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID,
-      int              thirdVertexID,
-      int              fourthVertexID);
+      VertexID         firstVertexID,
+      VertexID         secondVertexID,
+      VertexID         thirdVertexID,
+      VertexID         fourthVertexID);
 
   /// @copydoc Participant::setMeshTetrahedra
   void setMeshTetrahedra(
