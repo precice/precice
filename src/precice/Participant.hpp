@@ -604,7 +604,7 @@ public:
       int                    secondVertexID);
 
   /**
-   * @brief Sets multiple mesh edge from vertex IDs
+   * @brief Sets multiple mesh edges from vertex IDs
    *
    * vertices contain pairs of vertex indices for each edge to define.
    * The format follows: e1a, e1b, e2a, e2b, ...
@@ -612,8 +612,8 @@ public:
    *
    * @note The order of vertices per edge does not matter.
    *
-   * @param[in] meshName the name of the mesh to add the edges to
-   * @param[in] ids an array containing 2*size vertex IDs
+   * @param[in] meshName the name of the mesh to add the n edges to
+   * @param[in] ids an array containing 2n vertex IDs for n edges
    *
    * @pre vertices in \p ids were added to the mesh with the name meshName
    * @pre \p ids.size() is multiple of 2
@@ -655,8 +655,8 @@ public:
    *
    * @note The order of vertices per triangle does not matter.
    *
-   * @param[in] meshName name of the mesh to add the triangles to
-   * @param[in] ids an array containing 3*size vertex IDs
+   * @param[in] meshName name of the mesh to add the n triangles to
+   * @param[in] ids an array containing 3n vertex IDs for n triangles
    *
    * @pre vertices in \p ids were added to the mesh with the name meshName
    * @pre \p ids.size() is multiple of 3
@@ -703,8 +703,8 @@ public:
    *
    * @warning The order of vertices per quad does not matter, however, only planar quads are allowed.
    *
-   * @param[in] meshName name of the mesh to add the quad to
-   * @param[in] ids an array containing 4*size vertex IDs
+   * @param[in] meshName name of the mesh to add the n quads to
+   * @param[in] ids an array containing 4n vertex IDs for n quads
    *
    * @pre vertices in \p ids were added to the mesh with the name meshName
    * @pre \p ids.size() is multiple of 4
@@ -746,8 +746,8 @@ public:
    *
    * @note The order of vertices per tetrahedron does not matter.
    *
-   * @param[in] meshName name of the mesh to add the tetrahedra to
-   * @param[in] ids an array containing 4*size vertex IDs
+   * @param[in] meshName name of the mesh to add the n tetrahedra to
+   * @param[in] ids an array containing 4n vertex IDs for n tetrahedra
    *
    * @pre vertices in \p ids were added to the mesh with the name meshName
    * @pre ids.size() is multiple of 4
