@@ -162,13 +162,13 @@ PRECICE_API void precicec_setMeshVertices(
     int *         ids);
 
 /**
- * @brief Sets mesh edge from vertex IDs, returns edge ID.
+ * @brief Sets mesh edge from vertex IDs
  *
  * @param[in] meshName the name of the mesh to add the edge to
  * @param[in] firstVertexID ID of the first vertex of the edge
  * @param[in] secondVertexID ID of the second vertex of the edge
  *
- * @return the ID of the edge
+ * @pre ids were added to the mesh with the name \p meshName
  */
 PRECICE_API void precicec_setMeshEdge(
     const char *meshName,
@@ -182,7 +182,7 @@ PRECICE_API void precicec_setMeshEdge(
  * @param[in] size the amount of edges to set
  * @param[in] ids an array containing 2*size vertex IDs
  *
- * @pre ids were added to the mesh with the ID meshID
+ * @pre ids were added to the mesh with the name \p meshName
  */
 PRECICE_API void precicec_setMeshEdges(
     const char *meshName,
@@ -205,7 +205,7 @@ PRECICE_API void precicec_setMeshTriangle(
  * @param[in] size the amount of triangles to set
  * @param[in] ids an array containing 3*size vertex IDs
  *
- * @pre vertices in \p ids were added to the mesh with the ID meshID
+ * @pre vertices in \p ids were added to the mesh with the name \p meshName
  */
 PRECICE_API void precicec_setMeshTriangles(
     const char *meshName,
@@ -235,7 +235,7 @@ PRECICE_API void precicec_setMeshQuad(
  * @param[in] size the amount of quads to set
  * @param[in] ids an array containing 4*size vertex IDs
  *
- * @pre vertices in \ids were added to the mesh with the ID meshID
+ * @pre vertices in \ids were added to the mesh with the name \p meshName
  */
 PRECICE_API void precicec_setMeshQuads(
     const char *meshName,
@@ -265,7 +265,7 @@ PRECICE_API void precicec_setMeshTetrahedron(
  * @param[in] size the amount of tetrahedra to set
  * @param[in] ids an array containing 4*size vertex IDs
  *
- * @pre vertices in ids were added to the mesh with the ID meshID
+ * @pre vertices in ids were added to the mesh with the name \p meshName
  */
 PRECICE_API void precicec_setMeshTetrahedra(
     const char *meshName,
