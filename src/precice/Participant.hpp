@@ -55,20 +55,8 @@ namespace precice {
  * // one of
  * const char*      meshName = "MyMesh";
  * std::string      meshName = "MyMesh";
- * std::string_view meshName = "MyMesh";
  * // followed by
  * getMeshDimensions(meshName);
- * @endcode
- *
- * For more complex settings, you can pass pointer + size:
- *
- * @code{.cpp}
- * const char* meshName     = ...;
- * int         meshNameSize = ...;
- * // followed by either directly constructing
- * getMeshDimensions(::precice::string_view{meshName, meshNameSize});
- * // or without naming the type
- * getMeshDimensions({meshName, meshNameSize});
  * @endcode
  *
  */
