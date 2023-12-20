@@ -189,10 +189,11 @@ public:
    * index and size of the current process, which are equivalent to rank and size in the MPI terminology.
    *
    * If preCICE is compiled with MPI, then there are multiple ways for it to be used:
-   * 1. if the participant is configured to use an intra-comm using sockets, preCICE ignores MPI
-   * 2. if a custom communicator is provided, preCICE uses it
-   * 3. if MPI is already initialized, preCICE uses the MPI_COMM_WORLD
-   * 4. otherwise, preCICE initializes MPI itself and uses the MPI_COMM_WORLD
+   * 1. if a custom communicator is provided, preCICE uses it
+   * 2. if MPI is already initialized, preCICE uses the MPI_COMM_WORLD
+   * 3. otherwise, preCICE initializes MPI itself and uses the MPI_COMM_WORLD
+   *
+   * The MPI initialization is independent of which kind IntraCommunicator is configured.
    *
    * @{
    */
