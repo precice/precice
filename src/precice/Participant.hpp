@@ -524,17 +524,6 @@ public:
    *@{
    */
 
-  /*
-   * @brief Resets mesh with given ID.
-   *
-   * @experimental
-   *
-   * Has to be called, every time the positions for data to be mapped
-   * changes. Only has an effect, if the mapping used is non-stationary and
-   * non-incremental.
-   */
-  //  void resetMesh ( ::precice::string_view meshName );
-
   /**
    * @brief Checks if the given mesh requires connectivity.
    *

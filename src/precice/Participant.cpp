@@ -110,13 +110,6 @@ bool Participant::requiresGradientDataFor(::precice::string_view meshName,
   return _impl->requiresGradientDataFor(toSV(meshName), toSV(dataName));
 }
 
-// void Participant:: resetMesh
-//(
-//   ::precice::string_view meshName )
-//{
-//   _impl->resetMesh(toSV(meshName)ID);
-// }
-
 int Participant::setMeshVertex(
     ::precice::string_view        meshName,
     ::precice::span<const double> coordinates)
