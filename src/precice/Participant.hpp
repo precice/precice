@@ -582,15 +582,15 @@ public:
    * @note The order of vertices does not matter.
    *
    * @param[in] meshName name of the mesh to add the edge to
-   * @param[in] firstVertexID ID of the first vertex of the edge
-   * @param[in] secondVertexID ID of the second vertex of the edge
+   * @param[in] first ID of the first vertex of the edge
+   * @param[in] second ID of the second vertex of the edge
    *
-   * @pre vertices with firstVertexID and secondVertexID were added to the mesh with the name meshName
+   * @pre vertices with IDs first and second were added to the mesh with the name meshName
    */
   void setMeshEdge(
       ::precice::string_view meshName,
-      VertexID               firstVertexID,
-      VertexID               secondVertexID);
+      VertexID               first,
+      VertexID               second);
 
   /**
    * @brief Sets multiple mesh edges from vertex IDs
@@ -621,19 +621,19 @@ public:
    * @note The order of vertices does not matter.
    *
    * @param[in] meshName name of the mesh to add the triangle to
-   * @param[in] firstVertexID ID of the first vertex of the triangle
-   * @param[in] secondVertexID ID of the second vertex of the triangle
-   * @param[in] thirdVertexID ID of the third vertex of the triangle
+   * @param[in] first ID of the first vertex of the triangle
+   * @param[in] second ID of the second vertex of the triangle
+   * @param[in] third ID of the third vertex of the triangle
    *
-   * @pre edges with firstVertexID, secondVertexID, and thirdVertexID were added to the mesh with the name meshName
+   * @pre vertices with IDs first, second, and third were added to the mesh with the name meshName
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTriangle(
       ::precice::string_view meshName,
-      VertexID               firstVertexID,
-      VertexID               secondVertexID,
-      VertexID               thirdVertexID);
+      VertexID               first,
+      VertexID               second,
+      VertexID               third);
 
   /**
    * @brief Sets multiple mesh triangles from vertex IDs
@@ -665,21 +665,21 @@ public:
    * @warning The order of vertices does not matter, however, only planar quads are allowed.
    *
    * @param[in] meshName name of the mesh to add the Quad to
-   * @param[in] firstVertexID ID of the first vertex of the Quad
-   * @param[in] secondVertexID ID of the second vertex of the Quad
-   * @param[in] thirdVertexID ID of the third vertex of the Quad
-   * @param[in] fourthVertexID ID of the fourth vertex of the Quad
+   * @param[in] first ID of the first vertex of the Quad
+   * @param[in] second ID of the second vertex of the Quad
+   * @param[in] third ID of the third vertex of the Quad
+   * @param[in] fourth ID of the fourth vertex of the Quad
    *
-   * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the name meshName
+   * @pre vertices with IDs first, second, third, and fourth were added to the mesh with the name meshName
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshQuad(
       ::precice::string_view meshName,
-      VertexID               firstVertexID,
-      VertexID               secondVertexID,
-      VertexID               thirdVertexID,
-      VertexID               fourthVertexID);
+      VertexID               first,
+      VertexID               second,
+      VertexID               third,
+      VertexID               fourth);
 
   /**
    * @brief Sets multiple mesh quads from vertex IDs
@@ -710,21 +710,21 @@ public:
    * @note The order of vertices does not matter.
    *
    * @param[in] meshName name of the mesh to add the Tetrahedron to
-   * @param[in] firstVertexID ID of the first vertex of the Tetrahedron
-   * @param[in] secondVertexID ID of the second vertex of the Tetrahedron
-   * @param[in] thirdVertexID ID of the third vertex of the Tetrahedron
-   * @param[in] fourthVertexID ID of the fourth vertex of the Tetrahedron
+   * @param[in] first ID of the first vertex of the Tetrahedron
+   * @param[in] second ID of the second vertex of the Tetrahedron
+   * @param[in] third ID of the third vertex of the Tetrahedron
+   * @param[in] fourth ID of the fourth vertex of the Tetrahedron
    *
-   * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the name meshName
+   * @pre vertices with IDs first, second, third, and fourth were added to the mesh with the name meshName
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTetrahedron(
       ::precice::string_view meshName,
-      VertexID               firstVertexID,
-      VertexID               secondVertexID,
-      VertexID               thirdVertexID,
-      VertexID               fourthVertexID);
+      VertexID               first,
+      VertexID               second,
+      VertexID               third,
+      VertexID               fourth);
 
   /**
    * @brief Sets multiple mesh tetrahedra from vertex IDs

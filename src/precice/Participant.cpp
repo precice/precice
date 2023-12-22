@@ -133,10 +133,10 @@ void Participant::setMeshVertices(
 
 void Participant::setMeshEdge(
     ::precice::string_view meshName,
-    VertexID               firstVertexID,
-    VertexID               secondVertexID)
+    VertexID               first,
+    VertexID               second)
 {
-  _impl->setMeshEdge(toSV(meshName), firstVertexID, secondVertexID);
+  _impl->setMeshEdge(toSV(meshName), first, second);
 }
 
 void Participant::setMeshEdges(
@@ -148,11 +148,11 @@ void Participant::setMeshEdges(
 
 void Participant::setMeshTriangle(
     ::precice::string_view meshName,
-    VertexID               firstVertexID,
-    VertexID               secondVertexID,
-    VertexID               thirdVertexID)
+    VertexID               first,
+    VertexID               second,
+    VertexID               third)
 {
-  _impl->setMeshTriangle(toSV(meshName), firstVertexID, secondVertexID, thirdVertexID);
+  _impl->setMeshTriangle(toSV(meshName), first, second, third);
 }
 
 void Participant::setMeshTriangles(
@@ -164,13 +164,12 @@ void Participant::setMeshTriangles(
 
 void Participant::setMeshQuad(
     ::precice::string_view meshName,
-    VertexID               firstVertexID,
-    VertexID               secondVertexID,
-    VertexID               thirdVertexID,
-    VertexID               fourthVertexID)
+    VertexID               first,
+    VertexID               second,
+    VertexID               third,
+    VertexID               fourth)
 {
-  _impl->setMeshQuad(toSV(meshName), firstVertexID, secondVertexID, thirdVertexID,
-                     fourthVertexID);
+  _impl->setMeshQuad(toSV(meshName), first, second, third, fourth);
 }
 
 void Participant::setMeshQuads(
@@ -182,13 +181,12 @@ void Participant::setMeshQuads(
 
 void Participant::setMeshTetrahedron(
     ::precice::string_view meshName,
-    VertexID               firstVertexID,
-    VertexID               secondVertexID,
-    VertexID               thirdVertexID,
-    VertexID               fourthVertexID)
+    VertexID               first,
+    VertexID               second,
+    VertexID               third,
+    VertexID               fourth)
 {
-  _impl->setMeshTetrahedron(toSV(meshName), firstVertexID, secondVertexID, thirdVertexID,
-                            fourthVertexID);
+  _impl->setMeshTetrahedron(toSV(meshName), first, second, third, fourth);
 }
 
 void Participant::setMeshTetrahedra(
