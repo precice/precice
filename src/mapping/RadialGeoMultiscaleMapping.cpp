@@ -154,7 +154,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen
   // Check that the number of values for the input and output is right according to their dimensions
   PRECICE_ASSERT((inputValues.size() / inDataDimensions == static_cast<int>(input()->vertices().size())),
                  inputValues.size(), inDataDimensions, input()->vertices().size());
-  PRECICE_ASSERT((outputValues.size() / inDataDimensions == static_cast<int>(output()->vertices().size())),
+  PRECICE_ASSERT((outputValues.size() / outDataDimensions == static_cast<int>(output()->vertices().size())),
                  outputValues.size(), outDataDimensions, output()->vertices().size());
 
   // We currently don't support 1D data, so we need that the user specifies data of the same dimensions on both sides
@@ -172,7 +172,6 @@ void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen
       3D vertices are projected onto the 1D axis and the data is then mapped
       to (and averaged at) the nearest 1D vertex in projection space.
     */
-    PRECICE_ASSERT(outputValues.size() == static_cast<int>(output()->vertices().size()), outputValues.size(), inDataDimensions, output()->vertices().size());
 
     for (size_t i = 0; i < outSize; i++) {
       outputValues((i * inDataDimensions)) = 0;
