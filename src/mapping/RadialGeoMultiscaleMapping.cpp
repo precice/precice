@@ -164,7 +164,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen
   if (_type == MultiscaleType::SPREAD) {
     // assign 1D vertex value to all 3D vertices in vicinity
     for (size_t i = 0; i < outSize; i++) {
-      outputValues((i * outDataDimensions)) = inputValues(_vertexIndicesSpread[i]);
+      outputValues((i * outDataDimensions)) = inputValues(_vertexIndicesSpread[i] * inDataDimensions);
     }
   } else {
     PRECICE_ASSERT(_type == MultiscaleType::COLLECT);
