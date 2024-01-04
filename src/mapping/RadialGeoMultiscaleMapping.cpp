@@ -181,7 +181,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen
       outputValues(_vertexIndicesCollect[i] * outDataDimensions) += inputValues(i * inDataDimensions);
     }
     for (size_t i = 0; i < outSize; i++) {
-      outputValues(i) = outputValues(i) / _vertexCounter[i];
+      outputValues((i * outDataDimensions)) = outputValues((i * outDataDimensions)) / _vertexCounter[i];
     }
   }
 }
