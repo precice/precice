@@ -190,10 +190,7 @@ void RadialGeoMultiscaleMapping::tagMeshFirstRound()
     PRECICE_ASSERT(_type == MultiscaleType::SPREAD, "Not yet implemented");
 
     // tag all vertices of the 1D mesh
-    size_t const inSize = input()->vertices().size();
-    for (size_t i = 0; i < inSize; i++) {
-      input()->vertices()[i].tag();
-    }
+    input()->tagAll();
 
   } else {
     PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
