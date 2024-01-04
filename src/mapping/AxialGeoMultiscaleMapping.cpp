@@ -34,13 +34,13 @@ void AxialGeoMultiscaleMapping::computeMapping()
       /* When we add support for 1D meshes (https://github.com/precice/precice/issues/1669),
         we should check for valid dimensions combination.
 
-        const int inValueDimensions  = input()->getDimensions();
-        const int outValueDimensions = output()->getDimensions();
+        const int inDataDimensions  = input()->getDimensions();
+        const int outDataDimensions = output()->getDimensions();
 
         PRECICE_CHECK(input()->getDimensions() == 1, "The input mesh on an axial geometric multiscale mapping can only be 1D at the moment, but it was defined to be {}.", input()->getDimensions())
         PRECICE_CHECK(output()->getDimensions() == 3, "The output mesh on an axial geometric multiscale mapping can only be 3D at the moment, but it was defined to be {}.", input()->getDimensions())
       */
-      const int outValueDimensions = 3;
+      const int outDataDimensions = 3;
 
       int effectiveCoordinate = static_cast<std::underlying_type_t<MultiscaleType>>(_axis); // Convert enum struct to int
       PRECICE_ASSERT(effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::X) ||
@@ -57,7 +57,7 @@ void AxialGeoMultiscaleMapping::computeMapping()
       _vertexDistances.reserve(output()->vertices().size());
 
       for (size_t i = 0; i < outSize; i++) {
-        Eigen::VectorXd difference(outValueDimensions);
+        Eigen::VectorXd difference(outDataDimensions);
         difference = v0.getCoords();
         difference -= output()->vertices()[i].getCoords();
         double distance_to_radius = difference.norm() / _radius;
@@ -95,11 +95,11 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
 {
   PRECICE_TRACE();
 
-  const int              inValueDimensions = inData.dataDims;
-  const Eigen::VectorXd &inputValues       = inData.values;
-  Eigen::VectorXd &      outputValues      = outData;
+  const int              inDataDimensions = inData.dataDims;
+  const Eigen::VectorXd &inputValues      = inData.values;
+  Eigen::VectorXd &      outputValues     = outData;
   // TODO: check if this needs to change when access to mesh dimension is possible
-  const int outValueDimensions = outData.size() / output()->vertices().size();
+  const int outDataDimensions = outData.size() / output()->vertices().size();
 
   int effectiveCoordinate = static_cast<std::underlying_type_t<MultiscaleType>>(_axis);
   PRECICE_ASSERT(effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::X) ||
@@ -108,10 +108,13 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
                  "Unknown multiscale axis type.")
 
   // Check that the number of values for the input and output is right according to their dimensions
-  PRECICE_ASSERT((inputValues.size() / inValueDimensions == static_cast<int>(input()->vertices().size())),
-                 inputValues.size(), inValueDimensions, input()->vertices().size());
-  PRECICE_ASSERT((outputValues.size() / outValueDimensions == static_cast<int>(output()->vertices().size())),
-                 outputValues.size(), outValueDimensions, output()->vertices().size());
+  PRECICE_ASSERT((inputValues.size() / inDataDimensions == static_cast<int>(input()->vertices().size())),
+                 inputValues.size(), inDataDimensions, input()->vertices().size());
+  PRECICE_ASSERT((outputValues.size() / outDataDimensions == static_cast<int>(output()->vertices().size())),
+                 outputValues.size(), outDataDimensions, output()->vertices().size());
+
+  // We currently don't support 1D data, so we need that the user specifies data of the same dimensions on both sides
+  PRECICE_ASSERT(inDataDimensions == outDataDimensions);
 
   PRECICE_DEBUG("Map consistent");
   if (_type == MultiscaleType::SPREAD) {
@@ -123,9 +126,9 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
     size_t const outSize = output()->vertices().size();
 
     for (size_t i = 0; i < outSize; i++) {
-      PRECICE_ASSERT(static_cast<int>((i * outValueDimensions) + effectiveCoordinate) < outputValues.size(), ((i * outValueDimensions) + effectiveCoordinate), outputValues.size());
+      PRECICE_ASSERT(static_cast<int>((i * outDataDimensions) + effectiveCoordinate) < outputValues.size(), ((i * outDataDimensions) + effectiveCoordinate), outputValues.size());
       // When adding support for 2D, remember that this should be 1.5 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
-      outputValues((i * outValueDimensions) + effectiveCoordinate) = 2 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
+      outputValues((i * outDataDimensions) + effectiveCoordinate) = 2 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
     }
   } else {
     PRECICE_ASSERT(_type == MultiscaleType::COLLECT);
@@ -137,8 +140,8 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
     outputValues(effectiveCoordinate) = 0;
     size_t const inSize               = input()->vertices().size();
     for (size_t i = 0; i < inSize; i++) {
-      PRECICE_ASSERT(static_cast<int>((i * inValueDimensions) + effectiveCoordinate) < inputValues.size(), ((i * inValueDimensions) + effectiveCoordinate), inputValues.size())
-      outputValues(effectiveCoordinate) += inputValues((i * inValueDimensions) + effectiveCoordinate);
+      PRECICE_ASSERT(static_cast<int>((i * inDataDimensions) + effectiveCoordinate) < inputValues.size(), ((i * inDataDimensions) + effectiveCoordinate), inputValues.size())
+      outputValues(effectiveCoordinate) += inputValues((i * inDataDimensions) + effectiveCoordinate);
     }
     outputValues(effectiveCoordinate) = outputValues(effectiveCoordinate) / inSize;
   }

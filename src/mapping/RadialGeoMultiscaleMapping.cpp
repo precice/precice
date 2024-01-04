@@ -157,6 +157,9 @@ void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen
   PRECICE_ASSERT((outputValues.size() / inDataDimensions == static_cast<int>(output()->vertices().size())),
                  outputValues.size(), outDataDimensions, output()->vertices().size());
 
+  // We currently don't support 1D data, so we need that the user specifies data of the same dimensions on both sides
+  PRECICE_ASSERT(inDataDimensions == outDataDimensions);
+
   PRECICE_DEBUG("Map consistent");
   if (_type == MultiscaleType::SPREAD) {
     // assign 1D vertex value to all 3D vertices in vicinity
