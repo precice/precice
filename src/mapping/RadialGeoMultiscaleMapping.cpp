@@ -152,13 +152,13 @@ void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen
   auto outDataDimensions = outputValues.size() / outSize;
 
   // Check that the number of values for the input and output is right according to their dimensions
-  PRECICE_ASSERT((inputValues.size() / inDataDimensions == static_cast<int>(input()->vertices().size())),
+  PRECICE_ASSERT((inputValues.size() / static_cast<std::size_t>(inDataDimensions) == input()->vertices().size()),
                  inputValues.size(), inDataDimensions, input()->vertices().size());
-  PRECICE_ASSERT((outputValues.size() / outDataDimensions == static_cast<int>(output()->vertices().size())),
+  PRECICE_ASSERT((outputValues.size() / outDataDimensions == output()->vertices().size()),
                  outputValues.size(), outDataDimensions, output()->vertices().size());
 
   // We currently don't support 1D data, so we need that the user specifies data of the same dimensions on both sides
-  PRECICE_ASSERT(inDataDimensions == outDataDimensions);
+  PRECICE_ASSERT(static_cast<std::size_t>(inDataDimensions) == outDataDimensions);
 
   PRECICE_DEBUG("Map consistent");
   if (_type == MultiscaleType::SPREAD) {
