@@ -178,7 +178,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen
     }
     // assign the 1D vertex the average of all 3D vertex values in vicinity
     for (size_t i = 0; i < inSize; i++) {
-      outputValues(_vertexIndicesCollect[i]) += inputValues(i * inDataDimensions);
+      outputValues(_vertexIndicesCollect[i] * outDataDimensions) += inputValues(i * inDataDimensions);
     }
     for (size_t i = 0; i < outSize; i++) {
       outputValues(i) = outputValues(i) / _vertexCounter[i];
