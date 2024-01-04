@@ -180,14 +180,14 @@ void precicef_get_mesh_vertex_size_(
 void precicef_set_vertices_(
     const char *meshName,
     const int * size,
-    double *    positions,
-    int *       positionIDs,
+    double *    coordinates,
+    int *       ids,
     int         meshNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
   auto sv           = precice::impl::strippedStringView(meshName, meshNameLength);
   auto positionSize = static_cast<unsigned long>(impl->getMeshDimensions(sv) * *size);
-  impl->setMeshVertices(sv, {positions, positionSize}, {positionIDs, static_cast<unsigned long>(*size)});
+  impl->setMeshVertices(sv, {coordinates, positionSize}, {ids, static_cast<unsigned long>(*size)});
 }
 
 void precicef_set_edge_(
@@ -203,12 +203,12 @@ void precicef_set_edge_(
 void precicef_set_mesh_edges_(
     const char *meshName,
     const int * size,
-    const int * vertices,
+    const int * ids,
     int         meshNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  auto verticesSize = static_cast<unsigned long>(*size) * 2;
-  impl->setMeshEdges(precice::impl::strippedStringView(meshName, meshNameLength), {vertices, verticesSize});
+  auto idsSize = static_cast<unsigned long>(*size) * 2;
+  impl->setMeshEdges(precice::impl::strippedStringView(meshName, meshNameLength), {ids, idsSize});
 }
 
 void precicef_set_triangle_(
@@ -225,12 +225,12 @@ void precicef_set_triangle_(
 void precicef_set_mesh_triangles_(
     const char *meshName,
     const int * size,
-    const int * vertices,
+    const int * ids,
     int         meshNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  auto verticesSize = static_cast<unsigned long>(*size) * 3;
-  impl->setMeshTriangles(precice::impl::strippedStringView(meshName, meshNameLength), {vertices, verticesSize});
+  auto idsSize = static_cast<unsigned long>(*size) * 3;
+  impl->setMeshTriangles(precice::impl::strippedStringView(meshName, meshNameLength), {ids, idsSize});
 }
 
 void precicef_set_quad_(
@@ -248,12 +248,12 @@ void precicef_set_quad_(
 void precicef_set_mesh_quads_(
     const char *meshName,
     const int * size,
-    const int * vertices,
+    const int * ids,
     int         meshNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  auto verticesSize = static_cast<unsigned long>(*size) * 4;
-  impl->setMeshQuads(precice::impl::strippedStringView(meshName, meshNameLength), {vertices, verticesSize});
+  auto idsSize = static_cast<unsigned long>(*size) * 4;
+  impl->setMeshQuads(precice::impl::strippedStringView(meshName, meshNameLength), {ids, idsSize});
 }
 
 void precicef_set_tetrahedron(
@@ -271,19 +271,19 @@ void precicef_set_tetrahedron(
 void precicef_set_mesh_tetrahedra_(
     const char *meshName,
     const int * size,
-    const int * vertices,
+    const int * ids,
     int         meshNameLength)
 {
   PRECICE_CHECK(impl != nullptr, errormsg);
-  auto verticesSize = static_cast<unsigned long>(*size) * 4;
-  impl->setMeshTetrahedra(precice::impl::strippedStringView(meshName, meshNameLength), {vertices, verticesSize});
+  auto idsSize = static_cast<unsigned long>(*size) * 4;
+  impl->setMeshTetrahedra(precice::impl::strippedStringView(meshName, meshNameLength), {ids, idsSize});
 }
 
 void precicef_write_data_(
     const char *meshName,
     const char *dataName,
     const int * size,
-    int *       valueIndices,
+    int *       ids,
     double *    values,
     int         meshNameLength,
     int         dataNameLength)
@@ -294,7 +294,7 @@ void precicef_write_data_(
   auto dataSize         = *size * impl->getDataDimensions(strippedMeshName, strippedDataName);
   impl->writeData(strippedMeshName,
                   strippedDataName,
-                  {valueIndices, static_cast<unsigned long>(*size)},
+                  {ids, static_cast<unsigned long>(*size)},
                   {values, static_cast<unsigned long>(dataSize)});
 }
 
@@ -302,7 +302,7 @@ void precicef_read_data_(
     const char *  meshName,
     const char *  dataName,
     const int *   size,
-    int *         valueIndices,
+    int *         ids,
     const double *relativeReadTime,
     double *      values,
     int           meshNameLength,
@@ -315,7 +315,7 @@ void precicef_read_data_(
   impl->readData(
       strippedMeshName,
       strippedDataName,
-      {valueIndices, static_cast<unsigned long>(*size)},
+      {ids, static_cast<unsigned long>(*size)},
       *relativeReadTime,
       {values, static_cast<unsigned long>(dataSize)});
 }
@@ -365,7 +365,7 @@ void precicef_write_gradient_data_(
     const char *  meshName,
     const char *  dataName,
     const int *   size,
-    const int *   valueIndices,
+    const int *   ids,
     const double *gradients,
     int           meshNameLength,
     int           dataNameLength)
@@ -378,7 +378,7 @@ void precicef_write_gradient_data_(
 
   impl->writeGradientData(strippedMeshName,
                           strippedDataName,
-                          {valueIndices, static_cast<unsigned long>(*size)},
+                          {ids, static_cast<unsigned long>(*size)},
                           {gradients, static_cast<unsigned long>(gradientSize)});
 }
 
@@ -393,7 +393,7 @@ void precicef_set_mesh_access_region_(
   impl->setMeshAccessRegion(sv, {boundingBox, bbSize});
 }
 
-void precicef_get_mesh_vertices_and_ids_(
+void precicef_get_mesh_vertex_ids_and_coordinates_(
     const char *meshName,
     const int   size,
     int *       ids,

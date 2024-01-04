@@ -641,7 +641,7 @@ void ParticipantImpl::resetMesh(
   context.mesh->clear();
 }
 
-int ParticipantImpl::setMeshVertex(
+VertexID ParticipantImpl::setMeshVertex(
     std::string_view              meshName,
     ::precice::span<const double> position)
 {
@@ -698,19 +698,19 @@ void ParticipantImpl::setMeshVertices(
 
 void ParticipantImpl::setMeshEdge(
     std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID)
+    VertexID         first,
+    VertexID         second)
 {
-  PRECICE_TRACE(meshName, firstVertexID, secondVertexID);
+  PRECICE_TRACE(meshName, first, second);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    mesh::Vertex &v0 = mesh->vertices()[firstVertexID];
-    mesh::Vertex &v1 = mesh->vertices()[secondVertexID];
+    PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
+    PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
+    mesh::Vertex &v0 = mesh->vertices()[first];
+    mesh::Vertex &v1 = mesh->vertices()[second];
     mesh->createEdge(v0, v1);
   }
 }
@@ -751,32 +751,32 @@ void ParticipantImpl::setMeshEdges(
 
 void ParticipantImpl::setMeshTriangle(
     std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID,
-    int              thirdVertexID)
+    VertexID         first,
+    VertexID         second,
+    VertexID         third)
 {
-  PRECICE_TRACE(meshName, firstVertexID,
-                secondVertexID, thirdVertexID);
+  PRECICE_TRACE(meshName, first,
+                second, third);
 
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(firstVertexID, secondVertexID, thirdVertexID)),
+    PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
+    PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
+    PRECICE_CHECK(mesh->isValidVertexID(third), errorInvalidVertexID(third));
+    PRECICE_CHECK(utils::unique_elements(utils::make_array(first, second, third)),
                   "setMeshTriangle() was called with repeated Vertex IDs ({}, {}, {}).",
-                  firstVertexID, secondVertexID, thirdVertexID);
+                  first, second, third);
     mesh::Vertex *vertices[3];
-    vertices[0] = &mesh->vertices()[firstVertexID];
-    vertices[1] = &mesh->vertices()[secondVertexID];
-    vertices[2] = &mesh->vertices()[thirdVertexID];
+    vertices[0] = &mesh->vertices()[first];
+    vertices[1] = &mesh->vertices()[second];
+    vertices[2] = &mesh->vertices()[third];
     PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
                                                            vertices[1]->getCoords(), vertices[2]->getCoords())),
                   "setMeshTriangle() was called with vertices located at identical coordinates (IDs: {}, {}, {}).",
-                  firstVertexID, secondVertexID, thirdVertexID);
+                  first, second, third);
     mesh::Edge *edges[3];
     edges[0] = &mesh->createEdge(*vertices[0], *vertices[1]);
     edges[1] = &mesh->createEdge(*vertices[1], *vertices[2]);
@@ -825,13 +825,13 @@ void ParticipantImpl::setMeshTriangles(
 
 void ParticipantImpl::setMeshQuad(
     std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID,
-    int              thirdVertexID,
-    int              fourthVertexID)
+    VertexID         first,
+    VertexID         second,
+    VertexID         third,
+    VertexID         fourth)
 {
-  PRECICE_TRACE(meshName, firstVertexID,
-                secondVertexID, thirdVertexID, fourthVertexID);
+  PRECICE_TRACE(meshName, first,
+                second, third, fourth);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshQuad is only possible for 3D meshes."
@@ -840,12 +840,12 @@ void ParticipantImpl::setMeshQuad(
     PRECICE_ASSERT(context.mesh);
     mesh::Mesh &mesh = *(context.mesh);
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh.isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(mesh.isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    PRECICE_CHECK(mesh.isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
-    PRECICE_CHECK(mesh.isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
+    PRECICE_CHECK(mesh.isValidVertexID(first), errorInvalidVertexID(first));
+    PRECICE_CHECK(mesh.isValidVertexID(second), errorInvalidVertexID(second));
+    PRECICE_CHECK(mesh.isValidVertexID(third), errorInvalidVertexID(third));
+    PRECICE_CHECK(mesh.isValidVertexID(fourth), errorInvalidVertexID(fourth));
 
-    auto vertexIDs = utils::make_array(firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+    auto vertexIDs = utils::make_array(first, second, third, fourth);
     PRECICE_CHECK(utils::unique_elements(vertexIDs), "The four vertex ID's are not unique. Please check that the vertices that form the quad are correct.");
 
     auto coords = mesh::coordsFor(mesh, vertexIDs);
@@ -940,12 +940,12 @@ void ParticipantImpl::setMeshQuads(
 
 void ParticipantImpl::setMeshTetrahedron(
     std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID,
-    int              thirdVertexID,
-    int              fourthVertexID)
+    VertexID         first,
+    VertexID         second,
+    VertexID         third,
+    VertexID         fourth)
 {
-  PRECICE_TRACE(meshName, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+  PRECICE_TRACE(meshName, first, second, third, fourth);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes."
@@ -953,14 +953,14 @@ void ParticipantImpl::setMeshTetrahedron(
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
-    mesh::Vertex &A = mesh->vertices()[firstVertexID];
-    mesh::Vertex &B = mesh->vertices()[secondVertexID];
-    mesh::Vertex &C = mesh->vertices()[thirdVertexID];
-    mesh::Vertex &D = mesh->vertices()[fourthVertexID];
+    PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
+    PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
+    PRECICE_CHECK(mesh->isValidVertexID(third), errorInvalidVertexID(third));
+    PRECICE_CHECK(mesh->isValidVertexID(fourth), errorInvalidVertexID(fourth));
+    mesh::Vertex &A = mesh->vertices()[first];
+    mesh::Vertex &B = mesh->vertices()[second];
+    mesh::Vertex &C = mesh->vertices()[third];
+    mesh::Vertex &D = mesh->vertices()[fourth];
 
     mesh->createTetrahedron(A, B, C, D);
   }
