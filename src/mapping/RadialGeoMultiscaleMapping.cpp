@@ -66,7 +66,7 @@ void RadialGeoMultiscaleMapping::computeMapping()
         int  index       = 0;
         while (vertexCoord > axisMidpoints(index)) {
           PRECICE_ASSERT(index + 1 < static_cast<int>(inSize));
-          index++;
+          ++index;
         }
         _vertexIndicesSpread.push_back(index);
       }
@@ -106,7 +106,7 @@ void RadialGeoMultiscaleMapping::computeMapping()
         int  index        = 0;
         while (vertexCoords > axisMidpoints(index)) {
           PRECICE_ASSERT(index + 1 < static_cast<int>(outSize));
-          index++;
+          ++index;
         }
         _vertexIndicesCollect.push_back(index);
         counters[index] += 1;
