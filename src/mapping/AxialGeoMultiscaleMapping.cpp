@@ -107,6 +107,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
                      effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Z),
                  "Unknown multiscale axis type.")
 
+  // Check that the number of values for the input and output is right according to their dimensions
   PRECICE_ASSERT((inputValues.size() / inValueDimensions == static_cast<int>(input()->vertices().size())),
                  inputValues.size(), inValueDimensions, input()->vertices().size());
   PRECICE_ASSERT((outputValues.size() / outValueDimensions == static_cast<int>(output()->vertices().size())),
