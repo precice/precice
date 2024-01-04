@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadX)
   // Point F (1D) == Point c (3D)
   BOOST_TEST(outValues(15) == inSample.values(6));
   BOOST_TEST(outValues(16) == inSample.values(7));
-  BOOST_TEST(outValues(16) == inSample.values(8));
+  BOOST_TEST(outValues(17) == inSample.values(8));
 }
 
 BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
