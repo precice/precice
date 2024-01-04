@@ -43,10 +43,10 @@ void RadialGeoMultiscaleMapping::computeMapping()
       // Order the vertices of the 1D input mesh, to correctly compute the midpoints of the segments between neighboring vertices
       std::vector<size_t> ordered_vertex_indices(input()->vertices().size());
       std::iota(ordered_vertex_indices.begin(), ordered_vertex_indices.end(), 0);
-      std::sort(ordered_vertex_indices.begin(), ordered_vertex_indices.end(),
-                [effectiveCoordinate, &inputVerticesRef](const size_t aindex, const size_t bindex) {
-                  return inputVerticesRef[aindex].getCoords()[effectiveCoordinate] < inputVerticesRef[bindex].getCoords()[effectiveCoordinate];
-                });
+      std::stable_sort(ordered_vertex_indices.begin(), ordered_vertex_indices.end(),
+                       [effectiveCoordinate, &inputVerticesRef](const size_t aindex, const size_t bindex) {
+                         return inputVerticesRef[aindex].getCoords()[effectiveCoordinate] < inputVerticesRef[bindex].getCoords()[effectiveCoordinate];
+                       });
       // Compute the midpoints of the 1D input mesh
       for (size_t i = 0; i < (inSize - 1); i++) {
         auto axisPositionCurrent = inputVerticesRef[ordered_vertex_indices[i]].getCoords()[effectiveCoordinate];
@@ -84,10 +84,10 @@ void RadialGeoMultiscaleMapping::computeMapping()
       // Order the vertices of the 1D output mesh, to correctly compute the midpoints of the segments between neighboring vertices
       std::vector<size_t> ordered_vertex_indices(output()->vertices().size());
       std::iota(ordered_vertex_indices.begin(), ordered_vertex_indices.end(), 0);
-      std::sort(ordered_vertex_indices.begin(), ordered_vertex_indices.end(),
-                [effectiveCoordinate, &outputVerticesRef](const size_t aindex, const size_t bindex) {
-                  return outputVerticesRef[aindex].getCoords()[effectiveCoordinate] < outputVerticesRef[bindex].getCoords()[effectiveCoordinate];
-                });
+      std::stable_sort(ordered_vertex_indices.begin(), ordered_vertex_indices.end(),
+                       [effectiveCoordinate, &outputVerticesRef](const size_t aindex, const size_t bindex) {
+                         return outputVerticesRef[aindex].getCoords()[effectiveCoordinate] < outputVerticesRef[bindex].getCoords()[effectiveCoordinate];
+                       });
       // Compute the midpoints of the 1D output mesh
       for (size_t i = 0; i < (outSize - 1); i++) {
         auto axisPositionCurrent = output()->vertices()[i].getCoords()[effectiveCoordinate];
