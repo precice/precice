@@ -84,6 +84,7 @@ target_sources(testprecice
     src/testing/GlobalFixtures.cpp
     src/testing/ParallelCouplingSchemeFixture.cpp
     src/testing/ParallelCouplingSchemeFixture.hpp
+    src/testing/QuickTest.hpp
     src/testing/SerialCouplingSchemeFixture.cpp
     src/testing/SerialCouplingSchemeFixture.hpp
     src/testing/TestContext.cpp
@@ -93,6 +94,7 @@ target_sources(testprecice
     src/testing/WaveformFixture.cpp
     src/testing/WaveformFixture.hpp
     src/testing/main.cpp
+    src/testing/tests/ExampleQuickTests.cpp
     src/testing/tests/ExampleTests.cpp
     src/time/tests/StorageTest.cpp
     src/time/tests/WaveformTest.cpp

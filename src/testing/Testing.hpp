@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <boost/test/tools/collection_comparison_op.hpp>
 #include <boost/test/unit_test.hpp>
 #include <string>
 #include <type_traits>
