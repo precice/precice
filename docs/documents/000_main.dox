@@ -12,6 +12,8 @@ The API of further native bindings can be found here:
 - \ref preciceC.h "preciceC" for the C bindings.
 - \ref preciceFortran.hpp "preciceFortran" for the Fortran bindings.
 
+The detailed porting guides on https://precice.org/couple-your-code-porting-overview help you to port adapters between major versions of preCICE.
+
 # For Library Developers
 
 For general information, have a look at the developer documentation on the website https://precice.org/dev-docs-overview.
