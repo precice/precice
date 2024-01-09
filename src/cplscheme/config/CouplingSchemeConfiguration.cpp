@@ -799,6 +799,16 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
       _config.participants[0], _config.participants[1]);
   SerialCouplingScheme *scheme = new SerialCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.participants[0], _config.participants[1], accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
 
+  for (const auto &exchange : _config.exchanges) {
+    if ((exchange.from == _config.participants[1]) && exchange.exchangeSubsteps) {
+      PRECICE_WARN(
+          "You enabled exchanging substeps in the serial-explicit coupling between the second participant \"{}\" and first participant \"{}\". "
+          "This is inefficient as these substeps will never be used.",
+          exchange.from, exchange.to);
+      break;
+    }
+  }
+
   addDataToBeExchanged(*scheme, accessor);
 
   return PtrCouplingScheme(scheme);
@@ -811,6 +821,16 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
   ParallelCouplingScheme *scheme = new ParallelCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.participants[0], _config.participants[1], accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
+
+  for (const auto &exchange : _config.exchanges) {
+    if (exchange.exchangeSubsteps) {
+      PRECICE_WARN(
+          "You enabled exchanging substeps in the parallel-explicit coupling between \"{}\" and \"{}\". "
+          "This is inefficient as these substeps will never be used.",
+          exchange.from, exchange.to);
+      break;
+    }
+  }
 
   addDataToBeExchanged(*scheme, accessor);
 
