@@ -1,5 +1,5 @@
 #include "RadialGeoMultiscaleMapping.hpp"
-#include <Eigen/src/Core/Matrix.h>
+#include <Eigen/Core>
 #include <algorithm>
 #include <numeric>
 #include "mesh/Mesh.hpp"
