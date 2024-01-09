@@ -19,7 +19,7 @@ using namespace precice::mesh;
 BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(RadialGeoMultiscaleMapping)
 
-BOOST_AUTO_TEST_CASE(testConsistentSpreadX)
+BOOST_AUTO_TEST_CASE(ConsistentSpreadX)
 {
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, that intersect along the x-axis.
       Then, the data is mapped from the vertices of the 1D mesh to defined vertices of the 3D mesh (hence, SPREAD).
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadX)
   BOOST_TEST(outValues(17) == inSample.values(8));
 }
 
-BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
+BOOST_AUTO_TEST_CASE(ConsistentSpreadZ)
 {
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, that intersect along the z-axis.
       Then, the data is mapped from the vertices of the 1D mesh to defined vertices of the 3D mesh (hence, "spread").
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(testConsistentSpreadZ)
   BOOST_TEST(outValues(16) == inSample.values(8));
 }
 
-BOOST_AUTO_TEST_CASE(testConsistentCollectX)
+BOOST_AUTO_TEST_CASE(ConsistentCollectX)
 {
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, that intersect along the x-axis.
       Then, the data is mapped from the vertices of the 3D mesh to defined vertices of the 1D mesh (hence, "collect").
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(testConsistentCollectX)
   BOOST_TEST(outValues(8) == 0.0);
 }
 
-BOOST_AUTO_TEST_CASE(testConsistentCollectZ)
+BOOST_AUTO_TEST_CASE(ConsistentCollectZ)
 {
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, that intersect along the x-axis.
       Then, the data is mapped from the vertices of the 3D mesh to defined vertices of the 1D mesh (hence, COLLECT).
