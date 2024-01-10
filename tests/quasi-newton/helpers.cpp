@@ -269,7 +269,7 @@ void runTestQNWR(std::string const &config, TestContext const &context)
       outValues[1] = inValues[0] + t;
     }
 
-    // ave the outValues in savedValues to check for correctness later
+    // save the outValues in savedValues to check for correctness later
     savedValues(nSubStepsDone, 0) = outValues[0];
     savedValues(nSubStepsDone, 1) = outValues[1];
 
