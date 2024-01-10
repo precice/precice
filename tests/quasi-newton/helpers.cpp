@@ -231,7 +231,7 @@ void runTestQNWR(std::string const &config, TestContext const &context)
     interface.setMeshVertices(meshName, positions0, vertexIDs);
   }
 
-  int             nSubsteps = 5;             // perform subcycling on solvers. 3 steps happen in each window.
+  int             nSubsteps = 5;             // perform subcycling on solvers. 5 steps happen in each window.
   Eigen::MatrixXd savedValues(nSubsteps, 2); // save the solution to check for correctness after it has converged
 
   interface.initialize();
