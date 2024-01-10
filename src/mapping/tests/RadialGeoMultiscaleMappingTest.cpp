@@ -65,10 +65,12 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadX)
 
   // Map data
   mapping.computeMapping();
+  mapping.computeMapping(); // Check (only in this case) if calling computeMapping() additional times works.
   mapping.map(inSample, outValues);
 
   // Check if data is mapped to closest vertex
   BOOST_TEST(mapping.hasComputedMapping() == true);
+  mapping.computeMapping(); // Check (only in this case) if calling computeMapping() additional times works.
 
   // Point A (1D) == Point a (3D)
   BOOST_TEST(outValues(0) == inSample.values(0));

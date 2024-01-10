@@ -59,9 +59,11 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadX)
 
   // Map data
   mapping.computeMapping();
+  mapping.computeMapping(); // Check (only in this case) if calling computeMapping() additional times works.
   mapping.map(inSample, outValues);
 
   BOOST_TEST(mapping.hasComputedMapping() == true);
+  mapping.computeMapping(); // Check (only in this case) if calling computeMapping() additional times works.
 
   // Point A (3D): Check if x axis data is doubled at center node (parabolic profile)
   BOOST_TEST(outValues(0) == 2 * inSample.values(0));
