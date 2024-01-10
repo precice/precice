@@ -1,5 +1,5 @@
 #include "AxialGeoMultiscaleMapping.hpp"
-#include<Eigen/Core>
+#include <Eigen/Core>
 #include "mesh/Mesh.hpp"
 
 namespace precice::mapping {
