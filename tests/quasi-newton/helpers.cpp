@@ -289,7 +289,7 @@ void runTestQNWR(std::string const &config, TestContext const &context)
     }
   }
   interface.finalize();
-  // Check that the last time window is correct as well
+  // Check that the last time window has converged to the analytical solution
   for (int i = 0; i < nSubsteps; i++) {
     // scaling with the time window length which is equal to 1
     double localTime = (1.0 * i) / nSubStepsDone + timeCheckpoint;

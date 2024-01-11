@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_CASE(TestQNWithWaveforms)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-  // serial coupling, IQN-ILS, strict QR2 filter
+  // serial coupling,Waveform iterations, IQN-ILS
   runTestQNWR(context.config(), context);
 }
 

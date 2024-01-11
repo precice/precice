@@ -307,7 +307,6 @@ void BaseQNAcceleration::performAcceleration(
   PRECICE_ASSERT(_residuals.size() == _oldXTilde.size(), _residuals.size(), _oldXTilde.size());
 
   // assume data structures associated with the LS system can be updated easily.
-
   // scale data values (and secondary data values)
   Acceleration::concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
 
