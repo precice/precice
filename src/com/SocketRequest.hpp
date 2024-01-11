@@ -4,12 +4,9 @@
 #include <mutex>
 #include "Request.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 class SocketRequest : public Request {
 public:
-  SocketRequest();
-
   void complete();
 
   bool test() override;
@@ -17,10 +14,9 @@ public:
   void wait() override;
 
 private:
-  bool _complete;
+  bool _complete{false};
 
   std::condition_variable _completeCondition;
   std::mutex              _completeMutex;
 };
-} // namespace com
-} // namespace precice
+} // namespace precice::com

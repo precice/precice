@@ -223,7 +223,7 @@ void TestContext::initializeEvents()
 void TestContext::initializePetsc()
 {
   if (!invalid && _petsc) {
-    precice::utils::Petsc::initialize(nullptr, nullptr, _contextComm->comm);
+    precice::utils::Petsc::initialize(_contextComm->comm);
   }
 }
 

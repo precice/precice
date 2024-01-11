@@ -243,11 +243,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
         if (_config.precond_nbNonConstTWindows > _config.imvjChunkSize)
           _config.precond_nbNonConstTWindows = _config.imvjChunkSize;
       if (_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER) {
-        std::vector<double> factors;
-        for (int id : _config.dataIDs) {
-          factors.push_back(_config.scalings[id]);
-        }
-        _preconditioner = PtrPreconditioner(new ConstantPreconditioner(factors));
+        _preconditioner = PtrPreconditioner(new ConstantPreconditioner(_config.scalingFactorsInOrder()));
       } else if (_config.preconditionerType == VALUE_VALUE_PRECONDITIONER) {
         _preconditioner = PtrPreconditioner(new ValuePreconditioner(_config.precond_nbNonConstTWindows));
       } else if (_config.preconditionerType == VALUE_RESIDUAL_PRECONDITIONER) {
@@ -333,7 +329,8 @@ void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
   auto attrScaling = makeXMLAttribute(ATTR_SCALING, 1.0)
                          .setDocumentation(
                              "To improve the performance of a parallel or a multi coupling schemes, "
-                             "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
+                             "each data set can be manually scaled using this scaling factor with preconditioner type = \"constant\". For all other preconditioner types, the factor is ignored. "
+                             "We recommend, however, to use an automatic scaling via a preconditioner.");
   tagData.addAttribute(attrScaling);
   tagData.addAttribute(attrName);
   tagData.addAttribute(attrMesh);
@@ -387,8 +384,9 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     attrMesh.setDocumentation("The name of the mesh which holds the data.");
     auto attrScaling = makeXMLAttribute(ATTR_SCALING, 1.0)
                            .setDocumentation(
-                               "To improve the numerical stability of multiple data vectors, "
-                               "data values can be manually scaled. We recommend, however, to use an automatic scaling via a preconditioner.");
+                               "To improve the performance of a parallel or a multi coupling schemes, "
+                               "each data set can be manually scaled using this scaling factor with preconditioner type = \"constant\". For all other preconditioner types, the factor is ignored. "
+                               "We recommend, however, to use an automatic scaling via a preconditioner.");
     tagData.addAttribute(attrScaling);
     tagData.addAttribute(attrName);
     tagData.addAttribute(attrMesh);
@@ -539,4 +537,14 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     PRECICE_ERROR("Acceleration of type \"{}\" is unknown. Please choose a valid acceleration scheme or check the spelling in the configuration file.", tag.getName());
   }
 }
+
+std::vector<double> AccelerationConfiguration::ConfigurationData::scalingFactorsInOrder() const
+{
+  std::vector<double> factors;
+  for (int id : dataIDs) {
+    factors.push_back(scalings.at(id));
+  }
+  return factors;
+}
+
 } // namespace precice::acceleration

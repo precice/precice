@@ -24,7 +24,7 @@ Storage &Storage::operator=(const Storage &other)
   return *this;
 }
 
-void Storage::setSampleAtTime(double time, Sample sample)
+void Storage::setSampleAtTime(double time, const Sample &sample)
 {
   // The spline has to be recomputed, since the underlying data has changed
   _bspline.reset();
@@ -43,14 +43,9 @@ void Storage::setSampleAtTime(double time, Sample sample)
   if (existingSample == _stampleStorage.end()) { // key does not exist yet
     PRECICE_ASSERT(math::smaller(maxStoredTime(), time), maxStoredTime(), time, "Trying to write sample with a time that is too small. Please use clear(), if you want to write new samples to the storage.");
     _stampleStorage.emplace_back(Stample{time, sample});
-  } else { // overwrite sample at "time"
-    for (auto &stample : _stampleStorage) {
-      if (math::equals(stample.timestamp, time)) {
-        stample.sample = sample;
-        return;
-      }
-    }
-    PRECICE_ASSERT(false, "unreachable!");
+  } else {
+    // Overriding sample
+    existingSample->sample = sample;
   }
 }
 
@@ -116,6 +111,17 @@ void Storage::clear()
 {
   _stampleStorage.clear();
   PRECICE_ASSERT(_stampleStorage.size() == 0);
+
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
+}
+
+void Storage::clearExceptLast()
+{
+  if (_stampleStorage.empty()) {
+    return;
+  }
+  _stampleStorage.erase(_stampleStorage.begin(), --_stampleStorage.end());
 
   // The spline has to be recomputed, since the underlying data has changed
   _bspline.reset();

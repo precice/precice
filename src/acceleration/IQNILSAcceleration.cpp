@@ -243,10 +243,12 @@ void IQNILSAcceleration::specializedIterationsConverged(
     const DataMap &cplData)
 {
   PRECICE_TRACE();
-  if (_matrixCols.front() == 0) { // Did only one iteration
-    _matrixCols.pop_front();
-  }
-
+  if (_matrixCols.empty()) {
+    PRECICE_WARN("The IQN matrix has no columns.");
+  } else {
+    if (_matrixCols.front() == 0) { // Did only one iteration
+      _matrixCols.pop_front();
+    }
   if (_timeWindowsReused == 0) {
     if (_forceInitialRelaxation) {
       _secondaryWaveformW.clear();

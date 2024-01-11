@@ -396,6 +396,12 @@ protected:
    */
   bool reachedEndOfTimeWindow() const;
 
+  /// @copydoc cplscheme::CouplingScheme::requiresSubsteps()
+  bool requiresSubsteps() const override final;
+
+  /// @copydoc cplscheme::CouplingScheme::implicitDataToReceive()
+  ImplicitData implicitDataToReceive() const override;
+
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;

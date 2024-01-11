@@ -154,7 +154,7 @@ public:
                                std::string_view dataName) const;
 
   /// @copydoc Participant::setMeshVertex
-  int setMeshVertex(
+  VertexID setMeshVertex(
       std::string_view              meshName,
       ::precice::span<const double> position);
 
@@ -170,8 +170,8 @@ public:
   /// @copydoc Participant::setMeshEdge
   void setMeshEdge(
       std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID);
+      VertexID         first,
+      VertexID         second);
 
   /// @copydoc Participant::setMeshEdges
   void setMeshEdges(
@@ -181,9 +181,9 @@ public:
   /// @copydoc Participant::setMeshTriangle
   void setMeshTriangle(
       std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID,
-      int              thirdVertexID);
+      VertexID         first,
+      VertexID         second,
+      VertexID         third);
 
   /// @copydoc Participant::setMeshTriangles
   void setMeshTriangles(
@@ -193,10 +193,10 @@ public:
   /// @copydoc Participant::setMeshQuad
   void setMeshQuad(
       std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID,
-      int              thirdVertexID,
-      int              fourthVertexID);
+      VertexID         first,
+      VertexID         second,
+      VertexID         third,
+      VertexID         fourth);
 
   /// @copydoc Participant::setMeshQuads
   void setMeshQuads(
@@ -206,10 +206,10 @@ public:
   /// @copydoc Participant::setMeshTetrahedron
   void setMeshTetrahedron(
       std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID,
-      int              thirdVertexID,
-      int              fourthVertexID);
+      VertexID         first,
+      VertexID         second,
+      VertexID         third,
+      VertexID         fourth);
 
   /// @copydoc Participant::setMeshTetrahedra
   void setMeshTetrahedra(
@@ -266,6 +266,13 @@ public:
    */
   /// @todo try to remove or make private. See https://github.com/precice/precice/issues/1269
   const mesh::Mesh &mesh(const std::string &meshName) const;
+
+  struct MappedSamples {
+    int write, read;
+  };
+
+  /// Returns the amount of mapped read and write samples in the last call to advance.
+  MappedSamples mappedSamples() const;
 
   /// Disable copy construction
   ParticipantImpl(ParticipantImpl const &) = delete;
@@ -327,6 +334,12 @@ private:
   /// Counts calls to advance for plotting.
   long int _numberAdvanceCalls = 0;
 
+  /// Counts the amount of samples mapped in write mappings executed in the latest advance
+  int _executedWriteMappings = 0;
+
+  /// Counts the amount of samples mapped in read mappings executed in the latest advance
+  int _executedReadMappings = 0;
+
   /**
    * @brief Configures the coupling interface from the given xml file.
    *
@@ -363,11 +376,18 @@ private:
   /// Helper for mapWrittenData and mapReadData
   void computeMappings(std::vector<MappingContext> &contexts, const std::string &mappingType);
 
-  /// Computes, performs, and resets all suitable write mappings.
-  void mapWrittenData();
+  /// Computes, and performs suitable write mappings either entirely or after given time
+  void mapWrittenData(std::optional<double> after = std::nullopt);
 
-  /// Computes, performs, and resets all suitable read mappings.
+  // Computes, and performs read mappings
   void mapReadData();
+
+  /**
+   * @brief Removes samples in mapped to data connected to received data via a mapping.
+   *
+   * This prevents old samples from blocking remappings.
+   */
+  void trimReadMappedData(double timeAfterAdvance, bool isTimeWindowComplete, const cplscheme::ImplicitData &fromData);
 
   /**
    * @brief Performs all data actions with given timing.
@@ -410,7 +430,7 @@ private:
   void handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo);
 
   /// Completes everything data-related after advancing the coupling scheme
-  void handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance);
+  void handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance, const cplscheme::ImplicitData &receivedData);
 
   /// Creates a Stample at the given time for each write Data and zeros the buffers
   void samplizeWriteData(double time);

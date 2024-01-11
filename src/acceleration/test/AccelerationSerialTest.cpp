@@ -9,6 +9,7 @@
 #include "acceleration/SharedPointer.hpp"
 #include "acceleration/config/AccelerationConfiguration.hpp"
 #include "acceleration/impl/ConstantPreconditioner.hpp"
+#include "acceleration/impl/ResidualPreconditioner.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
 #include "acceleration/test/helper.hpp"
 #include "cplscheme/CouplingData.hpp"
@@ -301,7 +302,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
   BOOST_TEST(data.at(1)->values()(3) == 0.184);
 }
 
-BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxation)
+BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithoutSubsteps)
 {
   PRECICE_TEST(1_rank);
 
@@ -367,6 +368,140 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxation)
   BOOST_TEST(data.at(1)->values()(1) == 0.19880451030866292);
   BOOST_TEST(data.at(1)->values()(2) == 0.19880451030866292);
   BOOST_TEST(data.at(1)->values()(3) == 0.19880451030866292);
+}
+
+BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
+{
+  PRECICE_TEST(1_rank);
+
+  double           relaxation = 0.8;
+  std::vector<int> dataIDs{0, 1, 2, 3};
+  mesh::PtrMesh    dummyMesh = std::make_shared<mesh::Mesh>("DummyMesh", 3, testing::nextMeshID());
+
+  impl::PtrPreconditioner prec(new impl::ResidualPreconditioner(-1));
+  AitkenAcceleration      acc(relaxation, dataIDs, prec);
+
+  mesh::PtrData data1 = std::make_shared<mesh::Data>("dvalues", -1, 1);
+  mesh::PtrData data2 = std::make_shared<mesh::Data>("fvalues", -1, 1);
+  mesh::PtrData data3 = std::make_shared<mesh::Data>("gvalues", -1, 3);
+  mesh::PtrData data4 = std::make_shared<mesh::Data>("hvalues", -1, 1);
+
+  // init data1
+  data1->values().resize(2);
+  data1->values() << 40, 80;
+  data1->setSampleAtTime(0.0, data1->sample());
+
+  // init data2
+  data2->values().resize(2);
+  data2->values() << 5, 5;
+  data2->setSampleAtTime(0.0, data2->sample());
+
+  // init data3
+  data3->values().resize(3);
+  data3->values() << 1, 2, 3;
+  data3->setSampleAtTime(0.0, data3->sample());
+
+  // init data4
+  data4->values().resize(4);
+  data4->values() << 20, 40, 60, 80;
+  data4->setSampleAtTime(0.0, data4->sample());
+
+  cplscheme::PtrCouplingData dpcd = makeCouplingData(data1, dummyMesh, false);
+  cplscheme::PtrCouplingData fpcd = makeCouplingData(data2, dummyMesh, false);
+  cplscheme::PtrCouplingData gpcd = makeCouplingData(data3, dummyMesh, false);
+  cplscheme::PtrCouplingData hpcd = makeCouplingData(data4, dummyMesh, false);
+
+  DataMap data;
+  data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
+  data.insert(std::pair<int, cplscheme::PtrCouplingData>(1, fpcd));
+  data.insert(std::pair<int, cplscheme::PtrCouplingData>(2, gpcd));
+  data.insert(std::pair<int, cplscheme::PtrCouplingData>(3, hpcd));
+  dpcd->storeIteration();
+  fpcd->storeIteration();
+  gpcd->storeIteration();
+  hpcd->storeIteration();
+
+  acc.initialize(data);
+
+  data1->values() << 1, 7;
+  data1->setSampleAtTime(1.0, data1->sample());
+  data2->values() << 10, 10;
+  data2->setSampleAtTime(1.0, data2->sample());
+  data3->values() << 10, 11, 12;
+  data3->setSampleAtTime(1.0, data3->sample());
+  data4->values() << 40, 60, 80, 100;
+  data4->setSampleAtTime(1.0, data4->sample());
+
+  acc.performAcceleration(data);
+
+  BOOST_TEST(data.at(0)->values()(0) == 8.8);
+  BOOST_TEST(data.at(0)->values()(1) == 21.6);
+  BOOST_TEST(data.at(1)->values()(0) == 9);
+  BOOST_TEST(data.at(1)->values()(1) == 9);
+  BOOST_TEST(data.at(2)->values()(0) == 8.2);
+  BOOST_TEST(data.at(2)->values()(1) == 9.2);
+  BOOST_TEST(data.at(2)->values()(2) == 10.2);
+  BOOST_TEST(data.at(3)->values()(0) == 36);
+  BOOST_TEST(data.at(3)->values()(1) == 56);
+  BOOST_TEST(data.at(3)->values()(2) == 76);
+  BOOST_TEST(data.at(3)->values()(3) == 96);
+
+  data1->values() << 2, 14;
+  data1->setSampleAtTime(1.0, data1->sample());
+  data2->values() << 8, 8;
+  data2->setSampleAtTime(1.0, data2->sample());
+  data3->values() << 13, 14, 15;
+  data3->setSampleAtTime(1.0, data3->sample());
+  data4->values() << 41, 61, 81, 90;
+  data4->setSampleAtTime(1.0, data4->sample());
+
+  acc.performAcceleration(data);
+
+  BOOST_TEST(data.at(0)->values()(0) == -17.745640722103754);
+  BOOST_TEST(data.at(0)->values()(1) == -20.295060201548626);
+  BOOST_TEST(data.at(1)->values()(0) == 9.5588663727976648);
+  BOOST_TEST(data.at(1)->values()(1) == 9.5588663727976648);
+  BOOST_TEST(data.at(2)->values()(0) == 19.235465491190659);
+  BOOST_TEST(data.at(2)->values()(1) == 20.235465491190659);
+  BOOST_TEST(data.at(2)->values()(2) == 21.235465491190659);
+  BOOST_TEST(data.at(3)->values()(0) == 51.912064609583652);
+  BOOST_TEST(data.at(3)->values()(1) == 71.912064609583652);
+  BOOST_TEST(data.at(3)->values()(2) == 91.912064609583652);
+  BOOST_TEST(data.at(3)->values()(3) == 95.196221242658879);
+
+  data1->values() << 2.1, 14.1;
+  data1->setSampleAtTime(1.0, data1->sample());
+  data2->values() << 8, 8;
+  data2->setSampleAtTime(1.0, data2->sample());
+  data3->values() << 13.05, 14.07, 15.1;
+  data3->setSampleAtTime(1.0, data3->sample());
+  data4->values() << 42, 60, 81.3, 91;
+  data4->setSampleAtTime(1.0, data4->sample());
+
+  acc.iterationsConverged(data);
+
+  data1->values() << 3, 16;
+  data1->setSampleAtTime(2.0, data1->sample());
+  data2->values() << 7, 7;
+  data2->setSampleAtTime(2.0, data2->sample());
+  data3->values() << 18, 19, 20;
+  data3->setSampleAtTime(2.0, data3->sample());
+  data4->values() << 50, 70, 90, 110;
+  data4->setSampleAtTime(2.0, data4->sample());
+
+  acc.performAcceleration(data);
+
+  BOOST_TEST(data.at(0)->values()(0) == 10.4);
+  BOOST_TEST(data.at(0)->values()(1) == 28.8);
+  BOOST_TEST(data.at(1)->values()(0) == 6.6);
+  BOOST_TEST(data.at(1)->values()(1) == 6.6);
+  BOOST_TEST(data.at(2)->values()(0) == 14.6);
+  BOOST_TEST(data.at(2)->values()(1) == 15.6);
+  BOOST_TEST(data.at(2)->values()(2) == 16.6);
+  BOOST_TEST(data.at(3)->values()(0) == 44);
+  BOOST_TEST(data.at(3)->values()(1) == 64);
+  BOOST_TEST(data.at(3)->values()(2) == 84);
+  BOOST_TEST(data.at(3)->values()(3) == 104);
 }
 
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)

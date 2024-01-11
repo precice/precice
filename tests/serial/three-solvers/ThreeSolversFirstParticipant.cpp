@@ -42,13 +42,12 @@ BOOST_AUTO_TEST_CASE(ThreeSolversFirstParticipant)
     precice.setMeshVertex(meshBID, v0);
 
     precice.initialize();
-    double dt = precice.getMaxTimeStepSize();
 
     for (auto expected_dt : timestepSizes) {
       BOOST_TEST(precice.isCouplingOngoing());
+      double dt = precice.getMaxTimeStepSize();
       BOOST_TEST(dt == expected_dt);
       precice.advance(dt);
-      dt = precice.getMaxTimeStepSize();
     }
 
     BOOST_TEST(not precice.isCouplingOngoing());
@@ -61,13 +60,12 @@ BOOST_AUTO_TEST_CASE(ThreeSolversFirstParticipant)
     precice.setMeshVertex(meshName, v0);
 
     precice.initialize();
-    double dt = precice.getMaxTimeStepSize();
 
     for (auto expected_dt : timestepSizes) {
       BOOST_TEST(precice.isCouplingOngoing());
+      double dt = precice.getMaxTimeStepSize();
       BOOST_TEST(dt == expected_dt);
       precice.advance(dt);
-      dt = precice.getMaxTimeStepSize();
     }
     BOOST_TEST(not precice.isCouplingOngoing());
     precice.finalize();

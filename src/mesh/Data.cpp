@@ -15,12 +15,12 @@ Data::Data(
     int         dimensions,
     int         spatialDimensions,
     int         waveformDegree)
-    : _name(std::move(name)),
+    : _waveform(waveformDegree),
+      _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
       _spatialDimensions(spatialDimensions),
-      _sample(_dimensions),
-      _waveform(waveformDegree)
+      _sample(_dimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
 }
@@ -79,7 +79,7 @@ void Data::moveToNextWindow()
   }
 }
 
-void Data::setSampleAtTime(double time, time::Sample sample)
+void Data::setSampleAtTime(double time, const time::Sample &sample)
 {
   _sample = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _waveform.timeStepsStorage().setSampleAtTime(time, sample);

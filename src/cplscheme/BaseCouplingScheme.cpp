@@ -9,9 +9,9 @@
 #include <sstream>
 #include <utility>
 
-#include "BaseCouplingScheme.hpp"
 #include "acceleration/Acceleration.hpp"
 #include "com/SerializedStamples.hpp"
+#include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/Constants.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/CouplingScheme.hpp"
@@ -484,6 +484,10 @@ int BaseCouplingScheme::getTimeWindows() const
 
 double BaseCouplingScheme::getNextTimeStepMaxSize() const
 {
+  if (!isCouplingOngoing()) {
+    return 0.0; // if coupling is not ongoing (i.e. coupling scheme reached end of window) the maximum time step size is zero
+  }
+
   if (hasTimeWindowSize()) {
     return _timeWindowStartTime + _timeWindowSize - _time;
   } else {
@@ -850,6 +854,33 @@ void BaseCouplingScheme::receiveConvergence(const m2n::PtrM2N &m2n)
 double BaseCouplingScheme::getWindowEndTime() const
 {
   return _timeWindowStartTime + getTimeWindowSize();
+}
+
+bool BaseCouplingScheme::requiresSubsteps() const
+{
+  // Global toggle if a single send data uses substeps
+  for (auto cpldata : _allData | boost::adaptors::map_values) {
+    if (cpldata->getDirection() == CouplingData::Direction::Send && cpldata->exchangeSubsteps()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+ImplicitData BaseCouplingScheme::implicitDataToReceive() const
+{
+  // This implementation covers everything except SerialImplicit
+  if (!isImplicitCouplingScheme()) {
+    return {};
+  }
+
+  ImplicitData idata;
+  for (auto cpldata : _allData | boost::adaptors::map_values) {
+    if (cpldata->getDirection() == CouplingData::Direction::Receive) {
+      idata.add(cpldata->getDataID(), false);
+    }
+  }
+  return idata;
 }
 
 } // namespace precice::cplscheme

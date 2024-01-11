@@ -8,6 +8,7 @@ target_sources(testprecice
     src/acceleration/test/ParallelMatrixOperationsTest.cpp
     src/acceleration/test/PreconditionerTest.cpp
     src/acceleration/test/QRFactorizationTest.cpp
+    src/acceleration/test/SVDFactorizationTest.cpp
     src/acceleration/test/helper.hpp
     src/action/tests/PythonActionTest.cpp
     src/action/tests/ScaleActionTest.cpp
@@ -40,6 +41,7 @@ target_sources(testprecice
     src/io/tests/TXTWriterReaderTest.cpp
     src/m2n/tests/GatherScatterCommunicationTest.cpp
     src/m2n/tests/PointToPointCommunicationTest.cpp
+    src/mapping/tests/AxialGeoMultiscaleMappingTest.cpp
     src/mapping/tests/GinkgoRadialBasisFctSolverTest.cpp
     src/mapping/tests/LinearCellInterpolationMappingTest.cpp
     src/mapping/tests/MappingConfigurationTest.cpp
@@ -52,6 +54,7 @@ target_sources(testprecice
     src/mapping/tests/PolationTest.cpp
     src/mapping/tests/RadialBasisFctHelper.hpp
     src/mapping/tests/RadialBasisFctMappingTest.cpp
+    src/mapping/tests/RadialGeoMultiscaleMappingTest.cpp
     src/math/tests/BSplineTest.cpp
     src/math/tests/BarycenterTest.cpp
     src/math/tests/DifferencesTest.cpp

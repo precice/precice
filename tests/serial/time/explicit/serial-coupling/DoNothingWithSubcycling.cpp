@@ -53,9 +53,9 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
     double dt        = maxDt / 3.0; // Time step size desired by solver
     double currentDt = dt;          // Time step size used by solver
     while (precice.isCouplingOngoing()) {
-      precice.advance(currentDt);
       maxDt     = precice.getMaxTimeStepSize();
       currentDt = dt > maxDt ? maxDt : dt;
+      precice.advance(currentDt);
       timestep++;
     }
     precice.finalize();
