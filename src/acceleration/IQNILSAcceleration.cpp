@@ -249,22 +249,23 @@ void IQNILSAcceleration::specializedIterationsConverged(
     if (_matrixCols.front() == 0) { // Did only one iteration
       _matrixCols.pop_front();
     }
-  if (_timeWindowsReused == 0) {
-    if (_forceInitialRelaxation) {
-      _secondaryWaveformW.clear();
-    } else {
-      /**
+    if (_timeWindowsReused == 0) {
+      if (_forceInitialRelaxation) {
+        _secondaryWaveformW.clear();
+      } else {
+        /**
        * pending deletion (after first iteration of next time window
        * Using the matrices from the old time window for the first iteration
        * is better than doing underrelaxation as first iteration of every time window
        */
-    }
-  } else if (static_cast<int>(_matrixCols.size()) > _timeWindowsReused) {
-    int toRemove = _matrixCols.back();
-    for (int id : _secondaryDataIDs) {
-      PRECICE_ASSERT(_secondaryWaveformW.at(id).size() > toRemove, _secondaryWaveformW.at(id).size(), toRemove, id);
-      for (int i = 0; i < toRemove; i++) {
-        _secondaryWaveformW[id].erase(_secondaryWaveformW[id].end() - 1);
+      }
+    } else if (static_cast<int>(_matrixCols.size()) > _timeWindowsReused) {
+      int toRemove = _matrixCols.back();
+      for (int id : _secondaryDataIDs) {
+        PRECICE_ASSERT(_secondaryWaveformW.at(id).size() > toRemove, _secondaryWaveformW.at(id).size(), toRemove, id);
+        for (int i = 0; i < toRemove; i++) {
+          _secondaryWaveformW[id].erase(_secondaryWaveformW[id].end() - 1);
+        }
       }
     }
   }
