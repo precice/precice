@@ -366,7 +366,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   // account: example for 2D: if the distance between the centers is sqrt( 4 / 2 ) * radius, we violate the overlap condition between
   // diagonal clusters
   const int    inDim                 = inMesh->getDimensions();
-  const double maximumCenterDistance = std::sqrt(4 / inDim) * clusterRadius * (1 - relativeOverlap);
+  const double maximumCenterDistance = std::sqrt(4. / inDim) * clusterRadius * (1 - relativeOverlap);
 
   // Step 3: using the maximum distance and the bounding box, compute the number of clusters in each direction
   // we ceil the number of clusters in order to guarantee the desired overlap
