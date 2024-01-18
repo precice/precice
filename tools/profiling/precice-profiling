@@ -68,7 +68,7 @@ def printWide(df):
         return len("{:}".format(s))
 
     headerWidths = tuple(map(formattedLength, df.columns))
-    bodyWidths = tuple(df.select(pl.all().apply(formattedLength)).max().row(0))
+    bodyWidths = tuple(df.select(pl.all().map_elements(formattedLength)).max().row(0))
     assert len(headerWidths) == len(bodyWidths)
     colwidths = map(max, zip(headerWidths, bodyWidths, repeat(mincolwidth)))
 
@@ -508,7 +508,7 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
     ranks = df.select("rank").unique()
 
     if len(ranks) == 1:
-        joined = df.groupby("eid").agg(
+        joined = df.group_by("eid").agg(
             pl.sum("dur").alias("sum"),
             pl.count("dur").alias("count"),
             pl.mean("dur").alias("mean"),
@@ -519,7 +519,7 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
         ldf = df.lazy()
         rankAdvance = (
             ldf.filter((pl.col("eid") == event) & (pl.col("rank") > 0))
-            .groupby("rank")
+            .group_by("rank")
             .agg(pl.col("dur").sum())
             .sort("dur")
             .collect()
@@ -544,7 +544,7 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
             [
                 (
                     ldf.filter(pl.col("rank") == rank)
-                    .groupby("eid")
+                    .group_by("eid")
                     .agg(
                         pl.sum("dur").alias(f"R{rank}:sum"),
                         pl.count("dur").alias(f"R{rank}:count"),
