@@ -250,6 +250,8 @@ target_sources(testprecice
     tests/serial/time/explicit/compositional/DoNothingWithSubcycling.cpp
     tests/serial/time/explicit/compositional/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/compositional/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
+    tests/serial/time/explicit/parallel-coupling/DoManySmallSteps.cpp
+    tests/serial/time/explicit/parallel-coupling/DoNonfittingWindows.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling6400Steps.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling640Steps.cpp
