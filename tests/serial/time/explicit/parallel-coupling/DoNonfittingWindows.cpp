@@ -26,45 +26,27 @@ BOOST_AUTO_TEST_CASE(DoNonfittingWindows)
   std::string meshName, writeDataName, readDataName;
 
   if (context.isNamed("SolverOne")) {
-    meshName      = "MeshOne";
-    writeDataName = "DataOne";
-    readDataName  = "DataTwo";
+    meshName = "MeshOne";
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshName      = "MeshTwo";
-    writeDataName = "DataTwo";
-    readDataName  = "DataOne";
+    meshName = "MeshTwo";
   }
 
-  double writeData, readData;
-
-  double   v0[]     = {0, 0, 0};
-  VertexID vertexID = precice.setMeshVertex(meshName, v0);
-
-  int                 timestep   = 0;
-  int                 timewindow = 0;
-  double              time       = 0;
-  std::vector<double> expectedSizes{0.75, 0.25};
-
-  if (precice.requiresInitialData()) {
-    writeData = 1; // don't care
-    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
-  }
-
+  double v0[] = {0, 0, 0};
+  precice.setMeshVertex(meshName, v0);
+  BOOST_TEST(precice.requiresInitialData());
   precice.initialize();
-  int nWindows = 0;
 
-  while (precice.isCouplingOngoing()) {
-    BOOST_TEST(precice.getMaxTimeStepSize() == expectedSizes[nWindows]);
-    double dt = precice.getMaxTimeStepSize();
-    precice.advance(dt);
-    if (precice.isTimeWindowComplete()) {
-      nWindows++;
-    }
-  }
-  BOOST_TEST(nWindows == 2);
+  BOOST_TEST(precice.getMaxTimeStepSize() == 0.75);
+  precice.advance(precice.getMaxTimeStepSize());
+  BOOST_TEST(precice.isTimeWindowComplete());
+  BOOST_TEST(precice.isCouplingOngoing());
 
-  precice.finalize();
+  BOOST_TEST(precice.getMaxTimeStepSize() == 0.25);
+  precice.advance(precice.getMaxTimeStepSize());
+  BOOST_TEST(precice.isTimeWindowComplete());
+  BOOST_TEST(!precice.isCouplingOngoing());
+  BOOST_TEST(precice.getMaxTimeStepSize() == 0.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Integration
