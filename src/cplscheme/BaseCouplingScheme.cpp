@@ -269,7 +269,8 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   PRECICE_ASSERT(not isInitialized());
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
   PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-  _timeWindowStartTime = startTime;
+  _timeWindowStartTime = KahanAccumulator{}; // reset the accumulator
+  _timeWindowStartTime(startTime);
   _timeWindows         = startTimeWindow;
   _hasDataBeenReceived = false;
 
@@ -345,7 +346,7 @@ void BaseCouplingScheme::secondExchange()
         // The computed time window part equals the time window size, since the
         // time window remainder is zero. Subtract the time window size and do another
         // coupling iteration.
-        PRECICE_ASSERT(math::greater(_time, _timeWindowStartTime));
+        PRECICE_ASSERT(math::greater(_time, getWindowStartTime()));
         _timeWindows -= 1;
         _isTimeWindowComplete = false;
       } else { // write output, prepare for next window
@@ -376,9 +377,9 @@ void BaseCouplingScheme::secondExchange()
 
     // Update internal time tracking
     if (_isTimeWindowComplete) {
-      _timeWindowStartTime += _timeWindowSize;
+      _timeWindowStartTime(_timeWindowSize);
     }
-    _time           = _timeWindowStartTime;
+    _time           = getWindowStartTime();
     _timeWindowSize = _nextTimeWindowSize;
   }
 }
@@ -428,7 +429,7 @@ bool BaseCouplingScheme::addComputedTime(
                 "in the remaining of this time window. "
                 "Did you restrict your time step size, \"dt = min(preciceDt, solverDt)\"? "
                 "For more information, consult the adapter example in the preCICE documentation.",
-                timeToAdd, _timeWindowStartTime + _timeWindowSize - _time + timeToAdd);
+                timeToAdd, getWindowStartTime() + _timeWindowSize - _time + timeToAdd);
 
   return reachedEndOfTimeWindow();
 }
@@ -474,7 +475,7 @@ double BaseCouplingScheme::getTime() const
 
 double BaseCouplingScheme::getTimeWindowStart() const
 {
-  return _timeWindowStartTime;
+  return boost::accumulators::sum_kahan(_timeWindowStartTime);
 }
 
 int BaseCouplingScheme::getTimeWindows() const
@@ -489,7 +490,7 @@ double BaseCouplingScheme::getNextTimeStepMaxSize() const
   }
 
   if (hasTimeWindowSize()) {
-    return _timeWindowStartTime + _timeWindowSize - _time;
+    return getWindowStartTime() + _timeWindowSize - _time;
   } else {
     if (math::equals(_maxTime, UNDEFINED_MAX_TIME)) {
       return std::numeric_limits<double>::max();
@@ -762,7 +763,7 @@ void BaseCouplingScheme::advanceTXTWriters()
 
 bool BaseCouplingScheme::reachedEndOfTimeWindow() const
 {
-  return math::equals(_timeWindowStartTime + _timeWindowSize, _time) || not hasTimeWindowSize();
+  return math::equals(getWindowStartTime() + _timeWindowSize, _time) || not hasTimeWindowSize();
 }
 
 void BaseCouplingScheme::storeIteration()
@@ -851,9 +852,14 @@ void BaseCouplingScheme::receiveConvergence(const m2n::PtrM2N &m2n)
   m2n->receive(_hasConverged);
 }
 
+double BaseCouplingScheme::getWindowStartTime() const
+{
+  return boost::accumulators::sum_kahan(_timeWindowStartTime);
+}
+
 double BaseCouplingScheme::getWindowEndTime() const
 {
-  return _timeWindowStartTime + getTimeWindowSize();
+  return getWindowStartTime() + getTimeWindowSize();
 }
 
 bool BaseCouplingScheme::requiresSubsteps() const
