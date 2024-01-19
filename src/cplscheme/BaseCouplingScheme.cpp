@@ -490,7 +490,13 @@ double BaseCouplingScheme::getNextTimeStepMaxSize() const
   }
 
   if (hasTimeWindowSize()) {
-    return getWindowStartTime() + _timeWindowSize - _time;
+    double maxDt = getWindowStartTime() + _timeWindowSize - _time;
+    if (math::equals(_maxTime, UNDEFINED_MAX_TIME)) {
+      return maxDt;
+    } else {
+      double leftover = _maxTime - _time;
+      return std::min(maxDt, leftover);
+    }
   } else {
     if (math::equals(_maxTime, UNDEFINED_MAX_TIME)) {
       return std::numeric_limits<double>::max();
