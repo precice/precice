@@ -378,8 +378,20 @@ void BaseCouplingScheme::secondExchange()
 
     // Update internal time tracking
     if (_isTimeWindowComplete) {
-      _timeWindowStartTime(_timeWindowSize);
+      // We move to the next time window
+      double performedTimeWindowSize = getTime() - getWindowStartTime();
+      if (math::equals(performedTimeWindowSize, _timeWindowSize)) {
+        _timeWindowStartTime(_timeWindowSize);
+      } else {
+        // This only happens when the final time window is truncated due
+        // time window size not being a divider of max-time.
+        _timeWindowStartTime(performedTimeWindowSize);
+        PRECICE_ASSERT(!math::equals(_maxTime, UNDEFINED_MAX_TIME));
+        PRECICE_ASSERT(math::equals(_maxTime, getTime()));
+      }
     }
+    // We move the _time to the start of the updated time window.
+    // This can be a "reset" in case of an iteration, or the start of the next time window.
     _time = KahanAccumulator{};
     _time(getWindowStartTime());
     _timeWindowSize = _nextTimeWindowSize;
@@ -771,7 +783,18 @@ void BaseCouplingScheme::advanceTXTWriters()
 
 bool BaseCouplingScheme::reachedEndOfTimeWindow() const
 {
-  return math::equals(getWindowStartTime() + _timeWindowSize, getTime()) || not hasTimeWindowSize();
+  if (!hasTimeWindowSize()) {
+    return true; // This participant will always do exactly one step to dictate second's time-window-size
+  }
+
+  double timeWindowEnd = getTimeWindowStart() + _timeWindowSize;
+
+  // Is the current time-window truncated by max time?
+  if (!math::equals(_maxTime, UNDEFINED_MAX_TIME) && math::smaller(_maxTime, timeWindowEnd)) {
+    return math::equals(getTime(), _maxTime);
+  }
+
+  return math::equals(getTime(), timeWindowEnd);
 }
 
 void BaseCouplingScheme::storeIteration()
