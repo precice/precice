@@ -432,7 +432,7 @@ private:
   double _nextTimeWindowSize = UNDEFINED_TIME_WINDOW_SIZE;
 
   /// Current time
-  double _time = 0;
+  KahanAccumulator _time;
 
   /// Lower limit of iterations during one time window. Prevents convergence if _iterations < _minIterations.
   int _minIterations = -1;
