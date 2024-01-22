@@ -96,7 +96,7 @@ void RadialGeoMultiscaleMapping::computeMapping()
       }
       axisMidpoints(outSize - 1) = std::numeric_limits<double>::max(); // large number, such that vertices after the last midpoint are still assigned
 
-      std::vector<int> counters(outSize); // counts number of vertices in between midpoints for averaging
+      std::vector<size_t> counters(outSize); // counts number of vertices in between midpoints for averaging
 
       // Identify which vertex (index) of the 3D mesh corresponds to which vertex (index) of the 1D meesh
       _vertexIndicesCollect.clear();
