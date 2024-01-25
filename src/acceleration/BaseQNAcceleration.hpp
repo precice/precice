@@ -307,6 +307,11 @@ private:
   Eigen::MatrixXd _matrixWBackup;
   std::deque<int> _matrixColsBackup;
 
+  /** @brief backup of the V,W and matrixCols data structures. Needed for the skipping of
+ *  initial relaxation, if previous time window converged within one iteration i.e., V and W
+ *  are empty -- in this case restore V and W with time window t-2.
+ */
+
   std::map<int, std::vector<precice::time::Storage>> _waveformWBackup;
   std::map<int, std::vector<precice::time::Storage>> _waveformVBackup;
 

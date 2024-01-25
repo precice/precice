@@ -54,9 +54,13 @@ private:
 
   // @brief Secondary data x-tilde deltas.
   //
-  // Stores x-tilde deltas for data not involved in least-squares computation.
-
+  // Stores x-tilde deltas as waveforms for data not involved in least-squares computation.
   std::map<int, std::vector<precice::time::Storage>> _secondaryWaveformW;
+
+  /** @brief backup of the secondaryWaveformW. Needed for the skipping of
+   *  initial relaxation, if previous time window converged within one iteration i.e., V and W
+   *  are empty -- in this case restore V and W with time window t-2.
+   */
   std::map<int, std::vector<precice::time::Storage>> _secondaryWaveformWBackup;
 
   /// updates the secondary W waveforms
