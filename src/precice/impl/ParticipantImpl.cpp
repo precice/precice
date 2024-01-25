@@ -426,7 +426,7 @@ void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isT
 
   if (isTimeWindowComplete) {
     // Move to next time window
-    PRECICE_ASSERT(math::greaterEquals(timeAfterAdvance, timeSteppedTo), "We must have stayed or moved forwards in time (min-time-step-size).");
+    PRECICE_ASSERT(math::greaterEquals(timeAfterAdvance, timeSteppedTo), "We must have stayed or moved forwards in time (min-time-step-size).", timeAfterAdvance, timeSteppedTo);
 
     // As we move forward, there may now be old samples lying around
     trimOldDataBefore(_couplingScheme->getTimeWindowStart());

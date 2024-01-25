@@ -2,11 +2,15 @@
 
 #include <Eigen/Core>
 #include <algorithm>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
+#include <boost/accumulators/statistics/sum_kahan.hpp>
 #include <map>
 #include <memory>
 #include <set>
 #include <string>
 #include <vector>
+
 #include "Constants.hpp"
 #include "CouplingData.hpp"
 #include "CouplingScheme.hpp"
@@ -19,7 +23,6 @@
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "utils/assertion.hpp"
 
 namespace precice {
 namespace io {
@@ -411,8 +414,10 @@ private:
   /// Maximum time being computed. End of simulation is reached, if getTime() == _maxTime
   double _maxTime;
 
+  using KahanAccumulator = boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::sum_kahan>>;
+
   /// time of beginning of the current time window
-  double _timeWindowStartTime = 0;
+  KahanAccumulator _timeWindowStartTime;
 
   /// Number of time windows that have to be computed. End of simulation is reached, if _timeWindows == _maxTimeWindows
   int _maxTimeWindows;
@@ -427,7 +432,7 @@ private:
   double _nextTimeWindowSize = UNDEFINED_TIME_WINDOW_SIZE;
 
   /// Current time
-  double _time = 0;
+  KahanAccumulator _time;
 
   /// Lower limit of iterations during one time window. Prevents convergence if _iterations < _minIterations.
   int _minIterations = -1;
@@ -584,6 +589,11 @@ private:
    * @return the end of the time window, defined as timeWindowStart + timeWindowSize
    */
   double getWindowEndTime() const;
+
+  /**
+   * @return the start of the time window
+   */
+  double getWindowStartTime() const;
 };
 } // namespace cplscheme
 } // namespace precice
