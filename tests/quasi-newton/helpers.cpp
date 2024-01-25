@@ -205,6 +205,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
 void runTestQNWR(std::string const &config, TestContext const &context)
 {
+
   std::string meshName, writeDataName, readDataName;
 
   if (context.isNamed("SolverOne")) {
@@ -289,12 +290,15 @@ void runTestQNWR(std::string const &config, TestContext const &context)
     }
   }
   interface.finalize();
+
   // Check that the last time window has converged to the analytical solution
+  auto analyticalSolution = [](double localTime) { return std::vector<double>{(localTime * localTime - localTime) / 3, (localTime * localTime + 2 * localTime) / 3}; };
+
   for (int i = 0; i < nSubsteps; i++) {
     // scaling with the time window length which is equal to 1
     double localTime = (1.0 * i) / nSubStepsDone + timeCheckpoint;
-    BOOST_TEST(math::equals(savedValues(i, 0), (localTime * localTime - localTime) / 3, 1e-10));
-    BOOST_TEST(math::equals(savedValues(i, 1), (localTime * localTime + 2 * localTime) / 3), 1e-10);
+    BOOST_TEST(math::equals(savedValues(i, 0), analyticalSolution(localTime)[0], 1e-10));
+    BOOST_TEST(math::equals(savedValues(i, 1), analyticalSolution(localTime)[1], 1e-10));
   }
 }
 
