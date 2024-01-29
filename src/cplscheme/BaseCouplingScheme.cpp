@@ -205,14 +205,14 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
 void BaseCouplingScheme::receiveDataForWindowEnd(const m2n::PtrM2N &m2n, const DataMap &receiveData)
 {
   // buffer current time
-  const double oldTime = getTime();
+  const double oldProgress = getTimeWindowProgress();
   // set _time state to point to end of this window such that _time in receiveData is at end of window
-  _time(_nextTimeWindowSize);
+  _timeWindowProgress(_nextTimeWindowSize);
   // receive data for end of window
   this->receiveData(m2n, receiveData);
   // reset time state;
-  _time = KahanAccumulator{};
-  _time(oldTime);
+  _timeWindowProgress = KahanAccumulator{};
+  _timeWindowProgress(oldProgress); // This should be 0, right?
 }
 
 void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveData)
@@ -270,8 +270,13 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   PRECICE_ASSERT(not isInitialized());
   PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
   PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-  _timeWindowStartTime = KahanAccumulator{}; // reset the accumulator
+  // Reset the start time
+  _timeWindowStartTime = KahanAccumulator{};
   _timeWindowStartTime(startTime);
+  // Reset the Time window progress
+  _timeWindowProgress = KahanAccumulator{};
+  _timeWindowProgress(0.0);
+
   _timeWindows         = startTimeWindow;
   _hasDataBeenReceived = false;
 
@@ -379,21 +384,23 @@ void BaseCouplingScheme::secondExchange()
     // Update internal time tracking
     if (_isTimeWindowComplete) {
       // We move to the next time window
-      double performedTimeWindowSize = getTime() - getWindowStartTime();
+      double performedTimeWindowSize = getTimeWindowProgress();
       if (math::equals(performedTimeWindowSize, _timeWindowSize)) {
         _timeWindowStartTime(_timeWindowSize);
       } else {
+        PRECICE_ASSERT(!math::equals(_maxTime, UNDEFINED_MAX_TIME));
+        PRECICE_ASSERT(math::equals(_maxTime, getTime()), _maxTime, getTime());
         // This only happens when the final time window is truncated due
         // time window size not being a divider of max-time.
         _timeWindowStartTime(performedTimeWindowSize);
-        PRECICE_ASSERT(!math::equals(_maxTime, UNDEFINED_MAX_TIME));
-        PRECICE_ASSERT(math::equals(_maxTime, getTime()));
       }
     }
-    // We move the _time to the start of the updated time window.
-    // This can be a "reset" in case of an iteration, or the start of the next time window.
-    _time = KahanAccumulator{};
-    _time(getWindowStartTime());
+    // The time window has finished and the time window start has been moved in case of convergence.
+    // We now move the progress back to 0.0 as we are now aligned with the time window start.
+    _timeWindowProgress = KahanAccumulator{};
+    _timeWindowProgress(0.0);
+
+    // We also update the time window in case it is prescibed
     _timeWindowSize = _nextTimeWindowSize;
   }
 }
@@ -433,17 +440,18 @@ bool BaseCouplingScheme::addComputedTime(
   PRECICE_TRACE(timeToAdd, getTime());
   PRECICE_ASSERT(isCouplingOngoing(), "Invalid call of addComputedTime() after simulation end.");
 
-  // add time interval that has been computed in the solver to get the correct time remainder
-  _time(timeToAdd);
-
   // Check validness
-  bool valid = math::greaterEquals(getNextTimeStepMaxSize(), 0.0);
+  const double maxDt = getNextTimeStepMaxSize();
+  bool         valid = math::greaterEquals(maxDt, timeToAdd);
   PRECICE_CHECK(valid,
                 "The time step size given to preCICE in \"advance\" {} exceeds the maximum allowed time step size {} "
                 "in the remaining of this time window. "
                 "Did you restrict your time step size, \"dt = min(preciceDt, solverDt)\"? "
                 "For more information, consult the adapter example in the preCICE documentation.",
-                timeToAdd, getWindowStartTime() + _timeWindowSize - getTime() + timeToAdd);
+                timeToAdd, maxDt);
+
+  // add time interval that has been computed in the solver to get the correct time remainder
+  _timeWindowProgress(timeToAdd);
 
   return reachedEndOfTimeWindow();
 }
@@ -482,9 +490,14 @@ void BaseCouplingScheme::setTimeWindows(int timeWindows)
   _timeWindows = timeWindows;
 }
 
+double BaseCouplingScheme::getTimeWindowProgress() const
+{
+  return boost::accumulators::sum_kahan(_timeWindowProgress);
+}
+
 double BaseCouplingScheme::getTime() const
 {
-  return boost::accumulators::sum_kahan(_time);
+  return getTimeWindowStart() + getTimeWindowProgress();
 }
 
 double BaseCouplingScheme::getTimeWindowStart() const
@@ -504,7 +517,7 @@ double BaseCouplingScheme::getNextTimeStepMaxSize() const
   }
 
   if (hasTimeWindowSize()) {
-    double maxDt = getWindowStartTime() + _timeWindowSize - getTime();
+    double maxDt = _timeWindowSize - getTimeWindowProgress();
     if (math::equals(_maxTime, UNDEFINED_MAX_TIME)) {
       return maxDt;
     } else {

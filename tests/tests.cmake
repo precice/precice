@@ -299,7 +299,8 @@ target_sources(testprecice
     tests/serial/whitebox/TestConfigurationComsol.cpp
     tests/serial/whitebox/TestConfigurationPeano.cpp
     tests/serial/whitebox/TestExplicitWithDataScaling.cpp
+    tests/time-handling/SimpleMaxTime.cpp
     )
 
 # Contains the list of integration test suites
-set(PRECICE_TEST_SUITES GeometricMultiscale Parallel QuasiNewton Serial)
+set(PRECICE_TEST_SUITES GeometricMultiscale Parallel QuasiNewton Serial TimeHandling)

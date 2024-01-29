@@ -109,10 +109,12 @@ public:
   bool hasDataBeenReceived() const override final;
 
   /**
-   * @brief getter for _time
+   * @brief returns getTimeWindowStart() + getTimeWindowProgress()
    * @returns the currently computed time of the coupling scheme.
    */
   double getTime() const override final;
+
+  double getTimeWindowProgress() const;
 
   double getTimeWindowStart() const override final;
 
@@ -414,13 +416,16 @@ private:
   /// Maximum time being computed. End of simulation is reached, if getTime() == _maxTime
   double _maxTime;
 
-  using KahanAccumulator = boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::sum_kahan>>;
-
-  /// time of beginning of the current time window
-  KahanAccumulator _timeWindowStartTime;
-
   /// Number of time windows that have to be computed. End of simulation is reached, if _timeWindows == _maxTimeWindows
   int _maxTimeWindows;
+
+  using KahanAccumulator = boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::sum_kahan>>;
+
+  /// The start time of the current time window
+  KahanAccumulator _timeWindowStartTime;
+
+  /// The progress inside the current time window
+  KahanAccumulator _timeWindowProgress;
 
   /// number of completed time windows; _timeWindows <= _maxTimeWindows
   int _timeWindows = 0;
@@ -430,9 +435,6 @@ private:
 
   /// time window size of next window (acts as buffer for time windows size provided by first participant, if using first participant method)
   double _nextTimeWindowSize = UNDEFINED_TIME_WINDOW_SIZE;
-
-  /// Current time
-  KahanAccumulator _time;
 
   /// Lower limit of iterations during one time window. Prevents convergence if _iterations < _minIterations.
   int _minIterations = -1;
