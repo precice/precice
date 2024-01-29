@@ -205,14 +205,13 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
 void BaseCouplingScheme::receiveDataForWindowEnd(const m2n::PtrM2N &m2n, const DataMap &receiveData)
 {
   // buffer current time
-  const double oldProgress = getTimeWindowProgress();
+  auto oldProgress = _timeWindowProgress;
   // set _time state to point to end of this window such that _time in receiveData is at end of window
   _timeWindowProgress(_nextTimeWindowSize);
   // receive data for end of window
   this->receiveData(m2n, receiveData);
   // reset time state;
-  _timeWindowProgress = KahanAccumulator{};
-  _timeWindowProgress(oldProgress); // This should be 0, right?
+  _timeWindowProgress = oldProgress;
 }
 
 void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveData)
