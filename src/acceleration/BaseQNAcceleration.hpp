@@ -287,7 +287,7 @@ protected:
 private:
   /**
   *
-  * @brief Support rutine for saving the waveforms.
+  * @brief Support routine for saving the waveforms.
   */
   void addWaveforms(const DataMap &cplData);
 
