@@ -119,6 +119,15 @@ public:
   double getTimeWindowStart() const override final;
 
   /**
+   * @brief returns the remaining time after the start of the current time window
+   *
+   * @return getTimeWindowStart() - _maxTime
+   *
+   * @pre _maxTime must be defined
+   */
+  double getRemainingTime() const;
+
+  /**
    * @brief getter for _timeWindows
    * @returns the number of currently computed time windows of the coupling scheme.
    */
@@ -426,6 +435,9 @@ private:
 
   /// The progress inside the current time window
   KahanAccumulator _timeWindowProgress;
+
+  /// The remaining time of the simulation. This is _maxTime - timeWindowStartTime
+  KahanAccumulator _remainingTime;
 
   /// number of completed time windows; _timeWindows <= _maxTimeWindows
   int _timeWindows = 0;

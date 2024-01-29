@@ -276,6 +276,13 @@ void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
   // Reset the Time window progress
   _timeWindowProgress = KahanAccumulator{};
   _timeWindowProgress(0.0);
+  // Reset the remaining time
+  _remainingTime = KahanAccumulator{};
+  if (_maxTime != UNDEFINED_MAX_TIME) {
+    _remainingTime(_maxTime);
+  } else {
+    _remainingTime(0.0);
+  }
 
   _timeWindows         = startTimeWindow;
   _hasDataBeenReceived = false;
@@ -387,12 +394,15 @@ void BaseCouplingScheme::secondExchange()
       double performedTimeWindowSize = getTimeWindowProgress();
       if (math::equals(performedTimeWindowSize, _timeWindowSize)) {
         _timeWindowStartTime(_timeWindowSize);
+        _remainingTime(-_timeWindowSize);
       } else {
         PRECICE_ASSERT(!math::equals(_maxTime, UNDEFINED_MAX_TIME));
         PRECICE_ASSERT(math::equals(_maxTime, getTime()), _maxTime, getTime());
         // This only happens when the final time window is truncated due
         // time window size not being a divider of max-time.
         _timeWindowStartTime(performedTimeWindowSize);
+        _remainingTime(-performedTimeWindowSize);
+        PRECICE_ASSERT(math::equals(getRemainingTime(), 0.0), getRemainingTime());
       }
     }
     // The time window has finished and the time window start has been moved in case of convergence.
@@ -505,6 +515,12 @@ double BaseCouplingScheme::getTimeWindowStart() const
   return boost::accumulators::sum_kahan(_timeWindowStartTime);
 }
 
+double BaseCouplingScheme::getRemainingTime() const
+{
+  PRECICE_ASSERT(_maxTime != UNDEFINED_MAX_TIME, "maxtime must be defined");
+  return boost::accumulators::sum_kahan(_remainingTime);
+}
+
 int BaseCouplingScheme::getTimeWindows() const
 {
   return _timeWindows;
@@ -521,14 +537,15 @@ double BaseCouplingScheme::getNextTimeStepMaxSize() const
     if (math::equals(_maxTime, UNDEFINED_MAX_TIME)) {
       return maxDt;
     } else {
-      double leftover = _maxTime - getTime();
+      double leftover = getRemainingTime() - getTimeWindowProgress();
+      PRECICE_ASSERT(math::greaterEquals(leftover, 0.0), leftover);
       return std::min(maxDt, leftover);
     }
   } else {
     if (math::equals(_maxTime, UNDEFINED_MAX_TIME)) {
       return std::numeric_limits<double>::max();
     } else {
-      return _maxTime - getTime();
+      return getRemainingTime();
     }
   }
 }
