@@ -201,10 +201,14 @@ protected:
   /// @brief Stores x tilde deltas, where x tilde are values computed by solvers. todo remove when waveforms are supported by all Quasi Newton schemes
   Eigen::MatrixXd _matrixW;
 
-  /// @brief Stores the waveform of x tilde deltas, where x tilde are values computed by solvers
+  /** @brief Stores the waveform of x tilde deltas of datas in _dataIDs, which are computed by the solvers.
+  * The waveform are stored in a map which maps the DataIds to a vector containing the waveform iterates that are used in the QN acceleration
+  */
   std::map<int, std::vector<precice::time::Storage>> _waveformW;
 
-  /// @brief Stores the waveform of the residual deltas
+  /* @brief Stores the waveform of the residual deltas and is only used for the full IQNILSA acceleration, where all of the time steps are used in V_k
+  * The waveform are stored in a map which maps the DataIds to a vector containing the waveform iterates that are used in the QN acceleration
+  */
   std::map<int, std::vector<precice::time::Storage>> _waveformV;
 
   /// @brief Stores the current QR decomposition ov _matrixV, can be updated via deletion/insertion of columns
@@ -307,9 +311,10 @@ private:
   Eigen::MatrixXd _matrixWBackup;
   std::deque<int> _matrixColsBackup;
 
-  /** @brief backup of the V,W and matrixCols data structures. Needed for the skipping of
+  /** @brief backup of the V,W waveform data structures. Needed for the skipping of
  *  initial relaxation, if previous time window converged within one iteration i.e., V and W
  *  are empty -- in this case restore V and W with time window t-2.
+ *  The waveform are stored in a map which maps the DataIds to a vector containing the waveform iterates that are used in the QN acceleration
  */
 
   std::map<int, std::vector<precice::time::Storage>> _waveformWBackup;

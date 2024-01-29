@@ -52,9 +52,9 @@ private:
   /// Secondary data solver output from last iteration.
   std::map<int, precice::time::Storage> _secondaryOldXTildesW;
 
-  // @brief Secondary data x-tilde deltas.
-  //
-  // Stores x-tilde deltas as waveforms for data not involved in least-squares computation.
+  /** @brief Stores secondary data x-tilde deltas as waveforms for data not involved in least-squares computation.
+  * The waveform are stored in a map which maps the DataIds to a vector containing the waveform iterates that are used in the QN acceleration
+  */
   std::map<int, std::vector<precice::time::Storage>> _secondaryWaveformW;
 
   /** @brief backup of the secondaryWaveformW. Needed for the skipping of
