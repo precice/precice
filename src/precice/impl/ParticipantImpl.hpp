@@ -376,8 +376,14 @@ private:
   /// Helper for mapWrittenData and mapReadData
   void computeMappings(std::vector<MappingContext> &contexts, const std::string &mappingType);
 
+  /// Computes, and performs write mappings of the initial data in initialize
+  void mapInitialWrittenData();
+
   /// Computes, and performs suitable write mappings either entirely or after given time
   void mapWrittenData(std::optional<double> after = std::nullopt);
+
+  // Computes, and performs read mappings of the initial data in initialize
+  void mapInitialReadData();
 
   // Computes, and performs read mappings
   void mapReadData();

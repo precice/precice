@@ -87,7 +87,7 @@ bool DataContext::hasMapping() const
   return hasReadMapping() || hasWriteMapping();
 }
 
-int DataContext::mapData(std::optional<double> after)
+int DataContext::mapData(std::optional<double> after, bool skipZero)
 {
   PRECICE_TRACE(getMeshName(), getDataName());
   PRECICE_ASSERT(hasMapping());
@@ -122,20 +122,24 @@ int DataContext::mapData(std::optional<double> after)
         continue;
       }
 
-      PRECICE_INFO("Mapping \"{}\" for t={} from \"{}\" to \"{}\"",
-                   getDataName(), stample.timestamp, mapping.getInputMesh()->getName(), mapping.getOutputMesh()->getName());
       time::Sample outSample{
           dataDims,
           Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->vertices().size())};
 
-      if (mapping.requiresInitialGuess()) {
-        const FromToDataIDs key{context.fromData->getID(), context.toData->getID()};
-        mapping.map(stample.sample, outSample.values, _initialGuesses[key]);
-      } else {
-        mapping.map(stample.sample, outSample.values);
-      }
+      bool skipMapping = skipZero && stample.sample.values.isZero();
 
-      PRECICE_DEBUG("Mapped values (t={}) = {}", stample.timestamp, utils::previewRange(3, outSample.values));
+      PRECICE_INFO("Mapping \"{}\" for t={} from \"{}\" to \"{}\"{}",
+                   getDataName(), stample.timestamp, mapping.getInputMesh()->getName(), mapping.getOutputMesh()->getName(),
+                   (skipMapping ? " (skipped zero sample)" : ""));
+      if (!skipMapping) {
+        if (mapping.requiresInitialGuess()) {
+          const FromToDataIDs key{context.fromData->getID(), context.toData->getID()};
+          mapping.map(stample.sample, outSample.values, _initialGuesses[key]);
+        } else {
+          mapping.map(stample.sample, outSample.values);
+        }
+        PRECICE_DEBUG("Mapped values (t={}) = {}", stample.timestamp, utils::previewRange(3, outSample.values));
+      }
 
       // Store data from mapping buffer in storage
       context.toData->setSampleAtTime(stample.timestamp, std::move(outSample));
