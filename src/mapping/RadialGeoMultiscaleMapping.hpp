@@ -65,11 +65,11 @@ private:
   MultiscaleAxis _axis;
 
   /// computed vertex indices to map data from input vertices to output vertices and vice versa
-  std::vector<int> _vertexIndicesSpread;
-  std::vector<int> _vertexIndicesCollect;
+  std::vector<size_t> _vertexIndicesSpread;
+  std::vector<size_t> _vertexIndicesCollect;
 
   /// counts number of vertices between midpoints for averaging
-  std::vector<int> _vertexCounter;
+  std::vector<size_t> _vertexCounter;
 };
 
 } // namespace mapping
