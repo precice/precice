@@ -126,7 +126,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
     size_t const outSize = output()->vertices().size();
 
     for (size_t i = 0; i < outSize; i++) {
-      PRECICE_ASSERT(static_cast<size_t>((i * outDataDimensions) + effectiveCoordinate) < outputValues.size(), ((i * outDataDimensions) + effectiveCoordinate), outputValues.size());
+      PRECICE_ASSERT(static_cast<size_t>((i * outDataDimensions) + effectiveCoordinate) < static_cast<size_t>(outputValues.size()), ((i * outDataDimensions) + effectiveCoordinate), outputValues.size());
       // When adding support for 2D, remember that this should be 1.5 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
       outputValues((i * outDataDimensions) + effectiveCoordinate) = 2 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
     }
@@ -140,7 +140,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
     outputValues(effectiveCoordinate) = 0;
     size_t const inSize               = input()->vertices().size();
     for (size_t i = 0; i < inSize; i++) {
-      PRECICE_ASSERT(static_cast<size_t>((i * inDataDimensions) + effectiveCoordinate) < inputValues.size(), ((i * inDataDimensions) + effectiveCoordinate), inputValues.size())
+      PRECICE_ASSERT(static_cast<size_t>((i * inDataDimensions) + effectiveCoordinate) < static_cast<size_t>(inputValues.size()), ((i * inDataDimensions) + effectiveCoordinate), inputValues.size())
       outputValues(effectiveCoordinate) += inputValues((i * inDataDimensions) + effectiveCoordinate);
     }
     outputValues(effectiveCoordinate) = outputValues(effectiveCoordinate) / inSize;
