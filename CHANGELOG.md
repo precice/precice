@@ -4,9 +4,9 @@ All notable changes to this project will be documented in this file. For future 
 
 ## 2.5.1
 
+- Changed error to warning in case of an empty IQN matrix, keeping the simulation going. This allows to start from a zero initial state that only later changes (e.g., an opening valve in a flow simulation). (https://github.com/precice/precice/pull/1895)
 - Changed error to warning when trying to add a zero-value column to `V` matrix in QN-acceleration (Backport of https://github.com/precice/precice/pull/1863)
 - Fixed compatibility with libxml version 2.12.0. (https://github.com/precice/precice/pull/1886)
-- Added a warning for empty IQN matrix, but keep the simulation going. This allows to start from a zero initial state that only later changes (e.g., an opening valve in a flow simulation). (https://github.com/precice/precice/pull/1895)
 - Fixed missing include path for C-bindings when using preCICE via pkg-config directly from the build directory. (Backport of https://github.com/precice/precice/pull/1931)
 
 ## 2.5.0
