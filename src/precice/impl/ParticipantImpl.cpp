@@ -322,13 +322,13 @@ void ParticipantImpl::initialize()
     context.storeBufferedData(time);
   }
 
-  mapWrittenData();
+  mapInitialWrittenData();
   performDataActions({action::Action::WRITE_MAPPING_POST});
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timeWindow);
 
-  mapReadData();
+  mapInitialReadData();
   performDataActions({action::Action::READ_MAPPING_POST});
 
   PRECICE_DEBUG("Plot output");
@@ -1395,6 +1395,18 @@ void ParticipantImpl::computeMappings(std::vector<MappingContext> &contexts, con
   }
 }
 
+void ParticipantImpl::mapInitialWrittenData()
+{
+  PRECICE_TRACE();
+  computeMappings(_accessor->writeMappingContexts(), "write");
+  for (auto &context : _accessor->writeDataContexts()) {
+    if (context.hasMapping()) {
+      PRECICE_DEBUG("Map initial write data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
+      _executedWriteMappings += context.mapData(std::nullopt, true);
+    }
+  }
+}
+
 void ParticipantImpl::mapWrittenData(std::optional<double> after)
 {
   PRECICE_TRACE();
@@ -1420,6 +1432,19 @@ void ParticipantImpl::trimReadMappedData(double startOfTimeWindow, bool isTimeWi
       } else {
         context.trimToDataAfterFor(fromData, startOfTimeWindow);
       }
+    }
+  }
+}
+
+void ParticipantImpl::mapInitialReadData()
+{
+  PRECICE_TRACE();
+  computeMappings(_accessor->readMappingContexts(), "read");
+  for (auto &context : _accessor->readDataContexts()) {
+    if (context.hasMapping()) {
+      PRECICE_DEBUG("Map initial read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
+      // We always ensure that all read data was mapped
+      _executedReadMappings += context.mapData(std::nullopt, true);
     }
   }
 }
