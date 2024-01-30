@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.16.3)
-project(preCICE VERSION 2.5.0 LANGUAGES CXX)
+project(preCICE VERSION 2.5.1 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -550,11 +550,16 @@ else()
 endif()
 
 # Configure the pkg-config file for the binary directory
+set(_precice_bindings "")
+if (PRECICE_ENABLE_C)
+  set(_precice_bindings "-I${PROJECT_SOURCE_DIR}/extras/bindings/c/include")
+endif()
 configure_file(
   "${PROJECT_SOURCE_DIR}/cmake/binary.pc.in"
   "libprecice.pc"
   @ONLY
   )
+unset(_precice_bindings)
 
 # Configure the pkg-config file for the installation
 configure_file(

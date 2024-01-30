@@ -82,7 +82,7 @@ void OnCharacters(void *ctx, const xmlChar *ch, int len)
   pParser->OnTextSection(std::string(reinterpret_cast<const char *>(ch), len));
 }
 
-void OnStructuredErrorFunc(void *userData, xmlError *error)
+void OnStructuredErrorFunc(void *userData, const xmlError *error)
 {
   const std::string message{error->message};
 
@@ -94,6 +94,11 @@ void OnStructuredErrorFunc(void *userData, xmlError *error)
   ConfigParser::MessageProxy(error->level, message);
 }
 
+// Required for versions before 2.12.0 of libxml
+void OnStructuredErrorFunc(void *userData, xmlError *error)
+{
+  OnStructuredErrorFunc(userData, static_cast<const xmlError *>(error));
+}
 // ------------------------- ConfigParser implementation  -------------------------
 
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
