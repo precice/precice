@@ -25,6 +25,13 @@ inline void runMultipleSolversMappingCount(precice::testing::TestContext &contex
 
   participant.initialize();
 
+  BOOST_TEST_CONTEXT("Data isn't initialized, and thus isn't mapped")
+  {
+    auto mappedSubstep = precice::testing::WhiteboxAccessor::impl(participant).mappedSamples();
+    BOOST_TEST(mappedSubstep.write == 0);
+    BOOST_TEST(mappedSubstep.read == 0);
+  }
+
   participant.requiresWritingCheckpoint();
 
   // A and B are fully steered by the configuration
