@@ -25,6 +25,13 @@ inline void runTwoSolversMappingCount(precice::testing::TestContext &context, st
 
   participant.initialize();
 
+  BOOST_TEST_CONTEXT("Data isn't initialized, and thus isn't mapped")
+  {
+    auto mappedSubstep = precice::testing::WhiteboxAccessor::impl(participant).mappedSamples();
+    BOOST_TEST(mappedSubstep.write == 0);
+    BOOST_TEST(mappedSubstep.read == 0);
+  }
+
   BOOST_TEST(participant.requiresWritingCheckpoint() == implicit);
 
   size_t timeWindow = 0;
