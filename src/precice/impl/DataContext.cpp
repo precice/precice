@@ -139,11 +139,11 @@ int DataContext::mapData(std::optional<double> after, bool skipZero)
           mapping.map(stample.sample, outSample.values);
         }
         PRECICE_DEBUG("Mapped values (t={}) = {}", stample.timestamp, utils::previewRange(3, outSample.values));
+        ++executedMappings;
       }
 
       // Store data from mapping buffer in storage
       context.toData->setSampleAtTime(stample.timestamp, std::move(outSample));
-      ++executedMappings;
     }
   }
   return executedMappings;
