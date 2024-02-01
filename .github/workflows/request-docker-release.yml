@@ -50,7 +50,7 @@ jobs:
           build-args: |
             version=${{ github.event.inputs.version }}
       - name: Build and push latest tag
-        if: ${{ github.event.inputs.latest }}
+        if: ${{ github.event.inputs.latest == 'true' }}
         uses: docker/build-push-action@v5
         with:
           push: true
