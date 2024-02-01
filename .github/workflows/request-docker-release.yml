@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
     workflow_dispatch:
     inputs:
-      release:
+      version:
         description: 'Version without the v prefix'
         default: "2.1.0"
         required: true
@@ -27,7 +27,7 @@ on:
 
 jobs:
   package:
-    name: 'Release docker precice/precice:${{ github.event.inputs.release }}'
+    name: 'Release docker precice/precice:${{ github.event.inputs.version }}'
     runs-on: ubuntu-latest
     env:
         docker_username: precice
