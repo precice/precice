@@ -3,7 +3,10 @@
 #include <map>
 #include <string>
 #include <vector>
+
 #include "com/SharedPointer.hpp"
+#include "cplscheme/ImplicitData.hpp"
+#include "precice/impl/Types.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -30,8 +33,8 @@ namespace cplscheme {
  * -# query and fulfill required actions
  * -# compute data to be sent (possibly taking into account received data from
  *    initialize())
- * -# advance the coupling scheme with advance(); where the maximum timestep
- *    length (= time window size) needs to be obeyed
+ * -# advance the coupling scheme in 4 steps:
+ *    firstSynchronization, firstExchange, secondSynchronization, secondExchange;
  * -# ....
  * -# when the method isCouplingOngoing() returns false, call finalize() to
  *    stop the coupling scheme
@@ -39,7 +42,7 @@ namespace cplscheme {
 class CouplingScheme {
 public:
   /// Does not define a time limit for the coupled simulation.
-  static const double UNDEFINED_TIME;
+  static const double UNDEFINED_MAX_TIME;
 
   /// Does not define limit on time windows for the coupled simulation.
   static const int UNDEFINED_TIME_WINDOWS;
@@ -47,11 +50,23 @@ public:
   /// To be used, when the time window size is determined dynamically during the coupling.
   static const double UNDEFINED_TIME_WINDOW_SIZE;
 
-  /// To be used, when the extrapolation order is not defined (for explicit coupling).
-  static const int UNDEFINED_EXTRAPOLATION_ORDER;
-
   /// To be used, when the number of max iterations is not defined (for explicit coupling).
   static const int UNDEFINED_MAX_ITERATIONS;
+
+  /// To be used, when the number of min iterations is not defined (for explicit coupling).
+  static const int UNDEFINED_MIN_ITERATIONS;
+
+  /// To be used, when the number of max iterations is infinite (for implicit coupling).
+  static const int INFINITE_MAX_ITERATIONS;
+
+  /// Actions that are required by CouplingSchemes
+  enum struct Action {
+    InitializeData, ///< Is the initialization of coupling data required?
+    ReadCheckpoint, ///< Is the participant required to read a previously written checkpoint?
+    WriteCheckpoint ///< Is the participant required to write a checkpoint?
+  };
+
+  static std::string toString(Action action);
 
   CouplingScheme &operator=(CouplingScheme &&) = delete;
 
@@ -59,7 +74,7 @@ public:
 
   /**
    * @brief Initializes the coupling scheme and establishes a communication
-   *        connection to the coupling partner.
+   *        connection to the coupling partner. Initializes coupling data.
    *
    * @param[in] startTime starting time for coupling @BU correct?
    * @param[in] startTimeWindow counter of time window for coupling @BU correct?
@@ -68,47 +83,74 @@ public:
       double startTime,
       int    startTimeWindow) = 0;
 
-  /// Returns true, if initialize has been called.
-  virtual bool isInitialized() const = 0;
-
   /**
-   * @brief Getter for _sendsInitializedData
-   * @returns _sendsInitializedData
+   * @brief Returns whether this participant of the coupling scheme sends initialized data.
+   *
+   * @returns true, if this participant of the coupling scheme sends initialized data
    */
   virtual bool sendsInitializedData() const = 0;
 
-  /**
-   * @brief Getter for _receivesInitializedData
-   * @returns _receivesInitializedData
+  /// Returns true, if initialize has been called.
+  virtual bool isInitialized() const = 0;
+
+  /** @name Advancing
+   *
+   * Advancing the couplingscheme
+   * @{
    */
-  virtual bool receivesInitializedData() const = 0;
 
   /**
-   * @brief Initializes the data for first implicit coupling scheme iteration.
+   * @brief Adds newly computed time. Has to be called before every advance.
+   * @param timeToAdd time to be added
    *
-   * Has to be called after initialize() and before advance().
-   * If this method is not used, the first participant has zero initial values
-   * for its read data, before receiving data in advance(). If non-zero values
-   * are needed, this has to be configured in the coupling-scheme XML
-   * exchange-data tags. This method can nevertheless also be called if no
-   * initialization is necessary. Then it is simply skipped.
-   * It has to be called after initialize() and before
-   * advance(). The second participant has to write the initial data values
-   * to preCICE after initialize() and before initializeData().
+   * @returns true, if reaches end of the window by adding timeToAdd to time in this time step.
    */
-  virtual void initializeData() = 0;
+  virtual bool addComputedTime(double timeToAdd) = 0;
 
-  /// @brief Adds newly computed time. Has to be called before every advance.
-  virtual void addComputedTime(double timeToAdd) = 0;
+  using ChangedMeshes = std::vector<MeshID>;
 
-  /**
-   * @brief Exchanges data and updates the state of the coupling scheme.
+  /** Synchronizes mesh changes with remote participants.
    *
-   * @pre initialize() has been called.
+   * At this point, both participants may have changed the meshes.
+   * Thus, we need to send local changes and receive remote changes.
    *
-   * Does not necessarily advance in time.
+   * @param[in] changes MeshIDs of locally changed meshes
+   *
+   * @returns MeshIDs of remotely changed meshes.
    */
-  virtual void advance() = 0;
+  virtual ChangedMeshes firstSynchronization(const ChangedMeshes &changes) = 0;
+
+  /** Exchanges the first set of data.
+   *
+   * @pre \ref firstSynchronization() was called
+   */
+  virtual void firstExchange() = 0;
+
+  /** Receive mesh changes from remote participants in the second step.
+   *
+   * At this point, the remote participant may have changed the meshes if
+   * it is using a serial coupling scheme.
+   * In contrast, the local participant has already communicated local changes
+   * to the remote participant during @ref firstSynchronization().
+   * Hence we only need to receive remote changes here.
+   *
+   * @note local changes are covered by \ref firstSynchronization()
+   *
+   * @returns MeshIDs of remotely changed meshes.
+   *
+   * @pre \ref firstExchange() was called
+   */
+  virtual ChangedMeshes secondSynchronization() = 0;
+
+  /** Exchanges the second set of data.
+   *
+   * This concludes the step of the coupling scheme
+   *
+   * @pre \ref secondSynchronization() was called
+   */
+  virtual void secondExchange() = 0;
+
+  ///@}
 
   /// Finalizes the coupling and disconnects communication.
   virtual void finalize() = 0;
@@ -122,16 +164,17 @@ public:
    * Also returns true after the last call of advance() at the end of the
    * simulation.
    *
-   * @param lastSolverTimestepLength [IN] The length of the last timestep
+   * @param lastSolverTimeStepSize [IN] The size of the last time step
    *        computed by the solver calling willDataBeExchanged().
    */
-  virtual bool willDataBeExchanged(double lastSolverTimestepLength) const = 0;
-
-  /// @brief Returns true, if data has been received in initializeData().
-  virtual bool hasInitialDataBeenReceived() const = 0;
+  virtual bool willDataBeExchanged(double lastSolverTimeStepSize) const = 0;
 
   /// @brief Returns true, if data has been exchanged in last call of advance().
   virtual bool hasDataBeenReceived() const = 0;
+
+  /// Returns the time window start time of the current time window
+  /// For compositional schemes, this returns the earliest start of an active time window
+  virtual double getTimeWindowStart() const = 0;
 
   /// Returns the currently computed time of the coupling scheme.
   virtual double getTime() const = 0;
@@ -151,23 +194,12 @@ public:
   virtual double getTimeWindowSize() const = 0;
 
   /**
-   * @brief Returns the remaining time within the current time window.
-   *
-   * This is not necessarily the time window size limit the solver has to obey
-   * which is returned by getNextTimestepMaxLength().  // TODO explain this better
-   *
-   * If no time window size is prescribed by the coupling scheme, always 0.0 is
-   * returned.
-   */
-  virtual double getThisTimeWindowRemainder() const = 0;
-
-  /**
-   * @brief Returns the maximal length of the next timestep to be computed.
+   * @brief Returns the maximal size of the next time step to be computed.
    *
    * If no time window size is prescribed by the coupling scheme, always the
    * maximal double accuracy floating point number value is returned.
    */
-  virtual double getNextTimestepMaxLength() const = 0;
+  virtual double getNextTimeStepMaxSize() const = 0;
 
   /// Returns true, when the coupled simulation is still ongoing.
   virtual bool isCouplingOngoing() const = 0;
@@ -176,16 +208,31 @@ public:
   virtual bool isTimeWindowComplete() const = 0;
 
   /// Returns true, if the given action has to be performed by the accessor.
-  virtual bool isActionRequired(const std::string &actionName) const = 0;
+  virtual bool isActionRequired(Action action) const = 0;
+
+  /// Returns true, if the given action has already been performed by the accessor.
+  virtual bool isActionFulfilled(Action action) const = 0;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  virtual void markActionFulfilled(const std::string &actionName) = 0;
+  virtual void markActionFulfilled(Action action) = 0;
 
   /// Sets an action required to be performed by the accessor.
-  virtual void requireAction(const std::string &actionName) = 0;
+  virtual void requireAction(Action action) = 0;
 
   /// Returns a string representation of the current coupling state.
   virtual std::string printCouplingState() const = 0;
+
+  /// Returns true if the scheme or one subscheme is implicit
+  virtual bool isImplicitCouplingScheme() const = 0;
+
+  /// Returns false if the scheme is implicit and hasn't converged
+  virtual bool hasConverged() const = 0;
+
+  /// Returns true if any send data of the scheme requires substeps
+  virtual bool requiresSubsteps() const = 0;
+
+  /// Returns a vector of implicit data to receive in the next advance
+  virtual ImplicitData implicitDataToReceive() const = 0;
 };
 
 } // namespace cplscheme

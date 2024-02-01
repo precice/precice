@@ -5,14 +5,14 @@
 # a minimalisitic exectutable.
 # They report their activity as STATUS messages.
 # A failing validation is reported as a FATAL_ERROR.
-# 
+#
 # Variables
 #  PRECICE_ALWAYS_VALIDATE_LIBS - Always actively validates the libs.
 #
 
 # General function to validate a given library
 # precice_validate_lib( <code-to-compile> NAME <name> [LINK_LIBRARIES <lib> ...] [COMPILE_DEFINITIONS <def> ... ]
-# 
+#
 # Caches on success to speed up development. Set PRECICE_ALWAYS_VALIDATE_LIBS to disable this behaviour.
 #
 function(precice_validate_lib ARG_CODE)
@@ -54,6 +54,7 @@ function(precice_validate_lib ARG_CODE)
     else()
       message(STATUS "Validating ${ARG_NAME} - success")
       set(${_cache_success} Yes CACHE BOOL "Cached successful validation of ${ARG_NAME}." FORCE)
+      mark_as_advanced(${_cache_success})
     endif()
   endif()
 endfunction()
@@ -92,21 +93,4 @@ macro(precice_validate_eigen)
     "#include <Eigen/Core>\nint main() { return 0; } "
     NAME Eigen
     LINK_LIBRARIES Eigen3::Eigen)
-endmacro()
-
-
-# Validation for JSON
-macro(precice_validate_json)
-  precice_validate_lib(
-    "#include <nlohmann/json.hpp>\nint main() { return 0; } "
-    NAME JSON
-    LINK_LIBRARIES JSON)
-endmacro()
-
-# Validation for fmtlib
-macro(precice_validate_fmtlib)
-  precice_validate_lib(
-    "#include <fmt/format.h>\nint main() { return 0; } "
-    NAME fmtlib
-    LINK_LIBRARIES fmt-header-only)
 endmacro()

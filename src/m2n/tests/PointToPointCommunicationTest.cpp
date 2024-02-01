@@ -58,17 +58,7 @@ void runP2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
     if (context.isPrimary()) {
       mesh->setGlobalNumberOfVertices(10);
 
-      mesh->getVertexDistribution()[0].push_back(0);
-      mesh->getVertexDistribution()[0].push_back(1);
-      mesh->getVertexDistribution()[0].push_back(3);
-      mesh->getVertexDistribution()[0].push_back(5);
-      mesh->getVertexDistribution()[0].push_back(7);
-
-      mesh->getVertexDistribution()[1].push_back(1);
-      mesh->getVertexDistribution()[1].push_back(2);
-      mesh->getVertexDistribution()[1].push_back(4);
-      mesh->getVertexDistribution()[1].push_back(5);
-      mesh->getVertexDistribution()[1].push_back(6);
+      mesh->setVertexDistribution({{0, {0, 1, 3, 5, 7}}, {1, {1, 2, 4, 5, 6}}});
 
       data         = {10, 20, 40, 60, 80};
       expectedData = {10 + 2, 4 * 20 + 3, 40 + 2, 4 * 60 + 3, 80 + 2};
@@ -81,17 +71,7 @@ void runP2PComTest1(const TestContext &context, com::PtrCommunicationFactory cf)
     if (context.isPrimary()) {
       mesh->setGlobalNumberOfVertices(10);
 
-      mesh->getVertexDistribution()[0].push_back(1);
-      mesh->getVertexDistribution()[0].push_back(2);
-      mesh->getVertexDistribution()[0].push_back(5);
-      mesh->getVertexDistribution()[0].push_back(6);
-
-      mesh->getVertexDistribution()[1].push_back(0);
-      mesh->getVertexDistribution()[1].push_back(1);
-      mesh->getVertexDistribution()[1].push_back(3);
-      mesh->getVertexDistribution()[1].push_back(4);
-      mesh->getVertexDistribution()[1].push_back(5);
-      mesh->getVertexDistribution()[1].push_back(7);
+      mesh->setVertexDistribution({{0, {1, 2, 5, 6}}, {1, {0, 1, 3, 4, 5, 7}}});
 
       data.assign(4, -1);
       expectedData = {2 * 20, 30, 2 * 60, 70};
@@ -134,17 +114,7 @@ void runP2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
     if (context.isPrimary()) {
       mesh->setGlobalNumberOfVertices(10);
 
-      mesh->getVertexDistribution()[0].push_back(0);
-      mesh->getVertexDistribution()[0].push_back(1);
-      mesh->getVertexDistribution()[0].push_back(3);
-      mesh->getVertexDistribution()[0].push_back(5);
-      mesh->getVertexDistribution()[0].push_back(7);
-
-      mesh->getVertexDistribution()[1].push_back(1);
-      mesh->getVertexDistribution()[1].push_back(2);
-      mesh->getVertexDistribution()[1].push_back(4);
-      mesh->getVertexDistribution()[1].push_back(5);
-      mesh->getVertexDistribution()[1].push_back(6);
+      mesh->setVertexDistribution({{0, {0, 1, 3, 5, 7}}, {1, {1, 2, 4, 5, 6}}});
 
       data         = {10, 20, 40, 60, 80};
       expectedData = {10 + 2, 4 * 20 + 3, 2 * 40 + 3, 4 * 60 + 3, 80 + 2};
@@ -157,17 +127,7 @@ void runP2PComTest2(const TestContext &context, com::PtrCommunicationFactory cf)
     if (context.isPrimary()) {
       mesh->setGlobalNumberOfVertices(10);
 
-      mesh->getVertexDistribution()[0].push_back(1);
-      mesh->getVertexDistribution()[0].push_back(3);
-      mesh->getVertexDistribution()[0].push_back(5);
-      mesh->getVertexDistribution()[0].push_back(6);
-
-      mesh->getVertexDistribution()[1].push_back(0);
-      mesh->getVertexDistribution()[1].push_back(1);
-      mesh->getVertexDistribution()[1].push_back(3);
-      mesh->getVertexDistribution()[1].push_back(4);
-      mesh->getVertexDistribution()[1].push_back(5);
-      mesh->getVertexDistribution()[1].push_back(7);
+      mesh->setVertexDistribution({{0, {1, 3, 5, 6}}, {1, {0, 1, 3, 4, 5, 7}}});
 
       data.assign(4, -1);
       expectedData = {2 * 20, 40, 2 * 60, 70};
@@ -205,19 +165,19 @@ void runSameConnectionTest(const TestContext &context, com::PtrCommunicationFact
   if (context.isNamed("A")) {
     if (context.isPrimary()) {
 
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
     } else {
 
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     }
   } else {
     BOOST_TEST(context.isNamed("B"));
     if (context.isPrimary()) {
 
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
     } else {
 
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     }
   }
 
@@ -261,19 +221,19 @@ void runCrossConnectionTest(const TestContext &context, com::PtrCommunicationFac
   if (context.isNamed("A")) {
     if (context.isPrimary()) {
 
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     } else {
 
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
     }
   } else {
     BOOST_TEST(context.isNamed("B"));
     if (context.isPrimary()) {
 
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     } else {
 
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
     }
   }
 
@@ -316,14 +276,14 @@ void runEmptyConnectionTest(const TestContext &context, com::PtrCommunicationFac
   if (context.isNamed("A")) {
     if (context.isPrimary()) {
 
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
 
     } else {
     }
   } else {
     BOOST_TEST(context.isNamed("B"));
     if (context.isPrimary()) {
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
 
     } else {
     }
@@ -366,7 +326,7 @@ void runP2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFa
       mesh::Vertex &v2 = mesh->createVertex(position);
       mesh->createEdge(v1, v2);
 
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
 
     } else {
       Eigen::VectorXd position(dimensions);
@@ -376,15 +336,15 @@ void runP2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFa
       mesh::Vertex &v2 = mesh->createVertex(position);
       mesh->createEdge(v1, v2);
 
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     }
   } else {
     BOOST_TEST(context.isNamed("B"));
     if (context.isPrimary()) {
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
 
     } else {
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     }
   }
 
@@ -431,7 +391,7 @@ void runP2PComLocalCommunicationMapTest(const TestContext &context, com::PtrComm
 
       // The numbers are chosen in this way to make it easy to test weather
       // correct values are communicated or not!
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
       localCommunicationMap[0].push_back(102);
       localCommunicationMap[0].push_back(1022);
       localCommunicationMap[0].push_back(10222);
@@ -443,7 +403,7 @@ void runP2PComLocalCommunicationMapTest(const TestContext &context, com::PtrComm
 
       // The numbers are chosen in this way to make it easy to test weather
       // correct values are communicated or not!
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
       localCommunicationMap[0].push_back(112);
       localCommunicationMap[0].push_back(1122);
       localCommunicationMap[0].push_back(11222);
@@ -455,11 +415,11 @@ void runP2PComLocalCommunicationMapTest(const TestContext &context, com::PtrComm
     BOOST_TEST(context.isNamed("B"));
     if (context.isPrimary()) {
 
-      mesh->getConnectedRanks().push_back(0);
+      mesh->setConnectedRanks({0});
 
     } else {
 
-      mesh->getConnectedRanks().push_back(1);
+      mesh->setConnectedRanks({1});
     }
   }
 

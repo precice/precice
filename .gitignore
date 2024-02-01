@@ -16,12 +16,12 @@ build
 GTAGS
 GRTAGS
 GPATH
-src/precice/adapters/python/PySolverInterface.cpp
-src/precice/adapters/python/PySolverInterface.so
 src/Eigen/
 docs/source-code-documentation/
 CMakeFiles
 Makefile
 src/precice/impl/versions.hpp
 src/precice/Version.h
+src/testing/SourceLocation.hpp
 .idea
+CMakeUserPresets.json

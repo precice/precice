@@ -5,12 +5,11 @@
 #include "logging/LogMacros.hpp"
 #include "m2n/BoundM2N.hpp"
 #include "m2n/M2N.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace m2n {
+namespace precice::m2n {
 
 void BoundM2N::prepareEstablishment()
 {
@@ -94,5 +93,4 @@ void BoundM2N::waitForSecondaryRanks()
   }
 }
 
-} // namespace m2n
-} // namespace precice
+} // namespace precice::m2n

@@ -15,12 +15,11 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 WatchPoint::WatchPoint(
     Eigen::VectorXd    pointCoords,
@@ -153,5 +152,4 @@ void WatchPoint::getValue(
   }
 }
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

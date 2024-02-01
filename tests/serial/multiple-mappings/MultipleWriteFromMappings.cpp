@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -13,47 +13,49 @@ BOOST_AUTO_TEST_CASE(MultipleWriteFromMappings)
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank));
 
   using Eigen::Vector2d;
-  using namespace precice::constants;
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-  Vector2d                 vertex1{0.0, 0.0};
-  Vector2d                 vertex2{2.0, 0.0};
-  Vector2d                 vertex3{4.0, 0.0};
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
+  Vector2d             vertex1{0.0, 0.0};
+  Vector2d             vertex2{2.0, 0.0};
+  Vector2d             vertex3{4.0, 0.0};
 
   if (context.isNamed("A")) {
-    const precice::MeshID meshIDTop      = interface.getMeshID("MeshATop");
-    const precice::MeshID meshIDBottom   = interface.getMeshID("MeshABottom");
-    int                   vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex1.data());
-    int                   vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex3.data());
-    int                   dataIDTop      = interface.getDataID("Pressure", meshIDTop);
-    int                   dataIDBottom   = interface.getDataID("Pressure", meshIDBottom);
+    auto meshNameTop    = "MeshATop";
+    auto meshNameBottom = "MeshABottom";
+    int  vertexIDTop    = interface.setMeshVertex(meshNameTop, vertex1);
+    int  vertexIDBottom = interface.setMeshVertex(meshNameBottom, vertex3);
+    auto dataNameTop    = "Pressure";
+    auto dataNameBottom = "Pressure";
 
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
     interface.advance(dt);
+    dt              = interface.getMaxTimeStepSize();
     double pressure = -1.0;
-    interface.readScalarData(dataIDTop, vertexIDTop, pressure);
+    interface.readData(meshNameTop, dataNameTop, {&vertexIDTop, 1}, dt, {&pressure, 1});
     BOOST_TEST(pressure == 1.0);
     pressure = -1.0;
-    interface.readScalarData(dataIDBottom, vertexIDBottom, pressure);
+    interface.readData(meshNameBottom, dataNameBottom, {&vertexIDBottom, 1}, dt, {&pressure, 1});
     BOOST_TEST(pressure == 5.0);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    const precice::MeshID meshID    = interface.getMeshID("MeshB");
-    int                   vertexID1 = interface.setMeshVertex(meshID, vertex1.data());
-    int                   vertexID2 = interface.setMeshVertex(meshID, vertex2.data());
-    int                   vertexID3 = interface.setMeshVertex(meshID, vertex3.data());
-    int                   dataID    = interface.getDataID("Pressure", meshID);
+    auto meshName  = "MeshB";
+    int  vertexID1 = interface.setMeshVertex(meshName, vertex1);
+    int  vertexID2 = interface.setMeshVertex(meshName, vertex2);
+    int  vertexID3 = interface.setMeshVertex(meshName, vertex3);
+    auto dataName  = "Pressure";
 
-    double dt       = interface.initialize();
+    interface.initialize();
     double pressure = 1.0;
-    interface.writeScalarData(dataID, vertexID1, pressure);
+    interface.writeData(meshName, dataName, {&vertexID1, 1}, {&pressure, 1});
     pressure = 4.0;
-    interface.writeScalarData(dataID, vertexID2, pressure);
+    interface.writeData(meshName, dataName, {&vertexID2, 1}, {&pressure, 1});
     pressure = 5.0;
-    interface.writeScalarData(dataID, vertexID3, pressure);
+    interface.writeData(meshName, dataName, {&vertexID3, 1}, {&pressure, 1});
+    double dt = interface.getMaxTimeStepSize();
     interface.advance(dt);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();

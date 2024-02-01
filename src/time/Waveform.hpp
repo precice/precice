@@ -2,6 +2,8 @@
 
 #include <Eigen/Core>
 #include "logging/Logger.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "time/Storage.hpp"
 
 namespace precice {
 
@@ -11,17 +13,14 @@ class WaveformFixture;
 } // namespace testing
 
 namespace time {
-
+// @todo Refactor Waveform class. Move sample function inside of Storage::sample
 /**
- * @brief Stores data samples in time and allows to perform interpolation to obtain new values.
+ * @brief Allows to perform interpolation on samples in storage of given data.
  *
- * When created via Waveform(interpolationOrder) a waveform reserves storage for the samples that are used to create the interpolant.
- * After creation of the waveform it must be initialized with Waveform::initialize(value) to finally reserve the storage.
- * The waveform is initialized with one data value as a constant function.
- * Waveform::store(value) allows the user to update the data sample in the Waveform.
- * Each time the user calls Waveform::moveToNextWindow() the data provided through Waveform::initialize or Waveform::store will be locked.
- * With each call of Waveform::moveToNextWindow() the number of available samples and, therefore, the order of the waveform is increased by one until the interpolation order that was defined during construction is reached.
- * As soon as this interpolation order is reached, the oldest sample will be discarded when Waveform::moveToNextWindow() is called. The order will then stay the same.
+ * The constructor Waveform(degree, data) creates a waveform. The samples of the data's storage are used to create the interpolant.
+ * The waveform is initialized with two data values at the beginning and at the end of the window as a constant function. Waveform::store(value) allows the user to provide new data to the Waveform. Interpolation is performed based on these values.
+ * The maximum allowed polynomial degree depends on the number of stored samples and can reach the interpolationDegree defined during construction as a maximum. If more samples are available than the maximum degree requires, a piecewise interpolation will be used (piecewise constant, piecewise linear and B-Spline interpolation).
+ * Interpolation is only performed inside the current time window.
  */
 class Waveform {
   friend class testing::WaveformFixture; // Make the fixture friend of this class
@@ -29,91 +28,37 @@ public:
   /**
    * @brief Waveform object which stores values of current and past time windows for performing interpolation.
    *
-   * Storage still needs to be initialized with Waveform::initialize, before the Waveform can be used.
-   *
-   * @param interpolationOrder Defines the interpolation order supported by this Waveform and reserves storage correspondingly
+   * @param degree Defines the polynomial degree supported by this Waveform and reserves storage correspondingly
    */
-  Waveform(const int interpolationOrder);
+  Waveform(const int degree);
 
-  /**
-   * @brief Get the _interpolationOrder.
-   *
-   * @return int _interpolationOrder
-   */
-  int getInterpolationOrder() const;
+  /// Returns a reference to the _timeStepsStorage.
+  time::Storage &timeStepsStorage();
 
-  /**
-   * @brief Used to initialize _timeWindowsStorage according to required size and initializes Waveform as constant with given values.
-   * @param values Defines constant initial value of waveform and its size
-   */
-  void initialize(const Eigen::VectorXd &values);
+  /// Returns a const reference to the _timeStepsStorage.
+  const time::Storage &timeStepsStorage() const;
 
-  /**
-   * @brief Updates first entry in _timeWindows with given values.
-   * @param values Sample for this time window
-   */
-  void store(const Eigen::VectorXd &values);
-
-  /**
-   * @brief Shifts all entries in _timeWindows. The new entry is initialized as the value from the last window (= constant extrapolation). Called when moving to the next time window.
-   */
-  void moveToNextWindow();
+  /// Returns a the stamples from _timeStepsStorage.
+  auto stamples() const
+  {
+    return _timeStepsStorage.stamples();
+  }
 
   /**
    * @brief Evaluate waveform at specific point in time. Uses interpolation if necessary.
    *
-   * Interpolates values inside current time window using _timeWindowsStorage and an interpolation scheme of the order of this Waveform.
+   * Interpolates values inside current time window using _storage and an interpolation scheme of the maximum degree of this Waveform. The interpolation scheme always uses all available values in _storage and tries to reach _degree. If more than the required number of values needed to reach _degree are available, a piecewise interpolation strategy will be applied to obtain an interpolation that reaches the requested polynomial degree and still interpolates all the provided data points.
    *
-   * @param normalizedDt Time where the sampling inside the window happens. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
-   * @return Value of Waveform at time normalizedDt.
+   * @param time Time where the sampling inside the window happens.
+   * @return Value of Waveform at given time.
    */
-  Eigen::VectorXd sample(const double normalizedDt);
+  Eigen::VectorXd sample(const double time) const;
 
 private:
-  /// Set by initialize. Used for consistency checks.
-  bool _storageIsInitialized = false;
-
-  /// Stores values for several time windows.
-  Eigen::MatrixXd _timeWindowsStorage;
-
-  /// interpolation order for this waveform
-  const int _interpolationOrder;
-
-  /// number of stored samples in _timeWindowsStorage
-  int _numberOfStoredSamples;
+  /// Stores time steps in the current time window
+  time::Storage _timeStepsStorage;
 
   mutable logging::Logger _log{"time::Waveform"};
-
-  /**
-   * @brief Get number of values per sample in time stored by this waveform.
-   * @return Number of values per sample.
-   */
-  int valuesSize();
-
-  /**
-   * @brief Get maximum number of samples in time this waveform can store.
-   * @return Maximum number of samples.
-   */
-  int maxNumberOfStoredSamples();
-
-  /**
-   * @brief Updates entry in _timeWindowsStorage corresponding to a given sampleIndex with given values.
-   * @param values Input sample.
-   * @param sampleIndex Index of sample to be updated to given input sample.
-   */
-  void storeAt(const Eigen::VectorXd values, int sampleIndex);
-
-  /**
-   * @brief Computes which order may be used for interpolation.
-   *
-   * Order of interpolation is determined by number of stored samples and maximum order defined by the user.
-   * Example: If only two samples are available, the maximum order we may use is 1, even if the user demands order 2.
-   *
-   * @param requestedOrder Order requested by the user.
-   * @param numberOfAvailableSamples Samples available for interpolation.
-   * @return Order that may be used.
-   */
-  int computeUsedOrder(int requestedOrder, int numberOfAvailableSamples);
 };
 
 } // namespace time

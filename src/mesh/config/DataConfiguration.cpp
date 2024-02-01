@@ -5,8 +5,7 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 DataConfiguration::DataConfiguration(xml::XMLTag &parent)
 {
@@ -15,25 +14,22 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
   auto attrName = XMLAttribute<std::string>(ATTR_NAME)
                       .setDocumentation("Unique name for the data set.");
 
+  auto attrDegree = makeXMLAttribute(ATTR_DEGREE, time::Time::DEFAULT_WAVEFORM_DEGREE);
+  attrDegree.setDocumentation("Polynomial degree of waveform that is used for time interpolation.");
+
   XMLTag tagScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG);
   tagScalar.setDocumentation("Defines a scalar data set to be assigned to meshes.");
   tagScalar.addAttribute(attrName);
+  tagScalar.addAttribute(attrDegree);
   parent.addSubtag(tagScalar);
 
   XMLTag tagVector(*this, VALUE_VECTOR, XMLTag::OCCUR_ARBITRARY, TAG);
   tagVector.setDocumentation("Defines a vector data set to be assigned to meshes. The number of "
                              "components of each data entry depends on the spatial dimensions set "
-                             "in tag <solver-interface>.");
+                             "in tag <precice-configuration>.");
   tagVector.addAttribute(attrName);
+  tagVector.addAttribute(attrDegree);
   parent.addSubtag(tagVector);
-}
-
-void DataConfiguration::setDimensions(
-    int dimensions)
-{
-  PRECICE_TRACE(dimensions);
-  PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
-  _dimensions = dimensions;
 }
 
 const std::vector<DataConfiguration::ConfiguredData> &
@@ -55,11 +51,22 @@ void DataConfiguration::xmlTagCallback(
     xml::XMLTag &                    tag)
 {
   if (tag.getNamespace() == TAG) {
-    PRECICE_ASSERT(_dimensions != 0);
-    const std::string &name           = tag.getStringAttributeValue(ATTR_NAME);
-    const std::string &typeName       = tag.getName();
-    int                dataDimensions = getDataDimensions(typeName);
-    addData(name, dataDimensions);
+    const std::string &name = tag.getStringAttributeValue(ATTR_NAME);
+
+    Data::typeName typeName;
+    if (tag.getName() == "scalar") {
+      typeName = Data::typeName::SCALAR;
+    } else if (tag.getName() == "vector") {
+      typeName = Data::typeName::VECTOR;
+    } else {
+      PRECICE_ERROR("You configured data with name=\"{}\" to be of type \"{}\", but this type is unknown. Known types are \"scalar\" and \"vector\".", name, tag.getName());
+    };
+
+    const int waveformDegree = tag.getIntAttributeValue(ATTR_DEGREE);
+    if (waveformDegree < time::Time::MIN_WAVEFORM_DEGREE || waveformDegree > time::Time::MAX_WAVEFORM_DEGREE) {
+      PRECICE_ERROR("You tried to configure the data with name \"{}\" to use the waveform-degree=\"{}\", but the degree must be between \"{}\" and \"{}\". Please use a degree in the allowed range.", name, waveformDegree, time::Time::MIN_WAVEFORM_DEGREE, time::Time::MAX_WAVEFORM_DEGREE);
+    }
+    addData(name, typeName, waveformDegree);
   } else {
     PRECICE_ASSERT(false, "Received callback from an unknown tag.", tag.getName());
   }
@@ -72,8 +79,9 @@ void DataConfiguration::xmlEndTagCallback(
 }
 
 void DataConfiguration::addData(
-    const std::string &name,
-    int                dataDimensions)
+    const std::string &  name,
+    const Data::typeName typeName,
+    int                  waveformDegree)
 {
   // Check if data with same name has been added already
   for (auto &elem : _data) {
@@ -82,20 +90,7 @@ void DataConfiguration::addData(
                   name);
   }
 
-  _data.emplace_back(name, dataDimensions);
+  _data.emplace_back(name, typeName, waveformDegree);
 }
 
-int DataConfiguration::getDataDimensions(
-    const std::string &typeName) const
-{
-  if (typeName == VALUE_VECTOR) {
-    return _dimensions;
-  } else if (typeName == VALUE_SCALAR) {
-    return 1;
-  }
-  // We should never reach this point
-  PRECICE_UNREACHABLE("Unknown data type \"{}\".", typeName);
-}
-
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+  <mesh name="TestMesh" dimensions="3" />
+  <mesh name="TestMeshTwo" dimensions="3" />
+  <mesh name="TestMeshThree" dimensions="3" />
+  <mesh name="TestMeshFour" dimensions="3" />
+  <mesh name="TestMeshFive" dimensions="3" />
+  <mesh name="TestMeshSix" dimensions="3" />
+  <mesh name="TestMeshSeven" dimensions="3" />
+  <mesh name="TestMeshEight" dimensions="3" />
+  <mesh name="TestMeshNine" dimensions="3" />
+  <mesh name="TestMeshTen" dimensions="3" />
+  <mesh name="TestMeshEleven" dimensions="3" />
+  <mesh name="TestMeshTwelve" dimensions="3" />
+  <mesh name="TestMeshThirteen" dimensions="3" />
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshTwo"
+    to="TestMesh"
+    constraint="consistent">
+    <basis-function:thin-plate-splines />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshThree"
+    to="TestMeshTwo"
+    constraint="consistent">
+    <basis-function:volume-splines />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshFour"
+    to="TestMeshThree"
+    constraint="consistent">
+    <basis-function:compact-polynomial-c0 support-radius="0.3" />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshFive"
+    to="TestMeshFour"
+    constraint="consistent">
+    <basis-function:compact-polynomial-c2 support-radius="0.3" />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshSix"
+    to="TestMeshFive"
+    constraint="consistent">
+    <basis-function:compact-polynomial-c4 support-radius="0.3" />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshSeven"
+    to="TestMeshSix"
+    constraint="consistent">
+    <basis-function:compact-polynomial-c6 support-radius="0.3" />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshEight"
+    to="TestMeshSeven"
+    constraint="consistent">
+    <basis-function:compact-polynomial-c8 support-radius="0.3" />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshNine"
+    to="TestMeshEight"
+    constraint="consistent">
+    <basis-function:multiquadrics shape-parameter="0.3" />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshTen"
+    to="TestMeshNine"
+    constraint="consistent">
+    <basis-function:inverse-multiquadrics shape-parameter="0.3" />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshEleven"
+    to="TestMeshTen"
+    constraint="consistent">
+    <basis-function:compact-tps-c2 support-radius="0.3" />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshTwelve"
+    to="TestMeshEleven"
+    constraint="consistent">
+    <basis-function:gaussian support-radius="0.3" />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshThirteen"
+    to="TestMeshTwelve"
+    constraint="consistent"
+    polynomial="off"
+    x-dead="true"
+    y-dead="false"
+    z-dead="true">
+    <basis-function:gaussian shape-parameter="0.3" />
+  </mapping:rbf-global-direct>
+</configuration>

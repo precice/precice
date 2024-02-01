@@ -4,18 +4,19 @@
 
 # For Adapter Developers
 
-Please refer to the documentation on https://precice.org/docs and to the documentation of the \ref precice::SolverInterface SolverInterface.
+Please refer to the documentation on https://precice.org/docs and to the documentation of the \ref precice::Participant Participant.
 Refer to \ref precice::tooling for the tooling API.
+
+The API of further native bindings can be found here:
+
+- \ref preciceC.h "preciceC" for the C bindings.
+- \ref preciceFortran.hpp "preciceFortran" for the Fortran bindings.
+
+The detailed porting guides on https://precice.org/couple-your-code-porting-overview help you to port adapters between major versions of preCICE.
 
 # For Library Developers
 
-- \ref eventtimings
-- \ref optimization
-- \ref tests
-- \ref conventions
-- \ref logging
-- \ref tooling
-- \ref releases
+For general information, have a look at the developer documentation on the website https://precice.org/dev-docs-overview.
 
 The directory \ref src contains the sources of preCICE.
 Every component has its own directory and namespace. The namespaces of internal components are all rooted in the project namespace \ref precice.
@@ -35,8 +36,10 @@ The following components currently exist:
 - \ref precice::math "math" provides general mathematical constants and functions.
 - \ref precice::mapping "mapping" defines data mapping from points to meshes by using geometrical queries.
 - \ref precice::partition "partition" computes the partitioning of distributed meshes at initialization.
+- \ref precice::profiling "profiling" provides utilities for performance profiling .
 - \ref precice::query "query" holds classes to perform geometrical queries on geometries.
 - \ref precice::testing "testing" holds the code that configure the boost testing framework and the main function for the testprecice executable.
+- \ref precice::time "time" contains the functionality regarding interpolation in time
 - \ref precice::utils "utils" contains functionality serving as technical basis for all other components.
 - \ref precice::xml "xml" contains the XML configuration parser.
 

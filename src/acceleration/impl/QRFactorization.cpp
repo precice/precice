@@ -13,13 +13,11 @@
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 QRFactorization::QRFactorization(
     Eigen::MatrixXd Q,
@@ -398,7 +396,7 @@ int QRFactorization::orthogonalize(
     if (rho1 * _theta <= rho0 + _omega * norm_coefficients) {
       // exit to fail if too many iterations
       if (k >= 4) {
-        PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
+        PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to orthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
         return -1;
       }
       rho0 = rho1;
@@ -516,7 +514,7 @@ int QRFactorization::orthogonalize_stable(
       if (k >= 4) {
         std::cout
             << "\ntoo many iterations in orthogonalize, termination failed\n";
-        PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
+        PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to orthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
         return -1;
       }
 
@@ -779,6 +777,4 @@ void QRFactorization::setFilter(int filter)
   _filter = filter;
 }
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

@@ -6,9 +6,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 ResidualSumPreconditioner::ResidualSumPreconditioner(
     int maxNonConstTimeWindows)
@@ -55,7 +53,9 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
     }
 
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
-      _residualSum[k] += norms[k] / sum;
+      if (sum > math::NUMERICAL_ZERO_DIFFERENCE)
+        _residualSum[k] += norms[k] / sum;
+
       if (math::equals(_residualSum[k], 0.0)) {
         PRECICE_WARN("A sub-vector in the residual-sum preconditioner became numerically zero ( sub-vector = {}). "
                      "If this occurred in the second iteration and the initial-relaxation factor is equal to 1.0, "
@@ -86,6 +86,4 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
   }
 }
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

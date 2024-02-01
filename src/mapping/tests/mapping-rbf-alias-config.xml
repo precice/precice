@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+  <mesh name="TestMesh" dimensions="3" />
+  <mesh name="TestMeshTwo" dimensions="3" />
+  <mesh name="TestMeshThree" dimensions="3" />
+
+  <mapping:rbf direction="write" from="TestMesh" to="TestMeshThree" constraint="conservative">
+    <basis-function:thin-plate-splines />
+  </mapping:rbf>
+
+  <mapping:rbf direction="read" from="TestMeshThree" to="TestMeshTwo" constraint="consistent">
+    <basis-function:thin-plate-splines />
+  </mapping:rbf>
+</configuration>

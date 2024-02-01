@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -13,38 +13,40 @@ BOOST_AUTO_TEST_CASE(MultipleWriteToMappings)
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank));
 
   using Eigen::Vector2d;
-  using namespace precice::constants;
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-  Vector2d                 vertex{0.0, 0.0};
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
+  Vector2d             vertex{0.0, 0.0};
 
   if (context.isNamed("A")) {
-    const precice::MeshID meshIDTop      = interface.getMeshID("MeshATop");
-    const precice::MeshID meshIDBottom   = interface.getMeshID("MeshABottom");
-    int                   vertexIDTop    = interface.setMeshVertex(meshIDTop, vertex.data());
-    int                   vertexIDBottom = interface.setMeshVertex(meshIDBottom, vertex.data());
-    int                   dataIDTop      = interface.getDataID("DisplacementTop", meshIDTop);
-    int                   dataIDBottom   = interface.getDataID("DisplacementBottom", meshIDBottom);
+    auto meshNameTop    = "MeshATop";
+    auto meshNameBottom = "MeshABottom";
+    int  vertexIDTop    = interface.setMeshVertex(meshNameTop, vertex);
+    int  vertexIDBottom = interface.setMeshVertex(meshNameBottom, vertex);
+    auto dataNameTop    = "DisplacementTop";
+    auto dataNameBottom = "DisplacementBottom";
 
-    double dt              = interface.initialize();
+    interface.initialize();
     double displacementTop = 1.0;
-    interface.writeScalarData(dataIDTop, vertexIDTop, displacementTop);
+    interface.writeData(meshNameTop, dataNameTop, {&vertexIDTop, 1}, {&displacementTop, 1});
     double displacementBottom = 2.0;
-    interface.writeScalarData(dataIDBottom, vertexIDBottom, displacementBottom);
+    interface.writeData(meshNameBottom, dataNameBottom, {&vertexIDBottom, 1}, {&displacementBottom, 1});
+    double dt = interface.getMaxTimeStepSize();
     interface.advance(dt);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    const precice::MeshID meshID   = interface.getMeshID("MeshB");
-    int                   vertexID = interface.setMeshVertex(meshID, vertex.data());
-    int                   dataID   = interface.getDataID("DisplacementSum", meshID);
+    auto meshName = "MeshB";
+    int  vertexID = interface.setMeshVertex(meshName, vertex);
+    auto dataName = "DisplacementSum";
 
-    double dt = interface.initialize();
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
     interface.advance(dt);
     double displacement = -1.0;
-    interface.readScalarData(dataID, vertexID, displacement);
+    dt                  = interface.getMaxTimeStepSize();
+    interface.readData(meshName, dataName, {&vertexID, 1}, dt, {&displacement, 1});
     BOOST_TEST(displacement == 3.0);
     BOOST_TEST(not interface.isCouplingOngoing());
     interface.finalize();

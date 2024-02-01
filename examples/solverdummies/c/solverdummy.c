@@ -1,4 +1,4 @@
-#include "precice/SolverInterfaceC.h"
+#include "precice/preciceC.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,8 +13,6 @@ int main(int argc, char **argv)
   double *    vertices;
   double *    readData;
   double *    writeData;
-  int         meshID = -1;
-  int         dataID = -1;
   int *       vertexIDs;
   int         numberOfVertices = 3;
   int         writeDataID      = -1;
@@ -23,41 +21,34 @@ int main(int argc, char **argv)
   const char *writeDataName;
   const char *readDataName;
 
-  const char *configFileName  = argv[1];
-  const char *participantName = argv[2];
-
   if (argc != 3) {
-    printf("Usage: ./solverdummy configFile solverName\n\n");
+    printf("The solverdummy was called with an incorrect number of arguments. Usage: ./solverdummy configFile solverName\n\n");
     printf("Parameter description\n");
     printf("  configurationFile: Path and filename of preCICE configuration\n");
     printf("  solverName:        SolverDummy participant name in preCICE configuration\n");
     return 1;
   }
 
+  const char *configFileName  = argv[1];
+  const char *participantName = argv[2];
+
   printf("DUMMY: Running solver dummy with preCICE config file \"%s\" and participant name \"%s\".\n",
          configFileName, participantName);
 
-  const char *writeItCheckp = precicec_actionWriteIterationCheckpoint();
-  const char *readItCheckp  = precicec_actionReadIterationCheckpoint();
-
-  precicec_createSolverInterface(participantName, configFileName, solverProcessIndex, solverProcessSize);
+  precicec_createParticipant(participantName, configFileName, solverProcessIndex, solverProcessSize);
 
   if (strcmp(participantName, "SolverOne") == 0) {
-    writeDataName = "dataOne";
-    readDataName  = "dataTwo";
-    meshName      = "MeshOne";
+    writeDataName = "Data-One";
+    readDataName  = "Data-Two";
+    meshName      = "SolverOne-Mesh";
   }
   if (strcmp(participantName, "SolverTwo") == 0) {
-    writeDataName = "dataTwo";
-    readDataName  = "dataOne";
-    meshName      = "MeshTwo";
+    writeDataName = "Data-Two";
+    readDataName  = "Data-One";
+    meshName      = "SolverTwo-Mesh";
   }
 
-  meshID      = precicec_getMeshID(meshName);
-  writeDataID = precicec_getDataID(writeDataName, meshID);
-  readDataID  = precicec_getDataID(readDataName, meshID);
-
-  dimensions = precicec_getDimensions();
+  dimensions = precicec_getMeshDimensions(meshName);
   vertices   = malloc(numberOfVertices * dimensions * sizeof(double));
   readData   = malloc(numberOfVertices * dimensions * sizeof(double));
   writeData  = malloc(numberOfVertices * dimensions * sizeof(double));
@@ -71,36 +62,35 @@ int main(int argc, char **argv)
     }
   }
 
-  precicec_setMeshVertices(meshID, numberOfVertices, vertices, vertexIDs);
+  precicec_setMeshVertices(meshName, numberOfVertices, vertices, vertexIDs);
 
   free(vertices);
 
-  dt = precicec_initialize();
+  if (precicec_requiresInitialData()) {
+    printf("DUMMY: Writing initial data\n");
+  }
+
+  precicec_initialize();
 
   while (precicec_isCouplingOngoing()) {
 
-    if (precicec_isActionRequired(writeItCheckp)) {
+    if (precicec_requiresWritingCheckpoint()) {
       printf("DUMMY: Writing iteration checkpoint \n");
-      precicec_markActionFulfilled(writeItCheckp);
     }
 
-    if (precicec_isReadDataAvailable) {
-      precicec_readBlockVectorData(readDataID, numberOfVertices, vertexIDs, readData);
-    }
+    dt = precicec_getMaxTimeStepSize();
+    precicec_readData(meshName, readDataName, numberOfVertices, vertexIDs, dt, readData);
 
     for (int i = 0; i < numberOfVertices * dimensions; i++) {
       writeData[i] = readData[i] + 1;
     }
 
-    if (precicec_isWriteDataRequired(dt)) {
-      precicec_writeBlockVectorData(writeDataID, numberOfVertices, vertexIDs, writeData);
-    }
+    precicec_writeData(meshName, writeDataName, numberOfVertices, vertexIDs, writeData);
 
-    dt = precicec_advance(dt);
+    precicec_advance(dt);
 
-    if (precicec_isActionRequired(readItCheckp)) {
+    if (precicec_requiresReadingCheckpoint()) {
       printf("DUMMY: Reading iteration checkpoint \n");
-      precicec_markActionFulfilled(readItCheckp);
     } else {
       printf("DUMMY: Advancing in time \n");
     }

@@ -28,11 +28,11 @@ BOOST_AUTO_TEST_CASE(DirectionalEdges)
   Vertex v2(coords2, 1);
   Vertex v3(coords3, 2);
 
-  Edge e1(v1, v2, 0);
-  Edge e2(v2, v3, 1);
-  Edge e3(v3, v1, 2);
+  Edge e1(v1, v2);
+  Edge e2(v2, v3);
+  Edge e3(v3, v1);
 
-  Triangle triangle(e1, e2, e3, 0);
+  Triangle triangle(e1, e2, e3);
 
   Vertex &v1ref = triangle.vertex(0);
   BOOST_TEST(v1ref.getID() == v1.getID());
@@ -42,9 +42,6 @@ BOOST_AUTO_TEST_CASE(DirectionalEdges)
 
   Vertex &v3ref = triangle.vertex(2);
   BOOST_TEST(v3ref.getID() == v3.getID());
-
-  int id = triangle.getID();
-  BOOST_TEST(id == 0);
 
   Vector3d normal = triangle.computeNormal();
   BOOST_TEST((coords2 - coords1).dot(normal) == 0.0);
@@ -71,11 +68,11 @@ BOOST_AUTO_TEST_CASE(SecondFlipped)
   Vertex   v2(coords2, 1);
   Vertex   v3(coords3, 2);
 
-  Edge e1(v1, v2, 0);
-  Edge e2(v3, v2, 1);
-  Edge e3(v3, v1, 2);
+  Edge e1(v1, v2);
+  Edge e2(v3, v2);
+  Edge e3(v3, v1);
 
-  Triangle triangle(e1, e2, e3, 0);
+  Triangle triangle(e1, e2, e3);
 
   Vertex &v1ref = triangle.vertex(0);
   BOOST_TEST(v1ref.getID() == v1.getID());
@@ -85,9 +82,6 @@ BOOST_AUTO_TEST_CASE(SecondFlipped)
 
   Vertex &v3ref = triangle.vertex(2);
   BOOST_TEST(v3ref.getID() == v3.getID());
-
-  int id = triangle.getID();
-  BOOST_TEST(id == 0);
 
   Vector3d normal = triangle.computeNormal();
   BOOST_TEST((coords2 - coords1).dot(normal) == 0.0);
@@ -115,11 +109,11 @@ BOOST_AUTO_TEST_CASE(ReversedFirstFlipped)
   Vertex v2(coords2, 1);
   Vertex v3(coords3, 2);
 
-  Edge e1(v1, v2, 0);
-  Edge e2(v3, v2, 1);
-  Edge e3(v1, v3, 2);
+  Edge e1(v1, v2);
+  Edge e2(v3, v2);
+  Edge e3(v1, v3);
 
-  Triangle triangle(e1, e2, e3, 0);
+  Triangle triangle(e1, e2, e3);
 
   Vertex &v1ref = triangle.vertex(0);
   BOOST_TEST(v1ref.getID() == v1.getID());
@@ -129,9 +123,6 @@ BOOST_AUTO_TEST_CASE(ReversedFirstFlipped)
 
   Vertex &v3ref = triangle.vertex(2);
   BOOST_TEST(v3ref.getID() == v3.getID());
-
-  int id = triangle.getID();
-  BOOST_TEST(id == 0);
 
   Vector3d normal = triangle.computeNormal();
   BOOST_TEST((coords2 - coords1).dot(normal) == 0.0);
@@ -159,11 +150,11 @@ BOOST_AUTO_TEST_CASE(ReversedLastFlipped)
   Vertex v2(coords2, 1);
   Vertex v3(coords3, 2);
 
-  Edge e1(v1, v2, 0);
-  Edge e2(v3, v2, 1);
-  Edge e3(v3, v1, 2);
+  Edge e1(v1, v2);
+  Edge e2(v3, v2);
+  Edge e3(v3, v1);
 
-  Triangle triangle(e1, e3, e2, 0);
+  Triangle triangle(e1, e3, e2);
 
   Vertex &v1ref = triangle.vertex(0);
   BOOST_TEST(v1ref.getID() == v1.getID());
@@ -173,9 +164,6 @@ BOOST_AUTO_TEST_CASE(ReversedLastFlipped)
 
   Vertex &v3ref = triangle.vertex(2);
   BOOST_TEST(v3ref.getID() == v3.getID());
-
-  int id = triangle.getID();
-  BOOST_TEST(id == 0);
 
   Vector3d normal = triangle.computeNormal();
   BOOST_TEST((coords2 - coords1).dot(normal) == 0.0);
@@ -203,11 +191,11 @@ BOOST_AUTO_TEST_CASE(RangeAccess)
   Vertex v1(coords2, 1);
   Vertex v2(coords3, 2);
 
-  Edge e0(v0, v1, 0);
-  Edge e1(v1, v2, 1);
-  Edge e2(v2, v0, 2);
+  Edge e0(v0, v1);
+  Edge e1(v1, v2);
+  Edge e2(v2, v0);
 
-  Triangle triangle(e0, e1, e2, 0);
+  Triangle triangle(e0, e1, e2);
 
   {
     // Test begin(), end()
@@ -265,23 +253,23 @@ BOOST_AUTO_TEST_CASE(TriangleEquality)
   Vertex v3(coords3, 2);
   Vertex v4(coords4, 0);
 
-  Edge e1(v1, v2, 0);
-  Edge e2(v3, v2, 1);
-  Edge e3(v3, v1, 2);
-  Edge e4(v2, v4, 0);
-  Edge e5(v4, v3, 1);
+  Edge e1(v1, v2);
+  Edge e2(v3, v2);
+  Edge e3(v3, v1);
+  Edge e4(v2, v4);
+  Edge e5(v4, v3);
 
   //    *
   //  * *
   // ****
-  Triangle triangle1(e1, e3, e2, 0);
-  Triangle triangle2(e1, e2, e3, 1);
+  Triangle triangle1(e1, e3, e2);
+  Triangle triangle2(e1, e2, e3);
   BOOST_TEST(triangle1 == triangle2);
   //    *
   //    * *
   //    ****
-  Triangle triangle3(e2, e4, e5, 0);
-  Triangle triangle4(e2, e4, e5, 0);
+  Triangle triangle3(e2, e4, e5);
+  Triangle triangle4(e2, e4, e5);
   BOOST_TEST(triangle1 == triangle2);
   BOOST_TEST(triangle1 != triangle3);
   BOOST_TEST(triangle4 == triangle3);
@@ -293,10 +281,10 @@ BOOST_AUTO_TEST_CASE(TriangleWKTPrint)
   Vertex            v1(Eigen::Vector3d(0., 0., 0.), 0);
   Vertex            v2(Eigen::Vector3d(0., 1., 0.), 0);
   Vertex            v3(Eigen::Vector3d(1., 0., 0.), 0);
-  Edge              e1(v1, v2, 0);
-  Edge              e2(v2, v3, 0);
-  Edge              e3(v3, v1, 0);
-  Triangle          t1(e1, e2, e3, 0);
+  Edge              e1(v1, v2);
+  Edge              e2(v2, v3);
+  Edge              e3(v3, v1);
+  Triangle          t1(e1, e2, e3);
   std::stringstream stream;
   stream << t1;
   std::string t1string("POLYGON ((0 0 0, 0 1 0, 1 0 0, 0 0 0))");

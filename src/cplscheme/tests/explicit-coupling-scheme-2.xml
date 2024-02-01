@@ -3,36 +3,29 @@
   <data:scalar name="Data0" />
   <data:vector name="Data1" />
 
-  <mesh name="Mesh">
+  <mesh name="Mesh" dimensions="3">
     <use-data name="Data0" />
     <use-data name="Data1" />
   </mesh>
 
-  <m2n:sockets from="Participant0" to="Participant1" />
+  <m2n:sockets acceptor="Participant0" connector="Participant1" />
 
   <participant name="Participant0">
-    <use-mesh name="Mesh" provide="on" />
-
+    <provide-mesh name="Mesh" />
     <write-data name="Data0" mesh="Mesh" />
-
     <read-data name="Data1" mesh="Mesh" />
   </participant>
 
   <participant name="Participant1">
-    <use-mesh name="Mesh" provide="on" />
-
+    <provide-mesh name="Mesh" />
     <write-data name="Data1" mesh="Mesh" />
-
     <read-data name="Data0" mesh="Mesh" />
   </participant>
 
   <coupling-scheme:serial-explicit>
     <participants first="Participant0" second="Participant1" />
-
     <time-window-size method="first-participant" />
-
     <max-time value="1.0" />
-
     <exchange data="Data0" mesh="Mesh" from="Participant0" to="Participant1" />
     <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant0" />
   </coupling-scheme:serial-explicit>

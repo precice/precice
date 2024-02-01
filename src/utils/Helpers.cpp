@@ -1,7 +1,6 @@
 #include <cstdint>
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 bool isMachineBigEndian()
 {
@@ -13,5 +12,4 @@ bool isMachineBigEndian()
   return bint.c[0] == 1;
 }
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

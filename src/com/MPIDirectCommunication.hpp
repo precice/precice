@@ -9,7 +9,7 @@
 
 #include "com/MPICommunication.hpp"
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 

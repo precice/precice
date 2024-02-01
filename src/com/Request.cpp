@@ -2,8 +2,7 @@
 
 #include "com/Request.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 
 void Request::wait(std::vector<PtrRequest> &requests)
 {
@@ -13,5 +12,4 @@ void Request::wait(std::vector<PtrRequest> &requests)
 }
 
 Request::~Request() = default;
-} // namespace com
-} // namespace precice
+} // namespace precice::com

@@ -1,9 +1,11 @@
-#include "precice/impl/DataContext.hpp"
+#include <iterator>
 #include <memory>
+#include <utility>
+
+#include "precice/impl/DataContext.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 logging::Logger DataContext::_log{"impl::DataContext"};
 
@@ -21,36 +23,23 @@ std::string DataContext::getDataName() const
   return _providedData->getName();
 }
 
-DataID DataContext::getFromDataID(size_t dataVectorIndex) const
+void DataContext::resetInitialGuesses()
 {
-  PRECICE_ASSERT(hasMapping());
-  PRECICE_ASSERT(dataVectorIndex < _fromData.size())
-  PRECICE_ASSERT(_fromData[dataVectorIndex]);
-  return _fromData[dataVectorIndex]->getID();
-}
-
-void DataContext::resetData()
-{
-  // See also https://github.com/precice/precice/issues/1156.
-  _providedData->toZero();
-  if (hasMapping()) {
-    PRECICE_ASSERT(hasWriteMapping());
-    std::for_each(_toData.begin(), _toData.end(), [](auto &data) { data->toZero(); });
+  for (auto &kv : _initialGuesses) {
+    kv.second.setZero();
   }
 }
 
-DataID DataContext::getToDataID(size_t dataVectorIndex) const
-{
-  PRECICE_ASSERT(hasMapping());
-  PRECICE_ASSERT(dataVectorIndex < _toData.size())
-  PRECICE_ASSERT(_toData[dataVectorIndex]);
-  return _toData[dataVectorIndex]->getID();
-}
-
-DataID DataContext::getDataDimensions() const
+int DataContext::getDataDimensions() const
 {
   PRECICE_ASSERT(_providedData);
   return _providedData->getDimensions();
+}
+
+int DataContext::getSpatialDimensions() const
+{
+  PRECICE_ASSERT(_providedData);
+  return _providedData->getSpatialDimensions();
 }
 
 std::string DataContext::getMeshName() const
@@ -59,29 +48,38 @@ std::string DataContext::getMeshName() const
   return _mesh->getName();
 }
 
+int DataContext::getMeshVertexCount() const
+{
+  PRECICE_ASSERT(_mesh);
+  return _mesh->vertices().size();
+}
+
 MeshID DataContext::getMeshID() const
 {
   PRECICE_ASSERT(_mesh);
   return _mesh->getID();
 }
 
-void DataContext::appendMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData)
+bool DataContext::hasGradient() const
 {
-  PRECICE_ASSERT(fromData);
-  PRECICE_ASSERT(toData);
+  PRECICE_ASSERT(_providedData);
+  return _providedData->hasGradient();
+}
+
+void DataContext::appendMapping(MappingContext mappingContext)
+{
+  PRECICE_ASSERT(mappingContext.fromData);
+  PRECICE_ASSERT(mappingContext.toData);
   // Make sure we don't append a mapping twice
 #ifndef NDEBUG
-  for (unsigned int i = 0; i < _mappingContexts.size(); ++i) {
-    PRECICE_ASSERT(!((_mappingContexts[i].mapping == mappingContext.mapping) && (_fromData[i] == fromData) && (_toData[i] == toData)), "The appended mapping already exists.");
+  for (auto &context : _mappingContexts) {
+    PRECICE_ASSERT(!((context.mapping == mappingContext.mapping) && (context.fromData == mappingContext.fromData) && (context.fromData == mappingContext.toData)), "The appended mapping already exists.");
   }
 #endif
   _mappingContexts.emplace_back(mappingContext);
-  PRECICE_ASSERT(fromData == _providedData || toData == _providedData, "Either fromData or toData has to equal _providedData.");
-  PRECICE_ASSERT(fromData->getName() == getDataName());
-  _fromData.emplace_back(fromData);
-  PRECICE_ASSERT(toData->getName() == getDataName());
-  _toData.emplace_back(toData);
-  PRECICE_ASSERT(_toData != _fromData);
+  PRECICE_ASSERT(mappingContext.fromData == _providedData || mappingContext.toData == _providedData, "Either fromData or toData has to equal _providedData.");
+  PRECICE_ASSERT(mappingContext.fromData->getName() == getDataName());
+  PRECICE_ASSERT(mappingContext.toData->getName() == getDataName());
 }
 
 bool DataContext::hasMapping() const
@@ -89,43 +87,82 @@ bool DataContext::hasMapping() const
   return hasReadMapping() || hasWriteMapping();
 }
 
-bool DataContext::isMappingRequired()
+int DataContext::mapData(std::optional<double> after, bool skipZero)
 {
-  if (not hasMapping()) {
-    return false;
-  }
-
-  PRECICE_ASSERT(std::all_of(_mappingContexts.begin(), _mappingContexts.end(), [this](const auto &context) { return context.timing == _mappingContexts[0].timing; }), "Different mapping timings for the same data context are not supported");
-
-  return std::any_of(_mappingContexts.begin(), _mappingContexts.end(), [](const auto &context) {
-    const auto timing = context.timing;
-    const bool mapNow = (timing == mapping::MappingConfiguration::ON_ADVANCE) || (timing == mapping::MappingConfiguration::INITIAL);
-    return (mapNow && !context.hasMappedData); });
-}
-
-void DataContext::mapData()
-{
+  PRECICE_TRACE(getMeshName(), getDataName());
   PRECICE_ASSERT(hasMapping());
-  // Execute the mapping
-  for (unsigned int i = 0; i < _mappingContexts.size(); ++i) {
-    const DataID fromDataID = getFromDataID(i);
-    const DataID toDataID   = getToDataID(i);
-    // Reset the toData before executing the mapping
-    _toData[i]->toZero();
-    _mappingContexts[i].mapping->map(fromDataID, toDataID);
-    PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, _toData[i]->values()));
+
+  int executedMappings{0};
+
+  // Execute the mappings
+  for (auto &context : _mappingContexts) {
+    PRECICE_ASSERT(!context.fromData->stamples().empty(),
+                   "There must be samples at this point!");
+
+    // linear lookup should be sufficient here
+    const auto timestampExists = [times = context.toData->timeStepsStorage().getTimes()](double lookup) -> bool {
+      return std::any_of(times.data(), std::next(times.data(), times.size()), [lookup](double time) {
+        return math::equals(time, lookup);
+      });
+    };
+
+    auto &mapping = *context.mapping;
+
+    const auto dataDims = context.fromData->getDimensions();
+
+    for (const auto &stample : context.fromData->stamples()) {
+      // skip stamples before given time
+      if (after && math::smallerEquals(stample.timestamp, *after)) {
+        PRECICE_DEBUG("Skipping stample t={} (not after {})", stample.timestamp, *after);
+        continue;
+      }
+      // skip existing stamples
+      if (timestampExists(stample.timestamp)) {
+        PRECICE_DEBUG("Skipping stample t={} (exists)", stample.timestamp);
+        continue;
+      }
+
+      time::Sample outSample{
+          dataDims,
+          Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->vertices().size())};
+
+      bool skipMapping = skipZero && stample.sample.values.isZero();
+
+      PRECICE_INFO("Mapping \"{}\" for t={} from \"{}\" to \"{}\"{}",
+                   getDataName(), stample.timestamp, mapping.getInputMesh()->getName(), mapping.getOutputMesh()->getName(),
+                   (skipMapping ? " (skipped zero sample)" : ""));
+      if (!skipMapping) {
+        if (mapping.requiresInitialGuess()) {
+          const FromToDataIDs key{context.fromData->getID(), context.toData->getID()};
+          mapping.map(stample.sample, outSample.values, _initialGuesses[key]);
+        } else {
+          mapping.map(stample.sample, outSample.values);
+        }
+        PRECICE_DEBUG("Mapped values (t={}) = {}", stample.timestamp, utils::previewRange(3, outSample.values));
+        ++executedMappings;
+      }
+
+      // Store data from mapping buffer in storage
+      context.toData->setSampleAtTime(stample.timestamp, std::move(outSample));
+    }
   }
+  return executedMappings;
 }
 
 bool DataContext::hasReadMapping() const
 {
-  return std::any_of(_toData.begin(), _toData.end(), [this](auto &data) { return data == _providedData; });
+  return std::any_of(_mappingContexts.begin(), _mappingContexts.end(), [this](auto &context) { return context.toData == _providedData; });
 }
 
 bool DataContext::hasWriteMapping() const
 {
-  return std::any_of(_fromData.begin(), _fromData.end(), [this](auto &data) { return data == _providedData; });
+  return std::any_of(_mappingContexts.begin(), _mappingContexts.end(), [this](auto &context) { return context.fromData == _providedData; });
 }
 
-} // namespace impl
-} // namespace precice
+bool DataContext::isValidVertexID(const VertexID id) const
+{
+  PRECICE_ASSERT(_mesh);
+  return _mesh->isValidVertexID(id);
+}
+
+} // namespace precice::impl

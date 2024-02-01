@@ -4,6 +4,7 @@
 #include <boost/log/attributes/mutable_constant.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
+#include <boost/log/sinks/sink.hpp>
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup/console.hpp>
@@ -19,8 +20,7 @@
 #include "utils/String.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace logging {
+namespace precice::logging {
 
 /// A custom formatter that handles the TimeStamp format string
 class timestamp_formatter_factory : public boost::log::basic_formatter_factory<char, boost::posix_time::ptime> {
@@ -73,13 +73,39 @@ public:
   }
 };
 
+/// A custom sink that does nothing. It is used to disable the default sink of boost.Log
+class NullSink final : public boost::log::sinks::sink {
+public:
+  NullSink()
+      : boost::log::sinks::sink(false) {}
+
+  bool will_consume(boost::log::attribute_value_set const &) override
+  {
+    return false;
+  }
+
+  void consume(boost::log::record_view const &) override {}
+
+  bool try_consume(boost::log::record_view const &) override
+  {
+    return false;
+  }
+
+  void flush() override {}
+
+  bool is_cross_thread() const noexcept
+  {
+    return false;
+  }
+};
+
 /// A simple backends that outputs the message to a stream
 /**
  * Rationale: The original text_ostream_backend from boost suffered from the great amount of code that lies
- * between the printing of the message and the endline. This leads to high probability that a process switch 
+ * between the printing of the message and the endline. This leads to high probability that a process switch
  * occurs and the message is severed from the endline.
  */
-class StreamBackend : public boost::log::sinks::text_ostream_backend {
+class StreamBackend final : public boost::log::sinks::text_ostream_backend {
 private:
   boost::shared_ptr<std::ostream> _ostream;
 
@@ -146,14 +172,16 @@ void BackendConfiguration::setOption(std::string key, std::string value)
     filter = value;
   if (key == "format")
     format = value;
-  if (key == "enabled") {
-    enabled = utils::convertStringToBool(value);
-  }
+}
+
+void BackendConfiguration::setEnabled(bool enabled)
+{
+  this->enabled = enabled;
 }
 
 void setupLogging(LoggingConfiguration configs, bool enabled)
 {
-  if (_precice_logging_config_lock)
+  if (getGlobalLoggingConfig().locked)
     return;
 
   namespace bl = boost::log;
@@ -173,17 +201,41 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
       << bl::expressions::attr<std::string>("Function") << ": "
       << bl::expressions::message;
 
-  // Reset
-  bl::core::get()->remove_all_sinks();
-  bl::core::get()->reset_filter();
+  // Remove active preCICE sinks
+  using sink_ptr = typename boost::shared_ptr<boost::log::sinks::sink>;
 
-  bl::core::get()->set_logging_enabled(enabled);
+  static std::vector<sink_ptr> activeSinks;
+  for (auto &sink : activeSinks) {
+    boost::log::core::get()->remove_sink(sink);
+    sink->flush();
+    sink.reset();
+  }
+  activeSinks.clear();
 
-  // Add the default config
-  if (configs.empty())
+  // If logging sinks are disabled, then we need to disable the default sink.
+  // We do this by adding a NullSink.
+  // We need to exit after the sink removal as the default sink exists before
+  // the log configuration is parsed.
+  if (auto noconfigs = std::none_of(configs.begin(), configs.end(), [](const auto &config) { return config.enabled; });
+      !enabled && noconfigs) {
+    auto sink = boost::make_shared<NullSink>();
+    boost::log::core::get()->add_sink(sink);
+    activeSinks.emplace_back(std::move(sink));
+    return;
+  }
+
+  // Add the default config in case no sinks are configured
+  if (configs.empty()) {
     configs.emplace_back();
+  }
 
+  // Create new sinks
   for (const auto &config : configs) {
+    if (!config.enabled) {
+      continue;
+    }
+
+    // Setup backend of sink
     boost::shared_ptr<StreamBackend> backend;
     if (config.type == "file")
       backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(new std::ofstream(config.output)));
@@ -195,11 +247,20 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
     }
     PRECICE_ASSERT(backend != nullptr, "The logging backend was not initialized properly. Check your log config.");
     backend->auto_flush(true);
-    using sink_t = boost::log::sinks::synchronous_sink<StreamBackend>;
-    boost::shared_ptr<sink_t> sink(new sink_t(backend));
+
+    // Setup sink
+    auto sink = boost::make_shared<boost::log::sinks::synchronous_sink<StreamBackend>>(backend);
     sink->set_formatter(boost::log::parse_formatter(config.format));
-    sink->set_filter(boost::log::parse_filter(config.filter));
+
+    if (config.filter.empty()) {
+      sink->set_filter(boost::log::expressions::attr<bool>("preCICE") == true);
+    } else {
+      // We extend the filter here to filter all log entries not originating from preCICE.
+      sink->set_filter(boost::log::parse_filter("%preCICE% & ( " + config.filter + " )"));
+    }
+
     boost::log::core::get()->add_sink(sink);
+    activeSinks.emplace_back(std::move(sink));
   }
 }
 
@@ -210,20 +271,23 @@ void setupLogging(std::string const &logConfigFile)
 
 void setMPIRank(int const rank)
 {
-  boost::log::attribute_cast<boost::log::attributes::mutable_constant<int>>(boost::log::core::get()->get_global_attributes()["Rank"]).set(rank);
+  getGlobalLoggingConfig().rank = rank;
 }
 
 void setParticipant(std::string const &participant)
 {
-  boost::log::attribute_cast<boost::log::attributes::mutable_constant<std::string>>(boost::log::core::get()->get_global_attributes()["Participant"]).set(participant);
+  getGlobalLoggingConfig().participant = participant;
 }
 
-bool _precice_logging_config_lock{false};
+GlobalLoggingConfig &getGlobalLoggingConfig()
+{
+  static GlobalLoggingConfig instance;
+  return instance;
+}
 
 void lockConf()
 {
-  _precice_logging_config_lock = true;
+  getGlobalLoggingConfig().locked = true;
 }
 
-} // namespace logging
-} // namespace precice
+} // namespace precice::logging

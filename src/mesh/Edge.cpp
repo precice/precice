@@ -3,26 +3,21 @@
 
 #include "Edge.hpp"
 #include "math/differences.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/EigenIO.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 Edge::Edge(
     Vertex &vertexOne,
-    Vertex &vertexTwo,
-    EdgeID  id)
-    : _vertices({&vertexOne, &vertexTwo}),
-      _id(id)
+    Vertex &vertexTwo)
+    : _vertices({&vertexOne, &vertexTwo})
 {
+  if (*_vertices[1] < *_vertices[0]) {
+    std::swap(_vertices[0], _vertices[1]);
+  }
   PRECICE_ASSERT(vertexOne.getDimensions() == vertexTwo.getDimensions(),
                  vertexOne.getDimensions(), vertexTwo.getDimensions());
-}
-
-EdgeID Edge::getID() const
-{
-  return _id;
 }
 
 double Edge::getLength() const
@@ -66,5 +61,4 @@ std::ostream &operator<<(std::ostream &stream, const Edge &edge)
                 << ')';
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

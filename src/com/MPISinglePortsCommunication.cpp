@@ -9,7 +9,7 @@
 #include "com/ConnectionInfoPublisher.hpp"
 #include "com/MPISinglePortsCommunication.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/MPIResult.hpp"
 #include "utils/Parallel.hpp"
@@ -18,8 +18,7 @@
 
 using precice::utils::MPIResult;
 
-namespace precice {
-namespace com {
+namespace precice::com {
 MPISinglePortsCommunication::MPISinglePortsCommunication(std::string addressDirectory)
     : _addressDirectory(std::move(addressDirectory))
 {
@@ -292,7 +291,6 @@ void MPISinglePortsCommunication::cleanupEstablishment(std::string const &accept
   }
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

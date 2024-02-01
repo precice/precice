@@ -5,30 +5,34 @@
 #include "cplscheme/BiCouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 ParallelCouplingScheme::ParallelCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
-    int                           validDigits,
     const std::string &           firstParticipant,
     const std::string &           secondParticipant,
     const std::string &           localParticipant,
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
-    int                           maxIterations,
-    int                           extrapolationOrder)
-    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, firstParticipant,
-                       secondParticipant, localParticipant, std::move(m2n), maxIterations, cplMode, dtMethod, extrapolationOrder) {}
+    int                           minIterations,
+    int                           maxIterations)
+    : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, firstParticipant,
+                       secondParticipant, localParticipant, std::move(m2n), minIterations, maxIterations, cplMode, dtMethod) {}
 
-void ParallelCouplingScheme::initializeImplementation()
-{
-  determineInitialSend(getSendData());
-  determineInitialReceive(getReceiveData());
-}
+ParallelCouplingScheme::ParallelCouplingScheme(
+    double                        maxTime,
+    int                           maxTimeWindows,
+    double                        timeWindowSize,
+    const std::string &           firstParticipant,
+    const std::string &           secondParticipant,
+    const std::string &           localParticipant,
+    m2n::PtrM2N                   m2n,
+    constants::TimesteppingMethod dtMethod,
+    CouplingMode                  cplMode)
+    : ParallelCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), dtMethod, cplMode, UNDEFINED_MAX_ITERATIONS, UNDEFINED_MAX_ITERATIONS){};
 
 void ParallelCouplingScheme::exchangeInitialData()
 {
@@ -39,12 +43,16 @@ void ParallelCouplingScheme::exchangeInitialData()
     }
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
-      checkInitialDataHasBeenReceived();
+      notifyDataHasBeenReceived();
+    } else {
+      initializeWithZeroInitialData(getReceiveData());
     }
   } else { // second participant
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
-      checkInitialDataHasBeenReceived();
+      notifyDataHasBeenReceived();
+    } else {
+      initializeWithZeroInitialData(getReceiveData());
     }
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData());
@@ -52,34 +60,61 @@ void ParallelCouplingScheme::exchangeInitialData()
   }
 }
 
-bool ParallelCouplingScheme::exchangeDataAndAccelerate()
+void ParallelCouplingScheme::exchangeFirstData()
 {
-  bool convergence = true;
-
-  if (doesFirstStep()) { //first participant
+  if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
-    PRECICE_DEBUG("Receiving data...");
-    if (isImplicitCouplingScheme()) {
-      convergence = receiveConvergence(getM2N());
-    }
-    receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
-  } else { //second participant
+  } else { // second participant
     PRECICE_DEBUG("Receiving data...");
     receiveData(getM2N(), getReceiveData());
-    checkDataHasBeenReceived();
-    if (isImplicitCouplingScheme()) {
-      PRECICE_DEBUG("Perform acceleration (only second participant)...");
-      convergence = doImplicitStep();
-      sendConvergence(getM2N(), convergence);
-    }
-    PRECICE_DEBUG("Sending data...");
-    sendData(getM2N(), getSendData());
+    notifyDataHasBeenReceived();
   }
-
-  return convergence;
 }
 
-} // namespace cplscheme
-} // namespace precice
+void ParallelCouplingScheme::exchangeSecondData()
+{
+  if (isExplicitCouplingScheme()) {
+    if (doesFirstStep()) { // first participant
+      PRECICE_DEBUG("Receiving data...");
+      receiveData(getM2N(), getReceiveData());
+      notifyDataHasBeenReceived();
+    } else { // second participant
+      PRECICE_DEBUG("Sending data...");
+      sendData(getM2N(), getSendData());
+    }
+    moveToNextWindow();
+  } else {
+    PRECICE_ASSERT(isImplicitCouplingScheme());
+
+    if (doesFirstStep()) { // first participant
+      PRECICE_DEBUG("Receiving convergence data...");
+      receiveConvergence(getM2N());
+      PRECICE_DEBUG("Receiving data...");
+      receiveData(getM2N(), getReceiveData());
+      notifyDataHasBeenReceived();
+    } else { // second participant
+      PRECICE_DEBUG("Perform acceleration (only second participant)...");
+      doImplicitStep();
+      PRECICE_DEBUG("Sending convergence...");
+      sendConvergence(getM2N());
+      PRECICE_DEBUG("Sending data...");
+      sendData(getM2N(), getSendData());
+    }
+
+    if (hasConverged()) {
+      moveToNextWindow();
+    }
+
+    storeIteration();
+  }
+}
+
+DataMap &ParallelCouplingScheme::getAccelerationData()
+{
+  // ParallelCouplingScheme applies acceleration to all CouplingData
+  PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
+  return _allData;
+}
+
+} // namespace precice::cplscheme

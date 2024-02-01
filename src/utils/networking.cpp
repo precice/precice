@@ -1,8 +1,6 @@
 #include "utils/networking.hpp"
 
-namespace precice {
-namespace utils {
-namespace networking {
+namespace precice::utils::networking {
 
 std::string loopbackInterfaceName()
 {
@@ -19,6 +17,4 @@ std::string loopbackInterfaceName()
 #endif
 }
 
-} // namespace networking
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils::networking

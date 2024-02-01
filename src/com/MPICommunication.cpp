@@ -6,7 +6,7 @@
 #include "com/MPICommunication.hpp"
 #include "com/MPIRequest.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/span_tools.hpp"
 
 template <size_t>
@@ -38,8 +38,7 @@ MPI_Datatype MPI_Select_unsigned_integer_datatype<8>::datatype = MPI_UNSIGNED_LO
 
 #define MPI_BOOL MPI_Select_unsigned_integer_datatype<sizeof(bool)>::datatype
 
-namespace precice {
-namespace com {
+namespace precice::com {
 MPICommunication::MPICommunication() = default;
 
 void MPICommunication::send(std::string const &itemToSend, Rank rankReceiver)
@@ -330,7 +329,6 @@ PtrRequest MPICommunication::aReceive(bool &itemToReceive, Rank rankSender)
   return PtrRequest(new MPIRequest(request));
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

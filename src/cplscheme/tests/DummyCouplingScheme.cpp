@@ -1,42 +1,81 @@
 #include "DummyCouplingScheme.hpp"
 #include "../Constants.hpp"
+#include "cplscheme/CouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace tests {
+namespace precice::cplscheme::tests {
 
 DummyCouplingScheme::DummyCouplingScheme(
     int numberIterations,
-    int maxTimesteps)
+    int maxTimeWindows)
     : _numberIterations(numberIterations),
-      _maxTimesteps(maxTimesteps)
+      _maxTimeWindows(maxTimeWindows)
 {
 }
 
 void DummyCouplingScheme::initialize(
     double startTime,
-    int    startTimesteps)
+    int    startTimeWindows)
 {
   PRECICE_ASSERT(not _isInitialized);
   _isInitialized = true;
   _isOngoing     = true;
-  _timesteps     = startTimesteps;
+  _timeWindows   = startTimeWindows;
   _iterations    = 1;
 }
 
-void DummyCouplingScheme::advance()
+double DummyCouplingScheme::getTime() const
+{
+  return _timeWindows;
+}
+
+double DummyCouplingScheme::getTimeWindowStart() const
+{
+  return _timeWindows;
+}
+
+CouplingScheme::ChangedMeshes DummyCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
 {
   PRECICE_ASSERT(_isInitialized);
   PRECICE_ASSERT(_isOngoing);
-  if (_iterations == _numberIterations) {
-    if (_timesteps == _maxTimesteps) {
+  PRECICE_ASSERT(changes.empty());
+  return changes;
+}
+
+void DummyCouplingScheme::firstExchange()
+{
+  PRECICE_ASSERT(_isInitialized);
+  PRECICE_ASSERT(_isOngoing);
+}
+
+CouplingScheme::ChangedMeshes DummyCouplingScheme::secondSynchronization()
+{
+  PRECICE_ASSERT(_isInitialized);
+  PRECICE_ASSERT(_isOngoing);
+  return {};
+}
+
+void DummyCouplingScheme::secondExchange()
+{
+  PRECICE_ASSERT(_isInitialized);
+  PRECICE_ASSERT(_isOngoing);
+  // Imagine we compute the convergence measure here
+  _hasConverged = _iterations == _numberIterations;
+
+  if (_hasConverged) {
+    if (_timeWindows == _maxTimeWindows) {
       _isOngoing = false;
     }
-    _timesteps++;
-    _iterations = 0;
+    _timeWindows++;
+    _iterations = 1;
+  } else {
+    _iterations++;
   }
-  _iterations++;
+  if (isImplicitCouplingScheme()) {
+    PRECICE_DEBUG("advanced to {}-{}/{} (ongoing {})", _timeWindows, _iterations, _numberIterations, _isOngoing);
+  } else {
+    PRECICE_DEBUG("advanced to {} (ongoing {})", _timeWindows, _isOngoing);
+  }
 }
 
 void DummyCouplingScheme::finalize()
@@ -47,31 +86,38 @@ void DummyCouplingScheme::finalize()
 
 bool DummyCouplingScheme::isCouplingOngoing() const
 {
-  if (_timesteps <= _maxTimesteps)
+  PRECICE_ASSERT(_isInitialized);
+  if (_timeWindows <= _maxTimeWindows)
     return true;
   return false;
 }
 
 bool DummyCouplingScheme::isActionRequired(
-    const std::string &actionName) const
+    Action action) const
 {
-  if (_numberIterations > 1) {
-    if (actionName == constants::actionWriteIterationCheckpoint()) {
-      if (_iterations == 1) {
-        PRECICE_DEBUG("return true");
-        return true;
-      }
-    } else if (actionName == constants::actionReadIterationCheckpoint()) {
-      if (_iterations != 1) {
-        PRECICE_DEBUG("return true");
-        return true;
-      }
+  if (!isImplicitCouplingScheme()) {
+    PRECICE_DEBUG("return false (explicit)");
+    return false;
+  }
+  if (action == CouplingScheme::Action::WriteCheckpoint) {
+    if (_iterations == 1) {
+      PRECICE_DEBUG("return true");
+      return true;
+    }
+  }
+  if (action == CouplingScheme::Action::ReadCheckpoint) {
+    if (_iterations != 1) {
+      PRECICE_DEBUG("return true");
+      return true;
     }
   }
   PRECICE_DEBUG("return false");
   return false;
 }
 
-} // namespace tests
-} // namespace cplscheme
-} // namespace precice
+bool DummyCouplingScheme::hasConverged() const
+{
+  return _hasConverged;
+}
+
+} // namespace precice::cplscheme::tests

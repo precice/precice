@@ -1,7 +1,8 @@
 #include "testing/ParallelCouplingSchemeFixture.hpp"
+#include "acceleration/Acceleration.hpp"
+#include "acceleration/SharedPointer.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 bool ParallelCouplingSchemeFixture::isImplicitCouplingScheme(cplscheme::ParallelCouplingScheme &cplscheme)
 {
@@ -17,5 +18,28 @@ cplscheme::CouplingData *ParallelCouplingSchemeFixture::getSendData(cplscheme::P
 {
   return cplscheme.getSendData(dataID);
 }
-} // namespace testing
-} // namespace precice
+
+void ParallelCouplingSchemeFixture::setTimeWindows(cplscheme::ParallelCouplingScheme &cplscheme, int timeWindows)
+{
+  cplscheme.setTimeWindows(timeWindows);
+}
+
+void ParallelCouplingSchemeFixture::storeIteration(cplscheme::ParallelCouplingScheme &cplscheme)
+{
+  cplscheme.storeIteration();
+}
+
+void ParallelCouplingSchemeFixture::initializeAcceleration(cplscheme::ParallelCouplingScheme &cplscheme)
+{
+  if (cplscheme._acceleration) {
+    cplscheme._acceleration->initialize(cplscheme.getAccelerationData());
+  }
+}
+
+void ParallelCouplingSchemeFixture::moveToNextWindow(cplscheme::ParallelCouplingScheme &cplscheme)
+{
+  for (const auto &pair : cplscheme._allData) {
+    pair.second->timeStepsStorage().move();
+  }
+}
+} // namespace precice::testing

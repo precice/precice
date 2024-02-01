@@ -18,8 +18,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 void ExportXML::doExport(
     const std::string &name,
@@ -157,7 +156,7 @@ void ExportXML::writeSubFile(
 
 void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std::ostream &outFile) const
 {
-  const auto &             gradientValues = data->gradientValues();
+  const auto &             gradients      = data->gradients();
   const int                dataDimensions = data->getDimensions();
   std::vector<std::string> suffices;
   if (dataDimensions == 1) {
@@ -173,10 +172,10 @@ void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std
     outFile << "            <DataArray type=\"Float64\" Name=\"" << dataName << suffix << "\" NumberOfComponents=\"" << 3;
     outFile << "\" format=\"ascii\">\n";
     outFile << "               ";
-    for (int i = counter; i < gradientValues.cols(); i += spaceDim) { // Loop over vertices
+    for (int i = counter; i < gradients.cols(); i += spaceDim) { // Loop over vertices
       int j = 0;
-      for (; j < gradientValues.rows(); j++) { // Loop over components
-        outFile << gradientValues.coeff(j, i) << " ";
+      for (; j < gradients.rows(); j++) { // Loop over components
+        outFile << gradients.coeff(j, i) << " ";
       }
       if (j < 3) { // If 2D data add additional zero as third component
         outFile << "0.0"
@@ -330,5 +329,4 @@ void ExportXML::writeParallelData(std::ostream &out) const
   out << "      </PPointData>\n";
 }
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

@@ -1,8 +1,7 @@
 #include "Dimensions.hpp"
 #include "assertion.hpp"
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 const Eigen::VectorXd DELINEARIZE_2D[8] =
     {
@@ -77,5 +76,4 @@ const int IndexMaps<3>::CUBOID_EDGE_VERTICES[12][2] =
         /* 10 */ {2, 6},
         /* 11 */ {3, 7}};
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

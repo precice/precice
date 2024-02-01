@@ -6,11 +6,10 @@
 #include "Communication.hpp"
 #include "Request.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 
 void Communication::connectIntraComm(std::string const &participantName,
                                      std::string const &tag,
@@ -137,8 +136,7 @@ void Communication::allreduceSum(double itemToSend, double &itemToReceive)
   // send reduced result to all secondary ranks
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
   for (Rank rank : remoteCommunicatorRanks()) {
-    auto request   = aSend(itemToReceive, rank + _rankOffset);
-    requests[rank] = request;
+    requests[rank] = aSend(itemToReceive, rank + _rankOffset);
   }
   Request::wait(requests);
 }
@@ -169,8 +167,7 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive)
   // send reduced result to all secondary ranks
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
   for (Rank rank : remoteCommunicatorRanks()) {
-    auto request   = aSend(itemToReceive, rank + _rankOffset);
-    requests[rank] = request;
+    requests[rank] = aSend(itemToReceive, rank + _rankOffset);
   }
   Request::wait(requests);
 }
@@ -192,8 +189,7 @@ void Communication::broadcast(precice::span<const int> itemsToSend)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
   for (Rank rank : remoteCommunicatorRanks()) {
-    auto request   = aSend(itemsToSend, rank + _rankOffset);
-    requests[rank] = request;
+    requests[rank] = aSend(itemsToSend, rank + _rankOffset);
   }
 
   Request::wait(requests);
@@ -213,8 +209,7 @@ void Communication::broadcast(int itemToSend)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
   for (Rank rank : remoteCommunicatorRanks()) {
-    auto request   = aSend(itemToSend, rank + _rankOffset);
-    requests[rank] = request;
+    requests[rank] = aSend(itemToSend, rank + _rankOffset);
   }
 
   Request::wait(requests);
@@ -233,8 +228,7 @@ void Communication::broadcast(precice::span<const double> itemsToSend)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
   for (Rank rank : remoteCommunicatorRanks()) {
-    auto request   = aSend(itemsToSend, rank + _rankOffset);
-    requests[rank] = request;
+    requests[rank] = aSend(itemsToSend, rank + _rankOffset);
   }
 
   Request::wait(requests);
@@ -254,8 +248,7 @@ void Communication::broadcast(double itemToSend)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
   for (Rank rank : remoteCommunicatorRanks()) {
-    auto request   = aSend(itemToSend, rank + _rankOffset);
-    requests[rank] = request;
+    requests[rank] = aSend(itemToSend, rank + _rankOffset);
   }
 
   Request::wait(requests);
@@ -363,5 +356,41 @@ int Communication::adjustRank(Rank rank) const
   return rank - _rankOffset;
 }
 
-} // namespace com
-} // namespace precice
+void connectCircularComm(
+    std::string const & participantName,
+    std::string const & tag,
+    int                 rank,
+    int                 size,
+    com::Communication &left,
+    com::Communication &right)
+{
+  PRECICE_ASSERT(!left.isConnected());
+  PRECICE_ASSERT(!right.isConnected());
+  PRECICE_ASSERT(rank >= 0 && rank < size && size > 0);
+
+  if (size == 1) {
+    return;
+  }
+
+  const int prevProc = (rank - 1 + size) % size;
+  const int nextProc = (rank + 1) % size;
+
+  std::string prevName = participantName + std::to_string(prevProc);
+  std::string thisName = participantName + std::to_string(rank);
+  std::string nextName = participantName + std::to_string(nextProc);
+  if ((rank % 2) == 0) {
+    left.prepareEstablishment(prevName, thisName);
+    left.acceptConnection(prevName, thisName, tag, 0);
+    left.cleanupEstablishment(prevName, thisName);
+
+    right.requestConnection(thisName, nextName, tag, 0, 1);
+  } else {
+    right.requestConnection(thisName, nextName, tag, 0, 1);
+
+    left.prepareEstablishment(prevName, thisName);
+    left.acceptConnection(prevName, thisName, tag, 0);
+    left.cleanupEstablishment(prevName, thisName);
+  }
+}
+
+} // namespace precice::com

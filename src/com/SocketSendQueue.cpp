@@ -8,8 +8,7 @@
 #include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 namespace asio = boost::asio;
 
 /// If items are left in the queue upon destruction, something went really wrong.
@@ -52,5 +51,4 @@ void SocketSendQueue::process()
                     });
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

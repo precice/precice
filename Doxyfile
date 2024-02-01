@@ -1075,7 +1075,7 @@ HTML_STYLESHEET        =
 # defined cascading style sheet that is included after the standard style sheets
 # created by doxygen. Using this option one can overrule certain style aspects.
 # This is preferred over using HTML_STYLESHEET since it does not replace the
-# standard style sheet and is therefor more robust against future updates.
+# standard style sheet and is therefore more robust against future updates.
 # Doxygen will copy the style sheet file to the output directory. For an example
 # see the documentation.
 # This tag requires that the tag GENERATE_HTML is set to YES.
@@ -2294,6 +2294,12 @@ DOT_TRANSPARENT        = NO
 # This tag requires that the tag HAVE_DOT is set to YES.
 
 DOT_MULTI_TARGETS      = YES
+
+# Use the environment PLANTUML_JAR_PATH and set it to the restult of `find / -name plantuml.jar`
+# This activates the plantuml generation.
+# Note that startuml tags need to specify the filepath as .png for this to work correctly
+
+PLANTUML_JAR_PATH      = $(PLANTUML_JAR_PATH)
 
 # If the GENERATE_LEGEND tag is set to YES doxygen will generate a legend page
 # explaining the meaning of the various boxes and arrows in the dot generated

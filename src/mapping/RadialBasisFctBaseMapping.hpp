@@ -3,12 +3,9 @@
 #include "impl/BasisFunctions.hpp"
 #include "mapping/Mapping.hpp"
 #include "mesh/Filter.hpp"
-#include "precice/types.hpp"
-#include "utils/Event.hpp"
+#include "precice/impl/Types.hpp"
 
 namespace precice {
-extern bool syncMode;
-
 namespace mapping {
 
 /**
@@ -34,10 +31,11 @@ public:
    * @param[in] xDead, yDead, zDead Deactivates mapping along an axis
    */
   RadialBasisFctBaseMapping(
-      Constraint              constraint,
-      int                     dimensions,
-      RADIAL_BASIS_FUNCTION_T function,
-      std::array<bool, 3>     deadAxis);
+      Constraint                     constraint,
+      int                            dimensions,
+      const RADIAL_BASIS_FUNCTION_T &function,
+      std::array<bool, 3>            deadAxis,
+      InitialGuessRequirement        mappingType);
 
   virtual ~RadialBasisFctBaseMapping() = default;
 
@@ -80,14 +78,15 @@ private:
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctBaseMapping(
-    Constraint              constraint,
-    int                     dimensions,
-    RADIAL_BASIS_FUNCTION_T function,
-    std::array<bool, 3>     deadAxis)
-    : Mapping(constraint, dimensions),
+    Constraint                     constraint,
+    int                            dimensions,
+    const RADIAL_BASIS_FUNCTION_T &function,
+    std::array<bool, 3>            deadAxis,
+    InitialGuessRequirement        mappingType)
+    : Mapping(constraint, dimensions, false, mappingType),
       _basisFunction(function)
 {
-  if (constraint == SCALEDCONSISTENT) {
+  if (isScaledConsistent()) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   } else {

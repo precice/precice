@@ -3,8 +3,7 @@
 #include "math/barycenter.hpp"
 #include "math/differences.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 Polation::Polation(const Eigen::VectorXd &location, const mesh::Vertex &element)
 {
@@ -75,7 +74,7 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Tetrahedron &ele
   _weightedElements.emplace_back(WeightedElement{C.getID(), bcoords(2)});
   _weightedElements.emplace_back(WeightedElement{D.getID(), bcoords(3)});
 
-  // There is no projection happing, so the distance is always 0.
+  // There is no projection happening, so the distance is always 0.
   _distance = 0.0;
 }
 
@@ -108,5 +107,4 @@ std::ostream &operator<<(std::ostream &os, const Polation &p)
   return os;
 }
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

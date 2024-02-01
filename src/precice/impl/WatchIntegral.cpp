@@ -10,8 +10,7 @@
 #include "mesh/Vertex.hpp"
 #include "utils/IntraComm.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 WatchIntegral::WatchIntegral(
     mesh::PtrMesh      meshToWatch,
@@ -122,7 +121,7 @@ Eigen::VectorXd WatchIntegral::calculateIntegral(const mesh::PtrData &data) cons
     }
     return sum;
   } else { // Connectivity information is given
-    return mesh::integrate(_mesh, data);
+    return mesh::integrateSurface(_mesh, data->values());
   }
 }
 
@@ -142,5 +141,4 @@ double WatchIntegral::calculateSurfaceArea() const
   return surfaceArea;
 }
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

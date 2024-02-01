@@ -44,9 +44,9 @@ BOOST_AUTO_TEST_CASE(Consistent)
   inValuesScalar << 1.0, 2.0, 3.0;
 
   BOOST_CHECK(!inMesh->edges().empty());
-  /* 
-  Should pass: triangles are discarded when the mapping doesn't require the in SolverInterface::setMeshTriangle,
-  but Mesh::createTriangle doesn't check it. This is not an integration test! 
+  /*
+  Should pass: triangles are discarded when the mapping doesn't require the in Participant::setMeshTriangle,
+  but Mesh::createTriangle doesn't check it. This is not an integration test!
   */
 
   BOOST_CHECK(!inMesh->triangles().empty());
@@ -67,7 +67,7 @@ BOOST_AUTO_TEST_CASE(Consistent)
   outMesh->createVertex(Eigen::Vector2d(2.5 / 3, 1. / 3));
   outMesh->createVertex(Eigen::Vector2d(-10.0, 0.25));
   // Check fall back on nearest neighbor
-  outMesh->createVertex(Eigen::Vector2d(-0.1, -0.1)); // Currently maps to opposite edge
+  outMesh->createVertex(Eigen::Vector2d(-0.1, -0.1)); // Fall back to NN expected
   outMesh->createVertex(Eigen::Vector2d(2.5, -1.0));
   outMesh->createVertex(Eigen::Vector2d(2.5, 10.0));
 
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(Consistent)
 
   // Check expected
   Eigen::VectorXd expected(outMesh->vertices().size());
-  expected << 2.0, 1.0, 2.0, 3.0, 1.49, 2.25, 1.5, 2.5, 2.0, 3.0;
+  expected << 2.0, 1.0, 2.0, 3.0, 1.49, 2.25, 1.5, 1.0, 2.0, 3.0;
   BOOST_CHECK(equals(expected, outValuesScalar));
 }
 
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(ConsistentOneTetra3D)
   // Point below the triangle ABC -> fallback to triangle. Expected projection on triangle.
   outMesh->createVertex(Eigen::Vector3d(1.0 / 3, 1.0 / 3, -0.1));
   // Point close to the triangle ACD (which isn't set!).
-  // Wanted behavior: NN => 3.0. Actual behavior: 3.6 because of fall-back to edge. See issue #1304
+  // Wanted behavior: NN => 3.0. Incorrect behavior: 3.6 in case of fall-back to edge. See issue #1304
   outMesh->createVertex(Eigen::Vector3d(-0.1, 0.8, 0.5));
   // Point inside the triangle BCD (not set) -> Check it is inside the tetra. Expected: 0.2*2+0.3*3+0.5*4 = 3.3
   outMesh->createVertex(Eigen::Vector3d(0.2, 0.3, 0.5));
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(ConsistentOneTetra3D)
 
   // Check expected
   Eigen::VectorXd expected(outMesh->vertices().size());
-  expected << 2.5, 1.0, 2.0, 3.0, 4.0, 2.0, 3.6, 3.3, 3.6;
+  expected << 2.5, 1.0, 2.0, 3.0, 4.0, 2.0, 3.0, 3.3, 3.6;
   BOOST_CHECK(equals(expected, outValuesScalar));
 }
 

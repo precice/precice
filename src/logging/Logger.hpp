@@ -1,10 +1,9 @@
 #pragma once
 
 #include <memory>
-#include <string>
+#include <string_view>
 
-namespace precice {
-namespace logging {
+namespace precice::logging {
 
 /// Struct used to capture the original location of a log request
 struct LogLocation {
@@ -17,9 +16,9 @@ struct LogLocation {
 class Logger {
 public:
   /** Creates a logger for a given module.
-   * @param[in] the name of the module 
+   * @param[in] the name of the module
    */
-  explicit Logger(std::string module);
+  explicit Logger(std::string_view module);
 
   Logger(const Logger &other);
   Logger(Logger &&other) noexcept;
@@ -30,11 +29,11 @@ public:
 
   ///@name Logging operations
   ///@{
-  void error(LogLocation loc, const std::string &mess) noexcept;
-  void warning(LogLocation loc, const std::string &mess) noexcept;
-  void info(LogLocation loc, const std::string &mess) noexcept;
-  void debug(LogLocation loc, const std::string &mess) noexcept;
-  void trace(LogLocation loc, const std::string &mess) noexcept;
+  void error(LogLocation loc, std::string_view mess) noexcept;
+  void warning(LogLocation loc, std::string_view mess) noexcept;
+  void info(LogLocation loc, std::string_view mess) noexcept;
+  void debug(LogLocation loc, std::string_view mess) noexcept;
+  void trace(LogLocation loc, std::string_view mess) noexcept;
   ///@}
 
 private:
@@ -45,8 +44,7 @@ private:
   std::unique_ptr<LoggerImpl> _impl;
 };
 
-} // namespace logging
-} // namespace precice
+} // namespace precice::logging
 
 // Include LogMacros here, because using it works only together with a Logger
 #include "LogMacros.hpp"

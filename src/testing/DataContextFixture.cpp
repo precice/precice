@@ -1,7 +1,6 @@
 #include "testing/DataContextFixture.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 std::vector<impl::MappingContext> DataContextFixture::mappingContexts(precice::impl::DataContext &dataContext)
 {
@@ -15,12 +14,12 @@ int DataContextFixture::getProvidedDataID(precice::impl::DataContext &dataContex
 
 int DataContextFixture::getFromDataID(precice::impl::DataContext &dataContext, int dataVectorIndex)
 {
-  return dataContext.getFromDataID(dataVectorIndex);
+  return dataContext._mappingContexts[dataVectorIndex].fromData->getID();
 }
 
 int DataContextFixture::getToDataID(precice::impl::DataContext &dataContext, int dataVectorIndex)
 {
-  return dataContext.getToDataID(dataVectorIndex);
+  return dataContext._mappingContexts[dataVectorIndex].toData->getID();
 }
 
 bool DataContextFixture::hasMapping(precice::impl::DataContext &dataContext)
@@ -38,5 +37,4 @@ bool DataContextFixture::hasWriteMapping(precice::impl::DataContext &dataContext
   return dataContext.hasWriteMapping();
 }
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

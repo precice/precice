@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "m2n/SharedPointer.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/Parallel.hpp"
 
 namespace precice {
@@ -42,8 +42,8 @@ inline constexpr Ranks operator""_rank(unsigned long long value)
   return (value == 1) ? Ranks{1} : throw std::runtime_error{"Cannot create multiple ranks with _rank()! Use _ranks() instead!"};
 }
 
-/// Represents a Participant in a test
-struct Participant {
+/// Represents a ParticipantState in a test
+struct ParticipantState {
   /// the name of the participant
   std::string name;
 
@@ -54,7 +54,7 @@ struct Participant {
   bool initIntraComm = false;
 
   /// Constructs a serial participant with a given name
-  explicit Participant(std::string n)
+  explicit ParticipantState(std::string n)
       : name(std::move(n)){};
 
   /** Injects the amount of ranks this participant should run on.
@@ -63,38 +63,38 @@ struct Participant {
    *
    * @param[in] rsize the amount of Ranks to run on.
    *
-   * @returns A reference to the Participant allowing for chaining.
+   * @returns A reference to the ParticipantState allowing for chaining.
    */
-  Participant &operator()(Ranks rsize)
+  ParticipantState &operator()(Ranks rsize)
   {
     size = rsize.value;
     return *this;
   }
 
-  /** Marks that this Participant should initialize an intra-participant connection.
+  /** Marks that this ParticipantState should initialize an intra-participant connection.
    *
-   * @returns A reference to the Participant allowing for chaining.
+   * @returns A reference to the ParticipantState allowing for chaining.
    */
-  Participant &setupIntraComm()
+  ParticipantState &setupIntraComm()
   {
     initIntraComm = true;
     return *this;
   }
 };
 
-/// User-defined literal allowing to create a serial Participant from a given string.
-inline Participant operator""_on(const char *name, std::size_t)
+/// User-defined literal allowing to create a serial ParticipantState from a given string.
+inline ParticipantState operator""_on(const char *name, std::size_t)
 {
-  return Participant{name};
+  return ParticipantState{name};
 }
 
-static_assert(std::is_same<Participant &, decltype(""_on(1_rank))>::value, "");
-static_assert(std::is_same<Participant &, decltype(""_on(2_ranks))>::value, "");
+static_assert(std::is_same<ParticipantState &, decltype(""_on(1_rank))>::value, "");
+static_assert(std::is_same<ParticipantState &, decltype(""_on(2_ranks))>::value, "");
 
 /** Defines requirements for a test setup
  *
  * @note These are used for unit-tests.
- * Integration tests calling the SolverInterface initialize required components themselves.
+ * Integration tests calling the Participant initialize required components themselves.
  */
 enum class Require {
   /// Require to initialize PETSc. This implies the initialization of Events
@@ -151,7 +151,7 @@ struct ConnectionOptions {
  */
 class TestContext {
 public:
-  using Participants = std::vector<Participant>;
+  using Participants = std::vector<ParticipantState>;
 
   /// the name of the current participant
   std::string name;
@@ -253,6 +253,12 @@ public:
   /// Check whether this context has a given rank inside the Participant
   bool isRank(Rank rank) const;
 
+  /// Returns a pointer to the MPI communicator of this context
+  auto comm()
+  {
+    return &(_contextComm->comm);
+  }
+
   /** Check whether this context is the primary rank of a participant
    * @note This is equivalent to `isRank(0)`
    */
@@ -293,7 +299,7 @@ private:
 
   /// @{
   /// @name Option Handling
-  void handleOption(Participants &participants, Participant participant);
+  void handleOption(Participants &participants, ParticipantState participant);
   void handleOption(Participants &participants, testing::Require requirement);
 
   template <class LastOption>
@@ -313,7 +319,7 @@ private:
   /** set the context from a Participants and a given rank
    * Both uniquely identify a context.
    */
-  void setContextFrom(const Participant &p, Rank rank);
+  void setContextFrom(const ParticipantState &p, Rank rank);
 
   /// @{
   /// @name Initialization

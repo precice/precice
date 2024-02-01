@@ -9,8 +9,8 @@
 #include "com/Request.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
-#include "utils/span.hpp"
+#include "precice/impl/Types.hpp"
+#include "precice/span.hpp"
 
 namespace precice {
 namespace com {
@@ -383,6 +383,19 @@ protected:
 private:
   logging::Logger _log{"com::Communication"};
 };
+
+/** Establishes a circular communication for the given participant.
+ *
+ * rank "0" connects left to rank "size-1"
+ * rank "size" connects right to rank "0"
+ */
+void connectCircularComm(
+    std::string const & participantName,
+    std::string const & tag,
+    int                 rank,
+    int                 size,
+    com::Communication &left,
+    com::Communication &right);
 
 } // namespace com
 } // namespace precice

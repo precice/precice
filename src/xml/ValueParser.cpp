@@ -6,8 +6,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace precice {
-namespace xml {
+namespace precice::xml {
 
 namespace {
 constexpr static const char *PARSING_LOCALE = "en_US.UTF-8";
@@ -70,5 +69,4 @@ void readValueSpecific(const std::string &rawValue, Eigen::VectorXd &value)
   value = vec;
 }
 
-} // namespace xml
-} // namespace precice
+} // namespace precice::xml

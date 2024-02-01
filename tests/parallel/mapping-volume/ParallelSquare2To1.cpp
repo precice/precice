@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -15,14 +15,14 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
   using precice::VertexID;
   using precice::testing::equals;
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;
   double                dt;
 
   if (context.isNamed("SolverOne")) {
-    auto meshID = interface.getMeshID("MeshOne");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshOne";
+    auto dataName = "DataOne";
 
     std::vector<double> coords;
 
@@ -38,10 +38,11 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
     }
 
     vertexIDs.resize(coords.size() / 2);
-    interface.setMeshVertices(meshID, 3, coords.data(), vertexIDs.data());
-    interface.setMeshTriangleWithEdges(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
+    interface.setMeshVertices(meshName, coords, vertexIDs);
+    interface.setMeshTriangle(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
 
-    dt = interface.initialize();
+    interface.initialize();
+    dt = interface.getMaxTimeStepSize();
 
     // Run a step and write data with f(x) = x+2*y
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
@@ -57,15 +58,15 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
                 1.0};
     }
 
-    interface.writeBlockScalarData(dataID, 3, vertexIDs.data(), values.data());
+    interface.writeData(meshName, dataName, vertexIDs, values);
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
     interface.finalize();
 
   } else {
-    auto meshID = interface.getMeshID("MeshTwo");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshTwo";
+    auto dataName = "DataOne";
 
     std::vector<double> coords;
 
@@ -80,9 +81,10 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
               1. / 2, 5. / 6};
 
     vertexIDs.resize(coords.size() / 2);
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
-    dt = interface.initialize();
+    interface.initialize();
+    dt = interface.getMaxTimeStepSize();
 
     // Run a step and read data expected to be f(x) = x+2*y
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
@@ -95,7 +97,8 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
     Eigen::VectorXd readData(4);
     expected << 7. / 6, 5. / 6, 11. / 6, 13. / 6;
 
-    interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
+    dt = interface.getMaxTimeStepSize();
+    interface.readData(meshName, dataName, vertexIDs, dt, readData);
     BOOST_CHECK(equals(expected, readData));
     interface.finalize();
   }

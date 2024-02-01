@@ -163,6 +163,18 @@ public:
    */
   void send(double itemToSend);
 
+  /**
+   * @brief The primary rank sends a span of doubles to the other primary rank, for performance reasons, we
+   * neglect the gathering and checking step.
+   */
+  void send(precice::span<double const> itemsToSend);
+
+  /**
+   * @brief The primary rank sends an int to the other primary rank, for performance reasons, we
+   * neglect the gathering and checking step.
+   */
+  void send(int itemToSend);
+
   /// Broadcasts a mesh to connected ranks on remote participant (concerning the given mesh)
   void broadcastSendMesh(mesh::Mesh &mesh);
 
@@ -170,7 +182,7 @@ public:
   void scatterAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap, mesh::Mesh &mesh);
 
   /// Broadcasts an int to connected ranks on remote participant (concerning the given mesh)
-  void broadcastSend(int &itemToSend, mesh::Mesh &mesh);
+  void broadcastSend(int itemToSend, mesh::Mesh &mesh);
 
   /// All ranks receive an array of doubles (different for each rank).
   /// The values received can be gradient data
@@ -184,6 +196,12 @@ public:
 
   /// All ranks receive a double (the same for each rank).
   void receive(double &itemToReceive);
+
+  /// All ranks receive a double values (the same for each rank).
+  void receive(precice::span<double> itemsToReceive);
+
+  /// All ranks receive an int (the same for each rank).
+  void receive(int &itemToReceive);
 
   /// Receive mesh partitions per connected rank on remote participant (concerning the given mesh)
   void broadcastReceiveAllMesh(mesh::Mesh &mesh);

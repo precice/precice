@@ -9,8 +9,7 @@
 struct _object;
 using PyObject = _object;
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 /// Action whose implementation is given in a Python file.
 class PythonAction : public Action {
@@ -25,11 +24,7 @@ public:
 
   virtual ~PythonAction();
 
-  virtual void performAction(
-      double time,
-      double timeStepSize,
-      double computedTimeWindowPart,
-      double timeWindowSize);
+  virtual void performAction() final override;
 
 private:
   logging::Logger _log{"action::PythonAction"};
@@ -42,7 +37,7 @@ private:
 
   mesh::PtrData _sourceData;
 
-  int _numberArguments = 2;
+  int _numberArguments = 1;
 
   bool _isInitialized = false;
 
@@ -56,18 +51,11 @@ private:
 
   PyObject *_performAction = nullptr;
 
-  PyObject *_vertexCallback = nullptr;
-
-  int _vertexCallbackArgs = 0;
-
-  PyObject *_postAction = nullptr;
-
   void initialize();
 
   int makeNumPyArraysAvailable();
 };
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action
 
 #endif

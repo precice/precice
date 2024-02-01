@@ -31,7 +31,7 @@ Eigen::Vector2d calcBarycentricCoordsForEdge(
  *  @param c point C of the triangle ABC
  *  @param u the point to compute the barycentric coordinates for
  *
- * @note This implements the efficient one-step algorithm (no separate projection) presented in 
+ * @note This implements the efficient one-step algorithm (no separate projection) presented in
  *  _Computing the barycentric coordinates of a projected point_ by W. Heidrich (2005)
  *
  */
@@ -50,7 +50,7 @@ Eigen::Vector3d calcBarycentricCoordsForTriangle(
 *  @param d point D of the tetrahedron ABCD
  *  @param u the point to compute the barycentric coordinates for
  *
- * @note This implements an efficient one-step algorithm (no separate projection) 
+ * @note This implements an efficient one-step algorithm (no separate projection)
  * described in Boris Martin's Master's thesis
  *
  */

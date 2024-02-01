@@ -2,6 +2,8 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <string_view>
+
 #include "utils/fmt.hpp"
 
 // Assertions are disabled in release (NDEBUG) builds by default.
@@ -32,7 +34,7 @@
 namespace precice {
 namespace utils {
 
-static constexpr char const *ASSERT_FMT =
+static constexpr std::string_view ASSERT_FMT =
     "ASSERTION FAILED\n"
     "Location:   {}\n"
     "File:       {}:{}\n"
@@ -55,17 +57,18 @@ static constexpr char const *ASSERT_FMT =
  * @param[in] check the expression which needs to evaluate to true for the assertion to pass
  * @param[in] args the expression which evaluates to the formatted arguments
  */
-#define PRECICE_ASSERT_IMPL(check, args)                                 \
-  if (!(check)) {                                                        \
-    std::cerr << fmt::format(precice::utils::ASSERT_FMT,                 \
-                             BOOST_CURRENT_FUNCTION, __FILE__, __LINE__, \
-                             BOOST_PP_STRINGIZE(check),                  \
-                             precice::utils::Parallel::getProcessRank(), \
-                             args,                                       \
-                             getStacktrace())                            \
-              << std::flush;                                             \
-    std::cout.flush();                                                   \
-    PRECICE_ASSERT_WRAPPER();                                            \
+#define PRECICE_ASSERT_IMPL(check, args)                         \
+  if (!(check)) {                                                \
+    std::cerr << precice::utils::format_or_error(                \
+                     precice::utils::ASSERT_FMT,                 \
+                     BOOST_CURRENT_FUNCTION, __FILE__, __LINE__, \
+                     BOOST_PP_STRINGIZE(check),                  \
+                     precice::utils::Parallel::getProcessRank(), \
+                     args,                                       \
+                     getStacktrace())                            \
+              << std::flush;                                     \
+    std::cout.flush();                                           \
+    PRECICE_ASSERT_WRAPPER();                                    \
   }
 
 #define PRECICE_ASSERT_IMPL_N(check, ...) \
@@ -86,8 +89,8 @@ static constexpr char const *ASSERT_FMT =
 
 /// Displays an error message and aborts the program independent of the build type.
 /// Use to mark unreachable statements under switch or if blocks.
-#define PRECICE_UNREACHABLE(...)                        \
-  {                                                     \
-    std::cerr << fmt::format(__VA_ARGS__) << std::endl; \
-    std::abort();                                       \
+#define PRECICE_UNREACHABLE(...)                                              \
+  {                                                                           \
+    std::cerr << ::precice::utils::format_or_error(__VA_ARGS__) << std::endl; \
+    std::abort();                                                             \
   }

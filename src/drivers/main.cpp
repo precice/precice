@@ -1,6 +1,4 @@
-#include <cassert>
 #include <iostream>
-#include <precice/SolverInterface.hpp>
 #include <precice/Tooling.hpp>
 #include <stdexcept>
 #include <string>

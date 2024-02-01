@@ -12,12 +12,10 @@
 #include "testing/Testing.hpp"
 #include "utils/Parallel.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Edge;
 class Vertex;
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
 
 BOOST_AUTO_TEST_SUITE(IOTests)
 
@@ -48,10 +46,10 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
   valuesVector.setLinSpaced(1., 5.);
 
   // Create corresponding gradient data (all gradient values = const = 1)
-  Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
-  Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
-  gradValuesScalar.setOnes();
-  gradValuesVector.setOnes();
+  Eigen::MatrixXd &gradientsScalar = dataScalar->gradients();
+  Eigen::MatrixXd &gradientsVector = dataVector->gradients();
+  gradientsScalar.setOnes();
+  gradientsVector.setOnes();
   io::ExportVTU exportVTU;
   std::string   filename = "io-VTUExport-ExportDatawithGradient" + std::to_string(dimensions);
   std::string   location = "";
@@ -81,10 +79,10 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
   valuesVector.setLinSpaced(1., 5.);
 
   // Create corresponding gradient data (all gradient values = const = 1)
-  Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
-  Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
-  gradValuesScalar.setOnes();
-  gradValuesVector.setOnes();
+  Eigen::MatrixXd &gradientsScalar = dataScalar->gradients();
+  Eigen::MatrixXd &gradientsVector = dataVector->gradients();
+  gradientsScalar.setOnes();
+  gradientsVector.setOnes();
   io::ExportVTU exportVTU;
   std::string   filename = "io-VTUExport-ExportDatawithGradient" + std::to_string(dimensions);
   std::string   location = "";
@@ -124,7 +122,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh.createEdge(v1, v2);
     mesh.createEdge(v2, v3);
     mesh.createEdge(v3, v1);
-    mesh.getVertexOffsets() = {3, 3, 6, 7};
+    mesh.setVertexOffsets({3, 3, 6, 7});
 
   } else if (context.isRank(1)) {
     // nothing
@@ -162,7 +160,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh::Edge &e3 = mesh.createEdge(v3, v1);
     mesh.createTriangle(e1, e2, e3);
 
-    mesh.getVertexOffsets() = {3, 3, 6, 7};
+    mesh.setVertexOffsets({3, 3, 6, 7});
 
   } else if (context.isRank(1)) {
     // nothing
@@ -203,7 +201,7 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh::Edge &eo1 = mesh.createEdge(vo, v1);
     mesh::Edge &e2o = mesh.createEdge(v2, vo);
     mesh.createTriangle(eo1, e12, e2o);
-    mesh.getVertexOffsets() = {3, 6, 9, 12};
+    mesh.setVertexOffsets({3, 6, 9, 12});
 
   } else if (context.isRank(1)) {
     mesh::Vertex &v1  = mesh.createVertex(Eigen::Vector3d{1.0, -1.0, 0.0});
@@ -281,7 +279,7 @@ BOOST_AUTO_TEST_CASE(ExportPartitionedCube)
 
     mesh.createTetrahedron(v000, v001, v011, v111);
     mesh.createTetrahedron(v000, v010, v011, v111);
-    mesh.getVertexOffsets() = {4, 8, 8, 12};
+    mesh.setVertexOffsets({4, 8, 8, 12});
 
   } else if (context.isRank(1)) {
     mesh::Vertex &v000 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});

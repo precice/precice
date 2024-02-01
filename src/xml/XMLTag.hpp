@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -19,7 +20,7 @@ class ConfigParser;
 namespace precice {
 namespace xml {
 
-/// Tightly coupled to the parameters of SolverInterface()
+/// Tightly coupled to the parameters of Participant()
 struct ConfigurationContext {
   std::string name;
   int         rank;
@@ -133,7 +134,16 @@ public:
   /// Adds a XML attribute by making a copy of the given attribute.
   XMLTag &addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute);
 
+  /// Adds a hint for missing attributes, which will be displayed along the error message.
+  void addAttributeHint(std::string name, std::string message);
+
   bool hasAttribute(const std::string &attributeName);
+
+  template <typename Container>
+  void addSubtags(const Container &subtags)
+  {
+    std::for_each(subtags.begin(), subtags.end(), [this](auto &s) { this->addSubtag(s); });
+  }
 
   /**
    * @brief Returns name (without namespace).
@@ -162,13 +172,13 @@ public:
     return _fullName;
   }
 
-  double getDoubleAttributeValue(const std::string &name) const;
+  double getDoubleAttributeValue(const std::string &name, std::optional<double> default_value = std::nullopt) const;
 
-  int getIntAttributeValue(const std::string &name) const;
+  int getIntAttributeValue(const std::string &name, std::optional<int> default_value = std::nullopt) const;
 
-  const std::string &getStringAttributeValue(const std::string &name) const;
+  std::string getStringAttributeValue(const std::string &name, std::optional<std::string> default_value = std::nullopt) const;
 
-  bool getBooleanAttributeValue(const std::string &name) const;
+  bool getBooleanAttributeValue(const std::string &name, std::optional<bool> default_value = std::nullopt) const;
 
   const AttributeMap<double> &getDoubleAttributes() const
   {
@@ -262,6 +272,8 @@ private:
 
   AttributeMap<Eigen::VectorXd> _eigenVectorXdAttributes;
 
+  std::map<std::string, std::string> _attributeHints;
+
   void areAllSubtagsConfigured() const;
 
   void resetAttributes();
@@ -293,7 +305,7 @@ XMLTag getRootTag();
 void configure(
     XMLTag &                                  tag,
     const precice::xml::ConfigurationContext &context,
-    const std::string &                       configurationFilename);
+    std::string_view                          configurationFilename);
 
 } // namespace xml
 } // namespace precice

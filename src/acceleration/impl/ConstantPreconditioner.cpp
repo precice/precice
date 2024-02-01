@@ -5,9 +5,7 @@
 #include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 ConstantPreconditioner::ConstantPreconditioner(std::vector<double> factors)
     : Preconditioner(-1),
@@ -44,6 +42,4 @@ void ConstantPreconditioner::_update_(bool                   timeWindowComplete,
   //nothing to do here
 }
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

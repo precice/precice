@@ -7,15 +7,14 @@
 #include "com/ConnectionInfoPublisher.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/MPIResult.hpp"
 #include "utils/String.hpp"
 #include "utils/assertion.hpp"
 
 using precice::utils::MPIResult;
 
-namespace precice {
-namespace com {
+namespace precice::com {
 MPIPortsCommunication::MPIPortsCommunication(std::string addressDirectory)
     : _addressDirectory(std::move(addressDirectory))
 {
@@ -276,7 +275,6 @@ int MPIPortsCommunication::rank(Rank rank)
   return 0;
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

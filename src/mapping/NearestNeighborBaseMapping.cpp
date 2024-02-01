@@ -7,15 +7,13 @@
 #include "mapping/Mapping.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
-#include "utils/Event.hpp"
+#include "profiling/Event.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Statistics.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-extern bool syncMode;
-
-namespace mapping {
+namespace precice::mapping {
 
 NearestNeighborBaseMapping::NearestNeighborBaseMapping(
     Constraint  constraint,
@@ -23,9 +21,9 @@ NearestNeighborBaseMapping::NearestNeighborBaseMapping(
     bool        requiresGradientData,
     std::string mappingName,
     std::string mappingNameShort)
-    : Mapping(constraint, dimensions, requiresGradientData),
-      mappingName(mappingName),
-      mappingNameShort(mappingNameShort)
+    : Mapping(constraint, dimensions, requiresGradientData, Mapping::InitialGuessRequirement::None),
+      mappingName(std::move(mappingName)),
+      mappingNameShort(std::move(mappingNameShort))
 {
 }
 
@@ -36,8 +34,8 @@ void NearestNeighborBaseMapping::computeMapping()
   PRECICE_ASSERT(input().get() != nullptr);
   PRECICE_ASSERT(output().get() != nullptr);
 
-  const std::string     baseEvent = "map." + mappingNameShort + ".computeMapping.From" + input()->getName() + "To" + output()->getName();
-  precice::utils::Event e(baseEvent, precice::syncMode);
+  const std::string         baseEvent = "map." + mappingNameShort + ".computeMapping.From" + input()->getName() + "To" + output()->getName();
+  precice::profiling::Event e(baseEvent, profiling::Synchronize);
 
   // Setup Direction of Mapping
   mesh::PtrMesh origins, searchSpace;
@@ -109,7 +107,7 @@ void NearestNeighborBaseMapping::onMappingComputed(mesh::PtrMesh origins, mesh::
 void NearestNeighborBaseMapping::tagMeshFirstRound()
 {
   PRECICE_TRACE();
-  precice::utils::Event e("map." + mappingNameShort + ".tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  precice::profiling::Event e("map." + mappingNameShort + ".tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
 
   computeMapping();
 
@@ -135,5 +133,4 @@ void NearestNeighborBaseMapping::tagMeshSecondRound()
   // for NN mapping no operation needed here
 }
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

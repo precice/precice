@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <configuration>
-  <mesh name="TestMesh" />
-  <mesh name="TestMeshTwo" />
-  <mesh name="TestMeshThree" />
+  <mesh name="TestMesh" dimensions="3" />
+  <mesh name="TestMeshTwo" dimensions="3" />
+  <mesh name="TestMeshThree" dimensions="3" />
 
   <mapping:nearest-projection
     direction="write"
     from="TestMesh"
     to="TestMeshThree"
-    constraint="conservative"
-    timing="ondemand" />
+    constraint="conservative" />
   <mapping:nearest-projection
     direction="read"
     from="TestMeshThree"
@@ -19,6 +18,5 @@
     direction="write"
     from="TestMeshTwo"
     to="TestMesh"
-    constraint="conservative"
-    timing="onadvance" />
+    constraint="conservative" />
 </configuration>

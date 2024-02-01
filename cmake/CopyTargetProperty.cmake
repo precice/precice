@@ -5,4 +5,3 @@ function(copy_target_property from to property)
     set_target_properties(${to} PROPERTIES ${property} "${value}")
   endif(value)
 endfunction(copy_target_property)
-

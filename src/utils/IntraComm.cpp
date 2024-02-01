@@ -10,11 +10,14 @@
 #include "com/Communication.hpp"
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 #include "utils/span_tools.hpp"
 
 namespace precice {
+
+extern bool syncMode;
+
 namespace utils {
 
 Rank                  IntraComm::_rank            = -1;
@@ -335,6 +338,50 @@ void IntraComm::broadcast(double &value)
     // Broadcast (receive) value.
     _communication->broadcast(value, 0);
   }
+}
+
+void IntraComm::broadcast(int &value)
+{
+  PRECICE_TRACE();
+
+  if (not _isPrimaryRank && not _isSecondaryRank) {
+    return;
+  }
+
+  PRECICE_ASSERT(_communication.get() != nullptr);
+  PRECICE_ASSERT(_communication->isConnected());
+
+  if (_isPrimaryRank) {
+    // Broadcast (send) value.
+    _communication->broadcast(value);
+  }
+
+  if (_isSecondaryRank) {
+    // Broadcast (receive) value.
+    _communication->broadcast(value, 0);
+  }
+}
+
+void IntraComm::synchronize()
+{
+  PRECICE_TRACE();
+
+  if (precice::syncMode) {
+    barrier();
+  }
+}
+
+void IntraComm::barrier()
+{
+  PRECICE_TRACE();
+
+  if (!isParallel())
+    return;
+
+  int local = 1;
+  int sum   = -1;
+  allreduceSum(local, sum);
+  PRECICE_ASSERT(sum == _size);
 }
 
 } // namespace utils

@@ -14,7 +14,7 @@
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
@@ -267,7 +267,7 @@ private:
 
     // ensure that both matrices are stored in the same order. Important for reduce function, that adds serialized data.
     PRECICE_ASSERT(static_cast<int>(leftMatrix.IsRowMajor) == static_cast<int>(rightMatrix.IsRowMajor),
-                   leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
+                   static_cast<int>(leftMatrix.IsRowMajor), static_cast<int>(rightMatrix.IsRowMajor));
 
     // multiply local block (saxpy-based approach)
     // dimension: (n_global x n_local) * (n_local x m) = (n_global x m)

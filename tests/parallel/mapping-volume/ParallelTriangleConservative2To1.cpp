@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -14,14 +14,14 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
   using precice::testing::equals;
 
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(1_rank));
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;
   double                dt;
 
   if (context.isNamed("SolverOne")) {
-    auto meshID = interface.getMeshID("MeshOne");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshOne";
+    auto dataName = "DataOne";
 
     std::vector<double> coords;
 
@@ -32,9 +32,10 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
       coords = {0.7, 0.2};
     }
     vertexIDs.resize(coords.size() / 2);
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
-    dt = interface.initialize();
+    interface.initialize();
+    dt = interface.getMaxTimeStepSize();
 
     // Run a step and write forces
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
@@ -42,22 +43,23 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
     std::vector<double> values;
     values = {1.0};
 
-    interface.writeBlockScalarData(dataID, 1, vertexIDs.data(), values.data());
+    interface.writeData(meshName, dataName, vertexIDs, values);
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
     interface.finalize();
   } else { // SolverTwo
-    auto meshID = interface.getMeshID("MeshTwo");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshTwo";
+    auto dataName = "DataOne";
 
     std::vector<double> coords = {0.0, 0.0, 1.0, 0.0, 0.0, 1.0}; // Lower-left triangle making half the unit square
 
     vertexIDs.resize(coords.size() / 2);
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
-    interface.setMeshTriangleWithEdges(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
+    interface.setMeshVertices(meshName, coords, vertexIDs);
+    interface.setMeshTriangle(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2]);
 
-    dt = interface.initialize();
+    interface.initialize();
+    dt = interface.getMaxTimeStepSize();
 
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
 
@@ -71,7 +73,8 @@ BOOST_AUTO_TEST_CASE(ParallelTriangleConservative2To1)
     // These are proportional to barycentric coordinates.
     expected << 0.3, 1.0, 0.7;
 
-    interface.readBlockScalarData(dataID, expected.size(), vertexIDs.data(), readData.data());
+    dt = interface.getMaxTimeStepSize();
+    interface.readData(meshName, dataName, vertexIDs, dt, readData);
     BOOST_CHECK(equals(expected, readData));
     interface.finalize();
   }

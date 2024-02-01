@@ -16,7 +16,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "precice/impl/MeshContext.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice {
@@ -50,7 +50,7 @@ public:
    * @param[in] parent  Used to add subtags to hierarchical XML structure.
    * @param[in] meshConfig For checking if a used mesh is defined.
    * @param[in] m2nConfig For checking if a communication between participants to be coupled is defined.
-   * @param[in] participantConfig For checking waveform order.
+   * @param[in] participantConfig For checking waveform degree.
    */
   CouplingSchemeConfiguration(
       xml::XMLTag &                        parent,
@@ -92,24 +92,25 @@ private:
   const std::string TAG_MAX_TIME_WINDOWS;
   const std::string TAG_TIME_WINDOW_SIZE;
   const std::string TAG_ABS_CONV_MEASURE;
+  const std::string TAG_ABS_OR_REL_CONV_MEASURE;
   const std::string TAG_REL_CONV_MEASURE;
   const std::string TAG_RES_REL_CONV_MEASURE;
-  const std::string TAG_MIN_ITER_CONV_MEASURE;
+  const std::string TAG_MIN_ITERATIONS;
   const std::string TAG_MAX_ITERATIONS;
-  const std::string TAG_EXTRAPOLATION;
 
   const std::string ATTR_DATA;
   const std::string ATTR_MESH;
   const std::string ATTR_PARTICIPANT;
   const std::string ATTR_INITIALIZE;
+  const std::string ATTR_EXCHANGE_SUBSTEPS;
   const std::string ATTR_TYPE;
   const std::string ATTR_FIRST;
   const std::string ATTR_SECOND;
   const std::string ATTR_VALUE;
-  const std::string ATTR_VALID_DIGITS;
   const std::string ATTR_METHOD;
   const std::string ATTR_LIMIT;
-  const std::string ATTR_MIN_ITERATIONS;
+  const std::string ATTR_ABS_LIMIT;
+  const std::string ATTR_REL_LIMIT;
   const std::string ATTR_NAME;
   const std::string ATTR_FROM;
   const std::string ATTR_TO;
@@ -125,7 +126,8 @@ private:
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
 
-  bool _experimental = false;
+  static const int DEFAULT_MIN_ITERATIONS;
+  static const int DEFAULT_MAX_ITERATIONS;
 
   struct ConvergenceMeasureDefintion {
     mesh::PtrData               data;
@@ -142,10 +144,9 @@ private:
     std::vector<std::string>      participants;
     std::string                   controller;
     bool                          setController  = false;
-    double                        maxTime        = CouplingScheme::UNDEFINED_TIME;
+    double                        maxTime        = CouplingScheme::UNDEFINED_MAX_TIME;
     int                           maxTimeWindows = CouplingScheme::UNDEFINED_TIME_WINDOWS;
     double                        timeWindowSize = CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE;
-    int                           validDigits    = 16;
     constants::TimesteppingMethod dtMethod       = constants::FIXED_TIME_WINDOW_SIZE;
 
     struct Exchange {
@@ -154,11 +155,19 @@ private:
       std::string   from;
       std::string   to;
       bool          requiresInitialization;
+      bool          exchangeSubsteps;
     };
     std::vector<Exchange>                    exchanges;
     std::vector<ConvergenceMeasureDefintion> convergenceMeasureDefinitions;
-    int                                      maxIterations      = -1;
-    int                                      extrapolationOrder = 0;
+    int                                      maxIterations = DEFAULT_MAX_ITERATIONS;
+    int                                      minIterations = DEFAULT_MIN_ITERATIONS;
+
+    bool hasExchange(const Exchange &totest) const
+    {
+      return std::any_of(exchanges.begin(), exchanges.end(), [&totest](const auto &ex) {
+        return ex.from == totest.from && ex.to == totest.to && ex.data->getName() == totest.data->getName() && ex.mesh->getName() == totest.mesh->getName();
+      });
+    }
   } _config;
 
   mesh::PtrMeshConfiguration _meshConfig;
@@ -187,17 +196,17 @@ private:
 
   void addTagAbsoluteConvergenceMeasure(xml::XMLTag &tag);
 
+  void addTagAbsoluteOrRelativeConvergenceMeasure(xml::XMLTag &tag);
+
   void addTagRelativeConvergenceMeasure(xml::XMLTag &tag);
 
   void addTagResidualRelativeConvergenceMeasure(xml::XMLTag &tag);
 
-  void addTagMinIterationConvergenceMeasure(xml::XMLTag &tag);
-
   void addBaseAttributesTagConvergenceMeasure(xml::XMLTag &tag);
 
-  void addTagMaxIterations(xml::XMLTag &tag);
+  void addTagMinIterations(xml::XMLTag &tag);
 
-  void addTagExtrapolation(xml::XMLTag &tag);
+  void addTagMaxIterations(xml::XMLTag &tag);
 
   void addTagAcceleration(xml::XMLTag &tag);
 
@@ -205,6 +214,14 @@ private:
       const std::string &dataName,
       const std::string &meshName,
       double             limit,
+      bool               suffices,
+      bool               strict);
+
+  void addAbsoluteOrRelativeConvergenceMeasure(
+      const std::string &dataName,
+      const std::string &meshName,
+      double             absLimit,
+      double             relLimit,
       bool               suffices,
       bool               strict);
 
@@ -219,13 +236,6 @@ private:
       const std::string &dataName,
       const std::string &meshName,
       double             limit,
-      bool               suffices,
-      bool               strict);
-
-  void addMinIterationConvergenceMeasure(
-      const std::string &dataName,
-      const std::string &meshName,
-      int                minIterations,
       bool               suffices,
       bool               strict);
 
@@ -270,9 +280,6 @@ private:
   void checkIfDataIsExchanged(
       DataID dataID) const;
 
-  void checkWaveformOrderReadData(
-      int maxAllowedOrder) const;
-
   void checkSerialImplicitAccelerationData(
       DataID dataID, const std::string &first, const std::string &second) const;
 
@@ -292,6 +299,27 @@ private:
 
   friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation; // For whitebox tests
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;   // For whitebox tests
+
+  /**
+   * @brief Helper function to check that waveform-degree and substep exchange are compatible.
+   *
+   * The following rules are checked:
+   *
+   * 1) If waveform-degree="0", then user must set substeps="false", because constant interpolation (zeroth degree) is intended for debugging and user should use first degree instead.
+   * 2) If waveform-degree="1", then any configuration for substeps is allowed. The user might want to set substeps="false" for better performance.
+   * 3) If waveform-degree="2" or greater, the user must set substeps="true", because subcycling and exchange of substeps is required for higher-degree B-splines.
+   *
+   * @param exchange The Exchange being checked.
+   */
+  void checkSubstepExchangeWaveformDegree(const Config::Exchange &exchange) const;
+
+  /// Helper to update some configs which may have a different meaning in implicit coupling
+  void updateConfigForImplicitCoupling();
+
+  /**
+   * @brief Helper function to check iteration limits in conjunction with convergence measures
+   */
+  void checkIterationLimits() const;
 };
 } // namespace cplscheme
 } // namespace precice

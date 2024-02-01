@@ -1,47 +1,50 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <solver-interface dimensions="3">
-    <data:vector name="Forces" />
-    <data:vector name="Velocities" />
+  <data:vector name="Forces" />
+  <data:vector name="Velocities" />
 
-    <m2n:sockets from="SolverOne" to="SolverTwo" />
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
 
-    <mesh name="Square" flip-normals="inside">
-      <use-data name="Forces" />
-      <use-data name="Velocities" />
-    </mesh>
+  <mesh name="Square" dimensions="3">
+    <use-data name="Forces" />
+    <use-data name="Velocities" />
+  </mesh>
 
-    <mesh name="SquareTwo" flip-normals="inside">
-      <use-data name="Forces" />
-      <use-data name="Velocities" />
-    </mesh>
+  <mesh name="SquareTwo" dimensions="3">
+    <use-data name="Forces" />
+    <use-data name="Velocities" />
+  </mesh>
 
-    <participant name="SolverOne">
-      <use-mesh name="Square" provide="yes" />
-      <write-data name="Forces" mesh="Square" />
-      <read-data name="Velocities" mesh="Square" />
-    </participant>
+  <participant name="SolverOne">
+    <provide-mesh name="Square" />
+    <write-data name="Forces" mesh="Square" />
+    <read-data name="Velocities" mesh="Square" />
+  </participant>
 
-    <participant name="SolverTwo">
-      <use-mesh name="Square" from="SolverOne" />
-      <use-mesh name="SquareTwo" provide="yes" />
-      <mapping:nearest-neighbor
-        direction="write"
-        from="SquareTwo"
-        to="Square"
-        constraint="conservative" />
-      <write-data name="Velocities" mesh="SquareTwo" />
-      <read-data name="Forces" mesh="SquareTwo" />
-    </participant>
+  <participant name="SolverTwo">
+    <receive-mesh name="Square" from="SolverOne" />
+    <provide-mesh name="SquareTwo" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="SquareTwo"
+      to="Square"
+      constraint="conservative" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Square"
+      to="SquareTwo"
+      constraint="consistent" />
+    <write-data name="Velocities" mesh="SquareTwo" />
+    <read-data name="Forces" mesh="SquareTwo" />
+  </participant>
 
-    <coupling-scheme:serial-implicit>
-      <participants first="SolverOne" second="SolverTwo" />
-      <max-time-windows value="4" />
-      <time-window-size value="0.01" />
-      <max-iterations value="100" />
-      <absolute-convergence-measure data="Velocities" mesh="Square" limit="1.73205080756887729" />
-      <exchange data="Forces" mesh="Square" from="SolverOne" to="SolverTwo" />
-      <exchange data="Velocities" mesh="Square" from="SolverTwo" to="SolverOne" />
-    </coupling-scheme:serial-implicit>
-  </solver-interface>
+  <coupling-scheme:serial-implicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="4" />
+    <time-window-size value="0.01" />
+    <max-iterations value="100" />
+    <absolute-convergence-measure data="Velocities" mesh="Square" limit="1.73205080756887729" />
+    <exchange data="Forces" mesh="Square" from="SolverOne" to="SolverTwo" />
+    <exchange data="Velocities" mesh="Square" from="SolverTwo" to="SolverOne" />
+  </coupling-scheme:serial-implicit>
 </precice-configuration>

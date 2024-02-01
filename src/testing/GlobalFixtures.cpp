@@ -9,8 +9,7 @@
 #include "logging/LogConfiguration.hpp"
 #include "utils/ArgumentFormatter.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 /// Boost test Initialization function
 /**
@@ -97,8 +96,7 @@ void setupTestLogging()
   logging::lockConf();
 }
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing
 
 // Fixtures need to be defined in the global scope
 

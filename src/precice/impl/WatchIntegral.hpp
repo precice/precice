@@ -18,9 +18,9 @@ namespace impl {
 
 /**
  * @brief Track and output transient integral data on a mesh
- * 
+ *
  * Calculation of integral depends on connectivity information of mesh and
- * given scaling option. If scale with area option is true, vertex data is 
+ * given scaling option. If scale with area option is true, vertex data is
  * weighted by area and summed up, otherwise, vertex data is directly summed
  * up.
  */

@@ -1,0 +1,46 @@
+name: "CodeQL"
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run every Friday 3AM
+    - cron: "0 3 * * 5"
+
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: cpp
+
+      - name: Upgrade system and install dependencies
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y upgrade
+          sudo apt-get -y install build-essential ninja-build cmake libeigen3-dev libxml2-dev libboost-all-dev petsc-dev python3-dev python3-numpy
+
+      - name: Build
+        env:
+          CMAKE_GENERATOR: Ninja
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:cpp"

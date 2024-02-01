@@ -1,8 +1,10 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <sstream>
 #include <string>
+#include <vector>
 
 namespace precice {
 namespace utils {
@@ -72,6 +74,35 @@ std::string truncate_wstring_to_string(std::wstring wstr, char fill = '#');
   oss << message;                        \
   return oss.str();                      \
 }()
+
+std::size_t editDistance(std::string_view s1, std::string_view s2);
+
+struct StringMatch {
+  std::string name;
+  std::size_t distance;
+
+  bool operator<(const StringMatch &other) const
+  {
+    if (distance == other.distance) {
+      return name < other.name;
+    } else {
+      return distance < other.distance;
+    }
+  }
+};
+
+template <class Container>
+std::vector<StringMatch> computeMatches(std::string_view given, const Container &expected)
+{
+  std::vector<StringMatch> entries;
+  for (const auto &candidate : expected) {
+    entries.push_back(StringMatch{
+        candidate,
+        utils::editDistance(given, candidate)});
+  }
+  std::sort(entries.begin(), entries.end());
+  return entries;
+}
 
 } // namespace utils
 } // namespace precice

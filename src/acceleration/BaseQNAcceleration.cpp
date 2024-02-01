@@ -1,5 +1,6 @@
 #include "acceleration/BaseQNAcceleration.hpp"
 #include <Eigen/Core>
+#include <boost/range/adaptor/map.hpp>
 #include <cmath>
 #include <memory>
 #include <utility>
@@ -12,8 +13,8 @@
 #include "logging/LogMacros.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "profiling/Event.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/Event.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
@@ -23,8 +24,6 @@ namespace io {
 class TXTReader;
 class TXTWriter;
 } // namespace io
-
-extern bool syncMode;
 namespace acceleration {
 
 /* ----------------------------------------------------------------------------
@@ -78,9 +77,10 @@ void BaseQNAcceleration::initialize(
     const DataMap &cplData)
 {
   PRECICE_TRACE(cplData.size());
+
   for (const DataMap::value_type &pair : cplData) {
-    PRECICE_ASSERT(pair.second->values().size() == pair.second->previousIteration().size(), "current and previousIteration have to be initialized and of identical size.",
-                   pair.second->values().size(), pair.second->previousIteration().size());
+    PRECICE_ASSERT(pair.second->getSize() == pair.second->getPreviousIterationSize(), "current and previousIteration have to be initialized and of identical size.",
+                   pair.second->getSize(), pair.second->getPreviousIterationSize());
   }
 
   if (std::any_of(cplData.cbegin(), cplData.cend(), [](const auto &p) { return p.second->hasGradient(); })) {
@@ -89,12 +89,19 @@ void BaseQNAcceleration::initialize(
   }
 
   checkDataIDs(cplData);
+
+  for (const auto &data : cplData | boost::adaptors::map_values) {
+    if (data->exchangeSubsteps()) {
+      PRECICE_ERROR("Quasi-Newton acceleration does not yet support using data from all substeps. Please set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
+    }
+  }
+
   size_t              entries = 0;
-  std::vector<size_t> subVectorSizes; //needed for preconditioner
+  std::vector<size_t> subVectorSizes; // needed for preconditioner
 
   for (auto &elem : _dataIDs) {
-    entries += cplData.at(elem)->values().size();
-    subVectorSizes.push_back(cplData.at(elem)->values().size());
+    entries += cplData.at(elem)->getSize();
+    subVectorSizes.push_back(cplData.at(elem)->getSize());
   }
 
   _matrixCols.push_front(0);
@@ -156,7 +163,7 @@ void BaseQNAcceleration::initialize(
   for (const DataMap::value_type &pair : cplData) {
     if (not utils::contained(pair.first, _dataIDs)) {
       _secondaryDataIDs.push_back(pair.first);
-      int secondaryEntries            = pair.second->values().size();
+      int secondaryEntries            = pair.second->getSize();
       _secondaryResiduals[pair.first] = Eigen::VectorXd::Zero(secondaryEntries);
     }
   }
@@ -187,7 +194,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
                  "Or you just converge much further than actually necessary.");
   }
 
-  //if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
+  // if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
     // do nothing: constant relaxation
   } else {
@@ -268,11 +275,11 @@ void BaseQNAcceleration::updateDifferenceMatrices(
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::performAcceleration(
-    const DataMap &cplData)
+    DataMap &cplData)
 {
   PRECICE_TRACE(_dataIDs.size(), cplData.size());
 
-  utils::Event e("cpl.computeQuasiNewtonUpdate", precice::syncMode);
+  profiling::Event e("cpl.computeQuasiNewtonUpdate", profiling::Synchronize);
 
   PRECICE_ASSERT(_oldResiduals.size() == _oldXTilde.size(), _oldResiduals.size(), _oldXTilde.size());
   PRECICE_ASSERT(_values.size() == _oldXTilde.size(), _values.size(), _oldXTilde.size());
@@ -282,7 +289,7 @@ void BaseQNAcceleration::performAcceleration(
   // assume data structures associated with the LS system can be updated easily.
 
   // scale data values (and secondary data values)
-  concatenateCouplingData(cplData);
+  concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
 
   /** update the difference matrices V,W  includes:
    * scaling of values
@@ -336,7 +343,7 @@ void BaseQNAcceleration::performAcceleration(
     _preconditioner->apply(_matrixV);
 
     if (_preconditioner->requireNewQR()) {
-      if (not(_filter == Acceleration::QR2FILTER)) { //for QR2 filter, there is no need to do this twice
+      if (not(_filter == Acceleration::QR2FILTER)) { // for QR2 filter, there is no need to do this twice
         _qrV.reset(_matrixV, getLSSystemRows());
       }
       _preconditioner->newQRfulfilled();
@@ -348,7 +355,7 @@ void BaseQNAcceleration::performAcceleration(
     }
 
     // apply the configured filter to the LS system
-    utils::Event applyingFilter("ApplyFilter");
+    profiling::Event applyingFilter("ApplyFilter");
     applyFilter();
     applyingFilter.stop();
 
@@ -430,24 +437,6 @@ void BaseQNAcceleration::applyFilter()
   }
 }
 
-void BaseQNAcceleration::concatenateCouplingData(
-    const DataMap &cplData)
-{
-  PRECICE_TRACE();
-
-  int offset = 0;
-  for (int id : _dataIDs) {
-    int         size      = cplData.at(id)->values().size();
-    auto &      values    = cplData.at(id)->values();
-    const auto &oldValues = cplData.at(id)->previousIteration();
-    for (int i = 0; i < size; i++) {
-      _values(i + offset)    = values(i);
-      _oldValues(i + offset) = oldValues(i);
-    }
-    offset += size;
-  }
-}
-
 void BaseQNAcceleration::splitCouplingData(
     const DataMap &cplData)
 {
@@ -455,7 +444,7 @@ void BaseQNAcceleration::splitCouplingData(
 
   int offset = 0;
   for (int id : _dataIDs) {
-    int   size       = cplData.at(id)->values().size();
+    int   size       = cplData.at(id)->getSize();
     auto &valuesPart = cplData.at(id)->values();
     for (int i = 0; i < size; i++) {
       valuesPart(i) = _values(i + offset);
@@ -487,7 +476,7 @@ void BaseQNAcceleration::iterationsConverged(
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if
   // convergence was achieved
-  concatenateCouplingData(cplData);
+  concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
   updateDifferenceMatrices(cplData);
 
   if (not _matrixCols.empty() && _matrixCols.front() == 0) { // Did only one iteration

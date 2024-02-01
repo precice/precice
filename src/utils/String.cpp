@@ -1,4 +1,5 @@
 #include "String.hpp"
+#include <Eigen/Dense>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <memory>
 #include <vector>
@@ -6,8 +7,7 @@
 #include "boost/algorithm/string/split.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 std::string wrapText(
     const std::string &text,
@@ -75,5 +75,28 @@ std::string truncate_wstring_to_string(std::wstring wstr, char fill)
   return converted;
 }
 
-} // namespace utils
-} // namespace precice
+std::size_t editDistance(std::string_view s1, std::string_view s2)
+{
+  const std::size_t len1 = s1.size(), len2 = s2.size();
+  using Matrix = Eigen::Matrix<std::size_t, Eigen::Dynamic, Eigen::Dynamic>;
+  Matrix distances(len1 + 1, len2 + 1);
+
+  distances(0, 0) = 0;
+  for (std::size_t i = 1; i <= len1; ++i)
+    distances(i, 0) = i;
+  for (std::size_t i = 1; i <= len2; ++i)
+    distances(0, i) = i;
+
+  for (std::size_t i = 1; i <= len1; ++i) {
+    for (std::size_t j = 1; j <= len2; ++j) {
+      auto deletionCost     = distances(i - 1, j) + 1;
+      auto insertionCost    = distances(i, j - 1) + 1;
+      auto substitutionCost = distances(i - 1, j - 1) + (s1[i - 1] == s2[j - 1] ? 0 : 1);
+      distances(i, j)       = std::min({deletionCost, insertionCost, substitutionCost});
+    }
+  }
+
+  return distances(len1, len2);
+}
+
+} // namespace precice::utils
