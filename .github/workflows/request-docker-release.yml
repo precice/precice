@@ -33,7 +33,7 @@ jobs:
         docker_username: precice
     steps:
       - name: Check version
-        run: echo "${{ github.event.inputs.version }} | grep -Pq '^\d+\.\d+\.\d+$'
+        run: echo "${{ github.event.inputs.version }}" | grep -Pq '^\d+\.\d+\.\d+$'
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
