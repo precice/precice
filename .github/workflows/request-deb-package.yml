@@ -48,15 +48,18 @@ jobs:
         run: |
           apt update
           apt -y upgrade
-          apt -y install git build-essential lsb-release cmake libeigen3-dev libxml2-dev libboost-all-dev python3-dev python3-numpy petsc-dev
+          apt -y install git build-essential lsb-release cmake libeigen3-dev libxml2-dev libboost-all-dev python3-dev python3-numpy petsc-dev sed
       - name: Configure
         working-directory: build
         run: |
           cmake --version
-          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON ..
       - name: Compile
         working-directory: build
         run: make -j $(nproc)
+      - name: Patch
+        working-directory: build
+        run: sed -i 's/set(CPACK_DEBIAN_PACKAGE_DEPENDS.*$/set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libboost-dev (>= 1.65), libboost-log-dev (>= 1.65), libboost-thread-dev (>= 1.65), libboost-system-dev (>= 1.65), libboost-filesystem-dev (>= 1.65), libboost-program-options-dev (>= 1.65), libboost-test-dev (>= 1.65), libxml2, python3-dev, python3-numpy, mpi-default-dev, petsc-dev (>= 3.6)")/' CPackConfig.cmake
       - name: Create packages
         working-directory: build
         run: cpack
