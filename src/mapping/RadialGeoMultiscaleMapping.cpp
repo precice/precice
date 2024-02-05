@@ -62,10 +62,10 @@ void RadialGeoMultiscaleMapping::computeMapping()
       _vertexIndicesSpread.clear();
       _vertexIndicesSpread.reserve(output()->vertices().size());
       for (size_t i = 0; i < outSize; i++) {
-        auto vertexCoord = output()->vertices()[i].rawCoords()[effectiveCoordinate];
-        int  index       = 0;
+        auto   vertexCoord = output()->vertices()[i].rawCoords()[effectiveCoordinate];
+        size_t index       = 0;
         while (vertexCoord > axisMidpoints(index)) {
-          PRECICE_ASSERT(index + 1 < static_cast<int>(inSize));
+          PRECICE_ASSERT(index + 1 < inSize);
           ++index;
         }
         _vertexIndicesSpread.push_back(index);
@@ -96,16 +96,16 @@ void RadialGeoMultiscaleMapping::computeMapping()
       }
       axisMidpoints(outSize - 1) = std::numeric_limits<double>::max(); // large number, such that vertices after the last midpoint are still assigned
 
-      std::vector<int> counters(outSize); // counts number of vertices in between midpoints for averaging
+      std::vector<size_t> counters(outSize); // counts number of vertices in between midpoints for averaging
 
       // Identify which vertex (index) of the 3D mesh corresponds to which vertex (index) of the 1D meesh
       _vertexIndicesCollect.clear();
       _vertexIndicesCollect.reserve(input()->vertices().size());
       for (size_t i = 0; i < inSize; i++) {
-        auto vertexCoords = input()->vertices()[i].rawCoords()[effectiveCoordinate];
-        int  index        = 0;
+        auto   vertexCoords = input()->vertices()[i].rawCoords()[effectiveCoordinate];
+        size_t index        = 0;
         while (vertexCoords > axisMidpoints(index)) {
-          PRECICE_ASSERT(index + 1 < static_cast<int>(outSize));
+          PRECICE_ASSERT(index + 1 < outSize);
           ++index;
         }
         _vertexIndicesCollect.push_back(index);

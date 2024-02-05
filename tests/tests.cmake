@@ -169,6 +169,15 @@ target_sources(testprecice
     tests/serial/map-if-necessary/two-solvers/without-substeps/ParallelImplicit.cpp
     tests/serial/map-if-necessary/two-solvers/without-substeps/SerialExplicit.cpp
     tests/serial/map-if-necessary/two-solvers/without-substeps/SerialImplicit.cpp
+    tests/serial/map-initial-data/helper.hpp
+    tests/serial/map-initial-data/non-zero-data/ParallelRead.cpp
+    tests/serial/map-initial-data/non-zero-data/ParallelWrite.cpp
+    tests/serial/map-initial-data/non-zero-data/SerialRead.cpp
+    tests/serial/map-initial-data/non-zero-data/SerialWrite.cpp
+    tests/serial/map-initial-data/zero-data/ParallelRead.cpp
+    tests/serial/map-initial-data/zero-data/ParallelWrite.cpp
+    tests/serial/map-initial-data/zero-data/SerialRead.cpp
+    tests/serial/map-initial-data/zero-data/SerialWrite.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalReadScalar.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalReadVector.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalWriteScalar.cpp

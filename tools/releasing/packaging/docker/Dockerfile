@@ -10,5 +10,6 @@ ARG version
 RUN echo "$version" | grep "[0-9]\+\.[0-9]\+\.[0-9]\+" > /dev/null # The version must follow the format X.Y.Z
 RUN wget -q -O libprecice.deb https://github.com/precice/precice/releases/download/v${version}/libprecice`echo ${version} | sed 's/\([0-9]\+\)\.\([0-9]\+\.[0-9]\+\)/\1_\1.\2/'`_$(lsb_release -sc).deb && \
     apt-get update && apt-get -yy install ./libprecice.deb && \
-    rm libprecice.deb && rm -rf /var/lib/apt/lists/* && \
-    precice-tools xml > /dev/null # Make sure the installation is functional
+    rm libprecice.deb && rm -rf /var/lib/apt/lists/*
+# Make sure the installation is functional
+RUN precice-tools version
