@@ -43,7 +43,7 @@ ReceivedPartition::ReceivedPartition(
 void ReceivedPartition::communicate()
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(_mesh->vertices().empty());
+  PRECICE_ASSERT(_mesh->empty());
 
   // for two-level initialization, receive mesh partitions
   if (m2n().usesTwoLevelInitialization()) {
@@ -307,7 +307,7 @@ void ReceivedPartition::filterByBoundingBox()
       com::receiveMesh(*utils::IntraComm::getCommunication(), 0, *_mesh);
 
       if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
+        PRECICE_CHECK(not _mesh->empty(), errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
       }
 
     } else { // Primary
@@ -336,7 +336,7 @@ void ReceivedPartition::filterByBoundingBox()
       _mesh->addMesh(filteredMesh);
 
       if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
+        PRECICE_CHECK(not _mesh->empty(), errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
       }
     }
   } else {
@@ -367,7 +367,7 @@ void ReceivedPartition::filterByBoundingBox()
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
       if (isAnyProvidedMeshNonEmpty()) {
-        PRECICE_CHECK(not _mesh->vertices().empty(), errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
+        PRECICE_CHECK(not _mesh->empty(), errorMeshFilteredOut(_mesh->getName(), utils::IntraComm::getRank()));
       }
     } else {
       PRECICE_ASSERT(_geometricFilter == NO_FILTER);
@@ -879,12 +879,12 @@ void ReceivedPartition::createOwnerInformation()
 bool ReceivedPartition::isAnyProvidedMeshNonEmpty() const
 {
   for (const auto &fromMapping : _fromMappings) {
-    if (not fromMapping->getOutputMesh()->vertices().empty()) {
+    if (not fromMapping->getOutputMesh()->empty()) {
       return true;
     }
   }
   for (const auto &toMapping : _toMappings) {
-    if (not toMapping->getInputMesh()->vertices().empty()) {
+    if (not toMapping->getInputMesh()->empty()) {
       return true;
     }
   }

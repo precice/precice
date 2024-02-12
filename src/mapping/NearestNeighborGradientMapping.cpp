@@ -62,7 +62,7 @@ void NearestNeighborGradientMapping::mapConsistent(const time::Sample &inData, E
                  input()->getName());
 
   /// Check if input has gradient data, else send Error
-  PRECICE_WARN_IF(input()->vertices().empty(), "The mesh doesn't contain any vertices.");
+  PRECICE_WARN_IF(input()->empty(), "The mesh doesn't contain any vertices.");
 
   const int              valueDimensions = inData.dataDims;
   const Eigen::VectorXd &inputValues     = inData.values;

@@ -53,7 +53,7 @@ void runCoupling(
   BOOST_REQUIRE(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
   BOOST_REQUIRE(mesh->data().size() == 2);
-  BOOST_REQUIRE(!mesh->vertices().empty());
+  BOOST_REQUIRE(!mesh->empty());
   BOOST_REQUIRE(!validIterations.empty());
 
   mesh::Vertex &  vertex               = mesh->vertices().at(0);
@@ -228,7 +228,7 @@ void runCouplingWithSubcycling(
   BOOST_REQUIRE(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
   BOOST_REQUIRE(mesh->data().size() == 2);
-  BOOST_REQUIRE(!mesh->vertices().empty());
+  BOOST_REQUIRE(!mesh->empty());
   BOOST_REQUIRE(!validIterations.empty());
 
   double          initialStepsizeData0 = 5.0;

@@ -134,7 +134,7 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     otherMesh  = output(); // local
   }
 
-  if (otherMesh->vertices().empty())
+  if (otherMesh->empty())
     return; // Ranks not at the interface should never hold interface vertices
 
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius

@@ -315,7 +315,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   if (inMesh->nVertices() == 0 || outMesh->nVertices() == 0)
     return {double{}, Vertices{}};
 
-  PRECICE_ASSERT(!outMesh->vertices().empty() && !inMesh->vertices().empty());
+  PRECICE_ASSERT(!outMesh->empty() && !inMesh->vertices().empty());
 
   // startGridAtEdge boolean switch in order to decide either to start the clustering at the edge of the bounding box in each direction
   // (true) or start the clustering inside the bounding box (edge + 0.5 radius). The latter approach leads to fewer clusters,

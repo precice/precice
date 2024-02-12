@@ -172,7 +172,7 @@ VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
 {
   PRECICE_TRACE();
 
-  PRECICE_ASSERT(not _mesh->vertices().empty(), _mesh->getName());
+  PRECICE_ASSERT(not _mesh->empty(), _mesh->getName());
   VertexMatch match;
   const auto &rtree = _pimpl->getVertexRTree(*_mesh);
   rtree->query(bgi::nearest(sourceCoord, 1), boost::make_function_output_iterator([&](size_t matchID) {
@@ -184,7 +184,7 @@ VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
 std::vector<VertexID> Index::getClosestVertices(const Eigen::VectorXd &sourceCoord, int n)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(!(_mesh->vertices().empty()), _mesh->getName());
+  PRECICE_ASSERT(!(_mesh->empty()), _mesh->getName());
   std::vector<VertexID> matches;
   const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
 

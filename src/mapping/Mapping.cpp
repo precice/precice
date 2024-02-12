@@ -192,7 +192,7 @@ void Mapping::scaleConsistentMapping(const Eigen::VectorXd &input, Eigen::Vector
   bool requiresTetra     = (spaceDimension == 3 and volumeMode);
 
   for (mesh::PtrMesh mesh : {this->input(), this->output()}) {
-    if (not mesh->vertices().empty()) {
+    if (not mesh->empty()) {
 
       PRECICE_CHECK(!(requiresEdges && mesh->edges().empty()), "Edges connectivity information is missing for the mesh \"{}\". "
                                                                "Scaled consistent mapping requires connectivity information.",

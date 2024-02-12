@@ -44,7 +44,7 @@ void ExportCSV::doExport(
   PRECICE_ASSERT(!name.empty());
 
   // Ignore empty meshes
-  if (mesh.vertices().empty()) {
+  if (mesh.empty()) {
     return;
   }
 

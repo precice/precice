@@ -148,7 +148,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen
   size_t const inSize  = input()->nVertices();
   size_t const outSize = output()->nVertices();
 
-  PRECICE_ASSERT(!output()->vertices().empty());
+  PRECICE_ASSERT(!output()->empty());
   auto outDataDimensions = outputValues.size() / outSize;
 
   // Check that the number of values for the input and output is right according to their dimensions

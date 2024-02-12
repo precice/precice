@@ -303,7 +303,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     outMesh    = this->output(); // local
   }
 
-  if (outMesh->vertices().empty())
+  if (outMesh->empty())
     return; // Ranks not at the interface should never hold interface vertices
 
   // Note that we don't use the corresponding bounding box functions from
