@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(Query2DVertex)
   Eigen::Vector2d location(0.2, 0.8);
 
   auto result = indexTree.getClosestVertex(location);
-  BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector2d(0, 1));
+  BOOST_TEST(mesh->vertex(result.index).getCoords() == Eigen::Vector2d(0, 1));
 }
 
 BOOST_AUTO_TEST_CASE(Query3DVertex)
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(Query3DVertex)
   Eigen::Vector3d location(0.8, 0.0, 0.8);
 
   auto result = indexTree.getClosestVertex(location);
-  BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector3d(1, 0, 1));
+  BOOST_TEST(mesh->vertex(result.index).getCoords() == Eigen::Vector3d(1, 0, 1));
 }
 
 BOOST_AUTO_TEST_CASE(Query3DFullVertex)
@@ -148,7 +148,7 @@ BOOST_AUTO_TEST_CASE(Query3DFullVertex)
     Eigen::Vector3d location(0.8, 0.0, 0.8);
     auto            result = indexTree.getClosestVertex(location);
 
-    BOOST_TEST(mesh->vertices().at(result.index).getID() == v10.getID());
+    BOOST_TEST(mesh->vertex(result.index).getID() == v10.getID());
   }
   {
     Eigen::Vector3d       location(0.8, 0.0, 0.8);
@@ -195,8 +195,8 @@ BOOST_AUTO_TEST_CASE(QueryWithBox2Matches)
 
   auto results = indexTree.getVerticesInsideBox(searchVertex, radius);
   BOOST_TEST(results.size() == 2);
-  BOOST_TEST(mesh->vertices().at(results.at(0)).getCoords() == Eigen::Vector3d(0, 1, 0));
-  BOOST_TEST(mesh->vertices().at(results.at(1)).getCoords() == Eigen::Vector3d(1, 1, 0));
+  BOOST_TEST(mesh->vertex(results.at(0)).getCoords() == Eigen::Vector3d(0, 1, 0));
+  BOOST_TEST(mesh->vertex(results.at(1)).getCoords() == Eigen::Vector3d(1, 1, 0));
 }
 
 /// Resembles how boost geometry is used inside the PetRBF

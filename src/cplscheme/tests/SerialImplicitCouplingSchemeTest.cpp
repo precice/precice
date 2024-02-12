@@ -56,7 +56,7 @@ void runCoupling(
   BOOST_REQUIRE(!mesh->empty());
   BOOST_REQUIRE(!validIterations.empty());
 
-  mesh::Vertex &  vertex               = mesh->vertices().at(0);
+  mesh::Vertex &  vertex               = mesh->vertex(0);
   int             index                = vertex.getID();
   auto &          dataValues0          = mesh->data(0)->values();
   auto &          dataValues1          = mesh->data(1)->values();

@@ -42,8 +42,8 @@ void NearestNeighborGradientMapping::onMappingComputed(mesh::PtrMesh origins, me
   // Calculate offsets
   for (size_t i = 0; i < _vertexIndices.size(); ++i) {
 
-    const auto &matchedVertexCoords = searchSpace.get()->vertices()[_vertexIndices[i]].getCoords();
-    const auto &sourceVertexCoords  = origins->vertices()[i].getCoords();
+    const auto &matchedVertexCoords = searchSpace.get()->vertex(_vertexIndices[i)].getCoords();
+    const auto &sourceVertexCoords  = origins->vertex(i).getCoords();
 
     // We calculate the distances uniformly for consistent mapping constraint as the difference (output - input)
     // For consistent mapping: the source is the output vertex and the matched vertex is the input since we iterate over all outputs

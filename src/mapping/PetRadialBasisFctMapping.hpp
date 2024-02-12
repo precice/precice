@@ -373,7 +373,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   precice::profiling::Event eFillA("map.pet.fillA.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
 
   for (PetscInt row = ownerRangeABegin; row < ownerRangeAEnd; ++row) {
-    mesh::Vertex const &oVertex = outMesh->vertices()[row - _matrixA.ownerRange().first];
+    mesh::Vertex const &oVertex = outMesh->vertex(row - _matrixA.ownerRange().first);
 
     // -- SET THE POLYNOMIAL PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
@@ -589,7 +589,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time
     std::vector<PetscInt> inIdx;
     inIdx.reserve(this->input()->nVertices());
     for (size_t i = 0; i < this->input()->nVertices(); ++i) {
-      if (not this->input()->vertices()[i].isOwner())
+      if (not this->input()->vertex(i).isOwner())
         continue;
       inVals.emplace_back(inValues[i * valueDim + dim]);
       inIdx.emplace_back(inIdx.size() + in.ownerRange().first + localPolyparams);
@@ -709,8 +709,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const ti
 
     // Fill input from input data values
     for (size_t i = 0; i < this->input()->nVertices(); i++) {
-      auto const globalIndex = this->input()->vertices()[i].getGlobalIndex(); // globalIndex is target row
-      if (globalIndex >= inRangeStart and globalIndex < inRangeEnd)           // only fill local rows
+      auto const globalIndex = this->input()->vertex(i).getGlobalIndex(); // globalIndex is target row
+      if (globalIndex >= inRangeStart and globalIndex < inRangeEnd)       // only fill local rows
         ierr = VecSetValue(in, globalIndex, inValues[i * valueDim + dim], INSERT_VALUES);
       CHKERRV(ierr);
     }
@@ -879,7 +879,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixC(mesh::
     // -- PREALLOCATES THE COEFFICIENTS --
 
     for (auto const i : inMesh->index().getVerticesInsideBox(inVertex, supportRadius)) {
-      const mesh::Vertex &vj = inMesh->vertices()[i];
+      const mesh::Vertex &vj = inMesh->vertex(i);
 
       PetscInt mappedCol = vj.getGlobalIndex() + polyparams;
       AOApplicationToPetsc(_AOmapping, 1, &mappedCol); // likely not efficient in the inner loop
@@ -942,7 +942,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
     d_nnz[localRow]             = 0;
     o_nnz[localRow]             = 0;
     PetscInt            col     = 0;
-    mesh::Vertex const &oVertex = outMesh->vertices()[localRow];
+    mesh::Vertex const &oVertex = outMesh->vertex(localRow);
 
     // -- PREALLOCATE THE POLYNOM PART OF THE MATRIX --
     // col does not need mapping here, because the first polyparams col are always identity mapped
@@ -966,7 +966,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
 
     // -- PREALLOCATE THE COEFFICIENTS --
     for (auto i : inMesh->index().getVerticesInsideBox(oVertex, supportRadius)) {
-      const mesh::Vertex &inVertex = inMesh->vertices()[i];
+      const mesh::Vertex &inVertex = inMesh->vertex(i);
       distance                     = oVertex.getCoords() - inVertex.getCoords();
 
       for (int d = 0; d < dimensions; d++)

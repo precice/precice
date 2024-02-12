@@ -722,8 +722,8 @@ void ParticipantImpl::setMeshEdge(
     using impl::errorInvalidVertexID;
     PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
     PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
-    mesh::Vertex &v0 = mesh->vertices()[first];
-    mesh::Vertex &v1 = mesh->vertices()[second];
+    mesh::Vertex &v0 = mesh->vertex(first);
+    mesh::Vertex &v1 = mesh->vertex(second);
     mesh->createEdge(v0, v1);
   }
 }
@@ -758,7 +758,7 @@ void ParticipantImpl::setMeshEdges(
   for (unsigned long i = 0; i < vertices.size() / 2; ++i) {
     auto aid = vertices[2 * i];
     auto bid = vertices[2 * i + 1];
-    mesh->createEdge(mesh->vertices()[aid], mesh->vertices()[bid]);
+    mesh->createEdge(mesh->vertex(aid), mesh->vertices()[bid]);
   }
 }
 
@@ -783,9 +783,9 @@ void ParticipantImpl::setMeshTriangle(
                   "setMeshTriangle() was called with repeated Vertex IDs ({}, {}, {}).",
                   first, second, third);
     mesh::Vertex *vertices[3];
-    vertices[0] = &mesh->vertices()[first];
-    vertices[1] = &mesh->vertices()[second];
-    vertices[2] = &mesh->vertices()[third];
+    vertices[0] = &mesh->vertex(first);
+    vertices[1] = &mesh->vertex(second);
+    vertices[2] = &mesh->vertex(third);
     PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
                                                            vertices[1]->getCoords(), vertices[2]->getCoords())),
                   "setMeshTriangle() was called with vertices located at identical coordinates (IDs: {}, {}, {}).",
@@ -830,9 +830,9 @@ void ParticipantImpl::setMeshTriangles(
     auto aid = vertices[3 * i];
     auto bid = vertices[3 * i + 1];
     auto cid = vertices[3 * i + 2];
-    mesh->createTriangle(mesh->vertices()[aid],
-                         mesh->vertices()[bid],
-                         mesh->vertices()[cid]);
+    mesh->createTriangle(mesh->vertex(aid),
+                         mesh->vertex(bid),
+                         mesh->vertex(cid));
   }
 }
 
@@ -970,10 +970,10 @@ void ParticipantImpl::setMeshTetrahedron(
     PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
     PRECICE_CHECK(mesh->isValidVertexID(third), errorInvalidVertexID(third));
     PRECICE_CHECK(mesh->isValidVertexID(fourth), errorInvalidVertexID(fourth));
-    mesh::Vertex &A = mesh->vertices()[first];
-    mesh::Vertex &B = mesh->vertices()[second];
-    mesh::Vertex &C = mesh->vertices()[third];
-    mesh::Vertex &D = mesh->vertices()[fourth];
+    mesh::Vertex &A = mesh->vertex(first);
+    mesh::Vertex &B = mesh->vertex(second);
+    mesh::Vertex &C = mesh->vertex(third);
+    mesh::Vertex &D = mesh->vertex(fourth);
 
     mesh->createTetrahedron(A, B, C, D);
   }
@@ -1011,10 +1011,10 @@ void ParticipantImpl::setMeshTetrahedra(
     auto bid = vertices[4 * i + 1];
     auto cid = vertices[4 * i + 2];
     auto did = vertices[4 * i + 3];
-    mesh->createTetrahedron(mesh->vertices()[aid],
-                            mesh->vertices()[bid],
-                            mesh->vertices()[cid],
-                            mesh->vertices()[did]);
+    mesh->createTetrahedron(mesh->vertex(aid),
+                            mesh->vertex(bid),
+                            mesh->vertex(cid),
+                            mesh->vertex(did));
   }
 }
 

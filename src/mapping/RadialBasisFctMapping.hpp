@@ -279,7 +279,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
       // Filter data
       int outputCounter = 0;
       for (int i = 0; i < static_cast<int>(this->output()->nVertices()); ++i) {
-        if (this->output()->vertices()[i].isOwner()) {
+        if (this->output()->vertex(i).isOwner()) {
           for (int dim = 0; dim < valueDim; ++dim) {
             outData[i * valueDim + dim] = outputValues(outputCounter);
             ++outputCounter;
@@ -305,7 +305,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
 
     int outputCounter = 0;
     for (int i = 0; i < static_cast<int>(this->output()->nVertices()); ++i) {
-      if (this->output()->vertices()[i].isOwner()) {
+      if (this->output()->vertex(i).isOwner()) {
         for (int dim = 0; dim < valueDim; ++dim) {
           outData[i * valueDim + dim] = receivedValues.at(outputCounter);
           ++outputCounter;

@@ -353,7 +353,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // ... and tag all affected vertices
   auto verticesNew = filterMesh->index().getVerticesInsideBox(localBB);
 
-  std::for_each(verticesNew.begin(), verticesNew.end(), [&filterMesh](VertexID v) { filterMesh->vertices()[v].tag(); });
+  std::for_each(verticesNew.begin(), verticesNew.end(), [&filterMesh](VertexID v) { filterMesh->vertex(v).tag(); });
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

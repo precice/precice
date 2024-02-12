@@ -230,7 +230,7 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::Vertex &centerVert
 
   const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
   std::vector<VertexID> matches;
-  rtree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) < radius; }),
+  rtree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertex(i)) < radius; }),
                std::back_inserter(matches));
   return matches;
 }
@@ -245,7 +245,7 @@ bool Index::isAnyVertexInsideBox(const mesh::Vertex &centerVertex, double radius
 
   const auto &rtree = _pimpl->getVertexRTree(*_mesh);
 
-  auto queryIter = rtree->qbegin(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) < radius; }));
+  auto queryIter = rtree->qbegin(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertex(i)) < radius; }));
   bool hasMatch  = queryIter != rtree->qend();
   return hasMatch;
 }
@@ -312,7 +312,7 @@ ProjectionMatch Index::findCellOrProjection(const Eigen::VectorXd &location, int
 ProjectionMatch Index::findVertexProjection(const Eigen::VectorXd &location)
 {
   auto match = getClosestVertex(location);
-  return {mapping::Polation{location, _mesh->vertices()[match.index]}};
+  return {mapping::Polation{location, _mesh->vertex(match.index)}};
 }
 
 ProjectionMatch Index::findEdgeProjection(const Eigen::VectorXd &location, int n, ProjectionMatch closestVertex)

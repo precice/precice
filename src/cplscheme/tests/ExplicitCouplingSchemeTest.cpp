@@ -44,7 +44,7 @@ void runSimpleExplicitCoupling(
   auto &dataValues0 = mesh->data(0)->values();
   auto &dataValues1 = mesh->data(1)->values();
   BOOST_TEST(mesh->nVertices() > 0);
-  mesh::Vertex &  vertex     = mesh->vertices().at(0);
+  mesh::Vertex &  vertex     = mesh->vertex(0);
   double          valueData0 = 1.0;
   Eigen::VectorXd valueData1 = Eigen::VectorXd::Constant(3, 1.0);
 
@@ -155,7 +155,7 @@ void runExplicitCouplingWithSubcycling(
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
   BOOST_TEST(mesh->data().size() == 2);
   BOOST_TEST(mesh->nVertices() > 0);
-  mesh::Vertex &  vertex      = mesh->vertices().at(0);
+  mesh::Vertex &  vertex      = mesh->vertex(0);
   double          valueData0  = 1.0;
   Eigen::VectorXd valueData1  = Eigen::VectorXd::Constant(3, 1.0);
   auto &          dataValues0 = mesh->data(0)->values();

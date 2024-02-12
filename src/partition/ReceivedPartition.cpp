@@ -184,7 +184,7 @@ void ReceivedPartition::compute()
 
     for (size_t vertexIndex = 0; vertexIndex < _mesh->nVertices(); ++vertexIndex) {
       for (size_t rankIndex = 0; rankIndex < _mesh->getConnectedRanks().size(); ++rankIndex) {
-        int globalVertexIndex = _mesh->vertices()[vertexIndex].getGlobalIndex();
+        int globalVertexIndex = _mesh->vertex(vertexIndex).getGlobalIndex();
         if (globalVertexIndex <= _remoteMaxGlobalVertexIDs[rankIndex] && globalVertexIndex >= _remoteMinGlobalVertexIDs[rankIndex]) {
           int remoteRank = _mesh->getConnectedRanks()[rankIndex];
           remoteCommunicationMap[remoteRank].push_back(globalVertexIndex - _remoteMinGlobalVertexIDs[rankIndex]); // remote local vertex index
@@ -204,7 +204,7 @@ void ReceivedPartition::compute()
       int                   numberOfVertices = _mesh->nVertices();
       std::vector<VertexID> vertexIDs(numberOfVertices, -1);
       for (int i = 0; i < numberOfVertices; i++) {
-        vertexIDs[i] = _mesh->vertices()[i].getGlobalIndex();
+        vertexIDs[i] = _mesh->vertex(i).getGlobalIndex();
       }
       PRECICE_DEBUG("Send partition feedback to primary rank");
       utils::IntraComm::getCommunication()->sendRange(vertexIDs, 0);
@@ -214,7 +214,7 @@ void ReceivedPartition::compute()
       int                            numberOfVertices = _mesh->nVertices();
       std::vector<VertexID>          vertexIDs(numberOfVertices, -1);
       for (int i = 0; i < numberOfVertices; i++) {
-        vertexIDs[i] = _mesh->vertices()[i].getGlobalIndex();
+        vertexIDs[i] = _mesh->vertex(i).getGlobalIndex();
       }
       vertexDistribution[0] = std::move(vertexIDs);
 
@@ -618,11 +618,11 @@ void ReceivedPartition::createOwnerInformation()
     std::vector<VertexID> globalIDs(numberOfVertices, -1);
     int                   ownedVerticesCount = 0; // number of vertices owned by this rank
     for (int i = 0; i < numberOfVertices; i++) {
-      globalIDs[i] = _mesh->vertices()[i].getGlobalIndex();
-      if (_mesh->vertices()[i].isTagged()) {
+      globalIDs[i] = _mesh->vertex(i).getGlobalIndex();
+      if (_mesh->vertex(i).isTagged()) {
         bool vertexIsShared = false;
         for (const auto &neighborRank : localConnectedBBMap) {
-          if (neighborRank.second.contains(_mesh->vertices()[i])) {
+          if (neighborRank.second.contains(_mesh->vertex(i))) {
             vertexIsShared = true;
             sharedVerticesSendMap[neighborRank.first].push_back(globalIDs[i]);
           }
@@ -736,8 +736,8 @@ void ReceivedPartition::createOwnerInformation()
         std::vector<VertexID> globalIDs(numberOfVertices, -1);
         bool                  atInterface = false;
         for (int i = 0; i < numberOfVertices; i++) {
-          globalIDs[i] = _mesh->vertices()[i].getGlobalIndex();
-          if (_mesh->vertices()[i].isTagged()) {
+          globalIDs[i] = _mesh->vertex(i).getGlobalIndex();
+          if (_mesh->vertex(i).isTagged()) {
             tags[i]     = 1;
             atInterface = true;
           } else {
@@ -776,8 +776,8 @@ void ReceivedPartition::createOwnerInformation()
       secondaryGlobalIDs[0].resize(_mesh->nVertices());
       secondaryTags[0].resize(_mesh->nVertices());
       for (size_t i = 0; i < _mesh->nVertices(); i++) {
-        secondaryGlobalIDs[0][i] = _mesh->vertices()[i].getGlobalIndex();
-        if (_mesh->vertices()[i].isTagged()) {
+        secondaryGlobalIDs[0][i] = _mesh->vertex(i).getGlobalIndex();
+        if (_mesh->vertex(i).isTagged()) {
           primaryRankAtInterface = true;
           secondaryTags[0][i]    = 1;
         } else {

@@ -62,7 +62,7 @@ void RadialGeoMultiscaleMapping::computeMapping()
       _vertexIndicesSpread.clear();
       _vertexIndicesSpread.reserve(output()->nVertices());
       for (size_t i = 0; i < outSize; i++) {
-        auto   vertexCoord = output()->vertices()[i].coord(effectiveCoordinate);
+        auto   vertexCoord = output()->vertex(i).coord(effectiveCoordinate);
         size_t index       = 0;
         while (vertexCoord > axisMidpoints(index)) {
           PRECICE_ASSERT(index + 1 < inSize);
@@ -90,8 +90,8 @@ void RadialGeoMultiscaleMapping::computeMapping()
                        });
       // Compute the midpoints of the 1D output mesh
       for (size_t i = 0; i < (outSize - 1); i++) {
-        auto axisPositionCurrent = output()->vertices()[i].coord(effectiveCoordinate);
-        auto axisPositionNext    = output()->vertices()[i + 1].coord(effectiveCoordinate);
+        auto axisPositionCurrent = output()->vertex(i).coord(effectiveCoordinate);
+        auto axisPositionNext    = output()->vertex(i + 1).coord(effectiveCoordinate);
         axisMidpoints(i)         = (axisPositionCurrent + axisPositionNext) / 2;
       }
       axisMidpoints(outSize - 1) = std::numeric_limits<double>::max(); // large number, such that vertices after the last midpoint are still assigned
@@ -102,7 +102,7 @@ void RadialGeoMultiscaleMapping::computeMapping()
       _vertexIndicesCollect.clear();
       _vertexIndicesCollect.reserve(input()->nVertices());
       for (size_t i = 0; i < inSize; i++) {
-        auto   vertexCoords = input()->vertices()[i].coord(effectiveCoordinate);
+        auto   vertexCoords = input()->vertex(i).coord(effectiveCoordinate);
         size_t index        = 0;
         while (vertexCoords > axisMidpoints(index)) {
           PRECICE_ASSERT(index + 1 < outSize);

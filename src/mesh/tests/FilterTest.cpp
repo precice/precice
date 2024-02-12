@@ -32,8 +32,8 @@ BOOST_AUTO_TEST_CASE(Vertices2D)
 
   // dest should contain Constante(4) and Constant(3), but not Constant(2)
   BOOST_TEST(dest.nVertices() == 2);
-  BOOST_TEST(dest.vertices()[0] == v0);
-  BOOST_TEST(dest.vertices()[1] == v1);
+  BOOST_TEST(dest.vertex(0) == v0);
+  BOOST_TEST(dest.vertex(1) == v1);
 }
 
 BOOST_AUTO_TEST_CASE(Vertices3D)
@@ -55,8 +55,8 @@ BOOST_AUTO_TEST_CASE(Vertices3D)
 
   // dest should contain Constante(4) and Constant(3), but not Constant(2)
   BOOST_TEST(dest.nVertices() == 2);
-  BOOST_TEST(dest.vertices()[0] == v0);
-  BOOST_TEST(dest.vertices()[1] == v1);
+  BOOST_TEST(dest.vertex(0) == v0);
+  BOOST_TEST(dest.vertex(1) == v1);
 }
 
 BOOST_AUTO_TEST_CASE(Edges)
@@ -82,9 +82,9 @@ BOOST_AUTO_TEST_CASE(Edges)
   mesh::filterMesh(dest, src, p);
 
   BOOST_TEST(dest.nVertices() == 3);
-  BOOST_TEST(dest.vertices()[0] == v0);
-  BOOST_TEST(dest.vertices()[1] == v1);
-  BOOST_TEST(dest.vertices()[2] == v2);
+  BOOST_TEST(dest.vertex(0) == v0);
+  BOOST_TEST(dest.vertex(1) == v1);
+  BOOST_TEST(dest.vertex(2) == v2);
 
   // Only e0 should survive
   BOOST_TEST(dest.edges().size() == 1);

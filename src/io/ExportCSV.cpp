@@ -101,7 +101,7 @@ void ExportCSV::doExport(
   const std::string rankCol = ";" + std::to_string(rank);
   const auto        size    = mesh.nVertices();
   for (std::size_t vid = 0; vid < size; ++vid) {
-    const auto &vertex = mesh.vertices()[vid];
+    const auto &vertex = mesh.vertex(vid);
     outFile << vertex.coord(0] << ';';
     outFile << vertex.coord(1];
     if (is3d) {

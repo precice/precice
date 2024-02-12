@@ -127,7 +127,7 @@ void ProvidedPartition::prepare()
 
     // set globals IDs on primary rank
     for (int i = 0; i < numberOfVertices; i++) {
-      _mesh->vertices()[i].setGlobalIndex(i);
+      _mesh->vertex(i).setGlobalIndex(i);
     }
 
     mesh::Mesh::VertexOffsets vertexOffsets(utils::IntraComm::getSize());
@@ -186,7 +186,7 @@ void ProvidedPartition::prepare()
     utils::IntraComm::getCommunication()->receive(globalVertexCounter, 0);
     PRECICE_DEBUG("Set global vertex indices");
     for (int i = 0; i < numberOfVertices; i++) {
-      _mesh->vertices()[i].setGlobalIndex(globalVertexCounter + i);
+      _mesh->vertex(i).setGlobalIndex(globalVertexCounter + i);
     }
 
     // set global number of vertices
@@ -210,7 +210,7 @@ void ProvidedPartition::prepare()
       mesh::Mesh::VertexDistribution vertexDistribution;
       for (int i = 0; i < numberOfVertices; i++) {
         vertexDistribution[0].push_back(i);
-        _mesh->vertices()[i].setGlobalIndex(i);
+        _mesh->vertex(i).setGlobalIndex(i);
       }
       return vertexDistribution;
     }());

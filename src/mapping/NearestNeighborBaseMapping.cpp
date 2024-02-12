@@ -64,7 +64,7 @@ void NearestNeighborBaseMapping::computeMapping()
     _vertexIndices[i]         = matchedVertex.index;
 
     // Compute distance between input and output vertiex for the stats
-    const auto &matchCoords = searchSpace->vertices()[matchedVertex.index].getCoords();
+    const auto &matchCoords = searchSpace->vertex(matchedVertex.index).getCoords();
     auto        distance    = (sourceCoords - matchCoords).norm();
     distanceStatistics(distance);
   }
