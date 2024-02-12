@@ -227,7 +227,7 @@ MeshID Mesh::getID() const
 
 bool Mesh::isValidVertexID(VertexID vertexID) const
 {
-  return (0 <= vertexID) && (static_cast<size_t>(vertexID) < vertices().size());
+  return (0 <= vertexID) && (static_cast<size_t>(vertexID) < nVertices());
 }
 
 void Mesh::allocateDataValues()
@@ -279,11 +279,11 @@ void Mesh::clearPartitioning()
 Eigen::VectorXd Mesh::getOwnedVertexData(const Eigen::VectorXd &values)
 {
   std::vector<double> ownedDataVector;
-  PRECICE_ASSERT(static_cast<std::size_t>(values.size()) >= vertices().size());
-  if (vertices().empty()) {
+  PRECICE_ASSERT(static_cast<std::size_t>(values.size()) >= nVertices());
+  if (empty()) {
     return {};
   }
-  int valueDim = values.size() / vertices().size();
+  int valueDim = values.size() / nVertices();
   int index    = 0;
 
   for (const auto &vertex : vertices()) {

@@ -758,7 +758,7 @@ void ParticipantImpl::setMeshEdges(
   for (unsigned long i = 0; i < vertices.size() / 2; ++i) {
     auto aid = vertices[2 * i];
     auto bid = vertices[2 * i + 1];
-    mesh->createEdge(mesh->vertex(aid), mesh->vertices()[bid]);
+    mesh->createEdge(mesh->vertex(aid), mesh->vertex(bid));
   }
 }
 
@@ -1198,9 +1198,8 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
   const MeshContext & context = _accessor->meshContext(meshName);
   const mesh::PtrMesh mesh(context.mesh);
 
-  const auto &vertices = mesh->vertices();
-  const auto  meshSize = vertices.size();
-  const auto  meshDims = mesh->getDimensions();
+  const auto meshSize = mesh->nVertices();
+  const auto meshDims = mesh->getDimensions();
   PRECICE_CHECK(ids.size() == meshSize,
                 "Output size is incorrect attempting to get vertex ids of {}D mesh \"{}\". "
                 "You passed {} vertices indices, but we expected {}. "
@@ -1213,15 +1212,15 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
                 "Use getMeshVertexSize(\"{}\") and getMeshDimensions(\"{}\") to receive the required amount components",
                 meshDims, meshName, coordinates.size(), expectedCoordinatesSize, meshSize, meshDims, meshName, meshName);
 
-  PRECICE_CHECK(ids.size() <= vertices.size(), "The queried size exceeds the number of available points.");
+  PRECICE_CHECK(ids.size() <= meshSize, "The queried size exceeds the number of available points.");
 
   Eigen::Map<Eigen::MatrixXd> posMatrix{
       coordinates.data(), mesh->getDimensions(), static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
 
   for (unsigned long i = 0; i < ids.size(); i++) {
-    PRECICE_ASSERT(i < vertices.size(), i, vertices.size());
-    ids[i]           = vertices[i].getID();
-    posMatrix.col(i) = vertices[i].getCoords();
+    PRECICE_ASSERT(mesh->isValidVertexID(i), i, meshSize);
+    ids[i]           = mesh->vertex(i).getID();
+    posMatrix.col(i) = mesh->vertex(i).getCoords();
   }
 }
 

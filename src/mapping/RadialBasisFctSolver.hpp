@@ -101,9 +101,9 @@ constexpr void reduceActiveAxis(const mesh::Mesh &mesh, const IndexContainer &ID
     if (axis[d] == false) {
       differences[d] = std::make_pair<int, double>(d, std::numeric_limits<double>::max());
     } else {
-      auto res = std::minmax_element(IDs.begin(), IDs.end(), [&](const auto &a, const auto &b) { return mesh.vertex(a).coord(d) < mesh.vertices()[b].coord(d); });
+      auto res = std::minmax_element(IDs.begin(), IDs.end(), [&](const auto &a, const auto &b) { return mesh.vertex(a).coord(d) < mesh.vertex(b).coord(d); });
       // Check if we are above or below the threshold
-      differences[d] = std::make_pair<int, double>(d, std::abs(mesh.vertex(*res.second).coord(d) - mesh.vertices()[*res.first].coord(d)));
+      differences[d] = std::make_pair<int, double>(d, std::abs(mesh.vertex(*res.second).coord(d) - mesh.vertex(*res.first).coord(d)));
     }
   }
 
