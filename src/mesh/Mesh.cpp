@@ -38,6 +38,18 @@ Mesh::Mesh(
   PRECICE_ASSERT(_name != std::string(""));
 }
 
+Vertex &Mesh::vertex(VertexID id)
+{
+  PRECICE_ASSERT(isValidVertexID(id), id, nVertices());
+  return _vertices.at(id);
+}
+
+const Vertex &Mesh::vertex(VertexID id) const
+{
+  PRECICE_ASSERT(isValidVertexID(id), id, nVertices());
+  return _vertices.at(id);
+}
+
 Mesh::VertexContainer &Mesh::vertices()
 {
   return _vertices;
@@ -46,6 +58,11 @@ Mesh::VertexContainer &Mesh::vertices()
 const Mesh::VertexContainer &Mesh::vertices() const
 {
   return _vertices;
+}
+
+std::size_t Mesh::nVertices() const
+{
+  return _vertices.size();
 }
 
 Mesh::EdgeContainer &Mesh::edges()
