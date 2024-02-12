@@ -84,6 +84,12 @@ public:
   /// Returns the number of vertices
   std::size_t nVertices() const;
 
+  /// Does the mesh contain any vertices?
+  bool empty() const
+  {
+    return _vertices.empty();
+  }
+
   /// Returns modifiable container holding all edges.
   EdgeContainer &edges();
 
