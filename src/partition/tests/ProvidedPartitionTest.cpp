@@ -561,23 +561,23 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
     BOOST_TEST(mesh->nVertices() == 4);
 
     if (context.isPrimary()) {
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 0.5);
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(0) == 1.5);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(1) == 0.0);
-      BOOST_TEST(mesh->vertices().at(2).getCoords()(0) == 2.0);
-      BOOST_TEST(mesh->vertices().at(2).getCoords()(1) == 1.0);
-      BOOST_TEST(mesh->vertices().at(3).getCoords()(0) == 0.5);
-      BOOST_TEST(mesh->vertices().at(3).getCoords()(1) == 1.0);
+      BOOST_TEST(mesh->vertices().at(0).coord(0) == 0.5);
+      BOOST_TEST(mesh->vertices().at(0).coord(1) == 0.0);
+      BOOST_TEST(mesh->vertices().at(1).coord(0) == 1.5);
+      BOOST_TEST(mesh->vertices().at(1).coord(1) == 0.0);
+      BOOST_TEST(mesh->vertices().at(2).coord(0) == 2.0);
+      BOOST_TEST(mesh->vertices().at(2).coord(1) == 1.0);
+      BOOST_TEST(mesh->vertices().at(3).coord(0) == 0.5);
+      BOOST_TEST(mesh->vertices().at(3).coord(1) == 1.0);
     } else {
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 2.5);
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(0) == 3.5);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(1) == 0.0);
-      BOOST_TEST(mesh->vertices().at(2).getCoords()(0) == 3.5);
-      BOOST_TEST(mesh->vertices().at(2).getCoords()(1) == 1.0);
-      BOOST_TEST(mesh->vertices().at(3).getCoords()(0) == 2.0);
-      BOOST_TEST(mesh->vertices().at(3).getCoords()(1) == 1.0);
+      BOOST_TEST(mesh->vertices().at(0).coord(0) == 2.5);
+      BOOST_TEST(mesh->vertices().at(0).coord(1) == 0.0);
+      BOOST_TEST(mesh->vertices().at(1).coord(0) == 3.5);
+      BOOST_TEST(mesh->vertices().at(1).coord(1) == 0.0);
+      BOOST_TEST(mesh->vertices().at(2).coord(0) == 3.5);
+      BOOST_TEST(mesh->vertices().at(2).coord(1) == 1.0);
+      BOOST_TEST(mesh->vertices().at(3).coord(0) == 2.0);
+      BOOST_TEST(mesh->vertices().at(3).coord(1) == 1.0);
     }
   }
 }

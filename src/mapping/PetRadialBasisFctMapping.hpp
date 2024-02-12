@@ -313,7 +313,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       for (int dim = 0; dim < dimensions; dim++) {
         if (not this->_deadAxis[dim]) {
           colIdx[colNum]    = colNum;
-          rowVals[colNum++] = inVertex.getCoords()[dim];
+          rowVals[colNum++] = inVertex.coord(dim);
         }
       }
 
@@ -386,7 +386,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       for (int dim = 0; dim < dimensions; dim++) {
         if (not this->_deadAxis[dim]) {
           colIdx[colNum]    = colNum;
-          rowVals[colNum++] = oVertex.getCoords()[dim];
+          rowVals[colNum++] = oVertex.coord(dim);
         }
       }
       ierr = MatSetValues(*m, 1, &row, colNum, colIdx.data(), rowVals.data(), INSERT_VALUES);
