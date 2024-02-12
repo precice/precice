@@ -77,7 +77,7 @@ void ExportCSV::doExport(
   for (const auto &data : mesh.data()) {
     auto dataName = data->getName();
     auto dim      = data->getDimensions();
-    PRECICE_ASSERT(static_cast<std::size_t>(data->values().size()) == mesh.vertices().size() * dim);
+    PRECICE_ASSERT(static_cast<std::size_t>(data->values().size()) == mesh.nVertices() * dim);
     outFile << ';' << dataName;
     if (dim == 2) {
       outFile << "X;" << dataName << 'Y';
@@ -99,7 +99,7 @@ void ExportCSV::doExport(
 
   // write vertex data
   const std::string rankCol = ";" + std::to_string(rank);
-  const auto        size    = mesh.vertices().size();
+  const auto        size    = mesh.nVertices();
   for (std::size_t vid = 0; vid < size; ++vid) {
     const auto &vertex = mesh.vertices()[vid];
     outFile << vertex.getCoords()[0] << ';';

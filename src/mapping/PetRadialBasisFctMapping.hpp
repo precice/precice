@@ -238,11 +238,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   auto n = myIndizes.size(); // polyparams, if on rank 0, are included here
 
-  auto outputSize = outMesh->vertices().size();
+  auto outputSize = outMesh->nVertices();
 
   PetscErrorCode ierr = 0;
-  PRECICE_DEBUG("inMesh->vertices().size() = {}", inMesh->vertices().size());
-  PRECICE_DEBUG("outMesh->vertices().size() = {}", outMesh->vertices().size());
+  PRECICE_DEBUG("inMesh->nVertices() = {}", inMesh->nVertices());
+  PRECICE_DEBUG("outMesh->nVertices() = {}", outMesh->nVertices());
   ePreCompute.stop();
 
   precice::profiling::Event eCreateMatrices("map.pet.createMatrices.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
@@ -585,10 +585,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time
 
     // Fill input from input data values
     std::vector<PetscScalar> inVals;
-    inVals.reserve(this->input()->vertices().size());
+    inVals.reserve(this->input()->nVertices());
     std::vector<PetscInt> inIdx;
-    inIdx.reserve(this->input()->vertices().size());
-    for (size_t i = 0; i < this->input()->vertices().size(); ++i) {
+    inIdx.reserve(this->input()->nVertices());
+    for (size_t i = 0; i < this->input()->nVertices(); ++i) {
       if (not this->input()->vertices()[i].isOwner())
         continue;
       inVals.emplace_back(inValues[i * valueDim + dim]);
@@ -708,7 +708,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const ti
     printMappingInfo(dim);
 
     // Fill input from input data values
-    for (size_t i = 0; i < this->input()->vertices().size(); i++) {
+    for (size_t i = 0; i < this->input()->nVertices(); i++) {
       auto const globalIndex = this->input()->vertices()[i].getGlobalIndex(); // globalIndex is target row
       if (globalIndex >= inRangeStart and globalIndex < inRangeEnd)           // only fill local rows
         ierr = VecSetValue(in, globalIndex, inValues[i * valueDim + dim], INSERT_VALUES);

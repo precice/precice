@@ -637,7 +637,7 @@ int ParticipantImpl::getMeshVertexSize(
                 meshName, _accessor->getName());
   MeshContext &context = _accessor->usedMeshContext(meshName);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
-  return context.mesh->vertices().size();
+  return context.mesh->nVertices();
 }
 
 /// @todo Currently not supported as we would need to re-compute the re-partition
@@ -667,7 +667,7 @@ VertexID ParticipantImpl::setMeshVertex(
   auto index = mesh.createVertex(Eigen::Map<const Eigen::VectorXd>{position.data(), mesh.getDimensions()}).getID();
   mesh.allocateDataValues();
 
-  const auto newSize = mesh.vertices().size();
+  const auto newSize = mesh.nVertices();
   for (auto &context : _accessor->writeDataContexts()) {
     if (context.getMeshName() == mesh.getName()) {
       context.resizeBufferTo(newSize);
@@ -701,7 +701,7 @@ void ParticipantImpl::setMeshVertices(
   }
   mesh.allocateDataValues();
 
-  const auto newSize = mesh.vertices().size();
+  const auto newSize = mesh.nVertices();
   for (auto &context : _accessor->writeDataContexts()) {
     if (context.getMeshName() == mesh.getName()) {
       context.resizeBufferTo(newSize);
@@ -1372,7 +1372,7 @@ void ParticipantImpl::computePartitions()
 
     meshContext->mesh->allocateDataValues();
 
-    const auto requiredSize = meshContext->mesh->vertices().size();
+    const auto requiredSize = meshContext->mesh->nVertices();
     for (auto &context : _accessor->writeDataContexts()) {
       if (context.getMeshName() == meshContext->mesh->getName()) {
         context.resizeBufferTo(requiredSize);

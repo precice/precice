@@ -71,7 +71,7 @@ void NearestNeighborGradientMapping::mapConsistent(const time::Sample &inData, E
 
   // Consistent mapping
   PRECICE_DEBUG("Map {} using {}", (hasConstraint(CONSISTENT) ? "consistent" : "scaled-consistent"), getName());
-  const size_t outSize = output()->vertices().size();
+  const size_t outSize = output()->nVertices();
 
   for (size_t i = 0; i < outSize; i++) {
     int inputIndex = _vertexIndices[i] * valueDimensions;

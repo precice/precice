@@ -71,7 +71,7 @@ void ReceivedPartition::communicate()
     if (not utils::IntraComm::isSecondary()) {
       // a ReceivedPartition can only have one communication, @todo nicer design
       com::receiveMesh(*(m2n().getPrimaryRankCommunication()), 0, *_mesh);
-      _mesh->setGlobalNumberOfVertices(_mesh->vertices().size());
+      _mesh->setGlobalNumberOfVertices(_mesh->nVertices());
     }
   }
 
@@ -162,7 +162,7 @@ void ReceivedPartition::compute()
   mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
   mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return v.isTagged(); });
   PRECICE_DEBUG("Mapping filter, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
-                _mesh->vertices().size(), filteredMesh.vertices().size(),
+                _mesh->nVertices(), filteredMesh.nVertices(),
                 _mesh->edges().size(), filteredMesh.edges().size(),
                 _mesh->triangles().size(), filteredMesh.triangles().size());
 
@@ -182,7 +182,7 @@ void ReceivedPartition::compute()
     // A vertex belongs to a specific connected rank if its global vertex ID lies within the ranks min and max.
     mesh::Mesh::CommunicationMap remoteCommunicationMap;
 
-    for (size_t vertexIndex = 0; vertexIndex < _mesh->vertices().size(); ++vertexIndex) {
+    for (size_t vertexIndex = 0; vertexIndex < _mesh->nVertices(); ++vertexIndex) {
       for (size_t rankIndex = 0; rankIndex < _mesh->getConnectedRanks().size(); ++rankIndex) {
         int globalVertexIndex = _mesh->vertices()[vertexIndex].getGlobalIndex();
         if (globalVertexIndex <= _remoteMaxGlobalVertexIDs[rankIndex] && globalVertexIndex >= _remoteMinGlobalVertexIDs[rankIndex]) {
@@ -201,7 +201,7 @@ void ReceivedPartition::compute()
     PRECICE_INFO("Feedback distribution for mesh {}", _mesh->getName());
     Event e6("partition.feedbackMesh." + _mesh->getName(), profiling::Synchronize);
     if (utils::IntraComm::isSecondary()) {
-      int                   numberOfVertices = _mesh->vertices().size();
+      int                   numberOfVertices = _mesh->nVertices();
       std::vector<VertexID> vertexIDs(numberOfVertices, -1);
       for (int i = 0; i < numberOfVertices; i++) {
         vertexIDs[i] = _mesh->vertices()[i].getGlobalIndex();
@@ -211,7 +211,7 @@ void ReceivedPartition::compute()
     } else { // Primary
 
       mesh::Mesh::VertexDistribution vertexDistribution;
-      int                            numberOfVertices = _mesh->vertices().size();
+      int                            numberOfVertices = _mesh->nVertices();
       std::vector<VertexID>          vertexIDs(numberOfVertices, -1);
       for (int i = 0; i < numberOfVertices; i++) {
         vertexIDs[i] = _mesh->vertices()[i].getGlobalIndex();
@@ -232,8 +232,8 @@ void ReceivedPartition::compute()
   if (utils::IntraComm::isSecondary()) {
 
     // send number of vertices
-    PRECICE_DEBUG("Send number of vertices: {}", _mesh->vertices().size());
-    int numberOfVertices = _mesh->vertices().size();
+    PRECICE_DEBUG("Send number of vertices: {}", _mesh->nVertices());
+    int numberOfVertices = _mesh->nVertices();
     utils::IntraComm::getCommunication()->send(numberOfVertices, 0);
 
     // receive vertex offsets
@@ -246,7 +246,7 @@ void ReceivedPartition::compute()
   } else if (utils::IntraComm::isPrimary()) {
 
     mesh::Mesh::VertexOffsets vertexOffsets(utils::IntraComm::getSize());
-    vertexOffsets[0] = _mesh->vertices().size();
+    vertexOffsets[0] = _mesh->nVertices();
 
     // receive number of secondary vertices and fill vertex offsets
     for (int secondaryRank : utils::IntraComm::allSecondaryRanks()) {
@@ -329,7 +329,7 @@ void ReceivedPartition::filterByBoundingBox()
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
       PRECICE_DEBUG("Primary rank mesh, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
-                    _mesh->vertices().size(), filteredMesh.vertices().size(),
+                    _mesh->nVertices(), filteredMesh.nVertices(),
                     _mesh->edges().size(), filteredMesh.edges().size(),
                     _mesh->triangles().size(), filteredMesh.triangles().size());
       _mesh->clear();
@@ -360,7 +360,7 @@ void ReceivedPartition::filterByBoundingBox()
       mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
 
       PRECICE_DEBUG("Bounding box filter, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
-                    _mesh->vertices().size(), filteredMesh.vertices().size(),
+                    _mesh->nVertices(), filteredMesh.nVertices(),
                     _mesh->edges().size(), filteredMesh.edges().size(),
                     _mesh->triangles().size(), filteredMesh.triangles().size());
 
@@ -612,7 +612,7 @@ void ReceivedPartition::createOwnerInformation()
       sharedVerticesSendMap[neighborRank.first] = std::vector<VertexID>();
 
     // #3: check vertices and keep only those that fit into the current rank's bb
-    const int numberOfVertices = _mesh->vertices().size();
+    const int numberOfVertices = _mesh->nVertices();
     PRECICE_DEBUG("Tag vertices, number of vertices {}", numberOfVertices);
     std::vector<int>      tags(numberOfVertices, 1);
     std::vector<VertexID> globalIDs(numberOfVertices, -1);
@@ -727,7 +727,7 @@ void ReceivedPartition::createOwnerInformation()
     // end of two-level initialization section
   } else {
     if (utils::IntraComm::isSecondary()) {
-      int numberOfVertices = _mesh->vertices().size();
+      int numberOfVertices = _mesh->nVertices();
       utils::IntraComm::getCommunication()->send(numberOfVertices, 0);
 
       if (numberOfVertices != 0) {
@@ -772,10 +772,10 @@ void ReceivedPartition::createOwnerInformation()
       // Fill primary data
       PRECICE_DEBUG("Tag vertices of primary rank");
       bool primaryRankAtInterface = false;
-      secondaryOwnerVecs[0].resize(_mesh->vertices().size());
-      secondaryGlobalIDs[0].resize(_mesh->vertices().size());
-      secondaryTags[0].resize(_mesh->vertices().size());
-      for (size_t i = 0; i < _mesh->vertices().size(); i++) {
+      secondaryOwnerVecs[0].resize(_mesh->nVertices());
+      secondaryGlobalIDs[0].resize(_mesh->nVertices());
+      secondaryTags[0].resize(_mesh->nVertices());
+      for (size_t i = 0; i < _mesh->nVertices(); i++) {
         secondaryGlobalIDs[0][i] = _mesh->vertices()[i].getGlobalIndex();
         if (_mesh->vertices()[i].isTagged()) {
           primaryRankAtInterface = true;

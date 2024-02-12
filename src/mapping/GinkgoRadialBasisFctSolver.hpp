@@ -225,8 +225,8 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   PRECICE_ASSERT((inputMesh.getDimensions() == 3) || activeAxis[2] == false);
   PRECICE_ASSERT((inputSize >= 1 + polyparams) || polynomial != Polynomial::ON, inputSize);
 
-  const std::size_t inputMeshSize  = inputMesh.vertices().size();
-  const std::size_t outputMeshSize = outputMesh.vertices().size();
+  const std::size_t inputMeshSize  = inputMesh.nVertices();
+  const std::size_t outputMeshSize = outputMesh.nVertices();
   const std::size_t meshDim        = inputMesh.vertices().at(0).getDimensions();
 
   _scalarOne         = gko::share(gko::initialize<GinkgoScalar>({1.0}, _deviceExecutor));

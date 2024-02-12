@@ -313,7 +313,7 @@ void Mesh::addMesh(
   PRECICE_ASSERT(_dimensions == deltaMesh.getDimensions());
 
   boost::container::flat_map<VertexID, Vertex *> vertexMap;
-  vertexMap.reserve(deltaMesh.vertices().size());
+  vertexMap.reserve(deltaMesh.nVertices());
   Eigen::VectorXd coords(_dimensions);
   for (const Vertex &vertex : deltaMesh.vertices()) {
     coords    = vertex.getCoords();

@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
     part.addM2N(m2n);
     part.communicate();
 
-    BOOST_TEST(pSolidzMesh->vertices().size() == 6);
+    BOOST_TEST(pSolidzMesh->nVertices() == 6);
     BOOST_TEST(pSolidzMesh->edges().size() == 4);
 
     for (int i = 0; i < 6; i++) {
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
     part.addM2N(m2n);
     part.communicate();
 
-    BOOST_TEST(pSolidzMesh->vertices().size() == 6);
+    BOOST_TEST(pSolidzMesh->nVertices() == 6);
     BOOST_TEST(pSolidzMesh->edges().size() == 6);
     BOOST_TEST(pSolidzMesh->triangles().size() == 2);
 
@@ -558,7 +558,7 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
 
     part.communicate();
 
-    BOOST_TEST(mesh->vertices().size() == 4);
+    BOOST_TEST(mesh->nVertices() == 4);
 
     if (context.isPrimary()) {
       BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 0.5);

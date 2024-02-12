@@ -312,7 +312,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_ASSERT(inMesh->getDimensions() == outMesh->getDimensions());
 
   // If we have either no input or no output vertices, we return immediately
-  if (inMesh->vertices().size() == 0 || outMesh->vertices().size() == 0)
+  if (inMesh->nVertices() == 0 || outMesh->nVertices() == 0)
     return {double{}, Vertices{}};
 
   PRECICE_ASSERT(!outMesh->vertices().empty() && !inMesh->vertices().empty());
@@ -350,7 +350,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   // The single cluster has in principle a radius of inf. We use here twice the
   // length of the longest bounding box edge length and the center of the bounding
   // box for the center point.
-  if (inMesh->vertices().size() < verticesPerCluster * 2)
+  if (inMesh->nVertices() < verticesPerCluster * 2)
     return {localBB.longestEdgeLength() * 2, Vertices{mesh::Vertex({localBB.center(), 0})}};
 
   // We define a convenience alias for the localBB. In case we need to synchronize the clustering across ranks later on, we need

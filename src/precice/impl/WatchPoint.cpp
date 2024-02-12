@@ -57,7 +57,7 @@ void WatchPoint::initialize()
 {
   PRECICE_TRACE();
 
-  if (_mesh->vertices().size() > 0) {
+  if (_mesh->nVertices() > 0) {
     auto match        = _mesh->index().findCellOrProjection(_point, 4);
     _shortestDistance = match.polation.distance();
     _interpolation    = std::make_unique<mapping::Polation>(std::move(match.polation));

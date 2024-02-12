@@ -29,7 +29,7 @@ NearestNeighborBaseMapping::NearestNeighborBaseMapping(
 
 void NearestNeighborBaseMapping::computeMapping()
 {
-  PRECICE_TRACE(input()->vertices().size());
+  PRECICE_TRACE(input()->nVertices());
 
   PRECICE_ASSERT(input().get() != nullptr);
   PRECICE_ASSERT(output().get() != nullptr);
@@ -50,7 +50,7 @@ void NearestNeighborBaseMapping::computeMapping()
   }
 
   // Set up of output arrays
-  const size_t verticesSize   = origins->vertices().size();
+  const size_t verticesSize   = origins->nVertices();
   const auto & sourceVertices = origins->vertices();
   _vertexIndices.resize(verticesSize);
 

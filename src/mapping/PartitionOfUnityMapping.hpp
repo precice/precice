@@ -165,7 +165,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   eClusters.stop();
 
   _clusterRadius = clusterRadius;
-  PRECICE_ASSERT(_clusterRadius > 0 || inMesh->vertices().size() == 0 || outMesh->vertices().size() == 0);
+  PRECICE_ASSERT(_clusterRadius > 0 || inMesh->nVertices() == 0 || outMesh->nVertices() == 0);
 
   // Step 2: check, which of the resulting clusters are non-empty and register the cluster centers in a mesh
   // Here, the VertexCluster computes the matrix decompositions directly in case the cluster is non-empty
@@ -330,13 +330,13 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // vertices, but the user could increase the safety-factor or disable the filtering.
   // When no geometric filter is applid, vertices().size() is here the same as
   // getGlobalNumberOfVertices
-  if (filterMesh->vertices().size() < _verticesPerCluster &&
-      filterMesh->vertices().size() < static_cast<std::size_t>(filterMesh->getGlobalNumberOfVertices())) {
+  if (filterMesh->nVertices() < _verticesPerCluster &&
+      filterMesh->nVertices() < static_cast<std::size_t>(filterMesh->getGlobalNumberOfVertices())) {
     PRECICE_WARN("The repartitioning of the received mesh \"{}\" resulted in {} vertices on this "
                  "rank, which is less than the desired number of vertices per cluster configured "
                  "in the partition of unity mapping ({}). Consider increasing the safety-factor "
                  "or switching off the geometric filter (<receive-mesh: ... geometric-filter=\"no-filter\" .../>)",
-                 filterMesh->getName(), filterMesh->vertices().size(), _verticesPerCluster);
+                 filterMesh->getName(), filterMesh->nVertices(), _verticesPerCluster);
   }
 
   if (_clusterRadius == 0)
@@ -378,8 +378,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU
   // We have to create the global offsets in order to export things in parallel
   if (utils::IntraComm::isSecondary()) {
     // send number of vertices
-    PRECICE_DEBUG("Send number of vertices: {}", centerMesh.vertices().size());
-    int numberOfVertices = centerMesh.vertices().size();
+    PRECICE_DEBUG("Send number of vertices: {}", centerMesh.nVertices());
+    int numberOfVertices = centerMesh.nVertices();
     utils::IntraComm::getCommunication()->send(numberOfVertices, 0);
 
     // receive vertex offsets
@@ -391,7 +391,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU
   } else if (utils::IntraComm::isPrimary()) {
 
     mesh::Mesh::VertexOffsets vertexOffsets(utils::IntraComm::getSize());
-    vertexOffsets[0] = centerMesh.vertices().size();
+    vertexOffsets[0] = centerMesh.nVertices();
 
     // receive number of secondary vertices and fill vertex offsets
     for (int secondaryRank : utils::IntraComm::allSecondaryRanks()) {

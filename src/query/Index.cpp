@@ -56,7 +56,7 @@ VertexTraits::Ptr Index::IndexImpl::getVertexRTree(const mesh::Mesh &mesh)
   impl::RTreeParameters     params;
   VertexTraits::IndexGetter ind(mesh.vertices());
   auto                      tree = std::make_shared<VertexTraits::RTree>(
-      boost::irange<std::size_t>(0lu, mesh.vertices().size()), params, ind);
+      boost::irange<std::size_t>(0lu, mesh.nVertices()), params, ind);
 
   indices.vertexRTree = std::move(tree);
   return indices.vertexRTree;
@@ -370,7 +370,7 @@ mesh::BoundingBox Index::getRtreeBounds()
   // if the mesh is empty, we will most likely hit an assertion in the bounding box class
   // therefore, we keep the assert here, but might want to return an empty bounding box in case
   // we want to allow calling this function with empty meshes
-  PRECICE_ASSERT(_mesh->vertices().size() > 0);
+  PRECICE_ASSERT(_mesh->nVertices() > 0);
 
   auto            rtreeBox = _pimpl->getVertexRTree(*_mesh)->bounds();
   int             dim      = _mesh->getDimensions();
