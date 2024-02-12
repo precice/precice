@@ -261,18 +261,18 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   for (std::size_t i = 0; i < inputMeshSize; ++i) {
     for (std::size_t j = 0; j < meshDim; ++j) {
       if ("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor) {
-        inputVertices->at(j, i) = inputMesh.vertex(i).rawCoords()[j];
+        inputVertices->at(j, i) = inputMesh.vertex(i).coord(j);
       } else {
-        inputVertices->at(i, j) = inputMesh.vertex(i).rawCoords()[j];
+        inputVertices->at(i, j) = inputMesh.vertex(i).coord(j);
       }
     }
   }
   for (std::size_t i = 0; i < outputMeshSize; ++i) {
     for (std::size_t j = 0; j < meshDim; ++j) {
       if ("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor) {
-        outputVertices->at(j, i) = outputMesh.vertex(i).rawCoords()[j];
+        outputVertices->at(j, i) = outputMesh.vertex(i).coord(j);
       } else {
-        outputVertices->at(i, j) = outputMesh.vertex(i).rawCoords()[j];
+        outputVertices->at(i, j) = outputMesh.vertex(i).coord(j);
       }
     }
   }
