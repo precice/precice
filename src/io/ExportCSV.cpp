@@ -102,10 +102,10 @@ void ExportCSV::doExport(
   const auto        size    = mesh.nVertices();
   for (std::size_t vid = 0; vid < size; ++vid) {
     const auto &vertex = mesh.vertex(vid);
-    outFile << vertex.coord(0] << ';';
-    outFile << vertex.coord(1];
+    outFile << vertex.coord(0) << ';';
+    outFile << vertex.coord(1);
     if (is3d) {
-      outFile << ";" << vertex.coord(2];
+      outFile << ";" << vertex.coord(2);
     }
     outFile << rankCol;
     for (auto &dc : dataColumns) {
