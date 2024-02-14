@@ -1,5 +1,5 @@
-name: Develop image
-# Builds the nightly precice/precice:develop image
+name: Nightly docker release
+# Builds the precice/precice:nightly image
 on:
   workflow_dispatch:
   schedule:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   dockerfile:
-    name: "Develop docker "
+    name: "Build precice:nightly"
     runs-on: ubuntu-latest
     env:
         docker_username: precice
@@ -23,5 +23,5 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          file: "./tools/releasing/packaging/develop/Dockerfile"
-          tags: ${{ env.docker_username }}/precice:develop
+          file: "./tools/releasing/packaging/docker/nightly.dockerfile"
+          tags: ${{ env.docker_username }}/precice:nightly

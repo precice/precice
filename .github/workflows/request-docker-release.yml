@@ -45,7 +45,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          file: "./tools/releasing/packaging/docker/Dockerfile"
+          file: "./tools/releasing/packaging/docker/release.dockerfile"
           tags: ${{ env.docker_username }}/precice:${{ github.event.inputs.version }}
           build-args: |
             version=${{ github.event.inputs.version }}
@@ -54,7 +54,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          file: "./tools/releasing/packaging/docker/Dockerfile"
+          file: "./tools/releasing/packaging/docker/release.dockerfile"
           tags: ${{ env.docker_username }}/precice:latest
           build-args: |
             version=${{ github.event.inputs.version }}
