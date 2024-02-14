@@ -61,8 +61,8 @@ jobs:
           tag: ${{ github.ref }}
 
   dockerfile:
-    name: "Release Dockerfiles"
-    needs: release-draft
+    name: "Release Dockerfile"
+    needs: package-deb
     runs-on: ubuntu-latest
     env:
         docker_username: precice
