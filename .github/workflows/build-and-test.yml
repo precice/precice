@@ -161,6 +161,7 @@ jobs:
       - uses: codecov/codecov-action@v4
         with:
           files: ./build/coverage.info
+          token: ${{ secrets.CODECOV_TOKEN }}
         if: ${{ matrix.COVFLAGS }}
       - name: Check packages
         working-directory: build
