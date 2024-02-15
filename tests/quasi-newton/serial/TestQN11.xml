@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="Data1" />
+  <data:scalar name="Data2" />
+
+  <mesh name="MeshOne" dimensions="2">
+    <use-data name="Data1" />
+    <use-data name="Data2" />
+  </mesh>
+
+  <mesh name="MeshTwo" dimensions="2">
+    <use-data name="Data1" />
+    <use-data name="Data2" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <provide-mesh name="MeshOne" />
+    <write-data name="Data1" mesh="MeshOne" />
+    <read-data name="Data2" mesh="MeshOne" />
+  </participant>
+
+  <participant name="SolverTwo">
+    <receive-mesh name="MeshOne" from="SolverOne" safety-factor="0.1" />
+    <provide-mesh name="MeshTwo" />
+    <mapping:nearest-neighbor direction="read" from="MeshOne" to="MeshTwo" constraint="consistent" />
+    <mapping:nearest-neighbor direction="write" from="MeshTwo" to="MeshOne" constraint="conservative" />
+    <write-data name="Data2" mesh="MeshTwo" />
+    <read-data name="Data1" mesh="MeshTwo" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+
+  <coupling-scheme:serial-implicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="2" />
+    <time-window-size value="1.0" />
+    <exchange data="Data1" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
+    <exchange data="Data2" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
+    <max-iterations value="200" />
+    <absolute-convergence-measure limit="1e-8" data="Data1" mesh="MeshOne" />
+    <acceleration:IQN-IMVJ>
+      <data name="Data2" mesh="MeshOne" lower-bound="-1" upper-bound="1"/>
+      <filter type="QR2" limit="1e-3" />
+      <initial-relaxation value="0.2" />
+      <max-used-iterations value="2" />
+      <preconditioner type="residual-sum"/>
+      <time-windows-reused value="1" />
+      <imvj-restart-mode truncation-threshold="0.0001" chunk-size="8" reused-time-windows-at-restart="8" type="RS-SVD"/>
+    </acceleration:IQN-IMVJ>
+  </coupling-scheme:serial-implicit>
+</precice-configuration>

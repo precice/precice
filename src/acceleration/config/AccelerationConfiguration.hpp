@@ -57,6 +57,8 @@ private:
   const std::string ATTR_MESH;
   const std::string ATTR_SCALING;
   const std::string ATTR_VALUE;
+  const std::string ATTR_MIN;
+  const std::string ATTR_MAX;
   const std::string ATTR_ENFORCE;
   const std::string ATTR_SINGULARITYLIMIT;
   const std::string ATTR_TYPE;
@@ -99,6 +101,8 @@ private:
   struct ConfigurationData {
     std::vector<int>      dataIDs;
     std::map<int, double> scalings;
+    std::map<int, double> lowerBounds;
+    std::map<int, double> upperBounds;
     std::string           type;
     double                relaxationFactor           = 0;
     bool                  forceInitialRelaxation     = false;

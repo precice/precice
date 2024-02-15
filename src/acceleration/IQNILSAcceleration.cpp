@@ -32,9 +32,11 @@ IQNILSAcceleration::IQNILSAcceleration(
     int                     filter,
     double                  singularityLimit,
     std::vector<int>        dataIDs,
+    std::map<int, double>   lowerBounds,
+    std::map<int, double>   upperBounds,
     impl::PtrPreconditioner preconditioner)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
-                         filter, singularityLimit, std::move(dataIDs), std::move(preconditioner))
+                         filter, singularityLimit, std::move(dataIDs), lowerBounds, upperBounds, move(preconditioner))
 {
 }
 

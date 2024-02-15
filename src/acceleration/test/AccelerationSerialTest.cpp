@@ -53,13 +53,19 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
+  std::map<int, double> lowerBounds;
+  lowerBounds.insert(std::make_pair(0, -1.0e16));
+  lowerBounds.insert(std::make_pair(1, -1.0e16));
+  std::map<int, double> upperBounds;
+  upperBounds.insert(std::make_pair(0, 1.0e16));
+  upperBounds.insert(std::make_pair(1, 1.0e16));
   std::vector<double> factors;
   factors.resize(2, 1.0);
   impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
   mesh::PtrMesh           dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                         timeWindowsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
+                         timeWindowsReused, filter, singularityLimit, dataIDs, lowerBounds, upperBounds, prec, alwaysBuildJacobian,
                          restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps);
 
   Eigen::VectorXd fcol1;
@@ -147,6 +153,12 @@ void testVIQNPP(bool exchangeSubsteps)
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
+  std::map<int, double> lowerBounds;
+  lowerBounds.insert(std::make_pair(0, -1.0e16));
+  lowerBounds.insert(std::make_pair(1, -1.0e16));
+  std::map<int, double> upperBounds;
+  upperBounds.insert(std::make_pair(0, 1.0e16));
+  upperBounds.insert(std::make_pair(1, 1.0e16));
   std::vector<double> factors;
   factors.resize(2, 1.0);
   acceleration::impl::PtrPreconditioner prec(new acceleration::impl::ConstantPreconditioner(factors));
@@ -157,7 +169,7 @@ void testVIQNPP(bool exchangeSubsteps)
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                        timeWindowsReused, filter, singularityLimit, dataIDs, prec);
+                        timeWindowsReused, filter, singularityLimit, dataIDs, lowerBounds, upperBounds, prec);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));

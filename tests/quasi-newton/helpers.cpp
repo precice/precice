@@ -202,4 +202,79 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
   }
 }
 
+void runTestQNBoundedValue(std::string const &config, TestContext const &context)
+{
+  std::string meshName, writeDataName, readDataName;
+
+  if (context.isNamed("SolverOne")) {
+    meshName      = "MeshOne";
+    writeDataName = "Data1";
+    readDataName  = "Data2";
+  } else {
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
+    meshName      = "MeshTwo";
+    writeDataName = "Data2";
+    readDataName  = "Data1";
+  }
+
+  precice::Participant interface(context.name, config, context.rank, context.size);
+
+  VertexID vertexIDs[2];
+
+  // meshes for rank 0 and rank 1, we use matching meshes for both participants
+  double positions0[4] = {1.0, 0.0, 1.0, 1.2};
+
+  if (context.isNamed("SolverOne")) {
+    if (context.isPrimary()) {
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
+    }
+  } else {
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
+    if (context.isPrimary()) {
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
+    }
+  }
+
+  interface.initialize();
+  double inValues[2]  = {0.1, 0.2};
+  double outValues[2] = {0.00, 0.00};
+
+  int iterations = 0;
+
+  while (interface.isCouplingOngoing()) {
+    if (interface.requiresWritingCheckpoint()) {
+    }
+
+    double preciceDt = interface.getMaxTimeStepSize();
+    interface.readData(meshName, readDataName, vertexIDs, preciceDt, inValues);
+
+    if (context.isNamed("SolverOne")) {
+      if (iterations == 0) {
+        inValues[0] = 0.9;
+        inValues[1] = -0.9;
+      }
+      for (int i = 0; i < 2; i++) {
+        outValues[i] = inValues[i]; // only pushes solution through
+      }
+    } else {
+      BOOST_TEST(inValues[0] >= -1.0);
+      BOOST_TEST(inValues[0] <= 1.0);
+      BOOST_TEST(inValues[1] >= -1.0);
+      BOOST_TEST(inValues[1] <= 1.0);
+
+      outValues[0] = sin(inValues[0] * inValues[1]);
+      outValues[1] = cos(inValues[0] * inValues[1]);
+    }
+
+    interface.writeData(meshName, writeDataName, vertexIDs, outValues);
+
+    interface.advance(1.0);
+
+    if (interface.requiresReadingCheckpoint()) {
+    }
+    iterations++;
+  }
+
+  interface.finalize();
+}
 #endif

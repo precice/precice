@@ -70,6 +70,8 @@ public:
       int                     filter,
       double                  singularityLimit,
       std::vector<int>        dataIDs,
+      std::map<int, double>   lowerBounds,
+      std::map<int, double>   upperBounds,
       impl::PtrPreconditioner preconditioner);
 
   /**
@@ -104,7 +106,16 @@ public:
    * Has to be called after every implicit coupling iteration.
    */
   virtual void performAcceleration(DataMap &cplData);
-
+  /**
+   * @brief Transform the bounded input data into the inf range.
+   */
+  virtual void projectFWInput(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, double> lowerBounds,
+                              std::map<int, double> upperBounds);
+  /**
+   * @brief Trandform the output data backward from inf to certain range.
+   */
+  virtual void projectBWInput(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, double> lowerBounds,
+                              std::map<int, double> upperBounds);
   /**
    * @brief Marks a iteration sequence as converged.
    *
@@ -215,6 +226,12 @@ protected:
    * and the corresponding (older) iteration is removed.
    */
   double _singularityLimit;
+
+  /// @brief store the lower limit for each dataID
+  std::map<int, double> _lowerBounds;
+
+  /// @brief store the upper limit for each dataID
+  std::map<int, double> _upperBounds;
 
   /** @brief Indices (of columns in W, V matrices) of 1st iterations of time windows.
    *

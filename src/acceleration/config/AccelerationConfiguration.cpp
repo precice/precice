@@ -44,6 +44,8 @@ AccelerationConfiguration::AccelerationConfiguration(
       ATTR_MESH("mesh"),
       ATTR_SCALING("scaling"),
       ATTR_VALUE("value"),
+      ATTR_MIN("lower-bound"),
+      ATTR_MAX("upper-bound"),
       ATTR_ENFORCE("enforce"),
       ATTR_SINGULARITYLIMIT("limit"),
       ATTR_TYPE("type"),
@@ -151,8 +153,12 @@ void AccelerationConfiguration::xmlTagCallback(
                     "Please remove the duplicated entry.",
                     dataName, meshName);
     }
-    _meshName      = callingTag.getStringAttributeValue(ATTR_MESH);
-    double scaling = 1.0;
+    _meshName = callingTag.getStringAttributeValue(ATTR_MESH);
+
+    double scaling    = 1.0;
+    double lowerBound = -1.0e16;
+    double upperBound = 1.0e16;
+
     if (_config.type == VALUE_IQNILS || _config.type == VALUE_IQNIMVJ) {
       scaling = callingTag.getDoubleAttributeValue(ATTR_SCALING);
     }
@@ -162,10 +168,23 @@ void AccelerationConfiguration::xmlTagCallback(
                   "Add \"{0}\" to the \"<mesh name={1}>\" tag, or change the data name in the acceleration scheme.",
                   dataName, _meshName);
 
+    if (callingTag.hasAttribute(ATTR_MIN)) {
+      lowerBound = callingTag.getDoubleAttributeValue(ATTR_MIN);
+    }
+    if (callingTag.hasAttribute(ATTR_MAX)) {
+      upperBound = callingTag.getDoubleAttributeValue(ATTR_MAX);
+    }
+
+    PRECICE_CHECK(lowerBound < upperBound,
+                  "Data with name \"{0}\" associated to mesh \"{1}\" has larger minimum value than maximum.",
+                  dataName, _meshName);
+
     const mesh::PtrMesh &mesh = _meshConfig->getMesh(_meshName);
     const mesh::PtrData &data = mesh->data(dataName);
     _config.dataIDs.push_back(data->getID());
     _config.scalings.insert(std::make_pair(data->getID(), scaling));
+    _config.lowerBounds.insert(std::make_pair(data->getID(), lowerBound));
+    _config.upperBounds.insert(std::make_pair(data->getID(), upperBound));
 
     _neededMeshes.push_back(_meshName);
   } else if (callingTag.getName() == TAG_INIT_RELAX) {
@@ -278,6 +297,8 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
+              _config.lowerBounds,
+              _config.upperBounds,
               _preconditioner));
     } else if (callingTag.getName() == VALUE_IQNIMVJ) {
 #ifndef PRECICE_NO_MPI
@@ -294,6 +315,8 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
+              _config.lowerBounds,
+              _config.upperBounds,
               _preconditioner,
               _config.alwaysBuildJacobian,
               _config.imvjRestartType,
@@ -331,9 +354,13 @@ void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
                              "To improve the performance of a parallel or a multi coupling schemes, "
                              "each data set can be manually scaled using this scaling factor with preconditioner type = \"constant\". For all other preconditioner types, the factor is ignored. "
                              "We recommend, however, to use an automatic scaling via a preconditioner.");
-  tagData.addAttribute(attrScaling);
+  XMLAttribute<double> attrLowerBound = makeXMLAttribute(ATTR_MIN, -1.0e16).setDocumentation("The lower bound of the data.");
+  XMLAttribute<double> attrUpperBound = makeXMLAttribute(ATTR_MAX, 1.0e16).setDocumentation("The upper bound of the data.");
   tagData.addAttribute(attrName);
   tagData.addAttribute(attrMesh);
+  tagData.addAttribute(attrScaling);
+  tagData.addAttribute(attrLowerBound);
+  tagData.addAttribute(attrUpperBound);
   tag.addSubtag(tagData);
 
   XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
@@ -387,9 +414,13 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                "To improve the performance of a parallel or a multi coupling schemes, "
                                "each data set can be manually scaled using this scaling factor with preconditioner type = \"constant\". For all other preconditioner types, the factor is ignored. "
                                "We recommend, however, to use an automatic scaling via a preconditioner.");
+    auto attrLowerBound = makeXMLAttribute(ATTR_MIN, -1.0e16).setDocumentation("The lower bound of the data");
+    auto attrUpperBound = makeXMLAttribute(ATTR_MAX, 1.0e16).setDocumentation("The upper bound of the data");
     tagData.addAttribute(attrScaling);
     tagData.addAttribute(attrName);
     tagData.addAttribute(attrMesh);
+    tagData.addAttribute(attrUpperBound);
+    tagData.addAttribute(attrLowerBound);
     tag.addSubtag(tagData);
 
     XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);

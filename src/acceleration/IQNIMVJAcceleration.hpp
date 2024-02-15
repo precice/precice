@@ -49,6 +49,8 @@ public:
       int                            filter,
       double                         singularityLimit,
       std::vector<int>               dataIDs,
+      std::map<int, double>          lowerBounds,
+      std::map<int, double>          upperBounds,
       const impl::PtrPreconditioner &preconditioner,
       bool                           alwaysBuildJacobian,
       int                            imvjRestartType,

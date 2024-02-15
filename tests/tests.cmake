@@ -78,6 +78,7 @@ target_sources(testprecice
     tests/quasi-newton/serial/DefaultConfig.cpp
     tests/quasi-newton/serial/TestQN1.cpp
     tests/quasi-newton/serial/TestQN10.cpp
+    tests/quasi-newton/serial/TestQN11.cpp
     tests/quasi-newton/serial/TestQN2.cpp
     tests/quasi-newton/serial/TestQN3.cpp
     tests/quasi-newton/serial/TestQN4.cpp

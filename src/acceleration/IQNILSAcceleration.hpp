@@ -33,6 +33,8 @@ public:
       int                     filter,
       double                  singularityLimit,
       std::vector<int>        dataIDs,
+      std::map<int, double>   lowerBounds,
+      std::map<int, double>   upperBounds,
       impl::PtrPreconditioner preconditioner);
 
   virtual ~IQNILSAcceleration() {}
