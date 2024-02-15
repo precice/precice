@@ -4,9 +4,7 @@
 namespace precice::cplscheme::impl {
 
 AbsoluteOrRelativeConvergenceMeasure::AbsoluteOrRelativeConvergenceMeasure(double absLimit, double relLimit)
-    : _convergenceLimitPercent(relLimit),
-      _convergenceLimit(absLimit)
-
+    : _convergenceLimit(absLimit), _convergenceLimitPercent(relLimit)
 {
   PRECICE_ASSERT(math::greater(_convergenceLimit, 0.0),
                  "Absolute convergence limit has to be greater than zero!");

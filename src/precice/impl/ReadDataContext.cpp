@@ -38,4 +38,31 @@ int ReadDataContext::getWaveformDegree() const
   return _providedData->getWaveformDegree();
 }
 
+void ReadDataContext::clearToDataFor(const cplscheme::ImplicitData &from)
+{
+  PRECICE_TRACE(getMeshName(), getDataName());
+  PRECICE_ASSERT(hasMapping());
+  for (auto &context : _mappingContexts) {
+    auto id = context.fromData->getID();
+    if (from.contains(id)) {
+      if (from.toKeep(id)) {
+        context.toData->timeStepsStorage().clearExceptLast();
+      } else {
+        context.toData->timeStepsStorage().clear();
+      }
+    }
+  }
+}
+
+void ReadDataContext::trimToDataAfterFor(const cplscheme::ImplicitData &from, double t)
+{
+  PRECICE_TRACE(getMeshName(), getDataName(), t);
+  PRECICE_ASSERT(hasMapping());
+  for (auto &context : _mappingContexts) {
+    if (from.contains(context.fromData->getID())) {
+      context.toData->timeStepsStorage().trimAfter(t);
+    }
+  }
+}
+
 } // namespace precice::impl

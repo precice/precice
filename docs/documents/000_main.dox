@@ -9,8 +9,10 @@ Refer to \ref precice::tooling for the tooling API.
 
 The API of further native bindings can be found here:
 
-- \ref preciceC.h "precicec" for the C bindings.
+- \ref preciceC.h "preciceC" for the C bindings.
 - \ref preciceFortran.hpp "preciceFortran" for the Fortran bindings.
+
+The detailed porting guides on https://precice.org/couple-your-code-porting-overview help you to port adapters between major versions of preCICE.
 
 # For Library Developers
 

@@ -101,6 +101,8 @@ target_sources(preciceCore
     src/cplscheme/CouplingData.hpp
     src/cplscheme/CouplingScheme.cpp
     src/cplscheme/CouplingScheme.hpp
+    src/cplscheme/ImplicitData.cpp
+    src/cplscheme/ImplicitData.hpp
     src/cplscheme/MultiCouplingScheme.cpp
     src/cplscheme/MultiCouplingScheme.hpp
     src/cplscheme/ParallelCouplingScheme.cpp
@@ -167,6 +169,8 @@ target_sources(preciceCore
     src/m2n/SharedPointer.hpp
     src/m2n/config/M2NConfiguration.cpp
     src/m2n/config/M2NConfiguration.hpp
+    src/mapping/AxialGeoMultiscaleMapping.cpp
+    src/mapping/AxialGeoMultiscaleMapping.hpp
     src/mapping/BarycentricBaseMapping.cpp
     src/mapping/BarycentricBaseMapping.hpp
     src/mapping/GinkgoRadialBasisFctSolver.hpp
@@ -189,6 +193,8 @@ target_sources(preciceCore
     src/mapping/RadialBasisFctBaseMapping.hpp
     src/mapping/RadialBasisFctMapping.hpp
     src/mapping/RadialBasisFctSolver.hpp
+    src/mapping/RadialGeoMultiscaleMapping.cpp
+    src/mapping/RadialGeoMultiscaleMapping.hpp
     src/mapping/SharedPointer.hpp
     src/mapping/config/MappingConfiguration.cpp
     src/mapping/config/MappingConfiguration.hpp

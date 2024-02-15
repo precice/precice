@@ -99,7 +99,7 @@ jobs:
       OMPI_MCA_rmaps_base_oversubscribe: 1
     steps:
       - name: Restore ccache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ccache
           key: precice-ccache-${{ runner.IMAGE }}-${{ matrix.CONFIG }}-${{ matrix.CXX }}-${{ matrix.TYPE }}
@@ -120,17 +120,17 @@ jobs:
         run: |
           cmake --version
           cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DPRECICE_FEATURE_GINKGO_MAPPING=${{ env.Ginkgo }} -DPRECICE_FEATURE_LIBBACKTRACE_STACKTRACES=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeCache
           path: build/CMakeCache.txt
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeLogs
           path: 'build/CMakeFiles/*.log'
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CompileCommands
@@ -148,7 +148,8 @@ jobs:
         env:
           CTEST_OUTPUT_ON_FAILURE: 1
           BOOST_TEST_LOG_LEVEL: all
-          OMPI_MCA_btl_tcp_if_include: "${{ contains(matrix.IMAGE, 'archlinux') && 'lo' || '' }}"
+          OMPI_MCA_btl_tcp_if_include: lo # required for arch
+          PSM3_HAL: loopback # required for fedora
         working-directory: build
         run: su -c "ctest" $PRECICE_USER
       - name: Coverage Report
@@ -157,9 +158,10 @@ jobs:
         run: |
           lcov --capture --directory . --output-file coverage.info
           lcov --remove coverage.info '/usr/*' "/opt/*" --output-file coverage.info # filter system-files and local-dependencies
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@v4
         with:
           files: ./build/coverage.info
+          token: ${{ secrets.CODECOV_TOKEN }}
         if: ${{ matrix.COVFLAGS }}
       - name: Check packages
         working-directory: build
@@ -167,7 +169,7 @@ jobs:
         run: |
           cpack
           lintian -i --suppress-tags control-file-has-bad-permissions *.deb
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} TestOutput

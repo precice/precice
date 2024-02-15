@@ -145,10 +145,7 @@
     project-to-input="true"
     vertices-per-cluster="10"
     relative-overlap="0.4"
-    polynomial="off"
-    x-dead="true"
-    y-dead="false"
-    z-dead="true">
+    polynomial="off">
     <executor:cpu />
     <basis-function:gaussian shape-parameter="0.3" />
   </mapping:rbf-pum-direct>

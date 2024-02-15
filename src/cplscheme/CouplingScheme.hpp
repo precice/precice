@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "com/SharedPointer.hpp"
+#include "cplscheme/ImplicitData.hpp"
 #include "precice/impl/Types.hpp"
 
 namespace precice {
@@ -226,6 +227,12 @@ public:
 
   /// Returns false if the scheme is implicit and hasn't converged
   virtual bool hasConverged() const = 0;
+
+  /// Returns true if any send data of the scheme requires substeps
+  virtual bool requiresSubsteps() const = 0;
+
+  /// Returns a vector of implicit data to receive in the next advance
+  virtual ImplicitData implicitDataToReceive() const = 0;
 };
 
 } // namespace cplscheme
