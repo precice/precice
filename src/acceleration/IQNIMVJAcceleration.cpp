@@ -340,13 +340,20 @@ void IQNIMVJAcceleration::buildWtil()
 
   for (int i = 0; i < _Wtil.cols(); i++) {
     Eigen::VectorXd colVecW = Eigen::VectorXd::Zero(_matrixV.rows());
+
     // keep track of how far we have filled the vector
     int pos = 0;
+
     for (int id : _dataIDs) {
 
-      double          endTime                               = _waveformW[id][i].maxStoredTime();
-      Eigen::VectorXd lastSample                            = _waveformW[id][i].sample(endTime);
-      colVecW(Eigen::seq(pos, pos + lastSample.size() - 1)) = lastSample;
+      double          endTime    = _waveformW[id][i].maxStoredTime();
+      Eigen::VectorXd lastSample = _waveformW[id][i].sample(endTime);
+
+      // update the correct part of colVecW
+      for (int j = 0; j < lastSample.size(); j++) {
+        colVecW(pos + j) = lastSample(j);
+      }
+
       pos += lastSample.size();
     }
     _Wtil.col(i) = colVecW - _Wtil.col(i);

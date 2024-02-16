@@ -106,6 +106,10 @@ void testIQNIMVJPP(bool exchangeSubsteps)
 
   data.begin()->second->values() << 10, 10, 10, 10;
 
+  // Update the waveform as well
+  displacements->setSampleAtTime(1, displacements->sample());
+  forces->setSampleAtTime(1, forces->sample());
+
   pp.performAcceleration(data);
 
   BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929695848558e-01));
