@@ -159,7 +159,18 @@ void IQNIMVJAcceleration::updateDifferenceMatrices(
         // Update matrix _Wtil = (W - J_prev*V) with newest information
 
         Eigen::VectorXd v = _matrixV.col(0);
-        Eigen::VectorXd w = _matrixW.col(0);
+
+        // Need to reconstruct the newest w vector from _waveformW
+        Eigen::VectorXd w = Eigen::VectorXd::Zero(_matrixV.rows());
+
+        // keep track of how far we have filled the vector
+        int pos = 0;
+        for (int id : _dataIDs) {
+          double          endTime                         = _waveformW[id][0].maxStoredTime();
+          Eigen::VectorXd lastSample                      = _waveformW[id][0].sample(endTime);
+          w(Eigen::seq(pos, pos + lastSample.size() - 1)) = lastSample;
+          pos += lastSample.size();
+        }
 
         // here, we check for _Wtil.cols() as the matrices V, W need to be updated before hand
         // and thus getLSSystemCols() does not yield the correct result.
@@ -324,7 +335,22 @@ void IQNIMVJAcceleration::buildWtil()
 
   // W_til = (W-J_inv_n*V) = (W-V_tilde)
   _Wtil *= -1.;
-  _Wtil = _Wtil + _matrixW;
+
+  // The W matrix is no longer stored as a matrix in the base class but instead as a map from the DataIDs to the k waveforms in W so we need to assemble W matrix
+
+  for (int i = 0; i < _Wtil.cols(); i++) {
+    Eigen::VectorXd colVecW = Eigen::VectorXd::Zero(_matrixV.rows());
+    // keep track of how far we have filled the vector
+    int pos = 0;
+    for (int id : _dataIDs) {
+
+      double          endTime                               = _waveformW[id][i].maxStoredTime();
+      Eigen::VectorXd lastSample                            = _waveformW[id][i].sample(endTime);
+      colVecW(Eigen::seq(pos, pos + lastSample.size() - 1)) = lastSample;
+      pos += lastSample.size();
+    }
+    _Wtil.col(i) = colVecW - _Wtil.col(i);
+  }
 
   _resetLS = false;
   //  e.stop(true);

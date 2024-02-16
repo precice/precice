@@ -48,8 +48,8 @@
     <relative-convergence-measure limit="1e-13" data="Data2" mesh="MeshOne" />
     <acceleration:IQN-ILS>
       <data name="Data2" mesh="MeshOne" />
-      <initial-relaxation value="0.1" enforce="true" />
-      <max-used-iterations value="2" />
+      <initial-relaxation value="0.1" />
+      <max-used-iterations value="4" />
       <time-windows-reused value="0" />
     </acceleration:IQN-ILS>
   </coupling-scheme:serial-implicit>

@@ -41,8 +41,6 @@ IQNILSAcceleration::IQNILSAcceleration(
 void IQNILSAcceleration::initialize(
     const DataMap &cplData)
 {
-  _supportWaveform = true;
-
   //initialize x_tildes for secondary data
   for (int id : _secondaryDataIDs) {
     precice::time::Storage localCopy = cplData.at(id)->timeStepsStorage();
@@ -193,7 +191,6 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData)
     std::vector<precice::time::Storage> Wlist = _waveformW[id];
     //skip the first sample since it always contains the initial data that never changes
     for (auto &stample : cplData.at(id)->stamples()) {
-
       cplData.at(id)->values() = stample.sample.values;
       double timestamp         = stample.timestamp;
       for (int i = 0; i < c.size(); i++) {
@@ -264,7 +261,7 @@ void IQNILSAcceleration::specializedIterationsConverged(
       for (int id : _secondaryDataIDs) {
         PRECICE_ASSERT(_secondaryWaveformW.at(id).size() > toRemove, _secondaryWaveformW.at(id).size(), toRemove, id);
         for (int i = 0; i < toRemove; i++) {
-          _secondaryWaveformW[id].erase(_secondaryWaveformW[id].end() - 1);
+          _secondaryWaveformW[id].erase(_secondaryWaveformW[id].end());
         }
       }
     }

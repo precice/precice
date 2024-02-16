@@ -34,7 +34,7 @@
  *
  * The third possibility was to separate the approximation of the Jacobian from
  * the common stuff like handling V,W matrices in the acceleration.
- * Here, we have a class QNAcceleration that handles the V,W stuff an d the basic
+ * Here, we have a class QNAcceleration that handles the V,W stuff and the basic
  * scheme of the QN update. Furthermore we have a base class (or rather interface)
  * JacobianApproximation with sub classes IQNIMVJAPX and IQNAPX that handle all the
  * specialized stuff like Jacobian approximation, handling of secondary data etc.
@@ -198,18 +198,10 @@ protected:
   /// @brief Stores residual deltas. todo remove when waveforms are supported by all Quasi Newton schemes
   Eigen::MatrixXd _matrixV;
 
-  /// @brief Stores x tilde deltas, where x tilde are values computed by solvers. todo remove when waveforms are supported by all Quasi Newton schemes
-  Eigen::MatrixXd _matrixW;
-
   /** @brief Stores the waveform of x tilde deltas of datas in _dataIDs, which are computed by the solvers.
   * The waveform are stored in a map which maps the DataIds to a vector containing the waveform iterates that are used in the QN acceleration
   */
   std::map<int, std::vector<precice::time::Storage>> _waveformW;
-
-  /* @brief Stores the waveform of the residual deltas and is only used for the full IQNILSA acceleration, where all of the time steps are used in V_k
-  * The waveform are stored in a map which maps the DataIds to a vector containing the waveform iterates that are used in the QN acceleration
-  */
-  std::map<int, std::vector<precice::time::Storage>> _waveformV;
 
   /// @brief Stores the current QR decomposition ov _matrixV, can be updated via deletion/insertion of columns
   impl::QRFactorization _qrV;
@@ -278,9 +270,6 @@ protected:
 
   int its = 0, tWindows = 0;
 
-  // Bool to switch to the waveform variant of QN for the acceleration schemes that support it
-  bool _supportWaveform = false;
-
   /// @brief Concatenation of the last time step of all coupling data involved in the QN system.
   Eigen::VectorXd _values;
 
@@ -308,17 +297,14 @@ private:
    *  are empty -- in this case restore V and W with time window t-2.
    */
   Eigen::MatrixXd _matrixVBackup;
-  Eigen::MatrixXd _matrixWBackup;
   std::deque<int> _matrixColsBackup;
 
-  /** @brief backup of the V,W waveform data structures. Needed for the skipping of
+  /** @brief backup of the W waveform data structure. Needed for the skipping of
  *  initial relaxation, if previous time window converged within one iteration i.e., V and W
  *  are empty -- in this case restore V and W with time window t-2.
  *  The waveform are stored in a map which maps the DataIds to a vector containing the waveform iterates that are used in the QN acceleration
  */
-
   std::map<int, std::vector<precice::time::Storage>> _waveformWBackup;
-  std::map<int, std::vector<precice::time::Storage>> _waveformVBackup;
 
   /// Number of filtered out columns in this time window
   int _nbDelCols = 0;

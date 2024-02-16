@@ -50,7 +50,7 @@
       <data name="Data2" mesh="MeshOne" />
       <filter type="QR2" limit="1e-1" />
       <initial-relaxation value="1.0" />
-      <max-used-iterations value="10" />
+      <max-used-iterations value="5" />
       <time-windows-reused value="0" />
     </acceleration:IQN-ILS>
   </coupling-scheme:serial-implicit>
