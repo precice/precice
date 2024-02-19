@@ -566,9 +566,9 @@ void BaseQNAcceleration::iterationsConverged(
     for (int i = 0; i < toRemove; i++) {
       utils::removeColumnFromMatrix(_matrixV, _matrixV.cols() - 1);
       for (int id : _dataIDs) {
-
-        if (!_waveformW[id].empty())
+        if (!_waveformW.empty()) {
           _waveformW[id].erase(_waveformW[id].end());
+        }
       }
       // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
       _qrV.popBack();
