@@ -566,10 +566,9 @@ void BaseQNAcceleration::iterationsConverged(
     for (int i = 0; i < toRemove; i++) {
       utils::removeColumnFromMatrix(_matrixV, _matrixV.cols() - 1);
       for (int id : _dataIDs) {
-        std::cout << "\n *********** \n";
-        std::cout << _waveformW[id].size();
-        std::cout << "\n *********** \n";
-        _waveformW[id].erase(_waveformW[id].end());
+
+        if (!_waveformW[id].empty())
+          _waveformW[id].erase(_waveformW[id].end());
       }
       // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
       _qrV.popBack();
@@ -645,7 +644,7 @@ int BaseQNAcceleration::getLSSystemCols() const
   }
   if (_hasNodesOnInterface) {
     PRECICE_ASSERT(cols == _matrixV.cols(), cols, _matrixV.cols(), _matrixCols, _qrV.cols());
-    PRECICE_ASSERT((cols == 0 && _waveformW.empty()) || cols == _waveformW.at(_dataIDs.front()).size(), cols);
+    PRECICE_ASSERT((cols == 0 && _waveformW.empty()) || (cols == _waveformW.at(_dataIDs.front()).size()), cols);
   }
 
   return cols;
