@@ -521,12 +521,16 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
     ranks = df.select("rank").unique()
 
     if len(ranks) == 1:
-        joined = df.group_by("eid").agg(
-            pl.sum("dur").alias("sum"),
-            pl.count("dur").alias("count"),
-            pl.mean("dur").alias("mean"),
-            pl.min("dur").alias("min"),
-            pl.max("dur").alias("max"),
+        joined = (
+            df.group_by("eid")
+            .agg(
+                pl.sum("dur").alias("sum"),
+                pl.count("dur").alias("count"),
+                pl.mean("dur").alias("mean"),
+                pl.min("dur").alias("min"),
+                pl.max("dur").alias("max"),
+            )
+            .sort("eid")
         )
     else:
         ldf = df.lazy()
@@ -553,23 +557,27 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
             )
 
         ldf = df.lazy()
-        joined = pl.concat(
-            [
-                (
-                    ldf.filter(pl.col("rank") == rank)
-                    .group_by("eid")
-                    .agg(
-                        pl.sum("dur").alias(f"R{rank}:sum"),
-                        pl.count("dur").alias(f"R{rank}:count"),
-                        pl.mean("dur").alias(f"R{rank}:mean"),
-                        pl.min("dur").alias(f"R{rank}:min"),
-                        pl.max("dur").alias(f"R{rank}:max"),
+        joined = (
+            pl.concat(
+                [
+                    (
+                        ldf.filter(pl.col("rank") == rank)
+                        .group_by("eid")
+                        .agg(
+                            pl.sum("dur").alias(f"R{rank}:sum"),
+                            pl.count("dur").alias(f"R{rank}:count"),
+                            pl.mean("dur").alias(f"R{rank}:mean"),
+                            pl.min("dur").alias(f"R{rank}:min"),
+                            pl.max("dur").alias(f"R{rank}:max"),
+                        )
                     )
-                )
-                for rank in ranksToPrint
-            ],
-            how="align",
-        ).collect()
+                    for rank in ranksToPrint
+                ],
+                how="align",
+            )
+            .sort("eid")
+            .collect()
+        )
 
     printWide(joined)
 
