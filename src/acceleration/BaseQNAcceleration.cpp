@@ -480,6 +480,9 @@ void BaseQNAcceleration::splitCouplingData(
       valuesPart(i) = _values(i + offset);
     }
     offset += size;
+    // Update the coupling data of the last sample as well
+    double lastTimeStep = cplData.at(id)->timeStepsStorage().maxStoredTime();
+    cplData.at(id)->setSampleAtTime(lastTimeStep, cplData.at(id)->sample());
   }
 }
 
