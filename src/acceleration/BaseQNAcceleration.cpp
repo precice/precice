@@ -565,7 +565,18 @@ void BaseQNAcceleration::iterationsConverged(
     // remove columns
     for (int i = 0; i < toRemove; i++) {
       utils::removeColumnFromMatrix(_matrixV, _matrixV.cols() - 1);
+
       for (int id : _dataIDs) {
+
+        std::cout << "\n ******************* \n";
+        std::cout << _waveformW.empty();
+        std::cout << "\n that would be surprising \n";
+        std::cout << _waveformW.at(id).empty();
+        std::cout << "\n ******weird************* \n";
+        std::cout << _waveformW.at(id).size();
+        std::cout << "\n All passed \n";
+        std::cout << "\n ******************* \n";
+
         if (!_waveformW.empty()) {
           _waveformW[id].erase(_waveformW[id].end());
         }
