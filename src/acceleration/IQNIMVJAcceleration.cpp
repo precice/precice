@@ -166,9 +166,12 @@ void IQNIMVJAcceleration::updateDifferenceMatrices(
         // keep track of how far we have filled the vector
         int pos = 0;
         for (int id : _dataIDs) {
-          double          endTime                         = _waveformW[id][0].maxStoredTime();
-          Eigen::VectorXd lastSample                      = _waveformW[id][0].sample(endTime);
-          w(Eigen::seq(pos, pos + lastSample.size() - 1)) = lastSample;
+          double          endTime    = _waveformW[id][0].maxStoredTime();
+          Eigen::VectorXd lastSample = _waveformW[id][0].sample(endTime);
+
+          for (int j = 0; j < lastSample.size(); j++) {
+            w(pos + j) = lastSample(j);
+          }
           pos += lastSample.size();
         }
 
