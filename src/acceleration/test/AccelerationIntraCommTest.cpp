@@ -748,6 +748,11 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 
   pp.performAcceleration(data);
 
+  // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
+  for (auto &pair : data) {
+    pair.second->setSampleAtTime(1, pair.second->sample());
+  }
+
   // underrelaxation, first iteration
 
   if (context.isPrimary()) { // Primary
@@ -816,6 +821,11 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 
   // QN- Update, 2. iteration
   pp.performAcceleration(data);
+
+  // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
+  for (auto &pair : data) {
+    pair.second->setSampleAtTime(1, pair.second->sample());
+  }
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
@@ -891,6 +901,11 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
   // QN- Update, 3. iteration
   pp.performAcceleration(data);
 
+  // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
+  for (auto &pair : data) {
+    pair.second->setSampleAtTime(1, pair.second->sample());
+  }
+
   if (context.isPrimary()) { // Primary
 
   } else if (context.isRank(1)) { // SecondaryRank1
@@ -960,6 +975,11 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
   // QN- Update, 4. iteration
   pp.performAcceleration(data);
 
+  // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
+  for (auto &pair : data) {
+    pair.second->setSampleAtTime(1, pair.second->sample());
+  }
+
   if (context.isPrimary()) { // Primary
 
   } else if (context.isRank(1)) { // SecondaryRank1
@@ -1028,6 +1048,11 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 
   // QN- Update, 5. iteratidataon
   pp.performAcceleration(data);
+
+  // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
+  for (auto &pair : data) {
+    pair.second->setSampleAtTime(1, pair.second->sample());
+  }
 
   if (context.isPrimary()) { // Primary
 
