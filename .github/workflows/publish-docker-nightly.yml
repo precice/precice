@@ -1,4 +1,4 @@
-name: Nightly docker release
+name: Publish nightly docker release
 # Builds the precice/precice:nightly image
 on:
   workflow_dispatch:

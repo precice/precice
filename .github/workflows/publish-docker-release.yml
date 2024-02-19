@@ -1,4 +1,4 @@
-name: Request Docker release
+name: Publish Docker release
 # This is a workflow to manually request an ubuntu package for an existing release.
 # To use:
 # - Go to the GitHub repository
