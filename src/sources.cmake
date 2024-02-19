@@ -242,38 +242,6 @@ target_sources(preciceCore
     src/partition/ReceivedPartition.cpp
     src/partition/ReceivedPartition.hpp
     src/partition/SharedPointer.hpp
-    src/precice/Participant.cpp
-    src/precice/Participant.hpp
-    src/precice/Tooling.cpp
-    src/precice/Tooling.hpp
-    src/precice/Types.hpp
-    src/precice/config/Configuration.cpp
-    src/precice/config/Configuration.hpp
-    src/precice/config/ParticipantConfiguration.cpp
-    src/precice/config/ParticipantConfiguration.hpp
-    src/precice/config/SharedPointer.hpp
-    src/precice/impl/CommonErrorMessages.hpp
-    src/precice/impl/DataContext.cpp
-    src/precice/impl/DataContext.hpp
-    src/precice/impl/MappingContext.hpp
-    src/precice/impl/MeshContext.hpp
-    src/precice/impl/ParticipantImpl.cpp
-    src/precice/impl/ParticipantImpl.hpp
-    src/precice/impl/ParticipantState.cpp
-    src/precice/impl/ParticipantState.hpp
-    src/precice/impl/ReadDataContext.cpp
-    src/precice/impl/ReadDataContext.hpp
-    src/precice/impl/SharedPointer.hpp
-    src/precice/impl/Types.hpp
-    src/precice/impl/ValidationMacros.hpp
-    src/precice/impl/WatchIntegral.cpp
-    src/precice/impl/WatchIntegral.hpp
-    src/precice/impl/WatchPoint.cpp
-    src/precice/impl/WatchPoint.hpp
-    src/precice/impl/WriteDataContext.cpp
-    src/precice/impl/WriteDataContext.hpp
-    src/precice/precice.hpp
-    src/precice/span.hpp
     src/profiling/Event.cpp
     src/profiling/Event.hpp
     src/profiling/EventUtils.cpp
@@ -344,9 +312,4 @@ target_sources(preciceCore
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/Version.h
-    src/precice/Participant.hpp
-    src/precice/Tooling.hpp
-    src/precice/Types.hpp
-    src/precice/precice.hpp
-    src/precice/span.hpp
     )
