@@ -1,0 +1,4 @@
+#include "precice/impl/versions.hpp"
+
+const char * const precice::preciceRevision = "@preCICE_REVISION@";
+const char * const precice::versionInformation = "@preCICE_VERSION@;@preCICE_REVISION@;@preCICE_VERSION_INFORMATION@";

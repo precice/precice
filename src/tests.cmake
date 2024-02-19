@@ -72,6 +72,13 @@ target_sources(testprecice
     src/partition/tests/ProvidedPartitionTest.cpp
     src/partition/tests/ReceivedPartitionTest.cpp
     src/partition/tests/fixtures.hpp
+    src/precice/tests/DataContextTest.cpp
+    src/precice/tests/ParallelTests.cpp
+    src/precice/tests/SpanTests.cpp
+    src/precice/tests/ToolingTests.cpp
+    src/precice/tests/VersioningTests.cpp
+    src/precice/tests/WatchIntegralTest.cpp
+    src/precice/tests/WatchPointTest.cpp
     src/query/tests/RTreeAdapterTests.cpp
     src/query/tests/RTreeTests.cpp
     src/testing/DataContextFixture.cpp
@@ -81,7 +88,6 @@ target_sources(testprecice
     src/testing/ParallelCouplingSchemeFixture.hpp
     src/testing/SerialCouplingSchemeFixture.cpp
     src/testing/SerialCouplingSchemeFixture.hpp
-    src/testing/SourceLocation.hpp
     src/testing/TestContext.cpp
     src/testing/TestContext.hpp
     src/testing/Testing.cpp
