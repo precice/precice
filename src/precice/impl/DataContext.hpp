@@ -78,9 +78,14 @@ public:
   bool hasGradient() const;
 
   /**
-   * @brief Perform the mapping for all mapping contexts and the corresponding data context (from and to data)
+   * @brief Perform the mapping for mapping contexts and the corresponding data context (from and to data)
+   *
+   * @param[in] after only map samples after this optional time
+   * @param[in] skipZero set output sample to zero if the input sample is zero too
+   *
+   * @return the number of performed mappings
    */
-  void mapData();
+  int mapData(std::optional<double> after = std::nullopt, bool skipZero = false);
 
   /**
    * @brief Adds a MappingContext and the MeshContext required by the mapping to the corresponding DataContext data structures.

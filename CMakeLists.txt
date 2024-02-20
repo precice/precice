@@ -685,11 +685,16 @@ else()
 endif()
 
 # Configure the pkg-config file for the binary directory
+set(_precice_bindings "")
+if (PRECICE_BINDINGS_C)
+  set(_precice_bindings "-I${PROJECT_SOURCE_DIR}/extras/bindings/c/include")
+endif()
 configure_file(
   "${PROJECT_SOURCE_DIR}/cmake/binary.pc.in"
   "libprecice.pc"
   @ONLY
   )
+unset(_precice_bindings)
 
 # Configure the pkg-config file for the installation
 configure_file(

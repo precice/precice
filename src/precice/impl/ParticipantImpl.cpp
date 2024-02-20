@@ -322,13 +322,13 @@ void ParticipantImpl::initialize()
     context.storeBufferedData(time);
   }
 
-  mapWrittenData();
+  mapInitialWrittenData();
   performDataActions({action::Action::WRITE_MAPPING_POST});
 
   PRECICE_DEBUG("Initialize coupling schemes");
   _couplingScheme->initialize(time, timeWindow);
 
-  mapReadData();
+  mapInitialReadData();
   performDataActions({action::Action::READ_MAPPING_POST});
 
   PRECICE_DEBUG("Plot output");
@@ -376,6 +376,7 @@ void ParticipantImpl::advance(
   // Update the coupling scheme time state. Necessary to get correct remainder.
   const bool   isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
   const double timeSteppedTo = _couplingScheme->getTime();
+  const auto   dataToReceive = _couplingScheme->implicitDataToReceive();
 
   handleDataBeforeAdvance(isAtWindowEnd, timeSteppedTo);
 
@@ -385,9 +386,12 @@ void ParticipantImpl::advance(
   const double timeAfterAdvance   = _couplingScheme->getTime();
   const bool   timeWindowComplete = _couplingScheme->isTimeWindowComplete();
 
-  handleDataAfterAdvance(isAtWindowEnd, timeWindowComplete, timeSteppedTo, timeAfterAdvance);
+  handleDataAfterAdvance(isAtWindowEnd, timeWindowComplete, timeSteppedTo, timeAfterAdvance, dataToReceive);
 
   PRECICE_INFO(_couplingScheme->printCouplingState());
+
+  PRECICE_DEBUG("Mapped {} samples in write mappings and {} samples in read mappings",
+                _executedWriteMappings, _executedReadMappings);
 
   _meshLock.lockAll();
 
@@ -398,37 +402,48 @@ void ParticipantImpl::advance(
 
 void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo)
 {
-  samplizeWriteData(timeSteppedTo);
+  if (reachedTimeWindowEnd || _couplingScheme->requiresSubsteps()) {
+    samplizeWriteData(timeSteppedTo);
+  }
+  resetWrittenData();
+
+  // Reset mapping counters here to cover subcycling
+  _executedReadMappings  = 0;
+  _executedWriteMappings = 0;
 
   if (reachedTimeWindowEnd) {
-    mapWrittenData();
+    mapWrittenData(_couplingScheme->getTimeWindowStart());
     performDataActions({action::Action::WRITE_MAPPING_POST});
   }
 }
 
-void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance)
+void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance, const cplscheme::ImplicitData &receivedData)
 {
   if (!reachedTimeWindowEnd) {
     // We are subcycling
     return;
   }
 
+  if (isTimeWindowComplete) {
+    // Move to next time window
+    PRECICE_ASSERT(math::greaterEquals(timeAfterAdvance, timeSteppedTo), "We must have stayed or moved forwards in time (min-time-step-size).", timeAfterAdvance, timeSteppedTo);
+
+    // As we move forward, there may now be old samples lying around
+    trimOldDataBefore(_couplingScheme->getTimeWindowStart());
+  } else {
+    // We are iterating
+    PRECICE_ASSERT(math::greater(timeSteppedTo, timeAfterAdvance), "We must have moved back in time!");
+
+    trimSendDataAfter(timeAfterAdvance);
+  }
+
   if (reachedTimeWindowEnd) {
+    trimReadMappedData(timeAfterAdvance, isTimeWindowComplete, receivedData);
     mapReadData();
-    // FIXME: the actions timing for read mappings doesn't make sense after
     performDataActions({action::Action::READ_MAPPING_POST});
   }
 
-  handleExports();
-
   if (isTimeWindowComplete) {
-    // Move to next time window
-    PRECICE_ASSERT(math::greaterEquals(timeAfterAdvance, timeSteppedTo), "We must have stayed or moved forwards in time (min-time-step-size).");
-
-    // As we move forward, there may now be old samples lying around
-    // We know that timeAfterAdvance is the start time of the time window
-    trimOldDataBefore(timeAfterAdvance);
-
     // Reset initial guesses for iterative mappings
     for (auto &context : _accessor->readDataContexts()) {
       context.resetInitialGuesses();
@@ -436,13 +451,9 @@ void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isT
     for (auto &context : _accessor->writeDataContexts()) {
       context.resetInitialGuesses();
     }
-    return;
   }
 
-  // We are iterating
-  PRECICE_ASSERT(math::greater(timeSteppedTo, timeAfterAdvance), "We must have moved back in time!");
-
-  trimSendDataAfter(timeAfterAdvance);
+  handleExports();
 }
 
 void ParticipantImpl::samplizeWriteData(double time)
@@ -451,7 +462,6 @@ void ParticipantImpl::samplizeWriteData(double time)
   for (auto &context : _accessor->writeDataContexts()) {
     context.storeBufferedData(time);
   }
-  resetWrittenData();
 }
 
 void ParticipantImpl::trimOldDataBefore(double time)
@@ -553,7 +563,8 @@ double ParticipantImpl::getMaxTimeStepSize() const
   const double nextTimeStepSize = _couplingScheme->getNextTimeStepMaxSize();
   // PRECICE_ASSERT(!math::equals(nextTimeStepSize, 0.0), nextTimeStepSize); // @todo requires https://github.com/precice/precice/issues/1904
   // PRECICE_ASSERT(math::greater(nextTimeStepSize, 0.0), nextTimeStepSize); // @todo requires https://github.com/precice/precice/issues/1904
-  if (not math::greater(nextTimeStepSize, 0.0, 100 * math::NUMERICAL_ZERO_DIFFERENCE)) {
+  if (isCouplingOngoing() &&                                                             // safeguard needed because _couplingScheme->getNextTimeStepMaxSize() returns 0, if not isCouplingOngoing()
+      not math::greater(nextTimeStepSize, 0.0, 100 * math::NUMERICAL_ZERO_DIFFERENCE)) { // actual case where we want to warn the user
     PRECICE_WARN("preCICE just returned a maximum time step size of {}. Such a small value can happen if you use many substeps per time window over multiple time windows due to added-up differences of machine precision.", nextTimeStepSize);
   }
   return nextTimeStepSize;
@@ -640,7 +651,7 @@ void ParticipantImpl::resetMesh(
   context.mesh->clear();
 }
 
-int ParticipantImpl::setMeshVertex(
+VertexID ParticipantImpl::setMeshVertex(
     std::string_view              meshName,
     ::precice::span<const double> position)
 {
@@ -697,19 +708,19 @@ void ParticipantImpl::setMeshVertices(
 
 void ParticipantImpl::setMeshEdge(
     std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID)
+    VertexID         first,
+    VertexID         second)
 {
-  PRECICE_TRACE(meshName, firstVertexID, secondVertexID);
+  PRECICE_TRACE(meshName, first, second);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    mesh::Vertex &v0 = mesh->vertices()[firstVertexID];
-    mesh::Vertex &v1 = mesh->vertices()[secondVertexID];
+    PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
+    PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
+    mesh::Vertex &v0 = mesh->vertices()[first];
+    mesh::Vertex &v1 = mesh->vertices()[second];
     mesh->createEdge(v0, v1);
   }
 }
@@ -750,32 +761,32 @@ void ParticipantImpl::setMeshEdges(
 
 void ParticipantImpl::setMeshTriangle(
     std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID,
-    int              thirdVertexID)
+    VertexID         first,
+    VertexID         second,
+    VertexID         third)
 {
-  PRECICE_TRACE(meshName, firstVertexID,
-                secondVertexID, thirdVertexID);
+  PRECICE_TRACE(meshName, first,
+                second, third);
 
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(firstVertexID, secondVertexID, thirdVertexID)),
+    PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
+    PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
+    PRECICE_CHECK(mesh->isValidVertexID(third), errorInvalidVertexID(third));
+    PRECICE_CHECK(utils::unique_elements(utils::make_array(first, second, third)),
                   "setMeshTriangle() was called with repeated Vertex IDs ({}, {}, {}).",
-                  firstVertexID, secondVertexID, thirdVertexID);
+                  first, second, third);
     mesh::Vertex *vertices[3];
-    vertices[0] = &mesh->vertices()[firstVertexID];
-    vertices[1] = &mesh->vertices()[secondVertexID];
-    vertices[2] = &mesh->vertices()[thirdVertexID];
+    vertices[0] = &mesh->vertices()[first];
+    vertices[1] = &mesh->vertices()[second];
+    vertices[2] = &mesh->vertices()[third];
     PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
                                                            vertices[1]->getCoords(), vertices[2]->getCoords())),
                   "setMeshTriangle() was called with vertices located at identical coordinates (IDs: {}, {}, {}).",
-                  firstVertexID, secondVertexID, thirdVertexID);
+                  first, second, third);
     mesh::Edge *edges[3];
     edges[0] = &mesh->createEdge(*vertices[0], *vertices[1]);
     edges[1] = &mesh->createEdge(*vertices[1], *vertices[2]);
@@ -824,13 +835,13 @@ void ParticipantImpl::setMeshTriangles(
 
 void ParticipantImpl::setMeshQuad(
     std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID,
-    int              thirdVertexID,
-    int              fourthVertexID)
+    VertexID         first,
+    VertexID         second,
+    VertexID         third,
+    VertexID         fourth)
 {
-  PRECICE_TRACE(meshName, firstVertexID,
-                secondVertexID, thirdVertexID, fourthVertexID);
+  PRECICE_TRACE(meshName, first,
+                second, third, fourth);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshQuad is only possible for 3D meshes."
@@ -839,12 +850,12 @@ void ParticipantImpl::setMeshQuad(
     PRECICE_ASSERT(context.mesh);
     mesh::Mesh &mesh = *(context.mesh);
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh.isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(mesh.isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    PRECICE_CHECK(mesh.isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
-    PRECICE_CHECK(mesh.isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
+    PRECICE_CHECK(mesh.isValidVertexID(first), errorInvalidVertexID(first));
+    PRECICE_CHECK(mesh.isValidVertexID(second), errorInvalidVertexID(second));
+    PRECICE_CHECK(mesh.isValidVertexID(third), errorInvalidVertexID(third));
+    PRECICE_CHECK(mesh.isValidVertexID(fourth), errorInvalidVertexID(fourth));
 
-    auto vertexIDs = utils::make_array(firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+    auto vertexIDs = utils::make_array(first, second, third, fourth);
     PRECICE_CHECK(utils::unique_elements(vertexIDs), "The four vertex ID's are not unique. Please check that the vertices that form the quad are correct.");
 
     auto coords = mesh::coordsFor(mesh, vertexIDs);
@@ -939,12 +950,12 @@ void ParticipantImpl::setMeshQuads(
 
 void ParticipantImpl::setMeshTetrahedron(
     std::string_view meshName,
-    int              firstVertexID,
-    int              secondVertexID,
-    int              thirdVertexID,
-    int              fourthVertexID)
+    VertexID         first,
+    VertexID         second,
+    VertexID         third,
+    VertexID         fourth)
 {
-  PRECICE_TRACE(meshName, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID);
+  PRECICE_TRACE(meshName, first, second, third, fourth);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
   PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes."
@@ -952,14 +963,14 @@ void ParticipantImpl::setMeshTetrahedron(
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(firstVertexID), errorInvalidVertexID(firstVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(secondVertexID), errorInvalidVertexID(secondVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(thirdVertexID), errorInvalidVertexID(thirdVertexID));
-    PRECICE_CHECK(mesh->isValidVertexID(fourthVertexID), errorInvalidVertexID(fourthVertexID));
-    mesh::Vertex &A = mesh->vertices()[firstVertexID];
-    mesh::Vertex &B = mesh->vertices()[secondVertexID];
-    mesh::Vertex &C = mesh->vertices()[thirdVertexID];
-    mesh::Vertex &D = mesh->vertices()[fourthVertexID];
+    PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
+    PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
+    PRECICE_CHECK(mesh->isValidVertexID(third), errorInvalidVertexID(third));
+    PRECICE_CHECK(mesh->isValidVertexID(fourth), errorInvalidVertexID(fourth));
+    mesh::Vertex &A = mesh->vertices()[first];
+    mesh::Vertex &B = mesh->vertices()[second];
+    mesh::Vertex &C = mesh->vertices()[third];
+    mesh::Vertex &D = mesh->vertices()[fourth];
 
     mesh->createTetrahedron(A, B, C, D);
   }
@@ -1384,14 +1395,56 @@ void ParticipantImpl::computeMappings(std::vector<MappingContext> &contexts, con
   }
 }
 
-void ParticipantImpl::mapWrittenData()
+void ParticipantImpl::mapInitialWrittenData()
+{
+  PRECICE_TRACE();
+  computeMappings(_accessor->writeMappingContexts(), "write");
+  for (auto &context : _accessor->writeDataContexts()) {
+    if (context.hasMapping()) {
+      PRECICE_DEBUG("Map initial write data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
+      _executedWriteMappings += context.mapData(std::nullopt, true);
+    }
+  }
+}
+
+void ParticipantImpl::mapWrittenData(std::optional<double> after)
 {
   PRECICE_TRACE();
   computeMappings(_accessor->writeMappingContexts(), "write");
   for (auto &context : _accessor->writeDataContexts()) {
     if (context.hasMapping()) {
       PRECICE_DEBUG("Map write data \"{}\" from mesh \"{}\"", context.getDataName(), context.getMeshName());
-      context.mapData();
+      _executedWriteMappings += context.mapData(after);
+    }
+  }
+}
+
+void ParticipantImpl::trimReadMappedData(double startOfTimeWindow, bool isTimeWindowComplete, const cplscheme::ImplicitData &fromData)
+{
+  PRECICE_TRACE();
+  for (auto &context : _accessor->readDataContexts()) {
+    if (context.hasMapping()) {
+      if (isTimeWindowComplete) {
+        // For serial implicit second, we need to discard everything before startOfTimeWindow to preserve the time window start
+        // For serial implicit first, we need to discard everything as everything is new
+        // For parallel implicit, we need to discard everything as everything is new
+        context.clearToDataFor(fromData);
+      } else {
+        context.trimToDataAfterFor(fromData, startOfTimeWindow);
+      }
+    }
+  }
+}
+
+void ParticipantImpl::mapInitialReadData()
+{
+  PRECICE_TRACE();
+  computeMappings(_accessor->readMappingContexts(), "read");
+  for (auto &context : _accessor->readDataContexts()) {
+    if (context.hasMapping()) {
+      PRECICE_DEBUG("Map initial read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
+      // We always ensure that all read data was mapped
+      _executedReadMappings += context.mapData(std::nullopt, true);
     }
   }
 }
@@ -1403,7 +1456,8 @@ void ParticipantImpl::mapReadData()
   for (auto &context : _accessor->readDataContexts()) {
     if (context.hasMapping()) {
       PRECICE_DEBUG("Map read data \"{}\" to mesh \"{}\"", context.getDataName(), context.getMeshName());
-      context.mapData();
+      // We always ensure that all read data was mapped
+      _executedReadMappings += context.mapData();
     }
   }
 }
@@ -1533,6 +1587,14 @@ const mesh::Mesh &ParticipantImpl::mesh(const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
   return *_accessor->usedMeshContext(meshName).mesh;
+}
+
+ParticipantImpl::MappedSamples ParticipantImpl::mappedSamples() const
+{
+  MappedSamples res;
+  res.read  = _executedReadMappings;
+  res.write = _executedWriteMappings;
+  return res;
 }
 
 } // namespace precice::impl

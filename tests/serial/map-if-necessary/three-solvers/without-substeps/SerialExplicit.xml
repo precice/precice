@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:vector name="DataA" />
+  <data:vector name="DataB" />
+  <data:vector name="DataC" />
+
+  <mesh name="MeshA" dimensions="2">
+    <use-data name="DataA" />
+    <use-data name="DataC" />
+  </mesh>
+
+  <mesh name="MeshB" dimensions="2">
+    <use-data name="DataB" />
+    <use-data name="DataC" />
+  </mesh>
+
+  <mesh name="MeshC" dimensions="2">
+    <use-data name="DataA" />
+    <use-data name="DataB" />
+    <use-data name="DataC" />
+  </mesh>
+
+  <participant name="A">
+    <provide-mesh name="MeshA" />
+    <read-data name="DataC" mesh="MeshA" />
+    <write-data name="DataA" mesh="MeshA" />
+  </participant>
+
+  <participant name="B">
+    <provide-mesh name="MeshB" />
+    <read-data name="DataC" mesh="MeshB" />
+    <write-data name="DataB" mesh="MeshB" />
+  </participant>
+
+  <participant name="C">
+    <provide-mesh name="MeshC" />
+    <receive-mesh name="MeshA" from="A" />
+    <receive-mesh name="MeshB" from="B" />
+    <read-data name="DataA" mesh="MeshC" />
+    <read-data name="DataB" mesh="MeshC" />
+    <write-data name="DataC" mesh="MeshC" />
+    <mapping:nearest-neighbor direction="write" from="MeshC" to="MeshA" constraint="conservative" />
+    <mapping:nearest-neighbor direction="write" from="MeshC" to="MeshB" constraint="conservative" />
+    <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshC" constraint="consistent" />
+    <mapping:nearest-neighbor direction="read" from="MeshB" to="MeshC" constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="A" connector="C" />
+  <m2n:sockets acceptor="B" connector="C" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="A" second="C" />
+    <max-time-windows value="3" />
+    <time-window-size value="1.0" />
+    <exchange data="DataA" mesh="MeshA" from="A" to="C" substeps="false" />
+    <exchange data="DataC" mesh="MeshA" from="C" to="A" substeps="false" />
+  </coupling-scheme:serial-explicit>
+
+  <coupling-scheme:serial-explicit>
+    <participants first="B" second="C" />
+    <max-time-windows value="3" />
+    <time-window-size value="1.0" />
+    <exchange data="DataB" mesh="MeshB" from="B" to="C" substeps="true" />
+    <exchange data="DataC" mesh="MeshB" from="C" to="B" substeps="false" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>
