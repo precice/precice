@@ -61,8 +61,8 @@ jobs:
           tag: ${{ github.ref }}
 
   dockerfile:
-    name: "Release Dockerfiles"
-    needs: release-draft
+    name: "Release Dockerfile"
+    needs: package-deb
     runs-on: ubuntu-latest
     env:
         docker_username: precice
@@ -84,7 +84,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          file: "./tools/releasing/packaging/docker/Dockerfile"
+          file: "./tools/releasing/packaging/docker/release.dockerfile"
           tags: ${{ env.docker_username }}/precice:${{ steps.tag.outputs.tag }},${{ env.docker_username }}/precice:latest
           build-args: |
             version=${{ steps.tag.outputs.tag }}
