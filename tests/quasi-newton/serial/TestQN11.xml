@@ -22,8 +22,16 @@
   <participant name="SolverTwo">
     <receive-mesh name="MeshOne" from="SolverOne" safety-factor="0.1" />
     <provide-mesh name="MeshTwo" />
-    <mapping:nearest-neighbor direction="read" from="MeshOne" to="MeshTwo" constraint="consistent" />
-    <mapping:nearest-neighbor direction="write" from="MeshTwo" to="MeshOne" constraint="conservative" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="MeshOne"
+      to="MeshTwo"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="MeshTwo"
+      to="MeshOne"
+      constraint="conservative" />
     <write-data name="Data2" mesh="MeshTwo" />
     <read-data name="Data1" mesh="MeshTwo" />
   </participant>
@@ -39,13 +47,17 @@
     <max-iterations value="200" />
     <absolute-convergence-measure limit="1e-8" data="Data1" mesh="MeshOne" />
     <acceleration:IQN-IMVJ>
-      <data name="Data2" mesh="MeshOne" lower-bound="-1" upper-bound="1"/>
+      <data name="Data2" mesh="MeshOne" lower-bound="-1" upper-bound="1" />
       <filter type="QR2" limit="1e-3" />
       <initial-relaxation value="0.2" />
       <max-used-iterations value="2" />
-      <preconditioner type="residual-sum"/>
+      <preconditioner type="residual-sum" />
       <time-windows-reused value="1" />
-      <imvj-restart-mode truncation-threshold="0.0001" chunk-size="8" reused-time-windows-at-restart="8" type="RS-SVD"/>
+      <imvj-restart-mode
+        truncation-threshold="0.0001"
+        chunk-size="8"
+        reused-time-windows-at-restart="8"
+        type="RS-SVD" />
     </acceleration:IQN-IMVJ>
   </coupling-scheme:serial-implicit>
 </precice-configuration>
