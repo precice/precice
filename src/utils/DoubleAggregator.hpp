@@ -1,27 +1,26 @@
-#include <cmath>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics.hpp>
+#include <boost/accumulators/statistics/sum_kahan.hpp>
 
 namespace precice::utils {
 
 /// A Kahan Babushka Neumaier Aggregator with usability in mind
 class DoubleAggregator {
+private:
+  using Acc = boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::sum_kahan>>;
+
 public:
   /// Sets the aggregator to a value
   void operator=(double d)
   {
-    sum        = d;
-    correction = 0.0;
+    acc = Acc{};
+    acc(d);
   }
 
   /// Adds a value to the aggregator
   void add(double d)
   {
-    double t = sum + d;
-    if (std::abs(sum) >= std::abs(d)) {
-      correction += (sum - t) + d;
-    } else {
-      correction += (d - t) + sum;
-    }
-    sum = t;
+    acc(d);
   }
 
   /// Natural version of adding a value
@@ -55,7 +54,7 @@ public:
   /// Retrieves the corrected sum
   double value() const
   {
-    return sum + correction;
+    return boost::accumulators::sum_kahan(acc);
   }
 
   /// Allows implicit casting to a double
@@ -65,8 +64,7 @@ public:
   }
 
 private:
-  double sum{0.0};
-  double correction{0.0};
+  Acc acc;
 };
 
 } // namespace precice::utils

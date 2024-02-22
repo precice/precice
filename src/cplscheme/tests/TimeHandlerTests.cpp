@@ -137,8 +137,7 @@ BOOST_AUTO_TEST_CASE(LargeTWNormalTS)
       BOOST_TEST(th.time() == (i - 1) * tws + j * dt);
       BOOST_TEST(th.untilWindowEnd(tws) == tws - dt * j);
     }
-    BOOST_TEST(th.untilWindowEnd(tws) == 0, boost::test_tools::tolerance(1e-13));
-    //BOOST_TEST(th.reachedEndOfWindow(tws)); This currently fails
+    BOOST_TEST(th.reachedEndOfWindow(tws));
     BOOST_TEST(th.time() == tws * i);
     th.completeTimeWindow(tws);
     BOOST_TEST(th.time() == tws * i);
