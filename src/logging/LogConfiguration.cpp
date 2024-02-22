@@ -1,6 +1,7 @@
 #include "LogConfiguration.hpp"
 #include <algorithm>
 #include <boost/core/null_deleter.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/log/attributes/mutable_constant.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
@@ -123,6 +124,10 @@ public:
 /// Reads a log file, returns a logging configuration.
 LoggingConfiguration readLogConfFile(std::string const &filename)
 {
+  if (!boost::filesystem::exists(filename)) {
+    return {};
+  }
+
   namespace po = boost::program_options;
   po::options_description desc;
   std::ifstream           ifs(filename);
