@@ -210,6 +210,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
 
 void BaseCouplingScheme::receiveDataForWindowEnd(const m2n::PtrM2N &m2n, const DataMap &receiveData)
 {
+  // @TODO This is a hack required until https://github.com/precice/precice/issues/1957
   // buffer current time
   const impl::TimeHandler oldTime = _time;
   // set _time state to point to end of this window such that _time in receiveData is at end of window
