@@ -4,7 +4,7 @@
 
 namespace precice::utils {
 
-/// A Kahan Babushka Neumaier Aggregator with usability in mind
+/// An accurate aggregator for doubles with usability in mind
 class DoubleAggregator {
 private:
   using Acc = boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::sum_kahan>>;
@@ -35,22 +35,6 @@ public:
     add(-d);
   }
 
-  /// Creates a new aggregator with a value added
-  [[nodiscard]] DoubleAggregator operator+(double d) const
-  {
-    auto tmp = *this;
-    tmp.add(d);
-    return tmp;
-  }
-
-  /// Creates a new aggregator with a value subtracted
-  [[nodiscard]] DoubleAggregator operator-(double d) const
-  {
-    auto tmp = *this;
-    tmp.add(-d);
-    return tmp;
-  }
-
   /// Retrieves the corrected sum
   double value() const
   {
@@ -66,5 +50,23 @@ public:
 private:
   Acc acc;
 };
+
+[[nodiscard]] inline DoubleAggregator operator+(double lhs, DoubleAggregator rhs)
+{
+  rhs.add(lhs);
+  return rhs;
+}
+
+[[nodiscard]] inline DoubleAggregator operator+(DoubleAggregator lhs, double rhs)
+{
+  lhs.add(rhs);
+  return lhs;
+}
+
+[[nodiscard]] inline DoubleAggregator operator-(DoubleAggregator lhs, double rhs)
+{
+  lhs.add(-rhs);
+  return lhs;
+}
 
 } // namespace precice::utils

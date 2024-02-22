@@ -148,7 +148,7 @@ public:
   /// Returns the current time as a double
   double time() const
   {
-    return (_windowStart + _windowProgress).value();
+    return (_windowStart + _windowProgress.value()).value();
   }
 
   /// @}
