@@ -132,17 +132,18 @@ LoggingConfiguration readLogConfFile(std::string const &filename)
   po::options_description desc;
   std::ifstream           ifs(filename);
 
-  po::variables_map vm;
-
   std::map<std::string, BackendConfiguration> configs;
   try {
     po::parsed_options parsed = parse_config_file(ifs, desc, true);
-    po::store(parsed, vm);
-    po::notify(vm);
     for (auto const &opt : parsed.options) {
       std::string section = opt.string_key.substr(0, opt.string_key.find('.'));
       std::string key     = opt.string_key.substr(opt.string_key.find('.') + 1);
-      configs[section].setOption(key, opt.value[0]);
+      if (BackendConfiguration::isValidOption(key)) {
+        PRECICE_ASSERT(!opt.value.empty());
+        configs[section].setOption(key, opt.value[0]);
+      } else {
+        std::cerr << "WARNING: section [" << section << "] in configuration file \"" << filename << "\" contains invalid key \"" << key << "\"\n";
+      }
     }
   } catch (po::error &e) {
     std::cout << "ERROR reading logging configuration: " << e.what() << "\n\n";
@@ -177,6 +178,12 @@ void BackendConfiguration::setOption(std::string key, std::string value)
     filter = value;
   if (key == "format")
     format = value;
+}
+
+bool BackendConfiguration::isValidOption(std::string key)
+{
+  boost::algorithm::to_lower(key);
+  return key == "output" || key == "filter" || key == "format" || key == "type";
 }
 
 void BackendConfiguration::setEnabled(bool enabled)
