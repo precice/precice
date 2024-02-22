@@ -506,11 +506,7 @@ double BaseCouplingScheme::getNextTimeStepMaxSize() const
 bool BaseCouplingScheme::isCouplingOngoing() const
 {
   bool timestepsLeft = (_maxTimeWindows >= _timeWindows) || (_maxTimeWindows == UNDEFINED_TIME_WINDOWS);
-  bool timeLeft      = !_time.reachedEnd();
-  PRECICE_WARN("tsl:{} tl:{} t:{:e} mt:{:e} umt:{:e} is0:{} isabs0:{}", timestepsLeft, timeLeft, _time.time(), _maxTime, _time.untilTime(_maxTime),
-               math::equals(_time.untilTime(_maxTime), 0.0),
-               math::equals(std::abs(_time.untilTime(_maxTime)), 0.0));
-  return timestepsLeft && timeLeft;
+  return timestepsLeft && !_time.reachedEnd();
 }
 
 bool BaseCouplingScheme::isTimeWindowComplete() const
