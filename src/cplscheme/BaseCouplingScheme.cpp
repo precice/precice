@@ -79,6 +79,12 @@ BaseCouplingScheme::BaseCouplingScheme(
     PRECICE_ASSERT((maxIterations == INFINITE_MAX_ITERATIONS) || (minIterations <= maxIterations),
                    "Minimal iteration limit has to be smaller equal compared to the maximal iteration limit.");
   }
+
+  if (math::equals(maxTime, UNDEFINED_MAX_TIME)) {
+    _time = impl::TimeHandler();
+  } else {
+    _time = impl::TimeHandler(maxTime);
+  }
 }
 
 bool BaseCouplingScheme::isImplicitCouplingScheme() const
@@ -376,20 +382,10 @@ void BaseCouplingScheme::secondExchange()
 
     // Update internal time tracking
     if (_isTimeWindowComplete) {
-      // We move to the next time window
-      if (math::equals(_time.windowProgress(), _timeWindowSize)) {
-        _time.completeTimeWindowExact(_timeWindowSize);
-      } else {
-        // This only happens when the final time window is truncated due
-        // time window size not being a divider of max-time.
-        _time.completeTimeWindow();
-        PRECICE_ASSERT(!math::equals(_maxTime, UNDEFINED_MAX_TIME));
-        PRECICE_ASSERT(math::equals(_maxTime, getTime()));
-      }
+      _time.completeTimeWindow(_timeWindowSize);
+    } else {
+      _time.resetProgress();
     }
-    // We move the _time to the start of the updated time window.
-    // This can be a "reset" in case of an iteration, or the start of the next time window.
-    _time.resetProgress();
     _timeWindowSize = _nextTimeWindowSize;
   }
 }
@@ -429,17 +425,17 @@ bool BaseCouplingScheme::addComputedTime(
   PRECICE_TRACE(timeToAdd, getTime());
   PRECICE_ASSERT(isCouplingOngoing(), "Invalid call of addComputedTime() after simulation end.");
 
-  // add time interval that has been computed in the solver to get the correct time remainder
-  _time.progressBy(timeToAdd);
-
   // Check validness
-  bool valid = math::greaterEquals(getNextTimeStepMaxSize(), 0.0);
+  bool valid = math::greaterEquals(getNextTimeStepMaxSize(), timeToAdd);
   PRECICE_CHECK(valid,
                 "The time step size given to preCICE in \"advance\" {} exceeds the maximum allowed time step size {} "
                 "in the remaining of this time window. "
                 "Did you restrict your time step size, \"dt = min(preciceDt, solverDt)\"? "
                 "For more information, consult the adapter example in the preCICE documentation.",
-                timeToAdd, getWindowStartTime() + _timeWindowSize - getTime() + timeToAdd);
+                timeToAdd, getNextTimeWindowSize());
+
+  // add time interval that has been computed in the solver to get the correct time remainder
+  _time.progressBy(timeToAdd);
 
   return reachedEndOfTimeWindow();
 }
@@ -499,30 +495,21 @@ double BaseCouplingScheme::getNextTimeStepMaxSize() const
     return 0.0; // if coupling is not ongoing (i.e. coupling scheme reached end of window) the maximum time step size is zero
   }
 
-  const bool hasMaxTime = !math::equals(_maxTime, UNDEFINED_MAX_TIME);
-
   if (hasTimeWindowSize()) {
-    double maxDt = _time.untilProgress(_timeWindowSize);
-    if (hasMaxTime) {
-      double leftover = _time.untilTime(_maxTime);
-      return std::min(maxDt, leftover);
-    } else {
-      return maxDt;
-    }
+    return _time.untilWindowEnd(_timeWindowSize);
   } else {
-    if (hasMaxTime) {
-      return _time.untilTime(_maxTime);
-    } else {
-      return std::numeric_limits<double>::max();
-    }
+    return _time.untilEnd();
   }
 }
 
 bool BaseCouplingScheme::isCouplingOngoing() const
 {
-  bool timeLeft      = math::greater(_maxTime, getTime()) || math::equals(_maxTime, UNDEFINED_MAX_TIME);
   bool timestepsLeft = (_maxTimeWindows >= _timeWindows) || (_maxTimeWindows == UNDEFINED_TIME_WINDOWS);
-  return timeLeft && timestepsLeft;
+  bool timeLeft      = !_time.reachedEnd();
+  PRECICE_WARN("tsl:{} tl:{} t:{:e} mt:{:e} umt:{:e} is0:{} isabs0:{}", timestepsLeft, timeLeft, _time.time(), _maxTime, _time.untilTime(_maxTime),
+               math::equals(_time.untilTime(_maxTime), 0.0),
+               math::equals(std::abs(_time.untilTime(_maxTime)), 0.0));
+  return timestepsLeft && timeLeft;
 }
 
 bool BaseCouplingScheme::isTimeWindowComplete() const
@@ -785,14 +772,7 @@ bool BaseCouplingScheme::reachedEndOfTimeWindow() const
     return true; // This participant will always do exactly one step to dictate second's time-window-size
   }
 
-  double timeWindowEnd = getTimeWindowStart() + _timeWindowSize;
-
-  // Is the current time-window truncated by max time?
-  if (!math::equals(_maxTime, UNDEFINED_MAX_TIME) && math::smaller(_maxTime, timeWindowEnd)) {
-    return math::equals(getTime(), _maxTime);
-  }
-
-  return math::equals(getTime(), timeWindowEnd);
+  return _time.reachedEndOfWindow(_timeWindowSize);
 }
 
 void BaseCouplingScheme::storeIteration()
