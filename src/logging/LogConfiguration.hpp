@@ -22,6 +22,9 @@ struct BackendConfiguration {
   /// Sets on option, overwrites default values.
   void setOption(std::string key, std::string value);
 
+  /// Checks if an option is usable
+  static bool isValidOption(std::string key);
+
   /// Sets weather the sink is enabled or disabled
   void setEnabled(bool enabled);
 };
