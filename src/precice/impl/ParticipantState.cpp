@@ -149,7 +149,6 @@ ReadDataContext &ParticipantState::readDataContext(std::string_view mesh, std::s
 
 mesh::PtrMesh ParticipantState::findMesh(std::string_view data) const
 {
-  bool foundReadDataContextForAnyMesh = false;
   for (const auto &meshContext : _meshContexts) {
     const auto &             mesh = meshContext.second->mesh->getName();
     MeshDataKey<std::string> key{mesh, std::string{data}};
