@@ -19,9 +19,11 @@
   } while (false)
 
 #define PRECICE_CHECK(check, ...) \
-  if (!(check)) {                 \
-    PRECICE_ERROR(__VA_ARGS__);   \
-  }
+  do {                            \
+    if (!(check)) {               \
+      PRECICE_ERROR(__VA_ARGS__); \
+    }                             \
+  } while (false)
 
 // Debug logging is disabled in release (NDEBUG) builds by default.
 // To enable it anyhow, enable the CMake option PRECICE_RELEASE_WITH_DEBUG_LOG.
@@ -32,12 +34,13 @@
 
 #ifdef PRECICE_NO_DEBUG_LOG
 
+#include "utils/ignore.hpp"
+
 #define PRECICE_DEBUG(...) \
-  {                        \
-  }
+  ::precice::utils::ignore(__VA_ARGS__)
+
 #define PRECICE_TRACE(...) \
-  {                        \
-  }
+  ::precice::utils::ignore(__VA_ARGS__)
 
 #else // PRECICE_NO_DEBUG_LOG
 
@@ -56,9 +59,10 @@
 
 #ifdef PRECICE_NO_TRACE_LOG
 
+#include "utils/ignore.hpp"
+
 #define PRECICE_TRACE(...) \
-  {                        \
-  }
+  ::precice::utils::ignore(__VA_ARGS__)
 
 #else // PRECICE_NO_TRACE_LOG
 
