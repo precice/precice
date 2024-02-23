@@ -15,9 +15,10 @@
 
 #ifdef PRECICE_NO_ASSERTIONS
 
+#include "utils/ignore.hpp"
+
 #define PRECICE_ASSERT(...) \
-  {                         \
-  }
+  ::precice::utils::ignore(__VA_ARGS__)
 
 #else
 
