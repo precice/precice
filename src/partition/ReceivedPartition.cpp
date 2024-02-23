@@ -107,11 +107,10 @@ void ReceivedPartition::compute()
               ++nFilteredVertices;
           return _bb.contains(v); });
 
-      if (nFilteredVertices > 0) {
-        PRECICE_WARN("{} vertices on mesh \"{}\" have been filtered out due to the defined bounding box in \"setMeshAccessRegion\" "
-                     "in serial mode. Associated data values of the filtered vertices will be filled with zero values in order to provide valid data for other participants when reading data.",
-                     nFilteredVertices, _mesh->getName());
-      }
+      PRECICE_WARN_IF(nFilteredVertices > 0,
+                      "{} vertices on mesh \"{}\" have been filtered out due to the defined bounding box in \"setMeshAccessRegion\" "
+                      "in serial mode. Associated data values of the filtered vertices will be filled with zero values in order to provide valid data for other participants when reading data.",
+                      nFilteredVertices, _mesh->getName());
 
       _mesh->clear();
       _mesh->addMesh(filteredMesh);
@@ -511,13 +510,13 @@ void ReceivedPartition::prepareBoundingBox()
     // on the defined access region (setMeshAccessRegion), we raise a warning
     // to inform the user
     const float defaultSafetyFactor = 0.5;
-    if (utils::IntraComm::isPrimary() && !hasAnyMapping() && (_safetyFactor != defaultSafetyFactor)) {
-      PRECICE_WARN("The received mesh \"{}\" was entirely partitioned based on the defined access region "
-                   "(setMeshAccessRegion) and a safety-factor was defined. However, the safety factor "
-                   "will be ignored in this case. You may want to modify the access region by modifying "
-                   "the specified region in the function itself.",
-                   _mesh->getName());
-    }
+    PRECICE_WARN_IF(
+        utils::IntraComm::isPrimary() && !hasAnyMapping() && (_safetyFactor != defaultSafetyFactor),
+        "The received mesh \"{}\" was entirely partitioned based on the defined access region "
+        "(setMeshAccessRegion) and a safety-factor was defined. However, the safety factor "
+        "will be ignored in this case. You may want to modify the access region by modifying "
+        "the specified region in the function itself.",
+        _mesh->getName());
     _boundingBoxPrepared = true;
   }
 }
@@ -861,20 +860,18 @@ void ReceivedPartition::createOwnerInformation()
 
 #ifndef NDEBUG
       for (size_t i = 0; i < globalOwnerVec.size(); i++) {
-        if (globalOwnerVec[i] == 0) {
-          PRECICE_DEBUG("The Vertex with global index {} of mesh: {} was completely filtered out, since it has no influence on any mapping.",
-                        i, _mesh->getName());
-        }
+        PRECICE_DEBUG_IF(globalOwnerVec[i] == 0,
+                         "The Vertex with global index {} of mesh: {} was completely filtered out, since it has no influence on any mapping.",
+                         i, _mesh->getName());
       }
 #endif
       auto filteredVertices = std::count(globalOwnerVec.begin(), globalOwnerVec.end(), 0);
-      if (filteredVertices) {
-        PRECICE_WARN("{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.{}",
-                     filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName(),
-                     _allowDirectAccess ? " Associated data values of the filtered vertices will be filled with zero values in order to "
-                                          "provide valid data for other participants when reading data."
-                                        : "");
-      }
+      PRECICE_WARN_IF(filteredVertices,
+                      "{} of {} vertices of mesh {} have been filtered out since they have no influence on the mapping.{}",
+                      filteredVertices, _mesh->getGlobalNumberOfVertices(), _mesh->getName(),
+                      _allowDirectAccess ? " Associated data values of the filtered vertices will be filled with zero values in order to "
+                                           "provide valid data for other participants when reading data."
+                                         : "");
     }
   }
 }

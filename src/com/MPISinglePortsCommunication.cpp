@@ -215,25 +215,19 @@ void MPISinglePortsCommunication::closeConnection()
 
   for (auto &kv : _direct) {
     res = MPI_Comm_disconnect(&kv.second);
-    if (!res) {
-      PRECICE_WARN("MPI_Open_port failed with message: {}", res.message());
-    }
+    PRECICE_WARN_IF(!res, "MPI_Open_port failed with message: {}", res.message());
   }
   _direct.clear();
   if (_global != MPI_COMM_NULL) {
     res = MPI_Comm_disconnect(&_global);
-    if (!res) {
-      PRECICE_WARN("MPI_Open_port failed with message: {}", res.message());
-    }
+    PRECICE_WARN_IF(!res, "MPI_Open_port failed with message: {}", res.message());
   }
 
   PRECICE_DEBUG("Disconnected");
 
   if (_isAcceptor and utils::IntraComm::getRank() == 0) {
     res = MPI_Close_port(const_cast<char *>(_portName.c_str()));
-    if (!res) {
-      PRECICE_WARN("MPI_Open_port failed with message: {}", res.message());
-    }
+    PRECICE_WARN_IF(!res, "MPI_Open_port failed with message: {}", res.message());
     _portName.clear();
     PRECICE_DEBUG("Port closed");
   }
