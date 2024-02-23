@@ -51,11 +51,17 @@ function(add_precice_test)
     return()
   endif()
 
+  set(_extra_mpi_flags "")
+  if(MPI_CXX_LIBRARY_VERSION_STRING MATCHES "Open MPI: v5")
+    set(_extra_mpi_flags "--map-by=:OVERSUBSCRIBE")
+  endif()
+
   # Assemble the command
   message(STATUS "Test ${PAT_FULL_NAME}")
   add_test(NAME ${PAT_FULL_NAME}
-    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${MPIEXEC_POSTFLAGS} ${PAT_ARGUMENTS}
+    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${_extra_mpi_flags} ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${MPIEXEC_POSTFLAGS} ${PAT_ARGUMENTS}
     )
+  unset(_extra_mpi_flags)
   # Generate working directory
   set(PAT_WDIR "${PRECICE_TEST_DIR}/${PAT_NAME}")
   file(MAKE_DIRECTORY "${PAT_WDIR}")
