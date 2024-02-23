@@ -7,6 +7,7 @@ namespace precice::utils {
 /// An accurate aggregator for doubles with usability in mind
 class DoubleAggregator {
 private:
+  /// This class is mainly a wrapper for boost's Kahan accumulator which implements the Kahan summation algorithm (see https://en.wikipedia.org/wiki/Kahan_summation_algorithm)
   using Acc = boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::sum_kahan>>;
 
 public:
