@@ -63,9 +63,8 @@ void DataConfiguration::xmlTagCallback(
     };
 
     const int waveformDegree = tag.getIntAttributeValue(ATTR_DEGREE);
-    if (waveformDegree < time::Time::MIN_WAVEFORM_DEGREE || waveformDegree > time::Time::MAX_WAVEFORM_DEGREE) {
-      PRECICE_ERROR("You tried to configure the data with name \"{}\" to use the waveform-degree=\"{}\", but the degree must be between \"{}\" and \"{}\". Please use a degree in the allowed range.", name, waveformDegree, time::Time::MIN_WAVEFORM_DEGREE, time::Time::MAX_WAVEFORM_DEGREE);
-    }
+    PRECICE_CHECK(!(waveformDegree < time::Time::MIN_WAVEFORM_DEGREE || waveformDegree > time::Time::MAX_WAVEFORM_DEGREE),
+                  "You tried to configure the data with name \"{}\" to use the waveform-degree=\"{}\", but the degree must be between \"{}\" and \"{}\". Please use a degree in the allowed range.", name, waveformDegree, time::Time::MIN_WAVEFORM_DEGREE, time::Time::MAX_WAVEFORM_DEGREE);
     addData(name, typeName, waveformDegree);
   } else {
     PRECICE_ASSERT(false, "Received callback from an unknown tag.", tag.getName());
