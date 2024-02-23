@@ -91,7 +91,7 @@ public:
   bool reachedEnd() const
   {
     if (!_maxTime) {
-      return false;
+      return false; // Directly return preventing lossy computations
     }
     return math::equals(untilTime(*_maxTime), 0.0);
   }
@@ -105,7 +105,7 @@ public:
   {
     double maxDt = untilProgress(timeWindowSize);
     if (!_maxTime) {
-      return maxDt;
+      return maxDt; // Return to prevent further lossy computations
     }
     // Truncate by max Time
     return std::min(maxDt, untilEnd());
@@ -123,10 +123,10 @@ public:
     */
   double untilEnd() const
   {
-    if (_maxTime) {
-      return untilTime(*_maxTime);
+    if (!_maxTime) {
+      return std::numeric_limits<double>::max();
     }
-    return std::numeric_limits<double>::max();
+    return untilTime(*_maxTime);
   }
 
   /// Returns the window progress as a double
