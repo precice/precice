@@ -55,7 +55,7 @@ function(add_precice_test)
   # Note that --map-by=:OVERSUBSCRIBE work for OpenMPI(4+5), MPICH, and Intel MPI.
   message(STATUS "Test ${PAT_FULL_NAME}")
   add_test(NAME ${PAT_FULL_NAME}
-    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 --map-by=:OVERSUBSCRIBE ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${MPIEXEC_POSTFLAGS} ${PAT_ARGUMENTS}
+    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 --map-by :OVERSUBSCRIBE ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${MPIEXEC_POSTFLAGS} ${PAT_ARGUMENTS}
     )
   unset(_extra_mpi_flags)
   # Generate working directory
