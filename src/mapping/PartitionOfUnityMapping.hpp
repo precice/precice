@@ -217,17 +217,18 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // Step 4a: get the relevant clusters for the output vertex
     auto       clusterIDs            = clusterIndex.getVerticesInsideBox(vertex, _clusterRadius);
     const auto localNumberOfClusters = clusterIDs.size();
+
     // Consider the case where we didn't find any cluster (meshes don't match very well)
-    if (localNumberOfClusters == 0) {
-      PRECICE_ERROR("Output vertex {} of mesh \"{}\" could not be assigned to any cluster in the rbf-pum mapping. This probably means that the meshes do not match well geometry-wise: Visualize the exported preCICE meshes to confirm."
-                    " If the meshes are fine geometry-wise, you can try to increase the number of \"vertices-per-cluster\" (default is 50), the \"relative-overlap\" (default is 0.15),"
-                    " or disable the option \"project-to-input\"."
-                    "These options are only valid for the <mapping:rbf-pum-direct/> tag.",
-                    vertex.getCoords(), outMesh->getName());
-      // In principle, we could assign the vertex to the closest cluster using clusterIDs.emplace_back(clusterIndex.getClosestVertex(vertex.getCoords()).index);
-      // However, this leads to a conflict with weights already set in the corresponding cluster, since we insert the ID and, later on, map the ID to a local weight index
-      // Of course, we could rearrange the weights, but we want to avoid the case here anyway, i.e., prefer to abort.
-    }
+    //
+    // In principle, we could assign the vertex to the closest cluster using clusterIDs.emplace_back(clusterIndex.getClosestVertex(vertex.getCoords()).index);
+    // However, this leads to a conflict with weights already set in the corresponding cluster, since we insert the ID and, later on, map the ID to a local weight index
+    // Of course, we could rearrange the weights, but we want to avoid the case here anyway, i.e., prefer to abort.
+    PRECICE_CHECK(localNumberOfClusters > 0,
+                  "Output vertex {} of mesh \"{}\" could not be assigned to any cluster in the rbf-pum mapping. This probably means that the meshes do not match well geometry-wise: Visualize the exported preCICE meshes to confirm."
+                  " If the meshes are fine geometry-wise, you can try to increase the number of \"vertices-per-cluster\" (default is 50), the \"relative-overlap\" (default is 0.15),"
+                  " or disable the option \"project-to-input\"."
+                  "These options are only valid for the <mapping:rbf-pum-direct/> tag.",
+                  vertex.getCoords(), outMesh->getName());
 
     // Next we compute the normalized weights of each output vertex for each partition
     PRECICE_ASSERT(localNumberOfClusters > 0, "No cluster found for vertex {}", vertex.getCoords());
