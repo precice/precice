@@ -58,7 +58,7 @@ jobs:
         PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
       run: |
         cmake --version
-        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DPRECICE_CTEST_MPI_FLAGS="--map-by :OVERSUBSCRIBE" ..
     - uses: actions/upload-artifact@v4
       if: failure()
       with:
