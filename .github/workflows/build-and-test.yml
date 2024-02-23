@@ -98,6 +98,14 @@ jobs:
             CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Release
+          - IMAGE: 'intel'
+            CONFIG: MPIPETSc
+            CXX: 'icpx'
+            TYPE: Debug
+          - IMAGE: 'intel'
+            CONFIG: MPIPETSc
+            CXX: 'icpx'
+            TYPE: Release
     env:
       CCACHE_DIR: "$GITHUB_WORKSPACE/ccache"
       OMPI_MCA_rmaps_base_oversubscribe: 1
@@ -119,7 +127,7 @@ jobs:
         working-directory: build
         env:
           CXX: ${{ matrix.CXX }}
-          CXXFLAGS: "-Wall -Wextra -Wno-unused-parameter ${{ matrix.COVFLAGS }}"
+          CXXFLAGS: "-Wall -Wextra -Wno-unused-parameter ${{ matrix.COVFLAGS }} ${{ contains(matrix.IMAGE, 'intel') && contains(matrix.TYPE, 'Debug') && '' || '' }}"
           MPI: ${{ contains(matrix.CONFIG, 'MPI') }}
           PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
           Ginkgo: ${{ contains(matrix.CONFIG, 'Ginkgo') }}
