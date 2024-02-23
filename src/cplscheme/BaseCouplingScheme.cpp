@@ -433,7 +433,7 @@ bool BaseCouplingScheme::addComputedTime(
                 "in the remaining of this time window. "
                 "Did you restrict your time step size, \"dt = min(preciceDt, solverDt)\"? "
                 "For more information, consult the adapter example in the preCICE documentation.",
-                timeToAdd, getNextTimeWindowSize());
+                timeToAdd, getNextTimeStepMaxSize());
 
   // add time interval that has been computed in the solver to get the correct time remainder
   _time.progressBy(timeToAdd);
