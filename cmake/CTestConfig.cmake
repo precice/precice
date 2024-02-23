@@ -52,8 +52,8 @@ function(add_precice_test)
   endif()
 
   set(_extra_mpi_flags "")
-  if(MPI_CXX_LIBRARY_VERSION_STRING MATCHES "Open MPI: v5")
-    set(_extra_mpi_flags "--map-by=:OVERSUBSCRIBE")
+  if(PRECICE_MPI_OPENMPI)
+    set(_extra_mpi_flags "--oversubscribe")
   endif()
 
   # Assemble the command
@@ -69,7 +69,7 @@ function(add_precice_test)
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
     WORKING_DIRECTORY "${PAT_WDIR}"
-    ENVIRONMENT "OMPI_MCA_rmaps_base_oversubscribe=1;OMP_NUM_THREADS=2"
+    ENVIRONMENT "OMP_NUM_THREADS=2"
     )
   if(PAT_TIMEOUT)
     set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PAT_TIMEOUT} )
