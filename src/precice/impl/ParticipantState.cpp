@@ -164,14 +164,14 @@ mesh::PtrMesh ParticipantState::findMesh(std::string_view data) const
 const WriteDataContext &ParticipantState::writeDataContext(std::string_view mesh, std::string_view data) const
 {
   auto it = _writeDataContexts.find(MeshDataKey{mesh, data});
-  PRECICE_CHECK(it != _writeDataContexts.end(), "Data \"{}\" does not exist in write direction.", data)
+  PRECICE_CHECK(it != _writeDataContexts.end(), "Data \"{}\" does not exist in write direction.", data);
   return it->second;
 }
 
 WriteDataContext &ParticipantState::writeDataContext(std::string_view mesh, std::string_view data)
 {
   auto it = _writeDataContexts.find(MeshDataKey{mesh, data});
-  PRECICE_CHECK(it != _writeDataContexts.end(), "Data \"{}\" does not exist in write direction.", data)
+  PRECICE_CHECK(it != _writeDataContexts.end(), "Data \"{}\" does not exist in write direction.", data);
   return it->second;
 }
 

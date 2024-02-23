@@ -274,7 +274,7 @@ void ParticipantConfiguration::xmlTagCallback(
     PRECICE_CHECK(!from.empty(),
                   R"(Participant "{}" receives mesh "{}", but doesn't specify where from. )"
                   "Please add the name of the other participant to the receive-mesh tag: <receive-mesh name=\"{}\" from=\"(other participant)\" ... />",
-                  context.name, name, name)
+                  context.name, name, name);
 
     PRECICE_CHECK(_participants.back()->getName() != from,
                   "Participant \"{}\" cannot receive mesh \"{}\" from itself. "
