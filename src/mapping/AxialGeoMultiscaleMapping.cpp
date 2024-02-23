@@ -46,7 +46,7 @@ void AxialGeoMultiscaleMapping::computeMapping()
       PRECICE_ASSERT(effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::X) ||
                          effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Y) ||
                          effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Z),
-                     "Unknown multiscale axis type.")
+                     "Unknown multiscale axis type.");
 
       // compute distances between 1D vertex and 3D vertices
       mesh::Vertex &   v0                           = input()->vertices()[0];
@@ -105,7 +105,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
   PRECICE_ASSERT(effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::X) ||
                      effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Y) ||
                      effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Z),
-                 "Unknown multiscale axis type.")
+                 "Unknown multiscale axis type.");
 
   // Check that the number of values for the input and output is right according to their dimensions
   PRECICE_ASSERT((inputValues.size() / static_cast<std::size_t>(inDataDimensions) == input()->vertices().size()),
@@ -140,7 +140,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
     outputValues(effectiveCoordinate) = 0;
     size_t const inSize               = input()->vertices().size();
     for (size_t i = 0; i < inSize; i++) {
-      PRECICE_ASSERT(static_cast<size_t>((i * inDataDimensions) + effectiveCoordinate) < static_cast<size_t>(inputValues.size()), ((i * inDataDimensions) + effectiveCoordinate), inputValues.size())
+      PRECICE_ASSERT(static_cast<size_t>((i * inDataDimensions) + effectiveCoordinate) < static_cast<size_t>(inputValues.size()), ((i * inDataDimensions) + effectiveCoordinate), inputValues.size());
       outputValues(effectiveCoordinate) += inputValues((i * inDataDimensions) + effectiveCoordinate);
     }
     outputValues(effectiveCoordinate) = outputValues(effectiveCoordinate) / inSize;

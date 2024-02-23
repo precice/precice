@@ -191,7 +191,7 @@ void EventRegistry::clear()
 
 void EventRegistry::put(PendingEntry pe)
 {
-  PRECICE_ASSERT(_mode != Mode::Off, "The profiling is off.")
+  PRECICE_ASSERT(_mode != Mode::Off, "The profiling is off.");
   _writeQueue.emplace_back(std::move(pe));
   if (_writeQueueMax > 0 && _writeQueue.size() > _writeQueueMax) {
     flush();
