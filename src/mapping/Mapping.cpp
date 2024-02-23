@@ -238,9 +238,9 @@ void Mapping::scaleConsistentMapping(const Eigen::VectorXd &input, Eigen::Vector
   // check whether the constraint is fulfilled
   for (Eigen::Index i = 0; i < scalingFactor.size(); ++i) {
     double consistency = scalingFactor[i] * integralOutput[i] - integralInput[i];
-    if (math::greater(std::abs(consistency), 0.0)) {
-      PRECICE_WARN("Failed to fulfill consistency constraint of component {} for scaled-consistent mapping from mesh \"{}\" to mesh \"{}\". Consistency difference between input and scaled output is \"{}\".", i, this->input()->getName(), this->output()->getName(), consistency);
-    }
+    PRECICE_WARN_IF(
+        math::greater(std::abs(consistency), 0.0),
+        "Failed to fulfill consistency constraint of component {} for scaled-consistent mapping from mesh \"{}\" to mesh \"{}\". Consistency difference between input and scaled output is \"{}\".", i, this->input()->getName(), this->output()->getName(), consistency);
   }
 } // namespace mapping
 

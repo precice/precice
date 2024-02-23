@@ -206,15 +206,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   clear();
 
-  if (_polynomial == Polynomial::ON) {
-    PRECICE_DEBUG("Using integrated polynomial.");
-  }
-  if (_polynomial == Polynomial::OFF) {
-    PRECICE_DEBUG("Using no polynomial.");
-  }
-  if (_polynomial == Polynomial::SEPARATE) {
-    PRECICE_DEBUG("Using separated polynomial.");
-  }
+  PRECICE_DEBUG_IF(_polynomial == Polynomial::ON, "Using integrated polynomial.");
+  PRECICE_DEBUG_IF(_polynomial == Polynomial::OFF, "Using no polynomial.");
+  PRECICE_DEBUG_IF(_polynomial == Polynomial::SEPARATE, "Using separated polynomial.");
 
   PRECICE_ASSERT(this->input()->getDimensions() == this->output()->getDimensions(),
                  this->input()->getDimensions(), this->output()->getDimensions());

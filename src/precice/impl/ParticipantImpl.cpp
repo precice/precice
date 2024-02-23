@@ -563,10 +563,13 @@ double ParticipantImpl::getMaxTimeStepSize() const
   const double nextTimeStepSize = _couplingScheme->getNextTimeStepMaxSize();
   // PRECICE_ASSERT(!math::equals(nextTimeStepSize, 0.0), nextTimeStepSize); // @todo requires https://github.com/precice/precice/issues/1904
   // PRECICE_ASSERT(math::greater(nextTimeStepSize, 0.0), nextTimeStepSize); // @todo requires https://github.com/precice/precice/issues/1904
-  if (isCouplingOngoing() &&                                                             // safeguard needed because _couplingScheme->getNextTimeStepMaxSize() returns 0, if not isCouplingOngoing()
-      not math::greater(nextTimeStepSize, 0.0, 100 * math::NUMERICAL_ZERO_DIFFERENCE)) { // actual case where we want to warn the user
-    PRECICE_WARN("preCICE just returned a maximum time step size of {}. Such a small value can happen if you use many substeps per time window over multiple time windows due to added-up differences of machine precision.", nextTimeStepSize);
-  }
+
+  // safeguard needed because _couplingScheme->getNextTimeStepMaxSize() returns 0, if not isCouplingOngoing()
+  // actual case where we want to warn the user
+  PRECICE_WARN_IF(
+      isCouplingOngoing() && not math::greater(nextTimeStepSize, 0.0, 100 * math::NUMERICAL_ZERO_DIFFERENCE),
+      "preCICE just returned a maximum time step size of {}. Such a small value can happen if you use many substeps per time window over multiple time windows due to added-up differences of machine precision.",
+      nextTimeStepSize);
   return nextTimeStepSize;
 }
 
@@ -1384,10 +1387,9 @@ void ParticipantImpl::computeMappings(std::vector<MappingContext> &contexts, con
   using namespace mapping;
   for (impl::MappingContext &context : contexts) {
     if (not context.mapping->hasComputedMapping()) {
-      if (context.configuredWithAliasTag) {
-        PRECICE_INFO("Automatic RBF mapping alias from mesh \"{}\" to mesh \"{}\" in \"{}\" direction resolves to \"{}\" .",
-                     context.mapping->getInputMesh()->getName(), context.mapping->getOutputMesh()->getName(), mappingType, context.mapping->getName());
-      }
+      PRECICE_INFO_IF(context.configuredWithAliasTag,
+                      "Automatic RBF mapping alias from mesh \"{}\" to mesh \"{}\" in \"{}\" direction resolves to \"{}\" .",
+                      context.mapping->getInputMesh()->getName(), context.mapping->getOutputMesh()->getName(), mappingType, context.mapping->getName());
       PRECICE_INFO("Computing \"{}\" mapping from mesh \"{}\" to mesh \"{}\" in \"{}\" direction.",
                    context.mapping->getName(), context.mapping->getInputMesh()->getName(), context.mapping->getOutputMesh()->getName(), mappingType);
       context.mapping->computeMapping();

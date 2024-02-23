@@ -63,17 +63,15 @@ void NearestProjectionMapping::computeMapping()
   const auto &fVertices = origins->vertices();
 
   if (getDimensions() == 2) {
-    if (!fVertices.empty() && searchSpace->edges().empty()) {
-      PRECICE_WARN("2D Mesh \"{}\" does not contain edges. "
-                   "Nearest projection mapping falls back to nearest neighbor mapping.",
-                   searchSpace->getName());
-    }
+    PRECICE_WARN_IF(!fVertices.empty() && searchSpace->edges().empty(),
+                    "2D Mesh \"{}\" does not contain edges. "
+                    "Nearest projection mapping falls back to nearest neighbor mapping.",
+                    searchSpace->getName());
   } else {
-    if (!fVertices.empty() && searchSpace->triangles().empty()) {
-      PRECICE_WARN("3D Mesh \"{}\" does not contain triangles. "
-                   "Nearest projection mapping will map to primitives of lower dimension.",
-                   searchSpace->getName());
-    }
+    PRECICE_WARN_IF(!fVertices.empty() && searchSpace->triangles().empty(),
+                    "3D Mesh \"{}\" does not contain triangles. "
+                    "Nearest projection mapping will map to primitives of lower dimension.",
+                    searchSpace->getName());
   }
 
   // Amount of nearest elements to fetch for detailed comparison.

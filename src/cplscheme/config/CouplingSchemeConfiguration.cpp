@@ -723,11 +723,11 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
                 "Please check the <relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 limit, dataName, meshName);
-  if (limit < 10 * math::NUMERICAL_ZERO_DIFFERENCE) {
-    PRECICE_WARN("The relative convergence limit=\"{}\" is close to the hard-coded numerical resolution=\"{}\" of preCICE. "
-                 "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"  ",
-                 limit, math::NUMERICAL_ZERO_DIFFERENCE, 10 * math::NUMERICAL_ZERO_DIFFERENCE);
-  }
+  PRECICE_WARN_IF(
+      limit < 10 * math::NUMERICAL_ZERO_DIFFERENCE,
+      "The relative convergence limit=\"{}\" is close to the hard-coded numerical resolution=\"{}\" of preCICE. "
+      "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"  ",
+      limit, math::NUMERICAL_ZERO_DIFFERENCE, 10 * math::NUMERICAL_ZERO_DIFFERENCE);
 
   impl::PtrConvergenceMeasure measure(new impl::RelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
@@ -753,11 +753,11 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
                 "Please check the <residul-relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 limit, dataName, meshName);
-  if (limit < 10 * math::NUMERICAL_ZERO_DIFFERENCE) {
-    PRECICE_WARN("The relative convergence limit=\"{}\" is close to the hard-coded numerical resolution=\"{}\" of preCICE. "
-                 "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"  ",
-                 limit, math::NUMERICAL_ZERO_DIFFERENCE, 10 * math::NUMERICAL_ZERO_DIFFERENCE);
-  }
+  PRECICE_WARN_IF(
+      limit < 10 * math::NUMERICAL_ZERO_DIFFERENCE,
+      "The relative convergence limit=\"{}\" is close to the hard-coded numerical resolution=\"{}\" of preCICE. "
+      "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"  ",
+      limit, math::NUMERICAL_ZERO_DIFFERENCE, 10 * math::NUMERICAL_ZERO_DIFFERENCE);
 
   impl::PtrConvergenceMeasure measure(new impl::ResidualRelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
@@ -934,13 +934,11 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   // Set acceleration
   setParallelAcceleration(scheme, _config.controller);
 
-  if (not scheme->doesFirstStep() && _accelerationConfig->getAcceleration()) {
-    if (_accelerationConfig->getAcceleration()->getDataIDs().size() < 3) {
-      PRECICE_WARN("Due to numerical reasons, for multi coupling, the number of coupling data vectors should be at least 3, not: {}. "
-                   "Please check the <data .../> subtags in your <acceleration:.../> and make sure that you have at least 3.",
-                   _accelerationConfig->getAcceleration()->getDataIDs().size());
-    }
-  }
+  PRECICE_WARN_IF(
+      not scheme->doesFirstStep() && _accelerationConfig->getAcceleration() && _accelerationConfig->getAcceleration()->getDataIDs().size() < 3,
+      "Due to numerical reasons, for multi coupling, the number of coupling data vectors should be at least 3, not: {}. "
+      "Please check the <data .../> subtags in your <acceleration:.../> and make sure that you have at least 3.",
+      _accelerationConfig->getAcceleration()->getDataIDs().size());
   return PtrCouplingScheme(scheme);
 }
 
@@ -1186,12 +1184,13 @@ void CouplingSchemeConfiguration::setParallelAcceleration(
     }
     scheme->setAcceleration(_accelerationConfig->getAcceleration());
 
-    if (dynamic_cast<acceleration::AitkenAcceleration *>(_accelerationConfig->getAcceleration().get()) != nullptr)
-      PRECICE_WARN("You configured participant \"{}\" in a parallel-implicit coupling scheme with \"Aitken\" "
-                   "acceleration, which is known to perform bad in parallel coupling schemes. "
-                   "See https://precice.org/configuration-acceleration.html#dynamic-aitken-under-relaxation for details."
-                   "Consider switching to a serial-implicit coupling scheme or changing the acceleration method.",
-                   participant);
+    PRECICE_WARN_IF(
+        dynamic_cast<acceleration::AitkenAcceleration *>(_accelerationConfig->getAcceleration().get()) != nullptr,
+        "You configured participant \"{}\" in a parallel-implicit coupling scheme with \"Aitken\" "
+        "acceleration, which is known to perform bad in parallel coupling schemes. "
+        "See https://precice.org/configuration-acceleration.html#dynamic-aitken-under-relaxation for details."
+        "Consider switching to a serial-implicit coupling scheme or changing the acceleration method.",
+        participant);
   }
 }
 

@@ -21,9 +21,8 @@ NearestNeighborGradientMapping::NearestNeighborGradientMapping(
 {
   PRECICE_ASSERT(!hasConstraint(CONSERVATIVE));
 
-  if (isScaledConsistent()) {
-    PRECICE_WARN("The scaled-consistent mapping hasn't been specifically tested with nearest-neighbor-gradient. Please avoid using it or choose another mapping method. ");
-  }
+  PRECICE_WARN_IF(isScaledConsistent(),
+                  "The scaled-consistent mapping hasn't been specifically tested with nearest-neighbor-gradient. Please avoid using it or choose another mapping method. ");
 
   if (isScaledConsistent()) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
@@ -63,9 +62,7 @@ void NearestNeighborGradientMapping::mapConsistent(const time::Sample &inData, E
                  input()->getName());
 
   /// Check if input has gradient data, else send Error
-  if (input()->vertices().empty()) {
-    PRECICE_WARN("The mesh doesn't contain any vertices.");
-  }
+  PRECICE_WARN_IF(input()->vertices().empty(), "The mesh doesn't contain any vertices.");
 
   const int              valueDimensions = inData.dataDims;
   const Eigen::VectorXd &inputValues     = inData.values;

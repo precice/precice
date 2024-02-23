@@ -102,9 +102,8 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::setDeadAxis(std::array<
   PRECICE_ASSERT(getDimensions() <= 3);
   PRECICE_ASSERT(_deadAxis.empty());
   std::copy_n(deadAxis.begin(), getDimensions(), std::back_inserter(_deadAxis));
-  if (getDimensions() == 2 && deadAxis[2]) {
-    PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect. Please remove the respective mapping's \"z-dead\" attribute.");
-  }
+  PRECICE_WARN_IF(getDimensions() == 2 && deadAxis[2],
+                  "Setting the z-axis to dead on a 2-dimensional problem has no effect. Please remove the respective mapping's \"z-dead\" attribute.");
   PRECICE_CHECK(std::any_of(_deadAxis.begin(), _deadAxis.end(), [](const auto &ax) { return ax == false; }), "You cannot set all axes to dead for an RBF mapping. Please remove one of the respective mapping's \"x-dead\", \"y-dead\", or \"z-dead\" attributes.");
 }
 
