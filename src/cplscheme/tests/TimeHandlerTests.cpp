@@ -202,5 +202,180 @@ BOOST_AUTO_TEST_CASE(LargeTWNormalTS)
 
 BOOST_AUTO_TEST_SUITE_END()
 
+BOOST_AUTO_TEST_SUITE(MaxTime)
+
+BOOST_AUTO_TEST_CASE(StepToEnd)
+{
+  PRECICE_TEST(1_rank);
+  TimeHandler th(1.0);
+
+  th.progressBy(1.0);
+  BOOST_TEST(th.time() == 1.0);
+  BOOST_TEST(th.reachedEndOfWindow(1.0));
+  BOOST_TEST(th.reachedEnd());
+  BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
+
+  th.completeTimeWindow(1.0);
+  BOOST_TEST(th.windowProgress() == 0.0);
+  BOOST_TEST(th.reachedEnd());
+  BOOST_TEST(th.reachedEndOfWindow(1.0));
+  BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(StepTruncated)
+{
+  PRECICE_TEST(1_rank);
+  TimeHandler th(1.0);
+
+  double tws = 2.0;
+
+  th.progressBy(1.0);
+
+  BOOST_TEST(th.time() == 1.0);
+  BOOST_TEST(th.reachedEndOfWindow(tws));
+  BOOST_TEST(th.reachedEnd());
+  BOOST_TEST(th.untilWindowEnd(tws) == 0.0);
+
+  th.completeTimeWindow(tws);
+  BOOST_TEST(th.windowProgress() == 0.0);
+  BOOST_TEST(th.reachedEnd());
+  BOOST_TEST(th.reachedEndOfWindow(tws));
+  BOOST_TEST(th.untilWindowEnd(tws) == 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(StepCloseToEnd)
+{
+  PRECICE_TEST(1_rank);
+  TimeHandler th(1.0);
+
+  th.progressBy(0.999999999999999999999999);
+  BOOST_TEST(th.time() == 1.0);
+  BOOST_TEST(th.reachedEndOfWindow(1.0));
+  BOOST_TEST(th.reachedEnd());
+  BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
+
+  th.completeTimeWindow(1.0);
+  BOOST_TEST(th.windowProgress() == 0.0);
+  BOOST_TEST(th.reachedEnd());
+  BOOST_TEST(th.reachedEndOfWindow(1.0));
+  BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(TinyTimestepsToEnd)
+{
+  PRECICE_TEST(1_rank);
+  TimeHandler th(1.0);
+
+  double tss = 1e-6;
+  double tsc = 1'000'000;
+
+  for (int ts = 1; ts <= tsc; ++ts) {
+    th.progressBy(tss);
+  }
+
+  BOOST_TEST(th.time() == 1.0);
+  BOOST_TEST(th.reachedEndOfWindow(1.0));
+  BOOST_TEST(th.reachedEnd());
+  BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
+
+  th.completeTimeWindow(1.0);
+  BOOST_TEST(th.windowProgress() == 0.0);
+  BOOST_TEST(th.reachedEnd());
+  BOOST_TEST(th.reachedEndOfWindow(1.0));
+  BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(ManyTimeWindowsToEnd)
+{
+  PRECICE_TEST(1_rank);
+  TimeHandler th(1.0);
+
+  double tws = 1e-6;
+  double twc = 1'000'000;
+
+  for (int tw = 1; tw <= twc; ++tw) {
+    th.progressBy(tws);
+    th.completeTimeWindow(tws);
+  }
+
+  BOOST_TEST(th.windowProgress() == 0.0);
+  BOOST_TEST(th.reachedEnd());
+  BOOST_TEST(th.reachedEndOfWindow(1.0));
+  BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(TimeWindowsWithSubstepsToEnd)
+{
+  PRECICE_TEST(1_rank);
+  TimeHandler th(1.0);
+
+  double tws = 1e-3;
+  double twc = 1'000;
+  double tss = 1e-6;
+  double tsc = 1'000;
+
+  for (int tw = 1; tw <= twc; ++tw) {
+    for (int ts = 1; ts <= tsc; ++ts) {
+      th.progressBy(tss);
+    }
+    BOOST_TEST(th.reachedEndOfWindow(tws));
+    th.completeTimeWindow(tws);
+  }
+  BOOST_TEST(th.windowProgress() == 0.0);
+  BOOST_TEST(th.reachedEnd());
+  BOOST_TEST(th.reachedEndOfWindow(1.0));
+  BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(TinyTimestepsTruncated)
+{
+  PRECICE_TEST(1_rank);
+  TimeHandler th(1.0);
+
+  double tss = 1e-6;
+  double tsc = 1'000'000;
+
+  for (int ts = 1; ts <= tsc; ++ts) {
+    th.progressBy(tss);
+  }
+
+  BOOST_TEST(th.time() == 1.0);
+  BOOST_TEST(th.reachedEndOfWindow(1.0));
+  BOOST_TEST(th.reachedEnd());
+  BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
+
+  th.completeTimeWindow(1.0);
+  BOOST_TEST(th.windowProgress() == 0.0);
+  BOOST_TEST(th.reachedEnd());
+  BOOST_TEST(th.reachedEndOfWindow(1.0));
+  BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
+}
+
+BOOST_AUTO_TEST_CASE(ManyTimeWindowsTrucated)
+{
+  PRECICE_TEST(1_rank);
+  TimeHandler th(1.0);
+
+  double tws = 1e-6;
+  double twc = 1'000'000;
+  double twl = 0.001;
+
+  for (int tw = 1; tw <= twc; ++tw) {
+    th.progressBy(tws);
+    if (tw == twc) {
+      // extend last time window past the end, so it is truncated my maxTime
+      th.completeTimeWindow(twl);
+    } else {
+      th.completeTimeWindow(tws);
+    }
+  }
+  BOOST_TEST(th.windowProgress() == 0.0);
+  BOOST_TEST(th.reachedEnd());
+  BOOST_TEST(th.reachedEndOfWindow(1.0));
+  BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
