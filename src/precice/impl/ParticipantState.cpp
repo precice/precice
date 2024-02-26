@@ -149,7 +149,6 @@ ReadDataContext &ParticipantState::readDataContext(std::string_view mesh, std::s
 
 mesh::PtrMesh ParticipantState::findMesh(std::string_view data) const
 {
-  bool foundReadDataContextForAnyMesh = false;
   for (const auto &meshContext : _meshContexts) {
     const auto &             mesh = meshContext.second->mesh->getName();
     MeshDataKey<std::string> key{mesh, std::string{data}};
@@ -164,14 +163,14 @@ mesh::PtrMesh ParticipantState::findMesh(std::string_view data) const
 const WriteDataContext &ParticipantState::writeDataContext(std::string_view mesh, std::string_view data) const
 {
   auto it = _writeDataContexts.find(MeshDataKey{mesh, data});
-  PRECICE_CHECK(it != _writeDataContexts.end(), "Data \"{}\" does not exist in write direction.", data)
+  PRECICE_CHECK(it != _writeDataContexts.end(), "Data \"{}\" does not exist in write direction.", data);
   return it->second;
 }
 
 WriteDataContext &ParticipantState::writeDataContext(std::string_view mesh, std::string_view data)
 {
   auto it = _writeDataContexts.find(MeshDataKey{mesh, data});
-  PRECICE_CHECK(it != _writeDataContexts.end(), "Data \"{}\" does not exist in write direction.", data)
+  PRECICE_CHECK(it != _writeDataContexts.end(), "Data \"{}\" does not exist in write direction.", data);
   return it->second;
 }
 

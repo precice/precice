@@ -32,7 +32,7 @@ void RadialGeoMultiscaleMapping::computeMapping()
   PRECICE_ASSERT(effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::X) ||
                      effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Y) ||
                      effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Z),
-                 "Unknown multiscale axis type.")
+                 "Unknown multiscale axis type.");
 
   if (getConstraint() == CONSISTENT) {
     PRECICE_DEBUG("Compute consistent mapping");
@@ -71,7 +71,7 @@ void RadialGeoMultiscaleMapping::computeMapping()
         _vertexIndicesSpread.push_back(index);
       }
     } else {
-      PRECICE_ASSERT(_type == MultiscaleType::COLLECT)
+      PRECICE_ASSERT(_type == MultiscaleType::COLLECT);
       /*
         3D vertices are projected onto the 1D axis and the data is then mapped
         to (and averaged at) the nearest 1D vertex in projection space.

@@ -480,7 +480,7 @@ void SocketCommunication::send(int itemToSend, Rank rankReceiver)
 
   rankReceiver = adjustRank(rankReceiver);
 
-  PRECICE_ASSERT(rankReceiver >= 0, rankReceiver)
+  PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
 
   try {

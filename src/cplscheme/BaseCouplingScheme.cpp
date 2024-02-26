@@ -706,7 +706,7 @@ bool BaseCouplingScheme::measureConvergence()
         PRECICE_CHECK(_iterations < _maxIterations,
                       "The strict convergence measure for data \"" + convMeasure.couplingData->getDataName() +
                           "\" did not converge within the maximum allowed iterations, which terminates the simulation. "
-                          "To avoid this forced termination do not mark the convergence measure as strict.")
+                          "To avoid this forced termination do not mark the convergence measure as strict.");
       }
     } else if (convMeasure.suffices == true) {
       oneSuffices = true;

@@ -321,6 +321,7 @@ target_sources(preciceCore
     src/utils/fmt.hpp
     src/utils/fmtEigen.hpp
     src/utils/fmtSTL.hpp
+    src/utils/ignore.hpp
     src/utils/networking.cpp
     src/utils/networking.hpp
     src/utils/span_tools.hpp

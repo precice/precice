@@ -242,7 +242,7 @@ void ParticipantImpl::configure(
 void ParticipantImpl::initialize()
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().")
+  PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().");
   PRECICE_CHECK(_state != State::Initialized, "initialize() may only be called once.");
   PRECICE_ASSERT(not _couplingScheme->isInitialized());
 
@@ -358,8 +358,8 @@ void ParticipantImpl::advance(
   profiling::ScopedEventPrefix sep("advance/");
 
   PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before advance().");
-  PRECICE_CHECK(_state != State::Finalized, "advance() cannot be called after finalize().")
-  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before advance().")
+  PRECICE_CHECK(_state != State::Finalized, "advance() cannot be called after finalize().");
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before advance().");
   PRECICE_ASSERT(_couplingScheme->isInitialized());
   PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false.");
   PRECICE_CHECK(!math::equals(computedTimeStepSize, 0.0), "advance() cannot be called with a time step size of 0.");
@@ -1144,7 +1144,7 @@ void ParticipantImpl::setMeshAccessRegion(
 {
   PRECICE_TRACE(meshName, boundingBox.size());
   PRECICE_REQUIRE_MESH_USE(meshName);
-  PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().")
+  PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().");
   PRECICE_CHECK(_state != State::Initialized, "setMeshAccessRegion() needs to be called before initialize().");
   PRECICE_CHECK(!_accessRegionDefined, "setMeshAccessRegion may only be called once.");
 
