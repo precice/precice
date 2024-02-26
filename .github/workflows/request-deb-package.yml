@@ -6,7 +6,7 @@ name: Request Deb Package
 # - Select the "Request Package" workflow
 # - On the top of the list, select "Run workflow"
 # - Select the release tag to generate the package for. Example: v2.3.0
-# - Select the ubuntu version >18.04 to generate the package for. Example: 21.10
+# - Select the ubuntu version to generate the package for. Example: 21.10
 # - Click "Run Workflow"
 #
 # This workflow uses the official ubuntu docker images.

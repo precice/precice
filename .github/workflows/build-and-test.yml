@@ -1,7 +1,6 @@
 name: Build and Test
 # Builds preCICE inside various docker containers and runs the tests.
 # Ubuntu-based cases additionally build the Debian package and test it using lintian.
-# The debug builds of Ubuntu 18.04 LTS are additionally used for code coverage.
 #
 # See https://github.com/precice/ci-images
 on:
@@ -39,37 +38,33 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - IMAGE: 'ubuntu-2004'
+          - IMAGE: 'ubuntu-2204'
             CONFIG: Bare
             CXX: 'g++'
             TYPE: Debug
             COVFLAGS: '--coverage'
-          - IMAGE: 'ubuntu-2004'
+          - IMAGE: 'ubuntu-2204'
             CONFIG: MPI
             CXX: 'g++'
             TYPE: Debug
             COVFLAGS: '--coverage'
-          - IMAGE: 'ubuntu-2004'
+          - IMAGE: 'ubuntu-2204'
             CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Debug
             COVFLAGS: '--coverage'
-          - IMAGE: 'ubuntu-2004'
+          - IMAGE: 'ubuntu-2204'
             CONFIG: Bare
-            CXX: 'g++'
-            TYPE: Release
-          - IMAGE: 'ubuntu-2004'
-            CONFIG: MPI
-            CXX: 'g++'
-            TYPE: Release
-          - IMAGE: 'ubuntu-2004'
-            CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Release
           - IMAGE: 'ubuntu-2204'
-            CONFIG: MPIPETScGinkgo
+            CONFIG: MPI
             CXX: 'g++'
-            TYPE: Debug
+            TYPE: Release
+          - IMAGE: 'ubuntu-2204'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Release
           - IMAGE: 'ubuntu-2404'
             CONFIG: MPIPETScGinkgo
             CXX: 'g++'
