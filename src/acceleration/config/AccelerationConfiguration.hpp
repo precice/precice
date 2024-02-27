@@ -57,6 +57,7 @@ private:
   const std::string ATTR_MESH;
   const std::string ATTR_SCALING;
   const std::string ATTR_VALUE;
+  const std::string ATTR_RANGETYPE;
   const std::string ATTR_MIN;
   const std::string ATTR_MAX;
   const std::string ATTR_ENFORCE;
@@ -84,6 +85,10 @@ private:
   const std::string VALUE_SVD_RESTART;
   const std::string VALUE_SLIDE_RESTART;
   const std::string VALUE_NO_RESTART;
+  const std::string VALUE_NO_BOUND;
+  const std::string VALUE_LOWER_BOUND;
+  const std::string VALUE_UPPER_BOUND;
+  const std::string VALUE_ALL_BOUND;
 
   const mesh::PtrMeshConfiguration _meshConfig;
 
@@ -99,25 +104,26 @@ private:
   std::set<std::pair<std::string, std::string>> _uniqueDataAndMeshNames;
 
   struct ConfigurationData {
-    std::vector<int>      dataIDs;
-    std::map<int, double> scalings;
-    std::map<int, double> lowerBounds;
-    std::map<int, double> upperBounds;
-    std::string           type;
-    double                relaxationFactor           = 0;
-    bool                  forceInitialRelaxation     = false;
-    int                   maxIterationsUsed          = 0;
-    int                   timeWindowsReused          = 0;
-    int                   filter                     = Acceleration::NOFILTER;
-    int                   imvjRestartType            = 0;
-    int                   imvjChunkSize              = 0;
-    int                   imvjRSLS_reusedTimeWindows = 0;
-    int                   precond_nbNonConstTWindows = -1;
-    double                singularityLimit           = 0;
-    double                imvjRSSVD_truncationEps    = 0;
-    bool                  estimateJacobian           = false;
-    bool                  alwaysBuildJacobian        = false;
-    std::string           preconditionerType;
+    std::vector<int>           dataIDs;
+    std::map<int, double>      scalings;
+    std::map<int, std::string> rangeTypes;
+    std::map<int, double>      lowerBounds;
+    std::map<int, double>      upperBounds;
+    std::string                type;
+    double                     relaxationFactor           = 0;
+    bool                       forceInitialRelaxation     = false;
+    int                        maxIterationsUsed          = 0;
+    int                        timeWindowsReused          = 0;
+    int                        filter                     = Acceleration::NOFILTER;
+    int                        imvjRestartType            = 0;
+    int                        imvjChunkSize              = 0;
+    int                        imvjRSLS_reusedTimeWindows = 0;
+    int                        precond_nbNonConstTWindows = -1;
+    double                     singularityLimit           = 0;
+    double                     imvjRSSVD_truncationEps    = 0;
+    bool                       estimateJacobian           = false;
+    bool                       alwaysBuildJacobian        = false;
+    std::string                preconditionerType;
 
     std::vector<double> scalingFactorsInOrder() const;
   } _config;

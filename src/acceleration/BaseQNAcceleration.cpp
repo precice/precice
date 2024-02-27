@@ -31,21 +31,23 @@ namespace acceleration {
  * ----------------------------------------------------------------------------
  */
 BaseQNAcceleration::BaseQNAcceleration(
-    double                  initialRelaxation,
-    bool                    forceInitialRelaxation,
-    int                     maxIterationsUsed,
-    int                     timeWindowsReused,
-    int                     filter,
-    double                  singularityLimit,
-    std::vector<int>        dataIDs,
-    std::map<int, double>   lowerBounds,
-    std::map<int, double>   upperBounds,
-    impl::PtrPreconditioner preconditioner)
+    double                     initialRelaxation,
+    bool                       forceInitialRelaxation,
+    int                        maxIterationsUsed,
+    int                        timeWindowsReused,
+    int                        filter,
+    double                     singularityLimit,
+    std::vector<int>           dataIDs,
+    std::map<int, std::string> rangeTypes,
+    std::map<int, double>      lowerBounds,
+    std::map<int, double>      upperBounds,
+    impl::PtrPreconditioner    preconditioner)
     : _preconditioner(std::move(preconditioner)),
       _initialRelaxation(initialRelaxation),
       _maxIterationsUsed(maxIterationsUsed),
       _timeWindowsReused(timeWindowsReused),
       _dataIDs(std::move(dataIDs)),
+      _rangeTypes(rangeTypes),
       _lowerBounds(lowerBounds),
       _upperBounds(upperBounds),
       _forceInitialRelaxation(forceInitialRelaxation),
@@ -174,97 +176,63 @@ void BaseQNAcceleration::initialize(
 
   _preconditioner->initialize(subVectorSizes);
 }
-void BaseQNAcceleration::projectFWInput(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, double> lowerBounds,
-                                        std::map<int, double> upperBounds)
+void BaseQNAcceleration::forwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds, std::map<int, double> upperBounds)
 {
   Eigen::Index offset = 0;
   for (auto id : dataIDs) {
     Eigen::Index size       = cplData.at(id)->values().size();
+    auto         rangeType  = rangeTypes.at(id);
     auto         lowerBound = lowerBounds.at(id);
     auto         upperBound = upperBounds.at(id);
-    if (lowerBound <= -1.0e16 && upperBound >= 1.0e16) { // do nothing
-    } else if (lowerBound > -1.0e16 && upperBound < 1.0e16) {
-      // when both sides are bounded
+
+    if (rangeType == "not-bounded") {
+      // do nothing
+    } else if (rangeType == "lower-bounded") { //TODO
+    } else if (rangeType == "upper-bounded") { //TODO
+    } else {
       double delta       = 0.1;
       double leftLimit   = lowerBound - delta;
       double rightLimit  = upperBound + delta;
       double intervalLen = rightLimit - leftLimit;
-      // double factor        = 1;
-      // int selectedTrans = 1; // 1: logTrans, 2: tanhTrans, else: noTrans
 
       for (Eigen::Index i = 0; i < size; i++) {
-        double normOldValue = (_oldValues[i + offset] - leftLimit) / intervalLen;
-        double normValue    = (_values[i + offset] - leftLimit) / intervalLen;
+        double normalizedOldValue = (_oldValues[i + offset] - leftLimit) / intervalLen;
+        double normalizedValue    = (_values[i + offset] - leftLimit) / intervalLen;
 
-        _values[i + offset]    = log(normValue / (1.0 - normValue));
-        _oldValues[i + offset] = log(normOldValue / (1.0 - normOldValue));
-        /*
-        switch (selectedTrans) {
-        case 1:
-          _values[i + offset]    = factor * log(normValue / (1.0 - normValue));
-          _oldValues[i + offset] = factor * log(normOldValue / (1.0 - normOldValue));
-          break;
-        case 2:
-          _values[i + offset]    = factor * atanh(normValue);
-          _oldValues[i + offset] = factor * atanh(normOldValue);
-          break;
-        default:
-          _values[i + offset]    = _values[i + offset];
-          _oldValues[i + offset] = _oldValues[i + offset];
-          break;
-        }
-        */
+        _values[i + offset]    = log(normalizedValue / (1.0 - normalizedValue));
+        _oldValues[i + offset] = log(normalizedOldValue / (1.0 - normalizedOldValue));
       }
-    } else {
-      // when only one side is bounded
     }
+
     offset += size;
   }
 }
-void BaseQNAcceleration::projectBWInput(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, double> lowerBounds,
-                                        std::map<int, double> upperBounds)
+void BaseQNAcceleration::backwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds, std::map<int, double> upperBounds)
 {
   Eigen::Index offset = 0;
   for (auto id : dataIDs) {
     Eigen::Index size       = cplData.at(id)->values().size();
+    auto         rangeType  = rangeTypes.at(id);
     auto         lowerBound = lowerBounds.at(id);
     auto         upperBound = upperBounds.at(id);
-    if (lowerBound <= -1.0e16 && upperBound >= 1.0e16) { // do nothing
-    } else if (lowerBound > -1.0e16 && upperBound < 1.0e16) {
-      // when both sides are bounded
+
+    if (rangeType == "not-bounded") {
+      // do nothing
+    } else if (rangeType == "lower-bounded") { //TODO
+    } else if (rangeType == "upper-bounded") { //TODO
+    } else {
       double delta       = 0.1;
       double leftLimit   = lowerBound - delta;
       double rightLimit  = upperBound + delta;
       double intervalLen = rightLimit - leftLimit;
-      // int    selectedTrans = 1; // 0:only crop, 1: logTrans, 2: tanhTrans, else: nothing
-      // double factor = 10;
+
       for (Eigen::Index i = 0; i < size; i++) {
         _values[i + offset] = 1 / (1 + exp(-_values[i + offset])) * intervalLen + leftLimit;
         _values[i + offset] = fmin(fmax(lowerBound, _values[i + offset]), upperBound);
-        /*
-        switch (selectedTrans) {
-        case 0:
-          _values[i + offset] = fmin(fmax(lowerBound, _values[i + offset]), upperBound);
-          break;
-        case 1:
-          _values[i + offset] = 1 / (1 + exp(-_values[i + offset] / factor)) * intervalLen + leftLimit;
-          _values[i + offset] = fmin(fmax(lowerBound, _values[i + offset]), upperBound);
-          break;
-        case 2:
-          _values[i + offset] = tanh(_values[i + offset] / factor) * intervalLen + leftLimit;
-          _values[i + offset] = fmin(fmax(lowerBound, _values[i + offset]), upperBound);
-          break;
-        default:
-          _values[i + offset] = _values[i + offset];
-          break;
-        }
-        */
-
-        // TODO: when the cropped part is large, warn preCICE against fake convergence(accelerate to the boundary for consecutive time windows, thus residual is zero when it's actually not converged)
+        // TODO: when the cropped part is large, warn preCICE against fake convergence( accelerate to the boundary for consecutive time windows, thus residual is zero when it's actually not converged)
       }
-    } else {
-      // TODO: when only one side is bounded
     }
+
     offset += size;
   }
 }
@@ -387,7 +355,7 @@ void BaseQNAcceleration::performAcceleration(
 
   // scale data values (and secondary data values)
   concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
-  projectFWInput(cplData, _dataIDs, _lowerBounds, _upperBounds);
+  forwardTransformation(cplData, _dataIDs, _rangeTypes, _lowerBounds, _upperBounds);
 
   /** update the difference matrices V,W  includes:
    * scaling of values
@@ -408,7 +376,7 @@ void BaseQNAcceleration::performAcceleration(
     _values = _residuals;
 
     computeUnderrelaxationSecondaryData(cplData);
-    projectBWInput(cplData, _dataIDs, _lowerBounds, _upperBounds);
+    backwardTransformation(cplData, _dataIDs, _rangeTypes, _lowerBounds, _upperBounds);
   } else {
     PRECICE_DEBUG("   Performing quasi-Newton Step");
 
@@ -473,7 +441,7 @@ void BaseQNAcceleration::performAcceleration(
      * apply quasiNewton update
      */
     _values = _oldValues + xUpdate + _residuals; // = x^k + delta_x + r^k - q^k
-    projectBWInput(cplData, _dataIDs, _lowerBounds, _upperBounds);
+    backwardTransformation(cplData, _dataIDs, _rangeTypes, _lowerBounds, _upperBounds);
     // pending deletion: delete old V, W matrices if timeWindowsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
     if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
@@ -577,7 +545,7 @@ void BaseQNAcceleration::iterationsConverged(
   // convergence was achieved
   concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
   auto cplDataCopy = cplData;
-  projectFWInput(cplDataCopy, _dataIDs, _lowerBounds, _upperBounds);
+  forwardTransformation(cplDataCopy, _dataIDs, _rangeTypes, _lowerBounds, _upperBounds);
   updateDifferenceMatrices(cplDataCopy);
 
   if (not _matrixCols.empty() && _matrixCols.front() == 0) { // Did only one iteration

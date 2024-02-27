@@ -63,16 +63,17 @@ namespace acceleration {
 class BaseQNAcceleration : public Acceleration {
 public:
   BaseQNAcceleration(
-      double                  initialRelaxation,
-      bool                    forceInitialRelaxation,
-      int                     maxIterationsUsed,
-      int                     timeWindowsReused,
-      int                     filter,
-      double                  singularityLimit,
-      std::vector<int>        dataIDs,
-      std::map<int, double>   lowerBounds,
-      std::map<int, double>   upperBounds,
-      impl::PtrPreconditioner preconditioner);
+      double                     initialRelaxation,
+      bool                       forceInitialRelaxation,
+      int                        maxIterationsUsed,
+      int                        timeWindowsReused,
+      int                        filter,
+      double                     singularityLimit,
+      std::vector<int>           dataIDs,
+      std::map<int, std::string> rangeTypes,
+      std::map<int, double>      lowerBounds,
+      std::map<int, double>      upperBounds,
+      impl::PtrPreconditioner    preconditioner);
 
   /**
    * @brief Destructor, empty.
@@ -109,13 +110,13 @@ public:
   /**
    * @brief Transform the bounded input data into the inf range.
    */
-  virtual void projectFWInput(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, double> lowerBounds,
-                              std::map<int, double> upperBounds);
+  virtual void forwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds,
+                                     std::map<int, double> upperBounds);
   /**
-   * @brief Trandform the output data backward from inf to certain range.
+   * @brief Transform the output data backward from inf to certain range.
    */
-  virtual void projectBWInput(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, double> lowerBounds,
-                              std::map<int, double> upperBounds);
+  virtual void backwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds,
+                                      std::map<int, double> upperBounds);
   /**
    * @brief Marks a iteration sequence as converged.
    *
@@ -185,6 +186,15 @@ protected:
    */
   bool _hasNodesOnInterface = true;
 
+  /// @brief store the bound type for each dataID, 0 = none, 1 = lower bounded, 2 = upper bounded, 3 = both sides bounded
+  std::map<int, std::string> _rangeTypes;
+
+  /// @brief store the lower limit for each dataID
+  std::map<int, double> _lowerBounds;
+
+  /// @brief store the upper limit for each dataID
+  std::map<int, double> _upperBounds;
+
   /* @brief If true, the QN-scheme always performs a underrelaxation in the first iteration of
    *        a new time window. Otherwise, the LS system from the previous time window is used in the
    *        first iteration.
@@ -226,12 +236,6 @@ protected:
    * and the corresponding (older) iteration is removed.
    */
   double _singularityLimit;
-
-  /// @brief store the lower limit for each dataID
-  std::map<int, double> _lowerBounds;
-
-  /// @brief store the upper limit for each dataID
-  std::map<int, double> _upperBounds;
 
   /** @brief Indices (of columns in W, V matrices) of 1st iterations of time windows.
    *

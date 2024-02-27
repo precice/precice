@@ -25,18 +25,19 @@ using precice::cplscheme::PtrCouplingData;
 namespace precice::acceleration {
 
 IQNILSAcceleration::IQNILSAcceleration(
-    double                  initialRelaxation,
-    bool                    forceInitialRelaxation,
-    int                     maxIterationsUsed,
-    int                     pastTimeWindowsReused,
-    int                     filter,
-    double                  singularityLimit,
-    std::vector<int>        dataIDs,
-    std::map<int, double>   lowerBounds,
-    std::map<int, double>   upperBounds,
-    impl::PtrPreconditioner preconditioner)
+    double                     initialRelaxation,
+    bool                       forceInitialRelaxation,
+    int                        maxIterationsUsed,
+    int                        pastTimeWindowsReused,
+    int                        filter,
+    double                     singularityLimit,
+    std::vector<int>           dataIDs,
+    std::map<int, std::string> rangeTypes,
+    std::map<int, double>      lowerBounds,
+    std::map<int, double>      upperBounds,
+    impl::PtrPreconditioner    preconditioner)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
-                         filter, singularityLimit, std::move(dataIDs), lowerBounds, upperBounds, move(preconditioner))
+                         filter, singularityLimit, std::move(dataIDs), rangeTypes, lowerBounds, upperBounds, std::move(preconditioner))
 {
 }
 

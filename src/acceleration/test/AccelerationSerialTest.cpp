@@ -53,6 +53,9 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
+  std::map<int, std::string> rangeTypes;
+  rangeTypes.insert(std::make_pair(0, "not-bounded"));
+  rangeTypes.insert(std::make_pair(1, "not-bounded"));
   std::map<int, double> lowerBounds;
   lowerBounds.insert(std::make_pair(0, -1.0e16));
   lowerBounds.insert(std::make_pair(1, -1.0e16));
@@ -65,7 +68,7 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   mesh::PtrMesh           dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                         timeWindowsReused, filter, singularityLimit, dataIDs, lowerBounds, upperBounds, prec, alwaysBuildJacobian,
+                         timeWindowsReused, filter, singularityLimit, dataIDs, rangeTypes, lowerBounds, upperBounds, prec, alwaysBuildJacobian,
                          restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps);
 
   Eigen::VectorXd fcol1;
@@ -153,6 +156,9 @@ void testVIQNPP(bool exchangeSubsteps)
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
+  std::map<int, std::string> rangeTypes;
+  rangeTypes.insert(std::make_pair(0, "not-bounded"));
+  rangeTypes.insert(std::make_pair(1, "not-bounded"));
   std::map<int, double> lowerBounds;
   lowerBounds.insert(std::make_pair(0, -1.0e16));
   lowerBounds.insert(std::make_pair(1, -1.0e16));
@@ -169,7 +175,7 @@ void testVIQNPP(bool exchangeSubsteps)
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                        timeWindowsReused, filter, singularityLimit, dataIDs, lowerBounds, upperBounds, prec);
+                        timeWindowsReused, filter, singularityLimit, dataIDs, rangeTypes, lowerBounds, upperBounds, prec);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));

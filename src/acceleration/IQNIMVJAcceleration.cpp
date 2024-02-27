@@ -36,6 +36,7 @@ IQNIMVJAcceleration::IQNIMVJAcceleration(
     int                            filter,
     double                         singularityLimit,
     std::vector<int>               dataIDs,
+    std::map<int, std::string>     rangeTypes,
     std::map<int, double>          lowerBounds,
     std::map<int, double>          upperBounds,
     const impl::PtrPreconditioner &preconditioner,
@@ -45,7 +46,7 @@ IQNIMVJAcceleration::IQNIMVJAcceleration(
     int                            RSLSreusedTimeWindows,
     double                         RSSVDtruncationEps)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
-                         filter, singularityLimit, std::move(dataIDs), lowerBounds, upperBounds, preconditioner),
+                         filter, singularityLimit, std::move(dataIDs), rangeTypes, lowerBounds, upperBounds, preconditioner),
       //  _secondaryOldXTildes(),
       _invJacobian(),
       _oldInvJacobian(),
