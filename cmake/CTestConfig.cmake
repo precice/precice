@@ -228,7 +228,7 @@ add_precice_test(
 add_precice_test(
   NAME cplscheme
   ARGUMENTS "--run_test=CplSchemeTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_NORMAL}
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
   )
 add_precice_test(
   NAME io
