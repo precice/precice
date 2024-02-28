@@ -138,6 +138,8 @@ public:
 
   Eigen::MatrixXd sampleGradients(double time) const;
 
+  time::Sample getSampleAtEnd();
+
 private:
   /// Stores Stamples on the current window
   std::vector<Stample> _stampleStorage;
@@ -161,8 +163,6 @@ private:
   int computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const;
 
   time::Sample getSampleAtBeginning();
-
-  time::Sample getSampleAtEnd();
 
   int findTimeId(double time) const;
 };

@@ -28,10 +28,8 @@ void ScaleByAreaAction::performAction()
   PRECICE_TRACE();
   const int meshDimensions = getMesh()->getDimensions();
 
-  for (auto &targetStample : _targetData->stamples()) {
-
-    auto &targetValues              = _targetData->values();
-    targetValues                    = targetStample.sample.values;
+  for (auto &targetStample : _targetData->timeStepsStorage().stamples()) {
+    auto &          targetValues    = targetStample.sample.values;
     const int       valueDimensions = _targetData->getDimensions();
     Eigen::VectorXd areas           = Eigen::VectorXd::Zero(getMesh()->vertices().size());
     PRECICE_ASSERT(targetValues.size() / valueDimensions == areas.size());
@@ -67,8 +65,8 @@ void ScaleByAreaAction::performAction()
         }
       }
     }
-    _targetData->setSampleAtTime(targetStample.timestamp, _targetData->sample());
   }
+  _targetData->updateSample();
 }
 
 } // namespace precice::action

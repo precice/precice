@@ -233,11 +233,13 @@ int Storage::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples
 
 time::Sample Storage::getSampleAtBeginning()
 {
+  PRECICE_ASSERT(!_stampleStorage.empty());
   return _stampleStorage.front().sample;
 }
 
 time::Sample Storage::getSampleAtEnd()
 {
+  PRECICE_ASSERT(!_stampleStorage.empty());
   return _stampleStorage.back().sample;
 }
 

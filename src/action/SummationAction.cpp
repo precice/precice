@@ -7,6 +7,7 @@
 #include "mapping/Mapping.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
+#include "utils/ranges.hpp"
 
 namespace precice::action {
 
@@ -31,19 +32,23 @@ void SummationAction::performAction()
 {
   PRECICE_TRACE();
 
+  // check if all source stamples have identical times
   const auto &referenceData = _sourceDataVector.front(); // serves as reference
-  const int   nStamples     = referenceData->stamples().size();
-  for (int stampleId = 0; stampleId < nStamples; stampleId++) { // simultaneously loop over stamples in all sourceData of _sourceDataVector
-    auto &targetValues = _targetData->values();
-    targetValues.setZero();
-    const double currentTimestamp = referenceData->stamples()[stampleId].timestamp;
-    for (const auto &sourceData : _sourceDataVector) {
-      auto sourceStample = sourceData->stamples()[stampleId];
-      PRECICE_CHECK(math::equals(sourceStample.timestamp, currentTimestamp), "Trying to perform summation action on samples with different timestamps: expected timestamp {}, but got source data with timestamp {}.  Time meshes of all source data must agree. Actions do not fully support subcycling yet.", currentTimestamp, sourceStample.timestamp);
-      auto sourceDataValues = sourceStample.sample.values;
-      targetValues += sourceDataValues;
+  auto        times         = referenceData->timeStepsStorage().getTimes();
+  for (const auto &sourceData : utils::ranges::tail(_sourceDataVector)) {
+    auto sourceTimes = sourceData->timeStepsStorage().getTimes();
+    PRECICE_CHECK(times == sourceTimes,
+                  "Trying to perform summation action on data with different timestamps data \"{}\" has {}, while data \"{}\" has {}. Time meshes of all source data must agree. Actions do not fully support subcycling yet.",
+                  referenceData->getName(), times, sourceData->getName(), sourceTimes);
+  }
+
+  // Sum up the samples, note that _targetData does not contain stamples
+  for (int stampleId = 0, nStamples = referenceData->stamples().size(); stampleId < nStamples; stampleId++) { // simultaneously loop over stamples in all sourceData of _sourceDataVector
+    time::Stample sum = _sourceDataVector.front()->stamples()[stampleId];
+    for (const auto &sourceData : utils::ranges::tail(_sourceDataVector)) {
+      sum.sample.values += sourceData->stamples()[stampleId].sample.values;
     }
-    _targetData->setSampleAtTime(currentTimestamp, _targetData->sample());
+    _targetData->setSampleAtTime(sum.timestamp, std::move(sum.sample));
   }
 }
 
