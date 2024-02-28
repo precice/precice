@@ -51,7 +51,7 @@ void Data::updateSample()
     return;
   }
 
-  _sample = _waveform.timeStepsStorage().getSampleAtEnd();
+  _sample = lastStample().sample;
 }
 
 time::Sample &Data::sample()
