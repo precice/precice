@@ -92,6 +92,9 @@ public:
    */
   Eigen::VectorXd sampleAtTime(double time) const;
 
+  /// Get a reference to the lasts stample of the data.
+  const time::Stample &lastStample() const;
+
   /**
    * @brief get degree of _waveform.
    *

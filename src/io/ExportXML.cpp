@@ -156,7 +156,7 @@ void ExportXML::writeSubFile(
 
 void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std::ostream &outFile) const
 {
-  const auto &             gradients      = data->gradients();
+  const auto &             gradients      = data->lastStample().sample.gradients;
   const int                dataDimensions = data->getDimensions();
   std::vector<std::string> suffices;
   if (dataDimensions == 1) {
@@ -212,11 +212,11 @@ void ExportXML::exportData(
   outFile << "\n            </DataArray>\n";
 
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
-    Eigen::VectorXd &values         = data->values();
-    int              dataDimensions = data->getDimensions();
-    std::string      dataName(data->getName());
-    int              numberOfComponents = (dataDimensions == 2) ? 3 : dataDimensions;
-    const bool       hasGradient        = data->hasGradient();
+    const Eigen::VectorXd &values         = data->lastStample().sample.values;
+    int                    dataDimensions = data->getDimensions();
+    std::string            dataName(data->getName());
+    int                    numberOfComponents = (dataDimensions == 2) ? 3 : dataDimensions;
+    const bool             hasGradient        = data->hasGradient();
     outFile << "            <DataArray type=\"Float64\" Name=\"" << dataName << "\" NumberOfComponents=\"" << numberOfComponents;
     outFile << "\" format=\"ascii\">\n";
     outFile << "               ";

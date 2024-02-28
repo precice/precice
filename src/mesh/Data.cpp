@@ -64,6 +64,12 @@ const time::Sample &Data::sample() const
   return _sample;
 }
 
+const time::Stample &Data::lastStample() const
+{
+  PRECICE_ASSERT(!_waveform.timeStepsStorage().empty());
+  return _waveform.timeStepsStorage().stamples().back();
+}
+
 Eigen::VectorXd Data::sampleAtTime(double time) const
 {
   return _waveform.sample(time);

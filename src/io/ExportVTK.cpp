@@ -129,7 +129,7 @@ void ExportVTK::exportData(
   outFile << "\n\n";
 
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
-    Eigen::VectorXd &values = data->values();
+    const Eigen::VectorXd &values = data->lastStample().sample.values;
     if (data->getDimensions() > 1) {
       Eigen::VectorXd viewTemp(data->getDimensions());
       outFile << "VECTORS " << data->getName() << " double\n";
@@ -164,7 +164,7 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
   const int spaceDim = mesh.getDimensions();
   for (const mesh::PtrData &data : mesh.data()) {
     if (data->hasGradient()) { // Check whether this data has gradient
-      auto &gradients = data->gradients();
+      const auto &gradients = data->lastStample().sample.gradients;
       if (data->getDimensions() == 1) { // Scalar data, create a vector <dataname>_gradient
         outFile << "VECTORS " << data->getName() << "_gradient"
                 << " double\n";
