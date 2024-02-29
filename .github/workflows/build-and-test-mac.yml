@@ -45,12 +45,10 @@ jobs:
        check-latest: true
     - name: Install numpy
       run: pip3 install numpy
-    - name: Test
-      run: brew --cache
     - name: Restore homebrew cache
       uses: actions/cache@v4
       with:
-        path: Library/Caches/Homebrew
+        path: /Users/runner/Library/Caches/Homebrew
         key: precice-homebrew
     - name: Install preCICE dependencies
       run: brew install cmake eigen libxml2 boost petsc openmpi pkg-config ninja
