@@ -45,10 +45,15 @@ jobs:
        check-latest: true
     - name: Install numpy
       run: pip3 install numpy
-    - name: Install preCICE dependencies
-      uses: tecolicom/actions-use-homebrew-tools@v1
+    - name: Test
+      run: brew --cache
+    - name: Restore homebrew cache
+      uses: actions/cache@v4
       with:
-        tools: cmake eigen libxml2 boost petsc openmpi pkg-config ninja
+        path: Library/Caches/Homebrew
+        key: precice-homebrew
+    - name: Install preCICE dependencies
+      run: brew install cmake eigen libxml2 boost petsc openmpi pkg-config ninja
     - name: Generate build directory
       run: mkdir -p build
     - name: Configure
