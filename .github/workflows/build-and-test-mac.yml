@@ -46,7 +46,9 @@ jobs:
     - name: Install numpy
       run: pip3 install numpy
     - name: Install preCICE dependencies
-      run: brew install cmake eigen libxml2 boost petsc openmpi pkg-config
+      uses: tecolicom/actions-use-homebrew-tools@v1
+      with:
+        tools: cmake eigen libxml2 boost petsc openmpi pkg-config ninja
     - name: Generate build directory
       run: mkdir -p build
     - name: Configure
@@ -58,7 +60,7 @@ jobs:
         PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
       run: |
         cmake --version
-        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -G Ninja ..
     - uses: actions/upload-artifact@v4
       if: failure()
       with:
@@ -77,12 +79,12 @@ jobs:
     - name: Compile
       working-directory: build
       run: |
-        make -j $(sysctl -n hw.ncpu)
+        cmake --build .
     - name: Tests
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
       working-directory: build
-      run: make test
+      run: ctest
     - uses: actions/upload-artifact@v4
       if: failure()
       with:
