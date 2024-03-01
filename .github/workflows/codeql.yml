@@ -38,6 +38,7 @@ jobs:
       - name: Build
         env:
           CMAKE_GENERATOR: Ninja
+          CODEQL_EXTRACTOR_CPP_AUTOINSTALL_DEPENDENCIES: false
         uses: github/codeql-action/autobuild@v3
 
       - name: Perform CodeQL Analysis
