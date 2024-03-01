@@ -99,14 +99,12 @@ jobs:
             CXX: 'g++'
             TYPE: Release
     env:
-      CCACHE_DIR: "$GITHUB_WORKSPACE/ccache"
       OMPI_MCA_rmaps_base_oversubscribe: 1
     steps:
-      - name: Restore ccache
-        uses: actions/cache@v4
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          path: ccache
-          key: precice-ccache-${{ runner.IMAGE }}-${{ matrix.CONFIG }}-${{ matrix.CXX }}-${{ matrix.TYPE }}
+          key: precice-ccache-pr-${{ runner.IMAGE }}-${{ matrix.CONFIG }}-${{ matrix.CXX }}-${{ matrix.TYPE }}
       - uses: actions/checkout@v4
       - name: Generate build directory
         run: mkdir -p build
