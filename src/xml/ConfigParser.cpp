@@ -64,7 +64,7 @@ void OnStartElementNs(
 
   auto pParser = static_cast<ConfigParser *>(ctx);
 
-  std::string sPrefix(prefix == nullptr ? "" : reinterpret_cast<const char *>(prefix));
+  std::string_view sPrefix(prefix == nullptr ? "" : reinterpret_cast<const char *>(prefix));
 
   pParser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap);
 }
@@ -210,7 +210,7 @@ auto gatherCandidates(const std::vector<std::shared_ptr<XMLTag>> &DefTags, std::
 
 void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<std::shared_ptr<XMLTag>> &DefTags, CTagPtrVec &SubTags)
 {
-  std::unordered_set<std::string> usedTags;
+  std::unordered_set<std::string_view> usedTags;
 
   for (auto &subtag : SubTags) {
     std::string expectedName = (subtag->m_Prefix.length() ? subtag->m_Prefix + ":" : "") + subtag->m_Name;
@@ -259,8 +259,8 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 }
 
 void ConfigParser::OnStartElement(
-    std::string         localname,
-    std::string         prefix,
+    std::string_view    localname,
+    std::string_view    prefix,
     CTag::AttributePair attributes)
 {
   auto pTag = std::make_shared<CTag>();
