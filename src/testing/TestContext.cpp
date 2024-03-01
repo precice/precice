@@ -60,7 +60,12 @@ std::string TestContext::prefix(const std::string &filename) const
 
 std::string TestContext::config() const
 {
-  return prefix(testing::getTestName() + ".xml");
+  auto testname = testing::getTestName();
+  auto filepath = prefix(testname + ".xml");
+  if (!boost::filesystem::is_regular_file(filepath)) {
+    throw std::runtime_error("The requested config for \"" + testname + "\" does not exist at: " + filepath);
+  }
+  return filepath;
 }
 
 bool TestContext::hasSize(int size) const
