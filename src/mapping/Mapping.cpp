@@ -135,10 +135,10 @@ void Mapping::map(int inputDataID,
                  getDimensions(), output()->getDimensions());
   PRECICE_ASSERT(input()->data(inputDataID)->getDimensions() == output()->data(outputDataID)->getDimensions(),
                  input()->data(inputDataID)->getDimensions(), output()->data(outputDataID)->getDimensions());
-  PRECICE_ASSERT(input()->data(inputDataID)->values().size() / input()->data(inputDataID)->getDimensions() == static_cast<int>(input()->vertices().size()),
-                 input()->data(inputDataID)->values().size(), input()->data(inputDataID)->getDimensions(), input()->vertices().size());
-  PRECICE_ASSERT(output()->data(outputDataID)->values().size() / output()->data(outputDataID)->getDimensions() == static_cast<int>(output()->vertices().size()),
-                 output()->data(outputDataID)->values().size(), output()->data(outputDataID)->getDimensions(), output()->vertices().size());
+  PRECICE_ASSERT(input()->data(inputDataID)->values().size() / input()->data(inputDataID)->getDimensions() == static_cast<int>(input()->nVertices()),
+                 input()->data(inputDataID)->values().size(), input()->data(inputDataID)->getDimensions(), input()->nVertices());
+  PRECICE_ASSERT(output()->data(outputDataID)->values().size() / output()->data(outputDataID)->getDimensions() == static_cast<int>(output()->nVertices()),
+                 output()->data(outputDataID)->values().size(), output()->data(outputDataID)->getDimensions(), output()->nVertices());
 
   time::Sample sample{input()->data(inputDataID)->getDimensions(),
                       input()->data(inputDataID)->values(),
@@ -192,7 +192,7 @@ void Mapping::scaleConsistentMapping(const Eigen::VectorXd &input, Eigen::Vector
   bool requiresTetra     = (spaceDimension == 3 and volumeMode);
 
   for (mesh::PtrMesh mesh : {this->input(), this->output()}) {
-    if (not mesh->vertices().empty()) {
+    if (not mesh->empty()) {
 
       PRECICE_CHECK(!(requiresEdges && mesh->edges().empty()), "Edges connectivity information is missing for the mesh \"{}\". "
                                                                "Scaled consistent mapping requires connectivity information.",
@@ -208,7 +208,7 @@ void Mapping::scaleConsistentMapping(const Eigen::VectorXd &input, Eigen::Vector
     }
   }
 
-  const int valueDimensions = input.size() / this->input()->vertices().size();
+  const int valueDimensions = input.size() / this->input()->nVertices();
 
   Eigen::VectorXd integralInput;
   Eigen::VectorXd integralOutput;

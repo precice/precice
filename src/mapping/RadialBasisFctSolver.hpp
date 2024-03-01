@@ -101,9 +101,9 @@ constexpr void reduceActiveAxis(const mesh::Mesh &mesh, const IndexContainer &ID
     if (axis[d] == false) {
       differences[d] = std::make_pair<int, double>(d, std::numeric_limits<double>::max());
     } else {
-      auto res = std::minmax_element(IDs.begin(), IDs.end(), [&](const auto &a, const auto &b) { return mesh.vertices()[a].rawCoords()[d] < mesh.vertices()[b].rawCoords()[d]; });
+      auto res = std::minmax_element(IDs.begin(), IDs.end(), [&](const auto &a, const auto &b) { return mesh.vertex(a).coord(d) < mesh.vertex(b).coord(d); });
       // Check if we are above or below the threshold
-      differences[d] = std::make_pair<int, double>(d, std::abs(mesh.vertices()[*res.second].rawCoords()[d] - mesh.vertices()[*res.first].rawCoords()[d]));
+      differences[d] = std::make_pair<int, double>(d, std::abs(mesh.vertex(*res.second).coord(d) - mesh.vertex(*res.first).coord(d)));
     }
   }
 
@@ -123,7 +123,7 @@ inline void fillPolynomialEntries(Eigen::MatrixXd &matrix, const mesh::Mesh &mes
     matrix(i.index(), startIndex) = 1.0;
 
     // 2. the linear contribution
-    const auto & u = mesh.vertices()[i.value()].rawCoords();
+    const auto & u = mesh.vertex(i.value()).rawCoords();
     unsigned int k = 0;
     // Loop over all three space dimension and ignore dead axis
     for (unsigned int d = 0; d < activeAxis.size(); ++d) {
@@ -164,11 +164,11 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
   auto         i_iter  = inputIDs.begin();
   Eigen::Index i_index = 0;
   for (; i_iter != inputIDs.end(); ++i_iter, ++i_index) {
-    const auto &u       = inputMesh.vertices()[*i_iter].rawCoords();
+    const auto &u       = inputMesh.vertex(*i_iter).rawCoords();
     auto        j_iter  = i_iter;
     auto        j_index = i_index;
     for (; j_iter != inputIDs.end(); ++j_iter, ++j_index) {
-      const auto &v                 = inputMesh.vertices()[*j_iter].rawCoords();
+      const auto &v                 = inputMesh.vertex(*j_iter).rawCoords();
       double      squaredDifference = computeSquaredDifference(u, v, activeAxis);
       matrixCLU(i_index, j_index)   = basisFunction.evaluate(std::sqrt(squaredDifference));
     }
@@ -202,9 +202,9 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
 
   // Compute RBF values for matrix A
   for (const auto &i : outputIDs | boost::adaptors::indexed()) {
-    const auto &u = outputMesh.vertices()[i.value()].rawCoords();
+    const auto &u = outputMesh.vertex(i.value()).rawCoords();
     for (const auto &j : inputIDs | boost::adaptors::indexed()) {
-      const auto &v                 = inputMesh.vertices()[j.value()].rawCoords();
+      const auto &v                 = inputMesh.vertex(j.value()).rawCoords();
       double      squaredDifference = computeSquaredDifference(u, v, activeAxis);
       matrixA(i.index(), j.index()) = basisFunction.evaluate(std::sqrt(squaredDifference));
     }

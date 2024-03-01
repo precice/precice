@@ -156,11 +156,11 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::computeMapping()
 
     // Forwarding the tuples here requires some template magic I don't want to implement
     if constexpr (std::tuple_size_v<std::tuple<Args...>>> 0) {
-      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
-                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial, std::get<0>(optionalArgs));
+      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.nVertices()),
+                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.nVertices()), this->_deadAxis, _polynomial, std::get<0>(optionalArgs));
     } else {
-      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
-                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial);
+      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.nVertices()),
+                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.nVertices()), this->_deadAxis, _polynomial);
     }
   }
   this->_hasComputedMapping = true;
@@ -278,8 +278,8 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
 
       // Filter data
       int outputCounter = 0;
-      for (int i = 0; i < static_cast<int>(this->output()->vertices().size()); ++i) {
-        if (this->output()->vertices()[i].isOwner()) {
+      for (int i = 0; i < static_cast<int>(this->output()->nVertices()); ++i) {
+        if (this->output()->vertex(i).isOwner()) {
           for (int dim = 0; dim < valueDim; ++dim) {
             outData[i * valueDim + dim] = outputValues(outputCounter);
             ++outputCounter;
@@ -304,8 +304,8 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
     const int valueDim = inData.dataDims;
 
     int outputCounter = 0;
-    for (int i = 0; i < static_cast<int>(this->output()->vertices().size()); ++i) {
-      if (this->output()->vertices()[i].isOwner()) {
+    for (int i = 0; i < static_cast<int>(this->output()->nVertices()); ++i) {
+      if (this->output()->vertex(i).isOwner()) {
         for (int dim = 0; dim < valueDim; ++dim) {
           outData[i * valueDim + dim] = receivedValues.at(outputCounter);
           ++outputCounter;

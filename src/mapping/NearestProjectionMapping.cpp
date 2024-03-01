@@ -44,7 +44,7 @@ NearestProjectionMapping::NearestProjectionMapping(
 
 void NearestProjectionMapping::computeMapping()
 {
-  PRECICE_TRACE(input()->vertices().size(), output()->vertices().size());
+  PRECICE_TRACE(input()->nVertices(), output()->nVertices());
   const std::string         baseEvent = "map.np.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::profiling::Event e(baseEvent, profiling::Synchronize);
 

@@ -19,8 +19,8 @@ BOOST_AUTO_TEST_CASE(TestFinalize)
     double               v[]      = {xCoord, 0, 0};
     participant.setMeshVertex(meshName, v);
     participant.initialize();
-    BOOST_TEST(precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshOne").vertices().size() == 1);
-    BOOST_TEST(precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshTwo").vertices().size() == 1);
+    BOOST_TEST(precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshOne").nVertices() == 1);
+    BOOST_TEST(precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshTwo").nVertices() == 1);
     participant.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(TestFinalize)
     double               v[]      = {xCoord, 0, 0};
     participant.setMeshVertex(meshName, v);
     participant.initialize();
-    BOOST_TEST(precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshTwo").vertices().size() == 1);
+    BOOST_TEST(precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshTwo").nVertices() == 1);
     participant.finalize();
   }
 }

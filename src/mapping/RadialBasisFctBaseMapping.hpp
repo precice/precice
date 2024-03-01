@@ -134,7 +134,7 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     otherMesh  = output(); // local
   }
 
-  if (otherMesh->vertices().empty())
+  if (otherMesh->empty())
     return; // Ranks not at the interface should never hold interface vertices
 
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
@@ -144,7 +144,7 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     bb.expandBy(_basisFunction.getSupportRadius());
 
     auto vertices = filterMesh->index().getVerticesInsideBox(bb);
-    std::for_each(vertices.begin(), vertices.end(), [&filterMesh](size_t v) { filterMesh->vertices()[v].tag(); });
+    std::for_each(vertices.begin(), vertices.end(), [&filterMesh](size_t v) { filterMesh->vertex(v).tag(); });
   } else {
     filterMesh->tagAll();
   }
@@ -182,7 +182,7 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   // Enlarge bb by support radius
   bb.expandBy(_basisFunction.getSupportRadius());
   auto vertices = mesh->index().getVerticesInsideBox(bb);
-  std::for_each(vertices.begin(), vertices.end(), [&mesh](size_t v) { mesh->vertices()[v].tag(); });
+  std::for_each(vertices.begin(), vertices.end(), [&mesh](size_t v) { mesh->vertex(v).tag(); });
 }
 } // namespace mapping
 } // namespace precice
