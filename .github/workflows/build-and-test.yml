@@ -149,6 +149,8 @@ jobs:
         working-directory: build
         run: |
           cmake --build .
+      - name: Show ccache stats
+        run: ccache --show-stats
       - name: Adjust user rights
         run: chown -R $PRECICE_USER build
       - name: Tests
