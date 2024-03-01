@@ -104,7 +104,8 @@ jobs:
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: precice-ccache-pr-${{ runner.IMAGE }}-${{ matrix.CONFIG }}-${{ matrix.CXX }}-${{ matrix.TYPE }}
+          key: precice-ccache-${{ github.ref_name }}-${{ runner.IMAGE }}-${{ matrix.CONFIG }}-${{ matrix.CXX }}-${{ matrix.TYPE }}
+          restore-keys: precice-ccache-develop-${{ runner.IMAGE }}-${{ matrix.CONFIG }}-${{ matrix.CXX }}-${{ matrix.TYPE }}
       - uses: actions/checkout@v4
       - name: Generate build directory
         run: mkdir -p build
