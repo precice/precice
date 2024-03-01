@@ -326,6 +326,7 @@ target_sources(preciceCore
     src/utils/ignore.hpp
     src/utils/networking.cpp
     src/utils/networking.hpp
+    src/utils/ranges.hpp
     src/utils/span_tools.hpp
     src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp

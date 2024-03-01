@@ -34,16 +34,8 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
 
   // Create data
   mesh.allocateDataValues();
-  Eigen::VectorXd &valuesScalar = dataScalar->values();
-  Eigen::VectorXd &valuesVector = dataVector->values();
-  valuesScalar << 1.0, 2.0;
-  valuesVector << 1.0, 2.0, 3.0, 4.0;
-
-  // Create corresponding gradient data (all gradients = const = 1)
-  Eigen::MatrixXd &gradientsScalar = dataScalar->gradients();
-  Eigen::MatrixXd &gradientsVector = dataVector->gradients();
-  gradientsScalar.setOnes();
-  gradientsVector.setOnes();
+  dataScalar->setSampleAtTime(0.0, {1, {1.0, 2.0}, Eigen::MatrixXd::Ones(2, 2)});
+  dataVector->setSampleAtTime(0.0, {2, {1.0, 2.0, 3.0, 4.0}, Eigen::MatrixXd::Ones(2, 4)});
   io::ExportVTK exportVTK;
   std::string   filename = "io-VTKExport-ExportDatawithGradient";
   std::string   location = "";

@@ -45,6 +45,15 @@ const Eigen::MatrixXd &Data::gradients() const
   return _sample.gradients;
 }
 
+void Data::updateSample()
+{
+  if (_waveform.timeStepsStorage().empty()) {
+    return;
+  }
+
+  _sample = lastStample().sample;
+}
+
 time::Sample &Data::sample()
 {
   return _sample;
@@ -53,6 +62,12 @@ time::Sample &Data::sample()
 const time::Sample &Data::sample() const
 {
   return _sample;
+}
+
+const time::Stample &Data::lastStample() const
+{
+  PRECICE_ASSERT(!_waveform.timeStepsStorage().empty());
+  return _waveform.timeStepsStorage().stamples().back();
 }
 
 Eigen::VectorXd Data::sampleAtTime(double time) const
@@ -81,8 +96,8 @@ void Data::moveToNextWindow()
 
 void Data::setSampleAtTime(double time, const time::Sample &sample)
 {
-  _sample = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _waveform.timeStepsStorage().setSampleAtTime(time, sample);
+  updateSample();
 }
 
 const std::string &Data::getName() const

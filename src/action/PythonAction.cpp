@@ -98,28 +98,28 @@ void PythonAction::performAction()
   PyObject *dataArgs = PyTuple_New(_numberArguments);
 
   int i = 0;
-  for (auto &targetStample : _targetData->stamples()) { // iterate over _targetData, because it must always exist
-    PRECICE_ASSERT(_targetData);                        // _targetData is mandatory, cannot call setSampleAtTime, if target data is not provided!
+  for (auto &targetStample : _targetData->timeStepsStorage().stamples()) { // iterate over _targetData, because it must always exist
+    PRECICE_ASSERT(_targetData);                                           // _targetData is mandatory, cannot call setSampleAtTime, if target data is not provided!
 
     PyObject *pythonTime = PyFloat_FromDouble(targetStample.timestamp);
     PyTuple_SetItem(dataArgs, 0, pythonTime);
 
-    if (_sourceData) {                                     // _sourceData is optional
-      auto &sourceStample   = _sourceData->stamples()[i];  // simultaneously iterate over _targetData->stamples()
-      _sourceData->values() = sourceStample.sample.values; // put data into temporary buffer
+    if (_sourceData) {                                                       // _sourceData is optional
+      auto &sourceStample = _sourceData->timeStepsStorage().stamples()[i++]; // simultaneously iterate over _targetData->stamples()
       PRECICE_CHECK(math::equals(sourceStample.timestamp, targetStample.timestamp), "Trying to perform python action on samples with different timestamps: {} for source data and {} for target data. Time mesh of source data and target data must agree.", sourceStample.timestamp, targetStample.timestamp);
-      i++;
-      npy_intp sourceDim[]  = {_sourceData->values().size()};
-      double * sourceValues = _sourceData->values().data();
-      _sourceValues         = PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
+
+      auto &   sourceValues = sourceStample.sample.values; // put data into temporary buffer
+      npy_intp sourceDim[]  = {sourceValues.size()};
+      double * sourceData   = sourceValues.data();
+      _sourceValues         = PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceData);
       PRECICE_CHECK(_sourceValues != nullptr, "Creating python source values failed. Please check that the source data name is used by the mesh in action:python.");
       PyTuple_SetItem(dataArgs, 1, _sourceValues);
     }
 
-    _targetData->values() = targetStample.sample.values; // put data into temporary buffer
-    npy_intp targetDim[]  = {_targetData->values().size()};
-    double * targetValues = _targetData->values().data();
-    // PRECICE_ASSERT(_targetValues == NULL);
+    auto &   sample       = targetStample.sample;
+    npy_intp targetDim[]  = {sample.values.size()};
+    double * targetValues = sample.values.data();
+
     _targetValues = PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
     PRECICE_CHECK(_targetValues != nullptr, "Creating python target values failed. Please check that the target data name is used by the mesh in action:python.");
     int argumentIndex = _sourceData ? 2 : 1;
@@ -130,10 +130,9 @@ void PythonAction::performAction()
                   "Error occurred during call of function performAction() in python module \"{}\". "
                   "The error message is: {}",
                   _moduleName, python_error_as_string());
-
-    _targetData->setSampleAtTime(targetStample.timestamp, _targetData->sample());
   }
   Py_DECREF(dataArgs);
+  _targetData->updateSample();
 }
 
 void PythonAction::initialize()
@@ -148,8 +147,9 @@ void PythonAction::initialize()
   PyRun_SimpleString(appendPathCommand.c_str());
   _moduleNameObject = PyUnicode_FromString(_moduleName.c_str());
   _module           = PyImport_Import(_moduleNameObject);
-  PRECICE_CHECK(_module,
-                "An error occurred while loading python module \"{}\": {}", _moduleName, python_error_as_string());
+  if (_module == nullptr) {
+    PRECICE_ERROR("An error occurred while loading python module \"{}\": {}", _moduleName, python_error_as_string());
+  }
 
   // Construct method performAction
   _performAction = PyObject_GetAttrString(_module, "performAction");
