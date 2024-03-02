@@ -87,7 +87,7 @@ void OnCharacters(void *ctx, const xmlChar *ch, int len)
 
 void OnStructuredErrorFunc(void *userData, const xmlError *error)
 {
-  const std::string message{error->message};
+  const std::string_view message{error->message};
 
   // Ignore all namespace-related messages
   if (message.find("Namespace") != std::string::npos) {
@@ -117,10 +117,10 @@ void OnFatalErrorFunc(void *userData, const char *error, ...)
 
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
 
-ConfigParser::ConfigParser(const std::string &filePath, const ConfigurationContext &context, std::shared_ptr<precice::xml::XMLTag> pXmlTag)
+ConfigParser::ConfigParser(std::string_view filePath, const ConfigurationContext &context, std::shared_ptr<precice::xml::XMLTag> pXmlTag)
     : m_pXmlTag(std::move(pXmlTag))
 {
-  readXmlFile(filePath);
+  readXmlFile(std::string(filePath));
 
   std::vector<std::shared_ptr<XMLTag>> DefTags{m_pXmlTag};
   CTagPtrVec                           SubTags;
@@ -135,12 +135,12 @@ ConfigParser::ConfigParser(const std::string &filePath, const ConfigurationConte
   }
 }
 
-ConfigParser::ConfigParser(const std::string &filePath)
+ConfigParser::ConfigParser(std::string_view filePath)
 {
-  readXmlFile(filePath);
+  readXmlFile(std::string(filePath));
 }
 
-void ConfigParser::MessageProxy(int level, const std::string &mess)
+void ConfigParser::MessageProxy(int level, std::string_view mess)
 {
   switch (level) {
   case (XML_ERR_FATAL):

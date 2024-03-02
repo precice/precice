@@ -403,7 +403,7 @@ void configure(
   NoPListener nopListener;
   XMLTag      root(nopListener, "", XMLTag::OCCUR_ONCE);
 
-  precice::xml::ConfigParser p(std::string(configurationFilename), context, std::make_shared<XMLTag>(tag));
+  precice::xml::ConfigParser p(configurationFilename, context, std::make_shared<XMLTag>(tag));
 
   root.addSubtag(tag);
 }

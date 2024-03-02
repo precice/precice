@@ -44,10 +44,10 @@ private:
 
 public:
   /// Parser ctor for Callback init
-  ConfigParser(const std::string &filePath, const ConfigurationContext &context, std::shared_ptr<XMLTag> pXmlTag);
+  ConfigParser(std::string_view filePath, const ConfigurationContext &context, std::shared_ptr<XMLTag> pXmlTag);
 
   /// Parser ctor without Callbacks
-  ConfigParser(const std::string &filePath);
+  ConfigParser(std::string_view filePath);
 
   /// Reads the xml file
   int readXmlFile(std::string const &filePath);
@@ -72,7 +72,7 @@ public:
   void OnTextSection(const std::string &ch);
 
   /// Proxy for error and warning messages from libxml2
-  static void MessageProxy(int level, const std::string &mess);
+  static void MessageProxy(int level, std::string_view mess);
 };
 } // namespace xml
 } // namespace precice
