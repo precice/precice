@@ -51,7 +51,7 @@ std::string DataContext::getMeshName() const
 int DataContext::getMeshVertexCount() const
 {
   PRECICE_ASSERT(_mesh);
-  return _mesh->vertices().size();
+  return _mesh->nVertices();
 }
 
 MeshID DataContext::getMeshID() const
@@ -124,7 +124,7 @@ int DataContext::mapData(std::optional<double> after, bool skipZero)
 
       time::Sample outSample{
           dataDims,
-          Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->vertices().size())};
+          Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->nVertices())};
 
       bool skipMapping = skipZero && stample.sample.values.isZero();
 

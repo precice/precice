@@ -159,9 +159,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::strin
 
   const auto position = aAttributes.find(getName());
   if (position == aAttributes.end()) {
-    if (not _hasDefaultValue) {
-      PRECICE_ERROR("Attribute \"{}\" is required, but was not defined.", _name);
-    }
+    PRECICE_CHECK(_hasDefaultValue, "Attribute \"{}\" is required, but was not defined.", _name);
     set(_value, _defaultValue);
   } else {
     try {

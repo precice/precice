@@ -260,7 +260,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataGrow)
   mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
   mesh.createVertex(Vector3d(1.0, 0.0, 1.0));
 
-  BOOST_TEST(mesh.vertices().size() == 2);
+  BOOST_TEST(mesh.nVertices() == 2);
   mesh.allocateDataValues();
   BOOST_TEST(values.size() == 2);
 
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataGrow)
   mesh.createVertex(Vector3d(2.0, 0.0, 2.0));
   mesh.createVertex(Vector3d(2.0, 0.0, 2.1));
 
-  BOOST_TEST(mesh.vertices().size() == 5);
+  BOOST_TEST(mesh.nVertices() == 5);
   mesh.allocateDataValues();
   BOOST_TEST(values.size() == 5);
 }
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataShrink)
   mesh.createVertex(Vector3d(1.0, 1.0, 1.0));
   mesh.createVertex(Vector3d(2.0, 2.0, 2.0));
 
-  BOOST_TEST(mesh.vertices().size() == 4);
+  BOOST_TEST(mesh.nVertices() == 4);
   mesh.allocateDataValues();
   BOOST_TEST(values.size() == 4);
 
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataShrink)
   mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
   mesh.createVertex(Vector3d(1.0, 0.0, 1.0));
 
-  BOOST_TEST(mesh.vertices().size() == 2);
+  BOOST_TEST(mesh.nVertices() == 2);
   mesh.allocateDataValues();
   BOOST_TEST(values.size() == 2);
 }
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(AsChain)
   Vertex &v2 = mesh.createVertex(coords2);
   Vertex &v3 = mesh.createVertex(coords3);
 
-  BOOST_TEST(mesh.vertices().size() == 4);
+  BOOST_TEST(mesh.nVertices() == 4);
 
   Edge &e0 = mesh.createEdge(v0, v1);
   Edge &e1 = mesh.createEdge(v3, v2);
@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE(ShareVertex)
   Vertex *v1 = &mesh.createVertex(coords1);
   Vertex *v2 = &mesh.createVertex(coords2);
   Vertex *v3 = &mesh.createVertex(coords3);
-  BOOST_REQUIRE(mesh.vertices().size() == 4);
+  BOOST_REQUIRE(mesh.nVertices() == 4);
 
   Edge &e0 = mesh.createEdge(*v0, *v1);
   Edge &e1 = mesh.createEdge(*v1, *v2);
@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE(VertexPtrsFor)
   Vertex &v1 = mesh.createVertex(coords1);
   Vertex &v2 = mesh.createVertex(coords2);
   mesh.createVertex(coords3);
-  BOOST_TEST(mesh.vertices().size() == 4);
+  BOOST_TEST(mesh.nVertices() == 4);
 
   std::array<int, 3>      ids{v0.getID(), v2.getID(), v1.getID()};
   std::array<Vertex *, 3> expected{&v0, &v2, &v1};
@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(CoordsForIDs)
   Vertex &v1 = mesh.createVertex(coords1);
   Vertex &v2 = mesh.createVertex(coords2);
   mesh.createVertex(coords3);
-  BOOST_TEST(mesh.vertices().size() == 4);
+  BOOST_TEST(mesh.nVertices() == 4);
 
   std::array<int, 3>             ids{v0.getID(), v2.getID(), v1.getID()};
   std::array<Eigen::VectorXd, 3> expected{coords0, coords2, coords1};
@@ -471,7 +471,7 @@ BOOST_AUTO_TEST_CASE(CoordsForPtrs)
   Vertex &v1 = mesh.createVertex(coords1);
   Vertex &v2 = mesh.createVertex(coords2);
   mesh.createVertex(coords3);
-  BOOST_TEST(mesh.vertices().size() == 4);
+  BOOST_TEST(mesh.nVertices() == 4);
 
   std::array<Vertex *, 3>        ptrs{&v0, &v2, &v1};
   std::array<Eigen::VectorXd, 3> expected{coords0, coords2, coords1};
@@ -815,7 +815,7 @@ BOOST_AUTO_TEST_CASE(AddMesh)
   subMesh->createTetrahedron(v15, v12, v13, v14);
 
   globalMesh->addMesh(*subMesh);
-  BOOST_TEST(globalMesh->vertices().size() == 9);
+  BOOST_TEST(globalMesh->nVertices() == 9);
   BOOST_TEST(globalMesh->edges().size() == 3);
   BOOST_TEST(globalMesh->triangles().size() == 3);
   BOOST_TEST(globalMesh->tetrahedra().size() == 3);

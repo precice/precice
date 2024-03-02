@@ -11,6 +11,7 @@ target_sources(testprecice
     tests/parallel/GlobalRBFPartitioningPETSc.cpp
     tests/parallel/LocalRBFPartitioning.cpp
     tests/parallel/LocalRBFPartitioningPETSc.cpp
+    tests/parallel/MappingTypeRestriction.cpp
     tests/parallel/NearestProjectionRePartitioning.cpp
     tests/parallel/PrimaryRankSockets.cpp
     tests/parallel/TestBoundingBoxInitialization.cpp

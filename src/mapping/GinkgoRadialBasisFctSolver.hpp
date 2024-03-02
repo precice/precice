@@ -225,9 +225,9 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   PRECICE_ASSERT((inputMesh.getDimensions() == 3) || activeAxis[2] == false);
   PRECICE_ASSERT((inputSize >= 1 + polyparams) || polynomial != Polynomial::ON, inputSize);
 
-  const std::size_t inputMeshSize  = inputMesh.vertices().size();
-  const std::size_t outputMeshSize = outputMesh.vertices().size();
-  const std::size_t meshDim        = inputMesh.vertices().at(0).getDimensions();
+  const std::size_t inputMeshSize  = inputMesh.nVertices();
+  const std::size_t outputMeshSize = outputMesh.nVertices();
+  const std::size_t meshDim        = inputMesh.vertex(0).getDimensions();
 
   _scalarOne         = gko::share(gko::initialize<GinkgoScalar>({1.0}, _deviceExecutor));
   _scalarNegativeOne = gko::share(gko::initialize<GinkgoScalar>({-1.0}, _deviceExecutor));
@@ -261,18 +261,18 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   for (std::size_t i = 0; i < inputMeshSize; ++i) {
     for (std::size_t j = 0; j < meshDim; ++j) {
       if ("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor) {
-        inputVertices->at(j, i) = inputMesh.vertices().at(i).rawCoords()[j];
+        inputVertices->at(j, i) = inputMesh.vertex(i).coord(j);
       } else {
-        inputVertices->at(i, j) = inputMesh.vertices().at(i).rawCoords()[j];
+        inputVertices->at(i, j) = inputMesh.vertex(i).coord(j);
       }
     }
   }
   for (std::size_t i = 0; i < outputMeshSize; ++i) {
     for (std::size_t j = 0; j < meshDim; ++j) {
       if ("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor) {
-        outputVertices->at(j, i) = outputMesh.vertices().at(i).rawCoords()[j];
+        outputVertices->at(j, i) = outputMesh.vertex(i).coord(j);
       } else {
-        outputVertices->at(i, j) = outputMesh.vertices().at(i).rawCoords()[j];
+        outputVertices->at(i, j) = outputMesh.vertex(i).coord(j);
       }
     }
   }

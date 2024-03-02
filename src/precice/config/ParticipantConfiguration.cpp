@@ -408,7 +408,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                     participant->getName(), toMesh, toMesh);
     }
 
-    if (context.size > 1) {
+    if (context.size > 1 && context.name == participant->getName()) {
       if ((confMapping.direction == mapping::MappingConfiguration::WRITE &&
            confMapping.mapping->getConstraint() == mapping::Mapping::CONSISTENT) ||
           (confMapping.direction == mapping::MappingConfiguration::READ &&
