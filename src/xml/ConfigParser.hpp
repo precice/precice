@@ -61,8 +61,8 @@ public:
 
   /// Callback for Start-Tag
   void OnStartElement(
-      std::string_view    localname,
-      std::string_view    prefix,
+      std::string         localname,
+      std::string         prefix,
       CTag::AttributePair attributes);
 
   /// Callback for End-Tag

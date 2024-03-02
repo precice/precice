@@ -20,7 +20,7 @@ namespace precice::xml {
 
 std::string decodeXML(std::string xml)
 {
-  static const std::map<std::string, char> escapes{{"&lt;", '<'}, {"&gt;", '>'}, {"&amp;", '&'}, {"&quot;", '"'}, {"&apos;", '\''}};
+  static const std::map<std::string_view, char> escapes{{"&lt;", '<'}, {"&gt;", '>'}, {"&amp;", '&'}, {"&quot;", '"'}, {"&apos;", '\''}};
   while (true) {
     bool changes{false};
     for (const auto &kv : escapes) {
@@ -59,14 +59,14 @@ void OnStartElementNs(
     auto        valueEnd   = reinterpret_cast<const char *>(attributes[index + 4]);
     std::string value(valueBegin, valueEnd);
 
-    attributesMap[attributeName] = decodeXML(value);
+    attributesMap[attributeName] = decodeXML(std::move(value));
   }
 
   auto pParser = static_cast<ConfigParser *>(ctx);
 
-  std::string_view sPrefix(prefix == nullptr ? "" : reinterpret_cast<const char *>(prefix));
+  std::string sPrefix(prefix == nullptr ? "" : reinterpret_cast<const char *>(prefix));
 
-  pParser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap);
+  pParser->OnStartElement(std::move(reinterpret_cast<const char *>(localname)), std::move(sPrefix), attributesMap);
 }
 
 void OnEndElementNs(
@@ -259,8 +259,8 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 }
 
 void ConfigParser::OnStartElement(
-    std::string_view    localname,
-    std::string_view    prefix,
+    std::string         localname,
+    std::string         prefix,
     CTag::AttributePair attributes)
 {
   auto pTag = std::make_shared<CTag>();
