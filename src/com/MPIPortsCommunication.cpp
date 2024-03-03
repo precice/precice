@@ -1,6 +1,6 @@
 #ifndef PRECICE_NO_MPI
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <ostream>
 #include <utility>
 
@@ -240,12 +240,12 @@ void MPIPortsCommunication::closeConnection()
 void MPIPortsCommunication::prepareEstablishment(std::string const &acceptorName,
                                                  std::string const &requesterName)
 {
-  using namespace boost::filesystem;
+  using namespace std::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
   PRECICE_DEBUG("Creating connection exchange directory {}", dir.generic_string());
   try {
     create_directories(dir);
-  } catch (const boost::filesystem::filesystem_error &e) {
+  } catch (const std::filesystem::filesystem_error &e) {
     PRECICE_WARN("Creating directory for connection info failed with: {}", e.what());
   }
 }
@@ -253,12 +253,12 @@ void MPIPortsCommunication::prepareEstablishment(std::string const &acceptorName
 void MPIPortsCommunication::cleanupEstablishment(std::string const &acceptorName,
                                                  std::string const &requesterName)
 {
-  using namespace boost::filesystem;
+  using namespace std::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
   PRECICE_DEBUG("Removing connection exchange directory {}", dir.generic_string());
   try {
     remove_all(dir);
-  } catch (const boost::filesystem::filesystem_error &e) {
+  } catch (const std::filesystem::filesystem_error &e) {
     PRECICE_WARN("Cleaning up connection info failed with: {}", e.what());
   }
 }

@@ -1,7 +1,7 @@
 #include "io/ExportXML.hpp"
 #include <Eigen/Core>
 #include <algorithm>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -28,7 +28,7 @@ void ExportXML::doExport(
   PRECICE_TRACE(name, location, mesh.getName());
   processDataNamesAndDimensions(mesh);
   if (not location.empty())
-    boost::filesystem::create_directories(location);
+    std::filesystem::create_directories(location);
   if (utils::IntraComm::isPrimary()) {
     writeParallelFile(name, location, mesh);
   }
@@ -70,7 +70,7 @@ void ExportXML::writeParallelFile(
     const std::string &location,
     const mesh::Mesh & mesh) const
 {
-  namespace fs = boost::filesystem;
+  namespace fs = std::filesystem;
   fs::path outfile(location);
   outfile = outfile / fs::path(name + getParallelExtension());
   std::ofstream outParallelFile(outfile.string(), std::ios::trunc);
@@ -125,7 +125,7 @@ void ExportXML::writeSubFile(
     const std::string &location,
     const mesh::Mesh & mesh) const
 {
-  namespace fs = boost::filesystem;
+  namespace fs = std::filesystem;
   fs::path outfile(location);
   outfile /= fs::path(name + getPieceSuffix() + getPieceExtension());
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);

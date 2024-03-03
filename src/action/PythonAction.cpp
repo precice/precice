@@ -3,8 +3,8 @@
 #include "PythonAction.hpp"
 #include <Eigen/Core>
 #include <Python.h>
-#include <boost/filesystem/operations.hpp>
 #include <cstdlib>
+#include <filesystem>
 #include <memory>
 #include <ostream>
 #include <pthread.h>
@@ -63,7 +63,7 @@ PythonAction::PythonAction(
       _modulePath(std::move(modulePath)),
       _moduleName(std::move(moduleName))
 {
-  PRECICE_CHECK(boost::filesystem::is_directory(_modulePath),
+  PRECICE_CHECK(std::filesystem::is_directory(_modulePath),
                 "The module path of the python action \"{}\" does not exist. The configured path is \"{}\".",
                 _moduleName, _modulePath);
   if (targetDataID != -1) {
