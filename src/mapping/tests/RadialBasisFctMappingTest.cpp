@@ -1409,7 +1409,7 @@ void testDeadAxis2d(Polynomial polynomial, Mapping::Constraint constraint)
   inMesh->createVertex(Vector2d(2.0, 1.0));
   inMesh->createVertex(Vector2d(3.0, 1.0));
   addGlobalIndex(inMesh);
-  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
+  inMesh->setGlobalNumberOfVertices(inMesh->nVertices());
 
   Eigen::VectorXd values(4);
   values << 1.0, 2.0, 2.0, 1.0;
@@ -1421,7 +1421,7 @@ void testDeadAxis2d(Polynomial polynomial, Mapping::Constraint constraint)
   outMesh->createVertex(Vector2d(1.3, 1.));
   outMesh->createVertex(Vector2d(5, 1.));
   addGlobalIndex(outMesh);
-  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
+  outMesh->setGlobalNumberOfVertices(outMesh->nVertices());
 
   // Setup mapping with mapping coordinates and geometry used
   mapping.setMeshes(inMesh, outMesh);
@@ -1470,7 +1470,7 @@ void testDeadAxis3d(Polynomial polynomial, Mapping::Constraint constraint)
   inMesh->createVertex(Vector3d(0.0, 3.0, 1.0));
   inMesh->createVertex(Vector3d(1.0, 3.0, 1.0));
   addGlobalIndex(inMesh);
-  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
+  inMesh->setGlobalNumberOfVertices(inMesh->nVertices());
 
   Eigen::VectorXd values(4);
   values << 1.0, 2.0, 3.0, 4.0;
@@ -1482,7 +1482,7 @@ void testDeadAxis3d(Polynomial polynomial, Mapping::Constraint constraint)
   outMesh->createVertex(Vector3d(0.1, 2.9, 0.9));
   outMesh->createVertex(Vector3d(1.1, 2.9, 1.1));
   addGlobalIndex(outMesh);
-  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
+  outMesh->setGlobalNumberOfVertices(outMesh->nVertices());
 
   // Setup mapping with mapping coordinates and geometry used
   mapping.setMeshes(inMesh, outMesh);

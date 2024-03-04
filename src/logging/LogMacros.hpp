@@ -18,6 +18,20 @@
     std::exit(-1);                                                                  \
   } while (false)
 
+#define PRECICE_WARN_IF(condition, ...) \
+  do {                                  \
+    if (condition) {                    \
+      PRECICE_WARN(__VA_ARGS__);        \
+    }                                   \
+  } while (false)
+
+#define PRECICE_INFO_IF(condition, ...) \
+  do {                                  \
+    if (condition) {                    \
+      PRECICE_INFO(__VA_ARGS__);        \
+    }                                   \
+  } while (false)
+
 #define PRECICE_CHECK(check, ...) \
   do {                            \
     if (!(check)) {               \
@@ -39,6 +53,9 @@
 #define PRECICE_DEBUG(...) \
   ::precice::utils::ignore(__VA_ARGS__)
 
+#define PRECICE_DEBUG_IF(...) \
+  ::precice::utils::ignore(__VA_ARGS__)
+
 #define PRECICE_TRACE(...) \
   ::precice::utils::ignore(__VA_ARGS__)
 
@@ -47,6 +64,13 @@
 #include "utils/ArgumentFormatter.hpp"
 
 #define PRECICE_DEBUG(...) _log.debug(PRECICE_LOG_LOCATION, precice::utils::format_or_error(__VA_ARGS__))
+
+#define PRECICE_DEBUG_IF(condition, ...) \
+  do {                                   \
+    if (condition) {                     \
+      PRECICE_DEBUG(__VA_ARGS__);        \
+    }                                    \
+  } while (false)
 
 #endif // ! PRECICE_NO_DEBUG_LOG
 

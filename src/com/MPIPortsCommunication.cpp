@@ -226,9 +226,8 @@ void MPIPortsCommunication::closeConnection()
 
   for (auto &communicator : _communicators) {
     MPIResult res = MPI_Comm_disconnect(&communicator.second);
-    if (!res) {
-      PRECICE_WARN("MPI_Comm_disconnect failed with message: {}", res.message());
-    }
+    PRECICE_WARN_IF(!res,
+                    "MPI_Comm_disconnect failed with message: {}", res.message());
   }
   _communicators.clear();
 

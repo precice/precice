@@ -32,7 +32,7 @@ void ExportXML::doExport(
   if (utils::IntraComm::isPrimary()) {
     writeParallelFile(name, location, mesh);
   }
-  if (mesh.vertices().size() > 0) { // only procs at the coupling interface should write output (for performance reasons)
+  if (mesh.nVertices() > 0) { // only procs at the coupling interface should write output (for performance reasons)
     writeSubFile(name, location, mesh);
   }
 }
@@ -206,7 +206,7 @@ void ExportXML::exportData(
   outFile << "            <DataArray type=\"UInt32\" Name=\"Rank\" NumberOfComponents=\"1\" format=\"ascii\">\n";
   outFile << "               ";
   const auto rank = utils::IntraComm::getRank();
-  for (size_t count = 0; count < mesh.vertices().size(); ++count) {
+  for (size_t count = 0; count < mesh.nVertices(); ++count) {
     outFile << rank << ' ';
   }
   outFile << "\n            </DataArray>\n";
@@ -222,7 +222,7 @@ void ExportXML::exportData(
     outFile << "               ";
     if (dataDimensions > 1) {
       Eigen::VectorXd viewTemp(dataDimensions);
-      for (size_t count = 0; count < mesh.vertices().size(); count++) {
+      for (size_t count = 0; count < mesh.nVertices(); count++) {
         size_t offset = count * dataDimensions;
         for (int i = 0; i < dataDimensions; i++) {
           viewTemp[i] = values(offset + i);
@@ -236,7 +236,7 @@ void ExportXML::exportData(
         outFile << ' ';
       }
     } else if (dataDimensions == 1) {
-      for (size_t count = 0; count < mesh.vertices().size(); count++) {
+      for (size_t count = 0; count < mesh.nVertices(); count++) {
         outFile << values(count) << ' ';
       }
     }

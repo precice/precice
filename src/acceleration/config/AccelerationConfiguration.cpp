@@ -153,14 +153,14 @@ void AccelerationConfiguration::xmlTagCallback(
     std::string dataName = callingTag.getStringAttributeValue(ATTR_NAME);
     std::string meshName = callingTag.getStringAttributeValue(ATTR_MESH);
     auto        success  = _uniqueDataAndMeshNames.emplace(dataName, meshName);
-    if (not success.second) {
-      PRECICE_ERROR("You have provided a subtag <data name=\"{}\" mesh=\"{}\"/> more than once in your <acceleration:.../>. "
-                    "Please remove the duplicated entry.",
-                    dataName, meshName);
-    }
-    _meshName = callingTag.getStringAttributeValue(ATTR_MESH);
 
-    double      scaling    = 1.0;
+    PRECICE_CHECK(success.second,
+                  "You have provided a subtag <data name=\"{}\" mesh=\"{}\"/> more than once in your <acceleration:.../>. "
+                  "Please remove the duplicated entry.",
+                  dataName, meshName);
+
+    _meshName      = callingTag.getStringAttributeValue(ATTR_MESH);
+    double scaling = 1.0;
     std::string rangeType  = VALUE_NO_BOUND;
     double      lowerBound = -1.0e16;
     double      upperBound = 1.0e16;

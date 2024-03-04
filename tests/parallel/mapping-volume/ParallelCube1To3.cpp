@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube1To3)
     participant.setMeshTetrahedron(meshName, v000, v100, v110, v111);
 
     auto &mesh = precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
-    BOOST_REQUIRE(mesh.vertices().size() == 8);
+    BOOST_REQUIRE(mesh.nVertices() == 8);
     BOOST_REQUIRE(mesh.tetrahedra().size() == 6);
 
     participant.initialize();

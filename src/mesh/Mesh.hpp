@@ -69,11 +69,26 @@ public:
       int         dimensions,
       MeshID      id);
 
+  /// Mutable access to a vertex by VertexID
+  Vertex &vertex(VertexID id);
+
+  /// Const access to a vertex by VertexID
+  const Vertex &vertex(VertexID id) const;
+
   /// Returns modifieable container holding all vertices.
   VertexContainer &vertices();
 
   /// Returns const container holding all vertices.
   const VertexContainer &vertices() const;
+
+  /// Returns the number of vertices
+  std::size_t nVertices() const;
+
+  /// Does the mesh contain any vertices?
+  bool empty() const
+  {
+    return _vertices.empty();
+  }
 
   /// Returns modifiable container holding all edges.
   EdgeContainer &edges();
