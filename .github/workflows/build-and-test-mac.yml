@@ -82,7 +82,7 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
       working-directory: build
-      run: make test
+      run: ctest
     - uses: actions/upload-artifact@v4
       if: failure()
       with:
