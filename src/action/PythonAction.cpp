@@ -126,11 +126,10 @@ void PythonAction::performAction()
     PyTuple_SetItem(dataArgs, argumentIndex, _targetValues);
 
     PyObject_CallObject(_performAction, dataArgs);
-    if (PyErr_Occurred()) {
-      PRECICE_ERROR("Error occurred during call of function performAction() in python module \"{}\". "
-                    "The error message is: {}",
-                    _moduleName, python_error_as_string());
-    }
+    PRECICE_CHECK(!PyErr_Occurred(),
+                  "Error occurred during call of function performAction() in python module \"{}\". "
+                  "The error message is: {}",
+                  _moduleName, python_error_as_string());
 
     _targetData->setSampleAtTime(targetStample.timestamp, _targetData->sample());
   }
@@ -149,9 +148,8 @@ void PythonAction::initialize()
   PyRun_SimpleString(appendPathCommand.c_str());
   _moduleNameObject = PyUnicode_FromString(_moduleName.c_str());
   _module           = PyImport_Import(_moduleNameObject);
-  if (_module == nullptr) {
-    PRECICE_ERROR("An error occurred while loading python module \"{}\": {}", _moduleName, python_error_as_string());
-  }
+  PRECICE_CHECK(_module,
+                "An error occurred while loading python module \"{}\": {}", _moduleName, python_error_as_string());
 
   // Construct method performAction
   _performAction = PyObject_GetAttrString(_module, "performAction");

@@ -37,7 +37,7 @@ std::string ExportVTU::getPieceExtension() const
 std::string ExportVTU::getPieceAttributes(const mesh::Mesh &mesh) const
 {
   std::ostringstream oss;
-  oss << "NumberOfPoints=\"" << mesh.vertices().size() << "\" ";
+  oss << "NumberOfPoints=\"" << mesh.nVertices() << "\" ";
   oss << "NumberOfCells=\"" << mesh.edges().size() + mesh.triangles().size() + mesh.tetrahedra().size() << "\" ";
   return oss.str();
 }

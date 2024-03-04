@@ -1039,7 +1039,7 @@ void testTagging(const TestContext &context,
   mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
   mesh::PtrData outData = outMesh->createData("OutData", valueDimension, 1_dataID);
   getDistributedMesh(context, outMeshSpec, outMesh, outData);
-  BOOST_TEST_MESSAGE("Mesh sizes in: " << inMesh->vertices().size() << " out: " << outMesh->vertices().size());
+  BOOST_TEST_MESSAGE("Mesh sizes in: " << inMesh->nVertices() << " out: " << outMesh->nVertices());
 
   Gaussian fct(4.5); // Support radius approx. 1
   BOOST_TEST_MESSAGE("Basis function has support radius " << fct.getSupportRadius());

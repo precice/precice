@@ -395,7 +395,7 @@ void perform2DTestConservativeMapping(Mapping &mapping)
   inMesh->createVertex(Vector2d(5, 1));
   inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
-  inMesh->setGlobalNumberOfVertices(inMesh->vertices().size());
+  inMesh->setGlobalNumberOfVertices(inMesh->nVertices());
 
   auto &values = inData->values();
   values << 10.0, 0.0, 0.0, 10.0, 0.0;
@@ -421,7 +421,7 @@ void perform2DTestConservativeMapping(Mapping &mapping)
 
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
-  outMesh->setGlobalNumberOfVertices(outMesh->vertices().size());
+  outMesh->setGlobalNumberOfVertices(outMesh->nVertices());
 
   // Setup mapping with mapping coordinates and geometry used
   mapping.setMeshes(inMesh, outMesh);

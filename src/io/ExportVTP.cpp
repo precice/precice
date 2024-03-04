@@ -25,7 +25,7 @@ std::string ExportVTP::getPieceExtension() const
 std::string ExportVTP::getPieceAttributes(const mesh::Mesh &mesh) const
 {
   std::ostringstream oss;
-  oss << "NumberOfPoints=\"" << mesh.vertices().size() << "\" ";
+  oss << "NumberOfPoints=\"" << mesh.nVertices() << "\" ";
   oss << "NumberOfLines=\"" << mesh.edges().size() << "\" ";
   oss << "NumberOfPolys=\"" << mesh.triangles().size() << "\"";
   return oss.str();

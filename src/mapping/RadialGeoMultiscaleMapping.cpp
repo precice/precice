@@ -20,13 +20,13 @@ RadialGeoMultiscaleMapping::RadialGeoMultiscaleMapping(
 
 void RadialGeoMultiscaleMapping::computeMapping()
 {
-  PRECICE_TRACE(output()->vertices().size());
+  PRECICE_TRACE(output()->nVertices());
 
   PRECICE_ASSERT(input().get() != nullptr);
   PRECICE_ASSERT(output().get() != nullptr);
 
-  size_t const inSize  = input()->vertices().size();
-  size_t const outSize = output()->vertices().size();
+  size_t const inSize  = input()->nVertices();
+  size_t const outSize = output()->nVertices();
 
   int effectiveCoordinate = static_cast<std::underlying_type_t<MultiscaleType>>(_axis);
   PRECICE_ASSERT(effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::X) ||
@@ -41,16 +41,16 @@ void RadialGeoMultiscaleMapping::computeMapping()
       Eigen::VectorXd axisMidpoints(inSize);
       auto &          inputVerticesRef = input()->vertices();
       // Order the vertices of the 1D input mesh, to correctly compute the midpoints of the segments between neighboring vertices
-      std::vector<size_t> ordered_vertex_indices(input()->vertices().size());
+      std::vector<size_t> ordered_vertex_indices(input()->nVertices());
       std::iota(ordered_vertex_indices.begin(), ordered_vertex_indices.end(), 0);
       std::stable_sort(ordered_vertex_indices.begin(), ordered_vertex_indices.end(),
                        [effectiveCoordinate, &inputVerticesRef](const size_t aindex, const size_t bindex) {
-                         return inputVerticesRef[aindex].rawCoords()[effectiveCoordinate] < inputVerticesRef[bindex].rawCoords()[effectiveCoordinate];
+                         return inputVerticesRef[aindex].coord(effectiveCoordinate) < inputVerticesRef[bindex].coord(effectiveCoordinate);
                        });
       // Compute the midpoints of the 1D input mesh
       for (size_t i = 0; i < (inSize - 1); i++) {
-        auto axisPositionCurrent = inputVerticesRef[ordered_vertex_indices[i]].rawCoords()[effectiveCoordinate];
-        auto axisPositionNext    = inputVerticesRef[ordered_vertex_indices[i] + 1].rawCoords()[effectiveCoordinate];
+        auto axisPositionCurrent = inputVerticesRef[ordered_vertex_indices[i]].coord(effectiveCoordinate);
+        auto axisPositionNext    = inputVerticesRef[ordered_vertex_indices[i] + 1].coord(effectiveCoordinate);
         axisMidpoints(i)         = (axisPositionCurrent + axisPositionNext) / 2;
       }
       axisMidpoints(inSize - 1) = std::numeric_limits<double>::max(); // large number, such that vertices after the last midpoint are still assigned
@@ -60,9 +60,9 @@ void RadialGeoMultiscaleMapping::computeMapping()
         to the nearest neighbors of the 1D vertices in projection space.
       */
       _vertexIndicesSpread.clear();
-      _vertexIndicesSpread.reserve(output()->vertices().size());
+      _vertexIndicesSpread.reserve(output()->nVertices());
       for (size_t i = 0; i < outSize; i++) {
-        auto   vertexCoord = output()->vertices()[i].rawCoords()[effectiveCoordinate];
+        auto   vertexCoord = output()->vertex(i).coord(effectiveCoordinate);
         size_t index       = 0;
         while (vertexCoord > axisMidpoints(index)) {
           PRECICE_ASSERT(index + 1 < inSize);
@@ -82,16 +82,16 @@ void RadialGeoMultiscaleMapping::computeMapping()
       auto &          outputVerticesRef = output()->vertices();
 
       // Order the vertices of the 1D output mesh, to correctly compute the midpoints of the segments between neighboring vertices
-      std::vector<size_t> ordered_vertex_indices(output()->vertices().size());
+      std::vector<size_t> ordered_vertex_indices(output()->nVertices());
       std::iota(ordered_vertex_indices.begin(), ordered_vertex_indices.end(), 0);
       std::stable_sort(ordered_vertex_indices.begin(), ordered_vertex_indices.end(),
                        [effectiveCoordinate, &outputVerticesRef](const size_t aindex, const size_t bindex) {
-                         return outputVerticesRef[aindex].rawCoords()[effectiveCoordinate] < outputVerticesRef[bindex].rawCoords()[effectiveCoordinate];
+                         return outputVerticesRef[aindex].coord(effectiveCoordinate) < outputVerticesRef[bindex].coord(effectiveCoordinate);
                        });
       // Compute the midpoints of the 1D output mesh
       for (size_t i = 0; i < (outSize - 1); i++) {
-        auto axisPositionCurrent = output()->vertices()[i].rawCoords()[effectiveCoordinate];
-        auto axisPositionNext    = output()->vertices()[i + 1].rawCoords()[effectiveCoordinate];
+        auto axisPositionCurrent = output()->vertex(i).coord(effectiveCoordinate);
+        auto axisPositionNext    = output()->vertex(i + 1).coord(effectiveCoordinate);
         axisMidpoints(i)         = (axisPositionCurrent + axisPositionNext) / 2;
       }
       axisMidpoints(outSize - 1) = std::numeric_limits<double>::max(); // large number, such that vertices after the last midpoint are still assigned
@@ -100,9 +100,9 @@ void RadialGeoMultiscaleMapping::computeMapping()
 
       // Identify which vertex (index) of the 3D mesh corresponds to which vertex (index) of the 1D meesh
       _vertexIndicesCollect.clear();
-      _vertexIndicesCollect.reserve(input()->vertices().size());
+      _vertexIndicesCollect.reserve(input()->nVertices());
       for (size_t i = 0; i < inSize; i++) {
-        auto   vertexCoords = input()->vertices()[i].rawCoords()[effectiveCoordinate];
+        auto   vertexCoords = input()->vertex(i).coord(effectiveCoordinate);
         size_t index        = 0;
         while (vertexCoords > axisMidpoints(index)) {
           PRECICE_ASSERT(index + 1 < outSize);
@@ -145,17 +145,17 @@ void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen
   const Eigen::VectorXd &inputValues      = inData.values;
   Eigen::VectorXd &      outputValues     = outData;
 
-  size_t const inSize  = input()->vertices().size();
-  size_t const outSize = output()->vertices().size();
+  size_t const inSize  = input()->nVertices();
+  size_t const outSize = output()->nVertices();
 
-  PRECICE_ASSERT(!output()->vertices().empty());
+  PRECICE_ASSERT(!output()->empty());
   auto outDataDimensions = outputValues.size() / outSize;
 
   // Check that the number of values for the input and output is right according to their dimensions
-  PRECICE_ASSERT((inputValues.size() / static_cast<std::size_t>(inDataDimensions) == input()->vertices().size()),
-                 inputValues.size(), inDataDimensions, input()->vertices().size());
-  PRECICE_ASSERT((outputValues.size() / outDataDimensions == output()->vertices().size()),
-                 outputValues.size(), outDataDimensions, output()->vertices().size());
+  PRECICE_ASSERT((inputValues.size() / static_cast<std::size_t>(inDataDimensions) == input()->nVertices()),
+                 inputValues.size(), inDataDimensions, input()->nVertices());
+  PRECICE_ASSERT((outputValues.size() / outDataDimensions == output()->nVertices()),
+                 outputValues.size(), outDataDimensions, output()->nVertices());
 
   // We currently don't support 1D data, so we need that the user specifies data of the same dimensions on both sides
   PRECICE_ASSERT(static_cast<std::size_t>(inDataDimensions) == outDataDimensions);

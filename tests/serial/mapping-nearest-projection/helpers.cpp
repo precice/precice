@@ -174,7 +174,7 @@ void testQuadMappingNearestProjection(bool defineEdgesExplicitly, bool useBulkFu
     }
 
     auto &mesh = testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
-    BOOST_REQUIRE(mesh.vertices().size() == 4);
+    BOOST_REQUIRE(mesh.nVertices() == 4);
     if (defineEdgesExplicitly) {
       BOOST_REQUIRE(mesh.edges().size() == 4);
     } else {
@@ -276,7 +276,7 @@ void testQuadMappingNearestProjectionTallKite(bool defineEdgesExplicitly, bool u
     }
 
     auto &mesh = testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
-    BOOST_REQUIRE(mesh.vertices().size() == 4);
+    BOOST_REQUIRE(mesh.nVertices() == 4);
     if (defineEdgesExplicitly) {
       BOOST_REQUIRE(mesh.edges().size() == 4);
     } else {
@@ -335,7 +335,7 @@ void testQuadMappingNearestProjectionWideKite(bool defineEdgesExplicitly, bool u
     }
 
     auto &mesh = testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
-    BOOST_REQUIRE(mesh.vertices().size() == 4);
+    BOOST_REQUIRE(mesh.nVertices() == 4);
     if (defineEdgesExplicitly) {
       BOOST_REQUIRE(mesh.edges().size() == 4);
     } else {

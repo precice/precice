@@ -40,15 +40,15 @@ void BarycentricBaseMapping::mapConservative(const time::Sample &inData, Eigen::
   precice::profiling::Event e("map.bbm.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
   PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
   PRECICE_DEBUG("Map conservative using {}", getName());
-  PRECICE_ASSERT(_interpolations.size() == input()->vertices().size(),
-                 _interpolations.size(), input()->vertices().size());
+  PRECICE_ASSERT(_interpolations.size() == input()->nVertices(),
+                 _interpolations.size(), input()->nVertices());
   const int              dimensions = inData.dataDims;
   const Eigen::VectorXd &inValues   = inData.values;
   Eigen::VectorXd &      outValues  = outData;
 
   // For each input vertex, distribute the conserved data among the relevant output vertices
   // Do it for all dimensions (i.e. components if data is a vector)
-  for (size_t i = 0; i < input()->vertices().size(); i++) {
+  for (size_t i = 0; i < input()->nVertices(); i++) {
     const size_t inOffset = i * dimensions;
     const auto & elems    = _interpolations[i].getWeightedElements();
     for (const auto &elem : elems) {
@@ -67,8 +67,8 @@ void BarycentricBaseMapping::mapConsistent(const time::Sample &inData, Eigen::Ve
   PRECICE_TRACE();
   precice::profiling::Event e("map.bbm.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
   PRECICE_DEBUG("Map {} using {}", (hasConstraint(CONSISTENT) ? "consistent" : "scaled-consistent"), getName());
-  PRECICE_ASSERT(_interpolations.size() == output()->vertices().size(),
-                 _interpolations.size(), output()->vertices().size());
+  PRECICE_ASSERT(_interpolations.size() == output()->nVertices(),
+                 _interpolations.size(), output()->nVertices());
 
   const int              dimensions = inData.dataDims;
   const Eigen::VectorXd &inValues   = inData.values;
@@ -76,7 +76,7 @@ void BarycentricBaseMapping::mapConsistent(const time::Sample &inData, Eigen::Ve
 
   // For each output vertex, compute the linear combination of input vertices
   // Do it for all dimensions (i.e. components if data is a vector)
-  for (size_t i = 0; i < output()->vertices().size(); i++) {
+  for (size_t i = 0; i < output()->nVertices(); i++) {
     const auto &elems     = _interpolations[i].getWeightedElements();
     size_t      outOffset = i * dimensions;
     for (const auto &elem : elems) {
@@ -110,7 +110,7 @@ void BarycentricBaseMapping::tagMeshFirstRound()
   // Gather all vertices to be tagged in a first phase.
   // max_count is used to shortcut if all vertices have been tagged.
   std::unordered_set<int> tagged;
-  const std::size_t       max_count = origins->vertices().size();
+  const std::size_t       max_count = origins->nVertices();
 
   for (const Polation &interpolation : _interpolations) {
     for (const auto &elem : interpolation.getWeightedElements()) {
