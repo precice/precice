@@ -61,8 +61,6 @@
 
 #else // PRECICE_NO_DEBUG_LOG
 
-#include "utils/ArgumentFormatter.hpp"
-
 #define PRECICE_DEBUG(...) _log.debug(PRECICE_LOG_LOCATION, precice::utils::format_or_error(__VA_ARGS__))
 
 #define PRECICE_DEBUG_IF(condition, ...) \
@@ -91,6 +89,7 @@
 #else // PRECICE_NO_TRACE_LOG
 
 #include "logging/Tracer.hpp"
+#include "utils/ArgumentFormatter.hpp"
 
 // Do not put do {...} while (false) here, it will destroy the _tracer_ right after creation
 #define PRECICE_TRACE(...)                                       \
