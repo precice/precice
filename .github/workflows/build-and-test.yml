@@ -147,7 +147,7 @@ jobs:
       - name: Compile
         working-directory: build
         env:
-          CCACHE_DEBUGDIR: $${{ github.workspace }}/ccache_debug
+          CCACHE_DEBUGDIR: ${{ github.workspace }}/ccache_debug
           CCACHE_DEBUGLEVEL: 1
         run: |
           cmake --build .
@@ -156,7 +156,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CCache Debug
-          path: $${{ github.workspace }}/ccache_debug
+          path: ${{ github.workspace }}/ccache_debug
       - name: Adjust user rights
         run: chown -R $PRECICE_USER build
       - name: Tests
