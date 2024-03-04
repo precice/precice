@@ -1,6 +1,6 @@
 #include "ExportVTK.hpp"
 #include <Eigen/Core>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <memory>
@@ -26,7 +26,7 @@ void ExportVTK::doExport(
   PRECICE_ASSERT(name != std::string(""));
   PRECICE_ASSERT(!utils::IntraComm::isParallel(), "ExportVTK only supports serial participants.");
 
-  namespace fs = boost::filesystem;
+  namespace fs = std::filesystem;
   fs::path outfile(location);
   if (not location.empty())
     fs::create_directories(outfile);
