@@ -98,8 +98,6 @@ jobs:
             CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Release
-    env:
-      OMPI_MCA_rmaps_base_oversubscribe: 1
     steps:
       - uses: actions/checkout@v4
       - name: Generate build directory
