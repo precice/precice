@@ -108,10 +108,10 @@ ConnectionInfoWriter::~ConnectionInfoWriter()
   try {
     fs::remove(path);
     PRECICE_WARN_IF(
-      fs::exists(path),
-      "The connection file \"{}\" wasn't properly removed. "
-      "Make sure to delete the \"precice-run\" directory before restarting the simulation.",
-      path.generic_string());
+        fs::exists(path),
+        "The connection file \"{}\" wasn't properly removed. "
+        "Make sure to delete the \"precice-run\" directory before restarting the simulation.",
+        path.generic_string());
   } catch (const fs::filesystem_error &e) {
     PRECICE_WARN("Unable to clean-up connection file due to error: {}. "
                  "Make sure to delete the \"precice-run\" directory before restarting the simulation.",
@@ -149,10 +149,10 @@ void ConnectionInfoWriter::write(std::string_view info) const
   PRECICE_DEBUG("Publishing connection file \"{}\"", path);
   fs::rename(tmp, path);
   PRECICE_WARN_IF(
-    fs::exists(tmp),
-    "The temporary connection file \"{}\" wasn't properly removed. "
-    "Make sure to delete the \"precice-run\" directory before restarting the simulation.",
-    tmp.generic_string());
+      fs::exists(tmp),
+      "The temporary connection file \"{}\" wasn't properly removed. "
+      "Make sure to delete the \"precice-run\" directory before restarting the simulation.",
+      tmp.generic_string());
   PRECICE_CHECK(fs::exists(path),
                 "Unable to establish connection as the connection file \"{}\" doesn't exist on disk. "
                 "Please report this bug to the preCICE developers.",
