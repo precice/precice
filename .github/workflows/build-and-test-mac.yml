@@ -43,8 +43,8 @@ jobs:
       with:
        python-version: '3.10'
        check-latest: true
-    - name: Install numpy
-      run: pip3 install numpy
+    - name: Install pip packages
+      run: pip3 install numpy polars
     - name: Install preCICE dependencies
       run: brew install cmake eigen libxml2 boost petsc openmpi pkg-config
     - name: Generate build directory
