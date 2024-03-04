@@ -163,8 +163,9 @@ jobs:
         working-directory: build
         if: ${{ matrix.COVFLAGS }}
         run: |
-          lcov --capture --directory . --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' "/opt/*" --output-file coverage.info # filter system-files and local-dependencies
+          . ../venv/bin/activate
+          pip install fastcov
+          fastcov --lcov -e '/usr/' -e '/opt/'
       - uses: codecov/codecov-action@v4
         with:
           files: ./build/coverage.info
