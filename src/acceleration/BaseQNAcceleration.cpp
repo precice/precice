@@ -526,7 +526,9 @@ void BaseQNAcceleration::iterationsConverged(
   // convergence of iteration i.e.:
   // - analogously to the V,W matrices, remove columns from matrices for secondary data
   // - save the old Jacobian matrix
+  std::cout << "entering specializedIterationsConverged \n \n";
   specializedIterationsConverged(cplData);
+  std::cout << "exiting specializedIterationsConverged \n \n";
 
   // if we already have convergence in the first iteration of the first time window
   // we need to do underrelaxation in the first iteration of the second time window
@@ -559,7 +561,7 @@ void BaseQNAcceleration::iterationsConverged(
     _nbDropCols += toRemove;
     PRECICE_ASSERT(toRemove > 0, toRemove);
     PRECICE_DEBUG("Removing {} cols from least-squares system with {} cols", toRemove, getLSSystemCols());
-    PRECICE_ASSERT((_matrixV.cols() == 0 && _waveformW.empty()) || _matrixV.cols() == _waveformW.at(_dataIDs.front()).size(), _matrixV.cols());
+    PRECICE_ASSERT((_matrixV.cols() == 0 && _waveformW.empty()) || (_matrixV.cols() == _waveformW.at(_dataIDs.front()).size()), _matrixV.cols());
     PRECICE_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 
     // remove columns

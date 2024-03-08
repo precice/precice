@@ -1212,8 +1212,6 @@ BOOST_DATA_TEST_CASE(testColumnsLoggingWithoutSubsteps, boost::unit_test::data::
 
   acc.performAcceleration(data);
 
-  std::cout << "\n \n crashed at 0 location \n \n";
-
   Eigen::VectorXd newdvalues2;
   if (context.isPrimary()) {
     utils::append(newdvalues2, 1.0);
@@ -1228,15 +1226,13 @@ BOOST_DATA_TEST_CASE(testColumnsLoggingWithoutSubsteps, boost::unit_test::data::
   data.begin()->second->values() = newdvalues2;
   dpcd->setSampleAtTime(1, dpcd->sample());
 
-  std::cout << "\n \n crashed at first location \n \n";
   acc.iterationsConverged(data);
 
-  std::cout << "\n \n crashed at 2 location \n \n";
   BOOST_TEST(acc.getLSSystemCols() == 2);
   BOOST_TEST(acc.getDeletedColumns() == 0);
   BOOST_TEST(acc.getDroppedColumns() == 0);
 
-  std::cout << "\n \n crashed at survived test location \n \n";
+  std::cout << "\n \n survived test location \n \n";
 
   Eigen::VectorXd newdvalues3;
   if (context.isPrimary()) {
