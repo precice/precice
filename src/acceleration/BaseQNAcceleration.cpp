@@ -561,19 +561,24 @@ void BaseQNAcceleration::iterationsConverged(
     _nbDropCols += toRemove;
     PRECICE_ASSERT(toRemove > 0, toRemove);
     PRECICE_DEBUG("Removing {} cols from least-squares system with {} cols", toRemove, getLSSystemCols());
-    // PRECICE_ASSERT((_matrixV.cols() == 0 && _waveformW.empty()) || (_matrixV.cols() == _waveformW.at(_dataIDs.front()).size()), _matrixV.cols());
-    // PRECICE_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
+    PRECICE_ASSERT((_matrixV.cols() == 0 && _waveformW.empty()) || (_matrixV.cols() == _waveformW.at(_dataIDs.front()).size()), _matrixV.cols());
+    PRECICE_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 
     std::cout << "\n \n Probably crash here \n \n";
     std::cout << _matrixV.cols();
     std::cout << _waveformW.empty();
     std::cout << _waveformW.at(_dataIDs.front()).size();
-    std::cout << "\n nope this was not the problem";
+
     // remove columns
     for (int i = 0; i < toRemove; i++) {
       utils::removeColumnFromMatrix(_matrixV, _matrixV.cols() - 1);
 
       for (int id : _dataIDs) {
+
+        std::cout << "\n test stuff \n";
+        std::cout << _waveformW[id].size();
+        std::cout << "\n might cause a problem \n";
+        std::cout << toRemove;
 
         if (!_waveformW.empty()) {
           _waveformW[id].erase(_waveformW[id].end());
@@ -583,6 +588,7 @@ void BaseQNAcceleration::iterationsConverged(
       _qrV.popBack();
     }
     _matrixCols.pop_back();
+    std::cout << "\n nope this was not the problem";
   }
 
   _matrixCols.push_front(0);

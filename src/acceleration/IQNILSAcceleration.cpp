@@ -259,7 +259,7 @@ void IQNILSAcceleration::specializedIterationsConverged(
     } else if (static_cast<int>(_matrixCols.size()) > _timeWindowsReused) {
       int toRemove = _matrixCols.back();
       for (int id : _secondaryDataIDs) {
-        PRECICE_ASSERT(_secondaryWaveformW.at(id).size() > toRemove, _secondaryWaveformW.at(id).size(), toRemove, id);
+        PRECICE_ASSERT(_secondaryWaveformW[id].size() > toRemove, _secondaryWaveformW[id].size(), toRemove, id);
         for (int i = 0; i < toRemove; i++) {
           _secondaryWaveformW[id].erase(_secondaryWaveformW[id].end());
         }
