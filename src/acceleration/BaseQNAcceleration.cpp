@@ -181,7 +181,6 @@ void BaseQNAcceleration::updateDifferenceMatrices(
   _residuals = _values;
   _residuals -= _oldValues;
 
-
   PRECICE_WARN_IF(math::equals(utils::IntraComm::l2norm(_residuals), 0.0),
                   "The coupling residual equals almost zero. There is maybe something wrong in your adapter. "
                   "Maybe you always write the same data or you call advance without "
@@ -568,15 +567,6 @@ void BaseQNAcceleration::iterationsConverged(
       utils::removeColumnFromMatrix(_matrixV, _matrixV.cols() - 1);
 
       for (int id : _dataIDs) {
-
-        std::cout << "\n ******************* \n";
-        std::cout << _waveformW.empty();
-        std::cout << "\n that would be surprising \n";
-        std::cout << _waveformW.at(id).empty();
-        std::cout << "\n ******weird************* \n";
-        std::cout << _waveformW.at(id).size();
-        std::cout << "\n All passed \n";
-        std::cout << "\n ******************* \n";
 
         if (!_waveformW.empty()) {
           _waveformW[id].erase(_waveformW[id].end());
