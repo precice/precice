@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <boost/asio.hpp>
-#include <boost/filesystem.hpp>
+
+#include <filesystem>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
@@ -376,12 +377,12 @@ void SocketCommunication::send(precice::span<const int> itemsToSend, Rank rankRe
 void SocketCommunication::prepareEstablishment(std::string const &acceptorName,
                                                std::string const &requesterName)
 {
-  using namespace boost::filesystem;
+  using namespace std::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
   PRECICE_DEBUG("Creating connection exchange directory {}", dir.generic_string());
   try {
     create_directories(dir);
-  } catch (const boost::filesystem::filesystem_error &e) {
+  } catch (const std::filesystem::filesystem_error &e) {
     PRECICE_WARN("Creating directory for connection info failed with filesystem error: {}", e.what());
   }
 }
@@ -389,12 +390,12 @@ void SocketCommunication::prepareEstablishment(std::string const &acceptorName,
 void SocketCommunication::cleanupEstablishment(std::string const &acceptorName,
                                                std::string const &requesterName)
 {
-  using namespace boost::filesystem;
+  using namespace std::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
   PRECICE_DEBUG("Removing connection exchange directory {}", dir.generic_string());
   try {
     remove_all(dir);
-  } catch (const boost::filesystem::filesystem_error &e) {
+  } catch (const std::filesystem::filesystem_error &e) {
     PRECICE_WARN("Cleaning up connection info failed with filesystem error {}", e.what());
   }
 }
@@ -480,7 +481,7 @@ void SocketCommunication::send(int itemToSend, Rank rankReceiver)
 
   rankReceiver = adjustRank(rankReceiver);
 
-  PRECICE_ASSERT(rankReceiver >= 0, rankReceiver)
+  PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
 
   try {

@@ -83,10 +83,10 @@ void BaseQNAcceleration::initialize(
                    pair.second->getSize(), pair.second->getPreviousIterationSize());
   }
 
-  if (std::any_of(cplData.cbegin(), cplData.cend(), [](const auto &p) { return p.second->hasGradient(); })) {
-    PRECICE_WARN("Gradient data, which is required by at least one of the configured data mappings, is not yet compatible with quasi-Newton acceleration. This combination might lead to numerical issues. "
-                 "Consider switching to a different acceleration scheme or a different data mapping scheme.");
-  }
+  PRECICE_WARN_IF(
+      std::any_of(cplData.cbegin(), cplData.cend(), [](const auto &p) { return p.second->hasGradient(); }),
+      "Gradient data, which is required by at least one of the configured data mappings, is not yet compatible with quasi-Newton acceleration. This combination might lead to numerical issues. "
+      "Consider switching to a different acceleration scheme or a different data mapping scheme.");
 
   checkDataIDs(cplData);
 
@@ -180,12 +180,13 @@ void BaseQNAcceleration::updateDifferenceMatrices(
   // Compute current residual: vertex-data - oldData
   _residuals = _values;
   _residuals -= _oldValues;
-  if (math::equals(utils::IntraComm::l2norm(_residuals), 0.0)) {
-    PRECICE_WARN("The coupling residual equals almost zero. There is maybe something wrong in your adapter. "
-                 "Maybe you always write the same data or you call advance without "
-                 "providing new data first or you do not use available read data. "
-                 "Or you just converge much further than actually necessary.");
-  }
+
+
+  PRECICE_WARN_IF(math::equals(utils::IntraComm::l2norm(_residuals), 0.0),
+                  "The coupling residual equals almost zero. There is maybe something wrong in your adapter. "
+                  "Maybe you always write the same data or you call advance without "
+                  "providing new data first or you do not use available read data. "
+                  "Or you just converge much further than actually necessary.");
 
   // if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
@@ -199,11 +200,11 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       PRECICE_ASSERT((_matrixV.cols() == 0 && _waveformW.empty()) || _matrixV.cols() == _waveformW.at(_dataIDs.front()).size(), _matrixV.cols());
       PRECICE_ASSERT(getLSSystemCols() <= _maxIterationsUsed, getLSSystemCols(), _maxIterationsUsed);
 
-      if (2 * getLSSystemCols() >= getLSSystemRows())
-        PRECICE_WARN(
-            "The number of columns in the least squares system exceeded half the number of unknowns at the interface. "
-            "The system will probably become bad or ill-conditioned and the quasi-Newton acceleration may not "
-            "converge. Maybe the number of allowed columns (\"max-used-iterations\") should be limited.");
+      PRECICE_WARN_IF(
+          2 * getLSSystemCols() >= getLSSystemRows(),
+          "The number of columns in the least squares system exceeded half the number of unknowns at the interface. "
+          "The system will probably become bad or ill-conditioned and the quasi-Newton acceleration may not "
+          "converge. Maybe the number of allowed columns (\"max-used-iterations\") should be limited.");
 
       Eigen::VectorXd deltaR = _residuals;
       deltaR -= _oldResiduals;
@@ -216,13 +217,13 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       if (not math::equals(utils::IntraComm::l2norm(_values), 0.0)) {
         residualMagnitude /= utils::IntraComm::l2norm(_values);
       }
-      if (math::equals(residualMagnitude, 0.0)) {
-        PRECICE_WARN("Adding a vector with a two-norm of {} to the quasi-Newton V matrix, which will lead to "
-                     "ill-conditioning. A filter might delete the column again. Still, this could mean that you are "
-                     "converging too tightly, that you reached steady-state, or that you are giving by mistake identical "
-                     "data to preCICE in two consecutive iterations.",
-                     residualMagnitude);
-      }
+      PRECICE_WARN_IF(
+          math::equals(residualMagnitude, 0.0),
+          "Adding a vector with a two-norm of {} to the quasi-Newton V matrix, which will lead to "
+          "ill-conditioning. A filter might delete the column again. Still, this could mean that you are "
+          "converging too tightly, that you reached steady-state, or that you are giving by mistake identical "
+          "data to preCICE in two consecutive iterations.",
+          residualMagnitude);
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined     = getLSSystemCols() <= getLSSystemRows();

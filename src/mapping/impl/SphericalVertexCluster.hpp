@@ -135,7 +135,7 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
 {
   PRECICE_TRACE(_center.getCoords(), _radius);
   // Disable integrated polynomial, as it might cause locally singular matrices
-  PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.")
+  PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.");
 
   // Get vertices to be mapped
   // Subtract a safety margin to exclude the vertices at the edge

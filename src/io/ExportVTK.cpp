@@ -1,6 +1,6 @@
 #include "ExportVTK.hpp"
 #include <Eigen/Core>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <memory>
@@ -26,7 +26,7 @@ void ExportVTK::doExport(
   PRECICE_ASSERT(name != std::string(""));
   PRECICE_ASSERT(!utils::IntraComm::isParallel(), "ExportVTK only supports serial participants.");
 
-  namespace fs = boost::filesystem;
+  namespace fs = std::filesystem;
   fs::path outfile(location);
   if (not location.empty())
     fs::create_directories(outfile);
@@ -49,7 +49,7 @@ void ExportVTK::exportMesh(
   PRECICE_TRACE(mesh.getName());
 
   // Plot vertices
-  outFile << "POINTS " << mesh.vertices().size() << " double \n\n";
+  outFile << "POINTS " << mesh.nVertices() << " double \n\n";
   for (const mesh::Vertex &vertex : mesh.vertices()) {
     writeVertex(vertex.getCoords(), outFile);
   }
@@ -121,11 +121,11 @@ void ExportVTK::exportData(
     std::ofstream &   outFile,
     const mesh::Mesh &mesh)
 {
-  outFile << "POINT_DATA " << mesh.vertices().size() << "\n\n";
+  outFile << "POINT_DATA " << mesh.nVertices() << "\n\n";
 
   outFile << "SCALARS Rank unsigned_int\n";
   outFile << "LOOKUP_TABLE default\n";
-  std::fill_n(std::ostream_iterator<char const *>(outFile), mesh.vertices().size(), "0 ");
+  std::fill_n(std::ostream_iterator<char const *>(outFile), mesh.nVertices(), "0 ");
   outFile << "\n\n";
 
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data

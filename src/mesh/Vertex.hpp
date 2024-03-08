@@ -53,6 +53,9 @@ public:
 
   void tag();
 
+  /// Returns a coordinate of a vertex
+  inline double coord(int index) const;
+
   inline bool operator==(const Vertex &rhs) const;
 
   inline bool operator!=(const Vertex &rhs) const;
@@ -120,6 +123,12 @@ inline Eigen::VectorXd Vertex::getCoords() const
 inline const Vertex::RawCoords &Vertex::rawCoords() const
 {
   return _coords;
+}
+
+inline double Vertex::coord(int index) const
+{
+  PRECICE_ASSERT(0 <= index && index < _dim, index, _dim);
+  return _coords.at(index);
 }
 
 inline bool Vertex::operator==(const Vertex &rhs) const

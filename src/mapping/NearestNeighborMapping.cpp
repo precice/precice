@@ -36,7 +36,7 @@ void NearestNeighborMapping::mapConservative(const time::Sample &inData, Eigen::
   Eigen::VectorXd &      outputValues = outData;
 
   // Data dimensions (for scalar = 1, for vectors > 1)
-  const size_t inSize          = input()->vertices().size();
+  const size_t inSize          = input()->nVertices();
   const int    valueDimensions = inData.dataDims;
 
   for (size_t i = 0; i < inSize; i++) {
@@ -63,7 +63,7 @@ void NearestNeighborMapping::mapConsistent(const time::Sample &inData, Eigen::Ve
   Eigen::VectorXd &      outputValues = outData;
 
   // Data dimensions (for scalar = 1, for vectors > 1)
-  const size_t outSize         = output()->vertices().size();
+  const size_t outSize         = output()->nVertices();
   const int    valueDimensions = inData.dataDims;
 
   for (size_t i = 0; i < outSize; i++) {

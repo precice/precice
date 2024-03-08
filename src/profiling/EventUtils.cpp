@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <array>
-#include <boost/filesystem/operations.hpp>
 #include <cassert>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iterator>
@@ -116,13 +116,13 @@ void EventRegistry::startBackend()
   // Create the directory if necessary
   bool isLocal = _directory.empty() || _directory == ".";
   if (!isLocal) {
-    auto exists = boost::filesystem::exists(_directory);
+    auto exists = std::filesystem::exists(_directory);
     PRECICE_CHECK(
-        !(exists && !boost::filesystem::is_directory(_directory)),
+        !(exists && !std::filesystem::is_directory(_directory)),
         "The destination folder \"{}\" exists but isn't a directory. Please remove the directory \"precice-run\" and try again.",
         _directory);
     if (!exists) {
-      boost::filesystem::create_directories(_directory);
+      std::filesystem::create_directories(_directory);
     }
   }
   auto filename = fmt::format("{}/{}-{}-{}.json", _directory, _applicationName, _rank, _size);
@@ -191,7 +191,7 @@ void EventRegistry::clear()
 
 void EventRegistry::put(PendingEntry pe)
 {
-  PRECICE_ASSERT(_mode != Mode::Off, "The profiling is off.")
+  PRECICE_ASSERT(_mode != Mode::Off, "The profiling is off.");
   _writeQueue.emplace_back(std::move(pe));
   if (_writeQueueMax > 0 && _writeQueue.size() > _writeQueueMax) {
     flush();

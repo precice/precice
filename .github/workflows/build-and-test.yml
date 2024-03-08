@@ -70,6 +70,10 @@ jobs:
             CONFIG: MPIPETScGinkgo
             CXX: 'g++'
             TYPE: Debug
+          - IMAGE: 'ubuntu-2404'
+            CONFIG: MPIPETScGinkgo
+            CXX: 'g++'
+            TYPE: Debug
           - IMAGE: 'archlinux'
             CONFIG: MPIPETSc
             CXX: 'g++'
@@ -94,21 +98,15 @@ jobs:
             CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Release
-    env:
-      CCACHE_DIR: "$GITHUB_WORKSPACE/ccache"
-      OMPI_MCA_rmaps_base_oversubscribe: 1
     steps:
-      - name: Restore ccache
-        uses: actions/cache@v4
-        with:
-          path: ccache
-          key: precice-ccache-${{ runner.IMAGE }}-${{ matrix.CONFIG }}-${{ matrix.CXX }}-${{ matrix.TYPE }}
       - uses: actions/checkout@v4
       - name: Generate build directory
         run: mkdir -p build
-      - name: Install polars
-        run: pip install polars
-        if: ${{ contains(matrix.IMAGE, 'ubuntu') }}
+      - name: Install polars in venv
+        run: |
+          python3 -m venv --system-site-packages venv
+          venv/bin/pip install polars
+          venv/bin/pip list
       - name: Configure
         working-directory: build
         env:
@@ -118,8 +116,9 @@ jobs:
           PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
           Ginkgo: ${{ contains(matrix.CONFIG, 'Ginkgo') }}
         run: |
+          . ../venv/bin/activate # There is always a venv present
           cmake --version
-          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DPRECICE_FEATURE_GINKGO_MAPPING=${{ env.Ginkgo }} -DPRECICE_FEATURE_LIBBACKTRACE_STACKTRACES=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DPRECICE_FEATURE_GINKGO_MAPPING=${{ env.Ginkgo }} -DPRECICE_FEATURE_LIBBACKTRACE_STACKTRACES=ON -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -151,13 +150,14 @@ jobs:
           OMPI_MCA_btl_tcp_if_include: lo # required for arch
           PSM3_HAL: loopback # required for fedora
         working-directory: build
-        run: su -c "ctest" $PRECICE_USER
+        run: su -c ". ../venv/bin/activate && ctest" $PRECICE_USER
       - name: Coverage Report
         working-directory: build
         if: ${{ matrix.COVFLAGS }}
         run: |
-          lcov --capture --directory . --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' "/opt/*" --output-file coverage.info # filter system-files and local-dependencies
+          . ../venv/bin/activate
+          pip install fastcov
+          fastcov --lcov -e '/usr/' -e '/opt/'
       - uses: codecov/codecov-action@v4
         with:
           files: ./build/coverage.info

@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(Consistent)
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
   // Check expected
-  Eigen::VectorXd expected(outMesh->vertices().size());
+  Eigen::VectorXd expected(outMesh->nVertices());
   expected << 2.0, 1.0, 2.0, 3.0, 1.49, 2.25, 1.5, 1.0, 2.0, 3.0;
   BOOST_CHECK(equals(expected, outValuesScalar));
 }
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(Conservative)
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
   // Check expected
-  Eigen::VectorXd expected(outMesh->vertices().size());
+  Eigen::VectorXd expected(outMesh->nVertices());
   const double    expectedA = forceOnMid / 3 + forceOnMidAB / 2 + forceOnA;
   const double    expectedB = forceOnMid / 3 + forceOnMidAB / 2 + unbalancedforceOnBC * 0.75;
   const double    expectedC = forceOnMid / 3 + forceOnC + unbalancedforceOnBC * 0.25;
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(ConsistentOneTetra3D)
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
   // Check expected
-  Eigen::VectorXd expected(outMesh->vertices().size());
+  Eigen::VectorXd expected(outMesh->nVertices());
   expected << 2.5, 1.0, 2.0, 3.0, 4.0, 2.0, 3.0, 3.3, 3.6;
   BOOST_CHECK(equals(expected, outValuesScalar));
 }
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(ConservativeOneTetra3D)
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
   // Check expected
-  Eigen::VectorXd expected(outMesh->vertices().size());
+  Eigen::VectorXd expected(outMesh->nVertices());
   const double    expectedA = forceOnMid / 4 + forceOnMidAB / 2 + forceOnA + 0.4 * unbalancedInternalForce;
   const double    expectedB = forceOnMid / 4 + forceOnMidAB / 2 + unbalancedforceOnBC * 0.75 + 0.1 * unbalancedInternalForce;
   const double    expectedC = forceOnMid / 4 + forceOnC + unbalancedforceOnBC * 0.25 + 0.2 * unbalancedInternalForce;
