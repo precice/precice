@@ -585,9 +585,9 @@ void BaseQNAcceleration::iterationsConverged(
         }
       }
       // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
-      _qrV.popBack();
+      // _qrV.popBack();
     }
-    _matrixCols.pop_back();
+    // _matrixCols.pop_back();
     std::cout << "\n nope this was not the problem";
   }
 
