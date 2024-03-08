@@ -527,7 +527,7 @@ void BaseQNAcceleration::iterationsConverged(
   // - analogously to the V,W matrices, remove columns from matrices for secondary data
   // - save the old Jacobian matrix
   std::cout << "entering specializedIterationsConverged \n \n";
-  specializedIterationsConverged(cplData);
+  // specializedIterationsConverged(cplData);
   std::cout << "exiting specializedIterationsConverged \n \n";
 
   // if we already have convergence in the first iteration of the first time window
