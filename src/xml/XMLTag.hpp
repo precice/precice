@@ -72,7 +72,7 @@ public:
     OCCUR_ARBITRARY_NESTED
   };
 
-  static std::string getOccurrenceString(Occurrence occurrence);
+  static std::string_view getOccurrenceString(Occurrence occurrence);
 
   /**
    * @brief Standard constructor
@@ -93,7 +93,7 @@ public:
    *
    * The description and more information is printed with printDocumentation().
    */
-  XMLTag &setDocumentation(const std::string &documentation);
+  XMLTag &setDocumentation(std::string_view documentation);
 
   std::string getDocumentation() const
   {
