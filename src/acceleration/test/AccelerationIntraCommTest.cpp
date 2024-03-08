@@ -1248,7 +1248,16 @@ BOOST_DATA_TEST_CASE(testColumnsLoggingWithoutSubsteps, boost::unit_test::data::
   data.begin()->second->values() = newdvalues3;
   dpcd->setSampleAtTime(1, dpcd->sample());
 
+  std::cout << "I am rank";
+  std::cout << context.rank;
+  std::cout << "\n last known failure point location \n \n";
+
   acc.performAcceleration(data);
+
+  std::cout << "I am rank";
+  std::cout << context.rank;
+  std::cout << "\n survived here as well \n \n";
+
   Eigen::VectorXd newdvalues4;
   if (context.isPrimary()) {
     utils::append(newdvalues4, 1.0);
@@ -1263,11 +1272,15 @@ BOOST_DATA_TEST_CASE(testColumnsLoggingWithoutSubsteps, boost::unit_test::data::
   data.begin()->second->values() = newdvalues4;
   dpcd->setSampleAtTime(1, dpcd->sample());
 
-  std::cout << "\n \n crashed at second location \n \n";
+  std::cout << "I am rank";
+  std::cout << context.rank;
+  std::cout << "\n crashed at second location \n \n";
 
   acc.iterationsConverged(data);
 
-  std::cout << "\n \n crashed at third location \n \n";
+  std::cout << "I am rank";
+  std::cout << context.rank;
+  std::cout << "\n crashed at third location \n \n";
 
   BOOST_TEST(acc.getLSSystemCols() == 1);
   BOOST_TEST(acc.getDeletedColumns() == 1);
