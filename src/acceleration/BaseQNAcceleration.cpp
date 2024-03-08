@@ -580,9 +580,7 @@ void BaseQNAcceleration::iterationsConverged(
         std::cout << "\n might cause a problem \n";
         std::cout << toRemove;
 
-        if (!_waveformW.empty()) {
-          _waveformW[id].erase(_waveformW[id].end());
-        }
+        _waveformW[id].erase(_waveformW[id].end());
       }
       // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
       // _qrV.popBack();
