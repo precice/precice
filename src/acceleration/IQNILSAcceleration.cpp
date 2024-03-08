@@ -203,7 +203,7 @@ void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData)
                       "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
                       "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
                       "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "
-                      "fTerminateilter or increase its threshold (larger epsilon).");
+                      "filter or increase its threshold (larger epsilon).");
       }
       cplData.at(id)->setSampleAtTime(timestamp, cplData.at(id)->sample());
     }
