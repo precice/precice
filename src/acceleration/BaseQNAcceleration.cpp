@@ -562,11 +562,6 @@ void BaseQNAcceleration::iterationsConverged(
     PRECICE_ASSERT((_matrixV.cols() == 0 && _waveformW.empty()) || (_matrixV.cols() == _waveformW.at(_dataIDs.front()).size()), _matrixV.cols());
     PRECICE_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 
-    std::cout << "\n \n Probably crash here \n \n";
-    std::cout << _matrixV.cols();
-    std::cout << _waveformW.empty();
-    std::cout << _waveformW.at(_dataIDs.front()).size();
-
     // remove columns
     for (int i = 0; i < toRemove; i++) {
       utils::removeColumnFromMatrix(_matrixV, _matrixV.cols() - 1);
