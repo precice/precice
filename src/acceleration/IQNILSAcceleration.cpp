@@ -261,7 +261,7 @@ void IQNILSAcceleration::specializedIterationsConverged(
       for (int id : _secondaryDataIDs) {
         PRECICE_ASSERT(_secondaryWaveformW[id].size() > toRemove, _secondaryWaveformW[id].size(), toRemove, id);
         for (int i = 0; i < toRemove; i++) {
-          _secondaryWaveformW[id].erase(_secondaryWaveformW[id].end());
+          _secondaryWaveformW[id].pop_back();
         }
       }
     }

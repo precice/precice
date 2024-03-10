@@ -526,9 +526,7 @@ void BaseQNAcceleration::iterationsConverged(
   // convergence of iteration i.e.:
   // - analogously to the V,W matrices, remove columns from matrices for secondary data
   // - save the old Jacobian matrix
-  std::cout << "entering specializedIterationsConverged \n \n";
-  // specializedIterationsConverged(cplData);
-  std::cout << "exiting specializedIterationsConverged \n \n";
+  specializedIterationsConverged(cplData);
 
   // if we already have convergence in the first iteration of the first time window
   // we need to do underrelaxation in the first iteration of the second time window
@@ -575,18 +573,12 @@ void BaseQNAcceleration::iterationsConverged(
 
       for (int id : _dataIDs) {
 
-        std::cout << "\n test stuff \n";
-        std::cout << _waveformW[id].size();
-        std::cout << "\n might cause a problem \n";
-        std::cout << toRemove;
-
-        _waveformW[id].erase(_waveformW[id].end() - 1);
+        _waveformW[id].pop_back();
       }
       // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
       _qrV.popBack();
     }
     _matrixCols.pop_back();
-    std::cout << "\n nope this was not the problem";
   }
 
   _matrixCols.push_front(0);
