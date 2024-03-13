@@ -1,7 +1,6 @@
 #include <algorithm>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <exception>
+#include <filesystem>
 #include <memory>
 #include <numeric>
 #include <ostream>
@@ -52,10 +51,10 @@ TestContext::~TestContext() noexcept
 
 std::string TestContext::prefix(const std::string &filename) const
 {
-  boost::filesystem::path location{testing::getTestPath()};
-  auto                    dir = location.parent_path();
+  std::filesystem::path location{testing::getTestPath()};
+  auto                  dir = location.parent_path();
   dir /= filename;
-  return boost::filesystem::weakly_canonical(dir).string();
+  return std::filesystem::weakly_canonical(dir).string();
 }
 
 std::string TestContext::config() const

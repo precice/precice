@@ -122,6 +122,7 @@ target_sources(preciceCore
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.cpp
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp
     src/cplscheme/impl/SharedPointer.hpp
+    src/cplscheme/impl/TimeHandler.cpp
     src/cplscheme/impl/TimeHandler.hpp
     src/io/Export.hpp
     src/io/ExportCSV.cpp

@@ -1,7 +1,7 @@
 #include "io/ExportCSV.hpp"
 
 #include <Eigen/Core>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <memory>
@@ -57,7 +57,7 @@ void ExportCSV::doExport(
   }
   filename.append(".csv");
 
-  namespace fs = boost::filesystem;
+  namespace fs = std::filesystem;
   fs::path outfile(location);
   if (not location.empty()) {
     fs::create_directories(outfile);
