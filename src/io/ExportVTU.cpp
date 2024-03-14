@@ -1,7 +1,7 @@
 #include "io/ExportVTU.hpp"
 #include <Eigen/Core>
 #include <algorithm>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <string>

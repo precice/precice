@@ -1,7 +1,6 @@
 #include "LogConfiguration.hpp"
 #include <algorithm>
 #include <boost/core/null_deleter.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/log/attributes/mutable_constant.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
@@ -11,6 +10,7 @@
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/program_options.hpp>
 #include <deque>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -124,7 +124,7 @@ public:
 /// Reads a log file, returns a logging configuration.
 LoggingConfiguration readLogConfFile(std::string const &filename)
 {
-  if (!boost::filesystem::exists(filename)) {
+  if (!std::filesystem::exists(filename)) {
     return {};
   }
 

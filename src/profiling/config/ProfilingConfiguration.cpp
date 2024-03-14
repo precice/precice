@@ -1,6 +1,6 @@
 #include "profiling/config/ProfilingConfiguration.hpp"
-#include <boost/filesystem/path.hpp>
 #include <cstdlib>
+#include <filesystem>
 #include <string_view>
 #include "logging/LogMacros.hpp"
 #include "profiling/EventUtils.hpp"
@@ -70,7 +70,7 @@ void ProfilingConfiguration::xmlTagCallback(
   precice::syncMode = tag.getBooleanAttributeValue("synchronize");
   auto mode         = tag.getStringAttributeValue("mode");
   auto flushEvery   = tag.getIntAttributeValue("flush-every");
-  auto directory    = boost::filesystem::path(tag.getStringAttributeValue("directory"));
+  auto directory    = std::filesystem::path(tag.getStringAttributeValue("directory"));
   PRECICE_CHECK(flushEvery >= 0, "You configured the profiling to flush-every=\"{}\", which is invalid. "
                                  "Please choose a number >= 0.");
 
@@ -92,7 +92,7 @@ void applyDefaults()
 
   er.setWriteQueueMax(DEFAULT_SYNC_EVERY);
 
-  auto directory = boost::filesystem::path(DEFAULT_DIRECTORY);
+  auto directory = std::filesystem::path(DEFAULT_DIRECTORY);
   directory /= "precice-profiling";
   er.setDirectory(directory.string());
 

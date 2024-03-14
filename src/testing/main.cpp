@@ -4,11 +4,12 @@
 // Specify the overall name of test framework
 #define BOOST_TEST_MODULE "preCICE Tests"
 
-#include <boost/filesystem.hpp>
 #include <boost/test/tools/fpc_tolerance.hpp>
 #include <boost/test/tree/test_case_counter.hpp>
 #include <boost/test/tree/traverse.hpp>
 #include <boost/test/unit_test.hpp>
+
+#include <filesystem>
 #include <iostream>
 #include <string>
 
@@ -74,11 +75,11 @@ void setupTolerance()
 
 void removeStaleRunDirectory()
 {
-  namespace bf = boost::filesystem;
-  bf::path runDir("precice-run");
-  if (bf::exists(runDir) && bf::is_directory(runDir) && !bf::is_empty(runDir)) {
+  namespace fs = std::filesystem;
+  fs::path runDir("precice-run");
+  if (fs::exists(runDir) && fs::is_directory(runDir) && !fs::is_empty(runDir)) {
     std::cout << "Removing a non-empty precice-run directory from a previously failing test.\n";
-    bf::remove_all(runDir);
+    fs::remove_all(runDir);
   }
 }
 
