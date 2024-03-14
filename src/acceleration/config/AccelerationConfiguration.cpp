@@ -159,8 +159,8 @@ void AccelerationConfiguration::xmlTagCallback(
                   "Please remove the duplicated entry.",
                   dataName, meshName);
 
-    _meshName      = callingTag.getStringAttributeValue(ATTR_MESH);
-    double scaling = 1.0;
+    _meshName              = callingTag.getStringAttributeValue(ATTR_MESH);
+    double      scaling    = 1.0;
     std::string rangeType  = VALUE_NO_BOUND;
     double      lowerBound = -1.0e16;
     double      upperBound = 1.0e16;

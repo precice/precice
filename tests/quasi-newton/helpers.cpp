@@ -204,21 +204,29 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
 void runTestQNBoundedValue(std::string const &config, TestContext const &context)
 {
-  std::string meshName, writeDataName1, writeDataName2, readDataName1, readDataName2;
+  std::string meshName, writeDataName1, writeDataName2, writeDataName3, writeDataName4, readDataName1, readDataName2, readDataName3, readDataName4;
 
   if (context.isNamed("SolverOne")) {
     meshName       = "MeshOne";
     writeDataName1 = "Data11";
     writeDataName2 = "Data12";
+    writeDataName3 = "Data13";
+    writeDataName4 = "Data14";
     readDataName1  = "Data21";
     readDataName2  = "Data22";
+    readDataName3  = "Data23";
+    readDataName4  = "Data24";
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     meshName       = "MeshTwo";
     writeDataName1 = "Data21";
     writeDataName2 = "Data22";
+    writeDataName3 = "Data23";
+    writeDataName4 = "Data24";
     readDataName1  = "Data11";
     readDataName2  = "Data12";
+    readDataName3  = "Data13";
+    readDataName4  = "Data14";
   }
 
   precice::Participant participant(context.name, config, context.rank, context.size);
@@ -242,8 +250,12 @@ void runTestQNBoundedValue(std::string const &config, TestContext const &context
   participant.initialize();
   double inValues1[2]  = {0.1, 0.2};
   double inValues2[2]  = {1, 2};
+  double inValues3[2]  = {0.1, 0.2};
+  double inValues4[2]  = {1, 2};
   double outValues1[2] = {0., 0.};
   double outValues2[2] = {0., 0.};
+  double outValues3[2] = {0., 0.};
+  double outValues4[2] = {0., 0.};
 
   int iterations = 0;
 
@@ -254,6 +266,8 @@ void runTestQNBoundedValue(std::string const &config, TestContext const &context
     double preciceDt = participant.getMaxTimeStepSize();
     participant.readData(meshName, readDataName1, vertexIDs, preciceDt, inValues1);
     participant.readData(meshName, readDataName2, vertexIDs, preciceDt, inValues2);
+    participant.readData(meshName, readDataName3, vertexIDs, preciceDt, inValues3);
+    participant.readData(meshName, readDataName4, vertexIDs, preciceDt, inValues4);
 
     if (context.isNamed("SolverOne")) {
       if (iterations == 0) {
@@ -261,10 +275,16 @@ void runTestQNBoundedValue(std::string const &config, TestContext const &context
         inValues1[1] = -0.9;
         inValues2[0] = 0.9;
         inValues2[1] = -0.9;
+        inValues3[0] = 3.9;
+        inValues3[1] = 0.9;
+        inValues4[0] = -3.9;
+        inValues4[1] = -0.9;
       }
       for (int i = 0; i < 2; i++) {
         outValues1[i] = inValues1[i]; // only pushes solution through
         outValues2[i] = inValues2[i]; // only pushes solution through
+        outValues3[i] = inValues3[i]; // only pushes solution through
+        outValues4[i] = inValues4[i]; // only pushes solution through
       }
     } else {
       BOOST_TEST(inValues1[0] >= -1.0);
@@ -275,15 +295,23 @@ void runTestQNBoundedValue(std::string const &config, TestContext const &context
       BOOST_TEST(inValues2[0] <= 10.0);
       BOOST_TEST(inValues2[1] >= -10.0);
       BOOST_TEST(inValues2[1] <= 10.0);
+      BOOST_TEST(inValues3[0] >= -1.0);
+      BOOST_TEST(inValues4[0] <= 1.0);
 
       outValues1[0] = sin(inValues1[0] * inValues1[1]);
       outValues1[1] = cos(inValues1[0] * inValues1[1]);
-      outValues2[0] = 10.0 * sin(inValues2[0] * inValues2[1] / 10.0);
-      outValues2[1] = 10.0 * cos(inValues2[0] * inValues2[1] / 10.0);
+      outValues2[0] = 10.0 * sin(inValues2[0] * inValues2[1] / 100.0);
+      outValues2[1] = 10.0 * cos(inValues2[0] * inValues2[1] / 100.0);
+      outValues3[0] = inValues3[0] * inValues3[0] * exp(sin(inValues3[0] * inValues3[1])) - 1;
+      outValues3[1] = inValues3[1] * inValues3[1] * exp(cos(inValues3[0] * inValues3[1])) - 1;
+      outValues4[0] = -inValues4[0] * inValues4[0] * exp(sin(inValues4[0] * inValues4[1])) + 1;
+      outValues4[1] = -inValues4[1] * inValues4[1] * exp(cos(-inValues4[0] * inValues4[1])) + 1;
     }
 
     participant.writeData(meshName, writeDataName1, vertexIDs, outValues1);
     participant.writeData(meshName, writeDataName2, vertexIDs, outValues2);
+    participant.writeData(meshName, writeDataName3, vertexIDs, outValues3);
+    participant.writeData(meshName, writeDataName4, vertexIDs, outValues4);
 
     participant.advance(1.0);
 

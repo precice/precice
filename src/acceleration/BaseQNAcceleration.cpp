@@ -186,8 +186,49 @@ void BaseQNAcceleration::forwardTransformation(DataMap &cplData, const std::vect
 
     if (rangeType == "not-bounded") {
       // do nothing
-    } else if (rangeType == "lower-bounded") { //TODO
-    } else if (rangeType == "upper-bounded") { //TODO
+    } else if (rangeType == "lower-bounded") {
+      // use piecewise transformation function: close to the lower bound, the function is non-linear, otherwise it's linear
+      double delta       = 0.1;
+      double leftLimit   = lowerBound - delta;
+      double rightLimit  = lowerBound + 1.0 + delta;
+      double intervalLen = rightLimit - leftLimit;
+
+      for (Eigen::Index i = 0; i < size; i++) {
+        double normalizedOldValue = (_oldValues[i + offset] - leftLimit) / intervalLen;
+        double normalizedValue    = (_values[i + offset] - leftLimit) / intervalLen;
+
+        if (normalizedValue < 0.5) {
+          _values[i + offset] = log(normalizedValue / (1.0 - normalizedValue));
+        } else {
+          _values[i + offset] = normalizedValue - 0.5;
+        }
+        if (normalizedOldValue < 0.5) {
+          _oldValues[i + offset] = log(normalizedOldValue / (1.0 - normalizedOldValue));
+        } else {
+          _oldValues[i + offset] = normalizedOldValue - 0.5;
+        }
+      }
+    } else if (rangeType == "upper-bounded") {
+      double delta       = 0.1;
+      double leftLimit   = upperBound - 1.0 - delta;
+      double rightLimit  = upperBound + delta;
+      double intervalLen = rightLimit - leftLimit;
+
+      for (Eigen::Index i = 0; i < size; i++) {
+        double normalizedOldValue = (_oldValues[i + offset] - leftLimit) / intervalLen;
+        double normalizedValue    = (_values[i + offset] - leftLimit) / intervalLen;
+
+        if (normalizedValue > 0.5) {
+          _values[i + offset] = log(normalizedValue / (1.0 - normalizedValue));
+        } else {
+          _values[i + offset] = normalizedValue - 0.5;
+        }
+        if (normalizedOldValue > 0.5) {
+          _oldValues[i + offset] = log(normalizedOldValue / (1.0 - normalizedOldValue));
+        } else {
+          _oldValues[i + offset] = normalizedOldValue - 0.5;
+        }
+      }
     } else {
       double delta       = 0.1;
       double leftLimit   = lowerBound - delta;
@@ -217,8 +258,34 @@ void BaseQNAcceleration::backwardTransformation(DataMap &cplData, const std::vec
 
     if (rangeType == "not-bounded") {
       // do nothing
-    } else if (rangeType == "lower-bounded") { //TODO
-    } else if (rangeType == "upper-bounded") { //TODO
+    } else if (rangeType == "lower-bounded") {
+      double delta       = 0.1;
+      double leftLimit   = lowerBound - delta;
+      double rightLimit  = lowerBound + 1.0 + delta;
+      double intervalLen = rightLimit - leftLimit;
+
+      for (Eigen::Index i = 0; i < size; i++) {
+        if (_values[i + offset] < 0.0) {
+          _values[i + offset] = 1 / (1 + exp(-_values[i + offset])) * intervalLen + leftLimit;
+          _values[i + offset] = fmax(lowerBound, _values[i + offset]);
+        } else {
+          _values[i + offset] = (_values[i + offset] + 0.5) * intervalLen + leftLimit;
+        }
+      }
+    } else if (rangeType == "upper-bounded") {
+      double delta       = 0.1;
+      double leftLimit   = upperBound - 1.0 - delta;
+      double rightLimit  = upperBound + delta;
+      double intervalLen = rightLimit - leftLimit;
+
+      for (Eigen::Index i = 0; i < size; i++) {
+        if (_values[i + offset] > 0.0) {
+          _values[i + offset] = 1 / (1 + exp(-_values[i + offset])) * intervalLen + leftLimit;
+          _values[i + offset] = fmin(_values[i + offset], upperBound);
+        } else {
+          _values[i + offset] = (_values[i + offset] + 0.5) * intervalLen + leftLimit;
+        }
+      }
     } else {
       double delta       = 0.1;
       double leftLimit   = lowerBound - delta;
