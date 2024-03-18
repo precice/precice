@@ -196,7 +196,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
     if (not _firstIteration) {
       // Update matrices V, W with newest information
 
-      PRECICE_ASSERT((_matrixV.cols() == 0 && _waveformW.empty()) || _matrixV.cols() == _waveformW.at(_dataIDs.front()).size(), _waveformW.at(_dataIDs.front()).size(), _matrixV.cols());
+      PRECICE_ASSERT((_matrixV.cols() == 0 && _waveformW.empty()) || _matrixV.cols() == _waveformW.at(_dataIDs.front()).size(), _matrixV.cols());
       PRECICE_ASSERT(getLSSystemCols() <= _maxIterationsUsed, getLSSystemCols(), _maxIterationsUsed);
 
       PRECICE_WARN_IF(
@@ -559,7 +559,7 @@ void BaseQNAcceleration::iterationsConverged(
     _nbDropCols += toRemove;
     PRECICE_ASSERT(toRemove > 0, toRemove);
     PRECICE_DEBUG("Removing {} cols from least-squares system with {} cols", toRemove, getLSSystemCols());
-    PRECICE_ASSERT((_matrixV.cols() == 0 && _waveformW.empty()) || (_matrixV.cols() == _waveformW.at(_dataIDs.front()).size()), _waveformW.at(_dataIDs.front()).size(), _matrixV.cols());
+    PRECICE_ASSERT((_matrixV.cols() == 0 && _waveformW.empty()) || (_matrixV.cols() == _waveformW.at(_dataIDs.front()).size()), _matrixV.cols());
     PRECICE_ASSERT(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 
     // remove columns
@@ -644,7 +644,7 @@ int BaseQNAcceleration::getLSSystemCols() const
   }
   if (_hasNodesOnInterface) {
     PRECICE_ASSERT(cols == _matrixV.cols(), cols, _matrixV.cols(), _matrixCols, _qrV.cols());
-    PRECICE_ASSERT((cols == 0 && _waveformW.empty()) || (cols == _waveformW.at(_dataIDs.front()).size()), _waveformW.at(_dataIDs.front()).size(), cols);
+    PRECICE_ASSERT((cols == 0 && _waveformW.empty()) || (cols == _waveformW.at(_dataIDs.front()).size()), cols);
   }
 
   return cols;
