@@ -336,12 +336,16 @@ void IQNIMVJAcceleration::buildWtil()
     _parMatrixOps->multiply(_oldInvJacobian, _matrixV, _Wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols(), false);
   }
 
-  // W_til = (W-J_inv_n*V) = (W-V_tilde)
-  _Wtil *= -1.;
-
-  // The W matrix is no longer stored as a matrix in the base class but instead as a map from the DataIDs to the k waveforms in W so we need to assemble W matrix
+  /**
+   * update _Wtil using W_til = (W-J_inv_n*V) = (W-V_tilde)
+   *
+   * The W matrix is no longer stored as a matrix in the base class but instead as a
+   * map from the DataIDs to the k waveforms corresponding to that DataID. Thus, we instead update _Wtil column wise.
+  */
 
   for (int i = 0; i < _Wtil.cols(); i++) {
+
+    // Column i of waveformW
     Eigen::VectorXd colVecW = Eigen::VectorXd::Zero(_matrixV.rows());
 
     // keep track of how far we have filled the vector
@@ -359,7 +363,7 @@ void IQNIMVJAcceleration::buildWtil()
 
       pos += lastSample.size();
     }
-    _Wtil.col(i) = colVecW - _Wtil.col(i);
+    _Wtil.col(i) = colVecW + _Wtil.col(i);
   }
 
   _resetLS = false;

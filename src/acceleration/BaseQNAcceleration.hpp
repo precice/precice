@@ -195,7 +195,7 @@ protected:
   /// @brief Current iteration residuals of secondary data.
   std::map<int, Eigen::VectorXd> _secondaryResiduals;
 
-  /// @brief Stores residual deltas. todo remove when waveforms are supported by all Quasi Newton schemes
+  /// @brief Stores residual deltas.
   Eigen::MatrixXd _matrixV;
 
   /** @brief Stores the waveform of x tilde deltas of datas in _dataIDs, which are computed by the solvers.
