@@ -371,7 +371,7 @@ void BaseQNAcceleration::performAcceleration(
     /**
      * apply quasiNewton update
      */
-    _values = _oldValues + xUpdate + _residuals; // = x^k + delta_x + r^k - q^k
+    _values += xUpdate;
 
     // pending deletion: delete old V, W matrices if timeWindowsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
