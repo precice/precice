@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
     auto velocitiesID = "Velocities";
     while (cplInterface.isCouplingOngoing()) {
       std::vector<double> data;
-      for (size_t i = 0; i < testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-One").vertices().size(); ++i) {
+      for (size_t i = 0; i < testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-One").nVertices(); ++i) {
         data.push_back(i);
         data.push_back(i);
       }
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
 
     auto velocitiesID = "Velocities";
     while (cplInterface.isCouplingOngoing()) {
-      const auto size = testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-Two").vertices().size();
+      const auto size = testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-Two").nVertices();
 
       std::vector<double> expected;
       for (size_t i = 0; i < size; ++i) {

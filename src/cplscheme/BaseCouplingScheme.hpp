@@ -7,6 +7,7 @@
 #include <set>
 #include <string>
 #include <vector>
+
 #include "Constants.hpp"
 #include "CouplingData.hpp"
 #include "CouplingScheme.hpp"
@@ -14,12 +15,12 @@
 #include "acceleration/SharedPointer.hpp"
 #include "impl/ConvergenceMeasure.hpp"
 #include "impl/SharedPointer.hpp"
+#include "impl/TimeHandler.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "utils/assertion.hpp"
 
 namespace precice {
 namespace io {
@@ -396,6 +397,12 @@ protected:
    */
   bool reachedEndOfTimeWindow() const;
 
+  /// @copydoc cplscheme::CouplingScheme::requiresSubsteps()
+  bool requiresSubsteps() const override final;
+
+  /// @copydoc cplscheme::CouplingScheme::implicitDataToReceive()
+  ImplicitData implicitDataToReceive() const override;
+
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
@@ -404,9 +411,6 @@ private:
 
   /// Maximum time being computed. End of simulation is reached, if getTime() == _maxTime
   double _maxTime;
-
-  /// time of beginning of the current time window
-  double _timeWindowStartTime = 0;
 
   /// Number of time windows that have to be computed. End of simulation is reached, if _timeWindows == _maxTimeWindows
   int _maxTimeWindows;
@@ -420,8 +424,8 @@ private:
   /// time window size of next window (acts as buffer for time windows size provided by first participant, if using first participant method)
   double _nextTimeWindowSize = UNDEFINED_TIME_WINDOW_SIZE;
 
-  /// Current time
-  double _time = 0;
+  /// Time handler
+  impl::TimeHandler _time;
 
   /// Lower limit of iterations during one time window. Prevents convergence if _iterations < _minIterations.
   int _minIterations = -1;
@@ -578,6 +582,11 @@ private:
    * @return the end of the time window, defined as timeWindowStart + timeWindowSize
    */
   double getWindowEndTime() const;
+
+  /**
+   * @return the start of the time window
+   */
+  double getWindowStartTime() const;
 };
 } // namespace cplscheme
 } // namespace precice

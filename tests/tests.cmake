@@ -3,12 +3,15 @@
 #
 target_sources(testprecice
     PRIVATE
+    tests/geometric-multiscale/AxialGeoMultiscale.cpp
+    tests/geometric-multiscale/RadialGeoMultiscale.cpp
     tests/parallel/CouplingOnLine.cpp
     tests/parallel/ExportTimeseries.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
     tests/parallel/GlobalRBFPartitioningPETSc.cpp
     tests/parallel/LocalRBFPartitioning.cpp
     tests/parallel/LocalRBFPartitioningPETSc.cpp
+    tests/parallel/MappingTypeRestriction.cpp
     tests/parallel/NearestProjectionRePartitioning.cpp
     tests/parallel/PrimaryRankSockets.cpp
     tests/parallel/TestBoundingBoxInitialization.cpp
@@ -137,6 +140,44 @@ target_sources(testprecice
     tests/serial/lifecycle/reconstruction/ConstructOnly.cpp
     tests/serial/lifecycle/reconstruction/Full.cpp
     tests/serial/lifecycle/reconstruction/ImplicitFinalize.cpp
+    tests/serial/map-if-necessary/three-solvers/helper.hpp
+    tests/serial/map-if-necessary/three-solvers/mixed-substeps/Multi.cpp
+    tests/serial/map-if-necessary/three-solvers/mixed-substeps/ParallelExplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/mixed-substeps/ParallelImplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/mixed-substeps/SerialExplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/mixed-substeps/SerialImplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/with-substeps/Multi.cpp
+    tests/serial/map-if-necessary/three-solvers/with-substeps/ParallelExplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/with-substeps/ParallelImplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/with-substeps/SerialExplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/with-substeps/SerialImplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/without-substeps/Multi.cpp
+    tests/serial/map-if-necessary/three-solvers/without-substeps/ParallelExplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/without-substeps/ParallelImplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/without-substeps/SerialExplicit.cpp
+    tests/serial/map-if-necessary/three-solvers/without-substeps/SerialImplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/helper.hpp
+    tests/serial/map-if-necessary/two-solvers/mixed-substeps/ParallelExplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/mixed-substeps/ParallelImplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/mixed-substeps/SerialExplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/mixed-substeps/SerialImplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/with-substeps/ParallelExplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/with-substeps/ParallelImplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/with-substeps/SerialExplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/with-substeps/SerialImplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/without-substeps/ParallelExplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/without-substeps/ParallelImplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/without-substeps/SerialExplicit.cpp
+    tests/serial/map-if-necessary/two-solvers/without-substeps/SerialImplicit.cpp
+    tests/serial/map-initial-data/helper.hpp
+    tests/serial/map-initial-data/non-zero-data/ParallelRead.cpp
+    tests/serial/map-initial-data/non-zero-data/ParallelWrite.cpp
+    tests/serial/map-initial-data/non-zero-data/SerialRead.cpp
+    tests/serial/map-initial-data/non-zero-data/SerialWrite.cpp
+    tests/serial/map-initial-data/zero-data/ParallelRead.cpp
+    tests/serial/map-initial-data/zero-data/ParallelWrite.cpp
+    tests/serial/map-initial-data/zero-data/SerialRead.cpp
+    tests/serial/map-initial-data/zero-data/SerialWrite.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalReadScalar.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalReadVector.cpp
     tests/serial/mapping-nearest-neighbor-gradient/GradientTestBidirectionalWriteScalar.cpp
@@ -219,6 +260,8 @@ target_sources(testprecice
     tests/serial/time/explicit/compositional/DoNothingWithSubcycling.cpp
     tests/serial/time/explicit/compositional/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/compositional/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
+    tests/serial/time/explicit/parallel-coupling/DoManySmallSteps.cpp
+    tests/serial/time/explicit/parallel-coupling/DoNonfittingWindows.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling6400Steps.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling640Steps.cpp
@@ -269,4 +312,4 @@ target_sources(testprecice
     )
 
 # Contains the list of integration test suites
-set(PRECICE_TEST_SUITES Parallel QuasiNewton Serial)
+set(PRECICE_TEST_SUITES GeometricMultiscale Parallel QuasiNewton Serial)

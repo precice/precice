@@ -32,6 +32,7 @@ target_sources(testprecice
     src/cplscheme/tests/RelativeConvergenceMeasureTest.cpp
     src/cplscheme/tests/ResidualRelativeConvergenceMeasureTest.cpp
     src/cplscheme/tests/SerialImplicitCouplingSchemeTest.cpp
+    src/cplscheme/tests/TimeHandlerTests.cpp
     src/io/tests/ExportCSVTest.cpp
     src/io/tests/ExportConfigurationTest.cpp
     src/io/tests/ExportVTKTest.cpp
@@ -41,6 +42,7 @@ target_sources(testprecice
     src/io/tests/TXTWriterReaderTest.cpp
     src/m2n/tests/GatherScatterCommunicationTest.cpp
     src/m2n/tests/PointToPointCommunicationTest.cpp
+    src/mapping/tests/AxialGeoMultiscaleMappingTest.cpp
     src/mapping/tests/GinkgoRadialBasisFctSolverTest.cpp
     src/mapping/tests/LinearCellInterpolationMappingTest.cpp
     src/mapping/tests/MappingConfigurationTest.cpp
@@ -53,6 +55,7 @@ target_sources(testprecice
     src/mapping/tests/PolationTest.cpp
     src/mapping/tests/RadialBasisFctHelper.hpp
     src/mapping/tests/RadialBasisFctMappingTest.cpp
+    src/mapping/tests/RadialGeoMultiscaleMappingTest.cpp
     src/math/tests/BSplineTest.cpp
     src/math/tests/BarycenterTest.cpp
     src/math/tests/DifferencesTest.cpp

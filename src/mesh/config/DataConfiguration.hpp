@@ -60,8 +60,6 @@ private:
   const std::string VALUE_VECTOR = "vector";
   const std::string VALUE_SCALAR = "scalar";
 
-  const Data::typeName _dataTypeName{};
-
   std::vector<ConfiguredData> _data;
 
   int _indexLastConfigured = -1;

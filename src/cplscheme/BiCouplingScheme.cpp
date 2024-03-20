@@ -109,6 +109,11 @@ DataMap &BiCouplingScheme::getReceiveData()
   return _receiveData;
 }
 
+const DataMap &BiCouplingScheme::getReceiveData() const
+{
+  return _receiveData;
+}
+
 CouplingData *BiCouplingScheme::getSendData(
     DataID dataID)
 {

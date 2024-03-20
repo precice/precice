@@ -86,7 +86,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     BOOST_TEST(meshConfig->meshes().size() == 1);
     mesh::PtrMesh mesh = meshConfig->meshes().at(0);
     BOOST_TEST(mesh->data().size() == 3);
-    BOOST_TEST(mesh->vertices().size() > 0);
+    BOOST_TEST(mesh->nVertices() > 0);
 
     double computedTime      = 0.0;
     int    computedTimesteps = 0;

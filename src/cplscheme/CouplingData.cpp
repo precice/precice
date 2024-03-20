@@ -17,9 +17,9 @@ CouplingData::CouplingData(
     : requiresInitialization(requiresInitialization),
       _mesh(std::move(mesh)),
       _data(std::move(data)),
+      _previousTimeStepsStorage(),
       _exchangeSubsteps(exchangeSubsteps),
-      _direction(direction),
-      _previousTimeStepsStorage()
+      _direction(direction)
 {
   PRECICE_ASSERT(_data != nullptr);
   _previousTimeStepsStorage = _data->timeStepsStorage();

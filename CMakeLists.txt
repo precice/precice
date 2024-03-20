@@ -185,10 +185,10 @@ if(TPL_ENABLE_BOOST)
   unset(ENV{BOOST_ROOT})
 endif()
 find_package(Boost 1.71.0 REQUIRED
-  COMPONENTS filesystem log log_setup program_options system thread unit_test_framework
+  COMPONENTS log log_setup program_options system thread unit_test_framework
   )
-mark_as_advanced(Boost_FILESYSTEM_LIBRARY_RELEASE Boost_INCLUDE_DIR Boost_LOG_LIBRARY_RELEASE Boost_LOG_SETUP_LIBRARY_RELEASE Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE Boost_SYSTEM_LIBRARY_RELEASE Boost_THREAD_LIBRARY_RELEASE Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE)
-mark_as_advanced(Boost_FILESYSTEM_LIBRARY_DEBUG Boost_INCLUDE_DIR Boost_LOG_LIBRARY_DEBUG Boost_LOG_SETUP_LIBRARY_DEBUG Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG Boost_SYSTEM_LIBRARY_DEBUG Boost_THREAD_LIBRARY_DEBUG Boost_UNIT_TEST_FRAMEWORK_LIBRARY_DEBUG)
+mark_as_advanced(Boost_INCLUDE_DIR Boost_LOG_LIBRARY_RELEASE Boost_LOG_SETUP_LIBRARY_RELEASE Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE Boost_SYSTEM_LIBRARY_RELEASE Boost_THREAD_LIBRARY_RELEASE Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE)
+mark_as_advanced(Boost_INCLUDE_DIR Boost_LOG_LIBRARY_DEBUG Boost_LOG_SETUP_LIBRARY_DEBUG Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG Boost_SYSTEM_LIBRARY_DEBUG Boost_THREAD_LIBRARY_DEBUG Boost_UNIT_TEST_FRAMEWORK_LIBRARY_DEBUG)
 message(STATUS "Found Boost ${Boost_VERSION}")
 
 # Eigen
@@ -371,7 +371,6 @@ endif()
 target_compile_definitions(preciceCore PUBLIC BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING)
 target_link_libraries(preciceCore PUBLIC
   Boost::boost
-  Boost::filesystem
   Boost::log
   Boost::log_setup
   Boost::program_options
@@ -685,11 +684,16 @@ else()
 endif()
 
 # Configure the pkg-config file for the binary directory
+set(_precice_bindings "")
+if (PRECICE_BINDINGS_C)
+  set(_precice_bindings "-I${PROJECT_SOURCE_DIR}/extras/bindings/c/include")
+endif()
 configure_file(
   "${PROJECT_SOURCE_DIR}/cmake/binary.pc.in"
   "libprecice.pc"
   @ONLY
   )
+unset(_precice_bindings)
 
 # Configure the pkg-config file for the installation
 configure_file(

@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
         - name: "Create draft release"
-          uses: softprops/action-gh-release@v1
+          uses: softprops/action-gh-release@v2
           with:
             draft: True
 
@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        TARGET: ["ubuntu:20.04", "ubuntu:22.04", "debian:11"]
+        TARGET: ["ubuntu:20.04", "ubuntu:22.04", "debian:11", "debian:12"]
     steps:
       - uses: actions/checkout@v4
       - name: Generate build directory
@@ -45,7 +45,7 @@ jobs:
         working-directory: build
         run: |
           cmake --version
-          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DPRECICE_FEATURE_PETSC_MAPPING=ON -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DPRECICE_FEATURE_PETSC_MAPPING=ON -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON ..
       - name: Compile
         working-directory: build
         run: make -j $(nproc)
@@ -61,8 +61,8 @@ jobs:
           tag: ${{ github.ref }}
 
   dockerfile:
-    name: "Release Dockerfiles"
-    needs: release-draft
+    name: "Release Dockerfile"
+    needs: package-deb
     runs-on: ubuntu-latest
     env:
         docker_username: precice
@@ -84,7 +84,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          file: "./tools/releasing/packaging/docker/Dockerfile"
+          file: "./tools/releasing/packaging/docker/release.dockerfile"
           tags: ${{ env.docker_username }}/precice:${{ steps.tag.outputs.tag }},${{ env.docker_username }}/precice:latest
           build-args: |
             version=${{ steps.tag.outputs.tag }}

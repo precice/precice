@@ -15,12 +15,12 @@ Data::Data(
     int         dimensions,
     int         spatialDimensions,
     int         waveformDegree)
-    : _name(std::move(name)),
+    : _waveform(waveformDegree),
+      _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
       _spatialDimensions(spatialDimensions),
-      _sample(_dimensions),
-      _waveform(waveformDegree)
+      _sample(_dimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
 }

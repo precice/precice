@@ -2,9 +2,36 @@
  *
  * @copyright Copyright Tristan Brindle 2018.
  *
- * @brief A C++ 11 implementation of the non-owning C++20 std::span type.
+ * @brief A C++ 11 implementation of the non-owning C++20 \ref std::span type.
  *
- * A span represents a non-owning view into a contiguous block of memory of a known size.
+ * A \ref span represents a non-owning view into a contiguous block of memory of a known size.
+ * This view can be mutable or const, depending on the type.
  *
- * This version contains an additional constructor for `const char *`-style C strings, allowing the span to mimic C++17 std::string_view.
+ * A simple mental model is an object that holds a pointer and size, so it knows how many elements it is allowed to access after the initial pointer.
+ * You can imagine a `span<double>` to look like this:
+ *
+ * @code{cpp}
+ * class span {
+ *   double* begin;
+ *   size_t size;
+ * }
+ * @endcode
+ *
+ * This type can also be read-only aka `const`. You can imagine a `span<const double>` to look like this:
+ *
+ * @code{cpp}
+ * class span {
+ *   double const* begin;
+ *   size_t size;
+ * }
+ * @endcode
+ *
+ * It can be constructed from:
+ * - A pointer and size
+ * - A pointer to first element and pointer to one past the last element
+ * - A C-style array `char[10]`
+ * - A C++ STL arrays `std::array<char,10>`
+ * - A contiguous range with size `end(R) - begin(R)`, such as a `std::vector`
+ *
+ * @note This version contains an additional constructor for `const char *`-style C strings, allowing the span to mimic C++17 \ref std::string_view.
  */

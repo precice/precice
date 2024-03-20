@@ -154,7 +154,7 @@ void projectClusterCentersToinputMesh(Vertices &clusterCenters, mesh::PtrMesh me
   std::transform(clusterCenters.begin(), clusterCenters.end(), clusterCenters.begin(), [&](auto &v) {
     if (!v.isTagged()) {
       auto closestCenter = mesh->index().getClosestVertex(v.getCoords()).index;
-      return mesh::Vertex{mesh->vertices()[closestCenter].getCoords(), v.getID()};
+      return mesh::Vertex{mesh->vertex(closestCenter).getCoords(), v.getID()};
     } else {
       return v;
     }
@@ -258,11 +258,11 @@ inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMe
   std::vector<double> sampledClusterRadii;
   for (auto s : randomSamples) {
     // ask the index tree for the k-nearest neighbors  in order to estimate the point density
-    auto kNearestVertexIDs = inMesh->index().getClosestVertices(inMesh->vertices()[s].getCoords(), verticesPerCluster);
+    auto kNearestVertexIDs = inMesh->index().getClosestVertices(inMesh->vertex(s).getCoords(), verticesPerCluster);
     // compute the distance of each point to the center
     std::vector<double> squaredRadius(kNearestVertexIDs.size());
     std::transform(kNearestVertexIDs.begin(), kNearestVertexIDs.end(), squaredRadius.begin(), [&inMesh, s](auto i) {
-      return computeSquaredDifference(inMesh->vertices()[i].rawCoords(), inMesh->vertices()[s].rawCoords());
+      return computeSquaredDifference(inMesh->vertex(i).rawCoords(), inMesh->vertex(s).rawCoords());
     });
     // Store the maximum distance
     auto maxRadius = std::max_element(squaredRadius.begin(), squaredRadius.end());
@@ -312,10 +312,10 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_ASSERT(inMesh->getDimensions() == outMesh->getDimensions());
 
   // If we have either no input or no output vertices, we return immediately
-  if (inMesh->vertices().size() == 0 || outMesh->vertices().size() == 0)
+  if (inMesh->nVertices() == 0 || outMesh->nVertices() == 0)
     return {double{}, Vertices{}};
 
-  PRECICE_ASSERT(!outMesh->vertices().empty() && !inMesh->vertices().empty());
+  PRECICE_ASSERT(!outMesh->empty() && !inMesh->empty());
 
   // startGridAtEdge boolean switch in order to decide either to start the clustering at the edge of the bounding box in each direction
   // (true) or start the clustering inside the bounding box (edge + 0.5 radius). The latter approach leads to fewer clusters,
@@ -343,13 +343,14 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_ASSERT(bb_check == localBB);
 #endif
 
-  // If we have less vertices in the whole domain than our target cluster size,
-  // we just use a single cluster. The clustering result of the algorithm further
-  // down is in this case not optimal.
+  // If we have very few vertices in the domain, (in this case twice our cluster
+  // size as we decompose most probably at least in 4 clusters) we just use a
+  // single cluster. The clustering result of the algorithm further down is in
+  // this case not optimal and might lead to too many clusters.
   // The single cluster has in principle a radius of inf. We use here twice the
   // length of the longest bounding box edge length and the center of the bounding
   // box for the center point.
-  if (inMesh->vertices().size() < verticesPerCluster)
+  if (inMesh->nVertices() < verticesPerCluster * 2)
     return {localBB.longestEdgeLength() * 2, Vertices{mesh::Vertex({localBB.center(), 0})}};
 
   // We define a convenience alias for the localBB. In case we need to synchronize the clustering across ranks later on, we need
@@ -362,9 +363,10 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_DEBUG("Vertex cluster radius: {}", clusterRadius);
 
   // maximum distance between cluster centers lying diagonal to each other. The maximum distance takes the overlap condition into
-  // account: if the distance between the centers is sqrt(2) * radius, we violate the overlap condition between diagonal clusters
-  // 0.3 should be a good default value
-  const double maximumCenterDistance = std::sqrt(2) * clusterRadius * (1 - relativeOverlap);
+  // account: example for 2D: if the distance between the centers is sqrt( 4 / 2 ) * radius, we violate the overlap condition between
+  // diagonal clusters
+  const int    inDim                 = inMesh->getDimensions();
+  const double maximumCenterDistance = std::sqrt(4. / inDim) * clusterRadius * (1 - relativeOverlap);
 
   // Step 3: using the maximum distance and the bounding box, compute the number of clusters in each direction
   // we ceil the number of clusters in order to guarantee the desired overlap
@@ -375,11 +377,11 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   // Step 4: Determine the centers of the clusters
   Vertices centers;
   // Vector used to temporarily store each center coordinates
-  std::vector<double> centerCoords(inMesh->getDimensions());
+  std::vector<double> centerCoords(inDim);
   // Vector storing the distances between the cluster in each direction
-  std::vector<double> distances(inMesh->getDimensions());
+  std::vector<double> distances(inDim);
   // Vector storing the starting coordinates in each direction
-  std::vector<double> start(inMesh->getDimensions());
+  std::vector<double> start(inDim);
   // Fill the constant vectos, i.e., the distances and the start
   for (unsigned int d = 0; d < distances.size(); ++d) {
     // this distance calculation guarantees that we have at least the minimal specified overlap, as we ceil the division for the number of clusters
@@ -391,7 +393,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
 
   // Step 5: Take care of the starting layer: if we start the grid at the globalBB edge we have an additional layer in each direction
   if (startGridAtEdge) {
-    for (int d = 0; d < inMesh->getDimensions(); ++d) {
+    for (int d = 0; d < inDim; ++d) {
       if (globalBB.getEdgeLength(d) > math::NUMERICAL_ZERO_DIFFERENCE) {
         nClustersGlobal[d] += 1;
       }
@@ -430,7 +432,8 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   // Step 7: fill the center container using the zCurve for indexing. For the further processing, it is also important to ensure
   // that the ID within the center Vertex class coincides with the position of the center vertex in the container.
   // We start with the (bottom left) corner and iterate over all dimension
-  if (inMesh->getDimensions() == 2) {
+  PRECICE_ASSERT(inDim >= 2);
+  if (inDim == 2) {
     centerCoords[0] = start[0];
     for (unsigned int x = 0; x < nClustersLocal[0]; ++x, centerCoords[0] += distances[0]) {
       centerCoords[1] = start[1];

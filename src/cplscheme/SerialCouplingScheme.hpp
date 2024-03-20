@@ -62,6 +62,8 @@ public:
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode);
 
+  ImplicitData implicitDataToReceive() const override final;
+
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
 

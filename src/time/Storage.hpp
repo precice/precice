@@ -122,6 +122,8 @@ public:
    */
   void clear();
 
+  void clearExceptLast();
+
   void trimBefore(double time);
 
   void trimAfter(double time);

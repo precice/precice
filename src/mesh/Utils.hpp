@@ -114,7 +114,7 @@ std::array<Vertex *, n> vertexPtrsFor(Mesh &mesh, const std::array<int, n> &vert
   static_assert(n > 0, "Cannot handle nothing.");
   std::array<Vertex *, n> vptrs;
   std::transform(vertexIDs.begin(), vertexIDs.end(), vptrs.begin(),
-                 [&mesh](int id) { return &(mesh.vertices()[id]); });
+                 [&mesh](int id) { return &(mesh.vertex(id)); });
   return vptrs;
 }
 
@@ -124,7 +124,7 @@ std::array<Eigen::VectorXd, n> coordsFor(const Mesh &mesh, const std::array<int,
 {
   std::array<Eigen::VectorXd, n> coords;
   std::transform(vertexIDs.begin(), vertexIDs.end(), coords.begin(),
-                 [&mesh](int id) { return mesh.vertices()[id].getCoords(); });
+                 [&mesh](int id) { return mesh.vertex(id).getCoords(); });
   return coords;
 }
 

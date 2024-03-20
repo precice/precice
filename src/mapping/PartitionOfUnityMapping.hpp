@@ -47,7 +47,6 @@ public:
       Mapping::Constraint     constraint,
       int                     dimension,
       RADIAL_BASIS_FUNCTION_T function,
-      std::array<bool, 3>     deadAxis,
       Polynomial              polynomial,
       unsigned int            verticesPerCluster,
       double                  relativeOverlap,
@@ -100,10 +99,6 @@ private:
   /// derived parameter based on the input above: the radius of each cluster
   double _clusterRadius = 0;
 
-  /// true if the mapping along some axis should be ignored
-  /// has currently only dim x false entries, as integrated polynomials are irrelevant
-  std::vector<bool> _deadAxis;
-
   /// polynomial treatment of the RBF system
   Polynomial _polynomial;
 
@@ -123,7 +118,6 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
     Mapping::Constraint     constraint,
     int                     dimension,
     RADIAL_BASIS_FUNCTION_T function,
-    std::array<bool, 3>     deadAxis,
     Polynomial              polynomial,
     unsigned int            verticesPerCluster,
     double                  relativeOverlap,
@@ -143,13 +137,6 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
     setOutputRequirement(Mapping::MeshRequirement::VERTEX);
   }
-
-  _deadAxis.clear();
-  std::copy_n(deadAxis.begin(), getDimensions(), std::back_inserter(_deadAxis));
-  if (getDimensions() == 2 && deadAxis[2]) {
-    PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect. Please remove the respective mapping's \"z-dead\" attribute.");
-  }
-  PRECICE_CHECK(std::any_of(_deadAxis.begin(), _deadAxis.end(), [](const auto &ax) { return ax == false; }), "You cannot set all axes to dead for an RBF mapping. Please remove one of the respective mapping's \"x-dead\", \"y-dead\", or \"z-dead\" attributes.");
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -172,13 +159,13 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     outMesh = this->output();
   }
 
-  precice::profiling::Event eClusters("map.pou.computeMapping.createClustering");
+  precice::profiling::Event eClusters("map.pou.computeMapping.createClustering.From" + this->input()->getName() + "To" + this->output()->getName());
   // Step 1: get a tentative clustering consisting of centers and a radius from one of the available algorithms
   auto [clusterRadius, centerCandidates] = impl::createClustering(inMesh, outMesh, _relativeOverlap, _verticesPerCluster, _projectToInput);
   eClusters.stop();
 
   _clusterRadius = clusterRadius;
-  PRECICE_ASSERT(_clusterRadius > 0 || inMesh->vertices().size() == 0 || outMesh->vertices().size() == 0);
+  PRECICE_ASSERT(_clusterRadius > 0 || inMesh->nVertices() == 0 || outMesh->nVertices() == 0);
 
   // Step 2: check, which of the resulting clusters are non-empty and register the cluster centers in a mesh
   // Here, the VertexCluster computes the matrix decompositions directly in case the cluster is non-empty
@@ -193,7 +180,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
     const VertexID                                  vertexID = meshVertices.size();
     mesh::Vertex                                    center(c.getCoords(), vertexID);
-    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _deadAxis, _polynomial, inMesh, outMesh);
+    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _polynomial, inMesh, outMesh);
 
     // Consider only non-empty clusters (more of a safeguard here)
     if (!cluster.empty()) {
@@ -230,17 +217,18 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // Step 4a: get the relevant clusters for the output vertex
     auto       clusterIDs            = clusterIndex.getVerticesInsideBox(vertex, _clusterRadius);
     const auto localNumberOfClusters = clusterIDs.size();
+
     // Consider the case where we didn't find any cluster (meshes don't match very well)
-    if (localNumberOfClusters == 0) {
-      PRECICE_ERROR("Output vertex {} of mesh \"{}\" could not be assigned to any cluster in the rbf-pum mapping. This probably means that the meshes do not match well geometry-wise: Visualize the exported preCICE meshes to confirm."
-                    " If the meshes are fine geometry-wise, you can try to increase the number of \"vertices-per-cluster\" (default is 100), the \"relative-overlap\" (default is 0.3),"
-                    " or disable the option \"project-to-input\"."
-                    "These options are only valid for the <mapping:rbf-pum-direct/> tag.",
-                    vertex.getCoords(), outMesh->getName());
-      // In principle, we could assign the vertex to the closest cluster using clusterIDs.emplace_back(clusterIndex.getClosestVertex(vertex.getCoords()).index);
-      // However, this leads to a conflict with weights already set in the corresponding cluster, since we insert the ID and, later on, map the ID to a local weight index
-      // Of course, we could rearrange the weights, but we want to avoid the case here anyway, i.e., prefer to abort.
-    }
+    //
+    // In principle, we could assign the vertex to the closest cluster using clusterIDs.emplace_back(clusterIndex.getClosestVertex(vertex.getCoords()).index);
+    // However, this leads to a conflict with weights already set in the corresponding cluster, since we insert the ID and, later on, map the ID to a local weight index
+    // Of course, we could rearrange the weights, but we want to avoid the case here anyway, i.e., prefer to abort.
+    PRECICE_CHECK(localNumberOfClusters > 0,
+                  "Output vertex {} of mesh \"{}\" could not be assigned to any cluster in the rbf-pum mapping. This probably means that the meshes do not match well geometry-wise: Visualize the exported preCICE meshes to confirm."
+                  " If the meshes are fine geometry-wise, you can try to increase the number of \"vertices-per-cluster\" (default is 50), the \"relative-overlap\" (default is 0.15),"
+                  " or disable the option \"project-to-input\"."
+                  "These options are only valid for the <mapping:rbf-pum-direct/> tag.",
+                  vertex.getCoords(), outMesh->getName());
 
     // Next we compute the normalized weights of each output vertex for each partition
     PRECICE_ASSERT(localNumberOfClusters > 0, "No cluster found for vertex {}", vertex.getCoords());
@@ -315,13 +303,9 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     outMesh    = this->output(); // local
   }
 
-  if (outMesh->vertices().empty())
+  if (outMesh->empty())
     return; // Ranks not at the interface should never hold interface vertices
 
-  // TODO: Check again the tagging in combination with the partition construction (which mesh to use)
-  // In order to construct the local partitions, we need all vertices with a distance of 2 x radius,
-  // as the relevant partitions centers have a maximum distance of radius, and the proper construction of the
-  // interpolant requires all vertices with a distance of radius from the center.
   // Note that we don't use the corresponding bounding box functions from
   // precice::mesh (e.g. ::getBoundingBox), as the stored bounding box might
   // have the wrong size (e.g. direct access)
@@ -335,9 +319,25 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   }
   PRECICE_ASSERT(bb_check == bb);
 #endif
-  // @TODO: This assert is not completely right, as it checks all dimensions for non-emptyness (which might not be the case).
+  // @TODO: This is assert and the function might run into problems if we have only a single.
+  // vertex in the received mesh
   // However, with the current BB implementation, the expandBy function will just do nothing.
   PRECICE_ASSERT(!bb.empty());
+  // This function behaves differently when disabling the geometric filtering
+  // without filter, we look at the complete mesh, whereas otherwise, we look at
+  // a fraction of the mesh and we might end up with too few vertices per rank
+  // We cannot prevent too few vertices from being tagged, if we have filtered too much
+  // vertices, but the user could increase the safety-factor or disable the filtering.
+  // When no geometric filter is applid, vertices().size() is here the same as
+  // getGlobalNumberOfVertices
+  if (filterMesh->nVertices() < _verticesPerCluster &&
+      filterMesh->nVertices() < static_cast<std::size_t>(filterMesh->getGlobalNumberOfVertices())) {
+    PRECICE_WARN("The repartitioning of the received mesh \"{}\" resulted in {} vertices on this "
+                 "rank, which is less than the desired number of vertices per cluster configured "
+                 "in the partition of unity mapping ({}). Consider increasing the safety-factor "
+                 "or switching off the geometric filter (<receive-mesh: ... geometric-filter=\"no-filter\" .../>)",
+                 filterMesh->getName(), filterMesh->nVertices(), _verticesPerCluster);
+  }
 
   if (_clusterRadius == 0)
     _clusterRadius = impl::estimateClusterRadius(_verticesPerCluster, filterMesh, bb);
@@ -353,7 +353,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // ... and tag all affected vertices
   auto verticesNew = filterMesh->index().getVerticesInsideBox(localBB);
 
-  std::for_each(verticesNew.begin(), verticesNew.end(), [&filterMesh](VertexID v) { filterMesh->vertices()[v].tag(); });
+  std::for_each(verticesNew.begin(), verticesNew.end(), [&filterMesh](VertexID v) { filterMesh->vertex(v).tag(); });
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -378,8 +378,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU
   // We have to create the global offsets in order to export things in parallel
   if (utils::IntraComm::isSecondary()) {
     // send number of vertices
-    PRECICE_DEBUG("Send number of vertices: {}", centerMesh.vertices().size());
-    int numberOfVertices = centerMesh.vertices().size();
+    PRECICE_DEBUG("Send number of vertices: {}", centerMesh.nVertices());
+    int numberOfVertices = centerMesh.nVertices();
     utils::IntraComm::getCommunication()->send(numberOfVertices, 0);
 
     // receive vertex offsets
@@ -391,7 +391,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU
   } else if (utils::IntraComm::isPrimary()) {
 
     mesh::Mesh::VertexOffsets vertexOffsets(utils::IntraComm::getSize());
-    vertexOffsets[0] = centerMesh.vertices().size();
+    vertexOffsets[0] = centerMesh.nVertices();
 
     // receive number of secondary vertices and fill vertex offsets
     for (int secondaryRank : utils::IntraComm::allSecondaryRanks()) {

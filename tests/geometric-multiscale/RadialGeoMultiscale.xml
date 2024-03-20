@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration experimental="on">
+  <data:scalar name="HeatFluxLike" />
+
+  <mesh name="Mesh1D" dimensions="3">
+    <use-data name="HeatFluxLike" />
+  </mesh>
+
+  <mesh name="Mesh3D" dimensions="3">
+    <use-data name="HeatFluxLike" />
+  </mesh>
+
+  <participant name="Fluid1D">
+    <provide-mesh name="Mesh1D" />
+    <write-data name="HeatFluxLike" mesh="Mesh1D" />
+  </participant>
+
+  <participant name="Solid3D">
+    <receive-mesh name="Mesh1D" from="Fluid1D" />
+    <provide-mesh name="Mesh3D" />
+    <mapping:radial-geometric-multiscale
+      direction="read"
+      multiscale-type="spread"
+      multiscale-radius=""
+      multiscale-axis="z"
+      from="Mesh1D"
+      to="Mesh3D"
+      constraint="consistent" />
+    <read-data name="HeatFluxLike" mesh="Mesh3D" />
+  </participant>
+
+  <m2n:sockets acceptor="Fluid1D" connector="Solid3D" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="Fluid1D" second="Solid3D" />
+    <max-time-windows value="1" />
+    <time-window-size value="1.0" />
+    <exchange data="HeatFluxLike" mesh="Mesh1D" from="Fluid1D" to="Solid3D" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

@@ -361,18 +361,18 @@ void runP2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFa
 
     if (context.isPrimary()) {
       // This rank should receive the mesh from rank 0 (fluid primary)
-      BOOST_TEST(mesh->vertices().size() == 2);
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 5.50);
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(0) == 1.0);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(1) == 2.0);
+      BOOST_TEST(mesh->nVertices() == 2);
+      BOOST_TEST(mesh->vertex(0).coord(0) == 5.50);
+      BOOST_TEST(mesh->vertex(0).coord(1) == 0.0);
+      BOOST_TEST(mesh->vertex(1).coord(0) == 1.0);
+      BOOST_TEST(mesh->vertex(1).coord(1) == 2.0);
     } else {
       // This rank should receive the mesh from rank 1 (fluid secondary)
-      BOOST_TEST(mesh->vertices().size() == 2);
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 1.50);
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(0) == 1.50);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(1) == 2.0);
+      BOOST_TEST(mesh->nVertices() == 2);
+      BOOST_TEST(mesh->vertex(0).coord(0) == 1.50);
+      BOOST_TEST(mesh->vertex(0).coord(1) == 0.0);
+      BOOST_TEST(mesh->vertex(1).coord(0) == 1.50);
+      BOOST_TEST(mesh->vertex(1).coord(1) == 2.0);
     }
   }
 }

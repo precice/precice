@@ -30,14 +30,6 @@ public:
 #define MPI_COMM_NULL nullptr
 #endif
 
-  /// Used to sort and order all coupling participants.
-  struct AccessorGroup {
-    std::string name;
-    int         id;
-    int         leaderRank;
-    int         size;
-  };
-
   struct CommState;
 
   using CommStatePtr = std::shared_ptr<CommState>;
@@ -47,10 +39,6 @@ public:
    * It also owns the CommState it originated from (parent) via shared ownership.
    */
   struct CommState {
-
-    /// The different groups that were used to split the communicator
-    std::vector<AccessorGroup> groups;
-
     /// The native communicator that represents this state
     Communicator comm = MPI_COMM_NULL;
 
@@ -188,18 +176,7 @@ public:
    *
    * @param[in] groupName MPI group in which the calling process will be put in
    */
-  static void splitCommunicator(const std::string &groupName);
-
-  /// Creates a restricted communicator
-  /**
-   * Set the new, restricted communicator on all ranks that are contained in
-   * that new communicator. Sets the communicator of the other ranks to MPI_COMM_NULL.
-   *
-   * @param[in] newSize How many ranks to restrict the Communicator to
-   *
-   * @postcondition current()->size() == newSize || current()->isNull()
-   */
-  static void restrictCommunicator(int newSize);
+  static void splitCommunicator(std::optional<int> group = std::nullopt);
 
   /** Resets the commState to World
    *

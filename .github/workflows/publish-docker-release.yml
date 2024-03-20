@@ -1,0 +1,60 @@
+name: Publish Docker release
+# This is a workflow to manually request an ubuntu package for an existing release.
+# To use:
+# - Go to the GitHub repository
+# - Go to the Actions tab
+# - Select the "Request Docker release" workflow
+# - On the top of the list, select "Run workflow"
+# - Select the release tag to generate the package for. Example: v2.3.0
+# - Select weather to override the latest tag
+# - Click "Run Workflow"
+#
+# This workflow uses the official ubuntu docker images.
+on:
+  workflow_dispatch:
+    workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version without the v prefix'
+        default: "2.1.0"
+        required: true
+        type: string
+      latest:
+        description: 'Override precice/precice:latest'
+        default: false
+        required: true
+        type: boolean
+
+jobs:
+  package:
+    name: 'Release docker precice/precice:${{ github.event.inputs.version }}'
+    runs-on: ubuntu-latest
+    env:
+        docker_username: precice
+    steps:
+      - name: Check version
+        run: echo "${{ github.event.inputs.version }}" | grep -Pq '^\d+\.\d+\.\d+$'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.docker_username }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push version tag
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          file: "./tools/releasing/packaging/docker/release.dockerfile"
+          tags: ${{ env.docker_username }}/precice:${{ github.event.inputs.version }}
+          build-args: |
+            version=${{ github.event.inputs.version }}
+      - name: Build and push latest tag
+        if: ${{ github.event.inputs.latest == 'true' }}
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          file: "./tools/releasing/packaging/docker/release.dockerfile"
+          tags: ${{ env.docker_username }}/precice:latest
+          build-args: |
+            version=${{ github.event.inputs.version }}

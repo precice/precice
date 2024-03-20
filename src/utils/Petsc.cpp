@@ -75,10 +75,7 @@ precice::logging::Logger precice::utils::petsc::Vector::_log("utils::Petsc::Vect
 
 bool Petsc::weInitialized = false;
 
-void Petsc::initialize(
-    int *                  argc,
-    char ***               argv,
-    Parallel::Communicator comm)
+void Petsc::initialize(Parallel::Communicator comm)
 {
   PRECICE_TRACE();
 #ifndef PRECICE_NO_PETSC
@@ -89,7 +86,9 @@ void Petsc::initialize(
     // Disable the default signal handler
     PetscOptionsSetValue(nullptr, "-no_signal_handler", nullptr);
     PetscErrorCode ierr;
-    ierr = PetscInitialize(argc, argv, "", nullptr);
+    int            argc = 0;
+    char **        argv = nullptr;
+    ierr                = PetscInitialize(&argc, &argv, "", nullptr);
     CHKERRV(ierr);
     weInitialized = true;
   }
@@ -99,9 +98,12 @@ void Petsc::initialize(
 void Petsc::finalize()
 {
 #ifndef PRECICE_NO_PETSC
+  if (!weInitialized) {
+    return;
+  }
   PetscBool petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
-  if (petscIsInitialized and weInitialized) {
+  if (petscIsInitialized) {
     PetscOptionsSetValueWrapper("-options_left", "no");
     PetscFinalize();
   }

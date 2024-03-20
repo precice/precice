@@ -1,5 +1,5 @@
 #include "io/ExportVTP.hpp"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <sstream>
 #include <string>
 #include "mesh/Data.hpp"
@@ -25,7 +25,7 @@ std::string ExportVTP::getPieceExtension() const
 std::string ExportVTP::getPieceAttributes(const mesh::Mesh &mesh) const
 {
   std::ostringstream oss;
-  oss << "NumberOfPoints=\"" << mesh.vertices().size() << "\" ";
+  oss << "NumberOfPoints=\"" << mesh.nVertices() << "\" ";
   oss << "NumberOfLines=\"" << mesh.edges().size() << "\" ";
   oss << "NumberOfPolys=\"" << mesh.triangles().size() << "\"";
   return oss.str();

@@ -45,7 +45,6 @@ public:
    * @param[in] center Spatial center of the vertex cluster
    * @param[in] radius Spatial radius of the cluster associated to the \p center
    * @param[in] function Radial basis function type used in interpolation
-   * @param[in] deadAxis dead axis as set by the user. Required for the RBF solver
    * @param[in] polynomial The polynomial treatment in the RBF system.
    * @param[in] inputMesh mesh where the interpolants are build on, i.e., the input mesh for consistent
    *                      mappings and the output mesh for conservative mappings
@@ -55,7 +54,6 @@ public:
   SphericalVertexCluster(mesh::Vertex            center,
                          double                  radius,
                          RADIAL_BASIS_FUNCTION_T function,
-                         std::vector<bool>       deadAxis,
                          Polynomial              polynomial,
                          mesh::PtrMesh           inputMesh,
                          mesh::PtrMesh           outputMesh);
@@ -130,7 +128,6 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
     mesh::Vertex            center,
     double                  radius,
     RADIAL_BASIS_FUNCTION_T function,
-    std::vector<bool>       deadAxis,
     Polynomial              polynomial,
     mesh::PtrMesh           inputMesh,
     mesh::PtrMesh           outputMesh)
@@ -138,8 +135,7 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
 {
   PRECICE_TRACE(_center.getCoords(), _radius);
   // Disable integrated polynomial, as it might cause locally singular matrices
-  PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.")
-  PRECICE_ASSERT(static_cast<int>(deadAxis.size()) == inputMesh->getDimensions());
+  PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.");
 
   // Get vertices to be mapped
   // Subtract a safety margin to exclude the vertices at the edge
@@ -166,6 +162,7 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
 
   // Construct the solver. Here, the constructor of the RadialBasisFctSolver computes already the decompositions etc, such that we can mark the
   // mapping in this cluster as computed (mostly for debugging purpose)
+  std::vector<bool> deadAxis(inputMesh->getDimensions(), false);
   _rbfSolver          = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{function, *inputMesh.get(), _inputIDs, *outputMesh.get(), _outputIDs, deadAxis, _polynomial};
   _hasComputedMapping = true;
 }

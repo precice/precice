@@ -43,6 +43,17 @@ def requireModules(modules):
         sys.exit(1)
 
 
+def checkPolarsVersion():
+    import polars
+
+    major, minor, _ = tuple(map(int, polars.__version__.split(".")))
+    if (major == 0) and (minor < 19):
+        print(
+            f"This command requires a polars installation of at least version 0.19.0 (found: {polars.__version__})"
+        )
+        sys.exit(1)
+
+
 def loadRobust(content):
     try:
         return json.loads(content)
@@ -68,7 +79,7 @@ def printWide(df):
         return len("{:}".format(s))
 
     headerWidths = tuple(map(formattedLength, df.columns))
-    bodyWidths = tuple(df.select(pl.all().apply(formattedLength)).max().row(0))
+    bodyWidths = tuple(df.select(pl.all().map_elements(formattedLength)).max().row(0))
     assert len(headerWidths) == len(bodyWidths)
     colwidths = map(max, zip(headerWidths, bodyWidths, repeat(mincolwidth)))
 
@@ -487,6 +498,8 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
     requireModules(["polars"])
     import polars as pl
 
+    checkPolarsVersion()
+
     run = Run(profilingfile)
     df = run.toDataFrame()
 
@@ -508,18 +521,22 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
     ranks = df.select("rank").unique()
 
     if len(ranks) == 1:
-        joined = df.groupby("eid").agg(
-            pl.sum("dur").alias("sum"),
-            pl.count("dur").alias("count"),
-            pl.mean("dur").alias("mean"),
-            pl.min("dur").alias("min"),
-            pl.max("dur").alias("max"),
+        joined = (
+            df.group_by("eid")
+            .agg(
+                pl.sum("dur").alias("sum"),
+                pl.count("dur").alias("count"),
+                pl.mean("dur").alias("mean"),
+                pl.min("dur").alias("min"),
+                pl.max("dur").alias("max"),
+            )
+            .sort("eid")
         )
     else:
         ldf = df.lazy()
         rankAdvance = (
             ldf.filter((pl.col("eid") == event) & (pl.col("rank") > 0))
-            .groupby("rank")
+            .group_by("rank")
             .agg(pl.col("dur").sum())
             .sort("dur")
             .collect()
@@ -540,23 +557,27 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
             )
 
         ldf = df.lazy()
-        joined = pl.concat(
-            [
-                (
-                    ldf.filter(pl.col("rank") == rank)
-                    .groupby("eid")
-                    .agg(
-                        pl.sum("dur").alias(f"R{rank}:sum"),
-                        pl.count("dur").alias(f"R{rank}:count"),
-                        pl.mean("dur").alias(f"R{rank}:mean"),
-                        pl.min("dur").alias(f"R{rank}:min"),
-                        pl.max("dur").alias(f"R{rank}:max"),
+        joined = (
+            pl.concat(
+                [
+                    (
+                        ldf.filter(pl.col("rank") == rank)
+                        .group_by("eid")
+                        .agg(
+                            pl.sum("dur").alias(f"R{rank}:sum"),
+                            pl.count("dur").alias(f"R{rank}:count"),
+                            pl.mean("dur").alias(f"R{rank}:mean"),
+                            pl.min("dur").alias(f"R{rank}:min"),
+                            pl.max("dur").alias(f"R{rank}:max"),
+                        )
                     )
-                )
-                for rank in ranksToPrint
-            ],
-            how="align",
-        ).collect()
+                    for rank in ranksToPrint
+                ],
+                how="align",
+            )
+            .sort("eid")
+            .collect()
+        )
 
     printWide(joined)
 
@@ -571,6 +592,8 @@ def histogramCommand(profilingfile, outfile, participant, event, rank, bins, uni
     requireModules(["polars", "matplotlib"])
     import matplotlib.pyplot as plt
     import polars as pl
+
+    checkPolarsVersion()
 
     run = Run(profilingfile)
     df = run.toDataFrame()

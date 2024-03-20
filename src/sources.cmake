@@ -101,6 +101,8 @@ target_sources(preciceCore
     src/cplscheme/CouplingData.hpp
     src/cplscheme/CouplingScheme.cpp
     src/cplscheme/CouplingScheme.hpp
+    src/cplscheme/ImplicitData.cpp
+    src/cplscheme/ImplicitData.hpp
     src/cplscheme/MultiCouplingScheme.cpp
     src/cplscheme/MultiCouplingScheme.hpp
     src/cplscheme/ParallelCouplingScheme.cpp
@@ -120,6 +122,8 @@ target_sources(preciceCore
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.cpp
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp
     src/cplscheme/impl/SharedPointer.hpp
+    src/cplscheme/impl/TimeHandler.cpp
+    src/cplscheme/impl/TimeHandler.hpp
     src/io/Export.hpp
     src/io/ExportCSV.cpp
     src/io/ExportCSV.hpp
@@ -167,6 +171,8 @@ target_sources(preciceCore
     src/m2n/SharedPointer.hpp
     src/m2n/config/M2NConfiguration.cpp
     src/m2n/config/M2NConfiguration.hpp
+    src/mapping/AxialGeoMultiscaleMapping.cpp
+    src/mapping/AxialGeoMultiscaleMapping.hpp
     src/mapping/BarycentricBaseMapping.cpp
     src/mapping/BarycentricBaseMapping.hpp
     src/mapping/GinkgoRadialBasisFctSolver.hpp
@@ -189,6 +195,8 @@ target_sources(preciceCore
     src/mapping/RadialBasisFctBaseMapping.hpp
     src/mapping/RadialBasisFctMapping.hpp
     src/mapping/RadialBasisFctSolver.hpp
+    src/mapping/RadialGeoMultiscaleMapping.cpp
+    src/mapping/RadialGeoMultiscaleMapping.hpp
     src/mapping/SharedPointer.hpp
     src/mapping/config/MappingConfiguration.cpp
     src/mapping/config/MappingConfiguration.hpp
@@ -288,6 +296,7 @@ target_sources(preciceCore
     src/utils/ArgumentFormatter.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
+    src/utils/DoubleAggregator.hpp
     src/utils/EigenHelperFunctions.cpp
     src/utils/EigenHelperFunctions.hpp
     src/utils/EigenIO.hpp
@@ -315,6 +324,7 @@ target_sources(preciceCore
     src/utils/fmt.hpp
     src/utils/fmtEigen.hpp
     src/utils/fmtSTL.hpp
+    src/utils/ignore.hpp
     src/utils/networking.cpp
     src/utils/networking.hpp
     src/utils/span_tools.hpp

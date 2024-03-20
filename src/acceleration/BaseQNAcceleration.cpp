@@ -83,17 +83,16 @@ void BaseQNAcceleration::initialize(
                    pair.second->getSize(), pair.second->getPreviousIterationSize());
   }
 
-  if (std::any_of(cplData.cbegin(), cplData.cend(), [](const auto &p) { return p.second->hasGradient(); })) {
-    PRECICE_WARN("Gradient data, which is required by at least one of the configured data mappings, is not yet compatible with quasi-Newton acceleration. This combination might lead to numerical issues. "
-                 "Consider switching to a different acceleration scheme or a different data mapping scheme.");
-  }
+  PRECICE_WARN_IF(
+      std::any_of(cplData.cbegin(), cplData.cend(), [](const auto &p) { return p.second->hasGradient(); }),
+      "Gradient data, which is required by at least one of the configured data mappings, is not yet compatible with quasi-Newton acceleration. This combination might lead to numerical issues. "
+      "Consider switching to a different acceleration scheme or a different data mapping scheme.");
 
   checkDataIDs(cplData);
 
   for (const auto &data : cplData | boost::adaptors::map_values) {
-    if (data->exchangeSubsteps()) {
-      PRECICE_ERROR("Quasi-Newton acceleration does not yet support using data from all substeps. Please set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
-    }
+    PRECICE_CHECK(!data->exchangeSubsteps(),
+                  "Quasi-Newton acceleration does not yet support using data from all substeps. Please set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
   }
 
   size_t              entries = 0;
@@ -187,12 +186,11 @@ void BaseQNAcceleration::updateDifferenceMatrices(
   _residuals = _values;
   _residuals -= _oldValues;
 
-  if (math::equals(utils::IntraComm::l2norm(_residuals), 0.0)) {
-    PRECICE_WARN("The coupling residual equals almost zero. There is maybe something wrong in your adapter. "
-                 "Maybe you always write the same data or you call advance without "
-                 "providing new data first or you do not use available read data. "
-                 "Or you just converge much further than actually necessary.");
-  }
+  PRECICE_WARN_IF(math::equals(utils::IntraComm::l2norm(_residuals), 0.0),
+                  "The coupling residual equals almost zero. There is maybe something wrong in your adapter. "
+                  "Maybe you always write the same data or you call advance without "
+                  "providing new data first or you do not use available read data. "
+                  "Or you just converge much further than actually necessary.");
 
   // if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
@@ -205,11 +203,11 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       PRECICE_ASSERT(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
       PRECICE_ASSERT(getLSSystemCols() <= _maxIterationsUsed, getLSSystemCols(), _maxIterationsUsed);
 
-      if (2 * getLSSystemCols() >= getLSSystemRows())
-        PRECICE_WARN(
-            "The number of columns in the least squares system exceeded half the number of unknowns at the interface. "
-            "The system will probably become bad or ill-conditioned and the quasi-Newton acceleration may not "
-            "converge. Maybe the number of allowed columns (\"max-used-iterations\") should be limited.");
+      PRECICE_WARN_IF(
+          2 * getLSSystemCols() >= getLSSystemRows(),
+          "The number of columns in the least squares system exceeded half the number of unknowns at the interface. "
+          "The system will probably become bad or ill-conditioned and the quasi-Newton acceleration may not "
+          "converge. Maybe the number of allowed columns (\"max-used-iterations\") should be limited.");
 
       Eigen::VectorXd deltaR = _residuals;
       deltaR -= _oldResiduals;
@@ -222,13 +220,13 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       if (not math::equals(utils::IntraComm::l2norm(_values), 0.0)) {
         residualMagnitude /= utils::IntraComm::l2norm(_values);
       }
-      if (math::equals(residualMagnitude, 0.0)) {
-        PRECICE_WARN("Adding a vector with a two-norm of {} to the quasi-Newton V matrix, which will lead to "
-                     "ill-conditioning. A filter might delete the column again. Still, this could mean that you are "
-                     "converging too tightly, that you reached steady-state, or that you are giving by mistake identical "
-                     "data to preCICE in two consecutive iterations.",
-                     residualMagnitude);
-      }
+      PRECICE_WARN_IF(
+          math::equals(residualMagnitude, 0.0),
+          "Adding a vector with a two-norm of {} to the quasi-Newton V matrix, which will lead to "
+          "ill-conditioning. A filter might delete the column again. Still, this could mean that you are "
+          "converging too tightly, that you reached steady-state, or that you are giving by mistake identical "
+          "data to preCICE in two consecutive iterations.",
+          residualMagnitude);
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
@@ -373,7 +371,7 @@ void BaseQNAcceleration::performAcceleration(
     /**
      * apply quasiNewton update
      */
-    _values = _oldValues + xUpdate + _residuals; // = x^k + delta_x + r^k - q^k
+    _values += xUpdate;
 
     // pending deletion: delete old V, W matrices if timeWindowsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
@@ -400,13 +398,13 @@ void BaseQNAcceleration::performAcceleration(
       }
     }
 
-    if (std::isnan(utils::IntraComm::l2norm(xUpdate))) {
-      PRECICE_ERROR("The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
-                    "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
-                    "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
-                    "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "
-                    "filter or increase its threshold (larger epsilon).");
-    }
+    PRECICE_CHECK(
+        !std::isnan(utils::IntraComm::l2norm(xUpdate)),
+        "The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
+        "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
+        "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
+        "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "
+        "filter or increase its threshold (larger epsilon).");
   }
 
   splitCouplingData(cplData);
