@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 3.0.1
+
+- Added warnings when using invalid options inside log configuration files. (https://github.com/precice/precice/pull/1956)
+- Changed the output of `precice-profiling analyze` to be sorted by event name. (https://github.com/precice/precice/pull/1953)
+- Fixed a bug where reading from the end of the time window can trigger an assertion. (https://github.com/precice/precice/pull/1982)
+- Fixed bug when using log configuration files with invalid options. (https://github.com/precice/precice/pull/1956)
+- Fixed oversubscription errors when running tests. (https://github.com/precice/precice/pull/1960)
+- Fixed too strict check on allowed mapping types when combining serial and parallel participants. (https://github.com/precice/precice/pull/1964)
+- Improved robustness of time handling for simulations with many time steps or time windows. (https://github.com/precice/precice/pull/1954)
+- Replaced `boost.filesystem` with `std::filesystem` (https://github.com/precice/precice/pull/1972)
+
 ## 3.0.0
 
 - Added API method `getMaxTimeStepSize()`, replacing return values and simplifying usability of `advance(double dt)` and `initialize()`. (https://github.com/precice/precice/pull/1623)
