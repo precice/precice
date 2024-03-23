@@ -106,6 +106,10 @@ void testIQNIMVJPP(bool exchangeSubsteps)
 
   data.begin()->second->values() << 10, 10, 10, 10;
 
+  // Update the waveform as well
+  displacements->setSampleAtTime(1, displacements->sample());
+  forces->setSampleAtTime(1, forces->sample());
+
   pp.performAcceleration(data);
 
   BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929695848558e-01));
@@ -207,6 +211,9 @@ void testVIQNPP(bool exchangeSubsteps)
   utils::append(newdvalues, 10.0);
   data.begin()->second->values() = newdvalues;
 
+  displacements->setSampleAtTime(1, displacements->sample());
+  forces->setSampleAtTime(1, forces->sample());
+
   pp.performAcceleration(data);
 
   BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929692295845e-01));
@@ -219,14 +226,11 @@ void testVIQNPP(bool exchangeSubsteps)
   BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733944046e-02));
 }
 
-#if 0
-// TODO not yet supported
 BOOST_AUTO_TEST_CASE(testVIQNPPWithSubsteps)
 {
   PRECICE_TEST(1_rank);
   testVIQNPP(true);
- }
-#endif
+}
 
 BOOST_AUTO_TEST_CASE(testVIQNPPWithoutSubsteps)
 {

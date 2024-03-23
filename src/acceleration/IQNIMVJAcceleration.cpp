@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 
+#include <boost/range/adaptor/map.hpp>
 #include "acceleration/IQNIMVJAcceleration.hpp"
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
 #include "acceleration/impl/Preconditioner.hpp"
@@ -95,7 +96,7 @@ void IQNIMVJAcceleration::initialize(
   }
 
   if (not _imvjRestart) {
-    // only need memory for Jacobain of not in restart mode
+    // only need memory for Jacobain if not in restart mode
     _invJacobian    = Eigen::MatrixXd::Zero(global_n, entries);
     _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
   }
@@ -111,8 +112,12 @@ void IQNIMVJAcceleration::initialize(
     _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimeWindows << "\n--------\n"
                       << '\n';
   }
+  for (const auto &data : cplData | boost::adaptors::map_values) {
+    if (data->exchangeSubsteps()) {
+      PRECICE_ERROR("Quasi-Newton IMVJ acceleration does not yet support using data from all substeps. Please set substeps=\"false\" in the exchange tag of data \"{}\" or switch to Quasi-Newton ILS acceleration.", data->getDataName());
+    }
+  }
 }
-
 // ==================================================================================
 void IQNIMVJAcceleration::computeUnderrelaxationSecondaryData(
     const DataMap &cplData)
@@ -154,7 +159,21 @@ void IQNIMVJAcceleration::updateDifferenceMatrices(
         // Update matrix _Wtil = (W - J_prev*V) with newest information
 
         Eigen::VectorXd v = _matrixV.col(0);
-        Eigen::VectorXd w = _matrixW.col(0);
+
+        // Need to reconstruct the newest w vector from _waveformW
+        Eigen::VectorXd w = Eigen::VectorXd::Zero(_matrixV.rows());
+
+        // keep track of how far we have filled the vector
+        int pos = 0;
+        for (int id : _dataIDs) {
+          double          endTime    = _waveformW[id][0].maxStoredTime();
+          Eigen::VectorXd lastSample = _waveformW[id][0].sample(endTime);
+
+          for (int j = 0; j < lastSample.size(); j++) {
+            w(pos + j) = lastSample(j);
+          }
+          pos += lastSample.size();
+        }
 
         // here, we check for _Wtil.cols() as the matrices V, W need to be updated before hand
         // and thus getLSSystemCols() does not yield the correct result.
@@ -206,9 +225,9 @@ void IQNIMVJAcceleration::updateDifferenceMatrices(
 
 // ==================================================================================
 void IQNIMVJAcceleration::computeQNUpdate(
-    const DataMap &  cplData,
-    Eigen::VectorXd &xUpdate)
+    const DataMap &cplData)
 {
+
   /**
    * The inverse Jacobian
    *
@@ -226,11 +245,24 @@ void IQNIMVJAcceleration::computeQNUpdate(
    *             Only the QR-decomposition of V is scaled and thus needs to be unscaled before
    *             using it in multiplications with the other matrices.
    */
+  Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_residuals.size());
+
   if (_alwaysBuildJacobian) {
     computeNewtonUpdate(cplData, xUpdate);
   } else {
     computeNewtonUpdateEfficient(cplData, xUpdate);
   }
+  if (std::isnan(utils::IntraComm::l2norm(xUpdate))) {
+    PRECICE_ERROR("The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
+                  "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
+                  "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
+                  "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "
+                  "filter or increase its threshold (larger epsilon).");
+  }
+  _values += xUpdate;
+
+  //Split the coupling data and update the values in coupling data
+  BaseQNAcceleration::splitCouplingData(cplData);
 }
 
 // ==================================================================================
@@ -304,9 +336,35 @@ void IQNIMVJAcceleration::buildWtil()
     _parMatrixOps->multiply(_oldInvJacobian, _matrixV, _Wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols(), false);
   }
 
-  // W_til = (W-J_inv_n*V) = (W-V_tilde)
-  _Wtil *= -1.;
-  _Wtil = _Wtil + _matrixW;
+  /**
+   * update _Wtil using W_til = (W-J_inv_n*V) = (W-V_tilde)
+   *
+   * The W matrix is no longer stored as a matrix in the base class but instead as a
+   * map from the DataIDs to the k waveforms corresponding to that DataID. Thus, we instead update _Wtil column wise.
+  */
+
+  for (int i = 0; i < _Wtil.cols(); i++) {
+
+    // Column i of waveformW
+    Eigen::VectorXd colVecW = Eigen::VectorXd::Zero(_matrixV.rows());
+
+    // keep track of how far we have filled the vector
+    int pos = 0;
+
+    for (int id : _dataIDs) {
+
+      double          endTime    = _waveformW[id][i].maxStoredTime();
+      Eigen::VectorXd lastSample = _waveformW[id][i].sample(endTime);
+
+      // update the correct part of colVecW
+      for (int j = 0; j < lastSample.size(); j++) {
+        colVecW(pos + j) = lastSample(j);
+      }
+
+      pos += lastSample.size();
+    }
+    _Wtil.col(i) = colVecW + _Wtil.col(i);
+  }
 
   _resetLS = false;
   //  e.stop(true);

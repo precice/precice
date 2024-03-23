@@ -34,7 +34,7 @@
  *
  * The third possibility was to separate the approximation of the Jacobian from
  * the common stuff like handling V,W matrices in the acceleration.
- * Here, we have a class QNAcceleration that handles the V,W stuff an d the basic
+ * Here, we have a class QNAcceleration that handles the V,W stuff and the basic
  * scheme of the QN update. Furthermore we have a base class (or rather interface)
  * JacobianApproximation with sub classes IQNIMVJAPX and IQNAPX that handle all the
  * specialized stuff like Jacobian approximation, handling of secondary data etc.
@@ -186,7 +186,8 @@ protected:
   bool _resetLS = false;
 
   /// @brief Solver output from last iteration.
-  Eigen::VectorXd _oldXTilde;
+  Eigen::VectorXd                       _oldXTilde;
+  std::map<int, precice::time::Storage> _oldXTildeW;
 
   /// @brief Current iteration residuals of IQN data. Temporary.
   Eigen::VectorXd _residuals;
@@ -197,8 +198,10 @@ protected:
   /// @brief Stores residual deltas.
   Eigen::MatrixXd _matrixV;
 
-  /// @brief Stores x tilde deltas, where x tilde are values computed by solvers.
-  Eigen::MatrixXd _matrixW;
+  /** @brief Stores the waveform of x tilde deltas of datas in _dataIDs, which are computed by the solvers.
+  * The waveform are stored in a map which maps the DataIds to a vector containing the waveform iterates that are used in the QN acceleration
+  */
+  std::map<int, std::vector<precice::time::Storage>> _waveformW;
 
   /// @brief Stores the current QR decomposition ov _matrixV, can be updated via deletion/insertion of columns
   impl::QRFactorization _qrV;
@@ -257,7 +260,7 @@ protected:
   virtual void computeUnderrelaxationSecondaryData(const DataMap &cplData) = 0;
 
   /// Computes the quasi-Newton update using the specified pp scheme (IQNIMVJ, IQNILS)
-  virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate) = 0;
+  virtual void computeQNUpdate(const DataMap &cplData) = 0;
 
   /// Removes one iteration from V,W matrices and adapts _matrixCols.
   virtual void removeMatrixColumn(int columnIndex);
@@ -267,9 +270,21 @@ protected:
 
   int its = 0, tWindows = 0;
 
-private:
-  /// @brief Concatenation of all coupling data involved in the QN system.
+  /// @brief Concatenation of the last time step of all coupling data involved in the QN system.
   Eigen::VectorXd _values;
+
+private:
+  /**
+  *
+  * @brief Support routine for saving the waveforms.
+  */
+  void addWaveforms(const DataMap &cplData);
+
+  /**
+  *
+  * @brief transforms the time steps of the waveforms in _waveformW to the new time window. This is done by destroying and recreating _waveformW and _waveformWBackup as well as their waveforms
+  */
+  void rescaleWaveformInTime(const DataMap &cplData);
 
   /// @brief Concatenation of all (old) coupling data involved in the QN system.
   Eigen::VectorXd _oldValues;
@@ -282,8 +297,14 @@ private:
    *  are empty -- in this case restore V and W with time window t-2.
    */
   Eigen::MatrixXd _matrixVBackup;
-  Eigen::MatrixXd _matrixWBackup;
   std::deque<int> _matrixColsBackup;
+
+  /** @brief backup of the W waveform data structure. Needed for the skipping of
+ *  initial relaxation, if previous time window converged within one iteration i.e., V and W
+ *  are empty -- in this case restore V and W with time window t-2.
+ *  The waveform are stored in a map which maps the DataIds to a vector containing the waveform iterates that are used in the QN acceleration
+ */
+  std::map<int, std::vector<precice::time::Storage>> _waveformWBackup;
 
   /// Number of filtered out columns in this time window
   int _nbDelCols = 0;
@@ -291,5 +312,6 @@ private:
   /// Number of dropped columns in this time window (old time window out of scope)
   int _nbDropCols = 0;
 };
+
 } // namespace acceleration
 } // namespace precice
