@@ -106,7 +106,7 @@ void ProvidedPartition::communicate()
 
       if (not utils::IntraComm::isSecondary()) {
         PRECICE_CHECK(globalMesh.nVertices() > 0,
-                      "The provided mesh \"{}\" is empty. Please set the mesh using setMeshXXX() prior to calling initialize().",
+                      "The provided mesh \"{}\" is empty. Please set the mesh using setMeshVertex()/setMeshVertices() prior to calling initialize().",
                       globalMesh.getName());
         com::sendMesh(*m2n->getPrimaryRankCommunication(), 0, globalMesh);
       }
