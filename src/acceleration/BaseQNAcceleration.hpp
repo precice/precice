@@ -63,14 +63,17 @@ namespace acceleration {
 class BaseQNAcceleration : public Acceleration {
 public:
   BaseQNAcceleration(
-      double                  initialRelaxation,
-      bool                    forceInitialRelaxation,
-      int                     maxIterationsUsed,
-      int                     timeWindowsReused,
-      int                     filter,
-      double                  singularityLimit,
-      std::vector<int>        dataIDs,
-      impl::PtrPreconditioner preconditioner);
+      double                     initialRelaxation,
+      bool                       forceInitialRelaxation,
+      int                        maxIterationsUsed,
+      int                        timeWindowsReused,
+      int                        filter,
+      double                     singularityLimit,
+      std::vector<int>           dataIDs,
+      std::map<int, std::string> rangeTypes,
+      std::map<int, double>      lowerBounds,
+      std::map<int, double>      upperBounds,
+      impl::PtrPreconditioner    preconditioner);
 
   /**
    * @brief Destructor, empty.
@@ -104,7 +107,16 @@ public:
    * Has to be called after every implicit coupling iteration.
    */
   virtual void performAcceleration(DataMap &cplData);
-
+  /**
+   * @brief Transform the bounded input data into the inf range.
+   */
+  virtual void forwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds,
+                                     std::map<int, double> upperBounds);
+  /**
+   * @brief Transform the output data backward from inf to certain range.
+   */
+  virtual void backwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds,
+                                      std::map<int, double> upperBounds);
   /**
    * @brief Marks a iteration sequence as converged.
    *
@@ -173,6 +185,15 @@ protected:
    * @brief True if this process has nodes at the coupling interface
    */
   bool _hasNodesOnInterface = true;
+
+  /// @brief store the bound type for each dataID, 0 = none, 1 = lower bounded, 2 = upper bounded, 3 = both sides bounded
+  std::map<int, std::string> _rangeTypes;
+
+  /// @brief store the lower limit for each dataID
+  std::map<int, double> _lowerBounds;
+
+  /// @brief store the upper limit for each dataID
+  std::map<int, double> _upperBounds;
 
   /* @brief If true, the QN-scheme always performs a underrelaxation in the first iteration of
    *        a new time window. Otherwise, the LS system from the previous time window is used in the

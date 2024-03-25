@@ -44,6 +44,9 @@ AccelerationConfiguration::AccelerationConfiguration(
       ATTR_MESH("mesh"),
       ATTR_SCALING("scaling"),
       ATTR_VALUE("value"),
+      ATTR_RANGETYPE("range-type"),
+      ATTR_MIN("lower-bound"),
+      ATTR_MAX("upper-bound"),
       ATTR_ENFORCE("enforce"),
       ATTR_SINGULARITYLIMIT("limit"),
       ATTR_TYPE("type"),
@@ -68,6 +71,10 @@ AccelerationConfiguration::AccelerationConfiguration(
       VALUE_SVD_RESTART("RS-SVD"),
       VALUE_SLIDE_RESTART("RS-SLIDE"),
       VALUE_NO_RESTART("no-restart"),
+      VALUE_NO_BOUND("not-bounded"),
+      VALUE_LOWER_BOUND("lower-bounded"),
+      VALUE_UPPER_BOUND("upper-bounded"),
+      VALUE_ALL_BOUND("two-ends-bounded"),
       _meshConfig(meshConfig),
       _acceleration(),
       _neededMeshes(),
@@ -146,15 +153,30 @@ void AccelerationConfiguration::xmlTagCallback(
     std::string dataName = callingTag.getStringAttributeValue(ATTR_NAME);
     std::string meshName = callingTag.getStringAttributeValue(ATTR_MESH);
     auto        success  = _uniqueDataAndMeshNames.emplace(dataName, meshName);
+
     PRECICE_CHECK(success.second,
                   "You have provided a subtag <data name=\"{}\" mesh=\"{}\"/> more than once in your <acceleration:.../>. "
                   "Please remove the duplicated entry.",
                   dataName, meshName);
 
-    _meshName      = callingTag.getStringAttributeValue(ATTR_MESH);
-    double scaling = 1.0;
+    _meshName              = callingTag.getStringAttributeValue(ATTR_MESH);
+    double      scaling    = 1.0;
+    std::string rangeType  = VALUE_NO_BOUND;
+    double      lowerBound = -1.0e16;
+    double      upperBound = 1.0e16;
+
     if (_config.type == VALUE_IQNILS || _config.type == VALUE_IQNIMVJ) {
       scaling = callingTag.getDoubleAttributeValue(ATTR_SCALING);
+
+      if (callingTag.hasAttribute(ATTR_RANGETYPE)) {
+        rangeType = callingTag.getStringAttributeValue(ATTR_RANGETYPE);
+      }
+      lowerBound = callingTag.getDoubleAttributeValue(ATTR_MIN);
+      upperBound = callingTag.getDoubleAttributeValue(ATTR_MAX);
+
+      PRECICE_CHECK(lowerBound < upperBound,
+                    "Data with name \"{0}\" associated to mesh \"{1}\" has larger minimum value than maximum.",
+                    dataName, _meshName);
     }
 
     PRECICE_CHECK(_meshConfig->hasMeshName(_meshName) && _meshConfig->getMesh(_meshName)->hasDataName(dataName),
@@ -166,6 +188,9 @@ void AccelerationConfiguration::xmlTagCallback(
     const mesh::PtrData &data = mesh->data(dataName);
     _config.dataIDs.push_back(data->getID());
     _config.scalings.insert(std::make_pair(data->getID(), scaling));
+    _config.rangeTypes.insert(std::make_pair(data->getID(), rangeType));
+    _config.lowerBounds.insert(std::make_pair(data->getID(), lowerBound));
+    _config.upperBounds.insert(std::make_pair(data->getID(), upperBound));
 
     _neededMeshes.push_back(_meshName);
   } else if (callingTag.getName() == TAG_INIT_RELAX) {
@@ -278,6 +303,9 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
+              _config.rangeTypes,
+              _config.lowerBounds,
+              _config.upperBounds,
               _preconditioner));
     } else if (callingTag.getName() == VALUE_IQNIMVJ) {
 #ifndef PRECICE_NO_MPI
@@ -294,6 +322,9 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
+              _config.rangeTypes,
+              _config.lowerBounds,
+              _config.upperBounds,
               _preconditioner,
               _config.alwaysBuildJacobian,
               _config.imvjRestartType,
@@ -331,9 +362,25 @@ void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
                              "To improve the performance of a parallel or a multi coupling schemes, "
                              "each data set can be manually scaled using this scaling factor with preconditioner type = \"constant\". For all other preconditioner types, the factor is ignored. "
                              "We recommend, however, to use an automatic scaling via a preconditioner.");
-  tagData.addAttribute(attrScaling);
+  auto attrBoundType = XMLAttribute<std::string>(ATTR_RANGETYPE)
+                           .setOptions({VALUE_NO_BOUND,
+                                        VALUE_LOWER_BOUND,
+                                        VALUE_UPPER_BOUND,
+                                        VALUE_ALL_BOUND})
+                           .setDefaultValue(VALUE_NO_BOUND)
+                           .setDocumentation("The type of value interval for the data. Possible types:\n"
+                                             " - `not-bounded`: the value could range in \\(-\\infty, \\infty)\\ \n"
+                                             " - `lower-bounded`: the value is bounded at the left end\n"
+                                             " - `upper-bounded`: the value is bounded at the right send\n"
+                                             " - `two-ends-bounded`: the value has a range that is bounded at both the left and right ends.");
+  XMLAttribute<double> attrLowerBound = makeXMLAttribute(ATTR_MIN, -1.0e16).setDocumentation("The lower bound of the data. Default is -1.0e16.");
+  XMLAttribute<double> attrUpperBound = makeXMLAttribute(ATTR_MAX, 1.0e16).setDocumentation("The upper bound of the data. Default is 1.0e16.");
   tagData.addAttribute(attrName);
   tagData.addAttribute(attrMesh);
+  tagData.addAttribute(attrScaling);
+  tagData.addAttribute(attrBoundType);
+  tagData.addAttribute(attrLowerBound);
+  tagData.addAttribute(attrUpperBound);
   tag.addSubtag(tagData);
 
   XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
