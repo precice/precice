@@ -317,7 +317,7 @@ std::ostream &printMD(std::ostream &out, const XMLTag &tag, int level, std::map<
         out << "* [" << heading << "](" << link << ") `" << subtag->getOccurrenceString(subtag->getOccurrence()) << "`\n";
       } else {
         auto &tags = groupedTags[ns];
-        tags.emplace_back("[" + subtag->getName() + "](" + link + ") `" + subtag->getOccurrenceString(subtag->getOccurrence()) + "`");
+        tags.emplace_back("[" + subtag->getName() + "](" + link + ") `" + std::string(subtag->getOccurrenceString(subtag->getOccurrence())) + "`");
       }
     }
     for (const auto &kv : groupedTags) {

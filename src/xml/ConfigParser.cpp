@@ -20,7 +20,7 @@ namespace precice::xml {
 
 std::string decodeXML(std::string xml)
 {
-  static const std::map<std::string, char> escapes{{"&lt;", '<'}, {"&gt;", '>'}, {"&amp;", '&'}, {"&quot;", '"'}, {"&apos;", '\''}};
+  static const std::map<std::string_view, char> escapes{{"&lt;", '<'}, {"&gt;", '>'}, {"&amp;", '&'}, {"&quot;", '"'}, {"&apos;", '\''}};
   while (true) {
     bool changes{false};
     for (const auto &kv : escapes) {
@@ -59,14 +59,14 @@ void OnStartElementNs(
     auto        valueEnd   = reinterpret_cast<const char *>(attributes[index + 4]);
     std::string value(valueBegin, valueEnd);
 
-    attributesMap[attributeName] = decodeXML(value);
+    attributesMap[attributeName] = decodeXML(std::move(value));
   }
 
   auto pParser = static_cast<ConfigParser *>(ctx);
 
   std::string sPrefix(prefix == nullptr ? "" : reinterpret_cast<const char *>(prefix));
 
-  pParser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap);
+  pParser->OnStartElement(std::move(reinterpret_cast<const char *>(localname)), std::move(sPrefix), attributesMap);
 }
 
 void OnEndElementNs(
@@ -87,7 +87,7 @@ void OnCharacters(void *ctx, const xmlChar *ch, int len)
 
 void OnStructuredErrorFunc(void *userData, const xmlError *error)
 {
-  const std::string message{error->message};
+  const std::string_view message{error->message};
 
   // Ignore all namespace-related messages
   if (message.find("Namespace") != std::string::npos) {
@@ -117,10 +117,10 @@ void OnFatalErrorFunc(void *userData, const char *error, ...)
 
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
 
-ConfigParser::ConfigParser(const std::string &filePath, const ConfigurationContext &context, std::shared_ptr<precice::xml::XMLTag> pXmlTag)
+ConfigParser::ConfigParser(std::string_view filePath, const ConfigurationContext &context, std::shared_ptr<precice::xml::XMLTag> pXmlTag)
     : m_pXmlTag(std::move(pXmlTag))
 {
-  readXmlFile(filePath);
+  readXmlFile(std::string(filePath));
 
   std::vector<std::shared_ptr<XMLTag>> DefTags{m_pXmlTag};
   CTagPtrVec                           SubTags;
@@ -135,12 +135,12 @@ ConfigParser::ConfigParser(const std::string &filePath, const ConfigurationConte
   }
 }
 
-ConfigParser::ConfigParser(const std::string &filePath)
+ConfigParser::ConfigParser(std::string_view filePath)
 {
-  readXmlFile(filePath);
+  readXmlFile(std::string(filePath));
 }
 
-void ConfigParser::MessageProxy(int level, const std::string &mess)
+void ConfigParser::MessageProxy(int level, std::string_view mess)
 {
   switch (level) {
   case (XML_ERR_FATAL):
@@ -210,7 +210,7 @@ auto gatherCandidates(const std::vector<std::shared_ptr<XMLTag>> &DefTags, std::
 
 void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<std::shared_ptr<XMLTag>> &DefTags, CTagPtrVec &SubTags)
 {
-  std::unordered_set<std::string> usedTags;
+  std::unordered_set<std::string_view> usedTags;
 
   for (auto &subtag : SubTags) {
     std::string expectedName = (subtag->m_Prefix.length() ? subtag->m_Prefix + ":" : "") + subtag->m_Name;
@@ -228,7 +228,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
       auto matches = utils::computeMatches(expectedName, names);
       if (!matches.empty() && matches.front().distance < 3) {
         matches.erase(std::remove_if(matches.begin(), matches.end(), [](auto &m) { return m.distance > 2; }), matches.end());
-        std::vector<std::string> stringMatches;
+        std::vector<std::string_view> stringMatches;
         std::transform(matches.begin(), matches.end(), std::back_inserter(stringMatches), [](auto &m) { return m.name; });
         PRECICE_ERROR("The configuration contains an unknown tag <{}>. Did you mean <{}>?", expectedName, fmt::join(stringMatches, ">,<"));
       } else {
