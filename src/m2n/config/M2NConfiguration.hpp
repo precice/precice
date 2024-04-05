@@ -17,7 +17,11 @@ namespace m2n {
 class M2NConfiguration : public xml::XMLTag::Listener {
 public:
   using SharedPointer = std::shared_ptr<M2NConfiguration>;
-  using M2NTuple      = std::tuple<m2n::PtrM2N, std::string, std::string>;
+  struct M2NTuple {
+    m2n::PtrM2N m2n;
+    std::string acceptor;
+    std::string connector;
+  };
 
 public:
   explicit M2NConfiguration(xml::XMLTag &parent);
