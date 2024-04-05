@@ -518,6 +518,14 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
         .with_columns(pl.col("dur") * dur_factor)
     )
 
+    # Identify the global runtime (eid="_GLOBAL")
+    global_runtime = (
+        df.filter(pl.col("eid") == "_GLOBAL").select(pl.sum("dur")).to_numpy()[0][0]
+    )
+
+    # Calculate relative runtime (%)
+    df = df.with_columns(((pl.col("dur") / global_runtime) * 100).alias("%"))
+
     ranks = df.select("rank").unique()
 
     if len(ranks) == 1:
@@ -529,6 +537,7 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
                 pl.mean("dur").alias("mean"),
                 pl.min("dur").alias("min"),
                 pl.max("dur").alias("max"),
+                pl.sum("%").round(2).alias("%"),  # Include the new column
             )
             .sort("eid")
         )
