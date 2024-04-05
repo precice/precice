@@ -1229,29 +1229,34 @@ void ParticipantImpl::configureM2Ns(
 {
   PRECICE_TRACE();
   for (const auto &m2nTuple : config->m2ns()) {
-    std::string comPartner("");
-    bool        isRequesting = false;
-    if (std::get<1>(m2nTuple) == _accessorName) {
-      comPartner   = std::get<2>(m2nTuple);
-      isRequesting = true;
-    } else if (std::get<2>(m2nTuple) == _accessorName) {
-      comPartner = std::get<1>(m2nTuple);
+    if (m2nTuple.acceptor != _accessorName && m2nTuple.connector != _accessorName) {
+      continue;
     }
-    if (not comPartner.empty()) {
-      for (const impl::PtrParticipant &participant : _participants) {
-        if (participant->getName() == comPartner) {
-          PRECICE_ASSERT(not utils::contained(comPartner, _m2ns), comPartner);
-          PRECICE_ASSERT(std::get<0>(m2nTuple));
 
-          _m2ns[comPartner] = [&] {
-            m2n::BoundM2N bound;
-            bound.m2n          = std::get<0>(m2nTuple);
-            bound.localName    = _accessorName;
-            bound.remoteName   = comPartner;
-            bound.isRequesting = isRequesting;
-            return bound;
-          }();
-        }
+    std::string comPartner("");
+    bool        isRequesting;
+    if (m2nTuple.acceptor == _accessorName) {
+      comPartner   = m2nTuple.connector;
+      isRequesting = true;
+    } else {
+      comPartner   = m2nTuple.acceptor;
+      isRequesting = false;
+    }
+
+    PRECICE_ASSERT(!comPartner.empty());
+    for (const impl::PtrParticipant &participant : _participants) {
+      if (participant->getName() == comPartner) {
+        PRECICE_ASSERT(not utils::contained(comPartner, _m2ns), comPartner);
+        PRECICE_ASSERT(m2nTuple.m2n);
+
+        _m2ns[comPartner] = [&] {
+          m2n::BoundM2N bound;
+          bound.m2n          = m2nTuple.m2n;
+          bound.localName    = _accessorName;
+          bound.remoteName   = comPartner;
+          bound.isRequesting = isRequesting;
+          return bound;
+        }();
       }
     }
   }
