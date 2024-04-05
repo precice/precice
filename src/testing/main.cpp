@@ -4,11 +4,12 @@
 // Specify the overall name of test framework
 #define BOOST_TEST_MODULE "preCICE Tests"
 
-#include <boost/filesystem.hpp>
 #include <boost/test/tools/fpc_tolerance.hpp>
 #include <boost/test/tree/test_case_counter.hpp>
 #include <boost/test/tree/traverse.hpp>
 #include <boost/test/unit_test.hpp>
+
+#include <filesystem>
 #include <iostream>
 #include <string>
 
@@ -29,6 +30,41 @@ int countEnabledTests()
   return tcc.p_count;
 }
 
+class test_case_printer : public boost::unit_test::test_tree_visitor {
+private:
+  std::vector<std::string> prefix;
+
+  bool test_suite_start(boost::unit_test::test_suite const &ts) override
+  {
+    if (ts.p_type_name == "suite") {
+      prefix.push_back(ts.p_name);
+    }
+    return test_tree_visitor::visit((boost::unit_test::test_unit const &) ts);
+  }
+
+  void test_suite_finish(boost::unit_test::test_suite const &ts) override
+  {
+    if (ts.p_type_name == "suite") {
+      prefix.pop_back();
+    }
+  }
+
+  void visit(boost::unit_test::test_case const &tc) override
+  {
+    for (const auto &p : prefix) {
+      std::cout << p << '/';
+    }
+    std::cout << tc.p_name << '\n';
+  }
+};
+
+void printTestList()
+{
+  using namespace boost::unit_test;
+  test_case_printer tcp;
+  traverse_test_tree(framework::master_test_suite(), tcp, true);
+}
+
 void setupTolerance()
 {
   static constexpr double tolerance = 1e-9;
@@ -39,11 +75,11 @@ void setupTolerance()
 
 void removeStaleRunDirectory()
 {
-  namespace bf = boost::filesystem;
-  bf::path runDir("precice-run");
-  if (bf::exists(runDir) && bf::is_directory(runDir) && !bf::is_empty(runDir)) {
+  namespace fs = std::filesystem;
+  fs::path runDir("precice-run");
+  if (fs::exists(runDir) && fs::is_directory(runDir) && !fs::is_empty(runDir)) {
     std::cout << "Removing a non-empty precice-run directory from a previously failing test.\n";
-    bf::remove_all(runDir);
+    fs::remove_all(runDir);
   }
 }
 
@@ -58,10 +94,21 @@ int main(int argc, char *argv[])
   const auto size = utils::Parallel::current()->size();
   logging::setMPIRank(rank);
 
+  // Handle custom printing
+  if (argc == 2 && std::string(argv[1]) == "--list_units") {
+    if (rank == 0) {
+      printTestList();
+    }
+    utils::Parallel::finalizeTestingMPI();
+    return 0;
+  }
+
+  // Handle not enough MPI ranks
   if (size < 4 && argc < 2) {
     if (rank == 0) {
       std::cerr << "ERROR: The tests require at least 4 MPI processes. Please use \"mpirun -np 4 ./testprecice\" or \"ctest\" to run the full testsuite. \n";
     }
+    utils::Parallel::finalizeTestingMPI();
     return 2;
   }
 

@@ -44,7 +44,7 @@ void testQuadMappingScaledConsistent(const std::string configFile, const TestCon
     participant.setMeshQuad(meshOneID, idA, idB, idC, idD);
 
     auto &mesh = testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
-    BOOST_REQUIRE(mesh.vertices().size() == 4);
+    BOOST_REQUIRE(mesh.nVertices() == 4);
     BOOST_REQUIRE(mesh.edges().empty());
     BOOST_REQUIRE(mesh.triangles().size() == 2);
 
@@ -146,7 +146,7 @@ void testQuadMappingScaledConsistentVolumetric(const std::string configFile, con
     participant.setMeshTriangle(meshOneID, idB, idC, idExtra);
 
     auto &mesh = testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
-    BOOST_REQUIRE(mesh.vertices().size() == 5);
+    BOOST_REQUIRE(mesh.nVertices() == 5);
     BOOST_REQUIRE(mesh.triangles().size() == 3);
 
     auto   dataAID  = "DataOne";
@@ -253,7 +253,7 @@ void testTetraScaledConsistentVolumetric(const std::string configFile, const Tes
     participant.setMeshTetrahedron(meshOneID, idC, idB, idD, idExtra);
 
     auto &mesh = testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
-    BOOST_REQUIRE(mesh.vertices().size() == 5);
+    BOOST_REQUIRE(mesh.nVertices() == 5);
     BOOST_REQUIRE(mesh.tetrahedra().size() == 2);
 
     auto   dataAID  = "DataOne";

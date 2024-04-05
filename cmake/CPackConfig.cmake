@@ -61,14 +61,14 @@ set(CPACK_SOURCE_IGNORE_FILES
 
 # Build dependency set
 unset(CPACK_DEBIAN_PACKAGE_DEPENDS)
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libboost-dev (>= 1.65), libboost-log-dev (>= 1.65), libboost-thread-dev (>= 1.65), libboost-system-dev (>= 1.65), libboost-filesystem-dev (>= 1.65), libboost-program-options-dev (>= 1.65), libboost-test-dev (>= 1.65), libxml2")
-if(PRECICE_PythonActions)
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6, libboost-dev (>= 1.65), libboost-log-dev (>= 1.65), libboost-thread-dev (>= 1.65), libboost-system-dev (>= 1.65), libboost-program-options-dev (>= 1.65), libboost-test-dev (>= 1.65), libxml2")
+if(PRECICE_FEATURE_PYTHON_ACTIONS)
   set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, python3-dev, python3-numpy")
 endif()
-if(PRECICE_MPICommunication)
+if(PRECICE_FEATURE_MPI_COMMUNICATION)
   set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, mpi-default-dev")
 endif()
-if(PRECICE_PETScMapping)
+if(PRECICE_FEATURE_PETSC_MAPPING)
   set(CPACK_DEBIAN_PACKAGE_DEPENDS "${CPACK_DEBIAN_PACKAGE_DEPENDS}, petsc-dev (>= 3.6)")
 endif()
 

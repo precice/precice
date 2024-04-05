@@ -123,5 +123,20 @@ BOOST_AUTO_TEST_CASE(ThreePointsQuadraticNonEquidistant)
   BOOST_TEST(equals(bspline.interpolateAt(2.0), Eigen::Vector3d(8.0 / 3, 80.0 / 3, 800.0 / 3), 1e-13));
 }
 
+BOOST_AUTO_TEST_CASE(FloatingPointAccuracy) // see https://github.com/precice/precice/issues/1981
+{
+  PRECICE_TEST(1_rank);
+  Eigen::Vector2d ts;
+  ts << 256.1, 256.2;
+  Eigen::MatrixXd xs(3, 2);
+  xs << 1, 2, 10, 20, 100, 200;
+  precice::math::Bspline bspline(ts, xs, 1);
+  // Points
+  BOOST_TEST(equals(bspline.interpolateAt(256.1), Eigen::Vector3d(1, 10, 100)));
+  BOOST_TEST(equals(bspline.interpolateAt(256.2), Eigen::Vector3d(2, 20, 200)));
+  // 256.1 + 0.1 > 256.2 in floating point numbers!
+  BOOST_TEST(equals(bspline.interpolateAt(256.1 + 0.1), Eigen::Vector3d(2, 20, 200)));
+}
+
 BOOST_AUTO_TEST_SUITE_END() // BSpline
 BOOST_AUTO_TEST_SUITE_END() // Math

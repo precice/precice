@@ -122,6 +122,8 @@ target_sources(preciceCore
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.cpp
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp
     src/cplscheme/impl/SharedPointer.hpp
+    src/cplscheme/impl/TimeHandler.cpp
+    src/cplscheme/impl/TimeHandler.hpp
     src/io/Export.hpp
     src/io/ExportCSV.cpp
     src/io/ExportCSV.hpp
@@ -294,6 +296,7 @@ target_sources(preciceCore
     src/utils/ArgumentFormatter.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
+    src/utils/DoubleAggregator.hpp
     src/utils/EigenHelperFunctions.cpp
     src/utils/EigenHelperFunctions.hpp
     src/utils/EigenIO.hpp
@@ -321,6 +324,7 @@ target_sources(preciceCore
     src/utils/fmt.hpp
     src/utils/fmtEigen.hpp
     src/utils/fmtSTL.hpp
+    src/utils/ignore.hpp
     src/utils/networking.cpp
     src/utils/networking.hpp
     src/utils/span_tools.hpp

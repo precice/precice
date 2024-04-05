@@ -240,9 +240,8 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
     pDefSubTag->resetAttributes();
 
     if ((pDefSubTag->_occurrence == XMLTag::OCCUR_ONCE) || (pDefSubTag->_occurrence == XMLTag::OCCUR_NOT_OR_ONCE)) {
-      if (usedTags.count(pDefSubTag->_fullName)) {
-        PRECICE_ERROR("Tag <{}> is not allowed to occur multiple times.", pDefSubTag->_fullName);
-      }
+      PRECICE_CHECK(usedTags.count(pDefSubTag->_fullName) == 0,
+                    "Tag <{}> is not allowed to occur multiple times.", pDefSubTag->_fullName);
       usedTags.emplace(pDefSubTag->_fullName);
     }
 

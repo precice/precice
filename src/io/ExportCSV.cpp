@@ -1,7 +1,7 @@
 #include "io/ExportCSV.hpp"
 
 #include <Eigen/Core>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <memory>
@@ -44,7 +44,7 @@ void ExportCSV::doExport(
   PRECICE_ASSERT(!name.empty());
 
   // Ignore empty meshes
-  if (mesh.vertices().empty()) {
+  if (mesh.empty()) {
     return;
   }
 
@@ -57,7 +57,7 @@ void ExportCSV::doExport(
   }
   filename.append(".csv");
 
-  namespace fs = boost::filesystem;
+  namespace fs = std::filesystem;
   fs::path outfile(location);
   if (not location.empty()) {
     fs::create_directories(outfile);
@@ -77,7 +77,7 @@ void ExportCSV::doExport(
   for (const auto &data : mesh.data()) {
     auto dataName = data->getName();
     auto dim      = data->getDimensions();
-    PRECICE_ASSERT(static_cast<std::size_t>(data->values().size()) == mesh.vertices().size() * dim);
+    PRECICE_ASSERT(static_cast<std::size_t>(data->values().size()) == mesh.nVertices() * dim);
     outFile << ';' << dataName;
     if (dim == 2) {
       outFile << "X;" << dataName << 'Y';
@@ -99,13 +99,13 @@ void ExportCSV::doExport(
 
   // write vertex data
   const std::string rankCol = ";" + std::to_string(rank);
-  const auto        size    = mesh.vertices().size();
+  const auto        size    = mesh.nVertices();
   for (std::size_t vid = 0; vid < size; ++vid) {
-    const auto &vertex = mesh.vertices()[vid];
-    outFile << vertex.getCoords()[0] << ';';
-    outFile << vertex.getCoords()[1];
+    const auto &vertex = mesh.vertex(vid);
+    outFile << vertex.coord(0) << ';';
+    outFile << vertex.coord(1);
     if (is3d) {
-      outFile << ";" << vertex.getCoords()[2];
+      outFile << ";" << vertex.coord(2);
     }
     outFile << rankCol;
     for (auto &dc : dataColumns) {

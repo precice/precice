@@ -154,7 +154,7 @@ void projectClusterCentersToinputMesh(Vertices &clusterCenters, mesh::PtrMesh me
   std::transform(clusterCenters.begin(), clusterCenters.end(), clusterCenters.begin(), [&](auto &v) {
     if (!v.isTagged()) {
       auto closestCenter = mesh->index().getClosestVertex(v.getCoords()).index;
-      return mesh::Vertex{mesh->vertices()[closestCenter].getCoords(), v.getID()};
+      return mesh::Vertex{mesh->vertex(closestCenter).getCoords(), v.getID()};
     } else {
       return v;
     }
@@ -258,11 +258,11 @@ inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMe
   std::vector<double> sampledClusterRadii;
   for (auto s : randomSamples) {
     // ask the index tree for the k-nearest neighbors  in order to estimate the point density
-    auto kNearestVertexIDs = inMesh->index().getClosestVertices(inMesh->vertices()[s].getCoords(), verticesPerCluster);
+    auto kNearestVertexIDs = inMesh->index().getClosestVertices(inMesh->vertex(s).getCoords(), verticesPerCluster);
     // compute the distance of each point to the center
     std::vector<double> squaredRadius(kNearestVertexIDs.size());
     std::transform(kNearestVertexIDs.begin(), kNearestVertexIDs.end(), squaredRadius.begin(), [&inMesh, s](auto i) {
-      return computeSquaredDifference(inMesh->vertices()[i].rawCoords(), inMesh->vertices()[s].rawCoords());
+      return computeSquaredDifference(inMesh->vertex(i).rawCoords(), inMesh->vertex(s).rawCoords());
     });
     // Store the maximum distance
     auto maxRadius = std::max_element(squaredRadius.begin(), squaredRadius.end());
@@ -312,10 +312,10 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_ASSERT(inMesh->getDimensions() == outMesh->getDimensions());
 
   // If we have either no input or no output vertices, we return immediately
-  if (inMesh->vertices().size() == 0 || outMesh->vertices().size() == 0)
+  if (inMesh->nVertices() == 0 || outMesh->nVertices() == 0)
     return {double{}, Vertices{}};
 
-  PRECICE_ASSERT(!outMesh->vertices().empty() && !inMesh->vertices().empty());
+  PRECICE_ASSERT(!outMesh->empty() && !inMesh->empty());
 
   // startGridAtEdge boolean switch in order to decide either to start the clustering at the edge of the bounding box in each direction
   // (true) or start the clustering inside the bounding box (edge + 0.5 radius). The latter approach leads to fewer clusters,
@@ -350,7 +350,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   // The single cluster has in principle a radius of inf. We use here twice the
   // length of the longest bounding box edge length and the center of the bounding
   // box for the center point.
-  if (inMesh->vertices().size() < verticesPerCluster * 2)
+  if (inMesh->nVertices() < verticesPerCluster * 2)
     return {localBB.longestEdgeLength() * 2, Vertices{mesh::Vertex({localBB.center(), 0})}};
 
   // We define a convenience alias for the localBB. In case we need to synchronize the clustering across ranks later on, we need

@@ -33,7 +33,7 @@ void ScaleByAreaAction::performAction()
     auto &targetValues              = _targetData->values();
     targetValues                    = targetStample.sample.values;
     const int       valueDimensions = _targetData->getDimensions();
-    Eigen::VectorXd areas           = Eigen::VectorXd::Zero(getMesh()->vertices().size());
+    Eigen::VectorXd areas           = Eigen::VectorXd::Zero(getMesh()->nVertices());
     PRECICE_ASSERT(targetValues.size() / valueDimensions == areas.size());
 
     if (meshDimensions == 2) {

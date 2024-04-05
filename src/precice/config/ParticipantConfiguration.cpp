@@ -274,7 +274,7 @@ void ParticipantConfiguration::xmlTagCallback(
     PRECICE_CHECK(!from.empty(),
                   R"(Participant "{}" receives mesh "{}", but doesn't specify where from. )"
                   "Please add the name of the other participant to the receive-mesh tag: <receive-mesh name=\"{}\" from=\"(other participant)\" ... />",
-                  context.name, name, name)
+                  context.name, name, name);
 
     PRECICE_CHECK(_participants.back()->getName() != from,
                   "Participant \"{}\" cannot receive mesh \"{}\" from itself. "
@@ -408,7 +408,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                     participant->getName(), toMesh, toMesh);
     }
 
-    if (context.size > 1) {
+    if (context.size > 1 && context.name == participant->getName()) {
       if ((confMapping.direction == mapping::MappingConfiguration::WRITE &&
            confMapping.mapping->getConstraint() == mapping::Mapping::CONSISTENT) ||
           (confMapping.direction == mapping::MappingConfiguration::READ &&

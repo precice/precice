@@ -30,7 +30,7 @@ LinearCellInterpolationMapping::LinearCellInterpolationMapping(
 
 void LinearCellInterpolationMapping::computeMapping()
 {
-  PRECICE_TRACE(input()->vertices().size(), output()->vertices().size());
+  PRECICE_TRACE(input()->nVertices(), output()->nVertices());
   const std::string         baseEvent = "map.vci.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::profiling::Event e(baseEvent, profiling::Synchronize);
 
@@ -111,7 +111,7 @@ void LinearCellInterpolationMapping::computeMapping()
       PRECICE_INFO("All vertices are inside cells, no fallback required");
     } else {
       // No fallback and we have connectivity
-      PRECICE_ASSERT(hasConnectivity)
+      PRECICE_ASSERT(hasConnectivity);
       PRECICE_INFO("Successfully computed linear-cell-interpolation mapping.");
     }
   }
