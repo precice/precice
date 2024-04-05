@@ -76,25 +76,25 @@ void Configuration::xmlEndTagCallback(
     xml::XMLTag &                    tag)
 {
   PRECICE_TRACE(tag.getName());
-  if (tag.getName() == "precice-configuration") {
-    //test if both participants do have the exchange meshes
-    typedef std::map<std::string, std::vector<std::string>>::value_type neededMeshPair;
-    for (const neededMeshPair &neededMeshes : _meshConfiguration->getNeededMeshes()) {
-      bool participantFound = false;
-      for (const impl::PtrParticipant &participant : _participantConfiguration->getParticipants()) {
-        if (participant->getName() == neededMeshes.first) {
-          for (const std::string &neededMesh : neededMeshes.second) {
-            PRECICE_CHECK(participant->isMeshUsed(neededMesh),
-                          "Participant \"{}\" needs to use the mesh \"{}\" to be able to use it in the coupling scheme. "
-                          "Please either add a provide-mesh or a receive-mesh tag in this participant's configuration, or use a different mesh in the coupling scheme.",
-                          neededMeshes.first, neededMesh);
-          }
-          participantFound = true;
-          break;
+  PRECICE_ASSERT(tag.getName() == "precice-configuration");
+
+  //test if both participants do have the exchange meshes
+  typedef std::map<std::string, std::vector<std::string>>::value_type neededMeshPair;
+  for (const neededMeshPair &neededMeshes : _meshConfiguration->getNeededMeshes()) {
+    bool participantFound = false;
+    for (const impl::PtrParticipant &participant : _participantConfiguration->getParticipants()) {
+      if (participant->getName() == neededMeshes.first) {
+        for (const std::string &neededMesh : neededMeshes.second) {
+          PRECICE_CHECK(participant->isMeshUsed(neededMesh),
+                        "Participant \"{}\" needs to use the mesh \"{}\" to be able to use it in the coupling scheme. "
+                        "Please either add a provide-mesh or a receive-mesh tag in this participant's configuration, or use a different mesh in the coupling scheme.",
+                        neededMeshes.first, neededMesh);
         }
+        participantFound = true;
+        break;
       }
-      PRECICE_ASSERT(participantFound);
     }
+    PRECICE_ASSERT(participantFound);
   }
 }
 
