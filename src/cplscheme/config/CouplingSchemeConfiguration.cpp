@@ -162,18 +162,28 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     _config.type = tag.getName();
     _accelerationConfig->clear();
   } else if (tag.getName() == TAG_PARTICIPANTS) {
-    std::string first = tag.getStringAttributeValue(ATTR_FIRST);
-    _config.participants.push_back(first);
+    std::string first  = tag.getStringAttributeValue(ATTR_FIRST);
     std::string second = tag.getStringAttributeValue(ATTR_SECOND);
-    PRECICE_CHECK(std::find(_config.participants.begin(), _config.participants.end(), second) == _config.participants.end(),
-                  "Provided first participant equals second participant in coupling scheme. "
-                  "Please correct the <participants first=\"{}\" second=\"{}\" /> tag in the <coupling-scheme:...> of your precice-config.xml",
+
+    PRECICE_CHECK(_participantConfig->hasParticipant(first),
+                  "First participant in coupling-scheme <participants first=\"{}\" second=\"{}\" /> is unknown. {}",
+                  first, second, _participantConfig->hintFor(first));
+    PRECICE_CHECK(_participantConfig->hasParticipant(second),
+                  "Second participant in coupling-scheme <participants first=\"{}\" second=\"{}\" /> is unknown. {}",
+                  first, second, _participantConfig->hintFor(second));
+    PRECICE_CHECK(first != second,
+                  "First and second participant in coupling scheme are the same. "
+                  "Please choose different in the <participants first=\"{}\" second=\"{}\" /> tag in the <coupling-scheme:...> of your precice-config.xml",
                   first, second);
+    _config.participants.push_back(first);
     _config.participants.push_back(second);
   } else if (tag.getName() == TAG_PARTICIPANT) {
     PRECICE_ASSERT(_config.type == VALUE_MULTI);
     bool        control         = tag.getBooleanAttributeValue(ATTR_CONTROL);
     std::string participantName = tag.getStringAttributeValue(ATTR_NAME);
+    PRECICE_CHECK(_participantConfig->hasParticipant(participantName),
+                  "Provided participant in multi coupling-scheme <participant name=\"{}\" ... /> is unknown. {}",
+                  participantName, _participantConfig->hintFor(participantName));
     PRECICE_CHECK(std::find(_config.participants.begin(), _config.participants.end(), participantName) == _config.participants.end() && participantName.compare(_config.controller) != 0,
                   "Participant \"{0}\" is provided multiple times to multi coupling scheme. "
                   "Please make sure that you do not provide the participant multiple times via the <participant name=\"{0}\" /> "

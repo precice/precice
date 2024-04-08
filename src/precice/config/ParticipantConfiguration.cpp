@@ -1,5 +1,6 @@
 #include "ParticipantConfiguration.hpp"
 #include <algorithm>
+#include <boost/range/adaptor/transformed.hpp>
 #include <list>
 #include <memory>
 #include <stdexcept>
@@ -350,36 +351,28 @@ const impl::PtrParticipant ParticipantConfiguration::getParticipant(const std::s
 
 std::set<std::string> ParticipantConfiguration::knownParticipants() const
 {
-  std::set<std::string> names;
-  for (const auto &p : _participants) {
-    names.insert(p->getName());
-  }
-  return names;
+  auto range = _participants | boost::adaptors::transformed([](auto &p) { return p->getName(); });
+  return {range.begin(), range.end()};
 }
 
 bool ParticipantConfiguration::hasParticipant(std::string_view name) const
 {
-  for (const auto &p : _participants) {
-    if (p->getName() == name) {
-      return true;
-    }
-  }
-  return false;
+  return std::any_of(_participants.begin(), _participants.end(), [name](auto &p) { return p->getName() == name; });
 }
 
 std::string ParticipantConfiguration::hintFor(std::string_view wrongName) const
 {
   PRECICE_ASSERT(!hasParticipant(wrongName));
 
-  const auto partNames = knownParticipants();
-  const auto matches   = utils::computeMatches(wrongName, partNames);
+  const auto names   = knownParticipants();
+  const auto matches = utils::computeMatches(wrongName, names);
 
   // Typo detection
   if (matches.front().distance < 3) {
     return fmt::format("Did you mean: \"{}\"?", matches.front().name);
   }
 
-  return fmt::format("Available participants are: {}.", fmt::join(partNames, ", "));
+  return fmt::format("Available participants are: {}.", fmt::join(names, ", "));
 }
 
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFilter(const std::string &geoFilter) const
