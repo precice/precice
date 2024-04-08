@@ -96,6 +96,17 @@ void Configuration::xmlEndTagCallback(
     }
     PRECICE_ASSERT(participantFound);
   }
+
+  // test if all M2Ns use participants that exist
+  for (const auto &m2n : _m2nConfiguration->m2ns()) {
+    PRECICE_CHECK(_participantConfiguration->hasParticipant(m2n.acceptor),
+                  "The acceptor in <m2n:... acceptor=\"{}\" connector=\"{}\" /> is an unknown. {}",
+                  m2n.acceptor, m2n.connector, _participantConfiguration->hintFor(m2n.acceptor));
+
+    PRECICE_CHECK(_participantConfiguration->hasParticipant(m2n.connector),
+                  "The connector in <m2n:... acceptor=\"{}\" connector=\"{}\" /> is an unknown. {}",
+                  m2n.acceptor, m2n.connector, _participantConfiguration->hintFor(m2n.connector));
+  }
 }
 
 const PtrParticipantConfiguration &

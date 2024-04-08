@@ -348,6 +348,40 @@ const impl::PtrParticipant ParticipantConfiguration::getParticipant(const std::s
   return *participant;
 }
 
+std::set<std::string> ParticipantConfiguration::knownParticipants() const
+{
+  std::set<std::string> names;
+  for (const auto &p : _participants) {
+    names.insert(p->getName());
+  }
+  return names;
+}
+
+bool ParticipantConfiguration::hasParticipant(std::string_view name) const
+{
+  for (const auto &p : _participants) {
+    if (p->getName() == name) {
+      return true;
+    }
+  }
+  return false;
+}
+
+std::string ParticipantConfiguration::hintFor(std::string_view wrongName) const
+{
+  PRECICE_ASSERT(!hasParticipant(wrongName));
+
+  const auto partNames = knownParticipants();
+  const auto matches   = utils::computeMatches(wrongName, partNames);
+
+  // Typo detection
+  if (matches.front().distance < 3) {
+    return fmt::format("Did you mean: \"{}\"?", matches.front().name);
+  }
+
+  return fmt::format("Available participants are: {}.", fmt::join(partNames, ", "));
+}
+
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFilter(const std::string &geoFilter) const
 {
   if (geoFilter == VALUE_FILTER_ON_PRIMARY_RANK) {

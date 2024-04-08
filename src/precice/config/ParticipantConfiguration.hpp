@@ -54,6 +54,12 @@ public:
   /// Returns a participant with the given name
   const impl::PtrParticipant getParticipant(const std::string &participantName) const;
 
+  std::set<std::string> knownParticipants() const;
+
+  bool hasParticipant(std::string_view name) const;
+
+  std::string hintFor(std::string_view wrongName) const;
+
 private:
   struct WatchPointConfig {
     std::string     name;
