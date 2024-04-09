@@ -111,7 +111,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
 
 m2n::PtrM2N M2NConfiguration::getM2N(const std::string &acceptor, const std::string &connector)
 {
-  for (M2NTuple &conf : _m2ns) {
+  for (ConfiguredM2N &conf : _m2ns) {
     if ((conf.acceptor == acceptor && conf.connector == connector) ||
         (conf.connector == acceptor && conf.acceptor == connector)) {
       return conf.m2n;
@@ -194,7 +194,7 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
     }
     PRECICE_ASSERT(distrFactory.get() != nullptr);
 
-    _m2ns.emplace_back(M2NTuple{
+    _m2ns.emplace_back(ConfiguredM2N{
         std::make_shared<m2n::M2N>(com, distrFactory, false, useTwoLevelInit),
         acceptor,
         connector});
@@ -207,7 +207,7 @@ void M2NConfiguration::checkDuplicates(
 {
   using std::get;
   bool alreadyAdded = false;
-  for (M2NTuple &conf : _m2ns) {
+  for (ConfiguredM2N &conf : _m2ns) {
     alreadyAdded |= conf.acceptor == acceptor && conf.connector == connector;
     alreadyAdded |= conf.connector == acceptor && conf.acceptor == connector;
   }

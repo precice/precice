@@ -17,9 +17,12 @@ namespace m2n {
 class M2NConfiguration : public xml::XMLTag::Listener {
 public:
   using SharedPointer = std::shared_ptr<M2NConfiguration>;
-  struct M2NTuple {
+  struct ConfiguredM2N {
+    /// The configured M2N
     m2n::PtrM2N m2n;
+    /// The name of the acceptor
     std::string acceptor;
+    /// The name of the connector
     std::string connector;
   };
 
@@ -39,7 +42,7 @@ public:
       const std::string &connector);
 
   /// Returns all configured communication objects.
-  std::vector<M2NTuple> &m2ns()
+  std::vector<ConfiguredM2N> &m2ns()
   {
     return _m2ns;
   }
@@ -58,7 +61,7 @@ private:
   const std::string ATTR_ENFORCE_GATHER_SCATTER = "enforce-gather-scatter";
   const std::string ATTR_USE_TWO_LEVEL_INIT     = "use-two-level-initialization";
 
-  std::vector<M2NTuple> _m2ns;
+  std::vector<ConfiguredM2N> _m2ns;
 
   void checkDuplicates(
       const std::string &acceptor,
