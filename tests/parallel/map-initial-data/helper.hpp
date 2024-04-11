@@ -6,10 +6,10 @@
 #include "testing/Testing.hpp"
 
 /** Test for mappings mapping initial data when initialize="true"
- * One writes data (dataToWrite to initialize and 1 at the end of the time window)
- * Two runs on two ranks, of which only one (rank 0) participates in the coupling.
+ * Participant one writes data (dataToWrite to initialize and 1 at the end of the time window)
+ * Participant two runs on two ranks, of which only one (rank 0) participates in the coupling.
  *
- * Two reada data and compares initial data to dataToExpect.
+ * Participant two reads data and compares initial data to dataToExpect.
  * This is where read mappings are tested. The configured mappings are explicitly
  * global RBF mappings, to test for consistent decisions of skipping the zero sample
  * or not. In case the decision is inconsistent, the configuration runs into a deadlock,

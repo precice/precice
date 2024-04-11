@@ -126,6 +126,7 @@ int DataContext::mapData(std::optional<double> after, bool skipZero)
           dataDims,
           Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->nVertices())};
 
+      // Note that the l2norm is only computed during initialization due to short-circuit evaluation in C++
       bool skipMapping = skipZero && (utils::IntraComm::l2norm(stample.sample.values) < math::NUMERICAL_ZERO_DIFFERENCE);
 
       PRECICE_INFO("Mapping \"{}\" for t={} from \"{}\" to \"{}\"{}",
