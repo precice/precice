@@ -95,7 +95,7 @@ void IQNIMVJAcceleration::initialize(
   }
 
   if (not _imvjRestart) {
-    // only need memory for Jacobain of not in restart mode
+    // only need memory for Jacobain if not in restart mode
     _invJacobian    = Eigen::MatrixXd::Zero(global_n, entries);
     _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
   }
