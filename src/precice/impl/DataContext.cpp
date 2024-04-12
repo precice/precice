@@ -4,7 +4,7 @@
 
 #include "precice/impl/DataContext.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-
+#include "utils/IntraComm.hpp"
 namespace precice::impl {
 
 logging::Logger DataContext::_log{"impl::DataContext"};
@@ -126,7 +126,8 @@ int DataContext::mapData(std::optional<double> after, bool skipZero)
           dataDims,
           Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->nVertices())};
 
-      bool skipMapping = skipZero && stample.sample.values.isZero();
+      // Note that the l2norm is only computed during initialization due to short-circuit evaluation in C++
+      bool skipMapping = skipZero && (utils::IntraComm::l2norm(stample.sample.values) < math::NUMERICAL_ZERO_DIFFERENCE);
 
       PRECICE_INFO("Mapping \"{}\" for t={} from \"{}\" to \"{}\"{}",
                    getDataName(), stample.timestamp, mapping.getInputMesh()->getName(), mapping.getOutputMesh()->getName(),
