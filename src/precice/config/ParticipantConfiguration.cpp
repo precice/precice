@@ -1,5 +1,6 @@
 #include "ParticipantConfiguration.hpp"
 #include <algorithm>
+#include <boost/range/adaptor/transformed.hpp>
 #include <list>
 #include <memory>
 #include <stdexcept>
@@ -346,6 +347,32 @@ const impl::PtrParticipant ParticipantConfiguration::getParticipant(const std::s
   PRECICE_ASSERT(participant != _participants.end(), "Did not find participant \"{}\"", participantName);
 
   return *participant;
+}
+
+std::set<std::string> ParticipantConfiguration::knownParticipants() const
+{
+  auto range = _participants | boost::adaptors::transformed([](auto &p) { return p->getName(); });
+  return {range.begin(), range.end()};
+}
+
+bool ParticipantConfiguration::hasParticipant(std::string_view name) const
+{
+  return std::any_of(_participants.begin(), _participants.end(), [name](auto &p) { return p->getName() == name; });
+}
+
+std::string ParticipantConfiguration::hintFor(std::string_view wrongName) const
+{
+  PRECICE_ASSERT(!hasParticipant(wrongName));
+
+  const auto names   = knownParticipants();
+  const auto matches = utils::computeMatches(wrongName, names);
+
+  // Typo detection
+  if (matches.front().distance < 3) {
+    return fmt::format("Did you mean: \"{}\"?", matches.front().name);
+  }
+
+  return fmt::format("Available participants are: {}.", fmt::join(names, ", "));
 }
 
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFilter(const std::string &geoFilter) const

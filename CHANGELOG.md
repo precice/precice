@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 3.1.1
+
+- Added missing checks for incorrect Participant names in M2N and coupling-scheme. (https://github.com/precice/precice/pull/1995)
+- Fixed skipping initial mapping when data contains only zeros in parallel. (https://github.com/precice/precice/pull/1999)
+
 ## 3.1.0
 
 - Added warnings when using invalid options inside log configuration files. (https://github.com/precice/precice/pull/1956)

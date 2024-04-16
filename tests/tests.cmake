@@ -45,6 +45,9 @@ target_sources(testprecice
     tests/parallel/lifecycle/ConstructOnly.cpp
     tests/parallel/lifecycle/Full.cpp
     tests/parallel/lifecycle/ImplicitFinalize.cpp
+    tests/parallel/map-initial-data/NonZeroData.cpp
+    tests/parallel/map-initial-data/ZeroData.cpp
+    tests/parallel/map-initial-data/helper.hpp
     tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelScalar.cpp
     tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelVector.cpp
     tests/parallel/mapping-nearest-neighbor-gradient/GradientTestParallelWriteVector.cpp

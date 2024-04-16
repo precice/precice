@@ -76,25 +76,36 @@ void Configuration::xmlEndTagCallback(
     xml::XMLTag &                    tag)
 {
   PRECICE_TRACE(tag.getName());
-  if (tag.getName() == "precice-configuration") {
-    //test if both participants do have the exchange meshes
-    typedef std::map<std::string, std::vector<std::string>>::value_type neededMeshPair;
-    for (const neededMeshPair &neededMeshes : _meshConfiguration->getNeededMeshes()) {
-      bool participantFound = false;
-      for (const impl::PtrParticipant &participant : _participantConfiguration->getParticipants()) {
-        if (participant->getName() == neededMeshes.first) {
-          for (const std::string &neededMesh : neededMeshes.second) {
-            PRECICE_CHECK(participant->isMeshUsed(neededMesh),
-                          "Participant \"{}\" needs to use the mesh \"{}\" to be able to use it in the coupling scheme. "
-                          "Please either add a provide-mesh or a receive-mesh tag in this participant's configuration, or use a different mesh in the coupling scheme.",
-                          neededMeshes.first, neededMesh);
-          }
-          participantFound = true;
-          break;
+  PRECICE_ASSERT(tag.getName() == "precice-configuration");
+
+  //test if both participants do have the exchange meshes
+  typedef std::map<std::string, std::vector<std::string>>::value_type neededMeshPair;
+  for (const neededMeshPair &neededMeshes : _meshConfiguration->getNeededMeshes()) {
+    bool participantFound = false;
+    for (const impl::PtrParticipant &participant : _participantConfiguration->getParticipants()) {
+      if (participant->getName() == neededMeshes.first) {
+        for (const std::string &neededMesh : neededMeshes.second) {
+          PRECICE_CHECK(participant->isMeshUsed(neededMesh),
+                        "Participant \"{}\" needs to use the mesh \"{}\" to be able to use it in the coupling scheme. "
+                        "Please either add a provide-mesh or a receive-mesh tag in this participant's configuration, or use a different mesh in the coupling scheme.",
+                        neededMeshes.first, neededMesh);
         }
+        participantFound = true;
+        break;
       }
-      PRECICE_ASSERT(participantFound);
     }
+    PRECICE_ASSERT(participantFound);
+  }
+
+  // test if all M2Ns use participants that exist
+  for (const auto &m2n : _m2nConfiguration->m2ns()) {
+    PRECICE_CHECK(_participantConfiguration->hasParticipant(m2n.acceptor),
+                  "The acceptor in <m2n:... acceptor=\"{}\" connector=\"{}\" /> is an unknown. {}",
+                  m2n.acceptor, m2n.connector, _participantConfiguration->hintFor(m2n.acceptor));
+
+    PRECICE_CHECK(_participantConfiguration->hasParticipant(m2n.connector),
+                  "The connector in <m2n:... acceptor=\"{}\" connector=\"{}\" /> is an unknown. {}",
+                  m2n.acceptor, m2n.connector, _participantConfiguration->hintFor(m2n.connector));
   }
 }
 
