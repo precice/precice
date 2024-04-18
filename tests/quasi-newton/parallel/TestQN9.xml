@@ -50,7 +50,7 @@
 
   <coupling-scheme:serial-implicit>
     <participants first="SolverOne" second="SolverTwo" />
-    <max-time-windows value="1" />
+    <max-time-windows value="5" />
     <time-window-size value="1.0" />
     <exchange data="Data11" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
     <exchange data="Data12" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
@@ -66,7 +66,7 @@
       <max-used-iterations value="10" />
       <time-windows-reused value="0" />
       <imvj-restart-mode
-        truncation-threshold="0.001"
+        truncation-threshold="0.0001"
         chunk-size="2"
         reused-time-windows-at-restart="2"
         type="RS-SVD" />
