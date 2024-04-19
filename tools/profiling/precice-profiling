@@ -79,7 +79,11 @@ def printWide(df):
         return len("{:}".format(s))
 
     headerWidths = tuple(map(formattedLength, df.columns))
-    bodyWidths = tuple(df.select(pl.all().map_elements(formattedLength)).max().row(0))
+    bodyWidths = tuple(
+        df.select(pl.all().map_elements(formattedLength, return_dtype=pl.Int64))
+        .max()
+        .row(0)
+    )
     assert len(headerWidths) == len(bodyWidths)
     colwidths = map(max, zip(headerWidths, bodyWidths, repeat(mincolwidth)))
 
