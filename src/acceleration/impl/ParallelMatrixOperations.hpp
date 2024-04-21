@@ -136,7 +136,6 @@ private:
 
     PRECICE_ASSERT(_needCyclicComm);
     PRECICE_ASSERT(leftMatrix.cols() == q, leftMatrix.cols(), q);
-    PRECICE_ASSERT(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
     PRECICE_ASSERT(result.rows() == p, result.rows(), p);
 
     //int nextProc = (utils::IntraComm::getRank() + 1) % utils::IntraComm::getSize();

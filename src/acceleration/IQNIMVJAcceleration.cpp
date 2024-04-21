@@ -83,19 +83,20 @@ void IQNIMVJAcceleration::initialize(
   // initialize parallel matrix-matrix operation module
   _parMatrixOps = std::make_shared<impl::ParallelMatrixOperations>();
   _parMatrixOps->initialize(not _imvjRestart);
-  _svdJ.initialize(_parMatrixOps, getLSSystemRows());
+  _svdJ.initialize(_parMatrixOps, _cplResiduals.rows(), getLSSystemRows());
 
-  int entries  = _residuals.size();
-  int global_n = 0;
+  int entries        = _residuals.size();
+  int cplDataEntries = _cplResiduals.size();
+  int global_n       = 0;
 
   if (!utils::IntraComm::isParallel()) {
-    global_n = entries;
+    global_n = cplDataEntries;
   } else {
     global_n = _dimOffsets.back();
   }
 
   if (not _imvjRestart) {
-    // only need memory for Jacobain of not in restart mode
+    // only need memory for Jacobain if not in restart mode
     _invJacobian    = Eigen::MatrixXd::Zero(global_n, entries);
     _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
   }
@@ -103,29 +104,13 @@ void IQNIMVJAcceleration::initialize(
   if (_imvjRestartType == RS_LS) {
     _matrixCols_RSLS.push_front(0);
     _matrixV_RSLS = Eigen::MatrixXd::Zero(entries, 0);
-    _matrixW_RSLS = Eigen::MatrixXd::Zero(entries, 0);
+    _matrixW_RSLS = Eigen::MatrixXd::Zero(cplDataEntries, 0);
   }
-  _Wtil = Eigen::MatrixXd::Zero(entries, 0);
+  _Wtil = Eigen::MatrixXd::Zero(cplDataEntries, 0);
 
   if (utils::IntraComm::isPrimary() || !utils::IntraComm::isParallel()) {
     _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimeWindows << "\n--------\n"
                       << '\n';
-  }
-}
-
-// ==================================================================================
-void IQNIMVJAcceleration::computeUnderrelaxationSecondaryData(
-    const DataMap &cplData)
-{
-  // Perform underrelaxation with initial relaxation factor for secondary data
-  for (int id : _secondaryDataIDs) {
-    PtrCouplingData  data   = cplData.at(id);
-    Eigen::VectorXd &values = data->values();
-    values *= _initialRelaxation; // new * omg
-    Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
-    secResiduals                  = data->previousIteration();
-    secResiduals *= 1.0 - _initialRelaxation; // (1-omg) * old
-    values += secResiduals;                   // (1-omg) * old + new * omg
   }
 }
 
@@ -161,7 +146,7 @@ void IQNIMVJAcceleration::updateDifferenceMatrices(
         bool columnLimitReached = _Wtil.cols() == _maxIterationsUsed;
         bool overdetermined     = _Wtil.cols() <= getLSSystemRows();
 
-        Eigen::VectorXd wtil = Eigen::VectorXd::Zero(_matrixV.rows());
+        Eigen::VectorXd wtil = Eigen::VectorXd::Zero(_matrixW.rows());
 
         // add column: Wtil(:,0) = W(:,0) - sum_q [ Wtil^q * ( Z^q * V(:,0)) ]
         //                                         |--- J_prev ---|
@@ -281,7 +266,7 @@ void IQNIMVJAcceleration::buildWtil()
   PRECICE_ASSERT(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());
   PRECICE_ASSERT(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
 
-  _Wtil = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
+  _Wtil = Eigen::MatrixXd::Zero(_cplResiduals.rows(), _qrV.cols());
 
   // imvj restart mode: re-compute Wtil: Wtil = W - sum_q [ Wtil^q * (Z^q*V) ]
   //                                                      |--- J_prev ---|
@@ -415,8 +400,8 @@ void IQNIMVJAcceleration::computeNewtonUpdateEfficient(
    *
    * Note: r_til is not distributed but locally stored on each proc (dimension m x 1)
    */
-  Eigen::VectorXd xUptmp(_residuals.size());
-  xUpdate = Eigen::VectorXd::Zero(_residuals.size());
+  Eigen::VectorXd xUptmp(_cplResiduals.size());
+  xUpdate = Eigen::VectorXd::Zero(_cplResiduals.size());
   xUptmp  = _Wtil * r_til; // local product, result is naturally distributed.
 
   /**
@@ -502,7 +487,7 @@ void IQNIMVJAcceleration::restartIMVJ()
     // we need to compute the updated SVD of the scaled Jacobian matrix
     // |= APPLY PRECONDITIONING  J_prev = Wtil^q, Z^q  ===|
     for (int i = 0; i < static_cast<int>(_WtilChunk.size()); i++) {
-      _preconditioner->apply(_WtilChunk[i]);
+      // _preconditioner->apply(_WtilChunk[i]);
       _preconditioner->revert(_pseudoInverseChunk[i], true);
     }
     // |===================                            ===|
@@ -548,7 +533,7 @@ void IQNIMVJAcceleration::restartIMVJ()
     _pseudoInverseChunk.push_back(Z);
 
     // |= REVERT PRECONDITIONING  J_prev = Wtil^0, Z^0  ==|
-    _preconditioner->revert(_WtilChunk.front());
+    // _preconditioner->revert(_WtilChunk.front());
     _preconditioner->apply(_pseudoInverseChunk.front(), true);
     // |===================                             ==|
 
@@ -577,7 +562,7 @@ void IQNIMVJAcceleration::restartIMVJ()
       // W only needs to be scaled, as the design requires to store scaled
       // matrices Wtil^0 and Z^0 as initial guess after the restart
       _preconditioner->apply(_matrixV_RSLS);
-      _preconditioner->apply(_matrixW_RSLS);
+      // _preconditioner->apply(_matrixW_RSLS); //TODO
 
       impl::QRFactorization qr(_filter);
       qr.setGlobalRows(getLSSystemRows());
@@ -625,9 +610,9 @@ void IQNIMVJAcceleration::restartIMVJ()
       _pseudoInverseChunk.push_back(pseudoInverse);
 
       // |= REVERT PRECONDITIONING  J_prev = Wtil^0, Z^0  ==|
-      _preconditioner->revert(_WtilChunk.front());
+      // _preconditioner->revert(_WtilChunk.front());
       _preconditioner->apply(_pseudoInverseChunk.front(), true);
-      _preconditioner->revert(_matrixW_RSLS);
+      // _preconditioner->revert(_matrixW_RSLS);
       _preconditioner->revert(_matrixV_RSLS);
       // |===================                             ==|
     }
@@ -658,7 +643,7 @@ void IQNIMVJAcceleration::restartIMVJ()
       // multiply: ZV := Z^q * V of size (m x m) with m=#cols, stored on each proc.
       _parMatrixOps->multiply(_pseudoInverseChunk.front(), _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), _qrV.cols());
       // multiply: Wtil^0 * (Z_0*V)  dimensions: (n x m) * (m x m), fully local and embarrassingly parallel
-      Eigen::MatrixXd tmp = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
+      Eigen::MatrixXd tmp = Eigen::MatrixXd::Zero(_cplResiduals.rows(), _qrV.cols());
       tmp                 = _WtilChunk.front() * ZV;
       _WtilChunk[i] += tmp;
 

@@ -161,6 +161,9 @@ protected:
   /// Data IDs of data not involved in IQN coefficient computation.
   std::vector<int> _secondaryDataIDs;
 
+  /// Data IDs of all coupling data.
+  std::vector<int> _cplDataIDs;
+
   /// Indicates the first iteration, where constant relaxation is used.
   bool _firstIteration = true;
 
@@ -188,11 +191,14 @@ protected:
   /// @brief Solver output from last iteration.
   Eigen::VectorXd _oldXTilde;
 
+  /// @brief Solver output from last iteration.
+  Eigen::VectorXd _oldCplXTilde;
+
   /// @brief Current iteration residuals of IQN data. Temporary.
   Eigen::VectorXd _residuals;
 
-  /// @brief Current iteration residuals of secondary data.
-  std::map<int, Eigen::VectorXd> _secondaryResiduals;
+  /// @brief Current iteration residuals of IQN data. Temporary.
+  Eigen::VectorXd _cplResiduals;
 
   /// @brief Stores residual deltas.
   Eigen::MatrixXd _matrixV;
@@ -253,9 +259,6 @@ protected:
   /// Applies the filter method for the least-squares system, defined in the configuration
   virtual void applyFilter();
 
-  /// Computes underrelaxation for the secondary data
-  virtual void computeUnderrelaxationSecondaryData(const DataMap &cplData) = 0;
-
   /// Computes the quasi-Newton update using the specified pp scheme (IQNIMVJ, IQNILS)
   virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate) = 0;
 
@@ -273,6 +276,12 @@ private:
 
   /// @brief Concatenation of all (old) coupling data involved in the QN system.
   Eigen::VectorXd _oldValues;
+
+  /// @brief Concatenation of all primary and secondary data involved in the QN system.
+  Eigen::VectorXd _cplValues;
+
+  /// @brief Concatenation of all old primary and secondary data involved in the QN system.
+  Eigen::VectorXd _oldCplValues;
 
   /// @brief Difference between solver input and output from last time window
   Eigen::VectorXd _oldResiduals;

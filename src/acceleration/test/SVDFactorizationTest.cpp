@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(testSVDFactorization)
   // construct a SVD factorization object
   SVDFactorization svd_1(eps, prec);
 
-  svd_1.initialize(ptrParMatrixOp, m);
+  svd_1.initialize(ptrParMatrixOp, m, m);
   // update 4 times
   for (int i = 0; i < 4; i++) {
     for (int j = 0; j < m; j++) {

@@ -19,10 +19,12 @@ SVDFactorization::SVDFactorization(
 
 void SVDFactorization::initialize(
     PtrParMatrixOps parOps,
-    int             globalRows)
+    int             globalRowsA,
+    int             globalRowsB)
 {
   _parMatrixOps = std::move(parOps);
-  _globalRows   = globalRows;
+  _globalRowsA  = globalRowsA;
+  _globalRowsB  = globalRowsB;
   _initialized  = true;
 }
 
@@ -73,6 +75,7 @@ void SVDFactorization::reset()
 
 void SVDFactorization::computeQRdecomposition(
     Matrix const &A,
+    int           _globalRows,
     Matrix &      Q,
     Matrix &      R)
 {
@@ -288,9 +291,14 @@ int SVDFactorization::cols()
   return _cols;
 }
 
-int SVDFactorization::rows()
+int SVDFactorization::rowsA()
 {
-  return _rows;
+  return _rowsA;
+}
+
+int SVDFactorization::rowsB()
+{
+  return _rowsB;
 }
 
 Rank SVDFactorization::rank()
