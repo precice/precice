@@ -52,8 +52,8 @@
     <participants first="SolverOne" second="SolverTwo" />
     <max-time-windows value="5" />
     <time-window-size value="1.0" />
-    <exchange data="Data11" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
-    <exchange data="Data12" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
+    <exchange data="Data11" mesh="MeshOne" from="SolverOne" to="SolverTwo" substeps="false" />
+    <exchange data="Data12" mesh="MeshOne" from="SolverOne" to="SolverTwo" substeps="false" />
     <exchange data="Data21" mesh="MeshOne" from="SolverTwo" to="SolverOne" substeps="false" />
     <exchange data="Data22" mesh="MeshOne" from="SolverTwo" to="SolverOne" substeps="false" />
     <max-iterations value="100" />
