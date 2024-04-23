@@ -2,16 +2,17 @@
 
 #include "testing/Testing.hpp"
 
+#include <boost/test/data/test_case.hpp>
 #include <precice/precice.hpp>
 #include "../helpers.hpp"
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(QuasiNewton)
 BOOST_AUTO_TEST_SUITE(Serial)
-BOOST_AUTO_TEST_CASE(DefaultConfig)
+BOOST_DATA_TEST_CASE(DefaultConfig, boost::unit_test::data::make({true, false}), includeSecondaryData)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-  runTestQN(context.config(), context);
+  runTestQN(includeSecondaryData, context.config(), context);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Integration
