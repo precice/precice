@@ -110,8 +110,7 @@ void BaseQNAcceleration::initialize(
   // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
   for (const DataMap::value_type &pair : cplData) {
     if (not utils::contained(pair.first, _primaryDataIDs)) {
-      _secondaryDataIDs.push_back(pair.first);
-      _dataIDs.push_back(pair.first);
+      _dataIDs.push_back(pair.first); // add secondary data IDs to the list
       cplDataSize += pair.second->getSize();
     }
   }
@@ -223,11 +222,8 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       Eigen::VectorXd deltaR = _primaryResiduals;
       deltaR -= _oldPrimaryResiduals;
 
-      Eigen::VectorXd deltaXTilde = _primaryValues;
-      deltaXTilde -= _oldPrimaryXTilde;
-
-      Eigen::VectorXd deltaCplXTilde = _values;
-      deltaCplXTilde -= _oldXTilde;
+      Eigen::VectorXd deltaXTilde = _values;
+      deltaXTilde -= _oldXTilde;
 
       double residualMagnitude = utils::IntraComm::l2norm(deltaR);
 
@@ -247,7 +243,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       if (not columnLimitReached && overdetermined) {
 
         utils::appendFront(_matrixV, deltaR);
-        utils::appendFront(_matrixW, deltaCplXTilde);
+        utils::appendFront(_matrixW, deltaXTilde);
 
         // insert column deltaR = _primaryResiduals - _oldPrimaryResiduals at pos. 0 (front) into the
         // QR decomposition and update decomposition
@@ -259,7 +255,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         _matrixCols.front()++;
       } else {
         utils::shiftSetFirst(_matrixV, deltaR);
-        utils::shiftSetFirst(_matrixW, deltaCplXTilde);
+        utils::shiftSetFirst(_matrixW, deltaXTilde);
 
         // inserts column deltaR at pos. 0 to the QR decomposition and deletes the last column
         // the QR decomposition of V is updated
@@ -314,9 +310,9 @@ void BaseQNAcceleration::performAcceleration(
 
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
     PRECICE_DEBUG("   Performing underrelaxation");
-    _oldPrimaryXTilde    = _primaryValues;    // Store x tilde
-    _oldXTilde           = _values;           // Store coupling x tilde
-    _oldPrimaryResiduals = _primaryResiduals; // Store current residual
+    _oldPrimaryXTilde    = _primaryValues;    // Store x tilde of primary data
+    _oldXTilde           = _values;           // Store x tilde of primary and secondary data
+    _oldPrimaryResiduals = _primaryResiduals; // Store current residual of primary data
 
     // Perform constant relaxation
     // with residual: x_new = x_old + omega * res
@@ -380,13 +376,13 @@ void BaseQNAcceleration::performAcceleration(
      * PRECONDITION: All objects are unscaled, except the matrices within the QR-dec of V.
      *               Thus, the pseudo inverse needs to be reverted before using it.
      */
-    Eigen::VectorXd xCplUpdate = Eigen::VectorXd::Zero(_values.size());
-    computeQNUpdate(cplData, xCplUpdate);
+    Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_values.size());
+    computeQNUpdate(cplData, xUpdate);
 
     /**
      * apply quasiNewton update
      */
-    _values += xCplUpdate;
+    _values += xUpdate;
 
     // pending deletion: delete old V, W matrices if timeWindowsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
@@ -414,7 +410,7 @@ void BaseQNAcceleration::performAcceleration(
     }
 
     PRECICE_CHECK(
-        !std::isnan(utils::IntraComm::l2norm(xCplUpdate)),
+        !std::isnan(utils::IntraComm::l2norm(xUpdate)),
         "The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
         "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
         "data in succeeding iterations. Or you do not properly save and reload checkpoints. "

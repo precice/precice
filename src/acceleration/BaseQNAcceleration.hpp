@@ -155,11 +155,8 @@ protected:
   /// Maximum number of old time windows (with data values) kept.
   int _timeWindowsReused;
 
-  /// Data IDs of data to be involved in the IQN algorithm.
+  /// Data IDs of primary data to be involved in the IQN coefficient computation.
   std::vector<int> _primaryDataIDs;
-
-  /// Data IDs of data not involved in IQN coefficient computation.
-  std::vector<int> _secondaryDataIDs;
 
   /// Data IDs of all coupling data.
   std::vector<int> _dataIDs;
