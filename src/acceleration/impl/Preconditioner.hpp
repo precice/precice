@@ -58,16 +58,22 @@ public:
   {
     PRECICE_TRACE();
     if (transpose) {
-      PRECICE_ASSERT(M.cols() == (int) _weights.size(), M.cols(), _weights.size());
-      for (int i = 0; i < M.cols(); i++) {
+      PRECICE_WARN_IF(M.cols() < (int) _weights.size(), "Matrix and weights size mismatch, only part of the preconditioning weights will be used.");
+      PRECICE_WARN_IF(M.cols() > (int) _weights.size(), "Matrix and weights size mismatch, only part of the matrix will be preconditioned.");
+
+      int validCols = std::min(static_cast<int>(M.cols()), (int) _weights.size());
+      for (int i = 0; i < validCols; i++) {
         for (int j = 0; j < M.rows(); j++) {
           M(j, i) *= _weights[i];
         }
       }
     } else {
-      PRECICE_ASSERT(M.rows() == (int) _weights.size(), M.rows(), (int) _weights.size());
+      PRECICE_WARN_IF(M.rows() < (int) _weights.size(), "Matrix and weights size mismatch, only part of the preconditioning weights will be used.");
+      PRECICE_WARN_IF(M.rows() > (int) _weights.size(), "Matrix and weights size mismatch, only part of the matrix will be preconditioned.");
+
+      int validRows = std::min(static_cast<int>(M.rows()), (int) _weights.size());
       for (int i = 0; i < M.cols(); i++) {
-        for (int j = 0; j < M.rows(); j++) {
+        for (int j = 0; j < validRows; j++) {
           M(j, i) *= _weights[j];
         }
       }
@@ -83,16 +89,22 @@ public:
     PRECICE_TRACE();
     //PRECICE_ASSERT(_needsGlobalWeights);
     if (transpose) {
-      PRECICE_ASSERT(M.cols() == (int) _invWeights.size());
-      for (int i = 0; i < M.cols(); i++) {
+      PRECICE_WARN_IF(M.cols() < (int) _weights.size(), "Matrix and weights size mismatch, only part of the preconditioning weights will be used.");
+      PRECICE_WARN_IF(M.cols() > (int) _weights.size(), "Matrix and weights size mismatch, only part of the matrix will be preconditioned.");
+
+      int validCols = std::min(static_cast<int>(M.cols()), (int) _weights.size());
+      for (int i = 0; i < validCols; i++) {
         for (int j = 0; j < M.rows(); j++) {
           M(j, i) *= _invWeights[i];
         }
       }
     } else {
-      PRECICE_ASSERT(M.rows() == (int) _invWeights.size(), M.rows(), (int) _invWeights.size());
+      PRECICE_WARN_IF(M.rows() < (int) _weights.size(), "Matrix and weights size mismatch, only part of the preconditioning weights will be used.");
+      PRECICE_WARN_IF(M.rows() > (int) _weights.size(), "Matrix and weights size mismatch, only part of the matrix will be preconditioned.");
+
+      int validRows = std::min(static_cast<int>(M.rows()), (int) _weights.size());
       for (int i = 0; i < M.cols(); i++) {
-        for (int j = 0; j < M.rows(); j++) {
+        for (int j = 0; j < validRows; j++) {
           M(j, i) *= _invWeights[j];
         }
       }
@@ -103,11 +115,13 @@ public:
   void apply(Eigen::MatrixXd &M)
   {
     PRECICE_TRACE();
-    PRECICE_ASSERT(M.rows() == (int) _weights.size(), M.rows(), (int) _weights.size());
+    PRECICE_WARN_IF(M.rows() < (int) _weights.size(), "Matrix and weights size mismatch, only part of the preconditioning weights will be used.");
+    PRECICE_WARN_IF(M.rows() > (int) _weights.size(), "Matrix and weights size mismatch, only part of the matrix will be preconditioned.");
 
     // scale matrix M
+    int validRows = std::min(static_cast<int>(M.rows()), (int) _weights.size());
     for (int i = 0; i < M.cols(); i++) {
-      for (int j = 0; j < M.rows(); j++) {
+      for (int j = 0; j < validRows; j++) {
         M(j, i) *= _weights[j];
       }
     }
@@ -130,12 +144,13 @@ public:
   void revert(Eigen::MatrixXd &M)
   {
     PRECICE_TRACE();
-
-    PRECICE_ASSERT(M.rows() == (int) _weights.size());
+    PRECICE_WARN_IF(M.rows() < (int) _weights.size(), "Matrix and weights size mismatch, only part of the preconditioning weights will be used.");
+    PRECICE_WARN_IF(M.rows() > (int) _weights.size(), "Matrix and weights size mismatch, only part of the preconditioning on the matrix will be reverted.");
 
     // scale matrix M
+    int validRows = std::min(static_cast<int>(M.rows()), (int) _weights.size());
     for (int i = 0; i < M.cols(); i++) {
-      for (int j = 0; j < M.rows(); j++) {
+      for (int j = 0; j < validRows; j++) {
         M(j, i) *= _invWeights[j];
       }
     }

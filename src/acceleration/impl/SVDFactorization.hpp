@@ -202,8 +202,10 @@ public:
   /// @brief: returns the number of columns in the QR-decomposition
   int cols();
 
-  /// @brief: returns the number of rows in the QR-decomposition
+  /// @brief: returns the number of rows in the QR-decomposition relevant for the first multiplicator A
   int rowsA();
+
+  /// @brief: returns the number of rows in the QR-decomposition relevant for the second multiplicator B
   int rowsB();
 
   /// @brief: returns the rank of the truncated SVD factorization
