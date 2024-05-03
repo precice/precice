@@ -944,7 +944,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     mesh::PtrMesh                   pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     m2n->getPrimaryRankCommunication()->send(3, 0);
     com::sendBoundingBoxMap(*m2n->getPrimaryRankCommunication(), 0, sendGlobalBB);
-    std::vector<int> connectedRanksList = m2n->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
+    std::vector<int> connectedRanksList = m2n->getPrimaryRankCommunication()->receiveRange(0, com::asVector<int>);
     connectionMapSize                   = connectedRanksList.size();
     BOOST_TEST_REQUIRE(connectionMapSize == 2);
 
@@ -1012,7 +1012,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
     mesh::PtrMesh                   pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
     m2n->getPrimaryRankCommunication()->send(3, 0);
     com::sendBoundingBoxMap(*m2n->getPrimaryRankCommunication(), 0, sendGlobalBB);
-    std::vector<int> connectedRanksList = m2n->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<int>{});
+    std::vector<int> connectedRanksList = m2n->getPrimaryRankCommunication()->receiveRange(0, com::asVector<int>);
     connectionMapSize                   = connectedRanksList.size();
     BOOST_TEST(connectionMapSize == 2);
 
