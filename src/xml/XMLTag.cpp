@@ -411,15 +411,15 @@ void configure(
 std::string_view XMLTag::getOccurrenceString(XMLTag::Occurrence occurrence)
 {
   if (occurrence == XMLTag::OCCUR_ARBITRARY) {
-    return ("0..*");
+    return "0..*";
   } else if (occurrence == XMLTag::OCCUR_NOT_OR_ONCE) {
-    return ("0..1");
+    return "0..1";
   } else if (occurrence == XMLTag::OCCUR_ONCE) {
-    return ("1");
+    return "1";
   } else if (occurrence == XMLTag::OCCUR_ONCE_OR_MORE) {
-    return ("1..*");
+    return "1..*";
   }
-  return ("");
+  return "";
 }
 } // namespace precice::xml
 

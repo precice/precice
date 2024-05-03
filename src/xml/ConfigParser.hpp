@@ -17,7 +17,7 @@ class XMLTag; // forward declaration to resolve circular import
 struct ConfigurationContext;
 
 /// Decodes escape sequences of a given xml
-std::string decodeXML(std::string xml);
+std::string decodeXML(std::string_view xml);
 
 class ConfigParser {
 public:
@@ -50,7 +50,7 @@ public:
   ConfigParser(std::string_view filePath);
 
   /// Reads the xml file
-  int readXmlFile(std::string const &filePath);
+  int readXmlFile(std::string_view filePath);
 
   /**
    * @brief Connects the actual tags of an xml layer with the predefined tags
@@ -61,8 +61,8 @@ public:
 
   /// Callback for Start-Tag
   void OnStartElement(
-      std::string         localname,
-      std::string         prefix,
+      std::string_view    localname,
+      std::string_view    prefix,
       CTag::AttributePair attributes);
 
   /// Callback for End-Tag
