@@ -47,7 +47,6 @@ void receive(mesh::Mesh::VertexDistribution &m,
              int                             rankSender,
              const com::PtrCommunication &   communication)
 {
-  using precice::com::AsVectorTag;
   m.clear();
   int size = 0;
   communication->receive(size, rankSender);
@@ -55,7 +54,7 @@ void receive(mesh::Mesh::VertexDistribution &m,
   while (size--) {
     Rank rank = -1;
     communication->receive(rank, rankSender);
-    m[rank] = communication->receiveRange(rankSender, AsVectorTag<int>{});
+    m[rank] = communication->receiveRange(rankSender, com::asVector<int>);
   }
 }
 
@@ -695,9 +694,8 @@ void PointToPointCommunication::scatterAllCommunicationMap(CommunicationMap &loc
 
 void PointToPointCommunication::gatherAllCommunicationMap(CommunicationMap &localCommunicationMap)
 {
-  using precice::com::AsVectorTag;
   for (auto &connectionData : _connectionDataVector) {
-    localCommunicationMap[connectionData.remoteRank] = _communication->receiveRange(connectionData.remoteRank, AsVectorTag<int>{});
+    localCommunicationMap[connectionData.remoteRank] = _communication->receiveRange(connectionData.remoteRank, com::asVector<int>);
   }
 }
 

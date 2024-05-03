@@ -59,12 +59,12 @@ void SerializedMesh::send(Communication &communication, int rankReceiver)
 SerializedMesh SerializedMesh::receive(Communication &communication, int rankSender)
 {
   SerializedMesh sm;
-  sm.sizes = communication.receiveRange(rankSender, AsVectorTag<int>{});
+  sm.sizes = communication.receiveRange(rankSender, asVector<int>);
   PRECICE_ASSERT(sm.sizes.size() == 5);
   auto nVertices = sm.sizes[1];
   if (nVertices > 0) {
-    sm.coords = communication.receiveRange(rankSender, AsVectorTag<double>{});
-    sm.ids    = communication.receiveRange(rankSender, AsVectorTag<int>{});
+    sm.coords = communication.receiveRange(rankSender, asVector<double>);
+    sm.ids    = communication.receiveRange(rankSender, asVector<int>);
   }
   sm.assertValid();
   return sm;

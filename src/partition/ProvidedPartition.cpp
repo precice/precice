@@ -286,7 +286,7 @@ void ProvidedPartition::compareBoundingBoxes()
 
     // primary rank receives feedback map (map of other participant ranks -> connected ranks at this participant)
     // from other participants primary rank
-    std::vector<Rank> connectedRanksList = _m2ns[0]->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<Rank>{});
+    std::vector<Rank> connectedRanksList = _m2ns[0]->getPrimaryRankCommunication()->receiveRange(0, com::asVector<Rank>);
     remoteConnectionMapSize              = connectedRanksList.size();
 
     mesh::Mesh::CommunicationMap remoteConnectionMap;
