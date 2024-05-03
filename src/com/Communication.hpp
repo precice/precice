@@ -380,7 +380,7 @@ private:
 };
 
 /// Allows to use @ref Communication::AsVectorTag in a less verbose way.
-template<typename T>
+template <typename T>
 inline constexpr auto asVector = Communication::AsVectorTag<T>{};
 
 /** Establishes a circular communication for the given participant.
