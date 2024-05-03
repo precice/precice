@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        TARGET: ["ubuntu:22.04", "ubuntu:24.04", "debian:11", "debian:12"]
+        TARGET: ["ubuntu:22.04", "ubuntu:24.04", "debian:12"]
     steps:
       - uses: actions/checkout@v4
       - name: Generate build directory
