@@ -214,7 +214,10 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 
   for (auto &subtag : SubTags) {
     std::string expectedName = (subtag->m_Prefix.length() ? subtag->m_Prefix + ":" : "") + subtag->m_Name;
-    const auto  tagPosition  = std::find_if(
+    PRECICE_CHECK(expectedName != "solver-interface",
+                  "This configuration contains the tag <solver-interface>, meaning it was created for a preCICE version prior to version 3. "
+                  "Are you using the correct version of your simulation case? Has this simulation case been updated to this version of preCICE?");
+    const auto tagPosition = std::find_if(
         DefTags.begin(),
         DefTags.end(),
         [expectedName](const std::shared_ptr<XMLTag> &pTag) {

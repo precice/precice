@@ -34,7 +34,7 @@
  *
  * The third possibility was to separate the approximation of the Jacobian from
  * the common stuff like handling V,W matrices in the acceleration.
- * Here, we have a class QNAcceleration that handles the V,W stuff an d the basic
+ * Here, we have a class QNAcceleration that handles the V,W stuff and the basic
  * scheme of the QN update. Furthermore we have a base class (or rather interface)
  * JacobianApproximation with sub classes IQNIMVJAPX and IQNAPX that handle all the
  * specialized stuff like Jacobian approximation, handling of secondary data etc.

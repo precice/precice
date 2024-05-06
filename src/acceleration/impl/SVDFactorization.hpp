@@ -202,12 +202,6 @@ public:
   /// @brief: returns the number of columns in the QR-decomposition
   int cols();
 
-  /// @brief: returns the number of rows in the QR-decomposition relevant for the first multiplicator A
-  int rowsA();
-
-  /// @brief: returns the number of rows in the QR-decomposition relevant for the second multiplicator B
-  int rowsB();
-
   /// @brief: returns the rank of the truncated SVD factorization
   Rank rank();
 
@@ -251,7 +245,7 @@ private:
    *  The threshold parameter eps, indicates whether a column is seen to be in the column space
    *  of Q via the criterium ||v_orth|| / ||v|| <= eps (cmp. QR2 Filter)
    */
-  void computeQRdecomposition(Matrix const &A, int _globalRows, Matrix &Q, Matrix &R);
+  void computeQRdecomposition(Matrix const &A, int globalRows, Matrix &Q, Matrix &R);
 
   logging::Logger _log{"acceleration::SVDFactorization"};
 
@@ -275,8 +269,10 @@ private:
   /// Number of columns, i.e., rank of the truncated svd
   int _cols = 0;
 
-  /// Number of global rows, i.e., sum of _rows for all procs
+  /// Number of global rows of first multiplicator, i.e., sum of _rows for all procs
   int _globalRowsA = 0;
+
+  /// Number of global rows of second multiplicator, i.e., sum of _rows for all procs
   int _globalRowsB = 0;
 
   // Total number of truncated modes after last call to method getWaste()

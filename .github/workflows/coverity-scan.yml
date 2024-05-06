@@ -10,7 +10,7 @@ on:
 jobs:
   latest:
     runs-on: ubuntu-latest
-    container: 'precice/ci-ubuntu-2004:latest'
+    container: 'precice/ci-ubuntu-2204:latest'
     steps:
       - name: Download Coverity Build Tool
         run: |

@@ -196,7 +196,6 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
-  using precice::com::AsVectorTag;
 
   PRECICE_DEBUG("Map conservative using {}", getName());
 
@@ -240,7 +239,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
     {
       int secondaryOutputValueSize;
       for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
-        std::vector<double> secondaryBuffer = utils::IntraComm::getCommunication()->receiveRange(rank, AsVectorTag<double>{});
+        std::vector<double> secondaryBuffer = utils::IntraComm::getCommunication()->receiveRange(rank, com::asVector<double>);
         globalInValues.insert(globalInValues.end(), secondaryBuffer.begin(), secondaryBuffer.end());
 
         utils::IntraComm::getCommunication()->receive(secondaryOutputValueSize, rank);
@@ -299,7 +298,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
     }
   }
   if (utils::IntraComm::isSecondary()) {
-    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, AsVectorTag<double>{});
+    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, com::asVector<double>);
 
     const int valueDim = inData.dataDims;
 
@@ -320,7 +319,6 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
-  using precice::com::AsVectorTag;
 
   PRECICE_DEBUG("Map {} using {}", (this->hasConstraint(Mapping::CONSISTENT) ? "consistent" : "scaled-consistent"), getName());
 
@@ -352,7 +350,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
       int secondaryOutDataSize{0};
 
       for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
-        std::vector<double> secondaryBuffer = utils::IntraComm::getCommunication()->receiveRange(rank, AsVectorTag<double>{});
+        std::vector<double> secondaryBuffer = utils::IntraComm::getCommunication()->receiveRange(rank, com::asVector<double>);
         std::copy(secondaryBuffer.begin(), secondaryBuffer.end(), globalInValues.begin() + inputSizeCounter);
         inputSizeCounter += secondaryBuffer.size();
 
@@ -409,7 +407,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
     }
   }
   if (utils::IntraComm::isSecondary()) {
-    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, AsVectorTag<double>{});
+    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, com::asVector<double>);
     outData                            = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
   }
 }

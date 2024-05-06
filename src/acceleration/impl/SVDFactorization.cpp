@@ -75,7 +75,7 @@ void SVDFactorization::reset()
 
 void SVDFactorization::computeQRdecomposition(
     Matrix const &A,
-    int           _globalRows,
+    int           globalRows,
     Matrix &      Q,
     Matrix &      R)
 {
@@ -103,7 +103,7 @@ void SVDFactorization::computeQRdecomposition(
     Vector col = A.col(colIndex);
 
     // if system is quadratic; discard
-    if (_globalRows == colIndex) {
+    if (globalRows == colIndex) {
       PRECICE_WARN("The matrix that is about to be factorized is quadratic, i.e., the new column cannot be orthogonalized; discard.");
       return;
     }
@@ -289,16 +289,6 @@ int SVDFactorization::getWaste()
 int SVDFactorization::cols()
 {
   return _cols;
-}
-
-int SVDFactorization::rowsA()
-{
-  return _rowsA;
-}
-
-int SVDFactorization::rowsB()
-{
-  return _rowsB;
 }
 
 Rank SVDFactorization::rank()

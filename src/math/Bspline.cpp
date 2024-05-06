@@ -15,11 +15,7 @@ Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree
 {
 
   PRECICE_ASSERT(ts.size() >= 2, "Interpolation requires at least 2 samples");
-#if EIGEN_VERSION_AT_LEAST(3, 4, 0)
   PRECICE_ASSERT(std::is_sorted(ts.begin(), ts.end()), "Timestamps must be sorted");
-#else
-  PRECICE_ASSERT(std::is_sorted(ts.data(), ts.data() + ts.size()), "Timestamps must be sorted");
-#endif
 
   // organize data in columns. Each column represents one sample in time.
   PRECICE_ASSERT(xs.cols() == ts.size());
