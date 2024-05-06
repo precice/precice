@@ -291,16 +291,6 @@ int SVDFactorization::cols()
   return _cols;
 }
 
-int SVDFactorization::rowsA()
-{
-  return _rowsA;
-}
-
-int SVDFactorization::rowsB()
-{
-  return _rowsB;
-}
-
 Rank SVDFactorization::rank()
 {
   return _cols;
