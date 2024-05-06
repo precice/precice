@@ -122,7 +122,7 @@ precice::logging::Logger ConfigParser::_log("xml::XMLParser");
 ConfigParser::ConfigParser(std::string_view filePath, const ConfigurationContext &context, std::shared_ptr<precice::xml::XMLTag> pXmlTag)
     : m_pXmlTag(std::move(pXmlTag))
 {
-  readXmlFile(filePath);
+  readXmlFile(std::string(filePath));
 
   std::vector<std::shared_ptr<XMLTag>> DefTags{m_pXmlTag};
   CTagPtrVec                           SubTags;
@@ -139,7 +139,7 @@ ConfigParser::ConfigParser(std::string_view filePath, const ConfigurationContext
 
 ConfigParser::ConfigParser(std::string_view filePath)
 {
-  readXmlFile(filePath);
+  readXmlFile(std::string(filePath));
 }
 
 void ConfigParser::MessageProxy(int level, std::string_view mess)
@@ -157,7 +157,7 @@ void ConfigParser::MessageProxy(int level, std::string_view mess)
   }
 }
 
-int ConfigParser::readXmlFile(std::string_view filePath)
+int ConfigParser::readXmlFile(std::string const &filePath)
 {
   xmlSAXHandler SAXHandler;
 
@@ -171,7 +171,7 @@ int ConfigParser::readXmlFile(std::string_view filePath)
   SAXHandler.error          = OnErrorFunc;
   SAXHandler.fatalError     = OnFatalErrorFunc;
 
-  std::ifstream ifs{std::string(filePath).c_str()};
+  std::ifstream ifs{filePath};
   PRECICE_CHECK(ifs, "XML parser was unable to open configuration file \"{}\"", filePath);
 
   std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};

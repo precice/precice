@@ -318,13 +318,13 @@ std::ostream &printMD(std::ostream &out, const XMLTag &tag, int level, std::map<
         out << fmt::format("[* {}]({}) `{}`",
                            heading,
                            link,
-                           std::string(subtag->getOccurrenceString(subtag->getOccurrence())));
+                           subtag->getOccurrenceString(subtag->getOccurrence()));
       } else {
         auto &tags = groupedTags[ns];
         tags.emplace_back(fmt::format("[{}]({}) `{}`",
                                       subtag->getName(),
                                       link,
-                                      std::string(subtag->getOccurrenceString(subtag->getOccurrence()))));
+                                      subtag->getOccurrenceString(subtag->getOccurrence())));
       }
     }
     for (const auto &kv : groupedTags) {

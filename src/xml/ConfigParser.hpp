@@ -50,7 +50,7 @@ public:
   ConfigParser(std::string_view filePath);
 
   /// Reads the xml file
-  int readXmlFile(std::string_view filePath);
+  int readXmlFile(std::string const &filePath);
 
   /**
    * @brief Connects the actual tags of an xml layer with the predefined tags
