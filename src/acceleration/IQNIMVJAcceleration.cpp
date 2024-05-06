@@ -80,11 +80,6 @@ void IQNIMVJAcceleration::initialize(
   if (_imvjRestartType > 0)
     _imvjRestart = true;
 
-  // initialize parallel matrix-matrix operation module
-  _parMatrixOps = std::make_shared<impl::ParallelMatrixOperations>();
-  _parMatrixOps->initialize(not _imvjRestart);
-  _svdJ.initialize(_parMatrixOps, getLSSystemRows());
-
   int entries  = _residuals.size();
   int global_n = 0;
 
@@ -93,6 +88,11 @@ void IQNIMVJAcceleration::initialize(
   } else {
     global_n = _dimOffsets.back();
   }
+
+  // initialize parallel matrix-matrix operation module
+  _parMatrixOps = std::make_shared<impl::ParallelMatrixOperations>();
+  _parMatrixOps->initialize(not _imvjRestart);
+  _svdJ.initialize(_parMatrixOps, global_n, getLSSystemRows());
 
   if (not _imvjRestart) {
     // only need memory for Jacobain if not in restart mode
