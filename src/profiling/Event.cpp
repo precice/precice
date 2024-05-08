@@ -1,7 +1,10 @@
 #include "profiling/Event.hpp"
 #include "profiling/EventUtils.hpp"
+#include "profiling/config/ProfilingConfiguration.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
+
+extern bool precice::syncMode;
 
 namespace precice::profiling {
 
@@ -23,8 +26,6 @@ Event::~Event()
     stop();
   }
 }
-
-extern bool syncMode;
 
 void Event::start()
 {
