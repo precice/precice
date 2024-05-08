@@ -1,10 +1,7 @@
 #include "profiling/Event.hpp"
 #include "profiling/EventUtils.hpp"
-#include "profiling/config/ProfilingConfiguration.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
-
-extern bool precice::syncMode;
 
 namespace precice::profiling {
 
@@ -36,7 +33,7 @@ void Event::start()
     return;
   }
 
-  if (_synchronize && syncMode) {
+  if (_synchronize && ::precice::utils::IntraComm::willSynchronize()) {
     // We need to synchronize, so we record a sync event
     PRECICE_ASSERT(_sid != -1);
     registry.putCritical(StartEntry{_sid, Clock::now()});
