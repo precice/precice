@@ -58,7 +58,7 @@ public:
   {
     PRECICE_TRACE();
     if (transpose) {
-      PRECICE_DEBUG_IF(_weights.size() != M.cols(), "The number of columns of the matrix {} and weights size {} mismatched.", M.rows(), _weights.size());
+      PRECICE_DEBUG_IF((int) _weights.size() != M.cols(), "The number of columns of the matrix {} and weights size {} mismatched.", M.rows(), _weights.size());
 
       int validCols = std::min(static_cast<int>(M.cols()), (int) _weights.size());
       for (int i = 0; i < validCols; i++) {
@@ -67,7 +67,7 @@ public:
         }
       }
     } else {
-      PRECICE_DEBUG_IF(_weights.size() != M.rows(), "The number of rows of the matrix {} and weights size {} mismatched.", M.rows(), _weights.size());
+      PRECICE_DEBUG_IF((int) _weights.size() != M.rows(), "The number of rows of the matrix {} and weights size {} mismatched.", M.rows(), _weights.size());
 
       int validRows = std::min(static_cast<int>(M.rows()), (int) _weights.size());
       for (int i = 0; i < M.cols(); i++) {
@@ -87,7 +87,7 @@ public:
     PRECICE_TRACE();
     //PRECICE_ASSERT(_needsGlobalWeights);
     if (transpose) {
-      PRECICE_DEBUG_IF(_weights.size() != M.cols(), "The number of columns of the matrix {} and weights size {} mismatched.", M.cols(), _weights.size());
+      PRECICE_DEBUG_IF((int) _weights.size() != M.cols(), "The number of columns of the matrix {} and weights size {} mismatched.", M.cols(), _weights.size());
 
       int validCols = std::min(static_cast<int>(M.cols()), (int) _weights.size());
       for (int i = 0; i < validCols; i++) {
@@ -96,7 +96,7 @@ public:
         }
       }
     } else {
-      PRECICE_DEBUG_IF(_weights.size() != M.rows(), "The number of rows of the matrix {} and weights size {} mismatched.", M.rows(), _weights.size());
+      PRECICE_DEBUG_IF((int) _weights.size() != M.rows(), "The number of rows of the matrix {} and weights size {} mismatched.", M.rows(), _weights.size());
 
       int validRows = std::min(static_cast<int>(M.rows()), (int) _weights.size());
       for (int i = 0; i < M.cols(); i++) {
@@ -111,7 +111,7 @@ public:
   void apply(Eigen::MatrixXd &M)
   {
     PRECICE_TRACE();
-    PRECICE_DEBUG_IF(_weights.size() != M.rows(), "The number of rows of the matrix {} and weights size {} mismatched.", M.rows(), _weights.size());
+    PRECICE_DEBUG_IF((int) _weights.size() != M.rows(), "The number of rows of the matrix {} and weights size {} mismatched.", M.rows(), _weights.size());
 
     // scale matrix M
     int validRows = std::min(static_cast<int>(M.rows()), (int) _weights.size());
@@ -126,7 +126,7 @@ public:
   void apply(Eigen::VectorXd &v)
   {
     PRECICE_TRACE();
-    PRECICE_DEBUG_IF(_weights.size() != v.size(), "The vector size {} and weights size {} mismatched.", v.size(), _weights.size());
+    PRECICE_DEBUG_IF((int) _weights.size() != v.size(), "The vector size {} and weights size {} mismatched.", v.size(), _weights.size());
 
     // scale vector
     int validSize = std::min(static_cast<int>(v.size()), (int) _weights.size());
@@ -139,7 +139,7 @@ public:
   void revert(Eigen::MatrixXd &M)
   {
     PRECICE_TRACE();
-    PRECICE_DEBUG_IF(_weights.size() != M.rows(), "The number of rows of the matrix {} and weights size {} mismatched.", M.rows(), _weights.size());
+    PRECICE_DEBUG_IF((int) _weights.size() != M.rows(), "The number of rows of the matrix {} and weights size {} mismatched.", M.rows(), _weights.size());
 
     // scale matrix M
     int validRows = std::min(static_cast<int>(M.rows()), (int) _weights.size());
@@ -154,7 +154,7 @@ public:
   void revert(Eigen::VectorXd &v)
   {
     PRECICE_TRACE();
-    PRECICE_DEBUG_IF(_weights.size() != v.size(), "The vector size {} and weights size {} mismatched.", v.size(), _weights.size());
+    PRECICE_DEBUG_IF((int) _weights.size() != v.size(), "The vector size {} and weights size {} mismatched.", v.size(), _weights.size());
 
     // revert vector scaling
     int validSize = std::min(static_cast<int>(v.size()), (int) _weights.size());
