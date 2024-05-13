@@ -20,11 +20,11 @@ BOOST_AUTO_TEST_CASE(SerialImplicit)
   // new tw B = new start + mid + end
   std::vector<int> readMappings{
       // initialize is not checked (should be start + mid + end from B and start + end from A (tw0))
-      3, // iterating B + new data from A (tw1)
-      2, // next tw: end from B
-      3, // iterating B + final data from A (tw2)
-      2, // next tw: end from B
-      2, // iterating B
+      2, // iterating: mid + end from B
+      3, // next tw: new data from A (tw1) and mid + end from B
+      2, // iterating: mid + end from B
+      3, // next tw: final data from A (tw2) and mid + end from B
+      2, // iterating: mid + end from B
       0  // nothing from B (second)
   };
   // always maps mid + end per data

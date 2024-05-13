@@ -137,7 +137,7 @@
   </coupling-scheme:serial-explicit>
 
   <coupling-scheme:serial-explicit>
-    <participants first="M1" second="M1SM" />
+    <participants first="M1SM" second="M1" />
     <time-window-size value="1" />
     <max-time-windows value="2" />
     <exchange data="Activation1" mesh="Activation_M1SM_Mesh" from="M1" to="M1SM" />

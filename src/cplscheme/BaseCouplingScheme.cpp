@@ -895,4 +895,9 @@ ImplicitData BaseCouplingScheme::implicitDataToReceive() const
   return idata;
 }
 
+std::string BaseCouplingScheme::localParticipant() const
+{
+  return _localParticipant;
+}
+
 } // namespace precice::cplscheme
