@@ -3,6 +3,7 @@
 #include "utils/assertion.hpp"
 
 #include <Eigen/Core>
+#include <Eigen/Sparse>
 #include <algorithm>
 #include <cstdlib>
 #include <unsupported/Eigen/Splines>
@@ -28,27 +29,31 @@ Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree
   //The code for computing the knots and the control points is copied from Eigens bspline interpolation with minor modifications, https://gitlab.com/libeigen/eigen/-/blob/master/unsupported/Eigen/src/Splines/SplineFitting.h
 
   Eigen::KnotAveraging(ts, splineDegree, _knots);
-  Eigen::DenseIndex n = xs.cols();
-  Eigen::MatrixXd   A = Eigen::MatrixXd::Zero(n, n);
+  Eigen::DenseIndex                   n = xs.cols();
+  std::vector<Eigen::Triplet<double>> matrixEntries;
+  matrixEntries.reserve(n * splineDegree + 2);
 
   for (Eigen::DenseIndex i = 1; i < n - 1; ++i) {
-    //Attempt at hack... the spline dimension is not used here explicitly
-    const Eigen::DenseIndex span = Eigen::Spline<double, 1>::Span(ts[i], splineDegree, _knots);
+    const Eigen::DenseIndex span      = Eigen::Spline<double, 1>::Span(ts[i], splineDegree, _knots);
+    auto                    basisFunc = Eigen::Spline<double, 1>::BasisFunctions(ts[i], splineDegree, _knots);
 
-    // The segment call should somehow be told the spline order at compile time.
-    A.row(i).segment(span - splineDegree, splineDegree + 1) = Eigen::Spline<double, 1>::BasisFunctions(ts[i], splineDegree, _knots);
+    for (Eigen::DenseIndex j = 0; j < splineDegree + 1; ++j) {
+      matrixEntries.emplace_back(i, span - splineDegree + j, basisFunc(j));
+    }
   }
-  A(0, 0)         = 1.0;
-  A(n - 1, n - 1) = 1.0;
 
-  auto qr = A.householderQr();
+  matrixEntries.emplace_back(0, 0, 1.0);
+  matrixEntries.emplace_back(n - 1, n - 1, 1.0);
 
-  Eigen::MatrixXd controls = Eigen::MatrixXd::Zero(n, _ndofs);
+  Eigen::SparseMatrix<double> A(n, n);
+  A.setFromTriplets(matrixEntries.begin(), matrixEntries.end());
+  A.makeCompressed();
 
-  for (int i = 0; i < _ndofs; i++) {
-    controls.col(i) = qr.solve(xs.row(i).transpose());
-  }
-  _ctrls = std::move(controls);
+  Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> qr;
+  qr.analyzePattern(A);
+  qr.factorize(A);
+
+  _ctrls = qr.solve(xs.transpose());
 }
 
 Eigen::VectorXd Bspline::interpolateAt(double t) const
