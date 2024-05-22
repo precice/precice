@@ -34,7 +34,7 @@ public:
   XMLAttribute &operator=(const XMLAttribute<ATTRIBUTE_T> &other) = default;
 
   /// Sets a documentation string for the attribute.
-  XMLAttribute &setDocumentation(std::string documentation);
+  XMLAttribute &setDocumentation(std::string_view documentation);
 
   const std::string &getUserDocumentation() const
   {
@@ -127,9 +127,9 @@ private:
 };
 
 template <typename ATTRIBUTE_T>
-XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDocumentation(std::string documentation)
+XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDocumentation(std::string_view documentation)
 {
-  _doc = std::move(documentation);
+  _doc = documentation;
   return *this;
 }
 

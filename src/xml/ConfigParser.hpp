@@ -17,7 +17,7 @@ class XMLTag; // forward declaration to resolve circular import
 struct ConfigurationContext;
 
 /// Decodes escape sequences of a given xml
-std::string decodeXML(std::string xml);
+std::string decodeXML(std::string_view xml);
 
 class ConfigParser {
 public:
@@ -44,10 +44,10 @@ private:
 
 public:
   /// Parser ctor for Callback init
-  ConfigParser(const std::string &filePath, const ConfigurationContext &context, std::shared_ptr<XMLTag> pXmlTag);
+  ConfigParser(std::string_view filePath, const ConfigurationContext &context, std::shared_ptr<XMLTag> pXmlTag);
 
   /// Parser ctor without Callbacks
-  ConfigParser(const std::string &filePath);
+  ConfigParser(std::string_view filePath);
 
   /// Reads the xml file
   int readXmlFile(std::string const &filePath);
@@ -61,8 +61,8 @@ public:
 
   /// Callback for Start-Tag
   void OnStartElement(
-      std::string         localname,
-      std::string         prefix,
+      std::string_view    localname,
+      std::string_view    prefix,
       CTag::AttributePair attributes);
 
   /// Callback for End-Tag
@@ -72,7 +72,7 @@ public:
   void OnTextSection(const std::string &ch);
 
   /// Proxy for error and warning messages from libxml2
-  static void MessageProxy(int level, const std::string &mess);
+  static void MessageProxy(int level, std::string_view mess);
 };
 } // namespace xml
 } // namespace precice

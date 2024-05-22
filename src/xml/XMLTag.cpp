@@ -26,7 +26,7 @@ XMLTag::XMLTag(
   }
 }
 
-XMLTag &XMLTag::setDocumentation(const std::string &documentation)
+XMLTag &XMLTag::setDocumentation(std::string_view documentation)
 {
   _doc = documentation;
   return *this;
@@ -403,21 +403,21 @@ void configure(
   NoPListener nopListener;
   XMLTag      root(nopListener, "", XMLTag::OCCUR_ONCE);
 
-  precice::xml::ConfigParser p(std::string(configurationFilename), context, std::make_shared<XMLTag>(tag));
+  precice::xml::ConfigParser p(configurationFilename, context, std::make_shared<XMLTag>(tag));
 
   root.addSubtag(tag);
 }
 
-std::string XMLTag::getOccurrenceString(XMLTag::Occurrence occurrence)
+std::string_view XMLTag::getOccurrenceString(XMLTag::Occurrence occurrence)
 {
   if (occurrence == XMLTag::OCCUR_ARBITRARY) {
-    return std::string("0..*");
+    return "0..*";
   } else if (occurrence == XMLTag::OCCUR_NOT_OR_ONCE) {
-    return std::string("0..1");
+    return "0..1";
   } else if (occurrence == XMLTag::OCCUR_ONCE) {
-    return std::string("1");
+    return "1";
   } else if (occurrence == XMLTag::OCCUR_ONCE_OR_MORE) {
-    return std::string("1..*");
+    return "1..*";
   }
   return "";
 }
