@@ -517,11 +517,17 @@ target_link_libraries(precice PRIVATE preciceCore)
 include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 
 # File Configuration
-include(GenerateVersionInformation)
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectGitRevision.cmake)
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/impl/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/precice/impl/versions.hpp" @ONLY)
 configure_file("${PROJECT_SOURCE_DIR}/src/testing/SourceLocation.hpp.in" "${PROJECT_BINARY_DIR}/src/testing/SourceLocation.hpp" @ONLY)
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/Version.h.in" "${PROJECT_BINARY_DIR}/src/precice/Version.h" @ONLY)
+
+# Configure version file generation
+include(GenerateVersionInformation)
+# Configure CMake variables only. The result contains a placeholder for the git revision
+configure_file("${PROJECT_SOURCE_DIR}/src/precice/impl/versions.cpp.in" "${PROJECT_BINARY_DIR}/src/precice/impl/versions.cpp.in" @ONLY)
+# Dynamically replace the git revision information.
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectGitRevision.cmake)
+
 
 # Setup export header
 include(GenerateExportHeader)
