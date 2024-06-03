@@ -43,12 +43,13 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
 
       for (std::size_t i = 0; i < expectedData.size(); ++i) {
         std::vector<double> solverTwoCoord(dim);
+        double              value;
         for (int d = 0; d < dim; ++d) {
           solverTwoCoord[d] = tmpPositions[i * d + d];
         }
-        auto data = couplingInterface.readData(otherMeshName, dataName, solverTwoCoord, dt);
+        couplingInterface.readData(otherMeshName, dataName, solverTwoCoord, dt, {&value, 1});
         // Expected data according to the writeData
-        BOOST_TEST(expectedData[i] == data);
+        BOOST_TEST(expectedData[i] == value);
       }
     }
 
