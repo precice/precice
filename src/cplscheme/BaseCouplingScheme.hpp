@@ -491,7 +491,7 @@ private:
 
     std::string logHeader() const
     {
-      return "Res" + measure->getAbbreviation() + "(" + couplingData->getDataName() + ")";
+      return fmt::format("Res{}({}:{})", measure->getAbbreviation(), couplingData->getMeshName(), couplingData->getDataName());
     }
   };
 
