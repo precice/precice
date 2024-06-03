@@ -221,6 +221,7 @@ target_sources(testprecice
     tests/serial/explicit/TestExplicitSockets.cpp
     tests/serial/explicit/helpers.cpp
     tests/serial/explicit/helpers.hpp
+    tests/serial/indirect-mesh-access/ExplicitRead.cpp
     tests/serial/initialize-data/Explicit.cpp
     tests/serial/initialize-data/Implicit.cpp
     tests/serial/initialize-data/ImplicitBoth.cpp
