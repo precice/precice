@@ -220,6 +220,16 @@ void Participant::readData(
   _impl->readData(toSV(meshName), toSV(dataName), ids, relativeReadTime, values);
 }
 
+void Participant::readData(
+    ::precice::string_view        meshName,
+    ::precice::string_view        dataName,
+    ::precice::span<const double> coordinates,
+    double                        relativeReadTime,
+    ::precice::span<double>       values) const
+{
+  _impl->readData(toSV(meshName), toSV(dataName), coordinates, relativeReadTime, values);
+}
+
 void Participant::setMeshAccessRegion(::precice::string_view        meshName,
                                       ::precice::span<const double> boundingBox) const
 {

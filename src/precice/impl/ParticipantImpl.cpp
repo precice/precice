@@ -1174,6 +1174,18 @@ void ParticipantImpl::readData(
   context.readValues(vertices, readTime, values);
 }
 
+//////////////////////////////////////////////
+void ParticipantImpl::readData(
+    std::string_view              meshName,
+    std::string_view              dataName,
+    ::precice::span<const double> coordinates,
+    double                        relativeReadTime,
+    ::precice::span<double>       values) const
+{
+  // Implement stuff here
+}
+////////////////////////////////////////////////////
+
 void ParticipantImpl::writeGradientData(
     std::string_view                meshName,
     std::string_view                dataName,

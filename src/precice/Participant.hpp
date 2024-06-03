@@ -869,6 +869,47 @@ public:
       double                          relativeReadTime,
       ::precice::span<double>         values) const;
 
+  /**
+   * @brief Reads data values from a mesh just-in-time. Values correspond to a given point in time relative to the beginning of the current timestep.
+   *
+   * This function reads values of temporary vertices from data of a mesh.
+   * As opposed to the readData function using VertexIDs, this function allows to read data via coordinates,
+   * which don't have to be specified during the initialization. This is particularly useful for meshes, which
+   * vary over time. Note that using this function comes at a performance cost, since the specified mapping
+   * needs to be computed with every call of this function, whereas the other variant can efficiently precompute the mapping.
+   *
+   * Values are read into a block of continuous memory defined by values in the order specified by vertices.
+   *
+   * The 1D/Scalar-format of values is (d0, d1, ..., dn)
+   * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
+   * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
+   *
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the size of the current time step. Then relativeReadTime = dt corresponds to the data at
+   * the end of the time step.
+   *
+   * @param[in] meshName the name of mesh that hold the data, typically a remote mesh from another participant.
+   * @param[in] dataName the name of the data to read from.
+   * @param[in] coordinates a span to the coordinates of the vertices
+   *        The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
+   *        The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
+   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
+   * @param[out] values the destination memory to read the data from.
+   *
+   * @pre the coordinates are within the bounding box previously defined via \ref setMeshAccessRegion()
+   *
+   * @post values contain the read data as specified in the above format.
+   *
+   * @see Participant::setMeshAccessRegion()
+   */
+  void readData(
+      ::precice::string_view        meshName,
+      ::precice::string_view        dataName,
+      ::precice::span<const double> coordinates,
+      double                        relativeReadTime,
+      ::precice::span<double>       values) const;
+
   ///@}
 
   /** @name Direct Access

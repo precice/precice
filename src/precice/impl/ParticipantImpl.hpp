@@ -226,6 +226,14 @@ public:
       double                          relativeReadTime,
       ::precice::span<double>         values) const;
 
+  /// @copydoc Participant::readData
+  void readData(
+      std::string_view              meshName,
+      std::string_view              dataName,
+      ::precice::span<const double> coordinates,
+      double                        relativeReadTime,
+      ::precice::span<double>       values) const;
+
   /// @copydoc Participant::writeData
   void writeData(
       std::string_view                meshName,
