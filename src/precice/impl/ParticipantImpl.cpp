@@ -1182,7 +1182,29 @@ void ParticipantImpl::readData(
     double                        relativeReadTime,
     ::precice::span<double>       values) const
 {
-  // Implement stuff here
+  PRECICE_TRACE(meshName, dataName, coordinates.size(), relativeReadTime);
+  // TODO: Make these checks conditional
+  PRECICE_CHECK(_state != State::Constructed, "readData(...) cannot be called before initialize().");
+  PRECICE_CHECK(_state != State::Finalized, "readData(...) cannot be called after finalize().");
+  PRECICE_CHECK(math::smallerEquals(relativeReadTime, _couplingScheme->getNextTimeStepMaxSize()), "readData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime >= 0, "readData(...) cannot sample data before the current time.");
+  PRECICE_CHECK(isCouplingOngoing() || math::equals(relativeReadTime, 0.0), "Calling readData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only data for relativeReadTime = 0 is available. Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.", relativeReadTime);
+
+  PRECICE_REQUIRE_DATA_READ(meshName, dataName);
+  PRECICE_VALIDATE_DATA(coordinates.begin(), coordinates.size());
+
+  // Inconsistent sizes will be handled below
+  if (coordinates.empty() && values.empty()) {
+    return;
+  }
+
+  ReadDataContext &context          = _accessor->readDataContext(meshName, dataName);
+  const auto       dataDims         = context.getDataDimensions();
+  const auto       dim              = context.getSpatialDimensions();
+  const auto       expectedDataSize = (coordinates.size() / dim) * dataDims;
+  // TODO: Add check that this vertex is within the access region?
+  double readTime = _couplingScheme->getTime() + relativeReadTime;
+  context.mapAndReadValues(coordinates, readTime, values);
 }
 ////////////////////////////////////////////////////
 
