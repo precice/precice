@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
         std::vector<double> solverTwoCoord(dim);
         double              value;
         for (int d = 0; d < dim; ++d) {
-          solverTwoCoord[d] = tmpPositions[i * d + d];
+          solverTwoCoord[d] = tmpPositions[i * dim + d];
         }
         couplingInterface.readData(otherMeshName, dataName, solverTwoCoord, dt, {&value, 1});
         // Expected data according to the writeData

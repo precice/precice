@@ -901,6 +901,8 @@ public:
    *
    * @post values contain the read data as specified in the above format.
    *
+   * @note Note that the evaluated mapping computes the values corresponding to the initial configuration of the other provided mesh.
+   *
    * @see Participant::setMeshAccessRegion()
    */
   void readData(
