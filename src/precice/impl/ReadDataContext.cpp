@@ -38,6 +38,30 @@ void ReadDataContext::readValues(::precice::span<const VertexID> vertices, doubl
   }
 }
 
+void ReadDataContext::mapAndReadValues(::precice::span<const double> coordinates, double readTime, ::precice::span<double> values) const
+{
+  // TODO: First, check if this sample was already interpolated by the waveform and store it in the container
+  // Sample waveform relaxation
+  const Eigen::VectorXd sample{_providedData->sampleAtTime(readTime)};
+
+  // TODO: implement something which returns a mapped sample here
+  // Here is an example of the NN mapping
+  auto  searchSpace = _mesh;
+  auto &index       = searchSpace->index();
+  auto  dim         = getSpatialDimensions();
+
+  // Set up of output arrays
+  Eigen::Map<const Eigen::MatrixXd> localData(sample.data(), getDataDimensions(), getMeshVertexCount());
+  Eigen::Map<Eigen::MatrixXd>       outputData(values.data(), getDataDimensions(), values.size());
+
+  const size_t verticesSize = coordinates.size() / dim;
+  for (size_t i = 0; i < verticesSize; ++i) {
+    Eigen::Map<const Eigen::VectorXd> localCoords(coordinates.data() + i * dim, dim);
+    const auto &                      matchedVertex = index.getClosestVertex(local2);
+    outputData.col(i)                               = localData.col(matchedVertex.index);
+  }
+}
+
 int ReadDataContext::getWaveformDegree() const
 {
   return _providedData->getWaveformDegree();
