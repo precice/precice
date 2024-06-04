@@ -158,9 +158,10 @@ protected:
   /// Returns true if the given vertexID is valid
   bool isValidVertexID(const VertexID id) const;
 
+  mesh::PtrMesh _mesh;
+
 private:
   /// Unique mesh associated with _providedData.
-  mesh::PtrMesh _mesh;
 
   static logging::Logger _log;
 
