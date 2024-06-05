@@ -2,6 +2,7 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <cctype>
+#include <fmt/format.h>
 #include <map>
 #include <memory>
 #include <regex>
@@ -314,10 +315,16 @@ std::ostream &printMD(std::ostream &out, const XMLTag &tag, int level, std::map<
 
       const auto ns = subtag->getNamespace();
       if (ns.empty()) {
-        out << "* [" << heading << "](" << link << ") `" << subtag->getOccurrenceString(subtag->getOccurrence()) << "`\n";
+        out << fmt::format("[* {}]({}) `{}`",
+                           heading,
+                           link,
+                           subtag->getOccurrenceString(subtag->getOccurrence()));
       } else {
         auto &tags = groupedTags[ns];
-        tags.emplace_back("[" + subtag->getName() + "](" + link + ") `" + subtag->getOccurrenceString(subtag->getOccurrence()) + "`");
+        tags.emplace_back(fmt::format("[{}]({}) `{}`",
+                                      subtag->getName(),
+                                      link,
+                                      subtag->getOccurrenceString(subtag->getOccurrence())));
       }
     }
     for (const auto &kv : groupedTags) {

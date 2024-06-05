@@ -135,9 +135,14 @@ int CouplingData::getDataID()
   return _data->getID();
 }
 
-std::string CouplingData::getDataName()
+std::string CouplingData::getDataName() const
 {
   return _data->getName();
+}
+
+std::string CouplingData::getMeshName() const
+{
+  return _mesh->getName();
 }
 
 std::vector<int> CouplingData::getVertexOffsets()

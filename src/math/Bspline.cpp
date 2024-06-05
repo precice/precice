@@ -3,6 +3,7 @@
 #include "utils/assertion.hpp"
 
 #include <Eigen/Core>
+#include <Eigen/Sparse>
 #include <algorithm>
 #include <cstdlib>
 #include <unsupported/Eigen/Splines>
@@ -25,30 +26,39 @@ Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree
   auto relativeTime = [tsMin = _tsMin, tsMax = _tsMax](double t) -> double { return (t - tsMin) / (tsMax - tsMin); };
   ts                = ts.unaryExpr(relativeTime);
 
-  //The code for computing the knots and the control points is copied from Eigens bspline interpolation with minor modifications, https://gitlab.com/libeigen/eigen/-/blob/master/unsupported/Eigen/src/Splines/SplineFitting.h
+  // The code for computing the knots and the control points is copied from Eigens bspline interpolation with some modifications
+  // https://gitlab.com/libeigen/eigen/-/blob/master/unsupported/Eigen/src/Splines/SplineFitting.h
 
+  // 1. Compute the knot vector
   Eigen::KnotAveraging(ts, splineDegree, _knots);
-  Eigen::DenseIndex n = xs.cols();
-  Eigen::MatrixXd   A = Eigen::MatrixXd::Zero(n, n);
 
+  // 2. Compute the control points
+  // We use a nxn sparse matrix with 2 + (n-2) * (d+1) entries and thus a fill-factor < 0.5.
+  Eigen::DenseIndex                   n = xs.cols();
+  std::vector<Eigen::Triplet<double>> matrixEntries;
+  matrixEntries.reserve(2 + (n - 2) * (splineDegree + 1));
+
+  matrixEntries.emplace_back(0, 0, 1.0);
   for (Eigen::DenseIndex i = 1; i < n - 1; ++i) {
-    //Attempt at hack... the spline dimension is not used here explicitly
-    const Eigen::DenseIndex span = Eigen::Spline<double, 1>::Span(ts[i], splineDegree, _knots);
+    const Eigen::DenseIndex span      = Eigen::Spline<double, 1>::Span(ts[i], splineDegree, _knots);
+    auto                    basisFunc = Eigen::Spline<double, 1>::BasisFunctions(ts[i], splineDegree, _knots);
 
-    // The segment call should somehow be told the spline order at compile time.
-    A.row(i).segment(span - splineDegree, splineDegree + 1) = Eigen::Spline<double, 1>::BasisFunctions(ts[i], splineDegree, _knots);
+    for (Eigen::DenseIndex j = 0; j < splineDegree + 1; ++j) {
+      matrixEntries.emplace_back(i, span - splineDegree + j, basisFunc(j));
+    }
   }
-  A(0, 0)         = 1.0;
-  A(n - 1, n - 1) = 1.0;
+  matrixEntries.emplace_back(n - 1, n - 1, 1.0);
+  PRECICE_ASSERT(matrixEntries.capacity() == matrixEntries.size(), matrixEntries.capacity(), matrixEntries.size(), n, splineDegree);
 
-  auto qr = A.householderQr();
+  Eigen::SparseMatrix<double> A(n, n);
+  A.setFromTriplets(matrixEntries.begin(), matrixEntries.end());
+  A.makeCompressed();
 
-  Eigen::MatrixXd controls = Eigen::MatrixXd::Zero(n, _ndofs);
+  Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> qr;
+  qr.analyzePattern(A);
+  qr.factorize(A);
 
-  for (int i = 0; i < _ndofs; i++) {
-    controls.col(i) = qr.solve(xs.row(i).transpose());
-  }
-  _ctrls = std::move(controls);
+  _ctrls = qr.solve(xs.transpose());
 }
 
 Eigen::VectorXd Bspline::interpolateAt(double t) const
