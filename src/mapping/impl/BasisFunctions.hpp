@@ -24,7 +24,7 @@
 
 #endif
 
-constexpr double NUMERICAL_ZERO_DIFFERENCE = 1.0e-14;
+PRECICE_MEMORY_SPACE constexpr double NUMERICAL_ZERO_DIFFERENCE = 1.0e-14;
 
 #if !defined(__NVCC__) || !defined(__HIPCC__)
 #include "logging/Logger.hpp"

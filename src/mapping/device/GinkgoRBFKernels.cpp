@@ -40,8 +40,8 @@ void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
   auto k_supportPoints = map_data(supportPoints.get());
   auto k_targetPoints  = map_data(targetPoints.get());
 
-  if (dynamic_cast<const gko::ReferenceExecutor *>(exec.get()) ||
-      dynamic_cast<const gko::OmpExecutor *>(exec.get())) {
+  if (std::dynamic_pointer_cast<const gko::ReferenceExecutor>(exec) ||
+      std::dynamic_pointer_cast<const gko::OmpExecutor>(exec)) {
     // Row-major access
     Kokkos::parallel_for(
         "create_rbf_system_matrix_row_major",
@@ -113,8 +113,8 @@ void fill_polynomial_matrix(std::shared_ptr<const gko::Executor> exec,
   auto k_mtx = map_data(mtx.get());
   auto k_x   = map_data(x.get());
 
-  if (dynamic_cast<const gko::ReferenceExecutor *>(exec.get()) ||
-      dynamic_cast<const gko::OmpExecutor *>(exec.get())) {
+  if (std::dynamic_pointer_cast<const gko::ReferenceExecutor>(exec) ||
+      std::dynamic_pointer_cast<const gko::OmpExecutor>(exec)) {
     Kokkos::parallel_for(
         "fill_polynomial_matrix_row_major",
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>{{0, 0}, {mtx->get_size()[0], mtx->get_size()[1]}},
