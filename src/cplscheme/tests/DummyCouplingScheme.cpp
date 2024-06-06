@@ -34,6 +34,22 @@ double DummyCouplingScheme::getTimeWindowStart() const
   return _timeWindows;
 }
 
+/**
+ * @brief Always assumes we reached the end of a time window
+ */
+bool DummyCouplingScheme::addComputedTime(double timeToAdd)
+{
+  PRECICE_ASSERT(_isInitialized);
+  PRECICE_ASSERT(_isOngoing);
+
+  // Explicit schemes already advance time here, needed by compositional
+  if (!isImplicitCouplingScheme()) {
+    _timeWindows++;
+  }
+
+  return true;
+}
+
 CouplingScheme::ChangedMeshes DummyCouplingScheme::firstSynchronization(const CouplingScheme::ChangedMeshes &changes)
 {
   PRECICE_ASSERT(_isInitialized);
@@ -58,7 +74,20 @@ CouplingScheme::ChangedMeshes DummyCouplingScheme::secondSynchronization()
 void DummyCouplingScheme::secondExchange()
 {
   PRECICE_ASSERT(_isInitialized);
+
+  // explicit schemes advance in addComputedTime
+  if (!isImplicitCouplingScheme()) {
+    // -1 as we already went a step ahead in addComputeTime
+    if (_timeWindows - 1 == _maxTimeWindows) {
+      _isOngoing = false;
+    }
+    PRECICE_DEBUG("advanced to {} (ongoing {})", _timeWindows, _isOngoing);
+    return;
+  }
+
   PRECICE_ASSERT(_isOngoing);
+  PRECICE_ASSERT(_iterations <= _numberIterations);
+
   // Imagine we compute the convergence measure here
   _hasConverged = _iterations == _numberIterations;
 
@@ -71,11 +100,7 @@ void DummyCouplingScheme::secondExchange()
   } else {
     _iterations++;
   }
-  if (isImplicitCouplingScheme()) {
-    PRECICE_DEBUG("advanced to {}-{}/{} (ongoing {})", _timeWindows, _iterations, _numberIterations, _isOngoing);
-  } else {
-    PRECICE_DEBUG("advanced to {} (ongoing {})", _timeWindows, _isOngoing);
-  }
+  PRECICE_DEBUG("advanced to {}-{}/{} (ongoing {})", _timeWindows, _iterations, _numberIterations, _isOngoing);
 }
 
 void DummyCouplingScheme::finalize()

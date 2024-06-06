@@ -109,6 +109,14 @@ target_sources(testprecice
     tests/serial/circular/helper.hpp
     tests/serial/compositional/OneActivatedMuscle.cpp
     tests/serial/compositional/TwoActivatedMuscles.cpp
+    tests/serial/compositional/data/implicit-first/AllParallel.cpp
+    tests/serial/compositional/data/implicit-first/Parallel.cpp
+    tests/serial/compositional/data/implicit-first/SerialFirst.cpp
+    tests/serial/compositional/data/implicit-first/SerialSecond.cpp
+    tests/serial/compositional/data/implicit-second/AllParallel.cpp
+    tests/serial/compositional/data/implicit-second/Parallel.cpp
+    tests/serial/compositional/data/implicit-second/SerialFirst.cpp
+    tests/serial/compositional/data/implicit-second/SerialSecond.cpp
     tests/serial/convergence-measures/helpers.cpp
     tests/serial/convergence-measures/helpers.hpp
     tests/serial/convergence-measures/testConvergenceMeasures1.cpp

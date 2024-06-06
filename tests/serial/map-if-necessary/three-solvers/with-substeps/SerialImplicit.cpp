@@ -18,10 +18,10 @@ BOOST_AUTO_TEST_CASE(SerialImplicit)
 
   std::vector<int> readMappings{
       // initialize not checked (tw0 of A)
-      3, // iterating: end from A (tw1) and mid + end from B
-      2, // mid + end from B
-      3, // iterating: final end from A (tw2) and mid + end from B
-      2, // mid + end from B
+      2, // iterating: mid + end from B
+      3, // end from A (tw1) and mid + end from B
+      2, // iterating: mid + end from B
+      3, // final end from A (tw2) and mid + end from B
       2, // iterating: mid + end from B
       0  // nothing from B (second)
   };

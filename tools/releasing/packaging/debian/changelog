@@ -93,3 +93,9 @@ libprecice3 (3.1.1) experimental; urgency=low
   * New upstream release 3.1.1
 
  -- the preCICE developers <info@precice.org>  Fri, 12 Apr 2024 11:40:47 +0200
+
+libprecice3 (3.1.2) experimental; urgency=low
+
+  * New upstream release 3.1.2
+
+ -- the preCICE developers <info@precice.org>  Fri, 15 May 2024 16:33:00 +0200
