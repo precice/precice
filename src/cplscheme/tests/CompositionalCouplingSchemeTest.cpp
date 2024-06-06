@@ -242,6 +242,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
   composition.initialize(0.0, 1);
   int advances = 0;
   while (composition.isCouplingOngoing()) {
+    composition.addComputedTime(1.0);
     composition.firstSynchronization({});
     composition.firstExchange();
     composition.secondSynchronization();
@@ -273,6 +274,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
   composition.initialize(0.0, 1);
   int advances = 0;
   while (composition.isCouplingOngoing()) {
+    composition.addComputedTime(1.0);
     composition.firstSynchronization({});
     composition.firstExchange();
     composition.secondSynchronization();
@@ -303,6 +305,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
   BOOST_TEST_MESSAGE("Init Expl " << scheme1->getTimeWindows());
   BOOST_TEST_MESSAGE("Init Impl " << scheme2->getTimeWindows());
   while (composition.isCouplingOngoing()) {
+    composition.addComputedTime(1.0);
     composition.firstSynchronization({});
     composition.firstExchange();
     composition.secondSynchronization();
@@ -343,6 +346,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
   composition.initialize(0.0, 1);
   int advances = 0;
   while (composition.isCouplingOngoing()) {
+    composition.addComputedTime(1.0);
     composition.firstSynchronization({});
     composition.firstExchange();
     composition.secondSynchronization();
@@ -379,6 +383,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
   composition.initialize(0.0, 1);
   int advances = 0;
   while (composition.isCouplingOngoing()) {
+    composition.addComputedTime(1.0);
     composition.firstSynchronization({});
     composition.firstExchange();
     composition.secondSynchronization();
@@ -413,6 +418,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3Explicit1)
   composition.initialize(0.0, 1);
   int advances = 0;
   while (composition.isCouplingOngoing()) {
+    composition.addComputedTime(1.0);
     composition.firstSynchronization({});
     composition.firstExchange();
     composition.secondSynchronization();

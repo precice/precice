@@ -107,6 +107,9 @@ public:
   /// Returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const final override;
 
+  /// @copydoc cplscheme::CouplingScheme::localParticipant()
+  std::string localParticipant() const override final;
+
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
    *
@@ -221,6 +224,9 @@ private:
   /// The optional implicit scheme to be handled last
   PtrCouplingScheme _implicitScheme;
 
+  /// Are explicit schemes on hold?
+  bool _explicitOnHold = false;
+
   /** All schemes to run next
    *
    * This is the core of the CompositionalCouplingScheme
@@ -240,6 +246,9 @@ private:
 
   /// Actions also work before initialize is called
   std::vector<CouplingScheme *> activeOrAllSchemes() const;
+
+  /// check if time windows are compatible
+  void checkCompatibleTimeWindowSizes(const CouplingScheme &impl, const CouplingScheme &expl) const;
 };
 
 } // namespace cplscheme

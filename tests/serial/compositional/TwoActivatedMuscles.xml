@@ -132,7 +132,7 @@
   <m2n:sockets acceptor="M2SM" connector="M1" />
 
   <coupling-scheme:serial-explicit>
-    <participants first="M2SM" second="M1" />
+    <participants first="M1" second="M2SM" />
     <time-window-size value="1" />
     <max-time-windows value="2" />
     <exchange data="stretch2" mesh="Stretch_M2SM_Mesh" from="M2SM" to="M1" />

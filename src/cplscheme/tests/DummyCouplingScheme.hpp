@@ -56,14 +56,7 @@ public:
     return false;
   }
 
-  /**
-   * @brief Not implemented.
-   */
-  bool addComputedTime(double timeToAdd) override final
-  {
-    PRECICE_ASSERT(false);
-    return true;
-  }
+  bool addComputedTime(double timeToAdd) override final;
 
   /**
    * @brief
@@ -90,6 +83,12 @@ public:
   {
     PRECICE_ASSERT(false);
     return std::vector<std::string>();
+  }
+
+  std::string localParticipant() const override final
+  {
+    PRECICE_ASSERT(false);
+    return "unknown";
   }
 
   /**
@@ -125,13 +124,9 @@ public:
     return _timeWindows;
   }
 
-  /**
-   * @brief Not implemented.
-   */
   bool hasTimeWindowSize() const override final
   {
-    PRECICE_ASSERT(false);
-    return false;
+    return true;
   }
 
   /**
@@ -139,8 +134,7 @@ public:
    */
   double getTimeWindowSize() const override final
   {
-    PRECICE_ASSERT(false);
-    return 0;
+    return 1.0;
   }
 
   /**
