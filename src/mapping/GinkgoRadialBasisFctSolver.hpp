@@ -402,12 +402,12 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     if ("cuda-executor" == ginkgoParameter.executor) {
 #ifdef PRECICE_WITH_CUDA
       // _rbfSystemMatrix will be overridden into Q
-      computeQRDecompositionCuda(ginkgoParameter.deviceId, _deviceExecutor, _rbfSystemMatrix, _decompMatrixR);
+      computeQRDecompositionCuda(_deviceExecutor, _rbfSystemMatrix.get(), _decompMatrixR.get());
 #endif
     } else if ("hip-executor" == ginkgoParameter.executor) {
 #ifdef PRECICE_WITH_HIP
       // _rbfSystemMatrix will be overridden into Q
-      computeQRDecompositionHip(ginkgoParameter.deviceId, _deviceExecutor, _rbfSystemMatrix.get(), _decompMatrixR.get());
+      computeQRDecompositionHip(_deviceExecutor, _rbfSystemMatrix.get(), _decompMatrixR.get());
 #endif
     } else {
       PRECICE_UNREACHABLE("Not implemented");
