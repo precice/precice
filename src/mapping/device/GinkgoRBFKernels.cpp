@@ -76,7 +76,7 @@ void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
           // Compute Euclidean distance using column-major indexing
           for (size_t k = 0; k < activeAxis.size(); ++k) {
             if (activeAxis[k]) {
-              double diff = k_supportPoints(i, k) - k_targetPoints(j, k);
+              double diff = k_supportPoints(k, j) - k_targetPoints(k, i);
               dist += diff * diff;
             }
           }
