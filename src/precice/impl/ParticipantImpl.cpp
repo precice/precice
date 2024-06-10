@@ -1092,7 +1092,7 @@ void ParticipantImpl::readData(
 }
 
 //////////////////////////////////////////////
-void ParticipantImpl::readData(
+void ParticipantImpl::mapAndreadData(
     std::string_view              meshName,
     std::string_view              dataName,
     ::precice::span<const double> coordinates,

@@ -884,7 +884,7 @@ public:
    *
    * @see Participant::setMeshAccessRegion()
    */
-  void readData(
+  void mapAndreadData(
       ::precice::string_view        meshName,
       ::precice::string_view        dataName,
       ::precice::span<const double> coordinates,
