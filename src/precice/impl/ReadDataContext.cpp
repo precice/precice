@@ -57,7 +57,7 @@ void ReadDataContext::mapAndReadValues(::precice::span<const double> coordinates
   const size_t verticesSize = coordinates.size() / dim;
   for (size_t i = 0; i < verticesSize; ++i) {
     Eigen::Map<const Eigen::VectorXd> localCoords(coordinates.data() + i * dim, dim);
-    const auto &                      matchedVertex = index.getClosestVertex(local2);
+    const auto &                      matchedVertex = index.getClosestVertex(localCoords);
     outputData.col(i)                               = localData.col(matchedVertex.index);
   }
 }

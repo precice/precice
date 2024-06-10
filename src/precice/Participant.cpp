@@ -220,14 +220,14 @@ void Participant::readData(
   _impl->readData(toSV(meshName), toSV(dataName), ids, relativeReadTime, values);
 }
 
-void Participant::readData(
+void Participant::mapAndreadData(
     ::precice::string_view        meshName,
     ::precice::string_view        dataName,
     ::precice::span<const double> coordinates,
     double                        relativeReadTime,
     ::precice::span<double>       values) const
 {
-  _impl->readData(toSV(meshName), toSV(dataName), coordinates, relativeReadTime, values);
+  _impl->mapAndreadData(toSV(meshName), toSV(dataName), coordinates, relativeReadTime, values);
 }
 
 void Participant::setMeshAccessRegion(::precice::string_view        meshName,
