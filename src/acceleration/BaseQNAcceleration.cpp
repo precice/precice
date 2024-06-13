@@ -95,15 +95,15 @@ void BaseQNAcceleration::initialize(
                   "Quasi-Newton acceleration does not yet support using data from all substeps. Please set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
   }
 
-  size_t              entries     = 0;
-  size_t              cplDataSize = 0;
+  size_t              primaryDataSize = 0;
+  size_t              dataSize        = 0;
   std::vector<size_t> subVectorSizes; // needed for preconditioner
 
   for (auto &elem : _primaryDataIDs) {
-    entries += cplData.at(elem)->getSize();
+    primaryDataSize += cplData.at(elem)->getSize();
     subVectorSizes.push_back(cplData.at(elem)->getSize());
   }
-  cplDataSize += entries;
+  dataSize += primaryDataSize;
 
   // get all the data IDs as a vector
   _dataIDs = _primaryDataIDs;
@@ -111,7 +111,7 @@ void BaseQNAcceleration::initialize(
   for (const DataMap::value_type &pair : cplData) {
     if (not utils::contained(pair.first, _primaryDataIDs)) {
       _dataIDs.push_back(pair.first); // add secondary data IDs to the list
-      cplDataSize += pair.second->getSize();
+      dataSize += pair.second->getSize();
     }
   }
 
@@ -121,15 +121,15 @@ void BaseQNAcceleration::initialize(
 
   PRECICE_ASSERT(_oldPrimaryXTilde.size() == 0);
   PRECICE_ASSERT(_oldPrimaryResiduals.size() == 0);
-  _oldPrimaryXTilde    = Eigen::VectorXd::Zero(entries);
-  _oldPrimaryResiduals = Eigen::VectorXd::Zero(entries);
-  _primaryResiduals    = Eigen::VectorXd::Zero(entries);
-  _primaryValues       = Eigen::VectorXd::Zero(entries);
-  _oldPrimaryValues    = Eigen::VectorXd::Zero(entries);
-  _values              = Eigen::VectorXd::Zero(cplDataSize);
-  _oldValues           = Eigen::VectorXd::Zero(cplDataSize);
-  _oldXTilde           = Eigen::VectorXd::Zero(cplDataSize);
-  _residuals           = Eigen::VectorXd::Zero(cplDataSize);
+  _oldPrimaryXTilde    = Eigen::VectorXd::Zero(primaryDataSize);
+  _oldPrimaryResiduals = Eigen::VectorXd::Zero(primaryDataSize);
+  _primaryResiduals    = Eigen::VectorXd::Zero(primaryDataSize);
+  _primaryValues       = Eigen::VectorXd::Zero(primaryDataSize);
+  _oldPrimaryValues    = Eigen::VectorXd::Zero(primaryDataSize);
+  _values              = Eigen::VectorXd::Zero(dataSize);
+  _oldValues           = Eigen::VectorXd::Zero(dataSize);
+  _oldXTilde           = Eigen::VectorXd::Zero(dataSize);
+  _residuals           = Eigen::VectorXd::Zero(dataSize);
 
   /**
    *  make dimensions public to all procs,
@@ -140,7 +140,7 @@ void BaseQNAcceleration::initialize(
     PRECICE_ASSERT(utils::IntraComm::getCommunication() != nullptr);
     PRECICE_ASSERT(utils::IntraComm::getCommunication()->isConnected());
 
-    if (entries <= 0) {
+    if (primaryDataSize <= 0) {
       _hasNodesOnInterface = false;
     }
 
@@ -150,30 +150,39 @@ void BaseQNAcceleration::initialize(
      *  we need to multiply the number of vertices with the dimensionality of the vector-valued data for each coupling data.
      */
     _dimOffsets.resize(utils::IntraComm::getSize() + 1);
-    _dimOffsets[0] = 0;
+    _dimOffsetsPrimary.resize(utils::IntraComm::getSize() + 1);
+    _dimOffsets[0]        = 0;
+    _dimOffsetsPrimary[0] = 0;
     for (size_t i = 0; i < _dimOffsets.size() - 1; i++) {
-      int accumulatedNumberOfUnknowns = 0;
+      int accumulatedNumberOfUnknowns        = 0;
+      int accumulatedNumberOfPrimaryUnknowns = 0;
 
       for (auto &elem : _dataIDs) {
         const auto &offsets = cplData.at(elem)->getVertexOffsets();
         accumulatedNumberOfUnknowns += offsets[i] * cplData.at(elem)->getDimensions();
+        if (utils::contained(elem, _primaryDataIDs)) {
+          accumulatedNumberOfPrimaryUnknowns += offsets[i] * cplData.at(elem)->getDimensions();
+        }
       }
-      _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
+      _dimOffsets[i + 1]        = accumulatedNumberOfUnknowns;
+      _dimOffsetsPrimary[i + 1] = accumulatedNumberOfPrimaryUnknowns;
     }
     PRECICE_DEBUG("Number of unknowns at the interface (global): {}", _dimOffsets.back());
     if (utils::IntraComm::isPrimary()) {
       _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n offsets: {}\n", _dimOffsets.back(), _dimOffsets);
     }
 
-    // test that the computed number of unknown per proc equals the number of entries actually present on that proc
-    // size_t unknowns = _dimOffsets[utils::IntraComm::getRank() + 1] - _dimOffsets[utils::IntraComm::getRank()];
-    // PRECICE_ASSERT(entries == unknowns, entries, unknowns); //?
+    // test that the computed number of unknown per proc equals the number of primaryDataSize actually present on that proc
+    size_t unknowns = _dimOffsets[utils::IntraComm::getRank() + 1] - _dimOffsets[utils::IntraComm::getRank()];
+    PRECICE_ASSERT(dataSize == unknowns, dataSize, unknowns);
+    size_t primaryUnknowns = _dimOffsetsPrimary[utils::IntraComm::getRank() + 1] - _dimOffsetsPrimary[utils::IntraComm::getRank()];
+    PRECICE_ASSERT(primaryDataSize == primaryUnknowns, primaryDataSize, primaryUnknowns);
   } else {
-    _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n", entries);
+    _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n", dataSize);
   }
 
   // set the number of global rows in the QRFactorization.
-  _qrV.setGlobalRows(getLSSystemRows());
+  _qrV.setGlobalRows(getPrimaryLSSystemRows());
 
   _preconditioner->initialize(subVectorSizes);
 }
@@ -317,7 +326,8 @@ void BaseQNAcceleration::performAcceleration(
     // Perform constant relaxation
     // with residual: x_new = x_old + omega * res
     _residuals *= _initialRelaxation;
-    _values = _oldValues + _residuals;
+    _residuals += _oldValues;
+    _values = _residuals;
 
   } else {
     PRECICE_DEBUG("   Performing quasi-Newton Step");
@@ -404,7 +414,7 @@ void BaseQNAcceleration::performAcceleration(
         _matrixCols.push_front(0); // vital after clear()
         _qrV.reset();
         // set the number of global rows in the QRFactorization.
-        _qrV.setGlobalRows(getLSSystemRows());
+        _qrV.setGlobalRows(getPrimaryLSSystemRows());
         _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
       }
     }
@@ -524,7 +534,7 @@ void BaseQNAcceleration::iterationsConverged(
       _matrixW.resize(0, 0);
       _qrV.reset();
       // set the number of global rows in the QRFactorization.
-      _qrV.setGlobalRows(getLSSystemRows());
+      _qrV.setGlobalRows(getPrimaryLSSystemRows());
       _matrixCols.clear(); // _matrixCols.push_front() at the end of the method.
     } else {
       /**
@@ -627,6 +637,14 @@ int BaseQNAcceleration::getLSSystemRows()
 {
   if (utils::IntraComm::isParallel()) {
     return _dimOffsets.back();
+  }
+  return _residuals.size();
+}
+
+int BaseQNAcceleration::getPrimaryLSSystemRows()
+{
+  if (utils::IntraComm::isParallel()) {
+    return _dimOffsetsPrimary.back();
   }
   return _primaryResiduals.size();
 }

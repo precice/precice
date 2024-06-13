@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
   BOOST_TEST_MESSAGE("Test 1");
   // 1.) multiply JW = J * W (n x m), parallel: (n_local x m)
   Eigen::MatrixXd resJW_local(n_local, m_global);
-  parMatrixOps.multiply(J_local, W_local, resJW_local, vertexOffsets, n_global, n_global, m_global);
+  parMatrixOps.multiply(J_local, W_local, resJW_local, vertexOffsets, n_global, n_global, m_global, false);
   validate_result_equals_reference(resJW_local, JW_global, vertexOffsets.at(context.rank), true);
 
   BOOST_TEST_MESSAGE("Test 2");
@@ -306,19 +306,19 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
   BOOST_TEST_MESSAGE("Test 3");
   // 3.) multiply Jres = J * res (n x 1), parallel: (n_local x 1)
   Eigen::MatrixXd resJres_local(n_local, 1);
-  parMatrixOps.multiply(J_local, res_local, resJres_local, vertexOffsets, n_global, n_global, 1);
+  parMatrixOps.multiply(J_local, res_local, resJres_local, vertexOffsets, n_global, n_global, 1, false);
   validate_result_equals_reference(resJres_local, Jres_global, vertexOffsets.at(context.rank), true);
 
   BOOST_TEST_MESSAGE("Test 4");
   // 4.) multiply JW = J * W (n x m), parallel: (n_local x m) with block-wise multiplication
   Eigen::MatrixXd resJW_local2(n_local, m_global);
-  parMatrixOps.multiply(J_local, W_local, resJW_local2, vertexOffsets, n_global, n_global, m_global, false);
+  parMatrixOps.multiply(J_local, W_local, resJW_local2, vertexOffsets, n_global, n_global, m_global, false, false);
   validate_result_equals_reference(resJW_local2, JW_global, vertexOffsets.at(context.rank), true);
 
   BOOST_TEST_MESSAGE("Test 5");
   // 5.) multiply Jres = J * res (n x 1), parallel: (n_local x 1) with block-wise multiplication
   Eigen::VectorXd resJres_local2(n_local); // use the function with parameter of type Eigen::VectorXd
-  parMatrixOps.multiply(J_local, res_local_vec, resJres_local2, vertexOffsets, n_global, n_global, 1, false);
+  parMatrixOps.multiply(J_local, res_local_vec, resJres_local2, vertexOffsets, n_global, n_global, 1, false, false);
   Eigen::MatrixXd matrix_cast = resJres_local2;
   validate_result_equals_reference(matrix_cast, Jres_global, vertexOffsets.at(context.rank), true);
 }

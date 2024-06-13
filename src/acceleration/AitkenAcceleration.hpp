@@ -24,7 +24,7 @@ public:
 
   virtual std::vector<int> getDataIDs() const
   {
-    return _dataIDs;
+    return _primaryDataIDs;
   }
 
   virtual void initialize(
@@ -41,7 +41,7 @@ private:
 
   double _initialRelaxation;
 
-  std::vector<int> _dataIDs;
+  std::vector<int> _primaryDataIDs;
 
   double _aitkenFactor;
 

@@ -24,7 +24,7 @@ AitkenAcceleration::AitkenAcceleration(double                  initialRelaxation
                                        std::vector<int>        dataIDs,
                                        impl::PtrPreconditioner preconditioner)
     : _initialRelaxation(initialRelaxation),
-      _dataIDs(std::move(dataIDs)),
+      _primaryDataIDs(std::move(dataIDs)),
       _aitkenFactor(initialRelaxation),
       _preconditioner(std::move(preconditioner))
 {
@@ -47,7 +47,7 @@ void AitkenAcceleration::initialize(const DataMap &cplData)
   // Size for each subvector needed for preconditioner
   std::vector<std::size_t> subVectorSizes;
   // Gather sizes
-  std::transform(_dataIDs.cbegin(), _dataIDs.cend(), std::back_inserter(subVectorSizes), [&cplData](const auto &d) { return cplData.at(d)->getSize(); });
+  std::transform(_primaryDataIDs.cbegin(), _primaryDataIDs.cend(), std::back_inserter(subVectorSizes), [&cplData](const auto &d) { return cplData.at(d)->getSize(); });
   // The accumulated sum
   Eigen::Index entries = std::accumulate(subVectorSizes.cbegin(), subVectorSizes.cend(), static_cast<Eigen::Index>(0));
 
@@ -55,7 +55,7 @@ void AitkenAcceleration::initialize(const DataMap &cplData)
   _oldResiduals = Eigen::VectorXd::Zero(entries);
   _values       = Eigen::VectorXd::Zero(entries);
   _oldValues    = Eigen::VectorXd::Zero(entries);
-  if (_dataIDs.size() > 1) {
+  if (_primaryDataIDs.size() > 1) {
     _preconditioner->initialize(subVectorSizes);
   }
 }
@@ -66,9 +66,9 @@ void AitkenAcceleration::performAcceleration(
   PRECICE_TRACE();
 
   // Compute aitken relaxation factor
-  PRECICE_ASSERT(utils::contained(*_dataIDs.begin(), cplData));
+  PRECICE_ASSERT(utils::contained(*_primaryDataIDs.begin(), cplData));
 
-  concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
+  concatenateCouplingData(cplData, _primaryDataIDs, _values, _oldValues);
 
   // Compute current residual = values - oldValues
   Eigen::VectorXd residuals = _values - _oldValues;
@@ -77,7 +77,7 @@ void AitkenAcceleration::performAcceleration(
   Eigen::VectorXd residualDeltas = residuals - _oldResiduals;
 
   // We need to update the preconditioner in every iteration
-  if (_dataIDs.size() > 1) {
+  if (_primaryDataIDs.size() > 1) {
     _preconditioner->update(false, _values, residuals);
   }
 
@@ -88,7 +88,7 @@ void AitkenAcceleration::performAcceleration(
   } else {
     // If we have more than one data set, we scale the data to get a better approximation
     // of the Aitken factor
-    if (_dataIDs.size() > 1) {
+    if (_primaryDataIDs.size() > 1) {
       _preconditioner->apply(residualDeltas);
       _preconditioner->apply(_oldResiduals);
     }
@@ -113,7 +113,7 @@ void AitkenAcceleration::iterationsConverged(
     const DataMap &cplData)
 {
   _iterationCounter = 0;
-  if (_dataIDs.size() > 1) {
+  if (_primaryDataIDs.size() > 1) {
     _preconditioner->update(true, _values, _oldResiduals);
   }
   _oldResiduals = Eigen::VectorXd::Constant(_oldResiduals.size(), std::numeric_limits<double>::max());

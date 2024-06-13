@@ -84,7 +84,6 @@ void IQNIMVJAcceleration::initialize(
   int cplDataEntries = _residuals.size();
   int global_n       = 0;
 
-
   if (!utils::IntraComm::isParallel()) {
     global_n = cplDataEntries;
   } else {
@@ -181,7 +180,7 @@ void IQNIMVJAcceleration::updateDifferenceMatrices(
         } else {
           // compute J_prev * V(0) := wtil the new column in _Wtil of dimension: (n x n) * (n x 1) = (n x 1),
           //                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
-          _parMatrixOps->multiply(_oldInvJacobian, v, wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+          _parMatrixOps->multiply(_oldInvJacobian, v, wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false, false);
         }
         wtil *= -1;
         wtil += w;
@@ -293,7 +292,7 @@ void IQNIMVJAcceleration::buildWtil()
   } else {
     // multiply J_prev * V = W_til of dimension: (n x n) * (n x m) = (n x m),
     //                                    parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
-    _parMatrixOps->multiply(_oldInvJacobian, _matrixV, _Wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols(), false);
+    _parMatrixOps->multiply(_oldInvJacobian, _matrixV, _Wtil, _dimOffsets, getLSSystemRows(), getPrimaryLSSystemRows(), getLSSystemCols(), false, false);
   }
 
   // W_til = (W-J_inv_n*V) = (W-V_tilde)
@@ -336,7 +335,7 @@ void IQNIMVJAcceleration::buildJacobian()
    *  where Z = (V^T*V)^-1*V^T via QR-dec and back-substitution       dimension: (n x n) * (n x m) = (n x m),
    *  and W_til = (W - J_inv_n*V)                                     parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
    */
-  _parMatrixOps->multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
+  _parMatrixOps->multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getPrimaryLSSystemRows());
   // --------
 
   // update Jacobian
@@ -430,7 +429,7 @@ void IQNIMVJAcceleration::computeNewtonUpdateEfficient(
 
     // imvj without restart is used, i.e., compute directly J_prev * (-res)
   } else {
-    _parMatrixOps->multiply(_oldInvJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+    _parMatrixOps->multiply(_oldInvJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false, false);
     PRECICE_DEBUG("Mult J*V DONE");
   }
 
@@ -467,7 +466,7 @@ void IQNIMVJAcceleration::computeNewtonUpdate(const DataMap &cplData, Eigen::Vec
    *  where Z = (V^T*V)^-1*V^T via QR-dec and back-substitution             dimension: (n x n) * (n x m) = (n x m),
    *  and W_til = (W - J_inv_n*V)                                           parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
    */
-  _parMatrixOps->multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows()); // --------
+  _parMatrixOps->multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getPrimaryLSSystemRows()); // --------
 
   // update Jacobian
   _invJacobian = _invJacobian + _oldInvJacobian;
@@ -478,7 +477,7 @@ void IQNIMVJAcceleration::computeNewtonUpdate(const DataMap &cplData, Eigen::Vec
 
   // multiply J_inv * (-res) = x_Update of dimension: (n x n) * (n x 1) = (n x 1),
   //                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
-  _parMatrixOps->multiply(_invJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false); // --------
+  _parMatrixOps->multiply(_invJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getPrimaryLSSystemRows(), 1, false, false); // --------
 }
 
 // ==================================================================================
@@ -572,7 +571,7 @@ void IQNIMVJAcceleration::restartIMVJ()
       _preconditioner->apply(_matrixW_RSLS);
 
       impl::QRFactorization qr(_filter);
-      qr.setGlobalRows(getLSSystemRows());
+      qr.setGlobalRows(getPrimaryLSSystemRows());
       // for QR2-filter, the QR-dec is computed in qr-applyFilter()
       if (_filter != Acceleration::QR2FILTER) {
         for (int i = 0; i < static_cast<int>(_matrixV_RSLS.cols()); i++) {

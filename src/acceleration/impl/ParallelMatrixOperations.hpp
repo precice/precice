@@ -36,6 +36,7 @@ public:
       Eigen::PlainObjectBase<Derived2> &result,
       const std::vector<int> &          offsets,
       int p, int q, int r,
+      bool cyclicComm            = true,
       bool dotProductComputation = true)
   {
     PRECICE_TRACE();
@@ -52,18 +53,17 @@ public:
       PRECICE_ASSERT(utils::IntraComm::getCommunication()->isConnected());
 
       // The result matrix is of size (p x r)
-      // if p equals r (and p = global_n), we have to perform the
-      // cyclic communication with block-wise matrix-matrix multiplication
-      if (p == r) {
+      // if the cyclic communication is needed, we use block-wise matrix-matrix multiplication
+      if (cyclicComm) {
         PRECICE_ASSERT(_needCyclicComm);
         PRECICE_ASSERT(_cyclicCommLeft.get() != NULL);
         PRECICE_ASSERT(_cyclicCommLeft->isConnected());
         PRECICE_ASSERT(_cyclicCommRight.get() != NULL);
         PRECICE_ASSERT(_cyclicCommRight->isConnected());
 
-        _multiplyNN(leftMatrix, rightMatrix, result, offsets, p, q, r);
+        _multiply_cyclic(leftMatrix, rightMatrix, result, offsets, p, q, r);
 
-        // case p != r, i.e., usually p = number of columns of the least squares system
+        // case the cyclic communication is not needed, i.e., usually p = number of columns of the least squares system
         // perform parallel multiplication based on dot-product
       } else {
         if (dotProductComputation)
@@ -76,14 +76,14 @@ public:
 
   /** @brief: Method computes the matrix-matrix/matrix-vector product of a (p x q)
     * matrix that is distributed column-wise (e.g. pseudoInverse Z), with a matrix/vector
-    * of size (q x r) with r=1/cols, that is distributed row-wise (e.g. _matrixW, _matrixV, residual).
+    * of size (q x r) with r=1 or r=cols, that is distributed row-wise (e.g. _matrixW, _matrixV, residual).
     *
     * In each case mat-mat or mat-vec product, the result is of size (m x m) or (m x 1), where
     * m is the number of cols, i.e., small such that the result is stored on each proc.
     *
-    * @param[in] p - first dimension, i.e., overall (global) number of rows
+    * @param[in] p - first dimension, i.e., overall (global) number cols of result matrix
     * @param[in] q - inner dimension
-    * @param[in] r - second dimension, i.e., overall (global) number cols of result matrix
+    * @param[in] r - second dimension, i.e., 1 or overall (global) number cols of result matrix
     *
     */
   template <typename Derived1, typename Derived2, typename Derived3>
@@ -113,9 +113,9 @@ public:
 private:
   logging::Logger _log{"acceleration::ParallelMatrixOperations"};
 
-  // @brief multiplies matrices based on a cyclic communication and block-wise matrix multiplication with a quadratic result matrix
+  // @brief multiplies matrices based on a cyclic communication and block-wise matrix multiplication
   template <typename Derived1, typename Derived2>
-  void _multiplyNN(
+  void _multiply_cyclic(
       Eigen::PlainObjectBase<Derived1> &leftMatrix,
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
@@ -126,11 +126,11 @@ private:
     /*
      * For multiplication W_til * Z = J
      * -----------------------------------------------------------------------
-     * p = r = n_global, q = m
+     * p = n_global, q = m, r = n_global_primary
      *
      * leftMatrix:  local: (n_local x m) 		global: (n_global x m)
-     * rightMatrix: local: (m x n_local) 		global: (m x n_global)
-     * result: 		local: (n_global x n_local) global: (n_global x n_global)
+     * rightMatrix: local: (m x n_local_primary) 		global: (m x n_global_primary)
+     * result: 		local: (n_global x n_local_primary) global: (n_global x n_global_primary)
      * -----------------------------------------------------------------------
      */
 
@@ -185,7 +185,7 @@ private:
           requestSend = _cyclicCommRight->aSend(leftMatrix_copy, 0);
       }
 
-      // compute proc that owned leftMatrix_rcv (Wtil_rcv) at the very beginning for each cylce
+      // compute proc that owned leftMatrix_rcv (Wtil_rcv) at the very beginning for each cycle
       int sourceProc_nextCycle = (utils::IntraComm::getRank() - (cycle + 1) < 0) ? utils::IntraComm::getSize() + (utils::IntraComm::getRank() - (cycle + 1)) : utils::IntraComm::getRank() - (cycle + 1);
 
       int sourceProc = (utils::IntraComm::getRank() - cycle < 0) ? utils::IntraComm::getSize() + (utils::IntraComm::getRank() - cycle) : utils::IntraComm::getRank() - cycle;

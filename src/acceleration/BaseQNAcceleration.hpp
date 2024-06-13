@@ -233,11 +233,16 @@ protected:
    */
   std::vector<int> _dimOffsets;
 
+  /** @brief Stores the local dimensions regarding primary data,
+   */
+  std::vector<int> _dimOffsetsPrimary;
+
   /// @brief write some debug/acceleration info to file
   std::ostringstream _infostringstream;
   std::fstream       _infostream;
 
   int getLSSystemRows();
+  int getPrimaryLSSystemRows();
 
   /**
    * @brief Marks a iteration sequence as converged.
