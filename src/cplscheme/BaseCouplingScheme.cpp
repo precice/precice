@@ -267,17 +267,15 @@ void BaseCouplingScheme::finalize()
   PRECICE_ASSERT(_isInitialized, "Called finalize() before initialize().");
 }
 
-void BaseCouplingScheme::initialize(double startTime, int startTimeWindow)
+void BaseCouplingScheme::initialize()
 {
   // initialize with zero data here, might eventually be overwritten in exchangeInitialData
   initializeReceiveDataStorage();
   // Initialize uses the template method pattern (https://en.wikipedia.org/wiki/Template_method_pattern).
-  PRECICE_TRACE(startTime, startTimeWindow);
+  PRECICE_TRACE();
   PRECICE_ASSERT(not isInitialized());
-  PRECICE_ASSERT(math::greaterEquals(startTime, 0.0), startTime);
-  PRECICE_ASSERT(startTimeWindow >= 0, startTimeWindow);
-  _time.resetTo(startTime);
-  _timeWindows         = startTimeWindow;
+  _time.resetTo(0);
+  _timeWindows         = 1;
   _hasDataBeenReceived = false;
 
   if (isImplicitCouplingScheme()) {

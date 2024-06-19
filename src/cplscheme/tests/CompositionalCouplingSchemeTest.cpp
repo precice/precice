@@ -93,7 +93,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
 
     if (participantName == std::string("Participant0")) {
       mesh->data(0)->setSampleAtTime(0, time::Sample{1, mesh->data(0)->values()});
-      cplScheme->initialize(0.0, 1);
+      cplScheme->initialize();
       BOOST_TEST(not cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
@@ -131,7 +131,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     } else if (participantName == std::string("Participant1")) {
       auto ddims = mesh->data(1)->getDimensions();
       mesh->data(1)->setSampleAtTime(0, time::Sample{ddims, mesh->data(1)->values()});
-      cplScheme->initialize(0.0, 1);
+      cplScheme->initialize();
       BOOST_TEST(cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
@@ -170,7 +170,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       auto ddims = mesh->data(2)->getDimensions();
       BOOST_TEST(participantName == std::string("Participant2"), participantName);
       mesh->data(2)->setSampleAtTime(0, time::Sample{ddims, mesh->data(2)->values()});
-      cplScheme->initialize(0.0, 1);
+      cplScheme->initialize();
       BOOST_TEST(cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
       BOOST_TEST(cplScheme->isCouplingOngoing());
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
-  composition.initialize(0.0, 1);
+  composition.initialize();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.addComputedTime(1.0);
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
   composition.addCouplingScheme(scheme3);
-  composition.initialize(0.0, 1);
+  composition.initialize();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.addComputedTime(1.0);
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
-  composition.initialize(0.0, 1);
+  composition.initialize();
   int advances = 0;
   BOOST_TEST_MESSAGE("Init Expl " << scheme1->getTimeWindows());
   BOOST_TEST_MESSAGE("Init Impl " << scheme2->getTimeWindows());
@@ -343,7 +343,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
-  composition.initialize(0.0, 1);
+  composition.initialize();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.addComputedTime(1.0);
@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
-  composition.initialize(0.0, 1);
+  composition.initialize();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.addComputedTime(1.0);
@@ -415,7 +415,7 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3Explicit1)
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   composition.addCouplingScheme(scheme2);
-  composition.initialize(0.0, 1);
+  composition.initialize();
   int advances = 0;
   while (composition.isCouplingOngoing()) {
     composition.addComputedTime(1.0);

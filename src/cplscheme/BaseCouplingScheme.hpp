@@ -175,13 +175,8 @@ public:
   /// Finalizes the coupling scheme.
   void finalize() override final;
 
-  /**
-   * @brief Initializes the coupling scheme.
-   *
-   * @param[in] startTime starting time of coupling scheme
-   * @param[in] startTimeWindow starting counter of time window, from which coupling scheme starts
-   */
-  void initialize(double startTime, int startTimeWindow) override final;
+  /// @copydoc cplscheme::CouplingScheme::initialize()
+  void initialize() override final;
 
   ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override final;
 
