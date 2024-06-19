@@ -34,9 +34,7 @@ public:
   /**
    * @brief
    */
-  void initialize(
-      double startTime,
-      int    startTimeWindows) override final;
+  void initialize() override final;
 
   /**
    * @brief Not implemented.

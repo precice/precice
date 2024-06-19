@@ -77,14 +77,12 @@ void CompositionalCouplingScheme::addCouplingScheme(
   }
 }
 
-void CompositionalCouplingScheme::initialize(
-    double startTime,
-    int    startTimeWindow)
+void CompositionalCouplingScheme::initialize()
 {
-  PRECICE_TRACE(startTime, startTimeWindow);
+  PRECICE_TRACE();
   PRECICE_ASSERT(_activeSchemes.empty());
   for (const auto scheme : allSchemes()) {
-    scheme->initialize(startTime, startTimeWindow);
+    scheme->initialize();
     _activeSchemes.push_back(scheme);
   }
 }

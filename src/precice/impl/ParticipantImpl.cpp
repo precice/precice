@@ -312,21 +312,18 @@ void ParticipantImpl::initialize()
     watchIntegral->initialize();
   }
 
-  // Initialize coupling state, overwrite these values for restart
-  const double time       = 0.0;
-  const int    timeWindow = 1;
-
   _meshLock.lockAll();
 
   for (auto &context : _accessor->writeDataContexts()) {
-    context.storeBufferedData(time);
+    const double startTime = 0.0;
+    context.storeBufferedData(startTime);
   }
 
   mapInitialWrittenData();
   performDataActions({action::Action::WRITE_MAPPING_POST});
 
   PRECICE_DEBUG("Initialize coupling schemes");
-  _couplingScheme->initialize(time, timeWindow);
+  _couplingScheme->initialize();
 
   mapInitialReadData();
   performDataActions({action::Action::READ_MAPPING_POST});

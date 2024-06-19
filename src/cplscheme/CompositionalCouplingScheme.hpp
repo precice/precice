@@ -74,12 +74,8 @@ public:
   /**
    * @brief Initializes the coupling scheme and establishes a communication
    *        connection to the coupling partner.
-   * @param[in] startTime TODO
-   * @param[in] startTimeWindow TODO
    */
-  void initialize(
-      double startTime,
-      int    startTimeWindow) final override;
+  void initialize() final override;
 
   /// Returns true, if any of the composed coupling schemes sendsInitializedData for this participant
   bool sendsInitializedData() const override final;

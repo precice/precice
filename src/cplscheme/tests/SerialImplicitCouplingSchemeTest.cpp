@@ -74,7 +74,7 @@ void runCoupling(
 
   if (nameParticipant == nameParticipant0) {
     mesh->data(0)->setSampleAtTime(0, time::Sample{1, mesh->data(0)->values()});
-    cplScheme.initialize(0.0, 1);
+    cplScheme.initialize();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -143,7 +143,7 @@ void runCoupling(
     BOOST_TEST(computedTimesteps == 3);
   } else if (nameParticipant == nameParticipant1) {
     mesh->data(1)->setSampleAtTime(0, time::Sample{1, mesh->data(1)->values()});
-    cplScheme.initialize(0.0, 1);
+    cplScheme.initialize();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -247,7 +247,7 @@ void runCouplingWithSubcycling(
   if (nameParticipant == nameParticipant0) {
     iterationCount++; // different handling due to subcycling
     mesh->data(0)->setSampleAtTime(0, time::Sample{1, mesh->data(0)->values()});
-    cplScheme.initialize(0.0, 1);
+    cplScheme.initialize();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -336,7 +336,7 @@ void runCouplingWithSubcycling(
   else if (nameParticipant == nameParticipant1) {
     iterationCount++; // different handling due to subcycling
     mesh->data(1)->setSampleAtTime(0, time::Sample{1, mesh->data(1)->values()});
-    cplScheme.initialize(0.0, 1);
+    cplScheme.initialize();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -738,7 +738,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
     sendCouplingData->setSampleAtTime(0, time::Sample{1, sendCouplingData->values()});
-    cplScheme.initialize(0.0, 1);
+    cplScheme.initialize();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     // ensure that initial data was read
     BOOST_TEST(receiveCouplingData->getSize() == 3);
@@ -780,7 +780,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
     BOOST_TEST(sendCouplingData->getSize() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
-    cplScheme.initialize(0.0, 1);
+    cplScheme.initialize();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(receiveCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
