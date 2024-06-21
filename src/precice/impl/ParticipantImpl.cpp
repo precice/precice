@@ -1478,6 +1478,9 @@ void ParticipantImpl::performDataActions(const std::set<action::Action::Timing> 
 void ParticipantImpl::handleExports()
 {
   PRECICE_TRACE();
+  if (!_accessor->hasExports()) {
+    return;
+  }
   PRECICE_DEBUG("Handle exports");
   ParticipantState::IntermediateExport exp;
   exp.timewindow = _couplingScheme->getTimeWindows() - 1;

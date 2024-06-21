@@ -349,6 +349,11 @@ void ParticipantState::exportInitial()
   }
 }
 
+bool ParticipantState::hasExports() const
+{
+  return !_exportContexts.empty() || !_watchPoints.empty() || !_watchIntegrals.empty();
+}
+
 void ParticipantState::exportIntermediate(IntermediateExport exp)
 {
   for (const io::ExportContext &context : exportContexts()) {
