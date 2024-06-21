@@ -301,6 +301,9 @@ public:
 
   /// Returns all \ref ExportContext for exporting meshes and data.
   const std::vector<io::ExportContext> &exportContexts() const;
+
+  /// Returns true, if the participant has any exports enabled
+  bool hasExports() const;
   /// @}
 
   /// @name Error helpers
