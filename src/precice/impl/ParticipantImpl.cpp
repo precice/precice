@@ -328,8 +328,7 @@ void ParticipantImpl::initialize()
   mapInitialReadData();
   performDataActions({action::Action::READ_MAPPING_POST});
 
-  PRECICE_DEBUG("Plot output");
-  _accessor->exportInitial();
+  handleExports(ExportTiming::Initial);
 
   resetWrittenData();
 
@@ -450,7 +449,7 @@ void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isT
     }
   }
 
-  handleExports();
+  handleExports(ExportTiming::Advance);
 }
 
 void ParticipantImpl::samplizeWriteData(double time)
@@ -1475,7 +1474,7 @@ void ParticipantImpl::performDataActions(const std::set<action::Action::Timing> 
   }
 }
 
-void ParticipantImpl::handleExports()
+void ParticipantImpl::handleExports(ExportTiming timing)
 {
   PRECICE_TRACE();
   if (!_accessor->hasExports()) {
@@ -1483,6 +1482,11 @@ void ParticipantImpl::handleExports()
   }
   PRECICE_DEBUG("Handle exports");
   profiling::Event e{"handleExports"};
+
+  if (timing == ExportTiming::Initial) {
+    _accessor->exportInitial();
+    return;
+  }
 
   ParticipantState::IntermediateExport exp;
   exp.timewindow = _couplingScheme->getTimeWindows() - 1;
