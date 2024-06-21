@@ -1483,6 +1483,7 @@ void ParticipantImpl::handleExports()
   }
   PRECICE_DEBUG("Handle exports");
   profiling::Event e{"handleExports"};
+
   ParticipantState::IntermediateExport exp;
   exp.timewindow = _couplingScheme->getTimeWindows() - 1;
   exp.iteration  = _numberAdvanceCalls;
