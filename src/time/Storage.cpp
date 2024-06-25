@@ -51,7 +51,7 @@ void Storage::setSampleAtTime(double time, const Sample &sample)
 
 void Storage::setInterpolationDegree(int interpolationDegree)
 {
-  PRECICE_ASSERT(Time::MIN_WAVEFORM_DEGREE <= _degree && _degree <= Time::MAX_WAVEFORM_DEGREE);
+  PRECICE_ASSERT(interpolationDegree >= Time::MIN_WAVEFORM_DEGREE);
   _degree = interpolationDegree;
 
   // The spline has to be recomputed, since the underlying data has changed
@@ -227,7 +227,6 @@ Eigen::MatrixXd Storage::sampleGradients(double time) const
 
 int Storage::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const
 {
-  PRECICE_ASSERT(requestedDegree <= Time::MAX_WAVEFORM_DEGREE);
   return std::min(requestedDegree, numberOfAvailableSamples - 1);
 }
 
