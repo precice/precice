@@ -120,7 +120,10 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
 
   for (const auto &data : sendData | boost::adaptors::map_values) {
     const auto &stamples = data->stamples();
-    PRECICE_ASSERT(stamples.size() > 0);
+    PRECICE_CHECK(!stamples.empty(),
+                  "Data {0} on mesh {1} didn't contain any samples while attempting to send it to the coupling partner. "
+                  "Make sure participant {2} specifies data {0} to be written using tag <write-data mesh=\"{1}\" data=\"{0}\"/>.",
+                  data->getDataName(), data->getMeshName(), localParticipant());
 
     int nTimeSteps = data->timeStepsStorage().nTimes();
     PRECICE_ASSERT(nTimeSteps > 0);
