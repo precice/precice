@@ -120,11 +120,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
 
   for (const auto &data : sendData | boost::adaptors::map_values) {
     const auto &stamples = data->stamples();
-    PRECICE_CHECK(!stamples.empty(),
-                  "Data {0} on mesh {1} didn't contain any samples while attempting to send it to the coupling partner. "
-                  "Make sure participant {2} specifies data {0} to be written using tag <write-data mesh=\"{1}\" data=\"{0}\"/>. "
-                  "Alternatively, ensure participant {2} defines a mapping to mesh {1} from a mesh using data {0}.",
-                  data->getDataName(), data->getMeshName(), localParticipant());
+    PRECICE_ASSERT(!stamples.empty());
 
     int nTimeSteps = data->timeStepsStorage().nTimes();
     PRECICE_ASSERT(nTimeSteps > 0);
@@ -281,6 +277,8 @@ void BaseCouplingScheme::initialize()
   _time.resetTo(0);
   _timeWindows         = 1;
   _hasDataBeenReceived = false;
+
+  checkCouplingDataAvailable();
 
   if (isImplicitCouplingScheme()) {
     storeIteration();
@@ -613,6 +611,23 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
   _fulfilledActions.clear();
 }
 
+void BaseCouplingScheme::checkCouplingDataAvailable()
+{
+  PRECICE_TRACE();
+  for (const auto &data : _allData | boost::adaptors::map_values) {
+    if (data->getDirection() == CouplingData::Direction::Receive) {
+      PRECICE_ASSERT(!data->stamples().empty(), "initializeReceiveDataStorage() didn't initialize data correctly");
+    } else {
+      PRECICE_CHECK(!data->stamples().empty(),
+                    "Data {0} on mesh {1} doesn't contain any samples while initializing a coupling scheme of participant {2}. "
+                    "There are two common configuration issues that may cause this. "
+                    "Either, make sure participant {2} specifies data {0} to be written using tag <write-data mesh=\"{1}\" data=\"{0}\"/>. "
+                    "Or ensure participant {2} defines a mapping to mesh {1} from a mesh using data {0}.",
+                    data->getDataName(), data->getMeshName(), localParticipant());
+    }
+  }
+}
+
 void BaseCouplingScheme::setAcceleration(
     const acceleration::PtrAcceleration &acceleration)
 {
@@ -777,7 +792,13 @@ bool BaseCouplingScheme::reachedEndOfTimeWindow() const
 void BaseCouplingScheme::storeIteration()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme());
+
   for (const auto &data : _allData | boost::adaptors::map_values) {
+    PRECICE_CHECK(!data->stamples().empty(),
+                  "Data {0} on mesh {1} didn't contain any samples while attempting to send it to the coupling partner. "
+                  "Make sure participant {2} specifies data {0} to be written using tag <write-data mesh=\"{1}\" data=\"{0}\"/>. "
+                  "Alternatively, ensure participant {2} defines a mapping to mesh {1} from a mesh using data {0}.",
+                  data->getDataName(), data->getMeshName(), localParticipant());
     data->storeIteration();
   }
 }
