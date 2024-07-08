@@ -1,6 +1,8 @@
 # Dockerfile to build a ubuntu image containing the installed Debian package of a release
 
 FROM ubuntu:22.04
+# Add the precice user
+RUN useradd -m -s /bin/bash precice
 # Fix the installation of tzdata for Ubuntu
 ARG TIMEZONE=Europe/Berlin
 RUN export TZ=$TIMEZONE && echo $TZ > /etc/timezone && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \

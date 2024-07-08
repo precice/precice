@@ -2,6 +2,8 @@
 
 The point of these dockerfiles is to build a Ubuntu-based distribution of preCICE.
 
+All images contain the user `precice`, allowing them to run executables using MPI.
+
 ## Release images `release.dockerfile`
 
 This Dockerfile uses named releases of preCICE such as `2.1.1` and installs the attached debian package in the container.
