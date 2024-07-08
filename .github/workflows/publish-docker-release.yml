@@ -42,7 +42,7 @@ jobs:
           username: ${{ env.docker_username }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push version tag
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: true
           file: "./tools/releasing/packaging/docker/release.dockerfile"
@@ -51,7 +51,7 @@ jobs:
             version=${{ github.event.inputs.version }}
       - name: Build and push latest tag
         if: ${{ github.event.inputs.latest == 'true' }}
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: true
           file: "./tools/releasing/packaging/docker/release.dockerfile"

@@ -102,22 +102,24 @@
  *
  * @attention Do not use this macro directly!
  */
-#define PRECICE_REQUIRE_DATA_READ_IMPL(mesh, data)                                                                             \
-  PRECICE_VALIDATE_DATA_NAME_IMPL(mesh, data)                                                                                  \
-  PRECICE_CHECK((_accessor->isDataRead(mesh, data)),                                                                           \
-                "This participant does not use Data \"{0}\", but attempted to read it. "                                       \
-                "Please extend the configuration of participant \"{1}\" by defining <read-data mesh=\"{2}\" name=\"{0}\" />.", \
+#define PRECICE_REQUIRE_DATA_READ_IMPL(mesh, data)                                                                            \
+  PRECICE_VALIDATE_DATA_NAME_IMPL(mesh, data)                                                                                 \
+  PRECICE_CHECK((_accessor->isDataRead(mesh, data)),                                                                          \
+                "This participant does not use data \"{0}\" via mesh \"{2}\", but attempted to read it. "                     \
+                "Please extend the configuration of participant \"{1}\" by defining <read-data mesh=\"{2}\" name=\"{0}\" /> " \
+                "or check if the data is defined on this mesh.",                                                              \
                 data, _accessorName, mesh);
 
 /** Implementation of PRECICE_REQUIRE_DATA_WRITE()
  *
  * @attention Do not use this macro directly!
  */
-#define PRECICE_REQUIRE_DATA_WRITE_IMPL(mesh, data)                                                                             \
-  PRECICE_VALIDATE_DATA_NAME_IMPL(mesh, data)                                                                                   \
-  PRECICE_CHECK((_accessor->isDataWrite(mesh, data)),                                                                           \
-                "This participant does not use Data \"{0}\", but attempted to write it. "                                       \
-                "Please extend the configuration of participant \"{1}\" by defining <write-data mesh=\"{2}\" name=\"{0}\" />.", \
+#define PRECICE_REQUIRE_DATA_WRITE_IMPL(mesh, data)                                                                            \
+  PRECICE_VALIDATE_DATA_NAME_IMPL(mesh, data)                                                                                  \
+  PRECICE_CHECK((_accessor->isDataWrite(mesh, data)),                                                                          \
+                "This participant does not use data \"{0}\" via mesh \"{2}\", but attempted to write it. "                     \
+                "Please extend the configuration of participant \"{1}\" by defining <write-data mesh=\"{2}\" name=\"{0}\" /> " \
+                "or check if the data is defined on this mesh.",                                                               \
                 data, _accessorName, mesh);
 
 /** Validates a given dataID

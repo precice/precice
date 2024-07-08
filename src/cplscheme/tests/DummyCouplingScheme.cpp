@@ -13,14 +13,12 @@ DummyCouplingScheme::DummyCouplingScheme(
 {
 }
 
-void DummyCouplingScheme::initialize(
-    double startTime,
-    int    startTimeWindows)
+void DummyCouplingScheme::initialize()
 {
   PRECICE_ASSERT(not _isInitialized);
   _isInitialized = true;
   _isOngoing     = true;
-  _timeWindows   = startTimeWindows;
+  _timeWindows   = 1;
   _iterations    = 1;
 }
 

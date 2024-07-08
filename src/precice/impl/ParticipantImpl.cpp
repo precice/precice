@@ -312,27 +312,23 @@ void ParticipantImpl::initialize()
     watchIntegral->initialize();
   }
 
-  // Initialize coupling state, overwrite these values for restart
-  const double time       = 0.0;
-  const int    timeWindow = 1;
-
   _meshLock.lockAll();
 
   for (auto &context : _accessor->writeDataContexts()) {
-    context.storeBufferedData(time);
+    const double startTime = 0.0;
+    context.storeBufferedData(startTime);
   }
 
   mapInitialWrittenData();
   performDataActions({action::Action::WRITE_MAPPING_POST});
 
   PRECICE_DEBUG("Initialize coupling schemes");
-  _couplingScheme->initialize(time, timeWindow);
+  _couplingScheme->initialize();
 
   mapInitialReadData();
   performDataActions({action::Action::READ_MAPPING_POST});
 
-  PRECICE_DEBUG("Plot output");
-  _accessor->exportInitial();
+  handleExports(ExportTiming::Initial);
 
   resetWrittenData();
 
@@ -453,7 +449,7 @@ void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isT
     }
   }
 
-  handleExports();
+  handleExports(ExportTiming::Advance);
 }
 
 void ParticipantImpl::samplizeWriteData(double time)
@@ -1478,10 +1474,20 @@ void ParticipantImpl::performDataActions(const std::set<action::Action::Timing> 
   }
 }
 
-void ParticipantImpl::handleExports()
+void ParticipantImpl::handleExports(ExportTiming timing)
 {
   PRECICE_TRACE();
+  if (!_accessor->hasExports()) {
+    return;
+  }
   PRECICE_DEBUG("Handle exports");
+  profiling::Event e{"handleExports"};
+
+  if (timing == ExportTiming::Initial) {
+    _accessor->exportInitial();
+    return;
+  }
+
   ParticipantState::IntermediateExport exp;
   exp.timewindow = _couplingScheme->getTimeWindows() - 1;
   exp.iteration  = _numberAdvanceCalls;

@@ -360,8 +360,14 @@ private:
 
   void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
 
+  enum struct ExportTiming : bool {
+    Advance = false,
+    Initial = true
+  };
+
   /// Exports meshes with data and watch point data.
-  void handleExports();
+  /// @param[in] timing when the exports are requested
+  void handleExports(ExportTiming timing);
 
   /// Determines participants providing meshes to other participants.
   void configurePartitions(
