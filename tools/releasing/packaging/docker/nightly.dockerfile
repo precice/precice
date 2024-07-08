@@ -1,6 +1,8 @@
 # Dockerfile to build a ubuntu image containing the installed develop version of preCICE
 
 FROM ubuntu:22.04
+# Add the precice user
+RUN useradd -m -s /bin/bash precice
 ENV TZ=Europe/Berlin
 RUN apt-get update && \
     apt-get -yy upgrade && \
