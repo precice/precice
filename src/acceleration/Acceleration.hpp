@@ -30,7 +30,7 @@ public:
 
   virtual ~Acceleration() = default;
 
-  virtual std::vector<int> getDataIDs() const = 0;
+  virtual std::vector<int> getPrimaryDataIDs() const = 0;
 
   virtual void initialize(const DataMap &cpldata) = 0;
 

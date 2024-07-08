@@ -7,7 +7,7 @@ namespace precice::acceleration {
 void Acceleration::checkDataIDs(const DataMap &cplData) const
 {
 #ifndef NDEBUG
-  for (int id : getDataIDs()) {
+  for (int id : getPrimaryDataIDs()) {
     bool valid = utils::contained(id, cplData);
     PRECICE_ASSERT(valid, "Data with ID {} unknown.", id);
   }

@@ -292,19 +292,19 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
    * test parallel multiplications
    */
   BOOST_TEST_MESSAGE("Test 1");
-  // 1.) multiply JW = J * W (n x m), parallel: (n_local x m)
+  // 1.) multiply JW = J * W (n x m), parallel: (n_local x m), based on dot product
   Eigen::MatrixXd resJW_local(n_local, m_global);
   parMatrixOps.multiply(J_local, W_local, resJW_local, vertexOffsets, n_global, n_global, m_global, false);
   validate_result_equals_reference(resJW_local, JW_global, vertexOffsets.at(context.rank), true);
 
   BOOST_TEST_MESSAGE("Test 2");
-  // 2.) multiply WZ = W * Z (n x n), parallel: (n_global x n_local)
+  // 2.) multiply WZ = W * Z (n x n), parallel: (n_global x n_local), with cyclic multiplication
   Eigen::MatrixXd resWZ_local(n_global, n_local);
   parMatrixOps.multiply(W_local, Z_local, resWZ_local, vertexOffsets, n_global, m_global, n_global);
   validate_result_equals_reference(resWZ_local, WZ_global, vertexOffsets.at(context.rank), false);
 
   BOOST_TEST_MESSAGE("Test 3");
-  // 3.) multiply Jres = J * res (n x 1), parallel: (n_local x 1)
+  // 3.) multiply Jres = J * res (n x 1), parallel: (n_local x 1), based on dot product
   Eigen::MatrixXd resJres_local(n_local, 1);
   parMatrixOps.multiply(J_local, res_local, resJres_local, vertexOffsets, n_global, n_global, 1, false);
   validate_result_equals_reference(resJres_local, Jres_global, vertexOffsets.at(context.rank), true);
@@ -323,6 +323,207 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
   validate_result_equals_reference(matrix_cast, Jres_global, vertexOffsets.at(context.rank), true);
 }
 
+BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOpWithSecondaryData)
+{
+  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+
+  int              n_global = 10, n_global_primary = 8, m_global = 5;
+  int              n_local, n_local_primary;
+  std::vector<int> vertexOffsets{0, 3, 7, 7, 10};
+  std::vector<int> vertexOffsetsPrimary{0, 2, 6, 6, 8};
+
+  // Definition of Matrices
+  Eigen::MatrixXd W_global(n_global, m_global);
+  Eigen::MatrixXd V_global(n_global_primary, m_global);
+  Eigen::MatrixXd J_global(n_global, n_global_primary);
+  Eigen::MatrixXd Z_global(m_global, n_global_primary);
+  Eigen::MatrixXd WZ_global(n_global, n_global_primary);
+  Eigen::MatrixXd JV_global(n_global, m_global);
+  Eigen::MatrixXd res_global(n_global_primary, 1);
+  Eigen::MatrixXd Jres_global(n_global, 1);
+
+  J_global << 0.162182308193243, 0.450541598502498, 0.106652770180584, 0.431413827463545, 0.853031117721894, 0.417267069084370, 0.780252068321138, 0.234779913372406,
+      0.794284540683907, 0.083821377996933, 0.961898080855054, 0.910647594429523, 0.622055131485066, 0.049654430325742, 0.389738836961253, 0.353158571222071,
+      0.311215042044805, 0.228976968716819, 0.004634224134067, 0.181847028302852, 0.350952380892271, 0.902716109915281, 0.241691285913833, 0.821194040197959,
+      0.528533135506213, 0.913337361501670, 0.774910464711502, 0.263802916521990, 0.513249539867053, 0.944787189721646, 0.403912145588115, 0.015403437651555,
+      0.165648729499781, 0.152378018969223, 0.817303220653433, 0.145538980384717, 0.401808033751942, 0.490864092468080, 0.096454525168389, 0.043023801657808,
+      0.601981941401637, 0.825816977489547, 0.868694705363510, 0.136068558708664, 0.075966691690842, 0.489252638400019, 0.131973292606335, 0.168990029462704,
+      0.262971284540144, 0.538342435260057, 0.084435845510910, 0.869292207640089, 0.239916153553658, 0.337719409821377, 0.942050590775485, 0.649115474956452,
+      0.654079098476782, 0.996134716626885, 0.399782649098896, 0.579704587365570, 0.123318934835166, 0.900053846417662, 0.956134540229802, 0.731722385658670,
+      0.689214503140008, 0.078175528753184, 0.259870402850654, 0.549860201836332, 0.183907788282417, 0.369246781120215, 0.575208595078466, 0.647745963136307,
+      0.748151592823709, 0.442678269775446, 0.800068480224308, 0.144954798223727, 0.239952525664903, 0.111202755293787, 0.059779542947156, 0.450923706430945;
+
+  Z_global << 0.644318130193692, 0.939001561999887, 0.207742292733028, 0.194764289567049, 0.311102286650413, 0.979748378356085, 0.594896074008614, 0.117417650855806,
+      0.378609382660268, 0.875942811492984, 0.301246330279491, 0.225921780972399, 0.923379642103244, 0.438869973126103, 0.262211747780845, 0.296675873218327,
+      0.811580458282477, 0.550156342898422, 0.470923348517591, 0.170708047147859, 0.430207391329584, 0.111119223440599, 0.602843089382083, 0.318778301925882,
+      0.532825588799455, 0.622475086001227, 0.230488160211558, 0.227664297816554, 0.184816320124136, 0.258064695912067, 0.711215780433683, 0.424166759713807,
+      0.350727103576883, 0.587044704531417, 0.844308792695389, 0.435698684103899, 0.904880968679893, 0.408719846112552, 0.221746734017240, 0.507858284661118;
+
+  W_global << 0.963088539286913, 0.037738866239552, 0.106761861607241, 0.030540946304637, 0.182922469414914,
+      0.546805718738968, 0.885168008202475, 0.653757348668560, 0.744074260367462, 0.239932010568717,
+      0.521135830804001, 0.913286827639239, 0.494173936639270, 0.500022435590201, 0.886511933076101,
+      0.231594386708524, 0.796183873585212, 0.779051723231275, 0.479922141146060, 0.028674152464106,
+      0.488897743920167, 0.098712278655574, 0.715037078400694, 0.904722238067363, 0.489901388512224,
+      0.624060088173690, 0.261871183870716, 0.903720560556316, 0.609866648422558, 0.167927145682257,
+      0.679135540865748, 0.335356839962797, 0.890922504330789, 0.617666389588455, 0.978680649641159,
+      0.395515215668593, 0.679727951377338, 0.334163052737496, 0.859442305646212, 0.712694471678914,
+      0.367436648544477, 0.136553137355370, 0.698745832334794, 0.805489424529686, 0.500471624154843,
+      0.987982003161633, 0.721227498581740, 0.197809826685929, 0.576721515614685, 0.471088374541939;
+
+  V_global << 0.963088539286913, 0.037738866239552, 0.106761861607241, 0.030540946304637, 0.182922469414914,
+      0.546805718738968, 0.885168008202475, 0.653757348668560, 0.744074260367462, 0.239932010568717,
+      0.521135830804001, 0.913286827639239, 0.494173936639270, 0.500022435590201, 0.886511933076101,
+      0.231594386708524, 0.796183873585212, 0.779051723231275, 0.479922141146060, 0.028674152464106,
+      0.488897743920167, 0.098712278655574, 0.715037078400694, 0.904722238067363, 0.489901388512224,
+      0.624060088173690, 0.261871183870716, 0.903720560556316, 0.609866648422558, 0.167927145682257,
+      0.679135540865748, 0.335356839962797, 0.890922504330789, 0.617666389588455, 0.978680649641159,
+      0.395515215668593, 0.679727951377338, 0.334163052737496, 0.859442305646212, 0.712694471678914;
+
+  WZ_global << 0.801898401838153, 1.122529091861272, 0.423201945415435, 0.300978558234156, 0.551563616222783, 1.054655768517680, 0.709477478632269, 0.264166315674375,
+      1.698638905064191, 2.252495235306823, 1.062194901100270, 0.692015805803183, 1.623336848442643, 1.286934957259726, 1.533908621128989, 0.972679319556613,
+      1.659966647284183, 2.392880960790855, 1.479843373796984, 0.892278843543251, 2.112634376079842, 1.457681533373469, 1.399610510316321, 1.151987966448499,
+      1.348697901510644, 1.659051863989714, 0.789659275602735, 0.479726420963902, 1.257027472012560, 0.798463699122210, 1.163875903906441, 0.729876025630416,
+      1.586570049108119, 1.789685309000292, 1.090184919236369, 0.659006002219424, 1.161370228579310, 1.035482281126420, 1.499868794445182, 0.947182660718915,
+      1.618531220549951, 1.790772713269325, 0.916463926569826, 0.546989894699598, 1.089407693306137, 1.052790194022541, 1.455702372306257, 0.783021389674577,
+      1.959962169636355, 2.380620645499870, 1.630339868211612, 0.927153862633654, 1.903968068499247, 1.470962702535233, 1.685349366051057, 1.222266173248617,
+      1.491283328084721, 2.103999079781337, 1.244121457180890, 0.793826284013736, 1.698194683860993, 1.236033609893653, 1.384257591822518, 1.081117931366570,
+      1.460249196277507, 1.644252093240875, 1.054732358743229, 0.623131414603751, 1.142741229794316, 0.909989695162785, 1.359481290557063, 0.902231079036841,
+      1.542692246994852, 2.303841728541361, 1.046337587563584, 0.725683826909555, 1.591295952328042, 1.647853963194485, 1.410744976161187, 0.876907034839234;
+
+  JV_global << 1.858248897047313, 1.460539092513067, 2.461299078116529, 2.310512192504156, 1.663601063552978,
+      2.262454556403901, 2.152864057058022, 2.279290537358716, 2.141955784649117, 1.990458115280576,
+      1.693328169927193, 1.273724051556671, 1.883367613821275, 1.992574656933234, 1.266511368633932,
+      2.594305087789609, 2.190155821725327, 2.827802605166358, 2.513073994214369, 1.826727179050639,
+      1.287781563257562, 1.233237310490343, 1.465797647208796, 1.356396452895832, 1.199920226638404,
+      2.01447287618639, 1.950153314629895, 1.809958228225767, 1.726383681128359, 1.451238778472211,
+      2.017525848175016, 2.124945015000776, 2.631927613644521, 2.430782107524808, 1.835883749485157,
+      3.077955951651073, 2.798988133409233, 3.368174259406194, 3.119215306918595, 2.398487458862795,
+      1.936475995984718, 1.518374914122997, 1.875596213706102, 1.776612841904873, 1.567668346437563,
+      1.818765352859875, 1.64554169573584, 1.353590656234852, 1.531229933146514, 1.472596086577711;
+
+  res_global << 0.422885689100085,
+      0.094229338887735,
+      0.598523668756741,
+      0.470924256358334,
+      0.695949313301608,
+      0.699887849928292,
+      0.638530758271838,
+      0.033603836066429;
+
+  Jres_global << 1.769847280280699,
+      2.076753899795157,
+      1.299562301016763,
+      2.174474404430145,
+      1.328344900658182,
+      1.401636726777948,
+      1.648518325118321,
+      2.233612607114002,
+      1.488783436291021,
+      1.203366631149761;
+
+  if (context.isPrimary()) {
+    n_local         = 3;
+    n_local_primary = 2;
+  } else if (context.isRank(1)) {
+    n_local         = 4;
+    n_local_primary = 4;
+  } else if (context.isRank(2)) {
+    n_local         = 0;
+    n_local_primary = 0;
+  } else {
+    BOOST_REQUIRE(context.isRank(3));
+    n_local         = 3;
+    n_local_primary = 2;
+  }
+
+  Eigen::MatrixXd W_local(n_local, m_global);
+  Eigen::MatrixXd V_local(n_local_primary, m_global);
+  Eigen::MatrixXd J_local(n_global, n_local_primary);
+  Eigen::MatrixXd Z_local(m_global, n_local_primary);
+  Eigen::MatrixXd WZ_local(n_global, n_local_primary);
+  Eigen::MatrixXd JV_local(n_local, m_global);
+  Eigen::MatrixXd res_local(n_local_primary, 1);
+  Eigen::VectorXd res_local_vec(n_local_primary);
+  Eigen::MatrixXd Jres_local(n_local, 1);
+
+  // partition and distribute matrices
+
+  int off        = vertexOffsets.at(context.rank);
+  int offPrimary = vertexOffsetsPrimary.at(context.rank);
+  for (int i = 0; i < n_global; i++)
+    for (int j = 0; j < n_local_primary; j++) {
+      J_local(i, j)  = J_global(i, j + offPrimary);
+      WZ_local(i, j) = WZ_global(i, j + offPrimary);
+    }
+
+  for (int i = 0; i < n_local_primary; i++)
+    for (int j = 0; j < m_global; j++) {
+      V_local(i, j) = V_global(i + offPrimary, j);
+    }
+
+  for (int i = 0; i < n_local; i++)
+    for (int j = 0; j < m_global; j++) {
+      W_local(i, j)  = W_global(i + off, j);
+      JV_local(i, j) = JV_global(i + off, j);
+    }
+
+  for (int i = 0; i < m_global; i++)
+    for (int j = 0; j < n_local_primary; j++) {
+      Z_local(i, j) = Z_global(i, j + offPrimary);
+    }
+
+  for (int i = 0; i < n_local_primary; i++) {
+    res_local(i)     = res_global(i + offPrimary);
+    res_local_vec(i) = res_global(i + offPrimary);
+  }
+
+  for (int i = 0; i < n_local; i++) {
+    Jres_local(i) = Jres_global(i + off);
+  }
+
+  // initialize ParallelMatrixOperations object
+  ParallelMatrixOperations parMatrixOps{};
+  parMatrixOps.initialize(true);
+
+  /*
+   * test parallel multiplications
+   */
+  BOOST_TEST_MESSAGE("Test 1");
+  std::cout << "test1" << std::endl;
+  // 1.) multiply JW = J * W (n x m), parallel: (n_local x m), based on dot product
+  Eigen::MatrixXd resJV_local(n_local, m_global);
+  parMatrixOps.multiply(J_local, V_local, resJV_local, vertexOffsets, n_global, n_global, m_global, false);
+  validate_result_equals_reference(resJV_local, JV_global, vertexOffsets.at(context.rank), true);
+
+  BOOST_TEST_MESSAGE("Test 2");
+  std::cout << "test2" << std::endl;
+  // 2.) multiply WZ = W * Z (n x n), parallel: (n_global x n_local), with cyclic multiplication
+  Eigen::MatrixXd resWZ_local(n_global, n_local_primary);
+  parMatrixOps.multiply(W_local, Z_local, resWZ_local, vertexOffsets, n_global, m_global, n_global);
+  validate_result_equals_reference(resWZ_local, WZ_global, vertexOffsetsPrimary.at(context.rank), false);
+
+  BOOST_TEST_MESSAGE("Test 3");
+  std::cout << "test3" << std::endl;
+  // 3.) multiply Jres = J * res (n x 1), parallel: (n_local x 1), based on dot product
+  Eigen::MatrixXd resJres_local(n_local, 1);
+  parMatrixOps.multiply(J_local, res_local, resJres_local, vertexOffsets, n_global, n_global_primary, 1, false);
+  validate_result_equals_reference(resJres_local, Jres_global, vertexOffsets.at(context.rank), true);
+
+  BOOST_TEST_MESSAGE("Test 4");
+  std::cout << "test4" << std::endl;
+  // 4.) multiply JW = J * W (n x m), parallel: (n_local x m) with block-wise multiplication
+  Eigen::MatrixXd resJV_local2(n_local, m_global);
+  parMatrixOps.multiply(J_local, V_local, resJV_local2, vertexOffsets, n_global, n_global, m_global, false, false);
+  validate_result_equals_reference(resJV_local2, JV_global, vertexOffsets.at(context.rank), true);
+
+  BOOST_TEST_MESSAGE("Test 5");
+  std::cout << "test5" << std::endl;
+  // 5.) multiply Jres = J * res (n x 1), parallel: (n_local x 1) with block-wise multiplication
+  Eigen::VectorXd resJres_local2(n_local); // use the function with parameter of type Eigen::VectorXd
+  parMatrixOps.multiply(J_local, res_local_vec, resJres_local2, vertexOffsets, n_global, n_global, 1, false, false);
+  Eigen::MatrixXd matrix_cast = resJres_local2;
+  validate_result_equals_reference(matrix_cast, Jres_global, vertexOffsets.at(context.rank), true);
+}
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 

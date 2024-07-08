@@ -22,7 +22,7 @@ public:
 
   virtual ~AitkenAcceleration() {}
 
-  virtual std::vector<int> getDataIDs() const
+  virtual std::vector<int> getPrimaryDataIDs() const
   {
     return _primaryDataIDs;
   }
