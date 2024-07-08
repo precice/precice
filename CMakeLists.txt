@@ -269,6 +269,11 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
 
   # 2. Check if Ginkgo was built with HIP and if HIP is available on the system
   if(PRECICE_WITH_HIP)
+    include(CheckLanguage)
+    check_language(HIP)
+    enable_language(HIP)
+    set(CMAKE_HIP_STANDARD 17)
+    set(CMAKE_HIP_STANDARD_REQUIRED ON)
     if(NOT DEFINED HIP_PATH)
      if(NOT DEFINED $ENV{HIP_PATH})
        set(HIP_PATH "/opt/rocm/hip" CACHE PATH "Path to which HIP has been installed")
@@ -283,11 +288,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
      set(ENV{ROCM_PATH} ${ROCM_PATH})
     endif()
 
-    find_package(HIP REQUIRED)
     find_package(hipsolver REQUIRED)
-
-    set(HIP_CLANG_FLAGS "-fPIC -w")
-    set(HIP_NVCC_FLAGS "-fPIC")
   endif()
 
   if(PRECICE_WITH_OMP)
