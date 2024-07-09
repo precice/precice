@@ -178,7 +178,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
                ginkgoParameter.executor,
                ginkgoParameter.maxIterations,
                ginkgoParameter.residualNorm);
-  _deviceExecutor = create_device_executor(ginkgoParameter.enableUnifiedMemory);
+  _deviceExecutor = create_device_executor(ginkgoParameter.executor, ginkgoParameter.enableUnifiedMemory);
 #ifdef PRECICE_WITH_OMP
   if (_ginkgoParameter.nThreads > 0 && _ginkgoParameter.executor == "omp-executor")
     omp_set_num_threads(_ginkgoParameter.nThreads);

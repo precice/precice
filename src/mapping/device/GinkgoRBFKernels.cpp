@@ -13,8 +13,14 @@ using gko::ext::kokkos::map_data;
 
 namespace precice::mapping {
 
-std::shared_ptr<gko::Executor> create_device_executor(bool enableUnifiedMemory)
+std::shared_ptr<gko::Executor> create_device_executor(const std::string &execName, bool enableUnifiedMemory)
 {
+
+#ifdef KOKKOS_ENABLE_SERIAL
+  if (execName == "reference-executor") {
+    return gko::ext::kokkos::create_executor(Kokkos::Serial{});
+  }
+#endif
   if (enableUnifiedMemory) {
     return gko::ext::kokkos::create_executor(Kokkos::DefaultExecutionSpace{},
                                              Kokkos::SharedSpace{});
@@ -25,27 +31,26 @@ std::shared_ptr<gko::Executor> create_device_executor(bool enableUnifiedMemory)
 
 namespace kernel {
 
-template <typename EvalFunctionType>
-void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
-                              gko::ptr_param<GinkgoMatrix>              mtx,
-                              const std::array<bool, 3>                 activeAxis,
-                              gko::ptr_param<GinkgoMatrix>              supportPoints,
-                              gko::ptr_param<GinkgoMatrix>              targetPoints,
-                              EvalFunctionType                          f,
-                              ::precice::mapping::RadialBasisParameters rbf_params,
-                              bool                                      addPolynomial,
-                              unsigned int                              extraDims)
+template <typename MemorySpace, typename EvalFunctionType>
+void create_rbf_system_matrix_impl(std::shared_ptr<const gko::Executor>      exec,
+                                   gko::ptr_param<GinkgoMatrix>              mtx,
+                                   const std::array<bool, 3>                 activeAxis,
+                                   gko::ptr_param<GinkgoMatrix>              supportPoints,
+                                   gko::ptr_param<GinkgoMatrix>              targetPoints,
+                                   EvalFunctionType                          f,
+                                   ::precice::mapping::RadialBasisParameters rbf_params,
+                                   bool                                      addPolynomial,
+                                   unsigned int                              extraDims)
 {
-  auto k_mtx           = map_data(mtx.get());
-  auto k_supportPoints = map_data(supportPoints.get());
-  auto k_targetPoints  = map_data(targetPoints.get());
+  auto k_mtx           = map_data<MemorySpace>(mtx.get());
+  auto k_supportPoints = map_data<MemorySpace>(supportPoints.get());
+  auto k_targetPoints  = map_data<MemorySpace>(targetPoints.get());
 
-  if (std::dynamic_pointer_cast<const gko::ReferenceExecutor>(exec) ||
-      std::dynamic_pointer_cast<const gko::OmpExecutor>(exec)) {
+  if (std::is_same_v<MemorySpace, Kokkos::HostSpace>) {
     // Row-major access
     Kokkos::parallel_for(
         "create_rbf_system_matrix_row_major",
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>{{0, 0}, {mtx->get_size()[0], mtx->get_size()[1]}},
+        Kokkos::MDRangePolicy<typename MemorySpace::execution_space, Kokkos::Rank<2>>{{0, 0}, {mtx->get_size()[0], mtx->get_size()[1]}},
         KOKKOS_LAMBDA(const int &i, const int &j) {
           double dist = 0;
           if (addPolynomial) {
@@ -66,7 +71,7 @@ void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
     // Column-major access
     Kokkos::parallel_for(
         "create_rbf_system_matrix_col_major",
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>{{0, 0}, {mtx->get_size()[0], mtx->get_size()[1]}},
+        Kokkos::MDRangePolicy<typename MemorySpace::execution_space, Kokkos::Rank<2>>{{0, 0}, {mtx->get_size()[0], mtx->get_size()[1]}},
         KOKKOS_LAMBDA(const int &i, const int &j) {
           double dist = 0;
           if (addPolynomial) {
@@ -83,6 +88,24 @@ void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
           dist        = Kokkos::sqrt(dist);
           k_mtx(i, j) = f(dist, rbf_params); // Evaluate the RBF function
         });
+  }
+}
+
+template <typename EvalFunctionType>
+void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
+                              gko::ptr_param<GinkgoMatrix>              mtx,
+                              const std::array<bool, 3>                 activeAxis,
+                              gko::ptr_param<GinkgoMatrix>              supportPoints,
+                              gko::ptr_param<GinkgoMatrix>              targetPoints,
+                              EvalFunctionType                          f,
+                              ::precice::mapping::RadialBasisParameters rbf_params,
+                              bool                                      addPolynomial,
+                              unsigned int                              extraDims)
+{
+  if (std::dynamic_pointer_cast<const gko::ReferenceExecutor>(exec)) {
+    create_rbf_system_matrix_impl<Kokkos::HostSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+  } else {
+    create_rbf_system_matrix_impl<Kokkos::DefaultExecutionSpace::memory_space>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
   }
 }
 
@@ -104,20 +127,20 @@ INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(CompactPolynomialC4);
 INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(CompactPolynomialC6);
 INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(CompactPolynomialC8);
 
-void fill_polynomial_matrix(std::shared_ptr<const gko::Executor> exec,
-                            gko::ptr_param<GinkgoMatrix>         mtx,
-                            gko::ptr_param<const GinkgoMatrix>   x,
-                            const unsigned int                   dims)
+template <typename MemorySpace>
+void fill_polynomial_matrix_impl(std::shared_ptr<const gko::Executor> exec,
+                                 gko::ptr_param<GinkgoMatrix>         mtx,
+                                 gko::ptr_param<const GinkgoMatrix>   x,
+                                 const unsigned int                   dims)
 {
 
-  auto k_mtx = map_data(mtx.get());
-  auto k_x   = map_data(x.get());
+  auto k_mtx = map_data<MemorySpace>(mtx.get());
+  auto k_x   = map_data<MemorySpace>(x.get());
 
-  if (std::dynamic_pointer_cast<const gko::ReferenceExecutor>(exec) ||
-      std::dynamic_pointer_cast<const gko::OmpExecutor>(exec)) {
+  if (std::is_same_v<MemorySpace, Kokkos::HostSpace>) {
     Kokkos::parallel_for(
         "fill_polynomial_matrix_row_major",
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>{{0, 0}, {mtx->get_size()[0], mtx->get_size()[1]}},
+        Kokkos::MDRangePolicy<typename MemorySpace::execution_space, Kokkos::Rank<2>>{{0, 0}, {mtx->get_size()[0], mtx->get_size()[1]}},
         KOKKOS_LAMBDA(const int &i, const int &j) {
           double value;
           if (j < dims - 1) {
@@ -130,7 +153,7 @@ void fill_polynomial_matrix(std::shared_ptr<const gko::Executor> exec,
   } else {
     Kokkos::parallel_for(
         "fill_polynomial_matrix_col_major",
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>{{0, 0}, {mtx->get_size()[0], mtx->get_size()[1]}},
+        Kokkos::MDRangePolicy<typename MemorySpace::execution_space, Kokkos::Rank<2>>{{0, 0}, {mtx->get_size()[0], mtx->get_size()[1]}},
         KOKKOS_LAMBDA(const int &i, const int &j) {
           double value;
           if (j < dims - 1) {
@@ -140,6 +163,18 @@ void fill_polynomial_matrix(std::shared_ptr<const gko::Executor> exec,
           }
           k_mtx(i, j) = value;
         });
+  }
+}
+
+void fill_polynomial_matrix(std::shared_ptr<const gko::Executor> exec,
+                            gko::ptr_param<GinkgoMatrix>         mtx,
+                            gko::ptr_param<const GinkgoMatrix>   x,
+                            const unsigned int                   dims)
+{
+  if (std::dynamic_pointer_cast<const gko::ReferenceExecutor>(exec)) {
+    fill_polynomial_matrix_impl<Kokkos::HostSpace>(exec, mtx, x, dims);
+  } else {
+    fill_polynomial_matrix_impl<Kokkos::DefaultExecutionSpace::memory_space>(exec, mtx, x, dims);
   }
 }
 } // namespace kernel
