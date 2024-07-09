@@ -437,7 +437,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
   # TODO: Remove as soon as GPU feature is in main branch
   set(Ginkgo_Path "${Ginkgo_DIR}/.." CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.")
 
-  add_library(preciceCore_ginkgo
+  add_library(preciceCore_ginkgo STATIC
           src/mapping/device/GinkgoRBFKernels.cpp
           src/utils/Ginkgo.cpp)
   target_link_libraries(preciceCore_ginkgo PRIVATE Ginkgo::ginkgo Kokkos::kokkos preciceCore)
