@@ -1,0 +1,16 @@
+name: System tests
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  run-system-tests:
+    if: ${{ github.event.label.name == 'trigger-system-tests' }}
+    needs: gather-refs
+    uses: precice/tutorials/.github/workflows/run_testsuite_workflow.yml@develop
+    with:
+      suites: release_test
+      build_args: PRECICE_REF:${{ github.event.pull_request.head.sha }}
+      systests_branch: develop
+      loglevel: "DEBUG"
