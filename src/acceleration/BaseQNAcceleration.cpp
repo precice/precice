@@ -306,7 +306,6 @@ void BaseQNAcceleration::performAcceleration(
 
   // assume data structures associated with the LS system can be updated easily.
 
-  // scale data values
   concatenateCouplingData(cplData, _primaryDataIDs, _primaryValues, _oldPrimaryValues);
   concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
 

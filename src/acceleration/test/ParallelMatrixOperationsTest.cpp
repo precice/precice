@@ -323,6 +323,7 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
   validate_result_equals_reference(matrix_cast, Jres_global, vertexOffsets.at(context.rank), true);
 }
 
+// Test for the matrix operation when secondary data exists. The multiplicator matrices from the previous test are cut down in columns or rows to match new shapes.
 BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOpWithSecondaryData)
 {
   PRECICE_TEST(""_on(4_ranks).setupIntraComm());
