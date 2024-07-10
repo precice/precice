@@ -874,8 +874,8 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialImplicitCouplingSchem
   // Set acceleration
   setSerialAcceleration(scheme, first, second);
 
-  if (scheme->doesFirstStep() && _accelerationConfig->getAcceleration() && not _accelerationConfig->getAcceleration()->getDataIDs().empty()) {
-    DataID dataID = *(_accelerationConfig->getAcceleration()->getDataIDs().begin());
+  if (scheme->doesFirstStep() && _accelerationConfig->getAcceleration() && not _accelerationConfig->getAcceleration()->getPrimaryDataIDs().empty()) {
+    DataID dataID = *(_accelerationConfig->getAcceleration()->getPrimaryDataIDs().begin());
     PRECICE_CHECK(not scheme->hasSendData(dataID),
                   "In case of serial coupling, acceleration can be defined for data of second participant only!");
   }
@@ -945,10 +945,10 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   setParallelAcceleration(scheme, _config.controller);
 
   PRECICE_WARN_IF(
-      not scheme->doesFirstStep() && _accelerationConfig->getAcceleration() && _accelerationConfig->getAcceleration()->getDataIDs().size() < 3,
+      not scheme->doesFirstStep() && _accelerationConfig->getAcceleration() && _accelerationConfig->getAcceleration()->getPrimaryDataIDs().size() < 3,
       "Due to numerical reasons, for multi coupling, the number of coupling data vectors should be at least 3, not: {}. "
       "Please check the <data .../> subtags in your <acceleration:.../> and make sure that you have at least 3.",
-      _accelerationConfig->getAcceleration()->getDataIDs().size());
+      _accelerationConfig->getAcceleration()->getPrimaryDataIDs().size());
   return PtrCouplingScheme(scheme);
 }
 
@@ -1174,7 +1174,7 @@ void CouplingSchemeConfiguration::setSerialAcceleration(
     for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
       _meshConfig->addNeededMesh(second, neededMesh);
     }
-    for (const DataID dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
+    for (const DataID dataID : _accelerationConfig->getAcceleration()->getPrimaryDataIDs()) {
       checkSerialImplicitAccelerationData(dataID, first, second);
     }
     scheme->setAcceleration(_accelerationConfig->getAcceleration());
@@ -1189,7 +1189,7 @@ void CouplingSchemeConfiguration::setParallelAcceleration(
     for (std::string &neededMesh : _accelerationConfig->getNeededMeshes()) {
       _meshConfig->addNeededMesh(participant, neededMesh);
     }
-    for (const DataID dataID : _accelerationConfig->getAcceleration()->getDataIDs()) {
+    for (const DataID dataID : _accelerationConfig->getAcceleration()->getPrimaryDataIDs()) {
       checkIfDataIsExchanged(dataID);
     }
     scheme->setAcceleration(_accelerationConfig->getAcceleration());

@@ -88,9 +88,9 @@ public:
   /**
    * @brief Returns all IQN involved data IDs.
    */
-  virtual std::vector<int> getDataIDs() const
+  virtual std::vector<int> getPrimaryDataIDs() const
   {
-    return _dataIDs;
+    return _primaryDataIDs;
   }
 
   /**
@@ -155,11 +155,11 @@ protected:
   /// Maximum number of old time windows (with data values) kept.
   int _timeWindowsReused;
 
-  /// Data IDs of data to be involved in the IQN algorithm.
-  std::vector<int> _dataIDs;
+  /// Data IDs of primary data to be involved in the IQN coefficient computation.
+  std::vector<int> _primaryDataIDs;
 
-  /// Data IDs of data not involved in IQN coefficient computation.
-  std::vector<int> _secondaryDataIDs;
+  /// Data IDs of all coupling data.
+  std::vector<int> _dataIDs;
 
   /// Indicates the first iteration, where constant relaxation is used.
   bool _firstIteration = true;
@@ -185,14 +185,17 @@ protected:
    */
   bool _resetLS = false;
 
+  /// @brief Solver output regarding primary data from last iteration.
+  Eigen::VectorXd _oldPrimaryXTilde;
+
   /// @brief Solver output from last iteration.
   Eigen::VectorXd _oldXTilde;
 
+  /// @brief Current iteration residuals of primary IQN data. Temporary.
+  Eigen::VectorXd _primaryResiduals;
+
   /// @brief Current iteration residuals of IQN data. Temporary.
   Eigen::VectorXd _residuals;
-
-  /// @brief Current iteration residuals of secondary data.
-  std::map<int, Eigen::VectorXd> _secondaryResiduals;
 
   /// @brief Stores residual deltas.
   Eigen::MatrixXd _matrixV;
@@ -230,11 +233,16 @@ protected:
    */
   std::vector<int> _dimOffsets;
 
+  /** @brief Stores the local dimensions regarding primary data,
+   */
+  std::vector<int> _dimOffsetsPrimary;
+
   /// @brief write some debug/acceleration info to file
   std::ostringstream _infostringstream;
   std::fstream       _infostream;
 
   int getLSSystemRows();
+  int getPrimaryLSSystemRows();
 
   /**
    * @brief Marks a iteration sequence as converged.
@@ -253,9 +261,6 @@ protected:
   /// Applies the filter method for the least-squares system, defined in the configuration
   virtual void applyFilter();
 
-  /// Computes underrelaxation for the secondary data
-  virtual void computeUnderrelaxationSecondaryData(const DataMap &cplData) = 0;
-
   /// Computes the quasi-Newton update using the specified pp scheme (IQNIMVJ, IQNILS)
   virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate) = 0;
 
@@ -268,14 +273,20 @@ protected:
   int its = 0, tWindows = 0;
 
 private:
-  /// @brief Concatenation of all coupling data involved in the QN system.
+  /// @brief Concatenation of all primary data involved in the QN system.
+  Eigen::VectorXd _primaryValues;
+
+  /// @brief Concatenation of all old primary data involved in the QN system.
+  Eigen::VectorXd _oldPrimaryValues;
+
+  /// @brief Difference between solver input and output from last time window regarding primary data
+  Eigen::VectorXd _oldPrimaryResiduals;
+
+  /// @brief Concatenation of all primary and secondary data involved in the QN system.
   Eigen::VectorXd _values;
 
-  /// @brief Concatenation of all (old) coupling data involved in the QN system.
+  /// @brief Concatenation of all old primary and secondary data involved in the QN system.
   Eigen::VectorXd _oldValues;
-
-  /// @brief Difference between solver input and output from last time window
-  Eigen::VectorXd _oldResiduals;
 
   /** @brief backup of the V,W and matrixCols data structures. Needed for the skipping of
    *  initial relaxation, if previous time window converged within one iteration i.e., V and W
