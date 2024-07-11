@@ -357,21 +357,14 @@ bool ParticipantState::hasExports() const
 void ParticipantState::exportIntermediate(IntermediateExport exp)
 {
   for (const io::ExportContext &context : exportContexts()) {
-    if (exp.complete && (context.everyNTimeWindows > 0) && (exp.timewindow % context.everyNTimeWindows == 0)) {
-      for (const MeshContext *meshContext : usedMeshContexts()) {
-        auto &mesh = *meshContext->mesh;
-        PRECICE_DEBUG("Exporting mesh {} for timewindow {} to location \"{}\"", mesh.getName(), exp.timewindow, context.location);
-        context.exporter->doExport(fmt::format("{}-{}.dt{}", mesh.getName(), getName(), exp.timewindow), context.location, mesh);
-      }
+    if (exp.complete) {
+      //PRECICE_DEBUG("Exporting mesh {} for timewindow {} to location \"{}\"",  .getName(), exp.timewindow, context.location);
+      context.exporter->export(exp.timewindow, exp.time);
     }
 
     if (context.everyIteration) {
-      for (const MeshContext *meshContext : usedMeshContexts()) {
-        auto &mesh = *meshContext->mesh;
-        PRECICE_DEBUG("Exporting mesh {} for iteration {} to location \"{}\"", meshContext->mesh->getName(), exp.iteration, context.location);
-        /// @todo this is the global iteration count. Shouldn't this be local to the timestep? example .dtN.itM or similar
-        context.exporter->doExport(fmt::format("{}-{}.it{}", mesh.getName(), getName(), exp.iteration), context.location, mesh);
-      }
+      PRECICE_DEBUG("Exporting mesh {} for iteration {} to location \"{}\"", meshContext->mesh->getName(), exp.iteration, context.location);
+      context.exporter->export(exp.iteration, exp.time);
     }
   }
 

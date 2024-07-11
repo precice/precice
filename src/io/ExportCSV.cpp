@@ -35,34 +35,40 @@ struct StridedAccess {
 };
 } // namespace
 
-void ExportCSV::doExport(
-    const std::string &name,
-    const std::string &location,
-    const mesh::Mesh & mesh)
+ExportCSV::ExportCSV(
+    std::string_view  participantName,
+    std::string_view  location,
+    const mesh::Mesh &mesh,
+    ExportKind        kind,
+    int               frequency,
+    int               rank,
+    int               size)
+    : Export(participantName, location, mesh, kind, frequency, rank, size){};
+
+void ExportCSV::doExport(int index, double time)
 {
-  PRECICE_TRACE(name, location, mesh.getName());
-  PRECICE_ASSERT(!name.empty());
+  PRECICE_TRACE(index, time, _mesh->getName());
+  PRECICE_ASSERT(index >= 0);
+  PRECICE_ASSERT(time >= 0.0);
 
-  // Ignore empty meshes
-  if (mesh.empty()) {
-    return;
+  // Construct filename
+  std::string filename;
+  if (isParallel()) {
+    // Participant-Mesh-r2.it2
+    filename = fmt::format("{}-{}-r{}.{}{}.csv", _participantName, _mesh->getName(), _rank, kindPrefix(), index);
+  } else {
+    // Participant-Mesh.it2
+    filename = fmt::format("{}-{}.{}{}.csv", _participantName, _mesh->getName(), kindPrefix(), index);
   }
-
-  // Construct full filename
-  std::string filename{name};
-  int         rank{0};
-  if (utils::IntraComm::isParallel()) {
-    rank = utils::IntraComm::getRank();
-    filename.append("_").append(std::to_string(rank));
-  }
-  filename.append(".csv");
 
   namespace fs = std::filesystem;
-  fs::path outfile(location);
-  if (not location.empty()) {
+  fs::path outfile(_location);
+  if (not _location.empty()) {
     fs::create_directories(outfile);
   }
   outfile /= filename;
+
+  const auto &mesh = *_mesh;
 
   // Prepare filestream
   std::ofstream outFile(outfile.string(), std::ios::trunc);
@@ -98,7 +104,7 @@ void ExportCSV::doExport(
   }
 
   // write vertex data
-  const std::string rankCol = ";" + std::to_string(rank);
+  const std::string rankCol = ";" + std::to_string(_rank);
   const auto        size    = mesh.nVertices();
   for (std::size_t vid = 0; vid < size; ++vid) {
     const auto &vertex = mesh.vertex(vid);

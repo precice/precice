@@ -23,10 +23,16 @@ namespace io {
 /// Common class to generate the VTK XML-based formats.
 class ExportXML : public Export {
 public:
-  void doExport(
-      const std::string &name,
-      const std::string &location,
-      const mesh::Mesh & mesh) override;
+  ExportXML(
+      std::string_view  participantName,
+      std::string_view  location,
+      const mesh::Mesh &mesh,
+      ExportKind        kind,
+      int               frequency,
+      int               rank,
+      int               size);
+
+  void doExport(int index, double time) final override;
 
   static void writeVertex(
       const Eigen::VectorXd &position,
@@ -67,10 +73,7 @@ private:
   /**
    * @brief Writes the primary file (called only by the primary rank)
    */
-  void writeParallelFile(
-      const std::string &name,
-      const std::string &location,
-      const mesh::Mesh & mesh) const;
+  void writeParallelFile(int index, double time) const;
 
   virtual void writeParallelCells(std::ostream &out) const = 0;
 
@@ -79,10 +82,7 @@ private:
   /**
    * @brief Writes the sub file for each rank
    */
-  void writeSubFile(
-      const std::string &name,
-      const std::string &location,
-      const mesh::Mesh & mesh) const;
+  void writeSubFile(int index, double time) const;
 
   void exportPoints(
       std::ostream &    outFile,

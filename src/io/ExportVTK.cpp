@@ -17,28 +17,38 @@
 
 namespace precice::io {
 
-void ExportVTK::doExport(
-    const std::string &name,
-    const std::string &location,
-    const mesh::Mesh & mesh)
+ExportVTK::ExportVTK(
+    std::string_view  participantName,
+    std::string_view  location,
+    const mesh::Mesh &mesh,
+    ExportKind        kind,
+    int               frequency,
+    int               rank,
+    int               size)
+    : Export(participantName, location, mesh, kind, frequency, rank, size){};
+
+void ExportVTK::doExport(int index, double time)
 {
-  PRECICE_TRACE(name, location, mesh.getName());
-  PRECICE_ASSERT(name != std::string(""));
-  PRECICE_ASSERT(!utils::IntraComm::isParallel(), "ExportVTK only supports serial participants.");
+  PRECICE_TRACE(index, time, _mesh->getName());
+  PRECICE_ASSERT(index >= 0);
+  PRECICE_ASSERT(time >= 0.0);
+  PRECICE_ASSERT(!isParallel(), "ExportVTK only supports serial participants.");
+
+  auto filename = fmt::format("{}-{}.{}{}.vtk", _participantName, _mesh->getName(), kindPrefix(), index);
 
   namespace fs = std::filesystem;
-  fs::path outfile(location);
-  if (not location.empty())
+  fs::path outfile(_location);
+  if (not _location.empty())
     fs::create_directories(outfile);
-  outfile = outfile / fs::path(name + ".vtk");
+  outfile = outfile / filename;
   std::ofstream outstream(outfile.string(), std::ios::trunc);
   PRECICE_CHECK(outstream, "VTK export failed to open destination file \"{}\"", outfile.generic_string());
 
   initializeWriting(outstream);
   writeHeader(outstream);
-  exportMesh(outstream, mesh);
-  exportData(outstream, mesh);
-  exportGradient(outstream, mesh);
+  exportMesh(outstream, *_mesh);
+  exportData(outstream, *_mesh);
+  exportGradient(outstream, *_mesh);
   outstream.close();
 }
 
