@@ -76,13 +76,13 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
   }
 }
 
-std::string ExportXML::parallelPieceFilenameFor(int index, int rank)
+std::string ExportXML::parallelPieceFilenameFor(int index, int rank) const
 {
   PRECICE_ASSERT(isParallel());
   return fmt::format("{}-{}-r{}.{}{}.{}", _participantName, _mesh->getName(), rank, kindPrefix(), index, getParallelExtension());
 }
 
-std::string ExportXML::serialPieceFilename(int index)
+std::string ExportXML::serialPieceFilename(int index) const
 {
   PRECICE_ASSERT(!isParallel());
   return fmt::format("{}-{}.{}{}.{}", _participantName, _mesh->getName(), kindPrefix(), index, getParallelExtension());

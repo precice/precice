@@ -591,33 +591,68 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   // Add export contexts
   for (io::ExportContext &exportContext : _exportConfig->exportContexts()) {
-    io::PtrExport exporter;
-    if (exportContext.type == VALUE_VTK) {
-      // This is handled with respect to the current configuration context.
-      // Hence, this is potentially wrong for every participant other than context.name.
-      if (context.size > 1) {
-        // Only display the warning message if this participant configuration is the current one.
-        if (context.name == participant->getName()) {
-          PRECICE_ERROR("You attempted to use the legacy VTK exporter with the parallel participant {}, which isn't supported."
-                        "Migrate to another exporter, such as the VTU exporter by specifying \"<export:vtu ... />\"  instead of \"<export:vtk ... />\".",
-                        participant->getName());
-        }
-      } else {
-        exporter = io::PtrExport(new io::ExportVTK());
-      }
-    } else if (exportContext.type == VALUE_VTU) {
-      exporter = io::PtrExport(new io::ExportVTU());
-    } else if (exportContext.type == VALUE_VTP) {
-      exporter = io::PtrExport(new io::ExportVTP());
-    } else if (exportContext.type == VALUE_CSV) {
-      exporter = io::PtrExport(new io::ExportCSV());
-    } else {
-      PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
-                    _participants.back()->getName(), exportContext.type);
-    }
-    exportContext.exporter = std::move(exporter);
+    auto kind = exportContext.everyIteration ? io::Export::ExportKind::Iterations : io::Export::ExportKind::Iterations;
+    // Create one exporter per mesh
+    for (const auto &meshContext : participant->usedMeshContexts()) {
 
-    _participants.back()->addExportContext(exportContext);
+      exportContext.meshName = meshContext->mesh->getName();
+
+      io::PtrExport exporter;
+      if (exportContext.type == VALUE_VTK) {
+        // This is handled with respect to the current configuration context.
+        // Hence, this is potentially wrong for every participant other than context.name.
+        if (context.size > 1) {
+          // Only display the warning message if this participant configuration is the current one.
+          if (context.name == participant->getName()) {
+            PRECICE_ERROR("You attempted to use the legacy VTK exporter with the parallel participant {}, which isn't supported."
+                          "Migrate to another exporter, such as the VTU exporter by specifying \"<export:vtu ... />\"  instead of \"<export:vtk ... />\".",
+                          participant->getName());
+          }
+        } else {
+          exporter = io::PtrExport(new io::ExportVTK(
+              participant->getName(),
+              exportContext.location,
+              *meshContext->mesh,
+              kind,
+              exportContext.everyNTimeWindows,
+              context.rank,
+              context.size));
+        }
+      } else if (exportContext.type == VALUE_VTU) {
+        exporter = io::PtrExport(new io::ExportVTU(
+            participant->getName(),
+            exportContext.location,
+            *meshContext->mesh,
+            kind,
+            exportContext.everyNTimeWindows,
+            context.rank,
+            context.size));
+      } else if (exportContext.type == VALUE_VTP) {
+        exporter = io::PtrExport(new io::ExportVTP(
+            participant->getName(),
+            exportContext.location,
+            *meshContext->mesh,
+            kind,
+            exportContext.everyNTimeWindows,
+            context.rank,
+            context.size));
+      } else if (exportContext.type == VALUE_CSV) {
+        exporter = io::PtrExport(new io::ExportCSV(
+            participant->getName(),
+            exportContext.location,
+            *meshContext->mesh,
+            kind,
+            exportContext.everyNTimeWindows,
+            context.rank,
+            context.size));
+      } else {
+        PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
+                      _participants.back()->getName(), exportContext.type);
+      }
+      exportContext.exporter = std::move(exporter);
+
+      _participants.back()->addExportContext(exportContext);
+    }
   }
   _exportConfig->resetExports();
 

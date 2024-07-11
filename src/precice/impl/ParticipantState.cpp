@@ -341,11 +341,8 @@ void ParticipantState::exportInitial()
       continue;
     }
 
-    for (const MeshContext *meshContext : usedMeshContexts()) {
-      auto &mesh = *meshContext->mesh;
-      PRECICE_DEBUG("Exporting initial mesh {} to location \"{}\"", mesh.getName(), context.location);
-      context.exporter->doExport(fmt::format("{}-{}.init", mesh.getName(), getName()), context.location, mesh);
-    }
+    PRECICE_DEBUG("Exporting initial mesh {} to location \"{}\"", context.meshName, context.location);
+    context.exporter->doExport(0, 0.0);
   }
 }
 
@@ -358,13 +355,13 @@ void ParticipantState::exportIntermediate(IntermediateExport exp)
 {
   for (const io::ExportContext &context : exportContexts()) {
     if (exp.complete) {
-      //PRECICE_DEBUG("Exporting mesh {} for timewindow {} to location \"{}\"",  .getName(), exp.timewindow, context.location);
-      context.exporter->export(exp.timewindow, exp.time);
+      PRECICE_DEBUG("Exporting mesh {} for timewindow {} to location \"{}\"", context.meshName, exp.timewindow, context.location);
+      context.exporter->doExport(exp.timewindow, exp.time);
     }
 
     if (context.everyIteration) {
-      PRECICE_DEBUG("Exporting mesh {} for iteration {} to location \"{}\"", meshContext->mesh->getName(), exp.iteration, context.location);
-      context.exporter->export(exp.iteration, exp.time);
+      PRECICE_DEBUG("Exporting mesh {} for iteration {} to location \"{}\"", context.meshName, exp.iteration, context.location);
+      context.exporter->doExport(exp.iteration, exp.time);
     }
   }
 

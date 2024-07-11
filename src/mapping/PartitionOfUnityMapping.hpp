@@ -407,8 +407,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU
     centerMesh.setVertexOffsets(std::move(vertexOffsets));
   }
 
-  io::ExportVTU exporter;
-  exporter.doExport(centerMesh.getName(), "exports", centerMesh);
+  io::ExportVTU exporter{"PoU", "exports", centerMesh, io::Export::ExportKind::TimeWindows, 1, utils::IntraComm::getRank(), utils::IntraComm::getSize()};
+  exporter.doExport(0, 0.0);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

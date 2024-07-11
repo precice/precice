@@ -97,6 +97,9 @@ private:
       const mesh::Mesh &mesh) const;
 
   void exportGradient(const mesh::PtrData data, const int dataDim, std::ostream &outFile) const;
+
+  std::string parallelPieceFilenameFor(int index, int rank) const;
+  std::string serialPieceFilename(int index) const;
 };
 
 } // namespace io
