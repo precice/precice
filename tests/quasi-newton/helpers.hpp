@@ -7,7 +7,7 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-void runTestQN(std::string const &config, TestContext const &context);
+void runTestQN(bool includeSecondaryData, std::string const &config, TestContext const &context);
 
 void runTestQNEmptyPartition(std::string const &config, TestContext const &context);
 

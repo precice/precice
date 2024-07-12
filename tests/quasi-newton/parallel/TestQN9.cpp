@@ -2,17 +2,18 @@
 
 #include "testing/Testing.hpp"
 
+#include <boost/test/data/test_case.hpp>
 #include <precice/precice.hpp>
 #include "../helpers.hpp"
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(QuasiNewton)
 BOOST_AUTO_TEST_SUITE(Parallel)
-BOOST_AUTO_TEST_CASE(TestQN9)
+BOOST_DATA_TEST_CASE(TestQN9, boost::unit_test::data::make({true, false}), includeSecondaryData)
 {
   PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
   // serial coupling, IQN-IMVJ acceleration, to test `RS-SVD` method for restart;
-  runTestQN(context.config(), context);
+  runTestQN(includeSecondaryData, context.config(), context);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Integration
