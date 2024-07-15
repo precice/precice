@@ -51,6 +51,7 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
 
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
   exportVTP.doExport(0, 0.0);
+  exportVTP.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
@@ -82,6 +83,7 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
 
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
   exportVTP.doExport(0, 0.0);
+  exportVTP.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
@@ -99,6 +101,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
   exportVTP.doExport(0, 0.0);
+  exportVTP.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
@@ -130,8 +133,9 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh.createVertex(Eigen::Vector2d::Constant(3.0));
   }
 
-  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
+  exportVTP.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
@@ -166,8 +170,9 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh.createVertex(Eigen::Vector3d::Constant(3.0));
   }
 
-  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
+  exportVTP.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportSplitSquare)
@@ -225,8 +230,9 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh.createTriangle(eo1, e12, e2o);
   }
 
-  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
+  exportVTP.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // IOTests

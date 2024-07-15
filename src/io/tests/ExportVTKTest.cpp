@@ -47,6 +47,7 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
 
   io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
   exportVTK.doExport(0, 0.0);
+  exportVTK.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
@@ -64,6 +65,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 
   io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
   exportVTK.doExport(0, 0.0);
+  exportVTK.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
@@ -82,6 +84,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 
   io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
   exportVTK.doExport(0, 0.0);
+  exportVTK.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportTetrahedron)
@@ -98,6 +101,7 @@ BOOST_AUTO_TEST_CASE(ExportTetrahedron)
 
   io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
   exportVTK.doExport(0, 0.0);
+  exportVTK.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // ExportVTK

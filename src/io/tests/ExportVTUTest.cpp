@@ -52,6 +52,7 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
   gradientsVector.setOnes();
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
   exportVTU.doExport(0, 0.0);
+  exportVTU.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
@@ -83,6 +84,7 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
   gradientsVector.setOnes();
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
   exportVTU.doExport(0, 0.0);
+  exportVTU.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
@@ -100,6 +102,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
   exportVTU.doExport(0, 0.0);
+  exportVTU.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
@@ -132,8 +135,9 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh.createVertex(Eigen::Vector2d::Constant(3.0));
   }
 
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
+  exportVTU.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
@@ -169,8 +173,9 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh.createVertex(Eigen::Vector3d::Constant(3.0));
   }
 
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
+  exportVTU.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportSplitSquare)
@@ -228,8 +233,9 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh.createTriangle(eo1, e12, e2o);
   }
 
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
+  exportVTU.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportOneTetrahedron)
@@ -244,8 +250,9 @@ BOOST_AUTO_TEST_CASE(ExportOneTetrahedron)
 
   mesh.createTetrahedron(v0, v1, v2, v3);
 
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
+  exportVTU.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportPartitionedCube)
@@ -287,8 +294,9 @@ BOOST_AUTO_TEST_CASE(ExportPartitionedCube)
     mesh.createTetrahedron(v000, v100, v110, v111);
   }
 
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
+  exportVTU.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // IOTests
