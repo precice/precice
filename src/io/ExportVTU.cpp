@@ -37,12 +37,12 @@ std::string ExportVTU::getVTKFormat() const
 
 std::string ExportVTU::getParallelExtension() const
 {
-  return ".pvtu";
+  return "pvtu";
 }
 
 std::string ExportVTU::getPieceExtension() const
 {
-  return ".vtu";
+  return "vtu";
 }
 
 std::string ExportVTU::getPieceAttributes(const mesh::Mesh &mesh) const

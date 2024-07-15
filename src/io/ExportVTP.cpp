@@ -25,12 +25,12 @@ std::string ExportVTP::getVTKFormat() const
 
 std::string ExportVTP::getParallelExtension() const
 {
-  return ".pvtp";
+  return "pvtp";
 }
 
 std::string ExportVTP::getPieceExtension() const
 {
-  return ".vtp";
+  return "vtp";
 }
 
 std::string ExportVTP::getPieceAttributes(const mesh::Mesh &mesh) const

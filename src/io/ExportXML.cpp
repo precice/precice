@@ -40,12 +40,12 @@ void ExportXML::doExport(int index, double time)
   if (not _location.empty())
     std::filesystem::create_directories(_location);
 
-  if (_rank == 1) {
+  if (isParallel() && _rank == 0) {
     writeParallelFile(index, time);
   }
-  if (mesh.nVertices() > 0) { // only procs at the coupling interface should write output (for performance reasons)
-    writeSubFile(index, time);
-  }
+  //if (mesh.nVertices() > 0) { // only procs at the coupling interface should write output (for performance reasons)
+  writeSubFile(index, time);
+  //}
 }
 
 void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
@@ -79,13 +79,13 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
 std::string ExportXML::parallelPieceFilenameFor(int index, int rank) const
 {
   PRECICE_ASSERT(isParallel());
-  return fmt::format("{}-{}-r{}.{}{}.{}", _participantName, _mesh->getName(), rank, kindPrefix(), index, getParallelExtension());
+  return fmt::format("{}-{}-r{}.{}_{}.{}", _participantName, _mesh->getName(), rank, kindPrefix(), index, getPieceExtension());
 }
 
 std::string ExportXML::serialPieceFilename(int index) const
 {
   PRECICE_ASSERT(!isParallel());
-  return fmt::format("{}-{}.{}{}.{}", _participantName, _mesh->getName(), kindPrefix(), index, getParallelExtension());
+  return fmt::format("{}-{}.{}_{}.{}", _participantName, _mesh->getName(), kindPrefix(), index, getPieceExtension());
 }
 
 void ExportXML::writeParallelFile(int index, double time) const
@@ -93,8 +93,8 @@ void ExportXML::writeParallelFile(int index, double time) const
   PRECICE_ASSERT(isParallel());
 
   // Construct filename
-  // Participant-Mesh.it2.pvtu
-  auto filename = fmt::format("{}-{}.{}{}.{}", _participantName, _mesh->getName(), _rank, kindPrefix(), index, getParallelExtension());
+  // Participant-Mesh.it_2.pvtu
+  auto filename = fmt::format("{}-{}.{}_{}.{}", _participantName, _mesh->getName(), kindPrefix(), index, getParallelExtension());
 
   namespace fs = std::filesystem;
   fs::path outfile(_location);
@@ -117,17 +117,17 @@ void ExportXML::writeParallelFile(int index, double time) const
 
   writeParallelData(outParallelFile);
 
-  const auto &offsets = _mesh->getVertexOffsets();
-  PRECICE_ASSERT(offsets.size() > 0);
-  if (offsets[0] > 0) {
-    outParallelFile << "      <Piece Source=\"" << parallelPieceFilenameFor(index, 0) << "\"/>\n";
-  }
+  // const auto &offsets = _mesh->getVertexOffsets();
+  //PRECICE_ASSERT(offsets.size() > 0);
+  //if (offsets[0] > 0) {
+  outParallelFile << "      <Piece Source=\"" << parallelPieceFilenameFor(index, 0) << "\"/>\n";
+  //}
   for (size_t rank : utils::IntraComm::allSecondaryRanks()) {
-    PRECICE_ASSERT(rank < offsets.size());
-    if (offsets[rank] - offsets[rank - 1] > 0) {
-      // only non-empty subfiles
-      outParallelFile << "      <Piece Source=\"" << parallelPieceFilenameFor(index, rank) << "\"/>\n";
-    }
+    //  PRECICE_ASSERT(rank < offsets.size());
+    //  if (offsets[rank] - offsets[rank - 1] > 0) {
+    //    // only non-empty subfiles
+    outParallelFile << "      <Piece Source=\"" << parallelPieceFilenameFor(index, rank) << "\"/>\n";
+    //  }
   }
 
   outParallelFile << "   </P" << formatType << ">\n";
@@ -136,20 +136,16 @@ void ExportXML::writeParallelFile(int index, double time) const
   outParallelFile.close();
 }
 
-namespace {
-std::string getPieceSuffix()
-{
-  if (!utils::IntraComm::isParallel()) {
-    return "";
-  }
-  return "_" + std::to_string(utils::IntraComm::getRank());
-}
-} // namespace
-
 void ExportXML::writeSubFile(int index, double time) const
 {
-  auto filename = serialPieceFilename(index);
-  namespace fs  = std::filesystem;
+  std::string filename;
+  if (isParallel()) {
+    filename = parallelPieceFilenameFor(index, _rank);
+  } else {
+    filename = serialPieceFilename(index);
+  }
+
+  namespace fs = std::filesystem;
   fs::path outfile(_location);
   outfile /= filename;
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);
