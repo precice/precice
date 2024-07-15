@@ -533,6 +533,11 @@ private:
   void checkCompletenessRequiredActions();
 
   /**
+   * @brief Issues an error if coupling data does not contain stamples.
+   */
+  void checkCouplingDataAvailable();
+
+  /**
    * @brief Initialize txt writers for iterations and convergence tracking
    */
   void initializeTXTWriters();
