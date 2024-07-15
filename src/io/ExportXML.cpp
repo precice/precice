@@ -40,12 +40,16 @@ void ExportXML::doExport(int index, double time)
   if (not _location.empty())
     std::filesystem::create_directories(_location);
 
-  if (isParallel() && _rank == 0) {
-    writeParallelFile(index, time);
+  if (isParallel()) {
+    if (_rank == 0) {
+      writeParallelFile(index, time);
+    }
+    if (!mesh.isPartitionEmpty(_rank)) { // only procs at the coupling interface should write output (for performance reasons)
+      writeSubFile(index, time);
+    }
+  } else {
+    writeSubFile(index, time);
   }
-  //if (mesh.nVertices() > 0) { // only procs at the coupling interface should write output (for performance reasons)
-  writeSubFile(index, time);
-  //}
 }
 
 void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
@@ -118,16 +122,11 @@ void ExportXML::writeParallelFile(int index, double time) const
   writeParallelData(outParallelFile);
 
   // const auto &offsets = _mesh->getVertexOffsets();
-  //PRECICE_ASSERT(offsets.size() > 0);
-  //if (offsets[0] > 0) {
-  outParallelFile << "      <Piece Source=\"" << parallelPieceFilenameFor(index, 0) << "\"/>\n";
-  //}
-  for (size_t rank : utils::IntraComm::allSecondaryRanks()) {
-    //  PRECICE_ASSERT(rank < offsets.size());
-    //  if (offsets[rank] - offsets[rank - 1] > 0) {
-    //    // only non-empty subfiles
-    outParallelFile << "      <Piece Source=\"" << parallelPieceFilenameFor(index, rank) << "\"/>\n";
-    //  }
+  for (size_t rank : utils::IntraComm::allRanks()) {
+    if (!_mesh->isPartitionEmpty(rank)) {
+      // only non-empty subfiles
+      outParallelFile << "      <Piece Source=\"" << parallelPieceFilenameFor(index, rank) << "\"/>\n";
+    }
   }
 
   outParallelFile << "   </P" << formatType << ">\n";

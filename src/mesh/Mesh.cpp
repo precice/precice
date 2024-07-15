@@ -276,6 +276,19 @@ void Mesh::clearPartitioning()
   _globalNumberOfVertices = 0;
 }
 
+bool Mesh::isPartitionEmpty(Rank rank) const
+{
+  // Without offset data, we assume non-empty partititions
+  if (_vertexOffsets.empty()) {
+    return false;
+  }
+  PRECICE_ASSERT(_vertexOffsets.size() >= static_cast<std::size_t>(rank));
+  if (rank == 0) {
+    return _vertexOffsets[0] == 0;
+  }
+  return _vertexOffsets[rank] - _vertexOffsets[rank - 1] == 0;
+}
+
 Eigen::VectorXd Mesh::getOwnedVertexData(const Eigen::VectorXd &values)
 {
   std::vector<double> ownedDataVector;
