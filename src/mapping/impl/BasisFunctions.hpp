@@ -3,23 +3,32 @@
 #if defined(__NVCC__)
 
 #include <cuda_runtime.h>
+#include <ginkgo/extensions/kokkos.hpp>
+#include <ginkgo/ginkgo.hpp>
+
 #define BOOST_PP_VARIADICS 1
 #define PRECICE_HOST_DEVICE __host__ __device__
 #define PRECICE_MEMORY_SPACE __device__
-#define FMA std::fma
+#define FMA Kokkos::fma
+#define LOG Kokkos::log
 
 #elif defined(__HIPCC__)
 
 #include <hip/hip_runtime.h>
+#include <ginkgo/extensions/kokkos.hpp>
+#include <ginkgo/ginkgo.hpp>
+
 #define PRECICE_HOST_DEVICE __host__ __device__
 #define PRECICE_MEMORY_SPACE __device__
-#define FMA std::fma
+#define FMA Kokkos::fma
+#define LOG Kokkos::log
 
 #else
 
 #define PRECICE_HOST_DEVICE
 #define PRECICE_MEMORY_SPACE
 #define FMA std::fma
+#define LOG std::log
 
 #endif
 
@@ -104,7 +113,7 @@ public:
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
   {
     // We don't need to read any values from params since there is no need here
-    return std::log(std::max(radius, NUMERICAL_ZERO_DIFFERENCE_DEVICE)) * math::pow_int<2>(radius);
+    return LOG(std::max(radius, NUMERICAL_ZERO_DIFFERENCE_DEVICE)) * math::pow_int<2>(radius);
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -342,7 +351,7 @@ public:
     const double p     = radius * r_inv;
     if (p >= 1)
       return 0.0;
-    return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * std::log(std::max(p, NUMERICAL_ZERO_DIFFERENCE_DEVICE));
+    return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * LOG(std::max(p, NUMERICAL_ZERO_DIFFERENCE_DEVICE));
   }
 
   RadialBasisParameters getFunctionParameters()
