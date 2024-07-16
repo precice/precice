@@ -10,6 +10,6 @@ jobs:
     uses: precice/tutorials/.github/workflows/run_testsuite_workflow.yml@develop
     with:
       suites: release_test
-      build_args: PRECICE_REF:${{ github.event.pull_request.head.sha }}
+      build_args: PRECICE_REF:${{ github.event.pull_request.head.sha }}, OPENFOAM_EXECUTABLE:openfoam2312, OPENFOAM_ADAPTER_REF:master, TUTORIALS_REF:master, PLATFORM:ubuntu_2204, PYTHON_BINDINGS_REF:master, FENICS_ADAPTER_REF:master, CALULIX_VERSION:2.20, CALULIX_ADAPTER_REF:master, SU2_VERSION:7.5.1, SU2_ADAPTER_REF:master
       systests_branch: develop
       loglevel: "DEBUG"
