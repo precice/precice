@@ -7,12 +7,12 @@
 #include <numeric>
 #include "mapping/GinkgoDefinitions.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
+#include "mapping/device/Ginkgo.hpp"
 #include "mapping/device/GinkgoRBFKernels.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
-#include "utils/Ginkgo.hpp"
 #ifdef PRECICE_WITH_HIP
 #include "mapping/device/HipQRSolver.hip.hpp"
 #endif

@@ -1,7 +1,7 @@
 #pragma once
 
 namespace precice {
-namespace utils {
+namespace device {
 
 class Ginkgo {
 public:
@@ -12,5 +12,5 @@ public:
   static void finalize();
 };
 
-} // namespace utils
+} // namespace device
 } // namespace precice

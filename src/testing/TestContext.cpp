@@ -16,13 +16,13 @@
 #include "m2n/GatherScatterComFactory.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
+#include "mapping/device/Ginkgo.hpp"
 #include "mesh/Data.hpp"
 #include "precice/impl/Types.hpp"
 #include "profiling/EventUtils.hpp"
 #include "query/Index.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/Ginkgo.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
@@ -224,7 +224,9 @@ void TestContext::initializeGinkgo()
   if (!invalid && _kokkos) {
     int    argc = 0;
     char **argv;
-    precice::utils::Ginkgo::initialize(&argc, &argv);
+#ifndef PRECICE_NO_GINKGO
+    precice::device::Ginkgo::initialize(&argc, &argv);
+#endif
   }
 }
 

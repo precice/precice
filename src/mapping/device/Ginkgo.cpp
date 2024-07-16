@@ -5,7 +5,7 @@
 #ifndef PRECICE_NO_GINKGO
 #include <Kokkos_Core.hpp>
 
-namespace precice::utils {
+namespace precice::device {
 
 // bool Ginkgo::needs_finalize = false;
 
@@ -30,6 +30,6 @@ void Ginkgo::finalize()
   }
 }
 
-} // namespace precice::utils
+} // namespace precice::device
 
 #endif

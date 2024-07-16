@@ -32,6 +32,7 @@
 #include "mapping/Mapping.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
+#include "mapping/device/Ginkgo.hpp"
 #include "math/differences.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
@@ -64,7 +65,6 @@
 #include "profiling/config/ProfilingConfiguration.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/EigenIO.hpp"
-#include "utils/Ginkgo.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
@@ -515,8 +515,10 @@ void ParticipantImpl::finalize()
 
   // Finalize PETSc and Events first
   utils::Petsc::finalize();
-  // This will lead to issues if we call finalize afterwards again
-  utils::Ginkgo::finalize();
+// This will lead to issues if we call finalize afterwards again
+#ifndef PRECICE_NO_GINKGO
+  device::Ginkgo::finalize();
+#endif
   profiling::EventRegistry::instance().finalize();
 
   // Finally clear events and finalize MPI
