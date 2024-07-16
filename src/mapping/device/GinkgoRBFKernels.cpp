@@ -46,6 +46,8 @@ void create_rbf_system_matrix_impl(std::shared_ptr<const gko::Executor>      exe
   auto k_supportPoints = map_data<MemorySpace>(supportPoints.get());
   auto k_targetPoints  = map_data<MemorySpace>(targetPoints.get());
 
+  // the outcome of this if-condition is known at compile time. However, Cuda
+  // has issues with constexpr
   if (std::is_same_v<MemorySpace, Kokkos::HostSpace>) {
     // Row-major access
     Kokkos::parallel_for(
@@ -56,10 +58,14 @@ void create_rbf_system_matrix_impl(std::shared_ptr<const gko::Executor>      exe
           if (addPolynomial) {
             k_mtx(i, j) = 0; // Zero the matrix entry if polynomial terms are added
           }
+	  // We need to use a pointer here, because the bound checking of std::array
+	  // contins some host-only code, which yields errors when compiling in
+	  // debug mode
+          const bool* deviceActiveAxis = activeAxis.data();
 
           // Compute Euclidean distance using row-major indexing
           for (size_t k = 0; k < activeAxis.size(); ++k) {
-            if (activeAxis[k]) {
+            if (deviceActiveAxis[k]) {
               double diff = k_supportPoints(j, k) - k_targetPoints(i, k);
               dist += diff * diff;
             }
@@ -77,10 +83,11 @@ void create_rbf_system_matrix_impl(std::shared_ptr<const gko::Executor>      exe
           if (addPolynomial) {
             k_mtx(i, j) = 0; // Zero the matrix entry if polynomial terms are added
           }
+          const bool* deviceActiveAxis = activeAxis.data();
 
           // Compute Euclidean distance using column-major indexing
           for (size_t k = 0; k < activeAxis.size(); ++k) {
-            if (activeAxis[k]) {
+            if (deviceActiveAxis[k]) {
               double diff = k_supportPoints(k, j) - k_targetPoints(k, i);
               dist += diff * diff;
             }
