@@ -55,7 +55,7 @@ void ExportCSV::doExport(int index, double time)
   std::string filename;
   if (isParallel()) {
     // Participant-Mesh-r2.it2
-    filename = fmt::format("{}-{}-r{}.{}{}.csv", _participantName, _mesh->getName(), _rank, kindPrefix(), index);
+    filename = fmt::format("{}-{}.{}{}_{}.csv", _participantName, _mesh->getName(), _rank, kindPrefix(), index);
   } else {
     // Participant-Mesh.it2
     filename = fmt::format("{}-{}.{}{}.csv", _participantName, _mesh->getName(), kindPrefix(), index);
