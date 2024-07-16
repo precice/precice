@@ -4,7 +4,7 @@
 #include <ginkgo/ginkgo.hpp>
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>
-#include <hipsolver.h>
+#include <hipsolver/hipsolver.h>
 
 void computeQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoVector *R)
 {
