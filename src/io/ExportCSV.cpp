@@ -68,11 +68,9 @@ void ExportCSV::doExport(int index, double time)
   }
   outfile /= filename;
 
-  const auto &mesh = *_mesh;
-
   // Prepare filestream
   std::ofstream outFile(outfile.string(), std::ios::trunc);
-  const bool    is3d = (mesh.getDimensions() == 3);
+  const bool    is3d = (_mesh->getDimensions() == 3);
 
   // write header
   outFile << "PosX;PosY";
@@ -80,10 +78,10 @@ void ExportCSV::doExport(int index, double time)
     outFile << ";PosZ";
   }
   outFile << ";Rank";
-  for (const auto &data : mesh.data()) {
+  for (const auto &data : _mesh->data()) {
     auto dataName = data->getName();
     auto dim      = data->getDimensions();
-    PRECICE_ASSERT(static_cast<std::size_t>(data->values().size()) == mesh.nVertices() * dim);
+    PRECICE_ASSERT(static_cast<std::size_t>(data->values().size()) == _mesh->nVertices() * dim);
     outFile << ';' << dataName;
     if (dim == 2) {
       outFile << "X;" << dataName << 'Y';
@@ -95,7 +93,7 @@ void ExportCSV::doExport(int index, double time)
 
   // Prepare writing data
   std::vector<StridedAccess> dataColumns;
-  for (const auto &data : mesh.data()) {
+  for (const auto &data : _mesh->data()) {
     auto    dim    = data->getDimensions();
     double *values = data->values().data();
     for (int i = 0; i < dim; ++i) {
@@ -105,9 +103,9 @@ void ExportCSV::doExport(int index, double time)
 
   // write vertex data
   const std::string rankCol = ";" + std::to_string(_rank);
-  const auto        size    = mesh.nVertices();
+  const auto        size    = _mesh->nVertices();
   for (std::size_t vid = 0; vid < size; ++vid) {
-    const auto &vertex = mesh.vertex(vid);
+    const auto &vertex = _mesh->vertex(vid);
     outFile << vertex.coord(0) << ';';
     outFile << vertex.coord(1);
     if (is3d) {

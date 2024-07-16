@@ -158,16 +158,14 @@ void ExportXML::writeSubFile(int index, double time) const
 
   outSubFile << "   <" << formatType << ">\n";
 
-  const auto &mesh = *_mesh;
+  outSubFile << "      <Piece " << getPieceAttributes(*_mesh) << "> \n";
+  exportPoints(outSubFile, *_mesh);
 
-  outSubFile << "      <Piece " << getPieceAttributes(mesh) << "> \n";
-  exportPoints(outSubFile, mesh);
-
-  // Write Mesh
-  exportConnectivity(outSubFile, mesh);
+  // Write *_mesh
+  exportConnectivity(outSubFile, *_mesh);
 
   // Write data
-  exportData(outSubFile, mesh);
+  exportData(outSubFile, *_mesh);
 
   outSubFile << "      </Piece>\n";
   outSubFile << "   </" << formatType << "> \n";
