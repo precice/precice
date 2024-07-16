@@ -14,9 +14,9 @@
 
 #elif defined(__HIPCC__)
 
-#include <hip/hip_runtime.h>
 #include <ginkgo/extensions/kokkos.hpp>
 #include <ginkgo/ginkgo.hpp>
+#include <hip/hip_runtime.h>
 
 #define PRECICE_HOST_DEVICE __host__ __device__
 #define PRECICE_MEMORY_SPACE __device__

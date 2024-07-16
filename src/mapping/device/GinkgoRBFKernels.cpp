@@ -58,10 +58,10 @@ void create_rbf_system_matrix_impl(std::shared_ptr<const gko::Executor>      exe
           if (addPolynomial) {
             k_mtx(i, j) = 0; // Zero the matrix entry if polynomial terms are added
           }
-	  // We need to use a pointer here, because the bound checking of std::array
-	  // contins some host-only code, which yields errors when compiling in
-	  // debug mode
-          const bool* deviceActiveAxis = activeAxis.data();
+          // We need to use a pointer here, because the bound checking of std::array
+          // contins some host-only code, which yields errors when compiling in
+          // debug mode
+          const bool *deviceActiveAxis = activeAxis.data();
 
           // Compute Euclidean distance using row-major indexing
           for (size_t k = 0; k < activeAxis.size(); ++k) {
@@ -83,7 +83,7 @@ void create_rbf_system_matrix_impl(std::shared_ptr<const gko::Executor>      exe
           if (addPolynomial) {
             k_mtx(i, j) = 0; // Zero the matrix entry if polynomial terms are added
           }
-          const bool* deviceActiveAxis = activeAxis.data();
+          const bool *deviceActiveAxis = activeAxis.data();
 
           // Compute Euclidean distance using column-major indexing
           for (size_t k = 0; k < activeAxis.size(); ++k) {

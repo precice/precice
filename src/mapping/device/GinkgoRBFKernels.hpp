@@ -6,7 +6,7 @@
 namespace precice {
 namespace mapping {
 
-std::shared_ptr<gko::Executor> create_device_executor(const std::string& execName, bool enableUnifiedMemory);
+std::shared_ptr<gko::Executor> create_device_executor(const std::string &execName, bool enableUnifiedMemory);
 
 namespace kernel {
 
