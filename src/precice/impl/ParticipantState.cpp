@@ -354,14 +354,14 @@ bool ParticipantState::hasExports() const
 void ParticipantState::exportIntermediate(IntermediateExport exp)
 {
   for (const io::ExportContext &context : exportContexts()) {
-    if (exp.complete) {
-      PRECICE_DEBUG("Exporting mesh {} for timewindow {} to location \"{}\"", context.meshName, exp.timewindow, context.location);
-      context.exporter->doExport(exp.timewindow, exp.time);
-    }
-
     if (context.everyIteration) {
       PRECICE_DEBUG("Exporting mesh {} for iteration {} to location \"{}\"", context.meshName, exp.iteration, context.location);
       context.exporter->doExport(exp.iteration, exp.time);
+      continue;
+    }
+    if (exp.complete) {
+      PRECICE_DEBUG("Exporting mesh {} for timewindow {} to location \"{}\"", context.meshName, exp.timewindow, context.location);
+      context.exporter->doExport(exp.timewindow, exp.time);
     }
   }
 
