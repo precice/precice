@@ -66,6 +66,11 @@ protected:
     return ((_kind == ExportKind::TimeWindows) ? "dt"s : "it"s).append(std::to_string(index));
   }
 
+  bool keepExport(int index) const
+  {
+    return (_kind == ExportKind::Iterations) || ((_frequency > 0) && (index % _frequency == 0));
+  }
+
   std::string             _participantName;
   std::string             _location;
   const mesh::Mesh *const _mesh;

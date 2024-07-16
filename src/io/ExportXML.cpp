@@ -34,6 +34,9 @@ void ExportXML::doExport(int index, double time)
 {
   PRECICE_TRACE(index, time, _mesh->getName());
 
+  if (!keepExport(index))
+    return;
+
   const auto &mesh = *_mesh;
 
   processDataNamesAndDimensions(mesh);

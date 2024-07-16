@@ -51,6 +51,9 @@ void ExportCSV::doExport(int index, double time)
   PRECICE_ASSERT(index >= 0);
   PRECICE_ASSERT(time >= 0.0);
 
+  if (!keepExport(index))
+    return;
+
   // Construct filename
   std::string filename;
   if (isParallel()) {
