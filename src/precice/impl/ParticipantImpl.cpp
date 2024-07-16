@@ -1492,6 +1492,7 @@ void ParticipantImpl::handleExports(ExportTiming timing)
   exp.timewindow = _couplingScheme->getTimeWindows() - 1;
   exp.iteration  = _numberAdvanceCalls;
   exp.complete   = _couplingScheme->isTimeWindowComplete();
+  exp.final      = !_couplingScheme->isCouplingOngoing();
   exp.time       = _couplingScheme->getTime();
   _accessor->exportIntermediate(exp);
 }

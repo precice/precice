@@ -55,6 +55,15 @@ void ExportXML::doExport(int index, double time)
   }
 }
 
+void ExportXML::exportSeries() const
+{
+  if (isParallel() && _rank > 0)
+    return;
+
+  auto ext = isParallel() ? getParallelExtension() : getPieceExtension();
+  writeSeriesFile(fmt::format("{}-{}.{}.series", _participantName, _mesh->getName(), ext));
+}
+
 void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
 {
   _vectorDataNames.clear();
@@ -95,13 +104,14 @@ std::string ExportXML::serialPieceFilename(int index) const
   return fmt::format("{}-{}.{}.{}", _participantName, _mesh->getName(), formatIndex(index), getPieceExtension());
 }
 
-void ExportXML::writeParallelFile(int index, double time) const
+void ExportXML::writeParallelFile(int index, double time)
 {
   PRECICE_ASSERT(isParallel());
 
   // Construct filename
   // Participant-Mesh.it_2.pvtu
   auto filename = fmt::format("{}-{}.{}.{}", _participantName, _mesh->getName(), formatIndex(index), getParallelExtension());
+  recordExport(filename, time);
 
   namespace fs = std::filesystem;
   fs::path outfile(_location);
@@ -138,13 +148,14 @@ void ExportXML::writeParallelFile(int index, double time) const
   outParallelFile.close();
 }
 
-void ExportXML::writeSubFile(int index, double time) const
+void ExportXML::writeSubFile(int index, double time)
 {
   std::string filename;
   if (isParallel()) {
     filename = parallelPieceFilenameFor(index, _rank);
   } else {
     filename = serialPieceFilename(index);
+    recordExport(filename, time);
   }
 
   namespace fs = std::filesystem;
