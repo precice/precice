@@ -250,6 +250,9 @@ public:
     return _vertexOffsets;
   }
 
+  /// checks if the given ranks partition is empty
+  bool isPartitionEmpty(Rank rank) const;
+
   /// Only used for tests
   void setVertexOffsets(VertexOffsets vertexOffsets)
   {
