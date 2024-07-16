@@ -55,10 +55,10 @@ void ExportCSV::doExport(int index, double time)
   std::string filename;
   if (isParallel()) {
     // Participant-Mesh-r2.it2
-    filename = fmt::format("{}-{}.{}{}_{}.csv", _participantName, _mesh->getName(), _rank, kindPrefix(), index);
+    filename = fmt::format("{}-{}.{}_{}.csv", _participantName, _mesh->getName(), _rank, formatIndex(index));
   } else {
     // Participant-Mesh.it2
-    filename = fmt::format("{}-{}.{}{}.csv", _participantName, _mesh->getName(), kindPrefix(), index);
+    filename = fmt::format("{}-{}.{}.csv", _participantName, _mesh->getName(), formatIndex(index));
   }
 
   namespace fs = std::filesystem;

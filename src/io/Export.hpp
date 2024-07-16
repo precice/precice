@@ -56,10 +56,15 @@ protected:
   {
     return _size > 1;
   };
-  std::string_view kindPrefix() const
+
+  std::string formatIndex(int index) const
   {
-    return (_kind == ExportKind::TimeWindows) ? "dt" : "it";
-  };
+    if (index == 0) {
+      return "init";
+    }
+    using std::string_literals::operator""s;
+    return ((_kind == ExportKind::TimeWindows) ? "dt"s : "it"s).append(std::to_string(index));
+  }
 
   std::string             _participantName;
   std::string             _location;

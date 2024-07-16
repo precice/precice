@@ -83,13 +83,13 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
 std::string ExportXML::parallelPieceFilenameFor(int index, int rank) const
 {
   PRECICE_ASSERT(isParallel());
-  return fmt::format("{}-{}.{}{}_{}.{}", _participantName, _mesh->getName(), kindPrefix(), index, rank, getPieceExtension());
+  return fmt::format("{}-{}.{}_{}.{}", _participantName, _mesh->getName(), formatIndex(index), rank, getPieceExtension());
 }
 
 std::string ExportXML::serialPieceFilename(int index) const
 {
   PRECICE_ASSERT(!isParallel());
-  return fmt::format("{}-{}.{}{}.{}", _participantName, _mesh->getName(), kindPrefix(), index, getPieceExtension());
+  return fmt::format("{}-{}.{}.{}", _participantName, _mesh->getName(), formatIndex(index), getPieceExtension());
 }
 
 void ExportXML::writeParallelFile(int index, double time) const
@@ -98,7 +98,7 @@ void ExportXML::writeParallelFile(int index, double time) const
 
   // Construct filename
   // Participant-Mesh.it_2.pvtu
-  auto filename = fmt::format("{}-{}.{}{}.{}", _participantName, _mesh->getName(), kindPrefix(), index, getParallelExtension());
+  auto filename = fmt::format("{}-{}.{}.{}", _participantName, _mesh->getName(), formatIndex(index), getParallelExtension());
 
   namespace fs = std::filesystem;
   fs::path outfile(_location);

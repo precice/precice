@@ -34,7 +34,7 @@ void ExportVTK::doExport(int index, double time)
   PRECICE_ASSERT(time >= 0.0);
   PRECICE_ASSERT(!isParallel(), "ExportVTK only supports serial participants.");
 
-  auto filename = fmt::format("{}-{}.{}{}.vtk", _participantName, _mesh->getName(), kindPrefix(), index);
+  auto filename = fmt::format("{}-{}.{}.vtk", _participantName, _mesh->getName(), formatIndex(index));
 
   namespace fs = std::filesystem;
   fs::path outfile(_location);
