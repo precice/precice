@@ -241,7 +241,6 @@ endif()
 
 # Option: Ginkgo
 if (PRECICE_FEATURE_GINKGO_MAPPING)
-  # Current develop version, we probably need to require v 1.7 once it will be released
   find_package(Ginkgo 1.8.0 REQUIRED)
   message(STATUS "Found Ginkgo ${GINKGO_PROJECT_VERSION} at ${GINKGO_INSTALL_PREFIX}")
 
