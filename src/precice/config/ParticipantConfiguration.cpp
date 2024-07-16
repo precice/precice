@@ -591,7 +591,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   // Add export contexts
   for (io::ExportContext &exportContext : _exportConfig->exportContexts()) {
-    auto kind = exportContext.everyIteration ? io::Export::ExportKind::Iterations : io::Export::ExportKind::Iterations;
+    auto kind = exportContext.everyIteration ? io::Export::ExportKind::Iterations : io::Export::ExportKind::TimeWindows;
     // Create one exporter per mesh
     for (const auto &meshContext : participant->usedMeshContexts()) {
 
