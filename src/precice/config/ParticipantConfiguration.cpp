@@ -653,6 +653,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
       _participants.back()->addExportContext(exportContext);
     }
+    PRECICE_WARN_IF(exportContext.everyNTimeWindows > 1 && exportContext.everyIteration,
+                    "Participant {} defines an exporter of type {} which exports every iteration. "
+                    "This overrides the every-n-time-window value you provided.",
+                    _participants.back()->getName(), exportContext.type);
   }
   _exportConfig->resetExports();
 
