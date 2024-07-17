@@ -184,7 +184,12 @@ if(TPL_ENABLE_BOOST)
   set(Boost_NO_SYSTEM_PATHS ON CACHE BOOL "" FORCE)
   unset(ENV{BOOST_ROOT})
 endif()
-find_package(Boost 1.74.0 REQUIRED
+
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
+
+find_package(Boost 1.74.0 REQUIRED CONFIG
   COMPONENTS log log_setup program_options system thread unit_test_framework
   )
 mark_as_advanced(Boost_INCLUDE_DIR Boost_LOG_LIBRARY_RELEASE Boost_LOG_SETUP_LIBRARY_RELEASE Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE Boost_SYSTEM_LIBRARY_RELEASE Boost_THREAD_LIBRARY_RELEASE Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE)
