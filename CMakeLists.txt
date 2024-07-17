@@ -57,7 +57,7 @@ option(PRECICE_FEATURE_MPI_COMMUNICATION "Enables MPI-based communication and ru
 option(PRECICE_FEATURE_PETSC_MAPPING "Enable use of the PETSc linear algebra library for global-iterative RBF data mappings." ON)
 option(PRECICE_FEATURE_PYTHON_ACTIONS "Enable Python support for preCICE actions." ON)
 option(PRECICE_CONFIGURE_PACKAGE_GENERATION "Configure package generation." ON)
-option(PRECICE_FEATURE_GINKGO_MAPPING "**Experimental** Enable use of Ginkgo (unreleased version) for data mapping." OFF)
+option(PRECICE_FEATURE_GINKGO_MAPPING "Enable use of Ginkgo for accelerated data mapping." OFF)
 option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
 option(BUILD_TESTING "Build tests" ON)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
@@ -113,13 +113,13 @@ add_feature_info(PRECICE_FEATURE_PETSC_MAPPING PRECICE_FEATURE_PETSC_MAPPING
   ")
 
   add_feature_info(PRECICE_FEATURE_GINKGO_MAPPING PRECICE_FEATURE_GINKGO_MAPPING
-  "**Experimental** Enables the Ginkgo (requires branch public_common_kernels) backend which supports the usage of GPUs and OpenMP for (global) radial-basis function mappings.
+  "Enables the Ginkgo backend which supports the usage of GPUs and OpenMP for (global) radial-basis function mappings.
 
    Currently, this enables radial-basis function mappings to leverage the compute power of Nvidia/AMD GPUs and OpenMP.
    It uses iterative solvers provided by Ginkgo or direct solvers offered by hip/cuSolver.
 
    This feature can be enabled/disabled by setting the PRECICE_FEATURE_GINKGO_MAPPING CMake option.
-   Requires the Ginkgo library (branch public_common_kernels) and Eigen 3.4. Note that this feature is still experimental.
+   Requires the Ginkgo library, Kokkos (v4.1 or higher) and Eigen 3.4.
   ")
 
   add_feature_info(PRECICE_FEATURE_PYTHON_ACTIONS PRECICE_FEATURE_PYTHON_ACTIONS
@@ -242,10 +242,10 @@ endif()
 # Option: Ginkgo
 if (PRECICE_FEATURE_GINKGO_MAPPING)
   find_package(Ginkgo 1.8.0 REQUIRED)
-  message(STATUS "Found Ginkgo ${GINKGO_PROJECT_VERSION} at ${GINKGO_INSTALL_PREFIX}")
+  message(STATUS "Found Ginkgo ${GINKGO_PROJECT_VERSION} at ${Ginkgo_DIR}")
 
   find_package(Kokkos 4.1 REQUIRED)
-  message(STATUS "Found Kokkos ${KOKKOS_PROJECT_VERSION} at ${KOKKOS_INSTALL_PREFIX}")
+  message(STATUS "Found Kokkos version ${Kokkos_VERSION} at ${Kokkos_DIR}")
 
   include(CMakeDependentOption)
   cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_CUDA" OFF)
