@@ -59,7 +59,7 @@ void create_rbf_system_matrix_impl(std::shared_ptr<const gko::Executor>      exe
             k_mtx(i, j) = 0; // Zero the matrix entry if polynomial terms are added
           }
           // We need to use a pointer here, because the bound checking of std::array
-          // contins some host-only code, which yields errors when compiling in
+          // contains some host-only code, which yields errors when compiling in
           // debug mode
           const bool *deviceActiveAxis = activeAxis.data();
 
