@@ -436,6 +436,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
           src/mapping/device/GinkgoRBFKernels.cpp
           src/mapping/device/Ginkgo.cpp)
   target_link_libraries(preciceCore_ginkgo PRIVATE Ginkgo::ginkgo Kokkos::kokkos preciceCore)
+  target_compile_definitions(preciceCore PUBLIC EIGEN_NO_CUDA)
   target_compile_definitions(preciceCore_ginkgo PUBLIC EIGEN_NO_CUDA)
   set_target_properties(preciceCore_ginkgo PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
