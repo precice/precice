@@ -9,8 +9,8 @@
 #define BOOST_PP_VARIADICS 1
 #define PRECICE_HOST_DEVICE __host__ __device__
 #define PRECICE_MEMORY_SPACE __device__
-#define FMA Kokkos::fma
-#define LOG Kokkos::log
+#define PRECICE_FMA Kokkos::fma
+#define PRECICE_LOG Kokkos::log
 
 #elif defined(__HIPCC__)
 
@@ -20,15 +20,15 @@
 
 #define PRECICE_HOST_DEVICE __host__ __device__
 #define PRECICE_MEMORY_SPACE __device__
-#define FMA Kokkos::fma
-#define LOG Kokkos::log
+#define PRECICE_FMA Kokkos::fma
+#define PRECICE_LOG Kokkos::log
 
 #else
 
 #define PRECICE_HOST_DEVICE
 #define PRECICE_MEMORY_SPACE
-#define FMA std::fma
-#define LOG std::log
+#define PRECICE_FMA std::fma
+#define PRECICE_LOG std::log
 
 #endif
 
@@ -113,7 +113,7 @@ public:
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
   {
     // We don't need to read any values from params since there is no need here
-    return LOG(std::max(radius, NUMERICAL_ZERO_DIFFERENCE_DEVICE)) * math::pow_int<2>(radius);
+    return PRECICE_LOG(std::max(radius, NUMERICAL_ZERO_DIFFERENCE_DEVICE)) * math::pow_int<2>(radius);
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -351,7 +351,7 @@ public:
     const double p     = radius * r_inv;
     if (p >= 1)
       return 0.0;
-    return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * LOG(std::max(p, NUMERICAL_ZERO_DIFFERENCE_DEVICE));
+    return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * PRECICE_LOG(std::max(p, NUMERICAL_ZERO_DIFFERENCE_DEVICE));
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -458,7 +458,7 @@ public:
     const double p     = radius * r_inv;
     if (p >= 1)
       return 0.0;
-    return math::pow_int<4>(1.0 - p) * FMA(4, p, 1);
+    return math::pow_int<4>(1.0 - p) * PRECICE_FMA(4, p, 1);
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -512,7 +512,7 @@ public:
     const double p     = radius * r_inv;
     if (p >= 1)
       return 0.0;
-    return math::pow_int<6>(1.0 - p) * (35 * math::pow_int<2>(p) + FMA(18, p, 3));
+    return math::pow_int<6>(1.0 - p) * (35 * math::pow_int<2>(p) + PRECICE_FMA(18, p, 3));
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -565,7 +565,7 @@ public:
     const double p     = radius * r_inv;
     if (p >= 1)
       return 0.0;
-    return math::pow_int<8>(1.0 - p) * (32.0 * math::pow_int<3>(p) + 25.0 * math::pow_int<2>(p) + FMA(8.0, p, 1.0));
+    return math::pow_int<8>(1.0 - p) * (32.0 * math::pow_int<3>(p) + 25.0 * math::pow_int<2>(p) + PRECICE_FMA(8.0, p, 1.0));
   };
 
   const RadialBasisParameters getFunctionParameters()
@@ -630,5 +630,8 @@ private:
   double                _r_inv;
   RadialBasisParameters _params;
 };
+
+#undef PRECICE_FMA
+#undef PRECICE_LOG
 } // namespace mapping
 } // namespace precice
