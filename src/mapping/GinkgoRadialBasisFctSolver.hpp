@@ -19,7 +19,7 @@
 #ifdef PRECICE_WITH_CUDA
 #include "mapping/device/CudaQRSolver.cuh"
 #endif
-#ifdef PRECICE_WITH_OMP
+#ifdef PRECICE_WITH_OPENMP
 #include <omp.h>
 #endif
 
@@ -179,7 +179,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
                ginkgoParameter.maxIterations,
                ginkgoParameter.residualNorm);
   _deviceExecutor = create_device_executor(ginkgoParameter.executor, ginkgoParameter.enableUnifiedMemory);
-#ifdef PRECICE_WITH_OMP
+#ifdef PRECICE_WITH_OPENMP
   if (_ginkgoParameter.nThreads > 0 && _ginkgoParameter.executor == "omp-executor")
     omp_set_num_threads(_ginkgoParameter.nThreads);
 #endif

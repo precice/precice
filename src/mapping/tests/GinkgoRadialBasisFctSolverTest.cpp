@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_SUITE(Reference)
 TEST_FOR_ALL_RBFS("reference-executor", "gmres-solver");
 BOOST_AUTO_TEST_SUITE_END()
 
-#ifdef PRECICE_WITH_OMP
+#ifdef PRECICE_WITH_OPENMP
 BOOST_AUTO_TEST_SUITE(OpenMP)
 TEST_FOR_ALL_RBFS("omp-executor", "gmres-solver");
 BOOST_AUTO_TEST_SUITE_END()

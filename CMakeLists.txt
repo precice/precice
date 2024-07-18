@@ -250,7 +250,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
   include(CMakeDependentOption)
   cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_CUDA" OFF)
   cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_HIP" OFF)
-  cmake_dependent_option(PRECICE_WITH_OMP "Enable Ginkgo OpenMP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_OPENMP" OFF)
+  cmake_dependent_option(PRECICE_WITH_OPENMP "Enable Ginkgo OpenMP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_OPENMP" OFF)
 
   # We aim for the same configuration as Ginkgo itself and check immediately for device compiler
   # such that preciceCore inherits all relevant flags directly
@@ -294,7 +294,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     find_package(hipsolver REQUIRED)
   endif()
 
-  if(PRECICE_WITH_OMP)
+  if(PRECICE_WITH_OPENMP)
     find_package(OpenMP 3.0 REQUIRED)
   endif()
   # That's essentially all backends we use from Ginkgo. The reference executor and OMP doesn't need any special treatments and
@@ -463,8 +463,8 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     message(STATUS "Enabled HIP support for preCICE via the Ginkgo library.")
   endif()
 
-  if(PRECICE_WITH_OMP)
-    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_OMP)
+  if(PRECICE_WITH_OPENMP)
+    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_OPENMP)
     target_link_libraries(preciceCore PUBLIC OpenMP::OpenMP_CXX)
     # There is nothing special required for OpenMP, looking for OpenMP and setting the flag is handled by the unified kernels
     message(STATUS "Enabled OpenMP support for preCICE via the Ginkgo library.")
