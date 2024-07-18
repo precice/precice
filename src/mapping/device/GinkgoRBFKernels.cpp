@@ -116,23 +116,24 @@ void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
   }
 }
 
-#define INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(_function_type)                                                                                     \
+#define PRECICE_INSTANTIATE_CREATE_RBF_SYSTEM_MATRIX(_function_type)                                                                            \
   template void create_rbf_system_matrix<_function_type>(std::shared_ptr<const gko::Executor> exec,                                             \
                                                          gko::ptr_param<GinkgoMatrix> mtx, const std::array<bool, 3> activeAxis,                \
                                                          gko::ptr_param<GinkgoMatrix> supportPoints, gko::ptr_param<GinkgoMatrix> targetPoints, \
                                                          _function_type f, RadialBasisParameters rbf_params, bool addPolynomial, unsigned int extraDims)
 
-INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(ThinPlateSplines);
-INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(Multiquadrics);
-INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(InverseMultiquadrics);
-INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(VolumeSplines);
-INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(Gaussian);
-INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(CompactThinPlateSplinesC2);
-INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(CompactPolynomialC0);
-INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(CompactPolynomialC2);
-INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(CompactPolynomialC4);
-INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(CompactPolynomialC6);
-INSTATIATE_CREATE_RBF_SYSTEM_MATRIX(CompactPolynomialC8);
+PRECICE_INSTANTIATE_CREATE_RBF_SYSTEM_MATRIX(ThinPlateSplines);
+PRECICE_INSTANTIATE_CREATE_RBF_SYSTEM_MATRIX(Multiquadrics);
+PRECICE_INSTANTIATE_CREATE_RBF_SYSTEM_MATRIX(InverseMultiquadrics);
+PRECICE_INSTANTIATE_CREATE_RBF_SYSTEM_MATRIX(VolumeSplines);
+PRECICE_INSTANTIATE_CREATE_RBF_SYSTEM_MATRIX(Gaussian);
+PRECICE_INSTANTIATE_CREATE_RBF_SYSTEM_MATRIX(CompactThinPlateSplinesC2);
+PRECICE_INSTANTIATE_CREATE_RBF_SYSTEM_MATRIX(CompactPolynomialC0);
+PRECICE_INSTANTIATE_CREATE_RBF_SYSTEM_MATRIX(CompactPolynomialC2);
+PRECICE_INSTANTIATE_CREATE_RBF_SYSTEM_MATRIX(CompactPolynomialC4);
+PRECICE_INSTANTIATE_CREATE_RBF_SYSTEM_MATRIX(CompactPolynomialC6);
+PRECICE_INSTANTIATE_CREATE_RBF_SYSTEM_MATRIX(CompactPolynomialC8);
+#undef PRECICE_INSTANTIATE_CREATE_RBF_SYSTEM_MATRIX
 
 template <typename MemorySpace>
 void fill_polynomial_matrix_impl(std::shared_ptr<const gko::Executor> exec,
