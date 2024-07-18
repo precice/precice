@@ -2,10 +2,8 @@
 
 namespace precice::time {
 
-const int Time::DEFAULT_INTERPOLATION_ORDER = 0;
+const int Time::DEFAULT_WAVEFORM_DEGREE = 1;
 
-const int Time::MIN_INTERPOLATION_ORDER = 0;
-
-const int Time::MAX_INTERPOLATION_ORDER = 3;
+const int Time::MIN_WAVEFORM_DEGREE = 0;
 
 } // namespace precice::time

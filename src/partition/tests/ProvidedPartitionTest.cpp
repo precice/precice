@@ -6,8 +6,9 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "com/CommunicateBoundingBox.hpp"
+
 #include "com/Communication.hpp"
+#include "com/Extra.hpp"
 #include "com/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
 #include "mapping/Mapping.hpp"
@@ -53,11 +54,11 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
     part.addM2N(m2n);
     part.communicate();
 
-    BOOST_TEST(pSolidzMesh->vertices().size() == 6);
+    BOOST_TEST(pSolidzMesh->nVertices() == 6);
     BOOST_TEST(pSolidzMesh->edges().size() == 4);
 
     for (int i = 0; i < 6; i++) {
-      BOOST_TEST(pSolidzMesh->vertices().at(i).getGlobalIndex() == i);
+      BOOST_TEST(pSolidzMesh->vertex(i).getGlobalIndex() == i);
     }
   } else { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
@@ -124,12 +125,12 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
     part.addM2N(m2n);
     part.communicate();
 
-    BOOST_TEST(pSolidzMesh->vertices().size() == 6);
+    BOOST_TEST(pSolidzMesh->nVertices() == 6);
     BOOST_TEST(pSolidzMesh->edges().size() == 6);
     BOOST_TEST(pSolidzMesh->triangles().size() == 2);
 
     for (int i = 0; i < 6; i++) {
-      BOOST_TEST(pSolidzMesh->vertices().at(i).getGlobalIndex() == i);
+      BOOST_TEST(pSolidzMesh->vertex(i).getGlobalIndex() == i);
     }
   } else { //SOLIDZ
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, testing::nextMeshID()));
@@ -260,10 +261,10 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
       BOOST_TEST(pMesh->getVertexOffsets().at(1) == 3);
       BOOST_TEST(pMesh->getVertexOffsets().at(2) == 3);
       BOOST_TEST(pMesh->getVertexOffsets().at(3) == 5);
-      BOOST_TEST(pMesh->vertices().at(0).getGlobalIndex() == 0);
-      BOOST_TEST(pMesh->vertices().at(1).getGlobalIndex() == 1);
-      BOOST_TEST(pMesh->vertices().at(0).isOwner() == true);
-      BOOST_TEST(pMesh->vertices().at(1).isOwner() == true);
+      BOOST_TEST(pMesh->vertex(0).getGlobalIndex() == 0);
+      BOOST_TEST(pMesh->vertex(1).getGlobalIndex() == 1);
+      BOOST_TEST(pMesh->vertex(0).isOwner() == true);
+      BOOST_TEST(pMesh->vertex(1).isOwner() == true);
     } else if (context.isRank(1)) { //SecondaryRank1
       BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
       BOOST_TEST_REQUIRE(pMesh->getVertexOffsets().size() == 4);
@@ -271,8 +272,8 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
       BOOST_TEST(pMesh->getVertexOffsets().at(1) == 3);
       BOOST_TEST(pMesh->getVertexOffsets().at(2) == 3);
       BOOST_TEST(pMesh->getVertexOffsets().at(3) == 5);
-      BOOST_TEST(pMesh->vertices().at(0).getGlobalIndex() == 2);
-      BOOST_TEST(pMesh->vertices().at(0).isOwner() == true);
+      BOOST_TEST(pMesh->vertex(0).getGlobalIndex() == 2);
+      BOOST_TEST(pMesh->vertex(0).isOwner() == true);
     } else if (context.isRank(2)) { //Secondary rank 2
       BOOST_TEST(pMesh->getGlobalNumberOfVertices() == 5);
       BOOST_TEST_REQUIRE(pMesh->getVertexOffsets().size() == 4);
@@ -287,10 +288,10 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
       BOOST_TEST(pMesh->getVertexOffsets().at(1) == 3);
       BOOST_TEST(pMesh->getVertexOffsets().at(2) == 3);
       BOOST_TEST(pMesh->getVertexOffsets().at(3) == 5);
-      BOOST_TEST(pMesh->vertices().at(0).getGlobalIndex() == 3);
-      BOOST_TEST(pMesh->vertices().at(1).getGlobalIndex() == 4);
-      BOOST_TEST(pMesh->vertices().at(0).isOwner() == true);
-      BOOST_TEST(pMesh->vertices().at(1).isOwner() == true);
+      BOOST_TEST(pMesh->vertex(0).getGlobalIndex() == 3);
+      BOOST_TEST(pMesh->vertex(1).getGlobalIndex() == 4);
+      BOOST_TEST(pMesh->vertex(0).isOwner() == true);
+      BOOST_TEST(pMesh->vertex(1).isOwner() == true);
     }
   }
 }
@@ -376,7 +377,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     }
 
     // we receive global bounding box from other participant!
-    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
+    com::receiveBoundingBoxMap(*m2n->getPrimaryRankCommunication(), 0, receivedGlobalBB);
     // check whether we have received the correct com size
     BOOST_TEST(receivedFeedbackSize == 3);
 
@@ -397,7 +398,7 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
     connectionMap[2].push_back(0);
     connectionMap[2].push_back(1);
 
-    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).sendConnectionMap(connectionMap, 0);
+    com::sendConnectionMap(*m2n->getPrimaryRankCommunication(), 0, connectionMap);
   }
 }
 
@@ -468,7 +469,7 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
     }
 
     // we receive global bounding box from other participant!
-    com::CommunicateBoundingBox(m2n->getPrimaryRankCommunication()).receiveBoundingBoxMap(receivedGlobalBB, 0);
+    com::receiveBoundingBoxMap(*m2n->getPrimaryRankCommunication(), 0, receivedGlobalBB);
 
     // check whether we have received the correct com size
     BOOST_TEST(remoteParComSize == 3);
@@ -557,26 +558,26 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
 
     part.communicate();
 
-    BOOST_TEST(mesh->vertices().size() == 4);
+    BOOST_TEST(mesh->nVertices() == 4);
 
     if (context.isPrimary()) {
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 0.5);
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(0) == 1.5);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(1) == 0.0);
-      BOOST_TEST(mesh->vertices().at(2).getCoords()(0) == 2.0);
-      BOOST_TEST(mesh->vertices().at(2).getCoords()(1) == 1.0);
-      BOOST_TEST(mesh->vertices().at(3).getCoords()(0) == 0.5);
-      BOOST_TEST(mesh->vertices().at(3).getCoords()(1) == 1.0);
+      BOOST_TEST(mesh->vertex(0).coord(0) == 0.5);
+      BOOST_TEST(mesh->vertex(0).coord(1) == 0.0);
+      BOOST_TEST(mesh->vertex(1).coord(0) == 1.5);
+      BOOST_TEST(mesh->vertex(1).coord(1) == 0.0);
+      BOOST_TEST(mesh->vertex(2).coord(0) == 2.0);
+      BOOST_TEST(mesh->vertex(2).coord(1) == 1.0);
+      BOOST_TEST(mesh->vertex(3).coord(0) == 0.5);
+      BOOST_TEST(mesh->vertex(3).coord(1) == 1.0);
     } else {
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 2.5);
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(0) == 3.5);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(1) == 0.0);
-      BOOST_TEST(mesh->vertices().at(2).getCoords()(0) == 3.5);
-      BOOST_TEST(mesh->vertices().at(2).getCoords()(1) == 1.0);
-      BOOST_TEST(mesh->vertices().at(3).getCoords()(0) == 2.0);
-      BOOST_TEST(mesh->vertices().at(3).getCoords()(1) == 1.0);
+      BOOST_TEST(mesh->vertex(0).coord(0) == 2.5);
+      BOOST_TEST(mesh->vertex(0).coord(1) == 0.0);
+      BOOST_TEST(mesh->vertex(1).coord(0) == 3.5);
+      BOOST_TEST(mesh->vertex(1).coord(1) == 0.0);
+      BOOST_TEST(mesh->vertex(2).coord(0) == 3.5);
+      BOOST_TEST(mesh->vertex(2).coord(1) == 1.0);
+      BOOST_TEST(mesh->vertex(3).coord(0) == 2.0);
+      BOOST_TEST(mesh->vertex(3).coord(1) == 1.0);
     }
   }
 }

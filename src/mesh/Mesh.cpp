@@ -1,4 +1,5 @@
 #include <Eigen/Core>
+#include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
 #include <array>
 #include <boost/container/flat_map.hpp>
@@ -16,9 +17,10 @@
 #include "logging/LogMacros.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
-#include "precice/types.hpp"
+#include "mesh/Vertex.hpp"
+#include "precice/impl/Types.hpp"
 #include "query/Index.hpp"
-#include "utils/EigenHelperFunctions.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice::mesh {
 
@@ -36,6 +38,18 @@ Mesh::Mesh(
   PRECICE_ASSERT(_name != std::string(""));
 }
 
+Vertex &Mesh::vertex(VertexID id)
+{
+  PRECICE_ASSERT(isValidVertexID(id), id, nVertices());
+  return _vertices.at(id);
+}
+
+const Vertex &Mesh::vertex(VertexID id) const
+{
+  PRECICE_ASSERT(isValidVertexID(id), id, nVertices());
+  return _vertices.at(id);
+}
+
 Mesh::VertexContainer &Mesh::vertices()
 {
   return _vertices;
@@ -44,6 +58,11 @@ Mesh::VertexContainer &Mesh::vertices()
 const Mesh::VertexContainer &Mesh::vertices() const
 {
   return _vertices;
+}
+
+std::size_t Mesh::nVertices() const
+{
+  return _vertices.size();
 }
 
 Mesh::EdgeContainer &Mesh::edges()
@@ -132,7 +151,8 @@ Tetrahedron &Mesh::createTetrahedron(
 PtrData &Mesh::createData(
     const std::string &name,
     int                dimension,
-    DataID             id)
+    DataID             id,
+    int                waveformDegree)
 {
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
@@ -142,7 +162,7 @@ PtrData &Mesh::createData(
                   name, _name, name);
   }
   //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
-  PtrData data(new Data(name, id, dimension, _dimensions));
+  PtrData data(new Data(name, id, dimension, _dimensions, waveformDegree));
   _data.push_back(data);
   return _data.back();
 }
@@ -169,7 +189,7 @@ const PtrData &Mesh::data(DataID dataID) const
   return *iter;
 }
 
-bool Mesh::hasDataName(const std::string &dataName) const
+bool Mesh::hasDataName(std::string_view dataName) const
 {
   auto iter = std::find_if(_data.begin(), _data.end(), [&dataName](const auto &dptr) {
     return dptr->getName() == dataName;
@@ -177,7 +197,16 @@ bool Mesh::hasDataName(const std::string &dataName) const
   return iter != _data.end(); // if name was not found in mesh, iter == _data.end()
 }
 
-const PtrData &Mesh::data(const std::string &dataName) const
+std::vector<std::string> Mesh::availableData() const
+{
+  std::vector<std::string> names;
+  for (const auto &data : _data) {
+    names.push_back(data->getName());
+  }
+  return names;
+}
+
+const PtrData &Mesh::data(std::string_view dataName) const
 {
   auto iter = std::find_if(_data.begin(), _data.end(), [&dataName](const auto &dptr) {
     return dptr->getName() == dataName;
@@ -198,49 +227,15 @@ MeshID Mesh::getID() const
 
 bool Mesh::isValidVertexID(VertexID vertexID) const
 {
-  return (0 <= vertexID) && (static_cast<size_t>(vertexID) < vertices().size());
+  return (0 <= vertexID) && (static_cast<size_t>(vertexID) < nVertices());
 }
 
 void Mesh::allocateDataValues()
 {
   PRECICE_TRACE(_vertices.size());
   const auto expectedCount = _vertices.size();
-  using SizeType           = std::remove_cv<decltype(expectedCount)>::type;
   for (PtrData &data : _data) {
-
-    // Allocate data values
-    const SizeType expectedSize = expectedCount * data->getDimensions();
-    const auto     actualSize   = static_cast<SizeType>(data->values().size());
-    // Shrink Buffer
-    if (expectedSize < actualSize) {
-      data->values().resize(expectedSize);
-    }
-    // Enlarge Buffer
-    if (expectedSize > actualSize) {
-      const auto leftToAllocate = expectedSize - actualSize;
-      utils::append(data->values(), Eigen::VectorXd(Eigen::VectorXd::Zero(leftToAllocate)));
-    }
-    PRECICE_DEBUG("Data {} now has {} values", data->getName(), data->values().size());
-
-    // Allocate gradient data values
-    if (data->hasGradient()) {
-      const SizeType spaceDimensions = data->getSpatialDimensions();
-
-      const SizeType expectedColumnSize = expectedCount * data->getDimensions();
-      const auto     actualColumnSize   = static_cast<SizeType>(data->gradientValues().cols());
-
-      // Shrink Buffer
-      if (expectedColumnSize < actualColumnSize) {
-        data->gradientValues().resize(spaceDimensions, expectedColumnSize);
-      }
-
-      // Enlarge Buffer
-      if (expectedColumnSize > actualColumnSize) {
-        const auto columnLeftToAllocate = expectedColumnSize - actualColumnSize;
-        utils::append(data->gradientValues(), Eigen::MatrixXd(Eigen::MatrixXd::Zero(spaceDimensions, columnLeftToAllocate)));
-      }
-      PRECICE_DEBUG("Gradient Data {} now has {} x {} values", data->getName(), data->gradientValues().rows(), data->gradientValues().cols());
-    }
+    data->allocateValues(expectedCount);
   }
 }
 
@@ -249,7 +244,7 @@ void Mesh::computeBoundingBox()
   PRECICE_TRACE(_name);
 
   // Keep the bounding box if set via the API function.
-  BoundingBox bb = _boundingBox.empty() ? BoundingBox(_dimensions) : BoundingBox(_boundingBox);
+  BoundingBox bb = _boundingBox.isDefault() ? BoundingBox(_dimensions) : BoundingBox(_boundingBox);
 
   for (const Vertex &vertex : _vertices) {
     bb.expandBy(vertex);
@@ -281,17 +276,33 @@ void Mesh::clearPartitioning()
   _globalNumberOfVertices = 0;
 }
 
-Eigen::VectorXd Mesh::getOwnedVertexData(DataID dataID)
+bool Mesh::isPartitionEmpty(Rank rank) const
 {
+  // Without offset data, we assume non-empty partititions
+  if (_vertexOffsets.empty()) {
+    return false;
+  }
+  PRECICE_ASSERT(_vertexOffsets.size() >= static_cast<std::size_t>(rank));
+  if (rank == 0) {
+    return _vertexOffsets[0] == 0;
+  }
+  return _vertexOffsets[rank] - _vertexOffsets[rank - 1] == 0;
+}
 
+Eigen::VectorXd Mesh::getOwnedVertexData(const Eigen::VectorXd &values)
+{
   std::vector<double> ownedDataVector;
-  int                 valueDim = data(dataID)->getDimensions();
-  int                 index    = 0;
+  PRECICE_ASSERT(static_cast<std::size_t>(values.size()) >= nVertices());
+  if (empty()) {
+    return {};
+  }
+  int valueDim = values.size() / nVertices();
+  int index    = 0;
 
   for (const auto &vertex : vertices()) {
     if (vertex.isOwner()) {
       for (int dim = 0; dim < valueDim; ++dim) {
-        ownedDataVector.push_back(data(dataID)->values()[index * valueDim + dim]);
+        ownedDataVector.push_back(values[index * valueDim + dim]);
       }
     }
     ++index;
@@ -315,7 +326,7 @@ void Mesh::addMesh(
   PRECICE_ASSERT(_dimensions == deltaMesh.getDimensions());
 
   boost::container::flat_map<VertexID, Vertex *> vertexMap;
-  vertexMap.reserve(deltaMesh.vertices().size());
+  vertexMap.reserve(deltaMesh.nVertices());
   Eigen::VectorXd coords(_dimensions);
   for (const Vertex &vertex : deltaMesh.vertices()) {
     coords    = vertex.getCoords();
@@ -372,6 +383,128 @@ const BoundingBox &Mesh::getBoundingBox() const
 void Mesh::expandBoundingBox(const BoundingBox &boundingBox)
 {
   _boundingBox.expandBy(boundingBox);
+}
+
+void Mesh::preprocess()
+{
+  removeDuplicates();
+  generateImplictPrimitives();
+}
+
+void Mesh::removeDuplicates()
+{
+  // Remove duplicate tetrahedra
+  auto tetrahedraCnt = _tetrahedra.size();
+  std::sort(_tetrahedra.begin(), _tetrahedra.end());
+  auto lastTetrahedron = std::unique(_tetrahedra.begin(), _tetrahedra.end());
+  _tetrahedra          = TetraContainer{_tetrahedra.begin(), lastTetrahedron};
+
+  // Remove duplicate triangles
+  auto triangleCnt = _triangles.size();
+  std::sort(_triangles.begin(), _triangles.end());
+  auto lastTriangle = std::unique(_triangles.begin(), _triangles.end());
+  _triangles        = TriangleContainer{_triangles.begin(), lastTriangle};
+
+  // Remove duplicate edges
+  auto edgeCnt = _edges.size();
+  std::sort(_edges.begin(), _edges.end());
+  auto lastEdge = std::unique(_edges.begin(), _edges.end());
+  _edges        = EdgeContainer{_edges.begin(), lastEdge};
+
+  PRECICE_DEBUG("Compression removed {} tetrahedra ({} to {}), {} triangles ({} to {}), and {} edges ({} to {})",
+                tetrahedraCnt - _tetrahedra.size(), tetrahedraCnt, _tetrahedra.size(),
+                triangleCnt - _triangles.size(), triangleCnt, _triangles.size(),
+                edgeCnt - _edges.size(), edgeCnt, _edges.size());
+}
+
+namespace {
+
+template <class Primitive, int... Indices>
+auto sortedVertexPtrsForImpl(Primitive &p, std::integer_sequence<int, Indices...>)
+{
+  std::array<Vertex *, Primitive::vertexCount> vs{&p.vertex(Indices)...};
+  std::sort(vs.begin(), vs.end());
+  return std::tuple_cat(vs);
+}
+
+/** returns a tuple of Vertex* sorted by ptr of the Primitive
+ *
+ * This uniquely identifies a primitive, provides a weak order to allow sorting,
+ * and allows to directly fetch each Vertex to later create the primitive in the mesh.
+ *
+ * Requires Primitive to provide static constexpr vertexCount.
+ * Generates an integer sequence based on the vertexCount, which is then expanded to fill the array.
+ */
+template <class Primitive>
+auto sortedVertexPtrsFor(Primitive &p)
+{
+  return sortedVertexPtrsForImpl(p, std::make_integer_sequence<int, Primitive::vertexCount>{});
+}
+} // namespace
+
+void Mesh::generateImplictPrimitives()
+{
+  if (_triangles.empty() && _tetrahedra.empty()) {
+    PRECICE_DEBUG("No implicit primitives required");
+    return; // no implicit primitives
+  }
+
+  // count explicit primitives for debug
+  const auto explTriangles = _triangles.size();
+  const auto explEdges     = _triangles.size();
+
+  // First handle all explicit tetrahedra
+
+  // Build a set of all explicit triangles
+  using ExisitingTriangle = std::tuple<Vertex *, Vertex *, Vertex *>;
+  std::set<ExisitingTriangle> triangles;
+  for (auto &t : _triangles) {
+    triangles.insert(sortedVertexPtrsFor(t));
+  }
+
+  // Generate all missing implicit triangles of explicit tetrahedra
+  // Update the triangles set used by the implicit edge generation
+  auto createTriangleIfMissing = [&](Vertex *a, Vertex *b, Vertex *c) {
+    if (triangles.count({a, b, c}) == 0) {
+      triangles.emplace(a, b, c);
+      createTriangle(*a, *b, *c);
+    };
+  };
+  for (auto &t : _tetrahedra) {
+    auto [a, b, c, d] = sortedVertexPtrsFor(t);
+    // Make sure these are in the same order as above
+    createTriangleIfMissing(a, b, c);
+    createTriangleIfMissing(a, b, d);
+    createTriangleIfMissing(a, c, d);
+    createTriangleIfMissing(b, c, d);
+  }
+
+  // Second handle all triangles, both explicit and implicit from the tetrahedron phase
+  // Build an set of all explicit triangles
+  using ExisitingEdge = std::tuple<Vertex *, Vertex *>;
+  std::set<ExisitingEdge> edges;
+  for (auto &e : _edges) {
+    edges.emplace(sortedVertexPtrsFor(e));
+  }
+
+  // generate all missing implicit edges of implicit and explicit triangles
+  auto createEdgeIfMissing = [&](Vertex *a, Vertex *b) {
+    if (edges.count({a, b}) == 0) {
+      edges.emplace(a, b);
+      createEdge(*a, *b);
+    };
+  };
+  for (auto &t : _triangles) {
+    auto [a, b, c] = sortedVertexPtrsFor(t);
+    // Make sure these are in the same order as above
+    createEdgeIfMissing(a, b);
+    createEdgeIfMissing(a, c);
+    createEdgeIfMissing(b, c);
+  }
+
+  PRECICE_DEBUG("Generated {} implicit triangles and {} implicit edges",
+                _triangles.size() - explTriangles,
+                _edges.size() - explEdges);
 }
 
 bool Mesh::operator==(const Mesh &other) const

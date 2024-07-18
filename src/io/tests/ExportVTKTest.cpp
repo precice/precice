@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
   PRECICE_TEST(1_rank)
   int dimensions = 2;
   // Create mesh to map from
-  mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
+  mesh::Mesh    mesh("ExportDataWithGradient", dimensions, testing::nextMeshID());
   mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
   mesh::PtrData dataVector = mesh.createData("dataVector", 2, 1_dataID);
   dataScalar->requireDataGradient();
@@ -39,22 +39,22 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
   valuesScalar << 1.0, 2.0;
   valuesVector << 1.0, 2.0, 3.0, 4.0;
 
-  // Create corresponding gradient data (all gradient values = const = 1)
-  Eigen::MatrixXd &gradValuesScalar = dataScalar->gradientValues();
-  Eigen::MatrixXd &gradValuesVector = dataVector->gradientValues();
-  gradValuesScalar.setOnes();
-  gradValuesVector.setOnes();
-  io::ExportVTK exportVTK;
-  std::string   filename = "io-VTKExport-ExportDatawithGradient";
-  std::string   location = "";
-  exportVTK.doExport(filename, location, mesh);
+  // Create corresponding gradient data (all gradients = const = 1)
+  Eigen::MatrixXd &gradientsScalar = dataScalar->gradients();
+  Eigen::MatrixXd &gradientsVector = dataVector->gradients();
+  gradientsScalar.setOnes();
+  gradientsVector.setOnes();
+
+  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  exportVTK.doExport(0, 0.0);
+  exportVTK.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   PRECICE_TEST(1_rank);
   int           dim = 2;
-  mesh::Mesh    mesh("MyMesh", dim, testing::nextMeshID());
+  mesh::Mesh    mesh("ExportPolygonalMesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Constant(0.0));
   mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector2d::Constant(1.0));
   mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector2d{1.0, 0.0});
@@ -63,17 +63,16 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   mesh.createEdge(v2, v3);
   mesh.createEdge(v3, v1);
 
-  io::ExportVTK exportVTK;
-  std::string   filename = "io-VTKExport-ExportPolygonalMesh";
-  std::string   location = "";
-  exportVTK.doExport(filename, location, mesh);
+  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  exportVTK.doExport(0, 0.0);
+  exportVTK.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   PRECICE_TEST(1_rank);
   int           dim = 3;
-  mesh::Mesh    mesh("MyMesh", dim, testing::nextMeshID());
+  mesh::Mesh    mesh("ExportTriangulatedMesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Constant(0.0));
   mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d::Constant(1.0));
   mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
@@ -83,17 +82,16 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   mesh::Edge &e3 = mesh.createEdge(v3, v1);
   mesh.createTriangle(e1, e2, e3);
 
-  io::ExportVTK exportVTK;
-  std::string   filename = "io-VTKExport-ExportTriangulatedMesh";
-  std::string   location = "";
-  exportVTK.doExport(filename, location, mesh);
+  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  exportVTK.doExport(0, 0.0);
+  exportVTK.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_CASE(ExportTetrahedron)
 {
   PRECICE_TEST(1_rank);
   int           dim = 3;
-  mesh::Mesh    mesh("MyMesh", dim, testing::nextMeshID());
+  mesh::Mesh    mesh("ExportTetrahedron", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Constant(0.0));
   mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
   mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
@@ -101,10 +99,9 @@ BOOST_AUTO_TEST_CASE(ExportTetrahedron)
 
   mesh.createTetrahedron(v1, v2, v3, v4);
 
-  io::ExportVTK exportVTK;
-  std::string   filename = "io-VTKExport-ExportTetrahedron";
-  std::string   location = "";
-  exportVTK.doExport(filename, location, mesh);
+  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  exportVTK.doExport(0, 0.0);
+  exportVTK.doExport(1, 1.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // ExportVTK

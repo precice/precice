@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -11,26 +11,29 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
 {
   PRECICE_TEST("ExporterOne"_on(1_rank), "ExporterTwo"_on(2_ranks));
 
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-  BOOST_REQUIRE(interface.getDimensions() == 3);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<precice::VertexID> vertexIds(6 / context.size, -1);
   double                         y = context.size;
   std::vector<double>            coords{0, y, 0, 1, y, 0, 2, y, 0, 3, y, 0, 4, y, 0, 5, y, 0};
-  const precice::MeshID          meshID = interface.getMeshID(context.isNamed("ExporterOne") ? "A" : "B");
+  auto                           meshName = context.isNamed("ExporterOne") ? "A" : "B";
+  BOOST_REQUIRE(interface.getMeshDimensions(meshName) == 3);
 
   if (context.isNamed("ExporterOne")) {
-    interface.setMeshVertices(meshID, 6, coords.data(), vertexIds.data());
+    interface.setMeshVertices(meshName, coords, vertexIds);
   } else {
-    interface.setMeshVertices(meshID, 3, &coords[context.rank * 9], vertexIds.data());
+    auto coordsPtr  = &coords[context.rank * 9];
+    auto coordsSize = vertexIds.size() * 3;
+    interface.setMeshVertices(meshName, {coordsPtr, coordsSize}, vertexIds);
   }
 
   double time = 0.0;
-  double dt   = interface.initialize();
+  interface.initialize();
+  double dt = interface.getMaxTimeStepSize();
 
   if (context.isNamed("ExporterOne")) {
-    const precice::DataID sdataID = interface.getDataID("S", meshID);
-    const precice::DataID vdataID = interface.getDataID("V", meshID);
+    auto sdataName = "S";
+    auto vdataName = "V";
 
     std::vector<double> sdata(6);
     std::vector<double> vdata(6 * 3, 0);
@@ -42,20 +45,24 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
         vdata[3 * x + 1] = std::sin(x * pi / 3 + pi * time * 0.5);
         vdata[3 * x + 2] = 0;
       }
-      interface.writeBlockScalarData(sdataID, 6, vertexIds.data(), sdata.data());
-      interface.writeBlockVectorData(vdataID, 6, vertexIds.data(), vdata.data());
+      interface.writeData(meshName, sdataName, vertexIds, sdata);
+      interface.writeData(meshName, vdataName, vertexIds, vdata);
 
+      BOOST_TEST(interface.getMaxTimeStepSize() == 1);
+      dt = interface.getMaxTimeStepSize();
       time += dt;
-      dt = interface.advance(dt);
+      interface.advance(dt);
     }
   } else {
     while (interface.isCouplingOngoing()) {
+      BOOST_TEST(interface.getMaxTimeStepSize() == 1);
+      dt = interface.getMaxTimeStepSize();
       time += dt;
-      dt = interface.advance(dt);
+      interface.advance(dt);
     };
   }
   BOOST_TEST(time == 5);
-  BOOST_TEST(dt == 1);
+  BOOST_TEST(interface.getMaxTimeStepSize() == 0);
   interface.finalize();
 }
 

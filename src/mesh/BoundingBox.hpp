@@ -20,7 +20,7 @@ class BoundingBox {
 public:
   /***
   *
-  * @brief Constructor.
+  * @brief Constructor
   *
   * @param[in] dimension Dimension of the bounding box
   *
@@ -31,10 +31,18 @@ public:
   *
   * @brief Constructor.
   *
-  * @param[in] bounds Min-max values of the bounding box in each dimesion
+  * @param[in] bounds Min-max values of the bounding box in each dimesion (x_min, x_max, y_min, y_max, z_min, z_max)
   *
   */
   explicit BoundingBox(std::vector<double> bounds);
+
+  /**
+  * @brief Constructor accepting Eigen::VectorXd
+  *
+  * @param boundMin: vertex at minCorner
+  * @param boundMax: vertex at maxCorner
+  */
+  explicit BoundingBox(Eigen::VectorXd boundMin, Eigen::VectorXd boundMax);
 
   /// Special Members
   BoundingBox(const BoundingBox &) = default;
@@ -45,8 +53,13 @@ public:
   /// Comparison Operator
   bool operator==(const BoundingBox &otherBB) const;
 
-  /// Check whether the bounding box is at default state or not
+  /// Check if every dimension's length is equal to zero
   bool empty() const;
+
+  /// Check whether the bounding box is at default state or not
+  /// all the values of _boundMin = std::numeric_limits<double>::max()
+  /// all the values of _boundMax = std::numeric_limits<double>::lowest()
+  bool isDefault() const;
 
   /// Expand bounding box using another bounding box
   void expandBy(const BoundingBox &otherBB);
@@ -54,7 +67,8 @@ public:
   /// Expand bounding box using vertices
   void expandBy(const Vertex &vertices);
 
-  /// Expand bounding box using value
+  /// Expand bounding box using a double value in all dimensions
+  /// Using this method, BoundingBox should not be in the default state; otherwise, it will make ReceivedPartitionTest fail because of incorrect connectionMapSize
   void expandBy(double value);
 
   /// Increase the size of bounding box by safety margin
@@ -64,7 +78,7 @@ public:
   bool contains(const Vertex &vertex) const;
 
   /// Checks whether two bounding boxes are overlapping
-  bool overlapping(const BoundingBox &otherBB);
+  bool overlapping(const BoundingBox &otherBB) const;
 
   /**
    * @brief Returns the Center Of Gravity of the mesh
@@ -79,6 +93,12 @@ public:
 
   /// the max corner of the bounding box
   Eigen::VectorXd maxCorner() const;
+
+  /// returns the edge length of a specific axis
+  double getEdgeLength(int axis) const;
+
+  /// returns the maximum length of the bounding box in any dimension
+  double longestEdgeLength() const;
 
   /// Calculate the area of bounding box
   double getArea(std::vector<bool> deadAxis);
@@ -95,11 +115,18 @@ public:
 private:
   static logging::Logger _log;
 
-  /// Number of dimensions
+  /// Number of dimensions (2 or 3)
   int _dimensions;
 
-  /// Container of min and max points in each dimension
-  std::vector<double> _bounds;
+  /// _boundMin defining the bounding box, with minimum coordinates in each direction
+  /// (x_min, y_min) when _dimensions=2;
+  /// (x_min, y_min, z_min) when _dimensions=3;
+  Eigen::VectorXd _boundMin;
+
+  /// _boundMax defining the bounding box, with maximum coordinates in each direction
+  /// (x_max, y_max) when _dimensions=2;
+  /// (x_max, y_max, z_max) when _dimensions=3;
+  Eigen::VectorXd _boundMax;
 };
 
 std::ostream &operator<<(std::ostream &, const BoundingBox &);

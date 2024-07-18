@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="Data11" />
+  <data:scalar name="Data12" />
+  <data:scalar name="Data21" />
+  <data:scalar name="Data22" />
+
+  <mesh name="MeshOne" dimensions="2">
+    <use-data name="Data11" />
+    <use-data name="Data12" />
+    <use-data name="Data21" />
+    <use-data name="Data22" />
+  </mesh>
+
+  <mesh name="MeshTwo" dimensions="2">
+    <use-data name="Data11" />
+    <use-data name="Data12" />
+    <use-data name="Data21" />
+    <use-data name="Data22" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <provide-mesh name="MeshOne" />
+    <write-data name="Data11" mesh="MeshOne" />
+    <write-data name="Data12" mesh="MeshOne" />
+    <read-data name="Data21" mesh="MeshOne" />
+    <read-data name="Data22" mesh="MeshOne" />
+  </participant>
+
+  <participant name="SolverTwo">
+    <receive-mesh name="MeshOne" from="SolverOne" safety-factor="0.1" />
+    <provide-mesh name="MeshTwo" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="MeshOne"
+      to="MeshTwo"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="MeshTwo"
+      to="MeshOne"
+      constraint="conservative" />
+    <write-data name="Data21" mesh="MeshTwo" />
+    <write-data name="Data22" mesh="MeshTwo" />
+    <read-data name="Data11" mesh="MeshTwo" />
+    <read-data name="Data12" mesh="MeshTwo" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+
+  <coupling-scheme:serial-implicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="1" />
+    <time-window-size value="1.0" />
+    <exchange data="Data11" mesh="MeshOne" from="SolverOne" to="SolverTwo" substeps="false" />
+    <exchange data="Data12" mesh="MeshOne" from="SolverOne" to="SolverTwo" substeps="false" />
+    <exchange data="Data21" mesh="MeshOne" from="SolverTwo" to="SolverOne" substeps="false" />
+    <exchange data="Data22" mesh="MeshOne" from="SolverTwo" to="SolverOne" substeps="false" />
+    <max-iterations value="100" />
+    <relative-convergence-measure limit="1e-7" data="Data21" mesh="MeshOne" />
+    <relative-convergence-measure limit="1e-7" data="Data22" mesh="MeshOne" />
+    <acceleration:IQN-IMVJ always-build-jacobian="1">
+      <data name="Data21" mesh="MeshOne" />
+      <filter type="QR2" limit="1e-3" />
+      <initial-relaxation value="1.0" />
+      <max-used-iterations value="10" />
+      <time-windows-reused value="0" />
+    </acceleration:IQN-IMVJ>
+  </coupling-scheme:serial-implicit>
+</precice-configuration>

@@ -3,6 +3,7 @@
 #
 
 set(PRECICE_TEST_TIMEOUT_LONG 180 CACHE STRING "The timeout in seconds for longer tests.")
+set(PRECICE_TEST_TIMEOUT_NORMAL 40 CACHE STRING "The timeout in seconds for normal tests.")
 set(PRECICE_TEST_TIMEOUT_SHORT 20 CACHE STRING "The timeout in seconds for shorter tests.")
 
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
@@ -26,7 +27,7 @@ mark_as_advanced(PRECICE_TEST_WRAPPER_SCRIPT)
 
 
 function(add_precice_test)
-  cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;MPIPORTS" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
+  cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;MPIPORTS;GINKGO;GINKGO_OMP;GINKGO_CUDA;GINKGO_HIP" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
   # Check arguments
   if(NOT PAT_NAME)
     message(FATAL_ERROR "Argument NAME not passed")
@@ -36,7 +37,11 @@ function(add_precice_test)
   set(PAT_FULL_NAME "precice.${PAT_NAME}")
 
   # Are direct dependencies fulfilled?
-  if( (NOT PRECICE_MPICommunication) OR (PAT_PETSC AND NOT PRECICE_PETScMapping) )
+  if( (NOT PRECICE_FEATURE_MPI_COMMUNICATION) OR (PAT_PETSC AND NOT PRECICE_FEATURE_PETSC_MAPPING)
+       OR (PAT_GINKGO AND NOT PRECICE_FEATURE_GINKGO_MAPPING)
+       OR (PAT_GINKGO_OMP AND NOT PRECICE_WITH_OMP)
+       OR (PAT_GINKGO_CUDA AND NOT PRECICE_WITH_CUDA)
+       OR (PAT_GINKGO_HIP AND NOT PRECICE_WITH_HIP))
     message(STATUS "Test ${PAT_FULL_NAME} - skipped")
     return()
   endif()
@@ -47,19 +52,20 @@ function(add_precice_test)
   endif()
 
   # Assemble the command
+  # Note that --map-by=:OVERSUBSCRIBE work for OpenMPI(4+5), MPICH, and Intel MPI.
   message(STATUS "Test ${PAT_FULL_NAME}")
   add_test(NAME ${PAT_FULL_NAME}
-    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${MPIEXEC_POSTFLAGS} ${PAT_ARGUMENTS}
+    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 --map-by :OVERSUBSCRIBE ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${MPIEXEC_POSTFLAGS} ${PAT_ARGUMENTS}
     )
+  unset(_extra_mpi_flags)
   # Generate working directory
   set(PAT_WDIR "${PRECICE_TEST_DIR}/${PAT_NAME}")
   file(MAKE_DIRECTORY "${PAT_WDIR}")
   # Setting properties
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
-    RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_WDIR}"
-    ENVIRONMENT "PRECICE_ROOT=${preCICE_SOURCE_DIR};OMPI_MCA_rmaps_base_oversubscribe=1"
+    ENVIRONMENT "OMP_NUM_THREADS=2"
     )
   if(PAT_TIMEOUT)
     set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PAT_TIMEOUT} )
@@ -83,12 +89,12 @@ function(add_precice_test_build_solverdummy PAT_LANG)
 
   # Make sure the required compiler is available
   if(PAT_LANG STREQUAL "fortran")
-    if(NOT CMAKE_Fortran_COMPILER OR NOT PRECICE_ENABLE_FORTRAN)
+    if(NOT CMAKE_Fortran_COMPILER OR NOT PRECICE_BINDINGS_FORTRAN)
       message(STATUS "Test ${PAT_FULL_NAME} - skipped")
       return()
     endif()
   elseif(PAT_LANG STREQUAL "c")
-    if(NOT CMAKE_C_COMPILER OR NOT PRECICE_ENABLE_C)
+    if(NOT CMAKE_C_COMPILER OR NOT PRECICE_BINDINGS_C)
       message(STATUS "Test ${PAT_FULL_NAME} - skipped")
       return()
     endif()
@@ -110,7 +116,6 @@ function(add_precice_test_build_solverdummy PAT_LANG)
   # Setting properties
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
-    RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_BIN_DIR}"
     FIXTURES_SETUP "${PAT_LANG}-solverdummy"
     LABELS "Solverdummy"
@@ -135,12 +140,12 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
   # Make sure all required compilers are available
   foreach(_lang IN ITEMS ${PAT_LANG_A} ${PAT_LANG_B})
     if(_lang STREQUAL "fortran")
-      if(NOT CMAKE_Fortran_COMPILER OR NOT PRECICE_ENABLE_FORTRAN)
+      if(NOT CMAKE_Fortran_COMPILER OR NOT PRECICE_BINDINGS_FORTRAN)
         message(STATUS "Test ${PAT_FULL_NAME} - skipped")
         return()
       endif()
     elseif(_lang STREQUAL "c")
-      if(NOT CMAKE_C_COMPILER OR NOT PRECICE_ENABLE_C)
+      if(NOT CMAKE_C_COMPILER OR NOT PRECICE_BINDINGS_C)
         message(STATUS "Test ${PAT_FULL_NAME} - skipped")
         return()
       endif()
@@ -184,10 +189,8 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
   # Setting properties
   set_tests_properties(${PAT_FULL_NAME}
     PROPERTIES
-    RUN_SERIAL TRUE # Do not run this test in parallel with others
     WORKING_DIRECTORY "${PAT_RUN_DIR}"
-    FIXTURES_REQUIRED "${PAT_LANG_A}-solverdummy"
-    FIXTURES_REQUIRED "${PAT_LANG_B}-solverdummy"
+    FIXTURES_REQUIRED "${PAT_LANG_A}-solverdummy;${PAT_LANG_B}-solverdummy"
     LABELS "Solverdummy"
     TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
     )
@@ -196,7 +199,7 @@ endfunction(add_precice_test_run_solverdummies)
 
 enable_testing()
 
-if(NOT PRECICE_MPICommunication)
+if(NOT PRECICE_FEATURE_MPI_COMMUNICATION)
   message("Tests require MPICommunication to be enabled.")
 endif()
 
@@ -246,8 +249,8 @@ add_precice_test(
   )
 add_precice_test(
   NAME mapping
-  ARGUMENTS "--run_test=MappingTests:\!MappingTests/PetRadialBasisFunctionMapping"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  ARGUMENTS "--run_test=MappingTests:\!MappingTests/PetRadialBasisFunctionMapping:\!MappingTests/GinkgoRadialBasisFunctionSolver"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_NORMAL}
   )
 add_precice_test(
   NAME mapping.petrbf
@@ -255,6 +258,48 @@ add_precice_test(
   TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
   LABELS petsc
   PETSC
+  )
+add_precice_test(
+  NAME mapping.ginkgo.reference
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Reference"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS ginkgo
+  GINKGO
+  )
+add_precice_test(
+  NAME mapping.ginkgo.openmp
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/OpenMP"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
+  LABELS ginkgo
+  GINKGO_OMP
+  )
+add_precice_test(
+  NAME mapping.ginkgo.cuda
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Cuda"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS ginkgo
+  GINKGO_CUDA
+  )
+add_precice_test(
+  NAME mapping.ginkgo.cuSolver
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/cuSolver"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS ginkgo
+  GINKGO_CUDA
+  )
+add_precice_test(
+  NAME mapping.ginkgo.hip
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Hip"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS ginkgo
+  GINKGO_HIP
+  )
+add_precice_test(
+  NAME mapping.ginkgo.hipSolver
+  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/hipSolver"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  LABELS ginkgo
+  GINKGO_HIP
   )
 add_precice_test(
   NAME math
@@ -284,6 +329,11 @@ add_precice_test(
 add_precice_test(
   NAME testing
   ARGUMENTS "--run_test=TestingTests"
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  )
+add_precice_test(
+  NAME time
+  ARGUMENTS "--run_test=TimeTests"
   TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
   )
 add_precice_test(
@@ -382,17 +432,17 @@ if(PRECICE_BUILD_TOOLS)
 
   add_tools_test(
     NAME check.file
-    COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml
+    COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml
     )
 
   add_tools_test(
     NAME check.file+name
-    COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
+    COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
     )
 
   add_tools_test(
     NAME check.file+name+size
-    COMMAND precice-tools check ${CMAKE_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
+    COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
     )
 endif()
 

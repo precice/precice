@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 using namespace precice;
@@ -21,11 +21,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  SolverInterface precice(context.name, context.config(), 0, 1);
-
-  MeshID meshID;
-  DataID writeDataID;
-  DataID readDataID;
+  Participant precice(context.name, context.config(), 0, 1);
 
   typedef double (*DataFunction)(double);
 
@@ -38,24 +34,26 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
   DataFunction writeFunction;
   DataFunction readFunction;
 
+  std::string meshName, writeDataName, readDataName;
   if (context.isNamed("SolverOne")) {
-    meshID        = precice.getMeshID("MeshOne");
-    writeDataID   = precice.getDataID("DataOne", meshID);
+    meshName      = "MeshOne";
+    writeDataName = "DataOne";
     writeFunction = dataOneFunction;
-    readDataID    = precice.getDataID("DataTwo", meshID);
+    readDataName  = "DataTwo";
     readFunction  = dataTwoFunction;
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    meshID        = precice.getMeshID("MeshTwo");
-    writeDataID   = precice.getDataID("DataTwo", meshID);
+    meshName      = "MeshTwo";
+    writeDataName = "DataTwo";
     writeFunction = dataTwoFunction;
-    readDataID    = precice.getDataID("DataOne", meshID);
+    readDataName  = "DataOne";
     readFunction  = dataOneFunction;
   }
 
   double   writeData = 0;
   double   readData  = 0;
-  VertexID vertexID  = precice.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
+  double   v0[]      = {0, 0, 0};
+  VertexID vertexID  = precice.setMeshVertex(meshName, v0);
 
   int    nWindows        = 5; // perform 5 windows.
   int    timestep        = 0;
@@ -68,28 +66,27 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
   double readTime; // time where we are reading
   double sampleDt; // dt relative to timestep start, where we are sampling
 
-  if (precice.isActionRequired(precice::constants::actionWriteInitialData())) {
+  if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
-    precice.markActionFulfilled(precice::constants::actionWriteInitialData());
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
   }
 
-  double maxDt        = precice.initialize();
+  precice.initialize();
+  double maxDt        = precice.getMaxTimeStepSize();
   double windowDt     = maxDt;
-  double dt           = maxDt; // Timestep length desired by solver
-  double currentDt    = dt;    // Timestep length used by solver
+  double dt           = maxDt; // time step size desired by solver
+  double currentDt    = dt;    // time step size used by solver
   double sampleDts[4] = {0.0, dt / 4.0, dt / 2.0, 3.0 * dt / 4.0};
 
   while (precice.isCouplingOngoing()) {
-    if (precice.isActionRequired(precice::constants::actionWriteIterationCheckpoint())) {
+    if (precice.requiresWritingCheckpoint()) {
       windowStartTime = time;
       windowStartStep = timestep;
-      precice.markActionFulfilled(precice::constants::actionWriteIterationCheckpoint());
     }
     for (int j = 0; j < nSamples; j++) {
       sampleDt = sampleDts[j];
       readTime = time + sampleDt;
-      precice.readScalarData(readDataID, vertexID, sampleDt, readData);
+      precice.readData(meshName, readDataName, {&vertexID, 1}, sampleDt, {&readData, 1});
 
       if (context.isNamed("SolverOne") && iterations == 0) { // first participant always uses constant extrapolation in first iteration (from initializeData or writeData of second participant at end previous window).
         BOOST_TEST(readData == readFunction(time));
@@ -99,18 +96,18 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
-    time += currentDt;
-    writeData = writeFunction(time);
-    precice.writeScalarData(writeDataID, vertexID, writeData);
-    maxDt     = precice.advance(currentDt);
+    maxDt     = precice.getMaxTimeStepSize();
     currentDt = dt > maxDt ? maxDt : dt;
     BOOST_CHECK(currentDt == windowDt); // no subcycling.
+    time += currentDt;
+    writeData = writeFunction(time);
+    precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
+    precice.advance(maxDt);
     timestep++;
-    if (precice.isActionRequired(precice::constants::actionReadIterationCheckpoint())) { // at end of window and we have to repeat it.
+    if (precice.requiresReadingCheckpoint()) { // at end of window and we have to repeat it.
       iterations++;
       timestep = windowStartStep;
       time     = windowStartTime;
-      precice.markActionFulfilled(precice::constants::actionReadIterationCheckpoint()); // this test does not care about checkpointing, but we have to make the action
     }
     if (precice.isTimeWindowComplete()) {
       timewindow++;

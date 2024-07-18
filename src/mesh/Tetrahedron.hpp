@@ -2,14 +2,11 @@
 
 #include <array>
 #include <iostream>
-#include "precice/types.hpp"
-#include "utils/assertion.hpp"
+#include <tuple>
 
-namespace precice {
-namespace mesh {
-class Vertex;
-}
-} // namespace precice
+#include "mesh/Vertex.hpp"
+#include "precice/impl/Types.hpp"
+#include "utils/assertion.hpp"
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
@@ -19,6 +16,9 @@ namespace mesh {
 /// Tetrahedron of a mesh, defined by 4 vertices
 class Tetrahedron {
 public:
+  /// Amount of vertices
+  static constexpr int vertexCount{4};
+
   /** Constructor based on 4 vertices
    *
    * The vertices will be sorted by Vertex::getID().
@@ -61,6 +61,13 @@ public:
 
   /// Not equal, implemented in terms of equal.
   bool operator!=(const Tetrahedron &other) const;
+
+  /// Weak ordering based on vertex ids
+  bool operator<(const Tetrahedron &other) const
+  {
+    return std::make_tuple(_vertices[0]->getID(), _vertices[1]->getID(), _vertices[2]->getID(), _vertices[3]->getID()) <
+           std::make_tuple(other._vertices[0]->getID(), other._vertices[1]->getID(), other._vertices[2]->getID(), other._vertices[3]->getID());
+  }
 
 private:
   /// Vertices defining the Tetrahedron.

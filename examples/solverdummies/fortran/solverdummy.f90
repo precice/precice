@@ -1,22 +1,12 @@
 PROGRAM main
   IMPLICIT NONE
   CHARACTER*512                   :: config
-  CHARACTER*50                    :: participantName, meshName, writeInitialData, readItCheckp, writeItCheckp
+  CHARACTER*50                    :: participantName, meshName
   CHARACTER*50                    :: readDataName, writeDataName
-  INTEGER                         :: rank, commsize, ongoing, dimensions, meshID, bool, numberOfVertices, i,j
-  INTEGER                         :: readDataID, writeDataID
+  INTEGER                         :: rank, commsize, ongoing, dimensions, bool, numberOfVertices, i,j
   DOUBLE PRECISION                :: dt
   DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: vertices, writeData, readData
   INTEGER, DIMENSION(:), ALLOCATABLE :: vertexIDs
-
-  ! Constants in f90 have to be prefilled with blanks to be compatible with preCICE
-  writeInitialData(1:50)='                                                  '
-  readItCheckp(1:50)='                                                  '
-  writeItCheckp(1:50)='                                                  '
-
-  CALL precicef_action_write_initial_data(writeInitialData)
-  CALL precicef_action_read_iter_checkp(readItCheckp)
-  CALL precicef_action_write_iter_checkp(writeItCheckp)
 
   WRITE (*,*) 'DUMMY: Starting Fortran solver dummy...'
 
@@ -24,14 +14,14 @@ PROGRAM main
   CALL getarg(2, participantName)
 
   IF(participantName .eq. 'SolverOne') THEN
-    writeDataName = 'dataOne'
-    readDataName = 'dataTwo'
-    meshName = 'MeshOne'
+    writeDataName = 'Data-One'
+    readDataName = 'Data-Two'
+    meshName = 'SolverOne-Mesh'
   ENDIF
   IF(participantName .eq. 'SolverTwo') THEN
-    writeDataName = 'dataTwo'
-    readDataName = 'dataOne'
-    meshName = 'MeshTwo'
+    writeDataName = 'Data-Two'
+    readDataName = 'Data-One'
+    meshName = 'SolverTwo-Mesh'
   ENDIF
 
   rank = 0
@@ -41,12 +31,11 @@ PROGRAM main
   CALL precicef_create(participantName, config, rank, commsize)
 
   ! Allocate dummy mesh with only one vertex
-  CALL precicef_get_dims(dimensions)
+  CALL precicef_get_mesh_dimensions(meshName, dimensions)
   ALLOCATE(vertices(numberOfVertices*dimensions))
   ALLOCATE(vertexIDs(numberOfVertices))
   ALLOCATE(readData(numberOfVertices*dimensions))
   ALLOCATE(writeData(numberOfVertices*dimensions))
-  CALL precicef_get_mesh_id(meshName, meshID)
 
   do i = 1,numberOfVertices,1
     do j = 1,dimensions,1
@@ -57,42 +46,38 @@ PROGRAM main
     vertexIDs(i) = i-1
   enddo
 
-  CALL precicef_set_vertices(meshID, numberOfVertices, vertices, vertexIDs)
+  CALL precicef_set_vertices(meshName, numberOfVertices, vertices, vertexIDs)
   DEALLOCATE(vertices)
 
-  CALL precicef_get_data_id(readDataName,meshID,readDataID)
-  CALL precicef_get_data_id(writeDataName,meshID,writeDataID)
-
-  CALL precicef_is_action_required(writeInitialData, bool)
+  CALL precicef_requires_initial_data(bool)
   IF (bool.EQ.1) THEN
     WRITE (*,*) 'DUMMY: Writing initial data'
   ENDIF
-  CALL precicef_initialize(dt)
+  CALL precicef_initialize()
 
   CALL precicef_is_coupling_ongoing(ongoing)
   DO WHILE (ongoing.NE.0)
 
-    CALL precicef_is_action_required(writeItCheckp, bool)
+    CALL precicef_requires_writing_checkpoint(bool)
 
     IF (bool.EQ.1) THEN
       WRITE (*,*) 'DUMMY: Writing iteration checkpoint'
-      CALL precicef_mark_action_fulfilled(writeItCheckp)
     ENDIF
 
-    CALL precicef_read_bvdata(readDataID, numberOfVertices, vertexIDs, readData)
+    CALL precicef_get_max_time_step_size(dt)
+    CALL precicef_read_data(meshName, readDataName, numberOfVertices, vertexIDs, dt, readData)
 
     WRITE (*,*) 'readData: ', readData
 
     writeData = readData + 1
 
-    CALL precicef_write_bvdata(writeDataID, numberOfVertices, vertexIDs, writeData)
+    CALL precicef_write_data(meshName, writeDataName, numberOfVertices, vertexIDs, writeData)
 
     CALL precicef_advance(dt)
 
-    CALL precicef_is_action_required(readItCheckp, bool)
+    CALL precicef_requires_reading_checkpoint(bool)
     IF (bool.EQ.1) THEN
       WRITE (*,*) 'DUMMY: Reading iteration checkpoint'
-      CALL precicef_mark_action_fulfilled(readItCheckp)
     ELSE
       WRITE (*,*) 'DUMMY: Advancing in time'
     ENDIF

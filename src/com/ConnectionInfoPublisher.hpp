@@ -1,12 +1,12 @@
 #pragma once
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 
 namespace impl {
 /// Returns the file name for the connection information.
@@ -14,37 +14,37 @@ namespace impl {
    * It has the form first two letters from hash of
    * (acceptorName, requesterName, mesh, rank)/rest of hash.
    */
-std::string hashedFilePath(const std::string &acceptorName, const std::string &requesterName, const std::string &meshName, Rank rank);
+std::string hashedFilePath(std::string_view acceptorName, std::string_view requesterName, std::string_view meshName, Rank rank);
 
 /** Returns the local directory which is the root for storing connection information.
    * It has the form addressDirectory/precice-run/acceptorName-requesterName
    */
-std::string localDirectory(const std::string &acceptorName, const std::string &requesterName, const std::string &addressDirectory);
+std::string localDirectory(std::string_view acceptorName, std::string_view requesterName, std::string_view addressDirectory);
 } // namespace impl
 
 class ConnectionInfoPublisher {
 public:
-  ConnectionInfoPublisher(std::string acceptorName,
-                          std::string requesterName,
-                          std::string tag,
-                          int         rank,
-                          std::string addressDirectory) noexcept
-      : acceptorName(std::move(acceptorName)),
-        requesterName(std::move(requesterName)),
-        tag(std::move(tag)),
+  ConnectionInfoPublisher(std::string_view acceptorName,
+                          std::string_view requesterName,
+                          std::string_view tag,
+                          int              rank,
+                          std::string_view addressDirectory) noexcept
+      : acceptorName(acceptorName),
+        requesterName(requesterName),
+        tag(tag),
         rank(rank),
-        addressDirectory(std::move(addressDirectory))
+        addressDirectory(addressDirectory)
   {
   }
 
-  ConnectionInfoPublisher(std::string acceptorName,
-                          std::string requesterName,
-                          std::string tag,
-                          std::string addressDirectory) noexcept
-      : acceptorName(std::move(acceptorName)),
-        requesterName(std::move(requesterName)),
-        tag(std::move(tag)),
-        addressDirectory(std::move(addressDirectory))
+  ConnectionInfoPublisher(std::string_view acceptorName,
+                          std::string_view requesterName,
+                          std::string_view tag,
+                          std::string_view addressDirectory) noexcept
+      : acceptorName(acceptorName),
+        requesterName(requesterName),
+        tag(tag),
+        addressDirectory(addressDirectory)
   {
   }
 
@@ -67,19 +67,19 @@ protected:
 /// Reads the connection info for the given participant/rank information
 class ConnectionInfoReader : public ConnectionInfoPublisher {
 public:
-  ConnectionInfoReader(std::string acceptorName,
-                       std::string requesterName,
-                       std::string tag,
-                       int         rank,
-                       std::string addressDirectory) noexcept
+  ConnectionInfoReader(std::string_view acceptorName,
+                       std::string_view requesterName,
+                       std::string_view tag,
+                       int              rank,
+                       std::string_view addressDirectory) noexcept
       : ConnectionInfoPublisher(acceptorName, requesterName, tag, rank, addressDirectory)
   {
   }
 
-  ConnectionInfoReader(std::string acceptorName,
-                       std::string requesterName,
-                       std::string tag,
-                       std::string addressDirectory) noexcept
+  ConnectionInfoReader(std::string_view acceptorName,
+                       std::string_view requesterName,
+                       std::string_view tag,
+                       std::string_view addressDirectory) noexcept
       : ConnectionInfoPublisher(acceptorName, requesterName, tag, addressDirectory)
   {
   }
@@ -94,19 +94,19 @@ public:
  */
 class ConnectionInfoWriter : public ConnectionInfoPublisher {
 public:
-  ConnectionInfoWriter(std::string acceptorName,
-                       std::string requesterName,
-                       std::string tag,
-                       int         rank,
-                       std::string addressDirectory) noexcept
+  ConnectionInfoWriter(std::string_view acceptorName,
+                       std::string_view requesterName,
+                       std::string_view tag,
+                       int              rank,
+                       std::string_view addressDirectory) noexcept
       : ConnectionInfoPublisher(acceptorName, requesterName, tag, rank, addressDirectory)
   {
   }
 
-  ConnectionInfoWriter(std::string acceptorName,
-                       std::string requesterName,
-                       std::string tag,
-                       std::string addressDirectory) noexcept
+  ConnectionInfoWriter(std::string_view acceptorName,
+                       std::string_view requesterName,
+                       std::string_view tag,
+                       std::string_view addressDirectory) noexcept
       : ConnectionInfoPublisher(acceptorName, requesterName, tag, addressDirectory)
   {
   }
@@ -119,8 +119,7 @@ public:
    * which is determined by acceptorName, requesterName, rank, addressDirectory
    * set at construction.
    */
-  void write(std::string const &info) const;
+  void write(std::string_view info) const;
 };
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

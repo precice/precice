@@ -1,9 +1,9 @@
 #ifndef PRECICE_NO_MPI
 
-#include "precice/impl/SolverInterfaceImpl.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 using namespace precice;
@@ -22,49 +22,59 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
-  SolverInterface cplInterface(context.name, context.config(), 0, 1);
-  BOOST_TEST(cplInterface.getDimensions() == 2);
+  Participant cplInterface(context.name, context.config(), 0, 1);
 
   std::vector<double> positions = {0.0, 0.0, 0.0, 0.1, 0.1, 0.1, 0.1, 0.0};
   std::vector<int>    ids       = {0, 0, 0, 0};
 
   if (context.isNamed("SolverOne")) {
-    MeshID meshID = cplInterface.getMeshID("Test-Square-One");
-    cplInterface.setMeshVertices(meshID, 4, positions.data(), ids.data());
+    auto meshName = "Test-Square-One";
+    BOOST_REQUIRE(cplInterface.getMeshDimensions(meshName));
+    cplInterface.setMeshVertices(meshName, positions, ids);
     for (int i = 0; i < 4; i++)
-      cplInterface.setMeshEdge(meshID, ids.at(i), ids.at((i + 1) % 4));
+      cplInterface.setMeshEdge(meshName, ids.at(i), ids.at((i + 1) % 4));
 
-    double dt = cplInterface.initialize();
+    cplInterface.initialize();
+    double dt = cplInterface.getMaxTimeStepSize();
 
-    int velocitiesID = cplInterface.getDataID("Velocities", meshID);
+    auto velocitiesID = "Velocities";
     while (cplInterface.isCouplingOngoing()) {
-      for (size_t i = 0; i < testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-One").vertices().size(); ++i) {
-        Eigen::Vector2d data = Eigen::Vector2d::Constant(i);
-        cplInterface.writeVectorData(velocitiesID, i, data.data());
+      std::vector<double> data;
+      for (size_t i = 0; i < testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-One").nVertices(); ++i) {
+        data.push_back(i);
+        data.push_back(i);
       }
-      dt = cplInterface.advance(dt);
+      cplInterface.writeData(meshName, velocitiesID, ids, data);
+      cplInterface.advance(dt);
+      double dt = cplInterface.getMaxTimeStepSize();
     }
     cplInterface.finalize();
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    MeshID meshID = cplInterface.getMeshID("Test-Square-Two");
-    cplInterface.setMeshVertices(meshID, 4, positions.data(), ids.data());
+    auto meshName = "Test-Square-Two";
+    BOOST_REQUIRE(cplInterface.getMeshDimensions(meshName));
+    cplInterface.setMeshVertices(meshName, positions, ids);
     for (int i = 0; i < 4; i++)
-      cplInterface.setMeshEdge(meshID, ids.at(i), ids.at((i + 1) % 4));
+      cplInterface.setMeshEdge(meshName, ids.at(i), ids.at((i + 1) % 4));
 
-    double dt = cplInterface.initialize();
+    cplInterface.initialize();
+    double dt = cplInterface.getMaxTimeStepSize();
 
-    int velocitiesID = cplInterface.getDataID("Velocities", meshID);
+    auto velocitiesID = "Velocities";
     while (cplInterface.isCouplingOngoing()) {
-      const auto size = testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-Two").vertices().size();
+      const auto size = testing::WhiteboxAccessor::impl(cplInterface).mesh("Test-Square-Two").nVertices();
+
+      std::vector<double> expected;
       for (size_t i = 0; i < size; ++i) {
-        Eigen::Vector2d readData;
-        cplInterface.readVectorData(velocitiesID, i, readData.data());
-        Eigen::Vector2d expectedData = Eigen::Vector2d::Constant(i * 10.0);
-        BOOST_TEST(readData(0) == expectedData(0));
-        BOOST_TEST(readData(1) == expectedData(1));
+        expected.push_back(i * 10.0);
+        expected.push_back(i * 10.0);
       }
-      dt = cplInterface.advance(dt);
+      std::vector<double> data(expected.size());
+      cplInterface.readData(meshName, velocitiesID, ids, dt, data);
+      BOOST_TEST(data == expected, boost::test_tools::per_element());
+
+      cplInterface.advance(dt);
+      double dt = cplInterface.getMaxTimeStepSize();
     }
     cplInterface.finalize();
   }

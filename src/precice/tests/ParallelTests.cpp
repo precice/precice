@@ -13,10 +13,10 @@
 #include "math/constants.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Mesh.hpp"
-#include "precice/SolverInterface.hpp"
+#include "precice/Participant.hpp"
 #include "precice/config/Configuration.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
+#include "precice/impl/Types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/IntraComm.hpp"
@@ -43,8 +43,6 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
 {
   Eigen::Vector2d coordOneA{0.0, 0.0};
   Eigen::Vector2d coordOneB{1.0, 0.0};
-  std::string     writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
-  std::string     readIterCheckpoint(constants::actionReadIterationCheckpoint());
 
   double valueA1 = 1.0;
   double valueA2 = 1.5;
@@ -54,30 +52,31 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
   double valueC2 = 3.5;
 
   if (context.isNamed("SolverA")) {
-    SolverInterface cplInterface("SolverA", configFile, context.rank, context.size);
-    const int       meshID   = cplInterface.getMeshID("MeshA");
-    const int       dataABID = cplInterface.getDataID("DataAB", meshID);
-    const int       dataBAID = cplInterface.getDataID("DataBA", meshID);
+    Participant cplInterface("SolverA", configFile, context.rank, context.size);
+    auto        meshName = "MeshA";
+    auto        dataABID = "DataAB";
+    auto        dataBAID = "DataBA";
 
     if (context.isPrimary()) {
-      int vertex1 = cplInterface.setMeshVertex(meshID, coordOneA.data());
+      int vertex1 = cplInterface.setMeshVertex(meshName, coordOneA);
 
-      double maxDt = cplInterface.initialize();
+      cplInterface.initialize();
+      double maxDt = cplInterface.getMaxTimeStepSize();
       double valueRead;
 
       BOOST_TEST(cplInterface.isCouplingOngoing());
       while (cplInterface.isCouplingOngoing()) {
-        cplInterface.writeScalarData(dataABID, vertex1, valueA1);
-        if (cplInterface.isActionRequired(writeIterCheckpoint)) {
-          cplInterface.markActionFulfilled(writeIterCheckpoint);
+        cplInterface.writeData(meshName, dataABID, {&vertex1, 1}, {&valueA1, 1});
+        if (cplInterface.requiresWritingCheckpoint()) {
         }
 
         cplInterface.advance(maxDt);
 
-        if (cplInterface.isActionRequired(readIterCheckpoint)) {
-          cplInterface.markActionFulfilled(readIterCheckpoint);
+        if (cplInterface.requiresReadingCheckpoint()) {
         }
-        cplInterface.readScalarData(dataBAID, vertex1, valueRead);
+
+        maxDt = cplInterface.getMaxTimeStepSize();
+        cplInterface.readData(meshName, dataBAID, {&vertex1, 1}, maxDt, {&valueRead, 1});
       }
 
       BOOST_TEST(valueRead == valueB1);
@@ -85,24 +84,25 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
       cplInterface.finalize();
 
     } else {
-      int vertex2 = cplInterface.setMeshVertex(meshID, coordOneB.data());
+      int vertex2 = cplInterface.setMeshVertex(meshName, coordOneB);
 
-      double maxDt = cplInterface.initialize();
+      cplInterface.initialize();
+      double maxDt = cplInterface.getMaxTimeStepSize();
       double valueRead;
 
       BOOST_TEST(cplInterface.isCouplingOngoing());
       while (cplInterface.isCouplingOngoing()) {
-        cplInterface.writeScalarData(dataABID, vertex2, valueA2);
-        if (cplInterface.isActionRequired(writeIterCheckpoint)) {
-          cplInterface.markActionFulfilled(writeIterCheckpoint);
+        cplInterface.writeData(meshName, dataABID, {&vertex2, 1}, {&valueA2, 1});
+        if (cplInterface.requiresWritingCheckpoint()) {
         }
 
         cplInterface.advance(maxDt);
 
-        if (cplInterface.isActionRequired(readIterCheckpoint)) {
-          cplInterface.markActionFulfilled(readIterCheckpoint);
+        if (cplInterface.requiresReadingCheckpoint()) {
         }
-        cplInterface.readScalarData(dataBAID, vertex2, valueRead);
+
+        maxDt = cplInterface.getMaxTimeStepSize();
+        cplInterface.readData(meshName, dataBAID, {&vertex2, 1}, maxDt, {&valueRead, 1});
       }
 
       BOOST_TEST(valueRead == valueB2);
@@ -111,41 +111,42 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
     }
 
   } else if (context.isNamed("SolverB")) {
-    SolverInterface cplInterface("SolverB", configFile, 0, 1);
-    const int       meshID1 = cplInterface.getMeshID("MeshB1");
-    const int       meshID2 = cplInterface.getMeshID("MeshB2");
-    int             vertex1 = cplInterface.setMeshVertex(meshID1, coordOneA.data());
-    int             vertex2 = cplInterface.setMeshVertex(meshID1, coordOneB.data());
-    int             vertex3 = cplInterface.setMeshVertex(meshID2, coordOneA.data());
-    int             vertex4 = cplInterface.setMeshVertex(meshID2, coordOneB.data());
+    Participant cplInterface("SolverB", configFile, 0, 1);
+    auto        meshName1 = "MeshB1";
+    auto        meshName2 = "MeshB2";
+    int         vertex1   = cplInterface.setMeshVertex(meshName1, coordOneA);
+    int         vertex2   = cplInterface.setMeshVertex(meshName1, coordOneB);
+    int         vertex3   = cplInterface.setMeshVertex(meshName2, coordOneA);
+    int         vertex4   = cplInterface.setMeshVertex(meshName2, coordOneB);
 
-    int dataABID = cplInterface.getDataID("DataAB", meshID1);
-    int dataBAID = cplInterface.getDataID("DataBA", meshID1);
-    int dataCBID = cplInterface.getDataID("DataCB", meshID2);
-    int dataBCID = cplInterface.getDataID("DataBC", meshID2);
+    auto dataABID = "DataAB"; // meshName1
+    auto dataBAID = "DataBA"; // meshName1
+    auto dataCBID = "DataCB"; // meshName2;
+    auto dataBCID = "DataBC"; // meshName2;
 
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
     double valueReadA1, valueReadA2, valueReadC1, valueReadC2;
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeScalarData(dataBAID, vertex1, valueB1);
-      cplInterface.writeScalarData(dataBAID, vertex2, valueB2);
-      cplInterface.writeScalarData(dataBCID, vertex3, valueB1);
-      cplInterface.writeScalarData(dataBCID, vertex4, valueB2);
-      if (cplInterface.isActionRequired(writeIterCheckpoint)) {
-        cplInterface.markActionFulfilled(writeIterCheckpoint);
+      cplInterface.writeData(meshName1, dataBAID, {&vertex1, 1}, {&valueB1, 1});
+      cplInterface.writeData(meshName1, dataBAID, {&vertex2, 1}, {&valueB2, 1});
+      cplInterface.writeData(meshName2, dataBCID, {&vertex3, 1}, {&valueB1, 1});
+      cplInterface.writeData(meshName2, dataBCID, {&vertex4, 1}, {&valueB2, 1});
+      if (cplInterface.requiresWritingCheckpoint()) {
       }
 
       cplInterface.advance(maxDt);
 
-      if (cplInterface.isActionRequired(readIterCheckpoint)) {
-        cplInterface.markActionFulfilled(readIterCheckpoint);
+      if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(dataABID, vertex1, valueReadA1);
-      cplInterface.readScalarData(dataABID, vertex2, valueReadA2);
-      cplInterface.readScalarData(dataCBID, vertex1, valueReadC1);
-      cplInterface.readScalarData(dataCBID, vertex2, valueReadC2);
+
+      maxDt = cplInterface.getMaxTimeStepSize();
+      cplInterface.readData(meshName1, dataABID, {&vertex1, 1}, maxDt, {&valueReadA1, 1});
+      cplInterface.readData(meshName1, dataABID, {&vertex2, 1}, maxDt, {&valueReadA2, 1});
+      cplInterface.readData(meshName2, dataCBID, {&vertex1, 1}, maxDt, {&valueReadC1, 1});
+      cplInterface.readData(meshName2, dataCBID, {&vertex2, 1}, maxDt, {&valueReadC2, 1});
     }
 
     BOOST_TEST(valueReadA1 == valueA1);
@@ -156,32 +157,33 @@ void multiCouplingThreeSolversParallelControl(const std::string configFile, cons
     cplInterface.finalize();
 
   } else {
-    SolverInterface cplInterface("SolverC", configFile, 0, 1);
-    const int       meshID   = cplInterface.getMeshID("MeshC");
-    int             vertex1  = cplInterface.setMeshVertex(meshID, coordOneA.data());
-    int             vertex2  = cplInterface.setMeshVertex(meshID, coordOneB.data());
-    int             dataCBID = cplInterface.getDataID("DataCB", meshID);
-    int             dataBCID = cplInterface.getDataID("DataBC", meshID);
+    Participant cplInterface("SolverC", configFile, 0, 1);
+    auto        meshName = "MeshC";
+    int         vertex1  = cplInterface.setMeshVertex(meshName, coordOneA);
+    int         vertex2  = cplInterface.setMeshVertex(meshName, coordOneB);
+    auto        dataCBID = "DataCB";
+    auto        dataBCID = "DataBC";
 
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
     double valueRead1, valueRead2;
 
     BOOST_TEST(cplInterface.isCouplingOngoing());
     while (cplInterface.isCouplingOngoing()) {
 
-      cplInterface.writeScalarData(dataCBID, vertex1, valueC1);
-      cplInterface.writeScalarData(dataCBID, vertex2, valueC2);
-      if (cplInterface.isActionRequired(writeIterCheckpoint)) {
-        cplInterface.markActionFulfilled(writeIterCheckpoint);
+      cplInterface.writeData(meshName, dataCBID, {&vertex1, 1}, {&valueC1, 1});
+      cplInterface.writeData(meshName, dataCBID, {&vertex2, 1}, {&valueC2, 1});
+      if (cplInterface.requiresWritingCheckpoint()) {
       }
 
       cplInterface.advance(maxDt);
 
-      if (cplInterface.isActionRequired(readIterCheckpoint)) {
-        cplInterface.markActionFulfilled(readIterCheckpoint);
+      if (cplInterface.requiresReadingCheckpoint()) {
       }
-      cplInterface.readScalarData(dataBCID, vertex1, valueRead1);
-      cplInterface.readScalarData(dataBCID, vertex2, valueRead2);
+
+      maxDt = cplInterface.getMaxTimeStepSize();
+      cplInterface.readData(meshName, dataBCID, {&vertex1, 1}, maxDt, {&valueRead1, 1});
+      cplInterface.readData(meshName, dataBCID, {&vertex2, 1}, maxDt, {&valueRead2, 1});
     }
 
     BOOST_TEST(valueRead1 == valueB1);

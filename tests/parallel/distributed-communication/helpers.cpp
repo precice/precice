@@ -2,7 +2,7 @@
 
 #include "helpers.hpp"
 
-#include "precice/SolverInterface.hpp"
+#include "precice/precice.hpp"
 #include "testing/Testing.hpp"
 
 /// Tests various distributed communication schemes.
@@ -53,37 +53,38 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
     }
   }
 
-  precice::SolverInterface precice(context.name, config, context.rank, context.size);
-  int                      meshID   = precice.getMeshID(meshName);
-  int                      forcesID = precice.getDataID("Forces", meshID);
-  int                      velocID  = precice.getDataID("Velocities", meshID);
+  precice::Participant precice(context.name, config, context.rank, context.size);
+  auto                 forcesID = "Forces";
+  auto                 velocID  = "Velocities";
 
   std::vector<int> vertexIDs;
   for (int i = i1; i < i2; i++) {
-    VertexID vertexID = precice.setMeshVertex(meshID, positions[i].data());
+    VertexID vertexID = precice.setMeshVertex(meshName, positions[i]);
     vertexIDs.push_back(vertexID);
   }
 
   precice.initialize();
+  double dt = precice.getMaxTimeStepSize();
 
   if (context.isNamed("Fluid")) { //Fluid
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      precice.writeVectorData(forcesID, vertexIDs[i], data[i + i1].data());
+      precice.writeData(meshName, forcesID, {&vertexIDs[i], 1}, {data[i + i1].data(), 3});
     }
   } else {
     BOOST_TEST(context.isNamed("Structure"));
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      precice.readVectorData(forcesID, vertexIDs[i], data[i].data());
+      precice.readData(meshName, forcesID, {&vertexIDs[i], 1}, dt, {data[i].data(), 3});
       data[i] = (data[i] * 2).array() + 1.0;
-      precice.writeVectorData(velocID, vertexIDs[i], data[i].data());
+      precice.writeData(meshName, velocID, {&vertexIDs[i], 1}, {data[i].data(), 3});
     }
   }
 
   precice.advance(1.0);
+  dt = precice.getMaxTimeStepSize();
 
   if (context.isNamed("Fluid")) { //Fluid
     for (size_t i = 0; i < vertexIDs.size(); i++) {
-      precice.readVectorData(velocID, vertexIDs[i], data[i + i1].data());
+      precice.readData(meshName, velocID, {&vertexIDs[i], 1}, dt, {data[i + i1].data(), 3});
       for (size_t d = 0; d < 3; d++) {
         BOOST_TEST(expectedData[i + i1][d] == data[i + i1][d]);
       }

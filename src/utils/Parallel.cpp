@@ -15,15 +15,15 @@ namespace precice::utils {
 
 logging::Logger Parallel::_log("utils::Parallel");
 
-bool                   Parallel::_isInitialized           = false;
 Parallel::CommStatePtr Parallel::_currentState            = nullptr;
 bool                   Parallel::_mpiInitializedByPrecice = false;
+
+Parallel::InitializationState Parallel::_initState = Parallel::InitializationState::Uninitialized;
 
 /// BEGIN CommState
 
 Parallel::CommState::CommState(Parallel::CommState &&other) noexcept
 {
-  groups     = std::move(other.groups);
   comm       = other.comm;
   other.comm = MPI_COMM_NULL;
   _owning    = other._owning;
@@ -32,7 +32,6 @@ Parallel::CommState::CommState(Parallel::CommState &&other) noexcept
 
 Parallel::CommState &Parallel::CommState::operator=(Parallel::CommState &&other) noexcept
 {
-  groups     = std::move(other.groups);
   comm       = other.comm;
   other.comm = MPI_COMM_NULL;
   _owning    = other._owning;
@@ -162,7 +161,7 @@ void Parallel::resetCommState()
 void Parallel::resetManagedMPI()
 {
   _mpiInitializedByPrecice = false;
-  _isInitialized           = false;
+  _initState               = Parallel::InitializationState::Uninitialized;
 }
 
 void Parallel::pushState(CommStatePtr newState)
@@ -177,196 +176,114 @@ void Parallel::pushState(CommStatePtr newState)
   _currentState    = std::move(newState);
 }
 
-// Parallel::Communicator Parallel::getCommunicatorWorld()
-// {
-// #ifndef PRECICE_NO_MPI
-//   return MPI_COMM_WORLD;
-// #else
-//   return nullptr;
-// #endif
-// }
-
-void Parallel::initializeManagedMPI(
-    int *   argc,
-    char ***argv)
+bool Parallel::isMPIInitialized()
 {
 #ifndef PRECICE_NO_MPI
-  PRECICE_TRACE();
-  PRECICE_ASSERT(!_isInitialized, "A managed MPI session already exists.");
-  PRECICE_ASSERT(!_mpiInitializedByPrecice);
   int isMPIInitialized{-1};
   MPI_Initialized(&isMPIInitialized);
-  if (isMPIInitialized) {
-    PRECICE_DEBUG("Initializing unmanaged MPI.");
-    _mpiInitializedByPrecice = false;
-  } else {
-    PRECICE_DEBUG("Initializing managed MPI");
-    _mpiInitializedByPrecice = true;
-    initializeMPI(argc, argv);
+  return isMPIInitialized != 0;
+#else
+  return false;
+#endif // not PRECICE_NO_MPI
+}
+
+void Parallel::initializeOrDetectMPI(std::optional<Communicator> userProvided)
+{
+#ifndef PRECICE_NO_MPI
+  PRECICE_ASSERT(!_mpiInitializedByPrecice,
+                 "MPI cannot be initialized twice. You need to handle the MPI lifetime yourself.");
+
+  bool isInit = isMPIInitialized();
+
+  // Handle user-provided Communicator first
+  if (userProvided.has_value()) {
+    PRECICE_ASSERT(isInit, "A user-provided comm can only exist if MPI has been initialized.");
+    pushState(Parallel::CommState::fromExtern(*userProvided));
+    _initState = InitializationState::Provided;
+    return;
   }
-  _isInitialized = true;
+
+  // preCICE needs to initialize MPI itself
+  if (!isInit) {
+    MPI_Init(nullptr, nullptr);
+    _currentState            = CommState::world();
+    _initState               = InitializationState::Managed;
+    _mpiInitializedByPrecice = true;
+    return;
+  }
+
+  // preCICE is constructed in testing mode
+  if (_currentState == nullptr) {
+    // User initialized MPI but didn't pass a communicator
+    // We need to use MPI_COMM_WORLD
+    _currentState = CommState::world();
+    _initState    = InitializationState::Unmanaged;
+    return;
+  }
+
+  // We are in testing mode as \ref _currentState has been altered.
+  _initState = InitializationState::Testing;
+  return;
+#endif
+}
+
+void Parallel::finalizeOrCleanupMPI()
+{
+#ifndef PRECICE_NO_MPI
+  // Make sure all com states are freed at this point in time
+  if (_initState == InitializationState::Testing) {
+    resetCommState();
+  } else {
+    _currentState = nullptr;
+  }
+
+  if (_initState == InitializationState::Managed) {
+    MPI_Finalize();
+    PRECICE_ASSERT(_mpiInitializedByPrecice, "Something changed this state!");
+  }
+
+  _initState = InitializationState::Uninitialized;
 #endif // not PRECICE_NO_MPI
 }
 
-void Parallel::initializeMPI(
+void Parallel::initializeTestingMPI(
     int *   argc,
     char ***argv)
 {
 #ifndef PRECICE_NO_MPI
-  int isMPIInitialized{-1};
-  MPI_Initialized(&isMPIInitialized);
-  PRECICE_ASSERT(!isMPIInitialized, "MPI was already initialized.");
-  PRECICE_DEBUG("Initialize MPI");
+  PRECICE_ASSERT(!isMPIInitialized(), "MPI was already initialized.");
   MPI_Init(argc, argv);
+  // By altering the commstate, preCICE will know that it is testing mode
+  _currentState = CommState::world();
 #endif // not PRECICE_NO_MPI
 }
 
-void Parallel::finalizeManagedMPI()
+void Parallel::finalizeTestingMPI()
 {
-  PRECICE_TRACE();
-  // Make sure all com states were freed at this point in time
+  // Make sure all com states are freed at this point in time
   resetCommState();
 #ifndef PRECICE_NO_MPI
-  PRECICE_ASSERT(_isInitialized, "There is no managed MPI session.");
-  if (_mpiInitializedByPrecice) {
-    PRECICE_DEBUG("Finalizing managed MPI.");
-    finalizeMPI();
-  } else {
-    PRECICE_DEBUG("Finalizing unmanaged MPI");
-  }
-  _mpiInitializedByPrecice = false;
-  _isInitialized           = false;
-#endif // not PRECICE_NO_MPI
-}
-
-void Parallel::finalizeMPI()
-{
-#ifndef PRECICE_NO_MPI
-  PRECICE_TRACE();
-  int isMPIInitialized;
-  MPI_Initialized(&isMPIInitialized);
-  PRECICE_ASSERT(isMPIInitialized, "MPI was not initialized.");
-  PRECICE_DEBUG("Finalize MPI");
   MPI_Finalize();
 #endif // not PRECICE_NO_MPI
 }
 
-void Parallel::registerUserProvidedComm(Communicator comm)
+// State altering
+
+void Parallel::splitCommunicator(std::optional<int> group)
 {
 #ifndef PRECICE_NO_MPI
-  PRECICE_TRACE();
-  pushState(Parallel::CommState::fromExtern(comm));
-#endif // not PRECICE_NO_MPI
-}
+  PRECICE_TRACE(group.value_or(-1));
 
-void Parallel::splitCommunicator(const std::string &groupName)
-{
-#ifndef PRECICE_NO_MPI
-  PRECICE_TRACE(groupName);
+  // Passing the same key maintains rank order
+  constexpr int keepTheSameOrder{0};
 
-  // Exchange group information
-  PRECICE_DEBUG("Exchange group information");
-  //_accessorGroups.clear(); // Makes reinitialization possible
+  MPI_Comm newComm = MPI_COMM_NULL;
+  // Passing MPI_UNDEFINED as group results in MPI_COMM_NULL
+  auto err = MPI_Comm_split(current()->comm, group.value_or(MPI_UNDEFINED), keepTheSameOrder, &newComm);
+  PRECICE_ASSERT(err == MPI_SUCCESS, "MPI_Comm_split failed!", group.has_value(), group.value_or(-1));
 
-  CommStatePtr baseState  = current();
-  MPI_Comm     globalComm = baseState->comm;
-  int          rank       = baseState->rank();
-  int          size       = baseState->size();
-
-  PRECICE_ASSERT(size > 1, "Splitting a communicator or size 1 is not possible!");
-
-  std::vector<AccessorGroup>  accessorGroups;
-  com::MPIDirectCommunication com;
-
-  if (rank == 0) { // Primary rank
-    // Step 1 receive groupNames from Salves and setup accessorGroups
-    std::map<std::string, int> groupMap; // map from names to group ID
-    groupMap[groupName] = 0;
-    AccessorGroup newGroup;
-    newGroup.id         = 0;
-    newGroup.size       = 1;
-    newGroup.leaderRank = 0;
-    newGroup.name       = groupName;
-    accessorGroups.push_back(newGroup);
-    for (int i = 1; i < size; i++) {
-      std::string name;
-      com.receive(name, i); // Receive group name from all ranks
-      if (groupMap.find(name) == groupMap.end()) {
-        groupMap[name] = accessorGroups.size();
-        AccessorGroup newGroup;
-        newGroup.id         = accessorGroups.size();
-        newGroup.size       = 1;
-        newGroup.leaderRank = i;
-        newGroup.name       = name;
-        accessorGroups.push_back(newGroup);
-      } else {
-        accessorGroups[groupMap[name]].size++;
-      }
-    }
-    // Step 2 send groupCount to Primary rank
-    auto groupCount = static_cast<int>(accessorGroups.size());
-    MPI_Bcast(&groupCount, 1, MPI_INT, 0, globalComm);
-    PRECICE_ASSERT(groupCount > 1, "Calling split with a single group is not permitted!");
-
-    // Step 3 send AccessorGroups to SecondaryRanks
-    for (const AccessorGroup &group : accessorGroups) {
-      // @TODO can we use broadcast as the primary rank sends this to everyone else?
-      for (int i = 1; i < size; i++) {
-        com.send(group.name, i);
-        com.send(group.leaderRank, i);
-        com.send(group.id, i);
-        com.send(group.size, i);
-      }
-    }
-  } else { // rank != 0
-    // Step 1 send groupName to Primary rank
-    com.send(groupName, 0);
-    // Step 2 receive groupCount from Primary rank
-    int groupCount = -1;
-    MPI_Bcast(&groupCount, 1, MPI_INT, 0, globalComm);
-    PRECICE_ASSERT(groupCount > 1, "Calling split with a single group is not permitted!");
-
-    // Step 3 receive AccessorGroups from Primary rank
-    for (int i = 0; i < groupCount; i++) {
-      AccessorGroup newGroup;
-      com.receive(newGroup.name, 0);
-      com.receive(newGroup.leaderRank, 0);
-      com.receive(newGroup.id, 0);
-      com.receive(newGroup.size, 0);
-      accessorGroups.emplace_back(std::move(newGroup));
-    }
-  }
-
-  // Step 4 split into groups
-  PRECICE_DEBUG("Split groups");
-  auto thisGroup = std::find_if(accessorGroups.begin(), accessorGroups.end(), [groupName](const AccessorGroup &group) { return group.name == groupName; });
-  PRECICE_ASSERT(thisGroup != accessorGroups.end(), "This requested groupName is not in accessorGroups!", groupName);
-
-  CommStatePtr newState;
-  const bool   restrictToSelf = std::all_of(accessorGroups.begin(), accessorGroups.end(), [](const AccessorGroup &group) { return group.size == 1; });
-  if (restrictToSelf) {
-    PRECICE_DEBUG("Split to Comm Self");
-    newState = CommState::self();
-  } else {
-    PRECICE_DEBUG("Split to new Communicator");
-    // Create a new communicator that contains only ranks of my group
-    MPI_Comm newComm = MPI_COMM_NULL;
-    MPI_Comm_split(globalComm, thisGroup->id, rank, &newComm);
-    // Assemble and set new state
-    newState = CommState::fromComm(newComm);
-  }
-
-#ifndef NDEBUG
-  PRECICE_DEBUG("Detected {} groups", accessorGroups.size());
-  for (const AccessorGroup &group : accessorGroups) {
-    PRECICE_DEBUG("Group {}: name = {}, leaderRank = {}, size = {}",
-                  group.id, group.name, group.leaderRank, group.size);
-  }
-#endif // NDEBUG
-
-  newState->groups = std::move(accessorGroups);
-  pushState(newState);
-
+  // Assemble and set new state
+  pushState(CommState::fromComm(newComm));
 #endif // not PRECICE_NO_MPI
 }
 
@@ -379,184 +296,16 @@ void Parallel::popState()
   }
 }
 
-// void Parallel::clearGroups()
-// {
-//   _accessorGroups.clear();
-//   _isSplit = false;
-// }
-
 int Parallel::getProcessRank()
 {
   // Do not use TRACE or DEBUG here!
 #ifndef PRECICE_NO_MPI
-  if (!_isInitialized)
-    return 0;
-
-  return getGlobalCommState()->rank();
-#else
+  if (_currentState) {
+    return _currentState->rank();
+  }
+#endif // not PRECICE_NO_MPI
   return 0;
-#endif // not PRECICE_NO_MPI
 }
-
-int Parallel::getLocalProcessRank()
-{
-#ifndef PRECICE_NO_MPI
-  if (!_isInitialized)
-    return 0;
-
-  return getLocalCommState()->rank();
-#else
-  return 0;
-#endif // not PRECICE_NO_MPI
-}
-
-// inline int Parallel::getCommunicatorSize()
-// {
-//   return getCommunicatorSize(_globalCommunicator);
-// }
-
-// int Parallel::getCommunicatorSize(Communicator comm)
-// {
-//   PRECICE_TRACE();
-//   int communicatorSize = 1;
-// #ifndef PRECICE_NO_MPI
-//   if (_isInitialized) {
-//     MPI_Comm_size(comm, &communicatorSize);
-//   }
-// #endif // not PRECICE_NO_MPI
-//   return communicatorSize;
-// }
-
-// void Parallel::synchronizeProcesses()
-// {
-// #ifndef PRECICE_NO_MPI
-//   PRECICE_TRACE();
-//   PRECICE_ASSERT(_isInitialized);
-//   MPI_Barrier(_globalCommunicator);
-// #endif // not PRECICE_NO_MPI
-// }
-//
-// void Parallel::synchronizeLocalProcesses()
-// {
-// #ifndef PRECICE_NO_MPI
-//   PRECICE_TRACE();
-//   PRECICE_ASSERT(_isInitialized && _isSplit);
-//   MPI_Barrier(_localCommunicator);
-// #endif // not PRECICE_NO_MPI
-// }
-
-// // @TODO The freeing and cleaning behaviour is weird and needs fixing
-// void Parallel::setGlobalCommunicator(
-//     Parallel::Communicator defaultCommunicator,
-//     bool                   free)
-// {
-// #ifndef PRECICE_NO_MPI
-//   PRECICE_TRACE();
-//   if (free && _globalCommunicator != getCommunicatorWorld() && _globalCommunicator != MPI_COMM_SELF && _globalCommunicator != MPI_COMM_NULL) {
-//     MPI_Comm_free(&_globalCommunicator);
-//   }
-//   _globalCommunicator = defaultCommunicator;
-//   _localCommunicator  = _globalCommunicator;
-//   if (free)
-//     _accessorGroups.clear();
-// #endif // not PRECICE_NO_MPI
-// }
-
-const Parallel::CommStatePtr Parallel::getGlobalCommState()
-{
-  PRECICE_TRACE();
-  auto local = current();
-  return local->parent ? local->parent : CommState::world();
-}
-
-const Parallel::CommStatePtr Parallel::getLocalCommState()
-{
-  PRECICE_TRACE();
-  return current();
-}
-
-void Parallel::restrictCommunicator(int newSize)
-{
-  PRECICE_TRACE(newSize);
-  PRECICE_ASSERT(newSize > 0, "Cannot restrict a communicator to nothing!");
-
-#ifndef PRECICE_NO_MPI
-  auto       baseState = current();
-  const auto size      = baseState->size();
-  const auto rank      = baseState->rank();
-
-  PRECICE_ASSERT(newSize <= size, "Requested more ranks than the Communicator can provide!");
-
-  // A single rank can use MPI_COMM_SELF, nothing else required
-  if (newSize == 1) {
-    // @todo verify if the barrier is required
-    // PRECICE_DEBUG("Barrier");
-    // MPI_Barrier(_globalCommunicator);
-    if (rank == 0) {
-      PRECICE_DEBUG("Restricted to COMM_SELF");
-      pushState(CommState::self());
-      return;
-    } else {
-      PRECICE_DEBUG("This rank remains unused after the restriction.");
-      pushState(CommState::null());
-      return;
-    }
-  }
-
-  // If the requested size is the same as the capacity, then simply duplicate the comm
-  if (newSize == size) {
-    PRECICE_DEBUG("Restriction to capacity: duplicating Comm");
-    MPI_Comm copiedComm;
-    MPI_Comm_dup(baseState->comm, &copiedComm);
-    pushState(CommState::fromComm(copiedComm));
-    return;
-  }
-
-  // Create group, containing all processes of communicator
-  MPI_Group currentGroup;
-  MPI_Comm_group(baseState->comm, &currentGroup);
-
-  // Prepare a ranks vector with 0,1,2,...,newSize-1
-  std::vector<int> ranks(newSize);
-  std::iota(ranks.begin(), ranks.end(), 0);
-
-  // Create subgroup, containing processes contained in ranks
-  PRECICE_DEBUG("Create restricted group");
-  MPI_Group restrictedGroup;
-  MPI_Group_incl(currentGroup, ranks.size(), ranks.data(), &restrictedGroup);
-
-  // @todo check if it has to go back down to the other group free
-  MPI_Group_free(&currentGroup);
-
-  {
-    int restrictedGroupSize = 0;
-    MPI_Group_size(restrictedGroup, &restrictedGroupSize);
-    PRECICE_ASSERT(restrictedGroupSize == newSize, "Group size differs: restriction failed!");
-  }
-
-  // Create communicator, containing process of restrictedGroup
-  PRECICE_DEBUG("Create restricted comm using group");
-
-  //  MPI_Comm restrictedCommunicator;
-  MPI_Comm restrictedCommunicator = MPI_COMM_NULL;
-  MPI_Comm_create(baseState->comm, restrictedGroup, &restrictedCommunicator);
-
-  // @todo check if the we need a barrier here
-  // PRECICE_DEBUG("Barrier");
-  // MPI_Barrier(_globalCommunicator);
-  PRECICE_DEBUG("Free restricted group");
-  MPI_Group_free(&restrictedGroup);
-
-  pushState(CommState::fromComm(restrictedCommunicator));
-#endif // not PRECICE_NO_MPI
-}
-
-// const std::vector<Parallel::AccessorGroup> &Parallel::getAccessorGroups()
-// {
-//   PRECICE_TRACE();
-//   PRECICE_ASSERT(_isInitialized);
-//   return _accessorGroups;
-// }
 
 std::ostream &operator<<(std::ostream &out, const Parallel::CommState &value)
 {

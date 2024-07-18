@@ -9,24 +9,11 @@
 #include "com/Request.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
-#include "utils/span.hpp"
+#include "precice/impl/Types.hpp"
+#include "precice/span.hpp"
 
 namespace precice {
 namespace com {
-
-/** Tag used to specify which type of vector to return
- * @see Communication::receiveRange()
- */
-template <typename T>
-struct AsVectorTag {
-};
-
-/* TODO When moving to C++17 use inline variable:
- *
- * template<typename T>
- * inline constexpr auto asVector = Communication::AsVectorTag<T>{};
- */
 
 /**
  * @brief Interface for all interprocess communication classes.
@@ -351,6 +338,14 @@ public:
   /// @name Range communication
   /// @{
 
+  /** Tag used to specify which type of vector to return
+   * Use @ref asVector instead
+   * @see Communication::receiveRange()
+   */
+  template <typename T>
+  struct AsVectorTag {
+  };
+
   /// Sends a range of doubles (size + content)
   void sendRange(precice::span<const double> itemsToSend, Rank rankReceiver);
 
@@ -383,6 +378,10 @@ protected:
 private:
   logging::Logger _log{"com::Communication"};
 };
+
+/// Allows to use @ref Communication::AsVectorTag in a less verbose way.
+template <typename T>
+inline constexpr auto asVector = Communication::AsVectorTag<T>{};
 
 /** Establishes a circular communication for the given participant.
  *

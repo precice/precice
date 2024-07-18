@@ -1,6 +1,8 @@
 #pragma once
 
+#include <Eigen/Core>
 #include <iosfwd>
+
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 
@@ -48,8 +50,23 @@ public:
     FULL = 2
   };
 
+  /**
+   * @brief Specifies whether the mapping requires an initial guess
+   *
+   * Iterative mappings use an additional initial guess to perform the mapping.
+   * When calling the version of map with the initialGuess, derived classes of Mapping can
+   * access and update this initial guess using \ref initialGuess().
+   * Note that the size of the initial guess is controlled by the Mapping.
+   *
+   * The first initial guess is expected to be an empty VectorXd.
+   */
+  enum class InitialGuessRequirement : bool {
+    Required = true,
+    None     = false
+  };
+
   /// Constructor, takes mapping constraint.
-  Mapping(Constraint constraint, int dimensions, bool requiresGradientData = false);
+  Mapping(Constraint constraint, int dimensions, bool requiresGradientData, InitialGuessRequirement initialGuessRequirement);
 
   Mapping &operator=(Mapping &&) = delete;
 
@@ -95,19 +112,61 @@ public:
   /// Returns true if mapping is a form of scaled consistent mapping
   bool isScaledConsistent() const;
 
+  /// Return true if the mapping requires an initial guess
+  bool requiresInitialGuess() const;
+
+  /// Return the provided initial guess of a mapping using an initialGuess
+  const Eigen::VectorXd &initialGuess() const;
+
+  Eigen::VectorXd &initialGuess();
+
+  /// True if initialGuess().size() == 0
+  bool hasInitialGuess() const;
+
   /// Removes a computed mapping.
   virtual void clear() = 0;
 
-  /**
-   * @brief Maps input data to output data from input mesh to output mesh.
-   *
-   * Pre-conditions:
-   * - hasComputedMapping() returns true
-   *
-   * Post-conditions:
-   * - output values are computed from input values
-   */
+  /// @deprecated
   void map(int inputDataID, int outputDataID);
+  /// @deprecated
+  void map(int inputDataID, int outputDataID, Eigen::VectorXd &initialGuess);
+
+  /**
+   * @brief Maps an input \ref Sample to output data from input mesh to output mesh.
+   *
+   * Derived classed must implement the mapping functionality using mapConsistent() and mapConservative()
+   *
+   * @param[in] input sample to map
+   * @param[out] output result data
+   *
+   * @pre \ref hasComputedMapping() == true
+   * @pre \ref requiresInitialGuess() == false
+   *
+   * @post output contains the mapped data
+   */
+  void map(const time::Sample &input, Eigen::VectorXd &output);
+
+  /**
+   * @brief Maps an input \ref Sample to output data from input mesh to output mesh, given an initialGuess.
+   *
+   * The initialGuess must be either an empty VectorXd, or the result of a previous invocation of \ref map.
+   *
+   * Derived classed must implement the mapping functionality using mapConsistent() and mapConservative()
+   *
+   * @warning this is the map version which requires an initial guess
+   *
+   * @param[in] input sample to map
+   * @param[out] output result data
+   * @param[inout] initialGuess guess to use during map, may be an empty VectorXd
+   *
+   * @pre initialGuess is either an empty VectorXd or the result of a previous invocation of \ref map
+   * @pre \ref hasComputedMapping() == true
+   * @pre \ref requiresInitialGuess() == true
+   *
+   * @post output contains the mapped data
+   * @post \ref initialGuess() contains the initial guess for the next call to \ref map
+   */
+  void map(const time::Sample &input, Eigen::VectorXd &output, Eigen::VectorXd &initialGuess);
 
   /// Method used by partition. Tags vertices that could be owned by this rank.
   virtual void tagMeshFirstRound() = 0;
@@ -122,10 +181,13 @@ public:
    *
    * @pre Input and output mesh should have full connectivity information.
    */
-  virtual void scaleConsistentMapping(int inputDataID, int outputDataID, Constraint type) const;
+  virtual void scaleConsistentMapping(const Eigen::VectorXd &input, Eigen::VectorXd &output, Constraint type) const;
 
   /// Returns whether the mapping requires gradient data
   bool requiresGradientData() const;
+
+  /// Returns the name of the mapping method for logging purpose
+  virtual std::string getName() const = 0;
 
 protected:
   /// Returns pointer to input mesh.
@@ -151,18 +213,29 @@ protected:
   /**
    * @brief Maps data using a conservative constraint
    *
-   * @param[in] inputDataID Data ID of the input data set
-   * @param[in] outputDataID Data ID of the output data set
+   * @param[in] input Sample to map data from
+   * @param[in] output Values to map to
+   *
+   * If requiresInitialGuess(), then the initial guess is available via initialGuess().
+   * Provide a new initial guess by overwriting it.
+   * The mapping has full control over its size.
+   *
+   * @see For mappings requiring an initialGuess: initialGuess() hasInitialGuess()
    */
-  virtual void mapConservative(DataID inputDataID, DataID outputDataID) = 0;
-
+  virtual void mapConservative(const time::Sample &input, Eigen::VectorXd &output) = 0;
   /**
    * @brief Maps data using a consistent constraint
    *
-   * @param[in] inputDataID Data ID of the input data set
-   * @param[in] outputDataID Data ID of the output data set
+   * @param[in] input Sample to map data from
+   * @param[in] output Values to map to
+   *
+   * If requiresInitialGuess(), then the initial guess is available via initialGuess().
+   * Provide a new initial guess by overwriting it.
+   * The mapping has full control over its size.
+   *
+   * @see For mappings requiring an initialGuess: initialGuess() hasInitialGuess()
    */
-  virtual void mapConsistent(DataID inputDataID, DataID outputDataID) = 0;
+  virtual void mapConsistent(const time::Sample &input, Eigen::VectorXd &output) = 0;
 
 private:
   /// Determines whether mapping is consistent or conservative.
@@ -181,6 +254,12 @@ private:
   mesh::PtrMesh _output;
 
   int _dimensions;
+
+  /// The InitialGuessRequirement of the Mapping
+  InitialGuessRequirement _initialGuessRequirement;
+
+  /// Pointer to the initialGuess set and unset by \ref map.
+  Eigen::VectorXd *_initialGuess = nullptr;
 };
 
 /** Defines an ordering for MeshRequirement in terms of specificality

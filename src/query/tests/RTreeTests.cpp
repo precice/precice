@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(Query2DVertex)
   Eigen::Vector2d location(0.2, 0.8);
 
   auto result = indexTree.getClosestVertex(location);
-  BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector2d(0, 1));
+  BOOST_TEST(mesh->vertex(result.index).getCoords() == Eigen::Vector2d(0, 1));
 }
 
 BOOST_AUTO_TEST_CASE(Query3DVertex)
@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(Query3DVertex)
   Eigen::Vector3d location(0.8, 0.0, 0.8);
 
   auto result = indexTree.getClosestVertex(location);
-  BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector3d(1, 0, 1));
+  BOOST_TEST(mesh->vertex(result.index).getCoords() == Eigen::Vector3d(1, 0, 1));
 }
 
 BOOST_AUTO_TEST_CASE(Query3DFullVertex)
@@ -126,6 +126,8 @@ BOOST_AUTO_TEST_CASE(Query3DFullVertex)
   auto &       v11 = mesh->createVertex(Eigen::Vector3d(1, 1, z1));
   auto &       v20 = mesh->createVertex(Eigen::Vector3d(2, 0, z2));
   auto &       v21 = mesh->createVertex(Eigen::Vector3d(2, 1, z2));
+  auto &       v30 = mesh->createVertex(Eigen::Vector3d(3, 0, z2));
+  auto &       v31 = mesh->createVertex(Eigen::Vector3d(3, 1, z2));
   auto &       ell = mesh->createEdge(v00, v01);
   auto &       elt = mesh->createEdge(v01, v11);
   auto &       elr = mesh->createEdge(v11, v10);
@@ -141,11 +143,31 @@ BOOST_AUTO_TEST_CASE(Query3DFullVertex)
   mesh->createTriangle(erl, ert, erd);
   mesh->createTriangle(erd, erb, err);
 
-  Eigen::Vector3d location(0.8, 0.0, 0.8);
-  Index           indexTree(mesh);
-  auto            result = indexTree.getClosestVertex(location);
+  Index indexTree(mesh);
+  {
+    Eigen::Vector3d location(0.8, 0.0, 0.8);
+    auto            result = indexTree.getClosestVertex(location);
 
-  BOOST_TEST(mesh->vertices().at(result.index).getID() == v10.getID());
+    BOOST_TEST(mesh->vertex(result.index).getID() == v10.getID());
+  }
+  {
+    Eigen::Vector3d       location(0.8, 0.0, 0.8);
+    int                   nVertices = 2;
+    std::vector<VertexID> expectedResult({v00.getID(), v10.getID()});
+    auto                  result = indexTree.getClosestVertices(location, nVertices);
+
+    BOOST_TEST(result.size() == nVertices);
+    BOOST_TEST(std::is_permutation(result.begin(), result.end(), expectedResult.begin()));
+  }
+  {
+    Eigen::Vector3d       location(3.5, 3.5, 0.0);
+    int                   nVertices = 4;
+    std::vector<VertexID> expectedResult({v11.getID(), v30.getID(), v21.getID(), v31.getID()});
+    auto                  result = indexTree.getClosestVertices(location, nVertices);
+
+    BOOST_TEST(result.size() == nVertices);
+    BOOST_TEST(std::is_permutation(result.begin(), result.end(), expectedResult.begin()));
+  }
 }
 
 /// Resembles how boost geometry is used inside the PetRBF
@@ -173,8 +195,8 @@ BOOST_AUTO_TEST_CASE(QueryWithBox2Matches)
 
   auto results = indexTree.getVerticesInsideBox(searchVertex, radius);
   BOOST_TEST(results.size() == 2);
-  BOOST_TEST(mesh->vertices().at(results.at(0)).getCoords() == Eigen::Vector3d(0, 1, 0));
-  BOOST_TEST(mesh->vertices().at(results.at(1)).getCoords() == Eigen::Vector3d(1, 1, 0));
+  BOOST_TEST(mesh->vertex(results.at(0)).getCoords() == Eigen::Vector3d(0, 1, 0));
+  BOOST_TEST(mesh->vertex(results.at(1)).getCoords() == Eigen::Vector3d(1, 1, 0));
 }
 
 /// Resembles how boost geometry is used inside the PetRBF
@@ -189,6 +211,49 @@ BOOST_AUTO_TEST_CASE(QueryWithBoxEverything)
 
   auto results = indexTree.getVerticesInsideBox(searchVertex, radius);
   BOOST_TEST(results.size() == 8);
+}
+
+BOOST_AUTO_TEST_CASE(QueryRtreeBoundingBox2D)
+{
+  PRECICE_TEST(1_rank);
+  auto mesh   = edgeMesh2D();
+  auto result = mesh->index().getRtreeBounds();
+  mesh->computeBoundingBox();
+  auto comparison = mesh->getBoundingBox();
+
+  BOOST_TEST(result == comparison);
+  BOOST_TEST(result.minCorner() == Eigen::Vector2d(0, 0));
+  BOOST_TEST(result.maxCorner() == Eigen::Vector2d(1, 1));
+}
+
+BOOST_AUTO_TEST_CASE(QueryRtreeBoundingBox3D)
+{
+  PRECICE_TEST(1_rank);
+  auto mesh   = vertexMesh3D();
+  auto result = mesh->index().getRtreeBounds();
+  mesh->computeBoundingBox();
+  auto comparison = mesh->getBoundingBox();
+
+  BOOST_TEST(result == comparison);
+  BOOST_TEST(result.minCorner() == Eigen::Vector3d(0, 0, 0));
+  BOOST_TEST(result.maxCorner() == Eigen::Vector3d(1, 1, 1));
+}
+
+BOOST_AUTO_TEST_CASE(QueryRtreeBoundingBox3DComplex)
+{
+  PRECICE_TEST(1_rank);
+  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, precice::testing::nextMeshID()));
+  mesh->createVertex(Eigen::Vector3d(7, 4, 3.3));
+  mesh->createVertex(Eigen::Vector3d(26.4777, 5, 8));
+  mesh->createVertex(Eigen::Vector3d(-23.4, 100000.2, 7));
+  mesh->createVertex(Eigen::Vector3d(0.211, -21.37, 0.00003));
+  auto result = mesh->index().getRtreeBounds();
+  mesh->computeBoundingBox();
+  auto comparison = mesh->getBoundingBox();
+
+  BOOST_TEST(result == comparison);
+  BOOST_TEST(result.minCorner() == Eigen::Vector3d(-23.4, -21.37, 0.00003));
+  BOOST_TEST(result.maxCorner() == Eigen::Vector3d(26.4777, 100000.2, 8));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Vertex

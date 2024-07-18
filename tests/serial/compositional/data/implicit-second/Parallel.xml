@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="D-EA" />
+  <data:scalar name="D-EB" />
+  <data:scalar name="D-IA-IB" />
+  <data:scalar name="D-IB-IA" />
+  <data:scalar name="D-IA-EA" />
+  <data:scalar name="D-IB-EB" />
+
+  <mesh name="M-EA" dimensions="2">
+    <use-data name="D-EA" />
+    <use-data name="D-IA-EA" />
+  </mesh>
+
+  <mesh name="M-IA" dimensions="2">
+    <use-data name="D-EA" />
+    <use-data name="D-IA-EA" />
+    <use-data name="D-IA-IB" />
+    <use-data name="D-IB-IA" />
+  </mesh>
+
+  <mesh name="M-IB" dimensions="2">
+    <use-data name="D-EB" />
+    <use-data name="D-IB-IA" />
+    <use-data name="D-IB-EB" />
+    <use-data name="D-IA-IB" />
+  </mesh>
+
+  <mesh name="M-EB" dimensions="2">
+    <use-data name="D-EB" />
+    <use-data name="D-IB-EB" />
+  </mesh>
+
+  <participant name="EA">
+    <provide-mesh name="M-EA" />
+    <read-data name="D-IA-EA" mesh="M-EA" />
+    <write-data name="D-EA" mesh="M-EA" />
+  </participant>
+
+  <participant name="EB">
+    <provide-mesh name="M-EB" />
+    <read-data name="D-IB-EB" mesh="M-EB" />
+    <write-data name="D-EB" mesh="M-EB" />
+  </participant>
+
+  <participant name="IA">
+    <provide-mesh name="M-IA" />
+    <receive-mesh name="M-EA" from="EA" />
+    <receive-mesh name="M-IB" from="IB" />
+    <read-data name="D-EA" mesh="M-IA" />
+    <read-data name="D-IB-IA" mesh="M-IA" />
+    <write-data name="D-IA-EA" mesh="M-IA" />
+    <write-data name="D-IA-IB" mesh="M-IA" />
+    <mapping:nearest-neighbor direction="write" from="M-IA" to="M-EA" constraint="consistent" />
+    <mapping:nearest-neighbor direction="write" from="M-IA" to="M-IB" constraint="consistent" />
+    <mapping:nearest-neighbor direction="read" from="M-IB" to="M-IA" constraint="consistent" />
+    <mapping:nearest-neighbor direction="read" from="M-EA" to="M-IA" constraint="consistent" />
+  </participant>
+
+  <participant name="IB">
+    <provide-mesh name="M-IB" />
+    <receive-mesh name="M-EB" from="EB" />
+    <read-data name="D-EB" mesh="M-IB" />
+    <read-data name="D-IA-IB" mesh="M-IB" />
+    <write-data name="D-IB-EB" mesh="M-IB" />
+    <write-data name="D-IB-IA" mesh="M-IB" />
+    <mapping:nearest-neighbor direction="write" from="M-IB" to="M-EB" constraint="consistent" />
+    <mapping:nearest-neighbor direction="read" from="M-EB" to="M-IB" constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="IA" connector="EA" />
+  <m2n:sockets acceptor="IA" connector="IB" />
+  <m2n:sockets acceptor="IB" connector="EB" />
+
+  <coupling-scheme:parallel-implicit>
+    <participants first="IA" second="IB" />
+    <time-window-size value="1" />
+    <max-time-windows value="2" />
+    <exchange data="D-IA-IB" mesh="M-IB" from="IA" to="IB" />
+    <exchange data="D-IB-IA" mesh="M-IB" from="IB" to="IA" />
+    <max-iterations value="2" />
+    <min-iterations value="2" />
+  </coupling-scheme:parallel-implicit>
+
+  <coupling-scheme:serial-explicit>
+    <participants first="EA" second="IA" />
+    <time-window-size value="1" />
+    <max-time-windows value="2" />
+    <exchange data="D-EA" mesh="M-EA" from="EA" to="IA" />
+    <exchange data="D-IA-EA" mesh="M-EA" from="IA" to="EA" initialize="true" />
+  </coupling-scheme:serial-explicit>
+
+  <coupling-scheme:serial-explicit>
+    <participants first="EB" second="IB" />
+    <time-window-size value="1" />
+    <max-time-windows value="2" />
+    <exchange data="D-EB" mesh="M-EB" from="EB" to="IB" />
+    <exchange data="D-IB-EB" mesh="M-EB" from="IB" to="EB" initialize="true" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

@@ -5,11 +5,46 @@
 #include <fmt/ostream.h>
 #include <functional>
 #include <iterator>
+#include <set>
 #include <type_traits>
 #include <utility>
 
 namespace precice {
 namespace utils {
+
+/**
+   * @brief This function is by and large the same as std::set_intersection().
+   * The only difference is that we don't return the intersection set itself, but
+   * we return the indices of elements in \p InputIt1, which appear in both sets
+   * ( \p InputIt1 and \p InputIt2 )
+   * The implementation was taken from
+   * https://en.cppreference.com/w/cpp/algorithm/set_intersection#Version_1 with the
+   * only difference that we compute and store std::distance() (i.e. the indices)
+   * in the output iterator. Similar to the std function, this function operates
+   * on sorted ranges.
+   *
+   * @param ref1 The reference iterator, to which we compute the distance/indices.
+   * @param first1 The begin of the first range we want to compute the intersection with
+   * @param last1 The end of the first range we want to compute the intersection with
+   * @param first1 The begin of the second range we want to compute the intersection with
+   * @param last1 The end of the second range we want to compute the intersection with
+   * @param d_first Beginning of the output range
+   */
+template <class InputIt1, class InputIt2, class OutputIt>
+void set_intersection_indices(InputIt1 ref1, InputIt1 first1, InputIt1 last1,
+                              InputIt2 first2, InputIt2 last2, OutputIt d_first)
+{
+  while (first1 != last1 && first2 != last2) {
+    if (*first1 < *first2) {
+      ++first1;
+    } else {
+      if (!(*first2 < *first1)) {
+        *d_first++ = std::distance(ref1, first1++); // *first1 and *first2 are equivalent.
+      }
+      ++first2;
+    }
+  }
+}
 
 /// Function that generates an array from given elements.
 template <typename... Elements>
@@ -20,10 +55,10 @@ auto make_array(Elements &&... elements) -> std::array<typename std::common_type
 
 /** Checks weather the given elements contains no duplicates.
  *
- * \tparam Container type of the passed container.
- * \tparam BinaryPredicate the predicate used to compare two elements for equality.
- * \param c the container to check for unique elements.
- * \returns weather all elements in c are unique.
+ * @tparam Container type of the passed container.
+ * @tparam BinaryPredicate the predicate used to compare two elements for equality.
+ * @param c the container to check for unique elements.
+ * @returns weather all elements in c are unique.
  */
 template <typename Container, typename BinaryPredicate = std::equal_to<typename Container::value_type>>
 bool unique_elements(const Container &c, BinaryPredicate p = {})
@@ -51,11 +86,11 @@ bool unique_elements(const Container &c, BinaryPredicate p = {})
  *
  * This results in a range [first, elem, first+1, elem, ... , elem, last[
  *
- * \tparam InputIter the type of the input iterators
- * \tparam ElemT the type of the element to intersperse
+ * @tparam InputIter the type of the input iterators
+ * @tparam ElementType the type of the element to intersperse
  */
-template <class InputIter, class ElemT>
-void intersperse(InputIter first, InputIter last, const ElemT &elem, std::ostream &out)
+template <class InputIter, class ElementType>
+void intersperse(InputIter first, InputIter last, const ElementType &elem, std::ostream &out)
 {
   if (first == last)
     return;
@@ -156,6 +191,37 @@ template <class InputIt, class Size, class InOutIt>
 void add_n(InputIt first, Size count, InOutIt result)
 {
   std::transform(first, std::next(first, count), result, result, std::plus{});
+}
+
+/// Calls each value in the range of [first, last[ exactly once.
+template <class InputIt, class Unary>
+void for_each_unique(InputIt first, InputIt last, Unary func)
+{
+  using Inner = std::remove_cv_t<std::remove_reference_t<decltype(*first)>>;
+  std::set<Inner> seen;
+  std::for_each(first, last, [&seen, &func](const auto &elem) {
+    if (seen.count(elem) == 0) {
+      seen.insert(elem);
+      func(elem);
+    }
+  });
+}
+
+/// Finds the first range in [first, last[ that fulfills a predicate
+template <class InputIt, class Predicate>
+std::pair<InputIt, InputIt> find_first_range(InputIt first, InputIt last, Predicate p)
+{
+  auto firstMatch = std::find_if(first, last, p);
+  if (firstMatch == last) { // nothing found
+    return {last, last};
+  }
+  auto trailing = firstMatch;
+  auto next     = std::next(firstMatch);
+  while (next != last && p(*next)) {
+    ++trailing;
+    ++next;
+  }
+  return {firstMatch, trailing};
 }
 
 } // namespace utils

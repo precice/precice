@@ -6,9 +6,8 @@
 #include <utility>
 #include <vector>
 
-#include "com/CommunicateBoundingBox.hpp"
-#include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
+#include "com/Extra.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
@@ -18,17 +17,14 @@
 #include "mesh/Vertex.hpp"
 #include "partition/Partition.hpp"
 #include "partition/ProvidedPartition.hpp"
-#include "precice/types.hpp"
-#include "utils/Event.hpp"
+#include "precice/impl/Types.hpp"
+#include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-using precice::utils::Event;
+using precice::profiling::Event;
 
-namespace precice {
-extern bool syncMode;
-
-namespace partition {
+namespace precice::partition {
 
 ProvidedPartition::ProvidedPartition(
     mesh::PtrMesh mesh)
@@ -60,7 +56,7 @@ void ProvidedPartition::communicate()
                                                  "participant.");
       twoLevelInitAlreadyUsed = true;
 
-      Event e("partition.broadcastMeshPartitions." + _mesh->getName(), precice::syncMode);
+      Event e("partition.broadcastMeshPartitions." + _mesh->getName(), profiling::Synchronize);
 
       // communicate the total number of vertices to the other participants primary rank
       if (utils::IntraComm::isPrimary()) {
@@ -70,7 +66,7 @@ void ProvidedPartition::communicate()
       // the min and max of global vertex IDs of this rank's partition
       PRECICE_ASSERT(_mesh->getVertexOffsets().size() == static_cast<decltype(_mesh->getVertexOffsets().size())>(utils::IntraComm::getSize()));
       const int vertexOffset      = _mesh->getVertexOffsets()[utils::IntraComm::getRank()];
-      const int minGlobalVertexID = vertexOffset - _mesh->vertices().size();
+      const int minGlobalVertexID = vertexOffset - _mesh->nVertices();
       const int maxGlobalVertexID = vertexOffset - 1;
 
       // each rank sends its min/max global vertex index to connected remote ranks
@@ -83,8 +79,8 @@ void ProvidedPartition::communicate()
     } else {
 
       if (not hasMeshBeenGathered) {
-        //Gather mesh
-        Event e("partition.gatherMesh." + _mesh->getName(), precice::syncMode);
+        // Gather mesh
+        Event e("partition.gatherMesh." + _mesh->getName(), profiling::Synchronize);
         if (not utils::IntraComm::isSecondary()) {
           globalMesh.addMesh(*_mesh); // Add local primary mesh to global mesh
         }
@@ -94,25 +90,25 @@ void ProvidedPartition::communicate()
           PRECICE_ASSERT(utils::IntraComm::getSize() > 1);
 
           for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
-            com::CommunicateMesh(utils::IntraComm::getCommunication()).receiveMesh(globalMesh, secondaryRank);
-            PRECICE_DEBUG("Received sub-mesh, from secondary rank: {}, global vertexCount: {}", secondaryRank, globalMesh.vertices().size());
+            com::receiveMesh(*utils::IntraComm::getCommunication(), secondaryRank, globalMesh);
+            PRECICE_DEBUG("Received sub-mesh, from secondary rank: {}, global vertexCount: {}", secondaryRank, globalMesh.nVertices());
           }
         }
         if (utils::IntraComm::isSecondary()) {
-          com::CommunicateMesh(utils::IntraComm::getCommunication()).sendMesh(*_mesh, 0);
+          com::sendMesh(*utils::IntraComm::getCommunication(), 0, *_mesh);
         }
         hasMeshBeenGathered = true;
       }
 
       // Send (global) Mesh
       PRECICE_INFO("Send global mesh {}", _mesh->getName());
-      Event e("partition.sendGlobalMesh." + _mesh->getName(), precice::syncMode);
+      Event e("partition.sendGlobalMesh." + _mesh->getName(), profiling::Synchronize);
 
       if (not utils::IntraComm::isSecondary()) {
-        PRECICE_CHECK(globalMesh.vertices().size() > 0,
-                      "The provided mesh \"{}\" is empty. Please set the mesh using setMeshXXX() prior to calling initialize().",
+        PRECICE_CHECK(globalMesh.nVertices() > 0,
+                      "The provided mesh \"{}\" is empty. Please set the mesh using setMeshVertex()/setMeshVertices() prior to calling initialize().",
                       globalMesh.getName());
-        com::CommunicateMesh(m2n->getPrimaryRankCommunication()).sendMesh(globalMesh, 0);
+        com::sendMesh(*m2n->getPrimaryRankCommunication(), 0, globalMesh);
       }
     }
   }
@@ -122,16 +118,16 @@ void ProvidedPartition::prepare()
 {
   PRECICE_TRACE();
   PRECICE_INFO("Prepare partition for mesh {}", _mesh->getName());
-  Event e("partition.prepareMesh." + _mesh->getName(), precice::syncMode);
+  Event e("partition.prepareMesh." + _mesh->getName(), profiling::Synchronize);
 
-  int numberOfVertices = _mesh->vertices().size();
+  int numberOfVertices = _mesh->nVertices();
 
   if (utils::IntraComm::isPrimary()) {
     PRECICE_ASSERT(utils::IntraComm::getSize() > 1);
 
     // set globals IDs on primary rank
     for (int i = 0; i < numberOfVertices; i++) {
-      _mesh->vertices()[i].setGlobalIndex(i);
+      _mesh->vertex(i).setGlobalIndex(i);
     }
 
     mesh::Mesh::VertexOffsets vertexOffsets(utils::IntraComm::getSize());
@@ -190,7 +186,7 @@ void ProvidedPartition::prepare()
     utils::IntraComm::getCommunication()->receive(globalVertexCounter, 0);
     PRECICE_DEBUG("Set global vertex indices");
     for (int i = 0; i < numberOfVertices; i++) {
-      _mesh->vertices()[i].setGlobalIndex(globalVertexCounter + i);
+      _mesh->vertex(i).setGlobalIndex(globalVertexCounter + i);
     }
 
     // set global number of vertices
@@ -206,7 +202,7 @@ void ProvidedPartition::prepare()
     PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
     _mesh->setVertexOffsets(std::move(vertexOffsets));
 
-  } else { // Coupling mode
+  } else {
 
     // The only rank of the participant contains all vertices
     PRECICE_ASSERT(_mesh->getVertexDistribution().empty());
@@ -214,7 +210,7 @@ void ProvidedPartition::prepare()
       mesh::Mesh::VertexDistribution vertexDistribution;
       for (int i = 0; i < numberOfVertices; i++) {
         vertexDistribution[0].push_back(i);
-        _mesh->vertices()[i].setGlobalIndex(i);
+        _mesh->vertex(i).setGlobalIndex(i);
       }
       return vertexDistribution;
     }());
@@ -257,9 +253,9 @@ void ProvidedPartition::compareBoundingBoxes()
     return;
 
   // each secondary rank sends its bb to the primary rank
-  if (utils::IntraComm::isSecondary()) { //secondary
+  if (utils::IntraComm::isSecondary()) { // secondary
     PRECICE_ASSERT(_mesh->getBoundingBox().getDimension() == _mesh->getDimensions(), "The boundingbox of the local mesh is invalid!");
-    com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).sendBoundingBox(_mesh->getBoundingBox(), 0);
+    com::sendBoundingBox(*utils::IntraComm::getCommunication(), 0, _mesh->getBoundingBox());
   } else { // Primary
 
     PRECICE_ASSERT(utils::IntraComm::getRank() == 0);
@@ -275,12 +271,12 @@ void ProvidedPartition::compareBoundingBoxes()
     for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
       // initialize bbm
       bbm.emplace(secondaryRank, bb);
-      com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).receiveBoundingBox(bbm.at(secondaryRank), secondaryRank);
+      com::receiveBoundingBox(*utils::IntraComm::getCommunication(), secondaryRank, bbm.at(secondaryRank));
     }
 
     // primary rank sends number of ranks and bbm to the other primary rank
     _m2ns[0]->getPrimaryRankCommunication()->send(utils::IntraComm::getSize(), 0);
-    com::CommunicateBoundingBox(_m2ns[0]->getPrimaryRankCommunication()).sendBoundingBoxMap(bbm, 0);
+    com::sendBoundingBoxMap(*_m2ns[0]->getPrimaryRankCommunication(), 0, bbm);
   }
 
   // size of the feedbackmap
@@ -290,7 +286,7 @@ void ProvidedPartition::compareBoundingBoxes()
 
     // primary rank receives feedback map (map of other participant ranks -> connected ranks at this participant)
     // from other participants primary rank
-    std::vector<Rank> connectedRanksList = _m2ns[0]->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<Rank>{});
+    std::vector<Rank> connectedRanksList = _m2ns[0]->getPrimaryRankCommunication()->receiveRange(0, com::asVector<Rank>);
     remoteConnectionMapSize              = connectedRanksList.size();
 
     mesh::Mesh::CommunicationMap remoteConnectionMap;
@@ -298,13 +294,13 @@ void ProvidedPartition::compareBoundingBoxes()
       remoteConnectionMap[rank] = {-1};
     }
     if (remoteConnectionMapSize != 0) {
-      com::CommunicateBoundingBox(_m2ns[0]->getPrimaryRankCommunication()).receiveConnectionMap(remoteConnectionMap, 0);
+      com::receiveConnectionMap(*_m2ns[0]->getPrimaryRankCommunication(), 0, remoteConnectionMap);
     }
 
     // broadcast the received feedbackMap
     utils::IntraComm::getCommunication()->broadcast(connectedRanksList);
     if (remoteConnectionMapSize != 0) {
-      com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).broadcastSendConnectionMap(remoteConnectionMap);
+      com::broadcastSendConnectionMap(*utils::IntraComm::getCommunication(), remoteConnectionMap);
     }
 
     // primary rank checks which ranks are connected to it
@@ -330,7 +326,7 @@ void ProvidedPartition::compareBoundingBoxes()
       for (Rank rank : connectedRanksList) {
         remoteConnectionMap[rank] = {-1};
       }
-      com::CommunicateBoundingBox(utils::IntraComm::getCommunication()).broadcastReceiveConnectionMap(remoteConnectionMap);
+      com::broadcastReceiveConnectionMap(*utils::IntraComm::getCommunication(), remoteConnectionMap);
     }
 
     PRECICE_ASSERT(_mesh->getConnectedRanks().empty());
@@ -348,5 +344,4 @@ void ProvidedPartition::compareBoundingBoxes()
   }
 }
 
-} // namespace partition
-} // namespace precice
+} // namespace precice::partition

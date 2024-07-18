@@ -4,38 +4,33 @@
   <data:vector name="Data1" />
   <data:scalar name="Data2" />
 
-  <mesh name="Mesh">
+  <mesh name="Mesh" dimensions="2">
     <use-data name="Data0" />
     <use-data name="Data1" />
     <use-data name="Data2" />
   </mesh>
 
-  <m2n:sockets from="Participant0" to="Participant1" />
+  <m2n:sockets acceptor="Participant0" connector="Participant1" />
 
   <participant name="Participant0">
-    <use-mesh name="Mesh" provide="on" />
-
-    <write-data name="Data0" mesh="Mesh" />
-
+    <provide-mesh name="Mesh" />
+    <read-data name="Data0" mesh="Mesh" />
     <read-data name="Data1" mesh="Mesh" />
+    <write-data name="Data2" mesh="Mesh" />
   </participant>
 
   <participant name="Participant1">
-    <use-mesh name="Mesh" provide="on" />
-
+    <provide-mesh name="Mesh" />
+    <write-data name="Data0" mesh="Mesh" />
     <write-data name="Data1" mesh="Mesh" />
-
-    <read-data name="Data0" mesh="Mesh" />
+    <read-data name="Data2" mesh="Mesh" />
   </participant>
 
   <coupling-scheme:parallel-explicit>
     <participants first="Participant0" second="Participant1" />
-
-    <time-window-size value="0.1" method="fixed" />
-
+    <time-window-size value="0.1" />
     <max-time-windows value="1" />
-
-    <exchange data="Data0" mesh="Mesh" from="Participant1" to="Participant0" />
+    <exchange data="Data0" mesh="Mesh" from="Participant1" to="Participant0" initialize="off" />
     <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant0" initialize="on" />
     <exchange data="Data2" mesh="Mesh" from="Participant0" to="Participant1" initialize="on" />
   </coupling-scheme:parallel-explicit>

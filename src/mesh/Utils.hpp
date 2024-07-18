@@ -4,7 +4,12 @@
 #include <array>
 #include <mesh/Edge.hpp>
 #include <mesh/Mesh.hpp>
+#include <optional>
 #include <utility>
+
+namespace precice::mapping {
+struct Sample;
+}
 
 namespace precice {
 namespace mesh {
@@ -109,7 +114,7 @@ std::array<Vertex *, n> vertexPtrsFor(Mesh &mesh, const std::array<int, n> &vert
   static_assert(n > 0, "Cannot handle nothing.");
   std::array<Vertex *, n> vptrs;
   std::transform(vertexIDs.begin(), vertexIDs.end(), vptrs.begin(),
-                 [&mesh](int id) { return &(mesh.vertices()[id]); });
+                 [&mesh](int id) { return &(mesh.vertex(id)); });
   return vptrs;
 }
 
@@ -119,7 +124,7 @@ std::array<Eigen::VectorXd, n> coordsFor(const Mesh &mesh, const std::array<int,
 {
   std::array<Eigen::VectorXd, n> coords;
   std::transform(vertexIDs.begin(), vertexIDs.end(), coords.begin(),
-                 [&mesh](int id) { return mesh.vertices()[id].getCoords(); });
+                 [&mesh](int id) { return mesh.vertex(id).getCoords(); });
   return coords;
 }
 
@@ -134,10 +139,20 @@ std::array<Eigen::VectorXd, n> coordsFor(const std::array<Vertex *, n> &vertexPt
 }
 
 /// Given the data and the mesh, this function returns the surface integral. Assumes no overlap exists for the mesh
-Eigen::VectorXd integrateSurface(const PtrMesh &mesh, const PtrData &data);
+Eigen::VectorXd integrateSurface(const PtrMesh &mesh, const Eigen::VectorXd &input);
 
 /// Given the data and the mesh, this function returns the volume integral. Assumes no overlap exists for the mesh
-Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const PtrData &data);
+Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const Eigen::VectorXd &input);
+
+template <typename Container>
+std::optional<std::size_t> locateInvalidVertexID(const Mesh &mesh, const Container &container)
+{
+  if (const auto invalidIter = std::find_if(container.begin(), container.end(), [&mesh](VertexID id) { return !mesh.isValidVertexID(id); });
+      invalidIter != container.end()) {
+    return {std::distance(container.begin(), invalidIter)};
+  }
+  return std::nullopt;
+}
 
 } // namespace mesh
 } // namespace precice

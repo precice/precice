@@ -1,6 +1,7 @@
 #pragma once
 
 #include "logging/Logger.hpp"
+#include "precice/span.hpp"
 #include "utils/Parallel.hpp"
 
 namespace precice {
@@ -16,14 +17,9 @@ public:
   /**
    * @brief Initializes the Petsc environment.
    *
-   * @param[in] argc Parameter count, passed to PetscInitialize
-   * @param[in] argv Parameter values, passed to PetscInitialize
    * @param[in] comm The communicator to Initialize PETSc on
    */
-  static void initialize(
-      int *                         argc,
-      char ***                      argv,
-      utils::Parallel::Communicator comm);
+  static void initialize(utils::Parallel::Communicator comm);
 
   /// Finalizes Petsc environment.
   static void finalize();
@@ -135,6 +131,10 @@ public:
 
   void fillWithRandoms();
 
+  Vector &copyFrom(precice::span<const double> source);
+
+  Vector &copyTo(precice::span<double> destination);
+
   /// Sorts the LOCAL partition of the vector
   void sort();
 
@@ -154,6 +154,9 @@ public:
 
   /// returns the l2-norm of the vector
   double l2norm() const;
+
+private:
+  static logging::Logger _log;
 };
 
 void swap(Vector &lhs, Vector &rhs) noexcept;

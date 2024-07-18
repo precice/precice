@@ -20,12 +20,12 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/SolverInterface.hpp"
 #include "precice/impl/MeshContext.hpp"
-#include "precice/impl/Participant.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
+#include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
+#include "precice/precice.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
@@ -43,54 +43,57 @@ BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank))
   using Eigen::Vector3d;
 
-  SolverInterface cplInterface(context.name, context.config(), 0, 1);
+  Participant cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("A")) {
 
-    int meshOneID = cplInterface.getMeshID("MeshA");
-    int dataID    = cplInterface.getDataID("DataA", meshOneID);
+    auto meshName = "MeshA";
+    auto dataName = "DataA";
 
     Vector3d posOne = Vector3d::Constant(0.0);
     Vector3d posTwo = Vector3d::Constant(1.0);
-    cplInterface.setMeshVertex(meshOneID, posOne.data());
-    cplInterface.setMeshVertex(meshOneID, posTwo.data());
+    cplInterface.setMeshVertex(meshName, posOne);
+    cplInterface.setMeshVertex(meshName, posTwo);
 
     // Initialize, thus sending the mesh.
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
     BOOST_TEST(cplInterface.isCouplingOngoing(), "Sending participant should have to advance once!");
 
     double values[2]  = {1.0, 2.0};
     int    indices[2] = {0, 1};
-    cplInterface.writeBlockScalarData(dataID, 2, indices, values);
+    cplInterface.writeData(meshName, dataName, indices, values);
 
-    BOOST_TEST(cplInterface.isGradientDataRequired(dataID) == true);
+    BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataName) == true);
 
-    if (cplInterface.isGradientDataRequired(dataID)) {
-      double gradientValues[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
-      cplInterface.writeBlockScalarGradientData(dataID, 2, indices, gradientValues);
+    if (cplInterface.requiresGradientDataFor(meshName, dataName)) {
+      double gradients[6] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
+      cplInterface.writeGradientData(meshName, dataName, indices, gradients);
     }
 
     // Participant must make move after writing
-    maxDt = cplInterface.advance(maxDt);
+    cplInterface.advance(maxDt);
+    maxDt = cplInterface.getMaxTimeStepSize();
 
     BOOST_TEST(!cplInterface.isCouplingOngoing(), "Sending participant should have to advance once!");
     cplInterface.finalize();
 
   } else {
     BOOST_TEST(context.isNamed("B"));
-    int meshTwoID = cplInterface.getMeshID("MeshB");
-    int dataID    = cplInterface.getDataID("DataA", meshTwoID);
+    auto meshName = "MeshB";
+    auto dataName = "DataA";
 
     Vector3d posOne = Vector3d::Constant(0.1);
     Vector3d posTwo = Vector3d::Constant(1.1);
-    cplInterface.setMeshVertex(meshTwoID, posOne.data());
-    cplInterface.setMeshVertex(meshTwoID, posTwo.data());
+    cplInterface.setMeshVertex(meshName, posOne);
+    cplInterface.setMeshVertex(meshName, posTwo);
 
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
     BOOST_TEST(cplInterface.isCouplingOngoing(), "Receiving participant should have to advance once!");
 
     double valueData[2];
     int    indices[2] = {0, 1};
-    cplInterface.readBlockScalarData(dataID, 2, indices, valueData);
+    cplInterface.readData(meshName, dataName, indices, maxDt, valueData);
     double expected[2] = {1.6, 3.5};
     BOOST_TEST(valueData == expected);
 

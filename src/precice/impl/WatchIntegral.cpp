@@ -49,12 +49,11 @@ void WatchIntegral::initialize()
   if ((not utils::IntraComm::isSecondary()) and (not _mesh->edges().empty())) {
     _txtWriter.addData("SurfaceArea", io::TXTTableWriter::DOUBLE);
   }
-  if (_isScalingOn and (_mesh->edges().empty())) {
-    PRECICE_WARN("Watch-integral is configured with scaling option on; "
-                 "however, mesh {} does not contain connectivity information. "
-                 "Therefore, the integral will be calculated without scaling.",
-                 _mesh->getName());
-  }
+  PRECICE_WARN_IF(_isScalingOn && _mesh->edges().empty(),
+                  "Watch-integral is configured with scaling option on; "
+                  "however, mesh {} does not contain connectivity information. "
+                  "Therefore, the integral will be calculated without scaling.",
+                  _mesh->getName());
 }
 
 void WatchIntegral::exportIntegralData(
@@ -121,7 +120,7 @@ Eigen::VectorXd WatchIntegral::calculateIntegral(const mesh::PtrData &data) cons
     }
     return sum;
   } else { // Connectivity information is given
-    return mesh::integrateSurface(_mesh, data);
+    return mesh::integrateSurface(_mesh, data->values());
   }
 }
 

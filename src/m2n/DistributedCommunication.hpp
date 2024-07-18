@@ -4,7 +4,7 @@
 #include <vector>
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "utils/span.hpp"
+#include "precice/span.hpp"
 
 namespace precice {
 namespace m2n {

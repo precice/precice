@@ -20,12 +20,12 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/SolverInterface.hpp"
 #include "precice/impl/MeshContext.hpp"
-#include "precice/impl/Participant.hpp"
+#include "precice/impl/ParticipantImpl.hpp"
+#include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/impl/SolverInterfaceImpl.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
+#include "precice/precice.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
@@ -43,56 +43,63 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadScalar)
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
   using Eigen::Vector3d;
 
-  SolverInterface cplInterface(context.name, context.config(), 0, 1);
+  Participant cplInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
-    int      meshOneID = cplInterface.getMeshID("MeshOne");
-    Vector3d vec1      = Vector3d::Constant(0.1);
-    cplInterface.setMeshVertex(meshOneID, vec1.data());
-    int dataAID = cplInterface.getDataID("DataOne", meshOneID);
-    int dataBID = cplInterface.getDataID("DataTwo", meshOneID);
+    auto     meshName = "MeshOne";
+    Vector3d vec1     = Vector3d::Constant(0.1);
+    auto     vid      = cplInterface.setMeshVertex(meshName, vec1);
+    auto     dataAID  = "DataOne";
+    auto     dataBID  = "DataTwo";
 
     double valueDataB = 0.0;
-    double maxDt      = cplInterface.initialize();
-    cplInterface.readScalarData(dataBID, 0, valueDataB);
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
+    cplInterface.readData(meshName, dataBID, {&vid, 1}, maxDt, {&valueDataB, 1});
     BOOST_TEST(valueDataB == 1.0);
 
     while (cplInterface.isCouplingOngoing()) {
 
-      cplInterface.writeScalarData(dataAID, 0, 3.0);
+      double data[] = {3.0};
+      cplInterface.writeData(meshName, dataAID, {&vid, 1}, data);
       Vector3d valueGradDataA(1.0, 2.0, 3.0);
-      BOOST_TEST(cplInterface.isGradientDataRequired(dataAID));
-      cplInterface.writeScalarGradientData(dataAID, 0, valueGradDataA.data());
+      BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataAID));
+      cplInterface.writeGradientData(meshName, dataAID, {&vid, 1}, valueGradDataA);
 
-      maxDt = cplInterface.advance(maxDt);
+      cplInterface.advance(maxDt);
+      maxDt = cplInterface.getMaxTimeStepSize();
 
-      cplInterface.readScalarData(dataBID, 0, valueDataB);
+      cplInterface.readData(meshName, dataBID, {&vid, 1}, maxDt, {&valueDataB, 1});
       BOOST_TEST(valueDataB == 1.5);
     }
     cplInterface.finalize();
 
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
-    int      meshTwoID = cplInterface.getMeshID("MeshTwo");
-    Vector3d vec2      = Vector3d::Constant(0.0);
-    cplInterface.setMeshVertex(meshTwoID, vec2.data());
+    auto     meshName = "MeshTwo";
+    Vector3d vec2     = Vector3d::Constant(0.0);
+    auto     vid      = cplInterface.setMeshVertex(meshName, vec2);
 
-    int dataAID = cplInterface.getDataID("DataOne", meshTwoID);
-    int dataBID = cplInterface.getDataID("DataTwo", meshTwoID);
-    BOOST_TEST(cplInterface.isGradientDataRequired(dataBID) == false);
+    auto dataAID = "DataOne";
+    auto dataBID = "DataTwo";
+    BOOST_REQUIRE(cplInterface.requiresInitialData());
+    BOOST_TEST(cplInterface.requiresGradientDataFor(meshName, dataBID) == false);
+
     double valueDataB = 1.0;
-    cplInterface.writeScalarData(dataBID, 0, valueDataB);
+    cplInterface.writeData(meshName, dataBID, {&vid, 1}, {&valueDataB, 1});
 
     //tell preCICE that data has been written and call initialize
-    cplInterface.markActionFulfilled(precice::constants::actionWriteInitialData());
-    double maxDt = cplInterface.initialize();
+    cplInterface.initialize();
+    double maxDt = cplInterface.getMaxTimeStepSize();
 
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeScalarData(dataBID, 0, 1.5);
+      double data[] = {1.5};
+      cplInterface.writeData(meshName, dataBID, {&vid, 1}, data);
 
-      maxDt = cplInterface.advance(maxDt);
+      cplInterface.advance(maxDt);
+      maxDt = cplInterface.getMaxTimeStepSize();
 
       double valueDataA;
-      cplInterface.readScalarData(dataAID, 0, valueDataA);
+      cplInterface.readData(meshName, dataAID, {&vid, 1}, maxDt, {&valueDataA, 1});
       BOOST_TEST(valueDataA == 2.4);
     }
     cplInterface.finalize();

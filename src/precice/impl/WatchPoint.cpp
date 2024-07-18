@@ -15,7 +15,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
@@ -57,7 +57,7 @@ void WatchPoint::initialize()
 {
   PRECICE_TRACE();
 
-  if (_mesh->vertices().size() > 0) {
+  if (_mesh->nVertices() > 0) {
     auto match        = _mesh->index().findCellOrProjection(_point, 4);
     _shortestDistance = match.polation.distance();
     _interpolation    = std::make_unique<mapping::Polation>(std::move(match.polation));
@@ -99,7 +99,7 @@ void WatchPoint::exportPointData(
   // Export watch point coordinates
   Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);
   for (const auto &elem : _interpolation->getWeightedElements()) {
-    coords += elem.weight * _mesh->vertices()[elem.vertexID].getCoords();
+    coords += elem.weight * _mesh->vertex(elem.vertexID).getCoords();
   }
   if (coords.size() == 2) {
     _txtWriter.writeData("Coordinate", Eigen::Vector2d(coords));

@@ -1,6 +1,7 @@
 #include "Mapping.hpp"
 #include <boost/config.hpp>
 #include <ostream>
+#include "math/differences.hpp"
 #include "mesh/Utils.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
@@ -8,16 +9,18 @@
 namespace precice::mapping {
 
 Mapping::Mapping(
-    Constraint constraint,
-    int        dimensions,
-    bool       requiresGradientData)
+    Constraint              constraint,
+    int                     dimensions,
+    bool                    requiresGradientData,
+    InitialGuessRequirement mappingType)
     : _requiresGradientData(requiresGradientData),
       _constraint(constraint),
       _inputRequirement(MeshRequirement::UNDEFINED),
       _outputRequirement(MeshRequirement::UNDEFINED),
       _input(),
       _output(),
-      _dimensions(dimensions)
+      _dimensions(dimensions),
+      _initialGuessRequirement(mappingType)
 {
 }
 
@@ -42,6 +45,32 @@ const mesh::PtrMesh &Mapping::getOutputMesh() const
 Mapping::Constraint Mapping::getConstraint() const
 {
   return _constraint;
+}
+
+bool Mapping::requiresInitialGuess() const
+{
+  return _initialGuessRequirement == InitialGuessRequirement::Required;
+}
+
+bool Mapping::hasInitialGuess() const
+{
+  PRECICE_ASSERT(requiresInitialGuess(), "This mapping isn't iterative, so it cannot have an initial guess.");
+  PRECICE_ASSERT(_initialGuess != nullptr, "The last solution wasn't provided.");
+  return _initialGuess->size() > 0;
+}
+
+const Eigen::VectorXd &Mapping::initialGuess() const
+{
+  PRECICE_ASSERT(requiresInitialGuess(), "This mapping isn't iterative, so it doesn't have an initial guess.");
+  PRECICE_ASSERT(_initialGuess != nullptr, "The last solution wasn't provided.");
+  return *_initialGuess;
+}
+
+Eigen::VectorXd &Mapping::initialGuess()
+{
+  PRECICE_ASSERT(requiresInitialGuess(), "This mapping isn't iterative, so it doesn't have an initial guess.");
+  PRECICE_ASSERT(_initialGuess != nullptr, "The last solution wasn't provided.");
+  return *_initialGuess;
 }
 
 Mapping::MeshRequirement Mapping::getInputRequirement() const
@@ -86,49 +115,84 @@ bool Mapping::requiresGradientData() const
   return _requiresGradientData;
 }
 
+void Mapping::map(int inputDataID, int outputDataID, Eigen::VectorXd &initialGuess)
+{
+  PRECICE_ASSERT(_initialGuess == nullptr);
+  _initialGuess = &initialGuess;
+  map(inputDataID, outputDataID);
+  _initialGuess = nullptr;
+}
+
 void Mapping::map(int inputDataID,
                   int outputDataID)
 {
   PRECICE_ASSERT(_hasComputedMapping);
+  PRECICE_ASSERT(!requiresInitialGuess() || _initialGuess != nullptr, "Call the map version with lastSolution");
+
   PRECICE_ASSERT(input()->getDimensions() == output()->getDimensions(),
                  input()->getDimensions(), output()->getDimensions());
   PRECICE_ASSERT(getDimensions() == output()->getDimensions(),
                  getDimensions(), output()->getDimensions());
   PRECICE_ASSERT(input()->data(inputDataID)->getDimensions() == output()->data(outputDataID)->getDimensions(),
                  input()->data(inputDataID)->getDimensions(), output()->data(outputDataID)->getDimensions());
-  PRECICE_ASSERT(input()->data(inputDataID)->values().size() / input()->data(inputDataID)->getDimensions() == static_cast<int>(input()->vertices().size()),
-                 input()->data(inputDataID)->values().size(), input()->data(inputDataID)->getDimensions(), input()->vertices().size());
-  PRECICE_ASSERT(output()->data(outputDataID)->values().size() / output()->data(outputDataID)->getDimensions() == static_cast<int>(output()->vertices().size()),
-                 output()->data(outputDataID)->values().size(), output()->data(outputDataID)->getDimensions(), output()->vertices().size());
+  PRECICE_ASSERT(input()->data(inputDataID)->values().size() / input()->data(inputDataID)->getDimensions() == static_cast<int>(input()->nVertices()),
+                 input()->data(inputDataID)->values().size(), input()->data(inputDataID)->getDimensions(), input()->nVertices());
+  PRECICE_ASSERT(output()->data(outputDataID)->values().size() / output()->data(outputDataID)->getDimensions() == static_cast<int>(output()->nVertices()),
+                 output()->data(outputDataID)->values().size(), output()->data(outputDataID)->getDimensions(), output()->nVertices());
+
+  time::Sample sample{input()->data(inputDataID)->getDimensions(),
+                      input()->data(inputDataID)->values(),
+                      input()->data(inputDataID)->gradients()};
+  map(sample, output()->data(outputDataID)->values());
+}
+
+void Mapping::map(const time::Sample &input, Eigen::VectorXd &output, Eigen::VectorXd &lastSolution)
+{
+  PRECICE_ASSERT(_initialGuess == nullptr);
+  _initialGuess = &lastSolution;
+  map(input, output);
+  _initialGuess = nullptr;
+}
+
+void Mapping::map(const time::Sample &input, Eigen::VectorXd &output)
+{
+  PRECICE_ASSERT(_hasComputedMapping);
+  PRECICE_ASSERT(!requiresInitialGuess() || _initialGuess != nullptr, "Call the map version with lastSolution");
 
   if (hasConstraint(CONSERVATIVE)) {
-    mapConservative(inputDataID, outputDataID);
+    mapConservative(input, output);
   } else if (hasConstraint(CONSISTENT)) {
-    mapConsistent(inputDataID, outputDataID);
+    mapConsistent(input, output);
   } else if (isScaledConsistent()) {
-    mapConsistent(inputDataID, outputDataID);
-    scaleConsistentMapping(inputDataID, outputDataID, getConstraint());
+    mapConsistent(input, output);
+    scaleConsistentMapping(input.values, output, getConstraint());
   } else {
     PRECICE_UNREACHABLE("Unknown mapping constraint.")
   }
 }
 
-void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID, Mapping::Constraint constraint) const
+void Mapping::scaleConsistentMapping(const Eigen::VectorXd &input, Eigen::VectorXd &output, Mapping::Constraint constraint) const
 {
   PRECICE_ASSERT(isScaledConsistent());
+
+  if (input.size() == 0 || output.size() == 0) {
+    return;
+  }
+  PRECICE_ASSERT(input.size() > 0 && output.size() > 0);
+
   bool            volumeMode = hasConstraint(SCALED_CONSISTENT_VOLUME);
   logging::Logger _log{"mapping::Mapping"};
   // Only serial participant is supported for scale-consistent mapping
   PRECICE_ASSERT((not utils::IntraComm::isPrimary()) and (not utils::IntraComm::isSecondary()));
 
   // If rank is not empty and do not contain connectivity information, raise error
-  int  spaceDimension    = input()->getDimensions();
+  int  spaceDimension    = this->input()->getDimensions();
   bool requiresEdges     = (spaceDimension == 2 and !volumeMode);
   bool requiresTriangles = (spaceDimension == 2 and volumeMode) or (spaceDimension == 3 and !volumeMode);
   bool requiresTetra     = (spaceDimension == 3 and volumeMode);
 
-  for (mesh::PtrMesh mesh : {input(), output()}) {
-    if (not mesh->vertices().empty()) {
+  for (mesh::PtrMesh mesh : {this->input(), this->output()}) {
+    if (not mesh->empty()) {
 
       PRECICE_CHECK(!(requiresEdges && mesh->edges().empty()), "Edges connectivity information is missing for the mesh \"{}\". "
                                                                "Scaled consistent mapping requires connectivity information.",
@@ -144,28 +208,40 @@ void Mapping::scaleConsistentMapping(int inputDataID, int outputDataID, Mapping:
     }
   }
 
-  auto &outputValues    = output()->data(outputDataID)->values();
-  int   valueDimensions = input()->data(inputDataID)->getDimensions();
+  const int valueDimensions = input.size() / this->input()->nVertices();
 
   Eigen::VectorXd integralInput;
   Eigen::VectorXd integralOutput;
 
   // Integral is calculated on each direction separately
   if (!volumeMode) {
-    integralInput  = mesh::integrateSurface(input(), input()->data(inputDataID));
-    integralOutput = mesh::integrateSurface(output(), output()->data(outputDataID));
+    integralInput  = mesh::integrateSurface(this->input(), input);
+    integralOutput = mesh::integrateSurface(this->output(), output);
   } else {
-    integralInput  = mesh::integrateVolume(input(), input()->data(inputDataID));
-    integralOutput = mesh::integrateVolume(output(), output()->data(outputDataID));
+    integralInput  = mesh::integrateVolume(this->input(), input);
+    integralOutput = mesh::integrateVolume(this->output(), output);
   }
 
   // Create reshape the output values vector to matrix
-  Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(outputValues.data(), valueDimensions, outputValues.size() / valueDimensions);
+  Eigen::Map<Eigen::MatrixXd> outputValuesMatrix(output.data(), valueDimensions, output.size() / valueDimensions);
 
   // Scale in each direction
-  Eigen::VectorXd scalingFactor = integralInput.array() / integralOutput.array();
+  // We cannot handle the case with zero output data and non-zero input data.
+  // To fulfill the constraint, we would need to scale the output data in such a way, that the integral sum of the input is preserved.
+  // That's not possible using a constant scaling factor as the output sum will always be zero. Here, we return 1 and emit a warning afterwards.
+  const Eigen::VectorXd scalingFactor = integralInput.binaryExpr(integralOutput, [](double lhs, double rhs) { return (rhs == 0.0) ? 1.0 : (lhs / rhs); });
+  PRECICE_DEBUG("Scaling factor in scaled-consistent mapping: {}", scalingFactor);
+
   PRECICE_DEBUG("Scaling factor in scaled-consistent mapping: {}", scalingFactor);
   outputValuesMatrix.array().colwise() *= scalingFactor.array();
+
+  // check whether the constraint is fulfilled
+  for (Eigen::Index i = 0; i < scalingFactor.size(); ++i) {
+    double consistency = scalingFactor[i] * integralOutput[i] - integralInput[i];
+    PRECICE_WARN_IF(
+        math::greater(std::abs(consistency), 0.0),
+        "Failed to fulfill consistency constraint of component {} for scaled-consistent mapping from mesh \"{}\" to mesh \"{}\". Consistency difference between input and scaled output is \"{}\".", i, this->input()->getName(), this->output()->getName(), consistency);
+  }
 } // namespace mapping
 
 bool Mapping::hasConstraint(const Constraint &constraint) const

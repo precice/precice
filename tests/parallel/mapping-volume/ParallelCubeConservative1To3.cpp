@@ -1,6 +1,6 @@
 #ifndef PRECICE_NO_MPI
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 #include "testing/Testing.hpp"
 #include "utils/IntraComm.hpp"
@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
   using precice::testing::equals;
 
   PRECICE_TEST("SolverOneCubeConservative1To3"_on(1_rank), "SolverTwoCubeConservative1To3"_on(3_ranks).setupIntraComm());
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;
   double                dt;
@@ -29,8 +29,8 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
   double unbalancedForceOnAEGH = 7.0; // Distribution: 10%, 20%, 30%, 40%
 
   if (context.isNamed("SolverOneCubeConservative1To3")) {
-    auto meshID = interface.getMeshID("MeshOne");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshOne";
+    auto dataName = "DataOne";
 
     std::vector<double> coords;
 
@@ -42,9 +42,10 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
               0.3, 0.7, 0.9};
 
     vertexIDs.resize(coords.size() / 3);
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
 
-    dt = interface.initialize();
+    interface.initialize();
+    dt = interface.getMaxTimeStepSize();
 
     // Run a step and write forces
     BOOST_TEST(interface.isCouplingOngoing(), "Sending participant must advance once.");
@@ -57,14 +58,14 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
               forceNearC,
               unbalancedForceOnAEGH};
 
-    interface.writeBlockScalarData(dataID, values.size(), vertexIDs.data(), values.data());
+    interface.writeData(meshName, dataName, vertexIDs, values);
 
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Sending participant must advance only once.");
     interface.finalize();
   } else { // SolverTwoCubeConservative1To3
-    auto meshID = interface.getMeshID("MeshTwo");
-    auto dataID = interface.getDataID("DataOne", meshID);
+    auto meshName = "MeshTwo";
+    auto dataName = "DataOne";
 
     std::vector<double> coords;
 
@@ -102,23 +103,24 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
     }
 
     vertexIDs.resize(coords.size() / 3);
-    interface.setMeshVertices(meshID, vertexIDs.size(), coords.data(), vertexIDs.data());
+    interface.setMeshVertices(meshName, coords, vertexIDs);
     switch (context.rank) {
     case 0:
-      interface.setMeshTetrahedron(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
-      interface.setMeshTetrahedron(meshID, vertexIDs[0], vertexIDs[4], vertexIDs[2], vertexIDs[3]);
+      interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
+      interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[4], vertexIDs[2], vertexIDs[3]);
       break;
     case 1:
-      interface.setMeshTetrahedron(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
-      interface.setMeshTetrahedron(meshID, vertexIDs[0], vertexIDs[4], vertexIDs[2], vertexIDs[3]);
+      interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
+      interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[4], vertexIDs[2], vertexIDs[3]);
       break;
     case 2:
-      interface.setMeshTetrahedron(meshID, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
-      interface.setMeshTetrahedron(meshID, vertexIDs[0], vertexIDs[4], vertexIDs[2], vertexIDs[3]);
+      interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[1], vertexIDs[2], vertexIDs[3]);
+      interface.setMeshTetrahedron(meshName, vertexIDs[0], vertexIDs[4], vertexIDs[2], vertexIDs[3]);
       break;
     }
 
-    dt = interface.initialize();
+    interface.initialize();
+    dt = interface.getMaxTimeStepSize();
 
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
 
@@ -126,7 +128,7 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
     BOOST_TEST(!interface.isCouplingOngoing(), "Receiving participant must advance only once.");
 
     Eigen::VectorXd readData(vertexIDs.size());
-    interface.readBlockScalarData(dataID, vertexIDs.size(), vertexIDs.data(), readData.data());
+    interface.readData(meshName, dataName, vertexIDs, interface.getMaxTimeStepSize(), readData);
 
     // map to global coordinates
     std::array<double, 8> forces{0, 0, 0, 0, 0, 0, 0, 0};

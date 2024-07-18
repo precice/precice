@@ -2,11 +2,11 @@
 <configuration>
   <data:scalar name="Data" />
 
-  <mesh name="Mesh">
+  <mesh name="Mesh" dimensions="2">
     <use-data name="Data" />
   </mesh>
 
-  <action:multiply-by-area timing="regular-prior" mesh="Mesh">
+  <action:multiply-by-area timing="write-mapping-post" mesh="Mesh">
     <target-data name="Data" />
   </action:multiply-by-area>
 </configuration>

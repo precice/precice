@@ -1,0 +1,3 @@
+[codespell]
+ignore-words-list = precice,asend,pullrequest,inout,datas,bu
+skip = thirdparty/*
