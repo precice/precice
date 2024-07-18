@@ -18,8 +18,8 @@ extern bool syncMode;
 
 namespace m2n {
 
-M2N::M2N(com::PtrCommunication intraComm, DistributedComFactory::SharedPointer distrFactory, bool useOnlyPrimaryCom, bool useTwoLevelInit)
-    : _interComm(std::move(intraComm)),
+M2N::M2N(com::PtrCommunication interComm, DistributedComFactory::SharedPointer distrFactory, bool useOnlyPrimaryCom, bool useTwoLevelInit)
+    : _interComm(std::move(interComm)),
       _distrFactory(std::move(distrFactory)),
       _useOnlyPrimaryCom(useOnlyPrimaryCom),
       _useTwoLevelInit(useTwoLevelInit)
