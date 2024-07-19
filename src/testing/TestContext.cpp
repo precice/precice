@@ -100,8 +100,8 @@ void TestContext::handleOption(Participants &, testing::Require requirement)
   case Require::Events:
     _events = true;
     break;
-  case Require::Kokkos:
-    _kokkos = true;
+  case Require::Ginkgo:
+    _ginkgo = true;
     _events = true;
     break;
   default:
@@ -221,7 +221,7 @@ void TestContext::initializePetsc()
 
 void TestContext::initializeGinkgo()
 {
-  if (!invalid && _kokkos) {
+  if (!invalid && _ginkgo) {
     int    argc = 0;
     char **argv;
 #ifndef PRECICE_NO_GINKGO
