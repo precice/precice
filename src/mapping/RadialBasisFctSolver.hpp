@@ -274,8 +274,9 @@ double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeRippaLOOCVerror(con
 
     // 3: Evaluate the Rippa formula:
     // The error estimate is given by a component-wise division: lambda/A^{-1}_{ii}.
-    // We then compute the l2-error norm of all LOOCV errors
-    loocv = std::sqrt((lambda.array() / diag_inv_A.array()).array().square().sum()) / inSize;
+    // We then compute the RMS of all LOOCV error entries (other options for the
+    // aggregation should be possible)
+    loocv = std::sqrt((lambda.array() / diag_inv_A.array()).array().square().sum() / n);
   }
   return loocv;
 }
