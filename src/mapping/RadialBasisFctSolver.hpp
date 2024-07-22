@@ -53,6 +53,8 @@ public:
   // Returns the size of the input data
   Eigen::Index getOutputSize() const;
 
+  double computeRippaLOOCVerror(const Eigen::VectorXd &inputData);
+
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
 
@@ -215,6 +217,66 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
     fillPolynomialEntries(matrixA, outputMesh, outputIDs, inputSize, activeAxis);
   }
   return matrixA;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeRippaLOOCVerror(const Eigen::VectorXd &inputData)
+{
+  double loocv = 0;
+  if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
+
+    // 1. Compute the diagonal entries of the inverse kernel matrix:
+    // We already have the Cholesky decomposition. So instead of solving for the
+    // kernel matrix directly, we invert the lower triangular matrix of the
+    // decomposition:
+    // using A^{-1} = (L^T)^{-1}L^{-1} enables the computation of the diagonal
+    // entries of A^{-1} by evaluating the product above:
+    // A^{-1}_{ii} = sum_{k=1}^n L^{-T}_{ik} L^{-1}_{ki}
+
+    // 1a: Compute the inverse of the lower triangular matrix L
+    // Eigen::MatrixXd L_inv = L.inverse(); is not supported by Eigen (linker errors)
+    // However, Eigen provides triangular solver (LAPACK::trsm), which can be used
+    // to solve L * Linv = I
+    // Eigen::MatrixXd L_inv = Eigen::MatrixXd::Identity(inSize, inSize);
+    // _decMatrixC.matrixL().solveInPlace(L_inv);
+    // which yields cubic complexity (BLAS level 3).
+
+    // We implement the forward substitution of L here manually, which should be
+    // (similar to LAPACK:trtri) more efficient, given that the RHS is also
+    // triangular.
+    // @todo: compare the performance against the trsm of Eigen mentioned above
+
+    // Forward substitution to solve L * Linv = I
+    const Eigen::Index     n     = inputData.size();
+    const Eigen::MatrixXd &L     = _decMatrixC.matrixL();
+    Eigen::MatrixXd        L_inv = Eigen::MatrixXd::Identity(n, n);
+
+    for (int j = 0; j < n; ++j) {
+      L_inv(j, j) = 1.0 / L(j, j);
+      for (int i = j + 1; i < n; ++i) {
+        double sum = 0.0;
+        for (int k = j; k < i; ++k) {
+          sum += L(i, k) * L_inv(k, j);
+        }
+        L_inv(i, j) = -sum / L(i, i);
+      }
+    }
+
+    // 1b: Compute the diagonal elements of A^{-1} by evaluating (L^T)^{-1}L^{-1}
+    Eigen::VectorXd diag_inv_A = (L_inv.array().square().colwise().sum()).transpose();
+
+    // 2: Next, compute the RBF coefficient. These are exactly the same as computed during
+    // the solve_consistent and we could also pass them into the function, depending on how
+    // often wen want to compute the LOOCV. We omit the polynomial contribution here, i.e.,
+    // the input data remains untouched
+    Eigen::VectorXd lambda = _decMatrixC.solve(inputData);
+
+    // 3: Evaluate the Rippa formula:
+    // The error estimate is given by a component-wise division: lambda/A^{-1}_{ii}.
+    // We then compute the l2-error norm of all LOOCV errors
+    loocv = std::sqrt((lambda.array() / diag_inv_A.array()).array().square().sum()) / inSize;
+  }
+  return loocv;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
