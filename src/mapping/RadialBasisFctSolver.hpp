@@ -223,6 +223,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeRippaLOOCVerror(const Eigen::VectorXd &inputData)
 {
   double loocv = 0;
+  // Implementation of LOOCV according to Rippa(1999), DOI: 10.1023/a:1018975909870
   if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
 
     // 1. Compute the diagonal entries of the inverse kernel matrix:
