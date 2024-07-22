@@ -242,26 +242,17 @@ double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeRippaLOOCVerror(con
     // _decMatrixC.matrixL().solveInPlace(L_inv);
     // which yields cubic complexity (BLAS level 3).
 
-    // We implement the forward substitution of L here manually, which should be
+    // Trying to implement the forward substitution of L here manually, which can be
     // (similar to LAPACK:trtri) more efficient, given that the RHS is also
-    // triangular.
-    // @todo: compare the performance against the trsm of Eigen mentioned above
+    // triangular was unfortunately slower.
+    // @todo implement something trtri-like which is more efficient
+    // @todo if we need to compute this multiple times, we should store the diagonal
+    // entries
 
-    // Forward substitution to solve L * Linv = I
-    const Eigen::Index     n     = inputData.size();
-    const Eigen::MatrixXd &L     = _decMatrixC.matrixL();
-    Eigen::MatrixXd        L_inv = Eigen::MatrixXd::Identity(n, n);
-
-    for (int j = 0; j < n; ++j) {
-      L_inv(j, j) = 1.0 / L(j, j);
-      for (int i = j + 1; i < n; ++i) {
-        double sum = 0.0;
-        for (int k = j; k < i; ++k) {
-          sum += L(i, k) * L_inv(k, j);
-        }
-        L_inv(i, j) = -sum / L(i, i);
-      }
-    }
+    // Solve L * Linv = I
+    const Eigen::Index n     = inputData.size();
+    Eigen::MatrixXd    L_inv = Eigen::MatrixXd::Identity(n, n);
+    _decMatrixC.matrixL().solveInPlace(L_inv);
 
     // 1b: Compute the diagonal elements of A^{-1} by evaluating (L^T)^{-1}L^{-1}
     Eigen::VectorXd diag_inv_A = (L_inv.array().square().colwise().sum()).transpose();
