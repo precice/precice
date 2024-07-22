@@ -9,6 +9,7 @@
 #include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
+#include "profiling/Event.hpp"
 
 namespace precice {
 namespace mapping {
@@ -222,7 +223,11 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
 template <typename RADIAL_BASIS_FUNCTION_T>
 double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeRippaLOOCVerror(const Eigen::VectorXd &inputData)
 {
-  double loocv = 0;
+  precice::profiling::Event e("map.rbf.computeLOOCV", profiling::Synchronize);
+  double                    loocv = 0;
+  Eigen::VectorXd           diag_inv_A;
+  const Eigen::Index        n = inputData.size();
+
   // Implementation of LOOCV according to Rippa(1999), DOI: 10.1023/a:1018975909870
   if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
 
@@ -250,25 +255,59 @@ double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeRippaLOOCVerror(con
     // entries
 
     // Solve L * Linv = I
-    const Eigen::Index n     = inputData.size();
-    Eigen::MatrixXd    L_inv = Eigen::MatrixXd::Identity(n, n);
+    Eigen::MatrixXd L_inv = Eigen::MatrixXd::Identity(n, n);
     _decMatrixC.matrixL().solveInPlace(L_inv);
 
     // 1b: Compute the diagonal elements of A^{-1} by evaluating (L^T)^{-1}L^{-1}
-    Eigen::VectorXd diag_inv_A = (L_inv.array().square().colwise().sum()).transpose();
+    diag_inv_A = (L_inv.array().square().colwise().sum()).transpose();
 
-    // 2: Next, compute the RBF coefficient. These are exactly the same as computed during
-    // the solve_consistent and we could also pass them into the function, depending on how
-    // often wen want to compute the LOOCV. We omit the polynomial contribution here, i.e.,
-    // the input data remains untouched
-    Eigen::VectorXd lambda = _decMatrixC.solve(inputData);
+  } else {
 
-    // 3: Evaluate the Rippa formula:
-    // The error estimate is given by a component-wise division: lambda/A^{-1}_{ii}.
-    // We then compute the RMS of all LOOCV error entries (other options for the
-    // aggregation should be possible)
-    loocv = std::sqrt((lambda.array() / diag_inv_A.array()).array().square().sum() / n);
+    // 1. Compute the diagonal entries of the inverse kernel matrix:
+    // We could use
+    //     diag_inv_A= _decMatrixC.inverse().diagonal();
+    // as Eigen offers this for the QR decomposition, but the inverse() call is
+    // more expensive than it has to be (as we compute all entries of the inverse). On the
+    // other hand, using non strictily-positive definite functions is less relevant anyway.
+    // Still, let's try the following:
+
+    // We already have the QR decomposition. So instead of solving for the
+    // kernel matrix directly, make use of the following:
+    // A^{-1} = R^{-1}Q^{-1}
+    // Since Q is orthogonal, Q^{-1} = Q^T
+    // R is upper triangular and we need to compute the inverse (using backwards substitution)
+
+    // enables the computation of the diagonal
+    // entries of A^{-1} by evaluating the product above:
+    // A^{-1} = R^{-1} Q^T
+    // A^{-1}_{ii} = sum_{k=1}^n R^{-1}_{ik} Q^{T}_{ki}
+
+    // 1a: Compute the inverse of the lower triangular matrix L
+    // Solve R * Rinv = I
+    Eigen::MatrixXd R_inv = Eigen::MatrixXd::Identity(n, n);
+    _decMatrixC.matrixR().template triangularView<Eigen::Upper>().solveInPlace(R_inv);
+    Eigen::VectorXi P = _decMatrixC.colsPermutation().indices();
+    Eigen::MatrixXd Q = _decMatrixC.householderQ();
+
+    // Now evaluate, caution with the column permutation
+    diag_inv_A.resize(n);
+    for (Eigen::Index i = 0; i < n; ++i) {
+      diag_inv_A(P(i)) = R_inv.row(i) * Q.transpose().col(P(i));
+    }
   }
+
+  // 2: Next, compute the RBF coefficient. These are exactly the same as computed during
+  // the solve_consistent and we could also pass them into the function, depending on how
+  // often wen want to compute the LOOCV. We omit the polynomial contribution here, i.e.,
+  // the input data remains untouched
+  Eigen::VectorXd lambda = _decMatrixC.solve(inputData);
+
+  // 3: Evaluate the Rippa formula:
+  // The error estimate is given by a component-wise division: lambda/A^{-1}_{ii}.
+  // We then compute the RMS of all LOOCV error entries (other options for the
+  // aggregation should be possible)
+  loocv = std::sqrt((lambda.array() / diag_inv_A.array()).array().square().sum() / n);
+
   return loocv;
 }
 
