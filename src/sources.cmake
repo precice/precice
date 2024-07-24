@@ -124,6 +124,7 @@ target_sources(preciceCore
     src/cplscheme/impl/SharedPointer.hpp
     src/cplscheme/impl/TimeHandler.cpp
     src/cplscheme/impl/TimeHandler.hpp
+    src/io/Export.cpp
     src/io/Export.hpp
     src/io/ExportCSV.cpp
     src/io/ExportCSV.hpp

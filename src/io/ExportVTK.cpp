@@ -53,6 +53,15 @@ void ExportVTK::doExport(int index, double time)
   exportData(outstream, *_mesh);
   exportGradient(outstream, *_mesh);
   outstream.close();
+  recordExport(filename, time);
+}
+
+void ExportVTK::exportSeries() const
+{
+  if (isParallel())
+    return; // there is no parallel master file
+
+  writeSeriesFile(fmt::format("{}-{}.vtk.series", _participantName, _mesh->getName()));
 }
 
 void ExportVTK::exportMesh(

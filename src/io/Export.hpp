@@ -2,6 +2,7 @@
 
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace precice {
 namespace mesh {
@@ -51,20 +52,12 @@ public:
    */
   virtual void doExport(int index, double time) = 0;
 
-protected:
-  bool isParallel() const
-  {
-    return _size > 1;
-  };
+  virtual void exportSeries() const = 0;
 
-  std::string formatIndex(int index) const
-  {
-    if (index == 0) {
-      return "init";
-    }
-    using std::string_literals::operator""s;
-    return ((_kind == ExportKind::TimeWindows) ? "dt"s : "it"s).append(std::to_string(index));
-  }
+protected:
+  bool isParallel() const;
+
+  std::string formatIndex(int index) const;
 
   bool keepExport(int index) const
   {
@@ -78,6 +71,17 @@ protected:
   int                     _frequency;
   int                     _rank;
   int                     _size;
+
+  struct Record {
+    std::string filename;
+    double      time;
+  };
+
+  std::vector<Record> _records;
+
+  void writeSeriesFile(std::string_view filename) const;
+
+  void recordExport(std::string filename, double time);
 };
 
 } // namespace io
