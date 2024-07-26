@@ -299,7 +299,7 @@ double CompositionalCouplingScheme::getTimeWindowStart() const
   return std::transform_reduce(
       schemes.begin(), schemes.end(),
       std::numeric_limits<double>::max(),
-      ::min<double>,
+      [](double a, double b) { return std::min(a, b); },
       std::mem_fn(&CouplingScheme::getTimeWindowStart));
 }
 
@@ -311,7 +311,7 @@ int CompositionalCouplingScheme::getTimeWindows() const
   auto timeWindows = std::transform_reduce(
       schemes.begin(), schemes.end(),
       std::numeric_limits<int>::max(),
-      ::min<int>,
+      [](int a, int b) { return std::min(a, b); },
       std::mem_fn(&CouplingScheme::getTimeWindows));
   PRECICE_DEBUG("return {}", timeWindows);
   return timeWindows;
@@ -353,7 +353,7 @@ double CompositionalCouplingScheme::getNextTimeStepMaxSize() const
 
   double maxLength = std::transform_reduce(
       _activeSchemes.begin(), _activeSchemes.end(), std::numeric_limits<double>::max(),
-      ::min<double>,
+      [](double a, double b) { return std::min(a, b); },
       std::mem_fn(&CouplingScheme::getNextTimeStepMaxSize));
   PRECICE_DEBUG("return {}", maxLength);
   return maxLength;
