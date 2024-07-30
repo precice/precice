@@ -14,15 +14,6 @@
 #include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 
-namespace {
-/// Required by STL algos, which get confused by std::min overloads
-template <typename T>
-T min(T a, T b)
-{
-  return std::min(a, b);
-}
-} // namespace
-
 namespace precice::cplscheme {
 
 namespace {

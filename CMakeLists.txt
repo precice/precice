@@ -450,7 +450,6 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     src/mapping/device/Ginkgo.cpp
     )
 
-  # TODO: Maybe we should include <boost/config/compiler/nvcc.hpp>
   target_link_libraries(preciceCore PRIVATE Ginkgo::ginkgo Kokkos::kokkos)
   target_compile_definitions(preciceCore PUBLIC EIGEN_NO_CUDA)
 
@@ -470,8 +469,6 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
   if(PRECICE_WITH_HIP)
     target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_HIP)
     set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.cpp)
-    # The commented line here can be added, adding it or not doesn't seem to make a fundamental difference
-    # set_source_files_properties(${_hiplist} PROPERTIES LANGUAGE HIP)
     target_sources(preciceCore PRIVATE ${_hiplist})
     target_link_libraries(preciceCore PRIVATE hip::device Ginkgo::ginkgo roc::hipsolver)
 
