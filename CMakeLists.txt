@@ -268,7 +268,15 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
       set(CMAKE_CUDA_ARCHITECTURES OFF)
     endif()
+  # Check the Kokkos version
+  if (Kokkos_VERSION VERSION_LESS 4.4)
+    set(KOKKOS_VERSION_BELOW_4_4 TRUE)
+  else()
+    set(KOKKOS_VERSION_BELOW_4_4 FALSE)
   endif()
+else()
+  set(KOKKOS_VERSION_BELOW_4_4 FALSE)
+endif()
 
   # 2. Check if Ginkgo was built with HIP and if HIP is available on the system
   if(PRECICE_WITH_HIP)
@@ -348,8 +356,8 @@ set_target_properties(preciceCore PROPERTIES
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
   POSITION_INDEPENDENT_CODE YES
-  CXX_VISIBILITY_PRESET hidden
-  VISIBILITY_INLINES_HIDDEN YES
+  $<$<NOT:$<BOOL:${KOKKOS_VERSION_BELOW_4_4}>>:CXX_VISIBILITY_PRESET hidden>
+  $<$<NOT:$<BOOL:${KOKKOS_VERSION_BELOW_4_4}>>:VISIBILITY_INLINES_HIDDEN YES>
   )
 
 # Setup release override options
@@ -496,8 +504,8 @@ add_library(precice)
 set_target_properties(precice PROPERTIES
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
-  CXX_VISIBILITY_PRESET hidden
-  VISIBILITY_INLINES_HIDDEN YES
+  $<$<NOT:$<BOOL:${KOKKOS_VERSION_BELOW_4_4}>>:CXX_VISIBILITY_PRESET hidden>
+  $<$<NOT:$<BOOL:${KOKKOS_VERSION_BELOW_4_4}>>:VISIBILITY_INLINES_HIDDEN YES>
   )
 
 target_include_directories(precice PUBLIC
