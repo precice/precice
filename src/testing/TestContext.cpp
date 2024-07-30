@@ -16,6 +16,7 @@
 #include "m2n/GatherScatterComFactory.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
+#include "mapping/device/Ginkgo.hpp"
 #include "mesh/Data.hpp"
 #include "precice/impl/Types.hpp"
 #include "profiling/EventUtils.hpp"
@@ -99,6 +100,10 @@ void TestContext::handleOption(Participants &, testing::Require requirement)
   case Require::Events:
     _events = true;
     break;
+  case Require::Ginkgo:
+    _ginkgo = true;
+    _events = true;
+    break;
   default:
     std::terminate();
   }
@@ -131,6 +136,7 @@ void TestContext::initialize(const Participants &participants)
   initializeIntraComm();
   initializeEvents();
   initializePetsc();
+  initializeGinkgo();
 }
 
 void TestContext::initializeMPI(const TestContext::Participants &participants)
@@ -210,6 +216,17 @@ void TestContext::initializePetsc()
 {
   if (!invalid && _petsc) {
     precice::utils::Petsc::initialize(_contextComm->comm);
+  }
+}
+
+void TestContext::initializeGinkgo()
+{
+  if (!invalid && _ginkgo) {
+    int    argc = 0;
+    char **argv;
+#ifndef PRECICE_NO_GINKGO
+    precice::device::Ginkgo::initialize(&argc, &argv);
+#endif
   }
 }
 
