@@ -1,46 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <data:scalar name="Data11" />
-  <data:scalar name="Data12" />
-  <data:scalar name="Data13" />
-  <data:scalar name="Data14" />
-  <data:scalar name="Data21" />
-  <data:scalar name="Data22" />
-  <data:scalar name="Data23" />
-  <data:scalar name="Data24" />
+  <data:scalar name="Data1" />
+  <data:scalar name="Data2" />
 
   <mesh name="MeshOne" dimensions="2">
-    <use-data name="Data11" />
-    <use-data name="Data12" />
-    <use-data name="Data13" />
-    <use-data name="Data14" />
-    <use-data name="Data21" />
-    <use-data name="Data22" />
-    <use-data name="Data23" />
-    <use-data name="Data24" />
+    <use-data name="Data1" />
+    <use-data name="Data2" />
   </mesh>
 
   <mesh name="MeshTwo" dimensions="2">
-    <use-data name="Data11" />
-    <use-data name="Data12" />
-    <use-data name="Data13" />
-    <use-data name="Data14" />
-    <use-data name="Data21" />
-    <use-data name="Data22" />
-    <use-data name="Data23" />
-    <use-data name="Data24" />
+    <use-data name="Data1" />
+    <use-data name="Data2" />
   </mesh>
 
   <participant name="SolverOne">
     <provide-mesh name="MeshOne" />
-    <write-data name="Data11" mesh="MeshOne" />
-    <write-data name="Data12" mesh="MeshOne" />
-    <write-data name="Data13" mesh="MeshOne" />
-    <write-data name="Data14" mesh="MeshOne" />
-    <read-data name="Data21" mesh="MeshOne" />
-    <read-data name="Data22" mesh="MeshOne" />
-    <read-data name="Data23" mesh="MeshOne" />
-    <read-data name="Data24" mesh="MeshOne" />
+    <write-data name="Data1" mesh="MeshOne" />
+    <read-data name="Data2" mesh="MeshOne" />
   </participant>
 
   <participant name="SolverTwo">
@@ -56,14 +32,8 @@
       from="MeshTwo"
       to="MeshOne"
       constraint="conservative" />
-    <write-data name="Data21" mesh="MeshTwo" />
-    <write-data name="Data22" mesh="MeshTwo" />
-    <write-data name="Data23" mesh="MeshTwo" />
-    <write-data name="Data24" mesh="MeshTwo" />
-    <read-data name="Data11" mesh="MeshTwo" />
-    <read-data name="Data12" mesh="MeshTwo" />
-    <read-data name="Data13" mesh="MeshTwo" />
-    <read-data name="Data14" mesh="MeshTwo" />
+    <write-data name="Data2" mesh="MeshTwo" />
+    <read-data name="Data1" mesh="MeshTwo" />
   </participant>
 
   <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
@@ -72,33 +42,17 @@
     <participants first="SolverOne" second="SolverTwo" />
     <max-time-windows value="2" />
     <time-window-size value="1.0" />
-    <exchange data="Data11" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
-    <exchange data="Data12" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
-    <exchange data="Data13" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
-    <exchange data="Data14" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
-    <exchange data="Data21" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
-    <exchange data="Data22" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
-    <exchange data="Data23" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
-    <exchange data="Data24" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
-    <absolute-convergence-measure limit="1e-6" data="Data11" mesh="MeshOne" />
-    <absolute-convergence-measure limit="1e-6" data="Data12" mesh="MeshOne" />
-    <absolute-convergence-measure limit="1e-6" data="Data13" mesh="MeshOne" />
-    <absolute-convergence-measure limit="1e-6" data="Data14" mesh="MeshOne" />
+    <exchange data="Data1" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
+    <exchange data="Data2" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
+    <max-iterations value="200" />
+    <relative-convergence-measure limit="1e-8" data="Data1" mesh="MeshOne" />
     <acceleration:IQN-IMVJ>
       <data
-        name="Data21"
+        name="Data2"
         mesh="MeshOne"
-        range-type="two-ends-bounded"
-        lower-bound="-1"
-        upper-bound="1" />
-      <data
-        name="Data22"
-        mesh="MeshOne"
-        range-type="two-ends-bounded"
-        lower-bound="-10"
-        upper-bound="10" />
-      <data name="Data23" mesh="MeshOne" range-type="lower-bounded" lower-bound="-1" />
-      <data name="Data24" mesh="MeshOne" range-type="upper-bounded" upper-bound="1" />
+        lower-bound="-0.99999"
+        upper-bound="1.00001"
+        range-type="two-ends-bounded" />
       <filter type="QR2" limit="1e-3" />
       <initial-relaxation value="0.2" />
       <max-used-iterations value="2" />

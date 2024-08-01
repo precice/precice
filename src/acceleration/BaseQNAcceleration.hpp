@@ -116,7 +116,7 @@ public:
    * @brief Transform the output data backward from inf to certain range.
    */
   virtual void backwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds,
-                                      std::map<int, double> upperBounds);
+                                      std::map<int, double> upperBounds, Eigen::VectorXd &xUpdate);
   /**
    * @brief Marks a iteration sequence as converged.
    *
@@ -151,6 +151,13 @@ public:
    *  intra-participant communication. Number of its =! _cols in general.
    */
   virtual int getLSSystemCols() const;
+
+  // options are "cropping", "transformation", "Aitken" and "cutStep"
+  std::string methodForQN = "Aitken";
+
+  // if this step would fall back to Aitken under-relaxation
+  bool   _fallBack     = false;
+  double _aitkenFactor = 0.5;
 
 protected:
   logging::Logger _log{"acceleration::BaseQNAcceleration"};

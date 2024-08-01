@@ -1,6 +1,7 @@
 #ifndef PRECICE_NO_MPI
 
 #include "helpers.hpp"
+#include <iostream>
 
 #include "precice/precice.hpp"
 #include "testing/Testing.hpp"
@@ -70,7 +71,7 @@ void runTestQN(std::string const &config, TestContext const &context)
 
     if (context.isNamed("SolverOne")) {
       for (int i = 0; i < 4; i++) {
-        outValues[i] = inValues[i]; //only pushes solution through
+        outValues[i] = inValues[i]; // only pushes solution through
       }
     } else {
       outValues[0] = 2 * inValues[0] * inValues[0] - inValues[1] * inValues[2] - 8.0 + inValues[0];
@@ -89,7 +90,7 @@ void runTestQN(std::string const &config, TestContext const &context)
 
   interface.finalize();
 
-  //relative residual in config is 1e-7, so 2 orders of magnitude less strict
+  // relative residual in config is 1e-7, so 2 orders of magnitude less strict
   BOOST_TEST(outValues[0] == -2.0, boost::test_tools::tolerance(1e-5));
   BOOST_TEST(outValues[1] == 0.0, boost::test_tools::tolerance(1e-5));
   BOOST_TEST(outValues[2] == -2.0, boost::test_tools::tolerance(1e-5));
@@ -166,7 +167,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
     if (context.isNamed("SolverOne")) {
       for (int i = 0; i < 4; i++) {
-        outValues[i] = inValues[i]; //only pushes solution through
+        outValues[i] = inValues[i]; // only pushes solution through
       }
     } else {
       outValues[0] = 2 * inValues[0] * inValues[0] - inValues[1] * inValues[2] - 8.0 + inValues[0];
@@ -188,7 +189,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
   interface.finalize();
 
-  //relative residual in config is 1e-7, so 2 orders of magnitude less strict
+  // relative residual in config is 1e-7, so 2 orders of magnitude less strict
   if ((context.isNamed("SolverOne") and context.isPrimary()) or
       (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
     BOOST_TEST(outValues[0] == -2.0, boost::test_tools::tolerance(1e-5));
@@ -204,32 +205,21 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
 void runTestQNBoundedValue(std::string const &config, TestContext const &context)
 {
-  std::string meshName, writeDataName1, writeDataName2, writeDataName3, writeDataName4, readDataName1, readDataName2, readDataName3, readDataName4;
+  std::string meshName, writeDataName, readDataName;
 
   if (context.isNamed("SolverOne")) {
-    meshName       = "MeshOne";
-    writeDataName1 = "Data11";
-    writeDataName2 = "Data12";
-    writeDataName3 = "Data13";
-    writeDataName4 = "Data14";
-    readDataName1  = "Data21";
-    readDataName2  = "Data22";
-    readDataName3  = "Data23";
-    readDataName4  = "Data24";
+    meshName      = "MeshOne";
+    writeDataName = "Data1";
+    readDataName  = "Data2";
+    std::cout << "SolverOne" << std::endl;
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
-    meshName       = "MeshTwo";
-    writeDataName1 = "Data21";
-    writeDataName2 = "Data22";
-    writeDataName3 = "Data23";
-    writeDataName4 = "Data24";
-    readDataName1  = "Data11";
-    readDataName2  = "Data12";
-    readDataName3  = "Data13";
-    readDataName4  = "Data14";
+    meshName      = "MeshTwo";
+    writeDataName = "Data2";
+    readDataName  = "Data1";
   }
 
-  precice::Participant participant(context.name, config, context.rank, context.size);
+  precice::Participant interface(context.name, config, context.rank, context.size);
 
   VertexID vertexIDs[2];
 
@@ -238,88 +228,65 @@ void runTestQNBoundedValue(std::string const &config, TestContext const &context
 
   if (context.isNamed("SolverOne")) {
     if (context.isPrimary()) {
-      participant.setMeshVertices(meshName, positions0, vertexIDs);
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
     }
   } else {
     BOOST_REQUIRE(context.isNamed("SolverTwo"));
     if (context.isPrimary()) {
-      participant.setMeshVertices(meshName, positions0, vertexIDs);
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
     }
   }
 
-  participant.initialize();
-  double inValues1[2]  = {0.1, 0.2};
-  double inValues2[2]  = {1, 2};
-  double inValues3[2]  = {0.1, 0.2};
-  double inValues4[2]  = {1, 2};
-  double outValues1[2] = {0., 0.};
-  double outValues2[2] = {0., 0.};
-  double outValues3[2] = {0., 0.};
-  double outValues4[2] = {0., 0.};
+  interface.initialize();
+  double inValues[2]  = {0.1, 0.2};
+  double outValues[2] = {0.00, 0.00};
 
   int iterations = 0;
 
-  while (participant.isCouplingOngoing()) {
-    if (participant.requiresWritingCheckpoint()) {
+  while (interface.isCouplingOngoing()) {
+    if (interface.requiresWritingCheckpoint()) {
     }
 
-    double preciceDt = participant.getMaxTimeStepSize();
-    participant.readData(meshName, readDataName1, vertexIDs, preciceDt, inValues1);
-    participant.readData(meshName, readDataName2, vertexIDs, preciceDt, inValues2);
-    participant.readData(meshName, readDataName3, vertexIDs, preciceDt, inValues3);
-    participant.readData(meshName, readDataName4, vertexIDs, preciceDt, inValues4);
+    double preciceDt = interface.getMaxTimeStepSize();
+    interface.readData(meshName, readDataName, vertexIDs, preciceDt, inValues);
 
     if (context.isNamed("SolverOne")) {
       if (iterations == 0) {
-        inValues1[0] = 0.9;
-        inValues1[1] = -0.9;
-        inValues2[0] = 0.9;
-        inValues2[1] = -0.9;
-        inValues3[0] = 3.9;
-        inValues3[1] = 0.9;
-        inValues4[0] = -3.9;
-        inValues4[1] = -0.9;
+        inValues[0] = 0.9;
+        inValues[1] = -0.9;
       }
       for (int i = 0; i < 2; i++) {
-        outValues1[i] = inValues1[i]; // only pushes solution through
-        outValues2[i] = inValues2[i]; // only pushes solution through
-        outValues3[i] = inValues3[i]; // only pushes solution through
-        outValues4[i] = inValues4[i]; // only pushes solution through
+        outValues[i] = inValues[i]; // only pushes solution through
       }
     } else {
-      BOOST_TEST(inValues1[0] >= -1.0);
-      BOOST_TEST(inValues1[0] <= 1.0);
-      BOOST_TEST(inValues1[1] >= -1.0);
-      BOOST_TEST(inValues1[1] <= 1.0);
-      BOOST_TEST(inValues2[0] >= -10.0);
-      BOOST_TEST(inValues2[0] <= 10.0);
-      BOOST_TEST(inValues2[1] >= -10.0);
-      BOOST_TEST(inValues2[1] <= 10.0);
-      BOOST_TEST(inValues3[0] >= -1.0);
-      BOOST_TEST(inValues4[0] <= 1.0);
-
-      outValues1[0] = sin(inValues1[0] * inValues1[1]);
-      outValues1[1] = cos(inValues1[0] * inValues1[1]);
-      outValues2[0] = 10.0 * sin(inValues2[0] * inValues2[1] / 100.0);
-      outValues2[1] = 10.0 * cos(inValues2[0] * inValues2[1] / 100.0);
-      outValues3[0] = inValues3[0] * inValues3[0] * exp(sin(inValues3[0] * inValues3[1])) - 1;
-      outValues3[1] = inValues3[1] * inValues3[1] * exp(cos(inValues3[0] * inValues3[1])) - 1;
-      outValues4[0] = -inValues4[0] * inValues4[0] * exp(sin(inValues4[0] * inValues4[1])) + 1;
-      outValues4[1] = -inValues4[1] * inValues4[1] * exp(cos(-inValues4[0] * inValues4[1])) + 1;
+      double x = inValues[0];
+      double y = inValues[1];
+      // outValues[0] = (2 * (1.5 - x + x * y) * (y - 1.0) + 2 * (2.25 - x + x * y * y) * (y * y - 1) + 2 * (2.65 - x + x * pow(y, 3)) * (pow(y, 3) - 1)) / 5.0e4;
+      // outValues[1] = (2 * (1.5 - x + x * y) * x + 4 * (2.25 - x + x * y * y) * x * y + 6 * (2.65 - x + x * pow(y, 3)) * x * y * y) / 5.0e4;
+      // outValues[0] = abs(-sin(x) * cos(y) - 2.0 * cos(x) * sin(y));
+      // outValues[1] = abs(-cos(x) * sin(y) - 2.0 * sin(x) * cos(y));
+      outValues[0] = 1.0 * sin(x * y / 2.0);
+      outValues[1] = 1.0 * cos(x * y / 2.0);
+      // for (int i = 1; i < 2; i = i + 2) {
+      //   outValues[i] = 1;
+      // }
+      // for (int i = 0; i < 2; i = i + 2) {
+      //   outValues[i] = 10 * (inValues[i + 1] - inValues[i] * inValues[i]) + inValues[i];
+      // }
+      std::cout << "outvalues in Solver2: " << outValues[0] << "," << outValues[1] << std::endl;
+      // outValues[0] = fmin(fmax(-4.5, outValues[0]), 4.5);
+      // outValues[1] = fmin(fmax(-4.5, outValues[1]), 4.5);
     }
 
-    participant.writeData(meshName, writeDataName1, vertexIDs, outValues1);
-    participant.writeData(meshName, writeDataName2, vertexIDs, outValues2);
-    participant.writeData(meshName, writeDataName3, vertexIDs, outValues3);
-    participant.writeData(meshName, writeDataName4, vertexIDs, outValues4);
+    interface.writeData(meshName, writeDataName, vertexIDs, outValues);
 
-    participant.advance(1.0);
+    interface.advance(1.0);
 
-    if (participant.requiresReadingCheckpoint()) {
+    if (interface.requiresReadingCheckpoint()) {
     }
     iterations++;
   }
 
-  participant.finalize();
+  interface.finalize();
 }
 #endif

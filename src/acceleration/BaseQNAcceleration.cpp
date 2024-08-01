@@ -2,6 +2,7 @@
 #include <Eigen/Core>
 #include <boost/range/adaptor/map.hpp>
 #include <cmath>
+#include <iomanip>
 #include <memory>
 #include <utility>
 
@@ -177,129 +178,251 @@ void BaseQNAcceleration::initialize(
 }
 void BaseQNAcceleration::forwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds, std::map<int, double> upperBounds)
 {
-  Eigen::Index offset = 0;
-  for (auto id : dataIDs) {
-    Eigen::Index size       = cplData.at(id)->values().size();
-    auto         rangeType  = rangeTypes.at(id);
-    auto         lowerBound = lowerBounds.at(id);
-    auto         upperBound = upperBounds.at(id);
+  if (methodForQN == "transformation") {
+    Eigen::Index offset = 0;
+    for (auto id : dataIDs) {
+      Eigen::Index size       = cplData.at(id)->values().size();
+      auto         rangeType  = rangeTypes.at(id);
+      auto         lowerBound = lowerBounds.at(id);
+      auto         upperBound = upperBounds.at(id);
 
-    if (rangeType == "not-bounded") {
-      // do nothing
-    } else if (rangeType == "lower-bounded") {
-      // use piecewise transformation function: close to the lower bound, the function is non-linear, otherwise it's linear
-      double delta       = 0.1;
-      double leftLimit   = lowerBound - delta;
-      double rightLimit  = lowerBound + 1.0 + delta;
-      double intervalLen = rightLimit - leftLimit;
+      if (rangeType == "not-bounded") {
+        // do nothing
+      } else if (rangeType == "lower-bounded") {
+        // use piecewise transformation function: close to the lower bound, the function is non-linear, otherwise it's linear
+        double delta       = 0.1;
+        double leftLimit   = lowerBound - delta;
+        double rightLimit  = lowerBound + 1.0 + delta;
+        double intervalLen = rightLimit - leftLimit;
 
-      for (Eigen::Index i = 0; i < size; i++) {
-        double normalizedOldValue = (_oldValues[i + offset] - leftLimit) / intervalLen;
-        double normalizedValue    = (_values[i + offset] - leftLimit) / intervalLen;
+        for (Eigen::Index i = 0; i < size; i++) {
+          double normalizedOldValue = (_oldValues[i + offset] - leftLimit) / intervalLen;
+          double normalizedValue    = (_values[i + offset] - leftLimit) / intervalLen;
 
-        if (normalizedValue < 0.5) {
-          _values[i + offset] = log(normalizedValue / (1.0 - normalizedValue));
-        } else {
-          _values[i + offset] = normalizedValue - 0.5;
+          if (normalizedValue < 0.5) {
+            _values[i + offset] = log(normalizedValue / (1.0 - normalizedValue));
+          } else {
+            _values[i + offset] = normalizedValue - 0.5;
+          }
+          if (normalizedOldValue < 0.5) {
+            _oldValues[i + offset] = log(normalizedOldValue / (1.0 - normalizedOldValue));
+          } else {
+            _oldValues[i + offset] = normalizedOldValue - 0.5;
+          }
         }
-        if (normalizedOldValue < 0.5) {
+      } else if (rangeType == "upper-bounded") {
+        double delta       = 0.1;
+        double leftLimit   = upperBound - 1.0 - delta;
+        double rightLimit  = upperBound + delta;
+        double intervalLen = rightLimit - leftLimit;
+
+        for (Eigen::Index i = 0; i < size; i++) {
+          double normalizedOldValue = (_oldValues[i + offset] - leftLimit) / intervalLen;
+          double normalizedValue    = (_values[i + offset] - leftLimit) / intervalLen;
+
+          if (normalizedValue > 0.5) {
+            _values[i + offset] = log(normalizedValue / (1.0 - normalizedValue));
+          } else {
+            _values[i + offset] = normalizedValue - 0.5;
+          }
+          if (normalizedOldValue > 0.5) {
+            _oldValues[i + offset] = log(normalizedOldValue / (1.0 - normalizedOldValue));
+          } else {
+            _oldValues[i + offset] = normalizedOldValue - 0.5;
+          }
+        }
+      } else {
+        double delta       = 0.1;
+        double leftLimit   = lowerBound - delta;
+        double rightLimit  = upperBound + delta;
+        double intervalLen = rightLimit - leftLimit;
+
+        for (Eigen::Index i = 0; i < size; i++) {
+          double normalizedOldValue = (_oldValues[i + offset] - leftLimit) / intervalLen;
+          double normalizedValue    = (_values[i + offset] - leftLimit) / intervalLen;
+
+          _values[i + offset]    = log(normalizedValue / (1.0 - normalizedValue));
           _oldValues[i + offset] = log(normalizedOldValue / (1.0 - normalizedOldValue));
-        } else {
-          _oldValues[i + offset] = normalizedOldValue - 0.5;
         }
       }
-    } else if (rangeType == "upper-bounded") {
-      double delta       = 0.1;
-      double leftLimit   = upperBound - 1.0 - delta;
-      double rightLimit  = upperBound + delta;
-      double intervalLen = rightLimit - leftLimit;
 
-      for (Eigen::Index i = 0; i < size; i++) {
-        double normalizedOldValue = (_oldValues[i + offset] - leftLimit) / intervalLen;
-        double normalizedValue    = (_values[i + offset] - leftLimit) / intervalLen;
-
-        if (normalizedValue > 0.5) {
-          _values[i + offset] = log(normalizedValue / (1.0 - normalizedValue));
-        } else {
-          _values[i + offset] = normalizedValue - 0.5;
-        }
-        if (normalizedOldValue > 0.5) {
-          _oldValues[i + offset] = log(normalizedOldValue / (1.0 - normalizedOldValue));
-        } else {
-          _oldValues[i + offset] = normalizedOldValue - 0.5;
-        }
-      }
-    } else {
-      double delta       = 0.1;
-      double leftLimit   = lowerBound - delta;
-      double rightLimit  = upperBound + delta;
-      double intervalLen = rightLimit - leftLimit;
-
-      for (Eigen::Index i = 0; i < size; i++) {
-        double normalizedOldValue = (_oldValues[i + offset] - leftLimit) / intervalLen;
-        double normalizedValue    = (_values[i + offset] - leftLimit) / intervalLen;
-
-        _values[i + offset]    = log(normalizedValue / (1.0 - normalizedValue));
-        _oldValues[i + offset] = log(normalizedOldValue / (1.0 - normalizedOldValue));
-      }
+      offset += size;
     }
-
-    offset += size;
+  } else if (methodForQN == "cropping") {
+    // do nothing
+  } else if (methodForQN == "Aitken") {
+    // do nothing
+  } else if (methodForQN == "cutStep") {
+    // do nothing
+  } else {
+    PRECICE_ERROR("The method for quasi-Newton acceleration is not correctly defined");
   }
 }
-void BaseQNAcceleration::backwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds, std::map<int, double> upperBounds)
+void BaseQNAcceleration::backwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds, std::map<int, double> upperBounds, Eigen::VectorXd &xUpdate)
 {
-  Eigen::Index offset = 0;
-  for (auto id : dataIDs) {
-    Eigen::Index size       = cplData.at(id)->values().size();
-    auto         rangeType  = rangeTypes.at(id);
-    auto         lowerBound = lowerBounds.at(id);
-    auto         upperBound = upperBounds.at(id);
+  if (methodForQN == "transformation") {
+    Eigen::Index offset = 0;
+    for (auto id : dataIDs) {
+      Eigen::Index size       = cplData.at(id)->values().size();
+      auto         rangeType  = rangeTypes.at(id);
+      auto         lowerBound = lowerBounds.at(id);
+      auto         upperBound = upperBounds.at(id);
 
-    if (rangeType == "not-bounded") {
-      // do nothing
-    } else if (rangeType == "lower-bounded") {
-      double delta       = 0.1;
-      double leftLimit   = lowerBound - delta;
-      double rightLimit  = lowerBound + 1.0 + delta;
-      double intervalLen = rightLimit - leftLimit;
+      if (rangeType == "not-bounded") {
+        // do nothing
+      } else if (rangeType == "lower-bounded") {
+        double delta       = 0.1;
+        double leftLimit   = lowerBound - delta;
+        double rightLimit  = lowerBound + 1.0 + delta;
+        double intervalLen = rightLimit - leftLimit;
 
-      for (Eigen::Index i = 0; i < size; i++) {
-        if (_values[i + offset] < 0.0) {
+        for (Eigen::Index i = 0; i < size; i++) {
+          if (_values[i + offset] < 0.0) {
+            _values[i + offset] = 1 / (1 + exp(-_values[i + offset])) * intervalLen + leftLimit;
+            _values[i + offset] = fmax(lowerBound, _values[i + offset]);
+          } else {
+            _values[i + offset] = (_values[i + offset] + 0.5) * intervalLen + leftLimit;
+          }
+        }
+      } else if (rangeType == "upper-bounded") {
+        double delta       = 0.1;
+        double leftLimit   = upperBound - 1.0 - delta;
+        double rightLimit  = upperBound + delta;
+        double intervalLen = rightLimit - leftLimit;
+
+        for (Eigen::Index i = 0; i < size; i++) {
+          if (_values[i + offset] > 0.0) {
+            _values[i + offset] = 1 / (1 + exp(-_values[i + offset])) * intervalLen + leftLimit;
+            _values[i + offset] = fmin(_values[i + offset], upperBound);
+          } else {
+            _values[i + offset] = (_values[i + offset] + 0.5) * intervalLen + leftLimit;
+          }
+        }
+      } else {
+        double delta       = 0.1;
+        double leftLimit   = lowerBound - delta;
+        double rightLimit  = upperBound + delta;
+        double intervalLen = rightLimit - leftLimit;
+
+        for (Eigen::Index i = 0; i < size; i++) {
           _values[i + offset] = 1 / (1 + exp(-_values[i + offset])) * intervalLen + leftLimit;
-          _values[i + offset] = fmax(lowerBound, _values[i + offset]);
-        } else {
-          _values[i + offset] = (_values[i + offset] + 0.5) * intervalLen + leftLimit;
+          _values[i + offset] = fmin(fmax(lowerBound, _values[i + offset]), upperBound);
+          // TODO: when the cropped part is large, warn preCICE against fake convergence( accelerate to the boundary for consecutive time windows, thus residual is zero when it's actually not converged)
         }
       }
-    } else if (rangeType == "upper-bounded") {
-      double delta       = 0.1;
-      double leftLimit   = upperBound - 1.0 - delta;
-      double rightLimit  = upperBound + delta;
-      double intervalLen = rightLimit - leftLimit;
 
-      for (Eigen::Index i = 0; i < size; i++) {
-        if (_values[i + offset] > 0.0) {
-          _values[i + offset] = 1 / (1 + exp(-_values[i + offset])) * intervalLen + leftLimit;
-          _values[i + offset] = fmin(_values[i + offset], upperBound);
-        } else {
-          _values[i + offset] = (_values[i + offset] + 0.5) * intervalLen + leftLimit;
-        }
-      }
-    } else {
-      double delta       = 0.1;
-      double leftLimit   = lowerBound - delta;
-      double rightLimit  = upperBound + delta;
-      double intervalLen = rightLimit - leftLimit;
-
-      for (Eigen::Index i = 0; i < size; i++) {
-        _values[i + offset] = 1 / (1 + exp(-_values[i + offset])) * intervalLen + leftLimit;
-        _values[i + offset] = fmin(fmax(lowerBound, _values[i + offset]), upperBound);
-        // TODO: when the cropped part is large, warn preCICE against fake convergence( accelerate to the boundary for consecutive time windows, thus residual is zero when it's actually not converged)
-      }
+      offset += size;
     }
+  } else if (methodForQN == "cropping") {
+    Eigen::Index offset = 0;
+    for (auto id : dataIDs) {
+      Eigen::Index size       = cplData.at(id)->values().size();
+      auto         rangeType  = rangeTypes.at(id);
+      auto         lowerBound = lowerBounds.at(id);
+      auto         upperBound = upperBounds.at(id);
 
-    offset += size;
+      if (rangeType == "not-bounded") {
+        // do nothing
+      } else if (rangeType == "lower-bounded") {
+        for (Eigen::Index i = 0; i < size; i++) {
+          _values[i + offset] = fmax(_values[i + offset], lowerBound);
+        }
+      } else if (rangeType == "upper-bounded") {
+        for (Eigen::Index i = 0; i < size; i++) {
+          _values[i + offset] = fmin(_values[i + offset], upperBound);
+        }
+      } else {
+        for (Eigen::Index i = 0; i < size; i++) {
+          _values[i + offset] = fmin(fmax(lowerBound, _values[i + offset]), upperBound);
+        }
+      }
+      offset += size;
+    }
+  } else if (methodForQN == "Aitken") {
+    Eigen::Index offset = 0;
+    for (auto id : dataIDs) {
+      Eigen::Index size       = cplData.at(id)->values().size();
+      auto         rangeType  = rangeTypes.at(id);
+      auto         lowerBound = lowerBounds.at(id);
+      auto         upperBound = upperBounds.at(id);
+
+      // find the scaling factor for the step length
+      if (_fallBack) {
+        break;
+      } else if (rangeType == "lower-bounded") {
+        for (Eigen::Index i = 0; i < size; i++) {
+          if (_values[i + offset] < lowerBound) {
+            _fallBack = true;
+            break;
+          }
+        }
+      } else if (rangeType == "upper-bounded") {
+        for (Eigen::Index i = 0; i < size; i++) {
+          if (_values[i + offset] > upperBound) {
+            _fallBack = true;
+            break;
+          }
+        }
+      } else if (rangeType == "two-ends-bounded") {
+        for (Eigen::Index i = 0; i < size; i++) {
+          if (_values[i + offset] < lowerBound || _values[i + offset] > upperBound) {
+            _fallBack = true;
+            break;
+          }
+        }
+      }
+      offset += size;
+      std::cout << "fallback " << _fallBack << std::endl;
+    }
+  } else if (methodForQN == "cutStep") {
+    Eigen::Index offset    = 0;
+    double       scaleStep = 1.0;
+    for (auto id : dataIDs) {
+      Eigen::Index size       = cplData.at(id)->values().size();
+      auto         rangeType  = rangeTypes.at(id);
+      auto         lowerBound = lowerBounds.at(id);
+      auto         upperBound = upperBounds.at(id);
+
+      // find the scaling factor for the step length
+      if (rangeType == "not-bounded") {
+        // do nothing
+      } else if (rangeType == "lower-bounded") {
+        for (Eigen::Index i = 0; i < size; i++) {
+          if (_values[i + offset] < lowerBound) {
+            scaleStep = fmin(scaleStep, (lowerBound - _values[i + offset] + xUpdate[i + offset]) / xUpdate[i + offset]);
+          }
+        }
+      } else if (rangeType == "upper-bounded") {
+        for (Eigen::Index i = 0; i < size; i++) {
+          if (_values[i + offset] > upperBound) {
+            scaleStep = fmin(scaleStep, (upperBound - _values[i + offset] + xUpdate[i + offset]) / xUpdate[i + offset]);
+          }
+        }
+      } else {
+        for (Eigen::Index i = 0; i < size; i++) {
+          if (_values[i + offset] < lowerBound) {
+            scaleStep = fmin(scaleStep, (lowerBound - _values[i + offset] + xUpdate[i + offset]) / xUpdate[i + offset]);
+          } else if (_values[i + offset] > upperBound) {
+            std::cout << std::fixed << std::setprecision(16);
+            std::cout << "_values[i + offset]: " << _values[i + offset] << std::endl;
+            scaleStep = fmin(scaleStep, (upperBound - _values[i + offset] + xUpdate[i + offset]) / xUpdate[i + offset]);
+          }
+        }
+      }
+      offset += size;
+      std::cout << "scaleStep: " << scaleStep << std::endl;
+    }
+    // update the new values
+    offset = 0;
+    for (auto id : dataIDs) {
+      Eigen::Index size = cplData.at(id)->values().size();
+      for (Eigen::Index i = 0; i < size; i++) {
+        _values[i + offset] -= xUpdate[i + offset] * (1.0 - scaleStep);
+      }
+      offset += size;
+    }
+  } else {
+    PRECICE_ERROR("The method for quasi-Newton acceleration is not correctly defined");
   }
 }
 /** ---------------------------------------------------------------------------------------------
@@ -326,6 +449,9 @@ void BaseQNAcceleration::updateDifferenceMatrices(
 
   // if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
+
+    _aitkenFactor = _initialRelaxation;
+
     // do nothing: constant relaxation
   } else {
     PRECICE_DEBUG("   Update Difference Matrices");
@@ -393,6 +519,21 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         _nbDropCols++;
       }
     }
+
+    if (methodForQN == "Aitken") {
+      // Compute current residual = values - oldValues
+      Eigen::VectorXd residuals = _values - _oldValues;
+      // Compute residual deltas (= residuals - oldResiduals) and store it in _oldResiduals
+      Eigen::VectorXd residualDeltas = residuals - _oldResiduals;
+      // compute fraction of aitken factor with residuals and residual deltas
+      double nominator   = utils::IntraComm::dot(_oldResiduals, residualDeltas);
+      double denominator = utils::IntraComm::dot(residualDeltas, residualDeltas);
+      std::cout << "nominator: " << nominator << std::endl;
+      std::cout << "denominator: " << denominator << std::endl;
+      _aitkenFactor = -_aitkenFactor * (nominator / denominator);
+      std::cout << "Aitken factor: " << _aitkenFactor << std::endl;
+    }
+
     _oldResiduals = _residuals; // Store residuals
     _oldXTilde    = _values;    // Store x_tilde
   }
@@ -441,7 +582,7 @@ void BaseQNAcceleration::performAcceleration(
     _values = _residuals;
 
     computeUnderrelaxationSecondaryData(cplData);
-    backwardTransformation(cplData, _dataIDs, _rangeTypes, _lowerBounds, _upperBounds);
+    backwardTransformation(cplData, _dataIDs, _rangeTypes, _lowerBounds, _upperBounds, _residuals); // TODO: xUpadate is onpy used for "cutStep" method, since the values here are always inside the range, xUpdate is not used. Also, it's the wrong variable. Maybe it's better to separate the computation and re-update.
   } else {
     PRECICE_DEBUG("   Performing quasi-Newton Step");
 
@@ -505,10 +646,15 @@ void BaseQNAcceleration::performAcceleration(
     /**
      * apply quasiNewton update
      */
-
     _values += xUpdate;
-    backwardTransformation(cplData, _dataIDs, _rangeTypes, _lowerBounds, _upperBounds);
+    std::cout << "values before backward handling: " << _values << std::endl;
+    backwardTransformation(cplData, _dataIDs, _rangeTypes, _lowerBounds, _upperBounds, xUpdate);
 
+    if (_fallBack) {
+      _values -= xUpdate;                                                   // revert the QN update
+      _values = _oldValues * (1 - _aitkenFactor) + _aitkenFactor * _values; // dounder-relaxation instead
+    }
+    std::cout << "values after backward handling: " << _values << std::endl;
     // pending deletion: delete old V, W matrices if timeWindowsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
     if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
