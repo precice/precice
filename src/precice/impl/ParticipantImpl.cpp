@@ -1076,9 +1076,14 @@ void ParticipantImpl::readData(
     return;
   }
 
-  ReadDataContext &context          = _accessor->readDataContext(meshName, dataName);
-  const auto       dataDims         = context.getDataDimensions();
-  const auto       expectedDataSize = vertices.size() * dataDims;
+  ReadDataContext &context = _accessor->readDataContext(meshName, dataName);
+  PRECICE_CHECK(context.hasSamples(), "Data \"{}\" cannot be read from mesh \"{}\" as it contains no samples. "
+                                      "This is typically a configuration issue of the data flow. "
+                                      "Check if the data is correctly exchanged to this participant \"{}\" and mapped to mesh \"{}\".",
+                dataName, meshName, _accessorName, meshName);
+
+  const auto dataDims         = context.getDataDimensions();
+  const auto expectedDataSize = vertices.size() * dataDims;
   PRECICE_CHECK(expectedDataSize == values.size(),
                 "Input/Output sizes are inconsistent attempting to read {}D data \"{}\" from mesh \"{}\". "
                 "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",

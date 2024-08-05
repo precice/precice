@@ -54,6 +54,9 @@ public:
    */
   void readValues(::precice::span<const VertexID> vertices, double time, ::precice::span<double> values) const;
 
+  /// Are there samples to read from?
+  bool hasSamples() const;
+
   /// Disable copy construction
   ReadDataContext(const ReadDataContext &copy) = delete;
 
