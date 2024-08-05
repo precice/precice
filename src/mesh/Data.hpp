@@ -117,6 +117,9 @@ public:
   /// Returns if the data contains gradient data
   bool hasGradient() const;
 
+  /// Returns if there are sample of this data
+  bool hasSamples() const;
+
   /// Set the additional requirement of gradient data
   void requireDataGradient();
 
