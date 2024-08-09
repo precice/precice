@@ -384,7 +384,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
       for (int i = 0; i < this->input()->getGlobalNumberOfVertices(); i++) {
         in[i] = inputValues[i * valueDim + dim];
       }
-      // PRECICE_INFO("LOOCV (no polynomial) for vector component {}: {}", dim, _rbfSolver->evaluateRippaLOOCVerror(in));
+
       out = _rbfSolver->solveConsistent(in, _polynomial);
 
       // Copy mapped data to output data values

@@ -354,7 +354,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   // For polynomial on, the algorithm might fail in determining the size of the system
   if (polynomial != Polynomial::ON) {
     // TODO: Disable synchronization
-    precice::profiling::Event e("map.rbf.computeLOOCV", profiling::Synchronize);
+    precice::profiling::Event e("map.rbf.computeLOOCV");
     _inverseDiagonal = computeInverseDiagonal(_decMatrixC);
   }
   // Second, assemble evaluation matrix
@@ -438,8 +438,9 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   // Integrated polynomial (and separated)
   PRECICE_ASSERT(inputData.size() == _matrixA.cols());
   Eigen::VectorXd p = _decMatrixC.solve(inputData);
-  {
-    precice::profiling::Event e("map.rbf.evaluateLOOCV", profiling::Synchronize);
+
+  if (polynomial != Polynomial::ON) {
+    precice::profiling::Event e("map.rbf.evaluateLOOCV");
     PRECICE_INFO("LOOCV error: {}", evaluateRippaLOOCVerror(p));
   }
   PRECICE_ASSERT(p.size() == _matrixA.cols());
