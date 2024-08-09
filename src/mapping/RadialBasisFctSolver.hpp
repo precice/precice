@@ -6,6 +6,7 @@
 #include <boost/range/adaptor/indexed.hpp>
 #include <boost/range/irange.hpp>
 #include <numeric>
+#include <type_traits>
 #include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
@@ -54,13 +55,15 @@ public:
   // Returns the size of the input data
   Eigen::Index getOutputSize() const;
 
-  double computeRippaLOOCVerror(const Eigen::VectorXd &inputData);
-
 private:
-  precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
+  mutable precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
 
+  double evaluateRippaLOOCVerror(const Eigen::VectorXd &lambda) const;
   /// Decomposition of the interpolation matrix
   DecompositionType _decMatrixC;
+
+  /// Diagonal entris of the inverse matrix C, requires for the Rippa scheme
+  Eigen::VectorXd _inverseDiagonal;
 
   /// Decomposition of the polynomial (for separate polynomial)
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qrMatrixQ;
@@ -220,93 +223,103 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
   return matrixA;
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeRippaLOOCVerror(const Eigen::VectorXd &inputData)
+// Variant operating on the Cholesky decopmosition
+inline Eigen::VectorXd computeInverseDiagonal(Eigen::LLT<Eigen::MatrixXd> decMatrixC)
 {
-  precice::profiling::Event e("map.rbf.computeLOOCV", profiling::Synchronize);
-  double                    loocv = 0;
-  Eigen::VectorXd           diag_inv_A;
-  const Eigen::Index        n = inputData.size();
+  // 1. Compute the diagonal entries of the inverse kernel matrix:
+  // We already have the Cholesky decomposition. So instead of solving for the
+  // kernel matrix directly, we invert the lower triangular matrix of the
+  // decomposition:
+  // using A^{-1} = (L^T)^{-1}L^{-1} enables the computation of the diagonal
+  // entries of A^{-1} by evaluating the product above:
+  // A^{-1}_{ii} = sum_{k=1}^n L^{-T}_{ik} L^{-1}_{ki}
 
-  // Implementation of LOOCV according to Rippa(1999), DOI: 10.1023/a:1018975909870
-  if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
+  // 1a: Compute the inverse of the lower triangular matrix L
+  // Eigen::MatrixXd L_inv = L.inverse(); is not supported by Eigen (linker errors)
+  // However, Eigen provides triangular solver (LAPACK::trsm), which can be used
+  // to solve L * Linv = I
+  // Eigen::MatrixXd L_inv = Eigen::MatrixXd::Identity(inSize, inSize);
+  // _decMatrixC.matrixL().solveInPlace(L_inv);
+  // which yields cubic complexity (BLAS level 3).
 
-    // 1. Compute the diagonal entries of the inverse kernel matrix:
-    // We already have the Cholesky decomposition. So instead of solving for the
-    // kernel matrix directly, we invert the lower triangular matrix of the
-    // decomposition:
-    // using A^{-1} = (L^T)^{-1}L^{-1} enables the computation of the diagonal
-    // entries of A^{-1} by evaluating the product above:
-    // A^{-1}_{ii} = sum_{k=1}^n L^{-T}_{ik} L^{-1}_{ki}
+  // Trying to implement the forward substitution of L here manually, which can be
+  // (similar to LAPACK:trtri) more efficient, given that the RHS is also
+  // triangular was unfortunately slower.
+  // @todo implement something trtri-like which is more efficient
+  // @todo if we need to compute this multiple times, we should store the diagonal
+  // entries
 
-    // 1a: Compute the inverse of the lower triangular matrix L
-    // Eigen::MatrixXd L_inv = L.inverse(); is not supported by Eigen (linker errors)
-    // However, Eigen provides triangular solver (LAPACK::trsm), which can be used
-    // to solve L * Linv = I
-    // Eigen::MatrixXd L_inv = Eigen::MatrixXd::Identity(inSize, inSize);
-    // _decMatrixC.matrixL().solveInPlace(L_inv);
-    // which yields cubic complexity (BLAS level 3).
+  Eigen::VectorXd    inverseDiagonal;
+  const Eigen::Index n = decMatrixC.matrixL().cols();
 
-    // Trying to implement the forward substitution of L here manually, which can be
-    // (similar to LAPACK:trtri) more efficient, given that the RHS is also
-    // triangular was unfortunately slower.
-    // @todo implement something trtri-like which is more efficient
-    // @todo if we need to compute this multiple times, we should store the diagonal
-    // entries
+  // Solve L * Linv = I
+  Eigen::MatrixXd L_inv = Eigen::MatrixXd::Identity(n, n);
+  decMatrixC.matrixL().solveInPlace(L_inv);
 
-    // Solve L * Linv = I
-    Eigen::MatrixXd L_inv = Eigen::MatrixXd::Identity(n, n);
-    _decMatrixC.matrixL().solveInPlace(L_inv);
+  // 1b: Compute the diagonal elements of A^{-1} by evaluating (L^T)^{-1}L^{-1}
+  inverseDiagonal = (L_inv.array().square().colwise().sum()).transpose();
 
-    // 1b: Compute the diagonal elements of A^{-1} by evaluating (L^T)^{-1}L^{-1}
-    diag_inv_A = (L_inv.array().square().colwise().sum()).transpose();
+  return inverseDiagonal;
+}
 
-  } else {
+// Variant operating on the QR decomposition
+inline Eigen::VectorXd computeInverseDiagonal(Eigen::ColPivHouseholderQR<Eigen::MatrixXd> decMatrixC)
+{
+  // 1. Compute the diagonal entries of the inverse kernel matrix:
+  // We could use
+  //     diag_inv_A= _decMatrixC.inverse().diagonal();
+  // as Eigen offers this for the QR decomposition, but the inverse() call is
+  // more expensive than it has to be (as we compute all entries of the inverse). On the
+  // other hand, using non strictily-positive definite functions is less relevant anyway.
+  // Still, let's try the following:
 
-    // 1. Compute the diagonal entries of the inverse kernel matrix:
-    // We could use
-    //     diag_inv_A= _decMatrixC.inverse().diagonal();
-    // as Eigen offers this for the QR decomposition, but the inverse() call is
-    // more expensive than it has to be (as we compute all entries of the inverse). On the
-    // other hand, using non strictily-positive definite functions is less relevant anyway.
-    // Still, let's try the following:
+  // We already have the QR decomposition. So instead of solving for the
+  // kernel matrix directly, make use of the following:
+  // A^{-1} = R^{-1}Q^{-1}
+  // Since Q is orthogonal, Q^{-1} = Q^T
+  // R is upper triangular and we need to compute the inverse (using backwards substitution)
 
-    // We already have the QR decomposition. So instead of solving for the
-    // kernel matrix directly, make use of the following:
-    // A^{-1} = R^{-1}Q^{-1}
-    // Since Q is orthogonal, Q^{-1} = Q^T
-    // R is upper triangular and we need to compute the inverse (using backwards substitution)
+  // enables the computation of the diagonal
+  // entries of A^{-1} by evaluating the product above:
+  // A^{-1} = R^{-1} Q^T
+  // A^{-1}_{ii} = sum_{k=1}^n R^{-1}_{ik} Q^{T}_{ki}
 
-    // enables the computation of the diagonal
-    // entries of A^{-1} by evaluating the product above:
-    // A^{-1} = R^{-1} Q^T
-    // A^{-1}_{ii} = sum_{k=1}^n R^{-1}_{ik} Q^{T}_{ki}
+  Eigen::VectorXd    inverseDiagonal;
+  const Eigen::Index n = decMatrixC.matrixR().cols();
 
-    // 1a: Compute the inverse of the lower triangular matrix L
-    // Solve R * Rinv = I
-    Eigen::MatrixXd R_inv = Eigen::MatrixXd::Identity(n, n);
-    _decMatrixC.matrixR().template triangularView<Eigen::Upper>().solveInPlace(R_inv);
-    Eigen::VectorXi P = _decMatrixC.colsPermutation().indices();
-    Eigen::MatrixXd Q = _decMatrixC.householderQ();
+  // 1a: Compute the inverse of the lower triangular matrix L
+  // Solve R * Rinv = I
+  Eigen::MatrixXd R_inv = Eigen::MatrixXd::Identity(n, n);
+  decMatrixC.matrixR().template triangularView<Eigen::Upper>().solveInPlace(R_inv);
+  Eigen::VectorXi P = decMatrixC.colsPermutation().indices();
+  Eigen::MatrixXd Q = decMatrixC.householderQ();
 
-    // Now evaluate, caution with the column permutation
-    diag_inv_A.resize(n);
-    for (Eigen::Index i = 0; i < n; ++i) {
-      diag_inv_A(P(i)) = R_inv.row(i) * Q.transpose().col(P(i));
-    }
+  // Now evaluate, caution with the column permutation
+  inverseDiagonal.resize(n);
+  for (Eigen::Index i = 0; i < n; ++i) {
+    inverseDiagonal(P(i)) = R_inv.row(i) * Q.transpose().col(P(i));
   }
+  return inverseDiagonal;
+}
 
+template <typename RADIAL_BASIS_FUNCTION_T>
+double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::evaluateRippaLOOCVerror(const Eigen::VectorXd &lambda) const
+{
+  // Implementation of LOOCV according to Rippa(1999), DOI: 10.1023/a:1018975909870
+  double             loocv = 0;
+  const Eigen::Index n     = lambda.size();
   // 2: Next, compute the RBF coefficient. These are exactly the same as computed during
   // the solve_consistent and we could also pass them into the function, depending on how
   // often wen want to compute the LOOCV. We omit the polynomial contribution here, i.e.,
   // the input data remains untouched
-  Eigen::VectorXd lambda = _decMatrixC.solve(inputData);
+  // Eigen::VectorXd lambda = _decMatrixC.solve(inputData);
 
   // 3: Evaluate the Rippa formula:
   // The error estimate is given by a component-wise division: lambda/A^{-1}_{ii}.
   // We then compute the RMS of all LOOCV error entries (other options for the
   // aggregation should be possible)
-  loocv = std::sqrt((lambda.array() / diag_inv_A.array()).array().square().sum() / n);
+  // TODO:Consider storing the reciprocal inverse diagonal entries
+  loocv = std::sqrt((lambda.array() / _inverseDiagonal.array()).array().square().sum() / n);
 
   return loocv;
 }
@@ -338,6 +351,12 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
                 "your basis-function (e.g. reduce the support-radius).",
                 inputMesh.getName(), outputMesh.getName());
 
+  // For polynomial on, the algorithm might fail in determining the size of the system
+  if (polynomial != Polynomial::ON) {
+    // TODO: Disable synchronization
+    precice::profiling::Event e("map.rbf.computeLOOCV", profiling::Synchronize);
+    _inverseDiagonal = computeInverseDiagonal(_decMatrixC);
+  }
   // Second, assemble evaluation matrix
   _matrixA = buildMatrixA(basisFunction, inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial);
 
@@ -419,6 +438,10 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   // Integrated polynomial (and separated)
   PRECICE_ASSERT(inputData.size() == _matrixA.cols());
   Eigen::VectorXd p = _decMatrixC.solve(inputData);
+  {
+    precice::profiling::Event e("map.rbf.evaluateLOOCV", profiling::Synchronize);
+    PRECICE_INFO("LOOCV error: {}", evaluateRippaLOOCVerror(p));
+  }
   PRECICE_ASSERT(p.size() == _matrixA.cols());
   Eigen::VectorXd out = _matrixA * p;
 
