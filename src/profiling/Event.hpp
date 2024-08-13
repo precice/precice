@@ -95,6 +95,7 @@ public:
 
 private:
   int   _eid;
+  int   _sid{-1};
   State _state = State::STOPPED;
   bool  _fundamental{false};
   bool  _synchronize{false};

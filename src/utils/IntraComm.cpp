@@ -371,6 +371,11 @@ void IntraComm::synchronize()
   }
 }
 
+bool IntraComm::willSynchronize()
+{
+  return precice::syncMode;
+}
+
 void IntraComm::barrier()
 {
   PRECICE_TRACE();

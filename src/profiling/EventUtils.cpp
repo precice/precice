@@ -192,10 +192,20 @@ void EventRegistry::clear()
 void EventRegistry::put(PendingEntry pe)
 {
   PRECICE_ASSERT(_mode != Mode::Off, "The profiling is off.");
+
+  // avoid flushing the queue when we start measuring but only if we don't explicitly want to write every entry
+  auto skipFlush = _writeQueueMax != 1 && std::holds_alternative<StartEntry>(pe);
+
   _writeQueue.emplace_back(std::move(pe));
-  if (_writeQueueMax > 0 && _writeQueue.size() > _writeQueueMax) {
+  if (!skipFlush && _writeQueueMax > 0 && _writeQueue.size() > _writeQueueMax) {
     flush();
   }
+}
+
+void EventRegistry::putCritical(PendingEntry pe)
+{
+  PRECICE_ASSERT(_mode != Mode::Off, "The profiling is off.");
+  _writeQueue.emplace_back(std::move(pe));
 }
 
 namespace {

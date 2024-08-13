@@ -119,6 +119,9 @@ public:
   /// Records an event
   void put(PendingEntry pe);
 
+  /// Records an event without flushing events
+  void putCritical(PendingEntry pe);
+
   /// Writes all recorded events to file and flushes the buffer.
   void flush();
 
