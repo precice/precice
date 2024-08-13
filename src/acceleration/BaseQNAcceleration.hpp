@@ -147,16 +147,16 @@ protected:
   impl::PtrPreconditioner _preconditioner;
 
   /// Constant relaxation factor used for first iteration.
-  double _initialRelaxation;
+  const double _initialRelaxation;
 
   /// Maximum number of old data iterations kept.
-  int _maxIterationsUsed;
+  const int _maxIterationsUsed;
 
   /// Maximum number of old time windows (with data values) kept.
-  int _timeWindowsReused;
+  const int _timeWindowsReused;
 
   /// Data IDs of primary data to be involved in the IQN coefficient computation.
-  std::vector<int> _primaryDataIDs;
+  const std::vector<int> _primaryDataIDs;
 
   /// Data IDs of all coupling data.
   std::vector<int> _dataIDs;
@@ -209,7 +209,7 @@ protected:
   /** @brief filter method that is used to maintain good conditioning of the least-squares system
    *        Either of two types: QR1FILTER or QR2Filter
    */
-  int _filter;
+  const int _filter;
 
   /** @brief Determines sensitivity when two matrix columns are considered equal.
    *
@@ -217,7 +217,7 @@ protected:
    * than the singularity limit is found, the matrix is considered to be singular
    * and the corresponding (older) iteration is removed.
    */
-  double _singularityLimit;
+  const double _singularityLimit;
 
   /** @brief Indices (of columns in W, V matrices) of 1st iterations of time windows.
    *
