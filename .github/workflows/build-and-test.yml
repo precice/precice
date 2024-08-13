@@ -66,31 +66,31 @@ jobs:
             CXX: 'g++'
             TYPE: Release
           - IMAGE: 'ubuntu-2404'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Debug
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Debug
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Release
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'clang++'
+            TYPE: Debug
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'clang++'
+            TYPE: Release
+          - IMAGE: 'fedora'
             CONFIG: MPIPETScGinkgo
             CXX: 'g++'
             TYPE: Debug
-          - IMAGE: 'archlinux'
-            CONFIG: MPIPETSc
-            CXX: 'g++'
-            TYPE: Debug
-          - IMAGE: 'archlinux'
-            CONFIG: MPIPETSc
-            CXX: 'g++'
-            TYPE: Release
-          - IMAGE: 'archlinux'
-            CONFIG: MPIPETSc
-            CXX: 'clang++'
-            TYPE: Debug
-          - IMAGE: 'archlinux'
-            CONFIG: MPIPETSc
-            CXX: 'clang++'
-            TYPE: Release
           - IMAGE: 'fedora'
-            CONFIG: MPIPETSc
-            CXX: 'g++'
-            TYPE: Debug
-          - IMAGE: 'fedora'
-            CONFIG: MPIPETSc
+            CONFIG: MPIPETScGinkgo
             CXX: 'g++'
             TYPE: Release
     steps:

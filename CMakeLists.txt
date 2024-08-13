@@ -57,7 +57,7 @@ option(PRECICE_FEATURE_MPI_COMMUNICATION "Enables MPI-based communication and ru
 option(PRECICE_FEATURE_PETSC_MAPPING "Enable use of the PETSc linear algebra library for global-iterative RBF data mappings." ON)
 option(PRECICE_FEATURE_PYTHON_ACTIONS "Enable Python support for preCICE actions." ON)
 option(PRECICE_CONFIGURE_PACKAGE_GENERATION "Configure package generation." ON)
-option(PRECICE_FEATURE_GINKGO_MAPPING "**Experimental** Enable use of Ginkgo (unreleased version) for data mapping." OFF)
+option(PRECICE_FEATURE_GINKGO_MAPPING "Enable use of Ginkgo for accelerated data mapping." OFF)
 option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
 option(BUILD_TESTING "Build tests" ON)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
@@ -113,13 +113,13 @@ add_feature_info(PRECICE_FEATURE_PETSC_MAPPING PRECICE_FEATURE_PETSC_MAPPING
   ")
 
   add_feature_info(PRECICE_FEATURE_GINKGO_MAPPING PRECICE_FEATURE_GINKGO_MAPPING
-  "**Experimental** Enables the Ginkgo (requires branch public_common_kernels) backend which supports the usage of GPUs and OpenMP for (global) radial-basis function mappings.
+  "Enables the Ginkgo backend which supports the usage of GPUs and OpenMP for (global) radial-basis function mappings.
 
    Currently, this enables radial-basis function mappings to leverage the compute power of Nvidia/AMD GPUs and OpenMP.
    It uses iterative solvers provided by Ginkgo or direct solvers offered by hip/cuSolver.
 
    This feature can be enabled/disabled by setting the PRECICE_FEATURE_GINKGO_MAPPING CMake option.
-   Requires the Ginkgo library (branch public_common_kernels) and Eigen 3.4. Note that this feature is still experimental.
+   Requires the Ginkgo library, Kokkos (v4.1 or higher) and Eigen 3.4.
   ")
 
   add_feature_info(PRECICE_FEATURE_PYTHON_ACTIONS PRECICE_FEATURE_PYTHON_ACTIONS
@@ -246,13 +246,16 @@ endif()
 
 # Option: Ginkgo
 if (PRECICE_FEATURE_GINKGO_MAPPING)
-  find_package(Ginkgo 1.5 REQUIRED)
-  message(STATUS "Found Ginkgo ${GINKGO_PROJECT_VERSION} at ${GINKGO_INSTALL_PREFIX}")
+  find_package(Ginkgo 1.8.0 REQUIRED)
+  message(STATUS "Found Ginkgo ${GINKGO_PROJECT_VERSION} at ${Ginkgo_DIR}")
+
+  find_package(Kokkos 4.1 REQUIRED)
+  message(STATUS "Found Kokkos version ${Kokkos_VERSION} at ${Kokkos_DIR}")
 
   include(CMakeDependentOption)
-  cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;GINKGO_BUILD_CUDA" OFF)
-  cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;GINKGO_BUILD_HIP" OFF)
-  cmake_dependent_option(PRECICE_WITH_OMP "Enable Ginkgo OpenMP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;GINKGO_BUILD_OMP" OFF)
+  cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_CUDA" OFF)
+  cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_HIP" OFF)
+  cmake_dependent_option(PRECICE_WITH_OPENMP "Enable Ginkgo OpenMP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_OPENMP" OFF)
 
   # We aim for the same configuration as Ginkgo itself and check immediately for device compiler
   # such that preciceCore inherits all relevant flags directly
@@ -270,7 +273,15 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
       set(CMAKE_CUDA_ARCHITECTURES OFF)
     endif()
+  # Check the Kokkos version
+  if (Kokkos_VERSION VERSION_LESS 4.4)
+    set(KOKKOS_VERSION_BELOW_4_4 TRUE)
+  else()
+    set(KOKKOS_VERSION_BELOW_4_4 FALSE)
   endif()
+else()
+  set(KOKKOS_VERSION_BELOW_4_4 FALSE)
+endif()
 
   # 2. Check if Ginkgo was built with HIP and if HIP is available on the system
   if(PRECICE_WITH_HIP)
@@ -296,7 +307,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     find_package(hipsolver REQUIRED)
   endif()
 
-  if(PRECICE_WITH_OMP)
+  if(PRECICE_WITH_OPENMP)
     find_package(OpenMP 3.0 REQUIRED)
   endif()
   # That's essentially all backends we use from Ginkgo. The reference executor and OMP doesn't need any special treatments and
@@ -350,9 +361,16 @@ set_target_properties(preciceCore PROPERTIES
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
   POSITION_INDEPENDENT_CODE YES
+  CXX_VISIBILITY_PRESET default
+  VISIBILITY_INLINES_HIDDEN NO
+  )
+
+if(NOT ${Kokkos_VERSION} VERSION_LESS 4.4)
+set_target_properties(preciceCore PROPERTIES
   CXX_VISIBILITY_PRESET hidden
   VISIBILITY_INLINES_HIDDEN YES
-  )
+)
+endif()
 
 # Setup release override options
 if(PRECICE_RELEASE_WITH_DEBUG_LOG)
@@ -431,49 +449,39 @@ endif()
 
 # Setup Ginkgo
 if (PRECICE_FEATURE_GINKGO_MAPPING)
-  # Next we configure the common kernels for the matrix assembly
-  # This CMake part is still a shortcoming from the experimental Ginkgo we are using right now
-  # TODO: Remove as soon as GPU feature is in main branch
-  set(Ginkgo_Path "${Ginkgo_DIR}/.." CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.")
-  include(${Ginkgo_Path}/cmake/unified_kernels.cmake)
+    # Next we configure the common kernels for the matrix assembly
+    target_sources(preciceCore PRIVATE
+    src/mapping/device/GinkgoRBFKernels.cpp
+    src/mapping/device/Ginkgo.cpp
+    )
 
-  # This command registers Ginkgo kernels for different execution backends
-  ginkgo_add_unified_kernels(preciceCore src/mapping/device/GinkgoRBFKernels.cpp)
-  # shortcoming of the kernel registration: we need to add the includes here to all generated targets
-  include_directories(${PROJECT_SOURCE_DIR}/src)
-  include_directories(${EIGEN3_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/thirdparty/fmt/include)
-  target_compile_definitions(preciceCore_cuda PUBLIC EIGEN_NO_CUDA)
-  target_compile_definitions(preciceCore_hip PUBLIC EIGEN_NO_CUDA)
-  set_target_properties(preciceCore_cuda PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_target_properties(preciceCore_reference PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_target_properties(preciceCore_hip PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_target_properties(preciceCore_omp PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_target_properties(preciceCore_dpcpp PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  target_link_libraries(preciceCore PRIVATE Ginkgo::ginkgo Kokkos::kokkos)
+  target_compile_definitions(preciceCore PUBLIC EIGEN_NO_CUDA)
+
+  # Disable compiler launcher since Kokkos ships its own nvcc wrapper
+   set_target_properties(preciceCore PROPERTIES CXX_COMPILER_LAUNCHER "")
 
   # Now we setup cuSolver and hipSOLVER for preCICE
   if(PRECICE_WITH_CUDA)
     target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_CUDA)
+    # Required to make nvcc happy
+    target_compile_definitions(preciceCore PRIVATE BOOST_PP_VARIADICS=1)
     target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cuh ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cu)
-    target_link_libraries(preciceCore PUBLIC cusolver)
+    target_link_libraries(preciceCore PRIVATE cusolver)
     message(STATUS "Enabled CUDA support for preCICE via the Ginkgo library.")
   endif()
 
   if(PRECICE_WITH_HIP)
     target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_HIP)
     set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.cpp)
-    set_source_files_properties(${_hiplist} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
-    hip_add_library(preciceCore_qr_hip ${_hiplist}
-        HIPCC_OPTIONS ${GINKGO_HIPCC_OPTIONS} "-std=c++17 -DPRECICE_WITH_HIP"
-        CLANG_OPTIONS ${GINKGO_HIP_CLANG_OPTIONS}
-        NVCC_OPTIONS ${GINKGO_HIP_NVCC_OPTIONS}
-        STATIC)
-        target_link_libraries(preciceCore_qr_hip PRIVATE Ginkgo::ginkgo roc::hipsolver)
-        target_link_libraries(preciceCore PRIVATE preciceCore_qr_hip)
+    target_sources(preciceCore PRIVATE ${_hiplist})
+    target_link_libraries(preciceCore PRIVATE hip::device Ginkgo::ginkgo roc::hipsolver)
+
     message(STATUS "Enabled HIP support for preCICE via the Ginkgo library.")
   endif()
 
-  if(PRECICE_WITH_OMP)
-    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_OMP)
+  if(PRECICE_WITH_OPENMP)
+    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_OPENMP)
     target_link_libraries(preciceCore PUBLIC OpenMP::OpenMP_CXX)
     # There is nothing special required for OpenMP, looking for OpenMP and setting the flag is handled by the unified kernels
     message(STATUS "Enabled OpenMP support for preCICE via the Ginkgo library.")
@@ -505,9 +513,17 @@ add_library(precice)
 set_target_properties(precice PROPERTIES
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
+  CXX_VISIBILITY_PRESET default
+  VISIBILITY_INLINES_HIDDEN NO
+  )
+
+  if(NOT ${Kokkos_VERSION} VERSION_LESS 4.4)
+set_target_properties(precice PROPERTIES
   CXX_VISIBILITY_PRESET hidden
   VISIBILITY_INLINES_HIDDEN YES
-  )
+ )
+endif()
+
 
 target_include_directories(precice PUBLIC
   $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>

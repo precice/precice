@@ -123,4 +123,9 @@ void ExportCSV::doExport(int index, double time)
   }
 }
 
+void ExportCSV::exportSeries() const
+{
+  // not supported by paraview
+}
+
 } // namespace precice::io

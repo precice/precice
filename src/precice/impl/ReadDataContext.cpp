@@ -23,6 +23,11 @@ void ReadDataContext::appendMappingConfiguration(MappingContext &mappingContext,
   PRECICE_ASSERT(hasReadMapping());
 }
 
+bool ReadDataContext::hasSamples() const
+{
+  return _providedData->hasSamples();
+}
+
 void ReadDataContext::readValues(::precice::span<const VertexID> vertices, double readTime, ::precice::span<double> values) const
 {
   Eigen::Map<Eigen::MatrixXd>       outputData(values.data(), getDataDimensions(), values.size());

@@ -32,6 +32,7 @@
 #include "mapping/Mapping.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
+#include "mapping/device/Ginkgo.hpp"
 #include "math/differences.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
@@ -514,6 +515,10 @@ void ParticipantImpl::finalize()
 
   // Finalize PETSc and Events first
   utils::Petsc::finalize();
+// This will lead to issues if we call finalize afterwards again
+#ifndef PRECICE_NO_GINKGO
+  device::Ginkgo::finalize();
+#endif
   profiling::EventRegistry::instance().finalize();
 
   // Finally clear events and finalize MPI
@@ -1071,9 +1076,14 @@ void ParticipantImpl::readData(
     return;
   }
 
-  ReadDataContext &context          = _accessor->readDataContext(meshName, dataName);
-  const auto       dataDims         = context.getDataDimensions();
-  const auto       expectedDataSize = vertices.size() * dataDims;
+  ReadDataContext &context = _accessor->readDataContext(meshName, dataName);
+  PRECICE_CHECK(context.hasSamples(), "Data \"{}\" cannot be read from mesh \"{}\" as it contains no samples. "
+                                      "This is typically a configuration issue of the data flow. "
+                                      "Check if the data is correctly exchanged to this participant \"{}\" and mapped to mesh \"{}\".",
+                dataName, meshName, _accessorName, meshName);
+
+  const auto dataDims         = context.getDataDimensions();
+  const auto expectedDataSize = vertices.size() * dataDims;
   PRECICE_CHECK(expectedDataSize == values.size(),
                 "Input/Output sizes are inconsistent attempting to read {}D data \"{}\" from mesh \"{}\". "
                 "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
@@ -1492,6 +1502,7 @@ void ParticipantImpl::handleExports(ExportTiming timing)
   exp.timewindow = _couplingScheme->getTimeWindows() - 1;
   exp.iteration  = _numberAdvanceCalls;
   exp.complete   = _couplingScheme->isTimeWindowComplete();
+  exp.final      = !_couplingScheme->isCouplingOngoing();
   exp.time       = _couplingScheme->getTime();
   _accessor->exportIntermediate(exp);
 }

@@ -108,6 +108,11 @@ bool Data::hasGradient() const
   return _hasGradient;
 }
 
+bool Data::hasSamples() const
+{
+  return !_waveform.stamples().empty();
+}
+
 void Data::requireDataGradient()
 {
   _hasGradient = true;
