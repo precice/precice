@@ -30,7 +30,9 @@ jobs:
   build:
     name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }}
     runs-on: ubuntu-latest
-    container: 'precice/ci-${{ matrix.IMAGE }}:latest'
+    container:
+      image: 'precice/ci-${{ matrix.IMAGE }}:latest'
+      options: --shm-size=2gb
     defaults:
       run:
         shell: "bash --login -eo pipefail {0}"
@@ -92,6 +94,14 @@ jobs:
           - IMAGE: 'fedora'
             CONFIG: MPIPETScGinkgo
             CXX: 'g++'
+            TYPE: Release
+          - IMAGE: 'intel'
+            CONFIG: MPIPETSc
+            CXX: 'icpx'
+            TYPE: Debug
+          - IMAGE: 'intel'
+            CONFIG: MPIPETSc
+            CXX: 'icpx'
             TYPE: Release
     steps:
       - uses: actions/checkout@v4
