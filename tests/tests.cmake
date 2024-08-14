@@ -146,6 +146,7 @@ target_sources(testprecice
     tests/serial/lifecycle/ConstructNoConfig.cpp
     tests/serial/lifecycle/ConstructOnly.cpp
     tests/serial/lifecycle/ConstructOnlyWait.cpp
+    tests/serial/lifecycle/ConstructWrongCommSize.cpp
     tests/serial/lifecycle/Full.cpp
     tests/serial/lifecycle/FullWait.cpp
     tests/serial/lifecycle/ImplicitFinalize.cpp
