@@ -403,7 +403,7 @@ endif()
 # Force Intel to honor nan and infinite in every floating point mode
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
   # Compiler ID is supported after CMake 3.20
-  target_compile_options(preciceCore PUBLIC $<$<CXX_COMPILER_ID:IntelLLVM>:-fhonor-infinities -fhonor-nans>)
+  target_compile_options(preciceCore PUBLIC $<$<CXX_COMPILER_ID:IntelLLVM>:-fhonor-infinities -fhonor-nans -fp-model=precise>)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   # Compiler ID is supported after CMake 3.20 and IntelLLVM shows up as LLVM
   # We need to inspect the version
