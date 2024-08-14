@@ -166,6 +166,9 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
 #ifdef OMPI_MAJOR_VERSION
       PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi-multiple-ports />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems. Ignore this warning if participants find each other and the simulation starts.");
 #endif
+#ifdef I_MPI_VERSION
+      PRECICE_WARN("preCICE was compiled with Intel MPI and configured to use <m2n:mpi-multiple-ports />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems. Ignore this warning if participants find each other and the simulation starts.");
+#endif
       comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
 #endif
