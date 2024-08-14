@@ -46,18 +46,24 @@ function(add_precice_test)
     return()
   endif()
 
-  if(PAT_MPIPORTS AND PRECICE_MPI_OPENMPI)
-    message(STATUS "Test ${PAT_FULL_NAME} - skipped (OpenMPI)")
+  # We need to disable the MPIPorts tests in case we detect Open MPI or Intel MPI
+  if(PAT_MPIPORTS AND (MPI_CXX_LIBRARY_VERSION_STRING MATCHES "Open MPI|Intel"))
+    message(STATUS "Test ${PAT_FULL_NAME} - skipped (unsupported for this MPI)")
     return()
   endif()
+  message(STATUS "Test ${PAT_FULL_NAME}")
 
   # Assemble the command
-  # Note that --map-by=:OVERSUBSCRIBE work for OpenMPI(4+5), MPICH, and Intel MPI.
-  message(STATUS "Test ${PAT_FULL_NAME}")
+  # --map-by=:OVERSUBSCRIBE works for OpenMPI(4+5) and MPICH, but not for Intel which doesn't need a flag
+  set(_precice_oversubscribe "--map-by;:OVERSUBSCRIBE")
+  if(MPI_CXX_LIBRARY_VERSION_STRING MATCHES "Intel")
+     set(_precice_oversubscribe "")
+  endif()
   add_test(NAME ${PAT_FULL_NAME}
-    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 --map-by :OVERSUBSCRIBE ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${MPIEXEC_POSTFLAGS} ${PAT_ARGUMENTS}
+    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 ${_precice_oversubscribe}  ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${MPIEXEC_POSTFLAGS} ${PAT_ARGUMENTS}
     )
-  unset(_extra_mpi_flags)
+  unset(_precice_oversubscribe)
+
   # Generate working directory
   set(PAT_WDIR "${PRECICE_TEST_DIR}/${PAT_NAME}")
   file(MAKE_DIRECTORY "${PAT_WDIR}")
