@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <string_view>
 
 namespace precice::logging {
@@ -43,6 +44,14 @@ private:
   /// Pimpl to the logger implementation
   std::unique_ptr<LoggerImpl> _impl;
 };
+
+/// Utility function to log an error and throw an exception of given type
+template <class Error>
+inline void logErrorAndThrow(precice::logging::Logger &log, precice::logging::LogLocation location, const std::string &message)
+{
+  log.error(location, message);
+  throw Error{message};
+}
 
 } // namespace precice::logging
 
