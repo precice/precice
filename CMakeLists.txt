@@ -400,22 +400,8 @@ if(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES)
   target_link_libraries(preciceCore PRIVATE internal::libbacktrace)
 endif()
 
-# Force Intel to honor nan and infinite in every floating point mode
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
-  # Compiler ID is supported after CMake 3.20
-  target_compile_options(preciceCore PUBLIC $<$<CXX_COMPILER_ID:IntelLLVM>:-fhonor-infinities -fhonor-nans -fp-model=precise>)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  # Compiler ID is supported after CMake 3.20 and IntelLLVM shows up as LLVM
-  # We need to inspect the version
-  execute_process(
-      COMMAND ${CMAKE_CXX_COMPILER} --version
-      OUTPUT_VARIABLE PRECICE_CXX_COMPILER_VERSION
-  )
-  mark_as_advanced(PRECICE_CXX_COMPILER_VERSION)
-  if(PRECICE_CXX_COMPILER_VERSION MATCHES "Intel.+oneAPI DPC")
-    target_compile_options(preciceCore PUBLIC -fhonor-infinities -fhonor-nans)
-  endif()
-endif()
+# Force Intel compiler to honor nan and infinite and use value-preserving floating point mode
+target_compile_options(preciceCore PUBLIC $<$<CXX_COMPILER_ID:IntelLLVM>:-fhonor-infinities -fhonor-nans -fp-model=precise>)
 
 # Setup Eigen3
 target_link_libraries(preciceCore PUBLIC Eigen3::Eigen)
