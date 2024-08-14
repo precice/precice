@@ -143,6 +143,7 @@ target_sources(testprecice
     tests/serial/initialize-data/helpers.cpp
     tests/serial/initialize-data/helpers.hpp
     tests/serial/lifecycle/ConstructAndExplicitFinalize.cpp
+    tests/serial/lifecycle/ConstructNoConfig.cpp
     tests/serial/lifecycle/ConstructOnly.cpp
     tests/serial/lifecycle/ConstructOnlyWait.cpp
     tests/serial/lifecycle/Full.cpp
