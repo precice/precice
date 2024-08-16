@@ -1,4 +1,6 @@
 #pragma once
+#ifndef YEO
+#define YEO
 
 #include <precice/precice.hpp>
 
@@ -17,7 +19,7 @@
  *
  * The mapping is either a read or a write mapping.
  */
-inline void testMapInitialData(
+inline void testMapInitialDataP(
     precice::testing::TestContext &context,
     double                         dataToWrite,
     double                         dataToExpect,
@@ -69,3 +71,4 @@ inline void testMapInitialData(
   p.advance(p.getMaxTimeStepSize());
   BOOST_REQUIRE(!p.isCouplingOngoing());
 }
+#endif
