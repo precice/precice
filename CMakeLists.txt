@@ -572,6 +572,8 @@ IF (BUILD_TESTING)
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
+    UNITY_BUILD Yes
+    UNITY_BUILD_MODE GROUP
     )
   target_include_directories(testprecice PRIVATE
     ${preCICE_SOURCE_DIR}/src
@@ -582,6 +584,15 @@ IF (BUILD_TESTING)
   # Test Sources Configuration
   include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/tests/tests.cmake)
+
+  # Add integration tests from tests/ sources to a single unity group
+  get_target_property(_testprecice_sources testprecice SOURCES)
+  foreach(SOURCE_FILE IN LISTS _testprecice_sources)
+    if(SOURCE_FILE MATCHES "^tests/")
+      set_source_files_properties(${SOURCE_FILE} PROPERTIES UNITY_GROUP "integration")
+    endif()
+  endforeach()
+
 else(BUILD_TESTING)
   message(STATUS "Excluding test sources")
 endif(BUILD_TESTING)
