@@ -106,9 +106,9 @@ jobs:
         working-directory: build
         env:
           CXX: ${{ matrix.CXX }}
-          CXXFLAGS: -Wall -Wextra -Wno-unused-parameter -fsanitize=undefined,address ${{ matrix.COVFLAGS }}
-          CFLAGS: -Wall -Wextra -Wno-unused-parameter -fsanitize=undefined,address
-          FFLAGS: -Wall -Wextra -Wno-unused-parameter -fsanitize=undefined,address
+          CXXFLAGS: -Wall -Wextra -Wno-unused-parameter -fsanitize=undefined ${{ matrix.COVFLAGS }}
+          CFLAGS: -Wall -Wextra -Wno-unused-parameter -fsanitize=undefined
+          FFLAGS: -Wall -Wextra -Wno-unused-parameter -fsanitize=undefined
           MPI: ${{ contains(matrix.CONFIG, 'MPI') }}
           PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
           Ginkgo: ${{ contains(matrix.CONFIG, 'Ginkgo') }}
@@ -144,7 +144,6 @@ jobs:
         env:
           CTEST_OUTPUT_ON_FAILURE: 1
           BOOST_TEST_LOG_LEVEL: all
-          ASAN_OPTIONS: detect_leaks=0:verify_asan_link_order=0
           OMPI_MCA_btl_tcp_if_include: lo # required for arch
           PSM3_HAL: loopback # required for fedora
         working-directory: build
