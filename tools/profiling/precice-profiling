@@ -208,17 +208,29 @@ def alignEvents(events):
     return events
 
 
-def groupEvents(events, initTime, nameMapping):
+def groupEvents(events: [dict], initTime: int):
+
+    # Expands event names
+    def namedEvents():
+        nameMap = {int(e["eid"]): e["en"] for e in events if e["et"] == "n"}
+        for e in events:
+            type = e["et"]
+            if type != "n":
+                e["eid"] = nameMap[e["eid"]]
+                if type == "d":
+                    e["dn"] = nameMap[e["dn"]]
+                yield e
+
     completed = []
     active = {}  # name to event data
+    stack = []
 
-    for event in events:
+    for event in namedEvents():
         type = event["et"]
-        if type == "n":
-            continue
 
-        name = nameMapping[event["eid"]]
-        assert isinstance(name, int)
+        name: str = event["eid"]
+        assert isinstance(name, str)
+
         # Handle event starts
         if type == "b":
             # assert(name not in active.keys())
@@ -226,8 +238,11 @@ def groupEvents(events, initTime, nameMapping):
                 print(f"Ignoring start of active event {name}")
             else:
                 event["ts"] = int(event["ts"])
-                event["eid"] = name  # map to global name
+                fullName = "/".join(stack + [name])
+                event["eid"] = fullName
                 active[name] = event
+                if name != "_GLOBAL":
+                    stack.append(name)
         # Handle event stops
         elif type == "e":
             # assert(name in active.keys())
@@ -240,14 +255,17 @@ def groupEvents(events, initTime, nameMapping):
                 begin["ts"] = int(begin["ts"]) + initTime
                 begin.pop("et")
                 completed.append(begin)
+                if name != "_GLOBAL":
+                    assert stack[-1] == name
+                    stack.pop()
         # Handle event data
         elif type == "d":
             if name not in active.keys():
                 print(f"Dropping data event {name} as event isn't yet known.")
             else:
                 d = active[name].get("data", {})
-                dname = nameMapping[event["dn"]]
-                assert isinstance(dname, int)
+                dname = event["dn"]
+                assert isinstance(dname, str)
                 d[dname] = int(event["dv"])
                 active[name]["data"] = d
 
@@ -263,7 +281,32 @@ def groupEvents(events, initTime, nameMapping):
             begin.pop("et")
             completed.append(begin)
 
+    assert all((isinstance(e["eid"], str) for e in completed))
+
     return sorted(completed, key=lambda e: e["ts"])
+
+
+def compressNames(events):
+    allNames = set(
+        (
+            e["eid"]
+            for participants in events.values()
+            for ranks in participants.values()
+            for rank in ranks.values()
+            for e in ranks["events"]
+        )
+    )
+    nameToId = {name: id for id, name in enumerate(allNames)}
+
+    for p, ranks in events.items():
+        for r, data in ranks.items():
+            for e in data["events"]:
+                name = e["eid"]
+                assert isinstance(name, str)
+                e["eid"] = nameToId[name]
+
+    idToName = dict(zip(nameToId.values(), nameToId.keys()))
+    return idToName
 
 
 def loadProfilingOutputs(filenames):
@@ -273,27 +316,12 @@ def loadProfilingOutputs(filenames):
     for i, fn in enumerate(filenames):
         jsons.append(readRobust(fn))
 
-    # Get all names
-    print("Globalizing event names")
-    nameIDs = {}  # name to global id
-    nameMappings = {}  # participant -> localid -> globalid
-    for i, json in enumerate(jsons):
-        name = json["meta"]["name"]
-        rank = int(json["meta"]["rank"])
-        localNames = {int(e["eid"]): e["en"] for e in json["events"] if e["et"] == "n"}
-        for lid, n in localNames.items():
-            # get or create a global id for the name
-            gid = nameIDs.setdefault(n, len(nameIDs))
-            # register the local to global mapping
-            nameMappings.setdefault(name, {}).setdefault(rank, {}).update({lid: gid})
-
     # Grouping events
     print("Grouping events")
     events = {}
     for i, json in enumerate(jsons):
         name = json["meta"]["name"]
         rank = int(json["meta"]["rank"])
-        mapping = nameMappings[name][rank]
         unix_us = int(json["meta"]["unix_us"])
         events.setdefault(name, {})[rank] = {
             "meta": {
@@ -303,10 +331,13 @@ def loadProfilingOutputs(filenames):
                 "unix_us": unix_us,
                 "tinit": json["meta"]["tinit"],
             },
-            "events": groupEvents(json["events"], unix_us, mapping),
+            "events": groupEvents(json["events"], unix_us),
         }
 
-    return {"eventDict": {id: n for n, id in nameIDs.items()}, "events": events}
+    print("Compressing names")
+    globalNameMap = compressNames(events)
+
+    return {"eventDict": globalNameMap, "events": events}
 
 
 class RankData:
@@ -406,16 +437,7 @@ class Run:
                             "ts": e["ts"],
                             "dur": e["dur"],
                         },
-                        {}
-                        if "data" not in e
-                        else {
-                            "args": dict(
-                                zip(
-                                    map(self.lookupEvent, e["data"].keys()),
-                                    e["data"].values(),
-                                )
-                            )
-                        },
+                        {} if "data" not in e else {"args": e["data"]},
                     )
                 )
 
@@ -432,16 +454,7 @@ class Run:
                     self.lookupEvent(e["eid"]),
                     e["ts"],
                     e["dur"] * factor,
-                    ""
-                    if "data" not in e
-                    else str(
-                        dict(
-                            zip(
-                                map(self.lookupEvent, e["data"].keys()),
-                                e["data"].values(),
-                            )
-                        )
-                    ),
+                    "" if "data" not in e else str(e["data"]),
                 )
 
     def toDataFrame(self):
