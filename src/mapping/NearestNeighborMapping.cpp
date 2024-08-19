@@ -26,6 +26,24 @@ NearestNeighborMapping::NearestNeighborMapping(
   }
 }
 
+void NearestNeighborMapping::evaluateMappingDataCacheAt(::precice::span<const double> coordinates,const MappingDataCache& cache, ::precice::span<double> values)
+{
+  auto  searchSpace = input();
+  auto &index       = searchSpace->index();
+  auto  dim         = getDimensions();
+
+  // Set up of output arrays
+  Eigen::Map<const Eigen::MatrixXd> localData(cache.inData.data(), cache.getDataDimensions(), cache.inData.size()/ cache.getDataDimensions());
+  Eigen::Map<Eigen::MatrixXd>       outputData(values.data(), cache.getDataDimensions(), values.size());
+
+  const size_t verticesSize = coordinates.size() / dim;
+  for (size_t i = 0; i < verticesSize; ++i) {
+    Eigen::Map<const Eigen::VectorXd> localCoords(coordinates.data() + i * dim, dim);
+    const auto &                      matchedVertex = index.getClosestVertex(localCoords);
+    outputData.col(i)                               = localData.col(matchedVertex.index);
+  }
+}
+
 void NearestNeighborMapping::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();

@@ -99,6 +99,13 @@ const PtrDataConfiguration &MeshConfiguration::getDataConfiguration() const
   return _dataConfig;
 }
 
+mesh::PtrMesh MeshConfiguration::getIndirectAccessMesh(int dimension)
+{
+  PRECICE_ASSERT(dimension == 2 || dimension == 3);
+  static mesh::PtrMesh indirectAccess = std::make_shared<mesh::Mesh>("(indirect access)", dimension, mesh::Mesh::MESH_ID_UNDEFINED, true);
+  return indirectAccess;
+}
+
 void MeshConfiguration::addMesh(
     const mesh::PtrMesh &mesh)
 {
