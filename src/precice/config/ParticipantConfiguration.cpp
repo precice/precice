@@ -444,34 +444,38 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     }
 
     // The mesh context associated to the mappings
-    impl::MeshContext &fromMeshContext = participant->meshContext(fromMesh);
-    impl::MeshContext &toMeshContext   = participant->meshContext(toMesh);
+    // impl::MeshContext &fromMeshContext = ;
+    // impl::MeshContext &toMeshContext   = ;
 
     // more sanity checks
     if (confMapping.direction == mapping::MappingConfiguration::READ) {
-      PRECICE_CHECK(toMeshContext.provideMesh,
+      PRECICE_CHECK(confMapping.toMesh->isIndirect() || participant->meshContext(toMesh).provideMesh,
                     "A read mapping of participant \"{}\" needs to map TO a provided mesh. Mesh \"{1}\" is not provided. "
                     "Please add the tag <provide-mesh name=\"{1}\" /> to the participant.",
-                    participant->getName(), confMapping.toMesh->getName());
-      PRECICE_CHECK(not fromMeshContext.receiveMeshFrom.empty(),
+                    participant->getName(), toMesh);
+      PRECICE_CHECK(not participant->meshContext(fromMesh).receiveMeshFrom.empty(),
                     "A read mapping of participant \"{}\" needs to map FROM a received mesh. Mesh \"{1}\" is not received. "
                     "Please add the tag <receive-mesh name=\"{1}\" /> to the participant.",
-                    participant->getName(), confMapping.toMesh->getName());
+                    participant->getName(), toMesh);
     } else {
-      PRECICE_CHECK(fromMeshContext.provideMesh,
+      PRECICE_CHECK(confMapping.fromMesh->isIndirect() || participant->meshContext(fromMesh).provideMesh,
                     "A write mapping of participant \"{}\" needs to map FROM a provided mesh. Mesh \"{1}\" is not provided. "
                     "Please add the tag <provide-mesh name=\"{1}\" /> to the participant.",
-                    participant->getName(), confMapping.fromMesh->getName());
-      PRECICE_CHECK(not toMeshContext.receiveMeshFrom.empty(),
+                    participant->getName(), fromMesh);
+      PRECICE_CHECK(not participant->meshContext(toMesh).receiveMeshFrom.empty(),
                     "A write mapping of participant \"{}\" needs to map TO a received mesh. Mesh \"{1}\" is not received. "
                     "Please add the tag <receive-mesh name=\"{1}\" /> to the participant.",
-                    participant->getName(), confMapping.toMesh->getName());
+                    participant->getName(), toMesh);
     }
 
     // @TODO: is this still correct?
     if (confMapping.requiresBasisFunction) {
-      fromMeshContext.geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
-      toMeshContext.geoFilter   = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+      if (!confMapping.fromMesh->isIndirect()) {
+        participant->meshContext(fromMesh).geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+      }
+      if (!confMapping.toMesh->isIndirect()) {
+        participant->meshContext(toMesh).geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+      }
     }
 
     // Now we create the mappingContext, which will be stored permanently
@@ -489,11 +493,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     mappingContext.configuredWithAliasTag = confMapping.configuredWithAliasTag;
 
     // Set input and output meshes in the Mapping from the mesh contexts
-    const mesh::PtrMesh &input  = fromMeshContext.mesh;
-    const mesh::PtrMesh &output = toMeshContext.mesh;
+    const mesh::PtrMesh &input  = confMapping.fromMesh->isIndirect() ? confMapping.fromMesh : participant->meshContext(fromMesh).mesh;
+    const mesh::PtrMesh &output = confMapping.toMesh->isIndirect() ? confMapping.toMesh : participant->meshContext(toMesh).mesh;
     PRECICE_DEBUG("Configure mapping for input={}, output={}", input->getName(), output->getName());
     map->setMeshes(input, output);
 
+    // indirect mappings go for now into the participant's mapping context
     // Add the mappingcontext to the participant, separated by direction
     if (confMapping.direction == mapping::MappingConfiguration::WRITE) {
       participant->addWriteMappingContext(mappingContext);
@@ -503,14 +508,17 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     }
 
     // configure the involved mesh context with connectivity requirements stemming from the mapping
-    fromMeshContext.meshRequirement = std::max(
-        fromMeshContext.meshRequirement, map->getInputRequirement());
-    toMeshContext.meshRequirement = std::max(
-        toMeshContext.meshRequirement, map->getOutputRequirement());
-
     // Add the mappingcontext to the mesh context, only required to later on forward them to the Partition
-    fromMeshContext.fromMappingContexts.push_back(mappingContext);
-    toMeshContext.toMappingContexts.push_back(mappingContext);
+    if (!input->isIndirect()) {
+      participant->meshContext(fromMesh).meshRequirement = std::max(
+          participant->meshContext(fromMesh).meshRequirement, map->getInputRequirement());
+      participant->meshContext(fromMesh).fromMappingContexts.push_back(mappingContext);
+    }
+    if (!output->isIndirect()) {
+      participant->meshContext(toMesh).toMappingContexts.push_back(mappingContext);
+      participant->meshContext(toMesh).meshRequirement = std::max(
+          participant->meshContext(toMesh).meshRequirement, map->getOutputRequirement());
+    }
   }
   // clear the data structure we just transformed and don't need anymore
   _mappingConfig->resetMappings();
@@ -551,6 +559,17 @@ void ParticipantConfiguration::finishParticipantConfiguration(
           }
           dataFound = true;
         }
+      } else if (mappingContext.mapping->getInputMesh()->isIndirect()) {
+        const int toMeshID = dataContext.getMeshID();
+        // We compare here the to mesh instead of the from mesh
+        if (mappingContext.toMeshID == toMeshID) {
+          impl::MeshContext &meshContext = participant->meshContext(mappingContext.mapping->getOutputMesh()->getName());
+          dataContext.addIndirectAccessMapping(mappingContext, meshContext);
+          if (mappingContext.mapping->requiresGradientData() == true) {
+            mappingContext.requireGradientData(dataContext.getDataName());
+          }
+        }
+        dataFound = true;
       }
     }
     PRECICE_CHECK(dataFound,
@@ -585,6 +604,18 @@ void ParticipantConfiguration::finishParticipantConfiguration(
           }
           dataFound = true;
         }
+      } else if (mappingContext.mapping->getOutputMesh()->isIndirect()) {
+        const int fromMeshID = dataContext.getMeshID();
+        // We compare here the from mesh instead of the to mesh
+        if (mappingContext.fromMeshID == fromMeshID) {
+          impl::MeshContext &meshContext = participant->meshContext(mappingContext.mapping->getInputMesh()->getName());
+
+          dataContext.addIndirectAccessMapping(mappingContext, meshContext);
+          if (mappingContext.mapping->requiresGradientData() == true) {
+            mappingContext.requireGradientData(dataContext.getDataName());
+          }
+        }
+        dataFound = true;
       }
     }
     PRECICE_CHECK(dataFound,

@@ -110,6 +110,18 @@ public:
     return mesh::locateInvalidVertexID(*_mesh, c);
   }
 
+  /**
+   * @brief
+   *
+   * No need to put this function into a derived class.
+   * The Mapping class knows the direction and the DataContext states read or write.
+   * Mappings in the DataContext only affect the mapData() steering.
+   * Thus, we don't add the indirect mapping anywhere in the conventional mapping
+   * data structures, i.e., _mappingContexts
+   *
+   * @param mappingContext
+   */
+  void addIndirectAccessMapping(MappingContext mappingContext, MeshContext meshContext);
 protected:
   /**
    * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext should use this constructor.
@@ -154,18 +166,6 @@ protected:
    */
   void appendMapping(MappingContext mappingContext);
 
-  /**
-   * @brief
-   *
-   * No need to put this function into a derived class.
-   * The Mapping class knows the direction and the DataContext states read or write.
-   * Mappings in the DataContext only affect the mapData() steering.
-   * Thus, we don't add the indirect mapping anywhere in the conventional mapping
-   * data structures, i.e., _mappingContexts
-   *
-   * @param mappingContext
-   */
-  void addIndirectAccessMapping(MappingContext mappingContext);
   /**
    * @brief Informs the user whether this DataContext has any read mapping.
    *
