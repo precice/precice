@@ -14,6 +14,8 @@ ReadDataContext::ReadDataContext(
 void ReadDataContext::appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext)
 {
   PRECICE_ASSERT(!hasReadMapping(), "The read data context must be unique. Otherwise we would have an ambiguous read data operation on the user side.");
+  // The read mapping must be unique, but having read and write in the same context is not possible either
+  PRECICE_ASSERT(_mappingContexts.empty());
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData data = meshContext.mesh->data(getDataName());
   PRECICE_ASSERT(data != _providedData, "Data the read mapping is mapping from needs to be different from _providedData");
@@ -38,28 +40,19 @@ void ReadDataContext::readValues(::precice::span<const VertexID> vertices, doubl
   }
 }
 
-void ReadDataContext::mapAndReadValues(::precice::span<const double> coordinates, double readTime, ::precice::span<double> values) const
+void ReadDataContext::mapAndReadValues(::precice::span<const double> coordinates, double readTime, ::precice::span<double> values)
 {
-  // TODO: First, check if this sample was already interpolated by the waveform and store it in the container
-  // Sample waveform relaxation
-  const Eigen::VectorXd sample{_providedData->sampleAtTime(readTime)};
+  PRECICE_ASSERT(mappingCache);
 
-  // TODO: implement something which returns a mapped sample here
-  // Here is an example of the NN mapping
-  auto  searchSpace = _mesh;
-  auto &index       = searchSpace->index();
-  auto  dim         = getSpatialDimensions();
-
-  // Set up of output arrays
-  Eigen::Map<const Eigen::MatrixXd> localData(sample.data(), getDataDimensions(), getMeshVertexCount());
-  Eigen::Map<Eigen::MatrixXd>       outputData(values.data(), getDataDimensions(), values.size());
-
-  const size_t verticesSize = coordinates.size() / dim;
-  for (size_t i = 0; i < verticesSize; ++i) {
-    Eigen::Map<const Eigen::VectorXd> localCoords(coordinates.data() + i * dim, dim);
-    const auto &                      matchedVertex = index.getClosestVertex(localCoords);
-    outputData.col(i)                               = localData.col(matchedVertex.index);
+  if (!mappingCache->hasDataAtTimeStamp(readTime)) {
+    // Sample waveform relaxation
+    Eigen::VectorXd sample{_providedData->sampleAtTime(readTime)};
+    indirectMapping->updateMappingDataCache(*mappingCache.get(), sample);
+    mappingCache->setTimeStamp(readTime);
   }
+
+  // Function, which fills the values using the coordinates and the cache
+  indirectMapping->evaluateMappingDataCacheAt(coordinates, *mappingCache.get(), values);
 }
 
 int ReadDataContext::getWaveformDegree() const

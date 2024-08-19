@@ -8,7 +8,7 @@
 #include "MeshContext.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Utils.hpp"
-
+#include "mapping/NearestNeighborMapping.hpp"
 namespace precice {
 
 namespace testing {
@@ -126,6 +126,26 @@ protected:
   mesh::PtrData _providedData;
 
   /**
+   * @brief Cache for indirect mesh access.
+   *
+   * Purpose: For indirect access, we want to pre-compute as much data as possible to not have
+   * expensive operations repeated in every read/write call of the mapping class.
+   *
+   * The cache itself is updated in the associated Mapping class
+   * where it is used. However, storing it in the mapping class is not useful, as we might map
+   * multiple data from the same mesh. In preCICE, this leads to one (shared) MappingContext in
+   * different DataContexts. Hence, we store the data in this unique Mesh-Data pair.
+   *
+   * The \ref _mappingContexts in this class are a std::vector for multiple mappings associated
+   * to the same DataContext. However, for one DataContext (read or write) there can only be one
+   * indirect mapping/indirect mesh access.
+   * For conventional mappings, multiple MappingContexts can only occur in write direction (write
+   * to one local mesh, map it to different remote meshes). Since the indirect mapping operates
+   * on the remote meshes, this multiplicity cannot occur. Thus, one cache per DataContext is enough.
+   */
+  std::unique_ptr<mapping::MappingDataCache> mappingCache;
+  std::shared_ptr<mapping::NearestNeighborMapping> indirectMapping;
+  /**
    * @brief Helper to append a mappingContext, fromData and toData to the corresponding data containers
    *
    * @param mappingContext MappingContext this DataContext will be associated to.
@@ -134,6 +154,18 @@ protected:
    */
   void appendMapping(MappingContext mappingContext);
 
+  /**
+   * @brief
+   *
+   * No need to put this function into a derived class.
+   * The Mapping class knows the direction and the DataContext states read or write.
+   * Mappings in the DataContext only affect the mapData() steering.
+   * Thus, we don't add the indirect mapping anywhere in the conventional mapping
+   * data structures, i.e., _mappingContexts
+   *
+   * @param mappingContext
+   */
+  void addIndirectAccessMapping(MappingContext mappingContext);
   /**
    * @brief Informs the user whether this DataContext has any read mapping.
    *
