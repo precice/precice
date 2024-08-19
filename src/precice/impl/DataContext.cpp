@@ -82,6 +82,23 @@ void DataContext::appendMapping(MappingContext mappingContext)
   PRECICE_ASSERT(mappingContext.toData->getName() == getDataName());
 }
 
+void DataContext::addIndirectAccessMapping(MappingContext mappingContext)
+{
+  // @todo: add these checks again, depending on read or write direction
+  PRECICE_ASSERT(mappingContext.fromData);
+  // PRECICE_ASSERT(mappingContext.toData);
+
+  // PRECICE_ASSERT(mappingContext.fromData == _providedData || mappingContext.toData == _providedData, "Either fromData or toData has to equal _providedData.");
+  mappingCache = std::make_unique<mapping::MappingDataCache>(mappingContext.fromData->getDimensions());
+  indirectMapping = std::dynamic_pointer_cast<mapping::NearestNeighborMapping>(mappingContext.mapping);
+  PRECICE_ASSERT(indirectMapping, "Not implemented");
+
+  // @todo: here we setup the MappingDataCache. Do we need to store the whole MappingContext or is would a mapping pointer here be sufficient?
+  // MappingDataCache().mappingContext;
+  // PRECICE_ASSERT(mappingContext.fromData->getName() == getDataName());
+  // PRECICE_ASSERT(mappingContext.toData->getName() == getDataName());
+}
+
 bool DataContext::hasMapping() const
 {
   return hasReadMapping() || hasWriteMapping();

@@ -66,7 +66,8 @@ public:
   Mesh(
       std::string name,
       int         dimensions,
-      MeshID      id);
+      MeshID      id,
+      bool        isIndirect = false);
 
   /// Mutable access to a vertex by VertexID
   Vertex &vertex(VertexID id);
@@ -325,6 +326,11 @@ public:
     return _index;
   }
 
+  bool isIndirect() const
+  {
+    return _isIndirect;
+  }
+
   /**
    * Removes all duplicates and generates implicit primitives.
    *
@@ -392,6 +398,9 @@ private:
   BoundingBox _boundingBox;
 
   query::Index _index;
+
+  /// for indirect mesh access, we need an artificial mesh, which we can use
+  bool _isIndirect = false;
 
   /// Removes all duplicate connectivity.
   void removeDuplicates();

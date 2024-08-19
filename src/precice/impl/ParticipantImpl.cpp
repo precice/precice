@@ -1198,13 +1198,15 @@ void ParticipantImpl::mapAndreadData(
     return;
   }
 
-  ReadDataContext &context          = _accessor->readDataContext(meshName, dataName);
-  const auto       dataDims         = context.getDataDimensions();
-  const auto       dim              = context.getSpatialDimensions();
+  // Make use of the read data context
+  // Note that meshName refers here typically to a remote mesh
+  ReadDataContext &dataContext      = _accessor->readDataContext(meshName, dataName);
+  const auto       dataDims         = dataContext.getDataDimensions();
+  const auto       dim              = dataContext.getSpatialDimensions();
   const auto       expectedDataSize = (coordinates.size() / dim) * dataDims;
   // TODO: Add check that this vertex is within the access region?
   double readTime = _couplingScheme->getTime() + relativeReadTime;
-  context.mapAndReadValues(coordinates, readTime, values);
+  dataContext.mapAndReadValues(coordinates, readTime, values);
 }
 ////////////////////////////////////////////////////
 

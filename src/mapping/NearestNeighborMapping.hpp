@@ -21,6 +21,8 @@ public:
   /// name of the nn mapping
   std::string getName() const final override;
 
+  void evaluateMappingDataCacheAt(::precice::span<const double> coordinates,const MappingDataCache & cache, ::precice::span<double> values) final override;
+
 protected:
   /// @copydoc Mapping::mapConservative
   void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final override;

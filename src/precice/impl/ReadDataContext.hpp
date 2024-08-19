@@ -53,7 +53,7 @@ public:
    */
   void readValues(::precice::span<const VertexID> vertices, double time, ::precice::span<double> values) const;
 
-  void mapAndReadValues(::precice::span<const double> coordinates, double readTime, ::precice::span<double> values) const;
+  void mapAndReadValues(::precice::span<const double> coordinates, double readTime, ::precice::span<double> values);
 
   /// Are there samples to read from?
   bool hasSamples() const;

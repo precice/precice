@@ -52,7 +52,6 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
         BOOST_TEST(expectedData[i] == value);
       }
     }
-
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     // Query IDs

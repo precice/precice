@@ -242,7 +242,7 @@ void Mapping::scaleConsistentMapping(const Eigen::VectorXd &input, Eigen::Vector
         math::greater(std::abs(consistency), 0.0),
         "Failed to fulfill consistency constraint of component {} for scaled-consistent mapping from mesh \"{}\" to mesh \"{}\". Consistency difference between input and scaled output is \"{}\".", i, this->input()->getName(), this->output()->getName(), consistency);
   }
-} // namespace mapping
+}
 
 bool Mapping::hasConstraint(const Constraint &constraint) const
 {
@@ -257,6 +257,21 @@ bool Mapping::hasComputedMapping() const
 bool Mapping::isScaledConsistent() const
 {
   return (hasConstraint(SCALED_CONSISTENT_SURFACE) || hasConstraint(SCALED_CONSISTENT_VOLUME));
+}
+
+bool Mapping::isIndirectMapping() const
+{
+  return _isIndirect;
+}
+
+void Mapping::updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in)
+{
+  cache.inData = in;
+}
+
+void Mapping::evaluateMappingDataCacheAt(::precice::span<const double> coordinates,const MappingDataCache & cache, ::precice::span<double> values)
+{
+  PRECICE_ASSERT(false, "Not implemented");
 }
 
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)

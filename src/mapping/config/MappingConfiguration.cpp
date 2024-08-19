@@ -204,10 +204,10 @@ MappingConfiguration::MappingConfiguration(
                            .setDocumentation("Write mappings map written data prior to communication, thus in the same participant who writes the data. "
                                              "Read mappings map received data after communication, thus in the same participant who reads the data.");
 
-  auto attrFromMesh = XMLAttribute<std::string>(ATTR_FROM)
+  auto attrFromMesh = XMLAttribute<std::string>(ATTR_FROM, "")
                           .setDocumentation("The mesh to map the data from.");
 
-  auto attrToMesh = XMLAttribute<std::string>(ATTR_TO)
+  auto attrToMesh = XMLAttribute<std::string>(ATTR_TO, "")
                         .setDocumentation("The mesh to map the data to.");
 
   auto attrConstraint = XMLAttribute<std::string>(ATTR_CONSTRAINT)
@@ -381,6 +381,16 @@ void MappingConfiguration::xmlTagCallback(
     std::string type       = tag.getName();
     std::string constraint = tag.getStringAttributeValue(ATTR_CONSTRAINT);
 
+    // Check that either of the two is provided
+    PRECICE_CHECK(!toMesh.empty() || !fromMesh.empty(), "Standard Mappings usually need a \"to\" and \"from\" mesh. "
+                                                        "For indirect mesh access, one of both attributes has to be specified.");
+
+    // Restrict to read-consistent and write-conservative for indirect access
+    PRECICE_CHECK(!toMesh.empty() || (toMesh.empty() && dir == DIRECTION_READ && constraint == CONSTRAINT_CONSISTENT), "For indirect access, only read-consistent and write-conservative are allowed.");
+    PRECICE_CHECK(!fromMesh.empty() || (fromMesh.empty() && dir == DIRECTION_WRITE && constraint == CONSTRAINT_CONSERVATIVE), "For indirect access, only read-consistent and write-conservative are allowed.");
+    PRECICE_INFO_IF(toMesh.empty(), "Using indirect mesh access from mesh \"{}\"", fromMesh);
+    PRECICE_INFO_IF(fromMesh.empty(), "Using indirect mesh access to mesh \"{}\"", toMesh);
+
     // optional tags
     // We set here default values, but their actual value doesn't really matter.
     // It's just for the mapping methods, which do not use these attributes at all.
@@ -538,6 +548,23 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   ConfiguredMapping configuredMapping;
   mesh::PtrMesh     fromMesh(_meshConfig->getMesh(fromMeshName));
   mesh::PtrMesh     toMesh(_meshConfig->getMesh(toMeshName));
+
+  // Handle for indirect mesh access, we copy over the dimension and leave everything else
+  if (fromMesh.get() == nullptr && fromMeshName.empty()) {
+    PRECICE_CHECK(toMesh.get() != nullptr,
+                  "Mesh \"{0}\" was not found while creating a mapping. "
+                  "Please correct the to=\"{0}\" attribute.",
+                  toMeshName);
+    fromMesh = mesh::MeshConfiguration::getIndirectAccessMesh(toMesh->getDimensions());
+  }
+  if (toMesh.get() == nullptr && toMeshName.empty()) {
+    PRECICE_CHECK(fromMesh.get() != nullptr,
+                  "Mesh \"{0}\" was not found while creating a mapping. "
+                  "Please correct the from=\"{0}\" attribute.",
+                  fromMeshName);
+    toMesh = mesh::MeshConfiguration::getIndirectAccessMesh(fromMesh->getDimensions());
+  }
+
   PRECICE_CHECK(fromMesh.get() != nullptr,
                 "Mesh \"{0}\" was not found while creating a mapping. "
                 "Please correct the from=\"{0}\" attribute.",

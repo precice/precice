@@ -9,6 +9,7 @@
   <participant name="SolverOne">
     <receive-mesh name="MeshTwo" from="SolverTwo" direct-access="true" />
     <read-data name="Velocities" mesh="MeshTwo" />
+    <mapping:nearest-neighbor direction="read" from="MeshTwo" constraint="consistent" />
   </participant>
 
   <participant name="SolverTwo">

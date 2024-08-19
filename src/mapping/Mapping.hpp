@@ -3,8 +3,10 @@
 #include <Eigen/Core>
 #include <iosfwd>
 
+#include "mapping/MappingDataCache.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "precice/span.hpp"
 
 namespace precice::mapping {
 
@@ -114,6 +116,8 @@ public:
   /// Return true if the mapping requires an initial guess
   bool requiresInitialGuess() const;
 
+  bool isIndirectMapping() const;
+
   /// Return the provided initial guess of a mapping using an initialGuess
   const Eigen::VectorXd &initialGuess() const;
 
@@ -188,6 +192,11 @@ public:
   /// Returns the name of the mapping method for logging purpose
   virtual std::string getName() const = 0;
 
+  // @todo consider making this a private method in the RBFMapping/PUM mapping class
+  virtual void updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in);
+
+  // For now only for read-consistent
+  virtual void evaluateMappingDataCacheAt(::precice::span<const double> coordinates,const MappingDataCache & cache, ::precice::span<double> values);
 protected:
   /// Returns pointer to input mesh.
   mesh::PtrMesh input() const;
@@ -235,7 +244,6 @@ protected:
    * @see For mappings requiring an initialGuess: initialGuess() hasInitialGuess()
    */
   virtual void mapConsistent(const time::Sample &input, Eigen::VectorXd &output) = 0;
-
 private:
   /// Determines whether mapping is consistent or conservative.
   Constraint _constraint;
@@ -253,6 +261,9 @@ private:
   mesh::PtrMesh _output;
 
   int _dimensions;
+
+  /// bool for whether this is indirect or not
+  bool _isIndirect = false;
 
   /// The InitialGuessRequirement of the Mapping
   InitialGuessRequirement _initialGuessRequirement;
