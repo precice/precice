@@ -357,6 +357,8 @@ set_target_properties(preciceCore PROPERTIES
   POSITION_INDEPENDENT_CODE YES
   CXX_VISIBILITY_PRESET default
   VISIBILITY_INLINES_HIDDEN NO
+  UNITY_BUILD Yes
+  UNITY_BUILD_MODE GROUP
   )
 
 if(NOT ${Kokkos_VERSION} VERSION_LESS 4.4)
@@ -520,6 +522,14 @@ include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/impl/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/precice/impl/versions.hpp" @ONLY)
 configure_file("${PROJECT_SOURCE_DIR}/src/testing/SourceLocation.hpp.in" "${PROJECT_BINARY_DIR}/src/testing/SourceLocation.hpp" @ONLY)
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/Version.h.in" "${PROJECT_BINARY_DIR}/src/precice/Version.h" @ONLY)
+
+get_target_property(_precice_sources preciceCore SOURCES)
+foreach(SOURCE_FILE IN LISTS _precice_sources)
+  if(SOURCE_FILE MATCHES "^src/([a-z0-9]+)/")
+    set_source_files_properties(${SOURCE_FILE} PROPERTIES UNITY_GROUP "${CMAKE_MATCH_1}")
+  endif()
+endforeach()
+unset(_precice_sources)
 
 # Configure version file generation
 include(GenerateVersionInformation)
