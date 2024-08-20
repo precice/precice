@@ -13,6 +13,7 @@ BOOST_AUTO_TEST_SUITE(IndirectMeshAccess)
 // boundingBox. The test case here is the most basic variant in order
 // use such a feature. SolverTwo defines the mesh whereas SolverOne reads
 // indirectly from this mesh.
+// nearest-neighbor-consistent-read
 BOOST_AUTO_TEST_CASE(ExplicitRead)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));

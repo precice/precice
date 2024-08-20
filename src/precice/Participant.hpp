@@ -897,6 +897,8 @@ public:
    *
    * @note Note that the evaluated mapping computes the values corresponding to the initial configuration of the other provided mesh.
    * @note Only supported for conservative mapping constraints.
+   * @note Caution when calling this function multiple times on the same data coordinates: there is not internal check and preCICE accumulates
+   * data values for conservative mappings
    *
    * @see Participant::setMeshAccessRegion()
    */
