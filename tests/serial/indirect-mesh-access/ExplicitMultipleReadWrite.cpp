@@ -35,9 +35,10 @@ BOOST_AUTO_TEST_CASE(ExplicitMultipleReadWrite)
   std::vector<double> writeData1({27, 12, 8});
   std::vector<double> expectedData1({27, 20, 0, 0});
 
-  // std::vector<double> tmpPositions2 = {0.0, -0.01, 0.01, 0.05, 0.1, 0.1, 0.1, 0.0, 0, 0.05};
-  std::vector<double> writeData2({27, 12, 8});
-  std::vector<double> expectedData2({27, 20, 0, 0});
+  // maps to 2, 2, 3, 0 of the output mesh
+  std::vector<double> tmpPositions2 = {0.5, 0.45, 0.6, 0.5, 0.55, 0.6, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0};
+  std::vector<double> writeData2({4, -7, 28, 3500});
+  std::vector<double> expectedData2({3500, 0, -3, 28});
 
   if (context.isNamed("SolverOne")) {
     auto otherMeshName = "MeshTwo";
@@ -57,21 +58,19 @@ BOOST_AUTO_TEST_CASE(ExplicitMultipleReadWrite)
       // read data (not necessary here)
       // solve time step
       // write data:
-      for (std::size_t i = 0; i < writeData1.size(); ++i) {
-        std::vector<double> solverTwoCoord(dim);
-        if (time == 1) {
+      if (time == 1) {
+        for (std::size_t i = 0; i < writeData1.size(); ++i) {
+          std::vector<double> solverTwoCoord(dim);
           for (int d = 0; d < dim; ++d) {
             solverTwoCoord[d] = tmpPositions1[i * dim + d];
           }
           couplingInterface.mapAndwriteData(otherMeshName, dataName, solverTwoCoord, {&writeData1[i], 1});
-        } else if (time == 2) {
-          for (int d = 0; d < dim; ++d) {
-            solverTwoCoord[d] = tmpPositions1[i * dim + d];
-          }
-          couplingInterface.mapAndwriteData(otherMeshName, dataName, solverTwoCoord, {&writeData2[i], 1});
-        } else {
-          PRECICE_ASSERT(false);
         }
+      } else if (time == 2) {
+        // The second time, we pass all data at once
+        couplingInterface.mapAndwriteData(otherMeshName, dataName, tmpPositions2, writeData2);
+      } else {
+        PRECICE_ASSERT(false);
       }
       couplingInterface.advance(dt);
     }
