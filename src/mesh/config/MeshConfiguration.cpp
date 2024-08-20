@@ -102,8 +102,14 @@ const PtrDataConfiguration &MeshConfiguration::getDataConfiguration() const
 mesh::PtrMesh MeshConfiguration::getIndirectAccessMesh(int dimension)
 {
   PRECICE_ASSERT(dimension == 2 || dimension == 3);
-  static mesh::PtrMesh indirectAccess = std::make_shared<mesh::Mesh>("(indirect access)", dimension, mesh::Mesh::MESH_ID_UNDEFINED, true);
-  return indirectAccess;
+
+  // Using a static map to store meshes by dimension
+  static std::map<int, mesh::PtrMesh> meshes;
+  // Check if the mesh for the given dimension already exists
+  if (meshes.find(dimension) == meshes.end()) {
+    meshes[dimension] = std::make_shared<mesh::Mesh>("(indirect access)", dimension, mesh::Mesh::MESH_ID_UNDEFINED, true);
+  }
+  return meshes[dimension];
 }
 
 void MeshConfiguration::addMesh(
