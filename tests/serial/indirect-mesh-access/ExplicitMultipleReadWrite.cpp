@@ -33,37 +33,25 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
     couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox);
 
     couplingInterface.initialize();
+    double dt = couplingInterface.getMaxTimeStepSize();
 
-    double time = 0;
+    // Allocate data to read
     while (couplingInterface.isCouplingOngoing()) {
-      double dt = couplingInterface.getMaxTimeStepSize();
-      time += dt;
-
-      // read data:
-      std::vector<double> expectedData1({1, 2, 3, 4, 2, 4});
-      std::vector<double> expectedData2({-10, -11, -12, -13, -11, -13});
+      couplingInterface.advance(dt);
+      dt = couplingInterface.getMaxTimeStepSize();
+      std::vector<double> expectedData({1, 2, 3, 4, 2, 4});
       std::vector<double> tmpPositions = {0.0, -0.01, 0.01, 0.05, 0.1, 0.1, 0.1, 0.0, 0, 0.05, 0.1, 0.0};
 
-      for (std::size_t i = 0; i < expectedData1.size(); ++i) {
+      for (std::size_t i = 0; i < expectedData.size(); ++i) {
         std::vector<double> solverTwoCoord(dim);
         double              value;
         for (int d = 0; d < dim; ++d) {
           solverTwoCoord[d] = tmpPositions[i * dim + d];
         }
-
         couplingInterface.mapAndreadData(otherMeshName, dataName, solverTwoCoord, dt, {&value, 1});
         // Expected data according to the writeData
-        if (time == 1) {
-          BOOST_TEST(expectedData1[i] == value);
-        } else if (time == 2) {
-          BOOST_TEST(expectedData2[i] == value);
-        } else {
-          PRECICE_ASSERT(false);
-        }
+        BOOST_TEST(expectedData[i] == value);
       }
-      // solve time step
-      // write data (not necessary here)
-      couplingInterface.advance(dt);
     }
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
@@ -78,26 +66,16 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
     // Define the mesh
     couplingInterface.setMeshVertices(meshName, positions, ids);
     // Some dummy readData
-    std::array<double, 4> writeData1({1, 2, 3, 4});
-    std::array<double, 4> writeData2({-10, -11, -12, -13});
+    std::array<double, 4> writeData({1, 2, 3, 4});
 
     // Initialize
     couplingInterface.initialize();
-    double time = 0;
+    double dt = couplingInterface.getMaxTimeStepSize();
     while (couplingInterface.isCouplingOngoing()) {
-      double dt = couplingInterface.getMaxTimeStepSize();
-      time += dt;
-      // read data (not necessary here)
-      // solve time step
-      // write data:
-      if (time == 1) {
-      couplingInterface.writeData(meshName, dataName, ids, writeData1);
-      } else if (time == 2) {
-      couplingInterface.writeData(meshName, dataName, ids, writeData2);
-      } else {
-        PRECICE_ASSERT(false);
-      }
+
+      couplingInterface.writeData(meshName, dataName, ids, writeData);
       couplingInterface.advance(dt);
+      dt = couplingInterface.getMaxTimeStepSize();
     }
   }
 }
