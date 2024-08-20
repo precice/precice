@@ -47,7 +47,7 @@ private:
 
 /// Utility function to log an error and throw an exception of given type
 template <class Error>
-inline void logErrorAndThrow(precice::logging::Logger &log, precice::logging::LogLocation location, const std::string &message)
+inline void logErrorAndThrow [[noreturn]] (precice::logging::Logger &log, precice::logging::LogLocation location, const std::string &message)
 {
   log.error(location, message);
   throw Error{message};
