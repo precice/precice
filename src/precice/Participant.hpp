@@ -870,6 +870,43 @@ public:
       ::precice::span<double>         values) const;
 
   /**
+   * @brief Writes data values from a mesh just-in-time.
+   *
+   * This function writes values of temporary vertices to data of a mesh.
+   * As opposed to the writeData function using VertexIDs, this function allows to write data via coordinates,
+   * which don't have to be specified during the initialization. This is particularly useful for meshes, which
+   * vary over time. Note that using this function comes at a performance cost, since the specified mapping
+   * needs to be computed with every call of this function, whereas the other variant can efficiently precompute the mapping.
+   *
+   * Values are passed via a block of continuous memory defined by values in the order specified by vertices.
+   *
+   * The 1D/Scalar-format of values is (d0, d1, ..., dn)
+   * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
+   * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
+   *
+   * The time associated to the data is derived from the last call of \ref advance().
+   *
+   * @param[in] meshName the name of mesh that hold the data, typically a remote mesh from another participant.
+   * @param[in] dataName the name of the data to write.
+   * @param[in] coordinates a span to the coordinates of the vertices
+   *        The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
+   *        The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
+   * @param[out] values the values containing the write data.
+   *
+   * @pre the coordinates are within the bounding box previously defined via \ref setMeshAccessRegion()
+   *
+   * @note Note that the evaluated mapping computes the values corresponding to the initial configuration of the other provided mesh.
+   * @note Only supported for conservative mapping constraints.
+   *
+   * @see Participant::setMeshAccessRegion()
+   */
+  void mapAndwriteData(
+      ::precice::string_view        meshName,
+      ::precice::string_view        dataName,
+      ::precice::span<const double> coordinates,
+      ::precice::span<const double> values);
+
+  /**
    * @brief Reads data values from a mesh just-in-time. Values correspond to a given point in time relative to the beginning of the current timestep.
    *
    * This function reads values of temporary vertices from data of a mesh.
