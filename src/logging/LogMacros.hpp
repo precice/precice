@@ -1,6 +1,6 @@
 #pragma once
 
-#include "precice/exceptions.hpp"
+#include "precice/Exceptions.hpp"
 #include "utils/fmt.hpp"
 
 #define PRECICE_LOG_LOCATION     \
