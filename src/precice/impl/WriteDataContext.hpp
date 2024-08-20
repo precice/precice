@@ -38,6 +38,14 @@ public:
   /**
    * @brief Store values in _writeDataBuffer
    *
+   * @param[in] vertices coordinates of data
+   * @param[in] values values of data
+   */
+  void mapAndWriteValues(::precice::span<const double> coordinates, ::precice::span<const double> values);
+
+  /**
+   * @brief Store values in _writeDataBuffer
+   *
    * @param[in] vertices ids of data
    * @param[in] values values of data
    */
