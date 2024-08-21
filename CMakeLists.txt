@@ -491,7 +491,7 @@ set_target_properties(precice PROPERTIES
 if(NOT Kokkos_VERSION OR NOT Kokkos_VERSION VERSION_LESS 4.4)
   set_target_properties(precice PROPERTIES
     CXX_VISIBILITY_PRESET hidden
-    ISIBILITY_INLINES_HIDDEN YES
+    VISIBILITY_INLINES_HIDDEN YES
    )
 endif()
 
