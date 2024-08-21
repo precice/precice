@@ -268,14 +268,6 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
       set(CMAKE_CUDA_ARCHITECTURES OFF)
     endif()
-  # Check the Kokkos version
-  if (Kokkos_VERSION VERSION_LESS 4.4)
-    set(KOKKOS_VERSION_BELOW_4_4 TRUE)
-  else()
-    set(KOKKOS_VERSION_BELOW_4_4 FALSE)
-  endif()
-else()
-  set(KOKKOS_VERSION_BELOW_4_4 FALSE)
 endif()
 
   # 2. Check if Ginkgo was built with HIP and if HIP is available on the system
@@ -356,11 +348,9 @@ set_target_properties(preciceCore PROPERTIES
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
   POSITION_INDEPENDENT_CODE YES
-  CXX_VISIBILITY_PRESET default
-  VISIBILITY_INLINES_HIDDEN NO
   )
 
-if(Kokkos_VERSION AND NOT ${Kokkos_VERSION} VERSION_LESS 4.4)
+if(NOT Kokkos_VERSION OR NOT Kokkos_VERSION VERSION_LESS 4.4)
   set_target_properties(preciceCore PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
@@ -498,11 +488,11 @@ set_target_properties(precice PROPERTIES
   VISIBILITY_INLINES_HIDDEN NO
   )
 
-  if(NOT ${Kokkos_VERSION} VERSION_LESS 4.4)
-set_target_properties(precice PROPERTIES
-  CXX_VISIBILITY_PRESET hidden
-  VISIBILITY_INLINES_HIDDEN YES
- )
+if(NOT Kokkos_VERSION OR NOT Kokkos_VERSION VERSION_LESS 4.4)
+  set_target_properties(precice PROPERTIES
+    CXX_VISIBILITY_PRESET hidden
+    ISIBILITY_INLINES_HIDDEN YES
+   )
 endif()
 
 
