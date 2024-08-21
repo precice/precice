@@ -360,11 +360,11 @@ set_target_properties(preciceCore PROPERTIES
   VISIBILITY_INLINES_HIDDEN NO
   )
 
-if(NOT ${Kokkos_VERSION} VERSION_LESS 4.4)
-set_target_properties(preciceCore PROPERTIES
-  CXX_VISIBILITY_PRESET hidden
-  VISIBILITY_INLINES_HIDDEN YES
-)
+if(Kokkos_VERSION AND NOT ${Kokkos_VERSION} VERSION_LESS 4.4)
+  set_target_properties(preciceCore PROPERTIES
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN YES
+  )
 endif()
 
 # Setup release override options
