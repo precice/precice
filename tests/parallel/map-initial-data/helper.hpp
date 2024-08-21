@@ -1,6 +1,4 @@
 #pragma once
-#ifndef YEO
-#define YEO
 
 #include <precice/precice.hpp>
 
@@ -71,4 +69,3 @@ inline void testMapInitialDataP(
   p.advance(p.getMaxTimeStepSize());
   BOOST_REQUIRE(!p.isCouplingOngoing());
 }
-#endif
