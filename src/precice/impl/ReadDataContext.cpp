@@ -46,7 +46,6 @@ void ReadDataContext::mapAndReadValues(::precice::span<const double> coordinates
   PRECICE_ASSERT(mappingCache);
   PRECICE_ASSERT(indirectMapping);
 
-  // @todo: we might need to reset the time stamp for implicit coupling
   if (!mappingCache->hasDataAtTimeStamp(readTime)) {
     // Sample waveform relaxation
     Eigen::VectorXd sample{_providedData->sampleAtTime(readTime)};
