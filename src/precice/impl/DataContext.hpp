@@ -122,6 +122,14 @@ public:
    * @param mappingContext
    */
   void addIndirectAccessMapping(MappingContext mappingContext, MeshContext meshContext);
+
+  void invalidateMappingCache()
+  {
+    if (mappingCache) {
+      mappingCache->setTimeStamp(-1);
+    }
+  }
+
 protected:
   /**
    * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext should use this constructor.
@@ -155,7 +163,7 @@ protected:
    * to one local mesh, map it to different remote meshes). Since the indirect mapping operates
    * on the remote meshes, this multiplicity cannot occur. Thus, one cache per DataContext is enough.
    */
-  std::unique_ptr<mapping::MappingDataCache> mappingCache;
+  std::unique_ptr<mapping::MappingDataCache>       mappingCache;
   std::shared_ptr<mapping::NearestNeighborMapping> indirectMapping;
   /**
    * @brief Helper to append a mappingContext, fromData and toData to the corresponding data containers

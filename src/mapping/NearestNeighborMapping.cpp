@@ -54,7 +54,7 @@ void NearestNeighborMapping::writeConservativeAt(::precice::span<const double> c
   for (size_t i = 0; i < verticesSize; ++i) {
     Eigen::Map<const Eigen::VectorXd> localCoords(coordinates.data() + i * dim, dim);
     const auto &                      matchedVertex = index.getClosestVertex(localCoords);
-    target.col(matchedVertex.index)                 += source.col(i);
+    target.col(matchedVertex.index) += source.col(i);
   }
 }
 
