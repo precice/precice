@@ -224,6 +224,7 @@ target_sources(testprecice
     tests/serial/indirect-mesh-access/ExplicitMultipleReadWrite.cpp
     tests/serial/indirect-mesh-access/ExplicitRead.cpp
     tests/serial/indirect-mesh-access/ExplicitWrite.cpp
+    tests/serial/indirect-mesh-access/Implicit.cpp
     tests/serial/initialize-data/Explicit.cpp
     tests/serial/initialize-data/Implicit.cpp
     tests/serial/initialize-data/ImplicitBoth.cpp
