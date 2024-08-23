@@ -6,9 +6,9 @@
 
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
+#include "mapping/NearestNeighborMapping.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Utils.hpp"
-#include "mapping/NearestNeighborMapping.hpp"
 namespace precice {
 
 namespace testing {

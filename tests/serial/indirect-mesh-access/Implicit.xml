@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="Forces" />
+  <data:scalar name="Velocities" />
+
+  <mesh name="TestMesh" dimensions="2">
+    <use-data name="Forces" />
+    <use-data name="Velocities" />
+  </mesh>
+
+  <mesh name="MeshTwo" dimensions="2">
+    <use-data name="Forces" />
+    <use-data name="Velocities" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <provide-mesh name="TestMesh" />
+    <receive-mesh name="MeshTwo" from="SolverTwo" direct-access="true" />
+    <!-- both are indirect mesh access -->
+    <write-data name="Velocities" mesh="MeshTwo" />
+    <read-data name="Forces" mesh="MeshTwo" />
+    <read-data name="Forces" mesh="TestMesh" />
+    <mapping:nearest-neighbor direction="read" from="MeshTwo" constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="MeshTwo"
+      to="TestMesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor direction="write" to="MeshTwo" constraint="conservative" />
+  </participant>
+
+  <participant name="SolverTwo">
+    <provide-mesh name="MeshTwo" />
+    <write-data name="Forces" mesh="MeshTwo" />
+    <read-data name="Velocities" mesh="MeshTwo" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+
+  <coupling-scheme:serial-implicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="2" />
+    <time-window-size value="0.01" />
+    <max-iterations value="10" />
+    <relative-convergence-measure data="Forces" mesh="MeshTwo" limit="1e-3" />
+    <exchange data="Forces" mesh="MeshTwo" from="SolverTwo" to="SolverOne" />
+    <exchange data="Velocities" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
+  </coupling-scheme:serial-implicit>
+</precice-configuration>
