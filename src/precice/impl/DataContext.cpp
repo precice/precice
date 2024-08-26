@@ -97,8 +97,7 @@ void DataContext::addIndirectAccessMapping(MappingContext mappingContext, MeshCo
 
   // PRECICE_ASSERT(mappingContext.fromData == _providedData || mappingContext.toData == _providedData, "Either fromData or toData has to equal _providedData.");
   mappingCache    = std::make_unique<mapping::MappingDataCache>(data->getDimensions());
-  indirectMapping = std::dynamic_pointer_cast<mapping::NearestNeighborMapping>(mappingContext.mapping);
-  PRECICE_ASSERT(indirectMapping, "Not implemented");
+  indirectMapping = mappingContext.mapping;
 
   // @todo: here we setup the MappingDataCache. Do we need to store the whole MappingContext or would a mapping pointer here be sufficient?
   // PRECICE_ASSERT(mappingContext.fromData->getName() == getDataName());

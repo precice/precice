@@ -164,7 +164,7 @@ protected:
    * on the remote meshes, this multiplicity cannot occur. Thus, one cache per DataContext is enough.
    */
   std::unique_ptr<mapping::MappingDataCache>       mappingCache;
-  std::shared_ptr<mapping::NearestNeighborMapping> indirectMapping;
+  std::shared_ptr<mapping::Mapping> indirectMapping;
   /**
    * @brief Helper to append a mappingContext, fromData and toData to the corresponding data containers
    *

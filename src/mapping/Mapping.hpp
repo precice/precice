@@ -192,6 +192,8 @@ public:
   /// Returns the name of the mapping method for logging purpose
   virtual std::string getName() const = 0;
 
+  virtual void writeConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target);
+
   // @todo consider making this a private method in the RBFMapping/PUM mapping class
   virtual void updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in);
 
