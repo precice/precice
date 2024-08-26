@@ -223,6 +223,7 @@ target_sources(testprecice
     tests/serial/explicit/helpers.hpp
     tests/serial/indirect-mesh-access/ExplicitMultipleReadWrite.cpp
     tests/serial/indirect-mesh-access/ExplicitRead.cpp
+    tests/serial/indirect-mesh-access/ExplicitReadPUM.cpp
     tests/serial/indirect-mesh-access/ExplicitWrite.cpp
     tests/serial/indirect-mesh-access/Implicit.cpp
     tests/serial/initialize-data/Explicit.cpp

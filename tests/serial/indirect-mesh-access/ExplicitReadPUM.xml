@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="Velocities" />
+
+  <mesh name="MeshTwo" dimensions="2">
+    <use-data name="Velocities" />
+  </mesh>
+
+  <mesh name="MeshOne" dimensions="2">
+    <use-data name="Velocities" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <provide-mesh name="MeshOne" />
+    <receive-mesh name="MeshTwo" from="SolverTwo" direct-access="true" />
+    <read-data name="Velocities" mesh="MeshTwo" />
+    <read-data name="Velocities" mesh="MeshOne" />
+    <mapping:rbf-pum-direct
+      direction="read"
+      from="MeshTwo"
+      constraint="consistent"
+      vertices-per-cluster="30"
+      project-to-input="off">
+      <basis-function:compact-polynomial-c6 support-radius="1." />
+    </mapping:rbf-pum-direct>
+    <mapping:rbf-pum-direct
+      direction="read"
+      from="MeshTwo"
+      to="MeshOne"
+      constraint="consistent"
+      vertices-per-cluster="30"
+      project-to-input="off">
+      <basis-function:compact-polynomial-c6 support-radius="1." />
+    </mapping:rbf-pum-direct>
+  </participant>
+
+  <participant name="SolverTwo">
+    <provide-mesh name="MeshTwo" />
+    <write-data name="Velocities" mesh="MeshTwo" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="SolverTwo" second="SolverOne" />
+    <max-time-windows value="2" />
+    <time-window-size value="1.0" />
+    <exchange data="Velocities" mesh="MeshTwo" from="SolverTwo" to="SolverOne" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>
