@@ -26,9 +26,10 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
   std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
 
   if (context.isNamed("SolverOne")) {
-    auto meshName      = "MeshOne";
-    auto otherMeshName = "MeshTwo";
-    auto dataName      = "Velocities";
+    auto meshName       = "MeshOne";
+    auto otherMeshName  = "MeshTwo";
+    auto dataName       = "Temperature";
+    auto vectorDataName = "Velocity";
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(otherMeshName) == 2);
 
     int                 meshSize = 10;
@@ -60,11 +61,18 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
       // read data (for reference)
       std::vector<double> readData(meshSize);
       std::vector<double> indirectReadData(meshSize);
+      std::vector<double> readVectorData(meshSize * dim);
+      std::vector<double> indirectReadVectorData(meshSize * dim);
       couplingInterface.readData(meshName, dataName, ids, dt, readData);
       couplingInterface.mapAndreadData(otherMeshName, dataName, positions, dt, indirectReadData);
+      couplingInterface.readData(meshName, vectorDataName, ids, dt, readVectorData);
+      couplingInterface.mapAndreadData(otherMeshName, vectorDataName, positions, dt, indirectReadVectorData);
 
-      for (int r = 0; r < meshSize; ++r)
+      for (int r = 0; r < meshSize; ++r) {
         BOOST_TEST(readData[r] == indirectReadData[r]);
+        BOOST_TEST(readData[r * dim] == indirectReadData[r * dim]);
+        BOOST_TEST(readData[r * dim + 1] == indirectReadData[r * dim + 1]);
+      }
       // solve time step
       // write data (not necessary here)
       couplingInterface.advance(dt);
@@ -72,8 +80,9 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));
     // Query IDs
-    auto meshName = "MeshTwo";
-    auto dataName = "Velocities";
+    auto meshName       = "MeshTwo";
+    auto dataName       = "Temperature";
+    auto vectorDataName = "Velocity";
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName));
 
     std::vector<double> positions;
@@ -90,6 +99,8 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
     // Some dummy readData
     std::vector<double> writeData1(100);
     std::vector<double> writeData2(100);
+    std::vector<double> vectorData1(200);
+    std::vector<double> vectorData2(200);
 
     // Linear filling for writeData1
     std::generate(writeData1.begin(), writeData1.end(), [n = 0]() mutable {
@@ -100,6 +111,18 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
     std::generate(writeData2.begin(), writeData2.end(), [n = 0]() mutable {
       return -100.0 + 0.1 * (n * n++); // Quadratic pattern, n^2 scaled by 0.1
     });
+
+    // vectorData1 with linearly increasing values
+    for (int i = 0; i < 100; ++i) {
+      vectorData1[2 * i]     = 0.5 * i; // x component
+      vectorData1[2 * i + 1] = 0.2 * i; // y component
+    }
+
+    // vectorData2 with quadratic and linear patterns
+    for (int i = 0; i < 100; ++i) {
+      vectorData2[2 * i]     = 0.1 * i * i;   // x component quadratically increasing
+      vectorData2[2 * i + 1] = 100 - 0.5 * i; // y component linearly decreasing
+    }
 
     // Initialize
     couplingInterface.initialize();
@@ -112,8 +135,10 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
       // write data:
       if (time == 1) {
         couplingInterface.writeData(meshName, dataName, ids, writeData1);
+        couplingInterface.writeData(meshName, vectorDataName, ids, vectorData1);
       } else if (time == 2) {
         couplingInterface.writeData(meshName, dataName, ids, writeData2);
+        couplingInterface.writeData(meshName, vectorDataName, ids, vectorData2);
       } else {
         PRECICE_ASSERT(false);
       }

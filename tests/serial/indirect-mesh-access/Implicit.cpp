@@ -67,7 +67,6 @@ BOOST_AUTO_TEST_CASE(Implicit)
       ++iteration;
       ++timestep;
       // read data
-      std::cout << "Map and read values for: " << timestep << " iteration: " << iteration << std::endl;
       couplingInterface.mapAndreadData(otherMeshName, otherDataName, tmpMeshCoordsRead, dt, readData);
       // TODO: prevent ID access
       couplingInterface.readData(testMeshName, otherDataName, testIDs, dt, testReadData);
