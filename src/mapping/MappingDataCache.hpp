@@ -38,7 +38,7 @@ public:
   void setTimeStamp(double time);
 
 private:
-  double      _timeStamp = -1;
+  double    _timeStamp = -1;
   const int _dataDim;
 };
 
