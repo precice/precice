@@ -5,6 +5,7 @@
 
 #include "com/Communication.hpp"
 #include "io/ExportVTU.hpp"
+#include "mapping/MappingDataCache.hpp"
 #include "mapping/impl/CreateClustering.hpp"
 #include "mapping/impl/SphericalVertexCluster.hpp"
 #include "mesh/Filter.hpp"
@@ -75,6 +76,12 @@ public:
   /// name of the pum mapping
   std::string getName() const final override;
 
+  void evaluateMappingDataCacheAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values) final override;
+
+  void writeConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target) final override;
+
+  void updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in) final override;
+
 private:
   /// logger, as usual
   precice::logging::Logger _log{"mapping::PartitionOfUnityMapping"};
@@ -101,6 +108,8 @@ private:
 
   /// polynomial treatment of the RBF system
   Polynomial _polynomial;
+
+  std::unique_ptr<mesh::Mesh> _centerMesh;
 
   /// @copydoc Mapping::mapConservative
   void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) override;
@@ -169,8 +178,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // Step 2: check, which of the resulting clusters are non-empty and register the cluster centers in a mesh
   // Here, the VertexCluster computes the matrix decompositions directly in case the cluster is non-empty
-  mesh::Mesh centerMesh("pou-centers-" + inMesh->getName(), this->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
-  auto &     meshVertices = centerMesh.vertices();
+  _centerMesh        = std::make_unique<mesh::Mesh>("pou-centers-" + inMesh->getName(), this->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
+  auto &meshVertices = _centerMesh->vertices();
 
   meshVertices.clear();
   _clusters.clear();
@@ -202,12 +211,14 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   precice::profiling::Event eWeights("map.pou.computeMapping.computeWeights");
   // Log a bounding box of the center mesh
-  centerMesh.computeBoundingBox();
-  PRECICE_DEBUG("Bounding Box of the cluster centers {}", centerMesh.getBoundingBox());
+  _centerMesh->computeBoundingBox();
+  PRECICE_DEBUG("Bounding Box of the cluster centers {}", _centerMesh->getBoundingBox());
 
   // Step 3: index the clusters / the center mesh in order to define the output vertex -> cluster ownership
   // the ownership is required to compute the normalized partition of unity weights (Step 4)
-  query::Index clusterIndex(centerMesh);
+  // query::Index clusterIndex(*_centerMesh.get());
+  query::Index &clusterIndex = _centerMesh->index();
+
   // Step 4: find all clusters the output vertex lies in, i.e., find all cluster centers which have the distance of a cluster radius from the given output vertex
   // Here, we do this using the RTree on the centerMesh: VertexID (queried from the centersMesh) == clusterID, by construction above. The loop uses
   // the vertices to compute the weights required for the partition of unity data mapping.
@@ -254,6 +265,10 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
   eWeights.stop();
 
+  // we need the center mesh index data structure
+  if (!outMesh->isIndirect()) {
+    _centerMesh.reset();
+  }
   // Uncomment to add a VTK export of the cluster center distribution for visualization purposes
   // exportClusterCentersAsVTU(centerMesh);
 
@@ -288,6 +303,84 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time:
 
   // 2. Execute the actual mapping evaluation in all vertex clusters and accumulate the data
   std::for_each(_clusters.begin(), _clusters.end(), [&](auto &clusters) { clusters.mapConsistent(inData, outData); });
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::writeConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target)
+{
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in)
+{
+  // @todo: make the allocation here conditional
+  cache.polynomialContributions.resize(_clusters.size());
+  cache.p.resize(_clusters.size());
+  for (std::size_t c = 0; c < _clusters.size(); ++c) {
+    _clusters[c].computeCacheData(in, cache.polynomialContributions[c], cache.p[c]);
+  }
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::evaluateMappingDataCacheAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values)
+{
+  // @todo: it would most probably be more efficient to first group the vertices we receive here according to the clusters and then compute the solution
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_centerMesh);
+  // Step 1: use the indexed center mesh to find relevant cluster
+  query::Index &clusterIndex = _centerMesh->index();
+
+  // Step 4: find all clusters the output vertex lies in, i.e., find all cluster centers which have the distance of a cluster radius from the given output vertex
+  // Here, we do this using the RTree on the centerMesh: VertexID (queried from the centersMesh) == clusterID, by construction above. The loop uses
+  // the vertices to compute the weights required for the partition of unity data mapping.
+  // Note: this could also be done on-the-fly in the map data phase for dynamic queries, which would require to make the mesh as well as the indexTree member variables.
+  int          dim       = getDimensions();
+  std::size_t  nVertices = coordinates.size() / dim;
+  mesh::Vertex vertex(coordinates.subspan(0, dim), -1);
+  for (std::size_t v = 0; v < nVertices; ++v) {
+    vertex.setCoords(coordinates.subspan(v * dim, dim));
+    // Step 4a: get the relevant clusters for the output vertex
+    auto       clusterIDs            = clusterIndex.getVerticesInsideBox(vertex, _clusterRadius);
+    const auto localNumberOfClusters = clusterIDs.size();
+
+    // Consider the case where we didn't find any cluster (meshes don't match very well)
+    //
+    // In principle, we could assign the vertex to the closest cluster using clusterIDs.emplace_back(clusterIndex.getClosestVertex(vertex.getCoords()).index);
+    // However, this leads to a conflict with weights already set in the corresponding cluster, since we insert the ID and, later on, map the ID to a local weight index
+    // Of course, we could rearrange the weights, but we want to avoid the case here anyway, i.e., prefer to abort.
+    PRECICE_CHECK(localNumberOfClusters > 0,
+                  "Output vertex {} of mesh \"{}\" could not be assigned to any cluster in the rbf-pum mapping. This probably means that the meshes do not match well geometry-wise: Visualize the exported preCICE meshes to confirm."
+                  " If the meshes are fine geometry-wise, you can try to increase the number of \"vertices-per-cluster\" (default is 50), the \"relative-overlap\" (default is 0.15),"
+                  " or disable the option \"project-to-input\"."
+                  "These options are only valid for the <mapping:rbf-pum-direct/> tag.",
+                  vertex.getCoords(), this->output()->getName());
+
+    // Next we compute the normalized weights of each output vertex for each partition
+    PRECICE_ASSERT(localNumberOfClusters > 0, "No cluster found for vertex {}", vertex.getCoords());
+
+    // Step 4b: compute the weight in each partition individually and store them in 'weights'
+    std::vector<double> weights(localNumberOfClusters);
+    std::transform(clusterIDs.cbegin(), clusterIDs.cend(), weights.begin(), [&](const auto &ids) { return _clusters[ids].computeWeight(vertex); });
+    double weightSum = std::accumulate(weights.begin(), weights.end(), static_cast<double>(0.));
+    // TODO: This covers the edge case of vertices being at the edge of (several) clusters
+    // In case the sum is equal to zero, we assign equal weights for all clusters
+    if (weightSum <= 0) {
+      PRECICE_ASSERT(weights.size() > 0);
+      std::for_each(weights.begin(), weights.end(), [&weights](auto &w) { w = 1. / weights.size(); });
+      weightSum = 1;
+    }
+    PRECICE_ASSERT(weightSum > 0);
+
+    // Step 4c: scale the weight using the weight sum and store the normalized weight in all associated clusters
+    values[v] = 0;
+    for (unsigned int i = 0; i < localNumberOfClusters; ++i) {
+      PRECICE_ASSERT(clusterIDs[i] < static_cast<int>(_clusters.size()));
+      auto id = clusterIDs[i];
+      // the input mesh refers here to a consistent constraint
+      values[v] += weights[i] * _clusters[id].interpolateAt(vertex, cache.polynomialContributions[id], cache.p[id], *this->input().get());
+    }
+    values[v] *= (1. / weightSum);
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

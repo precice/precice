@@ -63,8 +63,8 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
       couplingInterface.readData(meshName, dataName, ids, dt, readData);
       couplingInterface.mapAndreadData(otherMeshName, dataName, positions, dt, indirectReadData);
 
-      for(int r = 0; r<meshSize;++r)
-      BOOST_TEST(readData[r] == indirectReadData[r]);
+      for (int r = 0; r < meshSize; ++r)
+        BOOST_TEST(readData[r] == indirectReadData[r]);
       // solve time step
       // write data (not necessary here)
       couplingInterface.advance(dt);
@@ -111,9 +111,9 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
       // solve time step
       // write data:
       if (time == 1) {
-      couplingInterface.writeData(meshName, dataName, ids, writeData1);
+        couplingInterface.writeData(meshName, dataName, ids, writeData1);
       } else if (time == 2) {
-      couplingInterface.writeData(meshName, dataName, ids, writeData2);
+        couplingInterface.writeData(meshName, dataName, ids, writeData2);
       } else {
         PRECICE_ASSERT(false);
       }
