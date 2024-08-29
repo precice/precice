@@ -25,6 +25,7 @@ public:
   // Eigen::MatrixXd (vertices, components);
   // @todo: do we want to encode this in the typesystem?
   // Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor, Eigen::Dynamic, 3> instead of MatrixXd?
+  // an alternative layout of this data could be to wrap this in another struct ClusterData which is then within a vector
   std::vector<Eigen::MatrixXd> polynomialContributions;
   // ...and a vector of P/lambdas
   std::vector<Eigen::MatrixXd> p;
