@@ -313,6 +313,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::writeConservativeAt(::pre
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in)
 {
+  // We cannot synchronize this event, as the call might to this function is rank-local only
+  precice::profiling::Event e("map.pou.updateCache.From" + input()->getName());
   // The polynomialContribution is unnecessary if we configure polynomial="off"
   // However, the matrices remain empty and in most cases, the polynomial will be used
   // and making this conditional would make the code more complex, so we just allocate
@@ -327,6 +329,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(Ma
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::evaluateMappingDataCacheAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values)
 {
+  precice::profiling::Event e("map.pou.evaluateCache.From" + input()->getName());
   // @todo: it would most probably be more efficient to first group the vertices we receive here according to the clusters and then compute the solution
   PRECICE_TRACE();
   PRECICE_ASSERT(_centerMesh);
