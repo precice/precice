@@ -28,6 +28,7 @@ NearestNeighborMapping::NearestNeighborMapping(
 
 void NearestNeighborMapping::evaluateMappingDataCacheAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values)
 {
+  precice::profiling::Event e("map.nn.evaluateCache.From" + input()->getName());
   auto  searchSpace = input();
   auto &index       = searchSpace->index();
   auto  dim         = getDimensions();
