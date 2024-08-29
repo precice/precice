@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_SUITE(IndirectMeshAccess)
 // boundingBox. The test case here is the most basic variant using partition of unity to
 // use such a feature. SolverTwo defines the mesh whereas SolverOne reads
 // indirectly from this mesh.
-// pum-consistent-read
+// pum-consistent-read with and without polynomial for scalar and vector data, reference is given by a conventional mapping
 BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
 {
   PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
@@ -28,6 +28,8 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
   if (context.isNamed("SolverOne")) {
     auto meshName       = "MeshOne";
     auto otherMeshName  = "MeshTwo";
+    auto meshBName      = "MeshOneB";
+    auto otherMeshBName = "MeshTwoB";
     auto dataName       = "Temperature";
     auto vectorDataName = "Velocity";
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(otherMeshName) == 2);
@@ -47,9 +49,11 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
     }
     // Define region of interest, where we could obtain direct write access
     couplingInterface.setMeshVertices(meshName, positions, ids);
+    couplingInterface.setMeshVertices(meshBName, positions, ids);
 
     // Define region of interest, where we could obtain direct write access
     couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox);
+    couplingInterface.setMeshAccessRegion(otherMeshBName, boundingBox);
 
     couplingInterface.initialize();
 
@@ -63,6 +67,8 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
       std::vector<double> indirectReadData(meshSize);
       std::vector<double> readVectorData(meshSize * dim);
       std::vector<double> indirectReadVectorData(meshSize * dim);
+
+      // First, we check the separate polynomial PUM (scalar and vector)
       couplingInterface.readData(meshName, dataName, ids, dt, readData);
       couplingInterface.mapAndreadData(otherMeshName, dataName, positions, dt, indirectReadData);
       couplingInterface.readData(meshName, vectorDataName, ids, dt, readVectorData);
@@ -73,6 +79,19 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
         BOOST_TEST(readVectorData[r * dim] == indirectReadVectorData[r * dim]);
         BOOST_TEST(readVectorData[r * dim + 1] == indirectReadVectorData[r * dim + 1]);
       }
+
+      // Second, we check the no polynomial PUM (scalar and vector)
+      couplingInterface.readData(meshBName, dataName, ids, dt, readData);
+      couplingInterface.mapAndreadData(otherMeshBName, dataName, positions, dt, indirectReadData);
+      couplingInterface.readData(meshBName, vectorDataName, ids, dt, readVectorData);
+      couplingInterface.mapAndreadData(otherMeshBName, vectorDataName, positions, dt, indirectReadVectorData);
+
+      for (int r = 0; r < meshSize; ++r) {
+        BOOST_TEST(readData[r] == indirectReadData[r]);
+        BOOST_TEST(readVectorData[r * dim] == indirectReadVectorData[r * dim]);
+        BOOST_TEST(readVectorData[r * dim + 1] == indirectReadVectorData[r * dim + 1]);
+      }
+
       // solve time step
       // write data (not necessary here)
       couplingInterface.advance(dt);
@@ -81,6 +100,7 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
     BOOST_TEST(context.isNamed("SolverTwo"));
     // Query IDs
     auto meshName       = "MeshTwo";
+    auto meshBName      = "MeshTwoB";
     auto dataName       = "Temperature";
     auto vectorDataName = "Velocity";
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName));
@@ -96,6 +116,7 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
     std::vector<int> ids(100, -1);
     // Define the mesh
     couplingInterface.setMeshVertices(meshName, positions, ids);
+    couplingInterface.setMeshVertices(meshBName, positions, ids);
     // Some dummy readData
     std::vector<double> writeData1(100);
     std::vector<double> writeData2(100);
@@ -136,9 +157,13 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
       if (time == 1) {
         couplingInterface.writeData(meshName, dataName, ids, writeData1);
         couplingInterface.writeData(meshName, vectorDataName, ids, vectorData1);
+        couplingInterface.writeData(meshBName, dataName, ids, writeData1);
+        couplingInterface.writeData(meshBName, vectorDataName, ids, vectorData1);
       } else if (time == 2) {
         couplingInterface.writeData(meshName, dataName, ids, writeData2);
         couplingInterface.writeData(meshName, vectorDataName, ids, vectorData2);
+        couplingInterface.writeData(meshBName, dataName, ids, writeData2);
+        couplingInterface.writeData(meshBName, vectorDataName, ids, vectorData2);
       } else {
         PRECICE_ASSERT(false);
       }

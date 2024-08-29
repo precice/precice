@@ -313,9 +313,12 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::writeConservativeAt(::pre
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in)
 {
-  // @todo: make the allocation here conditional
-  cache.polynomialContributions.resize(_clusters.size());
+  // The polynomialContribution is unnecessary if we configure polynomial="off"
+  // However, the matrices remain empty and in most cases, the polynomial will be used
+  // and making this conditional would make the code more complex, so we just allocate
+  // this here unconditionally
   cache.p.resize(_clusters.size());
+  cache.polynomialContributions.resize(_clusters.size());
   for (std::size_t c = 0; c < _clusters.size(); ++c) {
     _clusters[c].computeCacheData(in, cache.polynomialContributions[c], cache.p[c], cache.getDataDimensions());
   }

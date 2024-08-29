@@ -237,7 +237,6 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::computeCacheData(const Eig
   PRECICE_TRACE();
 
   Eigen::MatrixXd in(_rbfSolver.getInputSize(), nComponents);
-  coeffOut.resize(_rbfSolver.getInputSize(), nComponents);
   // Now we perform the data mapping component-wise
   for (unsigned int c = 0; c < nComponents; ++c) {
     // Step 1: extract the relevant input data from the global input data and store
@@ -247,8 +246,6 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::computeCacheData(const Eig
       PRECICE_ASSERT(dataIndex * nComponents + c < globalIn.size(), dataIndex * nComponents + c, globalIn.size());
       in(i, c) = globalIn[dataIndex * nComponents + c];
     }
-    // Eigen::Map<Eigen::VectorXd> polyVec(polyOut.col(c).data(), polyOut.rows());
-    // Eigen::Map<Eigen::VectorXd> coeffVec(coeffOut.col(c).data(),coeffOut.rows());
   }
   // Step 2: solve the system using a consistent constraint
   _rbfSolver.computeCacheData(in, _polynomial, polyOut, coeffOut);

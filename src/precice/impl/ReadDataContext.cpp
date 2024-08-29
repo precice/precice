@@ -42,7 +42,7 @@ void ReadDataContext::readValues(::precice::span<const VertexID> vertices, doubl
 
 void ReadDataContext::mapAndReadValues(::precice::span<const double> coordinates, double readTime, ::precice::span<double> values)
 {
-  PRECICE_TRACE(readTime);
+  PRECICE_TRACE(getMeshName(), getDataName(), coordinates.size(), values.size(), readTime);
   PRECICE_ASSERT(mappingCache);
   PRECICE_ASSERT(indirectMapping);
 

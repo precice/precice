@@ -85,6 +85,8 @@ void DataContext::appendMapping(MappingContext mappingContext)
 void DataContext::addIndirectAccessMapping(MappingContext mappingContext, MeshContext meshContext)
 {
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
+  PRECICE_ASSERT(indirectMapping.get() == nullptr);
+  PRECICE_ASSERT(mappingCache.get() == nullptr);
   mesh::PtrData data      = meshContext.mesh->data(getDataName());
   // @todo: the mapping itself has even for indirect access no notion about the data
   // maybe remove the data pointer here or set them to nullptr
