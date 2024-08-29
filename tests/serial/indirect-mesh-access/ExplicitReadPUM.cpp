@@ -70,8 +70,8 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
 
       for (int r = 0; r < meshSize; ++r) {
         BOOST_TEST(readData[r] == indirectReadData[r]);
-        BOOST_TEST(readData[r * dim] == indirectReadData[r * dim]);
-        BOOST_TEST(readData[r * dim + 1] == indirectReadData[r * dim + 1]);
+        BOOST_TEST(readVectorData[r * dim] == indirectReadVectorData[r * dim]);
+        BOOST_TEST(readVectorData[r * dim + 1] == indirectReadVectorData[r * dim + 1]);
       }
       // solve time step
       // write data (not necessary here)

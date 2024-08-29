@@ -317,7 +317,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(Ma
   cache.polynomialContributions.resize(_clusters.size());
   cache.p.resize(_clusters.size());
   for (std::size_t c = 0; c < _clusters.size(); ++c) {
-    _clusters[c].computeCacheData(in, cache.polynomialContributions[c], cache.p[c]);
+    _clusters[c].computeCacheData(in, cache.polynomialContributions[c], cache.p[c], cache.getDataDimensions());
   }
 }
 
@@ -327,9 +327,12 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::evaluateMappingDataCacheA
   // @todo: it would most probably be more efficient to first group the vertices we receive here according to the clusters and then compute the solution
   PRECICE_TRACE();
   PRECICE_ASSERT(_centerMesh);
+
+  // First, make sure that everything is reset before we start
+  std::fill(values.begin(), values.end(), 0.);
+
   // Step 1: use the indexed center mesh to find relevant cluster
   query::Index &clusterIndex = _centerMesh->index();
-
   // Step 4: find all clusters the output vertex lies in, i.e., find all cluster centers which have the distance of a cluster radius from the given output vertex
   // Here, we do this using the RTree on the centerMesh: VertexID (queried from the centersMesh) == clusterID, by construction above. The loop uses
   // the vertices to compute the weights required for the partition of unity data mapping.
@@ -370,16 +373,16 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::evaluateMappingDataCacheA
       weightSum = 1;
     }
     PRECICE_ASSERT(weightSum > 0);
-
     // Step 4c: scale the weight using the weight sum and store the normalized weight in all associated clusters
-    values[v] = 0;
     for (unsigned int i = 0; i < localNumberOfClusters; ++i) {
       PRECICE_ASSERT(clusterIDs[i] < static_cast<int>(_clusters.size()));
       auto id = clusterIDs[i];
       // the input mesh refers here to a consistent constraint
-      values[v] += weights[i] * _clusters[id].interpolateAt(vertex, cache.polynomialContributions[id], cache.p[id], *this->input().get());
+      Eigen::Vector3d localRes = (weights[i] / weightSum) * _clusters[id].interpolateAt(vertex, cache.polynomialContributions[id], cache.p[id], *this->input().get());
+      for (int c = 0; c < cache.getDataDimensions(); ++c) {
+        values[v * cache.getDataDimensions() + c] += localRes[c];
+      }
     }
-    values[v] *= (1. / weightSum);
   }
 }
 

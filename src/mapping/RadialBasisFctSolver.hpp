@@ -43,7 +43,7 @@ public:
   /// Maps the given input data
   Eigen::VectorXd solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const;
 
-  void computeCacheData(Eigen::VectorXd &inputData, Polynomial polynomial, Eigen::VectorXd &polyOut, Eigen::VectorXd &coeffsOut) const;
+  void computeCacheData(Eigen::MatrixXd &inputData, Polynomial polynomial, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffsOut) const;
 
   /// Maps the given input data
   Eigen::VectorXd solveConservative(const Eigen::VectorXd &inputData, Polynomial polynomial) const;
@@ -58,8 +58,8 @@ public:
   Eigen::Index getOutputSize() const;
 
   template <typename IndexContainer>
-  double interpolateAt(const mesh::Vertex &v, const Eigen::VectorXd &poly, const Eigen::VectorXd &coeffs,
-                       const RADIAL_BASIS_FUNCTION_T &function, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const;
+  Eigen::Vector3d interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs,
+                                const RADIAL_BASIS_FUNCTION_T &function, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const;
 
 private:
   mutable precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
@@ -93,7 +93,7 @@ private:
 inline double computeSquaredDifference(
     const std::array<double, 3> &u,
     std::array<double, 3>        v,
-    const std::array<bool, 3> &  activeAxis = {{true, true, true}})
+    const std::array<bool, 3>   &activeAxis = {{true, true, true}})
 {
   // Subtract the values and multiply out dead dimensions
   for (unsigned int d = 0; d < v.size(); ++d) {
@@ -138,7 +138,7 @@ inline void fillPolynomialEntries(Eigen::MatrixXd &matrix, const mesh::Mesh &mes
     matrix(i.index(), startIndex) = 1.0;
 
     // 2. the linear contribution
-    const auto & u = mesh.vertex(i.value()).rawCoords();
+    const auto  &u = mesh.vertex(i.value()).rawCoords();
     unsigned int k = 0;
     // Loop over all three space dimension and ignore dead axis
     for (unsigned int d = 0; d < activeAxis.size(); ++d) {
@@ -458,7 +458,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeCacheData(Eigen::VectorXd &inputData, Polynomial polynomial, Eigen::VectorXd &polyOut, Eigen::VectorXd &coeffsOut) const
+void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeCacheData(Eigen::MatrixXd &inputData, Polynomial polynomial, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffsOut) const
 {
   PRECICE_ASSERT((_matrixQ.size() > 0 && polynomial == Polynomial::SEPARATE) || _matrixQ.size() == 0);
   // Solve polynomial QR and subtract it from the input data
@@ -474,34 +474,40 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeCacheData(Eigen::Vect
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
-double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::interpolateAt(const mesh::Vertex &v, const Eigen::VectorXd &poly, const Eigen::VectorXd &coeffs,
-                                                                    const RADIAL_BASIS_FUNCTION_T &basisFunction, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const
+Eigen::Vector3d RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs,
+                                                                             const RADIAL_BASIS_FUNCTION_T &basisFunction, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const
 {
+  PRECICE_TRACE();
   // We ignore the dead axis here for the evaluation matrix (matrixA), as the vertex coordinates are zero for a potential 2d case and there is no option in PUM to set them from the user
 
   // Two cases we have to distinguish here:
   // 1. there is no polynomial given, then the result is out = _matrixA * p;
-  double result = 0;
+  Eigen::Vector3d result{{0, 0, 0}};
 
   // Compute RBF values for matrix A
   const auto &out = v.rawCoords();
   for (const auto &j : inputIDs | boost::adaptors::indexed()) {
     const auto &in                = inMesh.vertex(j.value()).rawCoords();
     double      squaredDifference = computeSquaredDifference(out, in);
-    result += coeffs[j.index()] * basisFunction.evaluate(std::sqrt(squaredDifference));
+    double      eval              = basisFunction.evaluate(std::sqrt(squaredDifference));
+    for (Eigen::Index c = 0; c < coeffs.cols(); ++c) {
+      result[c] += coeffs(j.index(), c) * eval;
+    }
   }
 
   // 2. we have a separate polynomial, then we have to add it again here;
   //   out += (_matrixV * polynomialContribution);
   if (poly.size() > 0) {
     // constant polynomial
-    result += 1 * poly[0];
-    // the linear contributions
-    int k = 1;
-    for (std::size_t d = 0; d < _localActiveAxis.size(); ++d) {
-      if (_localActiveAxis[d]) {
-        result += out[d] * poly[k];
-        ++k;
+    for (Eigen::Index c = 0; c < poly.cols(); ++c) {
+      result[c] += 1 * poly(0, c);
+      // the linear contributions
+      int k = 1;
+      for (std::size_t d = 0; d < _localActiveAxis.size(); ++d) {
+        if (_localActiveAxis[d]) {
+          result[c] += out[d] * poly(k, c);
+          ++k;
+        }
       }
     }
   }
