@@ -890,8 +890,8 @@ public:
    * on the receiving side, since the associated data values of the
    * filtered vertices are filled with zero data.
    *
-   * @note This function can only be called once per participant and
-   * rank and trying to call it more than once results in an error.
+   * @note This function can only be called once per mesh and rank
+   * and trying to call it more than once results in an error.
    *
    * @note If you combine the direct access with a mpping (say you want
    * to read data from a defined mesh, as usual, but you want to directly

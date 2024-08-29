@@ -325,9 +325,6 @@ private:
   /// Are participants waiting for each other in finalize?
   bool _waitInFinalize = false;
 
-  /// setMeshAccessRegion may only be called once
-  mutable bool _accessRegionDefined = false;
-
   /// The current State of the Participant
   State _state{State::Constructed};
 

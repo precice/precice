@@ -1153,10 +1153,11 @@ void ParticipantImpl::setMeshAccessRegion(
   PRECICE_REQUIRE_MESH_USE(meshName);
   PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().");
   PRECICE_CHECK(_state != State::Initialized, "setMeshAccessRegion() needs to be called before initialize().");
-  PRECICE_CHECK(!_accessRegionDefined, "setMeshAccessRegion may only be called once.");
 
   // Get the related mesh
   MeshContext & context = _accessor->meshContext(meshName);
+
+  PRECICE_CHECK(!context.accessRegionDefined, "setMeshAccessRegion was already defined for mesh \"{}\" and may only be called once per mesh.", context.mesh->getName());
   mesh::PtrMesh mesh(context.mesh);
   int           dim = mesh->getDimensions();
   PRECICE_CHECK(boundingBox.size() == static_cast<unsigned long>(dim) * 2,
@@ -1179,7 +1180,7 @@ void ParticipantImpl::setMeshAccessRegion(
   // Expand the mesh associated bounding box
   mesh->expandBoundingBox(providedBoundingBox);
   // and set a flag so that we know the function was called
-  _accessRegionDefined = true;
+  context.accessRegionDefined = true;
 }
 
 void ParticipantImpl::getMeshVertexIDsAndCoordinates(
