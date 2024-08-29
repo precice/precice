@@ -20,9 +20,14 @@ public:
   explicit MappingDataCache(int dataDim);
 
   // For PUM, we need a sequence of polynomial contributions
-  std::vector<Eigen::VectorXd> polynomialContributions;
+  // all data here is stored as a Matrix to encode the number of components
+  // the layout is
+  // Eigen::MatrixXd (vertices, components);
+  // @todo: do we want to encode this in the typesystem?
+  // Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor, Eigen::Dynamic, 3> instead of MatrixXd?
+  std::vector<Eigen::MatrixXd> polynomialContributions;
   // ...and a vector of P/lambdas
-  std::vector<Eigen::VectorXd> p;
+  std::vector<Eigen::MatrixXd> p;
 
   // @todo: storing the sampled data for all other mapping methods but PUM
   // preprocessed data in \ref polynomialContributions or \ref p
