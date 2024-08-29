@@ -1155,7 +1155,7 @@ void ParticipantImpl::setMeshAccessRegion(
   PRECICE_CHECK(_state != State::Initialized, "setMeshAccessRegion() needs to be called before initialize().");
 
   // Get the related mesh
-  MeshContext & context = _accessor->meshContext(meshName);
+  MeshContext &context = _accessor->meshContext(meshName);
 
   PRECICE_CHECK(!context.accessRegionDefined, "setMeshAccessRegion was already defined for mesh \"{}\" and may only be called once per mesh.", context.mesh->getName());
   mesh::PtrMesh mesh(context.mesh);
