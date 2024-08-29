@@ -764,8 +764,8 @@ void ParticipantConfiguration::checkIllDefinedMappings(
   using ConfMapping = mapping::MappingConfiguration::ConfiguredMapping;
 
   for (const ConfMapping &configuredMapping : _mappingConfig->mappings()) {
-    bool sameToMesh   = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
-    bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
+    bool sameToMesh   = (mapping.toMesh->getName() == configuredMapping.toMesh->getName()) && !mapping.toMesh->isIndirect();
+    bool sameFromMesh = (mapping.fromMesh->getName() == configuredMapping.fromMesh->getName()) && !mapping.fromMesh->isIndirect();
     if (sameToMesh && sameFromMesh) {
       // It's really the same mapping, not a duplicated one. Those are already checked for in MappingConfiguration.
       return;
