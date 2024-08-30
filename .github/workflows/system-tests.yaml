@@ -62,12 +62,12 @@ jobs:
       - id: report-refs
         name: Report Git refs
         run: |
-          printf "Python bindings: ${{ steps.ref-python-bindings.outputs.shorthash }}\n ${{ steps.ref-python-bindings.outputs.description }}\n\n"
-          printf "CalculiX adapter: ${{ steps.ref-calculix-adapter.outputs.shorthash }}\n ${{ steps.ref-calculix-adapter.outputs.description }}\n\n"
-          printf "FEniCS adapter: ${{ steps.ref-fenics-adapter.outputs.shorthash }}\n ${{ steps.ref-fenics-adapter.outputs.description }}\n\n"
-          printf "OpenFOAM adapter: ${{ steps.ref-openfoam-adapter.outputs.shorthash }} ${{ steps.ref-openfoam-adapter.outputs.description }}\n\n"
-          printf "SU2 adapter: ${{ steps.ref-su2-adapter.outputs.shorthash }}\n ${{ steps.ref-su2-adapter.outputs.description }}\n\n"
-          printf "Tutorials: ${{ steps.ref-tutorials.outputs.shorthash }} ${{ steps.ref-tutorials.outputs.description }}\n\n"
+          printf "Python bindings: ${{ steps.ref-python-bindings.outputs.shorthash }}\n ${{ steps.ref-python-bindings.outputs.description }}\n----------\n"
+          printf "CalculiX adapter: ${{ steps.ref-calculix-adapter.outputs.shorthash }}\n ${{ steps.ref-calculix-adapter.outputs.description }}\n----------\n"
+          printf "FEniCS adapter: ${{ steps.ref-fenics-adapter.outputs.shorthash }}\n ${{ steps.ref-fenics-adapter.outputs.description }}\n----------\n"
+          printf "OpenFOAM adapter: ${{ steps.ref-openfoam-adapter.outputs.shorthash }} ${{ steps.ref-openfoam-adapter.outputs.description }}\n----------\n"
+          printf "SU2 adapter: ${{ steps.ref-su2-adapter.outputs.shorthash }}\n ${{ steps.ref-su2-adapter.outputs.description }}\n----------\n"
+          printf "Tutorials: ${{ steps.ref-tutorials.outputs.shorthash }} ${{ steps.ref-tutorials.outputs.description }}\n----------\n"
 
   run-system-tests:
     name: Trigger system tests
