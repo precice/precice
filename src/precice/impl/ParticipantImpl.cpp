@@ -1157,7 +1157,7 @@ void ParticipantImpl::setMeshAccessRegion(
   // Get the related mesh
   MeshContext &context = _accessor->meshContext(meshName);
 
-  PRECICE_CHECK(!context.accessRegionDefined, "setMeshAccessRegion was already defined for mesh \"{}\" and may only be called once per mesh.", context.mesh->getName());
+  PRECICE_CHECK(!context.accessRegionDefined, "A mesh access region was already defined for mesh \"{}\". setMeshAccessRegion may only be called once per mesh.", context.mesh->getName());
   mesh::PtrMesh mesh(context.mesh);
   int           dim = mesh->getDimensions();
   PRECICE_CHECK(boundingBox.size() == static_cast<unsigned long>(dim) * 2,
