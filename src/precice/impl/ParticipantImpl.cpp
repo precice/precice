@@ -1213,6 +1213,12 @@ void ParticipantImpl::mapAndreadData(
   const auto       dataDims         = dataContext.getDataDimensions();
   const auto       dim              = dataContext.getSpatialDimensions();
   const auto       expectedDataSize = (coordinates.size() / dim) * dataDims;
+  PRECICE_CHECK(expectedDataSize == values.size(),
+                "Input sizes are inconsistent attempting to read {}D data \"{}\" from mesh \"{}\". "
+                "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
+                dataDims, dataName, meshName,
+                coordinates.size() / dim, values.size(), expectedDataSize, dataDims, coordinates.size() / dim);
+
   // TODO: Add check that this vertex is within the access region?
   double readTime = _couplingScheme->getTime() + relativeReadTime;
   dataContext.mapAndReadValues(coordinates, readTime, values);
