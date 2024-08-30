@@ -66,8 +66,7 @@ jobs:
     uses: precice/tutorials/.github/workflows/run_testsuite_workflow.yml@develop
     with:
       suites: release_test
-      build_args: >-
-        PLATFORM:ubuntu_2204,
+      build_args: "PLATFORM:ubuntu_2204,
         PRECICE_REF:${{ github.event.pull_request.head.sha }},
         PYTHON_BINDINGS_REF:${{ needs.gather-refs.outputs.ref-python-bindings }},
         OPENFOAM_EXECUTABLE:openfoam2406,
@@ -77,6 +76,6 @@ jobs:
         CALCULIX_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-calculix-adapter }},
         SU2_VERSION:7.5.1,
         SU2_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-su2-adapter }},
-        TUTORIALS_REF:${{ needs.gather-refs.outputs.ref-tutorials }}
+        TUTORIALS_REF:${{ needs.gather-refs.outputs.ref-tutorials }}"
       systests_branch: develop
       loglevel: "DEBUG"
