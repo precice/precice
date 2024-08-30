@@ -5,11 +5,70 @@ on:
     types: [labeled]
 
 jobs:
+  gather-refs:
+    if: ${{ github.event.label.name == 'trigger-system-tests' }}
+    runs-on: ubuntu-latest
+    outputs:
+      ref-python-bindings: ${{ steps.ref-python-bindings.outputs.shorthash }}
+      ref-calculix-adapter: ${{ steps.ref-calculix-adapter.outputs.shorthash }}
+      ref-fenics-adapter: ${{ steps.ref-fenics-adapter.outputs.shorthash }}
+      ref-openfoam-adapter: ${{ steps.ref-openfoam-adapter.outputs.shorthash }}
+      ref-su2-adapter: ${{ steps.ref-su2-adapter.outputs.shorthash }}
+      ref-tutorials: ${{ steps.ref-tutorials.outputs.shorthash }}
+    steps:
+      - id: ref-python-bindings
+        uses: nmbgeek/github-action-get-latest-commit@main
+        with:
+          owner: precice
+          repo: python-bindings
+          branch: develop
+      - id: ref-calculix-adapter
+        uses: nmbgeek/github-action-get-latest-commit@main
+        with:
+          owner: precice
+          repo: calculix-adapter
+          branch: develop
+      - id: ref-fenics-adapter
+        uses: nmbgeek/github-action-get-latest-commit@main
+        with:
+          owner: precice
+          repo: fenics-adapter
+          branch: develop
+      - id: ref-openfoam-adapter
+        uses: nmbgeek/github-action-get-latest-commit@main
+        with:
+          owner: precice
+          repo: openfoam-adapter
+          branch: develop
+      - id: ref-su2-adapter
+        uses: nmbgeek/github-action-get-latest-commit@main
+        with:
+          owner: precice
+          repo: su2-adapter
+          branch: develop
+      - id: ref-tutorials
+        uses: nmbgeek/github-action-get-latest-commit@main
+        with:
+          owner: precice
+          repo: tutorials
+          branch: develop
   run-system-tests:
     if: ${{ github.event.label.name == 'trigger-system-tests' }}
+    needs: gather-refs
     uses: precice/tutorials/.github/workflows/run_testsuite_workflow.yml@develop
     with:
       suites: release_test
-      build_args: PRECICE_REF:${{ github.event.pull_request.head.sha }},OPENFOAM_EXECUTABLE:openfoam2312,OPENFOAM_ADAPTER_REF:master,TUTORIALS_REF:develop,PLATFORM:ubuntu_2204,PYTHON_BINDINGS_REF:master,FENICS_ADAPTER_REF:master,CALCULIX_VERSION:2.20,CALCULIX_ADAPTER_REF:master,SU2_VERSION:7.5.1,SU2_ADAPTER_REF:master
+      build_args: |
+        PLATFORM:ubuntu_2204,
+        PRECICE_REF:${{ github.event.pull_request.head.sha }},
+        PYTHON_BINDINGS_REF:${{ needs.gather-refs.outputs.ref-python-bindings }},
+        OPENFOAM_EXECUTABLE:openfoam2406,
+        OPENFOAM_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-openfoam-adapter }},
+        FENICS_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-fenics-adapter }},
+        CALCULIX_VERSION:2.20,
+        CALCULIX_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-calculix-adapter }},
+        SU2_VERSION:7.5.1,
+        SU2_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-su2-adapter }},
+        TUTORIALS_REF:${{ needs.gather-refs.outputs.ref-tutorials }}
       systests_branch: develop
       loglevel: "DEBUG"
