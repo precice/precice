@@ -322,8 +322,11 @@ void BaseQNAcceleration::performAcceleration(
     _oldXTilde           = _values;           // Store x tilde of primary and secondary data
     _oldPrimaryResiduals = _primaryResiduals; // Store current residual of primary data
 
-    // Perform relaxation on all of the coupling data
-    applyRelaxation(_initialRelaxation, cplData);
+    // Perform constant relaxation
+    // with residual: x_new = x_old + omega * res
+    _residuals *= _initialRelaxation;
+    _residuals += _oldValues;
+    _values = _residuals;
 
   } else {
     PRECICE_DEBUG("   Performing quasi-Newton Step");
