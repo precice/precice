@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(RBFGinkgoHipConfiguration)
 }
 #endif
 
-#ifdef PRECICE_WITH_OMP
+#ifdef PRECICE_WITH_OPENMP
 // This test mostly runs the configuration path, but it does not test the actual
 // setting in the Ginkgo solver class (being an OpenMP executor), since the mapping
 // configuration does not expose this information

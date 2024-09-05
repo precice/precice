@@ -20,6 +20,8 @@ public:
 
   void doExport(int index, double time) final override;
 
+  void exportSeries() const final override;
+
 private:
   mutable logging::Logger _log{"io::ExportCSV"};
 };

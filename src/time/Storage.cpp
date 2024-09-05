@@ -190,6 +190,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
 
 Eigen::VectorXd Storage::sample(double time) const
 {
+  PRECICE_ASSERT(this->nTimes() != 0, "There are no samples available");
   const int usedDegree = computeUsedDegree(_degree, nTimes());
 
   if (usedDegree == 0) {

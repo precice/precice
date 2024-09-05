@@ -226,7 +226,8 @@ private:
   /// mesh::getID() -> Pointer to distributed communication
   std::map<int, DistributedCommunication::SharedPointer> _distComs;
 
-  com::PtrCommunication _intraComm;
+  /// connection between the primary ranks of the connected participants
+  com::PtrCommunication _interComm;
 
   DistributedComFactory::SharedPointer _distrFactory;
 

@@ -101,6 +101,8 @@ enum class Require {
   PETSc,
   /// Require to initialize Event.
   Events,
+  /// Ginkgo initialization
+  Ginkgo,
 };
 
 /** A type of distributed connection
@@ -285,6 +287,9 @@ private:
   /// whether to initialize events
   bool _events = false;
 
+  /// whether to initialize Ginkgo (the device)
+  bool _ginkgo = false;
+
   /// whether this Context was created with a Ranks constructor
   bool _simple = false;
 
@@ -342,6 +347,8 @@ private:
   /// Initialize Events if required
   void initializeEvents();
 
+  /// Initialize Ginkgo if required
+  void initializeGinkgo();
   /// @}
 };
 

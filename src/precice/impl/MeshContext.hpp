@@ -35,6 +35,9 @@ struct MeshContext {
   /// bounding-boxes.
   bool allowDirectAccess = false;
 
+  /// setMeshAccessRegion may only be called once per mesh(context)
+  bool accessRegionDefined = false;
+
   /// True, if accessor does create the mesh.
   bool provideMesh = false;
 

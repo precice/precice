@@ -14,15 +14,6 @@
 #include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 
-namespace {
-/// Required by STL algos, which get confused by std::min overloads
-template <typename T>
-T min(T a, T b)
-{
-  return std::min(a, b);
-}
-} // namespace
-
 namespace precice::cplscheme {
 
 namespace {
@@ -299,7 +290,7 @@ double CompositionalCouplingScheme::getTimeWindowStart() const
   return std::transform_reduce(
       schemes.begin(), schemes.end(),
       std::numeric_limits<double>::max(),
-      ::min<double>,
+      [](double a, double b) { return std::min(a, b); },
       std::mem_fn(&CouplingScheme::getTimeWindowStart));
 }
 
@@ -311,7 +302,7 @@ int CompositionalCouplingScheme::getTimeWindows() const
   auto timeWindows = std::transform_reduce(
       schemes.begin(), schemes.end(),
       std::numeric_limits<int>::max(),
-      ::min<int>,
+      [](int a, int b) { return std::min(a, b); },
       std::mem_fn(&CouplingScheme::getTimeWindows));
   PRECICE_DEBUG("return {}", timeWindows);
   return timeWindows;
@@ -353,7 +344,7 @@ double CompositionalCouplingScheme::getNextTimeStepMaxSize() const
 
   double maxLength = std::transform_reduce(
       _activeSchemes.begin(), _activeSchemes.end(), std::numeric_limits<double>::max(),
-      ::min<double>,
+      [](double a, double b) { return std::min(a, b); },
       std::mem_fn(&CouplingScheme::getNextTimeStepMaxSize));
   PRECICE_DEBUG("return {}", maxLength);
   return maxLength;

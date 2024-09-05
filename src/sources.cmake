@@ -124,6 +124,7 @@ target_sources(preciceCore
     src/cplscheme/impl/SharedPointer.hpp
     src/cplscheme/impl/TimeHandler.cpp
     src/cplscheme/impl/TimeHandler.hpp
+    src/io/Export.cpp
     src/io/Export.hpp
     src/io/ExportCSV.cpp
     src/io/ExportCSV.hpp
@@ -175,6 +176,7 @@ target_sources(preciceCore
     src/mapping/AxialGeoMultiscaleMapping.hpp
     src/mapping/BarycentricBaseMapping.cpp
     src/mapping/BarycentricBaseMapping.hpp
+    src/mapping/GinkgoDefinitions.hpp
     src/mapping/GinkgoRadialBasisFctSolver.hpp
     src/mapping/LinearCellInterpolationMapping.cpp
     src/mapping/LinearCellInterpolationMapping.hpp
@@ -244,6 +246,7 @@ target_sources(preciceCore
     src/partition/ReceivedPartition.cpp
     src/partition/ReceivedPartition.hpp
     src/partition/SharedPointer.hpp
+    src/precice/Exceptions.hpp
     src/precice/Participant.cpp
     src/precice/Participant.hpp
     src/precice/Tooling.cpp
@@ -348,6 +351,7 @@ target_sources(preciceCore
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/Version.h
+    src/precice/Exceptions.hpp
     src/precice/Participant.hpp
     src/precice/Tooling.hpp
     src/precice/Types.hpp

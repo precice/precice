@@ -3,30 +3,40 @@
 #if defined(__NVCC__)
 
 #include <cuda_runtime.h>
+#include <ginkgo/extensions/kokkos.hpp>
+#include <ginkgo/ginkgo.hpp>
+
 #define BOOST_PP_VARIADICS 1
 #define PRECICE_HOST_DEVICE __host__ __device__
 #define PRECICE_MEMORY_SPACE __device__
-#define FMA fma
+#define PRECICE_FMA Kokkos::fma
+#define PRECICE_LOG Kokkos::log
 
 #elif defined(__HIPCC__)
 
-// #define __HIP_PLATFORM_AMD__
+#include <ginkgo/extensions/kokkos.hpp>
+#include <ginkgo/ginkgo.hpp>
 #include <hip/hip_runtime.h>
+
 #define PRECICE_HOST_DEVICE __host__ __device__
 #define PRECICE_MEMORY_SPACE __device__
-#define FMA fma
+#define PRECICE_FMA Kokkos::fma
+#define PRECICE_LOG Kokkos::log
 
 #else
 
 #define PRECICE_HOST_DEVICE
 #define PRECICE_MEMORY_SPACE
-#define FMA std::fma
+#define PRECICE_FMA std::fma
+#define PRECICE_LOG std::log
 
 #endif
 
-PRECICE_MEMORY_SPACE const double NUMERICAL_ZERO_DIFFERENCE = 1.0e-14;
+#define NUMERICAL_ZERO_DIFFERENCE_DEVICE 1.0e-14
 
+#if !defined(__NVCC__) || !defined(__HIPCC__)
 #include "logging/Logger.hpp"
+#endif
 #include "math/math.hpp"
 
 namespace precice {
@@ -103,7 +113,7 @@ public:
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
   {
     // We don't need to read any values from params since there is no need here
-    return std::log(std::max(radius, NUMERICAL_ZERO_DIFFERENCE)) * math::pow_int<2>(radius);
+    return PRECICE_LOG(std::max(radius, NUMERICAL_ZERO_DIFFERENCE_DEVICE)) * math::pow_int<2>(radius);
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -341,7 +351,7 @@ public:
     const double p     = radius * r_inv;
     if (p >= 1)
       return 0.0;
-    return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * std::log(std::max(p, NUMERICAL_ZERO_DIFFERENCE));
+    return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * PRECICE_LOG(std::max(p, NUMERICAL_ZERO_DIFFERENCE_DEVICE));
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -448,7 +458,7 @@ public:
     const double p     = radius * r_inv;
     if (p >= 1)
       return 0.0;
-    return math::pow_int<4>(1.0 - p) * FMA(4, p, 1);
+    return math::pow_int<4>(1.0 - p) * PRECICE_FMA(4, p, 1);
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -502,7 +512,7 @@ public:
     const double p     = radius * r_inv;
     if (p >= 1)
       return 0.0;
-    return math::pow_int<6>(1.0 - p) * (35 * math::pow_int<2>(p) + FMA(18, p, 3));
+    return math::pow_int<6>(1.0 - p) * (35 * math::pow_int<2>(p) + PRECICE_FMA(18, p, 3));
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -555,7 +565,7 @@ public:
     const double p     = radius * r_inv;
     if (p >= 1)
       return 0.0;
-    return math::pow_int<8>(1.0 - p) * (32.0 * math::pow_int<3>(p) + 25.0 * math::pow_int<2>(p) + FMA(8.0, p, 1.0));
+    return math::pow_int<8>(1.0 - p) * (32.0 * math::pow_int<3>(p) + 25.0 * math::pow_int<2>(p) + PRECICE_FMA(8.0, p, 1.0));
   };
 
   const RadialBasisParameters getFunctionParameters()
@@ -620,5 +630,8 @@ private:
   double                _r_inv;
   RadialBasisParameters _params;
 };
+
+#undef PRECICE_FMA
+#undef PRECICE_LOG
 } // namespace mapping
 } // namespace precice

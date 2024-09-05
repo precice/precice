@@ -88,6 +88,11 @@ public:
    */
   static void synchronize();
 
+  /** Does @synchronize have an effect?
+   * @see precice::syncMode
+   */
+  static bool willSynchronize();
+
   /// Synchronizes all ranks
   static void barrier();
 

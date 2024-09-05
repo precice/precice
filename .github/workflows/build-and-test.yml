@@ -30,7 +30,9 @@ jobs:
   build:
     name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }}
     runs-on: ubuntu-latest
-    container: 'precice/ci-${{ matrix.IMAGE }}:latest'
+    container:
+      image: 'precice/ci-${{ matrix.IMAGE }}:latest'
+      options: --shm-size=2gb
     defaults:
       run:
         shell: "bash --login -eo pipefail {0}"
@@ -66,32 +68,40 @@ jobs:
             CXX: 'g++'
             TYPE: Release
           - IMAGE: 'ubuntu-2404'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Debug
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Debug
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Release
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'clang++'
+            TYPE: Debug
+          - IMAGE: 'archlinux'
+            CONFIG: MPIPETSc
+            CXX: 'clang++'
+            TYPE: Release
+          - IMAGE: 'fedora'
             CONFIG: MPIPETScGinkgo
             CXX: 'g++'
             TYPE: Debug
-          - IMAGE: 'archlinux'
-            CONFIG: MPIPETSc
-            CXX: 'g++'
-            TYPE: Debug
-          - IMAGE: 'archlinux'
-            CONFIG: MPIPETSc
+          - IMAGE: 'fedora'
+            CONFIG: MPIPETScGinkgo
             CXX: 'g++'
             TYPE: Release
-          - IMAGE: 'archlinux'
+          - IMAGE: 'intel'
             CONFIG: MPIPETSc
-            CXX: 'clang++'
+            CXX: 'icpx'
             TYPE: Debug
-          - IMAGE: 'archlinux'
+          - IMAGE: 'intel'
             CONFIG: MPIPETSc
-            CXX: 'clang++'
-            TYPE: Release
-          - IMAGE: 'fedora'
-            CONFIG: MPIPETSc
-            CXX: 'g++'
-            TYPE: Debug
-          - IMAGE: 'fedora'
-            CONFIG: MPIPETSc
-            CXX: 'g++'
+            CXX: 'icpx'
             TYPE: Release
     steps:
       - uses: actions/checkout@v4

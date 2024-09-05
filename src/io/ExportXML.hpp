@@ -34,6 +34,8 @@ public:
 
   void doExport(int index, double time) final override;
 
+  void exportSeries() const final override;
+
   static void writeVertex(
       const Eigen::VectorXd &position,
       std::ostream &         outFile);
@@ -73,7 +75,7 @@ private:
   /**
    * @brief Writes the primary file (called only by the primary rank)
    */
-  void writeParallelFile(int index, double time) const;
+  void writeParallelFile(int index, double time);
 
   virtual void writeParallelCells(std::ostream &out) const = 0;
 
@@ -82,7 +84,7 @@ private:
   /**
    * @brief Writes the sub file for each rank
    */
-  void writeSubFile(int index, double time) const;
+  void writeSubFile(int index, double time);
 
   void exportPoints(
       std::ostream &    outFile,

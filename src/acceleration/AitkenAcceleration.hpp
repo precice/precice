@@ -44,9 +44,9 @@ protected:
 private:
   logging::Logger _log{"acceleration::AitkenAcceleration"};
 
-  double _initialRelaxation;
+  const double _initialRelaxation;
 
-  std::vector<int> _primaryDataIDs;
+  const std::vector<int> _primaryDataIDs;
 
   double _aitkenFactor;
 
