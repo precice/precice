@@ -262,13 +262,17 @@ protected:
   virtual void applyFilter();
 
   /// Computes the quasi-Newton update using the specified pp scheme (IQNIMVJ, IQNILS)
-  virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate) = 0;
+  virtual void computeQNUpdate(Eigen::VectorXd &xUpdate) = 0;
 
   /// Removes one iteration from V,W matrices and adapts _matrixCols.
   virtual void removeMatrixColumn(int columnIndex);
 
-  /// Wwrites info to the _infostream (also in parallel)
+  /// Writes info to the _infostream (also in parallel)
   void writeInfo(const std::string &s, bool allProcs = false);
+
+  /// @brief Concatenates the data and old data in cplData into two long vectors
+  void concatenateCouplingData(
+      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const;
 
   int its = 0, tWindows = 0;
 

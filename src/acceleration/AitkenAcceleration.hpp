@@ -36,6 +36,11 @@ public:
   virtual void iterationsConverged(
       const DataMap &cpldata);
 
+protected:
+  /// @brief Concatenates the data and old data in cplData into two long vectors
+  void concatenateCouplingData(
+      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const;
+
 private:
   logging::Logger _log{"acceleration::AitkenAcceleration"};
 
