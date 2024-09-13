@@ -29,6 +29,14 @@ public:
   {
   }
 
+protected:
+  /// @copydoc acceleration::Acceleration::concatenateCouplingData
+  void concatenateCouplingData(
+      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const override final
+  {
+    // function not needed in ConstantRelaxationAcceleration
+  }
+
 private:
   logging::Logger _log{"acceleration::ConstantRelaxationAcceleration"};
 

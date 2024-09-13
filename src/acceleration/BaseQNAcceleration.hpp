@@ -270,7 +270,7 @@ protected:
   /// Writes info to the _infostream (also in parallel)
   void writeInfo(const std::string &s, bool allProcs = false);
 
-  /// @brief Concatenates the data and old data in cplData into two long vectors
+  /// @copydoc acceleration::Acceleration::concatenateCouplingData
   void concatenateCouplingData(
       const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const override final;
 
