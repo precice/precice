@@ -272,7 +272,7 @@ protected:
 
   /// @brief Concatenates the data and old data in cplData into two long vectors
   void concatenateCouplingData(
-      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const;
+      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const override final;
 
   int its = 0, tWindows = 0;
 
