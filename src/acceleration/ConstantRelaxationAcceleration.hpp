@@ -27,6 +27,7 @@ public:
 
   virtual void iterationsConverged(const DataMap &cplData) override
   {
+    // function not needed in ConstantRelaxationAcceleration
   }
 
 protected:
