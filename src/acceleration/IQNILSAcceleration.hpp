@@ -56,7 +56,7 @@ private:
   virtual void updateDifferenceMatrices(const DataMap &cplData);
 
   /// computes the IQN-ILS update using QR decomposition
-  virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate);
+  virtual void computeQNUpdate(Eigen::VectorXd &xUpdate);
 
   /// Removes one iteration from V,W matrices and adapts _matrixCols.
   virtual void removeMatrixColumn(int columnIndex);

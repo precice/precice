@@ -196,9 +196,7 @@ void IQNIMVJAcceleration::updateDifferenceMatrices(
 }
 
 // ==================================================================================
-void IQNIMVJAcceleration::computeQNUpdate(
-    const DataMap &  cplData,
-    Eigen::VectorXd &xUpdate)
+void IQNIMVJAcceleration::computeQNUpdate(Eigen::VectorXd &xUpdate)
 {
   /**
    * The inverse Jacobian
@@ -218,9 +216,9 @@ void IQNIMVJAcceleration::computeQNUpdate(
    *             using it in multiplications with the other matrices.
    */
   if (_alwaysBuildJacobian) {
-    computeNewtonUpdate(cplData, xUpdate);
+    computeNewtonUpdate(xUpdate);
   } else {
-    computeNewtonUpdateEfficient(cplData, xUpdate);
+    computeNewtonUpdateEfficient(xUpdate);
   }
 }
 
@@ -343,9 +341,7 @@ void IQNIMVJAcceleration::buildJacobian()
 }
 
 // ==================================================================================
-void IQNIMVJAcceleration::computeNewtonUpdateEfficient(
-    const DataMap &  cplData,
-    Eigen::VectorXd &xUpdate)
+void IQNIMVJAcceleration::computeNewtonUpdateEfficient(Eigen::VectorXd &xUpdate)
 {
   PRECICE_TRACE();
 
@@ -443,7 +439,7 @@ void IQNIMVJAcceleration::computeNewtonUpdateEfficient(
 }
 
 // ==================================================================================
-void IQNIMVJAcceleration::computeNewtonUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate)
+void IQNIMVJAcceleration::computeNewtonUpdate(Eigen::VectorXd &xUpdate)
 {
   PRECICE_TRACE();
 
