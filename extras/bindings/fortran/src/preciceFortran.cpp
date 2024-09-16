@@ -391,14 +391,8 @@ std::string_view precice::impl::strippedStringView(const char *string, int lengt
 void precicef_get_version_information_(
     char *versionInfo,
     int   lengthVersionInfo)
-try {
-  const std::string &versionInformation = precice::versionInformation;
-  PRECICE_ASSERT(versionInformation.size() < (size_t) lengthVersionInfo, versionInformation.size(), lengthVersionInfo);
-  for (size_t i = 0; i < versionInformation.size(); i++) {
-    versionInfo[i] = versionInformation[i];
-  }
-} catch (::precice::Error &e) {
-  std::abort();
+{
+  std::strncpy(versionInfo, precice::versionInformation, lengthVersionInfo);
 }
 
 void precicef_requires_gradient_data_for_(
