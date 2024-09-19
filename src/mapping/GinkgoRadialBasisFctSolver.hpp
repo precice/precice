@@ -62,7 +62,6 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 class GinkgoRadialBasisFctSolver {
 public:
   using BASIS_FUNCTION_T       = RADIAL_BASIS_FUNCTION_T;
-  GinkgoRadialBasisFctSolver() = default;
 
   /// Assembles the system matrices and computes the decomposition of the interpolation matrix
   template <typename IndexContainer>
@@ -173,6 +172,9 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     : _ginkgoParameter(ginkgoParameter)
 {
   PRECICE_TRACE();
+  // We have to initialize Kokkos and Ginkgo here, as the initialization call allocates memory
+  // in the current setup, this will only initialize the device (and allocate memory) on the primary rank
+  device::Ginkgo::initialize(_ginkgoParameter.nThreads, _ginkgoParameter.deviceId);
   PRECICE_INFO("Using Ginkgo solver {} on executor {} with max. iterations {} and residual reduction {}",
                ginkgoParameter.solver,
                ginkgoParameter.executor,
