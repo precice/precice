@@ -1,8 +1,9 @@
-#include "Mapping.hpp"
 #include <boost/config.hpp>
 #include <ostream>
+#include "Mapping.hpp"
 #include "math/differences.hpp"
 #include "mesh/Utils.hpp"
+#include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
@@ -266,6 +267,7 @@ bool Mapping::isIndirectMapping() const
 
 void Mapping::updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in)
 {
+  precice::profiling::Event e("map.updateCache.From" + input()->getName());
   cache.inData = in;
 }
 
