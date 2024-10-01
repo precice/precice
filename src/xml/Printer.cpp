@@ -65,25 +65,24 @@ std::ostream &printDTD(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &attr,
 template <typename ATTRIBUTE_T>
 std::ostream &printMD(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &attr)
 {
-  out << "| " << attr.getName() << " | " << utils::getTypeName(attr.getDefaultValue()) << " | " << attr.getUserDocumentation() << " | ";
+  fmt::print(out,
+             "| {} | {} | {} |",
+             attr.getName(),
+             utils::getTypeName(attr.getDefaultValue()),
+             attr.getUserDocumentation());
+
   if (attr.hasDefaultValue()) {
-    out << '`' << attr.getDefaultValue() << '`';
+    fmt::print(out, " `{}` |", attr.getDefaultValue());
   } else {
-    out << "_none_";
+    out << " _none_ |";
   }
-  out << " | ";
 
   const auto &options = attr.getOptions();
   if (options.empty()) {
-    out << "none";
+    out << " none |";
   } else {
-    out << '`' << options.front() << '`';
-    for (auto iter = ++options.cbegin(); iter != options.cend(); ++iter) {
-      out << ", " << '`' << *iter << '`';
-    }
+    fmt::print(out, " `{}` |", fmt::join(options, "`, `"));
   }
-
-  out << " |";
   return out;
 }
 
@@ -93,7 +92,7 @@ std::ostream &printExample(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &a
 {
   out << attr.getName() << "=\"";
   if (attr.hasDefaultValue()) {
-    out << attr.getDefaultValue();
+    fmt::print(out, "{}", attr.getDefaultValue());
   } else {
     out << '{' << utils::getTypeName(attr.getDefaultValue()) << '}';
   }
