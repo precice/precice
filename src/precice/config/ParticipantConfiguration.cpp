@@ -204,7 +204,7 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "for the InfiniBand on SuperMUC. ");
     tagIntraComm.addAttribute(attrNetwork);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, ".")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen.");
@@ -219,7 +219,7 @@ ParticipantConfiguration::ParticipantConfiguration(
     doc += "Use this tag to use MPI with separated communication spaces instead instead.";
     tagIntraComm.setDocumentation(doc);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, ".")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen.");
