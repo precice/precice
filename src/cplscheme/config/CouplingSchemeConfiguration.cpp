@@ -214,6 +214,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     _config.timeWindowSize = tag.getDoubleAttributeValue(ATTR_VALUE);
     // Attribute does not exist for parallel coupling schemes as it is always fixed.
     _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD, VALUE_FIXED));
+
     if (_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE) {
       PRECICE_CHECK(_config.timeWindowSize >= math::NUMERICAL_ZERO_DIFFERENCE,
                     "The minimal time window size supported by preCICE is {}. "
@@ -831,7 +832,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
   PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE);
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
-  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.participants[0], _config.participants[1], accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
+  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.participants[0], _config.participants[1], accessor, m2n, BaseCouplingScheme::Explicit);
 
   for (const auto &exchange : _config.exchanges) {
     if (exchange.exchangeSubsteps) {
@@ -891,7 +892,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
   PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE);
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
-  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.participants[0], _config.participants[1], accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.minIterations, _config.maxIterations);
+  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.participants[0], _config.participants[1], accessor, m2n, BaseCouplingScheme::Implicit, _config.minIterations, _config.maxIterations);
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(scheme->hasAnySendData(),
@@ -926,7 +927,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   }
 
   scheme = new MultiCouplingScheme(
-      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, accessor, m2ns, _config.dtMethod, _config.controller, _config.minIterations, _config.maxIterations);
+      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, accessor, m2ns, _config.controller, _config.minIterations, _config.maxIterations);
 
   MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
   PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");

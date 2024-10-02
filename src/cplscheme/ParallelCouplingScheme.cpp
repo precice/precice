@@ -8,31 +8,29 @@
 namespace precice::cplscheme {
 
 ParallelCouplingScheme::ParallelCouplingScheme(
-    double                        maxTime,
-    int                           maxTimeWindows,
-    double                        timeWindowSize,
-    const std::string &           firstParticipant,
-    const std::string &           secondParticipant,
-    const std::string &           localParticipant,
-    m2n::PtrM2N                   m2n,
-    constants::TimesteppingMethod dtMethod,
-    CouplingMode                  cplMode,
-    int                           minIterations,
-    int                           maxIterations)
+    double             maxTime,
+    int                maxTimeWindows,
+    double             timeWindowSize,
+    const std::string &firstParticipant,
+    const std::string &secondParticipant,
+    const std::string &localParticipant,
+    m2n::PtrM2N        m2n,
+    CouplingMode       cplMode,
+    int                minIterations,
+    int                maxIterations)
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, firstParticipant,
-                       secondParticipant, localParticipant, std::move(m2n), minIterations, maxIterations, cplMode, dtMethod) {}
+                       secondParticipant, localParticipant, std::move(m2n), minIterations, maxIterations, cplMode, constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE) {}
 
 ParallelCouplingScheme::ParallelCouplingScheme(
-    double                        maxTime,
-    int                           maxTimeWindows,
-    double                        timeWindowSize,
-    const std::string &           firstParticipant,
-    const std::string &           secondParticipant,
-    const std::string &           localParticipant,
-    m2n::PtrM2N                   m2n,
-    constants::TimesteppingMethod dtMethod,
-    CouplingMode                  cplMode)
-    : ParallelCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), dtMethod, cplMode, UNDEFINED_MAX_ITERATIONS, UNDEFINED_MAX_ITERATIONS){};
+    double             maxTime,
+    int                maxTimeWindows,
+    double             timeWindowSize,
+    const std::string &firstParticipant,
+    const std::string &secondParticipant,
+    const std::string &localParticipant,
+    m2n::PtrM2N        m2n,
+    CouplingMode       cplMode)
+    : ParallelCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), cplMode, UNDEFINED_MAX_ITERATIONS, UNDEFINED_MAX_ITERATIONS){};
 
 void ParallelCouplingScheme::exchangeInitialData()
 {
