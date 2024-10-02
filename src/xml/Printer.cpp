@@ -314,10 +314,10 @@ std::ostream &printMD(std::ostream &out, const XMLTag &tag, int level, std::map<
 
       const auto ns = subtag->getNamespace();
       if (ns.empty()) {
-        out << fmt::format("[* {}]({}) `{}`",
-                           heading,
-                           link,
-                           subtag->getOccurrenceString(subtag->getOccurrence()));
+        fmt::print(out, "* [{}]({}) `{}`\n",
+                   heading,
+                   link,
+                   subtag->getOccurrenceString(subtag->getOccurrence()));
       } else {
         auto &tags = groupedTags[ns];
         tags.emplace_back(fmt::format("[{}]({}) `{}`",
