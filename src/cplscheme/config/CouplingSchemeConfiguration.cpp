@@ -222,11 +222,11 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                     math::NUMERICAL_ZERO_DIFFERENCE, _config.timeWindowSize);
     } else {
       PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE);
-      PRECICE_CHECK(_config.timeWindowSize == -1,
-                    "Time window size value has to be equal to -1 (default), if method=\"first-participant\" is used. "
-                    "Please check the <time-window-size value=\"{}\" method=\"{}\" /> "
-                    "tag in the <coupling-scheme:...> of your precice-config.xml",
-                    _config.timeWindowSize, tag.getStringAttributeValue(ATTR_METHOD));
+      PRECICE_WARN_IF(_config.timeWindowSize != CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE,
+                      "You combined a custom time-window-size of {} with method=\"first-participant\". "
+                      "The given time-window-size will be ignored as it is prescribed by the participant.",
+                      _config.timeWindowSize);
+      _config.timeWindowSize = CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE;
     }
   } else if (tag.getName() == TAG_ABS_CONV_MEASURE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
@@ -828,6 +828,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
     const std::string &accessor) const
 {
   PRECICE_TRACE(accessor);
+  PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE);
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
   ParallelCouplingScheme *scheme = new ParallelCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.participants[0], _config.participants[1], accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
@@ -887,6 +888,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
     const std::string &accessor) const
 {
   PRECICE_TRACE(accessor);
+  PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE);
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
   ParallelCouplingScheme *scheme = new ParallelCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.participants[0], _config.participants[1], accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.minIterations, _config.maxIterations);
@@ -912,6 +914,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
     const std::string &accessor) const
 {
   PRECICE_TRACE(accessor);
+  PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE);
 
   BaseCouplingScheme *scheme;
 
