@@ -3,87 +3,59 @@
 #include <Eigen/Core>
 
 namespace precice::utils {
-inline Eigen::MatrixXd invertLowerTriangularBlockwise(const Eigen::MatrixXd& L) {
-    int n = L.rows();
-    int blockSize = 64;  // Block size can be adjusted based on cache size and performance
+inline Eigen::MatrixXd invertLowerTriangularBlockwise(const Eigen::MatrixXd &L)
+{
+  const int n = L.rows();
+  // Block size (could be adjusted) and resulting number of blocks
+  const int blockSize = 64;
+  const int numBlocks = static_cast<int>((n + blockSize - 1) / blockSize);
 
-    // Initialize the inverse matrix as a zero matrix
-    Eigen::MatrixXd L_inv = Eigen::MatrixXd::Zero(n, n);
+  // Initialize the inverse matrix as a identity (enables inPlaceSolve)
+  Eigen::MatrixXd L_inv = Eigen::MatrixXd::Identity(n, n);
 
-    // Number of blocks
-    int numBlocks = (n + blockSize - 1) / blockSize;
+  // Step 1: Invert diagonal blocks
+  for (int k = 0; k < numBlocks; ++k) {
+    const int start            = k * blockSize;
+    const int end              = std::min(start + blockSize, n);
+    const int currentBlockSize = end - start;
 
-    // Store inverses of diagonal blocks
-    std::vector<Eigen::MatrixXd> diagInverses(numBlocks);
+    // Invert the diagonal block using Eigen's trsm
+    L.block(start, start, currentBlockSize, currentBlockSize).triangularView<Eigen::Lower>().solveInPlace(L_inv.block(start, start, currentBlockSize, currentBlockSize));
+  }
 
-    // Step 1: Invert diagonal blocks
-    for (int k = 0; k < numBlocks; ++k) {
-        int start = k * blockSize;
-        int end = std::min(start + blockSize, n);
-        int currentBlockSize = end - start;
-
-        // Extract the diagonal block Lkk
-        auto Lkk = L.block(start, start, currentBlockSize, currentBlockSize);
-
-        // Invert the diagonal block
-        Eigen::MatrixXd Lkk_inv = Lkk.triangularView<Eigen::Lower>().solve(
-            Eigen::MatrixXd::Identity(currentBlockSize, currentBlockSize));
-
-        // Place the inverted diagonal block into L_inv
-        L_inv.block(start, start, currentBlockSize, currentBlockSize) = Lkk_inv;
-
-        // Store the inverted diagonal block for later use
-        diagInverses[k] = Lkk_inv;
-    }
-// Step 2: Compute off-diagonal blocks
-for (int i = 1; i < numBlocks; ++i) {
-    int i_start = i * blockSize;
-    int i_end = std::min(i_start + blockSize, n);
+  // Step 2: Compute off-diagonal blocks
+  for (int i = 1; i < numBlocks; ++i) {
+    int i_start     = i * blockSize;
+    int i_end       = std::min(i_start + blockSize, n);
     int i_blockSize = i_end - i_start;
 
-    // Inverse of the diagonal block Lii (already computed)
-    Eigen::MatrixXd Lii_inv = diagInverses[i];
-
     for (int j = 0; j < i; ++j) {
-        int j_start = j * blockSize;
-        int j_end = std::min(j_start + blockSize, n);
-        int j_blockSize = j_end - j_start;
+      int j_start     = j * blockSize;
+      int j_end       = std::min(j_start + blockSize, n);
+      int j_blockSize = j_end - j_start;
 
-        // Initialize the off-diagonal block
-        Eigen::MatrixXd offDiagBlock = Eigen::MatrixXd::Zero(i_blockSize, j_blockSize);
+      // Initialize the off-diagonal block
+      Eigen::MatrixXd offDiagBlock = Eigen::MatrixXd::Zero(i_blockSize, j_blockSize);
 
-        // Accumulate the sum of L_ik * L_inv(k, j) for k = j+1 to i-1
-        for (int k = j + 1; k < i; ++k) {
-            int k_start = k * blockSize;
-            int k_end = std::min(k_start + blockSize, n);
-            int k_blockSize = k_end - k_start;
+      // Accumulate the sum of L_ik * L_inv(k, j) for k = j+1 to i-1
+      for (int k = j + 1; k < i; ++k) {
+        int k_start     = k * blockSize;
+        int k_end       = std::min(k_start + blockSize, n);
+        int k_blockSize = k_end - k_start;
 
-            // L_ik
-            Eigen::MatrixXd Lik = L.block(i_start, k_start, i_blockSize, k_blockSize);
+        // Update offDiagBlock with L_ik + L_inv_kj
+        offDiagBlock += L.block(i_start, k_start, i_blockSize, k_blockSize) * L_inv.block(k_start, j_start, k_blockSize, j_blockSize);
+      }
 
-            // L_inv(k, j), previously computed
-            Eigen::MatrixXd L_inv_kj = L_inv.block(k_start, j_start, k_blockSize, j_blockSize);
+      // Final computation for the off-diagonal block using the block Lij and Ljj (from L_inv)
+      offDiagBlock += L.block(i_start, j_start, i_blockSize, j_blockSize) * L_inv.block(j_start, j_start, j_blockSize, j_blockSize).triangularView<Eigen::Lower>();
 
-            // Update offDiagBlock
-            offDiagBlock += Lik * L_inv_kj;
-        }
-
-        // Extract the block Lij
-        Eigen::MatrixXd Lij = L.block(i_start, j_start, i_blockSize, j_blockSize);
-
-        // Inverse of the diagonal block Ljj (already computed)
-        Eigen::MatrixXd Ljj_inv = diagInverses[j];
-
-        // Final computation for the off-diagonal block
-        offDiagBlock += Lij * Ljj_inv;
-        offDiagBlock = -Lii_inv * offDiagBlock;
-
-        // Place the computed off-diagonal block into L_inv
-        L_inv.block(i_start, j_start, i_blockSize, j_blockSize) = offDiagBlock;
+      // Place the computed off-diagonal block into L_inv
+      // Note that, although L_inv is on both sides, there source and destination are different in memory
+      L_inv.block(i_start, j_start, i_blockSize, j_blockSize) = -L_inv.block(i_start, i_start, i_blockSize, i_blockSize) * offDiagBlock;
     }
-}
-
-    return L_inv;
+  }
+  return L_inv;
 }
 
 // inline void invertLowerTriangular(const Eigen::Ref<const Eigen::MatrixXd>& L, Eigen::MatrixXd& L_inv)
@@ -124,7 +96,6 @@ for (int i = 1; i < numBlocks; ++i) {
 // {
 //     typedef typename MatrixType::Index Index;
 //     Index size = m.rows();
-
 
 //     Index n1 = blockSize;
 //     Index n2 = size - n1;

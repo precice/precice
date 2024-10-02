@@ -36,7 +36,7 @@ public:
    * for consistent mappings and the output mesh for conservative mappings
    * outputMesh refers to the mesh where we evaluate the interpolants, i.e., the output mesh
    * consistent mappings and the input mesh for conservative mappings
-  */
+   */
   template <typename IndexContainer>
   RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                        const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial);
