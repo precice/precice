@@ -7,6 +7,7 @@
 #include <boost/range/irange.hpp>
 #include <numeric>
 #include <type_traits>
+#include "mapping/MathHelper.hpp"
 #include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
