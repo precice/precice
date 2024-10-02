@@ -126,56 +126,46 @@ ParticipantConfiguration::ParticipantConfiguration(
   tag.addSubtag(tagWatchIntegral);
 
   XMLTag tagProvideMesh(*this, TAG_PROVIDE_MESH, XMLTag::OCCUR_ARBITRARY);
-  doc = "Provide a mesh (see tag <mesh>) to other participants.";
+  doc = "Provide a mesh (see tag `<mesh>`) to other participants.";
   tagProvideMesh.setDocumentation(doc);
   attrName.setDocumentation("Name of the mesh to provide.");
   tagProvideMesh.addAttribute(attrName);
   tag.addSubtag(tagProvideMesh);
 
   XMLTag tagReceiveMesh(*this, TAG_RECEIVE_MESH, XMLTag::OCCUR_ARBITRARY);
-  doc = "Makes a remote mesh (see tag <mesh>) available to this participant.";
+  doc = "Makes a remote mesh (see tag `<mesh>`) available to this participant.";
   tagReceiveMesh.setDocumentation(doc);
   attrName.setDocumentation("Name of the mesh to receive.");
   tagReceiveMesh.addAttribute(attrName);
   auto attrFrom = XMLAttribute<std::string>(ATTR_FROM)
                       .setDocumentation("The name of the participant to receive the mesh from. "
-                                        "This participant needs to provide the mesh using <provide-mesh />.");
-  tagReceiveMesh.addAttribute(attrFrom);
-  auto attrSafetyFactor = makeXMLAttribute(ATTR_SAFETY_FACTOR, 0.5)
+                                        "This participant needs to provide the mesh using `<provide-mesh />`.");
+
+  auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
                               .setDocumentation(
-                                  "If a mesh is received from another partipant (see tag <from>), it needs to be"
-                                  "decomposed at the receiving participant. To speed up this process, "
-                                  "a geometric filter (see tag <geometric-filter>), i.e. filtering by bounding boxes around the local mesh, can be used. "
-                                  "This safety factor defines by which factor this local information is "
-                                  "increased. An example: 0.5 means that the bounding box is 150% of its original size.");
-  tagReceiveMesh.addAttribute(attrSafetyFactor);
+                                  "Controls direct access to a received mesh without having to map it to a provided mesh. "
+                                  "A received mesh needs to be decomposed using a region of interest, which cannot inferred, if there are no mappings to or from a provided mesh. "
+                                  "To manually provide the region use the API function `setMeshAccessRegion()`.");
+  tagReceiveMesh.addAttribute(attrDirectAccess);
 
   auto attrGeoFilter = XMLAttribute<std::string>(ATTR_GEOMETRIC_FILTER)
                            .setDocumentation(
-                               "If a mesh is received from another partipant (see tag <from>), it needs to be"
-                               "decomposed at the receiving participant. To speed up this process, "
-                               "a geometric filter, i.e. filtering by bounding boxes around the local mesh, can be used. "
-                               "Two different variants are implemented: a filter \"on-primary\" strategy, "
-                               "which is beneficial for a huge mesh and a low number of processors, and a filter "
-                               "\"on-secondary\" strategy, which performs better for a very high number of "
-                               "processors. Both result in the same distribution (if the safety factor is sufficiently large). "
-                               "\"on-primary\" is not supported if you use two-level initialization. "
-                               "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")
+                               "A received mesh needs to be decomposed using a mapping-inferred region of interest, if it is not directly-accessed. "
+                               "A geometric filter based on bounding-boxes around the local mesh can speed up this process. "
+                               "`on-primary-rank` is beneficial for a huge mesh and a low number of processors, but is incompatible with two-level initialization. "
+                               "`on-secondary-ranks` performs better for a very high number of processors. "
+                               "Both result in the same distribution if the safety-factor is sufficiently large. "
+                               "`no-filter` may be useful for very asymmetric cases.")
                            .setOptions({VALUE_NO_FILTER, VALUE_FILTER_ON_PRIMARY_RANK, VALUE_FILTER_ON_SECONDARY_RANKS})
                            .setDefaultValue(VALUE_FILTER_ON_SECONDARY_RANKS);
   tagReceiveMesh.addAttribute(attrGeoFilter);
 
-  auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
+  tagReceiveMesh.addAttribute(attrFrom);
+  auto attrSafetyFactor = makeXMLAttribute(ATTR_SAFETY_FACTOR, 0.5)
                               .setDocumentation(
-                                  "If a mesh is received from another partipant (see tag <from>), it needs to be"
-                                  "decomposed at the receiving participant. In case a mapping is defined, the "
-                                  "mesh is decomposed according to the local provided mesh associated to the mapping. "
-                                  "In case no mapping has been defined (you want to access "
-                                  "the mesh and related data direct), there is no obvious way on how to decompose the "
-                                  "mesh, since no mesh needs to be provided by the participant. For this purpose, bounding "
-                                  "boxes can be defined (see API function \"setMeshAccessRegion\") and used by selecting "
-                                  "the option direct-access=\"true\".");
-  tagReceiveMesh.addAttribute(attrDirectAccess);
+                                  "The safety-factor of the geometric-filter uniformly scales the bounding box by the given factor. "
+                                  "A safety-factor of `0.5` means that the bounding box is 150% of its original size.");
+  tagReceiveMesh.addAttribute(attrSafetyFactor);
 
   tag.addSubtag(tagReceiveMesh);
 
