@@ -77,6 +77,8 @@ private:
 
   /// Evaluation matrix (output x input)
   Eigen::MatrixXd _matrixA;
+
+  const bool computeCrossValidation = false;
 };
 
 // ------- Non-Member Functions ---------
@@ -348,7 +350,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
                 inputMesh.getName(), outputMesh.getName());
 
   // For polynomial on, the algorithm might fail in determining the size of the system
-  if (polynomial != Polynomial::ON) {
+  if (polynomial != Polynomial::ON && computeCrossValidation) {
     // TODO: Disable synchronization
     precice::profiling::Event e("map.rbf.computeLOOCV");
     _inverseDiagonal = computeInverseDiagonal(_decMatrixC);
@@ -435,9 +437,9 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   PRECICE_ASSERT(inputData.size() == _matrixA.cols());
   Eigen::VectorXd p = _decMatrixC.solve(inputData);
 
-  if (polynomial != Polynomial::ON) {
+  if (polynomial != Polynomial::ON && computeCrossValidation) {
     precice::profiling::Event e("map.rbf.evaluateLOOCV");
-    PRECICE_INFO("LOOCV error: {}", evaluateRippaLOOCVerror(p));
+    PRECICE_INFO("Cross validation error (LOOCV): {}", evaluateRippaLOOCVerror(p));
   }
   PRECICE_ASSERT(p.size() == _matrixA.cols());
   Eigen::VectorXd out = _matrixA * p;
