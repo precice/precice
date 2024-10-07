@@ -152,6 +152,7 @@ ParticipantConfiguration::ParticipantConfiguration(
                            .setDocumentation(
                                "For parallel execution, a received mesh needs to be decomposed. "
                                "A geometric filter based on bounding-boxes around the local mesh can speed up this process. "
+                               "This setting controls if and where this filter is applied. "
                                "`on-primary-rank` is beneficial for a huge mesh and a low number of processors, but is incompatible with two-level initialization. "
                                "`on-secondary-ranks` performs better for a very high number of processors. "
                                "Both result in the same distribution if the safety-factor is sufficiently large. "
