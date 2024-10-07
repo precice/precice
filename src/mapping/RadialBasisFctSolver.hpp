@@ -78,7 +78,7 @@ private:
   /// Evaluation matrix (output x input)
   Eigen::MatrixXd _matrixA;
 
-  const bool computeCrossValidation = false;
+  bool computeCrossValidation = false;
 };
 
 // ------- Non-Member Functions ---------
