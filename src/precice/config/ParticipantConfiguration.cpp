@@ -163,7 +163,7 @@ ParticipantConfiguration::ParticipantConfiguration(
   tagReceiveMesh.addAttribute(attrFrom);
   auto attrSafetyFactor = makeXMLAttribute(ATTR_SAFETY_FACTOR, 0.5)
                               .setDocumentation(
-                                  "The safety-factor of the geometric-filter uniformly scales the bounding box by the given factor. "
+                                  "The safety factor of the geometric filter uniformly scales the rank-local bounding box by the given factor. "
                                   "A safety-factor of `0.5` means that the bounding box is 150% of its original size.");
   tagReceiveMesh.addAttribute(attrSafetyFactor);
 
