@@ -144,18 +144,18 @@ ParticipantConfiguration::ParticipantConfiguration(
   auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
                               .setDocumentation(
                                   "Controls direct access to a received mesh without having to map it to a provided mesh. "
-                                  "A received mesh needs to be decomposed using a region of interest, which cannot inferred, if there are no mappings to or from a provided mesh. "
-                                  "To manually provide the region use the API function `setMeshAccessRegion()`.");
+                                  "A received mesh needs to be decomposed in preCICE using a region of interest, which cannot be inferred, if there are no mappings to or from a provided mesh. "
+                                  "In such cases the API function `setMeshAccessRegion()` must be used to define the region of interest.");
   tagReceiveMesh.addAttribute(attrDirectAccess);
 
   auto attrGeoFilter = XMLAttribute<std::string>(ATTR_GEOMETRIC_FILTER)
                            .setDocumentation(
-                               "A received mesh needs to be decomposed using a mapping-inferred region of interest, if it is not directly-accessed. "
+                               "For parallel execution, a received mesh needs to be decomposed. "
                                "A geometric filter based on bounding-boxes around the local mesh can speed up this process. "
                                "`on-primary-rank` is beneficial for a huge mesh and a low number of processors, but is incompatible with two-level initialization. "
                                "`on-secondary-ranks` performs better for a very high number of processors. "
                                "Both result in the same distribution if the safety-factor is sufficiently large. "
-                               "`no-filter` may be useful for very asymmetric cases.")
+                               "`no-filter` may be useful for very asymmetric cases and for debugging.")
                            .setOptions({VALUE_NO_FILTER, VALUE_FILTER_ON_PRIMARY_RANK, VALUE_FILTER_ON_SECONDARY_RANKS})
                            .setDefaultValue(VALUE_FILTER_ON_SECONDARY_RANKS);
   tagReceiveMesh.addAttribute(attrGeoFilter);
