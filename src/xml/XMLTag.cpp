@@ -54,8 +54,8 @@ XMLTag &XMLTag::addAttribute(const XMLAttribute<double> &attribute)
 {
   const auto &name = attribute.getName();
   PRECICE_TRACE(name);
-  PRECICE_ASSERT(_attributes.count(name) == 0 && _attributeHints.count(name) == 0);
-  _attributes.insert(name);
+  PRECICE_ASSERT(!hasAttribute(name) && _attributeHints.count(name) == 0);
+  _attributes.push_back(name);
   _doubleAttributes.insert(std::pair<std::string, XMLAttribute<double>>(name, attribute));
   return *this;
 }
@@ -64,8 +64,8 @@ XMLTag &XMLTag::addAttribute(const XMLAttribute<int> &attribute)
 {
   const auto &name = attribute.getName();
   PRECICE_TRACE(name);
-  PRECICE_ASSERT(_attributes.count(name) == 0 && _attributeHints.count(name) == 0);
-  _attributes.insert(name);
+  PRECICE_ASSERT(!hasAttribute(name) && _attributeHints.count(name) == 0);
+  _attributes.push_back(name);
   _intAttributes.insert(std::pair<std::string, XMLAttribute<int>>(name, attribute));
   return *this;
 }
@@ -74,8 +74,8 @@ XMLTag &XMLTag::addAttribute(const XMLAttribute<std::string> &attribute)
 {
   const auto &name = attribute.getName();
   PRECICE_TRACE(name);
-  PRECICE_ASSERT(_attributes.count(name) == 0 && _attributeHints.count(name) == 0);
-  _attributes.insert(name);
+  PRECICE_ASSERT(!hasAttribute(name) && _attributeHints.count(name) == 0);
+  _attributes.push_back(name);
   _stringAttributes.insert(std::pair<std::string, XMLAttribute<std::string>>(name, attribute));
   return *this;
 }
@@ -84,8 +84,8 @@ XMLTag &XMLTag::addAttribute(const XMLAttribute<bool> &attribute)
 {
   const auto &name = attribute.getName();
   PRECICE_TRACE(name);
-  PRECICE_ASSERT(_attributes.count(name) == 0 && _attributeHints.count(name) == 0);
-  _attributes.insert(name);
+  PRECICE_ASSERT(!hasAttribute(name) && _attributeHints.count(name) == 0);
+  _attributes.push_back(name);
   _booleanAttributes.insert(std::pair<std::string, XMLAttribute<bool>>(name, attribute));
   return *this;
 }
@@ -94,8 +94,8 @@ XMLTag &XMLTag::addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute)
 {
   const auto &name = attribute.getName();
   PRECICE_TRACE(name);
-  PRECICE_ASSERT(_attributes.count(name) == 0 && _attributeHints.count(name) == 0);
-  _attributes.insert(name);
+  PRECICE_ASSERT(!hasAttribute(name) && _attributeHints.count(name) == 0);
+  _attributes.push_back(name);
   _eigenVectorXdAttributes.insert(
       std::pair<std::string, XMLAttribute<Eigen::VectorXd>>(name, attribute));
   return *this;
@@ -104,13 +104,13 @@ XMLTag &XMLTag::addAttribute(const XMLAttribute<Eigen::VectorXd> &attribute)
 void XMLTag::addAttributeHint(std::string name, std::string message)
 {
   PRECICE_TRACE(name);
-  PRECICE_ASSERT(_attributes.count(name) == 0 && _attributeHints.count(name) == 0);
+  PRECICE_ASSERT(!hasAttribute(name) && _attributeHints.count(name) == 0);
   _attributeHints.emplace(std::move(name), std::move(message));
 }
 
 bool XMLTag::hasAttribute(const std::string &attributeName)
 {
-  return utils::contained(attributeName, _attributes);
+  return std::find(_attributes.begin(), _attributes.end(), attributeName) != _attributes.end();
 }
 
 double XMLTag::getDoubleAttributeValue(const std::string &name, std::optional<double> default_value) const
@@ -194,7 +194,7 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
   for (auto &element : aAttributes) {
     auto name = element.first;
 
-    if (not utils::contained(name, _attributes)) {
+    if (not hasAttribute(name)) {
       // check existing hints
       if (auto pos = _attributeHints.find(name);
           pos != _attributeHints.end()) {
