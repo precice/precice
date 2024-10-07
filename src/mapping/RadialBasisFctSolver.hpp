@@ -243,22 +243,17 @@ inline Eigen::VectorXd computeInverseDiagonal(Eigen::LLT<Eigen::MatrixXd> decMat
   // _decMatrixC.matrixL().solveInPlace(L_inv);
   // which yields cubic complexity (BLAS level 3).
 
-  // Trying to implement the forward substitution of L here manually, which can be
+  // Here, we use our own implementation to compute the triangular inverse
   // (similar to LAPACK:trtri) more efficient, given that the RHS is also
   // triangular was unfortunately slower.
-  // @todo implement something trtri-like which is more efficient
-  // @todo if we need to compute this multiple times, we should store the diagonal
-  // entries
-
-  Eigen::VectorXd    inverseDiagonal;
-  const Eigen::Index n = decMatrixC.matrixL().cols();
 
   // Solve L * Linv = I
-  Eigen::MatrixXd L_inv = Eigen::MatrixXd::Identity(n, n);
-  decMatrixC.matrixL().solveInPlace(L_inv);
+  // Eigen::MatrixXd L_inv = Eigen::MatrixXd::Identity(n, n);
+  // decMatrixC.matrixL().solveInPlace(L_inv);
+  Eigen::MatrixXd L_inv = utils::invertLowerTriangularBlockwise(decMatrixC.matrixL());
 
   // 1b: Compute the diagonal elements of A^{-1} by evaluating (L^T)^{-1}L^{-1}
-  inverseDiagonal = (L_inv.array().square().colwise().sum()).transpose();
+  Eigen::VectorXd inverseDiagonal = (L_inv.array().square().colwise().sum()).transpose();
 
   return inverseDiagonal;
 }
