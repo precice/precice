@@ -180,6 +180,11 @@ public:
 
   bool getBooleanAttributeValue(const std::string &name, std::optional<bool> default_value = std::nullopt) const;
 
+  std::vector<std::string> getAttributes() const
+  {
+    return _attributes;
+  }
+
   const AttributeMap<double> &getDoubleAttributes() const
   {
     return _doubleAttributes;
@@ -260,7 +265,7 @@ private:
 
   std::map<std::string, bool> _configuredNamespaces;
 
-  std::set<std::string> _attributes;
+  std::vector<std::string> _attributes;
 
   AttributeMap<double> _doubleAttributes;
 

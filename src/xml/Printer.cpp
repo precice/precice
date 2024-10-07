@@ -267,33 +267,38 @@ std::ostream &printMD(std::ostream &out, const XMLTag &tag, int level, std::map<
   out << "**Example:**  \n```xml\n";
   printExample(out, tag, 0) << "\n```\n\n";
 
-  if (!(tag.getDoubleAttributes().empty() &&
-        tag.getIntAttributes().empty() &&
-        tag.getStringAttributes().empty() &&
-        tag.getBooleanAttributes().empty() &&
-        tag.getEigenVectorXdAttributes().empty())) {
+  if (auto attributes = tag.getAttributes();
+      !attributes.empty()) {
     out << "| Attribute | Type | Description | Default | Options |\n";
     out << "| --- | --- | --- | --- | --- |\n";
-    for (const auto &pair : tag.getDoubleAttributes()) {
-      printMD(out, pair.second) << '\n';
-    }
 
-    for (const auto &pair : tag.getIntAttributes()) {
-      printMD(out, pair.second) << '\n';
+    for (const auto &name : tag.getAttributes()) {
+      if (auto iter = tag.getDoubleAttributes().find(name);
+          iter != tag.getDoubleAttributes().end()) {
+        printMD(out, iter->second) << '\n';
+        continue;
+      }
+      if (auto iter = tag.getIntAttributes().find(name);
+          iter != tag.getIntAttributes().end()) {
+        printMD(out, iter->second) << '\n';
+        continue;
+      }
+      if (auto iter = tag.getStringAttributes().find(name);
+          iter != tag.getStringAttributes().end()) {
+        printMD(out, iter->second) << '\n';
+        continue;
+      }
+      if (auto iter = tag.getBooleanAttributes().find(name);
+          iter != tag.getBooleanAttributes().end()) {
+        printMD(out, iter->second) << '\n';
+        continue;
+      }
+      if (auto iter = tag.getEigenVectorXdAttributes().find(name);
+          iter != tag.getEigenVectorXdAttributes().end()) {
+        printMD(out, iter->second) << '\n';
+      }
     }
-
-    for (const auto &pair : tag.getStringAttributes()) {
-      printMD(out, pair.second) << '\n';
-    }
-
-    for (const auto &pair : tag.getBooleanAttributes()) {
-      printMD(out, pair.second) << '\n';
-    }
-
-    for (const auto &pair : tag.getEigenVectorXdAttributes()) {
-      printMD(out, pair.second) << '\n';
-    }
-    out << "\n";
+    out << '\n';
   }
 
   if (not tag.getSubtags().empty()) {
