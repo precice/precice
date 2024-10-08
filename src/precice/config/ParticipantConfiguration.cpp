@@ -310,7 +310,7 @@ void ParticipantConfiguration::xmlTagCallback(
     WatchPointConfig config;
     config.name        = tag.getStringAttributeValue(ATTR_NAME);
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
-    config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE, _meshConfig->getMesh(config.nameMesh)->getDimensions());
+    config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE);
     _watchPointConfigs.push_back(config);
   } else if (tag.getName() == TAG_WATCH_INTEGRAL) {
     WatchIntegralConfig config;
@@ -671,7 +671,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                   "Participant \"{}\" defines watchpoint \"{}\" for the received mesh \"{}\", which is not allowed. "
                   "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
-
+    PRECICE_CHECK(config.coordinates.size() == meshContext.mesh->getDimensions(),
+                  "Provided coordinate to watch is {}D, which does not match the dimension of the {}D mesh \"{}\".",
+                  config.coordinates.size(), meshContext.mesh->getDimensions(), meshContext.mesh->getName());
     std::string filename = "precice-" + participant->getName() + "-watchpoint-" + config.name + ".log";
     participant->addWatchPoint(std::make_shared<impl::WatchPoint>(config.coordinates, meshContext.mesh, std::move(filename)));
   }
