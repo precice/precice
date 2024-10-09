@@ -55,6 +55,11 @@ std::string getTestName()
   return boost::unit_test::framework::get<boost::unit_test::test_suite>(parent).p_name;
 }
 
+std::string getFullTestName()
+{
+  return boost::unit_test::framework::current_test_case().full_name();
+}
+
 int nextMeshID()
 {
   static utils::ManageUniqueIDs manager;
