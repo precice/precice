@@ -680,14 +680,12 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
                 "Please check the <absolute-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 limit, dataName, meshName);
-  impl::PtrConvergenceMeasure measure(new impl::AbsoluteConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
-  convMeasureDef.data        = getData(dataName, meshName);
-  convMeasureDef.suffices    = suffices;
-  convMeasureDef.strict      = strict;
-  convMeasureDef.meshName    = meshName;
-  convMeasureDef.measure     = std::move(measure);
-  convMeasureDef.doesLogging = true;
+  convMeasureDef.data     = getData(dataName, meshName);
+  convMeasureDef.suffices = suffices;
+  convMeasureDef.strict   = strict;
+  convMeasureDef.meshName = meshName;
+  convMeasureDef.measure  = std::make_shared<impl::AbsoluteConvergenceMeasure>(limit);
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
@@ -710,14 +708,12 @@ void CouplingSchemeConfiguration::addAbsoluteOrRelativeConvergenceMeasure(
                 "Please check the <absolute-or-relative-convergence-measure abs-limit=\"{}\" rel-limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 absLimit, relLimit, dataName, meshName);
-  impl::PtrConvergenceMeasure measure(new impl::AbsoluteOrRelativeConvergenceMeasure(absLimit, relLimit));
   ConvergenceMeasureDefintion convMeasureDef;
-  convMeasureDef.data        = getData(dataName, meshName);
-  convMeasureDef.suffices    = suffices;
-  convMeasureDef.strict      = strict;
-  convMeasureDef.meshName    = meshName;
-  convMeasureDef.measure     = std::move(measure);
-  convMeasureDef.doesLogging = true;
+  convMeasureDef.data     = getData(dataName, meshName);
+  convMeasureDef.suffices = suffices;
+  convMeasureDef.strict   = strict;
+  convMeasureDef.meshName = meshName;
+  convMeasureDef.measure  = std::make_shared<impl::AbsoluteOrRelativeConvergenceMeasure>(absLimit, relLimit);
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
@@ -740,14 +736,12 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
       "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"  ",
       limit, math::NUMERICAL_ZERO_DIFFERENCE, 10 * math::NUMERICAL_ZERO_DIFFERENCE);
 
-  impl::PtrConvergenceMeasure measure(new impl::RelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
-  convMeasureDef.data        = getData(dataName, meshName);
-  convMeasureDef.suffices    = suffices;
-  convMeasureDef.strict      = strict;
-  convMeasureDef.meshName    = meshName;
-  convMeasureDef.measure     = std::move(measure);
-  convMeasureDef.doesLogging = true;
+  convMeasureDef.data     = getData(dataName, meshName);
+  convMeasureDef.suffices = suffices;
+  convMeasureDef.strict   = strict;
+  convMeasureDef.meshName = meshName;
+  convMeasureDef.measure  = std::make_shared<impl::RelativeConvergenceMeasure>(limit);
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
@@ -770,14 +764,12 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
       "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"  ",
       limit, math::NUMERICAL_ZERO_DIFFERENCE, 10 * math::NUMERICAL_ZERO_DIFFERENCE);
 
-  impl::PtrConvergenceMeasure measure(new impl::ResidualRelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
-  convMeasureDef.data        = getData(dataName, meshName);
-  convMeasureDef.suffices    = suffices;
-  convMeasureDef.strict      = strict;
-  convMeasureDef.meshName    = meshName;
-  convMeasureDef.measure     = std::move(measure);
-  convMeasureDef.doesLogging = true;
+  convMeasureDef.data     = getData(dataName, meshName);
+  convMeasureDef.suffices = suffices;
+  convMeasureDef.strict   = strict;
+  convMeasureDef.meshName = meshName;
+  convMeasureDef.measure  = std::make_shared<impl::ResidualRelativeConvergenceMeasure>(limit);
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
@@ -1165,7 +1157,7 @@ void CouplingSchemeConfiguration::addConvergenceMeasures(
   for (auto &elem : convergenceMeasureDefinitions) {
     _meshConfig->addNeededMesh(participant, elem.meshName);
     checkIfDataIsExchanged(elem.data->getID());
-    scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure, elem.doesLogging);
+    scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure);
   }
 }
 
