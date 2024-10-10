@@ -191,8 +191,7 @@ public:
       int                         dataID,
       bool                        suffices,
       bool                        strict,
-      impl::PtrConvergenceMeasure measure,
-      bool                        doesLogging);
+      impl::PtrConvergenceMeasure measure);
 
   /// Set an acceleration technique.
   void setAcceleration(const acceleration::PtrAcceleration &acceleration);

@@ -653,8 +653,7 @@ void BaseCouplingScheme::addConvergenceMeasure(
     int                         dataID,
     bool                        suffices,
     bool                        strict,
-    impl::PtrConvergenceMeasure measure,
-    bool                        doesLogging)
+    impl::PtrConvergenceMeasure measure)
 {
   ConvergenceMeasureContext convMeasure;
   PRECICE_ASSERT(_allData.count(dataID) == 1, "Data with given data ID must exist!");
@@ -662,7 +661,6 @@ void BaseCouplingScheme::addConvergenceMeasure(
   convMeasure.suffices     = suffices;
   convMeasure.strict       = strict;
   convMeasure.measure      = std::move(measure);
-  convMeasure.doesLogging  = doesLogging;
   _convergenceMeasures.push_back(convMeasure);
 }
 

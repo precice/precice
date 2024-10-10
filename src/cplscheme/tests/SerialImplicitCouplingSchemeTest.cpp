@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   double                                 convergenceLimit1 = sqrt(3.0); // when diff_vector = (1.0, 1.0, 1.0)
   cplscheme::impl::PtrConvergenceMeasure absoluteConvMeasure1(
       new cplscheme::impl::AbsoluteConvergenceMeasure(convergenceLimit1));
-  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, absoluteConvMeasure1, true);
+  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, absoluteConvMeasure1);
 
   // Expected iterations per implicit timesptep
   std::vector<int> validIterations = {5, 5, 5};
