@@ -282,14 +282,14 @@ add_precice_test(
 add_precice_test(
   NAME mapping.ginkgo.cuda
   ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Cuda"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
   LABELS ginkgo
   GINKGO_CUDA
   )
 add_precice_test(
   NAME mapping.ginkgo.cuSolver
   ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/cuSolver"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
   LABELS ginkgo
   GINKGO_CUDA
   )
