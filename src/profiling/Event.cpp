@@ -11,7 +11,7 @@ Event::Event(std::string_view eventName, Options options)
   auto &er   = EventRegistry::instance();
   auto  name = std::string(EventRegistry::instance().prefix).append(eventName);
   _eid       = er.nameToID(name);
-  if (_synchronize) {
+  if (_synchronize && er.parallel()) {
     _sid = er.nameToID(name + ".sync");
   }
   start();
@@ -33,7 +33,7 @@ void Event::start()
     return;
   }
 
-  if (_synchronize && ::precice::utils::IntraComm::willSynchronize()) {
+  if (_synchronize && registry.parallel() && ::precice::utils::IntraComm::willSynchronize()) {
     // We need to synchronize, so we record a sync event
     PRECICE_ASSERT(_sid != -1);
     registry.putCritical(StartEntry{_sid, Clock::now()});

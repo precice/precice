@@ -32,7 +32,7 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
     tags.push_back(tag);
   }
 
-  auto attrLocation = XMLAttribute<std::string>(ATTR_LOCATION, "")
+  auto attrLocation = XMLAttribute<std::string>(ATTR_LOCATION, ".")
                           .setDocumentation("Directory to export the files to.");
 
   auto attrEveryNTimeWindows = makeXMLAttribute(ATTR_EVERY_N_TIME_WINDOWS, 1)

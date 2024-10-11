@@ -131,6 +131,12 @@ public:
     return _mode == Mode::All || (ec == EventClass::Fundamental && _mode == Mode::Fundamental);
   }
 
+  /// Is the solver running in parallel?
+  inline bool parallel() const
+  {
+    return _size > 1;
+  }
+
   int nameToID(std::string_view name);
 
   /// Currently active prefix. Changing that applies only to newly created events.

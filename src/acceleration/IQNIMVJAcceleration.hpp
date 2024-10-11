@@ -141,7 +141,7 @@ private:
   /** @brief: computes the IQNIMVJ update using QR decomposition of V,
    *        furthermore it updates the inverse of the system jacobian
    */
-  virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate);
+  virtual void computeQNUpdate(Eigen::VectorXd &xUpdate);
 
   /// @brief: updates the V, W matrices (as well as the matrices for the secondary data)
   virtual void updateDifferenceMatrices(const DataMap &cplData);
@@ -153,7 +153,7 @@ private:
    *  This method rebuilds the Jacobian matrix and the matrix W_til in each iteration
    *  which is not necessary and thus inefficient.
    */
-  void computeNewtonUpdate(const DataMap &cplData, Eigen::VectorXd &update);
+  void computeNewtonUpdate(Eigen::VectorXd &update);
 
   /** @brief: computes the quasi-Newton update vector based on the same numerics as above.
    *  However, it exploits the fact that the matrix W_til can be updated according to V and W
@@ -163,7 +163,7 @@ private:
    *  The Jacobian matrix only needs to be set up in the very last iteration of one time window, i.e.
    *  in iterationsConverged.
    */
-  void computeNewtonUpdateEfficient(const DataMap &cplData, Eigen::VectorXd &update);
+  void computeNewtonUpdateEfficient(Eigen::VectorXd &update);
 
   /** @brief: computes the pseudo inverse of V multiplied with V^T, i.e., Z = (V^TV)^-1V^T via QR-dec
    */

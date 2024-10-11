@@ -375,34 +375,24 @@ try {
 int precice::impl::strippedLength(
     const char *string,
     int         length)
-try {
+{
   int i = length - 1;
   while (((string[i] == ' ') || (string[i] == 0)) && (i >= 0)) {
     i--;
   }
   return i + 1;
-} catch (::precice::Error &e) {
-  std::abort();
 }
 
 std::string_view precice::impl::strippedStringView(const char *string, int length)
-try {
+{
   return {string, static_cast<std::string_view::size_type>(strippedLength(string, length))};
-} catch (::precice::Error &e) {
-  std::abort();
 }
 
 void precicef_get_version_information_(
     char *versionInfo,
     int   lengthVersionInfo)
-try {
-  const std::string &versionInformation = precice::versionInformation;
-  PRECICE_ASSERT(versionInformation.size() < (size_t) lengthVersionInfo, versionInformation.size(), lengthVersionInfo);
-  for (size_t i = 0; i < versionInformation.size(); i++) {
-    versionInfo[i] = versionInformation[i];
-  }
-} catch (::precice::Error &e) {
-  std::abort();
+{
+  std::strncpy(versionInfo, precice::versionInformation, lengthVersionInfo);
 }
 
 void precicef_requires_gradient_data_for_(

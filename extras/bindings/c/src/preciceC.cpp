@@ -88,6 +88,7 @@ try {
   return impl->getMeshDimensions(meshName);
 } catch (::precice::Error &e) {
   std::abort();
+  return -1;
 }
 
 int precicec_getDataDimensions(const char *meshName, const char *dataName)
@@ -96,6 +97,7 @@ try {
   return impl->getDataDimensions(meshName, dataName);
 } catch (::precice::Error &e) {
   std::abort();
+  return -1;
 }
 
 int precicec_isCouplingOngoing()
@@ -107,6 +109,7 @@ try {
   return 0;
 } catch (::precice::Error &e) {
   std::abort();
+  return -1;
 }
 
 int precicec_isTimeWindowComplete()
@@ -118,6 +121,7 @@ try {
   return 0;
 } catch (::precice::Error &e) {
   std::abort();
+  return -1;
 }
 
 double precicec_getMaxTimeStepSize()
@@ -125,6 +129,7 @@ try {
   return impl->getMaxTimeStepSize();
 } catch (::precice::Error &e) {
   std::abort();
+  return -1.0;
 }
 
 int precicec_requiresInitialData()
@@ -133,6 +138,7 @@ try {
   return impl->requiresInitialData() ? 1 : 0;
 } catch (::precice::Error &e) {
   std::abort();
+  return -1;
 }
 
 int precicec_requiresWritingCheckpoint()
@@ -141,6 +147,7 @@ try {
   return impl->requiresWritingCheckpoint() ? 1 : 0;
 } catch (::precice::Error &e) {
   std::abort();
+  return -1;
 }
 
 int precicec_requiresReadingCheckpoint()
@@ -149,6 +156,7 @@ try {
   return impl->requiresReadingCheckpoint() ? 1 : 0;
 } catch (::precice::Error &e) {
   std::abort();
+  return -1;
 }
 
 int precicec_requiresMeshConnectivityFor(const char *meshName)
@@ -160,6 +168,7 @@ try {
   return 0;
 } catch (::precice::Error &e) {
   std::abort();
+  return -1;
 }
 
 int precicec_setMeshVertex(
@@ -171,6 +180,7 @@ try {
   return impl->setMeshVertex(meshName, {position, size});
 } catch (::precice::Error &e) {
   std::abort();
+  return -1;
 }
 
 void precicec_setMeshVertices(
@@ -194,6 +204,7 @@ try {
   return impl->getMeshVertexSize(meshName);
 } catch (::precice::Error &e) {
   std::abort();
+  return -1;
 }
 
 void precicec_setMeshEdge(
@@ -332,6 +343,7 @@ try {
   return 0;
 } catch (::precice::Error &e) {
   std::abort();
+  return -1;
 }
 
 void precicec_writeGradientData(
@@ -350,10 +362,8 @@ try {
 }
 
 const char *precicec_getVersionInformation()
-try {
+{
   return precice::versionInformation;
-} catch (::precice::Error &e) {
-  std::abort();
 }
 
 void precicec_setMeshAccessRegion(
