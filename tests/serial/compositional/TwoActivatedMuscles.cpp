@@ -58,6 +58,7 @@ BOOST_AUTO_TEST_CASE(TwoActivatedMuscles)
   std::vector<double> receivedStretch1{0.0};
   std::vector<double> receivedCrossStretch1{0.0};
   std::vector<double> receivedStretch2{0.0};
+  std::vector<double> receivedCrossStretch2{0.0};
 
   const bool isImplicit = context.isNamed("M1SM") || context.isNamed("M2SM");
   for (int timestep = 0; timestep < 2; ++timestep) {
@@ -87,6 +88,7 @@ BOOST_AUTO_TEST_CASE(TwoActivatedMuscles)
     if (context.isNamed("M2")) {
       participant.writeData("Activation_M2_Mesh", "Activation2", activationVertexIDs, activation2);
       participant.readData("Stretch_M2_Mesh", "stretch2", stretchVertexIDs, timestepSize, receivedStretch2);
+      participant.readData("Stretch_M2_Mesh", "stretch1", stretchVertexIDs, timestepSize, receivedCrossStretch2);
     }
 
     participant.advance(timestepSize);
@@ -115,6 +117,7 @@ BOOST_AUTO_TEST_CASE(TwoActivatedMuscles)
   } else {
 
     BOOST_TEST(receivedStretch2 == stretch2, boost::test_tools::per_element());
+    BOOST_TEST(receivedCrossStretch2 == stretch1, boost::test_tools::per_element());
   }
 
   participant.finalize();
