@@ -115,12 +115,11 @@ void BaseQNAcceleration::initialize(
     }
   }
 
+  _matrixCols.clear();
   _matrixCols.push_front(0);
   _firstIteration  = true;
   _firstTimeWindow = true;
 
-  PRECICE_ASSERT(_oldPrimaryXTilde.size() == 0);
-  PRECICE_ASSERT(_oldPrimaryResiduals.size() == 0);
   _oldPrimaryXTilde    = Eigen::VectorXd::Zero(primaryDataSize);
   _oldPrimaryResiduals = Eigen::VectorXd::Zero(primaryDataSize);
   _primaryResiduals    = Eigen::VectorXd::Zero(primaryDataSize);
@@ -130,6 +129,8 @@ void BaseQNAcceleration::initialize(
   _oldValues           = Eigen::VectorXd::Zero(dataSize);
   _oldXTilde           = Eigen::VectorXd::Zero(dataSize);
   _residuals           = Eigen::VectorXd::Zero(dataSize);
+  _matrixV.resize(0, 0);
+  _matrixW.resize(0, 0);
 
   /**
    *  make dimensions public to all procs,
@@ -182,6 +183,7 @@ void BaseQNAcceleration::initialize(
   }
 
   // set the number of global rows in the QRFactorization.
+  _qrV.reset();
   _qrV.setGlobalRows(getPrimaryLSSystemRows());
 
   _preconditioner->initialize(subVectorSizes);

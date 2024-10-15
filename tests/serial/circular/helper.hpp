@@ -7,7 +7,7 @@
 #include <precice/precice.hpp>
 #include <vector>
 
-namespace tests {
+namespace precice::tests {
 inline void cyclicExplicit(TestContext &context)
 {
   precice::Participant interface{
@@ -57,4 +57,4 @@ inline void cyclicExplicit(TestContext &context)
 
   BOOST_TEST_REQUIRE(!interface.isCouplingOngoing());
 }
-} // namespace tests
+} // namespace precice::tests

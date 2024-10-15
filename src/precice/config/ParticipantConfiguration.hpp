@@ -29,6 +29,7 @@ public:
       mesh::PtrMeshConfiguration meshConfiguration);
 
   void setExperimental(bool experimental);
+  void setRemeshing(bool allowed);
 
   /**
    * @brief Callback function required for use of automatic configuration.
@@ -114,6 +115,7 @@ private:
   const std::string VALUE_CSV = "csv";
 
   bool _experimental = false;
+  bool _remeshing    = false;
 
   mesh::PtrMeshConfiguration _meshConfig;
 

@@ -78,6 +78,12 @@ void CompositionalCouplingScheme::initialize()
   }
 }
 
+void CompositionalCouplingScheme::reinitialize()
+{
+  PRECICE_TRACE();
+  PRECICE_UNREACHABLE("Not implemented and not allowed");
+}
+
 bool CompositionalCouplingScheme::sendsInitializedData() const
 {
   PRECICE_TRACE();
