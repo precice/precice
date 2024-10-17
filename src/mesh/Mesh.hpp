@@ -131,7 +131,7 @@ public:
   int getDimensions() const;
 
   /// Creates and initializes a Vertex object.
-  Vertex &createVertex(const Eigen::VectorXd &coords);
+  Vertex &createVertex(const Eigen::Ref<const Eigen::VectorXd> &coords);
 
   /**
    * @brief Creates and initializes an Edge object.
