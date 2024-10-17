@@ -84,7 +84,6 @@ void ExportCSV::doExport(int index, double time)
   for (const auto &data : _mesh->data()) {
     auto dataName = data->getName();
     auto dim      = data->getDimensions();
-    PRECICE_ASSERT(static_cast<std::size_t>(data->values().size()) == _mesh->nVertices() * dim);
     outFile << ';' << dataName;
     if (dim == 2) {
       outFile << "X;" << dataName << 'Y';
@@ -97,8 +96,8 @@ void ExportCSV::doExport(int index, double time)
   // Prepare writing data
   std::vector<StridedAccess> dataColumns;
   for (const auto &data : _mesh->data()) {
-    auto    dim    = data->getDimensions();
-    double *values = data->values().data();
+    auto          dim    = data->getDimensions();
+    double const *values = data->timeStepsStorage().last().sample.values.data();
     for (int i = 0; i < dim; ++i) {
       dataColumns.push_back({std::next(values, i), dim});
     }
