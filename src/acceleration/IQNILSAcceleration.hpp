@@ -60,6 +60,9 @@ private:
 
   /// Removes one iteration from V,W matrices and adapts _matrixCols.
   virtual void removeMatrixColumn(int columnIndex);
+
+  /// @copydoc precice::Acceleration::BaseQNAcceleration::specializedInitializeVectorsAndPreconditioner()
+  virtual void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) override final{};
 };
 } // namespace acceleration
 } // namespace precice
