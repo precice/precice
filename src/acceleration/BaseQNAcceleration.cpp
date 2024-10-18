@@ -99,8 +99,9 @@ void BaseQNAcceleration::initialize(
                   "Quasi-Newton acceleration does not yet support using data from all substeps. Please set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
   }
 
-  const size_t primaryDataSize = std::accumulate(_primaryDataIDs.begin(), _primaryDataIDs.end(), (size_t) 0, [&](size_t val, int id) { return val + cplData.at(id)->getSize(); });
-  const size_t dataSize        = std::accumulate(cplData.begin(), cplData.end(), (size_t) 0, [&](size_t val, const DataMap::value_type &pair) { return val + pair.second->getSize(); });
+  auto         addCplDataSize  = [&](size_t sum, int id) { return sum + cplData.at(id)->getSize(); };
+  const size_t primaryDataSize = std::accumulate(_primaryDataIDs.begin(), _primaryDataIDs.end(), (size_t) 0, addCplDataSize);
+  const size_t dataSize        = std::accumulate(_dataIDs.begin(), _dataIDs.end(), (size_t) 0, addCplDataSize);
 
   _matrixCols.push_front(0);
   _firstIteration  = true;
