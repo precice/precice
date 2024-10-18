@@ -32,18 +32,15 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
   mesh.createVertex(Eigen::Vector2d::Constant(0.0));
   mesh.createVertex(Eigen::Vector2d::Constant(1.0));
 
-  // Create data
-  mesh.allocateDataValues();
-  Eigen::VectorXd &valuesScalar = dataScalar->values();
-  Eigen::VectorXd &valuesVector = dataVector->values();
-  valuesScalar << 1.0, 2.0;
-  valuesVector << 1.0, 2.0, 3.0, 4.0;
+  time::Sample scalar(1, 2, dimensions);
+  scalar.values.setLinSpaced(0, 1);
+  scalar.gradients.setOnes();
+  dataScalar->setSampleAtTime(0, scalar);
 
-  // Create corresponding gradient data (all gradients = const = 1)
-  Eigen::MatrixXd &gradientsScalar = dataScalar->gradients();
-  Eigen::MatrixXd &gradientsVector = dataVector->gradients();
-  gradientsScalar.setOnes();
-  gradientsVector.setOnes();
+  time::Sample vectorial(dimensions, 2, dimensions);
+  vectorial.values.setLinSpaced(0, 1);
+  vectorial.gradients.setOnes();
+  dataScalar->setSampleAtTime(0, vectorial);
 
   io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
   exportVTK.doExport(0, 0.0);
