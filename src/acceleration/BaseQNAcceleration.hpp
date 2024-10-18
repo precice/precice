@@ -96,14 +96,14 @@ public:
   /**
    * @brief Initializes the acceleration.
    */
-  virtual void initialize(const DataMap &cplData);
+  virtual void initialize(const DataMap &cplData) override;
 
   /**
    * @brief Performs one acceleration step.
    *
    * Has to be called after every implicit coupling iteration.
    */
-  virtual void performAcceleration(DataMap &cplData);
+  virtual void performAcceleration(DataMap &cplData) override final;
 
   /**
    * @brief Marks a iteration sequence as converged.
@@ -111,25 +111,25 @@ public:
    * Since convergence measurements are done outside the acceleration, this
    * method has to be used to signalize convergence to the acceleration.
    */
-  virtual void iterationsConverged(const DataMap &cplData);
+  virtual void iterationsConverged(const DataMap &cplData) override final;
 
   /**
    * @brief Exports the current state of the acceleration to a file.
    */
-  virtual void exportState(io::TXTWriter &writer);
+  virtual void exportState(io::TXTWriter &writer) override final;
 
   /**
    * @brief Imports the last exported state of the acceleration from file.
    *
    * Is empty at the moment!!!
    */
-  virtual void importState(io::TXTReader &reader);
+  virtual void importState(io::TXTReader &reader) override final;
 
   /// how many QN columns were deleted in this time window
-  virtual int getDeletedColumns() const;
+  virtual int getDeletedColumns() const override final;
 
   /// how many QN columns were dropped (went out of scope) in this time window
-  virtual int getDroppedColumns() const;
+  virtual int getDroppedColumns() const override final;
 
   /** @brief: computes number of cols in least squares system, i.e, number of cols in
    *  _matrixV, _matrixW, _qrV, etc..
@@ -138,7 +138,7 @@ public:
    *  information about the number of cols. This info is needed for
    *  intra-participant communication. Number of its =! _cols in general.
    */
-  virtual int getLSSystemCols() const;
+  virtual int getLSSystemCols() const override final;
 
 protected:
   logging::Logger _log{"acceleration::BaseQNAcceleration"};
