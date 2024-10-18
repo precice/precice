@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "acceleration/Acceleration.hpp"
+#include "acceleration/BaseQNAcceleration.hpp"
 #include "com/SerializedStamples.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/Constants.hpp"
@@ -770,10 +771,12 @@ void BaseCouplingScheme::advanceTXTWriters()
     bool converged = _iterations >= _minIterations && (_maxIterations < 0 || (_iterations < _maxIterations));
     _iterationsWriter->writeData("Convergence", converged ? 1 : 0);
 
-    if (not doesFirstStep() && _acceleration) {
-      _iterationsWriter->writeData("QNColumns", _acceleration->getLSSystemCols());
-      _iterationsWriter->writeData("DeletedQNColumns", _acceleration->getDeletedColumns());
-      _iterationsWriter->writeData("DroppedQNColumns", _acceleration->getDroppedColumns());
+    std::shared_ptr<precice::acceleration::BaseQNAcceleration> qnAcceleration = std::dynamic_pointer_cast<precice::acceleration::BaseQNAcceleration>(_acceleration);
+    if (qnAcceleration && not doesFirstStep()) {
+      // Only write values for additional columns, if using a QN-based acceleration scheme
+      _iterationsWriter->writeData("QNColumns", qnAcceleration->getLSSystemCols());
+      _iterationsWriter->writeData("DeletedQNColumns", qnAcceleration->getDeletedColumns());
+      _iterationsWriter->writeData("DroppedQNColumns", qnAcceleration->getDroppedColumns());
     }
   }
 }

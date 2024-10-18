@@ -632,7 +632,7 @@ int BaseQNAcceleration::getLSSystemCols() const
   return cols;
 }
 
-int BaseQNAcceleration::getLSSystemRows()
+int BaseQNAcceleration::getLSSystemRows() const
 {
   if (utils::IntraComm::isParallel()) {
     return _dimOffsets.back();
@@ -640,7 +640,7 @@ int BaseQNAcceleration::getLSSystemRows()
   return _residuals.size();
 }
 
-int BaseQNAcceleration::getPrimaryLSSystemRows()
+int BaseQNAcceleration::getPrimaryLSSystemRows() const
 {
   if (utils::IntraComm::isParallel()) {
     return _dimOffsetsPrimary.back();
