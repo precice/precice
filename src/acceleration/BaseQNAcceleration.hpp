@@ -277,6 +277,16 @@ protected:
   int its = 0, tWindows = 0;
 
 private:
+  /// @brief Initializes the vectors, matrices and preconditioner
+  void initializeVectorsAndPreconditioner(const DataMap &cplData);
+
+  /**
+   * @brief handles the initialization of matrices and vectors in the sub-classes
+   *
+   * called by the initializeVectorsAndPreconditioner method in the BaseQNAcceleration class
+   */
+  virtual void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) = 0;
+
   /// @brief Concatenation of all primary data involved in the QN system.
   Eigen::VectorXd _primaryValues;
 
