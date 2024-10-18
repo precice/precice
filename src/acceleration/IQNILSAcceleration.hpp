@@ -33,7 +33,8 @@ public:
       int                     filter,
       double                  singularityLimit,
       std::vector<int>        dataIDs,
-      impl::PtrPreconditioner preconditioner);
+      impl::PtrPreconditioner preconditioner,
+      bool                    reduced = true);
 
   virtual ~IQNILSAcceleration() {}
 
@@ -60,6 +61,9 @@ private:
 
   /// Removes one iteration from V,W matrices and adapts _matrixCols.
   virtual void removeMatrixColumn(int columnIndex);
+
+  /// @brief Initializes specialised matrix structures for the IQNILS acceleration
+  virtual void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData){};
 };
 } // namespace acceleration
 } // namespace precice

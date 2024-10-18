@@ -9,6 +9,7 @@ target_sources(testprecice
     src/acceleration/test/PreconditionerTest.cpp
     src/acceleration/test/QRFactorizationTest.cpp
     src/acceleration/test/SVDFactorizationTest.cpp
+    src/acceleration/test/WaveformTimeGridsTest.cpp
     src/acceleration/test/helper.hpp
     src/action/tests/PythonActionTest.cpp
     src/action/tests/ScaleActionTest.cpp
