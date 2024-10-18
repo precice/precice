@@ -771,19 +771,12 @@ void BaseCouplingScheme::advanceTXTWriters()
     bool converged = _iterations >= _minIterations && (_maxIterations < 0 || (_iterations < _maxIterations));
     _iterationsWriter->writeData("Convergence", converged ? 1 : 0);
 
-    if (not doesFirstStep()) {
-      std::shared_ptr<precice::acceleration::BaseQNAcceleration> qnAcceleration = std::dynamic_pointer_cast<precice::acceleration::BaseQNAcceleration>(_acceleration);
-      if (qnAcceleration) {
-        // Only write values for additional columns, if using a QN-based acceleration scheme
-        _iterationsWriter->writeData("QNColumns", qnAcceleration->getLSSystemCols());
-        _iterationsWriter->writeData("DeletedQNColumns", qnAcceleration->getDeletedColumns());
-        _iterationsWriter->writeData("DroppedQNColumns", qnAcceleration->getDroppedColumns());
-      } else {
-        // non-breaking implementation uses "0" for these columns (delete columns in the future?)
-        _iterationsWriter->writeData("QNColumns", 0);
-        _iterationsWriter->writeData("DeletedQNColumns", 0);
-        _iterationsWriter->writeData("DroppedQNColumns", 0);
-      }
+    std::shared_ptr<precice::acceleration::BaseQNAcceleration> qnAcceleration = std::dynamic_pointer_cast<precice::acceleration::BaseQNAcceleration>(_acceleration);
+    if (qnAcceleration && not doesFirstStep()) {
+      // Only write values for additional columns, if using a QN-based acceleration scheme
+      _iterationsWriter->writeData("QNColumns", qnAcceleration->getLSSystemCols());
+      _iterationsWriter->writeData("DeletedQNColumns", qnAcceleration->getDeletedColumns());
+      _iterationsWriter->writeData("DroppedQNColumns", qnAcceleration->getDroppedColumns());
     }
   }
 }
