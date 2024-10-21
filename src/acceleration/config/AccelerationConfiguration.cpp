@@ -256,6 +256,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
       }
     }
 
+    PRECICE_CHECK(!_acceleration, "You are trying to define multiple acceleration schemes, which is not allowed. Please remove one of them.");
     if (callingTag.getName() == VALUE_CONSTANT) {
       _acceleration = PtrAcceleration(
           new ConstantRelaxationAcceleration(
