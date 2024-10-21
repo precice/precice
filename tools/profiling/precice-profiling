@@ -718,7 +718,7 @@ def findFilesOfLatestRun(name, sizes):
     return list(sizes[size].values())
 
 
-def sanitizeFiles(files):
+def groupRuns(files):
     PieceFile = namedtuple("PieceFile", ["name", "rank", "size", "filename"])
 
     def info(filename):
@@ -731,8 +731,18 @@ def sanitizeFiles(files):
 
     map = {}
     for n, r, s, fn in pieces:
-        map.setdefault(n, {}).setdefault(s, {}).update({r: fn})
+        rankMap = map.setdefault(n, {}).setdefault(s, {})
+        if r in rankMap:
+            print(
+                f"{fn}: \033[33mwarning:\033[0m Ignored due to conflict with '{rankMap[r]}'"
+            )
+        else:
+            rankMap.update({r: fn})
+    return map
 
+
+def sanitizeFiles(files):
+    map = groupRuns(files)
     filesToLoad = []
     for name, sizes in map.items():
         if len(sizes) == 1:
