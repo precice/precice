@@ -62,11 +62,6 @@ public:
   virtual ~IQNIMVJAcceleration();
 
   /**
-   * @brief Initializes the acceleration.
-   */
-  virtual void initialize(const DataMap &cplData) override final;
-
-  /**
    * @brief Marks a iteration sequence as converged.
    *
    * called by the iterationsConverged() method in the BaseQNAcceleration class
@@ -117,13 +112,13 @@ private:
    *  - RS-LS:      imvj in restart-mode. After M time windows restart with LS approximation for initial Jacobian
    *  - RS-SVD:     imvj in restart mode. After M time windows, update of an truncated SVD of the Jacobian.
    */
-  int _imvjRestartType;
+  const int _imvjRestartType;
 
   /** @brief: If true, the imvj method is used with the restart chunk based approach that avoids
    *  to explicitly build and store the Jacobian. If false, the Jacobian is stored and build, however,
    *  no truncation of information is present.
    */
-  bool _imvjRestart;
+  const bool _imvjRestart;
 
   /// @brief: Number of time windows between restarts for the imvj method in restart mode
   int _chunkSize;
@@ -187,6 +182,9 @@ private:
 
   /// @brief: Removes one iteration from V,W matrices and adapts _matrixCols.
   virtual void removeMatrixColumn(int columnIndex);
+
+  /// @copydoc precice::Acceleration::BaseQNAcceleration::specializedInitializeVectorsAndPreconditioner()
+  virtual void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) override final;
 
   /// @brief: Removes one column form the V_RSLS and W_RSLS matrices and adapts _matrixCols_RSLS
   void removeMatrixColumnRSLS(int columnINdex);
