@@ -96,14 +96,14 @@ public:
   /**
    * @brief Initializes the acceleration.
    */
-  virtual void initialize(const DataMap &cplData);
+  virtual void initialize(const DataMap &cplData) override;
 
   /**
    * @brief Performs one acceleration step.
    *
    * Has to be called after every implicit coupling iteration.
    */
-  virtual void performAcceleration(DataMap &cplData);
+  virtual void performAcceleration(DataMap &cplData) override final;
 
   /**
    * @brief Marks a iteration sequence as converged.
@@ -111,19 +111,19 @@ public:
    * Since convergence measurements are done outside the acceleration, this
    * method has to be used to signalize convergence to the acceleration.
    */
-  virtual void iterationsConverged(const DataMap &cplData);
+  virtual void iterationsConverged(const DataMap &cplData) override final;
 
   /**
    * @brief Exports the current state of the acceleration to a file.
    */
-  virtual void exportState(io::TXTWriter &writer);
+  virtual void exportState(io::TXTWriter &writer) override final;
 
   /**
    * @brief Imports the last exported state of the acceleration from file.
    *
    * Is empty at the moment!!!
    */
-  virtual void importState(io::TXTReader &reader);
+  virtual void importState(io::TXTReader &reader) override final;
 
   /// how many QN columns were deleted in this time window
   int getDeletedColumns() const;
