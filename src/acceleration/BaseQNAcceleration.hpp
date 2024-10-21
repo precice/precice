@@ -96,7 +96,7 @@ public:
   /**
    * @brief Initializes the acceleration.
    */
-  virtual void initialize(const DataMap &cplData) override;
+  virtual void initialize(const DataMap &cplData) override final;
 
   /**
    * @brief Performs one acceleration step.

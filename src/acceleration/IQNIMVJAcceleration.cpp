@@ -57,7 +57,7 @@ IQNIMVJAcceleration::IQNIMVJAcceleration(
       _svdJ(RSSVDtruncationEps, preconditioner),
       _alwaysBuildJacobian(alwaysBuildJacobian),
       _imvjRestartType(imvjRestartType),
-      _imvjRestart(false),
+      _imvjRestart(imvjRestartType > 0),
       _chunkSize(chunkSize),
       _RSLSreusedTimeWindows(RSLSreusedTimeWindows),
       _nbRestarts(0),
@@ -67,19 +67,6 @@ IQNIMVJAcceleration::IQNIMVJAcceleration(
 
 // ==================================================================================
 IQNIMVJAcceleration::~IQNIMVJAcceleration() = default;
-
-// ==================================================================================
-void IQNIMVJAcceleration::initialize(
-    const DataMap &cplData)
-{
-  PRECICE_TRACE();
-
-  if (_imvjRestartType > 0)
-    _imvjRestart = true;
-
-  // do common QN acceleration initialization
-  BaseQNAcceleration::initialize(cplData);
-}
 
 // ==================================================================================
 void IQNIMVJAcceleration::updateDifferenceMatrices(

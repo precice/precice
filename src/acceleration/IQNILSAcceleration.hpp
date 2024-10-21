@@ -37,9 +37,6 @@ public:
 
   virtual ~IQNILSAcceleration() {}
 
-  /// Initializes the acceleration.
-  virtual void initialize(const DataMap &cplData) override final;
-
   /**
     * @brief Marks a iteration sequence as converged.
     *
