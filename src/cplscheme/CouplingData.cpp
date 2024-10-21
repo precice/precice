@@ -99,6 +99,20 @@ int CouplingData::meshDimensions() const
   return _mesh->getDimensions();
 }
 
+void CouplingData::reinitialize()
+{
+  PRECICE_ASSERT(!_data->timeStepsStorage().empty());
+  // TODO port this to subcyling
+  // The mesh was reinitialized and the new data will be added later in advance().
+  // Meaning all samples are based on a different mesh.
+  // Without remapping, the best we can do is setting them to zero samples.
+  auto zero = time::Sample(_data->getDimensions(), _mesh->nVertices());
+  zero.setZero();
+
+  _data->timeStepsStorage().setAllSamples(zero);
+  _previousTimeStepsStorage.setAllSamples(zero);
+}
+
 void CouplingData::storeIteration()
 {
   const auto &stamples = this->stamples();

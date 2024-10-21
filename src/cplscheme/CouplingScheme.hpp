@@ -79,6 +79,11 @@ public:
   virtual void initialize() = 0;
 
   /**
+   * @brief Reinitializes the coupling scheme, coupling data, and acceleration schemes
+   */
+  virtual void reinitialize() = 0;
+
+  /**
    * @brief Returns whether this participant of the coupling scheme sends initialized data.
    *
    * @returns true, if this participant of the coupling scheme sends initialized data

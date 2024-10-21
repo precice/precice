@@ -263,6 +263,13 @@ void Mesh::clear()
 
   for (mesh::PtrData &data : _data) {
     data->values().resize(0);
+
+    auto &tts = data->timeStepsStorage();
+    if (!tts.empty()) {
+      auto tl = tts.last().timestamp;
+      tts.clear();
+      tts.setSampleAtTime(tl, data->sample());
+    }
   }
 }
 

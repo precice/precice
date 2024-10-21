@@ -178,6 +178,8 @@ public:
   /// @copydoc cplscheme::CouplingScheme::initialize()
   void initialize() override final;
 
+  void reinitialize() override final;
+
   ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override final;
 
   void firstExchange() override final;

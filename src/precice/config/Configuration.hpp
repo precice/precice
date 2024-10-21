@@ -56,6 +56,12 @@ public:
     return _experimental;
   }
 
+  /// @brief Returns whether experimental remeshing is allowed or not
+  bool allowsRemeshing() const
+  {
+    return _remeshing;
+  }
+
   /// @brief Returns whether participants wait for each other in finalize
   bool waitInFinalize() const
   {
@@ -113,6 +119,9 @@ private:
 
   /// Allow the use of experimental features
   bool _experimental = false;
+
+  /// Allow the use of experimental remeshing features
+  bool _remeshing = false;
 
   /// Synchronize participants in finalize
   bool _waitInFinalize = false;

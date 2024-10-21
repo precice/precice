@@ -232,6 +232,12 @@ void ParticipantConfiguration::setExperimental(
   _mappingConfig->setExperimental(_experimental);
 }
 
+void ParticipantConfiguration::setRemeshing(
+    bool allowed)
+{
+  _remeshing = allowed;
+}
+
 void ParticipantConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
     xml::XMLTag &                    tag)
