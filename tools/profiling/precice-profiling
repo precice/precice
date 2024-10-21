@@ -670,7 +670,6 @@ def detectFiles(files):
             resolved.append(path)
             continue
         if os.path.isdir(path):
-            print(f"Searching {path} : ", end="")
             candidates = [
                 ".",
                 "precice-profiling",
@@ -685,18 +684,20 @@ def detectFiles(files):
                 detected = searchDir(dir)
                 if len(detected) == 0:
                     continue
-                print(f"found {len(detected)} files in {dir}")
+                print(f"Found {len(detected)} files in {path}")
                 resolved += detected
                 found = True
                 break
 
             if not found:
-                print(f"nothing found")
+                print(f"Nothing found in {path}")
 
         else:
             print(f'Cannot interpret "{path}"')
+
     unique = list(set(resolved))
-    print(f"Found {len(unique)} unique profiling files")
+    if len(files) > 1:
+        print(f"Found {len(unique)} profiling files in total")
     return unique
 
 
