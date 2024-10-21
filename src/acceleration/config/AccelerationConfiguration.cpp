@@ -261,7 +261,8 @@ void AccelerationConfiguration::xmlEndTagCallback(
           new ConstantRelaxationAcceleration(
               _config.relaxationFactor, _config.dataIDs));
     } else if (callingTag.getName() == VALUE_AITKEN) {
-      _acceleration = PtrAcceleration(
+      _config.relaxationFactor = (_userDefinitions.definedRelaxationFactor) ? _config.relaxationFactor : _defaultAitkenRelaxationFactor;
+      _acceleration            = PtrAcceleration(
           new AitkenAcceleration(
               _config.relaxationFactor, _config.dataIDs, _preconditioner));
     } else if (callingTag.getName() == VALUE_IQNILS) {
@@ -311,8 +312,9 @@ void AccelerationConfiguration::xmlEndTagCallback(
 
 void AccelerationConfiguration::clear()
 {
-  _config       = ConfigurationData();
-  _acceleration = PtrAcceleration();
+  _config          = ConfigurationData();
+  _userDefinitions = UserDefinitions();
+  _acceleration    = PtrAcceleration();
   _neededMeshes.clear();
 }
 
