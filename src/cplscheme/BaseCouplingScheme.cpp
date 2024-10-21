@@ -771,7 +771,7 @@ void BaseCouplingScheme::advanceTXTWriters()
     bool converged = _iterations >= _minIterations && (_maxIterations < 0 || (_iterations < _maxIterations));
     _iterationsWriter->writeData("Convergence", converged ? 1 : 0);
 
-    if (not doesFirstStep()) {
+    if (not doesFirstStep() && _acceleration) {
       std::shared_ptr<precice::acceleration::BaseQNAcceleration> qnAcceleration = std::dynamic_pointer_cast<precice::acceleration::BaseQNAcceleration>(_acceleration);
       if (qnAcceleration) {
         // Only write values for additional columns, if using a QN-based acceleration scheme
