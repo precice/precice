@@ -637,6 +637,100 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
     return 0
 
 
+def sunburstCommand(profilingfile, participant, unit="us"):
+    requireModules(["polars", "plotly"])
+    import polars as pl
+
+    checkPolarsVersion()
+
+    run = Run(profilingfile)
+    df = run.toDataFrame()
+
+    assert df.select(
+        pl.col("participant").is_in([participant]).any()
+    ).item(), f"Given participant {participant} doesn't exist."
+
+    print(f"Output timing are in {unit}.")
+
+    # Filter by participant
+    # Convert duration to requested unit
+    dur_factor = 1000 * ns_to_unit_factor(unit)
+    df = (
+        df.filter(pl.col("participant") == participant)
+        .drop("participant")
+        .with_columns(
+            pl.col("dur") * dur_factor,
+            pl.col("eid")
+            .map_elements(
+                lambda s: "/".join(s.split("/")[:-1])
+                if "/" in s
+                else "_GLOBAL"
+                if s != "_GLOBAL"
+                else "",
+                return_dtype=pl.String,
+            )
+            .alias("parent"),
+            pl.col("eid")
+            .map_elements(
+                lambda s: s.split("/")[-1] if "/" in s else s, return_dtype=pl.String
+            )
+            .alias("label"),
+        )
+    )
+
+    primary = (
+        df.filter(pl.col("rank") == 0)
+        .group_by("eid", "parent", "label")
+        .agg(pl.sum("dur"))
+        .sort("eid")
+    )
+
+    import plotly.graph_objects as go
+
+    primaryPlot = go.Sunburst(
+        labels=primary["label"].to_list(),
+        ids=primary["eid"].to_list(),
+        parents=primary["parent"].to_list(),
+        values=primary["dur"].to_list(),
+    )
+
+    if len(df.select("rank").unique()) == 1:
+        import plotly.graph_objects as go
+
+        fig = go.Figure(primaryPlot)
+        fig.show()
+        return 0
+
+    secondary = (
+        df.filter(pl.col("rank") > 0)
+        .group_by("eid", "parent", "label")
+        .agg(pl.sum("dur"))
+        .sort("eid")
+    )
+
+    from plotly.subplots import make_subplots
+
+    fig = make_subplots(
+        rows=1,
+        cols=2,
+        specs=[[{"type": "domain"}, {"type": "domain"}]],
+        subplot_titles=["Primary", "Secondaries"],
+    )
+    fig.add_trace(primaryPlot, row=1, col=1)
+    fig.add_trace(
+        go.Sunburst(
+            labels=secondary["label"].to_list(),
+            ids=secondary["eid"].to_list(),
+            parents=secondary["parent"].to_list(),
+            values=secondary["dur"].to_list(),
+        ),
+        row=1,
+        col=2,
+    )
+    fig.show()
+    return 0
+
+
 def histogramCommand(profilingfile, outfile, participant, event, rank, bins, unit="us"):
     requireModules(["polars", "matplotlib"])
     import matplotlib.pyplot as plt
@@ -858,6 +952,22 @@ if __name__ == "__main__":
     )
     analyze.add_argument("-o", "--output", help="Write the result to CSV file")
 
+    sunburst_help = """Plots the hierarchical duration data of a solver as a sunburst plot.
+    Event durations are displayed in the unit of choice.
+    Parallel solvers show one plot for the primary rank and a combined plot for all secondary ranks.
+    """
+    sunburst = subparsers.add_parser(
+        "sunburst", help=sunburst_help.splitlines()[0], description=sunburst_help
+    )
+    sunburst.add_argument("participant", type=str, help="The participant to analyze")
+    sunburst.add_argument(
+        "profilingfile",
+        nargs="?",
+        type=str,
+        default="profiling.json",
+        help="The profiling file to process",
+    )
+
     def try_int(s):
         try:
             return int(s)
@@ -975,6 +1085,9 @@ if __name__ == "__main__":
             ns.unit,
         ),
         "merge": lambda ns: mergeCommand(ns.files, ns.output, not ns.no_align),
+        "sunburst": lambda ns: sunburstCommand(
+            ns.profilingfile, ns.participant, ns.unit
+        ),
     }
 
     def showHelp(ns):
