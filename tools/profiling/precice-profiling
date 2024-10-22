@@ -119,11 +119,11 @@ def printWide(df):
 
     fmts = iter(colfmts[1:])
     for batch in batched(fmts):
-        rowfmt += " | " + " ".join(batch)
+        rowfmt += " │ " + " ".join(batch)
 
-    hline = "-" * colwidths[0]
+    hline = "─" * colwidths[0]
     for b in batched(colwidths[1:]):
-        hline += "-+-" + "-" * (sum(b) + len(b) - 1)
+        hline += "─┼─" + "─" * (sum(b) + len(b) - 1)
 
     print(rowfmt.format(*(df.columns)))
     print(hline)
