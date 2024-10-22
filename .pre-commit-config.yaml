@@ -1,10 +1,11 @@
 repos:
 # Official repo for the clang-format hook
 - repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: 'v8.0.1'
+  rev: 'v18.1.8'
   hooks:
   - id: clang-format
     exclude: "^thirdparty"
+    types_or: [c, c++]
 # Official repo for default hooks
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: 'v4.3.0'
