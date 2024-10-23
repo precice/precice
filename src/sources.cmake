@@ -37,6 +37,8 @@ target_sources(preciceCore
     src/acceleration/impl/SharedPointer.hpp
     src/acceleration/impl/ValuePreconditioner.cpp
     src/acceleration/impl/ValuePreconditioner.hpp
+    src/acceleration/impl/WaveformTimeGrids.cpp
+    src/acceleration/impl/WaveformTimeGrids.hpp
     src/action/Action.hpp
     src/action/PythonAction.cpp
     src/action/PythonAction.hpp

@@ -41,9 +41,10 @@ IQNIMVJAcceleration::IQNIMVJAcceleration(
     int                            imvjRestartType,
     int                            chunkSize,
     int                            RSLSreusedTimeWindows,
-    double                         RSSVDtruncationEps)
+    double                         RSSVDtruncationEps,
+    bool                           reduced)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
-                         filter, singularityLimit, std::move(dataIDs), preconditioner),
+                         filter, singularityLimit, std::move(dataIDs), preconditioner, reduced),
       //  _secondaryOldXTildes(),
       _invJacobian(),
       _oldInvJacobian(),

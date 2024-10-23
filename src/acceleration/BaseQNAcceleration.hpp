@@ -11,6 +11,7 @@
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
+#include "acceleration/impl/WaveformTimeGrids.hpp"
 #include "logging/Logger.hpp"
 
 /* ****************************************************************************
@@ -70,7 +71,8 @@ public:
       int                     filter,
       double                  singularityLimit,
       std::vector<int>        dataIDs,
-      impl::PtrPreconditioner preconditioner);
+      impl::PtrPreconditioner preconditioner,
+      bool                    reduced = true);
 
   /**
    * @brief Destructor, empty.
@@ -88,7 +90,7 @@ public:
   /**
    * @brief Returns all IQN involved data IDs.
    */
-  virtual std::vector<int> getPrimaryDataIDs() const
+  virtual std::vector<int> getPrimaryDataIDs() const override final
   {
     return _primaryDataIDs;
   }
@@ -203,6 +205,9 @@ protected:
   /// @brief Stores x tilde deltas, where x tilde are values computed by solvers.
   Eigen::MatrixXd _matrixW;
 
+  /// @brief  if _reduced = false uses the full QN-WI and if _reduced = true uses rQN-WI form the paper https://onlinelibrary.wiley.com/doi/10.1002/nme.6443
+  const bool _reduced;
+
   /// @brief Stores the current QR decomposition ov _matrixV, can be updated via deletion/insertion of columns
   impl::QRFactorization _qrV;
 
@@ -256,7 +261,7 @@ protected:
   virtual void updateDifferenceMatrices(const DataMap &cplData);
 
   /// Splits up QN system vector back into the coupling data
-  virtual void splitCouplingData(const DataMap &cplData);
+  virtual void applyQNValuesToCouplingData(const DataMap &cplData);
 
   /// Applies the filter method for the least-squares system, defined in the configuration
   virtual void applyFilter();
@@ -270,14 +275,11 @@ protected:
   /// Writes info to the _infostream (also in parallel)
   void writeInfo(const std::string &s, bool allProcs = false);
 
-  /// @copydoc acceleration::Acceleration::concatenateCouplingData
-  void concatenateCouplingData(
-      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const override final;
-
   int its = 0, tWindows = 0;
 
 private:
   /// @brief Initializes the vectors, matrices and preconditioner
+  /// This has to be done after the first iteration, since everything in the QN-algorithm is sampled to the timegrid of the first waveform
   void initializeVectorsAndPreconditioner(const DataMap &cplData);
 
   /**
@@ -286,6 +288,17 @@ private:
    * called by the initializeVectorsAndPreconditioner method in the BaseQNAcceleration class
    */
   virtual void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) = 0;
+
+  /// @brief Samples and concatenates the data and old data in cplData into a long vector
+  void concatenateCouplingDataWaveform(Eigen::VectorXd &data, Eigen::VectorXd &oldData, const DataMap &cplData, std::vector<int> dataIDs, impl::WaveformTimeGrids timeGrids) const;
+
+  /// @brief List of the time grid to which all the data will be interpolated to
+  /// Stored in a map, since each data entry has its own time grid
+  impl::WaveformTimeGrids _timeGrids;
+
+  /// @brief List of the time grid to which all the primary data used in the QN system will be interpolated to
+  /// Stored in a map, since each data entry has its own time grid
+  impl::WaveformTimeGrids _primaryTimeGrids;
 
   /// @brief Concatenation of all primary data involved in the QN system.
   Eigen::VectorXd _primaryValues;

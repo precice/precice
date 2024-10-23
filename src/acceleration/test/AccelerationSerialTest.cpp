@@ -71,11 +71,13 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
   displacements->setSampleAtTime(0, displacements->sample());
+  displacements->setSampleAtTime(1, displacements->sample());
 
   // init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->setSampleAtTime(0, forces->sample());
+  forces->setSampleAtTime(1, forces->sample());
 
   cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
   cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
@@ -105,6 +107,10 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.199000000000000010214));
 
   data.begin()->second->values() << 10, 10, 10, 10;
+
+  // Update the waveform as well
+  displacements->setSampleAtTime(1, displacements->sample());
+  forces->setSampleAtTime(1, forces->sample());
 
   pp.performAcceleration(data);
 
@@ -166,11 +172,13 @@ void testVIQNPP(bool exchangeSubsteps)
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
   displacements->setSampleAtTime(0, displacements->sample());
+  displacements->setSampleAtTime(1, displacements->sample());
 
   // init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->setSampleAtTime(0, forces->sample());
+  forces->setSampleAtTime(1, forces->sample());
 
   cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
   cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
@@ -186,6 +194,7 @@ void testVIQNPP(bool exchangeSubsteps)
 
   displacements->values() << 1.0, 2.0, 3.0, 4.0;
   displacements->setSampleAtTime(1, displacements->sample());
+
   forces->values() << 0.1, 0.1, 0.1, 0.1;
   forces->setSampleAtTime(1, forces->sample());
 
@@ -207,6 +216,9 @@ void testVIQNPP(bool exchangeSubsteps)
   utils::append(newdvalues, 10.0);
   data.begin()->second->values() = newdvalues;
 
+  displacements->setSampleAtTime(1, displacements->sample());
+  forces->setSampleAtTime(1, forces->sample());
+
   pp.performAcceleration(data);
 
   BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929692295845e-01));
@@ -219,14 +231,11 @@ void testVIQNPP(bool exchangeSubsteps)
   BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733944046e-02));
 }
 
-#if 0
-// TODO not yet supported
 BOOST_AUTO_TEST_CASE(testVIQNPPWithSubsteps)
 {
   PRECICE_TEST(1_rank);
   testVIQNPP(true);
- }
-#endif
+}
 
 BOOST_AUTO_TEST_CASE(testVIQNPPWithoutSubsteps)
 {

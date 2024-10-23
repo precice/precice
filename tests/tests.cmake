@@ -81,6 +81,8 @@ target_sources(testprecice
     tests/quasi-newton/parallel/TestQN8EmptyPartition.cpp
     tests/quasi-newton/parallel/TestQN9.cpp
     tests/quasi-newton/parallel/TestQN9EmptyPartition.cpp
+    tests/quasi-newton/parallel/TestQNWithWaveforms.cpp
+    tests/quasi-newton/parallel/TestReducedQNWithWaveforms.cpp
     tests/quasi-newton/serial/DefaultConfig.cpp
     tests/quasi-newton/serial/TestQN1.cpp
     tests/quasi-newton/serial/TestQN10.cpp
@@ -92,6 +94,8 @@ target_sources(testprecice
     tests/quasi-newton/serial/TestQN7.cpp
     tests/quasi-newton/serial/TestQN8.cpp
     tests/quasi-newton/serial/TestQN9.cpp
+    tests/quasi-newton/serial/TestQNWithWaveforms.cpp
+    tests/quasi-newton/serial/TestReducedQNWithWaveforms.cpp
     tests/serial/AitkenAcceleration.cpp
     tests/serial/ImplicitCheckpointing.cpp
     tests/serial/PreconditionerBug.cpp
