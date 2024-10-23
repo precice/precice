@@ -110,6 +110,10 @@ ParticipantImpl::ParticipantImpl(
                 "Please check the values given when constructing a preCICE interface.",
                 _accessorProcessRank, _accessorCommunicatorSize);
 
+  profiling::EventRegistry::instance().initialize(_accessorName, _accessorProcessRank, _accessorCommunicatorSize);
+  profiling::applyDefaults();
+  Event e("construction", profiling::Fundamental);
+
   // Set the global communicator to the passed communicator.
   // This is a noop if preCICE is not configured with MPI.
 #ifndef PRECICE_NO_MPI
@@ -132,9 +136,6 @@ ParticipantImpl::ParticipantImpl(
   }
 #endif
 
-  profiling::EventRegistry::instance().initialize(_accessorName, _accessorProcessRank, _accessorCommunicatorSize);
-  profiling::applyDefaults();
-  Event e("construction", profiling::Fundamental);
   Event e1("configure", profiling::Fundamental);
   configure(configurationFileName);
   e1.stop();
