@@ -101,6 +101,7 @@ target_sources(testprecice
     tests/serial/TestExplicitWithSolverGeometry.cpp
     tests/serial/TestImplicit.cpp
     tests/serial/TestReadAPI.cpp
+    tests/serial/TwoAccelerations.cpp
     tests/serial/action-timings/ActionTimingsParallelExplicit.cpp
     tests/serial/action-timings/ActionTimingsParallelImplicit.cpp
     tests/serial/action-timings/ActionTimingsSerialExplicit.cpp
