@@ -549,9 +549,12 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
     run = Run(profilingfile)
     df = run.toDataFrame()
 
-    assert df.select(
-        pl.col("participant").is_in([participant]).any()
-    ).item(), f"Given participant {participant} doesn't exist."
+    participants = set(df.get_column("participant").unique())
+    assert (
+        participant in participants
+    ), f"Given participant {participant} doesn't exist. Known: " + ", ".join(
+        participants
+    )
 
     print(f"Output timing are in {unit}.")
 
