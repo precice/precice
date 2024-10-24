@@ -692,6 +692,7 @@ def sunburstCommand(profilingfile, participant, unit="us"):
         ids=primary["eid"].to_list(),
         parents=primary["parent"].to_list(),
         values=primary["dur"].to_list(),
+        branchvalues="total",
     )
 
     if len(df.select("rank").unique()) == 1:
@@ -723,6 +724,7 @@ def sunburstCommand(profilingfile, participant, unit="us"):
             ids=secondary["eid"].to_list(),
             parents=secondary["parent"].to_list(),
             values=secondary["dur"].to_list(),
+            branchvalues="total",
         ),
         row=1,
         col=2,
