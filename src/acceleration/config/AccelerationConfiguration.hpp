@@ -138,6 +138,8 @@ private:
     int         precond_nbNonConstTWindows = -1;
   } _defaultValuesIQNIMVJ;
 
+  const double _defaultAitkenRelaxationFactor = 0.5;
+
   struct UserDefinitions {
     bool definedRelaxationFactor   = false;
     bool definedMaxIterationsUsed  = false;
