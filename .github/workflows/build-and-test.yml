@@ -155,7 +155,7 @@ jobs:
           OMPI_MCA_btl_tcp_if_include: lo # required for arch
           PSM3_HAL: loopback # required for fedora
         working-directory: build
-        run: su -c ". ../venv/bin/activate && ctest" $PRECICE_USER
+        run: su -c ". ../venv/bin/activate && ctest -j" $PRECICE_USER
       - name: Coverage Report
         working-directory: build
         if: ${{ matrix.COVFLAGS }}

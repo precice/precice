@@ -89,20 +89,17 @@ int main(int argc, char *argv[])
 {
   using namespace precice;
 
+  // Handle unit list printing first to avoid the MPI initialization overhead
+  if (argc == 2 && std::string(argv[1]) == "--list_units") {
+    printTestList();
+    return 0;
+  }
+
   precice::syncMode = false;
   utils::Parallel::initializeTestingMPI(&argc, &argv);
   const auto rank = utils::Parallel::current()->rank();
   const auto size = utils::Parallel::current()->size();
   logging::setMPIRank(rank);
-
-  // Handle custom printing
-  if (argc == 2 && std::string(argv[1]) == "--list_units") {
-    if (rank == 0) {
-      printTestList();
-    }
-    utils::Parallel::finalizeTestingMPI();
-    return 0;
-  }
 
   // Handle not enough MPI ranks
   if (size < 4 && argc < 2) {
