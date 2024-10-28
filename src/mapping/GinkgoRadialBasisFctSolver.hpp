@@ -488,7 +488,7 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
 
   if (GinkgoSolverType::QR == _solverType) {
     // Upper Trs U x = b
-    solvewithQRDecompositionCuda(_ginkgoParameter.deviceId, gko::lend(_decompMatrixR), gko::lend(_rbfCoefficients), gko::lend(_dQ_T_Rhs), gko::lend(_decompMatrixQ_T),gko::lend(dRhs));
+    solvewithQRDecompositionCuda(_ginkgoParameter.deviceId, gko::lend(_decompMatrixR), gko::lend(_rbfCoefficients), gko::lend(_dQ_T_Rhs), gko::lend(_decompMatrixQ_T), gko::lend(dRhs));
   } else {
     _solveRBFSystem(dRhs);
   }
@@ -541,7 +541,7 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
   _matrixA->transpose()->apply(dRhs, dAu);
 
   if (GinkgoSolverType::QR == _solverType) {
-        solvewithQRDecompositionCuda(_ginkgoParameter.deviceId, gko::lend(_decompMatrixR), gko::lend(_rbfCoefficients), gko::lend(_dQ_T_Rhs), gko::lend(_decompMatrixQ_T),gko::lend(dAu));
+    solvewithQRDecompositionCuda(_ginkgoParameter.deviceId, gko::lend(_decompMatrixR), gko::lend(_rbfCoefficients), gko::lend(_dQ_T_Rhs), gko::lend(_decompMatrixQ_T), gko::lend(dAu));
   } else {
     _solveRBFSystem(dAu);
   }
