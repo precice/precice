@@ -198,7 +198,8 @@ public:
   virtual void updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in);
 
   // For now only for read-consistent
-  virtual void evaluateMappingDataCacheAt(::precice::span<const double> coordinates,const MappingDataCache & cache, ::precice::span<double> values);
+  virtual void evaluateMappingDataCacheAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values);
+
 protected:
   /// Returns pointer to input mesh.
   mesh::PtrMesh input() const;
@@ -246,6 +247,7 @@ protected:
    * @see For mappings requiring an initialGuess: initialGuess() hasInitialGuess()
    */
   virtual void mapConsistent(const time::Sample &input, Eigen::VectorXd &output) = 0;
+
 private:
   /// Determines whether mapping is consistent or conservative.
   Constraint _constraint;

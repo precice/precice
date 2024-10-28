@@ -91,9 +91,9 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
       // solve time step
       // write data:
       if (time == 1) {
-      couplingInterface.writeData(meshName, dataName, ids, writeData1);
+        couplingInterface.writeData(meshName, dataName, ids, writeData1);
       } else if (time == 2) {
-      couplingInterface.writeData(meshName, dataName, ids, writeData2);
+        couplingInterface.writeData(meshName, dataName, ids, writeData2);
       } else {
         PRECICE_ASSERT(false);
       }

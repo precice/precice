@@ -163,8 +163,8 @@ protected:
    * to one local mesh, map it to different remote meshes). Since the indirect mapping operates
    * on the remote meshes, this multiplicity cannot occur. Thus, one cache per DataContext is enough.
    */
-  std::unique_ptr<mapping::MappingDataCache>       mappingCache;
-  std::shared_ptr<mapping::Mapping> indirectMapping;
+  std::unique_ptr<mapping::MappingDataCache> mappingCache;
+  std::shared_ptr<mapping::Mapping>          indirectMapping;
   /**
    * @brief Helper to append a mappingContext, fromData and toData to the corresponding data containers
    *
