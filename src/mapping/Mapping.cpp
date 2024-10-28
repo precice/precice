@@ -1,6 +1,6 @@
+#include "Mapping.hpp"
 #include <boost/config.hpp>
 #include <ostream>
-#include "Mapping.hpp"
 #include "math/differences.hpp"
 #include "mesh/Utils.hpp"
 #include "profiling/Event.hpp"

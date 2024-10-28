@@ -182,8 +182,8 @@ target_sources(preciceCore
     src/mapping/LinearCellInterpolationMapping.hpp
     src/mapping/Mapping.cpp
     src/mapping/Mapping.hpp
-    src/mapping/MathHelper.hpp
     src/mapping/MappingDataCache.hpp
+    src/mapping/MathHelper.hpp
     src/mapping/NearestNeighborBaseMapping.cpp
     src/mapping/NearestNeighborBaseMapping.hpp
     src/mapping/NearestNeighborGradientMapping.cpp
