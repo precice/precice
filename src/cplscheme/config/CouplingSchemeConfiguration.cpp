@@ -214,6 +214,7 @@ void CouplingSchemeConfiguration::xmlTagCallback(
     _config.timeWindowSize = tag.getDoubleAttributeValue(ATTR_VALUE);
     // Attribute does not exist for parallel coupling schemes as it is always fixed.
     _config.dtMethod = getTimesteppingMethod(tag.getStringAttributeValue(ATTR_METHOD, VALUE_FIXED));
+
     if (_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE) {
       PRECICE_CHECK(_config.timeWindowSize >= math::NUMERICAL_ZERO_DIFFERENCE,
                     "The minimal time window size supported by preCICE is {}. "
@@ -222,11 +223,11 @@ void CouplingSchemeConfiguration::xmlTagCallback(
                     math::NUMERICAL_ZERO_DIFFERENCE, _config.timeWindowSize);
     } else {
       PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE);
-      PRECICE_CHECK(_config.timeWindowSize == -1,
-                    "Time window size value has to be equal to -1 (default), if method=\"first-participant\" is used. "
-                    "Please check the <time-window-size value=\"{}\" method=\"{}\" /> "
-                    "tag in the <coupling-scheme:...> of your precice-config.xml",
-                    _config.timeWindowSize, tag.getStringAttributeValue(ATTR_METHOD));
+      PRECICE_WARN_IF(_config.timeWindowSize != CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE,
+                      "You combined a custom time-window-size of {} with method=\"first-participant\". "
+                      "The given time-window-size will be ignored as it is prescribed by the participant.",
+                      _config.timeWindowSize);
+      _config.timeWindowSize = CouplingScheme::UNDEFINED_TIME_WINDOW_SIZE;
     }
   } else if (tag.getName() == TAG_ABS_CONV_MEASURE) {
     const std::string &dataName = tag.getStringAttributeValue(ATTR_DATA);
@@ -679,14 +680,12 @@ void CouplingSchemeConfiguration::addAbsoluteConvergenceMeasure(
                 "Please check the <absolute-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 limit, dataName, meshName);
-  impl::PtrConvergenceMeasure measure(new impl::AbsoluteConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
-  convMeasureDef.data        = getData(dataName, meshName);
-  convMeasureDef.suffices    = suffices;
-  convMeasureDef.strict      = strict;
-  convMeasureDef.meshName    = meshName;
-  convMeasureDef.measure     = std::move(measure);
-  convMeasureDef.doesLogging = true;
+  convMeasureDef.data     = getData(dataName, meshName);
+  convMeasureDef.suffices = suffices;
+  convMeasureDef.strict   = strict;
+  convMeasureDef.meshName = meshName;
+  convMeasureDef.measure  = std::make_shared<impl::AbsoluteConvergenceMeasure>(limit);
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
@@ -709,14 +708,12 @@ void CouplingSchemeConfiguration::addAbsoluteOrRelativeConvergenceMeasure(
                 "Please check the <absolute-or-relative-convergence-measure abs-limit=\"{}\" rel-limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 absLimit, relLimit, dataName, meshName);
-  impl::PtrConvergenceMeasure measure(new impl::AbsoluteOrRelativeConvergenceMeasure(absLimit, relLimit));
   ConvergenceMeasureDefintion convMeasureDef;
-  convMeasureDef.data        = getData(dataName, meshName);
-  convMeasureDef.suffices    = suffices;
-  convMeasureDef.strict      = strict;
-  convMeasureDef.meshName    = meshName;
-  convMeasureDef.measure     = std::move(measure);
-  convMeasureDef.doesLogging = true;
+  convMeasureDef.data     = getData(dataName, meshName);
+  convMeasureDef.suffices = suffices;
+  convMeasureDef.strict   = strict;
+  convMeasureDef.meshName = meshName;
+  convMeasureDef.measure  = std::make_shared<impl::AbsoluteOrRelativeConvergenceMeasure>(absLimit, relLimit);
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
@@ -739,14 +736,12 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
       "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"  ",
       limit, math::NUMERICAL_ZERO_DIFFERENCE, 10 * math::NUMERICAL_ZERO_DIFFERENCE);
 
-  impl::PtrConvergenceMeasure measure(new impl::RelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
-  convMeasureDef.data        = getData(dataName, meshName);
-  convMeasureDef.suffices    = suffices;
-  convMeasureDef.strict      = strict;
-  convMeasureDef.meshName    = meshName;
-  convMeasureDef.measure     = std::move(measure);
-  convMeasureDef.doesLogging = true;
+  convMeasureDef.data     = getData(dataName, meshName);
+  convMeasureDef.suffices = suffices;
+  convMeasureDef.strict   = strict;
+  convMeasureDef.meshName = meshName;
+  convMeasureDef.measure  = std::make_shared<impl::RelativeConvergenceMeasure>(limit);
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
@@ -769,14 +764,12 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
       "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"  ",
       limit, math::NUMERICAL_ZERO_DIFFERENCE, 10 * math::NUMERICAL_ZERO_DIFFERENCE);
 
-  impl::PtrConvergenceMeasure measure(new impl::ResidualRelativeConvergenceMeasure(limit));
   ConvergenceMeasureDefintion convMeasureDef;
-  convMeasureDef.data        = getData(dataName, meshName);
-  convMeasureDef.suffices    = suffices;
-  convMeasureDef.strict      = strict;
-  convMeasureDef.meshName    = meshName;
-  convMeasureDef.measure     = std::move(measure);
-  convMeasureDef.doesLogging = true;
+  convMeasureDef.data     = getData(dataName, meshName);
+  convMeasureDef.suffices = suffices;
+  convMeasureDef.strict   = strict;
+  convMeasureDef.meshName = meshName;
+  convMeasureDef.measure  = std::make_shared<impl::ResidualRelativeConvergenceMeasure>(limit);
   _config.convergenceMeasureDefinitions.push_back(convMeasureDef);
 }
 
@@ -828,9 +821,10 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
     const std::string &accessor) const
 {
   PRECICE_TRACE(accessor);
+  PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE);
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
-  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.participants[0], _config.participants[1], accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit);
+  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.participants[0], _config.participants[1], accessor, m2n, BaseCouplingScheme::Explicit);
 
   for (const auto &exchange : _config.exchanges) {
     if (exchange.exchangeSubsteps) {
@@ -887,9 +881,10 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelImplicitCouplingSch
     const std::string &accessor) const
 {
   PRECICE_TRACE(accessor);
+  PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE);
   m2n::PtrM2N m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1]);
-  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.participants[0], _config.participants[1], accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.minIterations, _config.maxIterations);
+  ParallelCouplingScheme *scheme = new ParallelCouplingScheme(_config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, _config.participants[0], _config.participants[1], accessor, m2n, BaseCouplingScheme::Implicit, _config.minIterations, _config.maxIterations);
 
   addDataToBeExchanged(*scheme, accessor);
   PRECICE_CHECK(scheme->hasAnySendData(),
@@ -912,6 +907,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
     const std::string &accessor) const
 {
   PRECICE_TRACE(accessor);
+  PRECICE_ASSERT(_config.dtMethod == constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE);
 
   BaseCouplingScheme *scheme;
 
@@ -923,7 +919,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createMultiCouplingScheme(
   }
 
   scheme = new MultiCouplingScheme(
-      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, accessor, m2ns, _config.dtMethod, _config.controller, _config.minIterations, _config.maxIterations);
+      _config.maxTime, _config.maxTimeWindows, _config.timeWindowSize, accessor, m2ns, _config.controller, _config.minIterations, _config.maxIterations);
 
   MultiCouplingScheme *castedScheme = dynamic_cast<MultiCouplingScheme *>(scheme);
   PRECICE_ASSERT(castedScheme, "The dynamic cast of CouplingScheme failed.");
@@ -1161,7 +1157,7 @@ void CouplingSchemeConfiguration::addConvergenceMeasures(
   for (auto &elem : convergenceMeasureDefinitions) {
     _meshConfig->addNeededMesh(participant, elem.meshName);
     checkIfDataIsExchanged(elem.data->getID());
-    scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure, elem.doesLogging);
+    scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure);
   }
 }
 

@@ -131,7 +131,7 @@ void WatchPoint::getValue(
 {
   int                    dim = _mesh->getDimensions();
   Eigen::VectorXd        temp(dim);
-  const Eigen::VectorXd &values = data->values();
+  const Eigen::VectorXd &values = data->timeStepsStorage().last().sample.values;
   for (const auto &elem : _interpolation->getWeightedElements()) {
     int offset = elem.vertexID * dim;
     for (int i = 0; i < dim; i++) {
@@ -146,7 +146,7 @@ void WatchPoint::getValue(
     double &       value,
     mesh::PtrData &data)
 {
-  const Eigen::VectorXd &values = data->values();
+  const Eigen::VectorXd &values = data->timeStepsStorage().last().sample.values;
   for (const auto &elem : _interpolation->getWeightedElements()) {
     value += elem.weight * values[elem.vertexID];
   }

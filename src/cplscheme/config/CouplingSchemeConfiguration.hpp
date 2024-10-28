@@ -135,7 +135,6 @@ private:
     bool                        strict;
     std::string                 meshName;
     impl::PtrConvergenceMeasure measure;
-    bool                        doesLogging;
   };
 
   struct Config {

@@ -1559,5 +1559,40 @@ BOOST_AUTO_TEST_CASE(DeadAxis3DConervative)
 
 BOOST_AUTO_TEST_SUITE_END() // Serial
 
+BOOST_AUTO_TEST_SUITE(Helper)
+
+BOOST_AUTO_TEST_CASE(inverseTriangularMatrix)
+{
+  // Define the size of the matrix
+  const int inSize = 112;
+
+  // Generate a random matrix A
+  Eigen::MatrixXd A = Eigen::MatrixXd::Random(inSize, inSize);
+
+  // Create an SPD matrix M
+  Eigen::MatrixXd M = A * A.transpose();
+
+  // Test our custom inversion
+  Eigen::MatrixXd M_inv_custom = utils::invertLowerTriangularBlockwise(M);
+
+  // Second, using Eigen's built-in method
+  Eigen::MatrixXd M_inv_builtin = Eigen::MatrixXd::Identity(inSize, inSize);
+  M.triangularView<Eigen::Lower>().solveInPlace(M_inv_builtin);
+
+  // Now compare the two inverses and compute the differences
+  Eigen::MatrixXd diff = M_inv_custom - M_inv_builtin;
+
+  double max_abs_diff = diff.maxCoeff();
+  double min_abs_diff = diff.minCoeff();
+
+  // Set a tolerance
+  double tolerance = 1e-12;
+
+  // Use BOOST_CHECK_SMALL to check that the maximum absolute difference is within the tolerance
+  BOOST_CHECK_SMALL(max_abs_diff, tolerance);
+  BOOST_CHECK_SMALL(min_abs_diff, tolerance);
+}
+
+BOOST_AUTO_TEST_SUITE_END() // Helper
 BOOST_AUTO_TEST_SUITE_END() // RadialBasisFunctionMapping
 BOOST_AUTO_TEST_SUITE_END()

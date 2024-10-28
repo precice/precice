@@ -272,7 +272,7 @@ std::string TestContext::describe() const
     return "This test context is invalid!";
 
   std::ostringstream os;
-  os << "Test context";
+  os << "Test context of " << testing::getFullTestName();
   if (name.empty()) {
     os << " is unnamed";
   } else {

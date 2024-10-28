@@ -1,4 +1,5 @@
 #include <iostream>
+#include <precice/Exceptions.hpp>
 #include <precice/Tooling.hpp>
 #include <stdexcept>
 #include <string>
@@ -56,7 +57,10 @@ int main(int argc, char **argv)
         return 1;
       }
     }
-    precice::tooling::checkConfiguration(file, participant, size);
+    try {
+      precice::tooling::checkConfiguration(file, participant, size);
+    } catch (const ::precice::Error &) {
+    }
     return 0;
   }
 
