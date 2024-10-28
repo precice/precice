@@ -38,13 +38,6 @@ IQNILSAcceleration::IQNILSAcceleration(
 {
 }
 
-void IQNILSAcceleration::initialize(
-    const DataMap &cplData)
-{
-  // do common QN acceleration initialization
-  BaseQNAcceleration::initialize(cplData);
-}
-
 void IQNILSAcceleration::updateDifferenceMatrices(
     const DataMap &cplData)
 {

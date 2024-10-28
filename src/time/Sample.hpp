@@ -19,6 +19,10 @@ struct Sample {
   Sample(int dims, int dataCount)
       : dataDims(dims), values(dims * dataCount) {}
 
+  /// Constructs a Sample of given data and mesh dimensionality, and size with gradients
+  Sample(int dataDims, int nVertices, int meshDims)
+      : dataDims(dataDims), values(nVertices * dataDims), gradients(nVertices, dataDims * meshDims) {}
+
   /// Constructs a Sample of given data dimensionality and data values
   Sample(int dims, Eigen::VectorXd inValues)
       : dataDims(dims), values(std::move(inValues)) {}

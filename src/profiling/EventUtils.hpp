@@ -139,9 +139,6 @@ public:
 
   int nameToID(std::string_view name);
 
-  /// Currently active prefix. Changing that applies only to newly created events.
-  std::string prefix;
-
 private:
   /// The name of the current participant
   std::string _applicationName;

@@ -36,18 +36,15 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
   mesh.createVertex(Eigen::Vector2d::Constant(0.0));
   mesh.createVertex(Eigen::Vector2d::Constant(1.0));
 
-  // Create data
-  mesh.allocateDataValues();
-  Eigen::VectorXd &valuesScalar = dataScalar->values();
-  Eigen::VectorXd &valuesVector = dataVector->values();
-  valuesScalar.setLinSpaced(1., 5.);
-  valuesVector.setLinSpaced(1., 5.);
+  time::Sample scalar(1, 2, dimensions);
+  scalar.values.setLinSpaced(0, 1);
+  scalar.gradients.setOnes();
+  dataScalar->setSampleAtTime(0, scalar);
 
-  // Create corresponding gradient data (all gradient values = const = 1)
-  Eigen::MatrixXd &gradientsScalar = dataScalar->gradients();
-  Eigen::MatrixXd &gradientsVector = dataVector->gradients();
-  gradientsScalar.setOnes();
-  gradientsVector.setOnes();
+  time::Sample vectorial(dimensions, 2, dimensions);
+  vectorial.values.setLinSpaced(0, 1);
+  vectorial.gradients.setOnes();
+  dataScalar->setSampleAtTime(0, vectorial);
 
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
   exportVTP.doExport(0, 0.0);
@@ -67,19 +64,15 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
   mesh.createVertex(Eigen::Vector3d::Constant(0.0));
   mesh.createVertex(Eigen::Vector3d::Constant(1.0));
 
-  // Create data
-  mesh.allocateDataValues();
-  Eigen::VectorXd &valuesScalar = dataScalar->values();
-  Eigen::VectorXd &valuesVector = dataVector->values();
+  time::Sample scalar(1, 2, dimensions);
+  scalar.values.setLinSpaced(0, 1);
+  scalar.gradients.setOnes();
+  dataScalar->setSampleAtTime(0, scalar);
 
-  valuesScalar.setLinSpaced(1., 5.);
-  valuesVector.setLinSpaced(1., 5.);
-
-  // Create corresponding gradient data (all gradient values = const = 1)
-  Eigen::MatrixXd &gradientsScalar = dataScalar->gradients();
-  Eigen::MatrixXd &gradientsVector = dataVector->gradients();
-  gradientsScalar.setOnes();
-  gradientsVector.setOnes();
+  time::Sample vectorial(dimensions, 2, dimensions);
+  vectorial.values.setLinSpaced(0, 1);
+  vectorial.gradients.setOnes();
+  dataScalar->setSampleAtTime(0, vectorial);
 
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
   exportVTP.doExport(0, 0.0);

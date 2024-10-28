@@ -108,6 +108,9 @@ std::string getPathToTests();
 /// Returns the name of the current test.
 std::string getTestName();
 
+/// Return the full name of the current test as seen in boost assertions.
+std::string getFullTestName();
+
 /// Returns the full path to the file containing the current test.
 std::string getTestPath();
 

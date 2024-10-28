@@ -100,7 +100,7 @@ int Mesh::getDimensions() const
   return _dimensions;
 }
 
-Vertex &Mesh::createVertex(const Eigen::VectorXd &coords)
+Vertex &Mesh::createVertex(const Eigen::Ref<const Eigen::VectorXd> &coords)
 {
   PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
   auto nextID = _vertices.size();

@@ -110,6 +110,10 @@ ParticipantImpl::ParticipantImpl(
                 "Please check the values given when constructing a preCICE interface.",
                 _accessorProcessRank, _accessorCommunicatorSize);
 
+  profiling::EventRegistry::instance().initialize(_accessorName, _accessorProcessRank, _accessorCommunicatorSize);
+  profiling::applyDefaults();
+  Event e("construction", profiling::Fundamental);
+
   // Set the global communicator to the passed communicator.
   // This is a noop if preCICE is not configured with MPI.
 #ifndef PRECICE_NO_MPI
@@ -132,11 +136,6 @@ ParticipantImpl::ParticipantImpl(
   }
 #endif
 
-  profiling::EventRegistry::instance().initialize(_accessorName, _accessorProcessRank, _accessorCommunicatorSize);
-  profiling::applyDefaults();
-  Event                        e("construction", profiling::Fundamental);
-  profiling::ScopedEventPrefix sep("construction/");
-
   Event e1("configure", profiling::Fundamental);
   configure(configurationFileName);
   e1.stop();
@@ -152,7 +151,6 @@ ParticipantImpl::ParticipantImpl(
   }
 
   e.stop();
-  sep.pop();
   _solverInitEvent = std::make_unique<profiling::Event>("solver.initialize", profiling::Fundamental, profiling::Synchronize);
 }
 
@@ -251,8 +249,7 @@ void ParticipantImpl::initialize()
                 "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using the writeData() function.");
 
   _solverInitEvent.reset();
-  Event                        e("initialize", profiling::Fundamental, profiling::Synchronize);
-  profiling::ScopedEventPrefix sep("initialize/");
+  Event e("initialize", profiling::Fundamental, profiling::Synchronize);
 
   PRECICE_DEBUG("Preprocessing provided meshes");
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
@@ -332,7 +329,6 @@ void ParticipantImpl::initialize()
   resetWrittenData();
 
   e.stop();
-  sep.pop();
 
   _state = State::Initialized;
   PRECICE_INFO(_couplingScheme->printCouplingState());
@@ -349,8 +345,7 @@ void ParticipantImpl::advance(
   PRECICE_ASSERT(_solverAdvanceEvent, "The advance event is created in initialize");
   _solverAdvanceEvent->stop();
 
-  Event                        e("advance", profiling::Fundamental, profiling::Synchronize);
-  profiling::ScopedEventPrefix sep("advance/");
+  Event e("advance", profiling::Fundamental, profiling::Synchronize);
 
   PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before advance().");
   PRECICE_CHECK(_state != State::Finalized, "advance() cannot be called after finalize().");
@@ -390,7 +385,6 @@ void ParticipantImpl::advance(
 
   _meshLock.lockAll();
 
-  sep.pop();
   e.stop();
   _solverAdvanceEvent->start();
 }
@@ -483,8 +477,7 @@ void ParticipantImpl::finalize()
   // Events for the solver time, finally stopped here
   _solverAdvanceEvent.reset();
 
-  Event                        e("finalize", profiling::Fundamental);
-  profiling::ScopedEventPrefix sep("finalize/");
+  Event e("finalize", profiling::Fundamental);
 
   if (_state == State::Initialized) {
 

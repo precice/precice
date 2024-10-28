@@ -132,7 +132,7 @@ ConfigParser::ConfigParser(std::string_view filePath, const ConfigurationContext
 
   try {
     connectTags(context, DefTags, SubTags);
-  } catch (::precice::Error) {
+  } catch (::precice::Error &) {
     throw;
   } catch (const std::exception &e) {
     PRECICE_ERROR("An unexpected exception occurred during configuration: {}.", e.what());

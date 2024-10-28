@@ -58,9 +58,6 @@ void readValueSpecific(const std::string &rawValue, Eigen::VectorXd &value)
   boost::split(
       components, rawValue, [](char c) { return c == ';'; }, boost::algorithm::token_compress_on);
   const int size = components.size();
-  if (size < 2 || size > 3) {
-    throw std::runtime_error{"The value \"" + rawValue + "\" is not a 2D or 3D vector."};
-  }
 
   Eigen::VectorXd vec(size);
   for (int i = 0; i != size; ++i) {

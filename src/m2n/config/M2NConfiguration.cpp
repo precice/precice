@@ -50,7 +50,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
                                "for the InfiniBand on SuperMUC. ");
     tag.addAttribute(attrNetwork);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, ".")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen, and both solvers have to be started "
@@ -63,7 +63,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     doc = "Communication via MPI with startup in separated communication spaces, using multiple communicators.";
     tag.setDocumentation(doc);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, ".")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen, and both solvers have to be started "
@@ -76,7 +76,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     doc = "Communication via MPI with startup in separated communication spaces, using a single communicator";
     tag.setDocumentation(doc);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, ".")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen, and both solvers have to be started "
