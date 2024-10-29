@@ -73,6 +73,23 @@ def printWide(df):
 
     import polars as pl
 
+    def makeLabel(eventName):
+        if "_GLOBAL" in eventName:
+            return "total"
+
+        indentation = "  "
+
+        if "/" not in eventName:
+            return indentation + eventName
+        parts = eventName.split("/")
+        return indentation * len(parts) + parts[-1]
+
+    df = (
+        df.sort("eid")
+        .with_columns(pl.col("eid").map_elements(makeLabel, return_dtype=pl.String))
+        .rename({"eid": "name"})
+    )
+
     mincolwidth = 8
 
     def formattedLength(s):
@@ -85,19 +102,31 @@ def printWide(df):
         .row(0)
     )
     assert len(headerWidths) == len(bodyWidths)
-    colwidths = map(max, zip(headerWidths, bodyWidths, repeat(mincolwidth)))
+    colwidths = list(map(max, zip(headerWidths, bodyWidths, repeat(mincolwidth))))
+    colaligns = ["<"] + [">"] * (len(df.columns) - 1)
 
-    colfmts = ["{:>" + str(w) + "}" for w in colwidths]
+    colfmts = ["{:" + a + str(w) + "}" for w, a in zip(colwidths, colaligns)]
 
     rowfmt = colfmts[0]
+
     # Measurements always come in batches of 5
-    from itertools import islice
+    def batched(iterable):
+        from itertools import islice
+
+        iterator = iter(iterable)
+        while batch := tuple(islice(iterator, 5)):
+            yield batch
 
     fmts = iter(colfmts[1:])
-    while batch := list(islice(fmts, 5)):
-        rowfmt += " | " + " ".join(batch)
+    for batch in batched(fmts):
+        rowfmt += " │ " + " ".join(batch)
+
+    hline = "─" * colwidths[0]
+    for b in batched(colwidths[1:]):
+        hline += "─┼─" + "─" * (sum(b) + len(b) - 1)
 
     print(rowfmt.format(*(df.columns)))
+    print(hline)
     for row in df.iter_rows():
         print(rowfmt.format(*map(lambda e: "" if e is None else e, row)))
 
@@ -520,9 +549,12 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
     run = Run(profilingfile)
     df = run.toDataFrame()
 
-    assert df.select(
-        pl.col("participant").is_in([participant]).any()
-    ).item(), f"Given participant {participant} doesn't exist."
+    participants = set(df.get_column("participant").unique())
+    assert (
+        participant in participants
+    ), f"Given participant {participant} doesn't exist. Known: " + ", ".join(
+        participants
+    )
 
     print(f"Output timing are in {unit}.")
 
