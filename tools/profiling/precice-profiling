@@ -652,6 +652,18 @@ def sunburstCommand(profilingfile, participant, unit="us"):
 
     print(f"Output timing are in {unit}.")
 
+    def toParent(eid):
+        if eid == "_GLOBAL":
+            return ""
+        if "/" not in eid:
+            return "_GLOBAL"
+        return "/".join(eid.split("/")[:-1])
+
+    def toLabel(eid):
+        if eid == "_GLOBAL":
+            return participant
+        return eid.split("/")[-1]
+
     # Filter by participant
     # Convert duration to requested unit
     dur_factor = 1000 * ns_to_unit_factor(unit)
@@ -661,20 +673,9 @@ def sunburstCommand(profilingfile, participant, unit="us"):
         .with_columns(
             pl.col("dur") * dur_factor,
             pl.col("eid")
-            .map_elements(
-                lambda s: "/".join(s.split("/")[:-1])
-                if "/" in s
-                else "_GLOBAL"
-                if s != "_GLOBAL"
-                else "",
-                return_dtype=pl.String,
-            )
+            .map_elements(toParent, return_dtype=pl.String)
             .alias("parent"),
-            pl.col("eid")
-            .map_elements(
-                lambda s: s.split("/")[-1] if "/" in s else s, return_dtype=pl.String
-            )
-            .alias("label"),
+            pl.col("eid").map_elements(toLabel, return_dtype=pl.String).alias("label"),
         )
     )
 
@@ -693,12 +694,15 @@ def sunburstCommand(profilingfile, participant, unit="us"):
         parents=primary["parent"].to_list(),
         values=primary["dur"].to_list(),
         branchvalues="total",
+        insidetextorientation="radial",
+        hovertemplate="<b>%{label}</b><br><i>%{id}</i><br>%{value} " + unit,
     )
 
     if len(df.select("rank").unique()) == 1:
         import plotly.graph_objects as go
 
         fig = go.Figure(primaryPlot)
+        fig.update_layout(title=participant)
         fig.show()
         return 0
 
@@ -715,7 +719,7 @@ def sunburstCommand(profilingfile, participant, unit="us"):
         rows=1,
         cols=2,
         specs=[[{"type": "domain"}, {"type": "domain"}]],
-        subplot_titles=["Primary", "Secondaries"],
+        subplot_titles=[f"Primary of {participant}", f"Secondaries of {participant}"],
     )
     fig.add_trace(primaryPlot, row=1, col=1)
     fig.add_trace(
@@ -725,6 +729,8 @@ def sunburstCommand(profilingfile, participant, unit="us"):
             parents=secondary["parent"].to_list(),
             values=secondary["dur"].to_list(),
             branchvalues="total",
+            insidetextorientation="radial",
+            hovertemplate="<b>%{label}</b><br><i>%{id}</i><br>%{value} " + unit,
         ),
         row=1,
         col=2,
