@@ -74,12 +74,9 @@ double IntraComm::l2norm(const Eigen::VectorXd &vec)
 
   PRECICE_ASSERT(_communication.get() != nullptr);
   PRECICE_ASSERT(_communication->isConnected());
-  double localSum2  = 0.0;
-  double globalSum2 = 0.0;
 
-  for (int i = 0; i < vec.size(); i++) {
-    localSum2 += vec(i) * vec(i);
-  }
+  double globalSum2 = 0.0;
+  double localSum2  = vec.squaredNorm();
 
   // localSum is modified, do not use afterwards
   allreduceSum(localSum2, globalSum2);
