@@ -262,7 +262,9 @@ bool Mapping::isScaledConsistent() const
 
 bool Mapping::isIndirectMapping() const
 {
-  return _isIndirect;
+  PRECICE_ASSERT(_input);
+  PRECICE_ASSERT(_output);
+  return _input->isIndirect() || _output->isIndirect();
 }
 
 void Mapping::updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in)
