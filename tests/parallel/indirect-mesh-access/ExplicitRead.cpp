@@ -27,16 +27,19 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
     std::array<double, dim * 2> boundingBox;
     std::vector<double>         tmpPositions;
     std::vector<double>         expectedData1;
+    std::vector<double>         expectedData2;
 
     if (context.isPrimary()) {
       boundingBox   = {0.0, 1.0, 0.0, 1.0};
       tmpPositions  = {0.1, 0.1, 0.1, 0.5, 1.0, 0.0, 1.0, 1.0};
       expectedData1 = {1, 1, 2, 4};
+      expectedData2 = {-10, -10, -11, -13};
     }
     if (!context.isPrimary()) {
       boundingBox   = {1.0, 2.0, 0.0, 1.0};
       tmpPositions  = {1.2, 0.0, 2.0, 1.0, 1.0, 0.5};
       expectedData1 = {2, 5, 3};
+      expectedData2 = {-11, -15, -12};
     }
     auto otherMeshName = "MeshTwo";
     auto dataName      = "Velocities";
@@ -51,9 +54,6 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
     while (couplingInterface.isCouplingOngoing()) {
       double dt = couplingInterface.getMaxTimeStepSize();
       time += dt;
-
-      // read data:
-      // std::vector<double> expectedData2({-10, -11, -12, -13, -11, -13});
 
       for (std::size_t i = 0; i < expectedData1.size(); ++i) {
         std::vector<double> solverTwoCoord(dim);
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
     couplingInterface.setMeshVertices(meshName, positions, ids);
     // Some dummy readData
     std::vector<double> writeData1({1, 2, 3, 4, 5});
-    // std::array<double, 4> writeData2({-10, -11, -12, -13});
+    std::vector<double> writeData2({-10, -11, -12, -13, -15});
 
     // Initialize
     couplingInterface.initialize();
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
       if (time == 1) {
         couplingInterface.writeData(meshName, dataName, ids, writeData1);
       } else if (time == 2) {
-        // couplingInterface.writeData(meshName, dataName, ids, writeData2);
+        couplingInterface.writeData(meshName, dataName, ids, writeData2);
       } else {
         PRECICE_ASSERT(false);
       }

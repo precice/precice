@@ -116,6 +116,7 @@ public:
   /// Return true if the mapping requires an initial guess
   bool requiresInitialGuess() const;
 
+  /// Returns true if either the input or output is an indirect (dummy) mesh
   bool isIndirectMapping() const;
 
   /// Return the provided initial guess of a mapping using an initialGuess
