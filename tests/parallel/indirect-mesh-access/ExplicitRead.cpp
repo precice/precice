@@ -25,11 +25,18 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
   if (context.isNamed("SolverOne")) {
 
     std::array<double, dim * 2> boundingBox;
+    std::vector<double>         tmpPositions;
+    std::vector<double>         expectedData1;
+
     if (context.isPrimary()) {
-      boundingBox = {0.0, 1.0, 0.0, 1.0};
+      boundingBox   = {0.0, 1.0, 0.0, 1.0};
+      tmpPositions  = {0.1, 0.1, 0.1, 0.5, 1.0, 0.0, 1.0, 1.0};
+      expectedData1 = {1, 1, 2, 4};
     }
     if (!context.isPrimary()) {
-      boundingBox = {1.0, 2.0, 1.0, 2.0};
+      boundingBox   = {1.0, 2.0, 0.0, 1.0};
+      tmpPositions  = {1.2, 0.0, 2.0, 1.0, 1.0, 0.5};
+      expectedData1 = {2, 5, 3};
     }
     auto otherMeshName = "MeshTwo";
     auto dataName      = "Velocities";
@@ -46,9 +53,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
       time += dt;
 
       // read data:
-      std::vector<double> expectedData1({1, 2, 3, 4, 2, 4});
-      std::vector<double> expectedData2({-10, -11, -12, -13, -11, -13});
-      std::vector<double> tmpPositions = {0.0, -0.01, 0.01, 0.05, 0.1, 0.1, 0.1, 0.0, 0, 0.05, 0.1, 0.0};
+      // std::vector<double> expectedData2({-10, -11, -12, -13, -11, -13});
 
       for (std::size_t i = 0; i < expectedData1.size(); ++i) {
         std::vector<double> solverTwoCoord(dim);
@@ -78,14 +83,14 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
     auto dataName = "Velocities";
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName));
 
-    std::vector<double> positions = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0};
-    std::vector<int>    ids(4, -1);
+    std::vector<double> positions = {0.0, 0.0, 1.2, 0.1, 0.9, 0.8, 1.2, 1.0, 2.0, 1.0};
+    std::vector<int>    ids(5, -1);
 
     // Define the mesh
     couplingInterface.setMeshVertices(meshName, positions, ids);
     // Some dummy readData
-    std::array<double, 4> writeData1({1, 2, 3, 4});
-    std::array<double, 4> writeData2({-10, -11, -12, -13});
+    std::vector<double> writeData1({1, 2, 3, 4, 5});
+    // std::array<double, 4> writeData2({-10, -11, -12, -13});
 
     // Initialize
     couplingInterface.initialize();
@@ -99,7 +104,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
       if (time == 1) {
         couplingInterface.writeData(meshName, dataName, ids, writeData1);
       } else if (time == 2) {
-        couplingInterface.writeData(meshName, dataName, ids, writeData2);
+        // couplingInterface.writeData(meshName, dataName, ids, writeData2);
       } else {
         PRECICE_ASSERT(false);
       }

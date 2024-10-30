@@ -266,9 +266,6 @@ private:
 
   int _dimensions;
 
-  /// bool for whether this is indirect or not
-  bool _isIndirect = false;
-
   /// The InitialGuessRequirement of the Mapping
   InitialGuessRequirement _initialGuessRequirement;
 
