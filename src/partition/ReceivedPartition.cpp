@@ -900,8 +900,20 @@ void ReceivedPartition::tagMeshFirstRound()
 {
   // We want to have every vertex within the box if we access the mesh directly
   if (_allowDirectAccess) {
-    _mesh->tagAll();
-    return;
+    // _mesh->getBoundingBox is based on the bounding box of the mesh, which is
+    // - set via the API function (setMeshAccessRegion)
+    // - potentially enlarged with another bounding box if there is another mapping defined
+    // i.e. we have a local mesh involved with a bounding box used to enlarge the original one
+    // concluding: it might be that the boundingBox is not (purely) the one asked for by the user
+    // but using mesh-tagAll() would tag the safety margin. Of course, this only applied for combinations of direct access plus mapping, for pure
+    // direct accesses, there is no safety factor
+
+    auto userDefinedBB = _mesh->getBoundingBox();
+    for (auto &vertex : _mesh->vertices()) {
+      if (userDefinedBB.contains(vertex)) {
+        vertex.tag();
+      }
+    }
   }
 
   for (const mapping::PtrMapping &fromMapping : _fromMappings) {
@@ -914,11 +926,6 @@ void ReceivedPartition::tagMeshFirstRound()
 
 void ReceivedPartition::tagMeshSecondRound()
 {
-  // We have already tagged every node in this case in the first round
-  if (_allowDirectAccess) {
-    return;
-  }
-
   for (const mapping::PtrMapping &fromMapping : _fromMappings) {
     fromMapping->tagMeshSecondRound();
   }
