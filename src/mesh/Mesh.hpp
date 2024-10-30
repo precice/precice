@@ -395,12 +395,12 @@ private:
    */
   CommunicationMap _communicationMap;
 
+  /// for indirect mesh access, we need an artificial mesh, which we can use
+  bool _isIndirect = false;
+
   BoundingBox _boundingBox;
 
   query::Index _index;
-
-  /// for indirect mesh access, we need an artificial mesh, which we can use
-  bool _isIndirect = false;
 
   /// Removes all duplicate connectivity.
   void removeDuplicates();
