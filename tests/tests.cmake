@@ -92,6 +92,82 @@ target_sources(testprecice
     tests/quasi-newton/serial/TestQN7.cpp
     tests/quasi-newton/serial/TestQN8.cpp
     tests/quasi-newton/serial/TestQN9.cpp
+    tests/remeshing/ReadAfterReset.cpp
+    tests/remeshing/ResetAfterSubcycling.cpp
+    tests/remeshing/ResetWhileIterating.cpp
+    tests/remeshing/SubcylingAfterReset.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshBoth.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshBoth2LI.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshBothSerial.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshInput.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshInput2LI.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshInputSerial.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshOutput.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshOutput2LI.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshOutputSerial.cpp
+    tests/remeshing/parallel-explicit/changed-partition/OverlapBoth.cpp
+    tests/remeshing/parallel-explicit/changed-partition/OverlapBoth2LI.cpp
+    tests/remeshing/parallel-explicit/changed-partition/ScatterOutputs.cpp
+    tests/remeshing/parallel-explicit/changed-partition/ScatterOutputs2LI.cpp
+    tests/remeshing/parallel-explicit/changed-partition/SwapOutputs.cpp
+    tests/remeshing/parallel-explicit/changed-partition/SwapOutputs2LI.cpp
+    tests/remeshing/parallel-explicit/helper.hpp
+    tests/remeshing/parallel-explicit/noop/RemeshBoth.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshBoth2LI.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshBothSerial.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshInput.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshInput2LI.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshInputSerial.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshOutput.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshOutput2LI.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshOutputSerial.cpp
+    tests/remeshing/parallel-explicit/two-meshes/LocalMapping.cpp
+    tests/remeshing/parallel-explicit/two-meshes/RemoteMapping.cpp
+    tests/remeshing/parallel-implicit/acceleration/IQN-ILS/RemeshBothSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/IQN-ILS/RemeshFirstSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/IQN-ILS/RemeshSecondSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/IQN-IMVJ/RemeshBothSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/IQN-IMVJ/RemeshFirstSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/IQN-IMVJ/RemeshSecondSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/aitken/RemeshBothSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/aitken/RemeshFirstSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/aitken/RemeshSecondSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/constant/RemeshBothSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/constant/RemeshFirstSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/constant/RemeshSecondSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/helper.hpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshBoth.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshBoth2LI.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshBothSerial.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshFirst.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshFirst2LI.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshFirstSerial.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshSecond.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshSecond2LI.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshSecondSerial.cpp
+    tests/remeshing/parallel-implicit/changed-partition/OverlapBoth.cpp
+    tests/remeshing/parallel-implicit/changed-partition/OverlapBoth2LI.cpp
+    tests/remeshing/parallel-implicit/changed-partition/ScatterFirst.cpp
+    tests/remeshing/parallel-implicit/changed-partition/ScatterFirst2LI.cpp
+    tests/remeshing/parallel-implicit/changed-partition/ScatterSecond.cpp
+    tests/remeshing/parallel-implicit/changed-partition/ScatterSecond2LI.cpp
+    tests/remeshing/parallel-implicit/changed-partition/SwapFirst.cpp
+    tests/remeshing/parallel-implicit/changed-partition/SwapFirst2LI.cpp
+    tests/remeshing/parallel-implicit/changed-partition/SwapSecond.cpp
+    tests/remeshing/parallel-implicit/changed-partition/SwapSecond2LI.cpp
+    tests/remeshing/parallel-implicit/convergence/RemeshBothSerial.cpp
+    tests/remeshing/parallel-implicit/convergence/RemeshFirstSerial.cpp
+    tests/remeshing/parallel-implicit/convergence/RemeshSecondSerial.cpp
+    tests/remeshing/parallel-implicit/helper.hpp
+    tests/remeshing/parallel-implicit/noop/RemeshBoth.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshBoth2LI.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshBothSerial.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshFirst.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshFirst2LI.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshFirstSerial.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshSecond.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshSecond2LI.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshSecondSerial.cpp
     tests/serial/AitkenAcceleration.cpp
     tests/serial/ImplicitCheckpointing.cpp
     tests/serial/PreconditionerBug.cpp
@@ -327,4 +403,4 @@ target_sources(testprecice
     )
 
 # Contains the list of integration test suites
-set(PRECICE_TEST_SUITES GeometricMultiscale Parallel QuasiNewton Serial)
+set(PRECICE_TEST_SUITES GeometricMultiscale Parallel QuasiNewton Remeshing Serial)

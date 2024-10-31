@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration experimental="yes" allow-remeshing="yes">
+  <data:scalar name="D" />
+
+  <mesh name="MA" dimensions="2">
+    <use-data name="D" />
+  </mesh>
+
+  <mesh name="MB" dimensions="2">
+    <use-data name="D" />
+  </mesh>
+
+  <participant name="A">
+    <provide-mesh name="MA" />
+    <write-data name="D" mesh="MA" />
+  </participant>
+
+  <participant name="B">
+    <provide-mesh name="MB" />
+    <receive-mesh name="MA" from="A" />
+    <read-data name="D" mesh="MB" />
+    <mapping:nearest-neighbor direction="read" from="MA" to="MB" constraint="consistent" />
+  </participant>
+
+  <m2n:sockets use-two-level-initialization="yes" connector="A" acceptor="B" />
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="B" second="A" />
+    <max-time-windows value="10" />
+    <time-window-size value="1.0" />
+    <exchange data="D" mesh="MA" from="A" to="B" />
+  </coupling-scheme:parallel-explicit>
+</precice-configuration>
