@@ -90,6 +90,7 @@ void BaseQNAcceleration::initialize(
 
   checkDataIDs(cplData);
   // store all data IDs in vector
+  _dataIDs.clear();
   for (const DataMap::value_type &pair : cplData) {
     _dataIDs.push_back(pair.first);
   }
@@ -99,6 +100,7 @@ void BaseQNAcceleration::initialize(
                   "Quasi-Newton acceleration does not yet support using data from all substeps. Please set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
   }
 
+  _matrixCols.clear();
   _matrixCols.push_front(0);
   _firstIteration  = true;
   _firstTimeWindow = true;
@@ -610,8 +612,6 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
   const size_t primaryDataSize = std::accumulate(_primaryDataIDs.begin(), _primaryDataIDs.end(), (size_t) 0, addCplDataSize);
   const size_t dataSize        = std::accumulate(_dataIDs.begin(), _dataIDs.end(), (size_t) 0, addCplDataSize);
 
-  PRECICE_ASSERT(_oldPrimaryXTilde.size() == 0);
-  PRECICE_ASSERT(_oldPrimaryResiduals.size() == 0);
   _oldPrimaryXTilde    = Eigen::VectorXd::Zero(primaryDataSize);
   _oldPrimaryResiduals = Eigen::VectorXd::Zero(primaryDataSize);
   _primaryResiduals    = Eigen::VectorXd::Zero(primaryDataSize);
@@ -621,6 +621,8 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
   _oldValues           = Eigen::VectorXd::Zero(dataSize);
   _oldXTilde           = Eigen::VectorXd::Zero(dataSize);
   _residuals           = Eigen::VectorXd::Zero(dataSize);
+  _matrixV.resize(0, 0);
+  _matrixW.resize(0, 0);
 
   /**
    *  make dimensions public to all procs,
@@ -673,6 +675,7 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
   }
 
   // set the number of global rows in the QRFactorization.
+  _qrV.reset();
   _qrV.setGlobalRows(getPrimaryLSSystemRows());
 
   std::vector<size_t> subVectorSizes; // needed for preconditioner
