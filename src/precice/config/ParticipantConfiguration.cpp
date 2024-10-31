@@ -411,7 +411,11 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     auto toMesh   = confMapping.toMesh->getName();
 
     if (confMapping.direction == mapping::MappingConfiguration::Direction::READ) {
-      /// A read mapping maps from received to provided
+      // A read mapping maps from received to provided
+      PRECICE_CHECK(participant->isMeshReceived(fromMesh) || participant->isMeshProvided(toMesh),
+                    "A read mapping of participant \"{}\" needs to map from a received to a provided mesh, but in this case they are swapped. "
+                    "Did you intent to map from mesh \"{}\" to mesh \"{}\", or use a write mapping instead?",
+                    participant->getName(), confMapping.fromMesh->getName(), confMapping.toMesh->getName());
       PRECICE_CHECK(participant->isMeshReceived(fromMesh),
                     "Participant \"{}\" has a read mapping from mesh \"{}\", without receiving it. "
                     "Please add a receive-mesh tag with name=\"{}\"",
@@ -422,6 +426,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                     participant->getName(), toMesh, toMesh);
     } else {
       // A write mapping maps from provided to received
+      PRECICE_CHECK(participant->isMeshProvided(fromMesh) || participant->isMeshReceived(toMesh),
+                    "A write mapping of participant \"{}\" needs to map from a provided to a received mesh, but in this case they are swapped. "
+                    "Did you intent to map from mesh \"{}\" to mesh \"{}\", or use a read mapping instead?",
+                    participant->getName(), confMapping.fromMesh->getName(), confMapping.toMesh->getName());
       PRECICE_CHECK(participant->isMeshProvided(fromMesh),
                     "Participant \"{}\" has a write mapping from mesh \"{}\", without providing it. "
                     "Please add a provided-mesh tag with name=\"{}\"",
@@ -448,26 +456,6 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     const auto &       toMeshID        = confMapping.toMesh->getID();
     impl::MeshContext &fromMeshContext = participant->meshContext(fromMesh);
     impl::MeshContext &toMeshContext   = participant->meshContext(toMesh);
-
-    if (confMapping.direction == mapping::MappingConfiguration::READ) {
-      PRECICE_CHECK(toMeshContext.provideMesh,
-                    "A read mapping of participant \"{}\" needs to map TO a provided mesh. Mesh \"{1}\" is not provided. "
-                    "Please add the tag <provide-mesh name=\"{1}\" /> to the participant.",
-                    participant->getName(), confMapping.toMesh->getName());
-      PRECICE_CHECK(not fromMeshContext.receiveMeshFrom.empty(),
-                    "A read mapping of participant \"{}\" needs to map FROM a received mesh. Mesh \"{1}\" is not received. "
-                    "Please add the tag <receive-mesh name=\"{1}\" /> to the participant.",
-                    participant->getName(), confMapping.toMesh->getName());
-    } else {
-      PRECICE_CHECK(fromMeshContext.provideMesh,
-                    "A write mapping of participant \"{}\" needs to map FROM a provided mesh. Mesh \"{1}\" is not provided. "
-                    "Please add the tag <provide-mesh name=\"{1}\" /> to the participant.",
-                    participant->getName(), confMapping.fromMesh->getName());
-      PRECICE_CHECK(not toMeshContext.receiveMeshFrom.empty(),
-                    "A write mapping of participant \"{}\" needs to map TO a received mesh. Mesh \"{1}\" is not received. "
-                    "Please add the tag <receive-mesh name=\"{1}\" /> to the participant.",
-                    participant->getName(), confMapping.toMesh->getName());
-    }
 
     // @TODO: is this still correct?
     if (confMapping.requiresBasisFunction) {
