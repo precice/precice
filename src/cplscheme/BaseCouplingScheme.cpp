@@ -298,6 +298,27 @@ void BaseCouplingScheme::initialize()
   _isInitialized = true;
 }
 
+void BaseCouplingScheme::reinitialize()
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(isInitialized());
+
+  if (isImplicitCouplingScheme()) {
+    // overwrite past iteration with new samples
+    for (const auto &data : _allData | boost::adaptors::map_values) {
+      // TODO: reset CouplingData of changed meshes only #2102
+      data->reinitialize();
+    }
+
+    if (not doesFirstStep()) {
+      if (_acceleration) {
+        _acceleration->initialize(getAccelerationData());
+      }
+    }
+    initializeTXTWriters();
+  }
+}
+
 bool BaseCouplingScheme::sendsInitializedData() const
 {
   return _sendsInitializedData;
