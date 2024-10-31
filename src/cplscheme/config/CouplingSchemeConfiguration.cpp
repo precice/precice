@@ -322,6 +322,7 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
     if (_config.type == VALUE_SERIAL_EXPLICIT) {
+      PRECICE_CHECK(!_allowRemeshing, "Remeshing is currently incompatible with serial coupling schemes. Try using a parallel or a multi coupling scheme instead.");
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialExplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
@@ -342,6 +343,7 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_SERIAL_IMPLICIT) {
+      PRECICE_CHECK(!_allowRemeshing, "Remeshing is currently incompatible with serial coupling schemes. Try using a parallel or a multi coupling scheme instead.");
       updateConfigForImplicitCoupling();
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createSerialImplicitCouplingScheme(accessor);
@@ -353,6 +355,7 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     } else if (_config.type == VALUE_PARALLEL_IMPLICIT) {
+      PRECICE_INFO_IF(_allowRemeshing, "Remeshing for implicit coupling schemes is in development. Currently, the acceleration data is deleted on remeshing.");
       updateConfigForImplicitCoupling();
       std::string       accessor(_config.participants[0]);
       PtrCouplingScheme scheme = createParallelImplicitCouplingScheme(accessor);
@@ -362,6 +365,9 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
       addCouplingScheme(scheme, accessor);
       _config = Config();
     } else if (_config.type == VALUE_MULTI) {
+      /// TODO test multi coupling scheme
+      PRECICE_CHECK(!_allowRemeshing, "Remeshing is currently incompatible with multi coupling schemes. Try using a parallel coupling scheme instead.");
+      PRECICE_INFO_IF(_allowRemeshing, "Remeshing for implicit coupling schemes is in development. Currently, the acceleration data is deleted on remeshing.");
       updateConfigForImplicitCoupling();
       PRECICE_CHECK(_config.setController,
                     "One controller per MultiCoupling needs to be defined. "
@@ -390,6 +396,8 @@ void CouplingSchemeConfiguration::addCouplingScheme(
     return;
   }
   PRECICE_ASSERT(_couplingSchemes.count(participantName) > 0);
+
+  PRECICE_CHECK(!_allowRemeshing, "Remeshing is currently incompatible with compositional coupling schemes. If you need remeshing, try using a multi coupling scheme to compose your participants.");
 
   // Create a composition to add the new cplScheme to
   if (!utils::contained(participantName, _couplingSchemeCompositions)) {
@@ -1198,6 +1206,12 @@ void CouplingSchemeConfiguration::setParallelAcceleration(
         "Consider switching to a serial-implicit coupling scheme or changing the acceleration method.",
         participant);
   }
+}
+
+void CouplingSchemeConfiguration::setRemeshing(
+    bool allowed)
+{
+  _allowRemeshing = allowed;
 }
 
 } // namespace precice::cplscheme

@@ -104,6 +104,11 @@ bool Participant::requiresMeshConnectivityFor(::precice::string_view meshName) c
   return _impl->requiresMeshConnectivityFor(toSV(meshName));
 }
 
+void Participant::resetMesh(::precice::string_view meshName)
+{
+  return _impl->resetMesh(toSV(meshName));
+}
+
 bool Participant::requiresGradientDataFor(::precice::string_view meshName,
                                           ::precice::string_view dataName) const
 {
