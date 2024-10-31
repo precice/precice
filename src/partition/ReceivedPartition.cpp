@@ -85,6 +85,8 @@ void ReceivedPartition::communicate()
     PRECICE_ASSERT(globalNumberOfVertices >= 0);
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
   }
+
+  PRECICE_ASSERT(_mesh->getGlobalNumberOfVertices() >= 0);
 }
 
 void ReceivedPartition::compute()
@@ -209,7 +211,6 @@ void ReceivedPartition::compute()
       PRECICE_DEBUG("Send partition feedback to primary rank");
       utils::IntraComm::getCommunication()->sendRange(vertexIDs, 0);
     } else { // Primary
-
       mesh::Mesh::VertexDistribution vertexDistribution;
       int                            numberOfVertices = _mesh->nVertices();
       std::vector<VertexID>          vertexIDs(numberOfVertices, -1);
@@ -261,6 +262,11 @@ void ReceivedPartition::compute()
     utils::IntraComm::getCommunication()->broadcast(vertexOffsets);
     PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
     _mesh->setVertexOffsets(std::move(vertexOffsets));
+  }
+
+  PRECICE_ASSERT(!_mesh->getVertexOffsets().empty());
+  if (!m2n().usesTwoLevelInitialization() && utils::IntraComm::isPrimary()) {
+    PRECICE_ASSERT(!_mesh->getVertexDistribution().empty());
   }
 }
 
