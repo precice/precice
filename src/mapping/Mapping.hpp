@@ -3,8 +3,10 @@
 #include <Eigen/Core>
 #include <iosfwd>
 
+#include "mapping/MappingDataCache.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "precice/span.hpp"
 
 namespace precice {
 namespace mapping {
@@ -115,6 +117,9 @@ public:
   /// Return true if the mapping requires an initial guess
   bool requiresInitialGuess() const;
 
+  /// Returns true if either the input or output is an indirect (dummy) mesh
+  bool isIndirectMapping() const;
+
   /// Return the provided initial guess of a mapping using an initialGuess
   const Eigen::VectorXd &initialGuess() const;
 
@@ -188,6 +193,14 @@ public:
 
   /// Returns the name of the mapping method for logging purpose
   virtual std::string getName() const = 0;
+
+  virtual void writeConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target);
+
+  // @todo consider making this a private method in the RBFMapping/PUM mapping class
+  virtual void updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in);
+
+  // For now only for read-consistent
+  virtual void evaluateMappingDataCacheAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values);
 
 protected:
   /// Returns pointer to input mesh.

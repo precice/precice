@@ -82,6 +82,30 @@ void DataContext::appendMapping(MappingContext mappingContext)
   PRECICE_ASSERT(mappingContext.toData->getName() == getDataName());
 }
 
+void DataContext::addIndirectAccessMapping(MappingContext mappingContext, MeshContext meshContext)
+{
+  PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
+  PRECICE_ASSERT(indirectMapping.get() == nullptr);
+  PRECICE_ASSERT(mappingCache.get() == nullptr);
+  mesh::PtrData data = meshContext.mesh->data(getDataName());
+  // @todo: the mapping itself has even for indirect access no notion about the data
+  // maybe remove the data pointer here or set them to nullptr
+  // the data access happens through the API functions
+  mappingContext.toData   = data;
+  mappingContext.fromData = data;
+  // @todo: add these checks again, depending on read or write direction
+  // PRECICE_ASSERT(mappingContext.fromData);
+  // PRECICE_ASSERT(mappingContext.toData);
+
+  // PRECICE_ASSERT(mappingContext.fromData == _providedData || mappingContext.toData == _providedData, "Either fromData or toData has to equal _providedData.");
+  mappingCache    = std::make_unique<mapping::MappingDataCache>(data->getDimensions());
+  indirectMapping = mappingContext.mapping;
+
+  // @todo: here we setup the MappingDataCache. Do we need to store the whole MappingContext or would a mapping pointer here be sufficient?
+  // PRECICE_ASSERT(mappingContext.fromData->getName() == getDataName());
+  // PRECICE_ASSERT(mappingContext.toData->getName() == getDataName());
+}
+
 bool DataContext::hasMapping() const
 {
   return hasReadMapping() || hasWriteMapping();

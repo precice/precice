@@ -14,6 +14,8 @@ ReadDataContext::ReadDataContext(
 void ReadDataContext::appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext)
 {
   PRECICE_ASSERT(!hasReadMapping(), "The read data context must be unique. Otherwise we would have an ambiguous read data operation on the user side.");
+  // The read mapping must be unique, but having read and write in the same context is not possible either
+  PRECICE_ASSERT(_mappingContexts.empty());
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData data = meshContext.mesh->data(getDataName());
   PRECICE_ASSERT(data != _providedData, "Data the read mapping is mapping from needs to be different from _providedData");
@@ -36,6 +38,23 @@ void ReadDataContext::readValues(::precice::span<const VertexID> vertices, doubl
   for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
     outputData.col(i) = localData.col(vertices[i]);
   }
+}
+
+void ReadDataContext::mapAndReadValues(::precice::span<const double> coordinates, double readTime, ::precice::span<double> values)
+{
+  PRECICE_TRACE(getMeshName(), getDataName(), coordinates.size(), values.size(), readTime);
+  PRECICE_ASSERT(mappingCache);
+  PRECICE_ASSERT(indirectMapping);
+
+  if (!mappingCache->hasDataAtTimeStamp(readTime)) {
+    // Sample waveform relaxation
+    Eigen::VectorXd sample{_providedData->sampleAtTime(readTime)};
+    indirectMapping->updateMappingDataCache(*mappingCache.get(), sample);
+    mappingCache->setTimeStamp(readTime);
+  }
+
+  // Function, which fills the values using the coordinates and the cache
+  indirectMapping->evaluateMappingDataCacheAt(coordinates, *mappingCache.get(), values);
 }
 
 int ReadDataContext::getWaveformDegree() const

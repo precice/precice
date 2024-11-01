@@ -3,6 +3,7 @@
 #include <ostream>
 #include "math/differences.hpp"
 #include "mesh/Utils.hpp"
+#include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
@@ -242,7 +243,7 @@ void Mapping::scaleConsistentMapping(const Eigen::VectorXd &input, Eigen::Vector
         math::greater(std::abs(consistency), 0.0),
         "Failed to fulfill consistency constraint of component {} for scaled-consistent mapping from mesh \"{}\" to mesh \"{}\". Consistency difference between input and scaled output is \"{}\".", i, this->input()->getName(), this->output()->getName(), consistency);
   }
-} // namespace mapping
+}
 
 bool Mapping::hasConstraint(const Constraint &constraint) const
 {
@@ -257,6 +258,29 @@ bool Mapping::hasComputedMapping() const
 bool Mapping::isScaledConsistent() const
 {
   return (hasConstraint(SCALED_CONSISTENT_SURFACE) || hasConstraint(SCALED_CONSISTENT_VOLUME));
+}
+
+bool Mapping::isIndirectMapping() const
+{
+  PRECICE_ASSERT(_input);
+  PRECICE_ASSERT(_output);
+  return _input->isIndirect() || _output->isIndirect();
+}
+
+void Mapping::updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in)
+{
+  precice::profiling::Event e("map.updateCache.From" + input()->getName());
+  cache.inData = in;
+}
+
+void Mapping::writeConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target)
+{
+  PRECICE_ASSERT(false, "Not implemented");
+}
+
+void Mapping::evaluateMappingDataCacheAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values)
+{
+  PRECICE_ASSERT(false, "Not implemented");
 }
 
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)

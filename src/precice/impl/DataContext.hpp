@@ -6,9 +6,9 @@
 
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
+#include "mapping/NearestNeighborMapping.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Utils.hpp"
-
 namespace precice {
 
 namespace testing {
@@ -110,6 +110,26 @@ public:
     return mesh::locateInvalidVertexID(*_mesh, c);
   }
 
+  /**
+   * @brief
+   *
+   * No need to put this function into a derived class.
+   * The Mapping class knows the direction and the DataContext states read or write.
+   * Mappings in the DataContext only affect the mapData() steering.
+   * Thus, we don't add the indirect mapping anywhere in the conventional mapping
+   * data structures, i.e., _mappingContexts
+   *
+   * @param mappingContext
+   */
+  void addIndirectAccessMapping(MappingContext mappingContext, MeshContext meshContext);
+
+  void invalidateMappingCache()
+  {
+    if (mappingCache) {
+      mappingCache->setTimeStamp(-1);
+    }
+  }
+
 protected:
   /**
    * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext should use this constructor.
@@ -125,6 +145,26 @@ protected:
   /// Unique data this context is associated with
   mesh::PtrData _providedData;
 
+  /**
+   * @brief Cache for indirect mesh access.
+   *
+   * Purpose: For indirect access, we want to pre-compute as much data as possible to not have
+   * expensive operations repeated in every read/write call of the mapping class.
+   *
+   * The cache itself is updated in the associated Mapping class
+   * where it is used. However, storing it in the mapping class is not useful, as we might map
+   * multiple data from the same mesh. In preCICE, this leads to one (shared) MappingContext in
+   * different DataContexts. Hence, we store the data in this unique Mesh-Data pair.
+   *
+   * The \ref _mappingContexts in this class are a std::vector for multiple mappings associated
+   * to the same DataContext. However, for one DataContext (read or write) there can only be one
+   * indirect mapping/indirect mesh access.
+   * For conventional mappings, multiple MappingContexts can only occur in write direction (write
+   * to one local mesh, map it to different remote meshes). Since the indirect mapping operates
+   * on the remote meshes, this multiplicity cannot occur. Thus, one cache per DataContext is enough.
+   */
+  std::unique_ptr<mapping::MappingDataCache> mappingCache;
+  std::shared_ptr<mapping::Mapping>          indirectMapping;
   /**
    * @brief Helper to append a mappingContext, fromData and toData to the corresponding data containers
    *
@@ -158,9 +198,10 @@ protected:
   /// Returns true if the given vertexID is valid
   bool isValidVertexID(const VertexID id) const;
 
+  mesh::PtrMesh _mesh;
+
 private:
   /// Unique mesh associated with _providedData.
-  mesh::PtrMesh _mesh;
 
   static logging::Logger _log;
 
