@@ -283,6 +283,16 @@ bool ParticipantState::isDirectAccessAllowed(std::string_view mesh) const
 
 // Other queries
 
+bool ParticipantState::hasReadMappings() const
+{
+  return !_readMappingContexts.empty();
+}
+
+bool ParticipantState::hasWriteMappings() const
+{
+  return !_writeMappingContexts.empty();
+}
+
 std::vector<MappingContext> &ParticipantState::readMappingContexts()
 {
   return _readMappingContexts;
