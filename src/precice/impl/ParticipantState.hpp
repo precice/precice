@@ -282,6 +282,12 @@ public:
   /// Returns true, if the participant uses a primary tag.
   bool useIntraComm() const;
 
+  /// Returns true, if the participant has at least one read mapping
+  bool hasReadMappings() const;
+
+  /// Returns true, if the participant has at least one write mapping
+  bool hasWriteMappings() const;
+
   /// Provided access to all read \ref MappingContext
   std::vector<MappingContext> &readMappingContexts();
 

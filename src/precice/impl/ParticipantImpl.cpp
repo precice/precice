@@ -1451,6 +1451,10 @@ void ParticipantImpl::computeMappings(std::vector<MappingContext> &contexts, con
 void ParticipantImpl::mapInitialWrittenData()
 {
   PRECICE_TRACE();
+  if (!_accessor->hasWriteMappings()) {
+    return;
+  }
+
   computeMappings(_accessor->writeMappingContexts(), "write");
   for (auto &context : _accessor->writeDataContexts()) {
     if (context.hasMapping()) {
@@ -1463,6 +1467,10 @@ void ParticipantImpl::mapInitialWrittenData()
 void ParticipantImpl::mapWrittenData(std::optional<double> after)
 {
   PRECICE_TRACE();
+  if (!_accessor->hasWriteMappings()) {
+    return;
+  }
+
   computeMappings(_accessor->writeMappingContexts(), "write");
   for (auto &context : _accessor->writeDataContexts()) {
     if (context.hasMapping()) {
@@ -1492,6 +1500,10 @@ void ParticipantImpl::trimReadMappedData(double startOfTimeWindow, bool isTimeWi
 void ParticipantImpl::mapInitialReadData()
 {
   PRECICE_TRACE();
+  if (!_accessor->hasReadMappings()) {
+    return;
+  }
+
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {
     if (context.hasMapping()) {
@@ -1505,6 +1517,10 @@ void ParticipantImpl::mapInitialReadData()
 void ParticipantImpl::mapReadData()
 {
   PRECICE_TRACE();
+  if (!_accessor->hasReadMappings()) {
+    return;
+  }
+
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {
     if (context.hasMapping()) {
