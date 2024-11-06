@@ -24,6 +24,7 @@
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
+#include "profiling/Event.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/IntraComm.hpp"
@@ -119,6 +120,8 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_ASSERT(m2n.get() != nullptr);
   PRECICE_ASSERT(m2n->isConnected());
 
+  profiling::Event e("sendData", profiling::Fundamental);
+
   for (const auto &data : sendData | boost::adaptors::map_values) {
     const auto &stamples = data->stamples();
     PRECICE_ASSERT(!stamples.empty());
@@ -177,6 +180,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
+  profiling::Event e("receiveData", profiling::Fundamental);
   for (const auto &data : receiveData | boost::adaptors::map_values) {
 
     if (data->exchangeSubsteps()) {
@@ -866,12 +870,14 @@ void BaseCouplingScheme::doImplicitStep()
   // coupling iteration converged for current time window. Advance in time.
   if (_hasConverged) {
     if (_acceleration) {
+      profiling::Event e("accelerate", profiling::Fundamental);
       _acceleration->iterationsConverged(getAccelerationData());
     }
     newConvergenceMeasurements();
   } else {
     // no convergence achieved for the coupling iteration within the current time window
     if (_acceleration) {
+      profiling::Event e("accelerate", profiling::Fundamental);
       // Acceleration works on CouplingData::values(), so we retrieve the data from the storage, perform the acceleration and then put the data back into the storage. See also https://github.com/precice/precice/issues/1645.
       // @todo For acceleration schemes as described in "Rüth, B, Uekermann, B, Mehl, M, Birken, P, Monge, A, Bungartz, H-J. Quasi-Newton waveform iteration for partitioned surface-coupled multiphysics applications. https://doi.org/10.1002/nme.6443" we need a more elaborate implementation.
 
@@ -897,6 +903,7 @@ void BaseCouplingScheme::sendConvergence(const m2n::PtrM2N &m2n)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme());
   PRECICE_ASSERT(not doesFirstStep(), "For convergence information the sending participant is never the first one.");
+  profiling::Event e("sendConvergence", profiling::Fundamental);
   m2n->send(_hasConverged);
 }
 
@@ -904,6 +911,7 @@ void BaseCouplingScheme::receiveConvergence(const m2n::PtrM2N &m2n)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme());
   PRECICE_ASSERT(doesFirstStep(), "For convergence information the receiving participant is always the first one.");
+  profiling::Event e("receiveConvergence", profiling::Fundamental);
   m2n->receive(_hasConverged);
 }
 
