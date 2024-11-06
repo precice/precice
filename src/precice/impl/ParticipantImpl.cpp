@@ -117,6 +117,7 @@ ParticipantImpl::ParticipantImpl(
   // Set the global communicator to the passed communicator.
   // This is a noop if preCICE is not configured with MPI.
 #ifndef PRECICE_NO_MPI
+  Event e3("com.initializeMPI", profiling::Fundamental);
   if (communicator.has_value()) {
     auto commptr = static_cast<utils::Parallel::Communicator *>(communicator.value());
     utils::Parallel::initializeOrDetectMPI(*commptr);
@@ -134,6 +135,7 @@ ParticipantImpl::ParticipantImpl(
                   "The solver process size given in the preCICE interface constructor({}) does not match the size of the passed MPI communicator ({}).",
                   _accessorCommunicatorSize, currentSize);
   }
+  e3.stop();
 #endif
 
   Event e1("configure", profiling::Fundamental);
@@ -266,7 +268,9 @@ void ParticipantImpl::initialize()
   performDataActions({action::Action::WRITE_MAPPING_POST});
 
   PRECICE_DEBUG("Initialize coupling schemes");
+  Event e1("initalizeCouplingScheme", profiling::Fundamental);
   _couplingScheme->initialize();
+  e1.stop();
 
   mapInitialReadData();
   performDataActions({action::Action::READ_MAPPING_POST});
@@ -306,7 +310,7 @@ void ParticipantImpl::setupCommunication()
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
     if (meshContext->provideMesh) {
       auto &mesh = *(meshContext->mesh);
-      Event e("preprocess." + mesh.getName(), profiling::Synchronize);
+      Event e("preprocess." + mesh.getName());
       meshContext->mesh->preprocess();
     }
   }
@@ -314,6 +318,7 @@ void ParticipantImpl::setupCommunication()
   // Setup communication
 
   PRECICE_INFO("Setting up primary communication to coupling partner/s");
+  Event e2("connectPrimaries");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n       = m2nPair.second;
     bool  requesting = bm2n.isRequesting;
@@ -326,9 +331,11 @@ void ParticipantImpl::setupCommunication()
       PRECICE_DEBUG("Established primary connection {} {}", (requesting ? "from " : "to "), bm2n.remoteName);
     }
   }
+  e2.stop();
 
   PRECICE_INFO("Primary ranks are connected");
 
+  Event e3("repartitioning");
   compareBoundingBoxes();
 
   PRECICE_INFO("Setting up preliminary secondary communication to coupling partner/s");
@@ -338,8 +345,10 @@ void ParticipantImpl::setupCommunication()
   }
 
   computePartitions();
+  e3.stop();
 
   PRECICE_INFO("Setting up secondary communication to coupling partner/s");
+  Event e4("connectSecondaries");
   for (auto &m2nPair : _m2ns) {
     auto &bm2n = m2nPair.second;
     bm2n.connectSecondaryRanks();
@@ -1455,6 +1464,7 @@ void ParticipantImpl::mapInitialWrittenData()
     return;
   }
 
+  Event e("mapping", profiling::Fundamental);
   computeMappings(_accessor->writeMappingContexts(), "write");
   for (auto &context : _accessor->writeDataContexts()) {
     if (context.hasMapping()) {
@@ -1471,6 +1481,7 @@ void ParticipantImpl::mapWrittenData(std::optional<double> after)
     return;
   }
 
+  Event e("mapping", profiling::Fundamental);
   computeMappings(_accessor->writeMappingContexts(), "write");
   for (auto &context : _accessor->writeDataContexts()) {
     if (context.hasMapping()) {
@@ -1504,6 +1515,7 @@ void ParticipantImpl::mapInitialReadData()
     return;
   }
 
+  Event e("mapping", profiling::Fundamental);
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {
     if (context.hasMapping()) {
@@ -1521,6 +1533,7 @@ void ParticipantImpl::mapReadData()
     return;
   }
 
+  Event e("mapping", profiling::Fundamental);
   computeMappings(_accessor->readMappingContexts(), "read");
   for (auto &context : _accessor->readDataContexts()) {
     if (context.hasMapping()) {
@@ -1601,6 +1614,7 @@ void ParticipantImpl::initializeIntraCommunication()
 void ParticipantImpl::syncTimestep(double computedTimeStepSize)
 {
   PRECICE_ASSERT(utils::IntraComm::isParallel());
+  Event e("syncTimestep", profiling::Fundamental);
   if (utils::IntraComm::isSecondary()) {
     utils::IntraComm::getCommunication()->send(computedTimeStepSize, 0);
   } else {
@@ -1618,6 +1632,7 @@ void ParticipantImpl::syncTimestep(double computedTimeStepSize)
 void ParticipantImpl::advanceCouplingScheme()
 {
   PRECICE_DEBUG("Advance coupling scheme");
+  Event e("advanceCoupling", profiling::Fundamental);
   // Orchestrate local and remote mesh changes
   std::vector<MeshID> localChanges;
 
