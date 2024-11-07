@@ -266,6 +266,7 @@ public:
     size_t iteration;
     double time;
     bool   complete;
+    bool   final;
   };
 
   /// Exports timewindows and iterations of meshes and watchpoints

@@ -32,6 +32,7 @@
 #include "mapping/Mapping.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
+#include "mapping/device/Ginkgo.hpp"
 #include "math/differences.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
@@ -87,13 +88,15 @@ ParticipantImpl::ParticipantImpl(
       _accessorCommunicatorSize(solverProcessSize)
 {
 
-  PRECICE_CHECK(!communicator || communicator.value() != nullptr,
-                "Passing \"nullptr\" as \"communicator\" to Participant constructor is not allowed. "
-                "Please use the Participant constructor without the \"communicator\" argument, if you don't want to pass an MPI communicator.");
   PRECICE_CHECK(!_accessorName.empty(),
                 "This participant's name is an empty string. "
                 "When constructing a preCICE interface you need to pass the name of the "
                 "participant as first argument to the constructor.");
+  logging::setParticipant(_accessorName);
+
+  PRECICE_CHECK(!communicator || communicator.value() != nullptr,
+                "Passing \"nullptr\" as \"communicator\" to Participant constructor is not allowed. "
+                "Please use the Participant constructor without the \"communicator\" argument, if you don't want to pass an MPI communicator.");
   PRECICE_CHECK(_accessorProcessRank >= 0,
                 "The solver process index needs to be a non-negative number, not: {}. "
                 "Please check the value given when constructing a preCICE interface.",
@@ -107,6 +110,10 @@ ParticipantImpl::ParticipantImpl(
                 "Please check the values given when constructing a preCICE interface.",
                 _accessorProcessRank, _accessorCommunicatorSize);
 
+  profiling::EventRegistry::instance().initialize(_accessorName, _accessorProcessRank, _accessorCommunicatorSize);
+  profiling::applyDefaults();
+  Event e("construction", profiling::Fundamental);
+
   // Set the global communicator to the passed communicator.
   // This is a noop if preCICE is not configured with MPI.
 #ifndef PRECICE_NO_MPI
@@ -116,14 +123,18 @@ ParticipantImpl::ParticipantImpl(
   } else {
     utils::Parallel::initializeOrDetectMPI();
   }
+
+  {
+    const auto currentRank = utils::Parallel::current()->rank();
+    PRECICE_CHECK(_accessorProcessRank == currentRank,
+                  "The solver process index given in the preCICE interface constructor({}) does not match the rank of the passed MPI communicator ({}).",
+                  _accessorProcessRank, currentRank);
+    const auto currentSize = utils::Parallel::current()->size();
+    PRECICE_CHECK(_accessorCommunicatorSize == currentSize,
+                  "The solver process size given in the preCICE interface constructor({}) does not match the size of the passed MPI communicator ({}).",
+                  _accessorCommunicatorSize, currentSize);
+  }
 #endif
-
-  logging::setParticipant(_accessorName);
-
-  profiling::EventRegistry::instance().initialize(_accessorName, _accessorProcessRank, _accessorCommunicatorSize);
-  profiling::applyDefaults();
-  Event                        e("construction", profiling::Fundamental);
-  profiling::ScopedEventPrefix sep("construction/");
 
   Event e1("configure", profiling::Fundamental);
   configure(configurationFileName);
@@ -139,21 +150,7 @@ ParticipantImpl::ParticipantImpl(
     initializeIntraCommunication();
   }
 
-  // This block cannot be merged with the one above as it only configures calls
-  // utils::Parallel::initializeMPI, which is needed for getProcessRank.
-#ifndef PRECICE_NO_MPI
-  const auto currentRank = utils::Parallel::current()->rank();
-  PRECICE_CHECK(_accessorProcessRank == currentRank,
-                "The solver process index given in the preCICE interface constructor({}) does not match the rank of the passed MPI communicator ({}).",
-                _accessorProcessRank, currentRank);
-  const auto currentSize = utils::Parallel::current()->size();
-  PRECICE_CHECK(_accessorCommunicatorSize == currentSize,
-                "The solver process size given in the preCICE interface constructor({}) does not match the size of the passed MPI communicator ({}).",
-                _accessorCommunicatorSize, currentSize);
-#endif
-
   e.stop();
-  sep.pop();
   _solverInitEvent = std::make_unique<profiling::Event>("solver.initialize", profiling::Fundamental, profiling::Synchronize);
 }
 
@@ -206,6 +203,7 @@ void ParticipantImpl::configure(
   _meshLock.clear();
 
   _allowsExperimental = config.allowsExperimental();
+  _allowsRemeshing    = config.allowsRemeshing();
   _waitInFinalize     = config.waitInFinalize();
   _accessor           = determineAccessingParticipant(config);
   _accessor->setMeshIdManager(config.getMeshConfiguration()->extractMeshIdManager());
@@ -252,9 +250,58 @@ void ParticipantImpl::initialize()
                 "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using the writeData() function.");
 
   _solverInitEvent.reset();
-  Event                        e("initialize", profiling::Fundamental, profiling::Synchronize);
-  profiling::ScopedEventPrefix sep("initialize/");
+  Event e("initialize", profiling::Fundamental, profiling::Synchronize);
 
+  setupCommunication();
+  setupWatcher();
+
+  _meshLock.lockAll();
+
+  for (auto &context : _accessor->writeDataContexts()) {
+    const double startTime = 0.0;
+    context.storeBufferedData(startTime);
+  }
+
+  mapInitialWrittenData();
+  performDataActions({action::Action::WRITE_MAPPING_POST});
+
+  PRECICE_DEBUG("Initialize coupling schemes");
+  _couplingScheme->initialize();
+
+  mapInitialReadData();
+  performDataActions({action::Action::READ_MAPPING_POST});
+
+  handleExports(ExportTiming::Initial);
+
+  resetWrittenData();
+
+  e.stop();
+
+  _state = State::Initialized;
+  PRECICE_INFO(_couplingScheme->printCouplingState());
+  _solverAdvanceEvent = std::make_unique<profiling::Event>("solver.advance", profiling::Fundamental, profiling::Synchronize);
+}
+
+void ParticipantImpl::reinitialize()
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_allowsRemeshing);
+  PRECICE_INFO("Reinitializing Participant");
+  Event e("reinitialize", profiling::Fundamental);
+  closeCommunicationChannels(CloseChannels::Distributed);
+
+  setupCommunication();
+  setupWatcher();
+
+  PRECICE_DEBUG("Reinitialize coupling schemes");
+  _couplingScheme->reinitialize();
+}
+
+void ParticipantImpl::setupCommunication()
+{
+  PRECICE_TRACE();
+
+  // TODO only preprocess changed meshes
   PRECICE_DEBUG("Preprocessing provided meshes");
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
     if (meshContext->provideMesh) {
@@ -303,7 +350,11 @@ void ParticipantImpl::initialize()
   for (auto &m2nPair : _m2ns) {
     m2nPair.second.cleanupEstablishment();
   }
+}
 
+void ParticipantImpl::setupWatcher()
+{
+  PRECICE_TRACE();
   PRECICE_DEBUG("Initialize watchpoints");
   for (PtrWatchPoint &watchPoint : _accessor->watchPoints()) {
     watchPoint->initialize();
@@ -311,33 +362,6 @@ void ParticipantImpl::initialize()
   for (PtrWatchIntegral &watchIntegral : _accessor->watchIntegrals()) {
     watchIntegral->initialize();
   }
-
-  _meshLock.lockAll();
-
-  for (auto &context : _accessor->writeDataContexts()) {
-    const double startTime = 0.0;
-    context.storeBufferedData(startTime);
-  }
-
-  mapInitialWrittenData();
-  performDataActions({action::Action::WRITE_MAPPING_POST});
-
-  PRECICE_DEBUG("Initialize coupling schemes");
-  _couplingScheme->initialize();
-
-  mapInitialReadData();
-  performDataActions({action::Action::READ_MAPPING_POST});
-
-  handleExports(ExportTiming::Initial);
-
-  resetWrittenData();
-
-  e.stop();
-  sep.pop();
-
-  _state = State::Initialized;
-  PRECICE_INFO(_couplingScheme->printCouplingState());
-  _solverAdvanceEvent = std::make_unique<profiling::Event>("solver.advance", profiling::Fundamental, profiling::Synchronize);
 }
 
 void ParticipantImpl::advance(
@@ -350,8 +374,7 @@ void ParticipantImpl::advance(
   PRECICE_ASSERT(_solverAdvanceEvent, "The advance event is created in initialize");
   _solverAdvanceEvent->stop();
 
-  Event                        e("advance", profiling::Fundamental, profiling::Synchronize);
-  profiling::ScopedEventPrefix sep("advance/");
+  Event e("advance", profiling::Fundamental, profiling::Synchronize);
 
   PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before advance().");
   PRECICE_CHECK(_state != State::Finalized, "advance() cannot be called after finalize().");
@@ -370,7 +393,19 @@ void ParticipantImpl::advance(
 #endif
 
   // Update the coupling scheme time state. Necessary to get correct remainder.
-  const bool   isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
+  const bool isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
+
+  if (_allowsRemeshing) {
+    if (isAtWindowEnd) {
+      int totalMeshChanges = getTotalMeshChanges();
+      if (reinitHandshake(totalMeshChanges)) {
+        reinitialize();
+      }
+    } else {
+      PRECICE_CHECK(_meshLock.checkAll(), "The time window needs to end after remeshing.");
+    }
+  }
+
   const double timeSteppedTo = _couplingScheme->getTime();
   const auto   dataToReceive = _couplingScheme->implicitDataToReceive();
 
@@ -391,7 +426,6 @@ void ParticipantImpl::advance(
 
   _meshLock.lockAll();
 
-  sep.pop();
   e.stop();
   _solverAdvanceEvent->start();
 }
@@ -484,8 +518,7 @@ void ParticipantImpl::finalize()
   // Events for the solver time, finally stopped here
   _solverAdvanceEvent.reset();
 
-  Event                        e("finalize", profiling::Fundamental);
-  profiling::ScopedEventPrefix sep("finalize/");
+  Event e("finalize", profiling::Fundamental);
 
   if (_state == State::Initialized) {
 
@@ -514,6 +547,10 @@ void ParticipantImpl::finalize()
 
   // Finalize PETSc and Events first
   utils::Petsc::finalize();
+// This will lead to issues if we call finalize afterwards again
+#ifndef PRECICE_NO_GINKGO
+  device::Ginkgo::finalize();
+#endif
   profiling::EventRegistry::instance().finalize();
 
   // Finally clear events and finalize MPI
@@ -641,8 +678,12 @@ void ParticipantImpl::resetMesh(
     std::string_view meshName)
 {
   PRECICE_EXPERIMENTAL_API();
+  PRECICE_CHECK(_allowsRemeshing, "Cannot reset meshes. This feature needs to be enabled using <precice-configuration experimental=\"1\" allow-remeshing=\"1\">.");
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before resetMesh().");
   PRECICE_TRACE(meshName);
   PRECICE_VALIDATE_MESH_NAME(meshName);
+  PRECICE_CHECK(_couplingScheme->isCouplingOngoing(), "Cannot remesh after the last time window has been completed.");
+  PRECICE_CHECK(_couplingScheme->isTimeWindowComplete(), "Cannot remesh while subcycling or iterating. Remeshing is only allowed when the time window is completed.");
   impl::MeshContext &context = _accessor->usedMeshContext(meshName);
 
   PRECICE_DEBUG("Clear mesh positions for mesh \"{}\"", context.mesh->getName());
@@ -1066,14 +1107,23 @@ void ParticipantImpl::readData(
 
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
 
+  PRECICE_CHECK(_meshLock.check(meshName),
+                "Cannot read from mesh \"{}\" after it has been reset. Please read data before calling resetMesh().",
+                meshName);
+
   // Inconsistent sizes will be handled below
   if (vertices.empty() && values.empty()) {
     return;
   }
 
-  ReadDataContext &context          = _accessor->readDataContext(meshName, dataName);
-  const auto       dataDims         = context.getDataDimensions();
-  const auto       expectedDataSize = vertices.size() * dataDims;
+  ReadDataContext &context = _accessor->readDataContext(meshName, dataName);
+  PRECICE_CHECK(context.hasSamples(), "Data \"{}\" cannot be read from mesh \"{}\" as it contains no samples. "
+                                      "This is typically a configuration issue of the data flow. "
+                                      "Check if the data is correctly exchanged to this participant \"{}\" and mapped to mesh \"{}\".",
+                dataName, meshName, _accessorName, meshName);
+
+  const auto dataDims         = context.getDataDimensions();
+  const auto expectedDataSize = vertices.size() * dataDims;
   PRECICE_CHECK(expectedDataSize == values.size(),
                 "Input/Output sizes are inconsistent attempting to read {}D data \"{}\" from mesh \"{}\". "
                 "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
@@ -1145,10 +1195,11 @@ void ParticipantImpl::setMeshAccessRegion(
   PRECICE_REQUIRE_MESH_USE(meshName);
   PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().");
   PRECICE_CHECK(_state != State::Initialized, "setMeshAccessRegion() needs to be called before initialize().");
-  PRECICE_CHECK(!_accessRegionDefined, "setMeshAccessRegion may only be called once.");
 
   // Get the related mesh
-  MeshContext & context = _accessor->meshContext(meshName);
+  MeshContext &context = _accessor->meshContext(meshName);
+
+  PRECICE_CHECK(!context.accessRegionDefined, "A mesh access region was already defined for mesh \"{}\". setMeshAccessRegion may only be called once per mesh.", context.mesh->getName());
   mesh::PtrMesh mesh(context.mesh);
   int           dim = mesh->getDimensions();
   PRECICE_CHECK(boundingBox.size() == static_cast<unsigned long>(dim) * 2,
@@ -1171,7 +1222,7 @@ void ParticipantImpl::setMeshAccessRegion(
   // Expand the mesh associated bounding box
   mesh->expandBoundingBox(providedBoundingBox);
   // and set a flag so that we know the function was called
-  _accessRegionDefined = true;
+  context.accessRegionDefined = true;
 }
 
 void ParticipantImpl::getMeshVertexIDsAndCoordinates(
@@ -1492,6 +1543,7 @@ void ParticipantImpl::handleExports(ExportTiming timing)
   exp.timewindow = _couplingScheme->getTimeWindows() - 1;
   exp.iteration  = _numberAdvanceCalls;
   exp.complete   = _couplingScheme->isTimeWindowComplete();
+  exp.final      = !_couplingScheme->isCouplingOngoing();
   exp.time       = _couplingScheme->getTime();
   _accessor->exportIntermediate(exp);
 }
@@ -1607,6 +1659,56 @@ ParticipantImpl::MappedSamples ParticipantImpl::mappedSamples() const
   res.read  = _executedReadMappings;
   res.write = _executedWriteMappings;
   return res;
+}
+
+// Reinitialization
+
+int ParticipantImpl::getTotalMeshChanges() const
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_allowsRemeshing);
+  Event e("remesh.exchangeLocalMeshChanges", profiling::Synchronize);
+  int   localMeshesChanges = _meshLock.countUnlocked();
+  PRECICE_DEBUG("Mesh changes of rank: {}", localMeshesChanges);
+
+  int totalMeshesChanges = 0;
+  utils::IntraComm::allreduceSum(localMeshesChanges, totalMeshesChanges);
+  PRECICE_DEBUG("Mesh changes of participant: {}", totalMeshesChanges);
+  return totalMeshesChanges;
+}
+
+bool ParticipantImpl::reinitHandshake(bool requestReinit) const
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_allowsRemeshing);
+  Event e("remesh.exchangeRemoteMeshChanges", profiling::Synchronize);
+
+  if (not utils::IntraComm::isSecondary()) {
+    PRECICE_DEBUG("Remeshing is{} required by this participant.", (requestReinit ? "" : " not"));
+
+    bool swarmReinitRequired = requestReinit;
+    for (auto &iter : _m2ns) {
+      PRECICE_DEBUG("Coordinating remeshing with {}", iter.first);
+      bool  received = false;
+      auto &comm     = *iter.second.m2n->getPrimaryRankCommunication();
+      if (iter.second.isRequesting) {
+        comm.send(requestReinit, 0);
+        comm.receive(received, 0);
+      } else {
+        comm.receive(received, 0);
+        comm.send(requestReinit, 0);
+      }
+      swarmReinitRequired |= received;
+    }
+    PRECICE_DEBUG("Coordinated that overall{} remeshing is required.", (swarmReinitRequired ? "" : " no"));
+
+    utils::IntraComm::broadcast(swarmReinitRequired);
+    return swarmReinitRequired;
+  } else {
+    bool swarmReinitRequired = false;
+    utils::IntraComm::broadcast(swarmReinitRequired);
+    return swarmReinitRequired;
+  }
 }
 
 } // namespace precice::impl

@@ -100,7 +100,7 @@ int Mesh::getDimensions() const
   return _dimensions;
 }
 
-Vertex &Mesh::createVertex(const Eigen::VectorXd &coords)
+Vertex &Mesh::createVertex(const Eigen::Ref<const Eigen::VectorXd> &coords)
 {
   PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
   auto nextID = _vertices.size();
@@ -263,6 +263,7 @@ void Mesh::clear()
 
   for (mesh::PtrData &data : _data) {
     data->values().resize(0);
+    data->timeStepsStorage().clear();
   }
 }
 
@@ -274,6 +275,19 @@ void Mesh::clearPartitioning()
   _vertexDistribution.clear();
   _vertexOffsets.clear();
   _globalNumberOfVertices = 0;
+}
+
+bool Mesh::isPartitionEmpty(Rank rank) const
+{
+  // Without offset data, we assume non-empty partititions
+  if (_vertexOffsets.empty()) {
+    return false;
+  }
+  PRECICE_ASSERT(_vertexOffsets.size() >= static_cast<std::size_t>(rank));
+  if (rank == 0) {
+    return _vertexOffsets[0] == 0;
+  }
+  return _vertexOffsets[rank] - _vertexOffsets[rank - 1] == 0;
 }
 
 Eigen::VectorXd Mesh::getOwnedVertexData(const Eigen::VectorXd &values)

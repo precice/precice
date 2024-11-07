@@ -25,8 +25,7 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
 
   XMLTag tagVector(*this, VALUE_VECTOR, XMLTag::OCCUR_ARBITRARY, TAG);
   tagVector.setDocumentation("Defines a vector data set to be assigned to meshes. The number of "
-                             "components of each data entry depends on the spatial dimensions set "
-                             "in tag <precice-configuration>.");
+                             "components of each data entry depends on the spatial dimensions of the mesh.");
   tagVector.addAttribute(attrName);
   tagVector.addAttribute(attrDegree);
   parent.addSubtag(tagVector);

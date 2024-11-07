@@ -17,7 +17,7 @@
  *
  * The mapping is either a read or a write mapping.
  */
-inline void testMapInitialData(
+inline void testMapInitialDataP(
     precice::testing::TestContext &context,
     double                         dataToWrite,
     double                         dataToExpect,

@@ -95,22 +95,10 @@ public:
 
 private:
   int   _eid;
+  int   _sid{-1};
   State _state = State::STOPPED;
   bool  _fundamental{false};
   bool  _synchronize{false};
-};
-
-/// Class that changes the prefix in its scope
-class ScopedEventPrefix {
-public:
-  ScopedEventPrefix(std::string_view name);
-
-  ~ScopedEventPrefix();
-
-  void pop();
-
-private:
-  std::string previousName = "";
 };
 
 } // namespace precice::profiling

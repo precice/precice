@@ -20,6 +20,7 @@
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctSolver.hpp"
 #include "mapping/RadialGeoMultiscaleMapping.hpp"
+#include "mapping/device/Ginkgo.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -718,7 +719,7 @@ void MappingConfiguration::finishRBFConfiguration()
     } else if (_executorConfig->executor == ExecutorConfiguration::Executor::OpenMP) {
       _ginkgoParameter.executor = "omp-executor";
       _ginkgoParameter.nThreads = _executorConfig->nThreads;
-#ifndef PRECICE_WITH_OMP
+#ifndef PRECICE_WITH_OPENMP
       PRECICE_CHECK(false, "The omp-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with OpenMP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
     }
@@ -730,6 +731,7 @@ void MappingConfiguration::finishRBFConfiguration()
     } else {
       PRECICE_UNREACHABLE("Unknown solver type.");
     }
+
     mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
 #else
     PRECICE_CHECK(false, "The selected executor for the mapping from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());

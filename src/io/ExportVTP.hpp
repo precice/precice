@@ -25,6 +25,16 @@ namespace io {
  * The naming scheme allows to import these files into Paraview as time series.
  */
 class ExportVTP : public ExportXML {
+public:
+  ExportVTP(
+      std::string_view  participantName,
+      std::string_view  location,
+      const mesh::Mesh &mesh,
+      ExportKind        kind,
+      int               frequency,
+      int               rank,
+      int               size);
+
 private:
   mutable logging::Logger _log{"io::ExportVTP"};
 

@@ -49,6 +49,13 @@ void Storage::setSampleAtTime(double time, const Sample &sample)
   }
 }
 
+void Storage::setAllSamples(const Sample &sample)
+{
+  for (auto &stample : _stampleStorage) {
+    stample.sample = sample;
+  }
+}
+
 void Storage::setInterpolationDegree(int interpolationDegree)
 {
   PRECICE_ASSERT(interpolationDegree >= Time::MIN_WAVEFORM_DEGREE);
@@ -190,6 +197,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
 
 Eigen::VectorXd Storage::sample(double time) const
 {
+  PRECICE_ASSERT(this->nTimes() != 0, "There are no samples available");
   const int usedDegree = computeUsedDegree(_degree, nTimes());
 
   if (usedDegree == 0) {

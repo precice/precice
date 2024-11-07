@@ -22,26 +22,31 @@ public:
 
   virtual ~AitkenAcceleration() {}
 
-  virtual std::vector<int> getPrimaryDataIDs() const
+  virtual std::vector<int> getPrimaryDataIDs() const override final
   {
     return _primaryDataIDs;
   }
 
   virtual void initialize(
-      const DataMap &cpldata);
+      const DataMap &cpldata) override final;
 
   virtual void performAcceleration(
-      DataMap &cpldata);
+      DataMap &cpldata) override final;
 
   virtual void iterationsConverged(
-      const DataMap &cpldata);
+      const DataMap &cpldata) override final;
+
+protected:
+  /// @copydoc acceleration::Acceleration::concatenateCouplingData
+  void concatenateCouplingData(
+      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const override final;
 
 private:
   logging::Logger _log{"acceleration::AitkenAcceleration"};
 
-  double _initialRelaxation;
+  const double _initialRelaxation;
 
-  std::vector<int> _primaryDataIDs;
+  const std::vector<int> _primaryDataIDs;
 
   double _aitkenFactor;
 

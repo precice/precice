@@ -4,7 +4,7 @@
 [![preCICE website status](https://img.shields.io/website-up-down-green-red/https/precice.org.svg?label=website)](https://twitter.com/preCICE_org)
 [![Release](https://img.shields.io/github/release/precice/precice.svg)](https://github.com/precice/precice/releases/latest)
 [![Cite](https://img.shields.io/badge/cite-literature_guide-d45815)](https://precice.org/fundamentals-literature-guide.html)
-[![preCICE distribution](https://img.shields.io/badge/preCICE_Distribution-10.18419%2Fdarus--2613-d45815.svg)](https://doi.org/10.18419/darus-2613)
+[![preCICE distribution](https://img.shields.io/badge/preCICE_Distribution-10.18419%2Fdarus--4167-d45815.svg)](https://doi.org/10.18419/darus-4167)
 [![Build status](https://github.com/precice/precice/workflows/Build%20and%20Test/badge.svg)](https://github.com/precice/precice/actions?query=workflow%3A%22Build+and+Test%22+branch%3Adevelop)
 [![System tests](https://img.shields.io/badge/system_tests-trigger_manually-blue)](https://github.com/precice/tutorials/actions/workflows/run_testsuite_manual.yml)
 

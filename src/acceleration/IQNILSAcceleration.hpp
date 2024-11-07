@@ -37,9 +37,6 @@ public:
 
   virtual ~IQNILSAcceleration() {}
 
-  /// Initializes the acceleration.
-  virtual void initialize(const DataMap &cplData);
-
   /**
     * @brief Marks a iteration sequence as converged.
     *
@@ -56,10 +53,13 @@ private:
   virtual void updateDifferenceMatrices(const DataMap &cplData);
 
   /// computes the IQN-ILS update using QR decomposition
-  virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate);
+  virtual void computeQNUpdate(Eigen::VectorXd &xUpdate);
 
   /// Removes one iteration from V,W matrices and adapts _matrixCols.
   virtual void removeMatrixColumn(int columnIndex);
+
+  /// @copydoc precice::Acceleration::BaseQNAcceleration::specializedInitializeVectorsAndPreconditioner()
+  virtual void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) override final{};
 };
 } // namespace acceleration
 } // namespace precice

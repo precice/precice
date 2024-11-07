@@ -341,11 +341,8 @@ void ParticipantState::exportInitial()
       continue;
     }
 
-    for (const MeshContext *meshContext : usedMeshContexts()) {
-      auto &mesh = *meshContext->mesh;
-      PRECICE_DEBUG("Exporting initial mesh {} to location \"{}\"", mesh.getName(), context.location);
-      context.exporter->doExport(fmt::format("{}-{}.init", mesh.getName(), getName()), context.location, mesh);
-    }
+    PRECICE_DEBUG("Exporting initial mesh {} to location \"{}\"", context.meshName, context.location);
+    context.exporter->doExport(0, 0.0);
   }
 }
 
@@ -357,21 +354,18 @@ bool ParticipantState::hasExports() const
 void ParticipantState::exportIntermediate(IntermediateExport exp)
 {
   for (const io::ExportContext &context : exportContexts()) {
-    if (exp.complete && (context.everyNTimeWindows > 0) && (exp.timewindow % context.everyNTimeWindows == 0)) {
-      for (const MeshContext *meshContext : usedMeshContexts()) {
-        auto &mesh = *meshContext->mesh;
-        PRECICE_DEBUG("Exporting mesh {} for timewindow {} to location \"{}\"", mesh.getName(), exp.timewindow, context.location);
-        context.exporter->doExport(fmt::format("{}-{}.dt{}", mesh.getName(), getName(), exp.timewindow), context.location, mesh);
-      }
-    }
-
     if (context.everyIteration) {
-      for (const MeshContext *meshContext : usedMeshContexts()) {
-        auto &mesh = *meshContext->mesh;
-        PRECICE_DEBUG("Exporting mesh {} for iteration {} to location \"{}\"", meshContext->mesh->getName(), exp.iteration, context.location);
-        /// @todo this is the global iteration count. Shouldn't this be local to the timestep? example .dtN.itM or similar
-        context.exporter->doExport(fmt::format("{}-{}.it{}", mesh.getName(), getName(), exp.iteration), context.location, mesh);
-      }
+      PRECICE_DEBUG("Exporting mesh {} for iteration {} to location \"{}\"", context.meshName, exp.iteration, context.location);
+      context.exporter->doExport(exp.iteration, exp.time);
+      continue;
+    }
+    if (exp.complete) {
+      PRECICE_DEBUG("Exporting mesh {} for timewindow {} to location \"{}\"", context.meshName, exp.timewindow, context.location);
+      context.exporter->doExport(exp.timewindow, exp.time);
+    }
+    if (exp.final) {
+      PRECICE_DEBUG("Exporting seried file of mesh {} to location \"{}\"", context.meshName, context.location);
+      context.exporter->exportSeries();
     }
   }
 

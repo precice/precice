@@ -40,7 +40,6 @@ public:
   {
     PRECICE_TRACE();
 
-    PRECICE_ASSERT(_weights.empty());
     _subVectorSizes = svs;
 
     size_t N = std::accumulate(_subVectorSizes.begin(), _subVectorSizes.end(), static_cast<std::size_t>(0));

@@ -96,14 +96,14 @@ public:
   /**
    * @brief Initializes the acceleration.
    */
-  virtual void initialize(const DataMap &cplData);
+  virtual void initialize(const DataMap &cplData) override final;
 
   /**
    * @brief Performs one acceleration step.
    *
    * Has to be called after every implicit coupling iteration.
    */
-  virtual void performAcceleration(DataMap &cplData);
+  virtual void performAcceleration(DataMap &cplData) override final;
 
   /**
    * @brief Marks a iteration sequence as converged.
@@ -111,25 +111,25 @@ public:
    * Since convergence measurements are done outside the acceleration, this
    * method has to be used to signalize convergence to the acceleration.
    */
-  virtual void iterationsConverged(const DataMap &cplData);
+  virtual void iterationsConverged(const DataMap &cplData) override final;
 
   /**
    * @brief Exports the current state of the acceleration to a file.
    */
-  virtual void exportState(io::TXTWriter &writer);
+  virtual void exportState(io::TXTWriter &writer) override final;
 
   /**
    * @brief Imports the last exported state of the acceleration from file.
    *
    * Is empty at the moment!!!
    */
-  virtual void importState(io::TXTReader &reader);
+  virtual void importState(io::TXTReader &reader) override final;
 
   /// how many QN columns were deleted in this time window
-  virtual int getDeletedColumns() const;
+  int getDeletedColumns() const;
 
   /// how many QN columns were dropped (went out of scope) in this time window
-  virtual int getDroppedColumns() const;
+  int getDroppedColumns() const;
 
   /** @brief: computes number of cols in least squares system, i.e, number of cols in
    *  _matrixV, _matrixW, _qrV, etc..
@@ -138,7 +138,7 @@ public:
    *  information about the number of cols. This info is needed for
    *  intra-participant communication. Number of its =! _cols in general.
    */
-  virtual int getLSSystemCols() const;
+  int getLSSystemCols() const;
 
 protected:
   logging::Logger _log{"acceleration::BaseQNAcceleration"};
@@ -147,16 +147,16 @@ protected:
   impl::PtrPreconditioner _preconditioner;
 
   /// Constant relaxation factor used for first iteration.
-  double _initialRelaxation;
+  const double _initialRelaxation;
 
   /// Maximum number of old data iterations kept.
-  int _maxIterationsUsed;
+  const int _maxIterationsUsed;
 
   /// Maximum number of old time windows (with data values) kept.
-  int _timeWindowsReused;
+  const int _timeWindowsReused;
 
   /// Data IDs of primary data to be involved in the IQN coefficient computation.
-  std::vector<int> _primaryDataIDs;
+  const std::vector<int> _primaryDataIDs;
 
   /// Data IDs of all coupling data.
   std::vector<int> _dataIDs;
@@ -209,7 +209,7 @@ protected:
   /** @brief filter method that is used to maintain good conditioning of the least-squares system
    *        Either of two types: QR1FILTER or QR2Filter
    */
-  int _filter;
+  const int _filter;
 
   /** @brief Determines sensitivity when two matrix columns are considered equal.
    *
@@ -217,7 +217,7 @@ protected:
    * than the singularity limit is found, the matrix is considered to be singular
    * and the corresponding (older) iteration is removed.
    */
-  double _singularityLimit;
+  const double _singularityLimit;
 
   /** @brief Indices (of columns in W, V matrices) of 1st iterations of time windows.
    *
@@ -241,8 +241,8 @@ protected:
   std::ostringstream _infostringstream;
   std::fstream       _infostream;
 
-  int getLSSystemRows();
-  int getPrimaryLSSystemRows();
+  int getLSSystemRows() const;
+  int getPrimaryLSSystemRows() const;
 
   /**
    * @brief Marks a iteration sequence as converged.
@@ -262,17 +262,31 @@ protected:
   virtual void applyFilter();
 
   /// Computes the quasi-Newton update using the specified pp scheme (IQNIMVJ, IQNILS)
-  virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate) = 0;
+  virtual void computeQNUpdate(Eigen::VectorXd &xUpdate) = 0;
 
   /// Removes one iteration from V,W matrices and adapts _matrixCols.
   virtual void removeMatrixColumn(int columnIndex);
 
-  /// Wwrites info to the _infostream (also in parallel)
+  /// Writes info to the _infostream (also in parallel)
   void writeInfo(const std::string &s, bool allProcs = false);
+
+  /// @copydoc acceleration::Acceleration::concatenateCouplingData
+  void concatenateCouplingData(
+      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const override final;
 
   int its = 0, tWindows = 0;
 
 private:
+  /// @brief Initializes the vectors, matrices and preconditioner
+  void initializeVectorsAndPreconditioner(const DataMap &cplData);
+
+  /**
+   * @brief handles the initialization of matrices and vectors in the sub-classes
+   *
+   * called by the initializeVectorsAndPreconditioner method in the BaseQNAcceleration class
+   */
+  virtual void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) = 0;
+
   /// @brief Concatenation of all primary data involved in the QN system.
   Eigen::VectorXd _primaryValues;
 

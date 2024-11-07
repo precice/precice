@@ -322,11 +322,11 @@ private:
   /// Are experimental API calls allowed?
   bool _allowsExperimental = false;
 
+  /// Are experimental remeshing API calls allowed?
+  bool _allowsRemeshing = false;
+
   /// Are participants waiting for each other in finalize?
   bool _waitInFinalize = false;
-
-  /// setMeshAccessRegion may only be called once
-  mutable bool _accessRegionDefined = false;
 
   /// The current State of the Participant
   State _state{State::Constructed};
@@ -452,6 +452,28 @@ private:
 
   /// Discards send (currently write) data of a participant after a given time when another iteration is required
   void trimSendDataAfter(double time);
+
+  /** Allreduce of the amount of changed meshes on each rank.
+   * @return the total amount of changed meshes of all ranks on each rank
+   */
+  int getTotalMeshChanges() const;
+
+  /** Exchanges request to remesh with all connecting participants.
+   *
+   * @param[in] requestReinit does this participant request to remesh?
+   *
+   * @return does any participant request to remesh?
+   */
+  bool reinitHandshake(bool requestReinit) const;
+
+  /// Reinitializes preCICE
+  void reinitialize();
+
+  /// Connect participants including repartitioning
+  void setupCommunication();
+
+  /// Setup mesh watcher such as WatchPoints
+  void setupWatcher();
 
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;

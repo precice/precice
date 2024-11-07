@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "acceleration/Acceleration.hpp"
+#include "acceleration/BaseQNAcceleration.hpp"
 #include "com/SerializedStamples.hpp"
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/Constants.hpp"
@@ -120,7 +121,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
 
   for (const auto &data : sendData | boost::adaptors::map_values) {
     const auto &stamples = data->stamples();
-    PRECICE_ASSERT(stamples.size() > 0);
+    PRECICE_ASSERT(!stamples.empty());
 
     int nTimeSteps = data->timeStepsStorage().nTimes();
     PRECICE_ASSERT(nTimeSteps > 0);
@@ -278,6 +279,8 @@ void BaseCouplingScheme::initialize()
   _timeWindows         = 1;
   _hasDataBeenReceived = false;
 
+  checkCouplingDataAvailable();
+
   if (isImplicitCouplingScheme()) {
     storeIteration();
     if (not doesFirstStep()) {
@@ -293,6 +296,27 @@ void BaseCouplingScheme::initialize()
   exchangeInitialData();
 
   _isInitialized = true;
+}
+
+void BaseCouplingScheme::reinitialize()
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(isInitialized());
+
+  if (isImplicitCouplingScheme()) {
+    // overwrite past iteration with new samples
+    for (const auto &data : _allData | boost::adaptors::map_values) {
+      // TODO: reset CouplingData of changed meshes only #2102
+      data->reinitialize();
+    }
+
+    if (not doesFirstStep()) {
+      if (_acceleration) {
+        _acceleration->initialize(getAccelerationData());
+      }
+    }
+    initializeTXTWriters();
+  }
 }
 
 bool BaseCouplingScheme::sendsInitializedData() const
@@ -609,6 +633,23 @@ void BaseCouplingScheme::checkCompletenessRequiredActions()
   _fulfilledActions.clear();
 }
 
+void BaseCouplingScheme::checkCouplingDataAvailable()
+{
+  PRECICE_TRACE();
+  for (const auto &data : _allData | boost::adaptors::map_values) {
+    if (data->getDirection() == CouplingData::Direction::Receive) {
+      PRECICE_ASSERT(!data->stamples().empty(), "initializeReceiveDataStorage() didn't initialize data correctly");
+    } else {
+      PRECICE_CHECK(!data->stamples().empty(),
+                    "Data {0} on mesh {1} doesn't contain any samples while initializing a coupling scheme of participant {2}. "
+                    "There are two common configuration issues that may cause this. "
+                    "Either, make sure participant {2} specifies data {0} to be written using tag <write-data mesh=\"{1}\" data=\"{0}\"/>. "
+                    "Or ensure participant {2} defines a mapping to mesh {1} from a mesh using data {0}.",
+                    data->getDataName(), data->getMeshName(), localParticipant());
+    }
+  }
+}
+
 void BaseCouplingScheme::setAcceleration(
     const acceleration::PtrAcceleration &acceleration)
 {
@@ -634,8 +675,7 @@ void BaseCouplingScheme::addConvergenceMeasure(
     int                         dataID,
     bool                        suffices,
     bool                        strict,
-    impl::PtrConvergenceMeasure measure,
-    bool                        doesLogging)
+    impl::PtrConvergenceMeasure measure)
 {
   ConvergenceMeasureContext convMeasure;
   PRECICE_ASSERT(_allData.count(dataID) == 1, "Data with given data ID must exist!");
@@ -643,7 +683,6 @@ void BaseCouplingScheme::addConvergenceMeasure(
   convMeasure.suffices     = suffices;
   convMeasure.strict       = strict;
   convMeasure.measure      = std::move(measure);
-  convMeasure.doesLogging  = doesLogging;
   _convergenceMeasures.push_back(convMeasure);
 }
 
@@ -754,9 +793,18 @@ void BaseCouplingScheme::advanceTXTWriters()
     _iterationsWriter->writeData("Convergence", converged ? 1 : 0);
 
     if (not doesFirstStep() && _acceleration) {
-      _iterationsWriter->writeData("QNColumns", _acceleration->getLSSystemCols());
-      _iterationsWriter->writeData("DeletedQNColumns", _acceleration->getDeletedColumns());
-      _iterationsWriter->writeData("DroppedQNColumns", _acceleration->getDroppedColumns());
+      std::shared_ptr<precice::acceleration::BaseQNAcceleration> qnAcceleration = std::dynamic_pointer_cast<precice::acceleration::BaseQNAcceleration>(_acceleration);
+      if (qnAcceleration) {
+        // Only write values for additional columns, if using a QN-based acceleration scheme
+        _iterationsWriter->writeData("QNColumns", qnAcceleration->getLSSystemCols());
+        _iterationsWriter->writeData("DeletedQNColumns", qnAcceleration->getDeletedColumns());
+        _iterationsWriter->writeData("DroppedQNColumns", qnAcceleration->getDroppedColumns());
+      } else {
+        // non-breaking implementation uses "0" for these columns (delete columns in the future?)
+        _iterationsWriter->writeData("QNColumns", 0);
+        _iterationsWriter->writeData("DeletedQNColumns", 0);
+        _iterationsWriter->writeData("DroppedQNColumns", 0);
+      }
     }
   }
 }
@@ -773,7 +821,13 @@ bool BaseCouplingScheme::reachedEndOfTimeWindow() const
 void BaseCouplingScheme::storeIteration()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme());
+
   for (const auto &data : _allData | boost::adaptors::map_values) {
+    PRECICE_CHECK(!data->stamples().empty(),
+                  "Data {0} on mesh {1} didn't contain any samples while attempting to send it to the coupling partner. "
+                  "Make sure participant {2} specifies data {0} to be written using tag <write-data mesh=\"{1}\" data=\"{0}\"/>. "
+                  "Alternatively, ensure participant {2} defines a mapping to mesh {1} from a mesh using data {0}.",
+                  data->getDataName(), data->getMeshName(), localParticipant());
     data->storeIteration();
   }
 }

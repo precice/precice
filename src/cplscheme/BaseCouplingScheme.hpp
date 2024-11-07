@@ -178,6 +178,8 @@ public:
   /// @copydoc cplscheme::CouplingScheme::initialize()
   void initialize() override final;
 
+  void reinitialize() override final;
+
   ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override final;
 
   void firstExchange() override final;
@@ -191,8 +193,7 @@ public:
       int                         dataID,
       bool                        suffices,
       bool                        strict,
-      impl::PtrConvergenceMeasure measure,
-      bool                        doesLogging);
+      impl::PtrConvergenceMeasure measure);
 
   /// Set an acceleration technique.
   void setAcceleration(const acceleration::PtrAcceleration &acceleration);
@@ -531,6 +532,11 @@ private:
    * @brief If any required actions are open, an error message is issued.
    */
   void checkCompletenessRequiredActions();
+
+  /**
+   * @brief Issues an error if coupling data does not contain stamples.
+   */
+  void checkCouplingDataAvailable();
 
   /**
    * @brief Initialize txt writers for iterations and convergence tracking

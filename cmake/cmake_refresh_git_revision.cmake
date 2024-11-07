@@ -27,4 +27,5 @@ if("${PRECICE_REVISION_RET}" EQUAL "0")
 else()
   message(STATUS "Revision status: Detection failed")
 endif()
-configure_file( ${SRC} ${DST} @ONLY)
+# Note this is a second configure_file pass which replaces ${VAR} instead of @ONLY
+configure_file( ${SRC} ${DST} )

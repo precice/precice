@@ -132,6 +132,8 @@ ConfigParser::ConfigParser(std::string_view filePath, const ConfigurationContext
 
   try {
     connectTags(context, DefTags, SubTags);
+  } catch (::precice::Error &) {
+    throw;
   } catch (const std::exception &e) {
     PRECICE_ERROR("An unexpected exception occurred during configuration: {}.", e.what());
   }
@@ -233,7 +235,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
       auto matches = utils::computeMatches(expectedName, names);
       if (!matches.empty() && matches.front().distance < 3) {
         matches.erase(std::remove_if(matches.begin(), matches.end(), [](auto &m) { return m.distance > 2; }), matches.end());
-        std::vector<std::string_view> stringMatches;
+        std::vector<std::string> stringMatches;
         std::transform(matches.begin(), matches.end(), std::back_inserter(stringMatches), [](auto &m) { return m.name; });
         PRECICE_ERROR("The configuration contains an unknown tag <{}>. Did you mean <{}>?", expectedName, fmt::join(stringMatches, ">,<"));
       } else {

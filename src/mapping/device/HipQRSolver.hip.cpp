@@ -4,13 +4,11 @@
 #include <ginkgo/ginkgo.hpp>
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>
-#include <hipsolver.h>
+#include <hipsolver/hipsolver.h>
 
-void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Executor> &exec, gko::matrix::Dense<> *A_Q, gko::matrix::Dense<> *R)
+void computeQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoVector *R)
 {
-  int backupDeviceId{};
-  hipGetDevice(&backupDeviceId);
-  hipSetDevice(deviceId);
+  auto scope_guard = exec->get_scoped_device_id_guard();
 
   void *dWork{};
   int * devInfo{};
@@ -24,7 +22,7 @@ void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Ex
   // NOTE: It's important to transpose since hipsolver assumes column-major memory layout
   // Making a copy since every value will be overridden
   auto A_T = gko::share(gko::matrix::Dense<>::create(exec, gko::dim<2>(A_Q->get_size()[1], A_Q->get_size()[0])));
-  A_Q->transpose(gko::lend(A_T));
+  A_Q->transpose(A_T);
 
   // Setting dimensions for solver
   const unsigned int M = A_T->get_size()[1];
@@ -57,7 +55,7 @@ void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Ex
   assert(hipSuccess == hipErrorCode);
 
   // Copy A_T to R s.t. the upper triangle corresponds to R
-  A_T->transpose(gko::lend(R));
+  A_T->transpose(R);
 
   // Compute Q
   hipsolverStatus = hipsolverDnDorgqr(solverHandle, M, N, k, A_T->get_values(), lda, dTau, (double *) dWork, lwork, devInfo);
@@ -65,7 +63,7 @@ void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Ex
   assert(hipsolverStatus == HIPSOLVER_STATUS_SUCCESS);
   assert(hipSuccess == hipErrorCode);
 
-  A_T->transpose(gko::lend(A_Q));
+  A_T->transpose(A_Q);
 
   hipDeviceSynchronize();
 
@@ -74,8 +72,5 @@ void computeQRDecompositionHip(const int deviceId, const std::shared_ptr<gko::Ex
   hipFree(dWork);
   hipFree(devInfo);
   hipsolverDnDestroy(solverHandle);
-
-  // ...and switch back to the GPU used for all coupled solvers
-  hipSetDevice(backupDeviceId);
 }
 #endif

@@ -29,7 +29,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     double dt = interface.getMaxTimeStepSize();
 
     // Get relevant size, allocate data structures and retrieve coordinates
-    const std::size_t meshSize = interface.getMeshVertexSize(otherMeshName);
+    const auto meshSize = interface.getMeshVertexSize(otherMeshName);
 
     // According to the bounding boxes and vertices: the primary rank receives 3 vertices, the secondary rank 2
     const bool expectedSize = (context.isPrimary() && meshSize == 3) ||

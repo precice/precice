@@ -38,13 +38,6 @@ IQNILSAcceleration::IQNILSAcceleration(
 {
 }
 
-void IQNILSAcceleration::initialize(
-    const DataMap &cplData)
-{
-  // do common QN acceleration initialization
-  BaseQNAcceleration::initialize(cplData);
-}
-
 void IQNILSAcceleration::updateDifferenceMatrices(
     const DataMap &cplData)
 {
@@ -52,7 +45,7 @@ void IQNILSAcceleration::updateDifferenceMatrices(
   BaseQNAcceleration::updateDifferenceMatrices(cplData);
 }
 
-void IQNILSAcceleration::computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate)
+void IQNILSAcceleration::computeQNUpdate(Eigen::VectorXd &xUpdate)
 {
   PRECICE_TRACE();
   PRECICE_DEBUG("   Compute Newton factors");

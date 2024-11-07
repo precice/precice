@@ -63,9 +63,11 @@ void EventRegistry::initialize(std::string_view applicationName, int rank, int s
   this->_initTime        = initTime;
   this->_initClock       = initClock;
 
-  _writeQueue.clear();
   _firstwrite = true;
-  _globalId   = std::nullopt;
+  _writeQueue.clear();
+
+  _globalId = nameToID("_GLOBAL");
+  _writeQueue.emplace_back(StartEntry{_globalId.value(), _initClock});
 
   _initialized = true;
   _finalized   = false;
@@ -129,8 +131,6 @@ void EventRegistry::startBackend()
   PRECICE_DEBUG("Starting backend with events-file: \"{}\"", filename);
   _output.open(filename);
   PRECICE_CHECK(_output, "Unable to open the events-file: \"{}\"", filename);
-  _globalId = nameToID("_GLOBAL");
-  _writeQueue.emplace_back(StartEntry{_globalId.value(), _initClock});
 
   // write header
   fmt::print(_output,
@@ -192,10 +192,20 @@ void EventRegistry::clear()
 void EventRegistry::put(PendingEntry pe)
 {
   PRECICE_ASSERT(_mode != Mode::Off, "The profiling is off.");
+
+  // avoid flushing the queue when we start measuring but only if we don't explicitly want to write every entry
+  auto skipFlush = _writeQueueMax != 1 && std::holds_alternative<StartEntry>(pe);
+
   _writeQueue.emplace_back(std::move(pe));
-  if (_writeQueueMax > 0 && _writeQueue.size() > _writeQueueMax) {
+  if (!skipFlush && _writeQueueMax > 0 && _writeQueue.size() > _writeQueueMax) {
     flush();
   }
+}
+
+void EventRegistry::putCritical(PendingEntry pe)
+{
+  PRECICE_ASSERT(_mode != Mode::Off, "The profiling is off.");
+  _writeQueue.emplace_back(std::move(pe));
 }
 
 namespace {

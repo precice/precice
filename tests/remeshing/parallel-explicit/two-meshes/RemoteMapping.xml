@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration experimental="yes" allow-remeshing="yes">
+  <data:scalar name="DA1" />
+  <data:scalar name="DA2" />
+  <data:scalar name="DB" />
+
+  <mesh name="MB" dimensions="2">
+    <use-data name="DA1" />
+    <use-data name="DA2" />
+    <use-data name="DB" />
+  </mesh>
+
+  <mesh name="MA1" dimensions="2">
+    <use-data name="DA1" />
+    <use-data name="DB" />
+  </mesh>
+
+  <mesh name="MA2" dimensions="2">
+    <use-data name="DA2" />
+    <use-data name="DB" />
+  </mesh>
+
+  <participant name="A">
+    <provide-mesh name="MA1" />
+    <provide-mesh name="MA2" />
+    <write-data name="DA1" mesh="MA1" />
+    <write-data name="DA2" mesh="MA2" />
+    <read-data name="DB" mesh="MA1" />
+    <read-data name="DB" mesh="MA2" />
+  </participant>
+
+  <participant name="B">
+    <provide-mesh name="MB" />
+    <receive-mesh name="MA1" from="A" />
+    <receive-mesh name="MA2" from="A" />
+    <write-data name="DB" mesh="MB" />
+    <read-data name="DA1" mesh="MB" />
+    <read-data name="DA2" mesh="MB" />
+    <mapping:nearest-neighbor direction="write" from="MB" to="MA1" constraint="consistent" />
+    <mapping:nearest-neighbor direction="write" from="MB" to="MA2" constraint="consistent" />
+    <mapping:nearest-neighbor direction="read" from="MA1" to="MB" constraint="consistent" />
+    <mapping:nearest-neighbor direction="read" from="MA2" to="MB" constraint="consistent" />
+  </participant>
+
+  <m2n:sockets acceptor="B" connector="A" exchange-directory=".." />
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="A" second="B" />
+    <max-time-windows value="3" />
+    <time-window-size value="1" />
+    <exchange data="DA1" mesh="MA1" from="A" to="B" />
+    <exchange data="DA2" mesh="MA2" from="A" to="B" />
+    <exchange data="DB" mesh="MA1" from="B" to="A" />
+    <exchange data="DB" mesh="MA2" from="B" to="A" />
+  </coupling-scheme:parallel-explicit>
+</precice-configuration>

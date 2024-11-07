@@ -126,56 +126,47 @@ ParticipantConfiguration::ParticipantConfiguration(
   tag.addSubtag(tagWatchIntegral);
 
   XMLTag tagProvideMesh(*this, TAG_PROVIDE_MESH, XMLTag::OCCUR_ARBITRARY);
-  doc = "Provide a mesh (see tag <mesh>) to other participants.";
+  doc = "Provide a mesh (see tag `<mesh>`) to other participants.";
   tagProvideMesh.setDocumentation(doc);
   attrName.setDocumentation("Name of the mesh to provide.");
   tagProvideMesh.addAttribute(attrName);
   tag.addSubtag(tagProvideMesh);
 
   XMLTag tagReceiveMesh(*this, TAG_RECEIVE_MESH, XMLTag::OCCUR_ARBITRARY);
-  doc = "Makes a remote mesh (see tag <mesh>) available to this participant.";
+  doc = "Makes a remote mesh (see tag `<mesh>`) available to this participant.";
   tagReceiveMesh.setDocumentation(doc);
   attrName.setDocumentation("Name of the mesh to receive.");
   tagReceiveMesh.addAttribute(attrName);
   auto attrFrom = XMLAttribute<std::string>(ATTR_FROM)
                       .setDocumentation("The name of the participant to receive the mesh from. "
-                                        "This participant needs to provide the mesh using <provide-mesh />.");
-  tagReceiveMesh.addAttribute(attrFrom);
-  auto attrSafetyFactor = makeXMLAttribute(ATTR_SAFETY_FACTOR, 0.5)
+                                        "This participant needs to provide the mesh using `<provide-mesh />`.");
+
+  auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
                               .setDocumentation(
-                                  "If a mesh is received from another partipant (see tag <from>), it needs to be"
-                                  "decomposed at the receiving participant. To speed up this process, "
-                                  "a geometric filter (see tag <geometric-filter>), i.e. filtering by bounding boxes around the local mesh, can be used. "
-                                  "This safety factor defines by which factor this local information is "
-                                  "increased. An example: 0.5 means that the bounding box is 150% of its original size.");
-  tagReceiveMesh.addAttribute(attrSafetyFactor);
+                                  "Controls direct access to a received mesh without having to map it to a provided mesh. "
+                                  "A received mesh needs to be decomposed in preCICE using a region of interest, which cannot be inferred, if there are no mappings to or from a provided mesh. "
+                                  "In such cases the API function `setMeshAccessRegion()` must be used to define the region of interest.");
+  tagReceiveMesh.addAttribute(attrDirectAccess);
 
   auto attrGeoFilter = XMLAttribute<std::string>(ATTR_GEOMETRIC_FILTER)
                            .setDocumentation(
-                               "If a mesh is received from another partipant (see tag <from>), it needs to be"
-                               "decomposed at the receiving participant. To speed up this process, "
-                               "a geometric filter, i.e. filtering by bounding boxes around the local mesh, can be used. "
-                               "Two different variants are implemented: a filter \"on-primary\" strategy, "
-                               "which is beneficial for a huge mesh and a low number of processors, and a filter "
-                               "\"on-secondary\" strategy, which performs better for a very high number of "
-                               "processors. Both result in the same distribution (if the safety factor is sufficiently large). "
-                               "\"on-primary\" is not supported if you use two-level initialization. "
-                               "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")
+                               "For parallel execution, a received mesh needs to be decomposed. "
+                               "A geometric filter based on bounding-boxes around the local mesh can speed up this process. "
+                               "This setting controls if and where this filter is applied. "
+                               "`on-primary-rank` is beneficial for a huge mesh and a low number of processors, but is incompatible with two-level initialization. "
+                               "`on-secondary-ranks` performs better for a very high number of processors. "
+                               "Both result in the same distribution if the safety-factor is sufficiently large. "
+                               "`no-filter` may be useful for very asymmetric cases and for debugging.")
                            .setOptions({VALUE_NO_FILTER, VALUE_FILTER_ON_PRIMARY_RANK, VALUE_FILTER_ON_SECONDARY_RANKS})
                            .setDefaultValue(VALUE_FILTER_ON_SECONDARY_RANKS);
   tagReceiveMesh.addAttribute(attrGeoFilter);
 
-  auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
+  tagReceiveMesh.addAttribute(attrFrom);
+  auto attrSafetyFactor = makeXMLAttribute(ATTR_SAFETY_FACTOR, 0.5)
                               .setDocumentation(
-                                  "If a mesh is received from another partipant (see tag <from>), it needs to be"
-                                  "decomposed at the receiving participant. In case a mapping is defined, the "
-                                  "mesh is decomposed according to the local provided mesh associated to the mapping. "
-                                  "In case no mapping has been defined (you want to access "
-                                  "the mesh and related data direct), there is no obvious way on how to decompose the "
-                                  "mesh, since no mesh needs to be provided by the participant. For this purpose, bounding "
-                                  "boxes can be defined (see API function \"setMeshAccessRegion\") and used by selecting "
-                                  "the option direct-access=\"true\".");
-  tagReceiveMesh.addAttribute(attrDirectAccess);
+                                  "The safety factor of the geometric filter uniformly scales the rank-local bounding box by the given factor. "
+                                  "A safety-factor of `0.5` means that the bounding box is 150% of its original size.");
+  tagReceiveMesh.addAttribute(attrSafetyFactor);
 
   tag.addSubtag(tagReceiveMesh);
 
@@ -204,7 +195,7 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "for the InfiniBand on SuperMUC. ");
     tagIntraComm.addAttribute(attrNetwork);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, ".")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen.");
@@ -219,7 +210,7 @@ ParticipantConfiguration::ParticipantConfiguration(
     doc += "Use this tag to use MPI with separated communication spaces instead instead.";
     tagIntraComm.setDocumentation(doc);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, ".")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen.");
@@ -239,6 +230,12 @@ void ParticipantConfiguration::setExperimental(
 {
   _experimental = experimental;
   _mappingConfig->setExperimental(_experimental);
+}
+
+void ParticipantConfiguration::setRemeshing(
+    bool allowed)
+{
+  _remeshing = allowed;
 }
 
 void ParticipantConfiguration::xmlTagCallback(
@@ -310,7 +307,7 @@ void ParticipantConfiguration::xmlTagCallback(
     WatchPointConfig config;
     config.name        = tag.getStringAttributeValue(ATTR_NAME);
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
-    config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE, _meshConfig->getMesh(config.nameMesh)->getDimensions());
+    config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE);
     _watchPointConfigs.push_back(config);
   } else if (tag.getName() == TAG_WATCH_INTEGRAL) {
     WatchIntegralConfig config;
@@ -591,33 +588,72 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   // Add export contexts
   for (io::ExportContext &exportContext : _exportConfig->exportContexts()) {
-    io::PtrExport exporter;
-    if (exportContext.type == VALUE_VTK) {
-      // This is handled with respect to the current configuration context.
-      // Hence, this is potentially wrong for every participant other than context.name.
-      if (context.size > 1) {
-        // Only display the warning message if this participant configuration is the current one.
-        if (context.name == participant->getName()) {
-          PRECICE_ERROR("You attempted to use the legacy VTK exporter with the parallel participant {}, which isn't supported."
-                        "Migrate to another exporter, such as the VTU exporter by specifying \"<export:vtu ... />\"  instead of \"<export:vtk ... />\".",
-                        participant->getName());
-        }
-      } else {
-        exporter = io::PtrExport(new io::ExportVTK());
-      }
-    } else if (exportContext.type == VALUE_VTU) {
-      exporter = io::PtrExport(new io::ExportVTU());
-    } else if (exportContext.type == VALUE_VTP) {
-      exporter = io::PtrExport(new io::ExportVTP());
-    } else if (exportContext.type == VALUE_CSV) {
-      exporter = io::PtrExport(new io::ExportCSV());
-    } else {
-      PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
-                    _participants.back()->getName(), exportContext.type);
-    }
-    exportContext.exporter = std::move(exporter);
+    auto kind = exportContext.everyIteration ? io::Export::ExportKind::Iterations : io::Export::ExportKind::TimeWindows;
+    // Create one exporter per mesh
+    for (const auto &meshContext : participant->usedMeshContexts()) {
 
-    _participants.back()->addExportContext(exportContext);
+      exportContext.meshName = meshContext->mesh->getName();
+
+      io::PtrExport exporter;
+      if (exportContext.type == VALUE_VTK) {
+        // This is handled with respect to the current configuration context.
+        // Hence, this is potentially wrong for every participant other than context.name.
+        if (context.size > 1) {
+          // Only display the warning message if this participant configuration is the current one.
+          if (context.name == participant->getName()) {
+            PRECICE_ERROR("You attempted to use the legacy VTK exporter with the parallel participant {}, which isn't supported."
+                          "Migrate to another exporter, such as the VTU exporter by specifying \"<export:vtu ... />\"  instead of \"<export:vtk ... />\".",
+                          participant->getName());
+          }
+        } else {
+          exporter = io::PtrExport(new io::ExportVTK(
+              participant->getName(),
+              exportContext.location,
+              *meshContext->mesh,
+              kind,
+              exportContext.everyNTimeWindows,
+              context.rank,
+              context.size));
+        }
+      } else if (exportContext.type == VALUE_VTU) {
+        exporter = io::PtrExport(new io::ExportVTU(
+            participant->getName(),
+            exportContext.location,
+            *meshContext->mesh,
+            kind,
+            exportContext.everyNTimeWindows,
+            context.rank,
+            context.size));
+      } else if (exportContext.type == VALUE_VTP) {
+        exporter = io::PtrExport(new io::ExportVTP(
+            participant->getName(),
+            exportContext.location,
+            *meshContext->mesh,
+            kind,
+            exportContext.everyNTimeWindows,
+            context.rank,
+            context.size));
+      } else if (exportContext.type == VALUE_CSV) {
+        exporter = io::PtrExport(new io::ExportCSV(
+            participant->getName(),
+            exportContext.location,
+            *meshContext->mesh,
+            kind,
+            exportContext.everyNTimeWindows,
+            context.rank,
+            context.size));
+      } else {
+        PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
+                      _participants.back()->getName(), exportContext.type);
+      }
+      exportContext.exporter = std::move(exporter);
+
+      _participants.back()->addExportContext(exportContext);
+    }
+    PRECICE_WARN_IF(exportContext.everyNTimeWindows > 1 && exportContext.everyIteration,
+                    "Participant {} defines an exporter of type {} which exports every iteration. "
+                    "This overrides the every-n-time-window value you provided.",
+                    _participants.back()->getName(), exportContext.type);
   }
   _exportConfig->resetExports();
 
@@ -632,7 +668,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                   "Participant \"{}\" defines watchpoint \"{}\" for the received mesh \"{}\", which is not allowed. "
                   "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                   participant->getName(), config.name, config.nameMesh, config.nameMesh);
-
+    PRECICE_CHECK(config.coordinates.size() == meshContext.mesh->getDimensions(),
+                  "Provided coordinate to watch is {}D, which does not match the dimension of the {}D mesh \"{}\".",
+                  config.coordinates.size(), meshContext.mesh->getDimensions(), meshContext.mesh->getName());
     std::string filename = "precice-" + participant->getName() + "-watchpoint-" + config.name + ".log";
     participant->addWatchPoint(std::make_shared<impl::WatchPoint>(config.coordinates, meshContext.mesh, std::move(filename)));
   }
