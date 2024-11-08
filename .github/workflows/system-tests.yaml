@@ -82,7 +82,7 @@ jobs:
         CALCULIX_VERSION:2.20,\
         CALCULIX_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-calculix-adapter }},\
         FENICS_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-fenics-adapter }},\
-        OPENFOAM_EXECUTABLE:openfoam2406,\
+        OPENFOAM_EXECUTABLE:openfoam2312,\
         OPENFOAM_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-openfoam-adapter }},\
         SU2_VERSION:7.5.1,\
         SU2_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-su2-adapter }},\
