@@ -92,7 +92,6 @@ target_sources(testprecice
     tests/quasi-newton/serial/TestQN7.cpp
     tests/quasi-newton/serial/TestQN8.cpp
     tests/quasi-newton/serial/TestQN9.cpp
-    tests/serial/AitkenAcceleration.cpp
     tests/serial/ImplicitCheckpointing.cpp
     tests/serial/PreconditionerBug.cpp
     tests/serial/SendMeshToMultipleParticipants.cpp
@@ -105,6 +104,8 @@ target_sources(testprecice
     tests/serial/action-timings/ActionTimingsParallelImplicit.cpp
     tests/serial/action-timings/ActionTimingsSerialExplicit.cpp
     tests/serial/action-timings/ActionTimingsSerialImplicit.cpp
+    tests/serial/aitken/DefaultInitialRelaxation.cpp
+    tests/serial/aitken/DefinedInitialRelaxation.cpp
     tests/serial/circular/Explicit.cpp
     tests/serial/circular/helper.hpp
     tests/serial/compositional/OneActivatedMuscle.cpp

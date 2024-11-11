@@ -371,8 +371,8 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagRelax.addAttribute(attrValue);
     tag.addSubtag(tagRelax);
   } else if (tag.getName() == VALUE_AITKEN) {
-    XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
-    tagInitRelax.setDocumentation("Initial relaxation factor.");
+    XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_NOT_OR_ONCE);
+    tagInitRelax.setDocumentation("Initial relaxation factor. If this tag is not provided, an initial relaxation of 0.5 is used.");
     XMLAttribute<double> attrValue(ATTR_VALUE);
     attrValue.setDocumentation("Initial relaxation factor.");
     tagInitRelax.addAttribute(attrValue);
