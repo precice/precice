@@ -415,7 +415,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       PRECICE_CHECK(participant->isMeshReceived(fromMesh) || participant->isMeshProvided(toMesh),
                     "A read mapping of participant \"{}\" needs to map from a received to a provided mesh, but in this case they are swapped. "
                     "Did you intent to map from mesh \"{}\" to mesh \"{}\", or use a write mapping instead?",
-                    participant->getName(), confMapping.fromMesh->getName(), confMapping.toMesh->getName());
+                    participant->getName(), confMapping.toMesh->getName(), confMapping.fromMesh->getName());
       PRECICE_CHECK(participant->isMeshReceived(fromMesh),
                     "Participant \"{}\" has a read mapping from mesh \"{}\", without receiving it. "
                     "Please add a receive-mesh tag with name=\"{}\"",
@@ -429,7 +429,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       PRECICE_CHECK(participant->isMeshProvided(fromMesh) || participant->isMeshReceived(toMesh),
                     "A write mapping of participant \"{}\" needs to map from a provided to a received mesh, but in this case they are swapped. "
                     "Did you intent to map from mesh \"{}\" to mesh \"{}\", or use a read mapping instead?",
-                    participant->getName(), confMapping.fromMesh->getName(), confMapping.toMesh->getName());
+                    participant->getName(), confMapping.toMesh->getName(), confMapping.fromMesh->getName());
       PRECICE_CHECK(participant->isMeshProvided(fromMesh),
                     "Participant \"{}\" has a write mapping from mesh \"{}\", without providing it. "
                     "Please add a provided-mesh tag with name=\"{}\"",
