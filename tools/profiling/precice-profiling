@@ -472,8 +472,26 @@ class Run:
 
         return {"traceEvents": metaEvents + mainEvents}
 
-    def toExportList(self, unit=None):
+    def allDataFields(self):
+        return list(
+            {
+                dname
+                for rank in self.iterRanks()
+                for e in rank.events
+                if "data" in e
+                for dname in e["data"].keys()
+            }
+        )
+
+    def toExportList(self, unit, dataNames):
         factor = ns_to_unit_factor(unit) * 1e3 if unit else 1
+
+        def makeData(e):
+            if "data" not in e:
+                return tuple("" for dname in dataNames)
+
+            return tuple(e["data"].get(dname, "") for dname in dataNames)
+
         for rank in self.iterRanks():
             for e in rank.events:
                 yield (
@@ -483,8 +501,7 @@ class Run:
                     self.lookupEvent(e["eid"]),
                     e["ts"],
                     e["dur"] * factor,
-                    "" if "data" not in e else str(e["data"]),
-                )
+                ) + makeData(e)
 
     def toDataFrame(self):
         import itertools
@@ -523,6 +540,7 @@ def traceCommand(profilingfile, outfile, rankfilter, limit):
 
 def exportCommand(profilingfile, outfile, unit):
     run = Run(profilingfile)
+    dataFields = run.allDataFields()
     fieldnames = [
         "participant",
         "rank",
@@ -530,13 +548,12 @@ def exportCommand(profilingfile, outfile, unit):
         "event",
         "timestamp",
         "duration",
-        "data",
-    ]
+    ] + dataFields
     print(f"Writing to {outfile}")
     with open(outfile, "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(fieldnames)
-        writer.writerows(run.toExportList(unit))
+        writer.writerows(run.toExportList(unit, dataFields))
     return 0
 
 
