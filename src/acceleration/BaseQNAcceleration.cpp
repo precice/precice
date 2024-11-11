@@ -90,6 +90,7 @@ void BaseQNAcceleration::initialize(
 
   checkDataIDs(cplData);
   // store all data IDs in vector
+  _dataIDs.clear();
   for (const DataMap::value_type &pair : cplData) {
     _dataIDs.push_back(pair.first);
   }
@@ -99,82 +100,12 @@ void BaseQNAcceleration::initialize(
                   "Quasi-Newton acceleration does not yet support using data from all substeps. Please set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
   }
 
-  auto         addCplDataSize  = [&](size_t sum, int id) { return sum + cplData.at(id)->getSize(); };
-  const size_t primaryDataSize = std::accumulate(_primaryDataIDs.begin(), _primaryDataIDs.end(), (size_t) 0, addCplDataSize);
-  const size_t dataSize        = std::accumulate(_dataIDs.begin(), _dataIDs.end(), (size_t) 0, addCplDataSize);
-
+  _matrixCols.clear();
   _matrixCols.push_front(0);
   _firstIteration  = true;
   _firstTimeWindow = true;
 
-  PRECICE_ASSERT(_oldPrimaryXTilde.size() == 0);
-  PRECICE_ASSERT(_oldPrimaryResiduals.size() == 0);
-  _oldPrimaryXTilde    = Eigen::VectorXd::Zero(primaryDataSize);
-  _oldPrimaryResiduals = Eigen::VectorXd::Zero(primaryDataSize);
-  _primaryResiduals    = Eigen::VectorXd::Zero(primaryDataSize);
-  _primaryValues       = Eigen::VectorXd::Zero(primaryDataSize);
-  _oldPrimaryValues    = Eigen::VectorXd::Zero(primaryDataSize);
-  _values              = Eigen::VectorXd::Zero(dataSize);
-  _oldValues           = Eigen::VectorXd::Zero(dataSize);
-  _oldXTilde           = Eigen::VectorXd::Zero(dataSize);
-  _residuals           = Eigen::VectorXd::Zero(dataSize);
-
-  /**
-   *  make dimensions public to all procs,
-   *  last entry _dimOffsets[IntraComm::getSize()] holds the global dimension, global,n
-   */
-  std::stringstream ss;
-  if (utils::IntraComm::isParallel()) {
-    PRECICE_ASSERT(utils::IntraComm::getCommunication() != nullptr);
-    PRECICE_ASSERT(utils::IntraComm::getCommunication()->isConnected());
-
-    if (primaryDataSize <= 0) {
-      _hasNodesOnInterface = false;
-    }
-
-    /** provide vertex offset information for all processors
-     *  mesh->getVertexOffsets() provides an array that stores the number of mesh vertices on each processor
-     *  This information needs to be gathered for all meshes. To get the number of respective unknowns of a specific processor
-     *  we need to multiply the number of vertices with the dimensionality of the vector-valued data for each coupling data.
-     */
-    _dimOffsets.resize(utils::IntraComm::getSize() + 1);
-    _dimOffsetsPrimary.resize(utils::IntraComm::getSize() + 1);
-    _dimOffsets[0]        = 0;
-    _dimOffsetsPrimary[0] = 0;
-    for (size_t i = 0; i < _dimOffsets.size() - 1; i++) {
-      int accumulatedNumberOfUnknowns        = 0;
-      int accumulatedNumberOfPrimaryUnknowns = 0;
-
-      for (auto &elem : _dataIDs) {
-        const auto &offsets = cplData.at(elem)->getVertexOffsets();
-        accumulatedNumberOfUnknowns += offsets[i] * cplData.at(elem)->getDimensions();
-        if (utils::contained(elem, _primaryDataIDs)) {
-          accumulatedNumberOfPrimaryUnknowns += offsets[i] * cplData.at(elem)->getDimensions();
-        }
-      }
-      _dimOffsets[i + 1]        = accumulatedNumberOfUnknowns;
-      _dimOffsetsPrimary[i + 1] = accumulatedNumberOfPrimaryUnknowns;
-    }
-    PRECICE_DEBUG("Number of unknowns at the interface (global): {}", _dimOffsets.back());
-    if (utils::IntraComm::isPrimary()) {
-      _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n offsets: {}\n", _dimOffsets.back(), _dimOffsets);
-    }
-
-    // test that the computed number of unknown per proc equals the number of primaryDataSize actually present on that proc
-    const size_t unknowns = _dimOffsets[utils::IntraComm::getRank() + 1] - _dimOffsets[utils::IntraComm::getRank()];
-    PRECICE_ASSERT(dataSize == unknowns, dataSize, unknowns);
-    const size_t primaryUnknowns = _dimOffsetsPrimary[utils::IntraComm::getRank() + 1] - _dimOffsetsPrimary[utils::IntraComm::getRank()];
-    PRECICE_ASSERT(primaryDataSize == primaryUnknowns, primaryDataSize, primaryUnknowns);
-  } else {
-    _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n", dataSize);
-  }
-
-  // set the number of global rows in the QRFactorization.
-  _qrV.setGlobalRows(getPrimaryLSSystemRows());
-
-  std::vector<size_t> subVectorSizes; // needed for preconditioner
-  std::transform(_primaryDataIDs.cbegin(), _primaryDataIDs.cend(), std::back_inserter(subVectorSizes), [&cplData](const auto &d) { return cplData.at(d)->getSize(); });
-  _preconditioner->initialize(subVectorSizes);
+  initializeVectorsAndPreconditioner(cplData);
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -622,7 +553,7 @@ int BaseQNAcceleration::getLSSystemCols() const
   return cols;
 }
 
-int BaseQNAcceleration::getLSSystemRows()
+int BaseQNAcceleration::getLSSystemRows() const
 {
   if (utils::IntraComm::isParallel()) {
     return _dimOffsets.back();
@@ -630,7 +561,7 @@ int BaseQNAcceleration::getLSSystemRows()
   return _residuals.size();
 }
 
-int BaseQNAcceleration::getPrimaryLSSystemRows()
+int BaseQNAcceleration::getPrimaryLSSystemRows() const
 {
   if (utils::IntraComm::isParallel()) {
     return _dimOffsetsPrimary.back();
@@ -673,6 +604,85 @@ void BaseQNAcceleration::concatenateCouplingData(
     }
     offset += size;
   }
+}
+
+void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplData)
+{
+  auto         addCplDataSize  = [&](size_t sum, int id) { return sum + cplData.at(id)->getSize(); };
+  const size_t primaryDataSize = std::accumulate(_primaryDataIDs.begin(), _primaryDataIDs.end(), (size_t) 0, addCplDataSize);
+  const size_t dataSize        = std::accumulate(_dataIDs.begin(), _dataIDs.end(), (size_t) 0, addCplDataSize);
+
+  _oldPrimaryXTilde    = Eigen::VectorXd::Zero(primaryDataSize);
+  _oldPrimaryResiduals = Eigen::VectorXd::Zero(primaryDataSize);
+  _primaryResiduals    = Eigen::VectorXd::Zero(primaryDataSize);
+  _primaryValues       = Eigen::VectorXd::Zero(primaryDataSize);
+  _oldPrimaryValues    = Eigen::VectorXd::Zero(primaryDataSize);
+  _values              = Eigen::VectorXd::Zero(dataSize);
+  _oldValues           = Eigen::VectorXd::Zero(dataSize);
+  _oldXTilde           = Eigen::VectorXd::Zero(dataSize);
+  _residuals           = Eigen::VectorXd::Zero(dataSize);
+  _matrixV.resize(0, 0);
+  _matrixW.resize(0, 0);
+
+  /**
+   *  make dimensions public to all procs,
+   *  last entry _dimOffsets[IntraComm::getSize()] holds the global dimension, global,n
+   */
+  std::stringstream ss;
+  if (utils::IntraComm::isParallel()) {
+    PRECICE_ASSERT(utils::IntraComm::getCommunication() != nullptr);
+    PRECICE_ASSERT(utils::IntraComm::getCommunication()->isConnected());
+
+    if (primaryDataSize <= 0) {
+      _hasNodesOnInterface = false;
+    }
+
+    /** provide vertex offset information for all processors
+     *  mesh->getVertexOffsets() provides an array that stores the number of mesh vertices on each processor
+     *  This information needs to be gathered for all meshes. To get the number of respective unknowns of a specific processor
+     *  we need to multiply the number of vertices with the dimensionality of the vector-valued data for each coupling data.
+     */
+    _dimOffsets.resize(utils::IntraComm::getSize() + 1);
+    _dimOffsetsPrimary.resize(utils::IntraComm::getSize() + 1);
+    _dimOffsets[0]        = 0;
+    _dimOffsetsPrimary[0] = 0;
+    for (size_t i = 0; i < _dimOffsets.size() - 1; i++) {
+      int accumulatedNumberOfUnknowns        = 0;
+      int accumulatedNumberOfPrimaryUnknowns = 0;
+
+      for (auto &elem : _dataIDs) {
+        const auto &offsets = cplData.at(elem)->getVertexOffsets();
+        accumulatedNumberOfUnknowns += offsets[i] * cplData.at(elem)->getDimensions();
+        if (utils::contained(elem, _primaryDataIDs)) {
+          accumulatedNumberOfPrimaryUnknowns += offsets[i] * cplData.at(elem)->getDimensions();
+        }
+      }
+      _dimOffsets[i + 1]        = accumulatedNumberOfUnknowns;
+      _dimOffsetsPrimary[i + 1] = accumulatedNumberOfPrimaryUnknowns;
+    }
+    PRECICE_DEBUG("Number of unknowns at the interface (global): {}", _dimOffsets.back());
+    if (utils::IntraComm::isPrimary()) {
+      _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n offsets: {}\n", _dimOffsets.back(), _dimOffsets);
+    }
+
+    // test that the computed number of unknown per proc equals the number of primaryDataSize actually present on that proc
+    const size_t unknowns = _dimOffsets[utils::IntraComm::getRank() + 1] - _dimOffsets[utils::IntraComm::getRank()];
+    PRECICE_ASSERT(dataSize == unknowns, dataSize, unknowns);
+    const size_t primaryUnknowns = _dimOffsetsPrimary[utils::IntraComm::getRank() + 1] - _dimOffsetsPrimary[utils::IntraComm::getRank()];
+    PRECICE_ASSERT(primaryDataSize == primaryUnknowns, primaryDataSize, primaryUnknowns);
+  } else {
+    _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n", dataSize);
+  }
+
+  // set the number of global rows in the QRFactorization.
+  _qrV.reset();
+  _qrV.setGlobalRows(getPrimaryLSSystemRows());
+
+  std::vector<size_t> subVectorSizes; // needed for preconditioner
+  std::transform(_primaryDataIDs.cbegin(), _primaryDataIDs.cend(), std::back_inserter(subVectorSizes), [&cplData](const auto &d) { return cplData.at(d)->getSize(); });
+  _preconditioner->initialize(subVectorSizes);
+
+  specializedInitializeVectorsAndPreconditioner(cplData);
 }
 
 } // namespace acceleration

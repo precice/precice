@@ -263,6 +263,7 @@ void Mesh::clear()
 
   for (mesh::PtrData &data : _data) {
     data->values().resize(0);
+    data->timeStepsStorage().clear();
   }
 }
 

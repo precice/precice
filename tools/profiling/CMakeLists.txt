@@ -5,6 +5,7 @@
 set(_tests
   from-common-dir
   one-parallel-solver
+  one-parallel-solver-missing-ranks
   one-parallel-solver-different-ids
   one-serial-damaged
   one-serial-solver

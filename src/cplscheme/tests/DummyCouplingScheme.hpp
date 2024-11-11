@@ -36,6 +36,8 @@ public:
    */
   void initialize() override final;
 
+  void reinitialize() override final{};
+
   /**
    * @brief Not implemented.
    */

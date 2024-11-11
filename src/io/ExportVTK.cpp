@@ -37,7 +37,7 @@ void ExportVTK::doExport(int index, double time)
   if (!keepExport(index))
     return;
 
-  auto filename = fmt::format("{}-{}.{}.vtk", _participantName, _mesh->getName(), formatIndex(index));
+  auto filename = fmt::format("{}-{}.{}.vtk", _mesh->getName(), _participantName, formatIndex(index));
 
   namespace fs = std::filesystem;
   fs::path outfile(_location);
@@ -61,7 +61,7 @@ void ExportVTK::exportSeries() const
   if (isParallel())
     return; // there is no parallel master file
 
-  writeSeriesFile(fmt::format("{}-{}.vtk.series", _participantName, _mesh->getName()));
+  writeSeriesFile(fmt::format("{}-{}.vtk.series", _mesh->getName(), _participantName));
 }
 
 void ExportVTK::exportMesh(

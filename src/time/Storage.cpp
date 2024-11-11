@@ -49,6 +49,13 @@ void Storage::setSampleAtTime(double time, const Sample &sample)
   }
 }
 
+void Storage::setAllSamples(const Sample &sample)
+{
+  for (auto &stample : _stampleStorage) {
+    stample.sample = sample;
+  }
+}
+
 void Storage::setInterpolationDegree(int interpolationDegree)
 {
   PRECICE_ASSERT(interpolationDegree >= Time::MIN_WAVEFORM_DEGREE);

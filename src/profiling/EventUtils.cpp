@@ -63,9 +63,11 @@ void EventRegistry::initialize(std::string_view applicationName, int rank, int s
   this->_initTime        = initTime;
   this->_initClock       = initClock;
 
-  _writeQueue.clear();
   _firstwrite = true;
-  _globalId   = std::nullopt;
+  _writeQueue.clear();
+
+  _globalId = nameToID("_GLOBAL");
+  _writeQueue.emplace_back(StartEntry{_globalId.value(), _initClock});
 
   _initialized = true;
   _finalized   = false;
@@ -129,8 +131,6 @@ void EventRegistry::startBackend()
   PRECICE_DEBUG("Starting backend with events-file: \"{}\"", filename);
   _output.open(filename);
   PRECICE_CHECK(_output, "Unable to open the events-file: \"{}\"", filename);
-  _globalId = nameToID("_GLOBAL");
-  _writeQueue.emplace_back(StartEntry{_globalId.value(), _initClock});
 
   // write header
   fmt::print(_output,

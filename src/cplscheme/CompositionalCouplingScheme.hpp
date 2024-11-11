@@ -77,6 +77,8 @@ public:
    */
   void initialize() final override;
 
+  void reinitialize() override final;
+
   /// Returns true, if any of the composed coupling schemes sendsInitializedData for this participant
   bool sendsInitializedData() const override final;
 
