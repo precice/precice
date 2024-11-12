@@ -70,6 +70,9 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
   _scalarDataNames.clear();
   const bool isThreeDim = (mesh.getDimensions() == 3);
   for (const mesh::PtrData &data : mesh.data()) {
+    if (data->timeStepsStorage().empty()) {
+      continue;
+    }
     int        dataDimensions = data->getDimensions();
     const bool hasGradient    = data->hasGradient();
     PRECICE_ASSERT(dataDimensions >= 1);
@@ -246,6 +249,9 @@ void ExportXML::exportData(
   outFile << "\n            </DataArray>\n";
 
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
+    if (data->timeStepsStorage().empty()) {
+      continue;
+    }
     const Eigen::VectorXd &values         = data->timeStepsStorage().last().sample.values;
     int                    dataDimensions = data->getDimensions();
     std::string            dataName(data->getName());
