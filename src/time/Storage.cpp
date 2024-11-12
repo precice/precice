@@ -31,6 +31,7 @@ void Storage::setSampleAtTime(double time, const Sample &sample)
 
   if (_stampleStorage.empty()) {
     _stampleStorage.emplace_back(Stample{time, sample});
+    std::cout << "DEBUG1: added sample at time: " << time << std::endl;
     return;
   }
 
@@ -43,9 +44,11 @@ void Storage::setSampleAtTime(double time, const Sample &sample)
   if (existingSample == _stampleStorage.end()) { // key does not exist yet
     PRECICE_ASSERT(math::smaller(maxStoredTime(), time), maxStoredTime(), time, "Trying to write sample with a time that is too small. Please use clear(), if you want to write new samples to the storage.");
     _stampleStorage.emplace_back(Stample{time, sample});
+    std::cout << "DEBUG2: added sample at time: " << time << std::endl;
   } else {
     // Overriding sample
     existingSample->sample = sample;
+    std::cout << "DEBUG3: overwrote sample" << std::endl;
   }
 }
 
@@ -92,6 +95,7 @@ int Storage::nDofs() const
 
 void Storage::move()
 {
+  std::cout << "DEBUG: move()" << std::endl;
   PRECICE_ASSERT(nTimes() >= 2, "Calling Storage::move() is only allowed, if there is a sample at the beginning and at the end. This ensures that this function is only called at the end of the window.", getTimes());
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
   const double nextWindowStart = _stampleStorage.back().timestamp;
@@ -104,6 +108,7 @@ void Storage::move()
 
 void Storage::trim()
 {
+  std::cout << "DEBUG: trim()" << std::endl;
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
   const double thisWindowStart = _stampleStorage.front().timestamp;
   _stampleStorage.erase(++_stampleStorage.begin(), _stampleStorage.end());
@@ -116,6 +121,7 @@ void Storage::trim()
 
 void Storage::clear()
 {
+  std::cout << "DEBUG: clear()" << std::endl;
   _stampleStorage.clear();
   PRECICE_ASSERT(_stampleStorage.size() == 0);
 
@@ -125,6 +131,7 @@ void Storage::clear()
 
 void Storage::clearExceptLast()
 {
+  std::cout << "DEBUG: clearExceptLast()" << std::endl;
   if (_stampleStorage.empty()) {
     return;
   }
@@ -136,6 +143,7 @@ void Storage::clearExceptLast()
 
 void Storage::trimBefore(double time)
 {
+  std::cout << "DEBUG: trimBefore()" << std::endl;
   auto beforeTime = [time](const auto &s) { return math::smaller(s.timestamp, time); };
   _stampleStorage.erase(std::remove_if(_stampleStorage.begin(), _stampleStorage.end(), beforeTime), _stampleStorage.end());
 
@@ -145,6 +153,7 @@ void Storage::trimBefore(double time)
 
 void Storage::trimAfter(double time)
 {
+  std::cout << "DEBUG: trimAfter()" << std::endl;
   auto afterTime = [time](const auto &s) { return math::greater(s.timestamp, time); };
   _stampleStorage.erase(std::remove_if(_stampleStorage.begin(), _stampleStorage.end(), afterTime), _stampleStorage.end());
 
@@ -206,13 +215,13 @@ Eigen::VectorXd Storage::sample(double time) const
 
   PRECICE_ASSERT(usedDegree >= 1);
 
-  //Return the sample corresponding to time if it exists
+  // Return the sample corresponding to time if it exists
   const int i = findTimeId(time);
   if (i > -1) {                              // _stampleStorage contains sample at given time
     return _stampleStorage[i].sample.values; // don't use getTimesAndValues, because this would iterate over the complete _stampleStorage.
   }
 
-  //Create a new bspline if _bspline does not already contain a spline
+  // Create a new bspline if _bspline does not already contain a spline
   if (!_bspline.has_value()) {
     auto [times, values] = getTimesAndValues();
     _bspline.emplace(times, values, usedDegree);

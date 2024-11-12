@@ -147,6 +147,7 @@ int DataContext::mapData(std::optional<double> after, bool skipZero)
       }
 
       // Store data from mapping buffer in storage
+      std::cout << "DEBUG: setSample(): " << outSample.dataDims << ", " << outSample.values << std::endl;
       context.toData->setSampleAtTime(stample.timestamp, std::move(outSample));
     }
   }
