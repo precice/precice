@@ -61,7 +61,9 @@ void runTestAccessReceivedMesh(const TestContext &       context,
       if (context.isPrimary()) {
         interface.writeData(otherMeshName, dataName, ids, writeData);
       } else {
-        if (meshSize - startIndex > 0) {
+        // Corresponds semantically to meshSize - startIndex > 0
+        // but meshSize - startIndex > 0 might underflow and the static analysis complained
+        if (meshSize > startIndex) {
           const int *ids_ptr  = &ids.at(startIndex);
           const auto vertices = meshSize - startIndex;
           interface.writeData(otherMeshName, dataName, {ids_ptr, vertices}, {writeData.data(), vertices});
