@@ -701,7 +701,8 @@ VertexID ParticipantImpl::setMeshVertex(
   auto &       mesh    = *context.mesh;
   PRECICE_CHECK(position.size() == static_cast<unsigned long>(mesh.getDimensions()),
                 "Cannot set vertex for mesh \"{}\". Expected {} position components but found {}.", meshName, mesh.getDimensions(), position.size());
-  auto index = mesh.createVertex(Eigen::Map<const Eigen::VectorXd>{position.data(), mesh.getDimensions()}).getID();
+  Event e{fmt::format("setMeshVertex.{}", meshName), profiling::Fundamental};
+  auto  index = mesh.createVertex(Eigen::Map<const Eigen::VectorXd>{position.data(), mesh.getDimensions()}).getID();
   mesh.allocateDataValues();
 
   const auto newSize = mesh.nVertices();
@@ -731,6 +732,7 @@ void ParticipantImpl::setMeshVertices(
                 "You passed {} vertices indices and {} position components, but we expected {} position components ({} x {}).",
                 meshDims, meshName, ids.size(), positions.size(), expectedPositionSize, ids.size(), meshDims);
 
+  Event                                   e{fmt::format("setMeshVertices.{}", meshName), profiling::Fundamental};
   const Eigen::Map<const Eigen::MatrixXd> posMatrix{
       positions.data(), mesh.getDimensions(), static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
   for (unsigned long i = 0; i < ids.size(); ++i) {
@@ -759,6 +761,7 @@ void ParticipantImpl::setMeshEdge(
     using impl::errorInvalidVertexID;
     PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
     PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
+    Event         e{fmt::format("setMeshEdge.{}", meshName), profiling::Fundamental};
     mesh::Vertex &v0 = mesh->vertex(first);
     mesh::Vertex &v1 = mesh->vertex(second);
     mesh->createEdge(v0, v1);
@@ -791,6 +794,8 @@ void ParticipantImpl::setMeshEdges(
                   std::distance(vertices.begin(), first),
                   std::distance(vertices.begin(), last));
   }
+
+  Event e{fmt::format("setMeshEdges.{}", meshName), profiling::Fundamental};
 
   for (unsigned long i = 0; i < vertices.size() / 2; ++i) {
     auto aid = vertices[2 * i];
@@ -827,6 +832,7 @@ void ParticipantImpl::setMeshTriangle(
                                                            vertices[1]->getCoords(), vertices[2]->getCoords())),
                   "setMeshTriangle() was called with vertices located at identical coordinates (IDs: {}, {}, {}).",
                   first, second, third);
+    Event       e{fmt::format("setMeshTriangle.{}", meshName), profiling::Fundamental};
     mesh::Edge *edges[3];
     edges[0] = &mesh->createEdge(*vertices[0], *vertices[1]);
     edges[1] = &mesh->createEdge(*vertices[1], *vertices[2]);
@@ -862,6 +868,8 @@ void ParticipantImpl::setMeshTriangles(
                   std::distance(vertices.begin(), first),
                   std::distance(vertices.begin(), last));
   }
+
+  Event e{fmt::format("setMeshTriangles.{}", meshName), profiling::Fundamental};
 
   for (unsigned long i = 0; i < vertices.size() / 3; ++i) {
     auto aid = vertices[3 * i];
@@ -907,6 +915,8 @@ void ParticipantImpl::setMeshQuad(
     PRECICE_CHECK(convexity.convex, "The given quad is not convex. "
                                     "Please check that the adapter send the four correct vertices or that the interface is composed of quads.");
     auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
+
+    Event e{fmt::format("setMeshQuad.{}", meshName), profiling::Fundamental};
 
     // Vertices are now in the order: V0-V1-V2-V3-V0.
     // Use the shortest diagonal to split the quad into 2 triangles.
@@ -973,6 +983,8 @@ void ParticipantImpl::setMeshQuads(
                   i);
     auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
 
+    Event e{fmt::format("setMeshQuads.{}", meshName), profiling::Fundamental};
+
     // Use the shortest diagonal to split the quad into 2 triangles.
     // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
     double distance02 = (reordered[0]->getCoords() - reordered[2]->getCoords()).norm();
@@ -1000,6 +1012,8 @@ void ParticipantImpl::setMeshTetrahedron(
   MeshContext &context = _accessor->usedMeshContext(meshName);
   PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes."
                                                     " Please set the mesh dimension to 3 in the preCICE configuration file.");
+  Event e{fmt::format("setMeshTetrahedron.{}", meshName), profiling::Fundamental};
+
   if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
     mesh::PtrMesh &mesh = context.mesh;
     using impl::errorInvalidVertexID;
@@ -1042,6 +1056,8 @@ void ParticipantImpl::setMeshTetrahedra(
                   std::distance(vertices.begin(), first),
                   std::distance(vertices.begin(), last));
   }
+
+  Event e{fmt::format("setMeshTetrahedra.{}", meshName), profiling::Fundamental};
 
   for (unsigned long i = 0; i < vertices.size() / 4; ++i) {
     auto aid = vertices[4 * i];
@@ -1088,6 +1104,7 @@ void ParticipantImpl::writeData(
                   "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   dataName, meshName, *index);
   }
+  Event e{fmt::format("writeData.{}_{}", meshName, dataName), profiling::Fundamental};
   context.writeValuesIntoDataBuffer(vertices, values);
 }
 
@@ -1136,6 +1153,8 @@ void ParticipantImpl::readData(
                   dataName, meshName, *index);
   }
 
+  Event e{fmt::format("readData.{}_{}", meshName, dataName), profiling::Fundamental};
+
   double readTime = _couplingScheme->getTime() + relativeReadTime;
   context.readValues(vertices, readTime, values);
 }
@@ -1183,6 +1202,8 @@ void ParticipantImpl::writeGradientData(
                 vertices.size(), gradients.size(), expectedComponents);
 
   PRECICE_VALIDATE_DATA(gradients.data(), gradients.size());
+
+  Event e{fmt::format("writeGradientData.{}_{}", meshName, dataName), profiling::Fundamental};
 
   context.writeGradientsIntoDataBuffer(vertices, gradients);
 }
@@ -1260,6 +1281,7 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
                 meshDims, meshName, coordinates.size(), expectedCoordinatesSize, meshSize, meshDims, meshName, meshName);
 
   PRECICE_CHECK(ids.size() <= meshSize, "The queried size exceeds the number of available points.");
+  Event e{fmt::format("getMeshVertexIDsAndCoordinates.{}", meshName), profiling::Fundamental};
 
   Eigen::Map<Eigen::MatrixXd> posMatrix{
       coordinates.data(), mesh->getDimensions(), static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
