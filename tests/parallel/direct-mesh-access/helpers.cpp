@@ -38,7 +38,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
 
     // Allocate memory
     std::vector<int>    ids(meshSize);
-    std::vector<double> coordinates(meshSize * dim);
+    std::vector<double> coordinates(static_cast<std::size_t>(meshSize) * static_cast<std::size_t>(dim));
     interface.getMeshVertexIDsAndCoordinates(otherMeshName, ids, coordinates);
 
     // Check the received vertex coordinates
