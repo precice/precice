@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>  
-
+<precice-configuration>
   <data:scalar name="DataAB" />
   <data:scalar name="DataBA" />
   <data:scalar name="DataBC" />
@@ -69,10 +68,10 @@
     <max-iterations value="2" />
     <!-- Check that we can initialize only data that is exchanged without involving the controller -->
     <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" initialize="no" />
-    <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" initialize="no"/>
-    <exchange data="DataCB" mesh="MeshC" from="SolverC" to="SolverB" initialize="yes"/>
-    <exchange data="DataBC" mesh="MeshC" from="SolverB" to="SolverC" initialize="yes"/>
-    <exchange data="DataCB" mesh="MeshC" from="SolverC" to="SolverA" initialize="no"/>
+    <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" initialize="no" />
+    <exchange data="DataCB" mesh="MeshC" from="SolverC" to="SolverB" initialize="yes" />
+    <exchange data="DataBC" mesh="MeshC" from="SolverB" to="SolverC" initialize="yes" />
+    <exchange data="DataCB" mesh="MeshC" from="SolverC" to="SolverA" initialize="no" />
     <relative-convergence-measure data="DataCB" mesh="MeshC" limit="1e-4" />
     <relative-convergence-measure data="DataBA" mesh="MeshA" limit="1e-4" />
   </coupling-scheme:multi>
