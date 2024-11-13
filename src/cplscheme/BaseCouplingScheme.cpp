@@ -713,7 +713,7 @@ bool BaseCouplingScheme::measureConvergence()
     PRECICE_ASSERT(convMeasure.couplingData->previousIteration().size() == convMeasure.couplingData->values().size(), convMeasure.couplingData->previousIteration().size(), convMeasure.couplingData->values().size(), convMeasure.couplingData->getDataName());
     convMeasure.measure->measure(convMeasure.couplingData->previousIteration(), convMeasure.couplingData->values());
 
-    if (not utils::IntraComm::isSecondary() && convMeasure.doesLogging) {
+    if (not utils::IntraComm::isSecondary()) {
       _convergenceWriter->writeData(convMeasure.logHeader(), convMeasure.measure->getNormResidual());
     }
 
@@ -768,10 +768,7 @@ void BaseCouplingScheme::initializeTXTWriters()
 
     if (not doesFirstStep()) {
       for (ConvergenceMeasureContext &convMeasure : _convergenceMeasures) {
-
-        if (convMeasure.doesLogging) {
-          _convergenceWriter->addData(convMeasure.logHeader(), io::TXTTableWriter::DOUBLE);
-        }
+        _convergenceWriter->addData(convMeasure.logHeader(), io::TXTTableWriter::DOUBLE);
       }
       if (_acceleration) {
         _iterationsWriter->addData("QNColumns", io::TXTTableWriter::INT);
