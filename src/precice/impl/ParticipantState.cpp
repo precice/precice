@@ -265,19 +265,25 @@ bool ParticipantState::isMeshUsed(std::string_view mesh) const
 
 bool ParticipantState::isMeshProvided(std::string_view mesh) const
 {
-  PRECICE_ASSERT(hasMesh(mesh));
+  if (!hasMesh(mesh)) {
+    return false;
+  }
   return usedMeshContext(mesh).provideMesh;
 }
 
 bool ParticipantState::isMeshReceived(std::string_view mesh) const
 {
-  PRECICE_ASSERT(hasMesh(mesh));
+  if (!hasMesh(mesh)) {
+    return false;
+  }
   return !usedMeshContext(mesh).provideMesh;
 }
 
 bool ParticipantState::isDirectAccessAllowed(std::string_view mesh) const
 {
-  PRECICE_ASSERT(hasMesh(mesh));
+  if (!hasMesh(mesh)) {
+    return false;
+  }
   return meshContext(mesh).allowDirectAccess;
 }
 
