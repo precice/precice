@@ -8,7 +8,7 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MultiCoupling)
-BOOST_AUTO_TEST_CASE(MultiCouplingTwoSolvers)
+BOOST_AUTO_TEST_CASE(MultiCouplingTwoSolvers2)
 {
   PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank));
   const std::string configFile = context.config();
