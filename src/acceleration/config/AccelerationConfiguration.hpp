@@ -136,6 +136,8 @@ private:
     double      singularityLimit           = 1e-2;
     std::string preconditionerType         = "residual-sum";
     int         precond_nbNonConstTWindows = -1;
+    int         imvjRestartType            = 3;
+    int         imvjChunkSize              = 8;
   } _defaultValuesIQNIMVJ;
 
   const double _defaultAitkenRelaxationFactor = 0.5;
@@ -146,6 +148,7 @@ private:
     bool definedTimeWindowsReused  = false;
     bool definedFilter             = false;
     bool definedPreconditionerType = false;
+    bool defineRestartType         = false;
   } _userDefinitions;
 
   void addTypeSpecificSubtags(xml::XMLTag &tag);
