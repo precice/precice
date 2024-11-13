@@ -120,7 +120,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   PRECICE_ASSERT(m2n.get() != nullptr);
   PRECICE_ASSERT(m2n->isConnected());
 
-  profiling::Event e("sendData", profiling::Fundamental);
+  profiling::Event e("waitAndSendData", profiling::Fundamental);
 
   for (const auto &data : sendData | boost::adaptors::map_values) {
     const auto &stamples = data->stamples();
@@ -180,7 +180,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   PRECICE_TRACE();
   PRECICE_ASSERT(m2n.get());
   PRECICE_ASSERT(m2n->isConnected());
-  profiling::Event e("receiveData", profiling::Fundamental);
+  profiling::Event e("waitAndReceiveData", profiling::Fundamental);
   for (const auto &data : receiveData | boost::adaptors::map_values) {
 
     if (data->exchangeSubsteps()) {
