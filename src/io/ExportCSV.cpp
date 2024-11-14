@@ -82,6 +82,9 @@ void ExportCSV::doExport(int index, double time)
   }
   outFile << ";Rank";
   for (const auto &data : _mesh->data()) {
+    if (data->timeStepsStorage().empty()) {
+      continue;
+    }
     auto dataName = data->getName();
     auto dim      = data->getDimensions();
     outFile << ';' << dataName;
@@ -96,6 +99,10 @@ void ExportCSV::doExport(int index, double time)
   // Prepare writing data
   std::vector<StridedAccess> dataColumns;
   for (const auto &data : _mesh->data()) {
+    if (data->timeStepsStorage().empty()) {
+      continue;
+      ;
+    }
     auto          dim    = data->getDimensions();
     double const *values = data->timeStepsStorage().last().sample.values.data();
     for (int i = 0; i < dim; ++i) {
