@@ -327,7 +327,11 @@ target_sources(testprecice
     tests/serial/multi-coupling/MultiCouplingThreeSolvers1.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers2.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers3.cpp
-    tests/serial/multi-coupling/MultiCouplingTwoSolvers.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers4.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers5.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers6.cpp
+    tests/serial/multi-coupling/MultiCouplingTwoSolvers1.cpp
+    tests/serial/multi-coupling/MultiCouplingTwoSolvers2.cpp
     tests/serial/multi-coupling/helpers.cpp
     tests/serial/multi-coupling/helpers.hpp
     tests/serial/multiple-mappings/MultipleReadFromMappings.cpp
