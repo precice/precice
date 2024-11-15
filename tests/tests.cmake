@@ -168,7 +168,6 @@ target_sources(testprecice
     tests/remeshing/parallel-implicit/noop/RemeshSecond.cpp
     tests/remeshing/parallel-implicit/noop/RemeshSecond2LI.cpp
     tests/remeshing/parallel-implicit/noop/RemeshSecondSerial.cpp
-    tests/serial/AitkenAcceleration.cpp
     tests/serial/ImplicitCheckpointing.cpp
     tests/serial/PreconditionerBug.cpp
     tests/serial/SendMeshToMultipleParticipants.cpp
@@ -182,6 +181,8 @@ target_sources(testprecice
     tests/serial/action-timings/ActionTimingsParallelImplicit.cpp
     tests/serial/action-timings/ActionTimingsSerialExplicit.cpp
     tests/serial/action-timings/ActionTimingsSerialImplicit.cpp
+    tests/serial/aitken/DefaultInitialRelaxation.cpp
+    tests/serial/aitken/DefinedInitialRelaxation.cpp
     tests/serial/circular/Explicit.cpp
     tests/serial/circular/helper.hpp
     tests/serial/compositional/OneActivatedMuscle.cpp
@@ -326,7 +327,11 @@ target_sources(testprecice
     tests/serial/multi-coupling/MultiCouplingThreeSolvers1.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers2.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers3.cpp
-    tests/serial/multi-coupling/MultiCouplingTwoSolvers.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers4.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers5.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers6.cpp
+    tests/serial/multi-coupling/MultiCouplingTwoSolvers1.cpp
+    tests/serial/multi-coupling/MultiCouplingTwoSolvers2.cpp
     tests/serial/multi-coupling/helpers.cpp
     tests/serial/multi-coupling/helpers.hpp
     tests/serial/multiple-mappings/MultipleReadFromMappings.cpp

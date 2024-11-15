@@ -216,7 +216,8 @@ void M2N::send(
     PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
 
     if (precice::syncMode && not utils::IntraComm::isSecondary()) {
-      bool ack = true;
+      Event es("mn2.sendData.interSync");
+      bool  ack = true;
       _interComm->send(ack, 0);
       _interComm->receive(ack, 0);
       _interComm->send(ack, 0);
@@ -302,14 +303,12 @@ void M2N::receive(precice::span<double> itemsToReceive,
     PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
     PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
 
-    if (precice::syncMode) {
-      if (not utils::IntraComm::isSecondary()) {
-        bool ack;
-
-        _interComm->receive(ack, 0);
-        _interComm->send(ack, 0);
-        _interComm->receive(ack, 0);
-      }
+    if (precice::syncMode && not utils::IntraComm::isSecondary()) {
+      Event es("m2n.receiveData.interSync");
+      bool  ack;
+      _interComm->receive(ack, 0);
+      _interComm->send(ack, 0);
+      _interComm->receive(ack, 0);
     }
 
     Event e("m2n.receiveData", profiling::Synchronize);

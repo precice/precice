@@ -7,7 +7,8 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
-BOOST_AUTO_TEST_CASE(AitkenAcceleration)
+BOOST_AUTO_TEST_SUITE(Aitken)
+BOOST_AUTO_TEST_CASE(DefaultInitialRelaxation)
 {
   PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank));
 
@@ -53,7 +54,7 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
 
     dt = interface.getMaxTimeStepSize();
     interface.readData(meshName, dataName, {&vertexID, 1}, dt, {&value, 1});
-    BOOST_TEST(value == 0.1); // due to initial underrelaxation
+    BOOST_TEST(value == 0.5); // due to default initial underrelaxation
 
     interface.requiresWritingCheckpoint();
     interface.advance(dt);
@@ -64,6 +65,7 @@ BOOST_AUTO_TEST_CASE(AitkenAcceleration)
   }
 }
 
+BOOST_AUTO_TEST_SUITE_END() // Aitken
 BOOST_AUTO_TEST_SUITE_END() // Integration
 BOOST_AUTO_TEST_SUITE_END() // Serial
 
