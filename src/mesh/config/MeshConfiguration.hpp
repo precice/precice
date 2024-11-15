@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 #include "logging/Logger.hpp"
+#include "mesh/Data.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "xml/XMLTag.hpp"
@@ -28,8 +29,6 @@ public:
   MeshConfiguration(
       xml::XMLTag &        parent,
       PtrDataConfiguration config);
-
-  void setDimensions(int dimensions);
 
   /// Returns all configured meshes.
   const std::vector<PtrMesh> &meshes() const;
@@ -67,19 +66,26 @@ public:
     return std::move(_meshIdManager);
   }
 
+  /// Initialize the map between meshes and dimensions, for unit tests that directly create mesh objects without going through the config reading.
+  void insertMeshToMeshDimensionsMap(const std::string &mesh,
+                                     int                dimensions);
+
 private:
   logging::Logger _log{"mesh::MeshConfiguration"};
 
   const std::string TAG;
   const std::string ATTR_NAME;
-  const std::string ATTR_FLIP_NORMALS;
+  const std::string ATTR_DIMENSIONS;
   const std::string TAG_DATA;
   const std::string ATTR_SIDE_INDEX;
 
-  int _dimensions;
+  std::map<std::string, int> _meshDimensionsMap;
 
   /// Data configuration.
   PtrDataConfiguration _dataConfig;
+
+  /// Get the number of dimensions that data values of this type (scalar/vector) have on this mesh
+  int getDataDimensions(const std::string &meshName, const Data::typeName typeName) const;
 
   /// Configured meshes.
   std::vector<PtrMesh> _meshes;

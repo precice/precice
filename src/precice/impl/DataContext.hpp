@@ -1,9 +1,13 @@
 #pragma once
 
+#include <map>
+#include <optional>
 #include <string>
+
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "mesh/Utils.hpp"
 
 namespace precice {
 
@@ -33,9 +37,9 @@ public:
   std::string getDataName() const;
 
   /**
-   * @brief Resets provided data and (if mapping exists) fromData or toData.
+   * @brief Resets initial guesses of transient mappings to zero.
    */
-  void resetData();
+  void resetInitialGuesses();
 
   /**
    * @brief Get the dimensions of _providedData.
@@ -43,6 +47,13 @@ public:
    * @return int Dimensions of _providedData.
    */
   int getDataDimensions() const;
+
+  /**
+   * @brief Get the spatial dimensions of _providedData.
+   *
+   * @return int Spatial dimensions of _providedData.
+   */
+  int getSpatialDimensions() const;
 
   /**
    * @brief Get the name of _mesh.
@@ -59,18 +70,22 @@ public:
   MeshID getMeshID() const;
 
   /**
-   * @brief Check whether any mapping has to be performed.
+   * @brief Returns whether _providedData has gradient
    *
-   * Checks whether any mapping exists for this context and the corresponding timing configuration.
-   *
-   * @return True, if any mapping has to be performed.
+   * @return true, if it has gradient
+   * @return false, if it has gradient
    */
-  bool isMappingRequired();
+  bool hasGradient() const;
 
   /**
-   * @brief Perform the mapping for all mapping contexts and the corresponding data context (from and to data)
+   * @brief Perform the mapping for mapping contexts and the corresponding data context (from and to data)
+   *
+   * @param[in] after only map samples after this optional time
+   * @param[in] skipZero set output sample to zero if the input sample is zero too
+   *
+   * @return the number of performed mappings
    */
-  void mapData();
+  int mapData(std::optional<double> after = std::nullopt, bool skipZero = false);
 
   /**
    * @brief Adds a MappingContext and the MeshContext required by the mapping to the corresponding DataContext data structures.
@@ -80,7 +95,20 @@ public:
    * @param[in] mappingContext Context of the mapping
    * @param[in] meshContext Context of mesh this mapping is mapping from or to
    */
-  virtual void appendMappingConfiguration(const MappingContext &mappingContext, const MeshContext &meshContext) = 0;
+  virtual void appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext) = 0;
+
+  /**
+   * @brief Informs the user whether this DataContext has any _mappingContext.
+   *
+   * @return True, if this DataContext is associated with a mapping. False, if not.
+   */
+  bool hasMapping() const;
+
+  template <typename Container>
+  std::optional<std::size_t> locateInvalidVertexID(const Container &c)
+  {
+    return mesh::locateInvalidVertexID(*_mesh, c);
+  }
 
 protected:
   /**
@@ -97,22 +125,14 @@ protected:
   /// Unique data this context is associated with
   mesh::PtrData _providedData;
 
-  /// If a mapping exists, collection of mesh::PtrData the mapping maps from.
-  std::vector<mesh::PtrData> _fromData;
-
-  /// If a mapping exists, collection of mesh::PtrData the mapping maps from.
-  std::vector<mesh::PtrData> _toData;
-
   /**
    * @brief Helper to append a mappingContext, fromData and toData to the corresponding data containers
    *
    * @param mappingContext MappingContext this DataContext will be associated to.
-   * @param fromData Data the mapping maps from.
-   * @param toData Data the mapping maps to.
    *
    * @note Only unique mappings may be appended. In case the same mapping is appended twice, an error is raised.
    */
-  void appendMapping(MappingContext mappingContext, mesh::PtrData fromData, mesh::PtrData toData);
+  void appendMapping(MappingContext mappingContext);
 
   /**
    * @brief Informs the user whether this DataContext has any read mapping.
@@ -128,36 +148,24 @@ protected:
    */
   bool hasWriteMapping() const;
 
+  /**
+   * @brief Get the number of vertices of mesh
+   *
+   * @return int number of vertices
+   */
+  int getMeshVertexCount() const;
+
+  /// Returns true if the given vertexID is valid
+  bool isValidVertexID(const VertexID id) const;
+
 private:
   /// Unique mesh associated with _providedData.
   mesh::PtrMesh _mesh;
 
   static logging::Logger _log;
 
-  /**
-   * @brief Get the ID of the data in the _fromDatas container. Used for performing the mapping outside of this class.
-   *
-   * @param[in] dataVectorIndex Index of the '_fromDatas' container this data context holds
-   *
-   * @return DataID ID of _fromDatas.
-   */
-  DataID getFromDataID(size_t dataVectorIndex) const;
-
-  /**
-   * @brief Get the ID of the data in the _toDatas container. Used for performing the mapping outside of this class.
-   *
-   * @param[in] dataVectorIndex Index of the '_toDatas' vector this data context holds
-   *
-   * @return DataID ID of _toDatas.
-   */
-  DataID getToDataID(size_t dataVectorIndex) const;
-
-  /**
-   * @brief Informs the user whether this DataContext has any _mappingContext.
-   *
-   * @return True, if this DataContext is associated with a mapping. False, if not.
-   */
-  bool hasMapping() const;
+  using FromToDataIDs = std::pair<int, int>;
+  std::map<FromToDataIDs, Eigen::VectorXd> _initialGuesses;
 };
 
 } // namespace impl

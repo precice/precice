@@ -9,8 +9,7 @@
 #include "logging/LogConfiguration.hpp"
 #include "utils/ArgumentFormatter.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 /// Boost test Initialization function
 /**
@@ -35,8 +34,8 @@ type = enum boost::unit_test::log_level : int {
 boost::unit_test::log_level getBoostTestLogLevel()
 {
   namespace bu = boost::unit_test;
-#if BOOST_VERSION == 106900 || __APPLE__ && __MACH__
-  std::cerr << "Boost 1.69 and macOS get log_level is broken, preCICE log level set to debug.\n";
+#if __APPLE__ && __MACH__
+  std::cerr << "macOS get log_level is broken, preCICE log level set to debug.\n";
   return bu::log_successful_tests;
 #else
   return bu::runtime_config::get<bu::log_level>(bu::runtime_config::btrt_log_level);
@@ -97,8 +96,7 @@ void setupTestLogging()
   logging::lockConf();
 }
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing
 
 // Fixtures need to be defined in the global scope
 

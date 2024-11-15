@@ -6,6 +6,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "logging/Logger.hpp"
@@ -16,10 +17,9 @@
 #include "mesh/Tetrahedron.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "query/Index.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include "utils/PointerVector.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -50,6 +50,9 @@ public:
 
   /// A mapping from remote local ranks to the IDs that must be communicated
   using CommunicationMap = std::map<Rank, std::vector<VertexID>>;
+  using ConnectionMap    = CommunicationMap; // until we decide on a name
+
+  using VertexOffsets = std::vector<int>;
 
   /// Use if the id of the mesh is not necessary
   static constexpr MeshID MESH_ID_UNDEFINED{-1};
@@ -66,11 +69,26 @@ public:
       int         dimensions,
       MeshID      id);
 
+  /// Mutable access to a vertex by VertexID
+  Vertex &vertex(VertexID id);
+
+  /// Const access to a vertex by VertexID
+  const Vertex &vertex(VertexID id) const;
+
   /// Returns modifieable container holding all vertices.
   VertexContainer &vertices();
 
   /// Returns const container holding all vertices.
   const VertexContainer &vertices() const;
+
+  /// Returns the number of vertices
+  std::size_t nVertices() const;
+
+  /// Does the mesh contain any vertices?
+  bool empty() const
+  {
+    return _vertices.empty();
+  }
 
   /// Returns modifiable container holding all edges.
   EdgeContainer &edges();
@@ -113,7 +131,7 @@ public:
   int getDimensions() const;
 
   /// Creates and initializes a Vertex object.
-  Vertex &createVertex(const Eigen::VectorXd &coords);
+  Vertex &createVertex(const Eigen::Ref<const Eigen::VectorXd> &coords);
 
   /**
    * @brief Creates and initializes an Edge object.
@@ -122,16 +140,6 @@ public:
    * @param[in] vertexTwo Reference to second Vertex defining the Edge.
    */
   Edge &createEdge(
-      Vertex &vertexOne,
-      Vertex &vertexTwo);
-
-  /**
-   * @brief Creates and initializes an Edge object or returns an already existing one.
-   *
-   * @param[in] vertexOne Reference to first Vertex defining the Edge.
-   * @param[in] vertexTwo Reference to second Vertex defining the Edge.
-   */
-  Edge &createUniqueEdge(
       Vertex &vertexOne,
       Vertex &vertexTwo);
 
@@ -176,7 +184,8 @@ public:
   /// Create only data for vertex
   PtrData &createData(const std::string &name,
                       int                dimension,
-                      DataID             id);
+                      DataID             id,
+                      int                waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE);
 
   /// Allows access to all data
   const DataContainer &data() const;
@@ -188,10 +197,13 @@ public:
   const PtrData &data(DataID dataID) const;
 
   /// Returns whether Mesh has Data with the dataName
-  bool hasDataName(const std::string &dataName) const;
+  bool hasDataName(std::string_view dataName) const;
+
+  /// Returns the names of all available data
+  std::vector<std::string> availableData() const;
 
   /// Returns the data with the matching name
-  const PtrData &data(const std::string &dataName) const;
+  const PtrData &data(std::string_view dataName) const;
 
   /// Returns the name of the mesh, as set in the config file.
   const std::string &getName() const;
@@ -202,17 +214,14 @@ public:
   /// Returns true if the given vertexID is valid
   bool isValidVertexID(VertexID vertexID) const;
 
-  /// Returns true if the given edgeID is valid
-  bool isValidEdgeID(EdgeID edgeID) const;
-
   /// Allocates memory for the vertex data values and corresponding gradient values.
-  void allocateDataValues();
+  void allocateDataValues(); //@todo Redesign mapping and remove this function. See https://github.com/precice/precice/issues/1651.
 
   /// Computes the boundingBox for the vertices.
   void computeBoundingBox();
 
   /**
-   * @brief Removes all mesh elements and data values (does not remove data).
+   * @brief Removes all mesh elements and data values (does not remove data or the bounding boxes).
    *
    * A mesh element is a
    * - vertex
@@ -224,32 +233,58 @@ public:
   /// Clears the partitioning information
   void clearPartitioning();
 
+  void setVertexDistribution(VertexDistribution vd)
+  {
+    PRECICE_ASSERT(std::all_of(vd.begin(), vd.end(), [](const auto &p) { return std::is_sorted(p.second.begin(), p.second.end()); }));
+    _vertexDistribution = std::move(vd);
+  }
+
   /// Returns a mapping from rank to used (not necessarily owned) vertex IDs
-  VertexDistribution &getVertexDistribution();
+  const VertexDistribution &getVertexDistribution() const
+  {
+    return _vertexDistribution;
+  }
 
-  VertexDistribution const &getVertexDistribution() const;
+  const VertexOffsets &getVertexOffsets() const
+  {
+    return _vertexOffsets;
+  }
 
-  std::vector<int> &getVertexOffsets();
-
-  const std::vector<int> &getVertexOffsets() const;
+  /// checks if the given ranks partition is empty
+  bool isPartitionEmpty(Rank rank) const;
 
   /// Only used for tests
-  void setVertexOffsets(std::vector<int> &vertexOffsets);
+  void setVertexOffsets(VertexOffsets vertexOffsets)
+  {
+    _vertexOffsets = std::move(vertexOffsets);
+  }
 
-  int getGlobalNumberOfVertices() const;
+  int getGlobalNumberOfVertices() const
+  {
+    return _globalNumberOfVertices;
+  }
 
-  void setGlobalNumberOfVertices(int num);
+  void setGlobalNumberOfVertices(int num)
+  {
+    _globalNumberOfVertices = num;
+  }
 
   // Get the data of owned vertices for given data ID
-  Eigen::VectorXd getOwnedVertexData(DataID dataID);
+  Eigen::VectorXd getOwnedVertexData(const Eigen::VectorXd &values);
 
   // Tag all the vertices
   void tagAll();
 
   /// Returns a vector of connected ranks
-  std::vector<Rank> &getConnectedRanks()
+  const std::vector<Rank> &getConnectedRanks() const
   {
     return _connectedRanks;
+  }
+
+  /// Returns a vector of connected ranks
+  void setConnectedRanks(std::vector<Rank> ranks)
+  {
+    _connectedRanks = std::move(ranks);
   }
 
   /// Returns a mapping from remote local connected ranks to the corresponding vertex IDs
@@ -264,6 +299,12 @@ public:
    * @brief Returns the bounding box of the mesh.
    *
    * BoundingBox is a vector of pairs (min, max), one pair for each dimension.
+   * Note that the bounding box does not necessarily need to match the bounding
+   * box of the contained vertices of the mesh. Examples are the direct mesh access
+   * or a computation of the bounding box before applying additional filtering
+   * during the repartitioning. Note that mesh::clear doesn't clear the underlying
+   * bounding box (which is potentially a user input when using and defining
+   * direct mesh access)
    */
   const BoundingBox &getBoundingBox() const;
 
@@ -273,15 +314,27 @@ public:
 
   bool operator!=(const Mesh &other) const;
 
+  /// Call preprocess() before index() to ensure correct projection handling
   const query::Index &index() const
   {
     return _index;
   }
 
+  /// Call preprocess() before index() to ensure correct projection handling
   query::Index &index()
   {
     return _index;
   }
+
+  /**
+   * Removes all duplicates and generates implicit primitives.
+   *
+   * This needs to be called for correct projection handling.
+   *
+   * @see removeDuplicates()
+   * @see generateImplictPrimitives()
+   */
+  void preprocess();
 
 private:
   mutable logging::Logger _log{"mesh::Mesh"};
@@ -316,7 +369,7 @@ private:
    * The last entry holds the total number of vertices.
    * Needed for the matrix-matrix multiplication of the IMVJ acceleration.
    */
-  std::vector<int> _vertexOffsets;
+  VertexOffsets _vertexOffsets;
 
   /**
    * @brief Number of unique vertices for complete distributed mesh.
@@ -340,6 +393,15 @@ private:
   BoundingBox _boundingBox;
 
   query::Index _index;
+
+  /// Removes all duplicate connectivity.
+  void removeDuplicates();
+
+  /** Generates implicit primitives for correct projection handling
+   *
+   * removeDuplicates() should be called first to avoid unnecessary filtering.
+   */
+  void generateImplictPrimitives();
 };
 
 std::ostream &operator<<(std::ostream &os, const Mesh &q);

@@ -6,7 +6,7 @@ namespace partition {
 /*
  * @brief A fixture that is used to access private functions of the receivedPartition class.
  *
- * The fixture can be used to call private functions for individual testing. 
+ * The fixture can be used to call private functions for individual testing.
  */
 struct ReceivedPartitionFixture {
   static void createOwnerInformation(ReceivedPartition &part)

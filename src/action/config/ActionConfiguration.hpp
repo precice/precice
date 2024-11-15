@@ -80,9 +80,6 @@ private:
 
   const std::string NAME_DIVIDE_BY_AREA;
   const std::string NAME_MULTIPLY_BY_AREA;
-  const std::string NAME_SCALING_BY_TIME_STEP_TO_TIME_WINDOW_RATIO;
-  const std::string NAME_SCALING_BY_COMPUTED_TIME_WINDOW_PART_RATIO;
-  const std::string NAME_SCALING_BY_TIME_WINDOW_SIZE;
   const std::string NAME_SUMMATION;
   const std::string NAME_COMPUTE_CURVATURE;
   const std::string NAME_PYTHON;
@@ -101,14 +98,7 @@ private:
   const std::string ATTR_VALUE  = "value";
   const std::string ATTR_MESH   = "mesh";
 
-  const std::string VALUE_REGULAR_PRIOR;
-  const std::string VALUE_REGULAR_POST;
-  const std::string VALUE_ON_EXCHANGE_PRIOR;
-  const std::string VALUE_ON_EXCHANGE_POST;
-  const std::string VALUE_ON_TIME_WINDOW_COMPLETE_POST;
-  const std::string WRITE_MAPPING_PRIOR;
   const std::string WRITE_MAPPING_POST;
-  const std::string READ_MAPPING_PRIOR;
   const std::string READ_MAPPING_POST;
 
   mesh::PtrMeshConfiguration _meshConfig;

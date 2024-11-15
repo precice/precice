@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include "acceleration/Acceleration.hpp"
-#include "acceleration/MVQNAcceleration.hpp"
+#include "acceleration/IQNIMVJAcceleration.hpp"
 #include "acceleration/SharedPointer.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
 #include "logging/Logger.hpp"
@@ -73,8 +73,7 @@ private:
   const std::string VALUE_CONSTANT;
   const std::string VALUE_AITKEN;
   const std::string VALUE_IQNILS;
-  const std::string VALUE_MVQN;
-  const std::string VALUE_BROYDEN;
+  const std::string VALUE_IQNIMVJ;
   const std::string VALUE_QR1FILTER;
   const std::string VALUE_QR1_ABSFILTER;
   const std::string VALUE_QR2FILTER;
@@ -122,7 +121,39 @@ private:
     bool                  alwaysBuildJacobian        = false;
     std::string           preconditionerUpdate;
     std::string           preconditionerType;
+
+    std::vector<double> scalingFactorsInOrder() const;
   } _config;
+
+  const struct DefaultValuesIQN {
+    double      relaxationFactor           = 0.1;
+    int         maxIterationsUsed          = 100;
+    int         timeWindowsReused          = 10;
+    int         filter                     = Acceleration::QR2FILTER;
+    double      singularityLimit           = 1e-2;
+    std::string preconditionerType         = "residual-sum";
+    int         precond_nbNonConstTWindows = -1;
+  } _defaultValuesIQNILS;
+
+  const struct DefaultValuesIMVJ {
+    double      relaxationFactor           = 0.1;
+    int         maxIterationsUsed          = 20;
+    int         timeWindowsReused          = 0;
+    int         filter                     = Acceleration::QR2FILTER;
+    double      singularityLimit           = 1e-2;
+    std::string preconditionerType         = "residual-sum";
+    int         precond_nbNonConstTWindows = -1;
+  } _defaultValuesIQNIMVJ;
+
+  const double _defaultAitkenRelaxationFactor = 0.5;
+
+  struct UserDefinitions {
+    bool definedRelaxationFactor   = false;
+    bool definedMaxIterationsUsed  = false;
+    bool definedTimeWindowsReused  = false;
+    bool definedFilter             = false;
+    bool definedPreconditionerType = false;
+  } _userDefinitions;
 
   void addTypeSpecificSubtags(xml::XMLTag &tag);
   void addCommonIQNSubtags(xml::XMLTag &tag);

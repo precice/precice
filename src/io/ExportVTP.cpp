@@ -1,12 +1,22 @@
 #include "io/ExportVTP.hpp"
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <sstream>
 #include <string>
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
+
+ExportVTP::ExportVTP(
+    std::string_view  participantName,
+    std::string_view  location,
+    const mesh::Mesh &mesh,
+    ExportKind        kind,
+    int               frequency,
+    int               rank,
+    int               size)
+
+    : ExportXML(participantName, location, mesh, kind, frequency, rank, size){};
 
 std::string ExportVTP::getVTKFormat() const
 {
@@ -15,18 +25,18 @@ std::string ExportVTP::getVTKFormat() const
 
 std::string ExportVTP::getParallelExtension() const
 {
-  return ".pvtp";
+  return "pvtp";
 }
 
 std::string ExportVTP::getPieceExtension() const
 {
-  return ".vtp";
+  return "vtp";
 }
 
 std::string ExportVTP::getPieceAttributes(const mesh::Mesh &mesh) const
 {
   std::ostringstream oss;
-  oss << "NumberOfPoints=\"" << mesh.vertices().size() << "\" ";
+  oss << "NumberOfPoints=\"" << mesh.nVertices() << "\" ";
   oss << "NumberOfLines=\"" << mesh.edges().size() << "\" ";
   oss << "NumberOfPolys=\"" << mesh.triangles().size() << "\"";
   return oss.str();
@@ -81,5 +91,4 @@ void ExportVTP::exportConnectivity(
   outFile << "            </DataArray>\n";
   outFile << "         </Polys>\n";
 }
-} // namespace io
-} // namespace precice
+} // namespace precice::io

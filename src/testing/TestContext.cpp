@@ -1,7 +1,6 @@
 #include <algorithm>
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <exception>
+#include <filesystem>
 #include <memory>
 #include <numeric>
 #include <ostream>
@@ -12,22 +11,23 @@
 #include "com/SharedPointer.hpp"
 #include "com/SocketCommunication.hpp"
 #include "com/SocketCommunicationFactory.hpp"
+#include "logging/LogConfiguration.hpp"
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
+#include "mapping/device/Ginkgo.hpp"
 #include "mesh/Data.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
+#include "profiling/EventUtils.hpp"
 #include "query/Index.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/EventUtils.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 using Par = utils::Parallel;
 
@@ -36,8 +36,9 @@ TestContext::~TestContext() noexcept
   if (!invalid && _petsc) {
     precice::utils::Petsc::finalize();
   }
-  if (!invalid && _events) {
-    precice::utils::EventRegistry::instance().finalize();
+  if (!invalid) {
+    // Always clean up tests.
+    precice::profiling::EventRegistry::instance().finalize();
   }
   if (!invalid && _initIntraComm) {
     utils::IntraComm::getCommunication() = nullptr;
@@ -51,10 +52,10 @@ TestContext::~TestContext() noexcept
 
 std::string TestContext::prefix(const std::string &filename) const
 {
-  boost::filesystem::path location{testing::getTestPath()};
-  auto                    dir = location.parent_path();
+  std::filesystem::path location{testing::getTestPath()};
+  auto                  dir = location.parent_path();
   dir /= filename;
-  return boost::filesystem::weakly_canonical(dir).string();
+  return std::filesystem::weakly_canonical(dir).string();
 }
 
 std::string TestContext::config() const
@@ -99,12 +100,16 @@ void TestContext::handleOption(Participants &, testing::Require requirement)
   case Require::Events:
     _events = true;
     break;
+  case Require::Ginkgo:
+    _ginkgo = true;
+    _events = true;
+    break;
   default:
     std::terminate();
   }
 }
 
-void TestContext::handleOption(Participants &participants, Participant participant)
+void TestContext::handleOption(Participants &participants, ParticipantState participant)
 {
   if (_simple) {
     std::terminate();
@@ -114,13 +119,13 @@ void TestContext::handleOption(Participants &participants, Participant participa
   participants.emplace_back(std::move(participant));
 }
 
-void TestContext::setContextFrom(const Participant &p, Rank rank)
+void TestContext::setContextFrom(const ParticipantState &p)
 {
   this->name           = p.name;
   this->size           = p.size;
-  this->rank           = rank;
   this->_initIntraComm = p.initIntraComm;
   this->_contextComm   = utils::Parallel::current();
+  this->rank           = this->_contextComm->rank();
 }
 
 void TestContext::initialize(const Participants &participants)
@@ -131,6 +136,7 @@ void TestContext::initialize(const Participants &participants)
   initializeIntraComm();
   initializeEvents();
   initializePetsc();
+  initializeGinkgo();
 }
 
 void TestContext::initializeMPI(const TestContext::Participants &participants)
@@ -138,43 +144,30 @@ void TestContext::initializeMPI(const TestContext::Participants &participants)
   auto      baseComm   = Par::current();
   const int globalRank = baseComm->rank();
   const int available  = baseComm->size();
-  const int required   = std::accumulate(participants.begin(), participants.end(), 0, [](int total, const Participant &next) { return total + next.size; });
+
+  // groups contain the accumulated sizes of previous groups
+  std::vector<int> groups(participants.size());
+  std::transform(participants.begin(), participants.end(), groups.begin(), [](const auto &p) { return p.size; });
+  std::partial_sum(groups.begin(), groups.end(), groups.begin());
+
+  // Check if there are enough ranks available
+  auto required = groups.back();
   if (required > available) {
     throw std::runtime_error{"This test requests " + std::to_string(required) + " ranks, but there are only " + std::to_string(available) + " available"};
   }
 
-  // Restrict the communicator to the total required size
-  Par::restrictCommunicator(required);
-
-  // Mark all unnecessary ranks as invalid and return
+  // Check if this rank isn't needed
   if (globalRank >= required) {
+    Par::splitCommunicator(); // No group
     invalid = true;
     return;
   }
 
-  // If there was only a single participant requested, then update its info and we are done.
-  if (participants.size() == 1) {
-    auto &participant = participants.front();
-    if (!invalid) {
-      setContextFrom(participant, globalRank);
-    }
-    return;
-  }
-
-  // If there were multiple participants requested, we need to split the restricted comm
-  if (participants.size() > 1) {
-    int offset = 0;
-    for (const auto &participant : participants) {
-      const auto localRank = globalRank - offset;
-      // Check if my global rank maps to this participant
-      if (localRank < participant.size) {
-        Par::splitCommunicator(participant.name);
-        setContextFrom(participant, localRank);
-        return;
-      }
-      offset += participant.size;
-    }
-  }
+  // Find the participant this rank is assigned to
+  auto position    = std::upper_bound(groups.begin(), groups.end(), globalRank);
+  auto participant = std::distance(groups.begin(), position);
+  Par::splitCommunicator(participant);
+  setContextFrom(participants[participant]);
 }
 
 void TestContext::initializeIntraComm()
@@ -185,6 +178,8 @@ void TestContext::initializeIntraComm()
   // Establish a consistent state for all tests
   utils::IntraComm::configure(rank, size);
   utils::IntraComm::getCommunication().reset();
+  logging::setMPIRank(rank);
+  logging::setParticipant(name);
 
   if (!_initIntraComm || hasSize(1))
     return;
@@ -202,15 +197,36 @@ void TestContext::initializeIntraComm()
 
 void TestContext::initializeEvents()
 {
-  if (!invalid && _events) {
-    precice::utils::EventRegistry::instance().initialize("precice-Tests", "", _contextComm->comm);
+  if (invalid) {
+    return;
   }
+  // Always initialize the events
+  auto &er = precice::profiling::EventRegistry::instance();
+  er.initialize(name, rank, size);
+  if (_events) { // Enable them if they are requested
+    er.setMode(precice::profiling::Mode::All);
+    er.setDirectory("./precice-profiling");
+  } else {
+    er.setMode(precice::profiling::Mode::Off);
+  }
+  er.startBackend();
 }
 
 void TestContext::initializePetsc()
 {
   if (!invalid && _petsc) {
-    precice::utils::Petsc::initialize(nullptr, nullptr, _contextComm->comm);
+    precice::utils::Petsc::initialize(_contextComm->comm);
+  }
+}
+
+void TestContext::initializeGinkgo()
+{
+  if (!invalid && _ginkgo) {
+    int    argc = 0;
+    char **argv;
+#ifndef PRECICE_NO_GINKGO
+    precice::device::Ginkgo::initialize(&argc, &argv);
+#endif
   }
 }
 
@@ -256,7 +272,7 @@ std::string TestContext::describe() const
     return "This test context is invalid!";
 
   std::ostringstream os;
-  os << "Test context";
+  os << "Test context of " << testing::getFullTestName();
   if (name.empty()) {
     os << " is unnamed";
   } else {
@@ -277,5 +293,4 @@ std::string TestContext::describe() const
   return os.str();
 }
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

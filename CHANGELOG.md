@@ -2,6 +2,178 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 3.1.2
+
+- Fixed incorrect handling of compositional coupling involving an implicit scheme. Explicit schemes now run after the implicit scheme has reached convergence, correctly receive data of the final iteration.
+
+## 3.1.1
+
+- Added missing checks for incorrect Participant names in M2N and coupling-scheme. (https://github.com/precice/precice/pull/1995)
+- Fixed skipping initial mapping when data contains only zeros in parallel. (https://github.com/precice/precice/pull/1999)
+
+## 3.1.0
+
+- Added warnings when using invalid options inside log configuration files. (https://github.com/precice/precice/pull/1956)
+- Changed the output of `precice-profiling analyze` to be sorted by event name. (https://github.com/precice/precice/pull/1953)
+- Fixed a bug where reading from the end of the time window can trigger an assertion. (https://github.com/precice/precice/pull/1982)
+- Fixed bug when using log configuration files with invalid options. (https://github.com/precice/precice/pull/1956)
+- Fixed oversubscription errors when running tests. (https://github.com/precice/precice/pull/1960)
+- Fixed too strict check on allowed mapping types when combining serial and parallel participants. (https://github.com/precice/precice/pull/1964)
+- Improved numerical accuracy of time handling for simulations with many time steps or time windows, using separate Kahan sums for time-window start and window progress. (https://github.com/precice/precice/pull/1954)
+- Replaced boost.filesystem with `std::filesystem`. (https://github.com/precice/precice/pull/1972)
+
+## 3.0.0
+
+- Added API method `getMaxTimeStepSize()`, replacing return values and simplifying usability of `advance(double dt)` and `initialize()`. (https://github.com/precice/precice/pull/1623)
+- Added CMake presets for simpler configuration. (https://github.com/precice/precice/pull/1452)
+- Added Wendland's compactly supported C2 and C4 RBF functions. (https://github.com/precice/precice/pull/1378)
+- Added `<mapping:rbf>` alias defaulting to the `rbf-pum-direct`. (https://github.com/precice/precice/pull/1616)
+- Added `precicef_get_version_information_` to Fortran bindings. (https://github.com/precice/precice/pull/1487)
+- Added a `scaled-consistent-volume` mapping constraint in order to scale by volumetric primitives. (https://github.com/precice/precice/pull/1387)
+- Added a mapping configuration subtag `executor` to specify where and how RBF data mappings should be computed: `cpu` (default), `cuda`, `hip`, or `openmp`. (https://github.com/precice/precice/pull/1630)
+- Added a new mixed convergence measure `absolute-or-relative-convergence-measure`. (https://github.com/precice/precice/pull/1862)
+- Added a warning for empty IQN matrix, but keep the simulation going. This allows to start from a zero initial state that only later changes (e.g., an opening valve in a flow simulation) (https://github.com/precice/precice/pull/1895)
+- Added an optional preconditioner to the Aitken underrelaxation acceleration. (https://github.com/precice/precice/pull/1379)
+- Added check for duplicated `<exchange/>` tags. (https://github.com/precice/precice/pull/1467)
+- Added communication of substeps data for waveform coupling. A new attribute `substeps` in the `exchange` tag allows activating and deactivating this additional communication. `substeps` defaults to `false`, since not yet all acceleration schemes support this feature. This default may change once preCICE is fully ported to handling waveforms.  See https://github.com/precice/precice/issues/1825 for details. (https://github.com/precice/precice/pull/1664)
+- Added compactly supported Wendland C8 basis function. (https://github.com/precice/precice/pull/1871)
+- Added configuration option for participants waiting for each other in finalize: `<precice-configuration wait-in-finalize="1"/>`. (https://github.com/precice/precice/pull/1840)
+- Added default values for the IQN-ILS and IQN-IMVJ configuration options `initial-relaxation`, `max-used-iterations`, `time-windows-reused`, `filter`, and `preconditioner`. (https://github.com/precice/precice/pull/1754)
+- Added dependency versions to the CMake output. (https://github.com/precice/precice/pull/1430)
+- Added descriptive errors when providing incorrect mesh or data names. (https://github.com/precice/precice/pull/1588)
+- Added efficient bulk functions `setMeshEdges|Triangles|Quads|Tetrahedra` for setting connectivity based on an array of vertex IDs. (https://github.com/precice/precice/pull/1322)
+- Added error message when attempting to initialize data on a directly-accessed mesh, which is not available before initialization. (https://github.com/precice/precice/pull/1592)
+- Added error messages for inconsistent argument sizes. (https://github.com/precice/precice/pull/1641)
+- Added experimental support for building preCICE with Ginkgo. (https://github.com/precice/precice/pull/1630)
+- Added experimental, serial implementations for `axial-geometric-multiscale` and `radial-geometric-multiscale` consistent mapping types for 1D-3D geometric multiscale. (https://github.com/precice/precice/pull/1439)
+- Added gradient data to constant and Aitken underrelaxation. (https://github.com/precice/precice/pull/1373)
+- Added gradient related API functions to native Fortran and C bindings. (https://github.com/precice/precice/pull/1374)
+- Added partition of unity RBF mapping as a more efficient alternative to existing RBF mapping for large cases. The mapping can be configured using `<mapping:rbf-pum-direct ... > <basis-function:... /> </mapping:rbf-pum-direct>`. (https://github.com/precice/precice/pull/1483)
+- Added preprocessing of mesh connectivity, which removes duplicates and completes hierarchical connectivity, if required. (https://github.com/precice/precice/pull/1494)
+- Added sample generation from write-data of substeps that result from subcycling, allowing higher-order B-spline interpolation. (https://github.com/precice/precice/pull/1671)
+- Added support for a single participant to use multiple coupling schemes with different time-window-sizes. This currently doesn't work with actions. (https://github.com/precice/precice/pull/1705)
+- Added support for higher-order B-spline interpolation (based on multiple samples in current window). (https://github.com/precice/precice/pull/1422)
+- Added support for implicit coupling schemes without convergence measures, which always iterate `max-iterations` times per time window. Not defining convergence measures now requires `max-iterations` to be defined. (https://github.com/precice/precice/pull/1841)
+- Added support for multiple data sets in the Aitken underrelaxation acceleration. (https://github.com/precice/precice/pull/1379)
+- Added support for using constant underrelaxation with waveforms. (https://github.com/precice/precice/pull/1794)
+- Added support for waveform interpolation with multi coupling. (https://github.com/precice/precice/pull/1445)
+- Added support for waveform iterations for the serial-explicit coupling. The `second` participant can now use higher-order time interpolation. (https://github.com/precice/precice/pull/1602)
+- Added support to include preCICE as CMake subproject. (https://github.com/precice/precice/pull/1615)
+- Added tag `min-iterations` to coupling schemes, which allows defining a minimal amount of iterations before convergence measures are taken into account. (https://github.com/precice/precice/pull/1841)
+- Added tool `precice-profiling` to post-process the generated profiling files. (https://github.com/precice/precice/pull/1419)
+- Added warning if subcycling over multiple windows introduces time drift leading to very small maximum time step sizes. See #1866 for details. (https://github.com/precice/precice/pull/1867)
+- Added warnings for `scaled-consistent` mappings unable to uphold their conservation constraint. (https://github.com/precice/precice/pull/1697)
+- Added waveform interpolation also for serial coupling. A serial coupling scheme now allows interpolation for both participants. (https://github.com/precice/precice/pull/1352)
+- Allowed `initialize=true` for send and write data of both participants in serial coupling schemes (consistently with parallel coupling schemes). (https://github.com/precice/precice/pull/1367)
+- Changed data samples containing only 0 to be skipped when mapping samples during `initialize`. This prevents mapping samples when using `<exchange ... initialize="false" />`. (https://github.com/precice/precice/pull/1742)
+- Changed API function `getMaxTimeStepSize()` to return `dt = 0.0` if called after `final advance(dt)` (https://github.com/precice/precice/pull/1906)
+- Changed API function `readData(...)` such that it may only be called after `initialize()` (https://github.com/precice/precice/pull/1906)
+- Changed API function `readData(...)` to only accept `relativeReadTime = 0.0`, if called after final `advance(dt)` (i.e. not `isCouplingOngoing()`) (https://github.com/precice/precice/pull/1906)
+- Changed API function `writeData(...)` such that it may only be called before the final `advance(dt)` (i.e. not isCouplingOngoing()) (https://github.com/precice/precice/pull/1906)
+- Changed API to guarantee the creation of hierarchical connectivity. For example, `setMeshTriangle` now ensures necessary edges exist internally. (https://github.com/precice/precice/pull/1322)
+- Changed API to use names instead of ids for meshes and data. Functions now accept a mesh name instead of a mesh id, and a mesh and data name instead of a data id. (https://github.com/precice/precice/pull/1588)
+- Changed C++ API from pointers to `precice::span`, which is forward-compatible with `std::span`. Every provided span contains an associated size, which is required to be correctly sized. (https://github.com/precice/precice/pull/1641)
+- Changed CMake to hide non-API symbols by default, significantly reducing binary size. (https://github.com/precice/precice/pull/1498)
+- Changed PETSc detection to rely solely on pkg-config. `PETSC_DIR` and `PETSC_ARCH` are no longer used to infer possible locations of the `PETSc.pc` file. (https://github.com/precice/precice/pull/1547)
+- Changed `waveform-degree="1"` to be default and time interpolation to non-experimental (no need to use `experimental="true"` anymore). Note on explicit schemes: Depending on the scheme for some participants `waveform-degree="1"` technically leads to a zeroth order interpolation. (https://github.com/precice/precice/pull/1684)
+- Changed argument `relativeReadTime` to be mandatory in `readData()`, use `0` to get the current point in time and `getMaxTimeStepSize()` to get the end of the time window. (https://github.com/precice/precice/pull/1622)
+- Changed data and mesh names in solverdummy configuration to match naming conventions. (https://github.com/precice/precice/pull/1548)
+- Changed default values of `rbf-pum` to 50 vertices per cluster and a relative overlap of 0.15. (https://github.com/precice/precice/pull/1872)
+- Changed direct-mesh access to be non-experimental. (https://github.com/precice/precice/pull/1740)
+- Changed error to warning when trying to add a zero-value column to `V` matrix in QN-acceleration. (https://github.com/precice/precice/pull/1863)
+- Changed execution order of schemes per participant to explicit schemes in configured order, followed by one optional implicit scheme. (https://github.com/precice/precice/pull/1462)
+- Changed internal time handling to a Kahan accumulator, preventing issues combining `max-time` with a small `time-windows-size` or when subcycling. (https://github.com/precice/precice/pull/1933 https://github.com/precice/precice/pull/1934)
+- Changed read mapping to be conditional during data initialization. This has a minor influence on some events being triggered and avoids performing unnecessary mappings. See #834. (https://github.com/precice/precice/pull/1404)
+- Changed storage so that it does not build the B-spline interpolant when reading from existing timestamps. (https://github.com/precice/precice/pull/1837)
+- Changed the data API to taking `precice::span`, reducing the API to `readData`, `writeData`, and `writeGradientData`. Sizes are checked at the API boundary and are required to be consistent. (https://github.com/precice/precice/pull/1636)
+- Changed the initial guess for global-iterative mappings to reset to zero after each completed time window. (https://github.com/precice/precice/pull/1660)
+- Changed the minimum supported C++ version from 14 to 17. The API only requires to be compiled with C++ 11. (https://github.com/precice/precice/pull/1413)
+- Changed the partition-of-unity mapping to only create a single cluster, if the desired number of vertices per cluster is smaller than the local number of vertices. (https://github.com/precice/precice/pull/1736)
+- Disabled the default PETSc signal handler in case preCICE needs to initialize PETSc. (https://github.com/precice/precice/pull/1434)
+- Fixed *init* export written at the end of `initialize`. (https://github.com/precice/precice/pull/1796)
+- Fixed CMake to correctly require Eigen version 3.3.7. (https://github.com/precice/precice/pull/1618)
+- Fixed `nearest-projection` mapping behavior to map to the closest primitive instead of the highest-dimensional primitive available. (https://github.com/precice/precice/pull/1351)
+- Fixed `precice-tools check` not displaying errors if the logger is disabled in the checked config. (https://github.com/precice/precice/pull/1477)
+- Fixed a crash when using `precice-tools check` to check configurations that use PETSc-based RBF mappings. (https://github.com/precice/precice/pull/1578)
+- Fixed bug for increasing time window size with participant first method and waveform relaxation by adding a corresponding check to prevent wrong usage. See https://github.com/precice/precice/pull/1770 for details. (https://github.com/precice/precice/pull/1789)
+- Fixed deadlock in two-level initialization, which occurs if ranks share vertices, but only one of the ranks actually needs the vertices (or any) to compute the mapping. (https://github.com/precice/precice/pull/1847)
+- Fixed missing error on mismatched closing XML tags (https://github.com/precice/precice/pull/1574)
+- Fixed missing include path for C-bindings when using preCICE via pkg-config directly from the build directory. (https://github.com/precice/precice/pull/1931)
+- Fixed preconditioners dividing by zero in case of coupling data always being zero and not changing over time. (https://github.com/precice/precice/pull/1910)
+- Fixed remapping of a time windows initial data sample in implicit coupling schemes. (https://github.com/precice/precice/pull/1899)
+- Fixed scaled-consistent mapping constraints with an output integral of zero to dividing by zero. (https://github.com/precice/precice/pull/1697)
+- Fixed subcycling when combining an implicit coupling scheme with any other coupling scheme. (https://github.com/precice/precice/pull/1705)
+- Fixed the Fortran API to use lowercase `id` in functions setting mesh vertices. (https://github.com/precice/precice/pull/1624)
+- Fixed the faulty conflict while using `no-restart` mode for restart and `always-build-jacobian` mode at the same time in IQN-IMVJ acceleration. (https://github.com/precice/precice/pull/1856)
+- Fixed the formula of the `residual-relative-convergence-measure` in the documentation. (https://github.com/precice/precice/pull/1769)
+- Fixed the threshold value for truncation in SVD for IQN-IMVJ using SVD-restart. (https://github.com/precice/precice/pull/1815)
+- Improved error messages of unknown tags and attributes in the configuration. (https://github.com/precice/precice/pull/1573)
+- Improved parallel single-level initialization significantly by optimizing communication map creation. (https://github.com/precice/precice/pull/1830)
+- Improved the computation of the owner rank for shared vertices between ranks in parallel computations, leading to a significant speed-up of the two-level initialization. (https://github.com/precice/precice/pull/1849)
+- Improved the runtime of `readData` by implementing a cache for the computations in the BSpline interpolation. (https://github.com/precice/precice/pull/1765)
+- Moved `precice::getVersionInformation()` to `precice/Tooling.hpp`. (https://github.com/precice/precice/pull/1473)
+- Moved the configuration attribute `dimensions` from the `solver-interface` XML tag to the `mesh` tag. (https://github.com/precice/precice/pull/1742)
+- Moved the configuration to enable synchronization from the root tag to profiling: `<profiling synchronize="true" />`. (https://github.com/precice/precice/pull/1743)
+- Removed *final* export written in `finalize`. (https://github.com/precice/precice/pull/1796)
+- Removed API function `initializeData()`, as data initialization is now performed in `initialize()`. Initial data has to be written before `initialize()`, directly after defining the mesh. (https://github.com/precice/precice/pull/1350)
+- Removed API functions `hasMesh` and `hasData`. (https://github.com/precice/precice/pull/1741)
+- Removed API functions `isReadDataAvailable()` and is `isWriteDataRequired()` as waveforms eliminate their use-cases. (https://github.com/precice/precice/pull/1362)
+- Removed Broyden acceleration. (https://github.com/precice/precice/pull/1735)
+- Removed `ComputeCurvatureAction` action. (https://github.com/precice/precice/pull/1614)
+- Removed `getMeshID()`, `getDataID()`, and `getDataIDs()` as we directly use names now. (https://github.com/precice/precice/pull/1588)
+- Removed `getMeshVertexIDsFromPositions` and `getMeshVertices`. (https://github.com/precice/precice/pull/1556)
+- Removed `min-iteration-convergence-measure`, use the new `min-iterations` tag or `max-iterations` instead. (https://github.com/precice/precice/pull/1841)
+- Removed `precice::constants` from the C++ API and the C and Fortran bindings. (https://github.com/precice/precice/pull/1487)
+- Removed `valid-digits` from `<time-window-size ... />`. preCICE now always uses the internal numerical precision for checking if the end of the time window has been reached. (https://github.com/precice/precice/pull/1882)
+- Removed action `ScaleByDtAction`. (https://github.com/precice/precice/pull/1403)
+- Removed action timings `read-mapping-prior`, `write-mapping-prior`, and `on-time-window-complete-post`. (https://github.com/precice/precice/pull/1614)
+- Removed callback functions `vertexCallback` and `postAction` from `PythonAction` interface. (https://github.com/precice/precice/pull/1614)
+- Removed dead-axis option from rbf-pum mappings. (https://github.com/precice/precice/pull/1872)
+- Removed deprecated API function `precicef_ongoing_()` in fortran bindings. (https://github.com/precice/precice/pull/1537)
+- Removed deprecated API functions `mapWriteDataFrom()` and `mapReadDataTo()` (https://github.com/precice/precice/pull/1222)
+- Removed deprecated XML attributes related to normals: `<mesh flip-normals="0">` and `<export:vtk normals="1"/>`. (https://github.com/precice/precice/pull/1475)
+- Removed deprecated XML tags using terminology master and slave. (https://github.com/precice/precice/pull/1474)
+- Removed deprecated action timings `regular-prior`, `regular-post`, `on-exchange-prior`, and `on-exchange-post`. (https://github.com/precice/precice/pull/1614)
+- Removed deprecated aliases `<intra-comm:mpi-single />` and `<m2n:mpi-singleports />`. (https://github.com/precice/precice/pull/1781)
+- Removed deprecated mapping timings, as there is no use-case anymore. (https://github.com/precice/precice/pull/1536)
+- Removed edge IDs from the API: `setMeshEdge` now returns nothing, all `setMeshXWithEdges` variants were removed from the API, and `setMeshTriangle|Quad` now accepts vertex IDs instead of edge IDs. (https://github.com/precice/precice/pull/1322)
+- Removed extrapolation feature from coupling schemes. Initial guess for acceleration is now always constant extrapolation (i.e. use converged results from end of last time window). (https://github.com/precice/precice/pull/1738)
+- Removed internally shipped dependency `nlohmann/json`. (https://github.com/precice/precice/pull/1759)
+- Removed second order extrapolation in acceleration scheme due to unclear use-case at high maintenance cost. Please contact us if you have a use-case that requires this feature. (https://github.com/precice/precice/pull/1503)
+- Removed support for multiple implicit coupling-schemes per participant. Use `<coupling-scheme:multi>` instead. (https://github.com/precice/precice/pull/1462)
+- Removed symbolic link `binprecice`. The executable is now called `precice-tools`. (https://github.com/precice/precice/pull/1595)
+- Removed the API stubs for `hasToEvaluateSurrogateModel()` and `hasToEvaluateFineModel()`, which were part of the deprecated Manifold mapping. (https://github.com/precice/precice/pull/1472)
+- Removed the XML configuration tag `<solver-interface>` and moved all attributes to the parent `<precice-configuration>` tag. (https://github.com/precice/precice/pull/1662)
+- Removed the `preallocation` option in the `rbf-global-iterative` mapping configuration. (https://github.com/precice/precice/pull/1758)
+- Removed the ability to install tests via `PRECICE_InstallTest`. (https://github.com/precice/precice/pull/1499)
+- Removed the deprecated `vtk` exporter fallback for parallel participants. If a parallel participant will try to use the `vtk` exporter, it will cause an error and ask the user to change the exporter to a compatible one (like vtu). (https://github.com/precice/precice/pull/1784)
+- Removed trailing space in watchpoint, convergence, and iteration log files. (https://github.com/precice/precice/pull/1620)
+- Renamed CMake variables consistently. (https://github.com/precice/precice/pull/1744)
+- Renamed `<mapping:rbf... use-qr-decomposition="true" />` to `<mapping:rbf-global-direct ... > <basis-function:... /> </mapping:rbf-global-direct>` (https://github.com/precice/precice/pull/1550)
+- Renamed `SolverInterface` to `Participant` in the API. (https://github.com/precice/precice/pull/1643)
+- Renamed `isGradientDataRequired()` to `requiresGradientDataFor()` (https://github.com/precice/precice/pull/1487)
+- Renamed `isMeshConnectivityRequired()` to `requiresMeshConnectivityFor()` (https://github.com/precice/precice/pull/1487)
+- Renamed `waveform-order` to `waveform-degree` and moved this attribute from `read-data` to `<data:scalar ... />`, respectively `<data:vector ... />`. (https://github.com/precice/precice/pull/1714)
+- Renamed precice-events to precice-profiling in configuration, tests, and scripts (https://github.com/precice/precice/pull/1787)
+- Renamed the `<m2n:... />` attributes `from` and `to` to `acceptor` and `connector`. (https://github.com/precice/precice/pull/1683)
+- Renamed the `scaled-consistent` mapping constraint to `scaled-consistent-surface`. (https://github.com/precice/precice/pull/1387)
+- Renamed the direct-mesh API function `getMeshVerticesAndIDs` to `getMeshVertexIDsAndCoordinates`. (https://github.com/precice/precice/pull/1740)
+- Renamed the primary API header files `SolverInterface.hpp` to `precice.hpp`, `SolverInterfaceC.h` to `preciceC.h`, and `SolverInterfaceFortran.hpp` to `preciceFortran.hpp`. (https://github.com/precice/precice/pull/1654)
+- Replaced `getDimensions()` with `getMeshDimensions(meshName)` and `getDataDimensions(meshName, dataName)`. (https://github.com/precice/precice/pull/1631)
+- Replaced `isActionRequired()` and `markActionFulfilled()` with explicit calls `requiresInitialData()`, `requiresReadingCheckpoint()`, and `requiresWritingCheckpoint()`. Invoking these functions is a promise to preCICE that the caller fulfills the requirement. (https://github.com/precice/precice/pull/1487)
+- Replaced all `<mapping:rbf... />` related tags. RBF mappings are now defined in terms of the applied solver (`<mapping:rbf-global-direct ...` or `<mapping:rbf-global-iterative`) and the applied basis function is a subtag of the solver. Users should use the additionally added auto selection of an appropriate solver as follows: `<mapping:rbf  ...> <basis-function:... /> </mapping:rbf>`. Example: `<mapping:compact-polynomial-c0 direction="read" from= ... support-radius="0.3" />` would become `<mapping:rbf  direction="read" from= ...> <basis-function:compact-polynomial-c0 support-radius="0.3" /> </mapping:rbf>` (https://github.com/precice/precice/pull/1550)
+- Replaced tag `<use-mesh />` with dedicated tags for `<receive-mesh />` and `<provide-mesh />`. (https://github.com/precice/precice/pull/1450)
+- Replaced the Eigen-based QR decomposition by a Cholesky decomposition for s.p.d. data mapping matrices, resulting in a signifacant speed-up (affecting Gaussian RBF, compact polynomial RBFs and inverse multiquadrics). (https://github.com/precice/precice/pull/1372)
+- Replaced the internal profiling tool to improve error-robustness and reduce complexity. (https://github.com/precice/precice/pull/1419)
+- Updated fmt to version 10.2.1 (https://github.com/precice/precice/pull/1928)
+
+## 2.5.1
+
+- Changed error to warning in case of an empty IQN matrix, keeping the simulation going. This allows to start from a zero initial state that only later changes (e.g., an opening valve in a flow simulation). (https://github.com/precice/precice/pull/1895)
+- Changed error to warning when trying to add a zero-value column to `V` matrix in QN-acceleration (Backport of https://github.com/precice/precice/pull/1863)
+- Fixed compatibility with libxml version 2.12.0. (https://github.com/precice/precice/pull/1886)
+- Fixed missing include path for C-bindings when using preCICE via pkg-config directly from the build directory. (Backport of https://github.com/precice/precice/pull/1931)
+
 ## 2.5.0
 
 - Added 3D support to Linear Cell Interpolation mapping (`<mapping:linear-cell-interpolation >/`) using tetrahedra. (https://github.com/precice/precice/pull/1337)
@@ -109,7 +281,7 @@ All notable changes to this project will be documented in this file. For future 
 - Deprecated the `flip-normals` attribute of meshes. This is not functional anymore.
 - Deprecated vertex normals in the `vertexCallback()` of the python actions. preCICE will pass `None` if the normal parameter is defined.
 - Fixed FindNumPy using fallback of `find_path`.
-- Fixed FindPETSc to also find PETSc if the include directory is in CPATH, which occured with some versions of `pkg-config`.
+- Fixed FindPETSc to also find PETSc if the include directory is in CPATH, which occurred with some versions of `pkg-config`.
 - Fixed socket communication to fail without a network connection.
 - Fixed wrong error in tightly converging QN coupling. (Issue #976)
 - Implement a simplified interface to query index trees of meshes.
@@ -156,7 +328,7 @@ All notable changes to this project will be documented in this file. For future 
 - Fixed an occasional issue solving the system matrix in PETSc-based RBF mappings.
 - Fixed boost log_level issues on MacOS.
 - Fixed compilation error emitted by intel compilers.
-- Fixed cryptic assertion for forgetting the max-iterations tag. Now max-iterations is enforced in the configuration. 
+- Fixed cryptic assertion for forgetting the max-iterations tag. Now max-iterations is enforced in the configuration.
 - Fixed indexing bug in solverdummies.
 - Fixed input checks for data access functions.
 - Fixed interleaved assertion output.
@@ -164,7 +336,7 @@ All notable changes to this project will be documented in this file. For future 
 - Fixed parsing error on systems without locales installed. This fixes issues when running preCICE in minimal docker containers.
 - Fixed syntax of the Fortran function `precicef_get_mesh_vertex_size_`, which lead to incorrect name de-mangling.
 - Fixed the data type and precision in exported VTK files.
-- Fixed two wrong assertions in QR factorization, which did not allow meshes with only a single partition. 
+- Fixed two wrong assertions in QR factorization, which did not allow meshes with only a single partition.
 - Improved checks of configuration related to data access.
 - Improved compiler compatibility of assertion.
 - Improved the error message for not exchanging data over the same mesh used for convergence measures.
@@ -189,7 +361,7 @@ All notable changes to this project will be documented in this file. For future 
 - Added check to prevent `<use-mesh>` from the same participant.
 - Added control flow checks to C bingings.
 - Added many tests for the communication abstraction.
-- Added option to make a convergence measure strict. It has to converge then and leads to a premature simulation stop if not. 
+- Added option to make a convergence measure strict. It has to converge then and leads to a premature simulation stop if not.
 - Added parallel support for Eigen RBF mapping.
 - Added platform-specific defaults of the loopback interface name to the `network` attribute of socket connections.
 - Added reset of written data 0 in `advance()` to simplify detection of missing write data calls.
@@ -204,8 +376,8 @@ All notable changes to this project will be documented in this file. For future 
 - Changed the CMake FindNumPy module to only consider information based on the selected python interpreter.
 - Changed the minimum required PETSc version to 3.12, which delivers consistent results across platforms.
 - Disabled tests based on MPIPorts and MPISinglePorts when using Open MPI.
-- Enabled RBF-based tests in partiton unit-tests and serial integration tests.
-- Extended iteration logging by total and dropped quasi-Newton columns. 
+- Enabled RBF-based tests in partition unit-tests and serial integration tests.
+- Extended iteration logging by total and dropped quasi-Newton columns.
 - Extended title headers of convergence and iteration files by measure abbreviation.
 - Fixed MPIPorts and MPISinglePorts not always closing ports.
 - Fixed SocketCommunication setting up a port and writing connection info even if there are no requesters.
@@ -223,7 +395,7 @@ All notable changes to this project will be documented in this file. For future 
 - Improved readability of relative convergence measure INFO logs.
 - Refactored `com::Communication` handling of rank adjustments.
 - Refactored `cplscheme::BaseCouplingScheme` and derived classes. Introduce `cplscheme::BiCouplingScheme`.
-- Refactored `mesh::BoundingBox` into seperate class.
+- Refactored `mesh::BoundingBox` into separate class.
 - Removed `m2n:mpi-single`, which never worked outside tests.
 - Removed convergence file logging for min-iterations convergence measure.
 - Removed deprecated and untested Manifold Mapping. API functions `hasToEvaluateSurrogateModel` and `hasToEvaluateFineModel` remain as nop stubs.
@@ -274,7 +446,7 @@ All notable changes to this project will be documented in this file. For future 
 - Improved efficiency of nearest projection mapping of matching meshes using lazy generation of index trees.
 - Introduced preCICE-MATLAB bindings (https://github.com/precice/precice/pull/494, https://github.com/precice/precice/pull/580) and provided them in [`precice/matlab-bindings`](https://github.com/precice/matlab-bindings).
 - Merged the `SolverInterface::configure()` into the `SolverInterface` constructors. They now have a second parameter for the configuration file.
-- Moved Fortan 2003 bindings (`src/precice/bindings/f2003`) and solverdummy (`tools/solverdummy/f2003`) to a separate repository.
+- Moved Fortran 2003 bindings (`src/precice/bindings/f2003`) and solverdummy (`tools/solverdummy/f2003`) to a separate repository.
 - Refactored and made two-level initialization configurable through `"use-two-level-init"` in `m2n`.
 - Refactored the XML documentation generation out of the `xml::XMLAttribute` and `xml::XMLTag` classes into `xml/Printer.[c/h]pp`.
 - Released finalized version of python bindings in independent repository: [`precice/python-bindings`](https://github.com/precice/python-bindings). Package is named [`pyprecice`](https://github.com/precice/python-bindings/blob/3b9aec6c529814e6904a6a4697cf92388d4c4bf0/setup.py#L18) and supports the preCICE version >= 2.0.0.
@@ -392,7 +564,7 @@ All notable changes to this project will be documented in this file. For future 
 
 ## 1.4.1
 
-- Bug in re-partitioning fixed, occured for OpenFOAM and empty ranks in parallel.
+- Bug in re-partitioning fixed, occurred for OpenFOAM and empty ranks in parallel.
 
 ## 1.4.0
 - The python modules are now proper packages tracking dependencies etc.
@@ -445,7 +617,7 @@ All notable changes to this project will be documented in this file. For future 
 - Added an (experimental) Fortran 2003 solver dummy.
 
 ## 1.3.0
-- Update of build procedure for python bindings (see [`precice/src/bindings/python/README.md`](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md) for instructions). Note: you do not have to add `PySolverInterface.so` to `PYTHONPATH` manually anymore, if you want to use it in your adapter. Python should be able to find it automatically.   
+- Update of build procedure for python bindings (see [`precice/src/bindings/python/README.md`](https://github.com/precice/precice/blob/develop/src/precice/bindings/python/README.md) for instructions). Note: you do not have to add `PySolverInterface.so` to `PYTHONPATH` manually anymore, if you want to use it in your adapter. Python should be able to find it automatically.
 - Make naming of log files consistent, following the pattern `precice-SOLVERNAME-logtype.log`, example: `precice-FLUID-eventTimings.log`
 - Enable boost.geometry based preallocation. Speeds up initialization of PetRBF based mapping.
 - Actions can now specify a `MeshRequirement`, such as the `ScaleByAreaAction`.
@@ -458,7 +630,7 @@ All notable changes to this project will be documented in this file. For future 
 - Build system:
   - Make `python=off` default.
 - Building with Conda:
-  - The helper scripts are now placed in the directory `tools/conda_building`. All the terms refering to `Anaconda` have been changed to `Conda`.
+  - The helper scripts are now placed in the directory `tools/conda_building`. All the terms referring to `Anaconda` have been changed to `Conda`.
 - Sending data exchange is now fully asynchronous, so that the sending participant never waits for the receiving one.
 - Rename `src/precice/adapters` to `src/precice/bindings`
 - adding `libprefix` option in scons build process to allow for non-standard library paths
@@ -485,7 +657,7 @@ All notable changes to this project will be documented in this file. For future 
 - Converted all tests to the new, boost test based, unit testing framework.
 - Removed the `tarch` legacy library.
 - Use `boost::signal2` for implement observer pattern for the Mesh class.
-- Add contributer guidelines.
+- Add contributor guidelines.
 
 
 ## 1.0.3

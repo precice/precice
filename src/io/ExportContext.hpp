@@ -14,6 +14,9 @@ struct ExportContext {
   // @brief Path to export location.
   std::string location;
 
+  // @brief Name of the mesh to export.
+  std::string meshName;
+
   // @brief Exporting every N time windows (equals -1 when not set).
   int everyNTimeWindows = -1;
 

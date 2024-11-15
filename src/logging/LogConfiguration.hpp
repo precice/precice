@@ -21,6 +21,12 @@ struct BackendConfiguration {
 
   /// Sets on option, overwrites default values.
   void setOption(std::string key, std::string value);
+
+  /// Checks if an option is usable
+  static bool isValidOption(std::string key);
+
+  /// Sets weather the sink is enabled or disabled
+  void setEnabled(bool enabled);
 };
 
 /// Holds the configuration of the logging system
@@ -36,18 +42,26 @@ void setupLogging(std::string const &logConfigFile = "log.conf");
 void setupLogging(LoggingConfiguration configs, bool enabled = true);
 
 /// Sets the current MPI rank as a logging attribute
+/// @see GlobalLoggingConfig
 void setMPIRank(int const rank);
 
 /// Sets the name of the current participant as a logging attribute
+/// @see GlobalLoggingConfig
 void setParticipant(std::string const &name);
 
 /// Locks the configuration, ignoring any future calls to setupLogging()
+/// @see GlobalLoggingConfig
 void lockConf();
 
-/** The global lock for the log configuration.
- * This variable is always initialized to false and can only be modified by calling lockConf()
- */
-extern bool _precice_logging_config_lock;
+/// Holds global logging data in a central place
+struct GlobalLoggingConfig {
+  std::string participant{""};
+  int         rank{-1};
+  bool        locked{false};
+};
+
+/// Returns the global logging configuration
+GlobalLoggingConfig &getGlobalLoggingConfig();
 
 } // namespace logging
 } // namespace precice

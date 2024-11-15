@@ -14,11 +14,9 @@
 #include "testing/Testing.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Vertex;
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
 
 using namespace precice;
 using precice::testing::TestContext;
@@ -75,38 +73,20 @@ void testWatchPoint(const TestContext & context,
   }
 
   using precice::testing::operator""_dataID;
-  PtrData                 doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
-  PtrData                 vectorData   = mesh->createData("VectorData", 2, 1_dataID);
-  auto &                  doubleValues = doubleData->values();
-  auto &                  vectorValues = vectorData->values();
-  mesh->allocateDataValues();
+  PtrData                 doubleData = mesh->createData("DoubleData", 1, 0_dataID);
+  PtrData                 vectorData = mesh->createData("VectorData", 2, 1_dataID);
 
   if (context.size > 1) {
     if (context.isPrimary()) {
-      doubleValues(0) = 1.0;
-      doubleValues(1) = 2.0;
-      vectorValues(0) = 1.0;
-      vectorValues(1) = 2.0;
-      vectorValues(2) = 3.0;
-      vectorValues(3) = 4.0;
+      doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1.0, 2.0}}));
+      vectorData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1.0, 2.0, 3.0, 4.0}}));
     } else {
-      doubleValues(0) = 2.0;
-      doubleValues(1) = 3.0;
-      vectorValues(0) = 3.0;
-      vectorValues(1) = 4.0;
-      vectorValues(2) = 5.0;
-      vectorValues(3) = 6.0;
+      doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{2.0, 3.0}}));
+      vectorData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{3.0, 4.0, 5.0, 6.0}}));
     }
   } else {
-    doubleValues(0) = 1.0;
-    doubleValues(1) = 2.0;
-    doubleValues(2) = 3.0;
-    vectorValues(0) = 1.0;
-    vectorValues(1) = 2.0;
-    vectorValues(2) = 3.0;
-    vectorValues(3) = 4.0;
-    vectorValues(4) = 5.0;
-    vectorValues(5) = 6.0;
+    doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1., 2., 3.}}));
+    vectorData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1., 2., 3., 4., 5., 6.}}));
   }
 
   std::string filename0("precice-WatchPointTest-timeseries-0.log");
@@ -127,30 +107,15 @@ void testWatchPoint(const TestContext & context,
     // Change data (next timestep)
     if (context.size > 1) {
       if (context.isPrimary()) {
-        doubleValues(0) = 2.0;
-        doubleValues(1) = 3.0;
-        vectorValues(0) = 2.0;
-        vectorValues(1) = 3.0;
-        vectorValues(2) = 4.0;
-        vectorValues(3) = 5.0;
+        doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{2., 3.}}));
+        vectorData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{2., 3., 4., 5.}}));
       } else {
-        doubleValues(0) = 3.0;
-        doubleValues(1) = 4.0;
-        vectorValues(0) = 4.0;
-        vectorValues(1) = 5.0;
-        vectorValues(2) = 6.0;
-        vectorValues(3) = 7.0;
+        doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{3., 4.}}));
+        vectorData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{4., 5., 6., 7.}}));
       }
     } else {
-      doubleValues(0) = 2.0;
-      doubleValues(1) = 3.0;
-      doubleValues(2) = 4.0;
-      vectorValues(0) = 2.0;
-      vectorValues(1) = 3.0;
-      vectorValues(2) = 4.0;
-      vectorValues(3) = 5.0;
-      vectorValues(4) = 6.0;
-      vectorValues(5) = 7.0;
+      doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{2., 3., 4.}}));
+      vectorData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{2., 3., 4., 5., 6., 7.}}));
     }
 
     // Write output again
@@ -289,19 +254,13 @@ BOOST_AUTO_TEST_CASE(Reinitialize)
   mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector2d(1.0, 2.0));
   mesh->createEdge(v1, v2);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
-  PtrData vectorData   = mesh->createData("VectorData", 2, 1_dataID);
-  auto &  doubleValues = doubleData->values();
-  auto &  vectorValues = vectorData->values();
-  mesh->allocateDataValues();
+  PtrData doubleData = mesh->createData("DoubleData", 1, 0_dataID);
+  PtrData vectorData = mesh->createData("VectorData", 2, 1_dataID);
 
   // v1, v2 carry data 1
   // v2 and later v3 carry data 2
-  doubleValues.setConstant(1.0);
-  doubleValues(2) = 2.0;
-  vectorValues.setConstant(1.0);
-  vectorValues(4) = 2.0;
-  vectorValues(5) = 2.0;
+  doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1., 1., 2.}}));
+  vectorData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1., 1., 1., 1., 2., 2.}}));
 
   std::string filename0("precice-WatchPointTest-reinit-0.log");
   std::string filename1("precice-WatchPointTest-reinit-1.log");
@@ -326,15 +285,8 @@ BOOST_AUTO_TEST_CASE(Reinitialize)
     mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
     mesh->createEdge(v3, v4);
     mesh->index().clear();
-    mesh->allocateDataValues();
-    doubleValues.setConstant(1.0);
-    doubleValues(2) = 2.0;
-    doubleValues(3) = 2.0;
-    vectorValues.setConstant(1.0);
-    vectorValues(4) = 2.0;
-    vectorValues(5) = 2.0;
-    vectorValues(6) = 2.0;
-    vectorValues(7) = 2.0;
+    doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1., 1., 2., 2.}}));
+    vectorData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1., 1., 1., 1., 2., 2., 2., 2.}}));
 
     // Re-Initialize
     watchpoint0.initialize();
@@ -396,18 +348,12 @@ BOOST_AUTO_TEST_CASE(VolumetricInterpolation2D)
   mesh->createEdge(v3, v1);
   mesh->createTriangle(v1, v2, v3);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
-  PtrData vectorData   = mesh->createData("VectorData", 2, 1_dataID);
-  auto &  doubleValues = doubleData->values();
-  auto &  vectorValues = vectorData->values();
-  mesh->allocateDataValues();
+  PtrData doubleData = mesh->createData("DoubleData", 1, 0_dataID);
+  PtrData vectorData = mesh->createData("VectorData", 2, 1_dataID);
 
   // Data is (1,1,2) for the scalar, and same for each vector component.
-  doubleValues.setConstant(1.0);
-  doubleValues(2) = 2.0;
-  vectorValues.setConstant(1.0);
-  vectorValues(4) = 2.0;
-  vectorValues(5) = 2.0;
+  doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1., 1., 2., 2.}}));
+  vectorData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1., 1., 1., 1., 2., 2., 2., 2.}}));
 
   std::string filename0("precice-WatchPointTest-volumetric2d-0.log");
   std::string filename1("precice-WatchPointTest-volumetric2d-1.log");
@@ -477,15 +423,10 @@ BOOST_AUTO_TEST_CASE(VolumetricInterpolation3D)
 
   mesh->createTetrahedron(v1, v2, v3, v4);
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
-  auto &  doubleValues = doubleData->values();
-  mesh->allocateDataValues();
+  PtrData doubleData = mesh->createData("DoubleData", 1, 0_dataID);
 
   // Data is (1,1,2) for the scalar, and same for each vector component.
-  doubleValues(0) = 1.0;
-  doubleValues(1) = 2.0;
-  doubleValues(2) = 3.0;
-  doubleValues(3) = 4.0;
+  doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1., 2., 3., 4.}}));
 
   std::string filename0("precice-WatchPointTest-volumetric3d-0.log");
   std::string filename1("precice-WatchPointTest-volumetric3d-1.log");
@@ -574,14 +515,10 @@ BOOST_AUTO_TEST_CASE(VolumetricParallel)
   } break;
   }
 
-  PtrData doubleData   = mesh->createData("DoubleData", 1, 0_dataID);
-  auto &  doubleValues = doubleData->values();
-  mesh->allocateDataValues();
+  PtrData doubleData = mesh->createData("DoubleData", 1, 0_dataID);
 
   // Data is (1, 2, 3, 4) on the tetra, other ranks agree on their subset
-  for (int i = 0; i <= context.rank; ++i) {
-    doubleValues(i) = i + 1;
-  }
+  doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd(context.rank + 1).setLinSpaced(1., context.rank + 1)));
 
   std::string filename0("precice-WatchPointTest-volumetricParallel-0.log");
   bool        isClosest;

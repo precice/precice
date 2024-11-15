@@ -1,9 +1,10 @@
+#include <boost/test/unit_test_log.hpp>
 #ifndef PRECICE_NO_MPI
 
 #include "helpers.hpp"
 #include "testing/Testing.hpp"
 
-#include "precice/SolverInterface.hpp"
+#include "precice/precice.hpp"
 
 /// Test to run simple "do nothing" coupling between two solvers.
 void runTestExplicit(std::string const &configurationFileName, TestContext const &context)
@@ -13,25 +14,29 @@ void runTestExplicit(std::string const &configurationFileName, TestContext const
   int    timesteps = 0;
   double time      = 0.0;
 
-  SolverInterface couplingInterface(context.name, configurationFileName, 0, 1);
+  Participant couplingInterface(context.name, configurationFileName, 0, 1);
 
-  //was necessary to replace pre-defined geometries
-  if (context.isNamed("SolverOne") && couplingInterface.hasMesh("MeshOne")) {
-    MeshID meshID = couplingInterface.getMeshID("MeshOne");
-    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+  double pos[] = {0, 0, 0, 1, 1, 1};
+  int    vids[2];
+
+  // was necessary to replace pre-defined geometries
+  if (context.isNamed("SolverOne")) {
+    auto meshName = "MeshOne";
+    BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName) == 3);
+    couplingInterface.setMeshVertices(meshName, pos, vids);
   }
-  if (context.isNamed("SolverTwo") && couplingInterface.hasMesh("Test-Square")) {
-    MeshID meshID = couplingInterface.getMeshID("Test-Square");
-    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(0.0, 0.0, 0.0).data());
-    couplingInterface.setMeshVertex(meshID, Eigen::Vector3d(1.0, 0.0, 0.0).data());
+  if (context.isNamed("SolverTwo")) {
+    auto meshName = "Test-Square";
+    BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName) == 3);
+    couplingInterface.setMeshVertices(meshName, pos, vids);
   }
 
-  BOOST_TEST(couplingInterface.getDimensions() == 3);
-  double dt = couplingInterface.initialize();
+  couplingInterface.initialize();
+  double dt = couplingInterface.getMaxTimeStepSize();
   while (couplingInterface.isCouplingOngoing()) {
     time += dt;
-    dt = couplingInterface.advance(dt);
+    couplingInterface.advance(dt);
+    dt = couplingInterface.getMaxTimeStepSize();
     timesteps++;
   }
   couplingInterface.finalize();

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "precice/Exceptions.hpp"
 #include "utils/fmt.hpp"
 
 #define PRECICE_LOG_LOCATION     \
@@ -12,16 +13,28 @@
 
 #define PRECICE_INFO(...) _log.info(PRECICE_LOG_LOCATION, precice::utils::format_or_error(__VA_ARGS__))
 
-#define PRECICE_ERROR(...)                                                          \
-  do {                                                                              \
-    _log.error(PRECICE_LOG_LOCATION, precice::utils::format_or_error(__VA_ARGS__)); \
-    std::exit(-1);                                                                  \
+#define PRECICE_ERROR(...) ::precice::logging::logErrorAndThrow<::precice::Error>(_log, PRECICE_LOG_LOCATION, precice::utils::format_or_error(__VA_ARGS__))
+
+#define PRECICE_WARN_IF(condition, ...) \
+  do {                                  \
+    if (condition) {                    \
+      PRECICE_WARN(__VA_ARGS__);        \
+    }                                   \
+  } while (false)
+
+#define PRECICE_INFO_IF(condition, ...) \
+  do {                                  \
+    if (condition) {                    \
+      PRECICE_INFO(__VA_ARGS__);        \
+    }                                   \
   } while (false)
 
 #define PRECICE_CHECK(check, ...) \
-  if (!(check)) {                 \
-    PRECICE_ERROR(__VA_ARGS__);   \
-  }
+  do {                            \
+    if (!(check)) {               \
+      PRECICE_ERROR(__VA_ARGS__); \
+    }                             \
+  } while (false)
 
 // Debug logging is disabled in release (NDEBUG) builds by default.
 // To enable it anyhow, enable the CMake option PRECICE_RELEASE_WITH_DEBUG_LOG.
@@ -32,18 +45,27 @@
 
 #ifdef PRECICE_NO_DEBUG_LOG
 
+#include "utils/ignore.hpp"
+
 #define PRECICE_DEBUG(...) \
-  {                        \
-  }
+  ::precice::utils::ignore(__VA_ARGS__)
+
+#define PRECICE_DEBUG_IF(...) \
+  ::precice::utils::ignore(__VA_ARGS__)
+
 #define PRECICE_TRACE(...) \
-  {                        \
-  }
+  ::precice::utils::ignore(__VA_ARGS__)
 
 #else // PRECICE_NO_DEBUG_LOG
 
-#include "utils/ArgumentFormatter.hpp"
-
 #define PRECICE_DEBUG(...) _log.debug(PRECICE_LOG_LOCATION, precice::utils::format_or_error(__VA_ARGS__))
+
+#define PRECICE_DEBUG_IF(condition, ...) \
+  do {                                   \
+    if (condition) {                     \
+      PRECICE_DEBUG(__VA_ARGS__);        \
+    }                                    \
+  } while (false)
 
 #endif // ! PRECICE_NO_DEBUG_LOG
 
@@ -56,13 +78,15 @@
 
 #ifdef PRECICE_NO_TRACE_LOG
 
+#include "utils/ignore.hpp"
+
 #define PRECICE_TRACE(...) \
-  {                        \
-  }
+  ::precice::utils::ignore(__VA_ARGS__)
 
 #else // PRECICE_NO_TRACE_LOG
 
 #include "logging/Tracer.hpp"
+#include "utils/ArgumentFormatter.hpp"
 
 // Do not put do {...} while (false) here, it will destroy the _tracer_ right after creation
 #define PRECICE_TRACE(...)                                       \

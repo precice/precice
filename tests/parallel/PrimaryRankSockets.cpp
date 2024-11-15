@@ -2,7 +2,7 @@
 
 #include "testing/Testing.hpp"
 
-#include <precice/SolverInterface.hpp>
+#include <precice/precice.hpp>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
@@ -17,10 +17,10 @@ BOOST_AUTO_TEST_CASE(PrimaryRankSockets)
   } else {
     myMeshName = "SerialMesh";
   }
-  precice::SolverInterface interface(context.name, context.config(), context.rank, context.size);
-  int                      meshID      = interface.getMeshID(myMeshName);
-  double                   position[2] = {0, 0};
-  interface.setMeshVertex(meshID, position);
+  precice::Participant interface(context.name, context.config(), context.rank, context.size);
+  auto                 meshName    = myMeshName;
+  double               position[2] = {0, 0};
+  interface.setMeshVertex(meshName, position);
   interface.initialize();
   interface.advance(1.0);
   interface.finalize();

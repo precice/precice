@@ -3,8 +3,7 @@
 #include <utility>
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace logging {
+namespace precice::logging {
 
 Tracer::Tracer(
     Logger &    log,
@@ -19,5 +18,4 @@ Tracer::~Tracer()
   _log.trace(_loc, std::string{"Leaving "}.append(_loc.func));
 }
 
-} // namespace logging
-} // namespace precice
+} // namespace precice::logging

@@ -2,8 +2,7 @@
 #include <Eigen/Core>
 #include "utils/EigenIO.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 int Vertex::getDimensions() const
 {
@@ -45,5 +44,4 @@ std::ostream &operator<<(std::ostream &os, Vertex const &v)
   return os << "POINT (" << v.getCoords().transpose().format(utils::eigenio::wkt()) << ')';
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

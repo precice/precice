@@ -15,12 +15,11 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 WatchPoint::WatchPoint(
     Eigen::VectorXd    pointCoords,
@@ -58,7 +57,7 @@ void WatchPoint::initialize()
 {
   PRECICE_TRACE();
 
-  if (_mesh->vertices().size() > 0) {
+  if (_mesh->nVertices() > 0) {
     auto match        = _mesh->index().findCellOrProjection(_point, 4);
     _shortestDistance = match.polation.distance();
     _interpolation    = std::make_unique<mapping::Polation>(std::move(match.polation));
@@ -100,7 +99,7 @@ void WatchPoint::exportPointData(
   // Export watch point coordinates
   Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);
   for (const auto &elem : _interpolation->getWeightedElements()) {
-    coords += elem.weight * _mesh->vertices()[elem.vertexID].getCoords();
+    coords += elem.weight * _mesh->vertex(elem.vertexID).getCoords();
   }
   if (coords.size() == 2) {
     _txtWriter.writeData("Coordinate", Eigen::Vector2d(coords));
@@ -132,7 +131,7 @@ void WatchPoint::getValue(
 {
   int                    dim = _mesh->getDimensions();
   Eigen::VectorXd        temp(dim);
-  const Eigen::VectorXd &values = data->values();
+  const Eigen::VectorXd &values = data->timeStepsStorage().last().sample.values;
   for (const auto &elem : _interpolation->getWeightedElements()) {
     int offset = elem.vertexID * dim;
     for (int i = 0; i < dim; i++) {
@@ -147,11 +146,10 @@ void WatchPoint::getValue(
     double &       value,
     mesh::PtrData &data)
 {
-  const Eigen::VectorXd &values = data->values();
+  const Eigen::VectorXd &values = data->timeStepsStorage().last().sample.values;
   for (const auto &elem : _interpolation->getWeightedElements()) {
     value += elem.weight * values[elem.vertexID];
   }
 }
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

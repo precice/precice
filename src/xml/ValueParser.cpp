@@ -6,8 +6,7 @@
 #include <stdexcept>
 #include <vector>
 
-namespace precice {
-namespace xml {
+namespace precice::xml {
 
 namespace {
 constexpr static const char *PARSING_LOCALE = "en_US.UTF-8";
@@ -59,9 +58,6 @@ void readValueSpecific(const std::string &rawValue, Eigen::VectorXd &value)
   boost::split(
       components, rawValue, [](char c) { return c == ';'; }, boost::algorithm::token_compress_on);
   const int size = components.size();
-  if (size < 2 || size > 3) {
-    throw std::runtime_error{"The value \"" + rawValue + "\" is not a 2D or 3D vector."};
-  }
 
   Eigen::VectorXd vec(size);
   for (int i = 0; i != size; ++i) {
@@ -70,5 +66,4 @@ void readValueSpecific(const std::string &rawValue, Eigen::VectorXd &value)
   value = vec;
 }
 
-} // namespace xml
-} // namespace precice
+} // namespace precice::xml

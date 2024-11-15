@@ -3,8 +3,7 @@
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
 {
@@ -33,14 +32,11 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
     tags.push_back(tag);
   }
 
-  auto attrLocation = XMLAttribute<std::string>(ATTR_LOCATION, "")
+  auto attrLocation = XMLAttribute<std::string>(ATTR_LOCATION, ".")
                           .setDocumentation("Directory to export the files to.");
 
   auto attrEveryNTimeWindows = makeXMLAttribute(ATTR_EVERY_N_TIME_WINDOWS, 1)
                                    .setDocumentation("preCICE does an export every X time windows. Choose -1 for no exports.");
-
-  auto attrNormals = makeXMLAttribute(ATTR_NORMALS, false)
-                         .setDocumentation("Deprecated");
 
   auto attrEveryIteration = makeXMLAttribute(ATTR_EVERY_ITERATION, false)
                                 .setDocumentation("Exports in every coupling (sub)iteration. For debug purposes.");
@@ -48,7 +44,6 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
   for (XMLTag &tag : tags) {
     tag.addAttribute(attrLocation);
     tag.addAttribute(attrEveryNTimeWindows);
-    tag.addAttribute(attrNormals);
     tag.addAttribute(attrEveryIteration);
     parent.addSubtag(tag);
   }
@@ -58,10 +53,6 @@ void ExportConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
     xml::XMLTag &                    tag)
 {
-  if (tag.getBooleanAttributeValue(ATTR_NORMALS)) {
-    PRECICE_WARN("You explicitly requested to export the vertex normals. "
-                 "This is deprecated, no longer functional, and the attribute will be removed in a future release.");
-  }
   if (tag.getNamespace() == TAG) {
     ExportContext econtext;
     econtext.location          = tag.getStringAttributeValue(ATTR_LOCATION);
@@ -72,5 +63,4 @@ void ExportConfiguration::xmlTagCallback(
   }
 }
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

@@ -7,8 +7,7 @@
 #include "MPISinglePortsCommunication.hpp"
 #include "com/SharedPointer.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 MPISinglePortsCommunicationFactory::MPISinglePortsCommunicationFactory(std::string addressDirectory)
     : _addressDirectory(std::move(addressDirectory))
 {
@@ -26,7 +25,6 @@ std::string MPISinglePortsCommunicationFactory::addressDirectory()
 {
   return _addressDirectory;
 }
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

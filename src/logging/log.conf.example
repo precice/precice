@@ -7,7 +7,7 @@
 
 # This can produce a really large debug.log
 [FullDebugOutputToFile]
-Filter = 
+Filter =
 Type = file
 Output = debug.log
 Enabled = False

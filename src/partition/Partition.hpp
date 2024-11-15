@@ -16,13 +16,12 @@ namespace partition {
  * @brief Abstract base class for partitions.
  *
  * A Partition describes how a mesh is decomposed among multiple ranks and
- * is associated to a "use-mesh" a participant holds. This class holds the
+ * is associated to a "provide-mesh" or "receive-mesh" a participant holds. This class holds the
  * structures that describe the decomposition (if not the mesh) and compute
  * them.
  *
- * A Partition can come in two flavors: Either defined by a participants
- * (provided=true in the config) or received from another participant
- * (from=... in the config).
+ * A Partition can come in two flavors: Either defined by a participant
+ * (provide-mesh) or received from another participant (receive-mesh).
  *
  * Access to the associated mesh, to both mappings (from and to this mesh),
  * and to an m2n communication to another participant is necessary.

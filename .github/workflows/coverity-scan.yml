@@ -10,7 +10,7 @@ on:
 jobs:
   latest:
     runs-on: ubuntu-latest
-    container: 'precice/ci-ubuntu-2004:latest'
+    container: 'precice/ci-ubuntu-2204:latest'
     steps:
       - name: Download Coverity Build Tool
         run: |
@@ -21,7 +21,7 @@ jobs:
           TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
 
       - name: Checkout preCICE
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: 'precice'
 

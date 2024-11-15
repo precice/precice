@@ -5,15 +5,7 @@
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace mesh {
-class Edge;
-class Triangle;
-} // namespace mesh
-} // namespace precice
-
-namespace precice {
-namespace action {
+namespace precice::action {
 
 class ScaleByAreaAction : public Action {
 public:
@@ -36,16 +28,10 @@ public:
       const mesh::PtrMesh &mesh,
       Scaling              scaling);
 
-  virtual ~ScaleByAreaAction() {}
-
   /**
    * @brief Scales data on mesh nodes according to selected scaling type.
    */
-  virtual void performAction(
-      double time,
-      double timeStepSize,
-      double computedTimeWindowPart,
-      double timeWindowSize);
+  void performAction() final override;
 
 private:
   logging::Logger _log{"action::ScaleByAreaAction"};
@@ -55,5 +41,4 @@ private:
   Scaling _scaling;
 };
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action

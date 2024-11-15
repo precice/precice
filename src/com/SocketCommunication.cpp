@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <boost/asio.hpp>
-#include <boost/filesystem.hpp>
+
+#include <filesystem>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
@@ -9,13 +10,12 @@
 #include "SocketCommunication.hpp"
 #include "SocketRequest.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
 #include "utils/span_tools.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 
 namespace asio = boost::asio;
 
@@ -104,7 +104,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
       PRECICE_ASSERT(_sockets.count(requesterRank) == 0,
                      "Rank {} has already been connected. Duplicate requests are not allowed.", requesterRank);
 
-      _sockets[requesterRank] = socket;
+      _sockets[requesterRank] = std::move(socket);
       // send and receive expect a rank from the acceptor perspective.
       // Thus we need to apply given rankOffset before passing it to send/receive.
       // This is essentially the inverse of adjustRank().
@@ -184,7 +184,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
 
       int requesterRank;
       asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
-      _sockets[requesterRank] = socket;
+      _sockets[requesterRank] = std::move(socket);
     }
 
     acceptor.close();
@@ -243,7 +243,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
 
     int acceptorRank = -1;
     asio::read(*socket, asio::buffer(&acceptorRank, sizeof(int)));
-    _sockets[0] = socket; // should be acceptorRank instead of 0, likewise all communication below
+    _sockets[0] = std::move(socket); // should be acceptorRank instead of 0, likewise all communication below
 
     send(requesterCommunicatorSize, 0);
 
@@ -288,7 +288,7 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
         tcp::resolver             resolver(*_ioService);
         tcp::resolver::iterator   endpoint_iterator = resolver.resolve(query);
         boost::system::error_code error             = asio::error::host_not_found;
-        boost::asio::connect(*socket, endpoint_iterator, error);
+        boost::asio::connect(*socket, std::move(endpoint_iterator), error);
 
         _isConnected = not error;
 
@@ -301,7 +301,7 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
       }
 
       PRECICE_DEBUG("Requested connection to {}, rank = {}", address, acceptorRank);
-      _sockets[acceptorRank] = socket;
+      _sockets[acceptorRank] = std::move(socket);
       send(requesterRank, acceptorRank); // send my rank
 
     } catch (std::exception &e) {
@@ -331,10 +331,10 @@ void SocketCommunication::closeConnection()
 
     try {
       socket.second->shutdown(Socket::shutdown_send);
+      socket.second->close();
     } catch (std::exception &e) {
       PRECICE_WARN("Socket shutdown failed with system error: {}", e.what());
     }
-    socket.second->close();
   }
 
   _isConnected = false;
@@ -377,12 +377,12 @@ void SocketCommunication::send(precice::span<const int> itemsToSend, Rank rankRe
 void SocketCommunication::prepareEstablishment(std::string const &acceptorName,
                                                std::string const &requesterName)
 {
-  using namespace boost::filesystem;
+  using namespace std::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
   PRECICE_DEBUG("Creating connection exchange directory {}", dir.generic_string());
   try {
     create_directories(dir);
-  } catch (const boost::filesystem::filesystem_error &e) {
+  } catch (const std::filesystem::filesystem_error &e) {
     PRECICE_WARN("Creating directory for connection info failed with filesystem error: {}", e.what());
   }
 }
@@ -390,12 +390,12 @@ void SocketCommunication::prepareEstablishment(std::string const &acceptorName,
 void SocketCommunication::cleanupEstablishment(std::string const &acceptorName,
                                                std::string const &requesterName)
 {
-  using namespace boost::filesystem;
+  using namespace std::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
   PRECICE_DEBUG("Removing connection exchange directory {}", dir.generic_string());
   try {
     remove_all(dir);
-  } catch (const boost::filesystem::filesystem_error &e) {
+  } catch (const std::filesystem::filesystem_error &e) {
     PRECICE_WARN("Cleaning up connection info failed with filesystem error {}", e.what());
   }
 }
@@ -481,7 +481,7 @@ void SocketCommunication::send(int itemToSend, Rank rankReceiver)
 
   rankReceiver = adjustRank(rankReceiver);
 
-  PRECICE_ASSERT(rankReceiver >= 0, rankReceiver)
+  PRECICE_ASSERT(rankReceiver >= 0, rankReceiver);
   PRECICE_ASSERT(isConnected());
 
   try {
@@ -777,7 +777,7 @@ std::string SocketCommunication::getIpAddress()
   auto pos = std::find_if(interfaces.begin(), interfaces.end(),
                           [&](Interface const &interface) { return interface.name == _networkName; });
   if (pos == interfaces.end()) {
-    PRECICE_DEBUG("There  NOTHING");
+    PRECICE_DEBUG("There's NOTHING");
     std::ostringstream err;
     err << "Cannot find network interface \"" << _networkName << "\". Available interfaces are: ";
     for (const auto &interface : interfaces) {
@@ -795,5 +795,4 @@ std::string SocketCommunication::getIpAddress()
 #endif
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

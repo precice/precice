@@ -2,13 +2,11 @@
 
 #include <utility>
 
-namespace precice {
-namespace partition {
+namespace precice::partition {
 
 Partition::Partition(mesh::PtrMesh mesh)
     : _mesh(std::move(mesh))
 {
 }
 
-} // namespace partition
-} // namespace precice
+} // namespace precice::partition

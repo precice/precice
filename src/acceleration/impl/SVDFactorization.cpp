@@ -7,9 +7,7 @@
 
 #include "utils/IntraComm.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 SVDFactorization::SVDFactorization(
     double            eps,
@@ -21,10 +19,12 @@ SVDFactorization::SVDFactorization(
 
 void SVDFactorization::initialize(
     PtrParMatrixOps parOps,
-    int             globalRows)
+    int             globalRowsA,
+    int             globalRowsB)
 {
   _parMatrixOps = std::move(parOps);
-  _globalRows   = globalRows;
+  _globalRowsA  = globalRowsA;
+  _globalRowsB  = globalRowsB;
   _initialized  = true;
 }
 
@@ -75,6 +75,7 @@ void SVDFactorization::reset()
 
 void SVDFactorization::computeQRdecomposition(
     Matrix const &A,
+    int           globalRows,
     Matrix &      Q,
     Matrix &      R)
 {
@@ -102,7 +103,7 @@ void SVDFactorization::computeQRdecomposition(
     Vector col = A.col(colIndex);
 
     // if system is quadratic; discard
-    if (_globalRows == colIndex) {
+    if (globalRows == colIndex) {
       PRECICE_WARN("The matrix that is about to be factorized is quadratic, i.e., the new column cannot be orthogonalized; discard.");
       return;
     }
@@ -170,7 +171,7 @@ void SVDFactorization::computeQRdecomposition(
       if (rho_orth * theta <= rho0 + omega * norm_coefficients) {
         // exit to fail if too many iterations
         if (its >= 4) {
-          PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded.");
+          PRECICE_WARN("Matrix Q is not sufficiently orthogonal. Failed to orthogonalize new column after 4 iterations. New column will be discarded.");
           orthogonalized = false;
           termination    = true;
         }
@@ -290,18 +291,11 @@ int SVDFactorization::cols()
   return _cols;
 }
 
-int SVDFactorization::rows()
-{
-  return _rows;
-}
-
 Rank SVDFactorization::rank()
 {
   return _cols;
 }
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl
 
 #endif // PRECICE_NO_MPI

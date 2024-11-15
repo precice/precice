@@ -10,11 +10,14 @@
 #include "com/Communication.hpp"
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 #include "utils/span_tools.hpp"
 
 namespace precice {
+
+extern bool syncMode;
+
 namespace utils {
 
 Rank                  IntraComm::_rank            = -1;
@@ -71,12 +74,9 @@ double IntraComm::l2norm(const Eigen::VectorXd &vec)
 
   PRECICE_ASSERT(_communication.get() != nullptr);
   PRECICE_ASSERT(_communication->isConnected());
-  double localSum2  = 0.0;
-  double globalSum2 = 0.0;
 
-  for (int i = 0; i < vec.size(); i++) {
-    localSum2 += vec(i) * vec(i);
-  }
+  double globalSum2 = 0.0;
+  double localSum2  = vec.squaredNorm();
 
   // localSum is modified, do not use afterwards
   allreduceSum(localSum2, globalSum2);
@@ -110,12 +110,9 @@ double IntraComm::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2)
   PRECICE_ASSERT(_communication.get() != nullptr);
   PRECICE_ASSERT(_communication->isConnected());
   PRECICE_ASSERT(vec1.size() == vec2.size(), vec1.size(), vec2.size());
-  double localSum  = 0.0;
-  double globalSum = 0.0;
 
-  for (int i = 0; i < vec1.size(); i++) {
-    localSum += vec1(i) * vec2(i);
-  }
+  double globalSum = 0.0;
+  double localSum  = vec1.dot(vec2);
 
   // localSum is modified, do not use afterwards
   allreduceSum(localSum, globalSum);
@@ -335,6 +332,55 @@ void IntraComm::broadcast(double &value)
     // Broadcast (receive) value.
     _communication->broadcast(value, 0);
   }
+}
+
+void IntraComm::broadcast(int &value)
+{
+  PRECICE_TRACE();
+
+  if (not _isPrimaryRank && not _isSecondaryRank) {
+    return;
+  }
+
+  PRECICE_ASSERT(_communication.get() != nullptr);
+  PRECICE_ASSERT(_communication->isConnected());
+
+  if (_isPrimaryRank) {
+    // Broadcast (send) value.
+    _communication->broadcast(value);
+  }
+
+  if (_isSecondaryRank) {
+    // Broadcast (receive) value.
+    _communication->broadcast(value, 0);
+  }
+}
+
+void IntraComm::synchronize()
+{
+  PRECICE_TRACE();
+
+  if (precice::syncMode) {
+    barrier();
+  }
+}
+
+bool IntraComm::willSynchronize()
+{
+  return precice::syncMode;
+}
+
+void IntraComm::barrier()
+{
+  PRECICE_TRACE();
+
+  if (!isParallel())
+    return;
+
+  int local = 1;
+  int sum   = -1;
+  allreduceSum(local, sum);
+  PRECICE_ASSERT(sum == _size);
 }
 
 } // namespace utils

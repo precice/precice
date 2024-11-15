@@ -3,12 +3,9 @@
 #include "impl/BasisFunctions.hpp"
 #include "mapping/Mapping.hpp"
 #include "mesh/Filter.hpp"
-#include "precice/types.hpp"
-#include "utils/Event.hpp"
+#include "precice/impl/Types.hpp"
 
 namespace precice {
-extern bool syncMode;
-
 namespace mapping {
 
 /**
@@ -34,10 +31,11 @@ public:
    * @param[in] xDead, yDead, zDead Deactivates mapping along an axis
    */
   RadialBasisFctBaseMapping(
-      Constraint              constraint,
-      int                     dimensions,
-      RADIAL_BASIS_FUNCTION_T function,
-      std::array<bool, 3>     deadAxis);
+      Constraint                     constraint,
+      int                            dimensions,
+      const RADIAL_BASIS_FUNCTION_T &function,
+      std::array<bool, 3>            deadAxis,
+      InitialGuessRequirement        mappingType);
 
   virtual ~RadialBasisFctBaseMapping() = default;
 
@@ -80,14 +78,15 @@ private:
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctBaseMapping(
-    Constraint              constraint,
-    int                     dimensions,
-    RADIAL_BASIS_FUNCTION_T function,
-    std::array<bool, 3>     deadAxis)
-    : Mapping(constraint, dimensions),
+    Constraint                     constraint,
+    int                            dimensions,
+    const RADIAL_BASIS_FUNCTION_T &function,
+    std::array<bool, 3>            deadAxis,
+    InitialGuessRequirement        mappingType)
+    : Mapping(constraint, dimensions, false, mappingType),
       _basisFunction(function)
 {
-  if (constraint == SCALEDCONSISTENT) {
+  if (isScaledConsistent()) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   } else {
@@ -103,9 +102,8 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::setDeadAxis(std::array<
   PRECICE_ASSERT(getDimensions() <= 3);
   PRECICE_ASSERT(_deadAxis.empty());
   std::copy_n(deadAxis.begin(), getDimensions(), std::back_inserter(_deadAxis));
-  if (getDimensions() == 2 && deadAxis[2]) {
-    PRECICE_WARN("Setting the z-axis to dead on a 2-dimensional problem has no effect. Please remove the respective mapping's \"z-dead\" attribute.");
-  }
+  PRECICE_WARN_IF(getDimensions() == 2 && deadAxis[2],
+                  "Setting the z-axis to dead on a 2-dimensional problem has no effect. Please remove the respective mapping's \"z-dead\" attribute.");
   PRECICE_CHECK(std::any_of(_deadAxis.begin(), _deadAxis.end(), [](const auto &ax) { return ax == false; }), "You cannot set all axes to dead for an RBF mapping. Please remove one of the respective mapping's \"x-dead\", \"y-dead\", or \"z-dead\" attributes.");
 }
 
@@ -136,7 +134,7 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     otherMesh  = output(); // local
   }
 
-  if (otherMesh->vertices().empty())
+  if (otherMesh->empty())
     return; // Ranks not at the interface should never hold interface vertices
 
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
@@ -146,7 +144,7 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     bb.expandBy(_basisFunction.getSupportRadius());
 
     auto vertices = filterMesh->index().getVerticesInsideBox(bb);
-    std::for_each(vertices.begin(), vertices.end(), [&filterMesh](size_t v) { filterMesh->vertices()[v].tag(); });
+    std::for_each(vertices.begin(), vertices.end(), [&filterMesh](size_t v) { filterMesh->vertex(v).tag(); });
   } else {
     filterMesh->tagAll();
   }
@@ -184,7 +182,7 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   // Enlarge bb by support radius
   bb.expandBy(_basisFunction.getSupportRadius());
   auto vertices = mesh->index().getVerticesInsideBox(bb);
-  std::for_each(vertices.begin(), vertices.end(), [&mesh](size_t v) { mesh->vertices()[v].tag(); });
+  std::for_each(vertices.begin(), vertices.end(), [&mesh](size_t v) { mesh->vertex(v).tag(); });
 }
 } // namespace mapping
 } // namespace precice

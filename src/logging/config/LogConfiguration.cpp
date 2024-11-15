@@ -3,8 +3,7 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace config {
+namespace precice::config {
 
 LogConfiguration::LogConfiguration(
     xml::XMLTag &parent)
@@ -18,12 +17,15 @@ LogConfiguration::LogConfiguration(
   tagLog.setDocumentation("Configures logging sinks based on Boost log.");
 
   auto attrLogEnabled = makeXMLAttribute("enabled", true)
-                            .setDocumentation("Enables logging");
+                            .setDocumentation("Enables the creation of log sinks. "
+                                              "Disable sinks if you prefer to handle preCICE logs in your application using boost.log.");
+
   tagLog.addAttribute(attrLogEnabled);
 
   XMLTag tagSink(*this, "sink", XMLTag::OCCUR_ARBITRARY);
   tagSink.setDocumentation("Contains the configuration of a single log sink, which allows fine grained control of what to log where. "
-                           "Available attributes in filter and format strings are `%Severity%`, `%ColorizedSeverity%`, `%File%`, `%Line%`, `%Function%`, `%Module%`, `%Rank%`, and `%Participant%`");
+                           "Available attributes in filter and format strings are `%TimeStamp%`, `%Runtime%`, `%Severity%`, `%ColorizedSeverity%`, `%File%`, `%Line%`, `%Function%`, `%Module%`, `%Rank%`, and `%Participant%`. "
+                           "The boolean attribute `%preCICE%` is `true` for all log entries originating from preCICE.");
   auto attrType = XMLAttribute<std::string>("type")
                       .setDocumentation("The type of sink.")
                       .setOptions({"stream", "file"})
@@ -59,13 +61,13 @@ void LogConfiguration::xmlTagCallback(
 {
   PRECICE_TRACE(tag.getFullName());
 
-  if (tag.getName() == "sink" and tag.getBooleanAttributeValue("enabled")) {
+  if (tag.getName() == "sink") {
     precice::logging::BackendConfiguration config;
     config.setOption("type", tag.getStringAttributeValue("type"));
     config.setOption("output", tag.getStringAttributeValue("output"));
     config.setOption("filter", tag.getStringAttributeValue("filter"));
     config.setOption("format", tag.getStringAttributeValue("format"));
-    config.setOption("enabled", "true"); // Not needed, but correct.
+    config.setEnabled(tag.getBooleanAttributeValue("enabled"));
     _logconfig.push_back(config);
   }
 }
@@ -79,5 +81,4 @@ void LogConfiguration::xmlEndTagCallback(
     precice::logging::setupLogging(_logconfig, tag.getBooleanAttributeValue("enabled"));
 }
 
-} // namespace config
-} // namespace precice
+} // namespace precice::config

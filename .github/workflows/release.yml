@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
         - name: "Create draft release"
-          uses: softprops/action-gh-release@v1
+          uses: softprops/action-gh-release@v2
           with:
             draft: True
 
@@ -26,11 +26,11 @@ jobs:
     runs-on: ubuntu-latest
     container: '${{ matrix.TARGET }}'
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
-        TARGET: ["ubuntu:20.04", "ubuntu:21.04", "ubuntu:21.10", "ubuntu:22.04", "debian:11"]
+        TARGET: ["ubuntu:22.04", "ubuntu:24.04", "debian:12"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Generate build directory
         run: mkdir -p build
       - name: Install common dependencies
@@ -45,7 +45,7 @@ jobs:
         working-directory: build
         run: |
           cmake --version
-          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DPRECICE_PETScMapping=ON -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DPRECICE_FEATURE_PETSC_MAPPING=ON -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON ..
       - name: Compile
         working-directory: build
         run: make -j $(nproc)
@@ -61,8 +61,8 @@ jobs:
           tag: ${{ github.ref }}
 
   dockerfile:
-    name: "Release Dockerfiles"
-    needs: release-draft
+    name: "Release Dockerfile"
+    needs: package-deb
     runs-on: ubuntu-latest
     env:
         docker_username: precice
@@ -72,19 +72,19 @@ jobs:
         uses: dawidd6/action-get-tag@v1
         with:
           strip_v: true
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ env.docker_username }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push Dockerfile
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v6
         with:
           push: true
-          file: "./tools/releasing/packaging/docker/Dockerfile"
+          file: "./tools/releasing/packaging/docker/release.dockerfile"
           tags: ${{ env.docker_username }}/precice:${{ steps.tag.outputs.tag }},${{ env.docker_username }}/precice:latest
           build-args: |
-            version=v${{ steps.tag.outputs.tag }}
+            version=${{ steps.tag.outputs.tag }}

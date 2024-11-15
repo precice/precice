@@ -13,7 +13,7 @@ if command -v gh > /dev/null ; then
     if [ -f $FILE ]; then
       echo "Changelog file for PR $PR already exists."
       echo $FILE
-      exit 2 
+      exit 2
     else
       echo "Changelog file for PR $PR created."
       echo $FILE
@@ -25,5 +25,5 @@ if command -v gh > /dev/null ; then
   fi
 else
   echo "Please install GitHub CLI first: https://cli.github.com/"
-  exit 1 
+  exit 1
 fi

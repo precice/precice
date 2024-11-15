@@ -18,11 +18,19 @@ namespace io {
 /// Writes polygonal, or triangle meshes to vtk files.
 class ExportVTK : public Export {
 public:
+  ExportVTK(
+      std::string_view  participantName,
+      std::string_view  location,
+      const mesh::Mesh &mesh,
+      ExportKind        kind,
+      int               frequency,
+      int               rank,
+      int               size);
+
   /// Perform writing to VTK file
-  virtual void doExport(
-      const std::string &name,
-      const std::string &location,
-      const mesh::Mesh & mesh);
+  void doExport(int index, double time) final override;
+
+  void exportSeries() const final override;
 
   static void initializeWriting(
       std::ofstream &filestream);

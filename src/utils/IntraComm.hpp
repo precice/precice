@@ -5,8 +5,8 @@
 #include "boost/range/irange.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
-#include "utils/span.hpp"
+#include "precice/impl/Types.hpp"
+#include "precice/span.hpp"
 
 namespace precice {
 namespace logging {
@@ -78,7 +78,23 @@ public:
 
   static void broadcast(double &value);
 
+  static void broadcast(int &value);
+
   static void broadcast(precice::span<double> values);
+
+  /** Synchronizes all ranks if syncMode is enabled
+   * @see precice::syncMode
+   * @see barrier()
+   */
+  static void synchronize();
+
+  /** Does @synchronize have an effect?
+   * @see precice::syncMode
+   */
+  static bool willSynchronize();
+
+  /// Synchronizes all ranks
+  static void barrier();
 
 private:
   static logging::Logger _log;

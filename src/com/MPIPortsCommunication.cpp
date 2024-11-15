@@ -1,21 +1,20 @@
 #ifndef PRECICE_NO_MPI
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <ostream>
 #include <utility>
 
 #include "com/ConnectionInfoPublisher.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/MPIResult.hpp"
 #include "utils/String.hpp"
 #include "utils/assertion.hpp"
 
 using precice::utils::MPIResult;
 
-namespace precice {
-namespace com {
+namespace precice::com {
 MPIPortsCommunication::MPIPortsCommunication(std::string addressDirectory)
     : _addressDirectory(std::move(addressDirectory))
 {
@@ -227,9 +226,8 @@ void MPIPortsCommunication::closeConnection()
 
   for (auto &communicator : _communicators) {
     MPIResult res = MPI_Comm_disconnect(&communicator.second);
-    if (!res) {
-      PRECICE_WARN("MPI_Comm_disconnect failed with message: {}", res.message());
-    }
+    PRECICE_WARN_IF(!res,
+                    "MPI_Comm_disconnect failed with message: {}", res.message());
   }
   _communicators.clear();
 
@@ -241,12 +239,12 @@ void MPIPortsCommunication::closeConnection()
 void MPIPortsCommunication::prepareEstablishment(std::string const &acceptorName,
                                                  std::string const &requesterName)
 {
-  using namespace boost::filesystem;
+  using namespace std::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
   PRECICE_DEBUG("Creating connection exchange directory {}", dir.generic_string());
   try {
     create_directories(dir);
-  } catch (const boost::filesystem::filesystem_error &e) {
+  } catch (const std::filesystem::filesystem_error &e) {
     PRECICE_WARN("Creating directory for connection info failed with: {}", e.what());
   }
 }
@@ -254,12 +252,12 @@ void MPIPortsCommunication::prepareEstablishment(std::string const &acceptorName
 void MPIPortsCommunication::cleanupEstablishment(std::string const &acceptorName,
                                                  std::string const &requesterName)
 {
-  using namespace boost::filesystem;
+  using namespace std::filesystem;
   path dir = com::impl::localDirectory(acceptorName, requesterName, _addressDirectory);
   PRECICE_DEBUG("Removing connection exchange directory {}", dir.generic_string());
   try {
     remove_all(dir);
-  } catch (const boost::filesystem::filesystem_error &e) {
+  } catch (const std::filesystem::filesystem_error &e) {
     PRECICE_WARN("Cleaning up connection info failed with: {}", e.what());
   }
 }
@@ -276,7 +274,6 @@ int MPIPortsCommunication::rank(Rank rank)
   return 0;
 }
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

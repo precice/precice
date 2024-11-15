@@ -1,0 +1,82 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "BUILD_SHARED_LIBS": "ON"
+      }
+    },
+    {
+      "name": "production",
+      "inherits": "base",
+      "displayName": "Production release",
+      "description": "Release configuration for preCICE used in production.",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
+      }
+    },
+    {
+      "name": "production-audit",
+      "inherits": "production",
+      "displayName": "Production release with assertions and debug log",
+      "description": "Release build with assertions and debug log enabled for auditing a specific run.",
+      "cacheVariables": {
+        "PRECICE_RELEASE_WITH_ASSERTIONS": "ON",
+        "PRECICE_RELEASE_WITH_DEBUG_LOG": "ON"
+      }
+    },
+    {
+      "name": "develop",
+      "inherits": "base",
+      "displayName": "Development",
+      "description": "Development config with default settings",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wno-unused-parameter"
+      },
+      "warnings": {
+        "dev": true,
+        "deprecated": true,
+        "uninitialized": true
+      }
+    },
+    {
+      "name": "debian-package",
+      "inherits": "production",
+      "displayName": "Debian package",
+      "description": "Build for the generation of Debian packages",
+      "cacheVariables": {
+        "CMAKE_INSTALL_PREFIX": "/usr",
+        "CPACK_GENERATOR": "DEB",
+        "BUILD_TESTING": "OFF"
+      }
+    },
+    {
+      "name": "optimized-debug",
+      "inherits": "base",
+      "displayName": "Optimized debug",
+      "description": "Optimized debug build log and assertions enabled",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "PRECICE_RELEASE_WITH_ASSERTIONS": "ON",
+        "PRECICE_RELEASE_WITH_DEBUG_LOG": "ON",
+        "CMAKE_CXX_FLAGS": "-fno-omit-frame-pointer"
+      }
+    },
+    {
+      "name": "profiling",
+      "inherits": "develop",
+      "displayName": "Profiling",
+      "description": "Profiling configuration",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON",
+        "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wno-unused-parameter -fno-omit-frame-pointer"
+      }
+    }
+  ]
+}

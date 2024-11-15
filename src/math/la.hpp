@@ -5,7 +5,7 @@ namespace precice {
 namespace math {
 
 /// Sums up the components of subvectors in vector into result.
-/* Assumes vector has size k*size(result), i.e. the components of 
+/* Assumes vector has size k*size(result), i.e. the components of
  * vector are a sequence of smaller vectors with length of result.
  * @param[in] vector Vector that is summed up
  * @param[in, out] result Vector which holds the sum and also defines the block sizes.

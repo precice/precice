@@ -3,9 +3,8 @@
 #include <Eigen/Core>
 
 #include "DataContext.hpp"
+#include "cplscheme/ImplicitData.hpp"
 #include "logging/Logger.hpp"
-#include "time/SharedPointer.hpp"
-#include "time/Time.hpp"
 
 namespace precice {
 namespace impl {
@@ -22,19 +21,17 @@ public:
    *
    * @param data Data associated with this ReadDataContext.
    * @param mesh Mesh associated with this ReadDataContext.
-   * @param interpolationOrder Order of the Waveform stored by this ReadDataContext.
    */
   ReadDataContext(
       mesh::PtrData data,
-      mesh::PtrMesh mesh,
-      int           interpolationOrder = time::Time::DEFAULT_INTERPOLATION_ORDER);
+      mesh::PtrMesh mesh);
 
   /**
-   * @brief Gets _interpolationOrder of _waveform
+   * @brief Gets degree of waveform
    *
-   * @return _interpolationOrder of _waveform
+   * @return int degree of waveform
    */
-  int getInterpolationOrder() const;
+  int getWaveformDegree() const;
 
   /**
    * @brief Adds a MappingContext and the MeshContext required by the read mapping to the corresponding ReadDataContext data structures.
@@ -46,35 +43,44 @@ public:
    *
    * @note Note that read mapping contexts have to be unique and and this function may only be called once for a given ReadDataContext
    */
-  void appendMappingConfiguration(const MappingContext &mappingContext, const MeshContext &meshContext) override;
+  void appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext) override;
 
   /**
-   * @brief Samples data at a given point in time within the current time window
+   * @brief Samples data at a given point in time within the current time window for given indices
    *
-   * @param normalizedDt Point in time where waveform is sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the current time window.
+   * @param[in] vertices vertex ids
+   * @param[in] time Point in time where waveform is sampled.
+   * @param[in] values read data associated with given indices for time \ref time will be returned into this span
    */
-  Eigen::VectorXd sampleWaveformAt(double normalizedDt);
+  void readValues(::precice::span<const VertexID> vertices, double time, ::precice::span<double> values) const;
+
+  /// Are there samples to read from?
+  bool hasSamples() const;
+
+  /// Disable copy construction
+  ReadDataContext(const ReadDataContext &copy) = delete;
+
+  /// Disable assignment construction
+  ReadDataContext &operator=(const ReadDataContext &assign) = delete;
+
+  /// Move constructor, use the implicitly declared.
+  ReadDataContext(ReadDataContext &&) = default;
+  ReadDataContext &operator=(ReadDataContext &&) = default;
 
   /**
-   * @brief Initializes the _waveform as a constant function with values from _providedData.
+   * @brief Removes all toData samples from mappings
    */
-  void initializeWaveform();
+  void clearToDataFor(const cplscheme::ImplicitData &from);
 
   /**
-   * @brief Updates _waveform when moving to the next time window.
+   * @brief Trims all toData of associated mappings after the given t
+   *
+   * @param[in] t the time after which to trim data
    */
-  void moveToNextWindow();
-
-  /**
-   * @brief Stores _providedData as first sample of _waveform.
-   */
-  void storeDataInWaveform();
+  void trimToDataAfterFor(const cplscheme::ImplicitData &from, double t);
 
 private:
   static logging::Logger _log;
-
-  /// Waveform wrapped by this ReadDataContext.
-  time::PtrWaveform _waveform;
 };
 
 } // namespace impl

@@ -4,66 +4,50 @@
   <data:vector name="Data1" />
   <data:vector name="Data2" />
 
-  <mesh name="Mesh">
+  <mesh name="Mesh" dimensions="3">
     <use-data name="Data0" />
     <use-data name="Data1" />
     <use-data name="Data2" />
   </mesh>
 
   <participant name="Participant0">
-    <use-mesh name="Mesh" provide="on" />
-
+    <provide-mesh name="Mesh" />
     <write-data name="Data0" mesh="Mesh" />
-
     <read-data name="Data1" mesh="Mesh" />
   </participant>
 
   <participant name="Participant1">
-    <use-mesh name="Mesh" provide="on" />
-
+    <provide-mesh name="Mesh" />
     <write-data name="Data1" mesh="Mesh" />
-
     <read-data name="Data0" mesh="Mesh" />
     <read-data name="Data2" mesh="Mesh" />
   </participant>
 
   <participant name="Participant2">
-    <use-mesh name="Mesh" provide="on" />
-
+    <provide-mesh name="Mesh" />
     <write-data name="Data2" mesh="Mesh" />
-
     <read-data name="Data1" mesh="Mesh" />
   </participant>
 
-  <m2n:sockets from="Participant0" to="Participant1" />
-  <m2n:sockets from="Participant1" to="Participant2" />
+  <m2n:sockets acceptor="Participant0" connector="Participant1" />
+  <m2n:sockets acceptor="Participant1" connector="Participant2" />
 
   <coupling-scheme:serial-explicit>
     <participants first="Participant0" second="Participant1" />
-
     <time-window-size value="0.1" method="fixed" />
-
     <max-time value="1.0" />
-
     <max-time-windows value="10" />
-
     <exchange data="Data0" mesh="Mesh" from="Participant0" to="Participant1" />
     <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant0" />
   </coupling-scheme:serial-explicit>
 
   <coupling-scheme:serial-implicit>
     <participants first="Participant1" second="Participant2" />
-
     <time-window-size value="0.1" method="fixed" />
-
     <max-time value="1.0" />
-
     <max-time-windows value="10" />
-
     <max-iterations value="10" />
-
-    <min-iteration-convergence-measure min-iterations="3" data="Data2" mesh="Mesh" />
-
+    <min-iterations value="3" />
     <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant2" />
     <exchange data="Data2" mesh="Mesh" from="Participant2" to="Participant1" />
   </coupling-scheme:serial-implicit>

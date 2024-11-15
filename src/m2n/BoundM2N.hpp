@@ -31,12 +31,12 @@ public:
   bool        isRequesting = false;
 
 private:
-  mutable logging::Logger _log{"impl::SolverInterfaceImpl"};
+  mutable logging::Logger _log{"impl::ParticipantImpl"};
 
   /** Instructs the Primary rank wait for SecondaryRanks.
    *
    * Performs a collective operation which forces every secondary rank to sync with the Primary.
-   * 
+   *
    * @note this does nothing if the participant is running serially.
    */
   void waitForSecondaryRanks();

@@ -1,7 +1,8 @@
 #include "testing/SerialCouplingSchemeFixture.hpp"
+#include "acceleration/Acceleration.hpp"
+#include "acceleration/SharedPointer.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 bool SerialCouplingSchemeFixture::isImplicitCouplingScheme(cplscheme::SerialCouplingScheme &cplscheme)
 {
@@ -28,19 +29,17 @@ void SerialCouplingSchemeFixture::storeIteration(cplscheme::SerialCouplingScheme
   cplscheme.storeIteration();
 }
 
-void SerialCouplingSchemeFixture::initializeStorages(cplscheme::SerialCouplingScheme &cplscheme)
+void SerialCouplingSchemeFixture::initializeAcceleration(cplscheme::SerialCouplingScheme &cplscheme)
 {
-  cplscheme.initializeStorages();
-}
-
-void SerialCouplingSchemeFixture::storeExtrapolationData(cplscheme::SerialCouplingScheme &cplscheme)
-{
-  cplscheme.storeExtrapolationData();
+  if (cplscheme._acceleration) {
+    cplscheme._acceleration->initialize(cplscheme.getAccelerationData());
+  }
 }
 
 void SerialCouplingSchemeFixture::moveToNextWindow(cplscheme::SerialCouplingScheme &cplscheme)
 {
-  cplscheme.moveToNextWindow();
+  for (const auto &pair : cplscheme._allData) {
+    pair.second->timeStepsStorage().move();
+  }
 }
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

@@ -8,6 +8,8 @@ target_sources(testprecice
     src/acceleration/test/ParallelMatrixOperationsTest.cpp
     src/acceleration/test/PreconditionerTest.cpp
     src/acceleration/test/QRFactorizationTest.cpp
+    src/acceleration/test/SVDFactorizationTest.cpp
+    src/acceleration/test/helper.hpp
     src/action/tests/PythonActionTest.cpp
     src/action/tests/ScaleActionTest.cpp
     src/action/tests/SummationActionTest.cpp
@@ -17,18 +19,20 @@ target_sources(testprecice
     src/com/tests/MPIDirectCommunicationTest.cpp
     src/com/tests/MPIPortsCommunicationTest.cpp
     src/com/tests/MPISinglePortsCommunicationTest.cpp
+    src/com/tests/SerializedStamplesTest.cpp
     src/com/tests/SocketCommunicationTest.cpp
+    src/com/tests/helper.hpp
     src/cplscheme/tests/AbsoluteConvergenceMeasureTest.cpp
+    src/cplscheme/tests/AbsoluteOrRelativeConvergenceMeasureTest.cpp
     src/cplscheme/tests/CompositionalCouplingSchemeTest.cpp
     src/cplscheme/tests/DummyCouplingScheme.cpp
     src/cplscheme/tests/DummyCouplingScheme.hpp
     src/cplscheme/tests/ExplicitCouplingSchemeTest.cpp
-    src/cplscheme/tests/ExtrapolationTest.cpp
-    src/cplscheme/tests/MinIterationConvergenceMeasureTest.cpp
     src/cplscheme/tests/ParallelImplicitCouplingSchemeTest.cpp
     src/cplscheme/tests/RelativeConvergenceMeasureTest.cpp
     src/cplscheme/tests/ResidualRelativeConvergenceMeasureTest.cpp
     src/cplscheme/tests/SerialImplicitCouplingSchemeTest.cpp
+    src/cplscheme/tests/TimeHandlerTests.cpp
     src/io/tests/ExportCSVTest.cpp
     src/io/tests/ExportConfigurationTest.cpp
     src/io/tests/ExportVTKTest.cpp
@@ -38,14 +42,21 @@ target_sources(testprecice
     src/io/tests/TXTWriterReaderTest.cpp
     src/m2n/tests/GatherScatterCommunicationTest.cpp
     src/m2n/tests/PointToPointCommunicationTest.cpp
+    src/mapping/tests/AxialGeoMultiscaleMappingTest.cpp
+    src/mapping/tests/GinkgoRadialBasisFctSolverTest.cpp
     src/mapping/tests/LinearCellInterpolationMappingTest.cpp
     src/mapping/tests/MappingConfigurationTest.cpp
     src/mapping/tests/NearestNeighborGradientMappingTest.cpp
     src/mapping/tests/NearestNeighborMappingTest.cpp
     src/mapping/tests/NearestProjectionMappingTest.cpp
+    src/mapping/tests/PartitionOfUnityClusteringTest.cpp
+    src/mapping/tests/PartitionOfUnityMappingTest.cpp
     src/mapping/tests/PetRadialBasisFctMappingTest.cpp
     src/mapping/tests/PolationTest.cpp
+    src/mapping/tests/RadialBasisFctHelper.hpp
     src/mapping/tests/RadialBasisFctMappingTest.cpp
+    src/mapping/tests/RadialGeoMultiscaleMappingTest.cpp
+    src/math/tests/BSplineTest.cpp
     src/math/tests/BarycenterTest.cpp
     src/math/tests/DifferencesTest.cpp
     src/math/tests/GeometryTest.cpp
@@ -57,12 +68,14 @@ target_sources(testprecice
     src/mesh/tests/MeshTest.cpp
     src/mesh/tests/TetrahedronTest.cpp
     src/mesh/tests/TriangleTest.cpp
+    src/mesh/tests/UtilsTest.cpp
     src/mesh/tests/VertexTest.cpp
     src/partition/tests/ProvidedPartitionTest.cpp
     src/partition/tests/ReceivedPartitionTest.cpp
     src/partition/tests/fixtures.hpp
     src/precice/tests/DataContextTest.cpp
     src/precice/tests/ParallelTests.cpp
+    src/precice/tests/SpanTests.cpp
     src/precice/tests/ToolingTests.cpp
     src/precice/tests/VersioningTests.cpp
     src/precice/tests/WatchIntegralTest.cpp
@@ -71,11 +84,10 @@ target_sources(testprecice
     src/query/tests/RTreeTests.cpp
     src/testing/DataContextFixture.cpp
     src/testing/DataContextFixture.hpp
-    src/testing/ExtrapolationFixture.cpp
-    src/testing/ExtrapolationFixture.hpp
     src/testing/GlobalFixtures.cpp
     src/testing/ParallelCouplingSchemeFixture.cpp
     src/testing/ParallelCouplingSchemeFixture.hpp
+    src/testing/QuickTest.hpp
     src/testing/SerialCouplingSchemeFixture.cpp
     src/testing/SerialCouplingSchemeFixture.hpp
     src/testing/TestContext.cpp
@@ -86,6 +98,7 @@ target_sources(testprecice
     src/testing/WaveformFixture.hpp
     src/testing/main.cpp
     src/testing/tests/ExampleTests.cpp
+    src/time/tests/StorageTest.cpp
     src/time/tests/WaveformTest.cpp
     src/utils/tests/AlgorithmTest.cpp
     src/utils/tests/DimensionsTest.cpp
@@ -94,7 +107,6 @@ target_sources(testprecice
     src/utils/tests/ManageUniqueIDsTest.cpp
     src/utils/tests/MultiLockTest.cpp
     src/utils/tests/ParallelTest.cpp
-    src/utils/tests/PointerVectorTest.cpp
     src/utils/tests/StatisticsTest.cpp
     src/utils/tests/StringTest.cpp
     src/xml/tests/ParserTest.cpp

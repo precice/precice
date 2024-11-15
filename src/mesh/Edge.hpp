@@ -6,7 +6,7 @@
 
 #include "math/differences.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -15,17 +15,18 @@ namespace mesh {
 /// Linear edge of a mesh, defined by two Vertex objects.
 class Edge {
 public:
+  /// Amount of vertices
+  static constexpr int vertexCount{2};
+
   /**
    * @brief Constructor.
    *
    * @param[in] vertexOne First Vertex object defining the edge.
    * @param[in] vertexTwo Second Vertex object defining the edge.
-   * @param[in] id Unique (among edges in one mesh) ID.
    */
   Edge(
       Vertex &vertexOne,
-      Vertex &vertexTwo,
-      EdgeID  id);
+      Vertex &vertexTwo);
 
   /// Returns number of spatial dimensions (2 or 3) the edge is embedded to.
   int getDimensions() const;
@@ -35,9 +36,6 @@ public:
 
   /// Returns the edge's vertex as const object with index 0 or 1.
   const Vertex &vertex(int i) const;
-
-  /// Returns the (among edges) unique ID of the edge.
-  EdgeID getID() const;
 
   /// Returns the length of the edge
   double getLength() const;
@@ -62,12 +60,16 @@ public:
   /// Not equal, implemented in terms of equal.
   bool operator!=(const Edge &other) const;
 
-private:
-  /// Pointers to Vertex objects defining the edge.
-  std::array<Vertex *, 2> _vertices;
+  /// Weak ordering based on vertex ids
+  bool operator<(const Edge &other) const
+  {
+    return std::make_tuple(_vertices[0]->getID(), _vertices[1]->getID()) <
+           std::make_tuple(other._vertices[0]->getID(), other._vertices[1]->getID());
+  }
 
-  /// Unique (among edges) ID of the edge.
-  int _id;
+private:
+  /// Pointers to Vertex objects defining the edge, ordered by Vertex::getID().
+  std::array<Vertex *, 2> _vertices;
 };
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION

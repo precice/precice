@@ -1,6 +1,6 @@
 #include "ExportVTK.hpp"
 #include <Eigen/Core>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <memory>
@@ -15,32 +15,53 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
-void ExportVTK::doExport(
-    const std::string &name,
-    const std::string &location,
-    const mesh::Mesh & mesh)
+ExportVTK::ExportVTK(
+    std::string_view  participantName,
+    std::string_view  location,
+    const mesh::Mesh &mesh,
+    ExportKind        kind,
+    int               frequency,
+    int               rank,
+    int               size)
+    : Export(participantName, location, mesh, kind, frequency, rank, size){};
+
+void ExportVTK::doExport(int index, double time)
 {
-  PRECICE_TRACE(name, location, mesh.getName());
-  PRECICE_ASSERT(name != std::string(""));
-  PRECICE_ASSERT(!utils::IntraComm::isParallel(), "ExportVTK only supports serial participants.");
+  PRECICE_TRACE(index, time, _mesh->getName());
+  PRECICE_ASSERT(index >= 0);
+  PRECICE_ASSERT(time >= 0.0);
+  PRECICE_ASSERT(!isParallel(), "ExportVTK only supports serial participants.");
 
-  namespace fs = boost::filesystem;
-  fs::path outfile(location);
-  if (not location.empty())
+  if (!keepExport(index))
+    return;
+
+  auto filename = fmt::format("{}-{}.{}.vtk", _mesh->getName(), _participantName, formatIndex(index));
+
+  namespace fs = std::filesystem;
+  fs::path outfile(_location);
+  if (not _location.empty())
     fs::create_directories(outfile);
-  outfile = outfile / fs::path(name + ".vtk");
+  outfile = outfile / filename;
   std::ofstream outstream(outfile.string(), std::ios::trunc);
   PRECICE_CHECK(outstream, "VTK export failed to open destination file \"{}\"", outfile.generic_string());
 
   initializeWriting(outstream);
   writeHeader(outstream);
-  exportMesh(outstream, mesh);
-  exportData(outstream, mesh);
-  exportGradient(outstream, mesh);
+  exportMesh(outstream, *_mesh);
+  exportData(outstream, *_mesh);
+  exportGradient(outstream, *_mesh);
   outstream.close();
+  recordExport(filename, time);
+}
+
+void ExportVTK::exportSeries() const
+{
+  if (isParallel())
+    return; // there is no parallel master file
+
+  writeSeriesFile(fmt::format("{}-{}.vtk.series", _mesh->getName(), _participantName));
 }
 
 void ExportVTK::exportMesh(
@@ -50,7 +71,7 @@ void ExportVTK::exportMesh(
   PRECICE_TRACE(mesh.getName());
 
   // Plot vertices
-  outFile << "POINTS " << mesh.vertices().size() << " double \n\n";
+  outFile << "POINTS " << mesh.nVertices() << " double \n\n";
   for (const mesh::Vertex &vertex : mesh.vertices()) {
     writeVertex(vertex.getCoords(), outFile);
   }
@@ -122,15 +143,22 @@ void ExportVTK::exportData(
     std::ofstream &   outFile,
     const mesh::Mesh &mesh)
 {
-  outFile << "POINT_DATA " << mesh.vertices().size() << "\n\n";
+  outFile << "POINT_DATA " << mesh.nVertices() << "\n\n";
 
   outFile << "SCALARS Rank unsigned_int\n";
   outFile << "LOOKUP_TABLE default\n";
-  std::fill_n(std::ostream_iterator<char const *>(outFile), mesh.vertices().size(), "0 ");
+  std::fill_n(std::ostream_iterator<char const *>(outFile), mesh.nVertices(), "0 ");
   outFile << "\n\n";
 
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
-    Eigen::VectorXd &values = data->values();
+    if (data->timeStepsStorage().empty()) {
+      if (data->hasGradient()) {
+        data->timeStepsStorage().setSampleAtTime(0, time::Sample(data->getDimensions(), mesh.nVertices(), mesh.getDimensions()).setZero());
+      } else {
+        data->timeStepsStorage().setSampleAtTime(0, time::Sample(data->getDimensions(), mesh.nVertices()).setZero());
+      }
+    }
+    const Eigen::VectorXd &values = data->timeStepsStorage().last().sample.values;
     if (data->getDimensions() > 1) {
       Eigen::VectorXd viewTemp(data->getDimensions());
       outFile << "VECTORS " << data->getName() << " double\n";
@@ -165,14 +193,14 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
   const int spaceDim = mesh.getDimensions();
   for (const mesh::PtrData &data : mesh.data()) {
     if (data->hasGradient()) { // Check whether this data has gradient
-      auto &gradientValues = data->gradientValues();
+      const auto &gradients = data->timeStepsStorage().last().sample.gradients;
       if (data->getDimensions() == 1) { // Scalar data, create a vector <dataname>_gradient
         outFile << "VECTORS " << data->getName() << "_gradient"
                 << " double\n";
-        for (int i = 0; i < gradientValues.cols(); i++) { // Loop over vertices
-          int j = 0;                                      // Dimension counter
-          for (; j < gradientValues.rows(); j++) {        // Loop over space directions
-            outFile << gradientValues.coeff(j, i) << " ";
+        for (int i = 0; i < gradients.cols(); i++) { // Loop over vertices
+          int j = 0;                                 // Dimension counter
+          for (; j < gradients.rows(); j++) {        // Loop over space directions
+            outFile << gradients.coeff(j, i) << " ";
           }
           if (j < 3) { // If 2D data add additional zero as third component
             outFile << '0';
@@ -182,10 +210,10 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
       } else { // Vector data, write n vector for n dimension <dataname>_(dx/dy/dz)
         outFile << "VECTORS " << data->getName() << "_dx"
                 << " double\n";
-        for (int i = 0; i < gradientValues.cols(); i += spaceDim) { // Loop over vertices
+        for (int i = 0; i < gradients.cols(); i += spaceDim) { // Loop over vertices
           int j = 0;
-          for (; j < gradientValues.rows(); j++) { // Loop over components
-            outFile << gradientValues.coeff(j, i) << " ";
+          for (; j < gradients.rows(); j++) { // Loop over components
+            outFile << gradients.coeff(j, i) << " ";
           }
           if (j < 3) { // If 2D data add additional zero as third component
             outFile << '0';
@@ -196,10 +224,10 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
 
         outFile << "VECTORS " << data->getName() << "_dy"
                 << " double\n";
-        for (int i = 1; i < gradientValues.cols(); i += spaceDim) { // Loop over vertices
+        for (int i = 1; i < gradients.cols(); i += spaceDim) { // Loop over vertices
           int j = 0;
-          for (; j < gradientValues.rows(); j++) { // Loop over components
-            outFile << gradientValues.coeff(j, i) << " ";
+          for (; j < gradients.rows(); j++) { // Loop over components
+            outFile << gradients.coeff(j, i) << " ";
           }
           if (j < 3) { // If 2D data add additional zero as third component
             outFile << '0';
@@ -211,10 +239,10 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
         if (spaceDim == 3) { // dz is only for 3D data
           outFile << "VECTORS " << data->getName() << "_dz"
                   << " double\n";
-          for (int i = 2; i < gradientValues.cols(); i += spaceDim) { // Loop over vertices
+          for (int i = 2; i < gradients.cols(); i += spaceDim) { // Loop over vertices
             int j = 0;
-            for (; j < gradientValues.rows(); j++) { // Loop over components
-              outFile << gradientValues.coeff(j, i) << " ";
+            for (; j < gradients.rows(); j++) { // Loop over components
+              outFile << gradients.coeff(j, i) << " ";
             }
             if (j < 3) { // If 2D data add additional zero as third component
               outFile << '0';
@@ -293,5 +321,4 @@ void ExportVTK::writeLine(
   outFile << '\n';
 }
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

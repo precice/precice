@@ -6,7 +6,7 @@ name: Request Deb Package
 # - Select the "Request Package" workflow
 # - On the top of the list, select "Run workflow"
 # - Select the release tag to generate the package for. Example: v2.3.0
-# - Select the ubuntu version >18.04 to generate the package for. Example: 21.10
+# - Select the ubuntu version to generate the package for. Example: 21.10
 # - Click "Run Workflow"
 #
 # This workflow uses the official ubuntu docker images.
@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     container: '${{ github.event.inputs.distro }}:${{ github.event.inputs.version }}'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.release }}
       - name: Generate build directory
@@ -53,7 +53,7 @@ jobs:
         working-directory: build
         run: |
           cmake --version
-          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON ..
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON ..
       - name: Compile
         working-directory: build
         run: make -j $(nproc)

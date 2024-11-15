@@ -11,7 +11,7 @@
 #include "mesh/Tetrahedron.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 
 namespace precice {
 namespace query {
@@ -69,8 +69,11 @@ public:
   Index(mesh::Mesh &mesh);
   ~Index();
 
-  /// Get n number of closest vertices to the given vertex
+  /// Get the closest vertex to the given vertex
   VertexMatch getClosestVertex(const Eigen::VectorXd &sourceCoord);
+
+  /// Get n number of closest vertices to the given vertex
+  std::vector<VertexID> getClosestVertices(const Eigen::VectorXd &sourceCoord, int n);
 
   /// Get n number of closest edges to the given vertex
   std::vector<EdgeMatch> getClosestEdges(const Eigen::VectorXd &sourceCoord, int n);
@@ -78,11 +81,14 @@ public:
   /// Get n number of closest triangles to the given vertex
   std::vector<TriangleMatch> getClosestTriangles(const Eigen::VectorXd &sourceCoord, int n);
 
-  /// Return all the vertices inside the box formed by vertex and radius
+  /// Return all the vertices inside the box formed by vertex and radius (boundary exclusive)
   std::vector<VertexID> getVerticesInsideBox(const mesh::Vertex &centerVertex, double radius);
 
   /// Return all the vertices inside a bounding box
   std::vector<VertexID> getVerticesInsideBox(const mesh::BoundingBox &bb);
+
+  /// Returns
+  bool isAnyVertexInsideBox(const mesh::Vertex &centerVertex, double radius);
 
   /// Return all the tetrahedra whose axis-aligned bounding box contains a vertex
   std::vector<TetrahedronID> getEnclosingTetrahedra(const Eigen::VectorXd &location);
@@ -100,6 +106,10 @@ public:
   ProjectionMatch findNearestProjection(const Eigen::VectorXd &location, int n);
 
   ProjectionMatch findCellOrProjection(const Eigen::VectorXd &location, int n);
+
+  // Index tree, bounds
+  mesh::BoundingBox getRtreeBounds();
+
   /// Clear the index
   void clear();
 
@@ -116,10 +126,10 @@ private:
   ProjectionMatch findVertexProjection(const Eigen::VectorXd &location);
 
   /// Find closest edge interpolation element. If cannot be found, it falls back to vertex projection
-  ProjectionMatch findEdgeProjection(const Eigen::VectorXd &location, int n);
+  ProjectionMatch findEdgeProjection(const Eigen::VectorXd &location, int n, ProjectionMatch closestVertex);
 
   /// Find closest face interpolation element. If cannot be found, it falls back to first edge interpolation element, then vertex if necessary
-  ProjectionMatch findTriangleProjection(const Eigen::VectorXd &location, int n);
+  ProjectionMatch findTriangleProjection(const Eigen::VectorXd &location, int n, ProjectionMatch closestVertex);
 };
 
 } // namespace query

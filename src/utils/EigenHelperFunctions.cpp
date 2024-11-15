@@ -7,8 +7,7 @@
 
 #include "EigenHelperFunctions.hpp"
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 void shiftSetFirst(
     Eigen::MatrixXd &A, const Eigen::VectorXd &v)
@@ -55,5 +54,4 @@ void append(
   v(n) = value;
 }
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

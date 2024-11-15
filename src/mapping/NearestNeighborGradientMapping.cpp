@@ -1,19 +1,18 @@
-
 #include "NearestNeighborGradientMapping.hpp"
 
 #include <Eigen/Core>
+#include <Eigen/src/Core/Matrix.h>
 #include <boost/container/flat_set.hpp>
 #include <functional>
 #include <iostream>
+#include <strings.h>
 #include "logging/LogMacros.hpp"
+#include "profiling/Event.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/Event.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-extern bool syncMode;
-
-namespace mapping {
+namespace precice::mapping {
 
 NearestNeighborGradientMapping::NearestNeighborGradientMapping(
     Constraint constraint,
@@ -22,11 +21,10 @@ NearestNeighborGradientMapping::NearestNeighborGradientMapping(
 {
   PRECICE_ASSERT(!hasConstraint(CONSERVATIVE));
 
-  if (hasConstraint(SCALEDCONSISTENT)) {
-    PRECICE_WARN("The scaled-consistent mapping hasn't been specifically tested with nearest-neighbor-gradient. Please avoid using it or choose another mapping method. ");
-  }
+  PRECICE_WARN_IF(isScaledConsistent(),
+                  "The scaled-consistent mapping hasn't been specifically tested with nearest-neighbor-gradient. Please avoid using it or choose another mapping method. ");
 
-  if (hasConstraint(SCALEDCONSISTENT)) {
+  if (isScaledConsistent()) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   } else {
@@ -44,8 +42,8 @@ void NearestNeighborGradientMapping::onMappingComputed(mesh::PtrMesh origins, me
   // Calculate offsets
   for (size_t i = 0; i < _vertexIndices.size(); ++i) {
 
-    const auto &matchedVertexCoords = searchSpace.get()->vertices()[_vertexIndices[i]].getCoords();
-    const auto &sourceVertexCoords  = origins->vertices()[i].getCoords();
+    const auto &matchedVertexCoords = searchSpace->vertex(_vertexIndices[i]).getCoords();
+    const auto &sourceVertexCoords  = origins->vertex(i).getCoords();
 
     // We calculate the distances uniformly for consistent mapping constraint as the difference (output - input)
     // For consistent mapping: the source is the output vertex and the matched vertex is the input since we iterate over all outputs
@@ -54,27 +52,26 @@ void NearestNeighborGradientMapping::onMappingComputed(mesh::PtrMesh origins, me
   }
 };
 
-void NearestNeighborGradientMapping::mapConsistent(DataID inputDataID, DataID outputDataID)
+void NearestNeighborGradientMapping::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
-  PRECICE_TRACE(inputDataID, outputDataID);
-  precice::utils::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), precice::syncMode);
+  PRECICE_TRACE();
+  precice::profiling::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
 
-  PRECICE_ASSERT(input()->data(inputDataID)->hasGradient(), "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient requires gradient data.",
+  PRECICE_ASSERT(inData.values.size() == 0 || inData.gradients.size() != 0,
+                 "Mesh \"{}\" does not contain gradient data. Using Nearest Neighbor Gradient mapping requires gradient data.",
                  input()->getName());
 
   /// Check if input has gradient data, else send Error
-  if (input()->vertices().empty()) {
-    PRECICE_WARN("The mesh doesn't contain any vertices.");
-  }
+  PRECICE_WARN_IF(input()->empty(), "The mesh doesn't contain any vertices.");
 
-  const int              valueDimensions = input()->data(inputDataID)->getDimensions(); // Data dimensions (for scalar = 1, for vectors > 1)
-  const Eigen::VectorXd &inputValues     = input()->data(inputDataID)->values();
-  Eigen::VectorXd &      outputValues    = output()->data(outputDataID)->values();
-  const Eigen::MatrixXd &gradientValues  = input()->data(inputDataID)->gradientValues();
+  const int              valueDimensions = inData.dataDims;
+  const Eigen::VectorXd &inputValues     = inData.values;
+  Eigen::VectorXd &      outputValues    = outData;
+  const Eigen::MatrixXd &gradients       = inData.gradients;
 
-  //Consistent mapping
-  PRECICE_DEBUG((hasConstraint(CONSISTENT) ? "Map consistent" : "Map scaled-consistent"));
-  const size_t outSize = output()->vertices().size();
+  // Consistent mapping
+  PRECICE_DEBUG("Map {} using {}", (hasConstraint(CONSISTENT) ? "consistent" : "scaled-consistent"), getName());
+  const size_t outSize = output()->nVertices();
 
   for (size_t i = 0; i < outSize; i++) {
     int inputIndex = _vertexIndices[i] * valueDimensions;
@@ -84,17 +81,21 @@ void NearestNeighborGradientMapping::mapConsistent(DataID inputDataID, DataID ou
       const int mapOutputIndex = (i * valueDimensions) + dim;
       const int mapInputIndex  = inputIndex + dim;
 
-      outputValues(mapOutputIndex) = inputValues(mapInputIndex) + _offsetsMatched[i].transpose() * gradientValues.col(mapInputIndex);
+      outputValues(mapOutputIndex) = inputValues(mapInputIndex) + _offsetsMatched[i].transpose() * gradients.col(mapInputIndex);
     }
   }
 
   PRECICE_DEBUG("Mapped values (with gradient) = {}", utils::previewRange(3, outputValues));
 }
 
-void NearestNeighborGradientMapping::mapConservative(DataID /*inputDataID*/, DataID /*outputDataID*/)
+void NearestNeighborGradientMapping::mapConservative(const time::Sample & /* inData */, Eigen::VectorXd & /* outData */)
 {
-  PRECICE_ASSERT(false, "Not implemented.")
+  PRECICE_ASSERT(false, "Not implemented.");
 }
 
-} // namespace mapping
-} // namespace precice
+std::string NearestNeighborGradientMapping::getName() const
+{
+  return "nearest-neighbor-gradient";
+}
+
+} // namespace precice::mapping

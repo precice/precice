@@ -34,7 +34,7 @@ public:
   XMLAttribute &operator=(const XMLAttribute<ATTRIBUTE_T> &other) = default;
 
   /// Sets a documentation string for the attribute.
-  XMLAttribute &setDocumentation(std::string documentation);
+  XMLAttribute &setDocumentation(std::string_view documentation);
 
   const std::string &getUserDocumentation() const
   {
@@ -127,9 +127,9 @@ private:
 };
 
 template <typename ATTRIBUTE_T>
-XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDocumentation(std::string documentation)
+XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDocumentation(std::string_view documentation)
 {
-  _doc = std::move(documentation);
+  _doc = documentation;
   return *this;
 }
 
@@ -159,9 +159,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::strin
 
   const auto position = aAttributes.find(getName());
   if (position == aAttributes.end()) {
-    if (not _hasDefaultValue) {
-      PRECICE_ERROR("Attribute \"{}\" is required, but was not defined.", _name);
-    }
+    PRECICE_CHECK(_hasDefaultValue, "Attribute \"{}\" is required, but was not defined.", _name);
     set(_value, _defaultValue);
   } else {
     try {
@@ -213,7 +211,7 @@ XMLAttribute<ATTRIBUTE_T>::set(
 }
 
 /** creates an XMLAttribute given a name and a default value.
- *  
+ *
  *  @param[in] name the name of the attribute
  *  @param[in] defaultValue the default value of the attribute
  *  @return an XMLAttribute with the above settings
@@ -224,7 +222,7 @@ inline XMLAttribute<std::string> makeXMLAttribute(std::string name, const char *
 }
 
 /** creates an XMLAttribute given a name and a default value.
- *  
+ *
  *  @param[in] name the name of the attribute
  *  @param[in] defaultValue the default value of the attribute
  *  @return an XMLAttribute with the above settings

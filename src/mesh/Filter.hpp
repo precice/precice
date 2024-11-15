@@ -3,7 +3,7 @@
 #include <boost/container/flat_map.hpp>
 
 #include "mesh/Mesh.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 
 namespace precice {
 namespace mesh {
@@ -11,7 +11,7 @@ namespace mesh {
 /** filters the source Mesh and adds it to the destination Mesh
  * @param[inout] destination the destination mesh to append the filtered Mesh to
  * @param[in] source the source Mesh to filter
- * @param[in] p the filter as a UnaryPredicate on mesh::Vertex 
+ * @param[in] p the filter as a UnaryPredicate on mesh::Vertex
  */
 template <typename UnaryPredicate>
 void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
@@ -19,7 +19,7 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
   // Create a flat_map which can contain all vertices of the original mesh.
   // This prevents resizes during the map build-up.
   boost::container::flat_map<VertexID, Vertex *> vertexMap;
-  vertexMap.reserve(source.vertices().size());
+  vertexMap.reserve(source.nVertices());
 
   for (const Vertex &vertex : source.vertices()) {
     if (p(vertex)) {

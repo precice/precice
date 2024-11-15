@@ -14,18 +14,17 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 MeshConfiguration::MeshConfiguration(
     xml::XMLTag &        parent,
     PtrDataConfiguration config)
     : TAG("mesh"),
       ATTR_NAME("name"),
-      ATTR_FLIP_NORMALS("flip-normals"),
+      ATTR_DIMENSIONS("dimensions"),
       TAG_DATA("use-data"),
       ATTR_SIDE_INDEX("side"),
-      _dimensions(0),
+      _meshDimensionsMap(),
       _dataConfig(std::move(config)),
       _meshes(),
       _neededMeshes(),
@@ -34,18 +33,20 @@ MeshConfiguration::MeshConfiguration(
   using namespace xml;
   std::string doc;
   XMLTag      tag(*this, TAG, xml::XMLTag::OCCUR_ONCE_OR_MORE);
-  doc = "Surface mesh consisting of vertices and (optional) of edges and ";
-  doc += "triangles (only in 3D). The vertices of a mesh can carry data, ";
-  doc += "configured by tag <use-data>. The mesh coordinates have to be ";
-  doc += "defined by a participant (see tag <use-mesh>).";
+  doc = "Surface mesh consisting of vertices and optional connectivity information. "
+        "The vertices of a mesh can carry data, "
+        "configured by tags <use-data>. The mesh coordinates have to be "
+        "defined by a participant (see tag <provide-mesh>).";
   tag.setDocumentation(doc);
 
   auto attrName = XMLAttribute<std::string>(ATTR_NAME)
                       .setDocumentation("Unique name for the mesh.");
   tag.addAttribute(attrName);
 
-  auto attrFlipNormals = makeXMLAttribute(ATTR_FLIP_NORMALS, false).setDocumentation("Deprecated.");
-  tag.addAttribute(attrFlipNormals);
+  auto attrDimensions = XMLAttribute<int>(ATTR_DIMENSIONS)
+                            .setDocumentation("Spatial dimensions of mesh")
+                            .setOptions({2, 3});
+  tag.addAttribute(attrDimensions);
 
   XMLTag subtagData(*this, TAG_DATA, XMLTag::OCCUR_ARBITRARY);
   doc = "Assigns a before defined data set (see tag <data>) to the mesh.";
@@ -57,45 +58,33 @@ MeshConfiguration::MeshConfiguration(
   parent.addSubtag(tag);
 }
 
-void MeshConfiguration::setDimensions(
-    int dimensions)
-{
-  PRECICE_TRACE(dimensions);
-  PRECICE_ASSERT((dimensions == 2) || (dimensions == 3), dimensions);
-  _dimensions = dimensions;
-}
-
 void MeshConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
     xml::XMLTag &                    tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
-    PRECICE_ASSERT(_dimensions != 0);
-    std::string name = tag.getStringAttributeValue(ATTR_NAME);
-    if (tag.getBooleanAttributeValue(ATTR_FLIP_NORMALS)) {
-      PRECICE_WARN("You used the attribute \"{}\" when configuring mesh \"\". "
-                   "This attribute is deprecated and will be removed in the next major release. "
-                   "Please remove the attribute to silence this warning.",
-                   ATTR_FLIP_NORMALS, name);
-    }
+    std::string name       = tag.getStringAttributeValue(ATTR_NAME);
+    int         dimensions = tag.getIntAttributeValue(ATTR_DIMENSIONS);
+    insertMeshToMeshDimensionsMap(name, dimensions);
+    PRECICE_ASSERT(dimensions != 0);
     PRECICE_ASSERT(_meshIdManager);
-    _meshes.push_back(std::make_shared<Mesh>(name, _dimensions, _meshIdManager->getFreeID()));
+    _meshes.push_back(std::make_shared<Mesh>(name, dimensions, _meshIdManager->getFreeID()));
   } else if (tag.getName() == TAG_DATA) {
     std::string name  = tag.getStringAttributeValue(ATTR_NAME);
     bool        found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
+      auto dataDimensions = getDataDimensions(_meshes.back()->getName(), data.typeName);
       if (data.name == name) {
-        _meshes.back()->createData(data.name, data.dimensions, _dataIDManager.getFreeID());
+        _meshes.back()->createData(data.name, dataDimensions, _dataIDManager.getFreeID(), data.waveformDegree);
         found = true;
         break;
       }
     }
-    if (not found) {
-      PRECICE_ERROR("Data with name \"{}\" used by mesh \"{}\" is not defined. "
-                    "Please define a data tag with name=\"{}\".",
-                    name, _meshes.back()->getName(), name);
-    }
+    PRECICE_CHECK(found,
+                  "Data with name \"{}\" used by mesh \"{}\" is not defined. "
+                  "Please define a data tag with name=\"{}\".",
+                  name, _meshes.back()->getName(), name);
   }
 }
 
@@ -116,7 +105,7 @@ void MeshConfiguration::addMesh(
   for (const PtrData &dataNewMesh : mesh->data()) {
     bool found = false;
     for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
-      if ((dataNewMesh->getName() == data.name) && (dataNewMesh->getDimensions() == data.dimensions)) {
+      if (dataNewMesh->getName() == data.name && dataNewMesh->getDimensions() == getDataDimensions(mesh->getName(), data.typeName)) {
         found = true;
         break;
       }
@@ -169,5 +158,24 @@ void MeshConfiguration::addNeededMesh(
   }
 }
 
-} // namespace mesh
-} // namespace precice
+void MeshConfiguration::insertMeshToMeshDimensionsMap(
+    const std::string &mesh,
+    int                dimensions)
+{
+  PRECICE_ASSERT(_meshDimensionsMap.count(mesh) == 0, "Mesh {} already exists in the mesh-dimensions map.", mesh);
+  _meshDimensionsMap.insert(std::pair<std::string, int>(mesh, dimensions));
+}
+
+int MeshConfiguration::getDataDimensions(const std::string &meshName, const Data::typeName dataTypeName) const
+{
+  if (dataTypeName == Data::typeName::VECTOR) {
+    PRECICE_ASSERT(_meshDimensionsMap.count(meshName) > 0, "Mesh {} does not exist in the mesh-dimensions map.", meshName);
+    return _meshDimensionsMap.at(meshName);
+  } else if (dataTypeName == Data::typeName::SCALAR) {
+    return 1;
+  }
+  // We should never reach this point
+  PRECICE_UNREACHABLE("Unknown data type defined on mesh \"{}\".", meshName);
+};
+
+} // namespace precice::mesh

@@ -1,14 +1,12 @@
 #include "LinearCellInterpolationMapping.hpp"
 #include "logging/LogMacros.hpp"
+#include "profiling/Event.hpp"
 #include "query/Index.hpp"
-#include "utils/Event.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/Statistics.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-extern bool syncMode;
-
-namespace mapping {
+namespace precice::mapping {
 
 LinearCellInterpolationMapping::LinearCellInterpolationMapping(
     Constraint constraint,
@@ -22,19 +20,19 @@ LinearCellInterpolationMapping::LinearCellInterpolationMapping(
     setInputRequirement(Mapping::MeshRequirement::VERTEX);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   } else {
-    PRECICE_ASSERT(constraint == SCALEDCONSISTENT, constraint);
+    PRECICE_ASSERT(isScaledConsistent());
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
   }
 
-  PRECICE_CHECK(constraint != SCALEDCONSISTENT, "Volume mapping doesn't support scaled-consistent mappings.");
+  PRECICE_CHECK(constraint != SCALED_CONSISTENT_SURFACE, "Volume mapping doesn't support scaled-consistent-surface mappings. Use \"scaled-consistent-volume\" instead.");
 }
 
 void LinearCellInterpolationMapping::computeMapping()
 {
-  PRECICE_TRACE(input()->vertices().size(), output()->vertices().size());
-  const std::string     baseEvent = "map.vci.computeMapping.From" + input()->getName() + "To" + output()->getName();
-  precice::utils::Event e(baseEvent, precice::syncMode);
+  PRECICE_TRACE(input()->nVertices(), output()->nVertices());
+  const std::string         baseEvent = "map.vci.computeMapping.From" + input()->getName() + "To" + output()->getName();
+  precice::profiling::Event e(baseEvent, profiling::Synchronize);
 
   // Setup Direction of Mapping
   mesh::PtrMesh origins, searchSpace;
@@ -48,22 +46,25 @@ void LinearCellInterpolationMapping::computeMapping()
     searchSpace = input();
   }
 
-  const auto &fVertices           = origins->vertices();
-  bool        missingConnectivity = false;
+  const auto &fVertices       = origins->vertices();
+  bool        hasConnectivity = true;
 
   if (getDimensions() == 2) {
     if (!fVertices.empty() && searchSpace->triangles().empty()) {
-      PRECICE_WARN("2D Mesh \"{}\" does not contain triangles. "
-                   "Linear cell interpolation falls back to nearest projection mapping.",
-                   searchSpace->getName());
-      missingConnectivity = true;
+      const bool hasEdges = searchSpace->hasEdges();
+      PRECICE_WARN("2D Mesh \"{}\" does not contain triangles{} "
+                   "Linear cell interpolation falls back to nearest-{} mapping.",
+                   searchSpace->getName(), hasEdges ? "." : " or edges.", hasEdges ? "projection" : "neighbor");
+      hasConnectivity = false;
     }
   } else {
     if (!fVertices.empty() && searchSpace->tetrahedra().empty()) {
-      PRECICE_WARN("3D Mesh \"{}\" does not contain tetrahedra. "
-                   "Linear cell interpolation falls back to nearest projection mapping.",
-                   searchSpace->getName());
-      missingConnectivity = true;
+      const bool hasTriangles = searchSpace->hasTriangles();
+      const bool hasEdges     = searchSpace->hasEdges();
+      PRECICE_WARN("3D Mesh \"{}\" does not contain tetrahedra{}{} "
+                   "Linear cell interpolation falls back to nearest-{} mapping.",
+                   searchSpace->getName(), hasEdges ? "" : ", edges", hasTriangles ? "." : " or triangles.", (hasTriangles || hasEdges) ? "projection" : "neighbor");
+      hasConnectivity = false;
     }
   }
 
@@ -90,20 +91,37 @@ void LinearCellInterpolationMapping::computeMapping()
     }
   }
 
-  if (!fallbackStatistics.empty() && !missingConnectivity) {
-    PRECICE_INFO(
-        "Linear Cell Interpolation is used, but some points from {} don't lie in the domain defined by the {}. "
-        "These points have been projected on the domain boundary. This could come from non-matching discrete geometries or erroneous connectivity information."
-        "If distances seem too large, please check your mesh. "
-        "The projection statistics are: {} ",
-        searchSpace->getName(), getDimensions() == 2 ? "triangles" : "tetrahedra",
-        fallbackStatistics);
+  if (!fallbackStatistics.empty()) {
+    if (hasConnectivity) {
+      // We have the connectivity, but some fallbacks occurred
+      PRECICE_INFO(
+          "Linear Cell Interpolation is used, but some points from {} don't lie in the domain defined by the {}. "
+          "These points have been projected on the domain boundary. This could come from non-matching discrete geometries or erroneous connectivity information."
+          "If distances seem too large, please check your mesh. "
+          "The fallback statistics are: {} ",
+          searchSpace->getName(), getDimensions() == 2 ? "triangles" : "tetrahedra",
+          fallbackStatistics);
+    } else {
+      // Fallback and no connectivity provided
+      PRECICE_INFO("Fallback mapping statistics: {}", fallbackStatistics);
+    }
   } else {
-    PRECICE_INFO("All vertices are inside cells, no fallback to Nearest-Projection required");
+    if (!hasConnectivity) {
+      // Not all connectivity provided, but no fallback applied
+      PRECICE_INFO("All vertices are inside cells, no fallback required");
+    } else {
+      // No fallback and we have connectivity
+      PRECICE_ASSERT(hasConnectivity);
+      PRECICE_INFO("Successfully computed linear-cell-interpolation mapping.");
+    }
   }
 
   _hasComputedMapping = true;
 }
 
-} // namespace mapping
-} // namespace precice
+std::string LinearCellInterpolationMapping::getName() const
+{
+  return "linear-cell interpolation";
+}
+
+} // namespace precice::mapping

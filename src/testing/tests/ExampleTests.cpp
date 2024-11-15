@@ -51,14 +51,6 @@ BOOST_AUTO_TEST_CASE(NumericalTolerance,
   BOOST_TEST(1.0 == 1.01, boost::test_tools::tolerance(0.1));
 }
 
-/// Use testing::Deleted to unconditionally delete the test
-BOOST_AUTO_TEST_CASE(Deleted,
-                     *testing::Deleted())
-{
-  PRECICE_TEST(1_rank);
-  BOOST_TEST(false);
-}
-
 /// Test that requires 4 processors.
 /*
  * If less than 4 procs are available the test will fail.
@@ -146,25 +138,24 @@ BOOST_AUTO_TEST_CASE(TwoProcTestsWithPETSc)
  * For integration tests (tests that directly use the preCICE API), often, you need two participants
  * where each participant uses it own communicator, i.e. each participant should not see that he is
  * part of a test.
- * In this case, you can simply create the participants and create a solverinterface.
- * The context-object is of type TestContext and provides access to the name of the current context and the rank and size of its communicator.  
+ * In this case, you can simply create the participants and create a Participant object.
+ * The context-object is of type TestContext and provides access to the name of the current context and the rank and size of its communicator.
  */
 BOOST_AUTO_TEST_CASE(IntegrationTestsWithTwoParticipants)
 {
-  // As we will use the solverinterface, we do require anything else here.
   PRECICE_TEST("Solid"_on(2_ranks), "Fluid"_on(2_ranks));
 
   if (context.isNamed("Solid")) {
     // This is the participant Solid
     BOOST_TEST(context.hasSize(2));
 
-    // You can now create a solverinterface for your first participant
+    // You can now create a Participant object for your first participant
     // You can use context.name, context.rank, context.size
   } else {
-    // This is the participant Solid
+    // This is the participant Fluid
     BOOST_TEST(context.hasSize(2));
 
-    // You can now create a solverinterface for your second participant
+    // You can now create a Participant object for your second participant
     // You can use context.name, context.rank, context.size
   }
 }

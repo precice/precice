@@ -1,11 +1,6 @@
 #include "SocketRequest.hpp"
 
-namespace precice {
-namespace com {
-SocketRequest::SocketRequest()
-    : _complete(false)
-{
-}
+namespace precice::com {
 
 void SocketRequest::complete()
 {
@@ -29,7 +24,7 @@ void SocketRequest::wait()
 {
   std::unique_lock<std::mutex> lock(_completeMutex);
 
+  // Lock is acquired when the predicate is evaluated.
   _completeCondition.wait(lock, [this] { return _complete; });
 }
-} // namespace com
-} // namespace precice
+} // namespace precice::com

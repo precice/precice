@@ -1,7 +1,7 @@
 #include "io/ExportVTU.hpp"
 #include <Eigen/Core>
 #include <algorithm>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -17,8 +17,18 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
+
+ExportVTU::ExportVTU(
+    std::string_view  participantName,
+    std::string_view  location,
+    const mesh::Mesh &mesh,
+    ExportKind        kind,
+    int               frequency,
+    int               rank,
+    int               size)
+
+    : ExportXML(participantName, location, mesh, kind, frequency, rank, size){};
 
 std::string ExportVTU::getVTKFormat() const
 {
@@ -27,18 +37,18 @@ std::string ExportVTU::getVTKFormat() const
 
 std::string ExportVTU::getParallelExtension() const
 {
-  return ".pvtu";
+  return "pvtu";
 }
 
 std::string ExportVTU::getPieceExtension() const
 {
-  return ".vtu";
+  return "vtu";
 }
 
 std::string ExportVTU::getPieceAttributes(const mesh::Mesh &mesh) const
 {
   std::ostringstream oss;
-  oss << "NumberOfPoints=\"" << mesh.vertices().size() << "\" ";
+  oss << "NumberOfPoints=\"" << mesh.nVertices() << "\" ";
   oss << "NumberOfCells=\"" << mesh.edges().size() + mesh.triangles().size() + mesh.tetrahedra().size() << "\" ";
   return oss.str();
 }
@@ -100,5 +110,4 @@ void ExportVTU::exportConnectivity(
   outFile << "            </DataArray>\n";
   outFile << "         </Cells>\n";
 }
-} // namespace io
-} // namespace precice
+} // namespace precice::io

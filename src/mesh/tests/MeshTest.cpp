@@ -1,11 +1,11 @@
 #include <Eigen/Core>
-#include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
 #include <deque>
 #include <iosfwd>
 #include <memory>
 #include <string>
 #include <vector>
+
 #include "logging/Logger.hpp"
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Data.hpp"
@@ -148,30 +148,14 @@ BOOST_AUTO_TEST_CASE(Demonstration)
     Edge &e2 = mesh.createEdge(v2, v0);
 
     BOOST_TEST(mesh.hasEdges());
+    BOOST_TEST(mesh.edges().size() == 3);
     BOOST_TEST(!mesh.hasTriangles());
-
-    // Validate mesh edges state
-    index = 0;
-    for (Edge &edge : mesh.edges()) {
-      if (index == 0) {
-        BOOST_TEST(edge.getID() == e0.getID());
-      } else if (index == 1) {
-        BOOST_TEST(edge.getID() == e1.getID());
-      } else if (index == 2) {
-        BOOST_TEST(edge.getID() == e2.getID());
-      } else {
-        BOOST_TEST(false);
-      }
-      index++;
-    }
 
     Triangle *t = nullptr;
     if (dim == 3) {
       // Create triangle
       t = &mesh.createTriangle(e0, e1, e2);
 
-      // Validate mesh triangle
-      BOOST_TEST((*mesh.triangles().begin()).getID() == t->getID());
       BOOST_TEST(mesh.hasTriangles());
     } else {
       BOOST_TEST(!mesh.hasTriangles());
@@ -260,40 +244,10 @@ BOOST_AUTO_TEST_CASE(MeshWKTPrint)
       "Mesh \"WKTMesh\", dimensionality = 3:\n"
       "GEOMETRYCOLLECTION(\n"
       "POINT (0 0 0), POINT (1 0 0), POINT (0 0 1), POINT (1 0 1),\n"
-      "LINESTRING (0 0 0, 1 0 0), LINESTRING (1 0 0, 0 0 1), LINESTRING (0 0 1, 0 0 0), LINESTRING (1 0 0, 1 0 1), LINESTRING (1 0 1, 0 0 1),\n"
+      "LINESTRING (0 0 0, 1 0 0), LINESTRING (1 0 0, 0 0 1), LINESTRING (0 0 0, 0 0 1), LINESTRING (1 0 0, 1 0 1), LINESTRING (0 0 1, 1 0 1),\n"
       "POLYGON ((0 0 0, 1 0 0, 0 0 1, 0 0 0))\n"
       ")");
   BOOST_TEST(reference == sstream.str());
-}
-
-BOOST_AUTO_TEST_CASE(CreateUniqueEdge)
-{
-  PRECICE_TEST(1_rank);
-  int             dim = 3;
-  Mesh            mesh1("Mesh1", dim, testing::nextMeshID());
-  auto &          mesh = mesh1;
-  Eigen::VectorXd coords0(dim);
-  Eigen::VectorXd coords1(dim);
-  Eigen::VectorXd coords2(dim);
-  coords0 << 0.0, 0.0, 0.0;
-  coords1 << 1.0, 0.0, 0.0;
-  coords2 << 0.0, 0.0, 1.0;
-  Vertex &v0 = mesh.createVertex(coords0);
-  Vertex &v1 = mesh.createVertex(coords1);
-  Vertex &v2 = mesh.createVertex(coords2);
-
-  Edge &e01a = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
-  mesh.createEdge(v0, v1);              // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 2);
-
-  Edge &e01c = mesh.createUniqueEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 2);
-  BOOST_TEST(e01a == e01c);
-
-  mesh.createUniqueEdge(v1, v2); // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 3);
-  mesh.createUniqueEdge(v1, v2); // LINESTRING (0 0 0, 1 0 0)
-  BOOST_TEST(mesh.edges().size() == 3);
 }
 
 BOOST_AUTO_TEST_CASE(ResizeDataGrow)
@@ -306,7 +260,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataGrow)
   mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
   mesh.createVertex(Vector3d(1.0, 0.0, 1.0));
 
-  BOOST_TEST(mesh.vertices().size() == 2);
+  BOOST_TEST(mesh.nVertices() == 2);
   mesh.allocateDataValues();
   BOOST_TEST(values.size() == 2);
 
@@ -314,7 +268,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataGrow)
   mesh.createVertex(Vector3d(2.0, 0.0, 2.0));
   mesh.createVertex(Vector3d(2.0, 0.0, 2.1));
 
-  BOOST_TEST(mesh.vertices().size() == 5);
+  BOOST_TEST(mesh.nVertices() == 5);
   mesh.allocateDataValues();
   BOOST_TEST(values.size() == 5);
 }
@@ -331,7 +285,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataShrink)
   mesh.createVertex(Vector3d(1.0, 1.0, 1.0));
   mesh.createVertex(Vector3d(2.0, 2.0, 2.0));
 
-  BOOST_TEST(mesh.vertices().size() == 4);
+  BOOST_TEST(mesh.nVertices() == 4);
   mesh.allocateDataValues();
   BOOST_TEST(values.size() == 4);
 
@@ -339,7 +293,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataShrink)
   mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
   mesh.createVertex(Vector3d(1.0, 0.0, 1.0));
 
-  BOOST_TEST(mesh.vertices().size() == 2);
+  BOOST_TEST(mesh.nVertices() == 2);
   mesh.allocateDataValues();
   BOOST_TEST(values.size() == 2);
 }
@@ -365,7 +319,7 @@ BOOST_AUTO_TEST_CASE(AsChain)
   Vertex &v2 = mesh.createVertex(coords2);
   Vertex &v3 = mesh.createVertex(coords3);
 
-  BOOST_TEST(mesh.vertices().size() == 4);
+  BOOST_TEST(mesh.nVertices() == 4);
 
   Edge &e0 = mesh.createEdge(v0, v1);
   Edge &e1 = mesh.createEdge(v3, v2);
@@ -407,7 +361,7 @@ BOOST_AUTO_TEST_CASE(ShareVertex)
   Vertex *v1 = &mesh.createVertex(coords1);
   Vertex *v2 = &mesh.createVertex(coords2);
   Vertex *v3 = &mesh.createVertex(coords3);
-  BOOST_REQUIRE(mesh.vertices().size() == 4);
+  BOOST_REQUIRE(mesh.nVertices() == 4);
 
   Edge &e0 = mesh.createEdge(*v0, *v1);
   Edge &e1 = mesh.createEdge(*v1, *v2);
@@ -439,7 +393,7 @@ BOOST_AUTO_TEST_CASE(EdgeLength)
   coords1 << 0.0, 1.0, 0.0;
   Vertex v0{coords0, 0};
   Vertex v1{coords1, 1};
-  Edge   e(v0, v1, 0);
+  Edge   e(v0, v1);
   BOOST_TEST(edgeLength(e) == std::sqrt(2));
 }
 
@@ -461,7 +415,7 @@ BOOST_AUTO_TEST_CASE(VertexPtrsFor)
   Vertex &v1 = mesh.createVertex(coords1);
   Vertex &v2 = mesh.createVertex(coords2);
   mesh.createVertex(coords3);
-  BOOST_TEST(mesh.vertices().size() == 4);
+  BOOST_TEST(mesh.nVertices() == 4);
 
   std::array<int, 3>      ids{v0.getID(), v2.getID(), v1.getID()};
   std::array<Vertex *, 3> expected{&v0, &v2, &v1};
@@ -489,7 +443,7 @@ BOOST_AUTO_TEST_CASE(CoordsForIDs)
   Vertex &v1 = mesh.createVertex(coords1);
   Vertex &v2 = mesh.createVertex(coords2);
   mesh.createVertex(coords3);
-  BOOST_TEST(mesh.vertices().size() == 4);
+  BOOST_TEST(mesh.nVertices() == 4);
 
   std::array<int, 3>             ids{v0.getID(), v2.getID(), v1.getID()};
   std::array<Eigen::VectorXd, 3> expected{coords0, coords2, coords1};
@@ -517,7 +471,7 @@ BOOST_AUTO_TEST_CASE(CoordsForPtrs)
   Vertex &v1 = mesh.createVertex(coords1);
   Vertex &v2 = mesh.createVertex(coords2);
   mesh.createVertex(coords3);
-  BOOST_TEST(mesh.vertices().size() == 4);
+  BOOST_TEST(mesh.nVertices() == 4);
 
   std::array<Vertex *, 3>        ptrs{&v0, &v2, &v1};
   std::array<Eigen::VectorXd, 3> expected{coords0, coords2, coords1};
@@ -548,7 +502,7 @@ BOOST_AUTO_TEST_CASE(Integrate2DScalarData)
   mesh->data(0)->values()(2) = 5.0;
   mesh->data(0)->values()(3) = 7.0;
 
-  auto   result   = mesh::integrate(mesh, mesh->data(0));
+  auto   result   = mesh::integrateSurface(mesh, mesh->data(0)->values());
   double expected = 17.0;
   BOOST_REQUIRE(result.size() == 1);
   BOOST_TEST(result(0) == expected);
@@ -579,7 +533,7 @@ BOOST_AUTO_TEST_CASE(Integrate2DVectorData)
   mesh->data(0)->values()(6) = 7.0;
   mesh->data(0)->values()(7) = 8.0;
 
-  auto            result = mesh::integrate(mesh, mesh->data(0));
+  auto            result = mesh::integrateSurface(mesh, mesh->data(0)->values());
   Eigen::Vector2d expected(17.0, 20.5);
   BOOST_REQUIRE(result.size() == 2);
   BOOST_TEST(result(0) == expected(0));
@@ -612,7 +566,7 @@ BOOST_AUTO_TEST_CASE(Integrate3DScalarData)
   mesh->data(0)->values()(2) = 5.0;
   mesh->data(0)->values()(3) = 7.0;
 
-  auto   result   = mesh::integrate(mesh, mesh->data(0));
+  auto   result   = mesh::integrateSurface(mesh, mesh->data(0)->values());
   double expected = 70.0;
   BOOST_REQUIRE(result.size() == 1);
   BOOST_TEST(result(0) == expected);
@@ -648,7 +602,7 @@ BOOST_AUTO_TEST_CASE(Integrate3DVectorData)
   mesh->data(0)->values()(6) = 7.0;
   mesh->data(0)->values()(7) = 8.0;
 
-  auto            result = mesh::integrate(mesh, mesh->data(0));
+  auto            result = mesh::integrateSurface(mesh, mesh->data(0)->values());
   Eigen::Vector2d expected(70.0, 88.0);
   BOOST_REQUIRE(result.size() == 2);
   BOOST_TEST(result(0) == expected(0));
@@ -698,7 +652,7 @@ BOOST_FIXTURE_TEST_CASE(Integrate2DScalarDataVolume, UnitSquareFixture)
   mesh->data(0)->values()(2) = 7.0;
   mesh->data(0)->values()(3) = 5.0;
 
-  auto   result   = mesh::integrateVolume(mesh, mesh->data(0));
+  auto   result   = mesh::integrateVolume(mesh, mesh->data(0)->values());
   double expected = 4.0;
   BOOST_REQUIRE(result.size() == 1);
   BOOST_TEST(result(0) == expected);
@@ -741,7 +695,7 @@ BOOST_FIXTURE_TEST_CASE(Integrate2DVectorDataVolume, UnitSquareFixture)
   mesh->data(0)->values()(5) = 8.0;
   mesh->data(0)->values()(7) = 6.0;
 
-  auto            result = mesh::integrateVolume(mesh, mesh->data(0));
+  auto            result = mesh::integrateVolume(mesh, mesh->data(0)->values());
   Eigen::Vector2d expected(4.0, 5.0);
   BOOST_REQUIRE(result.size() == 2);
   BOOST_TEST(result(0) == expected(0));
@@ -779,7 +733,7 @@ BOOST_FIXTURE_TEST_CASE(Integrate3DScalarDataVolume, OneTetraFixture)
   mesh->data(0)->values()(2) = 5.0;
   mesh->data(0)->values()(3) = 7.0;
 
-  auto   result   = mesh::integrateVolume(mesh, mesh->data(0));
+  auto   result   = mesh::integrateVolume(mesh, mesh->data(0)->values());
   double expected = 4.0 / 6;
   BOOST_REQUIRE(result.size() == 1);
   BOOST_TEST(result(0) == expected);
@@ -819,7 +773,7 @@ BOOST_FIXTURE_TEST_CASE(Integrate3DVectorDataVolume, OneTetraFixture)
   mesh->data(0)->values()(2 * 3 + 2) = 0.0;
   mesh->data(0)->values()(3 * 3 + 2) = 0.0;
 
-  auto            result = mesh::integrateVolume(mesh, mesh->data(0));
+  auto            result = mesh::integrateVolume(mesh, mesh->data(0)->values());
   Eigen::Vector3d expected(4.0 / 6, 1.0 / 6, 1.0 / 24);
   BOOST_REQUIRE(result.size() == 3);
   BOOST_TEST(result(0) == expected(0));
@@ -861,11 +815,281 @@ BOOST_AUTO_TEST_CASE(AddMesh)
   subMesh->createTetrahedron(v15, v12, v13, v14);
 
   globalMesh->addMesh(*subMesh);
-  BOOST_TEST(globalMesh->vertices().size() == 9);
+  BOOST_TEST(globalMesh->nVertices() == 9);
   BOOST_TEST(globalMesh->edges().size() == 3);
   BOOST_TEST(globalMesh->triangles().size() == 3);
   BOOST_TEST(globalMesh->tetrahedra().size() == 3);
 }
 
+BOOST_AUTO_TEST_SUITE(PreProcess);
+
+BOOST_AUTO_TEST_CASE(DuplicateEdges)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh{"Mesh1", 3, 0};
+
+  auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  auto &v2 = mesh.createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
+  auto &v3 = mesh.createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
+  auto &v4 = mesh.createVertex(Eigen::Vector3d(0.0, 8.0, 0.0));
+
+  mesh.createEdge(v1, v2);
+  mesh.createEdge(v2, v3);
+  mesh.createEdge(v3, v4);
+
+  // add single duplicate
+  mesh.createEdge(v3, v4);
+
+  // add 1000 duplicates
+  for (int i = 0; i < 1000; ++i) {
+    mesh.createEdge(v2, v3);
+  };
+  BOOST_TEST(mesh.edges().size() == 1004);
+
+  mesh.preprocess();
+
+  BOOST_TEST(mesh.edges().size() == 3);
+  BOOST_TEST(mesh.triangles().empty());
+  BOOST_TEST(mesh.tetrahedra().empty());
+
+  std::vector<Edge> expectedEdges{{v1, v2}, {v2, v3}, {v3, v4}};
+  for (auto &e : expectedEdges) {
+    auto cnt = std::count(mesh.edges().begin(), mesh.edges().end(), e);
+    BOOST_TEST(cnt == 1);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(SingleTriangle)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh{"Mesh1", 3, 0};
+
+  auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  auto &v2 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  auto &v3 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+
+  mesh.createTriangle(v1, v2, v3);
+
+  mesh.preprocess();
+
+  BOOST_TEST(mesh.edges().size() == 3);
+  BOOST_TEST(mesh.triangles().size() == 1);
+  BOOST_TEST(mesh.tetrahedra().size() == 0);
+}
+
+BOOST_AUTO_TEST_CASE(SingleTriangulatedQuad)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh{"Mesh1", 3, 0};
+
+  auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  auto &v2 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  auto &v3 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+  auto &v4 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+
+  mesh.createTriangle(v1, v2, v3);
+  mesh.createTriangle(v2, v3, v4);
+
+  mesh.preprocess();
+
+  BOOST_TEST(mesh.edges().size() == 5);
+  BOOST_TEST(mesh.triangles().size() == 2);
+  BOOST_TEST(mesh.tetrahedra().size() == 0);
+}
+
+BOOST_AUTO_TEST_CASE(SingleTetrahedron)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh{"Mesh1", 3, 0};
+
+  auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  auto &v2 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  auto &v3 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+  auto &v4 = mesh.createVertex(Eigen::Vector3d(0.3, 0.3, 1.0));
+
+  mesh.createTetrahedron(v1, v2, v3, v4);
+
+  mesh.preprocess();
+
+  BOOST_TEST(mesh.edges().size() == 6);
+  BOOST_TEST(mesh.triangles().size() == 4);
+  BOOST_TEST(mesh.tetrahedra().size() == 1);
+}
+
+BOOST_AUTO_TEST_CASE(TouchingTetrahedra)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh{"Mesh1", 3, 0};
+
+  auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  auto &v2 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  auto &v3 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+
+  auto &v4 = mesh.createVertex(Eigen::Vector3d(0.3, 0.3, 1.0));
+  auto &v5 = mesh.createVertex(Eigen::Vector3d(0.3, 0.3, -1.0));
+
+  mesh.createTetrahedron(v1, v2, v3, v4);
+  mesh.createTetrahedron(v1, v2, v3, v5);
+
+  mesh.preprocess();
+
+  BOOST_TEST(mesh.edges().size() == 9);
+  BOOST_TEST(mesh.triangles().size() == 7);
+  BOOST_TEST(mesh.tetrahedra().size() == 2);
+}
+
+BOOST_AUTO_TEST_CASE(SingleTriangle2ImplicitEdges)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh{"Mesh1", 3, 0};
+
+  auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  auto &v2 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  auto &v3 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+
+  mesh.createTriangle(v1, v2, v3);
+  mesh.createEdge(v2, v3);
+
+  mesh.preprocess();
+
+  BOOST_TEST(mesh.edges().size() == 3);
+  BOOST_TEST(mesh.triangles().size() == 1);
+  BOOST_TEST(mesh.tetrahedra().size() == 0);
+}
+
+BOOST_AUTO_TEST_CASE(SingleTriangle1ImplicitEdges)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh{"Mesh1", 3, 0};
+
+  auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  auto &v2 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  auto &v3 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+
+  mesh.createTriangle(v1, v2, v3);
+  mesh.createEdge(v1, v2);
+  mesh.createEdge(v2, v3);
+
+  mesh.preprocess();
+
+  BOOST_TEST(mesh.edges().size() == 3);
+  BOOST_TEST(mesh.triangles().size() == 1);
+  BOOST_TEST(mesh.tetrahedra().size() == 0);
+}
+
+BOOST_AUTO_TEST_CASE(SingleTetrahedron3ImplicitTriangles)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh{"Mesh1", 3, 0};
+
+  auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  auto &v2 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  auto &v3 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+  auto &v4 = mesh.createVertex(Eigen::Vector3d(0.3, 0.3, 1.0));
+
+  mesh.createTetrahedron(v1, v2, v3, v4);
+  mesh.createTriangle(v1, v2, v3);
+
+  mesh.preprocess();
+
+  BOOST_TEST(mesh.edges().size() == 6);
+  BOOST_TEST(mesh.triangles().size() == 4);
+  BOOST_TEST(mesh.tetrahedra().size() == 1);
+}
+
+BOOST_AUTO_TEST_CASE(SingleTetrahedronNoImplicitTriangles)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh{"Mesh1", 3, 0};
+
+  auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  auto &v2 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  auto &v3 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+  auto &v4 = mesh.createVertex(Eigen::Vector3d(0.3, 0.3, 1.0));
+
+  mesh.createTetrahedron(v1, v2, v3, v4);
+  mesh.createTriangle(v1, v2, v3);
+  mesh.createTriangle(v1, v2, v4);
+  mesh.createTriangle(v3, v4, v1);
+  mesh.createTriangle(v3, v4, v2);
+
+  mesh.preprocess();
+
+  BOOST_TEST(mesh.edges().size() == 6);
+  BOOST_TEST(mesh.triangles().size() == 4);
+  BOOST_TEST(mesh.tetrahedra().size() == 1);
+}
+
+BOOST_AUTO_TEST_CASE(Mixed)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh{"Mesh1", 3, 0};
+
+  auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  auto &v2 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  auto &v3 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+  auto &v4 = mesh.createVertex(Eigen::Vector3d(0.3, 0.3, 1.0));
+
+  mesh.createTetrahedron(v1, v2, v3, v4);
+  mesh.createTriangle(v1, v2, v3);
+  mesh.createEdge(v3, v4);
+
+  mesh.preprocess();
+
+  BOOST_TEST(mesh.edges().size() == 6);
+  BOOST_TEST(mesh.triangles().size() == 4);
+  BOOST_TEST(mesh.tetrahedra().size() == 1);
+}
+
+BOOST_AUTO_TEST_CASE(Complex)
+{
+  PRECICE_TEST(1_rank);
+  Mesh mesh{"Mesh1", 3, 0};
+
+  auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  auto &v2 = mesh.createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
+  auto &v3 = mesh.createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
+  auto &v4 = mesh.createVertex(Eigen::Vector3d(0.0, 8.0, 0.0));
+
+  mesh.createEdge(v1, v2);
+  mesh.createEdge(v2, v3);
+  mesh.createEdge(v3, v4);
+
+  // add single duplicate
+  mesh.createEdge(v3, v4);
+
+  // add 1000 duplicates
+  for (int i = 0; i < 1000; ++i) {
+    mesh.createEdge(v2, v3);
+  };
+  BOOST_TEST(mesh.edges().size() == 1004);
+
+  mesh.createTriangle(v1, v2, v3);
+  mesh.createTriangle(v2, v3, v4);
+  for (int i = 0; i < 1000; ++i) {
+    mesh.createTriangle(v2, v3, v4);
+  };
+  BOOST_TEST(mesh.triangles().size() == 1002);
+
+  // creates edges 1-3 and 2-4
+  mesh.preprocess();
+
+  BOOST_TEST(mesh.edges().size() == 5);
+  BOOST_TEST(mesh.triangles().size() == 2);
+
+  std::vector<Edge> expectedEdges{{v1, v2}, {v1, v3}, {v2, v3}, {v3, v4}, {v2, v4}};
+  for (auto &e : expectedEdges) {
+    auto cnt = std::count(mesh.edges().begin(), mesh.edges().end(), e);
+    BOOST_TEST(cnt == 1);
+  }
+
+  std::vector<Triangle> expectedTriangles{{v1, v2, v3}, {v2, v3, v4}};
+  for (auto &t : expectedTriangles) {
+    auto cnt = std::count(mesh.triangles().begin(), mesh.triangles().end(), t);
+    BOOST_TEST(cnt == 1);
+  }
+}
+
+BOOST_AUTO_TEST_SUITE_END();
 BOOST_AUTO_TEST_SUITE_END() // Mesh
 BOOST_AUTO_TEST_SUITE_END() // Mesh

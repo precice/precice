@@ -13,8 +13,7 @@
 #include "utils/EigenIO.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Triangle::iterator>) );
 BOOST_CONCEPT_ASSERT((boost::RandomAccessIteratorConcept<Triangle::const_iterator>) );
@@ -24,9 +23,7 @@ BOOST_CONCEPT_ASSERT((boost::RandomAccessRangeConcept<const Triangle>) );
 Triangle::Triangle(
     Edge &edgeOne,
     Edge &edgeTwo,
-    Edge &edgeThree,
-    int   id)
-    : _id(id)
+    Edge &edgeThree)
 {
   PRECICE_ASSERT(edgeOne.getDimensions() == edgeTwo.getDimensions(),
                  edgeOne.getDimensions(), edgeTwo.getDimensions());
@@ -59,10 +56,8 @@ Triangle::Triangle(
 Triangle::Triangle(
     Vertex &vertexOne,
     Vertex &vertexTwo,
-    Vertex &vertexThree,
-    int     id)
-    : _vertices({&vertexOne, &vertexTwo, &vertexThree}),
-      _id(id)
+    Vertex &vertexThree)
+    : _vertices({&vertexOne, &vertexTwo, &vertexThree})
 {
   PRECICE_ASSERT(vertexOne.getDimensions() == vertexTwo.getDimensions(),
                  vertexOne.getDimensions(), vertexTwo.getDimensions());
@@ -125,5 +120,4 @@ std::ostream &operator<<(std::ostream &os, const Triangle &t)
             << t.vertex(0).getCoords().transpose().format(wkt()) << "))";
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

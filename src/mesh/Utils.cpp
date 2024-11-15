@@ -1,17 +1,19 @@
 #include <Eigen/Core>
 #include <mesh/Edge.hpp>
 #include <mesh/Mesh.hpp>
+#include <mesh/Utils.hpp>
 #include <utils/IntraComm.hpp>
+#include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 /// Given the data and the mesh, this function returns the surface integral. Assumes no overlap exists for the mesh
-Eigen::VectorXd integrate(const PtrMesh &mesh, const PtrData &data)
+Eigen::VectorXd integrateSurface(const PtrMesh &mesh, const Eigen::VectorXd &input)
 {
-  const int       valueDimensions = data->getDimensions();
+  PRECICE_ASSERT(mesh->nVertices() > 0);
   const int       meshDimensions  = mesh->getDimensions();
-  const auto &    values          = data->values();
+  const int       valueDimensions = input.size() / mesh->nVertices();
+  const auto &    values          = input;
   Eigen::VectorXd integral        = Eigen::VectorXd::Zero(valueDimensions);
 
   if (meshDimensions == 2) {
@@ -36,11 +38,12 @@ Eigen::VectorXd integrate(const PtrMesh &mesh, const PtrData &data)
   return integral;
 }
 
-Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const PtrData &data)
+Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const Eigen::VectorXd &input)
 {
-  const int       valueDimensions = data->getDimensions();
+  PRECICE_ASSERT(mesh->nVertices() > 0);
   const int       meshDimensions  = mesh->getDimensions();
-  const auto &    values          = data->values();
+  const int       valueDimensions = input.size() / mesh->nVertices();
+  const auto &    values          = input;
   Eigen::VectorXd integral        = Eigen::VectorXd::Zero(valueDimensions);
   if (meshDimensions == 2) {
     for (const auto &face : mesh->triangles()) {
@@ -66,5 +69,4 @@ Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const PtrData &data)
   return integral;
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

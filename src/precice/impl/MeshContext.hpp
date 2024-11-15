@@ -14,11 +14,6 @@ namespace impl {
 
 /// Stores a mesh and related objects and data.
 struct MeshContext {
-  MeshContext(int dimensions)
-      : localOffset(Eigen::VectorXd::Zero(dimensions))
-  {
-  }
-
   /** Upgrades the mesh requirement to a more specific level.
     * @param[in] requirement The requirement to upgrade to.
     */
@@ -26,9 +21,6 @@ struct MeshContext {
 
   /// Mesh holding the geometry data structure.
   mesh::PtrMesh mesh;
-
-  /// Data IDs of properties the geometry does possess.
-  std::vector<int> associatedData;
 
   /// Determines which mesh type has to be provided by the accessor.
   mapping::Mapping::MeshRequirement meshRequirement = mapping::Mapping::MeshRequirement::UNDEFINED;
@@ -43,14 +35,14 @@ struct MeshContext {
   /// bounding-boxes.
   bool allowDirectAccess = false;
 
+  /// setMeshAccessRegion may only be called once per mesh(context)
+  bool accessRegionDefined = false;
+
   /// True, if accessor does create the mesh.
   bool provideMesh = false;
 
   /// type of geometric filter
   partition::ReceivedPartition::GeometricFilter geoFilter = partition::ReceivedPartition::GeometricFilter::UNDEFINED;
-
-  /// Offset only applied to meshes local to the accessor.
-  Eigen::VectorXd localOffset;
 
   /// Partition creating the parallel decomposition of the mesh
   partition::PtrPartition partition;

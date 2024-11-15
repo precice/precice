@@ -12,19 +12,19 @@ struct MappingContext {
   mapping::PtrMapping mapping;
 
   /// id of mesh from which is mapped
-  int fromMeshID = -1;
+  MeshID fromMeshID = -1;
 
   /// id of mesh to which is mapped
-  int toMeshID = -1;
+  MeshID toMeshID = -1;
 
-  /// Time of execution of mapping.
-  mapping::MappingConfiguration::Timing timing = mapping::MappingConfiguration::INITIAL;
+  /// data which is mapped from mesh
+  mesh::PtrData fromData = nullptr;
 
-  /// True, if computation and mapping is done repeatedly for single values.
-  //bool isIncremental;
+  /// data which is mapped to mesh
+  mesh::PtrData toData = nullptr;
 
-  /// True, if data has been mapped already.
-  bool hasMappedData = false;
+  /// used the automatic rbf alias tag in order to set the mapping
+  bool configuredWithAliasTag = false;
 
   /// Enables gradient data in the corresponding 'from' data class
   void requireGradientData(const std::string &dataName)

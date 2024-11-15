@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+  <mesh name="TestMesh" dimensions="3" />
+  <mesh name="TestMeshTwo" dimensions="3" />
+  <mesh name="TestMeshThree" dimensions="3" />
+  <mesh name="TestMeshFour" dimensions="3" />
+  <mesh name="TestMeshFive" dimensions="3" />
+  <mesh name="TestMeshSix" dimensions="3" />
+  <mesh name="TestMeshSeven" dimensions="3" />
+  <mesh name="TestMeshEight" dimensions="3" />
+  <mesh name="TestMeshNine" dimensions="3" />
+  <mesh name="TestMeshTen" dimensions="3" />
+  <mesh name="TestMeshEleven" dimensions="3" />
+  <mesh name="TestMeshTwelve" dimensions="3" />
+  <mesh name="TestMeshThirteen" dimensions="3" />
+
+  <mapping:rbf-global-iterative
+    direction="write"
+    from="TestMeshTwo"
+    to="TestMesh"
+    constraint="conservative">
+    <basis-function:thin-plate-splines />
+  </mapping:rbf-global-iterative>
+
+  <mapping:rbf-global-iterative
+    direction="write"
+    from="TestMeshThree"
+    to="TestMeshTwo"
+    constraint="conservative">
+    <basis-function:volume-splines />
+  </mapping:rbf-global-iterative>
+
+  <mapping:rbf-global-iterative
+    direction="write"
+    from="TestMeshFour"
+    to="TestMeshThree"
+    constraint="conservative">
+    <basis-function:compact-polynomial-c0 support-radius="0.3" />
+  </mapping:rbf-global-iterative>
+
+  <mapping:rbf-global-iterative
+    direction="write"
+    from="TestMeshFive"
+    to="TestMeshFour"
+    constraint="conservative">
+    <basis-function:compact-polynomial-c2 support-radius="0.3" />
+  </mapping:rbf-global-iterative>
+
+  <mapping:rbf-global-iterative
+    direction="write"
+    from="TestMeshSix"
+    to="TestMeshFive"
+    constraint="conservative">
+    <basis-function:compact-polynomial-c4 support-radius="0.3" />
+  </mapping:rbf-global-iterative>
+
+  <mapping:rbf-global-iterative
+    direction="write"
+    from="TestMeshSeven"
+    to="TestMeshSix"
+    constraint="conservative">
+    <basis-function:compact-polynomial-c6 support-radius="0.3" />
+  </mapping:rbf-global-iterative>
+
+  <mapping:rbf-global-iterative
+    direction="write"
+    from="TestMeshEight"
+    to="TestMeshSeven"
+    constraint="conservative">
+    <basis-function:compact-polynomial-c8 support-radius="0.3" />
+  </mapping:rbf-global-iterative>
+
+  <mapping:rbf-global-iterative
+    direction="write"
+    from="TestMeshNine"
+    to="TestMeshEight"
+    constraint="conservative">
+    <basis-function:multiquadrics shape-parameter="0.3" />
+  </mapping:rbf-global-iterative>
+
+  <mapping:rbf-global-iterative
+    direction="write"
+    from="TestMeshTen"
+    to="TestMeshNine"
+    constraint="conservative">
+    <basis-function:inverse-multiquadrics shape-parameter="0.3" />
+  </mapping:rbf-global-iterative>
+
+  <mapping:rbf-global-iterative
+    direction="write"
+    from="TestMeshEleven"
+    to="TestMeshTen"
+    constraint="conservative">
+    <basis-function:compact-tps-c2 support-radius="0.3" />
+    <executor:cpu />
+  </mapping:rbf-global-iterative>
+
+  <mapping:rbf-global-iterative
+    direction="write"
+    from="TestMeshTwelve"
+    to="TestMeshEleven"
+    constraint="conservative">
+    <basis-function:gaussian support-radius="0.3" />
+    <executor:cpu />
+  </mapping:rbf-global-iterative>
+
+  <mapping:rbf-global-iterative
+    direction="write"
+    from="TestMeshThirteen"
+    to="TestMeshTwelve"
+    constraint="conservative"
+    polynomial="off"
+    x-dead="true"
+    y-dead="false"
+    z-dead="true"
+    solver-rtol="1e-6">
+    <basis-function:gaussian shape-parameter="0.3" />
+  </mapping:rbf-global-iterative>
+</configuration>

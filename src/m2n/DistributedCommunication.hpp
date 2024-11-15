@@ -4,7 +4,7 @@
 #include <vector>
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "utils/span.hpp"
+#include "precice/span.hpp"
 
 namespace precice {
 namespace m2n {
@@ -117,7 +117,7 @@ public:
   using CommunicationMap = std::map<int, std::vector<int>>;
 
   /// Broadcasts an int to connected ranks on remote participant
-  virtual void broadcastSend(const int &itemToSend) = 0;
+  virtual void broadcastSend(int itemToSend) = 0;
 
   /**
    * @brief Receives an int per connected rank on remote participant

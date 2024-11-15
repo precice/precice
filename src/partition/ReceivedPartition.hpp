@@ -27,7 +27,7 @@ class ReceivedPartition : public Partition {
   friend struct ReceivedPartitionFixture;
 
 public:
-  /// Defines the typ of geometric filter used
+  /// Defines the type of geometric filter used
   enum GeometricFilter {
     /// undefined
     UNDEFINED,

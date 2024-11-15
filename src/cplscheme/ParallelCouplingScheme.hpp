@@ -29,61 +29,49 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param[in] maxTime Simulation time limit, or UNDEFINED_TIME.
-   * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIMEWINDOWS.
+   * @param[in] maxTime Simulation time limit, or UNDEFINED_MAX_TIME.
+   * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIME_WINDOWS.
    * @param[in] timeWindowSize Simulation time window size.
-   * @param[in] validDigits valid digits for computation of the remainder of a time window
    * @param[in] firstParticipant Name of participant starting simulation.
    * @param[in] secondParticipant Name of second participant in coupling.
    * @param[in] localParticipant Name of participant using this coupling scheme.
    * @param[in] m2n Communication object for com. between participants.
-   * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
    * @param[in] cplMode Set implicit or explicit coupling
    * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
-   * @param[in] extrapolationOrder order used for extrapolation
    */
   ParallelCouplingScheme(
-      double                        maxTime,
-      int                           maxTimeWindows,
-      double                        timeWindowSize,
-      int                           validDigits,
-      const std::string &           firstParticipant,
-      const std::string &           secondParticipant,
-      const std::string &           localParticipant,
-      m2n::PtrM2N                   m2n,
-      constants::TimesteppingMethod dtMethod,
-      CouplingMode                  cplMode,
-      int                           maxIterations      = UNDEFINED_MAX_ITERATIONS,
-      int                           extrapolationOrder = UNDEFINED_EXTRAPOLATION_ORDER);
+      double             maxTime,
+      int                maxTimeWindows,
+      double             timeWindowSize,
+      const std::string &firstParticipant,
+      const std::string &secondParticipant,
+      const std::string &localParticipant,
+      m2n::PtrM2N        m2n,
+      CouplingMode       cplMode,
+      int                minIterations,
+      int                maxIterations);
+
+  ParallelCouplingScheme(
+      double             maxTime,
+      int                maxTimeWindows,
+      double             timeWindowSize,
+      const std::string &firstParticipant,
+      const std::string &secondParticipant,
+      const std::string &localParticipant,
+      m2n::PtrM2N        m2n,
+      CouplingMode       cplMode);
 
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
-  /**
-   * @brief Exchanges all data between the participants of the ParallelCouplingScheme and applies acceleration.
-   * @returns true, if iteration converged
-   */
-  bool exchangeDataAndAccelerate() override;
+  /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
+  void exchangeInitialData() override final;
 
-  /**
-   * @brief ParallelCouplingScheme applies acceleration to all CouplingData
-   * @returns DataMap being accelerated
-   */
-  const DataMap getAccelerationData() override
-  {
-    PRECICE_ASSERT(!doesFirstStep(), "Only the second participant should do the acceleration.");
-    return getAllData();
-  }
+  void exchangeFirstData() override final;
 
-  /**
-   * @brief determine whether data has to be sent/received
-   */
-  void initializeImplementation() override;
+  void exchangeSecondData() override final;
 
-  /**
-   * @brief Exchanges data, if it has to be initialized.
-   */
-  void exchangeInitialData() override;
+  DataMap &getAccelerationData() override final;
 };
 
 } // namespace cplscheme

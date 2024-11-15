@@ -1,7 +1,7 @@
 #include "io/ExportCSV.hpp"
 
 #include <Eigen/Core>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <memory>
@@ -16,8 +16,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 namespace {
 struct StridedAccess {
@@ -36,38 +35,45 @@ struct StridedAccess {
 };
 } // namespace
 
-void ExportCSV::doExport(
-    const std::string &name,
-    const std::string &location,
-    const mesh::Mesh & mesh)
+ExportCSV::ExportCSV(
+    std::string_view  participantName,
+    std::string_view  location,
+    const mesh::Mesh &mesh,
+    ExportKind        kind,
+    int               frequency,
+    int               rank,
+    int               size)
+    : Export(participantName, location, mesh, kind, frequency, rank, size){};
+
+void ExportCSV::doExport(int index, double time)
 {
-  PRECICE_TRACE(name, location, mesh.getName());
-  PRECICE_ASSERT(!name.empty());
+  PRECICE_TRACE(index, time, _mesh->getName());
+  PRECICE_ASSERT(index >= 0);
+  PRECICE_ASSERT(time >= 0.0);
 
-  // Ignore empty meshes
-  if (mesh.vertices().empty()) {
+  if (!keepExport(index))
     return;
+
+  // Construct filename
+  std::string filename;
+  if (isParallel()) {
+    // Mesh-Participant.r2.it2
+    filename = fmt::format("{}-{}.{}_{}.csv", _mesh->getName(), _participantName, _rank, formatIndex(index));
+  } else {
+    // Mesh-Participant.it2
+    filename = fmt::format("{}-{}.{}.csv", _mesh->getName(), _participantName, formatIndex(index));
   }
 
-  // Construct full filename
-  std::string filename{name};
-  int         rank{0};
-  if (utils::IntraComm::isParallel()) {
-    rank = utils::IntraComm::getRank();
-    filename.append("_").append(std::to_string(rank));
-  }
-  filename.append(".csv");
-
-  namespace fs = boost::filesystem;
-  fs::path outfile(location);
-  if (not location.empty()) {
+  namespace fs = std::filesystem;
+  fs::path outfile(_location);
+  if (not _location.empty()) {
     fs::create_directories(outfile);
   }
   outfile /= filename;
 
   // Prepare filestream
   std::ofstream outFile(outfile.string(), std::ios::trunc);
-  const bool    is3d = (mesh.getDimensions() == 3);
+  const bool    is3d = (_mesh->getDimensions() == 3);
 
   // write header
   outFile << "PosX;PosY";
@@ -75,10 +81,9 @@ void ExportCSV::doExport(
     outFile << ";PosZ";
   }
   outFile << ";Rank";
-  for (const auto &data : mesh.data()) {
+  for (const auto &data : _mesh->data()) {
     auto dataName = data->getName();
     auto dim      = data->getDimensions();
-    PRECICE_ASSERT(static_cast<std::size_t>(data->values().size()) == mesh.vertices().size() * dim);
     outFile << ';' << dataName;
     if (dim == 2) {
       outFile << "X;" << dataName << 'Y';
@@ -90,23 +95,23 @@ void ExportCSV::doExport(
 
   // Prepare writing data
   std::vector<StridedAccess> dataColumns;
-  for (const auto &data : mesh.data()) {
-    auto    dim    = data->getDimensions();
-    double *values = data->values().data();
+  for (const auto &data : _mesh->data()) {
+    auto          dim    = data->getDimensions();
+    double const *values = data->timeStepsStorage().last().sample.values.data();
     for (int i = 0; i < dim; ++i) {
       dataColumns.push_back({std::next(values, i), dim});
     }
   }
 
   // write vertex data
-  const std::string rankCol = ";" + std::to_string(rank);
-  const auto        size    = mesh.vertices().size();
+  const std::string rankCol = ";" + std::to_string(_rank);
+  const auto        size    = _mesh->nVertices();
   for (std::size_t vid = 0; vid < size; ++vid) {
-    const auto &vertex = mesh.vertices()[vid];
-    outFile << vertex.getCoords()[0] << ';';
-    outFile << vertex.getCoords()[1];
+    const auto &vertex = _mesh->vertex(vid);
+    outFile << vertex.coord(0) << ';';
+    outFile << vertex.coord(1);
     if (is3d) {
-      outFile << ";" << vertex.getCoords()[2];
+      outFile << ";" << vertex.coord(2);
     }
     outFile << rankCol;
     for (auto &dc : dataColumns) {
@@ -117,5 +122,9 @@ void ExportCSV::doExport(
   }
 }
 
-} // namespace io
-} // namespace precice
+void ExportCSV::exportSeries() const
+{
+  // not supported by paraview
+}
+
+} // namespace precice::io

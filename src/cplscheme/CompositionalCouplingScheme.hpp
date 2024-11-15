@@ -74,40 +74,30 @@ public:
   /**
    * @brief Initializes the coupling scheme and establishes a communication
    *        connection to the coupling partner.
-* @param[in] startTime TODO
-* @param[in] startTimeWindow TODO
-*/
-  void initialize(
-      double startTime,
-      int    startTimeWindow) final override;
+   */
+  void initialize() final override;
+
+  void reinitialize() override final;
+
+  /// Returns true, if any of the composed coupling schemes sendsInitializedData for this participant
+  bool sendsInitializedData() const override final;
 
   /// Returns true, if initialize has been called.
   bool isInitialized() const final override;
 
-  /**
-   * @brief Getter for _sendsInitializedData
-   * @returns _sendsInitializedData
-   */
-  bool sendsInitializedData() const final override;
-
-  /**
-   * @brief Getter for _receivesInitializedData
-   * @returns _receivesInitializedData
-   */
-  bool receivesInitializedData() const final override;
-
-  /**
-   * @brief Initializes the data for first implicit coupling scheme iteration.
-   *
-   * Has to be called after initialize() and before advance().
-   */
-  void initializeData() final override;
-
-  /// Adds newly computed time. Has to be called before every advance.
-  void addComputedTime(double timeToAdd) final override;
+  /// @copydoc cplscheme::CouplingScheme::addComputedTime()
+  bool addComputedTime(double timeToAdd) final override;
 
   /// Exchanges data and updates the state of the coupling scheme.
-  void advance() final override;
+  //void advance() final override;
+
+  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override;
+
+  void firstExchange() override;
+
+  ChangedMeshes secondSynchronization() override;
+
+  void secondExchange() override;
 
   /// Finalizes the coupling and disconnects communication.
   void finalize() final override;
@@ -115,22 +105,19 @@ public:
   /// Returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const final override;
 
+  /// @copydoc cplscheme::CouplingScheme::localParticipant()
+  std::string localParticipant() const override final;
+
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
    *
    * Also returns true after the last call of advance() at the end of the
    * simulation.
    *
-   * @param lastSolverTimestepLength [IN] The length of the last timestep
+   * @param lastSolverTimeStepSize [IN] The size of the last time step
    *        computed by the solver calling willDataBeExchanged().
    */
-  bool willDataBeExchanged(double lastSolverTimestepLength) const final override;
-
-  /**
-   * @brief checks all coupling schemes this coupling scheme is composed of.
-   * @returns true, if data has been received in call of initializeData().
-   */
-  bool hasInitialDataBeenReceived() const override final;
+  bool willDataBeExchanged(double lastSolverTimeStepSize) const final override;
 
   /**
    * @brief checks all coupling schemes this coupling scheme is composed of.
@@ -145,6 +132,8 @@ public:
    */
   double getTime() const final override;
 
+  double getTimeWindowStart() const override final;
+
   /**
    * @brief Returns the currently computed time windows of the coupling scheme.
    *
@@ -153,46 +142,29 @@ public:
   int getTimeWindows() const final override;
 
   /**
-   * @brief Returns true, if timestep length by any of the coupling schemes in this compositional coupling scheme.
+   * @brief Returns true, if time window size is given by any of the coupling schemes in this compositional coupling scheme.
    *
-   * If any of the solvers in the composition has a timestep length limit, this
-   * counts as limit.
    */
   bool hasTimeWindowSize() const final override;
 
   /**
-   * @brief Returns the timestep length, if one is given by the coupling scheme.
+   * @brief Returns the time window size, if one is given by the coupling scheme.
    *
-   * An assertion is thrown, if no valid timestep is given. Check with
+   * An assertion is thrown, if no valid time window size is given. Check with
    * hasTimeWindowSize().
    *
-   * The smallest timestep length limit in the coupling scheme composition has
-   * to be obeyed.
    */
   double getTimeWindowSize() const final override;
 
   /**
-   * @brief Returns the remaining timestep length inside the current time window.
+   * @brief Returns the maximal size of the next time step to be computed.
    *
-   * This is not necessarily the timestep length limit the solver has to obey
-   * which is returned by getNextTimestepMaxLength().
-   *
-   * If no timestep length is prescribed by the coupling scheme, always 0.0 is
-   * returned.
-   *
-   * The maximum remainder of all composed coupling schemes is returned.
-   */
-  double getThisTimeWindowRemainder() const final override;
-
-  /**
-   * @brief Returns the maximal length of the next timestep to be computed.
-   *
-   * If no timestep length is prescribed by the coupling scheme, always the
+   * If no time step size is prescribed by the coupling scheme, always the
    * maximal double accuracy floating point number value is returned.
    *
-   * This is the minimum of all max lengths of the composed coupling schemes.
+   * This is the minimum of all max sizes of the composed coupling schemes.
    */
-  double getNextTimestepMaxLength() const final override;
+  double getNextTimeStepMaxSize() const final override;
 
   /**
    * @brief Returns true, when the coupled simulation is still ongoing.
@@ -213,74 +185,68 @@ public:
    *
    * True, if any of the composed coupling schemes requires the action.
    */
-  bool isActionRequired(const std::string &actionName) const final override;
+  bool isActionRequired(Action action) const final override;
+
+  /// Returns true, if the given action has been performed by the accessor.
+  bool isActionFulfilled(Action action) const final override;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  void markActionFulfilled(const std::string &actionName) final override;
+  void markActionFulfilled(Action action) final override;
 
   /// Sets an action required to be performed by the accessor.
-  void requireAction(const std::string &actionName) final override;
+  void requireAction(Action action) final override;
 
   /// Returns a string representation of the current coupling state.
   std::string printCouplingState() const final override;
 
+  /// True if one cplscheme is an implicit scheme
+  bool isImplicitCouplingScheme() const final;
+
+  /// True if the implicit scheme has converged or no implicit scheme is defined
+  bool hasConverged() const final;
+
+  /// @copydoc cplscheme::CouplingScheme::requiresSubsteps()
+  bool requiresSubsteps() const override final;
+
+  /// @copydoc cplscheme::CouplingScheme::implicitDataToReceive()
+  ImplicitData implicitDataToReceive() const override final;
+
 private:
   mutable logging::Logger _log{"cplscheme::CompositionalCouplingScheme"};
 
-  /// Groups a coupling scheme with additional associated variables.
-  struct Scheme {
+  using Schemes = std::vector<PtrCouplingScheme>;
 
-    /// The actual coupling scheme
-    PtrCouplingScheme scheme;
+  /// Explicit coupling schemes to be executed
+  Schemes _explicitSchemes;
 
-    // @brief Excludes converged implicit schemes from some operations.
-    //
-    // When several implicit schemes are iterating their point of convergence
-    // will be different in general. Converged schemes are automatically advanced
-    // to the next timestep and are put on hold until all schemes are converged.
-    //
-    // This assumes that a once converged scheme does not leave the convergence
-    // region again.
-    bool onHold;
+  /// The optional implicit scheme to be handled last
+  PtrCouplingScheme _implicitScheme;
 
-    Scheme(PtrCouplingScheme scheme)
-        : scheme(scheme), onHold(false) {}
-  };
+  /// Are explicit schemes on hold?
+  bool _explicitOnHold = false;
 
-  typedef std::list<Scheme>           Schemes;
-  typedef std::list<Scheme>::iterator SchemesIt;
-  //typedef std::list<PtrCouplingScheme>::const_iterator ConstSchemesIt;
-
-  /// Coupling schemes to be executed in parallel.
-  Schemes _couplingSchemes;
-
-  //Schemes _activeCouplingSchemes;
-
-  /// Iterator to begin of coupling schemes currently active.
-  SchemesIt _activeSchemesBegin = _couplingSchemes.end();
-
-  /// Iterator to behind the end of coupling schemes currently active.
-  SchemesIt _activeSchemesEnd = _couplingSchemes.end();
-
-  /// Stores time added since last call of advance.
-  double _lastAddedTime = 0;
-
-  /**
-   * @brief Determines the current set of active coupling schemes.
+  /** All schemes to run next
    *
-   * Is called in advance, after all active sub-schemes are advanced.
+   * This is the core of the CompositionalCouplingScheme
    *
-   * @return True, if active schemes have changed and should be treated within
-   *         the same call of advance().
+   * All schemes start at t=0, so they all run on the first time step.
+   * This is updated by finishing the complete advance calling secondExchange() using updateActiveSchemes().
    */
-  bool determineActiveCouplingSchemes();
+  std::vector<CouplingScheme *> _activeSchemes;
 
-  /**
-   * @brief Advances the active set of coupling schemes.
-   *
-   * Helper function for determineActiveCouplingSchemes().
+  /** Updates _activeSchemes to the next ones that will participate in the upcoming step in time
+   * Called from secondExchange
    */
-  void advanceActiveCouplingSchemes();
+  void updateActiveSchemes();
+
+  /// Returns all schemes in execution order, explicit as well as implicit
+  std::vector<CouplingScheme *> allSchemes() const;
+
+  /// Actions also work before initialize is called
+  std::vector<CouplingScheme *> activeOrAllSchemes() const;
+
+  /// check if time windows are compatible
+  void checkCompatibleTimeWindowSizes(const CouplingScheme &impl, const CouplingScheme &expl) const;
 };
 
 } // namespace cplscheme
