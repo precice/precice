@@ -163,7 +163,7 @@ jobs:
           . ../venv/bin/activate
           pip install fastcov
           fastcov --lcov -e '/usr/' -e '/opt/'
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
         with:
           files: ./build/coverage.info
           token: ${{ secrets.CODECOV_TOKEN }}
