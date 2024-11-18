@@ -209,7 +209,7 @@ void AccelerationConfiguration::xmlTagCallback(
     _config.precond_nbNonConstTWindows = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIME_WINDOWS);
     _config.preconLimitUpdate          = callingTag.getDoubleAttributeValue(VALUE_RESIDUAL_SUM_LIMIT);
   } else if (callingTag.getName() == TAG_IMVJRESTART) {
-
+    _userDefinitions.defineRestartType = true;
 #ifndef PRECICE_NO_MPI
     _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);
     const auto &f         = callingTag.getStringAttributeValue(ATTR_TYPE);
@@ -307,7 +307,11 @@ void AccelerationConfiguration::xmlEndTagCallback(
       _config.timeWindowsReused = (_userDefinitions.definedTimeWindowsReused) ? _config.timeWindowsReused : _defaultValuesIQNIMVJ.timeWindowsReused;
       _config.filter            = (_userDefinitions.definedFilter) ? _config.filter : _defaultValuesIQNILS.filter;
       _config.singularityLimit  = (_userDefinitions.definedFilter) ? _config.singularityLimit : _defaultValuesIQNILS.singularityLimit;
-      _acceleration             = PtrAcceleration(
+      if (!_config.alwaysBuildJacobian) {
+        _config.imvjRestartType = (_userDefinitions.defineRestartType) ? _config.imvjRestartType : _defaultValuesIQNIMVJ.imvjRestartType;
+        _config.imvjChunkSize   = (_userDefinitions.defineRestartType) ? _config.imvjChunkSize : _defaultValuesIQNIMVJ.imvjChunkSize;
+      }
+      _acceleration = PtrAcceleration(
           new IQNIMVJAcceleration(
               _config.relaxationFactor,
               _config.forceInitialRelaxation,
@@ -515,11 +519,11 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagIMVJRESTART.addAttribute(attrRestartName);
     tagIMVJRESTART.setDocumentation("Type of IMVJ restart mode that is used:\n"
                                     "- `no-restart`: IMVJ runs in normal mode with explicit representation of Jacobian\n"
-                                    "- `RS-ZERO`:    IMVJ runs in restart mode. After M time windows all Jacobain information is dropped, restart with no information\n"
+                                    "- `RS-0`:    IMVJ runs in restart mode. After M time windows all Jacobain information is dropped, restart with no information\n"
                                     "- `RS-LS`:      IMVJ runs in restart mode. After M time windows a IQN-LS like approximation for the initial guess of the Jacobian is computed.\n"
                                     "- `RS-SVD`:     IMVJ runs in restart mode. After M time windows a truncated SVD of the Jacobian is updated.\n"
                                     "- `RS-SLIDE`:   IMVJ runs in sliding window restart mode.\n"
-                                    "If this tag is not provided, IMVJ runs in normal mode with explicit representation of Jacobian.");
+                                    "If this tag is not provided, IMVJ runs in restart mode with SVD-method.");
     auto attrChunkSize = makeXMLAttribute(ATTR_IMVJCHUNKSIZE, 8)
                              .setDocumentation("Specifies the number of time windows M after which the IMVJ restarts, if run in restart-mode. Default value is M=8.");
     auto attrReusedTimeWindowsAtRestart = makeXMLAttribute(ATTR_RSLS_REUSED_TIME_WINDOWS, 8)
