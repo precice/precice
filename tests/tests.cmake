@@ -325,11 +325,15 @@ target_sources(testprecice
     tests/serial/multi-coupling/MultiCouplingFourSolvers1.cpp
     tests/serial/multi-coupling/MultiCouplingFourSolvers2.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers1.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers10.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers2.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers3.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers4.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers5.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers6.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers7.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers8.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers9.cpp
     tests/serial/multi-coupling/MultiCouplingTwoSolvers1.cpp
     tests/serial/multi-coupling/MultiCouplingTwoSolvers2.cpp
     tests/serial/multi-coupling/helpers.cpp
