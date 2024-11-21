@@ -252,7 +252,6 @@ PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, m
                 "Data \"{0}\" cannot be added for sending and for receiving. Please remove either <exchange data=\"{0}\" ... /> tag", data->getName());
   PRECICE_CHECK(direction == CouplingData::Direction::Send,
                 "Data \"{0}\" cannot be received from multiple sources. Please remove either <exchange data=\"{0}\" ... /> tag", data->getName());
-
   PRECICE_CHECK(existing->exchangeSubsteps() == communicateSubsteps,
                 "Data \"{0}\" is configured with substeps enabled and disabled at the same time. Please make the configuration consistent in the <exchange data=\"{0}\" ... /> tags", data->getName());
   PRECICE_CHECK(existing->requiresInitialization == requiresInitialization,
