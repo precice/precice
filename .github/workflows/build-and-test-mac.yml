@@ -46,7 +46,7 @@ jobs:
     - name: Install pip packages
       run: pip3 install numpy polars
     - name: Install preCICE dependencies
-      run: brew install --overwrite cmake eigen libxml2 boost petsc openmpi pkg-config ninja
+      run: brew install --overwrite eigen libxml2 boost petsc openmpi ninja
     - name: Generate build directory
       run: mkdir -p build
     - name: Configure
