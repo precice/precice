@@ -152,7 +152,9 @@ jobs:
         env:
           CTEST_OUTPUT_ON_FAILURE: 1
           BOOST_TEST_LOG_LEVEL: all
-          OMPI_MCA_btl_tcp_if_include: lo # required for arch
+          OMPI_MCA_btl: self,vader
+          OMPI_MCA_pml: ob1
+          FI_PROVIDER: ${{ matrix.IMAGE == 'Intel' && 'tcp' || 'sockets' }} # use sockets on fedora and tcp on intel
           PSM3_HAL: loopback # required for fedora
         working-directory: build
         run: su -c ". ../venv/bin/activate && ctest -j" $PRECICE_USER
