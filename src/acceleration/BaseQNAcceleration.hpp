@@ -275,10 +275,6 @@ protected:
   /// Writes info to the _infostream (also in parallel)
   void writeInfo(const std::string &s, bool allProcs = false);
 
-  /// @copydoc acceleration::Acceleration::concatenateCouplingData
-  void concatenateCouplingData(
-      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const override final;
-
   int its = 0, tWindows = 0;
 
 private:
