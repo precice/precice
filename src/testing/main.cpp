@@ -40,7 +40,7 @@ private:
     if (ts.p_type_name == "suite") {
       prefix.push_back(ts.p_name);
     }
-    return test_tree_visitor::visit((boost::unit_test::test_unit const &) ts);
+    return true;
   }
 
   void test_suite_finish(boost::unit_test::test_suite const &ts) override
@@ -63,6 +63,12 @@ void printTestList()
 {
   using namespace boost::unit_test;
   test_case_printer tcp;
+  // We need to manually initialize boost test
+  // Internally it always accesses the first argument
+  char  arg0[] = "./testprecice";
+  char *argv[] = {arg0};
+  framework::init(&init_unit_test, 1, argv);
+  framework::finalize_setup_phase();
   traverse_test_tree(framework::master_test_suite(), tcp, true);
 }
 
