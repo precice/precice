@@ -204,10 +204,10 @@ void AccelerationConfiguration::xmlTagCallback(
     _config.singularityLimit = callingTag.getDoubleAttributeValue(ATTR_SINGULARITYLIMIT);
   } else if (callingTag.getName() == TAG_PRECONDITIONER) {
     _userDefinitions.definedPreconditionerType = true;
-    _config.preconditionerType         = callingTag.getStringAttributeValue(ATTR_TYPE);
-    _config.preconditionerUpdate       = callingTag.getBooleanAttributeValue(ATTR_PRECOND_UPDATE);
-    _config.precond_nbNonConstTWindows = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIME_WINDOWS);
-    _config.preconLimitUpdate          = callingTag.getDoubleAttributeValue(VALUE_RESIDUAL_SUM_LIMIT);
+    _config.preconditionerType                 = callingTag.getStringAttributeValue(ATTR_TYPE);
+    _config.preconditionerUpdate               = callingTag.getBooleanAttributeValue(ATTR_PRECOND_UPDATE);
+    _config.precond_nbNonConstTWindows         = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIME_WINDOWS);
+    _config.preconLimitUpdate                  = callingTag.getDoubleAttributeValue(VALUE_RESIDUAL_SUM_LIMIT);
   } else if (callingTag.getName() == TAG_IMVJRESTART) {
     _userDefinitions.defineRestartType = true;
 #ifndef PRECICE_NO_MPI

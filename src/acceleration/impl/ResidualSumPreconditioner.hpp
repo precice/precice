@@ -17,7 +17,7 @@ namespace impl {
  */
 class ResidualSumPreconditioner : public Preconditioner {
 public:
-  ResidualSumPreconditioner(int maxNonConstTimeWindows, bool preconForceUpdate, double updatePreconLimit);
+  ResidualSumPreconditioner(int maxNonConstTimeWindows, bool = true, double updatePreconLimit = 10.0);
   /**
    * @brief Destructor, empty.
    */

@@ -167,7 +167,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
 
 /**
  * Recomputes QR factorization using the QR2 filter.
- * This removes columns during the QR factorization step. 
+ * This removes columns during the QR factorization step.
  * Returns Q and R.
  */
 void QRFactorization::resetFilter(double singularityLimit, std::vector<int> &delIndices, Eigen::MatrixXd &V)
@@ -266,7 +266,7 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
   if (rho_orth <= std::numeric_limits<double>::min() || err < 0) {
     PRECICE_DEBUG("The ratio ||v_orth|| / ||v|| is extremely small and either the orthogonalization process of column v failed or the system is quadratic.");
 
-    // necessary for applyFilter with the QR-2 filer. In this case, the new column is not inserted, but discarded.
+    // necessary for applyFilter with the QR-2 filter. In this case, the new column is not inserted, but discarded.
     _cols--;
     return false;
   }

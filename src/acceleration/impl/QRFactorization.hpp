@@ -65,7 +65,7 @@ public:
   /**
    * @brief Performs a reset of A = QR using the QR2 Filter. This eliminates
    * columns during the reconstruction of the QR decomposition.
-   * 
+   *
    */
   void resetFilter(double singularityLimit, std::vector<int> &delIndices, Eigen::MatrixXd &V);
 
