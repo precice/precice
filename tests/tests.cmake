@@ -406,6 +406,3 @@ target_sources(testprecice
     tests/serial/whitebox/TestConfigurationPeano.cpp
     tests/serial/whitebox/TestExplicitWithDataScaling.cpp
     )
-
-# Contains the list of integration test suites
-set(PRECICE_TEST_SUITES GeometricMultiscale Parallel QuasiNewton Remeshing Serial)

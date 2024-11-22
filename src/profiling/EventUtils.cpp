@@ -65,6 +65,7 @@ void EventRegistry::initialize(std::string_view applicationName, int rank, int s
 
   _firstwrite = true;
   _writeQueue.clear();
+  _nameDict.clear();
 
   _globalId = nameToID("_GLOBAL");
   _writeQueue.emplace_back(StartEntry{_globalId.value(), _initClock});
