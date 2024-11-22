@@ -100,10 +100,6 @@ def itest_path_to_suite(path):
     return "".join(parts)
 
 
-def test_suites_from_files(itests):
-    return sorted(set(map(itest_path_to_suite, itests)))
-
-
 SOURCES_BASE = """#
 # This file lists all sources that will be compiles into the precice library
 #
@@ -136,9 +132,6 @@ target_sources(testprecice
     PRIVATE
     {}
     )
-
-# Contains the list of integration test suites
-set(PRECICE_TEST_SUITES {})
 """
 
 
@@ -151,9 +144,7 @@ def generate_unit_tests(utests):
 
 
 def generate_integration_tests(itests):
-    return ITESTS_BASE.format(
-        "\n    ".join(itests), " ".join(test_suites_from_files(itests))
-    )
+    return ITESTS_BASE.format("\n    ".join(itests))
 
 
 def main():
