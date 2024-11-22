@@ -223,7 +223,9 @@ if (PRECICE_FEATURE_MPI_COMMUNICATION)
   set(MPI_DETERMINE_LIBRARY_VERSION ON) # Try to detect the library vendor
 
   find_package(MPI REQUIRED)
-  message(STATUS "MPI Version: ${MPI_CXX_LIBRARY_VERSION_STRING}")
+
+  string(REGEX MATCH "^[^\n]*" PRECICE_MPI_VERSION "${MPI_CXX_LIBRARY_VERSION_STRING}")
+  message(STATUS "MPI Version: ${PRECICE_MPI_VERSION}")
 endif()
 
 # Option: PETSC
