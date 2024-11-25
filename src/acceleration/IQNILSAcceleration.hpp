@@ -33,7 +33,8 @@ public:
       int                     filter,
       double                  singularityLimit,
       std::vector<int>        dataIDs,
-      impl::PtrPreconditioner preconditioner);
+      impl::PtrPreconditioner preconditioner,
+      bool                    reducedTimeGrid);
 
   virtual ~IQNILSAcceleration() {}
 

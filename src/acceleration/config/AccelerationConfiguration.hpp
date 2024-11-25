@@ -61,6 +61,7 @@ private:
   const std::string ATTR_SINGULARITYLIMIT;
   const std::string ATTR_TYPE;
   const std::string ATTR_BUILDJACOBIAN;
+  const std::string ATTR_REDUCEDTIMEGRIDQN;
   const std::string ATTR_IMVJCHUNKSIZE;
   const std::string ATTR_RSLS_REUSED_TIME_WINDOWS;
   const std::string ATTR_RSSVD_TRUNCATIONEPS;
@@ -113,6 +114,7 @@ private:
     double                imvjRSSVD_truncationEps    = 0;
     bool                  estimateJacobian           = false;
     bool                  alwaysBuildJacobian        = false;
+    bool                  reducedTimeGridQN          = true;
     std::string           preconditionerType;
 
     std::vector<double> scalingFactorsInOrder() const;
