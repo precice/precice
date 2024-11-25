@@ -66,11 +66,11 @@
     <max-time-windows value="10" />
     <time-window-size value="1.0" />
     <max-iterations value="2" />
-    <!-- Check that we can initialize data that is exchanged between non-controller -->
-    <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" initialize="no" />
+    <!-- Check that we can initialize all data received by the controller -->
+    <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" initialize="yes" />
     <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" initialize="no" />
     <exchange data="DataCB" mesh="MeshC" from="SolverC" to="SolverB" initialize="yes" />
-    <exchange data="DataBC" mesh="MeshC" from="SolverB" to="SolverC" initialize="yes" />
+    <exchange data="DataBC" mesh="MeshC" from="SolverB" to="SolverC" initialize="no" />
     <exchange data="DataCB" mesh="MeshC" from="SolverC" to="SolverA" initialize="yes" />
     <relative-convergence-measure data="DataCB" mesh="MeshC" limit="1e-4" />
     <relative-convergence-measure data="DataBA" mesh="MeshA" limit="1e-4" />
