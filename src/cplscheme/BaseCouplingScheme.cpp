@@ -237,16 +237,27 @@ void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveDat
 
 PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool communicateSubsteps, CouplingData::Direction direction)
 {
-  int             id = data->getID();
-  PtrCouplingData ptrCplData;
-  if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps, direction);
-    _allData.emplace(id, ptrCplData);
-  } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
-    ptrCplData = _allData[id];
-    PRECICE_CHECK(ptrCplData->getDirection() == direction, "Data \"{0}\" cannot be added for sending and for receiving. Please remove either <exchange data=\"{0}\" ... /> tag", data->getName());
+  const DataID id = data->getID();
+
+  // new data
+  if (_allData.count(id) == 0) {
+    auto ptr = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps, direction);
+    _allData.emplace(id, ptr);
+    return ptr;
   }
-  return ptrCplData;
+
+  // data is already used by another exchange of this coupling scheme, use existing CouplingData
+  auto &existing = _allData[id];
+  PRECICE_CHECK(existing->getDirection() == direction,
+                "Data \"{0}\" cannot be added for sending and for receiving. Please remove either <exchange data=\"{0}\" ... /> tag", data->getName());
+  PRECICE_CHECK(direction == CouplingData::Direction::Send,
+                "Data \"{0}\" cannot be received from multiple sources. Please remove either <exchange data=\"{0}\" ... /> tag", data->getName());
+  PRECICE_CHECK(existing->exchangeSubsteps() == communicateSubsteps,
+                "Data \"{0}\" is configured with substeps enabled and disabled at the same time. Please make the configuration consistent in the <exchange data=\"{0}\" ... substeps=\"True/False\" ... /> tags", data->getName());
+  PRECICE_CHECK(existing->requiresInitialization == requiresInitialization,
+                "Data \"{0}\" is configured with data initialization enabled and disabled at the same time. Please make the configuration consistent in the <exchange data=\"{0}\" ... /> tags", data->getName());
+
+  return existing;
 }
 
 bool BaseCouplingScheme::isExplicitCouplingScheme() const
