@@ -228,13 +228,14 @@ void BaseQNAcceleration::performAcceleration(
 
   // Needs to be called in the first iteration of each time window.
   if (_firstIteration) {
-    _timeGrids->moveTimeGridToNewWindow(cplData);
-    _primaryTimeGrids->moveTimeGridToNewWindow(cplData);
+    _timeGrids.value().moveTimeGridToNewWindow(cplData);
+    _primaryTimeGrids.value().moveTimeGridToNewWindow(cplData);
   }
 
   /// Sample all the data to the corresponding time grid in _timeGrids and concatenate everything into a long vector
-  concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids);
-  concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids);
+  /// timeGrids are stored using std::opional, thus the .value() to get the actual object
+  concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value());
+  concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value());
 
   /** update the difference matrices V,W  includes:
    * scaling of values
@@ -446,8 +447,9 @@ void BaseQNAcceleration::iterationsConverged(
     _primaryTimeGrids->moveTimeGridToNewWindow(cplData);
   }
   /// Sample all the data to the corresponding time grid in _timeGrids and concatenate everything into a long vector
-  concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids);
-  concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids);
+  /// timeGrids are stored using std::opional, thus the .value() to get the actual object
+  concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value());
+  concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value());
   updateDifferenceMatrices(cplData);
 
   if (not _matrixCols.empty() && _matrixCols.front() == 0) { // Did only one iteration
@@ -619,12 +621,12 @@ void BaseQNAcceleration::writeInfo(
   _infostringstream << std::flush;
 }
 
-void BaseQNAcceleration::concatenateCouplingData(Eigen::VectorXd &data, Eigen::VectorXd &oldData, const DataMap &cplData, std::vector<int> dataIDs, std::unique_ptr<precice::time::TimeGrids> &timeGrids) const
+void BaseQNAcceleration::concatenateCouplingData(Eigen::VectorXd &data, Eigen::VectorXd &oldData, const DataMap &cplData, std::vector<int> dataIDs, precice::time::TimeGrids timeGrids) const
 {
   Eigen::Index offset = 0;
   for (int id : dataIDs) {
     Eigen::Index    dataSize = cplData.at(id)->getSize();
-    Eigen::VectorXd timeGrid = timeGrids->getTimeGrid(id);
+    Eigen::VectorXd timeGrid = timeGrids.getTimeGrid(id);
 
     for (int i = 0; i < timeGrid.size(); i++) {
 
@@ -655,17 +657,17 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
   }
 
   // Saves the time grid of each waveform in the data field to be used in the QN method
-  _timeGrids        = std::make_unique<time::TimeGrids>(cplData, _dataIDs, !subcycling);
-  _primaryTimeGrids = std::make_unique<time::TimeGrids>(cplData, _primaryDataIDs, !(subcycling and !_reducedTimeGrid));
+  _timeGrids.emplace(cplData, _dataIDs, !subcycling);
+  _primaryTimeGrids.emplace(cplData, _primaryDataIDs, !(subcycling and !_reducedTimeGrid));
 
   // Helper function
-  auto addTimeSliceSize = [&](size_t sum, int id, std::unique_ptr<precice::time::TimeGrids> &timeGrids) { return sum + timeGrids->getTimeGrid(id).size() * cplData.at(id)->getSize(); };
+  auto addTimeSliceSize = [&](size_t sum, int id, precice::time::TimeGrids timeGrids) { return sum + timeGrids.getTimeGrid(id).size() * cplData.at(id)->getSize(); };
 
   // Size of primary data
-  const size_t primaryDataSize = std::accumulate(_primaryDataIDs.begin(), _primaryDataIDs.end(), (size_t) 0, [&](size_t sum, int id) { return addTimeSliceSize(sum, id, _primaryTimeGrids); });
+  const size_t primaryDataSize = std::accumulate(_primaryDataIDs.begin(), _primaryDataIDs.end(), (size_t) 0, [&](size_t sum, int id) { return addTimeSliceSize(sum, id, _primaryTimeGrids.value()); });
 
   // Size of values
-  const size_t dataSize = std::accumulate(_dataIDs.begin(), _dataIDs.end(), (size_t) 0, [&](size_t sum, int id) { return addTimeSliceSize(sum, id, _timeGrids); });
+  const size_t dataSize = std::accumulate(_dataIDs.begin(), _dataIDs.end(), (size_t) 0, [&](size_t sum, int id) { return addTimeSliceSize(sum, id, _timeGrids.value()); });
 
   _values              = Eigen::VectorXd::Zero(dataSize);
   _oldValues           = Eigen::VectorXd::Zero(dataSize);
@@ -710,10 +712,10 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
       for (auto &elem : _dataIDs) {
         const auto &offsets = cplData.at(elem)->getVertexOffsets();
 
-        accumulatedNumberOfUnknowns += offsets[i] * cplData.at(elem)->getDimensions() * _timeGrids->getTimeGrid(elem).size();
+        accumulatedNumberOfUnknowns += offsets[i] * cplData.at(elem)->getDimensions() * _timeGrids.value().getTimeGrid(elem).size();
 
         if (utils::contained(elem, _primaryDataIDs)) {
-          accumulatedNumberOfPrimaryUnknowns += offsets[i] * cplData.at(elem)->getDimensions() * _primaryTimeGrids->getTimeGrid(elem).size();
+          accumulatedNumberOfPrimaryUnknowns += offsets[i] * cplData.at(elem)->getDimensions() * _primaryTimeGrids.value().getTimeGrid(elem).size();
         }
       }
       _dimOffsets[i + 1]        = accumulatedNumberOfUnknowns;
@@ -739,7 +741,7 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
   _qrV.setGlobalRows(getPrimaryLSSystemRows());
 
   std::vector<size_t> subVectorSizes; // needed for preconditioner
-  std::transform(_primaryDataIDs.cbegin(), _primaryDataIDs.cend(), std::back_inserter(subVectorSizes), [&cplData, this](const auto &d) { return _primaryTimeGrids->getTimeGrid(d).size() * cplData.at(d)->getSize(); });
+  std::transform(_primaryDataIDs.cbegin(), _primaryDataIDs.cend(), std::back_inserter(subVectorSizes), [&cplData, this](const auto &d) { return _primaryTimeGrids.value().getTimeGrid(d).size() * cplData.at(d)->getSize(); });
   _preconditioner->initialize(subVectorSizes);
 
   specializedInitializeVectorsAndPreconditioner(cplData);

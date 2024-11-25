@@ -290,14 +290,14 @@ private:
   virtual void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) = 0;
 
   /// @brief Samples and concatenates the data and old data in cplData into a long vector
-  void concatenateCouplingData(Eigen::VectorXd &data, Eigen::VectorXd &oldData, const DataMap &cplData, std::vector<int> dataIDs, std::unique_ptr<precice::time::TimeGrids> &timeGrids) const;
+  void concatenateCouplingData(Eigen::VectorXd &data, Eigen::VectorXd &oldData, const DataMap &cplData, std::vector<int> dataIDs, precice::time::TimeGrids timeGrids) const;
 
   /// @brief Stores the time grids to which the primary and secondary data involved in the QN system will be interpolated to.
-  std::unique_ptr<time::TimeGrids> _timeGrids;
+  std::optional<time::TimeGrids> _timeGrids;
 
   /// @brief Stores the time grids to which the primary data involved in the QN system will be interpolated to.
   /// If _reducedTimeGrids is true then this will only contain the last time stamp of the time window, see https://doi.org/10.1002/nme.6443
-  std::unique_ptr<time::TimeGrids> _primaryTimeGrids;
+  std::optional<time::TimeGrids> _primaryTimeGrids;
 
   /// @brief Concatenation of all primary data involved in the QN system.
   Eigen::VectorXd _primaryValues;
