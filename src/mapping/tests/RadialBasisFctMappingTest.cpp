@@ -1592,8 +1592,10 @@ BOOST_AUTO_TEST_SUITE_END() // Serial
 
 BOOST_AUTO_TEST_SUITE(Helper)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(inverseTriangularMatrix)
 {
+  PRECICE_TEST();
   // Define the size of the matrix
   const int inSize = 112;
 
