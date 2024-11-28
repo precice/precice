@@ -56,7 +56,13 @@ private:
     for (const auto &p : prefix) {
       std::cout << p << '/';
     }
-    std::cout << tc.p_name << '\n';
+    std::cout << tc.p_name << ' ';
+
+    if (auto setup = precice::testing::getTestSetupFor(tc); setup) {
+      std::cout << setup->totalRanks() << '\n';
+    } else {
+      std::cout << "?\n";
+    }
   }
 };
 
