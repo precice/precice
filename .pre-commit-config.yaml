@@ -18,13 +18,6 @@ repos:
     exclude: "^thirdparty"
   - id: end-of-file-fixer
     exclude: "^thirdparty"
-# isort for python imports
-- repo: https://github.com/pycqa/isort
-  rev: 5.12.0
-  hooks:
-    - id: isort
-      name: isort (python)
-      exclude: "^thirdparty"
 # black repo for python formatting
 - repo: https://github.com/ambv/black
   rev: 22.12.0
