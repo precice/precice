@@ -16,6 +16,7 @@
 #include "com/SharedPointer.hpp"
 #include "logging/LogConfiguration.hpp"
 #include "mapping/device/Ginkgo.hpp"
+#include "testing/Testing.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 

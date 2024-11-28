@@ -60,6 +60,27 @@ std::string getFullTestName()
   return boost::unit_test::framework::current_test_case().full_name();
 }
 
+TestSetup getTestSetup()
+{
+  if (auto setup = getTestSetupFor(boost::unit_test::framework::current_test_case());
+      setup) {
+    return *setup;
+  }
+  throw std::runtime_error{"Use PRECICE_TEST_SETUP(...) to define the setup directly before the BOOST_[AUTO_]TEST_CASE."};
+}
+
+std::optional<TestSetup> getTestSetupFor(const boost::unit_test::test_unit &tu)
+{
+  auto &list = tu.p_decorators;
+  for (auto iter = list->begin(); iter != list->end(); ++iter) {
+    auto ptr = dynamic_cast<precice::testing::precice_testsetup_fixture *>(iter->get());
+    if (ptr) {
+      return ptr->testSetup;
+    }
+  }
+  return std::nullopt;
+}
+
 int nextMeshID()
 {
   static utils::ManageUniqueIDs manager;

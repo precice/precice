@@ -180,7 +180,7 @@ struct ConnectionOptions {
 
 /** Type representing the context of a test.
  *
- * @note Do not use this type directly. Use @ref PRECICE_TEST() instead.
+ * @note Do not use this type directly. Use @ref PRECICE_TEST() and @ref PRECICE_TEST_SETUP() instead.
  *
  * This type is responsible for
  * 1. making sure that there are enough ranks to run the test on.
