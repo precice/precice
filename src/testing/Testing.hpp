@@ -24,13 +24,13 @@ using precice::testing::operator""_on;
 using precice::testing::operator""_dataID;
 } // namespace inject
 
-#define PRECICE_TEST(...)                             \
-  using namespace precice::testing::inject;           \
-  precice::testing::TestContext context{__VA_ARGS__}; \
-  if (context.invalid) {                              \
-    return;                                           \
-  }                                                   \
-  BOOST_TEST_MESSAGE(context.describe());             \
+#define PRECICE_TEST(...)                                                          \
+  using namespace precice::testing::inject;                                        \
+  precice::testing::TestContext context{precice::testing::TestSetup{__VA_ARGS__}}; \
+  if (context.invalid) {                                                           \
+    return;                                                                        \
+  }                                                                                \
+  BOOST_TEST_MESSAGE(context.describe());                                          \
   boost::unit_test::framework::add_context(BOOST_TEST_LAZY_MSG(context.describe()), true);
 
 /// struct giving access to the impl of a befriended class or struct
