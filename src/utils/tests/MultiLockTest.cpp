@@ -12,9 +12,10 @@ using namespace precice::utils;
 BOOST_AUTO_TEST_SUITE(UtilsTests)
 BOOST_AUTO_TEST_SUITE(MultiLockTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MultiLockTest)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   MultiLock<std::string> mlock;
 
   BOOST_TEST(mlock.checkAll());

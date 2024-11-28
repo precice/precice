@@ -8,9 +8,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MultiCoupling)
+PRECICE_TEST_SETUP("SolverA"_on(1_rank), "SolverB"_on(1_rank), "SolverC"_on(1_rank))
 BOOST_AUTO_TEST_CASE(MultiCouplingThreeSolvers1)
 {
-  PRECICE_TEST("SolverA"_on(1_rank), "SolverB"_on(1_rank), "SolverC"_on(1_rank));
+  PRECICE_TEST();
   const std::string configFile = context.config();
   multiCouplingThreeSolvers(configFile, context);
 }

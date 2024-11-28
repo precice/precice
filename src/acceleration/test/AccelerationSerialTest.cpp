@@ -124,15 +124,17 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733250157e-02));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testIQNIMVJPPWithSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testIQNIMVJPP(true);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testIQNIMVJPPWithoutSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testIQNIMVJPP(false);
 }
 
@@ -228,21 +230,24 @@ void testVIQNPP(bool exchangeSubsteps)
   BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733944046e-02));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testVIQNPPWithSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testVIQNPP(true);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testVIQNPPWithoutSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testVIQNPP(false);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   // use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
@@ -308,9 +313,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
   BOOST_TEST(data.at(1)->values()(3) == 0.184);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithoutSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   double              relaxation = 0.4;
   std::vector<int>    dataIDs{0, 1};
@@ -376,9 +382,10 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithoutSubsteps)
   BOOST_TEST(data.at(1)->values()(3) == 0.19880451030866292);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   double           relaxation = 0.8;
   std::vector<int> dataIDs{0, 1, 2, 3};
@@ -510,9 +517,10 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
   BOOST_TEST(data.at(3)->values()(3) == 104);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   //use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
@@ -613,9 +621,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
   BOOST_TEST(data.at(0)->gradients()(1, 2) == 3.4);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   //use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
@@ -681,9 +690,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
   BOOST_TEST(data.at(1)->values()(3) == 0.184);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   // use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};

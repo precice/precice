@@ -9,9 +9,10 @@ BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Lifecycle)
 // Test representing the full explicit lifecycle of a Participant
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(FullWait)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
   precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   if (context.isNamed("SolverOne")) {

@@ -23,9 +23,10 @@ using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(CSVExport)
 
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 {
-  PRECICE_TEST(""_on(1_rank).setupIntraComm());
+  PRECICE_TEST();
   int           dim = 2;
   mesh::Mesh    mesh("ExportPolygonalMeshSerial", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Zero());
@@ -40,9 +41,10 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
   exportCSV.doExport(0, 0.0);
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   int        dim = 2;
   mesh::Mesh mesh("ExportPolygonalMesh", dim, testing::nextMeshID());
 
@@ -73,9 +75,10 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   exportCSV.doExport(0, 0.0);
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   int        dim = 3;
   mesh::Mesh mesh("ExportTriangulatedMesh", dim, testing::nextMeshID());
 
@@ -109,9 +112,10 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   exportCSV.doExport(0, 0.0);
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportSplitSquare)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   int        dim = 3;
   mesh::Mesh mesh("ExportSplitSquare", dim, testing::nextMeshID());
 

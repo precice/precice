@@ -13,9 +13,10 @@ using namespace Eigen;
 BOOST_AUTO_TEST_SUITE(MeshTests)
 BOOST_AUTO_TEST_SUITE(FilterTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Vertices2D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   mesh::Mesh dest("2D dest", 2, testing::nextMeshID());
   mesh::Mesh src("2D src", 2, testing::nextMeshID());
@@ -36,9 +37,10 @@ BOOST_AUTO_TEST_CASE(Vertices2D)
   BOOST_TEST(dest.vertex(1) == v1);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Vertices3D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   mesh::Mesh dest("3D dest", 3, testing::nextMeshID());
   mesh::Mesh src("3D src", 3, testing::nextMeshID());
@@ -59,9 +61,10 @@ BOOST_AUTO_TEST_CASE(Vertices3D)
   BOOST_TEST(dest.vertex(1) == v1);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Edges)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   mesh::Mesh dest("3D dest", 3, testing::nextMeshID());
   mesh::Mesh src("3D src", 3, testing::nextMeshID());
@@ -91,9 +94,10 @@ BOOST_AUTO_TEST_CASE(Edges)
   BOOST_TEST(dest.edges()[0] == e0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Triangles)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   mesh::Mesh dest("3D dest", 3, testing::nextMeshID());
   mesh::Mesh src("3D src", 3, testing::nextMeshID());
@@ -122,9 +126,10 @@ BOOST_AUTO_TEST_CASE(Triangles)
   BOOST_TEST(dest.triangles()[0] == t1);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Tetrahedra)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   mesh::Mesh dest("3D dest", 3, testing::nextMeshID());
   mesh::Mesh src("3D src", 3, testing::nextMeshID());

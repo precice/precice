@@ -19,9 +19,10 @@ using namespace precice::action;
 BOOST_AUTO_TEST_SUITE(ActionTests)
 BOOST_AUTO_TEST_SUITE(Python)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(PerformActionWithGlobalIterationsCounter)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, testing::nextMeshID()));
   mesh->createVertex(Eigen::Vector3d::Constant(1.0));
   mesh->createVertex(Eigen::Vector3d::Constant(2.0));

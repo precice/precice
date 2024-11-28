@@ -10,9 +10,10 @@ BOOST_AUTO_TEST_SUITE(Serial)
 /**
  * @brief Tests the reading of data using available API functions
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(TestReadAPI)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   using Eigen::Vector3d;
 

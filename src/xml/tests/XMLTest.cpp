@@ -30,9 +30,10 @@ struct CallbackHost : public XMLTag::Listener {
   }
 };
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(AttributeConcatenation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/config_xmltest_concatenation.xml");
 
   CallbackHost cb;
@@ -49,9 +50,10 @@ BOOST_AUTO_TEST_CASE(AttributeConcatenation)
   configure(rootTag, ConfigurationContext{}, filename);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(VectorAttributes)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/config_xmltest_vectorattributes.xml");
 
   CallbackHost cb;

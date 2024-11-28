@@ -12,9 +12,10 @@ BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
 // by another participant. The region of interest is defined through a
 // boundingBox. As opposed to the 'boundingBoxExplicit' test case, this
 // test case uses the same feature in an implicit setup.
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(Implicit)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   // Set up Participant
   precice::Participant couplingInterface(context.name, context.config(), 0, 1);

@@ -13,9 +13,10 @@ using namespace precice::math::barycenter;
 BOOST_AUTO_TEST_SUITE(MathTests)
 BOOST_AUTO_TEST_SUITE(BarycenterEdge)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(BarycenterEdge2D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector2d;
   using Eigen::Vector3d;
   using precice::testing::equals;
@@ -55,9 +56,10 @@ BOOST_AUTO_TEST_CASE(BarycenterEdge2D)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(BarycenterEdge3D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector2d;
   using Eigen::Vector3d;
   using precice::testing::equals;
@@ -101,9 +103,10 @@ BOOST_AUTO_TEST_SUITE_END() // BarycenterEdges
 
 BOOST_AUTO_TEST_SUITE(BarycenterTriangle)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(BarycenterTriangle3D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector3d;
   using precice::testing::equals;
   Vector3d a(0.0, 0.0, 0.0);
@@ -171,9 +174,10 @@ BOOST_AUTO_TEST_CASE(BarycenterTriangle3D)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(BarycenterTriangle2D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector2d;
   using Eigen::Vector3d;
   using precice::testing::equals;
@@ -284,54 +288,60 @@ struct FunnyTetrahedronFixture {
 
 typedef boost::mpl::vector<TetrahedronFixture, FlippedTetrahedronFixture, AlmostDegenerateTetrahedronFixture, FunnyTetrahedronFixture> TetrahedraFixtures;
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExactOnA, T, TetrahedraFixtures, T)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   Eigen::Vector4d coords(1.0, 0.0, 0.0, 0.0);
   auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, T::a);
   BOOST_TEST(precice::testing::equals(ret, coords));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExactOnB, T, TetrahedraFixtures, T)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   Eigen::Vector4d coords(0.0, 1.0, 0.0, 0.0);
   auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, T::b);
   BOOST_TEST(precice::testing::equals(ret, coords));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExactOnC, T, TetrahedraFixtures, T)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   Eigen::Vector4d coords(0.0, 0.0, 1.0, 0.0);
   auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, T::c);
   BOOST_TEST(precice::testing::equals(ret, coords));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExactOnD, T, TetrahedraFixtures, T)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   Eigen::Vector4d coords(0.0, 0.0, 0.0, 1.0);
   auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, T::d);
   BOOST_TEST(precice::testing::equals(ret, coords));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExactOnCenter, T, TetrahedraFixtures, T)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   Eigen::Vector4d center_coords{0.25, 0.25, 0.25, 0.25};
   auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, T::center);
   BOOST_TEST(precice::testing::equals(ret, center_coords));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronInsidePoint, T, TetrahedraFixtures, T)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   Eigen::Vector4d coords(0.2, 0.3, 0.4, 0.1);
   auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, 0.2 * T::a + 0.3 * T::b + 0.4 * T::c + 0.1 * T::d);
@@ -339,9 +349,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronInsidePoint, T, Tetrahedra
   BOOST_TEST(precice::testing::equals(ret, coords));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronEdgeCenter, T, TetrahedraFixtures, T)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector4d;
 
   Eigen::Vector4d coords(0.5, 0.5, 0.0, 0.0);
@@ -350,9 +361,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronEdgeCenter, T, TetrahedraF
   BOOST_TEST(precice::testing::equals(ret, coords));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronTriangleCenter, T, TetrahedraFixtures, T)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector4d;
 
   Eigen::Vector4d coords(1. / 3, 1. / 3, 0.0, 1. / 3);
@@ -361,9 +373,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronTriangleCenter, T, Tetrahe
   BOOST_TEST(precice::testing::equals(ret, coords));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExtrapolationOnEdge, T, TetrahedraFixtures, T)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   Eigen::Vector4d coords(-2.0, 3.0, 0, 0);
   auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, T::a + 3 * (T::b - T::a));
@@ -371,9 +384,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExtrapolationOnEdge, T, Te
   BOOST_TEST(precice::testing::equals(ret, coords));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExtrapolationOnMirrored, T, TetrahedraFixtures, T)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   Eigen::Vector4d coords(2.0, 0.0, 0.0, -1.0);
   auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, 2 * T::a - T::d);
@@ -381,9 +395,10 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExtrapolationOnMirrored, T
   BOOST_TEST(precice::testing::equals(ret, coords));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(BarycenterTetrahedronExtrapolationOnMirroredFromTriangle, T, TetrahedraFixtures, T)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   Eigen::Vector4d coords(1.0, 1.0, 1.0, -2.0);
   auto            ret = calcBarycentricCoordsForTetrahedron(T::a, T::b, T::c, T::d, (T::a + T::b + T::c) - 2 * T::d);

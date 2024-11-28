@@ -15,9 +15,10 @@ BOOST_AUTO_TEST_SUITE(InitializeData)
  * initialize=true for both participants. Tests https://github.com/precice/precice/issues/1367.
  *
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ImplicitBoth)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   Participant couplingInterface(context.name, context.config(), 0, 1);
 

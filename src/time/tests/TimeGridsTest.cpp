@@ -27,9 +27,10 @@ struct TimeGridsTestsFixture {
 
 BOOST_FIXTURE_TEST_SUITE(TimeGridsTest, TimeGridsTestsFixture)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TestMoveAndScaleTimeGrids)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));

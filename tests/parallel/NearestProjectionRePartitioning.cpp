@@ -10,11 +10,12 @@
 /// This testcase is based on a bug documented in issue #371
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
+PRECICE_TEST_SETUP("FluidSolver"_on(3_ranks), "SolidSolver"_on(1_rank))
 BOOST_DATA_TEST_CASE(NearestProjectionRePartitioning,
                      boost::unit_test::data::make({true, false}),
                      useBulkFunctions)
 {
-  PRECICE_TEST("FluidSolver"_on(3_ranks), "SolidSolver"_on(1_rank));
+  PRECICE_TEST();
 
   if (context.isNamed("FluidSolver")) {
     precice::Participant participant(context.name, context.config(), context.rank, context.size);

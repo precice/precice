@@ -8,9 +8,10 @@
 // Tests Participant() with a user-defined MPI communicator.
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
+PRECICE_TEST_SETUP("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(UserDefinedMPICommunicator)
 {
-  PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   /// @todo simplify once #1191 is merged
   if (context.isNamed("SolverOne")) {

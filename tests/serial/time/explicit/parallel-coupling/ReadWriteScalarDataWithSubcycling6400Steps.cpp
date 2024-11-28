@@ -20,9 +20,10 @@ BOOST_AUTO_TEST_SUITE(ParallelCoupling)
  *
  * This is a smoke test to reproduce the scenario explained in https://github.com/precice/precice/issues/1866
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling6400Steps)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   bool useAdvancedDtStrategy = true;
   // bool useAdvancedDtStrategy = false;  // Triggers warning, because preciceDt becomes very small. Test also fails for second window with 6401 substeps.

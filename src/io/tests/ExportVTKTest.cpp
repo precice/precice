@@ -19,9 +19,10 @@ BOOST_AUTO_TEST_SUITE(VTKExport)
 
 using namespace precice;
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
 {
-  PRECICE_TEST(1_rank)
+  PRECICE_TEST();
   int dimensions = 2;
   // Create mesh to map from
   mesh::Mesh    mesh("ExportDataWithGradient", dimensions, testing::nextMeshID());
@@ -47,9 +48,10 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
   exportVTK.doExport(1, 1.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int           dim = 2;
   mesh::Mesh    mesh("ExportPolygonalMesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Constant(0.0));
@@ -65,9 +67,10 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   exportVTK.doExport(1, 1.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int           dim = 3;
   mesh::Mesh    mesh("ExportTriangulatedMesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Constant(0.0));
@@ -84,9 +87,10 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   exportVTK.doExport(1, 1.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExportTetrahedron)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int           dim = 3;
   mesh::Mesh    mesh("ExportTetrahedron", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Constant(0.0));

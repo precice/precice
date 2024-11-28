@@ -9,9 +9,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(QuasiNewton)
 BOOST_AUTO_TEST_SUITE(Serial)
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_DATA_TEST_CASE(TestQN8, boost::unit_test::data::make({true, false}), includeSecondaryData)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
   // serial coupling, IQN-IMVJ (which is identical to IQN-ILS as only first timestep is considered), to test `always-build-jacobian` option;
   runTestQN(includeSecondaryData, context.config(), context);
 }

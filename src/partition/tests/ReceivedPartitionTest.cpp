@@ -229,9 +229,10 @@ void createNastinMesh3D2(mesh::PtrMesh pNastinMesh, Rank rank)
   pNastinMesh->computeBoundingBox();
 }
 
+PRECICE_TEST_SETUP("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
 {
-  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("Solid", "Fluid");
 
   int             dimensions = 2;
@@ -284,9 +285,10 @@ BOOST_AUTO_TEST_CASE(RePartitionNNBroadcastFilter2D)
   }
 }
 
+PRECICE_TEST_SETUP("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
 {
-  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("Solid", "Fluid");
 
   int             dimensions = 2;
@@ -335,9 +337,10 @@ BOOST_AUTO_TEST_CASE(RePartitionNNDoubleNode2D)
   }
 }
 
+PRECICE_TEST_SETUP("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
 {
-  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("Solid", "Fluid");
 
   int dimensions = 2;
@@ -388,9 +391,10 @@ BOOST_AUTO_TEST_CASE(RePartitionNPPreFilterPostFilter2D)
 }
 
 #ifndef PRECICE_NO_PETSC
+PRECICE_TEST_SETUP("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events, Require::PETSc)
 BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D)
 {
-  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events, Require::PETSc);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("Solid", "Fluid");
 
   int dimensions = 2;
@@ -471,9 +475,10 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFGlobal2D)
   }
 }
 
+PRECICE_TEST_SETUP("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events, Require::PETSc)
 BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
 {
-  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events, Require::PETSc);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("Solid", "Fluid");
 
   int dimensions = 2;
@@ -544,9 +549,10 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D1)
   }
 }
 
+PRECICE_TEST_SETUP("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events, Require::PETSc)
 BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
 {
-  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events, Require::PETSc);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("Solid", "Fluid");
 
   int dimensions = 2;
@@ -623,9 +629,10 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal2D2)
   }
 }
 
+PRECICE_TEST_SETUP("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events, Require::PETSc)
 BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
 {
-  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events, Require::PETSc);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("Solid", "Fluid");
 
   int dimensions = 3;
@@ -711,9 +718,10 @@ BOOST_AUTO_TEST_CASE(RePartitionRBFLocal3D)
 
 #endif // PRECICE_NO_PETSC
 
+PRECICE_TEST_SETUP("Fluid"_on(3_ranks).setupIntraComm(), "Solid"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
 {
-  PRECICE_TEST("Fluid"_on(3_ranks).setupIntraComm(), "Solid"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("Solid", "Fluid");
 
   int dimensions = 3;
@@ -763,9 +771,10 @@ BOOST_AUTO_TEST_CASE(RePartitionNPBroadcastFilter3D)
   }
 }
 
+PRECICE_TEST_SETUP("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
 {
-  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("Solid", "Fluid");
 
   int dimensions = 2;
@@ -848,9 +857,10 @@ BOOST_AUTO_TEST_CASE(TestRepartitionAndDistribution2D)
   }
 }
 
+PRECICE_TEST_SETUP("Fluid"_on(1_rank), "Solid"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(ProvideAndReceiveCouplingMode)
 {
-  PRECICE_TEST("Fluid"_on(1_rank), "Solid"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("Solid", "Fluid");
 
   int dimensions = 2;
@@ -916,9 +926,10 @@ BOOST_AUTO_TEST_CASE(ProvideAndReceiveCouplingMode)
   }
 }
 
+PRECICE_TEST_SETUP("SOLIDZ"_on(1_rank), "NASTIN"_on(3_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 {
-  PRECICE_TEST("SOLIDZ"_on(1_rank), "NASTIN"_on(3_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
 
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = false;
@@ -984,9 +995,10 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
   }
 }
 
+PRECICE_TEST_SETUP("SOLIDZ"_on(1_rank), "NASTIN"_on(3_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes3D)
 {
-  PRECICE_TEST("SOLIDZ"_on(1_rank), "NASTIN"_on(3_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
 
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = false;
@@ -1085,15 +1097,16 @@ void testParallelSetOwnerInformation(mesh::PtrMesh mesh, int dimensions)
   Access::createOwnerInformation(part);
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationVertexCount)
 {
+  PRECICE_TEST();
   /*
     This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
     for 2LI. The provided mesh includes a vertex at point (0, 0). Initially, all receiving ranks receive
     this vertex, but only one of them can own it. Since the rank 2, has the lowest number of vertices,
     this vertex must belong only to it finally.
   */
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::Events);
   //mesh creation
   int           dimensions = 2;
   mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
@@ -1178,15 +1191,16 @@ BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationVertexCount)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationLowerRank)
 {
+  PRECICE_TEST();
   /*
     This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
     for 2LI. The provided mesh includes a vertices at point (0, 0, 0) and (0, 0, 1). Initially, all
     receiving ranks receive this vertex, but only one of them can own it. Since the rank 0, has the lowest
     rank number, this vertex must belong only to this rank.
    */
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::Events);
   //mesh creation
   int           dimensions = 3;
   mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
@@ -1331,15 +1345,16 @@ BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationLowerRank)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationEmptyPartition)
 {
+  PRECICE_TEST();
   /*
     This test examines an edge case for parallel setOwnerinformation function in receivedpartition.cpp
     for 2LI. The provided mesh includes vertices at points (0, 0, 0) and (0, 0, 1). Rank 2 has an
     empty mesh partition. Initially, all ranks (except rank 2) receive this vertex, but only one of them
     can own it. Since the rank 0, has the lowest rank number, this vertex must belong only to this rank.
    */
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::Events);
   //mesh creation
   int           dimensions = 3;
   mesh::PtrMesh mesh(new mesh::Mesh("mesh", dimensions, testing::nextMeshID()));
@@ -1460,9 +1475,10 @@ BOOST_AUTO_TEST_CASE(parallelSetOwnerInformationEmptyPartition)
 }
 
 // Test with two "from" and two "to" mappings
+PRECICE_TEST_SETUP("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(RePartitionMultipleMappings)
 {
-  PRECICE_TEST("Solid"_on(1_rank), "Fluid"_on(3_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("Solid", "Fluid");
 
   int             dimensions = 2;
