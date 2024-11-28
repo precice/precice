@@ -23,7 +23,7 @@ using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(VTUExport)
 
-  PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportScalar)
 {
   PRECICE_TEST();
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(ExportScalar)
   exportVTU.doExport(0, 0.0);
 }
 
-  PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportVector)
 {
   PRECICE_TEST();
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(ExportVector)
   exportVTU.doExport(0, 0.0);
 }
 
-  PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportMissing)
 {
   PRECICE_TEST();
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(ExportMissing)
   exportVTU.doExport(0, 0.0);
 }
 
-  PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
 {
   PRECICE_TEST();
