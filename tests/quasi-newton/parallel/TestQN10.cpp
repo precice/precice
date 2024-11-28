@@ -9,9 +9,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(QuasiNewton)
 BOOST_AUTO_TEST_SUITE(Parallel)
+PRECICE_TEST_SETUP("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks))
 BOOST_DATA_TEST_CASE(TestQN10, boost::unit_test::data::make({true, false}), includeSecondaryData)
 {
-  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  PRECICE_TEST();
   // serial coupling, IQN-IMVJ acceleration, to test zero update for V matrix;
   runTestQN(includeSecondaryData, context.config(), context);
 }

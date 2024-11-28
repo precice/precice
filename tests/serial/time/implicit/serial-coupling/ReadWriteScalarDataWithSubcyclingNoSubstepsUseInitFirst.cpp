@@ -20,9 +20,10 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
  *
  * Deactivates exchange of substeps. Uses first degree interpolation. Uses data initialization for both participants.
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingNoSubstepsUseInitFirst)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   Participant precice(context.name, context.config(), 0, 1);
 

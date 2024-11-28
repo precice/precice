@@ -9,9 +9,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Compositional)
+PRECICE_TEST_SETUP("M1SM"_on(1_rank), "M2SM"_on(1_rank), "Tendon"_on(1_rank), "M1"_on(1_rank))
 BOOST_AUTO_TEST_CASE(OneActivatedMuscle)
 {
-  PRECICE_TEST("M1SM"_on(1_rank), "M2SM"_on(1_rank), "Tendon"_on(1_rank), "M1"_on(1_rank));
+  PRECICE_TEST();
 
   precice::Participant participant(context.name, context.config(), context.rank, context.size);
 

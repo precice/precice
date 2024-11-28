@@ -10,9 +10,10 @@ namespace pu = precice::utils;
 
 BOOST_AUTO_TEST_SUITE(UtilsTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DistanceAccumulator)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   pu::statistics::DistanceAccumulator acc;
   acc(0.01);
   BOOST_TEST(!acc.empty());

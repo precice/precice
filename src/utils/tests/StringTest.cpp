@@ -12,9 +12,10 @@ using namespace precice::utils;
 BOOST_AUTO_TEST_SUITE(UtilsTests)
 BOOST_AUTO_TEST_SUITE(StringTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(StringWrap)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string text("123456 1234567 12345678");
   std::string wrapped = wrapText(text, 4, 0);
   BOOST_TEST(wrapped == std::string("123456\n1234567\n12345678"));
@@ -40,9 +41,10 @@ BOOST_AUTO_TEST_CASE(StringWrap)
   BOOST_TEST(wrapped == std::string("12345678\n  1234 1\n  1234"));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(StringAppendExtension)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename("somefile");
   std::string extension(".xyz");
 
@@ -59,9 +61,10 @@ BOOST_AUTO_TEST_CASE(StringAppendExtension)
   BOOST_TEST(result.compare(filename + extension + ".zyx" + extension) == 0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ConvertStringToBool)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   BOOST_TEST(convertStringToBool("tRUe") == true);
   BOOST_TEST(convertStringToBool("FALSE") == false);
   BOOST_TEST(convertStringToBool("oN") == true);
@@ -72,9 +75,10 @@ BOOST_AUTO_TEST_CASE(ConvertStringToBool)
   BOOST_TEST(convertStringToBool("no") == false);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(StringMaker)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   utils::StringMaker<10> sm;
   BOOST_REQUIRE(sm.data() != nullptr);
   BOOST_TEST(*sm.data() == '\0');
@@ -94,9 +98,10 @@ BOOST_AUTO_TEST_CASE(StringMaker)
   BOOST_TEST(str2 == "12");
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EditDistance)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using precice::utils::editDistance;
   BOOST_TEST(editDistance("left", "theft") == 2);
   BOOST_TEST(editDistance("aaa", "aa") == 1);
@@ -104,9 +109,10 @@ BOOST_AUTO_TEST_CASE(EditDistance)
   BOOST_TEST(editDistance("same", "same") == 0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ComputeMatches)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::set names{"left", "right", "up", "down"};
   auto     matches = utils::computeMatches("lewp", names);
   BOOST_TEST_REQUIRE(matches.size() == 4);

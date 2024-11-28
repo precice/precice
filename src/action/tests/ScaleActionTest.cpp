@@ -26,9 +26,10 @@ using namespace precice;
 BOOST_AUTO_TEST_SUITE(ActionTests)
 BOOST_AUTO_TEST_SUITE(Scale)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DivideByArea2D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   PtrMesh mesh(new Mesh("Mesh", 2, testing::nextMeshID()));
   PtrData data   = mesh->createData("test-data", 1, 0_dataID);
@@ -60,9 +61,10 @@ BOOST_AUTO_TEST_CASE(DivideByArea2D)
   BOOST_TEST(values(2) == 8.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DivideByArea3D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   PtrMesh mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
   PtrData data   = mesh->createData("test-data", 1, 0_dataID);
@@ -108,9 +110,10 @@ BOOST_AUTO_TEST_CASE(DivideByArea3D)
   BOOST_TEST(values(4) == 6.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Configuration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   {
     std::string                 filename = testing::getPathToSources() + "/action/tests/ScaleActionTest-testConfiguration-1.xml";
     xml::XMLTag                 tag      = xml::getRootTag();

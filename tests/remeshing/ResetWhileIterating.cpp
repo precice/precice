@@ -6,9 +6,10 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Remeshing)
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ResetWhileIterating)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank));
+  PRECICE_TEST();
   using namespace precice::testing;
   constexpr double     y = 0.0;
   precice::Participant participant{context.name, context.config(), context.rank, context.size};

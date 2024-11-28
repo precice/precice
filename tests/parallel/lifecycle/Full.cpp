@@ -9,9 +9,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(Lifecycle)
+PRECICE_TEST_SETUP("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks))
 BOOST_AUTO_TEST_CASE(Full)
 {
-  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  PRECICE_TEST();
 
   precice::Participant interface(context.name, context.config(), context.rank, context.size);
   constexpr double     y{0};

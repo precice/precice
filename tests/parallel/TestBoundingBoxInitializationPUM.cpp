@@ -8,9 +8,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 // Integration test for 2LI with PUM mapping
+PRECICE_TEST_SETUP("Fluid"_on(2_ranks), "Structure"_on(2_ranks))
 BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationPUM)
 {
-  PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
+  PRECICE_TEST();
 
   std::vector<double> positions;
   std::vector<double> data;

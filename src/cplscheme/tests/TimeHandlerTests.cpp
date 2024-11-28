@@ -6,9 +6,10 @@ BOOST_AUTO_TEST_SUITE(TimeHandler)
 
 using precice::cplscheme::impl::TimeHandler;
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ManyTinyTimesteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   TimeHandler th;
 
   double tws        = 1e-7;
@@ -32,9 +33,10 @@ BOOST_AUTO_TEST_CASE(ManyTinyTimesteps)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ManyBigTimesteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   TimeHandler th;
 
   double tws        = 1000.0;
@@ -58,9 +60,10 @@ BOOST_AUTO_TEST_CASE(ManyBigTimesteps)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ManyMixedTimesteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   TimeHandler th;
 
   double tws1       = 0.01;
@@ -99,9 +102,10 @@ BOOST_AUTO_TEST_CASE(ManyMixedTimesteps)
 
 BOOST_AUTO_TEST_SUITE(Subcycling)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(NormalTWSmallTS)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   TimeHandler th;
 
   double tws        = 10.0;
@@ -136,9 +140,10 @@ BOOST_AUTO_TEST_CASE(NormalTWSmallTS)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SmallTWTinyTS)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   TimeHandler th;
 
   double tws        = 0.001;
@@ -168,9 +173,10 @@ BOOST_AUTO_TEST_CASE(SmallTWTinyTS)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(LargeTWNormalTS)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   TimeHandler th;
 
   double tws        = 1000;
@@ -204,9 +210,10 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(MaxTime)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(StepToEnd)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   TimeHandler th(1.0);
 
   th.progressBy(1.0);
@@ -222,9 +229,10 @@ BOOST_AUTO_TEST_CASE(StepToEnd)
   BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(StepTruncated)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   TimeHandler th(1.0);
 
   double tws = 2.0;
@@ -243,9 +251,10 @@ BOOST_AUTO_TEST_CASE(StepTruncated)
   BOOST_TEST(th.untilWindowEnd(tws) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(StepCloseToEnd)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   TimeHandler th(1.0);
 
   th.progressBy(0.999999999999999999999999);
@@ -261,9 +270,10 @@ BOOST_AUTO_TEST_CASE(StepCloseToEnd)
   BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TinyTimestepsToEnd)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   TimeHandler th(1.0);
 
   double tss = 1e-6;
@@ -285,9 +295,10 @@ BOOST_AUTO_TEST_CASE(TinyTimestepsToEnd)
   BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ManyTimeWindowsToEnd)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   TimeHandler th(1.0);
 
   double tws = 1e-6;
@@ -304,9 +315,10 @@ BOOST_AUTO_TEST_CASE(ManyTimeWindowsToEnd)
   BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TimeWindowsWithSubstepsToEnd)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   TimeHandler th(1.0);
 
   double tws = 1e-3;
@@ -327,9 +339,10 @@ BOOST_AUTO_TEST_CASE(TimeWindowsWithSubstepsToEnd)
   BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TinyTimestepsTruncated)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   TimeHandler th(1.0);
 
   double tss = 1e-6;
@@ -351,9 +364,10 @@ BOOST_AUTO_TEST_CASE(TinyTimestepsTruncated)
   BOOST_TEST(th.untilWindowEnd(1.0) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ManyTimeWindowsTrucated)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   TimeHandler th(1.0);
 
   double tws = 1e-6;

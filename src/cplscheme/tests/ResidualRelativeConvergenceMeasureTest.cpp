@@ -5,9 +5,10 @@
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ResidualRelativeConvergenceMeasureTest)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector3d;
   double                                                       convergenceLimit = 0.1; // 10%
   precice::cplscheme::impl::ResidualRelativeConvergenceMeasure measure(convergenceLimit);

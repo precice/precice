@@ -12,9 +12,10 @@
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Versioning)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(VersionInformation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   const std::string info{::precice::getVersionInformation()};
   BOOST_TEST_CONTEXT("Info is \"" << info << "\"")
   {
@@ -35,9 +36,10 @@ BOOST_AUTO_TEST_CASE(VersionInformation)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(VersionMacros)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   BOOST_REQUIRE(std::is_integral<decltype(PRECICE_VERSION_MAJOR)>::value);
   BOOST_REQUIRE(std::is_integral<decltype(PRECICE_VERSION_MINOR)>::value);
@@ -56,9 +58,10 @@ BOOST_AUTO_TEST_CASE(VersionMacros)
   BOOST_REQUIRE(std::count(version.begin(), version.end(), '.') == 2);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(VersionMacroGreaterEqual)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   BOOST_REQUIRE(PRECICE_VERSION_GREATER_EQUAL(0, 0, 0));
   BOOST_REQUIRE(PRECICE_VERSION_GREATER_EQUAL(1, 0, 0));

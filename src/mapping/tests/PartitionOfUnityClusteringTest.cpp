@@ -26,9 +26,10 @@ BOOST_AUTO_TEST_SUITE(PartitionOfUnityClustering)
 
 BOOST_AUTO_TEST_SUITE(Serial)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(createClustering2D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   int meshDimension = 2;
   // Generate the meshes
@@ -59,9 +60,10 @@ BOOST_AUTO_TEST_CASE(createClustering2D)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(createClustering3D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   int meshDimension = 3;
   // Generate the meshes

@@ -10,9 +10,10 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Lifecycle)
 // Test representing the minimal lifecylce, which consists out of construction only.
 // The destructor has to cleanup correctly.
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ConstructOnly)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
   precice::Participant interface(context.name, context.config(), context.rank, context.size);
 }
 

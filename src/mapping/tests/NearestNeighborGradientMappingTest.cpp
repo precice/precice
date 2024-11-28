@@ -16,9 +16,10 @@ using namespace precice::mesh;
 BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(NearestNeighborGradientMapping)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
 {
-  PRECICE_TEST(1_rank)
+  PRECICE_TEST();
   int dimensions = 2;
   using testing::equals;
 
@@ -101,10 +102,10 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   BOOST_CHECK(equals(expected, outValuesVector));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ConsistentGradientNotConstant)
 {
-
-  PRECICE_TEST(1_rank)
+  PRECICE_TEST()
   int dimensions = 2;
   using testing::equals;
 

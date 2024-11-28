@@ -41,9 +41,10 @@ using DataMap = std::map<int, PtrCouplingData>;
 BOOST_AUTO_TEST_SUITE(AccelerationIntraCommTests)
 
 /// Test that runs on 4 processors.
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make({true, false}), exchangeSubsteps)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST()
   double           initialRelaxation        = 0.01;
   int              maxIterationsUsed        = 50;
   int              timeWindowsReused        = 6;
@@ -289,9 +290,10 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
 }
 
 /// Test that runs on 4 processors.
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   double initialRelaxation          = 0.01;
   int    maxIterationsUsed          = 50;
   int    timeWindowsReused          = 6;
@@ -590,9 +592,10 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 }
 
 /// Test that runs on 4 processors.
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   // config:
   double initialRelaxation          = 0.1;
   int    maxIterationsUsed          = 30;
@@ -1125,9 +1128,10 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 }
 
 /// Test that runs on 4 processors.
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   double           initialRelaxation        = 0.1;
   int              maxIterationsUsed        = 3;
   int              timeWindowsReused        = 1;

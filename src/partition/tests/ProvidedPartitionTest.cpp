@@ -38,9 +38,10 @@ using precice::testing::TestContext;
 BOOST_AUTO_TEST_SUITE(PartitionTests)
 BOOST_AUTO_TEST_SUITE(ProvidedPartitionTests)
 
+PRECICE_TEST_SETUP("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
 {
-  PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("NASTIN", "SOLIDZ");
 
   int dimensions = 2;
@@ -109,9 +110,10 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate2D)
   }
 }
 
+PRECICE_TEST_SETUP("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
 {
-  PRECICE_TEST("NASTIN"_on(1_rank), "SOLIDZ"_on(3_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("NASTIN", "SOLIDZ");
 
   int dimensions = 3;
@@ -220,9 +222,10 @@ BOOST_AUTO_TEST_CASE(TestGatherAndCommunicate3D)
   }
 }
 
+PRECICE_TEST_SETUP("NASTIN"_on(4_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
 {
-  PRECICE_TEST("NASTIN"_on(4_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   // Create mesh object
   std::string   meshName("MyMesh");
   int           dim = 2;
@@ -296,9 +299,10 @@ BOOST_AUTO_TEST_CASE(TestOnlyDistribution2D)
   }
 }
 
+PRECICE_TEST_SETUP("SOLIDZ"_on(3_ranks).setupIntraComm(), "NASTIN"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
 {
-  PRECICE_TEST("SOLIDZ"_on(3_ranks).setupIntraComm(), "NASTIN"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = false;
   options.useTwoLevelInit   = true;
@@ -402,9 +406,10 @@ BOOST_AUTO_TEST_CASE(TestCompareBoundingBoxes2D)
   }
 }
 
+PRECICE_TEST_SETUP("SOLIDZ"_on(3_ranks).setupIntraComm(), "NASTIN"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
 {
-  PRECICE_TEST("SOLIDZ"_on(3_ranks).setupIntraComm(), "NASTIN"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = false;
   options.useTwoLevelInit   = true;
@@ -485,9 +490,10 @@ BOOST_AUTO_TEST_CASE(TestSendBoundingBoxes3D)
   }
 }
 
+PRECICE_TEST_SETUP("Solid"_on(2_ranks).setupIntraComm(), "Fluid"_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
 {
-  PRECICE_TEST("Solid"_on(2_ranks).setupIntraComm(), "Fluid"_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   //mesh creation
   int           dimensions   = 2;
   double        safetyFactor = 0.1;
@@ -582,9 +588,10 @@ BOOST_AUTO_TEST_CASE(TestCommunicateLocalMeshPartitions)
   }
 }
 
+PRECICE_TEST_SETUP("Solid"_on(2_ranks).setupIntraComm(), "Fluid"_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
 {
-  PRECICE_TEST("Solid"_on(2_ranks).setupIntraComm(), "Fluid"_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   //mesh creation
   int           dimensions   = 2;
   double        safetyFactor = 0;
@@ -720,9 +727,10 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
   }
 }
 
+PRECICE_TEST_SETUP("Solid"_on(2_ranks).setupIntraComm(), "Fluid"_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
 {
-  PRECICE_TEST("Solid"_on(2_ranks).setupIntraComm(), "Fluid"_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
 
   //mesh creation
   int           dimensions   = 3;

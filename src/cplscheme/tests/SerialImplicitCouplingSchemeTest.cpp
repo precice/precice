@@ -438,9 +438,10 @@ struct SerialImplicitCouplingSchemeFixture : m2n::WhiteboxAccessor {
 
 BOOST_FIXTURE_TEST_SUITE(SerialImplicitCouplingSchemeTests, SerialImplicitCouplingSchemeFixture)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
 
   int dimensions = 3;
@@ -465,9 +466,10 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
 }
 
 /// Test that runs on 2 processors.
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
   auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
@@ -528,9 +530,10 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   runCoupling(cplScheme, context.name, meshConfig, validIterations);
 }
 
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
 
   using namespace mesh;
 
@@ -569,9 +572,10 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
               context.name, *meshConfig, validIterations);
 }
 
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
   auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
@@ -620,9 +624,10 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   runCoupling(cplScheme, context.name, meshConfig, validIterations);
 }
 
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
   auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
@@ -673,9 +678,10 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
       cplScheme, context.name, meshConfig, validIterations);
 }
 
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testInitializeData)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
   auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
