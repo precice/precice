@@ -15,7 +15,7 @@ function(add_command NAME TEST_NAME)
   set(script "${script}" PARENT_SCOPE)
 endfunction()
 
-function(add_test NAME)
+function(add_test NAME RANKS)
   if(NAME MATCHES "MPIPorts|MPISinglePorts" AND (PRECICE_MPI_VERSION MATCHES "Open MPI|Intel"))
     # Test is unsupported by this MPI implementation
     return()
@@ -46,23 +46,32 @@ function(add_test NAME)
     list(JOIN labels "\;" labels)
   endif()
 
-  # --map-by=:OVERSUBSCRIBE works for OpenMPI(4+5) and MPICH, but not for Intel which doesn't need a flag
-  set(_oversubscribe_FLAG "--map-by;:OVERSUBSCRIBE")
-  if(PRECICE_MPI_VERSION MATCHES "Intel")
-    set(_oversubscribe_FLAG "")
+  if(RANKS STREQUAL "1")
+    add_command(add_test
+      "[=[precice.${NAME}]=]"
+      ${_TEST_EXECUTABLE} "--run_test=${NAME}" "--log_level=message"
+    )
+  else()
+    # --map-by=:OVERSUBSCRIBE works for OpenMPI(4+5) and MPICH, but not for Intel which doesn't need a flag
+    set(_oversubscribe_FLAG "--map-by;:OVERSUBSCRIBE")
+    if(PRECICE_MPI_VERSION MATCHES "Intel")
+      set(_oversubscribe_FLAG "")
+    endif()
+
+    add_command(add_test
+      "[=[precice.${NAME}]=]"
+      ${MPIEXEC_EXECUTABLE}
+      ${MPIEXEC_NUMPROC_FLAG}
+      ${RANKS}
+      ${_oversubscribe_FLAG}
+      ${PRECICE_CTEST_MPI_FLAGS}
+      ${MPIEXEC_PREFLAGS}
+      ${_TEST_EXECUTABLE} "--run_test=${NAME}" "--log_level=message"
+      ${MPIEXEC_POSTFLAGS}
+    )
   endif()
 
-  add_command(add_test
-    "[=[precice.${NAME}]=]"
-    ${MPIEXEC_EXECUTABLE}
-    ${MPIEXEC_NUMPROC_FLAG}
-    4
-    ${_oversubscribe_FLAG}
-    ${PRECICE_CTEST_MPI_FLAGS}
-    ${MPIEXEC_PREFLAGS}
-    ${_TEST_EXECUTABLE} "--run_test=${NAME}" "--log_level=message"
-    ${MPIEXEC_POSTFLAGS}
-  )
+
   add_command(set_tests_properties
     "[=[precice.${NAME}]=]"
     PROPERTIES
@@ -118,7 +127,12 @@ function(discover_tests)
   start_file()
   foreach(test IN LISTS output)
     if (NOT test STREQUAL "")
-      add_test("${test}")
+      string(REGEX MATCH "(.+) ([0-9?])" _ "${test}")
+      if (CMAKE_MATCH_2 STREQUAL "?")
+        message(WARNING "Test ${CMAKE_MATCH_1} does not define a test setup!")
+    else()
+      add_test("${CMAKE_MATCH_1}" ${CMAKE_MATCH_2})
+    endif()
     endif()
   endforeach()
   flush_file()
