@@ -24,6 +24,47 @@ using namespace precice;
 BOOST_AUTO_TEST_SUITE(CSVExport)
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportScalar)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("ExportScalarMesh", 2, testing::nextMeshID());
+  mesh.createVertex(Eigen::Vector2d::Zero());
+  mesh.createVertex(Eigen::Vector2d::Constant(1));
+  mesh::PtrData data = mesh.createData("data", 1, 0_dataID);
+  data->setSampleAtTime(0, time::Sample{1, 2}.setZero());
+
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  exportCSV.doExport(0, 0.0);
+}
+
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportVector)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("ExportVectorMesh", 2, testing::nextMeshID());
+  mesh.createVertex(Eigen::Vector2d::Zero());
+  mesh.createVertex(Eigen::Vector2d::Constant(1));
+  mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
+  data->setSampleAtTime(0, time::Sample{2, 2}.setZero());
+
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  exportCSV.doExport(0, 0.0);
+}
+
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportMissing)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("ExportVectorMesh", 2, testing::nextMeshID());
+  mesh.createVertex(Eigen::Vector2d::Zero());
+  mesh.createVertex(Eigen::Vector2d::Constant(1));
+  mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
+  // no sample
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  exportCSV.doExport(0, 0.0);
+}
+
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 {
   PRECICE_TEST();
