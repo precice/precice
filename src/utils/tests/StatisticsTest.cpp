@@ -32,8 +32,10 @@ BOOST_AUTO_TEST_CASE(DistanceAccumulator)
   BOOST_TEST(acc.max() == 23);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DistanceAccumulatorOnEmptyMesh)
 {
+  PRECICE_TEST();
   pu::statistics::DistanceAccumulator acc;
   BOOST_TEST(acc.empty());
   BOOST_TEST(acc.count() == 0);

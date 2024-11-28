@@ -73,8 +73,10 @@ BOOST_AUTO_TEST_CASE(ThreePointsLinear)
   BOOST_TEST(equals(bspline.interpolateAt(1.5), Eigen::Vector3d(2.5, 25, 250)));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ThreePointsLinearNonEquidistant)
 {
+  PRECICE_TEST();
   Eigen::Vector3d ts;
   ts << 0, 1, 3;
   Eigen::MatrixXd xs(3, 3);
