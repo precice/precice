@@ -114,8 +114,6 @@ struct TestSetup {
    * @note You need to construct a Participant if you require initializing
    * an intra-participant connection `"Serial"_on(3_ranks).setupIntraComm()`
    *
-   * @attention This call synchronizes all ranks
-   *
    * @see Require
    */
   template <class... T>
@@ -209,7 +207,15 @@ public:
   /// whether this context is valid or not
   bool invalid = false;
 
-  /// Create a context representing an unnamed serial Participant
+  /** Creates a context for a rank in the given TestSetup
+   *
+   * Unneeded ranks are marked as invalid.
+   * Provides a TestContext named `context` which can be used in the test.
+   *
+   * @attention This call synchronizes all ranks
+   *
+   * @see @ref PRECICE_TEST()
+   */
   TestContext(TestSetup setup);
 
   /** Cleans-up all initialized parts and synchronizes all ranks
