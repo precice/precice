@@ -305,7 +305,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
       // create preconditioner
       // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time windows is limited by the chunksize
       // it is separated from the other acceleration methods, since SVD-restart might be chosen as default here
-      if (_config.imvjRestartType == 3)
+      if (_config.imvjRestartType == IQNIMVJAcceleration::RS_SVD)
         if (_config.precond_nbNonConstTWindows > _config.imvjChunkSize)
           _config.precond_nbNonConstTWindows = _config.imvjChunkSize;
       if (_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER) {
