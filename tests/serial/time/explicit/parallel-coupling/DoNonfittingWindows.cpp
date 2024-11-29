@@ -17,9 +17,10 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
  * @brief Test to ensure that correct max-time is reached, if time-window-size does not fit. See https://github.com/precice/precice/issues/1922 for context.
  *
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(DoNonfittingWindows)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   Participant precice(context.name, context.config(), 0, 1);
 

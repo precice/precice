@@ -60,7 +60,7 @@ void testIQNIMVJPP(bool exchangeSubsteps)
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                          timeWindowsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
-                         restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps);
+                         restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps, !exchangeSubsteps);
 
   Eigen::VectorXd fcol1;
 
@@ -71,11 +71,13 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
   displacements->setSampleAtTime(0, displacements->sample());
+  displacements->setSampleAtTime(1, displacements->sample());
 
   // init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->setSampleAtTime(0, forces->sample());
+  forces->setSampleAtTime(1, forces->sample());
 
   cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
   cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
@@ -106,6 +108,10 @@ void testIQNIMVJPP(bool exchangeSubsteps)
 
   data.begin()->second->values() << 10, 10, 10, 10;
 
+  // Update the waveform as well
+  displacements->setSampleAtTime(1, displacements->sample());
+  forces->setSampleAtTime(1, forces->sample());
+
   pp.performAcceleration(data);
 
   BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929695848558e-01));
@@ -118,18 +124,17 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733250157e-02));
 }
 
-#if 0
-// TODO not yet supported
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testIQNIMVJPPWithSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testIQNIMVJPP(true);
 }
-#endif
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testIQNIMVJPPWithoutSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testIQNIMVJPP(false);
 }
 
@@ -157,7 +162,7 @@ void testVIQNPP(bool exchangeSubsteps)
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                        timeWindowsReused, filter, singularityLimit, dataIDs, prec);
+                        timeWindowsReused, filter, singularityLimit, dataIDs, prec, !exchangeSubsteps);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
@@ -166,11 +171,13 @@ void testVIQNPP(bool exchangeSubsteps)
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
   displacements->setSampleAtTime(0, displacements->sample());
+  displacements->setSampleAtTime(1, displacements->sample());
 
   // init forces
   forces->values().resize(4);
   forces->values() << 0.2, 0.2, 0.2, 0.2;
   forces->setSampleAtTime(0, forces->sample());
+  forces->setSampleAtTime(1, forces->sample());
 
   cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
   cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
@@ -186,6 +193,7 @@ void testVIQNPP(bool exchangeSubsteps)
 
   displacements->values() << 1.0, 2.0, 3.0, 4.0;
   displacements->setSampleAtTime(1, displacements->sample());
+
   forces->values() << 0.1, 0.1, 0.1, 0.1;
   forces->setSampleAtTime(1, forces->sample());
 
@@ -207,6 +215,9 @@ void testVIQNPP(bool exchangeSubsteps)
   utils::append(newdvalues, 10.0);
   data.begin()->second->values() = newdvalues;
 
+  displacements->setSampleAtTime(1, displacements->sample());
+  forces->setSampleAtTime(1, forces->sample());
+
   pp.performAcceleration(data);
 
   BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929692295845e-01));
@@ -219,24 +230,24 @@ void testVIQNPP(bool exchangeSubsteps)
   BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733944046e-02));
 }
 
-#if 0
-// TODO not yet supported
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testVIQNPPWithSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testVIQNPP(true);
- }
-#endif
+}
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testVIQNPPWithoutSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testVIQNPP(false);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   // use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
@@ -302,9 +313,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
   BOOST_TEST(data.at(1)->values()(3) == 0.184);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithoutSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   double              relaxation = 0.4;
   std::vector<int>    dataIDs{0, 1};
@@ -370,9 +382,10 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithoutSubsteps)
   BOOST_TEST(data.at(1)->values()(3) == 0.19880451030866292);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   double           relaxation = 0.8;
   std::vector<int> dataIDs{0, 1, 2, 3};
@@ -504,9 +517,10 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
   BOOST_TEST(data.at(3)->values()(3) == 104);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   //use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
@@ -607,9 +621,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
   BOOST_TEST(data.at(0)->gradients()(1, 2) == 3.4);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   //use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
@@ -675,9 +690,10 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
   BOOST_TEST(data.at(1)->values()(3) == 0.184);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   // use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};

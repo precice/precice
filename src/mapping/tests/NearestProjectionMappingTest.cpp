@@ -23,9 +23,10 @@ using namespace precice;
 BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(NearestProjectionMapping)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   int dimensions = 2;
 
@@ -105,9 +106,10 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   int dimensions = 2;
 
@@ -192,9 +194,10 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase1)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   int dimensions = 2;
 
@@ -248,9 +251,10 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase1)
   BOOST_TEST(outValues(2) == inValues(1) * scaleFactor);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   int dimensions = 2;
 
@@ -302,9 +306,10 @@ BOOST_AUTO_TEST_CASE(ScaleConsistentNonIncremental2DCase2)
   BOOST_TEST(outValues(2) == (inValues(0) + inValues(1)) * 0.5 * scaleFactor);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnEdges)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   int dimensions = 3;
 
@@ -353,9 +358,10 @@ BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnEdges)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnVertices)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   int dimensions = 3;
 
@@ -401,9 +407,10 @@ BOOST_AUTO_TEST_CASE(Consistent3DFalbackOnVertices)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace precice::mesh;
   constexpr int dimensions = 3;
 
@@ -447,9 +454,10 @@ BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
   BOOST_TEST(outValues == outValues.cwiseAbs());
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace precice::mesh;
   constexpr int dimensions = 3;
 
@@ -501,9 +509,10 @@ BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
   BOOST_TEST(outValues(0) == 1.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace precice::mesh;
   constexpr int dimensions = 3;
 
@@ -597,9 +606,10 @@ void makeTriangle(PtrMesh &inMesh, Vertex &a, Vertex &b, Vertex &c)
 }
 } // namespace
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(AvoidClosestTriangle)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace precice::mesh;
   constexpr int dimensions = 3;
 
@@ -629,9 +639,10 @@ BOOST_AUTO_TEST_CASE(AvoidClosestTriangle)
   BOOST_TEST(values(0) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(PickClosestTriangle)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace precice::mesh;
 
   PtrMesh inMesh(new mesh::Mesh("InMesh", 3, testing::nextMeshID()));
@@ -659,9 +670,10 @@ BOOST_AUTO_TEST_CASE(PickClosestTriangle)
   BOOST_TEST(values(0) == 1.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(PreferTriangleOverEdge)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace precice::mesh;
   constexpr int dimensions = 3;
 
@@ -691,9 +703,10 @@ BOOST_AUTO_TEST_CASE(PreferTriangleOverEdge)
   BOOST_TEST(values(0) == 0.5);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TriangleDistances)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace precice::mesh;
   constexpr int dimensions = 3;
 

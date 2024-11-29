@@ -132,9 +132,10 @@ struct ResPreconditionerFixture {
 
 BOOST_FIXTURE_TEST_SUITE(ResPreconditionerTests, ResPreconditionerFixture)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testResPreconditioner)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -163,9 +164,10 @@ BOOST_AUTO_TEST_CASE(testResPreconditioner)
   BOOST_TEST(testing::equals(_data, backup));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testResSumPreconditioner)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -196,6 +198,7 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditioner)
   BOOST_TEST(testing::equals(_data, backup));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testResSumPreconditionerUpdate)
 {
   PRECICE_TEST(1_rank);
@@ -258,9 +261,10 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditionerUpdate)
   precond.revert(_data);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testValuePreconditioner)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -294,9 +298,10 @@ BOOST_AUTO_TEST_CASE(testValuePreconditioner)
   precond.newQRfulfilled();
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConstPreconditioner)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -329,9 +334,10 @@ BOOST_AUTO_TEST_CASE(testConstPreconditioner)
   BOOST_TEST(testing::equals(_data, backup));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testPreconditionerLargerDataSize)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -362,9 +368,10 @@ BOOST_AUTO_TEST_CASE(testPreconditionerLargerDataSize)
   BOOST_TEST(testing::equals(_dataLargerSize, backup));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testPreconditionerLargerResSize)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);
@@ -395,9 +402,10 @@ BOOST_AUTO_TEST_CASE(testPreconditionerLargerResSize)
   BOOST_TEST(testing::equals(_dataSmallerSize, backup));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testMultilpleMeshes)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector<size_t> svs;
   svs.push_back(3);
   svs.push_back(5);
@@ -426,9 +434,10 @@ BOOST_AUTO_TEST_CASE(testMultilpleMeshes)
 }
 
 #ifndef PRECICE_NO_MPI
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(testParallelMatrixScaling)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   //setup data
   int localN = -1;
   if (context.isPrimary()) {

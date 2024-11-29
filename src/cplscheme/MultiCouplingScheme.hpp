@@ -83,11 +83,21 @@ private:
    */
   std::map<std::string, DataMap> _sendDataVector;
 
+  /// Coupling partners to receive initial data from
+  std::set<std::string> _receiveInitialFrom;
+
+  /// Coupling partners to send initial data to
+  std::set<std::string> _sendInitialTo;
+
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
   void exchangeFirstData() override final;
 
   void exchangeSecondData() override final;
+
+  bool sendsInitializedDataTo(const std::string &to) const;
+
+  bool receivesInitializedDataFrom(const std::string &from) const;
 
   DataMap &getAccelerationData() override final;
 

@@ -144,9 +144,10 @@ void testWatchPoint(const TestContext & context,
 
 BOOST_AUTO_TEST_SUITE(WatchPoint)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeSerialPoint1)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   bool withEdge           = false;
   auto watchPointPosition = std::vector<double>{-0.5, 0.6};
   auto expected           = std::vector<double>{
@@ -156,9 +157,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeSerialPoint1)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeSerialPoint1)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   bool withEdge           = true;
   auto watchPointPosition = std::vector<double>{-0.5, 0.6};
   auto expected           = std::vector<double>{
@@ -168,9 +170,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeSerialPoint1)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeSerialPoint2)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   bool withEdge           = false;
   auto watchPointPosition = std::vector<double>{0.0, 1.6};
   auto expected           = std::vector<double>{
@@ -180,9 +183,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeSerialPoint2)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeSerialPoint2)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   bool withEdge           = true;
   auto watchPointPosition = std::vector<double>{0.0, 1.6};
   auto expected           = std::vector<double>{
@@ -192,9 +196,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeSerialPoint2)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeParallelPoint1)
 {
-  PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   bool withEdge           = false;
   auto watchPointPosition = std::vector<double>{-0.5, 0.6};
   auto expected           = std::vector<double>{
@@ -204,9 +209,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeParallelPoint1)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeParallelPoint1)
 {
-  PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   bool withEdge           = true;
   auto watchPointPosition = std::vector<double>{-0.5, 0.6};
   auto expected           = std::vector<double>{
@@ -216,9 +222,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeParallelPoint1)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeParallelPoint2)
 {
-  PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   bool withEdge           = false;
   auto watchPointPosition = std::vector<double>{0.0, 1.6};
   auto expected           = std::vector<double>{
@@ -228,9 +235,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeParallelPoint2)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeParallelPoint2)
 {
-  PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   bool withEdge           = true;
   auto watchPointPosition = std::vector<double>{0.0, 1.6};
   auto expected           = std::vector<double>{
@@ -240,9 +248,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeParallelPoint2)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Reinitialize)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   using Eigen::VectorXd;
   // Setup geometry
@@ -331,9 +340,10 @@ BOOST_AUTO_TEST_CASE(Reinitialize)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(VolumetricInterpolation2D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   using Eigen::VectorXd;
   // Setup geometry
@@ -407,9 +417,10 @@ BOOST_AUTO_TEST_CASE(VolumetricInterpolation2D)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(VolumetricInterpolation3D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   using Eigen::VectorXd;
   // Setup geometry
@@ -480,9 +491,10 @@ BOOST_AUTO_TEST_CASE(VolumetricInterpolation3D)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(VolumetricParallel)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   using namespace mesh;
   using Eigen::VectorXd;
   // Setup geometry

@@ -39,9 +39,10 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MappingNearestNeighborGradient)
 
 // Bidirectional test : Read: Vector & NNG - Write: Vector & NN (Serial coupling)
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadVector)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
+  PRECICE_TEST();
 
   using Eigen::Vector3d;
 

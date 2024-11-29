@@ -17,9 +17,10 @@ BOOST_AUTO_TEST_SUITE(InitializeData)
  * A mapping is employed for the second solver, i.e., at the end of
  * initialize(), the mapping needs to be invoked.
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(Explicit)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   using Eigen::Vector3d;
 

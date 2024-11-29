@@ -9,12 +9,12 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(MappingVolume)
+PRECICE_TEST_SETUP("SolverOneCubeConservative3To1"_on(3_ranks), "SolverTwoCubeConservative3To1"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ParallelCubeConservative3To1)
 {
+  PRECICE_TEST();
   using precice::VertexID;
   using precice::testing::equals;
-
-  PRECICE_TEST("SolverOneCubeConservative3To1"_on(3_ranks), "SolverTwoCubeConservative3To1"_on(1_rank));
   precice::Participant participant(context.name, context.config(), context.rank, context.size);
 
   // Apply some forces (geometry described below)

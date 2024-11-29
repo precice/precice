@@ -11,9 +11,10 @@ using namespace precice::time;
 BOOST_AUTO_TEST_SUITE(TimeTests)
 BOOST_AUTO_TEST_SUITE(WaveformTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testInitialization)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   const int       interpolationDegree = 0;
   const int       valuesSize          = 1;
   Eigen::VectorXd value(valuesSize);
@@ -28,9 +29,10 @@ BOOST_AUTO_TEST_CASE(testInitialization)
   BOOST_TEST(testing::equals(waveform.sample(1.0)(0), 0.0));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testInitializationVector)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   const int       interpolationDegree = 0;
   const int       valuesSize          = 3;
@@ -50,9 +52,10 @@ BOOST_AUTO_TEST_CASE(testInitializationVector)
 
 BOOST_AUTO_TEST_SUITE(InterpolationTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testInterpolateDataZerothDegree)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   testing::WaveformFixture fixture;
 
@@ -95,9 +98,10 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothDegree)
   BOOST_TEST(testing::equals(waveform.sample(2.0)(0), 3.0));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegree)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   testing::WaveformFixture fixture;
 
@@ -141,9 +145,10 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegree)
 }
 
 // Remove or modify this feature? Creating a second degree interpolant by using data from previous windows is difficult, because this would require several pieces of data during initialization. What would be useful: Generating a second degree interpolant from multiple samples in a single window (if available). This would go into the least-squares direction
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testInterpolateDataSecondDegree)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   testing::WaveformFixture fixture;
 
@@ -211,9 +216,10 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondDegree)
   BOOST_TEST(testing::equals(waveform.sample(3.0)(0), 8.0));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegreeVector)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   testing::WaveformFixture fixture;
 
@@ -266,9 +272,10 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegreeVector)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataZerothDegree)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   testing::WaveformFixture fixture;
 
@@ -336,9 +343,10 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataZerothDegree)
   BOOST_TEST(testing::equals(waveform.sample(2.00)(0), 4.0));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstDegree)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   testing::WaveformFixture fixture;
 
@@ -404,9 +412,10 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstDegree)
   BOOST_TEST(testing::equals(waveform.sample(2.00)(0), 4.00));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataSecondDegree)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   testing::WaveformFixture fixture;
 
@@ -431,9 +440,10 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataSecondDegree)
   BOOST_TEST(testing::equals(waveform.sample(1.00)(0), 2.00));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdDegree)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   testing::WaveformFixture fixture;
 

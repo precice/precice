@@ -18,9 +18,10 @@ BOOST_AUTO_TEST_SUITE(ParallelCoupling)
  *
  * Ensures that each time step provides its own data, but preCICE only exchanges data at the end of the window.
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   Participant precice(context.name, context.config(), 0, 1);
 

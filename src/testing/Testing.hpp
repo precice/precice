@@ -24,13 +24,23 @@ using precice::testing::operator""_on;
 using precice::testing::operator""_dataID;
 } // namespace inject
 
-#define PRECICE_TEST(...)                             \
-  using namespace precice::testing::inject;           \
-  precice::testing::TestContext context{__VA_ARGS__}; \
-  if (context.invalid) {                              \
-    return;                                           \
-  }                                                   \
-  BOOST_TEST_MESSAGE(context.describe());             \
+/// Creates and attaches a TestSetup to a Boost test case
+#define PRECICE_TEST_SETUP(...) \
+  BOOST_TEST_DECORATOR(*precice::testing::testSetup(__VA_ARGS__))
+
+/** Setup the preCICE test
+ * Assigns a participant and rank from the TestSetup.
+ * Unneeded ranks are marked as invalid and skip the test.
+ * Provides a TestContext named context which can be used in the test.
+ *
+ * @pre PRECICE_TEST_SETUP has been called before the test to setup a test context.
+ */
+#define PRECICE_TEST()                                                     \
+  precice::testing::TestContext context{precice::testing::getTestSetup()}; \
+  if (context.invalid) {                                                   \
+    return;                                                                \
+  }                                                                        \
+  BOOST_TEST_MESSAGE(context.describe());                                  \
   boost::unit_test::framework::add_context(BOOST_TEST_LAZY_MSG(context.describe()), true);
 
 /// struct giving access to the impl of a befriended class or struct
@@ -114,6 +124,35 @@ std::string getFullTestName();
 /// Returns the full path to the file containing the current test.
 std::string getTestPath();
 
+class precice_testsetup_fixture : public boost::unit_test::decorator::base {
+public:
+  // Constructor
+  explicit precice_testsetup_fixture(precice::testing::TestSetup ts)
+      : testSetup(ts) {}
+
+  precice::testing::TestSetup testSetup;
+
+private:
+  // decorator::base interface
+  void                                  apply(boost::unit_test::test_unit &tu) override{};
+  boost::unit_test::decorator::base_ptr clone() const override
+  {
+    return boost::unit_test::decorator::base_ptr(new precice_testsetup_fixture(*this));
+  }
+};
+
+template <typename... ARGS>
+auto testSetup(ARGS... args)
+{
+  return precice_testsetup_fixture{precice::testing::TestSetup{args...}};
+}
+
+/// Returns the registered TestSetup for the test
+TestSetup getTestSetup();
+
+/// Returns the registered TestSetup for a test if available
+std::optional<TestSetup> getTestSetupFor(const boost::unit_test::test_unit &tu);
+
 /** Generates a new mesh id for use in tests.
  *
  * @returns a new unique mesh ID
@@ -121,3 +160,5 @@ std::string getTestPath();
 int nextMeshID();
 
 } // namespace precice::testing
+
+using namespace precice::testing::inject;\

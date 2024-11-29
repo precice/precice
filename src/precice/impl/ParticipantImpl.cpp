@@ -1676,18 +1676,23 @@ void ParticipantImpl::closeCommunicationChannels(CloseChannels close)
   std::string pong = "pong";
   for (auto &iter : _m2ns) {
     auto bm2n = iter.second;
+    if (!bm2n.m2n->isConnected()) {
+      PRECICE_DEBUG("Skipping closure of defective connection with {}", bm2n.remoteName);
+      continue;
+    }
     if (_waitInFinalize && not utils::IntraComm::isSecondary()) {
+      auto comm = bm2n.m2n->getPrimaryRankCommunication();
       PRECICE_DEBUG("Synchronizing primary rank with {}", bm2n.remoteName);
       if (bm2n.isRequesting) {
-        bm2n.m2n->getPrimaryRankCommunication()->send(ping, 0);
+        comm->send(ping, 0);
         std::string receive = "init";
-        bm2n.m2n->getPrimaryRankCommunication()->receive(receive, 0);
+        comm->receive(receive, 0);
         PRECICE_ASSERT(receive == pong);
       } else {
         std::string receive = "init";
-        bm2n.m2n->getPrimaryRankCommunication()->receive(receive, 0);
+        comm->receive(receive, 0);
         PRECICE_ASSERT(receive == ping);
-        bm2n.m2n->getPrimaryRankCommunication()->send(pong, 0);
+        comm->send(pong, 0);
       }
     }
     if (close == CloseChannels::Distributed) {

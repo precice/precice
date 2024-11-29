@@ -49,10 +49,6 @@ protected:
 
   /// performs a relaxation given a relaxation factor omega
   static void applyRelaxation(double omega, DataMap &cplData);
-
-  /// @brief Concatenates the data and old data in cplData into two long vectors
-  virtual void concatenateCouplingData(
-      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const = 0;
 };
 } // namespace acceleration
 } // namespace precice

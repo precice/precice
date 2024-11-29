@@ -229,9 +229,10 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
 BOOST_AUTO_TEST_SUITE(DummySchemeCompositionTests)
 
 // Test two explicit dummy coupling schemes
+PRECICE_TEST_SETUP(1_rank, Require::Events)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
 {
-  PRECICE_TEST(1_rank, Require::Events);
+  PRECICE_TEST();
   int                         numberIterations = 1;
   int                         maxTimeWindows   = 10;
   PtrCouplingScheme           scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
@@ -256,9 +257,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
 }
 
 // Test three explicit dummy coupling schemes
+PRECICE_TEST_SETUP(1_rank, Require::Events)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
 {
-  PRECICE_TEST(1_rank, Require::Events);
+  PRECICE_TEST();
   int               numberIterations = 1;
   int               maxTimeWindows   = 10;
   PtrCouplingScheme scheme1(
@@ -289,9 +291,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
 }
 
 // Test E, I(2)
+PRECICE_TEST_SETUP(1_rank, Require::Events)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
 {
-  PRECICE_TEST(1_rank, Require::Events);
+  PRECICE_TEST();
   int               numberIterations = 1;
   int               maxTimeWindows   = 10;
   PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
@@ -332,9 +335,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
 }
 
 // Test I(2), E
+PRECICE_TEST_SETUP(1_rank, Require::Events)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
 {
-  PRECICE_TEST(1_rank, Require::Events);
+  PRECICE_TEST();
   int               numberIterations = 2;
   int               maxTimeWindows   = 10;
   PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
@@ -367,9 +371,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
 }
 
 // Test E, I(3)
+PRECICE_TEST_SETUP(1_rank, Require::Events)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
 {
-  PRECICE_TEST(1_rank, Require::Events);
+  PRECICE_TEST();
   int               numberIterations = 1;
   int               maxTimeWindows   = 10;
   PtrCouplingScheme scheme1(
@@ -404,9 +409,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
 }
 
 // Test I(3), E
+PRECICE_TEST_SETUP(1_rank, Require::Events)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3Explicit1)
 {
-  PRECICE_TEST(1_rank, Require::Events);
+  PRECICE_TEST();
   int               numberIterations = 3;
   int               maxTimeWindows   = 10;
   PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
@@ -443,27 +449,30 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_FIXTURE_TEST_SUITE(CompositionalCouplingSchemeTests, CompositionalCouplingSchemeFixture)
 
 /// Test that runs on 3 processors.
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), "Participant2"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testExplicitSchemeComposition1)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), "Participant2"_on(1_rank), Require::Events);
+  PRECICE_TEST();
 
   std::string configPath(_pathToTests + "multi-solver-coupling-1.xml");
   setupAndRunThreeSolverCoupling(configPath, context);
 }
 
 /// Test that runs on 3 processors.
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), "Participant2"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testImplicitExplicitSchemeComposition)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), "Participant2"_on(1_rank), Require::Events);
+  PRECICE_TEST();
 
   std::string configPath(_pathToTests + "multi-solver-coupling-3.xml");
   setupAndRunThreeSolverCoupling(configPath, context);
 }
 
 /// Test that runs on 3 processors.
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), "Participant2"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testExplicitImplicitSchemeComposition)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), "Participant2"_on(1_rank), Require::Events);
+  PRECICE_TEST();
 
   std::string configPath(_pathToTests + "multi-solver-coupling-4.xml");
   setupAndRunThreeSolverCoupling(configPath, context);

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration experimental="true">
+  <data:scalar name="Data1" waveform-degree="2" />
+  <data:scalar name="Data2" waveform-degree="2" />
+
+  <mesh name="MeshOne" dimensions="2">
+    <use-data name="Data1" />
+    <use-data name="Data2" />
+  </mesh>
+
+  <mesh name="MeshTwo" dimensions="2">
+    <use-data name="Data1" />
+    <use-data name="Data2" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <provide-mesh name="MeshOne" />
+    <write-data name="Data1" mesh="MeshOne" />
+    <read-data name="Data2" mesh="MeshOne" />
+  </participant>
+
+  <participant name="SolverTwo">
+    <receive-mesh name="MeshOne" from="SolverOne" safety-factor="0.1" />
+    <provide-mesh name="MeshTwo" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="MeshOne"
+      to="MeshTwo"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="MeshTwo"
+      to="MeshOne"
+      constraint="conservative" />
+    <write-data name="Data2" mesh="MeshTwo" />
+    <read-data name="Data1" mesh="MeshTwo" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+
+  <coupling-scheme:serial-implicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="1" />
+    <time-window-size value="1" />
+    <exchange data="Data1" mesh="MeshOne" from="SolverOne" to="SolverTwo" substeps="true" />
+    <exchange data="Data2" mesh="MeshOne" from="SolverTwo" to="SolverOne" substeps="true" />
+    <max-iterations value="100" />
+    <relative-convergence-measure limit="1e-13" data="Data2" mesh="MeshOne" />
+    <acceleration:IQN-ILS reducedTimeGrid="true">
+      <data name="Data2" mesh="MeshOne" />
+      <initial-relaxation value="0.1" />
+      <max-used-iterations value="10" />
+      <time-windows-reused value="2" />
+    </acceleration:IQN-ILS>
+  </coupling-scheme:serial-implicit>
+</precice-configuration>

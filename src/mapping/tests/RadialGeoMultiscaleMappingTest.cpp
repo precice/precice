@@ -19,16 +19,16 @@ using namespace precice::mesh;
 BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(RadialGeoMultiscaleMapping)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ConsistentSpreadX)
 {
+  PRECICE_TEST();
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, that intersect along the x-axis.
       Then, the data is mapped from the vertices of the 1D mesh to defined vertices of the 3D mesh (hence, SPREAD).
       The defined vertices are close to a 1D vertex - in the sense that their projection onto the x-axis is a nearest neighbor of a 1D vertex -
       and therefore we can predict which value from the 1D vertex should be assigned.
       Finally, this expected behavior is tested.
   */
-
-  PRECICE_TEST(1_rank);
   constexpr int dimensions = 3;
   using testing::equals;
 
@@ -103,16 +103,16 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadX)
   BOOST_TEST(outValues(17) == inSample.values(8));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ConsistentSpreadZ)
 {
+  PRECICE_TEST();
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, that intersect along the z-axis.
       Then, the data is mapped from the vertices of the 1D mesh to defined vertices of the 3D mesh (hence, "spread").
       The defined vertices are close to a 1D vertex - in the sense that their projection onto the z-axis is a nearest neighbor of a 1D vertex -
       and therefore we can predict which value from the 1D vertex should be assigned.
       Finally, this expected behavior is tested.
   */
-
-  PRECICE_TEST(1_rank);
   constexpr int dimensions = 3;
   using testing::equals;
 
@@ -185,16 +185,16 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadZ)
   BOOST_TEST(outValues(16) == inSample.values(8));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ConsistentCollectX)
 {
+  PRECICE_TEST();
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, that intersect along the x-axis.
       Then, the data is mapped from the vertices of the 3D mesh to defined vertices of the 1D mesh (hence, "collect").
       The defined vertices are close to a 1D vertex - in the sense that their projection onto the x-axis is a nearest neighbor of a 1D vertex -
       and therefore we can predict that the 1D vertex value should be the mean of all close 3D vertices.
       Finally, this expected behavior is tested.
   */
-
-  PRECICE_TEST(1_rank);
   constexpr int dimensions = 3;
   using testing::equals;
 
@@ -255,15 +255,15 @@ BOOST_AUTO_TEST_CASE(ConsistentCollectX)
   BOOST_TEST(outValues(8) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ConsistentCollectZ)
 {
+  PRECICE_TEST();
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, that intersect along the x-axis.
       Then, the data is mapped from the vertices of the 3D mesh to defined vertices of the 1D mesh (hence, COLLECT).
       The defined vertices are close to a 1D vertex and therefore we can predict that the 1D vertex value should be the mean of all close 3D vertices.
       Finally, this expected behavior is tested.
   */
-
-  PRECICE_TEST(1_rank);
   constexpr int dimensions = 3;
   using testing::equals;
 

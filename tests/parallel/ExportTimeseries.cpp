@@ -7,9 +7,10 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
+PRECICE_TEST_SETUP("ExporterOne"_on(1_rank), "ExporterTwo"_on(2_ranks))
 BOOST_AUTO_TEST_CASE(ExportTimeseries)
 {
-  PRECICE_TEST("ExporterOne"_on(1_rank), "ExporterTwo"_on(2_ranks));
+  PRECICE_TEST();
 
   precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
