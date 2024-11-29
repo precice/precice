@@ -249,12 +249,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
   if (callingTag.getNamespace() == TAG) {
 
     //create preconditioner
-    if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_IQNIMVJ || callingTag.getName() == VALUE_AITKEN) {
-
-      // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time windows is limited by the chunksize
-      if (callingTag.getName() == VALUE_IQNIMVJ && _config.imvjRestartType > 0)
-        if (_config.precond_nbNonConstTWindows > _config.imvjChunkSize)
-          _config.precond_nbNonConstTWindows = _config.imvjChunkSize;
+    if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_AITKEN) {
       if (_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER) {
         _preconditioner = PtrPreconditioner(new ConstantPreconditioner(_config.scalingFactorsInOrder()));
       } else if (_config.preconditionerType == VALUE_VALUE_PRECONDITIONER) {
@@ -306,6 +301,26 @@ void AccelerationConfiguration::xmlEndTagCallback(
         _config.imvjRestartType = (_userDefinitions.defineRestartType) ? _config.imvjRestartType : _defaultValuesIQNIMVJ.imvjRestartType;
         _config.imvjChunkSize   = (_userDefinitions.defineRestartType) ? _config.imvjChunkSize : _defaultValuesIQNIMVJ.imvjChunkSize;
       }
+
+      // create preconditioner
+      // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time windows is limited by the chunksize
+      // it is separated from the other acceleration methods, since SVD-restart might be chosen as default here
+      if (_config.imvjRestartType == IQNIMVJAcceleration::RS_SVD)
+        if (_config.precond_nbNonConstTWindows > _config.imvjChunkSize)
+          _config.precond_nbNonConstTWindows = _config.imvjChunkSize;
+      if (_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER) {
+        _preconditioner = PtrPreconditioner(new ConstantPreconditioner(_config.scalingFactorsInOrder()));
+      } else if (_config.preconditionerType == VALUE_VALUE_PRECONDITIONER) {
+        _preconditioner = PtrPreconditioner(new ValuePreconditioner(_config.precond_nbNonConstTWindows));
+      } else if (_config.preconditionerType == VALUE_RESIDUAL_PRECONDITIONER) {
+        _preconditioner = PtrPreconditioner(new ResidualPreconditioner(_config.precond_nbNonConstTWindows));
+      } else if (_config.preconditionerType == VALUE_RESIDUAL_SUM_PRECONDITIONER) {
+        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_config.precond_nbNonConstTWindows));
+      } else {
+        // no preconditioner defined
+        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_defaultValuesIQNILS.precond_nbNonConstTWindows));
+      }
+
       _acceleration = PtrAcceleration(
           new IQNIMVJAcceleration(
               _config.relaxationFactor,
