@@ -114,7 +114,7 @@ def printWide(df):
         from itertools import islice
 
         iterator = iter(iterable)
-        while batch := tuple(islice(iterator, 5)):
+        while batch := tuple(islice(iterator, 6)):
             yield batch
 
     fmts = iter(colfmts[1:])
@@ -564,7 +564,10 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
     df = (
         df.filter(pl.col("participant") == participant)
         .drop("participant")
-        .with_columns(pl.col("dur") * dur_factor)
+        .with_columns(
+            (pl.col("dur") * dur_factor),
+            (pl.col("dur") / pl.col("dur").max().over(["rank"]) * 100).alias("rel"),
+        )
     )
 
     ranks = df.select("rank").unique()
@@ -574,6 +577,7 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
             df.group_by("eid")
             .agg(
                 pl.sum("dur").alias("sum"),
+                pl.sum("rel").alias("%"),
                 pl.count("dur").alias("count"),
                 pl.mean("dur").alias("mean"),
                 pl.min("dur").alias("min"),
@@ -614,6 +618,7 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
                         .group_by("eid")
                         .agg(
                             pl.sum("dur").alias(f"R{rank}:sum"),
+                            pl.sum("rel").alias(f"R{rank}:%"),
                             pl.count("dur").alias(f"R{rank}:count"),
                             pl.mean("dur").alias(f"R{rank}:mean"),
                             pl.min("dur").alias(f"R{rank}:min"),
