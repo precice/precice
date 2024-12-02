@@ -119,7 +119,7 @@ private:
     double                imvjRSSVD_truncationEps    = 0;
     double                preconLimitUpdate          = 10;
     bool                  estimateJacobian           = false;
-    bool                  alwaysBuildJacobian        = false;  
+    bool                  alwaysBuildJacobian        = false;
     bool                  reducedTimeGridQN          = true;
     std::string           preconditionerUpdate;
     std::string           preconditionerType;

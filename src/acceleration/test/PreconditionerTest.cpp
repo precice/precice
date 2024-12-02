@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditioner)
 PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testResSumPreconditionerUpdate)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector<size_t> svs;
   svs.push_back(2);
   svs.push_back(4);

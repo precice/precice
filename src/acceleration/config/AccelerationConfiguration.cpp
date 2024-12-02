@@ -218,7 +218,7 @@ void AccelerationConfiguration::xmlTagCallback(
   } else if (callingTag.getName() == TAG_PRECONDITIONER) {
     _userDefinitions.definedPreconditionerType = true;
     _config.preconditionerType                 = callingTag.getStringAttributeValue(ATTR_TYPE);
-    _config.preconditionerUpdate               = callingTag.getBooleanAttributeValue(ATTR_PRECOND_UPDATE);
+    _config.preconditionerUpdate               = callingTag.getStringAttributeValue(ATTR_PRECOND_UPDATE);
     _config.precond_nbNonConstTWindows         = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIME_WINDOWS);
     _config.preconLimitUpdate                  = callingTag.getDoubleAttributeValue(VALUE_RESIDUAL_SUM_LIMIT);
   } else if (callingTag.getName() == TAG_IMVJRESTART) {
