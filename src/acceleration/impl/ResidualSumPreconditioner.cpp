@@ -94,12 +94,10 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
             _weights[i + offset]    = 1 / _residualSum[k];
             _invWeights[i + offset] = _residualSum[k];
           }
-          PRECICE_DEBUG("preconditioner scaling factor[{}] = {}", k, 1 / _residualSum[k]);
           _previousResidualSum[k] = _residualSum[k];
           _requireNewQR           = true;
           _areWeightsUpdated      = true;
         }
-        PRECICE_DEBUG("Actual Norm of pre-scaling weights in current iteration: {}", _previousResidualSum[k]);
         offset += _subVectorSizes[k];
       }
 

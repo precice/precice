@@ -150,7 +150,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
       PRECICE_DEBUG("  Pre-scaling weights were reset. Reverting to QR2 and rebuilding QR.");
       resetFilter(singularityLimit, delIndices, V);
     } else {
-      for (size_t i = index; i > 1; i--) {
+      for (size_t i = index; i > 0; i--) {
         Eigen::VectorXd v    = V.col(i);
         double          rho0 = utils::IntraComm::l2norm(v);
         if (std::fabs(_R(i, i)) < rho0 * singularityLimit) {
@@ -268,6 +268,7 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
 
     // necessary for applyFilter with the QR-2 filter. In this case, the new column is not inserted, but discarded.
     _cols--;
+    computeQR2Filter = true;
     return false;
   }
 

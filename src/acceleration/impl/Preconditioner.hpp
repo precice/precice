@@ -199,12 +199,6 @@ public:
     return _areWeightsUpdated;
   }
 
-  /// to tell that the QR decomposition has been reset due to updated pre-scaling weights
-  void updatedWeightsReset()
-  {
-    _areWeightsUpdated = false;
-  }
-
   /// to tell the preconditioner that QR-decomposition has been recomputed
   void newQRfulfilled()
   {
