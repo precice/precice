@@ -515,7 +515,10 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     auto attrPreconditionerUpdate = XMLAttribute<std::string>(ATTR_PRECOND_UPDATE, VALUE_RESIDUAL_SUM_ALWAYS)
                                         .setOptions({VALUE_RESIDUAL_SUM_ALWAYS,
                                                      VALUE_RESIDUAL_SUM_THRESHOLD})
-                                        .setDocumentation("Periodically updates the preconditioner weights after the first time windows.");
+                                        .setDocumentation("To update the preconditioner weights after the first time window:"
+                                                          "- `always`: The preconditioner weights are updated after every iteration.\n"
+                                                          "- `on-threshold`: The preconditioner weights are only updated if the relative difference of the weights is larger than the limit."
+                                                          "If this tag is not provided, the preconditioner weights are updated after every iteration when it's not frozen.");
     tagPreconditioner.addAttribute(attrPreconditionerUpdate);
     auto nonconstTWindows = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
                                 .setDocumentation(
@@ -524,7 +527,7 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagPreconditioner.addAttribute(nonconstTWindows);
     auto precondUpdateLim = makeXMLAttribute(VALUE_RESIDUAL_SUM_LIMIT, 10.0)
                                 .setDocumentation(
-                                    "The limit for the preconditioner update. If the pre-scaling weights have a relative difference of this limit, the weights are updated.");
+                                    "The limit for the preconditioner update. If the pre-scaling weights have a relative difference larger than this limit, the weights are updated.");
     tagPreconditioner.addAttribute(precondUpdateLim);
     tag.addSubtag(tagPreconditioner);
 
@@ -597,14 +600,17 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     auto attrPreconditionerUpdate = XMLAttribute<std::string>(ATTR_PRECOND_UPDATE, VALUE_RESIDUAL_SUM_ALWAYS)
                                         .setOptions({VALUE_RESIDUAL_SUM_ALWAYS,
                                                      VALUE_RESIDUAL_SUM_THRESHOLD})
-                                        .setDocumentation("Periodically updates the preconditioner weights after the first time windows.");
+                                        .setDocumentation("To update the preconditioner weights after the first time window:"
+                                                          "- `always`: The preconditioner weights are updated after every iteration.\n"
+                                                          "- `on-threshold`: The preconditioner weights are only updated if the relative difference of the weights is larger than the limit."
+                                                          "If this tag is not provided, the preconditioner weights are updated after every iteration when it's not frozen.");
     tagPreconditioner.addAttribute(attrPreconditionerUpdate);
     auto nonconstTWindows = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
                                 .setDocumentation("After the given number of time windows, the preconditioner weights are frozen and the preconditioner acts like a constant preconditioner.");
     tagPreconditioner.addAttribute(nonconstTWindows);
     auto precondUpdateLim = makeXMLAttribute(VALUE_RESIDUAL_SUM_LIMIT, 10.0)
                                 .setDocumentation(
-                                    "The limit for the preconditioner update. If the pre-scaling weights have a relative difference of this limit, the weights are updated.");
+                                    "The limit for the preconditioner update. If the pre-scaling weights have a relative difference larger than this limit, the weights are updated.");
     tagPreconditioner.addAttribute(precondUpdateLim);
     tag.addSubtag(tagPreconditioner);
 
