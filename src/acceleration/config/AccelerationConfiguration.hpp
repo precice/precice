@@ -66,6 +66,10 @@ private:
   const std::string ATTR_RSLS_REUSED_TIME_WINDOWS;
   const std::string ATTR_RSSVD_TRUNCATIONEPS;
   const std::string ATTR_PRECOND_NONCONST_TIME_WINDOWS;
+  const std::string ATTR_PRECOND_UPDATE;
+  const std::string VALUE_RESIDUAL_SUM_ALWAYS;
+  const std::string VALUE_RESIDUAL_SUM_THRESHOLD;
+  const std::string VALUE_RESIDUAL_SUM_LIMIT;
 
   const std::string VALUE_CONSTANT;
   const std::string VALUE_AITKEN;
@@ -74,6 +78,7 @@ private:
   const std::string VALUE_QR1FILTER;
   const std::string VALUE_QR1_ABSFILTER;
   const std::string VALUE_QR2FILTER;
+  const std::string VALUE_QR3FILTER;
   const std::string VALUE_CONSTANT_PRECONDITIONER;
   const std::string VALUE_VALUE_PRECONDITIONER;
   const std::string VALUE_RESIDUAL_PRECONDITIONER;
@@ -112,9 +117,11 @@ private:
     int                   precond_nbNonConstTWindows = -1;
     double                singularityLimit           = 0;
     double                imvjRSSVD_truncationEps    = 0;
+    double                preconLimitUpdate          = 10;
     bool                  estimateJacobian           = false;
     bool                  alwaysBuildJacobian        = false;
     bool                  reducedTimeGridQN          = true;
+    std::string           preconditionerUpdate;
     std::string           preconditionerType;
 
     std::vector<double> scalingFactorsInOrder() const;
