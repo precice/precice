@@ -84,51 +84,73 @@ def printWide(df):
         parts = eventName.split("/")
         return indentation * len(parts) + parts[-1]
 
-    df = (
+    df: pl.DataFrame = (
         df.sort("eid")
         .with_columns(pl.col("eid").map_elements(makeLabel, return_dtype=pl.String))
         .rename({"eid": "name"})
     )
 
-    mincolwidth = 8
+    blocksize = 6
+    assert len(df.columns) % blocksize == 1
 
-    def formattedLength(s):
-        return len("{:}".format(s))
+    headerFmts = []
+    bodyFmts = []
+    colWidths = []
+    for col in df.iter_columns():
+        headerWidth = len(col.name.encode())
 
-    headerWidths = tuple(map(formattedLength, df.columns))
-    bodyWidths = tuple(
-        df.select(pl.all().map_elements(formattedLength, return_dtype=pl.Int64))
-        .max()
-        .row(0)
-    )
-    assert len(headerWidths) == len(bodyWidths)
-    colwidths = list(map(max, zip(headerWidths, bodyWidths, repeat(mincolwidth))))
-    colaligns = ["<"] + [">"] * (len(df.columns) - 1)
+        def fmt(d):
+            if col.dtype == pl.Float32 or col.dtype == pl.Float64:
+                return len(f"{d:.2f}")
+            else:
+                return len(f"{d}")
 
-    colfmts = ["{:" + a + str(w) + "}" for w, a in zip(colwidths, colaligns)]
+        width = col.map_elements(fmt, return_dtype=pl.Int64).max()
+        width = max(width, headerWidth)
+        colWidths.append(width)
+        sw = str(width)
 
-    rowfmt = colfmts[0]
+        headerFmts.append("{:<" + sw + "}")
 
-    # Measurements always come in batches of 5
-    def batched(iterable):
-        from itertools import islice
+        if col.dtype == pl.Float32 or col.dtype == pl.Float64:
+            bodyFmts.append("{:>" + sw + ".2f}")
+        elif col.dtype == pl.String:
+            bodyFmts.append("{:<" + sw + "}")
+        else:
+            bodyFmts.append("{:>" + sw + "}")
 
-        iterator = iter(iterable)
-        while batch := tuple(islice(iterator, 6)):
-            yield batch
+    headerFmt = ""
+    hline = ""
+    bodyFmt = ""
 
-    fmts = iter(colfmts[1:])
-    for batch in batched(fmts):
-        rowfmt += " │ " + " ".join(batch)
+    for col, (h, b, w) in enumerate(zip(headerFmts, bodyFmts, colWidths)):
+        if col % blocksize == 1:
+            headerFmt += " │ "
+        else:
+            headerFmt += " "
+        headerFmt += h
 
-    hline = "─" * colwidths[0]
-    for b in batched(colwidths[1:]):
-        hline += "─┼─" + "─" * (sum(b) + len(b) - 1)
+        if col % blocksize == 1:
+            hline += "─┼─"
+        else:
+            hline += " "
 
-    print(rowfmt.format(*(df.columns)))
+        hline += "─" * w
+
+        if col % blocksize == 1:
+            bodyFmt += " │ "
+        else:
+            bodyFmt += " "
+        bodyFmt += b
+
+    print(headerFmt.format(*(df.columns)))
     print(hline)
     for row in df.iter_rows():
-        print(rowfmt.format(*map(lambda e: "" if e is None else e, row)))
+        print(
+            bodyFmt.format(
+                *map(lambda e: float("nan") if e is None else e, row)
+            ).replace("nan", "   ")
+        )
 
 
 @functools.lru_cache
