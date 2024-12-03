@@ -62,7 +62,7 @@
     <acceleration:IQN-IMVJ>
       <data name="Data21" mesh="MeshOne" />
       <filter type="QR3" limit="1e-3" />
-      <preconditioner type="residual-sum" update="on-threshold" freeze-after="-1" limit="5.0"/>
+      <preconditioner type="residual-sum" update="on-threshold" freeze-after="-1" limit="5.0" />
       <initial-relaxation value="1.0" />
       <max-used-iterations value="10" />
       <time-windows-reused value="0" />
