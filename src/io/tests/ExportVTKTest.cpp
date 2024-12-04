@@ -1,5 +1,6 @@
 #include <Eigen/Core>
 #include <algorithm>
+#include <filesystem>
 #include <string>
 #include "io/Export.hpp"
 #include "io/ExportVTK.hpp"
@@ -23,7 +24,7 @@ PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportScalar)
 {
   PRECICE_TEST();
-  mesh::Mesh mesh("ExportScalarMesh", 2, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
   mesh::PtrData data = mesh.createData("data", 1, 0_dataID);
@@ -31,13 +32,14 @@ BOOST_AUTO_TEST_CASE(ExportScalar)
 
   io::ExportVTK exportCSV{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
+  testing::expectFiles("Mesh-io-VTKExport.init.vtk");
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportVector)
 {
   PRECICE_TEST();
-  mesh::Mesh mesh("ExportVectorMesh", 2, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
   mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
@@ -45,19 +47,21 @@ BOOST_AUTO_TEST_CASE(ExportVector)
 
   io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTK.doExport(0, 0.0);
+  testing::expectFiles("Mesh-io-VTKExport.init.vtk");
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportMissing)
 {
   PRECICE_TEST();
-  mesh::Mesh mesh("ExportVectorMesh", 2, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
   mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
   // no sample
   io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTK.doExport(0, 0.0);
+  testing::expectFiles("Mesh-io-VTKExport.init.vtk");
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -66,7 +70,7 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
   PRECICE_TEST();
   int dimensions = 2;
   // Create mesh to map from
-  mesh::Mesh    mesh("ExportDataWithGradient", dimensions, testing::nextMeshID());
+  mesh::Mesh    mesh("Mesh", dimensions, testing::nextMeshID());
   mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
   mesh::PtrData dataVector = mesh.createData("dataVector", 2, 1_dataID);
   dataScalar->requireDataGradient();
@@ -87,6 +91,7 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
   io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTK.doExport(0, 0.0);
   exportVTK.doExport(1, 1.0);
+  testing::expectFiles("Mesh-io-VTKExport.init.vtk", "Mesh-io-VTKExport.dt1.vtk");
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -94,7 +99,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   PRECICE_TEST();
   int           dim = 2;
-  mesh::Mesh    mesh("ExportPolygonalMesh", dim, testing::nextMeshID());
+  mesh::Mesh    mesh("Mesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Constant(0.0));
   mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector2d::Constant(1.0));
   mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector2d{1.0, 0.0});
@@ -106,6 +111,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTK.doExport(0, 0.0);
   exportVTK.doExport(1, 1.0);
+  testing::expectFiles("Mesh-io-VTKExport.init.vtk", "Mesh-io-VTKExport.dt1.vtk");
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -113,7 +119,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   PRECICE_TEST();
   int           dim = 3;
-  mesh::Mesh    mesh("ExportTriangulatedMesh", dim, testing::nextMeshID());
+  mesh::Mesh    mesh("Mesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Constant(0.0));
   mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d::Constant(1.0));
   mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
@@ -126,6 +132,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTK.doExport(0, 0.0);
   exportVTK.doExport(1, 1.0);
+  testing::expectFiles("Mesh-io-VTKExport.init.vtk", "Mesh-io-VTKExport.dt1.vtk");
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -133,7 +140,7 @@ BOOST_AUTO_TEST_CASE(ExportTetrahedron)
 {
   PRECICE_TEST();
   int           dim = 3;
-  mesh::Mesh    mesh("ExportTetrahedron", dim, testing::nextMeshID());
+  mesh::Mesh    mesh("Mesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Constant(0.0));
   mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
   mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
@@ -144,6 +151,7 @@ BOOST_AUTO_TEST_CASE(ExportTetrahedron)
   io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTK.doExport(0, 0.0);
   exportVTK.doExport(1, 1.0);
+  testing::expectFiles("Mesh-io-VTKExport.init.vtk", "Mesh-io-VTKExport.dt1.vtk");
 }
 
 BOOST_AUTO_TEST_SUITE_END() // ExportVTK
