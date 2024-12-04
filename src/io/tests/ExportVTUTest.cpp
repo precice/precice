@@ -64,6 +64,76 @@ BOOST_AUTO_TEST_CASE(ExportMissing)
   exportVTU.doExport(0, 0.0);
 }
 
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportScalarParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("ExportScalarMesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  mesh::PtrData data = mesh.createData("data", 1, 0_dataID);
+  data->setSampleAtTime(0, time::Sample{1, 1}.setZero());
+
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTU.doExport(0, 0.0);
+}
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportVectorParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("ExportVectorMesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
+  data->setSampleAtTime(0, time::Sample{2, 1}.setZero());
+
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTU.doExport(0, 0.0);
+}
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportMissingParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("ExportVectorMesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
+  BOOST_TEST_REQUIRE(data->timeStepsStorage().empty());
+  // no sample
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTU.doExport(0, 0.0);
+}
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportScalarAndMissingParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("ExportVectorMesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  auto missing = mesh.createData("missing", 2, 0_dataID);
+  BOOST_TEST_REQUIRE(missing->timeStepsStorage().empty());
+  mesh::PtrData data = mesh.createData("data", 2, 1_dataID);
+  data->setSampleAtTime(0, time::Sample{2, 1}.setZero());
+  // no sample
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTU.doExport(0, 0.0);
+}
+
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
 {
