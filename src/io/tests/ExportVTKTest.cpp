@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(ExportScalar)
   mesh::PtrData data = mesh.createData("data", 1, 0_dataID);
   data->setSampleAtTime(0, time::Sample{1, 2}.setZero());
 
-  io::ExportVTK exportCSV{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTK exportCSV{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
 }
 
@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(ExportVector)
   mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
   data->setSampleAtTime(0, time::Sample{2, 2}.setZero());
 
-  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTK.doExport(0, 0.0);
 }
 
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(ExportMissing)
   mesh.createVertex(Eigen::Vector2d::Constant(1));
   mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
   // no sample
-  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTK.doExport(0, 0.0);
 }
 
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
   vectorial.gradients.setOnes();
   dataScalar->setSampleAtTime(0, vectorial);
 
-  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTK.doExport(0, 0.0);
   exportVTK.doExport(1, 1.0);
 }
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   mesh.createEdge(v2, v3);
   mesh.createEdge(v3, v1);
 
-  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTK.doExport(0, 0.0);
   exportVTK.doExport(1, 1.0);
 }
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   mesh::Edge &e3 = mesh.createEdge(v3, v1);
   mesh.createTriangle(e1, e2, e3);
 
-  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTK.doExport(0, 0.0);
   exportVTK.doExport(1, 1.0);
 }
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(ExportTetrahedron)
 
   mesh.createTetrahedron(v1, v2, v3, v4);
 
-  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTK.doExport(0, 0.0);
   exportVTK.doExport(1, 1.0);
 }

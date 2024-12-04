@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(ExportScalar)
   mesh::PtrData data = mesh.createData("data", 1, 0_dataID);
   data->setSampleAtTime(0, time::Sample{1, 2}.setZero());
 
-  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
 }
 
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(ExportVector)
   mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
   data->setSampleAtTime(0, time::Sample{2, 2}.setZero());
 
-  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
 }
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(ExportMissing)
   mesh.createVertex(Eigen::Vector2d::Constant(1));
   mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
   // no sample
-  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
 }
 
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
   mesh.createEdge(v2, v3);
   mesh.createEdge(v3, v1);
 
-  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
 }
 
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh.createVertex(Eigen::Vector2d::Constant(3.0));
   }
 
-  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
 }
 
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh.createVertex(Eigen::Vector3d::Constant(3.0));
   }
 
-  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
 }
 
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh.createTriangle(eo1, e12, e2o);
   }
 
-  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
 }
 
