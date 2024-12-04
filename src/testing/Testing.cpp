@@ -132,4 +132,9 @@ boost::test_tools::predicate_result equals(double a, double b, double tolerance)
   return true;
 }
 
+void expectFile(std::string_view name)
+{
+  BOOST_TEST(std::filesystem::is_regular_file(name), "File " << name << " is not a regular file or doesn't exist.");
+}
+
 } // namespace precice::testing

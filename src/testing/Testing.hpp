@@ -159,6 +159,14 @@ std::optional<TestSetup> getTestSetupFor(const boost::unit_test::test_unit &tu);
  */
 int nextMeshID();
 
+void expectFile(std::string_view name);
+
+template <typename... Args>
+void expectFiles(Args... args)
+{
+  (expectFile(args), ...);
+}
+
 } // namespace precice::testing
 
 using namespace precice::testing::inject;\
