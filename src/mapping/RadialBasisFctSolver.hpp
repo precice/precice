@@ -42,7 +42,7 @@ public:
                        const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial);
 
   /// Maps the given input data
-  Eigen::VectorXd solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const;
+  double solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial, Eigen::VectorXd &result) const;
 
   /// Maps the given input data
   Eigen::VectorXd solveConservative(const Eigen::VectorXd &inputData, Polynomial polynomial) const;
@@ -423,7 +423,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const
+double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial, Eigen::VectorXd &result) const
 {
   PRECICE_ASSERT((_matrixQ.size() > 0 && polynomial == Polynomial::SEPARATE) || _matrixQ.size() == 0);
   Eigen::VectorXd polynomialContribution;
@@ -437,18 +437,20 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   PRECICE_ASSERT(inputData.size() == _matrixA.cols());
   Eigen::VectorXd p = _decMatrixC.solve(inputData);
 
+  double loocv = -1;
   if (polynomial != Polynomial::ON && computeCrossValidation) {
     precice::profiling::Event e("map.rbf.evaluateLOOCV");
-    PRECICE_INFO("Cross validation error (LOOCV): {}", evaluateRippaLOOCVerror(p));
+    // PRECICE_INFO("Cross validation error (LOOCV): {}", evaluateRippaLOOCVerror(p));
+    loocv = evaluateRippaLOOCVerror(p);
   }
   PRECICE_ASSERT(p.size() == _matrixA.cols());
-  Eigen::VectorXd out = _matrixA * p;
+  result = _matrixA * p;
 
   // Add the polynomial part again for separated polynomial
   if (polynomial == Polynomial::SEPARATE) {
-    out += (_matrixV * polynomialContribution);
+    result += (_matrixV * polynomialContribution);
   }
-  return out;
+  return loocv;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

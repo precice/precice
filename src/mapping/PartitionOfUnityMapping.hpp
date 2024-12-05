@@ -287,7 +287,22 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time:
   PRECICE_ASSERT(outData.isZero());
 
   // 2. Execute the actual mapping evaluation in all vertex clusters and accumulate the data
-  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &clusters) { clusters.mapConsistent(inData, outData); });
+  // std::for_each(_clusters.begin(), _clusters.end(), [&](auto &clusters) { clusters.mapConsistent(inData, outData); });
+  auto maxErrors = std::array<double, 3>{-1, -1, -1};
+  for (auto &cluster : _clusters) {
+    auto errors = cluster.mapConsistent(inData, outData);
+    for (int i = 0; i < 3; ++i) {
+      maxErrors[i] = std::max(maxErrors[i], errors[i]);
+    }
+  }
+  std::vector<double> logErrors;
+  std::copy_n(maxErrors.begin(), inData.dataDims, std::back_inserter(logErrors));
+  // Do we want to log every iteration about disabled error metrics?
+  if (std::all_of(logErrors.begin(), logErrors.end(), [](auto value) { return value == -1; })) {
+    PRECICE_INFO("Evaluation of componen-wise cross-validation error (LOOCV) from \"{}\" to \"{}\" is disabled in the preCICE configuration.", input()->getName(), output()->getName());
+  } else {
+    PRECICE_INFO("Componen-wise cross-validation error (LOOCV) from \"{}\" to \"{}\": {:e}", input()->getName(), output()->getName(), logErrors);
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

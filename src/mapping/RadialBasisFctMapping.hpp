@@ -377,7 +377,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
 
     Eigen::VectorXd out;
     outputValues.setZero();
-
+    std::array<double, 3> loocv{{-1, -1, -1}};
     // For every data dimension, perform mapping
     for (int dim = 0; dim < valueDim; dim++) {
       // Fill input from input data values (last polyparams entries remain zero)
@@ -385,12 +385,20 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
         in[i] = inputValues[i * valueDim + dim];
       }
 
-      out = _rbfSolver->solveConsistent(in, _polynomial);
+      loocv[dim] = _rbfSolver->solveConsistent(in, _polynomial, out);
 
       // Copy mapped data to output data values
       for (int i = 0; i < out.size(); i++) {
         outputValues[i * valueDim + dim] = out[i];
       }
+    }
+    std::vector<double> logErrors;
+    std::copy_n(loocv.begin(), inData.dataDims, std::back_inserter(logErrors));
+    // Do we want to log every iteration about disabled error metrics?
+    if (std::all_of(logErrors.begin(), logErrors.end(), [](auto value) { return value == -1; })) {
+      PRECICE_INFO("Evaluation of componen-wise cross-validation error (LOOCV) from \"{}\" to \"{}\" is disabled in the preCICE configuration.", input()->getName(), output()->getName());
+    } else {
+      PRECICE_INFO("Componen-wise cross-validation error (LOOCV) from \"{}\" to \"{}\": {:e}", input()->getName(), output()->getName(), logErrors);
     }
 
     outData = Eigen::Map<Eigen::VectorXd>(outputValues.data(), outValuesSize.at(0));
