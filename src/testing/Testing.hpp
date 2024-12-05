@@ -169,4 +169,4 @@ void expectFiles(Args... args)
 
 } // namespace precice::testing
 
-using namespace precice::testing::inject;\
+using namespace precice::testing::inject;
