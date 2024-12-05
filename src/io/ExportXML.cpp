@@ -246,6 +246,13 @@ void ExportXML::exportData(
   outFile << "\n            </DataArray>\n";
 
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
+    if (data->timeStepsStorage().empty()) {
+      if (data->hasGradient()) {
+        data->timeStepsStorage().setSampleAtTime(0, time::Sample(data->getDimensions(), mesh.nVertices(), mesh.getDimensions()).setZero());
+      } else {
+        data->timeStepsStorage().setSampleAtTime(0, time::Sample(data->getDimensions(), mesh.nVertices()).setZero());
+      }
+    }
     const Eigen::VectorXd &values         = data->timeStepsStorage().last().sample.values;
     int                    dataDimensions = data->getDimensions();
     std::string            dataName(data->getName());

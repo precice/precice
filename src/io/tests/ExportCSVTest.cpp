@@ -27,41 +27,118 @@ PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportScalar)
 {
   PRECICE_TEST();
-  mesh::Mesh mesh("ExportScalarMesh", 2, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
   mesh::PtrData data = mesh.createData("data", 1, 0_dataID);
   data->setSampleAtTime(0, time::Sample{1, 2}.setZero());
 
-  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
+  testing::expectFiles("Mesh-io-CSVExport.init.csv");
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportVector)
 {
   PRECICE_TEST();
-  mesh::Mesh mesh("ExportVectorMesh", 2, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
   mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
   data->setSampleAtTime(0, time::Sample{2, 2}.setZero());
 
-  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
+  testing::expectFiles("Mesh-io-CSVExport.init.csv");
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportMissing)
 {
   PRECICE_TEST();
-  mesh::Mesh mesh("ExportVectorMesh", 2, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
   mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
   // no sample
-  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
+  testing::expectFiles("Mesh-io-CSVExport.init.csv");
+}
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportScalarParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  mesh::PtrData data = mesh.createData("data", 1, 0_dataID);
+  data->setSampleAtTime(0, time::Sample{1, 1}.setZero());
+
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportCSV.doExport(0, 0.0);
+  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+}
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportVectorParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
+  data->setSampleAtTime(0, time::Sample{2, 1}.setZero());
+
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportCSV.doExport(0, 0.0);
+  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+}
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportMissingParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
+  BOOST_TEST_REQUIRE(data->timeStepsStorage().empty());
+  // no sample
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportCSV.doExport(0, 0.0);
+  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+}
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportScalarAndMissingParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  auto missing = mesh.createData("missing", 2, 0_dataID);
+  BOOST_TEST_REQUIRE(missing->timeStepsStorage().empty());
+  mesh::PtrData data = mesh.createData("data", 2, 1_dataID);
+  data->setSampleAtTime(0, time::Sample{2, 1}.setZero());
+  // no sample
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportCSV.doExport(0, 0.0);
+  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
@@ -69,7 +146,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 {
   PRECICE_TEST();
   int           dim = 2;
-  mesh::Mesh    mesh("ExportPolygonalMeshSerial", dim, testing::nextMeshID());
+  mesh::Mesh    mesh("Mesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Zero());
   mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector2d::Constant(1));
   mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector2d{1.0, 0.0});
@@ -78,8 +155,9 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
   mesh.createEdge(v2, v3);
   mesh.createEdge(v3, v1);
 
-  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
+  testing::expectFiles("Mesh-io-CSVExport.init.csv");
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -87,7 +165,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   PRECICE_TEST();
   int        dim = 2;
-  mesh::Mesh mesh("ExportPolygonalMesh", dim, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", dim, testing::nextMeshID());
 
   if (context.isRank(0)) {
     mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Zero());
@@ -112,8 +190,9 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh.createVertex(Eigen::Vector2d::Constant(3.0));
   }
 
-  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
+  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -121,7 +200,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   PRECICE_TEST();
   int        dim = 3;
-  mesh::Mesh mesh("ExportTriangulatedMesh", dim, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", dim, testing::nextMeshID());
 
   if (context.isRank(0)) {
     mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Zero());
@@ -149,8 +228,9 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh.createVertex(Eigen::Vector3d::Constant(3.0));
   }
 
-  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
+  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -158,7 +238,7 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
 {
   PRECICE_TEST();
   int        dim = 3;
-  mesh::Mesh mesh("ExportSplitSquare", dim, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", dim, testing::nextMeshID());
 
   mesh::Vertex &vm = mesh.createVertex(Eigen::Vector3d::Zero());
   if (context.isRank(0)) {
@@ -209,8 +289,9 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh.createTriangle(eo1, e12, e2o);
   }
 
-  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
+  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // IOTests
