@@ -306,7 +306,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time:
   if (std::all_of(logErrors.begin(), logErrors.end(), [](auto value) { return value == -1; })) {
     PRECICE_INFO("Evaluation of cross-validation error (LOOCV) from \"{}\" to \"{}\" is disabled in the preCICE configuration.", input()->getName(), output()->getName());
   } else {
-    PRECICE_INFO("Rank-local cross-validation error (LOOCV) from \"{}\" to \"{}\": {:e}", input()->getName(), output()->getName(), logErrors);
+    PRECICE_INFO("Rank-local cross-validation error (LOOCV) from \"{}\" to \"{}\": [{:e}]", input()->getName(), output()->getName(), fmt::join(logErrors, ", "));
   }
 }
 

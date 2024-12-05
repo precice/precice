@@ -406,7 +406,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
         if (std::all_of(logErrors.begin(), logErrors.end(), [](auto value) { return value == -1; })) {
           PRECICE_INFO("Evaluation of componen-wise cross-validation error (LOOCV) from \"{}\" to \"{}\" is disabled in the preCICE configuration.", this->input()->getName(), this->output()->getName());
         } else {
-          PRECICE_INFO("Componen-wise cross-validation error (LOOCV) from \"{}\" to \"{}\": {:e}", this->input()->getName(), this->output()->getName(), logErrors);
+          PRECICE_INFO("Componen-wise cross-validation error (LOOCV) from \"{}\" to \"{}\": [{:e}]", this->input()->getName(), this->output()->getName(), fmt::join(logErrors, ", "));
         }
       }
     }
