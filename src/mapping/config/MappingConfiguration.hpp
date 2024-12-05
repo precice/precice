@@ -87,6 +87,7 @@ public:
     };
     SystemSolver        solver{};
     std::array<bool, 3> deadAxis{};
+    bool                crossValidation{};
     Polynomial          polynomial{};
     double              solverRtol{};
     int                 verticesPerCluster{};
@@ -159,6 +160,8 @@ private:
   const std::string POLYNOMIAL_SEPARATE = "separate";
   const std::string POLYNOMIAL_ON       = "on";
   const std::string POLYNOMIAL_OFF      = "off";
+
+  const std::string ATTR_CROSS_VALIDATION = "estimate-error";
 
   // For iterative RBFs
   const std::string ATTR_SOLVER_RTOL = "solver-rtol";
@@ -274,6 +277,7 @@ private:
   RBFConfiguration configureRBFMapping(const std::string &type,
                                        const std::string &polynomial,
                                        bool xDead, bool yDead, bool zDead,
+                                       bool   crossValidation,
                                        double solverRtol,
                                        double verticesPerCluster,
                                        double relativeOverlap,

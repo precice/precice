@@ -159,8 +159,9 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::computeMapping()
       _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.nVertices()),
                                               globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.nVertices()), this->_deadAxis, _polynomial, std::get<0>(optionalArgs));
     } else {
+      // We disable the cross validation by default
       _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.nVertices()),
-                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.nVertices()), this->_deadAxis, _polynomial);
+                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.nVertices()), this->_deadAxis, _polynomial, false);
     }
   }
   this->_hasComputedMapping = true;
@@ -178,17 +179,20 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::clear()
 template <typename SOLVER_T, typename... Args>
 std::string RadialBasisFctMapping<SOLVER_T, Args...>::getName() const
 {
+  // Special handling of the Ginkgo case
   if constexpr (std::tuple_size_v<std::tuple<Args...>>> 0) {
-    auto        param = std::get<0>(optionalArgs);
-    std::string exec  = param.executor;
-    if (param.solver == "qr-solver") {
-      return "global-direct RBF (" + exec + ")";
-    } else {
-      return "global-iterative RBF (" + exec + ")";
+    if constexpr (!std::is_same_v<std::tuple_element_t<0, decltype(optionalArgs)>, bool>) {
+      auto        param = std::get<0>(optionalArgs);
+      std::string exec  = param.executor;
+      if (param.solver == "qr-solver") {
+        return "global-direct RBF (" + exec + ")";
+      } else {
+        return "global-iterative RBF (" + exec + ")";
+      }
     }
-  } else {
-    return "global-direct RBF (cpu-executor)";
   }
+  // all other cases
+  return "global-direct RBF (cpu-executor)";
 }
 
 template <typename SOLVER_T, typename... Args>
@@ -392,15 +396,20 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
         outputValues[i * valueDim + dim] = out[i];
       }
     }
-    std::vector<double> logErrors;
-    std::copy_n(loocv.begin(), inData.dataDims, std::back_inserter(logErrors));
-    // Do we want to log every iteration about disabled error metrics?
-    if (std::all_of(logErrors.begin(), logErrors.end(), [](auto value) { return value == -1; })) {
-      PRECICE_INFO("Evaluation of componen-wise cross-validation error (LOOCV) from \"{}\" to \"{}\" is disabled in the preCICE configuration.", input()->getName(), output()->getName());
-    } else {
-      PRECICE_INFO("Componen-wise cross-validation error (LOOCV) from \"{}\" to \"{}\": {:e}", input()->getName(), output()->getName(), logErrors);
-    }
 
+    // Log the error as configured
+    if constexpr (std::tuple_size_v<std::tuple<Args...>>> 0) {
+      if constexpr (std::is_same_v<std::tuple_element_t<0, decltype(optionalArgs)>, bool>) {
+        std::vector<double> logErrors;
+        std::copy_n(loocv.begin(), inData.dataDims, std::back_inserter(logErrors));
+        // Do we want to log every iteration about disabled error metrics?
+        if (std::all_of(logErrors.begin(), logErrors.end(), [](auto value) { return value == -1; })) {
+          PRECICE_INFO("Evaluation of componen-wise cross-validation error (LOOCV) from \"{}\" to \"{}\" is disabled in the preCICE configuration.", this->input()->getName(), this->output()->getName());
+        } else {
+          PRECICE_INFO("Componen-wise cross-validation error (LOOCV) from \"{}\" to \"{}\": {:e}", this->input()->getName(), this->output()->getName(), logErrors);
+        }
+      }
+    }
     outData = Eigen::Map<Eigen::VectorXd>(outputValues.data(), outValuesSize.at(0));
 
     // Data scattering to secondary ranks
