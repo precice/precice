@@ -82,10 +82,11 @@ BOOST_AUTO_TEST_CASE(ExportScalarParallel)
 
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
-  testing::expectFiles(
-      "Mesh-io-VTUExport.init_0.vtu",
-      "Mesh-io-VTUExport.init_1.vtu",
-      "Mesh-io-VTUExport.init.pvtu");
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
@@ -103,10 +104,11 @@ BOOST_AUTO_TEST_CASE(ExportVectorParallel)
 
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
-  testing::expectFiles(
-      "Mesh-io-VTUExport.init_0.vtu",
-      "Mesh-io-VTUExport.init_1.vtu",
-      "Mesh-io-VTUExport.init.pvtu");
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
@@ -124,10 +126,11 @@ BOOST_AUTO_TEST_CASE(ExportMissingParallel)
   // no sample
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
-  testing::expectFiles(
-      "Mesh-io-VTUExport.init_0.vtu",
-      "Mesh-io-VTUExport.init_1.vtu",
-      "Mesh-io-VTUExport.init.pvtu");
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
@@ -147,10 +150,11 @@ BOOST_AUTO_TEST_CASE(ExportScalarAndMissingParallel)
   // no sample
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
-  testing::expectFiles(
-      "Mesh-io-VTUExport.init_0.vtu",
-      "Mesh-io-VTUExport.init_1.vtu",
-      "Mesh-io-VTUExport.init.pvtu");
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
@@ -270,17 +274,11 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
-  testing::expectFiles(
-      "Mesh-io-VTUExport.init_0.vtu",
-      "Mesh-io-VTUExport.init_1.vtu",
-      "Mesh-io-VTUExport.init_2.vtu",
-      "Mesh-io-VTUExport.init_3.vtu",
-      "Mesh-io-VTUExport.init.pvtu",
-      "Mesh-io-VTUExport.dt1_0.vtu",
-      "Mesh-io-VTUExport.dt1_1.vtu",
-      "Mesh-io-VTUExport.dt1_2.vtu",
-      "Mesh-io-VTUExport.dt1_3.vtu",
-      "Mesh-io-VTUExport.dt1.pvtu");
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), fmt::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu", "Mesh-io-VTUExport.dt1.pvtu");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -320,17 +318,11 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
-  testing::expectFiles(
-      "Mesh-io-VTUExport.init_0.vtu",
-      "Mesh-io-VTUExport.init_1.vtu",
-      "Mesh-io-VTUExport.init_2.vtu",
-      "Mesh-io-VTUExport.init_3.vtu",
-      "Mesh-io-VTUExport.init.pvtu",
-      "Mesh-io-VTUExport.dt1_0.vtu",
-      "Mesh-io-VTUExport.dt1_1.vtu",
-      "Mesh-io-VTUExport.dt1_2.vtu",
-      "Mesh-io-VTUExport.dt1_3.vtu",
-      "Mesh-io-VTUExport.dt1.pvtu");
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), fmt::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu", "Mesh-io-VTUExport.dt1.pvtu");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -392,17 +384,11 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
-  testing::expectFiles(
-      "Mesh-io-VTUExport.init_0.vtu",
-      "Mesh-io-VTUExport.init_1.vtu",
-      "Mesh-io-VTUExport.init_2.vtu",
-      "Mesh-io-VTUExport.init_3.vtu",
-      "Mesh-io-VTUExport.init.pvtu",
-      "Mesh-io-VTUExport.dt1_0.vtu",
-      "Mesh-io-VTUExport.dt1_1.vtu",
-      "Mesh-io-VTUExport.dt1_2.vtu",
-      "Mesh-io-VTUExport.dt1_3.vtu",
-      "Mesh-io-VTUExport.dt1.pvtu");
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), fmt::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu", "Mesh-io-VTUExport.dt1.pvtu");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
@@ -467,17 +453,11 @@ BOOST_AUTO_TEST_CASE(ExportPartitionedCube)
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
-  testing::expectFiles(
-      "Mesh-io-VTUExport.init_0.vtu",
-      "Mesh-io-VTUExport.init_1.vtu",
-      "Mesh-io-VTUExport.init_2.vtu",
-      "Mesh-io-VTUExport.init_3.vtu",
-      "Mesh-io-VTUExport.init.pvtu",
-      "Mesh-io-VTUExport.dt1_0.vtu",
-      "Mesh-io-VTUExport.dt1_1.vtu",
-      "Mesh-io-VTUExport.dt1_2.vtu",
-      "Mesh-io-VTUExport.dt1_3.vtu",
-      "Mesh-io-VTUExport.dt1.pvtu");
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), fmt::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu", "Mesh-io-VTUExport.dt1.pvtu");
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END() // IOTests

@@ -82,10 +82,13 @@ BOOST_AUTO_TEST_CASE(ExportScalarParallel)
 
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
-  testing::expectFiles(
-      "Mesh-io-VTPExport.init_0.vtp",
-      "Mesh-io-VTPExport.init_1.vtp",
-      "Mesh-io-VTPExport.init.pvtp");
+  if (context.isPrimary()) {
+    testing::expectFiles(
+        "Mesh-io-VTPExport.init_0.vtp",
+        "Mesh-io-VTPExport.init.pvtp");
+  } else {
+    testing::expectFiles("Mesh-io-VTPExport.init_1.vtp");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
@@ -103,10 +106,13 @@ BOOST_AUTO_TEST_CASE(ExportVectorParallel)
 
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
-  testing::expectFiles(
-      "Mesh-io-VTPExport.init_0.vtp",
-      "Mesh-io-VTPExport.init_1.vtp",
-      "Mesh-io-VTPExport.init.pvtp");
+  if (context.isPrimary()) {
+    testing::expectFiles(
+        "Mesh-io-VTPExport.init_0.vtp",
+        "Mesh-io-VTPExport.init.pvtp");
+  } else {
+    testing::expectFiles("Mesh-io-VTPExport.init_1.vtp");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
@@ -124,10 +130,13 @@ BOOST_AUTO_TEST_CASE(ExportMissingParallel)
   // no sample
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
-  testing::expectFiles(
-      "Mesh-io-VTPExport.init_0.vtp",
-      "Mesh-io-VTPExport.init_1.vtp",
-      "Mesh-io-VTPExport.init.pvtp");
+  if (context.isPrimary()) {
+    testing::expectFiles(
+        "Mesh-io-VTPExport.init_0.vtp",
+        "Mesh-io-VTPExport.init.pvtp");
+  } else {
+    testing::expectFiles("Mesh-io-VTPExport.init_1.vtp");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
@@ -147,10 +156,13 @@ BOOST_AUTO_TEST_CASE(ExportScalarAndMissingParallel)
   // no sample
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
-  testing::expectFiles(
-      "Mesh-io-VTPExport.init_0.vtp",
-      "Mesh-io-VTPExport.init_1.vtp",
-      "Mesh-io-VTPExport.init.pvtp");
+  if (context.isPrimary()) {
+    testing::expectFiles(
+        "Mesh-io-VTPExport.init_0.vtp",
+        "Mesh-io-VTPExport.init.pvtp");
+  } else {
+    testing::expectFiles("Mesh-io-VTPExport.init_1.vtp");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm());
@@ -266,17 +278,13 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
   exportVTP.doExport(1, 1.0);
-  testing::expectFiles(
-      "Mesh-io-VTPExport.init_0.vtp",
-      "Mesh-io-VTPExport.init_1.vtp",
-      "Mesh-io-VTPExport.init_2.vtp",
-      "Mesh-io-VTPExport.init_3.vtp",
-      "Mesh-io-VTPExport.init.pvtp",
-      "Mesh-io-VTPExport.dt1_0.vtp",
-      "Mesh-io-VTPExport.dt1_1.vtp",
-      "Mesh-io-VTPExport.dt1_2.vtp",
-      "Mesh-io-VTPExport.dt1_3.vtp",
-      "Mesh-io-VTPExport.dt1.pvtp");
+  testing::expectFiles(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank),
+                       fmt::format("Mesh-io-VTPExport.dt1_{}.vtp", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles(
+        "Mesh-io-VTPExport.init.pvtp",
+        "Mesh-io-VTPExport.dt1.pvtp");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -315,17 +323,13 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
   exportVTP.doExport(1, 1.0);
-  testing::expectFiles(
-      "Mesh-io-VTPExport.init_0.vtp",
-      "Mesh-io-VTPExport.init_1.vtp",
-      "Mesh-io-VTPExport.init_2.vtp",
-      "Mesh-io-VTPExport.init_3.vtp",
-      "Mesh-io-VTPExport.init.pvtp",
-      "Mesh-io-VTPExport.dt1_0.vtp",
-      "Mesh-io-VTPExport.dt1_1.vtp",
-      "Mesh-io-VTPExport.dt1_2.vtp",
-      "Mesh-io-VTPExport.dt1_3.vtp",
-      "Mesh-io-VTPExport.dt1.pvtp");
+  testing::expectFiles(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank),
+                       fmt::format("Mesh-io-VTPExport.dt1_{}.vtp", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles(
+        "Mesh-io-VTPExport.init.pvtp",
+        "Mesh-io-VTPExport.dt1.pvtp");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -387,17 +391,13 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
   exportVTP.doExport(1, 1.0);
-  testing::expectFiles(
-      "Mesh-io-VTPExport.init_0.vtp",
-      "Mesh-io-VTPExport.init_1.vtp",
-      "Mesh-io-VTPExport.init_2.vtp",
-      "Mesh-io-VTPExport.init_3.vtp",
-      "Mesh-io-VTPExport.init.pvtp",
-      "Mesh-io-VTPExport.dt1_0.vtp",
-      "Mesh-io-VTPExport.dt1_1.vtp",
-      "Mesh-io-VTPExport.dt1_2.vtp",
-      "Mesh-io-VTPExport.dt1_3.vtp",
-      "Mesh-io-VTPExport.dt1.pvtp");
+  testing::expectFiles(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank),
+                       fmt::format("Mesh-io-VTPExport.dt1_{}.vtp", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles(
+        "Mesh-io-VTPExport.init.pvtp",
+        "Mesh-io-VTPExport.dt1.pvtp");
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END() // IOTests
