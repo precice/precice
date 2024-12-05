@@ -1298,24 +1298,24 @@ BOOST_AUTO_TEST_SUITE_END() // Parallel
 BOOST_AUTO_TEST_SUITE(Serial)
 
 #undef doLocalCode
-#define doLocalCode(Type, function, polynomial)                                                                                                                    \
-  {                                                                                                                                                                \
-    RadialBasisFctMapping<RadialBasisFctSolver<Type>> consistentMap2D(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial);                      \
-    perform2DTestConsistentMapping(consistentMap2D);                                                                                                               \
-    RadialBasisFctMapping<RadialBasisFctSolver<Type>> consistentMap2DVector(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial);                \
-    perform2DTestConsistentMappingVector(consistentMap2DVector);                                                                                                   \
-    RadialBasisFctMapping<RadialBasisFctSolver<Type>> consistentMap3D(Mapping::CONSISTENT, 3, function, {{false, false, false}}, polynomial);                      \
-    perform3DTestConsistentMapping(consistentMap3D);                                                                                                               \
-    RadialBasisFctMapping<RadialBasisFctSolver<Type>> scaledConsistentMap2D(Mapping::SCALED_CONSISTENT_SURFACE, 2, function, {{false, false, false}}, polynomial); \
-    perform2DTestScaledConsistentMapping(scaledConsistentMap2D);                                                                                                   \
-    RadialBasisFctMapping<RadialBasisFctSolver<Type>> scaledConsistentMap3D(Mapping::SCALED_CONSISTENT_SURFACE, 3, function, {{false, false, false}}, polynomial); \
-    perform3DTestScaledConsistentMapping(scaledConsistentMap3D);                                                                                                   \
-    RadialBasisFctMapping<RadialBasisFctSolver<Type>> conservativeMap2D(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial);                  \
-    perform2DTestConservativeMapping(conservativeMap2D);                                                                                                           \
-    RadialBasisFctMapping<RadialBasisFctSolver<Type>> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial);            \
-    perform2DTestConservativeMappingVector(conservativeMap2DVector);                                                                                               \
-    RadialBasisFctMapping<RadialBasisFctSolver<Type>> conservativeMap3D(Mapping::CONSERVATIVE, 3, function, {{false, false, false}}, polynomial);                  \
-    perform3DTestConservativeMapping(conservativeMap3D);                                                                                                           \
+#define doLocalCode(Type, function, polynomial, crossValidation)                                                                                                                          \
+  {                                                                                                                                                                                       \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>, bool> consistentMap2D(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial, crossValidation);                      \
+    perform2DTestConsistentMapping(consistentMap2D);                                                                                                                                      \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>, bool> consistentMap2DVector(Mapping::CONSISTENT, 2, function, {{false, false, false}}, polynomial, crossValidation);                \
+    perform2DTestConsistentMappingVector(consistentMap2DVector);                                                                                                                          \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>, bool> consistentMap3D(Mapping::CONSISTENT, 3, function, {{false, false, false}}, polynomial, crossValidation);                      \
+    perform3DTestConsistentMapping(consistentMap3D);                                                                                                                                      \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>> scaledConsistentMap2D(Mapping::SCALED_CONSISTENT_SURFACE, 2, function, {{false, false, false}}, polynomial);                        \
+    perform2DTestScaledConsistentMapping(scaledConsistentMap2D);                                                                                                                          \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>, bool> scaledConsistentMap3D(Mapping::SCALED_CONSISTENT_SURFACE, 3, function, {{false, false, false}}, polynomial, crossValidation); \
+    perform3DTestScaledConsistentMapping(scaledConsistentMap3D);                                                                                                                          \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>> conservativeMap2D(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial);                                         \
+    perform2DTestConservativeMapping(conservativeMap2D);                                                                                                                                  \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>> conservativeMap2DVector(Mapping::CONSERVATIVE, 2, function, {{false, false, false}}, polynomial);                                   \
+    perform2DTestConservativeMappingVector(conservativeMap2DVector);                                                                                                                      \
+    RadialBasisFctMapping<RadialBasisFctSolver<Type>> conservativeMap3D(Mapping::CONSERVATIVE, 3, function, {{false, false, false}}, polynomial);                                         \
+    perform3DTestConservativeMapping(conservativeMap3D);                                                                                                                                  \
   }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -1323,8 +1323,8 @@ BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
 {
   PRECICE_TEST();
   ThinPlateSplines fct;
-  doLocalCode(ThinPlateSplines, fct, Polynomial::ON);
-  doLocalCode(ThinPlateSplines, fct, Polynomial::SEPARATE);
+  doLocalCode(ThinPlateSplines, fct, Polynomial::ON, false);
+  doLocalCode(ThinPlateSplines, fct, Polynomial::SEPARATE, false);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -1332,8 +1332,8 @@ BOOST_AUTO_TEST_CASE(MapMultiquadrics)
 {
   PRECICE_TEST();
   Multiquadrics fct(1e-3);
-  doLocalCode(Multiquadrics, fct, Polynomial::ON);
-  doLocalCode(Multiquadrics, fct, Polynomial::SEPARATE);
+  doLocalCode(Multiquadrics, fct, Polynomial::ON, false);
+  doLocalCode(Multiquadrics, fct, Polynomial::SEPARATE, false);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -1341,7 +1341,7 @@ BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
 {
   PRECICE_TEST();
   InverseMultiquadrics fct(1e-3);
-  doLocalCode(InverseMultiquadrics, fct, Polynomial::SEPARATE);
+  doLocalCode(InverseMultiquadrics, fct, Polynomial::SEPARATE, false);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -1349,8 +1349,8 @@ BOOST_AUTO_TEST_CASE(MapVolumeSplines)
 {
   PRECICE_TEST();
   VolumeSplines fct;
-  doLocalCode(VolumeSplines, fct, Polynomial::ON);
-  doLocalCode(VolumeSplines, fct, Polynomial::SEPARATE);
+  doLocalCode(VolumeSplines, fct, Polynomial::ON, false);
+  doLocalCode(VolumeSplines, fct, Polynomial::SEPARATE, false);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -1358,7 +1358,7 @@ BOOST_AUTO_TEST_CASE(MapGaussian)
 {
   PRECICE_TEST();
   Gaussian fct(1.0);
-  doLocalCode(Gaussian, fct, Polynomial::SEPARATE);
+  doLocalCode(Gaussian, fct, Polynomial::SEPARATE, false);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -1367,7 +1367,7 @@ BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
   PRECICE_TEST();
   double                    supportRadius = 1.2;
   CompactThinPlateSplinesC2 fct(supportRadius);
-  doLocalCode(CompactThinPlateSplinesC2, fct, Polynomial::SEPARATE);
+  doLocalCode(CompactThinPlateSplinesC2, fct, Polynomial::SEPARATE, false);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -1376,7 +1376,7 @@ BOOST_AUTO_TEST_CASE(MapCompactPolynomialC0)
   PRECICE_TEST();
   double              supportRadius = 1.2;
   CompactPolynomialC0 fct(supportRadius);
-  doLocalCode(CompactPolynomialC0, fct, Polynomial::SEPARATE);
+  doLocalCode(CompactPolynomialC0, fct, Polynomial::SEPARATE, false);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -1385,7 +1385,7 @@ BOOST_AUTO_TEST_CASE(MapCompactPolynomialC2)
   PRECICE_TEST();
   double              supportRadius = 1.2;
   CompactPolynomialC2 fct(supportRadius);
-  doLocalCode(CompactPolynomialC2, fct, Polynomial::SEPARATE);
+  doLocalCode(CompactPolynomialC2, fct, Polynomial::SEPARATE, true);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -1394,7 +1394,7 @@ BOOST_AUTO_TEST_CASE(MapCompactPolynomialC4)
   PRECICE_TEST();
   double              supportRadius = 1.2;
   CompactPolynomialC4 fct(supportRadius);
-  doLocalCode(CompactPolynomialC4, fct, Polynomial::SEPARATE);
+  doLocalCode(CompactPolynomialC4, fct, Polynomial::SEPARATE, true);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -1403,7 +1403,7 @@ BOOST_AUTO_TEST_CASE(MapCompactPolynomialC6)
   PRECICE_TEST();
   double              supportRadius = 1.2;
   CompactPolynomialC6 fct(supportRadius);
-  doLocalCode(CompactPolynomialC6, fct, Polynomial::SEPARATE);
+  doLocalCode(CompactPolynomialC6, fct, Polynomial::SEPARATE, true);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -1412,7 +1412,7 @@ BOOST_AUTO_TEST_CASE(MapCompactPolynomialC8)
   PRECICE_TEST();
   double              supportRadius = 1.2;
   CompactPolynomialC8 fct(supportRadius);
-  doLocalCode(CompactPolynomialC8, fct, Polynomial::SEPARATE);
+  doLocalCode(CompactPolynomialC8, fct, Polynomial::SEPARATE, false);
 }
 #undef doLocalCode
 

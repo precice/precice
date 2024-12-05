@@ -79,6 +79,7 @@ BOOST_AUTO_TEST_CASE(RBFDirectConfiguration)
     BOOST_TEST(mappingConfig.rbfConfig().deadAxis[0] == true);
     BOOST_TEST(mappingConfig.rbfConfig().deadAxis[1] == false);
     BOOST_TEST(mappingConfig.rbfConfig().deadAxis[2] == true);
+    BOOST_TEST(mappingConfig.rbfConfig().crossValidation == true);
     BOOST_TEST(mappingConfig.rbfConfig().solverRtol == 1e-9);
   }
 }
@@ -117,6 +118,7 @@ BOOST_AUTO_TEST_CASE(RBFPUMConfiguration)
     BOOST_TEST(mappingConfig.rbfConfig().verticesPerCluster == 10);
     BOOST_TEST(mappingConfig.rbfConfig().relativeOverlap == 0.4);
     BOOST_TEST(mappingConfig.rbfConfig().projectToInput == true);
+    BOOST_TEST(mappingConfig.rbfConfig().crossValidation == true);
   }
 }
 

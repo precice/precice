@@ -1119,13 +1119,14 @@ BOOST_AUTO_TEST_CASE(PartitionOfUnityMappingTests)
 {
   PRECICE_TEST();
   mapping::CompactPolynomialC0                          function(3);
-  mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap2D(Mapping::CONSISTENT, 2, function, Polynomial::SEPARATE, 5, 0.4, false);
+  bool                                                  computeCrossValidation = true;
+  mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap2D(Mapping::CONSISTENT, 2, function, Polynomial::SEPARATE, 5, 0.4, false, computeCrossValidation);
   perform2DTestConsistentMapping(consistentMap2D);
-  mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap2DVector(Mapping::CONSISTENT, 2, function, Polynomial::SEPARATE, 5, 0.4, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap2DVector(Mapping::CONSISTENT, 2, function, Polynomial::SEPARATE, 5, 0.4, false, computeCrossValidation);
   perform2DTestConsistentMappingVector(consistentMap2DVector);
   mapping::PartitionOfUnityMapping<CompactPolynomialC6> consistentMap2DDeadAxis(Mapping::CONSISTENT, 2, mapping::CompactPolynomialC6(6), Polynomial::SEPARATE, 5, 0.4, false);
   performTestConsistentMapDeadAxis(consistentMap2DDeadAxis, 2);
-  mapping::PartitionOfUnityMapping<CompactPolynomialC6> consistentMap3DDeadAxis(Mapping::CONSISTENT, 3, mapping::CompactPolynomialC6(8), Polynomial::SEPARATE, 5, 0.265, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC6> consistentMap3DDeadAxis(Mapping::CONSISTENT, 3, mapping::CompactPolynomialC6(8), Polynomial::SEPARATE, 5, 0.265, false, computeCrossValidation);
   performTestConsistentMapDeadAxis(consistentMap3DDeadAxis, 3);
   mapping::PartitionOfUnityMapping<CompactPolynomialC0> conservativeMap2D(Mapping::CONSERVATIVE, 2, function, Polynomial::SEPARATE, 5, 0.4, false);
   perform2DTestConservativeMapping(conservativeMap2D);
@@ -1133,7 +1134,7 @@ BOOST_AUTO_TEST_CASE(PartitionOfUnityMappingTests)
   perform2DTestConservativeMappingVector(conservativeMap2DVector);
   mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap3D(Mapping::CONSISTENT, 3, function, Polynomial::SEPARATE, 5, 0.265, false);
   perform3DTestConsistentMapping(consistentMap3D);
-  mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap3DVector(Mapping::CONSISTENT, 3, function, Polynomial::SEPARATE, 5, 0.265, false);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap3DVector(Mapping::CONSISTENT, 3, function, Polynomial::SEPARATE, 5, 0.265, false, computeCrossValidation);
   perform3DTestConsistentMappingVector(consistentMap3DVector);
   mapping::PartitionOfUnityMapping<CompactPolynomialC0> conservativeMap3D(Mapping::CONSERVATIVE, 3, function, Polynomial::SEPARATE, 5, 0.265, false);
   perform3DTestConservativeMapping(conservativeMap3D);

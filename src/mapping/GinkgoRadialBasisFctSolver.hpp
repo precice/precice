@@ -70,7 +70,7 @@ public:
                              MappingConfiguration::GinkgoParameter ginkgoParameter);
 
   /// Maps the given input data
-  Eigen::VectorXd solveConsistent(const Eigen::VectorXd &inputData, Polynomial polynomial);
+  double solveConsistent(const Eigen::VectorXd &rhsValues, Polynomial polynomial, Eigen::VectorXd &result);
 
   /// Maps the given input data
   Eigen::VectorXd solveConservative(const Eigen::VectorXd &inputData, Polynomial polynomial);
@@ -459,7 +459,7 @@ void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const 
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const Eigen::VectorXd &rhsValues, Polynomial polynomial)
+double GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const Eigen::VectorXd &rhsValues, Polynomial polynomial, Eigen::VectorXd &result)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(rhsValues.cols() == 1);
@@ -512,13 +512,14 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
   auto output = gko::clone(_hostExecutor, dOutput);
   _allocCopyEvent.stop();
 
-  Eigen::VectorXd result(output->get_size()[0], 1);
+  result.resize(output->get_size()[0], 1);
 
   for (Eigen::Index i = 0; i < result.rows(); ++i) {
     result(i, 0) = output->at(i, 0);
   }
 
-  return result;
+  double dummyError = -1;
+  return dummyError;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
