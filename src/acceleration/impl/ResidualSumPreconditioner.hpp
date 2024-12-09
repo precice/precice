@@ -17,7 +17,7 @@ namespace impl {
  */
 class ResidualSumPreconditioner : public Preconditioner {
 public:
-  ResidualSumPreconditioner(int maxNonConstTimeWindows);
+  ResidualSumPreconditioner(int maxNonConstTimeWindows, bool = true, double updatePreconLimit = 10.0);
   /**
    * @brief Destructor, empty.
    */
@@ -36,6 +36,10 @@ private:
   logging::Logger _log{"acceleration::ResidualSumPreconditioner"};
 
   std::vector<double> _residualSum;
+  std::vector<double> _previousResidualSum;
+  int                 timeWindowPreconditioner = 0;
+  bool                _preconForceUpdate;
+  double              _updatePreconLimit;
 };
 
 } // namespace impl
