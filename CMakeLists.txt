@@ -214,6 +214,9 @@ precice_validate_libxml2()
 # libfmt
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt)
 
+# limbo
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/limbo)
+
 #
 # Find Configurable Dependencies
 #
@@ -405,6 +408,9 @@ target_link_libraries(preciceCore PUBLIC LibXml2::LibXml2)
 
 # Setup FMT
 target_link_libraries(preciceCore PUBLIC fmtlib-static)
+
+# Setup limbo
+target_link_libraries(preciceCore PUBLIC limbo)
 
 # Setup MPI
 if (PRECICE_FEATURE_MPI_COMMUNICATION)

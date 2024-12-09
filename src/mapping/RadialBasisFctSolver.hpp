@@ -5,6 +5,7 @@
 #include <Eigen/SVD>
 #include <boost/range/adaptor/indexed.hpp>
 #include <boost/range/irange.hpp>
+#include <limbo/limbo.hpp>
 #include <numeric>
 #include <type_traits>
 #include "mapping/MathHelper.hpp"
