@@ -88,7 +88,8 @@ private:
 
   Eigen::MatrixXd _distanceMatrix;
 
-  double clusterRadius{};
+  // TODO: Won't work with global RBF, as we set the minimum in the SphericalVertexCLuster as the (half) cluster radius or similar
+  double clusterRadius = {};
 
   bool computeCrossValidation = false;
 };
