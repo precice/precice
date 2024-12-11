@@ -10,7 +10,8 @@ namespace precice::utils {
  * @param L the lower triangular matrix
  * @return Eigen::MatrixXd the inverse of L
  */
-inline Eigen::MatrixXd invertLowerTriangularBlockwise(const Eigen::MatrixXd &L)
+template <typename T>
+inline Eigen::Matrix<T, -1, -1> invertLowerTriangularBlockwise(const Eigen::Matrix<T, -1, -1> &L)
 {
   const int n = L.rows();
 
@@ -27,7 +28,7 @@ inline Eigen::MatrixXd invertLowerTriangularBlockwise(const Eigen::MatrixXd &L)
 
   // Initialize the inverse matrix as a identity (enables inPlaceSolve)
   // TODO: maybe consider to return by reference, as Eigen doesn't recommend to return by value
-  Eigen::MatrixXd L_inv = Eigen::MatrixXd::Identity(n, n);
+  Eigen::Matrix<T, -1, -1> L_inv = Eigen::Matrix<T, -1, -1>::Identity(n, n);
 
   // Now we iterate over all blocks...
   for (int i = 0; i < numBlocks; ++i) {
@@ -37,7 +38,7 @@ inline Eigen::MatrixXd invertLowerTriangularBlockwise(const Eigen::MatrixXd &L)
 
     // Step 1: Invert the diagonal block
     L.block(i_start, i_start, i_blockSize, i_blockSize)
-        .triangularView<Eigen::Lower>()
+        .template triangularView<Eigen::Lower>()
         .solveInPlace(L_inv.block(i_start, i_start, i_blockSize, i_blockSize));
 
     // Step 2: Compute off-diagonal blocks
@@ -47,8 +48,8 @@ inline Eigen::MatrixXd invertLowerTriangularBlockwise(const Eigen::MatrixXd &L)
       int j_blockSize = j_end - j_start;
 
       // computation for the off-diagonal block using the block Lij and Ljj (from L_inv)
-      Eigen::MatrixXd offDiagBlock = L.block(i_start, j_start, i_blockSize, j_blockSize) * L_inv.block(j_start, j_start, j_blockSize, j_blockSize)
-                                                                                               .triangularView<Eigen::Lower>();
+      Eigen::Matrix<T, -1, -1> offDiagBlock = L.block(i_start, j_start, i_blockSize, j_blockSize) * L_inv.block(j_start, j_start, j_blockSize, j_blockSize)
+                                                                                                        .template triangularView<Eigen::Lower>();
       // Accumulate the sum of L_ik * L_inv(k, j) for k = j+1 to i-1
       for (int k = j + 1; k < i; ++k) {
         int k_start     = k * blockSize;

@@ -47,7 +47,7 @@
 #define LIMBO_STAT_CONSOLE_SUMMARY_HPP
 
 #include <limbo/stat/stat_base.hpp>
-
+#include <iomanip>
 namespace limbo {
     namespace stat {
         ///@ingroup stat
@@ -60,7 +60,7 @@ namespace limbo {
                 if (!bo.stats_enabled() || bo.observations().empty())
                     return;
 
-                std::cout << bo.total_iterations() << " new point: "
+                std::cout<<std::fixed << std::setprecision(10) << bo.total_iterations() << " new point: "
                           << bo.samples().back().transpose()
                           << " value: " << afun(bo.observations().back())
                           << " best:" << afun(bo.best_observation(afun)) << std::endl;

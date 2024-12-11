@@ -5,15 +5,15 @@
 #include <Eigen/SVD>
 #include <boost/range/adaptor/indexed.hpp>
 #include <boost/range/irange.hpp>
-#include <limbo/limbo.hpp>
 #include <numeric>
 #include <type_traits>
 #include "mapping/MathHelper.hpp"
 #include "mapping/config/MappingConfigurationTypes.hpp"
+#include "mapping/impl/BasisFunctions.hpp"
+#include "mapping/impl/OptimizationParameters.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
-
 namespace precice {
 namespace mapping {
 
@@ -57,12 +57,19 @@ public:
   // Returns the size of the input data
   Eigen::Index getOutputSize() const;
 
+  void setClusterRadius(double r)
+  {
+    this->clusterRadius = r;
+  }
+  // BO_PARAM(std::size_t, dim_in, 1);
+  // number of dimensions of the result (res.size())
+  // BO_PARAM(std::size_t, dim_out, 1);
 private:
   mutable precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
 
   double evaluateRippaLOOCVerror(const Eigen::VectorXd &lambda) const;
   /// Decomposition of the interpolation matrix
-  DecompositionType _decMatrixC;
+  mutable DecompositionType _decMatrixC;
 
   /// Diagonal entris of the inverse matrix C, requires for the Rippa scheme
   Eigen::VectorXd _inverseDiagonal;
@@ -77,7 +84,11 @@ private:
   Eigen::MatrixXd _matrixV;
 
   /// Evaluation matrix (output x input)
-  Eigen::MatrixXd _matrixA;
+  mutable Eigen::MatrixXd _matrixA;
+
+  Eigen::MatrixXd _distanceMatrix;
+
+  double clusterRadius{};
 
   bool computeCrossValidation = false;
 };
@@ -253,7 +264,7 @@ inline Eigen::VectorXd computeInverseDiagonal(Eigen::LLT<Eigen::MatrixXd> decMat
   // Solve L * Linv = I
   // Eigen::MatrixXd L_inv = Eigen::MatrixXd::Identity(n, n);
   // decMatrixC.matrixL().solveInPlace(L_inv);
-  Eigen::MatrixXd L_inv = utils::invertLowerTriangularBlockwise(decMatrixC.matrixL());
+  Eigen::MatrixXd L_inv = utils::invertLowerTriangularBlockwise<double>(decMatrixC.matrixL());
 
   // 1b: Compute the diagonal elements of A^{-1} by evaluating (L^T)^{-1}L^{-1}
   Eigen::VectorXd inverseDiagonal = (L_inv.array().square().colwise().sum()).transpose();
@@ -336,19 +347,20 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   // First, assemble the interpolation matrix and check the invertability
   bool decompositionSuccessful = false;
   if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
-    _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).llt();
-    decompositionSuccessful = _decMatrixC.info() == Eigen::ComputationInfo::Success;
+    // _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).llt();
+    _distanceMatrix = buildMatrixCLU(precice::mapping::VolumeSplines(), inputMesh, inputIDs, activeAxis, polynomial);
+    // decompositionSuccessful = _decMatrixC.info() == Eigen::ComputationInfo::Success;
   } else {
     _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).colPivHouseholderQr();
     decompositionSuccessful = _decMatrixC.isInvertible();
   }
 
-  PRECICE_CHECK(decompositionSuccessful,
-                "The interpolation matrix of the RBF mapping from mesh \"{}\" to mesh \"{}\" is not invertable. "
-                "This means that the mapping problem is not well-posed. "
-                "Please check if your coupling meshes are correct (e.g. no vertices are duplicated) or reconfigure "
-                "your basis-function (e.g. reduce the support-radius).",
-                inputMesh.getName(), outputMesh.getName());
+  // PRECICE_CHECK(decompositionSuccessful,
+  //               "The interpolation matrix of the RBF mapping from mesh \"{}\" to mesh \"{}\" is not invertable. "
+  //               "This means that the mapping problem is not well-posed. "
+  //               "Please check if your coupling meshes are correct (e.g. no vertices are duplicated) or reconfigure "
+  //               "your basis-function (e.g. reduce the support-radius).",
+  //               inputMesh.getName(), outputMesh.getName());
 
   // For polynomial on, the algorithm might fail in determining the size of the system
   if (polynomial != Polynomial::ON && computeCrossValidation) {
@@ -357,7 +369,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
     _inverseDiagonal = computeInverseDiagonal(_decMatrixC);
   }
   // Second, assemble evaluation matrix
-  _matrixA = buildMatrixA(basisFunction, inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial);
+  _matrixA = buildMatrixA(precice::mapping::VolumeSplines(), inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial);
 
   // In case we deal with separated polynomials, we need dedicated matrices for the polynomial contribution
   if (polynomial == Polynomial::SEPARATE) {
@@ -433,6 +445,26 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
     polynomialContribution = _qrMatrixQ.solve(inputData);
     inputData -= (_matrixQ * polynomialContribution);
   }
+  using stop_t = boost::fusion::vector<limbo::stop::MaxIterations<precice::OptimizationParameters>, limbo::stop::MaxPredictedValue<precice::OptimizationParameters>>;
+  // using stop_t = boost::fusion::vector<limbo::stop::MaxIterations<precice::OptimizationParameters>>;
+  using init_t  = limbo::init::InitSampling<precice::OptimizationParameters>;
+  using acqui_t = limbo::acqui::EI<precice::OptimizationParameters, limbo::model::GP<precice::OptimizationParameters>>;
+  // using acqui_t = limbo::acqui::GP_UCB<precice::OptimizationParameters, limbo::model::GP<precice::OptimizationParameters>>;
+  // using acqui_t = limbo::acqui::UCB<precice::OptimizationParameters, limbo::model::GP<precice::OptimizationParameters>>;
+  using acqui_opt_t = limbo::opt::Cmaes<precice::OptimizationParameters>;
+  limbo::bayes_opt::BOptimizer<precice::OptimizationParameters, limbo::initfun<init_t>, limbo::acquifun<acqui_t>, limbo::acquiopt<acqui_opt_t>, limbo::stopcrit<stop_t>> boptimizer;
+
+  LOOCVEvaluator<RADIAL_BASIS_FUNCTION_T> eval(inputData, _distanceMatrix, clusterRadius);
+  boptimizer.optimize(eval);
+  std::cout << "Best sample: " << eval.transformFromUnitToReal(boptimizer.best_sample()(0)) << " - Best observation: " << boptimizer.best_observation()(0) << std::endl;
+
+  std::unique_ptr<RADIAL_BASIS_FUNCTION_T> kernel;
+  if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
+    kernel      = std::make_unique<RADIAL_BASIS_FUNCTION_T>(eval.transformFromUnitToReal(boptimizer.best_sample()(0)));
+    _decMatrixC = _distanceMatrix.unaryExpr([&kernel](double x) { return kernel->evaluate(x); }).llt();
+  } else {
+    PRECICE_ASSERT(false, "Not supported.");
+  }
 
   // Integrated polynomial (and separated)
   PRECICE_ASSERT(inputData.size() == _matrixA.cols());
@@ -443,6 +475,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
     PRECICE_INFO("Cross validation error (LOOCV): {}", evaluateRippaLOOCVerror(p));
   }
   PRECICE_ASSERT(p.size() == _matrixA.cols());
+  _matrixA            = _matrixA.unaryExpr([&kernel](double x) { return kernel->evaluate(x); });
   Eigen::VectorXd out = _matrixA * p;
 
   // Add the polynomial part again for separated polynomial
