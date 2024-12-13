@@ -138,13 +138,18 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     return; // Ranks not at the interface should never hold interface vertices
 
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
-
   if (_basisFunction.hasCompactSupport()) {
     auto bb = otherMesh->getBoundingBox();
     bb.expandBy(_basisFunction.getSupportRadius());
 
-    auto vertices = filterMesh->index().getVerticesInsideBox(bb);
-    std::for_each(vertices.begin(), vertices.end(), [&filterMesh](size_t v) { filterMesh->vertex(v).tag(); });
+    // We don't make use of the index tree here, because constructing the index tree on the
+    // (unfiltered) mesh is expensive
+    auto &vertices = filterMesh->vertices();
+    std::for_each(vertices.begin(), vertices.end(), [&bb](auto &v) {
+      if (bb.contains(v)) {
+        v.tag();
+      }
+    });
   } else {
     filterMesh->tagAll();
   }
