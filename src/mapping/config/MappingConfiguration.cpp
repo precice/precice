@@ -686,12 +686,11 @@ void MappingConfiguration::finishRBFConfiguration()
   PRECICE_ASSERT(_executorConfig);
   ConfiguredMapping &mapping = _mappings.back();
 
-  // We need to disable the geometric filter in case we have global RBF mappings with a global support
-  // We instantiate here a dummy functionVariant to query the information about the compact support directly from the basis function
+  // We disable the geometric filter in case we have global RBF mappings, as the default safety factor is not reliable enough to provide a robust
+  // safety margin such that the mapping is still correct. For PUM, we still perform the filtering, as it accelerates the tagging and leads to
+  // more accurate settings of the cluster radius
   PRECICE_ASSERT(mapping.requiresBasisFunction);
-  auto functionVariant          = constructRBF(_rbfConfig.basisFunction, _rbfConfig.supportRadius, _rbfConfig.shapeParameter);
-  mapping.allowsGeometricFilter = _rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect ||
-                                  std::visit([&](auto &&func) { return func.hasCompactSupport(); }, functionVariant);
+  mapping.allowsGeometricFilter = _rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect;
 
   // Instantiate the RBF mapping classes
   // We first categorize according to the executor
