@@ -1,9 +1,9 @@
-#include "logging/LogConfiguration.hpp"
+#include "logging/config/LogConfiguration.hpp"
 #include "logging/LogMacros.hpp"
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice::config {
+namespace precice::logging {
 
 LogConfiguration::LogConfiguration(
     xml::XMLTag &parent)
@@ -81,4 +81,4 @@ void LogConfiguration::xmlEndTagCallback(
     precice::logging::setupLogging(_logconfig, tag.getBooleanAttributeValue("enabled"));
 }
 
-} // namespace precice::config
+} // namespace precice::logging
