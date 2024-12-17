@@ -488,6 +488,15 @@ void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isT
     performDataActions({action::Action::READ_MAPPING_POST});
   }
 
+  // Required for implicit coupling
+  for (auto &context : _accessor->readDataContexts()) {
+    context.invalidateMappingCache();
+  }
+
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.invalidateMappingCache();
+  }
+
   if (isTimeWindowComplete) {
     // Reset initial guesses for iterative mappings
     for (auto &context : _accessor->readDataContexts()) {

@@ -8,16 +8,29 @@
     <use-data name="Velocities" />
   </mesh>
 
+  <mesh name="TestMesh2" dimensions="2">
+    <use-data name="Forces" />
+    <use-data name="Velocities" />
+  </mesh>
+
   <mesh name="MeshTwo" dimensions="2">
+    <use-data name="Forces" />
+    <use-data name="Velocities" />
+  </mesh>
+
+  <mesh name="MeshTwoDuplicate" dimensions="2">
     <use-data name="Forces" />
     <use-data name="Velocities" />
   </mesh>
 
   <participant name="SolverOne">
     <provide-mesh name="TestMesh" />
+    <provide-mesh name="TestMesh2" />
     <receive-mesh name="MeshTwo" from="SolverTwo" direct-access="true" />
+    <receive-mesh name="MeshTwoDuplicate" from="SolverTwo" />
     <!-- both are indirect mesh access -->
     <write-data name="Velocities" mesh="MeshTwo" />
+    <write-data name="Velocities" mesh="TestMesh2" />
     <read-data name="Forces" mesh="MeshTwo" />
     <read-data name="Forces" mesh="TestMesh" />
     <mapping:nearest-neighbor direction="read" from="MeshTwo" constraint="consistent" />
@@ -27,12 +40,19 @@
       to="TestMesh"
       constraint="consistent" />
     <mapping:nearest-neighbor direction="write" to="MeshTwo" constraint="conservative" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="TestMesh2"
+      to="MeshTwoDuplicate"
+      constraint="conservative" />
   </participant>
 
   <participant name="SolverTwo">
     <provide-mesh name="MeshTwo" />
+    <provide-mesh name="MeshTwoDuplicate" />
     <write-data name="Forces" mesh="MeshTwo" />
     <read-data name="Velocities" mesh="MeshTwo" />
+    <read-data name="Velocities" mesh="MeshTwoDuplicate" />
   </participant>
 
   <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
@@ -45,5 +65,6 @@
     <relative-convergence-measure data="Forces" mesh="MeshTwo" limit="1e-3" />
     <exchange data="Forces" mesh="MeshTwo" from="SolverTwo" to="SolverOne" />
     <exchange data="Velocities" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
+    <exchange data="Velocities" mesh="MeshTwoDuplicate" from="SolverOne" to="SolverTwo" />
   </coupling-scheme:serial-implicit>
 </precice-configuration>

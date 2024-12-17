@@ -29,10 +29,12 @@ BOOST_AUTO_TEST_CASE(Implicit)
     std::vector<double>         tmpMeshCoordsWrite = {0.1, 0.1, 0.2, 0.05};
     std::vector<double>         tmpMeshCoordsRead  = {0.2, 0.3};
     std::vector<int>            testIDs            = {-1};
+    std::vector<int>            test2IDs           = {-1, -1};
     std::vector<double>         testReadData({-1.});
 
     auto otherMeshName = "MeshTwo";
     auto testMeshName  = "TestMesh";
+    auto testMesh2Name = "TestMesh2";
     auto ownDataName   = "Velocities";
     auto otherDataName = "Forces";
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(otherMeshName) == dim);
@@ -40,6 +42,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
     // Define region of interest, where we could obtain direct write access
     couplingInterface.setMeshAccessRegion(otherMeshName, boundingBox);
     couplingInterface.setMeshVertices(testMeshName, tmpMeshCoordsRead, testIDs);
+    couplingInterface.setMeshVertices(testMesh2Name, tmpMeshCoordsWrite, test2IDs);
 
     couplingInterface.initialize();
 
@@ -68,12 +71,13 @@ BOOST_AUTO_TEST_CASE(Implicit)
       couplingInterface.mapAndreadData(otherMeshName, otherDataName, tmpMeshCoordsRead, dt, readData);
       // TODO: prevent ID access
       couplingInterface.readData(testMeshName, otherDataName, testIDs, dt, testReadData);
-      std::cout << "Values: " << readData[0] << std::endl;
       BOOST_TEST(precice::testing::equals(testReadData, readData));
 
       // solve timestep
       // write data
+      std::transform(writeData.begin(), writeData.end(), writeData.begin(), [&](auto &w) { return timestep * 500 + 50 * std::pow(10, -iteration); });
       couplingInterface.mapAndwriteData(otherMeshName, ownDataName, tmpMeshCoordsWrite, writeData);
+      couplingInterface.writeData(testMesh2Name, ownDataName, test2IDs, writeData);
       couplingInterface.advance(dt);
 
       if (couplingInterface.requiresReadingCheckpoint()) {
@@ -86,9 +90,11 @@ BOOST_AUTO_TEST_CASE(Implicit)
     BOOST_TEST(context.isNamed("SolverTwo"));
     std::vector<double> positions = {0.0, 0.0, 0.2, 0.3, 0.1, 0.1};
     std::vector<int>    ownIDs(3, -1);
+    std::vector<int>    testIDs(3, -1);
 
     // Query IDs
     auto ownMeshName   = "MeshTwo";
+    auto testMeshName  = "MeshTwoDuplicate";
     auto ownDataName   = "Forces";
     auto otherDataName = "Velocities";
 
@@ -96,11 +102,13 @@ BOOST_AUTO_TEST_CASE(Implicit)
 
     // Define the mesh
     couplingInterface.setMeshVertices(ownMeshName, positions, ownIDs);
+    couplingInterface.setMeshVertices(testMeshName, positions, testIDs);
 
     // Initialize
     couplingInterface.initialize();
 
     std::vector<double> readData(ownIDs.size(), -10);
+    std::vector<double> testReadData(testIDs.size(), -10);
 
     int    iteration   = 0;
     double timestep    = 0;
@@ -115,6 +123,8 @@ BOOST_AUTO_TEST_CASE(Implicit)
 
       // read data
       couplingInterface.readData(ownMeshName, otherDataName, ownIDs, dt, readData);
+      couplingInterface.readData(testMeshName, otherDataName, testIDs, dt, testReadData);
+      BOOST_TEST(precice::testing::equals(testReadData, readData));
       // solve timestep
       // Write data
       std::transform(writeDataForce.begin(), writeDataForce.end(), writeDataForce.begin(), [&](auto &w) { return timestep * 5 + std::pow(10, -iteration); });
@@ -126,8 +136,6 @@ BOOST_AUTO_TEST_CASE(Implicit)
       } else {
         iteration = 0;
       }
-
-      // BOOST_TEST(precice::testing::equals(expectedDataVelocities, readData));
     }
   }
 }

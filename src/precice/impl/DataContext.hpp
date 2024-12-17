@@ -123,6 +123,13 @@ public:
    */
   void addIndirectAccessMapping(MappingContext mappingContext, MeshContext meshContext);
 
+  void invalidateMappingCache()
+  {
+    if (mappingCache) {
+      mappingCache->setTimeStamp(-1);
+    }
+  }
+
 protected:
   /**
    * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext should use this constructor.
