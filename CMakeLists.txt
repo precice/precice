@@ -440,7 +440,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     # Required to make nvcc happy
     target_compile_definitions(preciceCore PRIVATE BOOST_PP_VARIADICS=1)
     target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cuh ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cu)
-    target_link_libraries(preciceCore PRIVATE cusolver)
+    target_link_libraries(preciceCore PUBLIC cusolver cublas)
     message(STATUS "Enabled CUDA support for preCICE via the Ginkgo library.")
   endif()
 
