@@ -42,7 +42,9 @@ void ReadDataContext::readValues(::precice::span<const VertexID> vertices, doubl
 
 void ReadDataContext::mapAndReadValues(::precice::span<const double> coordinates, double readTime, ::precice::span<double> values)
 {
+  PRECICE_TRACE();
   PRECICE_ASSERT(mappingCache);
+  PRECICE_ASSERT(indirectMapping);
 
   if (!mappingCache->hasDataAtTimeStamp(readTime)) {
     // Sample waveform relaxation
