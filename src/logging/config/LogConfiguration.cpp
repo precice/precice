@@ -1,4 +1,4 @@
-#include "LogConfiguration.hpp"
+#include "logging/LogConfiguration.hpp"
 #include "logging/LogMacros.hpp"
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"

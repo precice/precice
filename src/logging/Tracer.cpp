@@ -1,7 +1,7 @@
-#include "Tracer.hpp"
 #include <string>
 #include <utility>
-#include "logging/Logger.hpp"
+
+#include "logging/Tracer.hpp"
 
 namespace precice::logging {
 
