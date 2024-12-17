@@ -9,6 +9,8 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(IndirectMeshAccess)
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
+
 // Test case for a indirect mesh access on one participant to a mesh defined
 // by another participant. The region of interest is defined through a
 // boundingBox. The test case here is the most basic variant in order
@@ -19,7 +21,7 @@ BOOST_AUTO_TEST_SUITE(IndirectMeshAccess)
 // access (see #1583)
 BOOST_AUTO_TEST_CASE(ExplicitWrite)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   // Set up Participant
   precice::Participant couplingInterface(context.name, context.config(), 0, 1);

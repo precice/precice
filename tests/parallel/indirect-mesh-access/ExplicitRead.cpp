@@ -8,6 +8,8 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(IndirectMeshAccess)
+PRECICE_TEST_SETUP("One"_on(2_rank), "Two"_on(1_ranks))
+
 // Test case for a indirect mesh access on one participant to a mesh defined
 // by another participant. The region of interest is defined through a
 // boundingBox. SolverTwo defines the mesh (as usual) whereas SolverOne reads
@@ -15,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(IndirectMeshAccess)
 // parallel-access-nearest-neighbor-consistent-read
 BOOST_AUTO_TEST_CASE(ExplicitRead)
 {
-  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   // Set up Participant
   precice::Participant couplingInterface(context.name, context.config(), context.rank, context.size);
