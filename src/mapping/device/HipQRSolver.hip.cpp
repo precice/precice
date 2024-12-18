@@ -73,4 +73,42 @@ void computeQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, Ginkg
   hipFree(devInfo);
   hipsolverDnDestroy(solverHandle);
 }
+
+void solvewithQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *U, GinkgoVector *x, GinkgoVector *rhs, GinkgoMatrix *matQ, GinkgoVector *in_vec)
+{
+  auto scope_guard = exec->get_scoped_device_id_guard();
+
+  hipblasHandle_t handle;
+  hipblasStatus_t hipblasStatus = hipblasCreate(&handle);
+  assert(hipblasStatus == HIPBLAS_STATUS_SUCCESS);
+  double a      = 1;
+  double b      = 0;
+  hipblasStatus = hipblasDgemv(handle, HIPBLAS_OP_T,
+                               matQ->get_size()[0], matQ->get_size()[1],
+                               &a,
+                               matQ->get_values(), matQ->get_size()[0],
+                               in_vec->get_values(), 1,
+                               &b,
+                               rhs->get_values(), 1);
+  assert(hipblasStatus == HIPBLAS_STATUS_SUCCESS);
+
+  hipblasFillMode_t  uplo  = HIPBLAS_FILL_MODE_LOWER;
+  hipblasOperation_t trans = HIPBLAS_OP_T;
+
+  // unit triangular = diag = 1
+  hipblasDiagType_t diag = HIPBLAS_DIAG_NON_UNIT;
+  int               rows = rhs->get_size()[0];
+  const int         lda  = max(1, rows);
+
+  hipblasStatus = hipblasDtrsv(handle, uplo,
+                               trans, diag,
+                               rows, U->get_values(), lda,
+                               rhs->get_values(), 1);
+  assert(hipblasStatus == HIPBLAS_STATUS_SUCCESS);
+
+  hipDeviceSynchronize();
+  *x            = *rhs;
+  hipblasStatus = hipblasDestroy(handle);
+  assert(hipblasStatus == HIPBLAS_STATUS_SUCCESS);
+}
 #endif
