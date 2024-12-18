@@ -86,7 +86,7 @@ void computeQRDecompositionCuda(const std::shared_ptr<gko::Executor> &exec, Gink
   cusolverDnDestroy(solverHandle);
 }
 
-void solvewithQRDecompositionCuda(const std::shared_ptr<gko::Executor> &exec, gko::matrix::Dense<> *U, gko::matrix::Dense<> *x, gko::matrix::Dense<> *rhs, gko::matrix::Dense<> *matQ, gko::matrix::Dense<> *in_vec)
+void solvewithQRDecompositionCuda(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *U, GinkgoVector *x, GinkgoVector *rhs, GinkgoMatrix *matQ, GinkgoVector *in_vec)
 {
   auto scope_guard = exec->get_scoped_device_id_guard();
 
