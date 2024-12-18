@@ -9,8 +9,12 @@
 namespace precice::acceleration::impl {
 
 ResidualSumPreconditioner::ResidualSumPreconditioner(
-    int maxNonConstTimeWindows)
-    : Preconditioner(maxNonConstTimeWindows)
+    int    maxNonConstTimeWindows,
+    bool   preconForceUpdate,
+    double updatePreconLimit)
+    : Preconditioner(maxNonConstTimeWindows),
+      _preconForceUpdate(preconForceUpdate),
+      _updatePreconLimit(updatePreconLimit)
 {
 }
 
@@ -20,6 +24,7 @@ void ResidualSumPreconditioner::initialize(std::vector<size_t> &svs)
   Preconditioner::initialize(svs);
 
   _residualSum.resize(_subVectorSizes.size(), 0.0);
+  _previousResidualSum.resize(_subVectorSizes.size(), 0.0);
 }
 
 void ResidualSumPreconditioner::_update_(bool                   timeWindowComplete,
@@ -31,7 +36,8 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
 
     double sum = 0.0;
 
-    int offset = 0;
+    int  offset       = 0;
+    bool resetWeights = _preconForceUpdate; // True if pre-scaling weights must be reset
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
       Eigen::VectorXd part = Eigen::VectorXd::Zero(_subVectorSizes[k]);
       for (size_t i = 0; i < _subVectorSizes[k]; i++) {
@@ -67,19 +73,39 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
     }
 
     offset = 0;
-    for (size_t k = 0; k < _subVectorSizes.size(); k++) {
-      if (not math::equals(_residualSum[k], 0.0)) {
-        for (size_t i = 0; i < _subVectorSizes[k]; i++) {
-          _weights[i + offset]    = 1 / _residualSum[k];
-          _invWeights[i + offset] = _residualSum[k];
+    // Check if the new scaling weights are more or less than 1 order of magnitude from the previous weights
+    if (!_preconForceUpdate) {
+      for (size_t k = 0; k < _subVectorSizes.size(); k++) {
+        double newScalingWeight = (1 / _residualSum[k]);
+        std::cout << "newScalingWeight: " << newScalingWeight << std::endl;
+        std::cout << "_previousResidualSum[k]: " << _previousResidualSum[k] << std::endl;
+        if ((newScalingWeight * _previousResidualSum[k] > (_updatePreconLimit)) || (newScalingWeight * _previousResidualSum[k] < (1 / _updatePreconLimit))) {
+          resetWeights = true;
+          PRECICE_DEBUG("Resetting pre-scaling weights as the value has increased/decreased by more than 1 order of magnitude");
+          break;
         }
-        PRECICE_DEBUG("preconditioner scaling factor[{}] = {}", k, 1 / _residualSum[k]);
       }
-      offset += _subVectorSizes[k];
     }
 
-    _requireNewQR = true;
+    if (timeWindowPreconditioner < 1 || resetWeights) {
+      for (size_t k = 0; k < _subVectorSizes.size(); k++) {
+        if (not math::equals(_residualSum[k], 0.0)) {
+          for (size_t i = 0; i < _subVectorSizes[k]; i++) {
+            _weights[i + offset]    = 1 / _residualSum[k];
+            _invWeights[i + offset] = _residualSum[k];
+          }
+          _previousResidualSum[k] = _residualSum[k];
+          _requireNewQR           = true;
+          _areWeightsUpdated      = true;
+        }
+        offset += _subVectorSizes[k];
+      }
+
+      _requireNewQR = true;
+    }
+
   } else {
+    timeWindowPreconditioner++;
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
       _residualSum[k] = 0.0;
     }
