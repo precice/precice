@@ -488,11 +488,11 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
     // Upper Trs U x = b
     if ("cuda-executor" == _ginkgoParameter.executor) {
 #ifdef PRECICE_WITH_CUDA
-      solvewithQRDecompositionCuda(_ginkgoParameter.deviceId, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dRhs.get());
+      solvewithQRDecompositionCuda(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dRhs.get());
 #endif
     } else if ("hip-executor" == _ginkgoParameter.executor) {
 #ifdef PRECICE_WITH_HIP
-      // solvewithQRDecompositionHip(_ginkgoParameter.deviceId, gko::lend(_decompMatrixR), gko::lend(_rbfCoefficients), gko::lend(_dQ_T_Rhs), gko::lend(_decompMatrixQ_T), gko::lend(dRhs));
+      solvewithQRDecompositionHip(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dRhs.get());
 #endif
     } else {
       PRECICE_UNREACHABLE("Not implemented");
@@ -551,11 +551,11 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
   if (GinkgoSolverType::QR == _solverType) {
     if ("cuda-executor" == _ginkgoParameter.executor) {
 #ifdef PRECICE_WITH_CUDA
-      solvewithQRDecompositionCuda(_ginkgoParameter.deviceId, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dAu.get());
+      solvewithQRDecompositionCuda(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dAu.get());
 #endif
     } else if ("hip-executor" == _ginkgoParameter.executor) {
 #ifdef PRECICE_WITH_HIP
-      solvewithQRDecompositionHip(_ginkgoParameter.deviceId, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dAu.get());
+      solvewithQRDecompositionHip(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dAu.get());
 #endif
     } else {
       PRECICE_UNREACHABLE("Not implemented");
