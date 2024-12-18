@@ -56,6 +56,7 @@ public:
                          double                  radius,
                          RADIAL_BASIS_FUNCTION_T function,
                          Polynomial              polynomial,
+                         bool                    crossValidation,
                          mesh::PtrMesh           inputMesh,
                          mesh::PtrMesh           outputMesh);
 
@@ -63,7 +64,7 @@ public:
   void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) const;
 
   /// Evaluates a consistent mapping and agglomerates the result in the given output data
-  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) const;
+  std::array<double, 3> mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) const;
 
   /// Set the normalized weight for the given \p vertexID in the outputMesh
   void setNormalizedWeight(double normalizedWeight, VertexID vertexID);
@@ -130,6 +131,7 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
     double                  radius,
     RADIAL_BASIS_FUNCTION_T function,
     Polynomial              polynomial,
+    bool                    crossValidation,
     mesh::PtrMesh           inputMesh,
     mesh::PtrMesh           outputMesh)
     : _center(center), _radius(radius), _polynomial(polynomial), _weightingFunction(radius)
@@ -166,7 +168,7 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
   // mapping in this cluster as computed (mostly for debugging purpose)
   std::vector<bool>         deadAxis(inputMesh->getDimensions(), false);
   precice::profiling::Event e("map.pou.computeMapping.rbfSolver");
-  _rbfSolver          = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{function, *inputMesh.get(), _inputIDs, *outputMesh.get(), _outputIDs, deadAxis, _polynomial};
+  _rbfSolver          = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{function, *inputMesh.get(), _inputIDs, *outputMesh.get(), _outputIDs, deadAxis, _polynomial, crossValidation};
   _hasComputedMapping = true;
 }
 
@@ -228,7 +230,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) const
+std::array<double, 3> SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) const
 {
   // First, a few sanity checks. Empty partitions shouldn't be stored at all
   PRECICE_ASSERT(!empty());
@@ -239,7 +241,9 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
   const unsigned int nComponents = inData.dataDims;
   const auto &       localInData = inData.values;
 
-  Eigen::VectorXd in(_rbfSolver.getInputSize());
+  Eigen::VectorXd       in(_rbfSolver.getInputSize());
+  Eigen::VectorXd       result;
+  std::array<double, 3> loocv{{-1, -1, -1}};
 
   // Now we perform the data mapping component-wise
   for (unsigned int c = 0; c < nComponents; ++c) {
@@ -252,7 +256,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
     }
 
     // Step 2: solve the system using a consistent constraint
-    auto result = _rbfSolver.solveConsistent(in, _polynomial);
+    loocv[c] = _rbfSolver.solveConsistent(in, _polynomial, result);
     PRECICE_ASSERT(static_cast<Eigen::Index>(_outputIDs.size()) == result.size());
 
     // Step 3: now accumulate the result into our global output data
@@ -264,6 +268,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
       outData[dataIndex * nComponents + c] += result(i) * _normalizedWeights[i];
     }
   }
+  return loocv;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
