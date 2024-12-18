@@ -482,6 +482,15 @@ void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isT
     performDataActions({action::Action::READ_MAPPING_POST});
   }
 
+  // Required for implicit coupling
+  for (auto &context : _accessor->readDataContexts()) {
+    context.invalidateMappingCache();
+  }
+
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.invalidateMappingCache();
+  }
+
   if (isTimeWindowComplete) {
     // Reset initial guesses for iterative mappings
     for (auto &context : _accessor->readDataContexts()) {
@@ -1166,6 +1175,81 @@ void ParticipantImpl::readData(
 
   double readTime = _couplingScheme->getTime() + relativeReadTime;
   context.readValues(vertices, readTime, values);
+}
+
+//////////////////////////////////////////////
+void ParticipantImpl::mapAndreadData(
+    std::string_view              meshName,
+    std::string_view              dataName,
+    ::precice::span<const double> coordinates,
+    double                        relativeReadTime,
+    ::precice::span<double>       values) const
+{
+  PRECICE_TRACE(meshName, dataName, coordinates.size(), relativeReadTime);
+  // TODO: Make these checks conditional
+  PRECICE_CHECK(_state != State::Constructed, "mapAndreadData(...) cannot be called before initialize().");
+  PRECICE_CHECK(_state != State::Finalized, "mapAndreadData(...) cannot be called after finalize().");
+  PRECICE_CHECK(math::smallerEquals(relativeReadTime, _couplingScheme->getNextTimeStepMaxSize()), "readData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime >= 0, "mapAndreadData(...) cannot sample data before the current time.");
+  PRECICE_CHECK(isCouplingOngoing() || math::equals(relativeReadTime, 0.0), "Calling mapAndreadData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only data for relativeReadTime = 0 is available. Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.", relativeReadTime);
+
+  PRECICE_REQUIRE_DATA_READ(meshName, dataName);
+  PRECICE_VALIDATE_DATA(coordinates.begin(), coordinates.size());
+
+  // Inconsistent sizes will be handled below
+  if (coordinates.empty() && values.empty()) {
+    return;
+  }
+
+  // Make use of the read data context
+  // Note that meshName refers here typically to a remote mesh
+  ReadDataContext &dataContext      = _accessor->readDataContext(meshName, dataName);
+  const auto       dataDims         = dataContext.getDataDimensions();
+  const auto       dim              = dataContext.getSpatialDimensions();
+  const auto       expectedDataSize = (coordinates.size() / dim) * dataDims;
+  PRECICE_CHECK(expectedDataSize == values.size(),
+                "Input sizes are inconsistent attempting to read {}D data \"{}\" from mesh \"{}\". "
+                "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
+                dataDims, dataName, meshName,
+                coordinates.size() / dim, values.size(), expectedDataSize, dataDims, coordinates.size() / dim);
+
+  // TODO: Add check that this vertex is within the access region?
+  double readTime = _couplingScheme->getTime() + relativeReadTime;
+  dataContext.mapAndReadValues(coordinates, readTime, values);
+}
+////////////////////////////////////////////////////
+
+void ParticipantImpl::mapAndwriteData(
+    std::string_view              meshName,
+    std::string_view              dataName,
+    ::precice::span<const double> coordinates,
+    ::precice::span<const double> values)
+{
+  PRECICE_TRACE(meshName, dataName, coordinates.size());
+  PRECICE_CHECK(_state != State::Finalized, "mapAndwriteData(...) cannot be called after finalize().");
+  PRECICE_CHECK(_state == State::Constructed || (_state == State::Initialized && isCouplingOngoing()), "Calling mapAndwriteData(...) is forbidden if coupling is not ongoing, because the data you are trying to write will not be used anymore. You can fix this by always calling mapAndwriteData(...) before the advance(...) call in your simulation loop or by using Participant::isCouplingOngoing() to implement a safeguard.");
+  PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
+  // Inconsistent sizes will be handled below
+  if (coordinates.empty() && values.empty()) {
+    return;
+  }
+
+  WriteDataContext &dataContext = _accessor->writeDataContext(meshName, dataName);
+
+  const auto dataDims         = dataContext.getDataDimensions();
+  const auto dim              = dataContext.getSpatialDimensions();
+  const auto expectedDataSize = (coordinates.size() / dim) * dataDims;
+  PRECICE_CHECK(expectedDataSize == values.size(),
+                "Input sizes are inconsistent attempting to write {}D data \"{}\" to mesh \"{}\". "
+                "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
+                dataDims, dataName, meshName,
+                coordinates.size() / dim, values.size(), expectedDataSize, dataDims, coordinates.size() / dim);
+
+  // Sizes are correct at this point
+  PRECICE_VALIDATE_DATA(values.data(), values.size()); // TODO Only take span
+
+  // TODO: Add check that this vertex is within the access region?
+  dataContext.mapAndWriteValues(coordinates, values);
 }
 
 void ParticipantImpl::writeGradientData(

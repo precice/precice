@@ -41,6 +41,7 @@ target_sources(testprecice
     tests/parallel/gather-scatter/EnforceGatherScatterEmptyReceivedPrimaryRank.cpp
     tests/parallel/gather-scatter/helpers.cpp
     tests/parallel/gather-scatter/helpers.hpp
+    tests/parallel/indirect-mesh-access/ExplicitRead.cpp
     tests/parallel/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/parallel/lifecycle/ConstructOnly.cpp
     tests/parallel/lifecycle/Full.cpp
@@ -218,6 +219,11 @@ target_sources(testprecice
     tests/serial/explicit/TestExplicitSockets.cpp
     tests/serial/explicit/helpers.cpp
     tests/serial/explicit/helpers.hpp
+    tests/serial/indirect-mesh-access/ExplicitMultipleReadWrite.cpp
+    tests/serial/indirect-mesh-access/ExplicitRead.cpp
+    tests/serial/indirect-mesh-access/ExplicitReadPUM.cpp
+    tests/serial/indirect-mesh-access/ExplicitWrite.cpp
+    tests/serial/indirect-mesh-access/Implicit.cpp
     tests/serial/initialize-data/Explicit.cpp
     tests/serial/initialize-data/Implicit.cpp
     tests/serial/initialize-data/ImplicitBoth.cpp

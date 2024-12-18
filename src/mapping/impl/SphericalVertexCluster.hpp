@@ -62,6 +62,9 @@ public:
   /// Evaluates a conservative mapping and agglomerates the result in the given output data
   void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) const;
 
+  /// Computes and saves the RBF coefficients
+  void computeCacheData(const Eigen::VectorXd &globalIn, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coefficientsOut, int components) const;
+
   /// Evaluates a consistent mapping and agglomerates the result in the given output data
   void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) const;
 
@@ -71,6 +74,7 @@ public:
   /// Compute the weight for a given vertex
   double computeWeight(const mesh::Vertex &v) const;
 
+  Eigen::Vector3d interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs, const mesh::Mesh &inMesh) const;
   /// Number of input vertices this partition operates on
   unsigned int getNumberOfInputVertices() const;
 
@@ -86,7 +90,7 @@ public:
 
 private:
   /// logger, as usual
-  precice::logging::Logger _log{"mapping::SphericalVertexCluster"};
+  mutable precice::logging::Logger _log{"mapping::SphericalVertexCluster"};
 
   /// center vertex of the cluster
   mesh::Vertex _center;
@@ -115,6 +119,8 @@ private:
   /// Polynomial treatment in the RBF solver
   Polynomial _polynomial;
 
+  RADIAL_BASIS_FUNCTION_T _function;
+
   /// The weighting function
   CompactPolynomialC2 _weightingFunction;
 
@@ -132,7 +138,7 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
     Polynomial              polynomial,
     mesh::PtrMesh           inputMesh,
     mesh::PtrMesh           outputMesh)
-    : _center(center), _radius(radius), _polynomial(polynomial), _weightingFunction(radius)
+    : _center(center), _radius(radius), _polynomial(polynomial), _function(function), _weightingFunction(radius)
 {
   PRECICE_TRACE(_center.getCoords(), _radius);
   precice::profiling::Event eq("map.pou.computeMapping.queryVertices");
@@ -228,6 +234,34 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::computeCacheData(const Eigen::VectorXd &globalIn, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffOut, int nComponents) const
+{
+  PRECICE_TRACE();
+
+  Eigen::MatrixXd in(_rbfSolver.getInputSize(), nComponents);
+  // Now we perform the data mapping component-wise
+  for (unsigned int c = 0; c < nComponents; ++c) {
+    // Step 1: extract the relevant input data from the global input data and store
+    // it in a contiguous array, which is required for the RBF solver (last polyparams entries remain zero)
+    for (unsigned int i = 0; i < _inputIDs.size(); i++) {
+      const auto dataIndex = *(_inputIDs.nth(i));
+      PRECICE_ASSERT(dataIndex * nComponents + c < globalIn.size(), dataIndex * nComponents + c, globalIn.size());
+      in(i, c) = globalIn[dataIndex * nComponents + c];
+    }
+  }
+  // Step 2: solve the system using a consistent constraint
+  _rbfSolver.computeCacheData(in, _polynomial, polyOut, coeffOut);
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+Eigen::Vector3d SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs, const mesh::Mesh &inMesh) const
+{
+  PRECICE_TRACE();
+
+  return _rbfSolver.interpolateAt(v, poly, coeffs, _function, _inputIDs, inMesh);
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
 void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) const
 {
   // First, a few sanity checks. Empty partitions shouldn't be stored at all
@@ -290,7 +324,7 @@ std::array<double, 3> SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::getCenter
 template <typename RADIAL_BASIS_FUNCTION_T>
 bool SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::empty() const
 {
-  return _outputIDs.size() == 0 || _inputIDs.size() == 0;
+  return _inputIDs.size() == 0;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
