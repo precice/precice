@@ -86,11 +86,9 @@ void computeQRDecompositionCuda(const std::shared_ptr<gko::Executor> &exec, Gink
   cusolverDnDestroy(solverHandle);
 }
 
-void solvewithQRDecompositionCuda(const int deviceId, gko::matrix::Dense<> *U, gko::matrix::Dense<> *x, gko::matrix::Dense<> *rhs, gko::matrix::Dense<> *matQ, gko::matrix::Dense<> *in_vec)
+void solvewithQRDecompositionCuda(const std::shared_ptr<gko::Executor> &exec, gko::matrix::Dense<> *U, gko::matrix::Dense<> *x, gko::matrix::Dense<> *rhs, gko::matrix::Dense<> *matQ, gko::matrix::Dense<> *in_vec)
 {
-  int backupDeviceId{};
-  cudaGetDevice(&backupDeviceId);
-  cudaSetDevice(deviceId);
+  auto scope_guard = exec->get_scoped_device_id_guard();
 
   cublasHandle_t handle;
   cublasStatus_t cublasStatus = cublasCreate(&handle);
@@ -106,23 +104,27 @@ void solvewithQRDecompositionCuda(const int deviceId, gko::matrix::Dense<> *U, g
                              rhs->get_values(), 1);
   assert(cublasStatus == CUBLAS_STATUS_SUCCESS);
 
-  // this works
-  cublasSideMode_t  side  = CUBLAS_SIDE_LEFT;
   cublasFillMode_t  uplo  = CUBLAS_FILL_MODE_LOWER;
   cublasOperation_t trans = CUBLAS_OP_T;
 
   // unit triangular = diag = 1
   cublasDiagType_t diag    = CUBLAS_DIAG_NON_UNIT;
-  double           alpha   = 1.0;
   int              rows    = rhs->get_size()[0];
-  int              columns = 1;
   const int        lda     = max(1, rows);
-  const int        ldb     = max(1, rows);
 
   cublasStatus = cublasDtrsv(handle, uplo,
                              trans, diag,
                              rows, U->get_values(), lda,
                              rhs->get_values(), 1);
+  assert(cublasStatus == CUBLAS_STATUS_SUCCESS);
+
+  // In case we refactor the code in the future to make use of
+  // dtrsm instead of dtrsv (processing vector data as a whole),
+  // the following holds
+  // double           alpha   = 1.0;
+  // int              columns = 1;
+  // const int        ldb     = max(1, rows);
+  // cublasSideMode_t  side  = CUBLAS_SIDE_LEFT;
   // cublasStatus = cublasDtrsm(handle,
   //                            side,
   //                            uplo,
@@ -134,11 +136,10 @@ void solvewithQRDecompositionCuda(const int deviceId, gko::matrix::Dense<> *U, g
   //                            U->get_values(), lda,
   //                            rhs->get_values(),
   //                            ldb);
-  assert(cublasStatus == CUBLAS_STATUS_SUCCESS);
+
   cudaDeviceSynchronize();
   *x           = *rhs;
   cublasStatus = cublasDestroy(handle);
   assert(cublasStatus == CUBLAS_STATUS_SUCCESS);
-  cudaSetDevice(backupDeviceId);
 }
 #endif
