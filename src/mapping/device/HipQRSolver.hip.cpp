@@ -15,8 +15,11 @@ void computeQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, Ginkg
   int * devInfo{};
 
   // Allocating important HIP variables
-  hipMalloc((void **) &dWork, sizeof(double));
-  hipMalloc((void **) &devInfo, sizeof(int));
+  hipError_t hipErrorCode;
+  hipErrorCode = hipMalloc((void **) &dWork, sizeof(double));
+  assert(hipErrorCode == hipSuccess);
+  hipErrorCode = hipMalloc((void **) &devInfo, sizeof(int));
+  assert(hipErrorCode == hipSuccess);
 
   hipsolverDnHandle_t solverHandle;
   hipsolverDnCreate(&solverHandle);
@@ -37,15 +40,16 @@ void computeQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, Ginkg
   int lwork       = 0;
 
   double *dTau{};
-  hipMalloc((void **) &dTau, sizeof(double) * M);
+  hiperror = hipMalloc((void **) &dTau, sizeof(double) * M);
+  assert(hiperror == hipSuccess);
 
   // Query working space of geqrf and orgqr
   hipsolverStatus_t hipsolverStatus = hipsolverDnDgeqrf_bufferSize(solverHandle, M, N, A_T->get_values(), lda, &lwork_geqrf);
   assert(hipsolverStatus == HIPSOLVER_STATUS_SUCCESS);
   hipsolverStatus = hipsolverDnDorgqr_bufferSize(solverHandle, M, N, k, A_T->get_values(), lda, dTau, &lwork_orgqr);
   assert(hipsolverStatus == HIPSOLVER_STATUS_SUCCESS);
-  lwork                   = (lwork_geqrf > lwork_orgqr) ? lwork_geqrf : lwork_orgqr;
-  hipError_t hipErrorCode = hipMalloc((void **) &dWork, sizeof(double) * lwork);
+  lwork        = (lwork_geqrf > lwork_orgqr) ? lwork_geqrf : lwork_orgqr;
+  hipErrorCode = hipMalloc((void **) &dWork, sizeof(double) * lwork);
   assert(hipSuccess == hipErrorCode);
 
   void *hWork{};
@@ -66,13 +70,18 @@ void computeQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, Ginkg
 
   A_T->transpose(A_Q);
 
-  hipDeviceSynchronize();
+  hipErrorCode = hipDeviceSynchronize();
+  assert(hipSuccess == hipErrorCode);
 
   // Free the utilized memory
-  hipFree(dTau);
-  hipFree(dWork);
-  hipFree(devInfo);
-  hipsolverDnDestroy(solverHandle);
+  hipErrorCode = hipFree(dTau);
+  assert(hipSuccess == hipErrorCode);
+  hipErrorCode = hipFree(dWork);
+  assert(hipSuccess == hipErrorCode);
+  hipErrorCode = hipFree(devInfo);
+  assert(hipSuccess == hipErrorCode);
+  hipErrorCode = hipsolverDnDestroy(solverHandle);
+  assert(hipSuccess == hipErrorCode);
 }
 
 void solvewithQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *U, GinkgoVector *x, GinkgoVector *rhs, GinkgoMatrix *matQ, GinkgoVector *in_vec)
