@@ -3,9 +3,9 @@
 #include <ginkgo/ginkgo.hpp>
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>
+#include <hipblas/hipblas.h>
 #include <hipsolver/hipsolver.h>
 #include "mapping/device/HipQRSolver.hip.hpp"
-#include <hipblas/hipblas.h>
 
 void computeQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoVector *R)
 {
@@ -40,8 +40,8 @@ void computeQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, Ginkg
   int lwork       = 0;
 
   double *dTau{};
-  hiperror = hipMalloc((void **) &dTau, sizeof(double) * M);
-  assert(hiperror == hipSuccess);
+  hipErrorCode = hipMalloc((void **) &dTau, sizeof(double) * M);
+  assert(hipErrorCode == hipSuccess);
 
   // Query working space of geqrf and orgqr
   hipsolverStatus_t hipsolverStatus = hipsolverDnDgeqrf_bufferSize(solverHandle, M, N, A_T->get_values(), lda, &lwork_geqrf);
@@ -80,8 +80,8 @@ void computeQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, Ginkg
   assert(hipSuccess == hipErrorCode);
   hipErrorCode = hipFree(devInfo);
   assert(hipSuccess == hipErrorCode);
-  hipErrorCode = hipsolverDnDestroy(solverHandle);
-  assert(hipSuccess == hipErrorCode);
+  hipsolverStatus = hipsolverDnDestroy(solverHandle);
+  assert(hipsolverStatus == HIPSOLVER_STATUS_SUCCESS);
 }
 
 void solvewithQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *U, GinkgoVector *x, GinkgoVector *rhs, GinkgoMatrix *matQ, GinkgoVector *in_vec)
@@ -116,7 +116,8 @@ void solvewithQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, Gin
                                rhs->get_values(), 1);
   assert(hipblasStatus == HIPBLAS_STATUS_SUCCESS);
 
-  hipDeviceSynchronize();
+  hipError_t hipErrorCode = hipDeviceSynchronize();
+  assert(hipSuccess == hipErrorCode);
   *x            = *rhs;
   hipblasStatus = hipblasDestroy(handle);
   assert(hipblasStatus == HIPBLAS_STATUS_SUCCESS);
