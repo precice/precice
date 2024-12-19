@@ -143,10 +143,10 @@ private:
 
   using IOContext = boost::asio::io_context;
   using Socket    = boost::asio::ip::tcp::socket;
-  using Work      = boost::asio::io_context::work;
+  using WorkGuard = boost::asio::executor_work_guard<IOContext::executor_type>;
 
   std::shared_ptr<IOContext> _ioContext;
-  std::shared_ptr<Work>      _work;
+  std::shared_ptr<WorkGuard> _workGuard;
   std::thread                _thread;
 
   /// Remote rank -> socket map

@@ -128,10 +128,9 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
     PRECICE_ERROR("Accepting a socket connection at {} failed with the system error: {}", address, e.what());
   }
 
-  // NOTE:
-  // Keep IO service running so that it fires asynchronous handlers from another thread.
-  _work   = std::make_shared<asio::io_context::work>(*_ioContext);
-  _thread = std::thread([this] { _ioContext->run(); });
+  // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
+  _workGuard = std::make_shared<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
+  _thread    = std::thread([this] { _ioContext->run(); });
 }
 
 void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorName,
@@ -192,9 +191,9 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
     PRECICE_ERROR("Accepting a socket connection at {} failed with the system error: {}", address, e.what());
   }
 
-  // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
-  _work   = std::make_shared<asio::io_context::work>(*_ioContext);
-  _thread = std::thread([this] { _ioContext->run(); });
+  // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
+  _workGuard = std::make_shared<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
+  _thread    = std::thread([this] { _ioContext->run(); });
 }
 
 void SocketCommunication::requestConnection(std::string const &acceptorName,
@@ -251,9 +250,9 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
     PRECICE_ERROR("Requesting a socket connection at {} failed with the system error: {}", address, e.what());
   }
 
-  // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
-  _work   = std::make_shared<asio::io_context::work>(*_ioContext);
-  _thread = std::thread([this] { _ioContext->run(); });
+  // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
+  _workGuard = std::make_shared<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
+  _thread    = std::thread([this] { _ioContext->run(); });
 }
 
 void SocketCommunication::requestConnectionAsClient(std::string const &  acceptorName,
@@ -308,9 +307,9 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
       PRECICE_ERROR("Requesting a socket connection at {} failed with the system error: {}", address, e.what());
     }
   }
-  // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
-  _work   = std::make_shared<asio::io_context::work>(*_ioContext);
-  _thread = std::thread([this] { _ioContext->run(); });
+  // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
+  _workGuard = std::make_shared<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
+  _thread    = std::thread([this] { _ioContext->run(); });
 }
 
 void SocketCommunication::closeConnection()
@@ -321,7 +320,7 @@ void SocketCommunication::closeConnection()
     return;
 
   if (_thread.joinable()) {
-    _work.reset();
+    _workGuard.reset();
     _ioContext->stop();
     _thread.join();
   }
