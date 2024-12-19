@@ -27,7 +27,7 @@ SocketCommunication::SocketCommunication(unsigned short portNumber,
       _reuseAddress(reuseAddress),
       _networkName(std::move(networkName)),
       _addressDirectory(std::move(addressDirectory)),
-      _ioService(new IOService)
+      _ioContext(new IOContext)
 {
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";
@@ -72,7 +72,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
 
     using asio::ip::tcp;
 
-    tcp::acceptor acceptor(*_ioService);
+    tcp::acceptor acceptor(*_ioContext);
     tcp::endpoint endpoint(tcp::v4(), _portNumber);
 
     acceptor.open(endpoint.protocol());
@@ -91,7 +91,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
     int requesterCommunicatorSize = -1;
 
     do {
-      auto socket = std::make_shared<Socket>(*_ioService);
+      auto socket = std::make_shared<Socket>(*_ioContext);
 
       acceptor.accept(*socket);
       PRECICE_DEBUG("Accepted connection at {}", address);
@@ -128,10 +128,9 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
     PRECICE_ERROR("Accepting a socket connection at {} failed with the system error: {}", address, e.what());
   }
 
-  // NOTE:
-  // Keep IO service running so that it fires asynchronous handlers from another thread.
-  _work   = std::make_shared<asio::io_service::work>(*_ioService);
-  _thread = std::thread([this] { _ioService->run(); });
+  // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
+  _workGuard = std::make_unique<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
+  _thread    = std::thread([this] { _ioContext->run(); });
 }
 
 void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorName,
@@ -158,7 +157,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
 
     using asio::ip::tcp;
 
-    tcp::acceptor acceptor(*_ioService);
+    tcp::acceptor acceptor(*_ioContext);
     {
       tcp::endpoint endpoint(tcp::v4(), _portNumber);
 
@@ -177,7 +176,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
     PRECICE_DEBUG("Accepting connection at {}", address);
 
     for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
-      auto socket = std::make_shared<Socket>(*_ioService);
+      auto socket = std::make_shared<Socket>(*_ioContext);
       acceptor.accept(*socket);
       PRECICE_DEBUG("Accepted connection at {}", address);
       _isConnected = true;
@@ -192,9 +191,9 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
     PRECICE_ERROR("Accepting a socket connection at {} failed with the system error: {}", address, e.what());
   }
 
-  // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
-  _work   = std::make_shared<asio::io_service::work>(*_ioService);
-  _thread = std::thread([this] { _ioService->run(); });
+  // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
+  _workGuard = std::make_unique<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
+  _thread    = std::thread([this] { _ioContext->run(); });
 }
 
 void SocketCommunication::requestConnection(std::string const &acceptorName,
@@ -215,16 +214,16 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
   _portNumber                  = static_cast<unsigned short>(std::stoul(portNumber));
 
   try {
-    auto socket = std::make_shared<Socket>(*_ioService);
+    auto socket = std::make_shared<Socket>(*_ioContext);
 
     using asio::ip::tcp;
 
-    tcp::resolver::query query(tcp::v4(), ipAddress, portNumber, tcp::resolver::query::numeric_host);
-
     while (not isConnected()) {
-      tcp::resolver                resolver(*_ioService);
-      tcp::resolver::endpoint_type endpoint = *(resolver.resolve(query));
-      boost::system::error_code    error    = asio::error::host_not_found;
+      tcp::resolver resolver(*_ioContext);
+      auto          results = resolver.resolve(ipAddress, portNumber, boost::asio::ip::resolver_base::numeric_host);
+
+      auto                      endpoint = results.begin()->endpoint();
+      boost::system::error_code error    = asio::error::host_not_found;
       socket->connect(endpoint, error);
 
       _isConnected = not error;
@@ -232,7 +231,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
       if (not isConnected()) {
         // Wait a little, since after a couple of ten-thousand trials the system
         // seems to get confused and the requester connects wrongly to itself.
-        boost::asio::deadline_timer timer(*_ioService, boost::posix_time::milliseconds(1));
+        boost::asio::deadline_timer timer(*_ioContext, boost::posix_time::milliseconds(1));
         timer.wait();
       }
     }
@@ -251,9 +250,9 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
     PRECICE_ERROR("Requesting a socket connection at {} failed with the system error: {}", address, e.what());
   }
 
-  // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
-  _work   = std::make_shared<asio::io_service::work>(*_ioService);
-  _thread = std::thread([this] { _ioService->run(); });
+  // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
+  _workGuard = std::make_unique<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
+  _thread    = std::thread([this] { _ioContext->run(); });
 }
 
 void SocketCommunication::requestConnectionAsClient(std::string const &  acceptorName,
@@ -276,26 +275,25 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
     _portNumber                     = static_cast<unsigned short>(std::stoul(portNumber));
 
     try {
-      auto socket = std::make_shared<Socket>(*_ioService);
+      auto socket = std::make_shared<Socket>(*_ioContext);
 
       using asio::ip::tcp;
 
       PRECICE_DEBUG("Requesting connection to {}, port {}", ipAddress, portNumber);
 
-      tcp::resolver::query query(tcp::v4(), ipAddress, portNumber, tcp::resolver::query::numeric_host);
-
       while (not isConnected()) {
-        tcp::resolver             resolver(*_ioService);
-        tcp::resolver::iterator   endpoint_iterator = resolver.resolve(query);
-        boost::system::error_code error             = asio::error::host_not_found;
-        boost::asio::connect(*socket, std::move(endpoint_iterator), error);
+        tcp::resolver resolver(*_ioContext);
+        auto          endpoints = resolver.resolve(ipAddress, portNumber, boost::asio::ip::resolver_base::numeric_host);
+
+        boost::system::error_code error = asio::error::host_not_found;
+        boost::asio::connect(*socket, endpoints, error);
 
         _isConnected = not error;
 
         if (not isConnected()) {
           // Wait a little, since after a couple of ten-thousand trials the system
           // seems to get confused and the requester connects wrongly to itself.
-          boost::asio::deadline_timer timer(*_ioService, boost::posix_time::milliseconds(1));
+          boost::asio::deadline_timer timer(*_ioContext, boost::posix_time::milliseconds(1));
           timer.wait();
         }
       }
@@ -308,9 +306,9 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
       PRECICE_ERROR("Requesting a socket connection at {} failed with the system error: {}", address, e.what());
     }
   }
-  // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
-  _work   = std::make_shared<asio::io_service::work>(*_ioService);
-  _thread = std::thread([this] { _ioService->run(); });
+  // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
+  _workGuard = std::make_unique<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
+  _thread    = std::thread([this] { _ioContext->run(); });
 }
 
 void SocketCommunication::closeConnection()
@@ -321,8 +319,8 @@ void SocketCommunication::closeConnection()
     return;
 
   if (_thread.joinable()) {
-    _work.reset();
-    _ioService->stop();
+    _workGuard.reset();
+    _ioContext->stop();
     _thread.join();
   }
 
