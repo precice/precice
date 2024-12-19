@@ -19,8 +19,10 @@ void computeQRDecompositionCuda(const std::shared_ptr<gko::Executor> &exec, Gink
   int * devInfo{};
 
   // Allocating important CUDA variables
-  cudaMalloc((void **) &dWork, sizeof(double));
-  cudaMalloc((void **) &devInfo, sizeof(int));
+  cudaError_t cudaErrorCode = cudaMalloc((void **) &dWork, sizeof(double));
+  assert(cudaSuccess == cudaErrorCode);
+  cudaErrorCode = cudaMalloc((void **) &devInfo, sizeof(int));
+  assert(cudaSuccess == cudaErrorCode);
 
   cusolverDnHandle_t solverHandle;
   cusolverDnCreate(&solverHandle);
@@ -44,7 +46,8 @@ void computeQRDecompositionCuda(const std::shared_ptr<gko::Executor> &exec, Gink
   size_t hLwork       = 0;
 
   double *dTau{};
-  cudaMalloc((void **) &dTau, sizeof(double) * M);
+  cudaErrorCode = cudaMalloc((void **) &dTau, sizeof(double) * M);
+  assert(cudaSuccess == cudaErrorCode);
 
   precice::profiling::Event calculateQRDecompEvent{"calculateQRDecomp"};
 
@@ -55,7 +58,7 @@ void computeQRDecompositionCuda(const std::shared_ptr<gko::Executor> &exec, Gink
   cusolverStatus = cusolverDnDorgqr_bufferSize(solverHandle, M, N, k, A_T->get_values(), lda, dTau, (int *) &dLwork_orgqr);
   assert(cusolverStatus == CUSOLVER_STATUS_SUCCESS);
   dLwork                    = (dLwork_geqrf > dLwork_orgqr) ? dLwork_geqrf : dLwork_orgqr;
-  cudaError_t cudaErrorCode = cudaMalloc((void **) &dWork, sizeof(double) * dLwork);
+  cudaErrorCode = cudaMalloc((void **) &dWork, sizeof(double) * dLwork);
   assert(cudaSuccess == cudaErrorCode);
 
   void *hWork{};
@@ -76,14 +79,19 @@ void computeQRDecompositionCuda(const std::shared_ptr<gko::Executor> &exec, Gink
 
   A_T->transpose(gko::lend(A_Q));
 
-  cudaDeviceSynchronize();
+  cudaErrorCode = cudaDeviceSynchronize();
+  assert(cudaSuccess == cudaErrorCode);
   calculateQRDecompEvent.stop();
 
   // Free the utilized memory
-  cudaFree(dTau);
-  cudaFree(dWork);
-  cudaFree(devInfo);
-  cusolverDnDestroy(solverHandle);
+  cudaErrorCode = cudaFree(dTau);
+  assert(cudaSuccess == cudaErrorCode);
+  cudaErrorCode = cudaFree(dWork);
+  assert(cudaSuccess == cudaErrorCode);
+  cudaErrorCode = cudaFree(devInfo);
+  assert(cudaSuccess == cudaErrorCode);
+  cusolverStatus = cusolverDnDestroy(solverHandle);
+  assert(cusolverStatus == CUSOLVER_STATUS_SUCCESS);
 }
 
 void solvewithQRDecompositionCuda(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *U, GinkgoVector *x, GinkgoVector *rhs, GinkgoMatrix *matQ, GinkgoVector *in_vec)
