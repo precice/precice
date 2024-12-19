@@ -7,5 +7,5 @@ target_sources(precice-bench
     benchmarks/helper.hpp
     benchmarks/main.cpp
     benchmarks/rbf-assembly-kernels.cpp
-    benchmarks/write-block-vector-data.cpp
+    benchmarks/write-data.cpp
     )
