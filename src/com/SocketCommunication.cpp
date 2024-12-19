@@ -129,7 +129,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
   }
 
   // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
-  _workGuard = std::make_shared<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
+  _workGuard = std::make_unique<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
   _thread    = std::thread([this] { _ioContext->run(); });
 }
 
@@ -192,7 +192,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
   }
 
   // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
-  _workGuard = std::make_shared<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
+  _workGuard = std::make_unique<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
   _thread    = std::thread([this] { _ioContext->run(); });
 }
 
@@ -251,7 +251,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
   }
 
   // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
-  _workGuard = std::make_shared<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
+  _workGuard = std::make_unique<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
   _thread    = std::thread([this] { _ioContext->run(); });
 }
 
@@ -308,7 +308,7 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
     }
   }
   // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
-  _workGuard = std::make_shared<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
+  _workGuard = std::make_unique<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
   _thread    = std::thread([this] { _ioContext->run(); });
 }
 
