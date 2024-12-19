@@ -141,11 +141,11 @@ private:
   /// Directory where IP address is exchanged by file.
   std::string _addressDirectory;
 
-  using IOService = boost::asio::io_service;
+  using IOContext = boost::asio::io_context;
   using Socket    = boost::asio::ip::tcp::socket;
-  using Work      = boost::asio::io_service::work;
+  using Work      = boost::asio::io_context::work;
 
-  std::shared_ptr<IOService> _ioService;
+  std::shared_ptr<IOContext> _ioContext;
   std::shared_ptr<Work>      _work;
   std::thread                _thread;
 

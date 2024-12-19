@@ -27,7 +27,7 @@ SocketCommunication::SocketCommunication(unsigned short portNumber,
       _reuseAddress(reuseAddress),
       _networkName(std::move(networkName)),
       _addressDirectory(std::move(addressDirectory)),
-      _ioService(new IOService)
+      _ioContext(new IOService)
 {
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";
@@ -72,7 +72,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
 
     using asio::ip::tcp;
 
-    tcp::acceptor acceptor(*_ioService);
+    tcp::acceptor acceptor(*_ioContext);
     tcp::endpoint endpoint(tcp::v4(), _portNumber);
 
     acceptor.open(endpoint.protocol());
@@ -91,7 +91,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
     int requesterCommunicatorSize = -1;
 
     do {
-      auto socket = std::make_shared<Socket>(*_ioService);
+      auto socket = std::make_shared<Socket>(*_ioContext);
 
       acceptor.accept(*socket);
       PRECICE_DEBUG("Accepted connection at {}", address);
@@ -130,8 +130,8 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
 
   // NOTE:
   // Keep IO service running so that it fires asynchronous handlers from another thread.
-  _work   = std::make_shared<asio::io_service::work>(*_ioService);
-  _thread = std::thread([this] { _ioService->run(); });
+  _work   = std::make_shared<asio::io_context::work>(*_ioContext);
+  _thread = std::thread([this] { _ioContext->run(); });
 }
 
 void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorName,
@@ -158,7 +158,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
 
     using asio::ip::tcp;
 
-    tcp::acceptor acceptor(*_ioService);
+    tcp::acceptor acceptor(*_ioContext);
     {
       tcp::endpoint endpoint(tcp::v4(), _portNumber);
 
@@ -177,7 +177,7 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
     PRECICE_DEBUG("Accepting connection at {}", address);
 
     for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
-      auto socket = std::make_shared<Socket>(*_ioService);
+      auto socket = std::make_shared<Socket>(*_ioContext);
       acceptor.accept(*socket);
       PRECICE_DEBUG("Accepted connection at {}", address);
       _isConnected = true;
@@ -193,8 +193,8 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
   }
 
   // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
-  _work   = std::make_shared<asio::io_service::work>(*_ioService);
-  _thread = std::thread([this] { _ioService->run(); });
+  _work   = std::make_shared<asio::io_context::work>(*_ioContext);
+  _thread = std::thread([this] { _ioContext->run(); });
 }
 
 void SocketCommunication::requestConnection(std::string const &acceptorName,
@@ -215,14 +215,14 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
   _portNumber                  = static_cast<unsigned short>(std::stoul(portNumber));
 
   try {
-    auto socket = std::make_shared<Socket>(*_ioService);
+    auto socket = std::make_shared<Socket>(*_ioContext);
 
     using asio::ip::tcp;
 
     tcp::resolver::query query(tcp::v4(), ipAddress, portNumber, tcp::resolver::query::numeric_host);
 
     while (not isConnected()) {
-      tcp::resolver                resolver(*_ioService);
+      tcp::resolver                resolver(*_ioContext);
       tcp::resolver::endpoint_type endpoint = *(resolver.resolve(query));
       boost::system::error_code    error    = asio::error::host_not_found;
       socket->connect(endpoint, error);
@@ -232,7 +232,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
       if (not isConnected()) {
         // Wait a little, since after a couple of ten-thousand trials the system
         // seems to get confused and the requester connects wrongly to itself.
-        boost::asio::deadline_timer timer(*_ioService, boost::posix_time::milliseconds(1));
+        boost::asio::deadline_timer timer(*_ioContext, boost::posix_time::milliseconds(1));
         timer.wait();
       }
     }
@@ -252,8 +252,8 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
   }
 
   // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
-  _work   = std::make_shared<asio::io_service::work>(*_ioService);
-  _thread = std::thread([this] { _ioService->run(); });
+  _work   = std::make_shared<asio::io_context::work>(*_ioContext);
+  _thread = std::thread([this] { _ioContext->run(); });
 }
 
 void SocketCommunication::requestConnectionAsClient(std::string const &  acceptorName,
@@ -276,7 +276,7 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
     _portNumber                     = static_cast<unsigned short>(std::stoul(portNumber));
 
     try {
-      auto socket = std::make_shared<Socket>(*_ioService);
+      auto socket = std::make_shared<Socket>(*_ioContext);
 
       using asio::ip::tcp;
 
@@ -285,7 +285,7 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
       tcp::resolver::query query(tcp::v4(), ipAddress, portNumber, tcp::resolver::query::numeric_host);
 
       while (not isConnected()) {
-        tcp::resolver             resolver(*_ioService);
+        tcp::resolver             resolver(*_ioContext);
         tcp::resolver::iterator   endpoint_iterator = resolver.resolve(query);
         boost::system::error_code error             = asio::error::host_not_found;
         boost::asio::connect(*socket, std::move(endpoint_iterator), error);
@@ -295,7 +295,7 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
         if (not isConnected()) {
           // Wait a little, since after a couple of ten-thousand trials the system
           // seems to get confused and the requester connects wrongly to itself.
-          boost::asio::deadline_timer timer(*_ioService, boost::posix_time::milliseconds(1));
+          boost::asio::deadline_timer timer(*_ioContext, boost::posix_time::milliseconds(1));
           timer.wait();
         }
       }
@@ -309,8 +309,8 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
     }
   }
   // NOTE: Keep IO service running so that it fires asynchronous handlers from another thread.
-  _work   = std::make_shared<asio::io_service::work>(*_ioService);
-  _thread = std::thread([this] { _ioService->run(); });
+  _work   = std::make_shared<asio::io_context::work>(*_ioContext);
+  _thread = std::thread([this] { _ioContext->run(); });
 }
 
 void SocketCommunication::closeConnection()
@@ -322,7 +322,7 @@ void SocketCommunication::closeConnection()
 
   if (_thread.joinable()) {
     _work.reset();
-    _ioService->stop();
+    _ioContext->stop();
     _thread.join();
   }
 
