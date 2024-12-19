@@ -283,11 +283,10 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
 
       while (not isConnected()) {
         tcp::resolver resolver(*_ioContext);
-        auto          results = resolver.resolve(ipAddress, portNumber, boost::asio::ip::resolver_base::numeric_host);
+        auto          endpoints = resolver.resolve(ipAddress, portNumber, boost::asio::ip::resolver_base::numeric_host);
 
-        auto                      endpoint_iterator = results.begin();
-        boost::system::error_code error             = asio::error::host_not_found;
-        boost::asio::connect(*socket, std::move(endpoint_iterator), error);
+        boost::system::error_code error = asio::error::host_not_found;
+        boost::asio::connect(*socket, endpoints, error);
 
         _isConnected = not error;
 
