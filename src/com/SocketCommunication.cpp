@@ -27,7 +27,7 @@ SocketCommunication::SocketCommunication(unsigned short portNumber,
       _reuseAddress(reuseAddress),
       _networkName(std::move(networkName)),
       _addressDirectory(std::move(addressDirectory)),
-      _ioContext(new IOService)
+      _ioContext(new IOContext)
 {
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";
