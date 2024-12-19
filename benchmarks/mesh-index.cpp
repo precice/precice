@@ -87,7 +87,6 @@ static void queryInnerBB(benchmark::State &state)
     auto match = index.getVerticesInsideBox(bb);
     benchmark::DoNotOptimize(match);
   }
-  state.SetComplexityN(state.range(0));
 }
 
-BENCHMARK(queryInnerBB)->RangeMultiplier(2)->Range(1 << 10, 1 << 20)->Complexity();
+BENCHMARK(queryInnerBB)->Arg(100000)->Arg(1000000);
