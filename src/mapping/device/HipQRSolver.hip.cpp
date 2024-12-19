@@ -6,6 +6,7 @@
 #include <hip/hip_runtime_api.h>
 #include <hipblas/hipblas.h>
 #include <hipsolver/hipsolver.h>
+#include "profiling/Event.hpp"
 
 void computeQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, GinkgoMatrix *A_Q, GinkgoVector *R)
 {
@@ -43,6 +44,8 @@ void computeQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, Ginkg
   hipErrorCode = hipMalloc((void **) &dTau, sizeof(double) * M);
   assert(hipErrorCode == hipSuccess);
 
+  precice::profiling::Event calculateQRDecompEvent{"calculateQRDecomp"};
+
   // Query working space of geqrf and orgqr
   hipsolverStatus_t hipsolverStatus = hipsolverDnDgeqrf_bufferSize(solverHandle, M, N, A_T->get_values(), lda, &lwork_geqrf);
   assert(hipsolverStatus == HIPSOLVER_STATUS_SUCCESS);
@@ -72,6 +75,7 @@ void computeQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, Ginkg
 
   hipErrorCode = hipDeviceSynchronize();
   assert(hipSuccess == hipErrorCode);
+  calculateQRDecompEvent.stop();
 
   // Free the utilized memory
   hipErrorCode = hipFree(dTau);
