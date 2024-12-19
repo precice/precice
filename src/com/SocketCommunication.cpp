@@ -218,12 +218,12 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
 
     using asio::ip::tcp;
 
-    tcp::resolver::query query(tcp::v4(), ipAddress, portNumber, tcp::resolver::query::numeric_host);
-
     while (not isConnected()) {
-      tcp::resolver                resolver(*_ioContext);
-      tcp::resolver::endpoint_type endpoint = *(resolver.resolve(query));
-      boost::system::error_code    error    = asio::error::host_not_found;
+      tcp::resolver resolver(*_ioContext);
+      auto          results = resolver.resolve(ipAddress, portNumber, boost::asio::ip::resolver_base::numeric_host);
+
+      auto                      endpoint = results.begin()->endpoint();
+      boost::system::error_code error    = asio::error::host_not_found;
       socket->connect(endpoint, error);
 
       _isConnected = not error;
@@ -281,11 +281,11 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
 
       PRECICE_DEBUG("Requesting connection to {}, port {}", ipAddress, portNumber);
 
-      tcp::resolver::query query(tcp::v4(), ipAddress, portNumber, tcp::resolver::query::numeric_host);
-
       while (not isConnected()) {
-        tcp::resolver             resolver(*_ioContext);
-        tcp::resolver::iterator   endpoint_iterator = resolver.resolve(query);
+        tcp::resolver resolver(*_ioContext);
+        auto          results = resolver.resolve(ipAddress, portNumber, boost::asio::ip::resolver_base::numeric_host);
+
+        auto                      endpoint_iterator = results.begin();
         boost::system::error_code error             = asio::error::host_not_found;
         boost::asio::connect(*socket, std::move(endpoint_iterator), error);
 
