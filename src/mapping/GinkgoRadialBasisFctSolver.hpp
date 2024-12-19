@@ -415,11 +415,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
       PRECICE_UNREACHABLE("Not implemented");
     }
     _rbfSystemMatrix->transpose(_decompMatrixQ_T);
-
     _dQ_T_Rhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_decompMatrixQ_T->get_size()[0], 1}));
-
-    auto triangularSolverFactory = triangular::build().on(_deviceExecutor);
-    _triangularSolver            = gko::share(triangularSolverFactory->generate(_decompMatrixR));
   } else {
     PRECICE_UNREACHABLE("Unknown solver type");
   }
@@ -489,8 +485,18 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
   }
 
   if (GinkgoSolverType::QR == _solverType) {
-    _decompMatrixQ_T->apply(dRhs, _dQ_T_Rhs);
-    _triangularSolver->apply(_dQ_T_Rhs, _rbfCoefficients);
+    // Upper Trs U x = b
+    if ("cuda-executor" == _ginkgoParameter.executor) {
+#ifdef PRECICE_WITH_CUDA
+      solvewithQRDecompositionCuda(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dRhs.get());
+#endif
+    } else if ("hip-executor" == _ginkgoParameter.executor) {
+#ifdef PRECICE_WITH_HIP
+      solvewithQRDecompositionHip(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dRhs.get());
+#endif
+    } else {
+      PRECICE_UNREACHABLE("Not implemented");
+    }
   } else {
     _solveRBFSystem(dRhs);
   }
@@ -543,8 +549,17 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
   _matrixA->transpose()->apply(dRhs, dAu);
 
   if (GinkgoSolverType::QR == _solverType) {
-    _decompMatrixQ_T->apply(dAu, _dQ_T_Rhs);
-    _triangularSolver->apply(_dQ_T_Rhs, _rbfCoefficients);
+    if ("cuda-executor" == _ginkgoParameter.executor) {
+#ifdef PRECICE_WITH_CUDA
+      solvewithQRDecompositionCuda(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dAu.get());
+#endif
+    } else if ("hip-executor" == _ginkgoParameter.executor) {
+#ifdef PRECICE_WITH_HIP
+      solvewithQRDecompositionHip(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dAu.get());
+#endif
+    } else {
+      PRECICE_UNREACHABLE("Not implemented");
+    }
   } else {
     _solveRBFSystem(dAu);
   }
