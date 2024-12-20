@@ -4,6 +4,7 @@
 
 target_sources(precice-bench
     PRIVATE
+    benchmarks/bb.cpp
     benchmarks/helper.hpp
     benchmarks/main.cpp
     benchmarks/mesh-index.cpp
