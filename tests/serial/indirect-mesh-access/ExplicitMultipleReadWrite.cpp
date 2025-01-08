@@ -90,18 +90,18 @@ BOOST_AUTO_TEST_CASE(ExplicitMultipleReadWrite)
           for (int d = 0; d < dim; ++d) {
             solverTwoCoord[d] = tmpPositions1[i * dim + d];
           }
-          couplingInterface.mapAndreadData(otherMeshName, porosityData, solverTwoCoord, dt, {&readPorosityData1[i], 1});
-          couplingInterface.mapAndreadData(otherMeshName, speedOfLightData, solverTwoCoord, dt, {&readSpeedOfLightData1[i * dim], dim});
+          couplingInterface.mapAndReadData(otherMeshName, porosityData, solverTwoCoord, dt, {&readPorosityData1[i], 1});
+          couplingInterface.mapAndReadData(otherMeshName, speedOfLightData, solverTwoCoord, dt, {&readSpeedOfLightData1[i * dim], dim});
         }
 
         BOOST_TEST(readPorosityData1 == expectedPorosityData1);
         BOOST_TEST(readSpeedOfLightData1 == expectedSpeedOfLightData1);
 
       } else if (time == 2) {
-        couplingInterface.mapAndreadData(otherMeshName, porosityData, tmpPositions2, dt, readPorosityData2);
+        couplingInterface.mapAndReadData(otherMeshName, porosityData, tmpPositions2, dt, readPorosityData2);
         BOOST_TEST(readPorosityData2 == expectedPorosityData2);
 
-        couplingInterface.mapAndreadData(otherMeshName, speedOfLightData, tmpPositions2, dt, readSpeedOfLightData2);
+        couplingInterface.mapAndReadData(otherMeshName, speedOfLightData, tmpPositions2, dt, readSpeedOfLightData2);
         BOOST_TEST(readSpeedOfLightData2 == expectedSpeedOfLightData2);
       } else {
         PRECICE_ASSERT(false);
@@ -114,13 +114,13 @@ BOOST_AUTO_TEST_CASE(ExplicitMultipleReadWrite)
           for (int d = 0; d < dim; ++d) {
             solverTwoCoord[d] = tmpPositions1[i * dim + d];
           }
-          couplingInterface.mapAndwriteData(otherMeshName, velocityData, solverTwoCoord, {&velocityData1[i], 1});
-          couplingInterface.mapAndwriteData(otherMeshName, vorticityData, solverTwoCoord, {&vorticityData1[i * dim], dim});
+          couplingInterface.mapAndWriteData(otherMeshName, velocityData, solverTwoCoord, {&velocityData1[i], 1});
+          couplingInterface.mapAndWriteData(otherMeshName, vorticityData, solverTwoCoord, {&vorticityData1[i * dim], dim});
         }
       } else if (time == 2) {
         // The second time, we pass all data at once
-        couplingInterface.mapAndwriteData(otherMeshName, velocityData, tmpPositions2, velocityData2);
-        couplingInterface.mapAndwriteData(otherMeshName, vorticityData, tmpPositions2, vorticityData2);
+        couplingInterface.mapAndWriteData(otherMeshName, velocityData, tmpPositions2, velocityData2);
+        couplingInterface.mapAndWriteData(otherMeshName, vorticityData, tmpPositions2, vorticityData2);
       } else {
         PRECICE_ASSERT(false);
       }
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(ExplicitMultipleReadWrite)
 
     // @todo: this call is allowed. Which data should it return? for dt = 0, it should correspond to the previous dt = 1, right?
     // the last data written by the second participant is essentially never received on the other side
-    //  couplingInterface.mapAndreadData(otherMeshName, porosityData, tmpPositions2, 0, readPorosityData2);
+    //  couplingInterface.mapAndReadData(otherMeshName, porosityData, tmpPositions2, 0, readPorosityData2);
 
   } else {
     BOOST_TEST(context.isNamed("SolverTwo"));

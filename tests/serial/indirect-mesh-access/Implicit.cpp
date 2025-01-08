@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
       ++iteration;
       ++timestep;
       // read data
-      couplingInterface.mapAndreadData(otherMeshName, otherDataName, tmpMeshCoordsRead, dt, readData);
+      couplingInterface.mapAndReadData(otherMeshName, otherDataName, tmpMeshCoordsRead, dt, readData);
       // TODO: prevent ID access
       couplingInterface.readData(testMeshName, otherDataName, testIDs, dt, testReadData);
       BOOST_TEST(precice::testing::equals(testReadData, readData));
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
       // solve timestep
       // write data
       std::transform(writeData.begin(), writeData.end(), writeData.begin(), [&](auto &w) { return timestep * 500 + 50 * std::pow(10, -iteration); });
-      couplingInterface.mapAndwriteData(otherMeshName, ownDataName, tmpMeshCoordsWrite, writeData);
+      couplingInterface.mapAndWriteData(otherMeshName, ownDataName, tmpMeshCoordsWrite, writeData);
       couplingInterface.writeData(testMesh2Name, ownDataName, test2IDs, writeData);
       couplingInterface.advance(dt);
 

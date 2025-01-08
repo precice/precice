@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
           solverTwoCoord[d] = tmpPositions[i * dim + d];
         }
 
-        couplingInterface.mapAndreadData(otherMeshName, dataName, solverTwoCoord, dt, {&value, 1});
+        couplingInterface.mapAndReadData(otherMeshName, dataName, solverTwoCoord, dt, {&value, 1});
         // Expected data according to the writeData
         if (time == 1) {
           BOOST_TEST(expectedData1[i] == value);

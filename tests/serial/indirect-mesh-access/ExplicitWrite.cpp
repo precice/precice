@@ -58,9 +58,9 @@ BOOST_AUTO_TEST_CASE(ExplicitWrite)
           solverTwoCoord[d] = tmpPositions[i * dim + d];
         }
         if (time == 1) {
-          couplingInterface.mapAndwriteData(otherMeshName, dataName, solverTwoCoord, {&writeData1[i], 1});
+          couplingInterface.mapAndWriteData(otherMeshName, dataName, solverTwoCoord, {&writeData1[i], 1});
         } else if (time == 2) {
-          couplingInterface.mapAndwriteData(otherMeshName, dataName, solverTwoCoord, {&writeData2[i], 1});
+          couplingInterface.mapAndWriteData(otherMeshName, dataName, solverTwoCoord, {&writeData2[i], 1});
         } else {
           PRECICE_ASSERT(false);
         }

@@ -72,9 +72,9 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
 
       // First, we check the separate polynomial PUM (scalar and vector)
       couplingInterface.readData(meshName, dataName, ids, dt, readData);
-      couplingInterface.mapAndreadData(otherMeshName, dataName, positions, dt, indirectReadData);
+      couplingInterface.mapAndReadData(otherMeshName, dataName, positions, dt, indirectReadData);
       couplingInterface.readData(meshName, vectorDataName, ids, dt, readVectorData);
-      couplingInterface.mapAndreadData(otherMeshName, vectorDataName, positions, dt, indirectReadVectorData);
+      couplingInterface.mapAndReadData(otherMeshName, vectorDataName, positions, dt, indirectReadVectorData);
 
       for (int r = 0; r < meshSize; ++r) {
         BOOST_TEST(readData[r] == indirectReadData[r]);
@@ -84,9 +84,9 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
 
       // Second, we check the no polynomial PUM (scalar and vector)
       couplingInterface.readData(meshBName, dataName, ids, dt, readData);
-      couplingInterface.mapAndreadData(otherMeshBName, dataName, positions, dt, indirectReadData);
+      couplingInterface.mapAndReadData(otherMeshBName, dataName, positions, dt, indirectReadData);
       couplingInterface.readData(meshBName, vectorDataName, ids, dt, readVectorData);
-      couplingInterface.mapAndreadData(otherMeshBName, vectorDataName, positions, dt, indirectReadVectorData);
+      couplingInterface.mapAndReadData(otherMeshBName, vectorDataName, positions, dt, indirectReadVectorData);
 
       for (int r = 0; r < meshSize; ++r) {
         BOOST_TEST(readData[r] == indirectReadData[r]);
