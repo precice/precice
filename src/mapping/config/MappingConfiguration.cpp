@@ -382,8 +382,9 @@ void MappingConfiguration::xmlTagCallback(
     std::string constraint = tag.getStringAttributeValue(ATTR_CONSTRAINT);
 
     // Check that either of the two is provided
-    PRECICE_CHECK(!toMesh.empty() || !fromMesh.empty(), "Standard Mappings usually need a \"to\" and \"from\" mesh. "
-                                                        "For indirect mesh access, one of both attributes has to be specified.");
+    PRECICE_CHECK(!toMesh.empty() || !fromMesh.empty(), "Neither a \"to\" nor a \"from\" mesh was defined in a preCICE mapping. Most data mappings require a \"to\" and a \"from\" mesh. "
+                                                        "For indirect mesh access, at least one of both attributes has to be specified.");
+
 
     // Restrict to read-consistent and write-conservative for indirect access
     PRECICE_CHECK(!toMesh.empty() || (toMesh.empty() && dir == DIRECTION_READ && constraint == CONSTRAINT_CONSISTENT), "For indirect access, only read-consistent (direction = \"read\" and no \"to\" mesh) and write-conservative (direction = \"write\" and no \"from\" mesh) are allowed.");

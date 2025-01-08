@@ -424,7 +424,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                     "Participant \"{}\" has a read mapping from mesh \"{}\", without receiving it. "
                     "Please add a receive-mesh tag with name=\"{}\"",
                     participant->getName(), fromMesh, fromMesh);
-      // The indirect cannot be on the "from" mesh, as only the combinations read-consistent and write conservative are allowed
+      // The indirect cannot be on the "from" mesh, as only the combinations read-consistent and write-conservative are allowed
       PRECICE_CHECK(confMapping.toMesh->isIndirect() || participant->isMeshProvided(toMesh),
                     "Participant \"{}\" has a read mapping to mesh \"{}\", without providing it. "
                     "Please add a provide-mesh tag with name=\"{}\"",
@@ -435,7 +435,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                     "A write mapping of participant \"{}\" needs to map from a provided to a received mesh, but in this case they are swapped. "
                     "Did you intent to map from mesh \"{}\" to mesh \"{}\", or use a read mapping instead?",
                     participant->getName(), confMapping.toMesh->getName(), confMapping.fromMesh->getName());
-      // The indirect cannot be on the "to" mesh, as only the combinations read-consistent and write conservative are allowed
+      // The indirect cannot be on the "to" mesh, as only the combinations read-consistent and write-conservative are allowed
       PRECICE_CHECK(confMapping.fromMesh->isIndirect() || participant->isMeshProvided(fromMesh),
                     "Participant \"{}\" has a write mapping from mesh \"{}\", without providing it. "
                     "Please add a provided-mesh tag with name=\"{}\"",

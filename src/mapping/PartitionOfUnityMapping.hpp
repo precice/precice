@@ -313,7 +313,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::writeConservativeAt(::pre
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in)
 {
-  // We cannot synchronize this event, as the call might to this function is rank-local only
+  // We cannot synchronize this event, as the call to this function is rank-local only
   precice::profiling::Event e("map.pou.updateCache.From" + input()->getName());
   // The polynomialContribution is unnecessary if we configure polynomial="off"
   // However, the matrices remain empty and in most cases, the polynomial will be used
