@@ -43,7 +43,9 @@ def get_cmake_file_paths(root):
     utests = os.path.join(root, "src", "tests.cmake")
     itests = os.path.join(root, "tests", "tests.cmake")
     benchmarks = os.path.join(root, "benchmarks", "sources.cmake")
-    cmakepaths = collections.namedtuple("CMakePaths", "sources utests itests benchmarks")
+    cmakepaths = collections.namedtuple(
+        "CMakePaths", "sources utests itests benchmarks"
+    )
     return cmakepaths(sources, utests, itests, benchmarks)
 
 
@@ -99,7 +101,13 @@ def get_file_lists(root):
         ]
         benchmarks += files
 
-    return sorted(sources), sorted(public), sorted(utests), sorted(itests), sorted(benchmarks)
+    return (
+        sorted(sources),
+        sorted(public),
+        sorted(utests),
+        sorted(itests),
+        sorted(benchmarks),
+    )
 
 
 def itest_path_to_suite(path):
@@ -168,9 +176,7 @@ def generate_integration_tests(itests):
 
 
 def generate_benchmark_sources(sources):
-    return BENCHMARKS_BASE.format(
-        "\n    ".join(sources)
-    )
+    return BENCHMARKS_BASE.format("\n    ".join(sources))
 
 
 def main():
@@ -179,7 +185,11 @@ def main():
         print("Current dir {} is not the root of the precice repository!".format(root))
         return 1
     sources, public, utests, itests, benchmarks = get_file_lists(root)
-    print("Detected files:\n  sources: {}\n  public headers: {}\n  unit tests: {}\n  integration tests: {}\n  benchmarks: {}".format(len(sources), len(public), len(utests), len(itests), len(benchmarks)))
+    print(
+        "Detected files:\n  sources: {}\n  public headers: {}\n  unit tests: {}\n  integration tests: {}\n  benchmarks: {}".format(
+            len(sources), len(public), len(utests), len(itests), len(benchmarks)
+        )
+    )
 
     gitfiles = get_gitfiles()
     if gitfiles:
