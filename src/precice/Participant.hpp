@@ -902,7 +902,7 @@ public:
    *
    * @see Participant::setMeshAccessRegion()
    */
-  void mapAndwriteData(
+  void mapAndWriteData(
       ::precice::string_view        meshName,
       ::precice::string_view        dataName,
       ::precice::span<const double> coordinates,
@@ -944,7 +944,7 @@ public:
    *
    * @see Participant::setMeshAccessRegion()
    */
-  void mapAndreadData(
+  void mapAndReadData(
       ::precice::string_view        meshName,
       ::precice::string_view        dataName,
       ::precice::span<const double> coordinates,

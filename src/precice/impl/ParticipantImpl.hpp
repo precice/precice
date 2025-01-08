@@ -226,16 +226,16 @@ public:
       double                          relativeReadTime,
       ::precice::span<double>         values) const;
 
-  /// @copydoc Participant::mapAndreadData
-  void mapAndreadData(
+  /// @copydoc Participant::mapAndReadData
+  void mapAndReadData(
       std::string_view              meshName,
       std::string_view              dataName,
       ::precice::span<const double> coordinates,
       double                        relativeReadTime,
       ::precice::span<double>       values) const;
 
-  /// @copydoc Participant::mapAndwriteData
-  void mapAndwriteData(
+  /// @copydoc Participant::mapAndWriteData
+  void mapAndWriteData(
       std::string_view              meshName,
       std::string_view              dataName,
       ::precice::span<const double> coordinates,

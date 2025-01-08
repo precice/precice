@@ -1184,7 +1184,7 @@ void ParticipantImpl::readData(
 }
 
 //////////////////////////////////////////////
-void ParticipantImpl::mapAndreadData(
+void ParticipantImpl::mapAndReadData(
     std::string_view              meshName,
     std::string_view              dataName,
     ::precice::span<const double> coordinates,
@@ -1193,11 +1193,11 @@ void ParticipantImpl::mapAndreadData(
 {
   PRECICE_TRACE(meshName, dataName, coordinates.size(), relativeReadTime);
   // TODO: Make these checks conditional
-  PRECICE_CHECK(_state != State::Constructed, "mapAndreadData(...) cannot be called before initialize().");
-  PRECICE_CHECK(_state != State::Finalized, "mapAndreadData(...) cannot be called after finalize().");
+  PRECICE_CHECK(_state != State::Constructed, "mapAndReadData(...) cannot be called before initialize().");
+  PRECICE_CHECK(_state != State::Finalized, "mapAndReadData(...) cannot be called after finalize().");
   PRECICE_CHECK(math::smallerEquals(relativeReadTime, _couplingScheme->getNextTimeStepMaxSize()), "readData(...) cannot sample data outside of current time window.");
-  PRECICE_CHECK(relativeReadTime >= 0, "mapAndreadData(...) cannot sample data before the current time.");
-  PRECICE_CHECK(isCouplingOngoing() || math::equals(relativeReadTime, 0.0), "Calling mapAndreadData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only data for relativeReadTime = 0 is available. Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.", relativeReadTime);
+  PRECICE_CHECK(relativeReadTime >= 0, "mapAndReadData(...) cannot sample data before the current time.");
+  PRECICE_CHECK(isCouplingOngoing() || math::equals(relativeReadTime, 0.0), "Calling mapAndReadData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only data for relativeReadTime = 0 is available. Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.", relativeReadTime);
 
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
   PRECICE_VALIDATE_DATA(coordinates.begin(), coordinates.size());
@@ -1225,15 +1225,15 @@ void ParticipantImpl::mapAndreadData(
 }
 ////////////////////////////////////////////////////
 
-void ParticipantImpl::mapAndwriteData(
+void ParticipantImpl::mapAndWriteData(
     std::string_view              meshName,
     std::string_view              dataName,
     ::precice::span<const double> coordinates,
     ::precice::span<const double> values)
 {
   PRECICE_TRACE(meshName, dataName, coordinates.size());
-  PRECICE_CHECK(_state != State::Finalized, "mapAndwriteData(...) cannot be called after finalize().");
-  PRECICE_CHECK(_state == State::Constructed || (_state == State::Initialized && isCouplingOngoing()), "Calling mapAndwriteData(...) is forbidden if coupling is not ongoing, because the data you are trying to write will not be used anymore. You can fix this by always calling mapAndwriteData(...) before the advance(...) call in your simulation loop or by using Participant::isCouplingOngoing() to implement a safeguard.");
+  PRECICE_CHECK(_state != State::Finalized, "mapAndWriteData(...) cannot be called after finalize().");
+  PRECICE_CHECK(_state == State::Constructed || (_state == State::Initialized && isCouplingOngoing()), "Calling mapAndWriteData(...) is forbidden if coupling is not ongoing, because the data you are trying to write will not be used anymore. You can fix this by always calling mapAndWriteData(...) before the advance(...) call in your simulation loop or by using Participant::isCouplingOngoing() to implement a safeguard.");
   PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
   // Inconsistent sizes will be handled below
   if (coordinates.empty() && values.empty()) {
