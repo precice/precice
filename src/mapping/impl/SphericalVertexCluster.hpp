@@ -238,10 +238,10 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::computeCacheData(const Eig
 
   Eigen::MatrixXd in(_rbfSolver.getInputSize(), nComponents);
   // Now we perform the data mapping component-wise
-  for (unsigned int c = 0; c < nComponents; ++c) {
+  for (int c = 0; c < nComponents; ++c) {
     // Step 1: extract the relevant input data from the global input data and store
     // it in a contiguous array, which is required for the RBF solver (last polyparams entries remain zero)
-    for (unsigned int i = 0; i < _inputIDs.size(); i++) {
+    for (std::size_t i = 0; i < _inputIDs.size(); i++) {
       const auto dataIndex = *(_inputIDs.nth(i));
       PRECICE_ASSERT(dataIndex * nComponents + c < globalIn.size(), dataIndex * nComponents + c, globalIn.size());
       in(i, c) = globalIn[dataIndex * nComponents + c];
