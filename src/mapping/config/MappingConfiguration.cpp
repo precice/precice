@@ -385,10 +385,13 @@ void MappingConfiguration::xmlTagCallback(
     PRECICE_CHECK(!toMesh.empty() || !fromMesh.empty(), "Neither a \"to\" nor a \"from\" mesh was defined in a preCICE mapping. Most data mappings require a \"to\" and a \"from\" mesh. "
                                                         "For indirect mesh access, at least one of both attributes has to be specified.");
 
-
     // Restrict to read-consistent and write-conservative for indirect access
-    PRECICE_CHECK(!toMesh.empty() || (toMesh.empty() && dir == DIRECTION_READ && constraint == CONSTRAINT_CONSISTENT), "For indirect access, only read-consistent (direction = \"read\" and no \"to\" mesh) and write-conservative (direction = \"write\" and no \"from\" mesh) are allowed.");
-    PRECICE_CHECK(!fromMesh.empty() || (fromMesh.empty() && dir == DIRECTION_WRITE && constraint == CONSTRAINT_CONSERVATIVE), "For indirect access, only read-consistent (direction = \"read\" and no \"to\" mesh) and write-conservative (direction = \"write\" and no \"from\" mesh) are allowed.");
+
+    // The from mesh cannot be empty due to the check above
+    PRECICE_CHECK(!toMesh.empty() || (toMesh.empty() && dir == DIRECTION_READ && constraint == CONSTRAINT_CONSISTENT),
+                  "The mapping from mesh \"{0}\" has no \"to\" mesh, which configures an indirect mesh access for the mesh \"{0}\". For indirect mesh access, only read-consistent (direction = \"read\" and no \"to\" mesh) and write-conservative (direction = \"write\" and no \"from\" mesh) are implemented.", fromMesh);
+    PRECICE_CHECK(!fromMesh.empty() || (fromMesh.empty() && dir == DIRECTION_WRITE && constraint == CONSTRAINT_CONSERVATIVE),
+                  "The mapping to mesh \"{0}\" has no \"from\" mesh, which configures an indirect mesh access for the mesh \"{0}\". For indirect mesh access, only read-consistent (direction = \"read\" and no \"to\" mesh) and write-conservative (direction = \"write\" and no \"from\" mesh) are implemented.", toMesh);
     PRECICE_INFO_IF(toMesh.empty(), "Using indirect mesh access from mesh \"{}\"", fromMesh);
     PRECICE_INFO_IF(fromMesh.empty(), "Using indirect mesh access to mesh \"{}\"", toMesh);
 
