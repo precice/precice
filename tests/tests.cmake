@@ -188,6 +188,7 @@ target_sources(testprecice
     tests/serial/action-timings/ActionTimingsSerialImplicit.cpp
     tests/serial/aitken/DefaultInitialRelaxation.cpp
     tests/serial/aitken/DefinedInitialRelaxation.cpp
+    tests/serial/aitken/WithSubsteps.cpp
     tests/serial/circular/Explicit.cpp
     tests/serial/circular/helper.hpp
     tests/serial/compositional/OneActivatedMuscle.cpp
