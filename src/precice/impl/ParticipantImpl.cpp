@@ -1191,6 +1191,7 @@ void ParticipantImpl::mapAndReadData(
     double                        relativeReadTime,
     ::precice::span<double>       values) const
 {
+  PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshName, dataName, coordinates.size(), relativeReadTime);
   // TODO: Make these checks conditional
   PRECICE_CHECK(_state != State::Constructed, "mapAndReadData(...) cannot be called before initialize().");
@@ -1231,6 +1232,7 @@ void ParticipantImpl::mapAndWriteData(
     ::precice::span<const double> coordinates,
     ::precice::span<const double> values)
 {
+  PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshName, dataName, coordinates.size());
   PRECICE_CHECK(_state != State::Finalized, "mapAndWriteData(...) cannot be called after finalize().");
   PRECICE_CHECK(_state == State::Constructed || (_state == State::Initialized && isCouplingOngoing()), "Calling mapAndWriteData(...) is forbidden if coupling is not ongoing, because the data you are trying to write will not be used anymore. You can fix this by always calling mapAndWriteData(...) before the advance(...) call in your simulation loop or by using Participant::isCouplingOngoing() to implement a safeguard.");

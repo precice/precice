@@ -870,7 +870,7 @@ public:
       ::precice::span<double>         values) const;
 
   /**
-   * @brief Writes data values to a mesh just-in-time.
+   * @brief Writes data values to a mesh just-in-time (experimental).
    *
    * This function writes values of temporary vertices to data of a mesh.
    * As opposed to the writeData function using VertexIDs, this function allows to write data via coordinates,
@@ -899,6 +899,7 @@ public:
    * @note Only supported for conservative mapping constraints.
    * @note Caution when calling this function multiple times on the same data coordinates: There is no internal check and preCICE accumulates
    * data values for conservative mappings.
+   * @note this function is currently part of the experimental API.
    *
    * @see Participant::setMeshAccessRegion()
    */
@@ -909,7 +910,7 @@ public:
       ::precice::span<const double> values);
 
   /**
-   * @brief Reads data values from a mesh just-in-time. Values correspond to a given point in time relative to the beginning of the current timestep.
+   * @brief Reads data values from a mesh just-in-time. Values correspond to a given point in time relative to the beginning of the current timestep (experimental).
    *
    * This function reads values of temporary vertices from data of a mesh.
    * As opposed to the readData function using VertexIDs, this function allows to read data via coordinates,
@@ -941,6 +942,8 @@ public:
    * @post values contain the read data as specified in the above format.
    *
    * @note Note that the evaluated mapping computes the values corresponding to the initial configuration of the other provided mesh.
+   *
+   * @note this function is currently part of the experimental API.
    *
    * @see Participant::setMeshAccessRegion()
    */
