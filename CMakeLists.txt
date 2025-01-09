@@ -66,6 +66,7 @@ option(PRECICE_BINDINGS_FORTRAN "Enable the native Fortran bindings" ON)
 option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
 option(PRECICE_BUILD_UNITY "Use unity builds in preCICE" ON)
 option(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES "Enable libbacktrace for stacktrace generation." OFF)
+option(PRECICE_BUILD_BENCHMARKS "Build the preCICE-internal benchmarks" OFF)
 
 option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization for all targets." OFF)
 
@@ -622,8 +623,7 @@ if (PRECICE_BINDINGS_FORTRAN)
 endif()
 
 # Build benchmarks if enabled
-option(PRECICE_ENABLE_BENCHMARKS "Build the preCICE benchmarks" OFF)
-if(PRECICE_ENABLE_BENCHMARKS)
+if(PRECICE_BUILD_BENCHMARKS)
   find_package(benchmark REQUIRED)
 
   add_executable(precice-bench)
