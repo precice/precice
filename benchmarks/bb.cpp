@@ -6,6 +6,7 @@
 
 using namespace precice;
 
+/// Benchmarks 2D BoundingBox contains with a match
 static void BBcontains2D(benchmark::State &state)
 {
   Eigen::Vector2d   min{-1, -3.4};
@@ -23,6 +24,7 @@ static void BBcontains2D(benchmark::State &state)
 
 BENCHMARK(BBcontains2D)->Name("2D BoundingBox contains");
 
+/// Benchmarks 3D BoundingBox contains with a match
 static void BBcontains3D(benchmark::State &state)
 {
   Eigen::Vector3d   min{-1, -3.4, -1.0};

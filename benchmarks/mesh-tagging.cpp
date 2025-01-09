@@ -6,6 +6,7 @@
 
 using namespace precice;
 
+/// Benchmarks vertex tagging using getVerticesInsideBox of central 0.5 cube of a 3D Halton mesh of n vertices
 static void tagInBBIndex(benchmark::State &state)
 {
   int        n = state.range(0);
@@ -31,6 +32,7 @@ static void tagInBBIndex(benchmark::State &state)
 
 BENCHMARK(tagInBBIndex)->Name("Tag inside box with index")->Arg(100000)->Arg(1000000);
 
+/// Benchmarks vertex tagging using BoundingBox::contains of central 0.5 cube of a 3D Halton mesh of n vertices
 static void tagInBBManual(benchmark::State &state)
 {
   int        n = state.range(0);

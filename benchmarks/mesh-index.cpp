@@ -6,6 +6,7 @@
 
 using namespace precice;
 
+/// Benchmarks the generation of a Vertex IndexTree on 3d mesh with n vertices
 static void indexVertices(benchmark::State &state)
 {
   int        n = state.range(0);
@@ -16,7 +17,7 @@ static void indexVertices(benchmark::State &state)
   }
   for (auto _ : state) {
     query::Index index(m);
-    auto         bounds = index.getRtreeBounds();
+    auto         bounds = index.getRtreeBounds(); // trigger the build
     benchmark::DoNotOptimize(bounds);
   }
   state.SetComplexityN(state.range(0));
@@ -24,6 +25,7 @@ static void indexVertices(benchmark::State &state)
 
 BENCHMARK(indexVertices)->Name("Index vertices")->RangeMultiplier(2)->Range(1 << 10, 1 << 20)->Complexity();
 
+/// Benchmarks getClosestVertex of the center of a 3D Halton mesh of n vertices
 static void queryNearestToCenter(benchmark::State &state)
 {
   int        n = state.range(0);
@@ -46,6 +48,7 @@ static void queryNearestToCenter(benchmark::State &state)
 
 BENCHMARK(queryNearestToCenter)->Name("Closest vertex to center")->RangeMultiplier(2)->Range(1 << 10, 1 << 20)->Complexity();
 
+/// Benchmarks getClosestVertex(10) of the center of a 3D Halton mesh of n vertices
 static void query10NearestToCenter(benchmark::State &state)
 {
   int        n = state.range(0);
@@ -68,6 +71,7 @@ static void query10NearestToCenter(benchmark::State &state)
 
 BENCHMARK(query10NearestToCenter)->Name("10 closest vertices to center")->RangeMultiplier(2)->Range(1 << 10, 1 << 20)->Complexity();
 
+/// Benchmarks getVerticesInsideBox of central 0.5 cube of a 3D Halton mesh of n vertices
 static void queryInnerBB(benchmark::State &state)
 {
   int        n = state.range(0);

@@ -6,6 +6,7 @@
 
 using namespace precice;
 
+/// Benchmarks assembleA for a given RBF and polynomial setting given 100 input and output points
 template <typename RBF>
 void assembleA(benchmark::State &state, RBF f, mapping::Polynomial polynomial)
 {

@@ -4,6 +4,7 @@
 
 #include "helper.hpp"
 
+/// Benchmarks writing vectorial data to n verticles of a participant before calling initialize
 static void writeDataVector(benchmark::State &state)
 {
   const int            nv = state.range(0);
@@ -22,6 +23,7 @@ static void writeDataVector(benchmark::State &state)
 
 BENCHMARK(writeDataVector)->Name("Write vector data to participant")->RangeMultiplier(2)->Range(1 << 10, 1 << 20)->Complexity();
 
+/// Benchmarks writing scalar data to n verticles of a participant before calling initialize
 static void writeDataScalar(benchmark::State &state)
 {
   const int            nv = state.range(0);
