@@ -20,7 +20,7 @@ static void writeDataVector(benchmark::State &state)
   state.SetComplexityN(state.range(0));
 }
 
-BENCHMARK(writeDataVector)->RangeMultiplier(2)->Range(1 << 10, 1 << 20)->Complexity();
+BENCHMARK(writeDataVector)->Name("Write vector data to participant")->RangeMultiplier(2)->Range(1 << 10, 1 << 20)->Complexity();
 
 static void writeDataScalar(benchmark::State &state)
 {
@@ -38,4 +38,4 @@ static void writeDataScalar(benchmark::State &state)
   state.SetComplexityN(state.range(0));
 }
 
-BENCHMARK(writeDataScalar)->RangeMultiplier(2)->Range(1 << 10, 1 << 20)->Complexity();
+BENCHMARK(writeDataScalar)->Name("Write scalar data to participant")->RangeMultiplier(2)->Range(1 << 10, 1 << 20)->Complexity();

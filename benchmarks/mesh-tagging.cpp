@@ -29,7 +29,7 @@ static void tagInBBIndex(benchmark::State &state)
   }
 }
 
-BENCHMARK(tagInBBIndex)->Arg(100000)->Arg(1000000);
+BENCHMARK(tagInBBIndex)->Name("Tag inside box with index")->Arg(100000)->Arg(1000000);
 
 static void tagInBBManual(benchmark::State &state)
 {
@@ -54,4 +54,4 @@ static void tagInBBManual(benchmark::State &state)
   }
 }
 
-BENCHMARK(tagInBBManual)->Arg(100000)->Arg(1000000);
+BENCHMARK(tagInBBManual)->Name("Tag inside box with BB")->Arg(100000)->Arg(1000000);

@@ -21,7 +21,7 @@ static void BBcontains2D(benchmark::State &state)
   }
 }
 
-BENCHMARK(BBcontains2D);
+BENCHMARK(BBcontains2D)->Name("2D BoundingBox contains");
 
 static void BBcontains3D(benchmark::State &state)
 {
@@ -38,4 +38,4 @@ static void BBcontains3D(benchmark::State &state)
   }
 }
 
-BENCHMARK(BBcontains3D);
+BENCHMARK(BBcontains3D)->Name("3D BoundingBox contains");

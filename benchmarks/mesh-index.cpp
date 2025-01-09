@@ -22,7 +22,7 @@ static void indexVertices(benchmark::State &state)
   state.SetComplexityN(state.range(0));
 }
 
-BENCHMARK(indexVertices)->RangeMultiplier(2)->Range(1 << 10, 1 << 20)->Complexity();
+BENCHMARK(indexVertices)->Name("Index vertices")->RangeMultiplier(2)->Range(1 << 10, 1 << 20)->Complexity();
 
 static void queryNearestToCenter(benchmark::State &state)
 {
@@ -44,7 +44,7 @@ static void queryNearestToCenter(benchmark::State &state)
   state.SetComplexityN(state.range(0));
 }
 
-BENCHMARK(queryNearestToCenter)->RangeMultiplier(2)->Range(1 << 10, 1 << 20)->Complexity();
+BENCHMARK(queryNearestToCenter)->Name("Closest vertex to center")->RangeMultiplier(2)->Range(1 << 10, 1 << 20)->Complexity();
 
 static void query10NearestToCenter(benchmark::State &state)
 {
@@ -66,7 +66,7 @@ static void query10NearestToCenter(benchmark::State &state)
   state.SetComplexityN(state.range(0));
 }
 
-BENCHMARK(query10NearestToCenter)->RangeMultiplier(2)->Range(1 << 10, 1 << 20)->Complexity();
+BENCHMARK(query10NearestToCenter)->Name("10 closest vertices to center")->RangeMultiplier(2)->Range(1 << 10, 1 << 20)->Complexity();
 
 static void queryInnerBB(benchmark::State &state)
 {
@@ -89,4 +89,4 @@ static void queryInnerBB(benchmark::State &state)
   }
 }
 
-BENCHMARK(queryInnerBB)->Arg(100000)->Arg(1000000);
+BENCHMARK(queryInnerBB)->Name("vertices inside box")->Arg(100000)->Arg(1000000);
