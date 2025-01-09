@@ -26,7 +26,7 @@
   <participant name="SolverOne">
     <provide-mesh name="TestMesh" />
     <provide-mesh name="TestMesh2" />
-    <receive-mesh name="MeshTwo" from="SolverTwo" direct-access="true" />
+    <receive-mesh name="MeshTwo" from="SolverTwo" enable-access="true" />
     <receive-mesh name="MeshTwoDuplicate" from="SolverTwo" />
     <!-- both are indirect mesh access -->
     <write-data name="Velocities" mesh="MeshTwo" />

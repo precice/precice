@@ -141,11 +141,18 @@ ParticipantConfiguration::ParticipantConfiguration(
                       .setDocumentation("The name of the participant to receive the mesh from. "
                                         "This participant needs to provide the mesh using `<provide-mesh />`.");
 
+  auto attrEnableAccess = makeXMLAttribute(ATTR_ENABLE_ACCESS, false)
+                              .setDocumentation(
+                                  "Enables access to the data on this received mesh via the preCICE API functions without having to map it to a provided mesh. "
+                                  "This is useful for a direct or an indirect mesh access. "
+                                  "A received mesh needs to be decomposed in preCICE using a region of interest, which cannot be inferred, if there are no mappings to or from a provided mesh. "
+                                  "In such cases the API function `setMeshAccessRegion()` must be used to define the region of interest. "
+                                  "See the preCICE documentation for more information.");
+  tagReceiveMesh.addAttribute(attrEnableAccess);
+  // @todo: remove with the next breaking release
   auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
                               .setDocumentation(
-                                  "Controls direct access to a received mesh without having to map it to a provided mesh. "
-                                  "A received mesh needs to be decomposed in preCICE using a region of interest, which cannot be inferred, if there are no mappings to or from a provided mesh. "
-                                  "In such cases the API function `setMeshAccessRegion()` must be used to define the region of interest.");
+                                  "Deprecated: use \"enable-access\" instead.");
   tagReceiveMesh.addAttribute(attrDirectAccess);
 
   auto attrGeoFilter = XMLAttribute<std::string>(ATTR_GEOMETRIC_FILTER)
@@ -261,7 +268,8 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string                                   from              = tag.getStringAttributeValue(ATTR_FROM);
     double                                        safetyFactor      = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
     partition::ReceivedPartition::GeometricFilter geoFilter         = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
-    const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
+    const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_ENABLE_ACCESS) || tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
+    PRECICE_WARN_IF(tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS), "The 'direct-access' flag (<receive-mesh direct-access=\"...\" />) is deprecated and will be removed in preCICE v4. Use 'enable-access' instead (<receive-mesh enable-access=\"...\" />).");
 
     // Start with defining the mesh
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);

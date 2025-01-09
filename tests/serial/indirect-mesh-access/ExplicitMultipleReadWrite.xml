@@ -13,7 +13,7 @@
   </mesh>
 
   <participant name="SolverOne">
-    <receive-mesh name="MeshTwo" from="SolverTwo" direct-access="true" />
+    <receive-mesh name="MeshTwo" from="SolverTwo" enable-access="true" />
     <write-data name="Velocities" mesh="MeshTwo" />
     <write-data name="Vorticity" mesh="MeshTwo" />
     <read-data name="Porosity" mesh="MeshTwo" />
