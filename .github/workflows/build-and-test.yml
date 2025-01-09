@@ -170,6 +170,11 @@ jobs:
           files: ./build/coverage.info
           token: ${{ secrets.CODECOV_TOKEN }}
         if: ${{ matrix.COVFLAGS }}
+      - name: Run benchmarks
+        working-directory: build
+        if: ${{ contains(matrix.IMAGE, 'archlinux') && (matrix.TYPE == 'Release') }}
+        run: |
+          ./precice-bench
       - name: Check packages
         working-directory: build
         if: ${{ contains(matrix.IMAGE, 'ubuntu') }}
