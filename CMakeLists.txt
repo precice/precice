@@ -294,6 +294,7 @@ endif()
     endif()
 
     find_package(hipsolver REQUIRED)
+    find_package(hipblas REQUIRED)
   endif()
 
   if(PRECICE_WITH_OPENMP)
@@ -440,7 +441,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     # Required to make nvcc happy
     target_compile_definitions(preciceCore PRIVATE BOOST_PP_VARIADICS=1)
     target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cuh ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cu)
-    target_link_libraries(preciceCore PRIVATE cusolver)
+    target_link_libraries(preciceCore PRIVATE cusolver cublas)
     message(STATUS "Enabled CUDA support for preCICE via the Ginkgo library.")
   endif()
 
@@ -448,7 +449,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_HIP)
     set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.cpp)
     target_sources(preciceCore PRIVATE ${_hiplist})
-    target_link_libraries(preciceCore PRIVATE hip::device Ginkgo::ginkgo roc::hipsolver)
+    target_link_libraries(preciceCore PRIVATE hip::device Ginkgo::ginkgo roc::hipsolver roc::hipblas)
 
     message(STATUS "Enabled HIP support for preCICE via the Ginkgo library.")
   endif()

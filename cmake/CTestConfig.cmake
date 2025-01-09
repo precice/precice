@@ -185,7 +185,6 @@ else()
 endif()
 
 # Add solverdummy tests
-
 add_precice_test_build_solverdummy(cpp)
 add_precice_test_build_solverdummy(c)
 add_precice_test_build_solverdummy(fortran)

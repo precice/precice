@@ -27,41 +27,134 @@ PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportScalar)
 {
   PRECICE_TEST();
-  mesh::Mesh mesh("ExportScalarMesh", 2, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
   mesh::PtrData data = mesh.createData("data", 1, 0_dataID);
   data->setSampleAtTime(0, time::Sample{1, 2}.setZero());
 
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
+  testing::expectFiles("Mesh-io-VTUExport.init.vtu");
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportVector)
 {
   PRECICE_TEST();
-  mesh::Mesh mesh("ExportVectorMesh", 2, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
   mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
   data->setSampleAtTime(0, time::Sample{2, 2}.setZero());
 
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
+  testing::expectFiles("Mesh-io-VTUExport.init.vtu");
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportMissing)
 {
   PRECICE_TEST();
-  mesh::Mesh mesh("ExportVectorMesh", 2, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
   mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
   // no sample
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
+  testing::expectFiles("Mesh-io-VTUExport.init.vtu");
+}
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportScalarParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  mesh::PtrData data = mesh.createData("data", 1, 0_dataID);
+  data->setSampleAtTime(0, time::Sample{1, 1}.setZero());
+
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTU.doExport(0, 0.0);
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu");
+  }
+}
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportVectorParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
+  data->setSampleAtTime(0, time::Sample{2, 1}.setZero());
+
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTU.doExport(0, 0.0);
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu");
+  }
+}
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportMissingParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
+  BOOST_TEST_REQUIRE(data->timeStepsStorage().empty());
+  // no sample
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTU.doExport(0, 0.0);
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu");
+  }
+}
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportScalarAndMissingParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  auto missing = mesh.createData("missing", 2, 0_dataID);
+  BOOST_TEST_REQUIRE(missing->timeStepsStorage().empty());
+  mesh::PtrData data = mesh.createData("data", 2, 1_dataID);
+  data->setSampleAtTime(0, time::Sample{2, 1}.setZero());
+  // no sample
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTU.doExport(0, 0.0);
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
@@ -71,7 +164,7 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
 
   // Create mesh to map from
   int           dimensions = 2;
-  mesh::Mesh    mesh("ExportDatawithGradient2D", dimensions, testing::nextMeshID());
+  mesh::Mesh    mesh("Mesh", dimensions, testing::nextMeshID());
   mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
   mesh::PtrData dataVector = mesh.createData("dataVector", dimensions, 1_dataID);
   dataScalar->requireDataGradient();
@@ -90,9 +183,10 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
   vectorial.gradients.setOnes();
   dataScalar->setSampleAtTime(0, vectorial);
 
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
+  testing::expectFiles("Mesh-io-VTUExport.init.vtu", "Mesh-io-VTUExport.dt1.vtu");
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -101,7 +195,7 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
   PRECICE_TEST();
   int dimensions = 3;
   // Create mesh to map from
-  mesh::Mesh    mesh("ExportDatawithGradient3D", dimensions, testing::nextMeshID());
+  mesh::Mesh    mesh("Mesh", dimensions, testing::nextMeshID());
   mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
   mesh::PtrData dataVector = mesh.createData("dataVector", dimensions, 1_dataID);
   dataScalar->requireDataGradient();
@@ -120,9 +214,10 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
   vectorial.gradients.setOnes();
   dataScalar->setSampleAtTime(0, vectorial);
 
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
+  testing::expectFiles("Mesh-io-VTUExport.init.vtu", "Mesh-io-VTUExport.dt1.vtu");
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
@@ -130,7 +225,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 {
   PRECICE_TEST();
   int           dim = 2;
-  mesh::Mesh    mesh("ExportPolygonalMeshSerial", dim, testing::nextMeshID());
+  mesh::Mesh    mesh("Mesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Zero());
   mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector2d::Constant(1));
   mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector2d{1.0, 0.0});
@@ -139,9 +234,10 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
   mesh.createEdge(v2, v3);
   mesh.createEdge(v3, v1);
 
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, 0, 1};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
+  testing::expectFiles("Mesh-io-VTUExport.init.vtu", "Mesh-io-VTUExport.dt1.vtu");
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -149,7 +245,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   PRECICE_TEST();
   int        dim = 2;
-  mesh::Mesh mesh("ExportPolygonalMesh", dim, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", dim, testing::nextMeshID());
 
   if (context.isRank(0)) {
     mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Zero());
@@ -175,9 +271,14 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh.createVertex(Eigen::Vector2d::Constant(3.0));
   }
 
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, context.rank, context.size};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), fmt::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu", "Mesh-io-VTUExport.dt1.pvtu");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -185,7 +286,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   PRECICE_TEST();
   int        dim = 3;
-  mesh::Mesh mesh("ExportTriangulatedMesh", dim, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", dim, testing::nextMeshID());
 
   if (context.isRank(0)) {
     mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Zero());
@@ -214,9 +315,14 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh.createVertex(Eigen::Vector3d::Constant(3.0));
   }
 
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, context.rank, context.size};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), fmt::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu", "Mesh-io-VTUExport.dt1.pvtu");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -224,7 +330,7 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
 {
   PRECICE_TEST();
   int        dim = 3;
-  mesh::Mesh mesh("ExportSplitSquare", dim, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", dim, testing::nextMeshID());
 
   mesh::Vertex &vm = mesh.createVertex(Eigen::Vector3d::Zero());
   if (context.isRank(0)) {
@@ -275,9 +381,14 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh.createTriangle(eo1, e12, e2o);
   }
 
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, context.rank, context.size};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), fmt::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu", "Mesh-io-VTUExport.dt1.pvtu");
+  }
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
@@ -285,7 +396,7 @@ BOOST_AUTO_TEST_CASE(ExportOneTetrahedron)
 {
   PRECICE_TEST();
   int           dim = 3;
-  mesh::Mesh    mesh("ExportOneTetrahedron", dim, testing::nextMeshID());
+  mesh::Mesh    mesh("Mesh", dim, testing::nextMeshID());
   mesh::Vertex &v0 = mesh.createVertex(Eigen::Vector3d::Zero());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d{1.0, 0.0, 0.0});
   mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector3d{0.0, 1.0, 0.0});
@@ -293,9 +404,10 @@ BOOST_AUTO_TEST_CASE(ExportOneTetrahedron)
 
   mesh.createTetrahedron(v0, v1, v2, v3);
 
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, context.rank, context.size};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
+  testing::expectFiles("Mesh-io-VTUExport.init.vtu", "Mesh-io-VTUExport.dt1.vtu");
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -305,7 +417,7 @@ BOOST_AUTO_TEST_CASE(ExportPartitionedCube)
   // Unit cube is made of 6 tetrahedra. We have 3 ranks with 2 tetra each
   // as well as en empty rank. Empty rank is the 3rd
   int        dim = 3;
-  mesh::Mesh mesh("ExportPartitionedCube", dim, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", dim, testing::nextMeshID());
 
   if (context.isRank(0)) {
     mesh::Vertex &v000 = mesh.createVertex(Eigen::Vector3d{0.0, 0.0, 0.0});
@@ -338,9 +450,14 @@ BOOST_AUTO_TEST_CASE(ExportPartitionedCube)
     mesh.createTetrahedron(v000, v100, v110, v111);
   }
 
-  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 0, context.rank, context.size};
+  io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
+
+  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), fmt::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles("Mesh-io-VTUExport.init.pvtu", "Mesh-io-VTUExport.dt1.pvtu");
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END() // IOTests
