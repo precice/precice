@@ -65,25 +65,18 @@ void NearestNeighborMapping::mapConservative(const time::Sample &inData, Eigen::
   precice::profiling::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
   PRECICE_DEBUG("Map conservative using {}", getName());
 
-  const Eigen::VectorXd &inputValues  = inData.values;
-  Eigen::VectorXd &      outputValues = outData;
+  // scalar = 1, vector > 1
+  const int valueDimensions = inData.dataDims;
+  // Create Eigen::Map to interpret data as a matrix (enables col-wise operations)
+  Eigen::Map<const Eigen::MatrixXd> inMap(inData.values.data(), valueDimensions, input()->nVertices());
+  Eigen::Map<Eigen::MatrixXd>       outMap(outData.data(), valueDimensions, output()->nVertices());
 
-  // Data dimensions (for scalar = 1, for vectors > 1)
-  const size_t inSize          = input()->nVertices();
-  const int    valueDimensions = inData.dataDims;
-
-  for (size_t i = 0; i < inSize; i++) {
-    int const outputIndex = _vertexIndices[i] * valueDimensions;
-
-    for (int dim = 0; dim < valueDimensions; dim++) {
-
-      const int mapOutputIndex = outputIndex + dim;
-      const int mapInputIndex  = (i * valueDimensions) + dim;
-
-      outputValues(mapOutputIndex) += inputValues(mapInputIndex);
-    }
+  // Apply mapping
+  for (size_t i = 0; i < inMap.cols(); ++i) {
+    outMap.col(_vertexIndices[i]) += inMap.col(i);
   }
-  PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, outputValues));
+
+  PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, outData));
 }
 
 void NearestNeighborMapping::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
@@ -92,25 +85,16 @@ void NearestNeighborMapping::mapConsistent(const time::Sample &inData, Eigen::Ve
   precice::profiling::Event e("map." + mappingNameShort + ".mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
   PRECICE_DEBUG("Map {} using {}", (hasConstraint(CONSISTENT) ? "consistent" : "scaled-consistent"), getName());
 
-  const Eigen::VectorXd &inputValues  = inData.values;
-  Eigen::VectorXd &      outputValues = outData;
+  const int valueDimensions = inData.dataDims;
+  // Map the raw pointers as (valueDimensions x vertices) in column-major Eigen style
+  Eigen::Map<const Eigen::MatrixXd> inputMap(inData.values.data(), valueDimensions, input()->nVertices());
+  Eigen::Map<Eigen::MatrixXd>       outputMap(outData.data(), valueDimensions, output()->nVertices());
 
-  // Data dimensions (for scalar = 1, for vectors > 1)
-  const size_t outSize         = output()->nVertices();
-  const int    valueDimensions = inData.dataDims;
-
-  for (size_t i = 0; i < outSize; i++) {
-    int inputIndex = _vertexIndices[i] * valueDimensions;
-
-    for (int dim = 0; dim < valueDimensions; dim++) {
-
-      const int mapOutputIndex = (i * valueDimensions) + dim;
-      const int mapInputIndex  = inputIndex + dim;
-
-      outputValues(mapOutputIndex) = inputValues(mapInputIndex);
-    }
+  for (size_t i = 0; i < outputMap.cols(); ++i) {
+    // _vertexIndices[i] is the solution of our mapping
+    outputMap.col(i) = inputMap.col(_vertexIndices[i]);
   }
-  PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, outputValues));
+  PRECICE_DEBUG("Mapped values = {}", utils::previewRange(3, outData));
 }
 
 std::string NearestNeighborMapping::getName() const
