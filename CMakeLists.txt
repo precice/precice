@@ -66,6 +66,7 @@ option(PRECICE_BINDINGS_FORTRAN "Enable the native Fortran bindings" ON)
 option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
 option(PRECICE_BUILD_UNITY "Use unity builds in preCICE" ON)
 option(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES "Enable libbacktrace for stacktrace generation." OFF)
+option(PRECICE_BUILD_BENCHMARKS "Build the preCICE-internal benchmarks" OFF)
 
 option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization for all targets." OFF)
 
@@ -620,6 +621,32 @@ if (PRECICE_BINDINGS_FORTRAN)
   # include((${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran/CMakeLists.txt)
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran)
 endif()
+
+# Build benchmarks if enabled
+if(PRECICE_BUILD_BENCHMARKS)
+  find_package(benchmark REQUIRED)
+
+  add_executable(precice-bench)
+  include(${CMAKE_CURRENT_LIST_DIR}/benchmarks/sources.cmake)
+
+  target_link_libraries(precice-bench
+    PRIVATE
+    preciceCore
+    benchmark::benchmark
+    )
+  set_target_properties(precice-bench PROPERTIES
+    # precice is a C++17 project
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED Yes
+    CXX_EXTENSIONS No
+    )
+  target_include_directories(precice-bench PRIVATE
+    ${preCICE_SOURCE_DIR}/src
+    ${preCICE_SOURCE_DIR}/benchmark
+    )
+endif()
+
+
 #
 # Install Targets for precice
 #
