@@ -109,14 +109,16 @@ void NearestNeighborBaseMapping::tagMeshFirstRound()
   PRECICE_TRACE();
   precice::profiling::Event e("map." + mappingNameShort + ".tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
 
-  // @TODO: How to handle the parallel partitioning for indirect access here?
-  // in the usual case, we make use of the indexSet, which is pre-computed from the mapping
-  // for the indirect access, we can't do that since we don't have the output mesh
-  // what we would need to do in theory:
-  // find all nearest-neighbors at the 'boundary' of the access region, which would require an
-  // infinite fine sampling of output mesh nodes wo be used in the computeMapping below
-  // for now, we simply tag everything and move on.
+  // parallel partitioning for indirect access:
   if (this->isIndirectMapping()) {
+    // in the usual case, we make use of the indexSet, which is pre-computed from the mapping
+    // for the indirect access, we can't do that since we don't have the output (local) mesh
+    // what we would need to do in theory for a perfect partitioning:
+    // find all nearest-neighbors at the 'boundary' of the access region, which would require an
+    // infinite fine sampling of output mesh nodes to be used in the computeMapping below
+    // for now, we simply tag everything and move on. The remote mesh is here already filtered
+    // through the geometric filter setting.
+    //
     // Depending on the mapping constraint, one of these tagAll calls will do nothing, as the vertex
     // set of the mesh is empty. From a practical point of view, we only need to apply the
     // tagging to one of the meshes (the remote one). But calling it on both sides reliefs us from any
