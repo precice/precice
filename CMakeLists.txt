@@ -441,7 +441,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
       $<BUILD_INTERFACE:${preCICE_BINARY_DIR}/src>
     )
 
-  target_link_libraries(ginkgoKernels PRIVATE Ginkgo::ginkgo Kokkos::kokkos fmtlib-static)
+  target_link_libraries(ginkgoKernels PRIVATE Ginkgo::ginkgo Kokkos::kokkos fmtlib-static Eigen3::Eigen)
   target_compile_definitions(ginkgoKernels PUBLIC EIGEN_NO_CUDA)
 
   target_link_libraries(preciceCore PUBLIC ginkgoKernels)
