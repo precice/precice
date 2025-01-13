@@ -60,7 +60,7 @@ void NearestNeighborBaseMapping::computeMapping()
   auto &index = searchSpace->index();
   for (size_t i = 0; i < verticesSize; ++i) {
     const auto &sourceCoords  = sourceVertices[i].getCoords();
-    const auto &matchedVertex = index.getClosestVertex(sourceCoords);
+    const auto  matchedVertex = index.getClosestVertex(sourceCoords);
     _vertexIndices[i]         = matchedVertex.index;
 
     // Compute distance between input and output vertiex for the stats

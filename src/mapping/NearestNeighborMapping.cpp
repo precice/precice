@@ -29,9 +29,8 @@ NearestNeighborMapping::NearestNeighborMapping(
 void NearestNeighborMapping::evaluateMappingDataCacheAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values)
 {
   precice::profiling::Event e("map.nn.evaluateCache.From" + input()->getName());
-  auto                      searchSpace = input();
-  auto &                    index       = searchSpace->index();
-  auto                      dim         = getDimensions();
+  auto &                    index = input()->index();
+  auto                      dim   = getDimensions();
 
   // Set up of output arrays
   Eigen::Map<const Eigen::MatrixXd> localData(cache.inData.data(), cache.getDataDimensions(), cache.inData.size() / cache.getDataDimensions());
@@ -40,21 +39,20 @@ void NearestNeighborMapping::evaluateMappingDataCacheAt(::precice::span<const do
   const size_t verticesSize = coordinates.size() / dim;
   for (size_t i = 0; i < verticesSize; ++i) {
     Eigen::Map<const Eigen::VectorXd> localCoords(coordinates.data() + i * dim, dim);
-    const auto &                      matchedVertex = index.getClosestVertex(localCoords);
+    const auto                        matchedVertex = index.getClosestVertex(localCoords);
     outputData.col(i)                               = localData.col(matchedVertex.index);
   }
 }
 
 void NearestNeighborMapping::writeConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target)
 {
-  auto  searchSpace = output();
-  auto &index       = searchSpace->index();
-  auto  dim         = getDimensions();
+  auto &index = output()->index();
+  auto  dim   = getDimensions();
 
   const size_t verticesSize = coordinates.size() / dim;
   for (size_t i = 0; i < verticesSize; ++i) {
     Eigen::Map<const Eigen::VectorXd> localCoords(coordinates.data() + i * dim, dim);
-    const auto &                      matchedVertex = index.getClosestVertex(localCoords);
+    const auto                        matchedVertex = index.getClosestVertex(localCoords);
     target.col(matchedVertex.index) += source.col(i);
   }
 }
