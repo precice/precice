@@ -1315,6 +1315,11 @@ void ParticipantImpl::setMeshAccessRegion(
 {
   PRECICE_TRACE(meshName, boundingBox.size());
   PRECICE_REQUIRE_MESH_USE(meshName);
+  PRECICE_CHECK(_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName),
+                "This participant attempteded to set an access region (via \"setMeshAccessRegion\") on mesh \"{0}\", "
+                "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
+                "setMeshAccessRegion(...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
+                meshName);
   PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().");
   PRECICE_CHECK(_state != State::Initialized, "setMeshAccessRegion() needs to be called before initialize().");
 
@@ -1354,6 +1359,11 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
 {
   PRECICE_TRACE(meshName, ids.size(), coordinates.size());
   PRECICE_REQUIRE_MESH_USE(meshName);
+  PRECICE_CHECK(_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName),
+                "This participant attempteded to get mesh vertex IDs and coordinates (via \"getMeshVertexIDsAndCoordinates\") from mesh \"{0}\", "
+                "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
+                "getMeshVertexIDsAndCoordinates(...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
+                meshName);
   PRECICE_DEBUG("Get {} mesh vertices with IDs", ids.size());
 
   // Check, if the requested mesh data has already been received. Otherwise, the function call doesn't make any sense
