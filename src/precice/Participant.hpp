@@ -868,6 +868,32 @@ public:
       ::precice::span<const VertexID> ids,
       double                          relativeReadTime,
       ::precice::span<double>         values) const;
+  ///@}
+
+  /** @name Just-in-time mapping (or indirect access) (experimental)
+   *
+   * If one of your coupling meshes is not static and has varying locations over time, we can compute a data mapping
+   * just-in-time. In such a case the user provides the coordinates of the moving mesh along with the API functions
+   * \p mapAndWriteData or \p mapAndReadData to read and write data.
+   *
+   * The just-in-time mapping is closely connected to the \p Direct Access (see section below):
+   *
+   * Since one of the meshes is not given during the initialization, the user has to specify a region of interest
+   * using \p setMeshAccessRegion() before calling \p initialize() to enable preCICE computing the repartitioning.
+   *
+   * Configuring this feature in the preCICE configuration file, requires two things:
+   *
+   * 1) The static mesh which is not moving (which is always a received mesh) needs api-access enabled
+   * via `<receive-mesh name="StaticMesh" ... api-access="true"/>`. Similar to the Direct Access, the name of this static
+   * mesh is then also the mesh name used in the API functions below, e.g., mapAndWriteData(StaticMesh, ...).
+   *
+   * 2) A mapping "from" or "to" the received mesh needs to be defined, where the "to" or "from" attribute in the configuration
+   * needs to remain empty, e.g., ` <mapping:nearest-neighbor direction="read" from="StaticMesh" constraint="consistent" />`.
+   * Note how the "to" attribute is not given in this configuration, as opposed to the conventional mapping configurations
+   * in preCICE.
+   *
+   * @{
+   */
 
   /**
    * @brief Writes data values to a mesh just-in-time (experimental).
