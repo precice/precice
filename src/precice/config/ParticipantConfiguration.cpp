@@ -466,9 +466,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       }
     }
 
-    // The mesh context associated to the mappings
-    // impl::MeshContext &fromMeshContext = ;
-    // impl::MeshContext &toMeshContext   = ;
+    PRECICE_CHECK(!confMapping.mapping->isScaledConsistent() || !(confMapping.fromMesh->isIndirect() || confMapping.toMesh->isIndirect()),
+                  "The just-in-time mapping from mesh \"{}\" to mesh \"{}\" was configured with a scaled-consistent constraint. A scaled-consistent constraint is not implemented for just-in-time mappings in preCICE.", confMapping.fromMesh->getName(), confMapping.toMesh->getName());
 
     // We disable the geometric filter for any kernel method, as the default safety factor is not reliable enough to provide a robust
     // safety margin such that the mapping is still correct.
