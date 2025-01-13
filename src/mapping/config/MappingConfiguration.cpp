@@ -205,10 +205,10 @@ MappingConfiguration::MappingConfiguration(
                                              "Read mappings map received data after communication, thus in the same participant who reads the data.");
 
   auto attrFromMesh = XMLAttribute<std::string>(ATTR_FROM, "")
-                          .setDocumentation("The mesh to map the data from.");
+                          .setDocumentation("The mesh to map the data from. The default name is an empty mesh name, which is only valid for a just-in-time mapping (using the API functions \"mapAndWriteData\" or \"mapAndReadData\").");
 
   auto attrToMesh = XMLAttribute<std::string>(ATTR_TO, "")
-                        .setDocumentation("The mesh to map the data to.");
+                        .setDocumentation("The mesh to map the data to. The default name is an empty mesh name, which is only valid for a just-in-time mapping (using the API functions \"mapAndWriteData\" or \"mapAndReadData\").");
 
   auto attrConstraint = XMLAttribute<std::string>(ATTR_CONSTRAINT)
                             .setDocumentation("Use conservative to conserve the nodal sum of the data over the interface (needed e.g. for force mapping).  Use consistent for normalized quantities such as temperature or pressure. Use scaled-consistent-surface or scaled-consistent-volume for normalized quantities where conservation of integral values (surface or volume) is needed (e.g. velocities when the mass flow rate needs to be conserved). Mesh connectivity is required to use scaled-consistent.")
