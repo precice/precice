@@ -26,34 +26,24 @@ NearestNeighborMapping::NearestNeighborMapping(
   }
 }
 
-void NearestNeighborMapping::mapConsistentAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values)
+void NearestNeighborMapping::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
 {
-  precice::profiling::Event e("map.nn.evaluateCache.From" + input()->getName());
+  precice::profiling::Event e("map.nn.mapConsistentAt.From" + input()->getName());
   auto &                    index = input()->index();
-  auto                      dim   = getDimensions();
 
   // Set up of output arrays
   Eigen::Map<const Eigen::MatrixXd> localData(cache.inData.data(), cache.getDataDimensions(), cache.inData.size() / cache.getDataDimensions());
-  Eigen::Map<Eigen::MatrixXd>       outputData(values.data(), cache.getDataDimensions(), values.size());
-
-  const size_t verticesSize = coordinates.size() / dim;
-  for (size_t i = 0; i < verticesSize; ++i) {
-    Eigen::Map<const Eigen::VectorXd> localCoords(coordinates.data() + i * dim, dim);
-    const auto                        matchedVertex = index.getClosestVertex(localCoords);
-    outputData.col(i)                               = localData.col(matchedVertex.index);
+  for (Eigen::Index i = 0; i < coordinates.cols(); ++i) {
+    values.col(i) = localData.col(index.getClosestVertex(coordinates.col(i)).index);
   }
 }
 
-void NearestNeighborMapping::writeConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target)
+void NearestNeighborMapping::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target)
 {
-  auto &index = output()->index();
-  auto  dim   = getDimensions();
-
-  const size_t verticesSize = coordinates.size() / dim;
-  for (size_t i = 0; i < verticesSize; ++i) {
-    Eigen::Map<const Eigen::VectorXd> localCoords(coordinates.data() + i * dim, dim);
-    const auto                        matchedVertex = index.getClosestVertex(localCoords);
-    target.col(matchedVertex.index) += source.col(i);
+  precice::profiling::Event e("map.nn.mapConservativeAt.From" + input()->getName());
+  auto &                    index = output()->index();
+  for (Eigen::Index i = 0; i < coordinates.cols(); ++i) {
+    target.col(index.getClosestVertex(coordinates.col(i)).index) += source.col(i);
   }
 }
 

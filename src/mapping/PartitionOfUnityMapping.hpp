@@ -76,9 +76,9 @@ public:
   /// name of the pum mapping
   std::string getName() const final override;
 
-  void mapConsistentAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values) final override;
+  void mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values) final override;
 
-  void mapConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target) final override;
+  void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target) final override;
 
   void updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in) final override;
 
@@ -327,8 +327,9 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time:
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target)
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target)
 {
+  precice::profiling::Event e("map.pou.mapConservativeAt.From" + input()->getName());
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -348,31 +349,28 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(Ma
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistentAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values)
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
 {
-  precice::profiling::Event e("map.pou.evaluateCache.From" + input()->getName());
+  precice::profiling::Event e("map.pou.mapConsistentAt.From" + input()->getName());
   // @todo: it would most probably be more efficient to first group the vertices we receive here according to the clusters and then compute the solution
   PRECICE_TRACE();
   PRECICE_ASSERT(_centerMesh);
 
   // First, make sure that everything is reset before we start
-  std::fill(values.begin(), values.end(), 0.);
+  values.setZero();
 
-  int          dim       = getDimensions();
-  std::size_t  nVertices = coordinates.size() / dim;
-  mesh::Vertex vertex(coordinates.subspan(0, dim), -1);
-  for (std::size_t v = 0; v < nVertices; ++v) {
-    vertex.setCoords(coordinates.subspan(v * dim, dim));
+  int          dim = getDimensions();
+  mesh::Vertex vertex(coordinates.col(0), -1);
+  for (std::size_t v = 0; v < values.cols(); ++v) {
+    vertex.setCoords(coordinates.col(v));
     auto [clusterIDs, normalizedWeights] = computeNormalizedWeight(vertex, this->output()->getName());
     // Use the weight to interpolate the solution
     for (std::size_t i = 0; i < clusterIDs.size(); ++i) {
       PRECICE_ASSERT(clusterIDs[i] < static_cast<int>(_clusters.size()));
       auto id = clusterIDs[i];
       // the input mesh refers here to a consistent constraint
-      Eigen::Vector3d localRes = normalizedWeights[i] * _clusters[id].interpolateAt(vertex, cache.polynomialContributions[id], cache.p[id], *this->input().get());
-      for (int c = 0; c < cache.getDataDimensions(); ++c) {
-        values[v * cache.getDataDimensions() + c] += localRes[c];
-      }
+      Eigen::VectorXd localRes = normalizedWeights[i] * _clusters[id].interpolateAt(vertex, cache.polynomialContributions[id], cache.p[id], *this->input().get());
+      values.col(v) += localRes;
     }
   }
 }

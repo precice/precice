@@ -58,7 +58,7 @@ public:
   Eigen::Index getOutputSize() const;
 
   template <typename IndexContainer>
-  Eigen::Vector3d interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs,
+  Eigen::VectorXd interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs,
                                 const RADIAL_BASIS_FUNCTION_T &function, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const;
 
 private:
@@ -474,7 +474,7 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeCacheData(Eigen::Matr
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
-Eigen::Vector3d RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs,
+Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs,
                                                                              const RADIAL_BASIS_FUNCTION_T &basisFunction, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const
 {
   PRECICE_TRACE();
@@ -482,7 +482,8 @@ Eigen::Vector3d RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::interpolateAt(con
 
   // Two cases we have to distinguish here:
   // 1. there is no polynomial given, then the result is out = _matrixA * p;
-  Eigen::Vector3d result{{0, 0, 0}};
+  Eigen::VectorXd result(coeffs.cols());
+  result.setZero();
 
   // Compute RBF values for matrix A
   const auto &out = v.rawCoords();

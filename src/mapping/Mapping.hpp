@@ -193,13 +193,49 @@ public:
   /// Returns the name of the mapping method for logging purpose
   virtual std::string getName() const = 0;
 
-  virtual void mapConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target);
+  /**
+   * @brief Just-in-time or indirect access variant of mapConservative
+   *
+   * @param coordinates[in] where to compute the mapping
+   * @param source[in] the data values passed from the user
+   * @param target[in/out] preCICE-interal buffer where we store the result
+   *
+   * @note the default implementation in this class simply aborts the code and actual
+   * implementations are in derived classes
+   */
+  virtual void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target);
 
-  // @todo consider making this a private method in the RBFMapping/PUM mapping class
+  /**
+   * @brief Just-in-time or indirect access variant of mapConsistent
+   *
+   * @param coordinates[in] where to compute the mapping
+   * @param cache[in] the mapping data cache previously computed with \p updateMappingDataCache
+   * @param values[in/out] data buffer passed from the user
+   *
+   * @note the default implementation in this class simply aborts the code and actual
+   * implementations are in derived classes
+   */
+  virtual void mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values);
+
+  /**
+   * @brief Allows to update a so-called MappingDataCache for more efficient just-in-time mappings
+   *
+   * To compute a mapping just-in-time (either with \p mapConservativeAt or \p mapConsistentAt ), we
+   * first sample in time and then compute an interpolant in time and then interpolate in space.
+   * Since we typically need to evaluate at a specific point in time for many different locations
+   * (potentially corresponding to many different calls to \p mapConservativeAt or \p mapConsistentAt )
+   * we would compute the same time interpolant many times. Depending on the mapping method selected,
+   * we need to compute further data structures and values from the time interpolant (e.g. RBF
+   * coefficients) which is computationally demanding. The cache enables to store the latest queried
+   * time snapshot and (potentially, depending on the mapping) further derived data structures which
+   * remain constant for a specific point in time.
+   *
+   * In the default implementation, the cache stores the latest waveform sample in time.
+   *
+   * @param cache the cache in use
+   * @param in the time-interpolated data values
+   */
   virtual void updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in);
-
-  // For now only for read-consistent
-  virtual void mapConsistentAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values);
 
 protected:
   /// Returns pointer to input mesh.

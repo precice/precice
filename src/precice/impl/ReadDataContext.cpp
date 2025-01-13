@@ -52,9 +52,11 @@ void ReadDataContext::mapAndReadValues(::precice::span<const double> coordinates
     indirectMapping->updateMappingDataCache(*mappingCache.get(), sample);
     mappingCache->setTimeStamp(readTime);
   }
+  Eigen::Map<const Eigen::MatrixXd> coords(coordinates.data(), getSpatialDimensions(), coordinates.size() / getSpatialDimensions());
+  Eigen::Map<Eigen::MatrixXd>       target(values.data(), getDataDimensions(), values.size() / getDataDimensions());
 
   // Function, which fills the values using the coordinates and the cache
-  indirectMapping->mapConsistentAt(coordinates, *mappingCache.get(), values);
+  indirectMapping->mapConsistentAt(coords, *mappingCache.get(), target);
 }
 
 int ReadDataContext::getWaveformDegree() const

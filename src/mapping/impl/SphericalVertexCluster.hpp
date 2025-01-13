@@ -72,7 +72,7 @@ public:
   /// Compute the weight for a given vertex
   double computeWeight(const mesh::Vertex &v) const;
 
-  Eigen::Vector3d interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs, const mesh::Mesh &inMesh) const;
+  Eigen::VectorXd interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs, const mesh::Mesh &inMesh) const;
   /// Number of input vertices this partition operates on
   unsigned int getNumberOfInputVertices() const;
 
@@ -252,7 +252,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::computeCacheData(const Eig
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::Vector3d SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs, const mesh::Mesh &inMesh) const
+Eigen::VectorXd SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs, const mesh::Mesh &inMesh) const
 {
   PRECICE_TRACE();
 

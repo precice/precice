@@ -38,11 +38,11 @@ void WriteDataContext::mapAndWriteValues(::precice::span<const double> coordinat
   PRECICE_ASSERT((coordinates.size() / getSpatialDimensions()) * getDataDimensions() == values.size());
   PRECICE_ASSERT(_writeDataBuffer.values.data());
 
+  Eigen::Map<const Eigen::MatrixXd> coords(coordinates.data(), getSpatialDimensions(), coordinates.size() / getSpatialDimensions());
   Eigen::Map<const Eigen::MatrixXd> inputData(values.data(), getDataDimensions(), coordinates.size() / getSpatialDimensions());
   Eigen::Map<Eigen::MatrixXd>       localData(_writeDataBuffer.values.data(), getDataDimensions(), getMeshVertexCount());
-
   // Function to fill the localData
-  indirectMapping->mapConservativeAt(coordinates, inputData, localData);
+  indirectMapping->mapConservativeAt(coords, inputData, localData);
 }
 
 void WriteDataContext::writeValuesIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> values)

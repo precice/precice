@@ -269,16 +269,16 @@ bool Mapping::isIndirectMapping() const
 
 void Mapping::updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in)
 {
-  precice::profiling::Event e("map.updateCache.From" + input()->getName());
+  precice::profiling::Event e("map.updateMappingDataCache.From" + input()->getName());
   cache.inData = in;
 }
 
-void Mapping::mapConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target)
+void Mapping::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target)
 {
   PRECICE_ASSERT(false, "Not implemented");
 }
 
-void Mapping::mapConsistentAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values)
+void Mapping::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
 {
   PRECICE_ASSERT(false, "Not implemented");
 }
