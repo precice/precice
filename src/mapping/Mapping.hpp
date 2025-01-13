@@ -117,6 +117,9 @@ public:
   bool requiresInitialGuess() const;
 
   /// Returns true if either the input or output is an indirect (dummy) mesh
+  /// which is used for just-in-time mappings. The indirect mesh is essentially
+  /// a placeholder for the non-existent or just-in-time mesh provided
+  /// by the user through the API functions
   bool isIndirectMapping() const;
 
   /// Return the provided initial guess of a mapping using an initialGuess
