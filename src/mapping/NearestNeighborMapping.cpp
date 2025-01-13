@@ -26,7 +26,7 @@ NearestNeighborMapping::NearestNeighborMapping(
   }
 }
 
-void NearestNeighborMapping::evaluateMappingDataCacheAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values)
+void NearestNeighborMapping::mapConsistentAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values)
 {
   precice::profiling::Event e("map.nn.evaluateCache.From" + input()->getName());
   auto &                    index = input()->index();

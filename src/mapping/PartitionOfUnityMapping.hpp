@@ -76,9 +76,9 @@ public:
   /// name of the pum mapping
   std::string getName() const final override;
 
-  void evaluateMappingDataCacheAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values) final override;
+  void mapConsistentAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values) final override;
 
-  void writeConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target) final override;
+  void mapConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target) final override;
 
   void updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in) final override;
 
@@ -327,7 +327,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time:
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::writeConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target)
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target)
 {
 }
 
@@ -348,7 +348,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(Ma
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::evaluateMappingDataCacheAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values)
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistentAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values)
 {
   precice::profiling::Event e("map.pou.evaluateCache.From" + input()->getName());
   // @todo: it would most probably be more efficient to first group the vertices we receive here according to the clusters and then compute the solution

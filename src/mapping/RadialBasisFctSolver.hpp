@@ -428,6 +428,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative
   return out;
 }
 
+// @todo: change the signature to Eigen::MatrixXd and process all components at once, the solve function of eigen can handle that
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const
 {
@@ -468,7 +469,6 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeCacheData(Eigen::Matr
   }
 
   // Integrated polynomial (and separated)
-  // PRECICE_ASSERT(inputData.size() == _matrixA.cols());
   coeffsOut = _decMatrixC.solve(inputData);
 }
 

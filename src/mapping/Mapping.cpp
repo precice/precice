@@ -273,12 +273,12 @@ void Mapping::updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &i
   cache.inData = in;
 }
 
-void Mapping::writeConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target)
+void Mapping::mapConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target)
 {
   PRECICE_ASSERT(false, "Not implemented");
 }
 
-void Mapping::evaluateMappingDataCacheAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values)
+void Mapping::mapConsistentAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values)
 {
   PRECICE_ASSERT(false, "Not implemented");
 }

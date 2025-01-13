@@ -22,7 +22,7 @@ public:
   std::string getName() const final override;
 
   /// For reading data just-in-time (only consistent at the moment)
-  void evaluateMappingDataCacheAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values) final override;
+  void mapConsistentAt(::precice::span<const double> coordinates, const MappingDataCache &cache, ::precice::span<double> values) final override;
 
   /// For writing data just-in-time (only conservative at the moment)
   void writeConservativeAt(::precice::span<const double> coordinates, Eigen::Map<const Eigen::MatrixXd> &source, Eigen::Map<Eigen::MatrixXd> &target) final override;

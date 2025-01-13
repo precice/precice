@@ -42,7 +42,7 @@ void WriteDataContext::mapAndWriteValues(::precice::span<const double> coordinat
   Eigen::Map<Eigen::MatrixXd>       localData(_writeDataBuffer.values.data(), getDataDimensions(), getMeshVertexCount());
 
   // Function to fill the localData
-  indirectMapping->writeConservativeAt(coordinates, inputData, localData);
+  indirectMapping->mapConservativeAt(coordinates, inputData, localData);
 }
 
 void WriteDataContext::writeValuesIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> values)

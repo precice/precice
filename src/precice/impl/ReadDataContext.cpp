@@ -54,7 +54,7 @@ void ReadDataContext::mapAndReadValues(::precice::span<const double> coordinates
   }
 
   // Function, which fills the values using the coordinates and the cache
-  indirectMapping->evaluateMappingDataCacheAt(coordinates, *mappingCache.get(), values);
+  indirectMapping->mapConsistentAt(coordinates, *mappingCache.get(), values);
 }
 
 int ReadDataContext::getWaveformDegree() const
