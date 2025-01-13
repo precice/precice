@@ -135,7 +135,7 @@ void ReceivedPartition::compute()
   // check to prevent false configuration
   if (not utils::IntraComm::isSecondary()) {
     PRECICE_CHECK(hasAnyMapping() || _allowDirectAccess,
-                  "The received mesh {} needs a mapping (either from it, to it, or both) or API access enabled (enable-access=\"true\"). Maybe you don't want to receive this mesh at all?",
+                  "The received mesh {} needs a mapping (either from it, to it, or both) or API access enabled (api-access=\"true\"). Maybe you don't want to receive this mesh at all?",
                   _mesh->getName());
   }
 

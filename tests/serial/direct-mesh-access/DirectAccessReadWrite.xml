@@ -15,7 +15,7 @@
   </participant>
 
   <participant name="SolverTwo">
-    <receive-mesh name="MeshOne" from="SolverOne" safety-factor="0" enable-access="true" />
+    <receive-mesh name="MeshOne" from="SolverOne" safety-factor="0" api-access="true" />
     <read-data name="Velocities" mesh="MeshOne" />
     <write-data name="Forces" mesh="MeshOne" />
   </participant>

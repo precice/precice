@@ -26,8 +26,8 @@
   <participant name="SolverOne">
     <provide-mesh name="MeshOne" />
     <provide-mesh name="MeshOneB" />
-    <receive-mesh name="MeshTwo" from="SolverTwo" enable-access="true" />
-    <receive-mesh name="MeshTwoB" from="SolverTwo" enable-access="true" />
+    <receive-mesh name="MeshTwo" from="SolverTwo" api-access="true" />
+    <receive-mesh name="MeshTwoB" from="SolverTwo" api-access="true" />
     <read-data name="Temperature" mesh="MeshTwo" />
     <read-data name="Temperature" mesh="MeshOne" />
     <read-data name="Velocity" mesh="MeshTwo" />
