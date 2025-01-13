@@ -876,7 +876,8 @@ public:
    * As opposed to the writeData function using VertexIDs, this function allows to write data via coordinates,
    * which don't have to be specified during the initialization. This is particularly useful for meshes, which
    * vary over time. Note that using this function comes at a performance cost, since the specified mapping
-   * needs to be computed with every call of this function, whereas the other variant can efficiently precompute the mapping.
+   * needs to be computed locally for the given locations, whereas the other variant (writeData) can typically
+   * exploit the static interface mesh and pre-compute data structures more efficient.
    *
    * Values are passed via a block of continuous memory defined by values in the order specified by vertices.
    *
@@ -916,7 +917,8 @@ public:
    * As opposed to the readData function using VertexIDs, this function allows to read data via coordinates,
    * which don't have to be specified during the initialization. This is particularly useful for meshes, which
    * vary over time. Note that using this function comes at a performance cost, since the specified mapping
-   * needs to be computed with every call of this function, whereas the other variant can efficiently precompute the mapping.
+   * needs to be computed locally for the given locations, whereas the other variant (readData) can typically
+   * exploit the static interface mesh and pre-compute data structures more efficient.
    *
    * Values are read into a block of continuous memory defined by values in the order specified by vertices.
    *
