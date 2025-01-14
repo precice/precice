@@ -216,6 +216,7 @@ target_sources(testprecice
     tests/serial/direct-mesh-access/Explicit.cpp
     tests/serial/direct-mesh-access/ExplicitAndMapping.cpp
     tests/serial/direct-mesh-access/ExplicitRead.cpp
+    tests/serial/direct-mesh-access/ExplicitReadNoFlag.cpp
     tests/serial/direct-mesh-access/Implicit.cpp
     tests/serial/explicit/TestExplicitMPI.cpp
     tests/serial/explicit/TestExplicitMPISingle.cpp
