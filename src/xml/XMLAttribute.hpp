@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 #include "logging/Logger.hpp"
+#include "utils/String.hpp"
 #include "utils/assertion.hpp"
 #include "xml/ValueParser.hpp"
 
@@ -24,10 +25,16 @@ public:
   XMLAttribute() = delete;
 
   explicit XMLAttribute(std::string name)
-      : _name(std::move(name)){};
+      : _name(std::move(name))
+  {
+    PRECICE_ASSERT(utils::isKebabStyle(_name), _name);
+  };
 
   XMLAttribute(std::string name, ATTRIBUTE_T defaultValue)
-      : _name(std::move(name)), _hasDefaultValue(true), _defaultValue(std::move(defaultValue)){};
+      : _name(std::move(name)), _hasDefaultValue(true), _defaultValue(std::move(defaultValue))
+  {
+    PRECICE_ASSERT(utils::isKebabStyle(_name), _name);
+  };
 
   XMLAttribute(const XMLAttribute<ATTRIBUTE_T> &other) = default;
 
