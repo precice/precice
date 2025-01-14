@@ -1,18 +1,10 @@
 #pragma once
 
-#if defined(__NVCC__) || (defined(__CUDA__) && defined(__CUDA_ARCH__))
-#define PRECICE_CUDA_DEVICE
-#endif
-
-#if defined(__HIPCC__)
-#define PRECICE_HIP_DEVICE
-#endif
-
-#if defined(PRECICE_CUDA_DEVICE) || defined(PRECICE_HIP_DEVICE)
+#if defined(__CUDACC__) || defined(__HIPCC__)
 #define PRECICE_DEVICE
 #endif
 
-#if defined(PRECICE_CUDA_DEVICE)
+#ifdef __CUDACC__
 
 #include <cuda_runtime.h>
 #include <ginkgo/extensions/kokkos.hpp>
