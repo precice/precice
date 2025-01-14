@@ -1,10 +1,8 @@
 #pragma once
 
-#if defined(__CUDACC__) || defined(__HIPCC__)
-#define PRECICE_DEVICE
-#endif
-
 #ifdef __CUDACC__
+
+#define PRECICE_DEVICE
 
 #include <cuda_runtime.h>
 #include <ginkgo/extensions/kokkos.hpp>
@@ -16,7 +14,9 @@
 #define PRECICE_FMA Kokkos::fma
 #define PRECICE_LOG Kokkos::log
 
-#elif defined(PRECICE_HIP_DEVICE)
+#elif defined(__HIPCC__)
+
+#define PRECICE_DEVICE
 
 #include <ginkgo/extensions/kokkos.hpp>
 #include <ginkgo/ginkgo.hpp>
