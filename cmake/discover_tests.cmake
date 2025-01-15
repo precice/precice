@@ -75,7 +75,7 @@ function(add_test NAME RANKS)
   add_command(set_tests_properties
     "[=[precice.${NAME}]=]"
     PROPERTIES
-    ENVIRONMENT "OMP_NUM_THREADS=2"
+    ENVIRONMENT "OMP_NUM_THREADS=2\;OMP_PROC_BIND=false"
     TIMEOUT "30"
     WORKING_DIRECTORY "${test_dir}"
     LABELS "${labels}"
