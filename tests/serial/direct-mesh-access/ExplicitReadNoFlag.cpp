@@ -11,6 +11,8 @@ BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
 // Test case for a direct mesh access on one participant to a mesh defined
 // by another participant. Here, we check that preCICE correctly throws an
 // error in case API functions are used, but the flag was not set in the config
+// We also check that getMeshVertexSize can still be called and returns the
+// amount of vertices in the remote mesh
 PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ExplicitReadNoFlag)
 {
@@ -19,8 +21,8 @@ BOOST_AUTO_TEST_CASE(ExplicitReadNoFlag)
   // Set up Participant
   precice::Participant couplingInterface(context.name, context.config(), 0, 1);
 
-  std::vector<double> positions = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0};
-  std::vector<int>    ids(4, -1);
+  std::vector<double> positions = {0.0, 0.0, 0.0, 0.05, 0.1, 0.1, 0.1, 0.0, 5.0, 5.0};
+  std::vector<int>    ids(5, -1);
 
   constexpr int               dim         = 2;
   std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
@@ -58,7 +60,7 @@ BOOST_AUTO_TEST_CASE(ExplicitReadNoFlag)
     // Define the mesh
     couplingInterface.setMeshVertices(meshName, positions, ids);
     // Some dummy readData
-    std::array<double, 4> writeData({1, 2, 3, 4});
+    std::array<double, 5> writeData({1, 2, 3, 4, 5});
 
     // Initialize
     couplingInterface.initialize();

@@ -694,7 +694,24 @@ int ParticipantImpl::getMeshVertexSize(
                 meshName, _accessor->getName());
   MeshContext &context = _accessor->usedMeshContext(meshName);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
-  return context.mesh->nVertices();
+
+  // Returns true if we have api access configured and we run in parallel and have a received mesh
+  if (requiresUserDefinedAccessRegion(meshName) && _accessor->isDirectAccessAllowed(meshName)) {
+    // filter nVertices to the actual number of vertices queried by the user
+    PRECICE_CHECK(context.userDefinedAccessRegion, "The function getMeshVertexSize was called on the received mesh \"{0}\", "
+                                                   "but no access region was defined although this is necessary for parallel runs. "
+                                                   "Please define an access region using \"setMeshAccessRegion()\" before calling \"getMeshVertexSize()\".",
+                  meshName);
+    return std::count_if(context.mesh->vertices().cbegin(), context.mesh->vertices().cend(),
+                         [bb = context.userDefinedAccessRegion](const auto &v) { return bb->contains(v); });
+  } else {
+    // For provided meshes and in case the api-access was not configured, we return here all vertices
+    PRECICE_WARN_IF(_accessor->isMeshReceived(meshName) && !_accessor->isDirectAccessAllowed(meshName),
+                    "You are calling \"getMeshVertexSize()\" on a received mesh without api-access enabled (<receive-mesh name=\"{0}\" ... api-access=\"false\"/>). "
+                    "Note that enabling api-access is required for this function to work properly with direct mesh access and just-in-time mappings.",
+                    meshName);
+    return context.mesh->nVertices();
+  }
 }
 
 /// @todo Currently not supported as we would need to re-compute the re-partition
@@ -1360,6 +1377,14 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
                 "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
                 "getMeshVertexIDsAndCoordinates(...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
                 meshName);
+  // If an access region is required, we have to check its existence
+  bool requiresBB = requiresUserDefinedAccessRegion(meshName);
+  PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->meshContext(meshName).userDefinedAccessRegion),
+                "The function \"getMeshVertexIDsAndCoordinates\" was called on mesh \"{0}\", "
+                "but no access region was defined although this is necessary for parallel runs. "
+                "Please define an access region using \"setMeshAccessRegion()\" before calling \"getMeshVertexIDsAndCoordinates()\".",
+                meshName);
+
   PRECICE_DEBUG("Get {} mesh vertices with IDs", ids.size());
 
   // Check, if the requested mesh data has already been received. Otherwise, the function call doesn't make any sense
@@ -1370,10 +1395,22 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
   if (ids.empty() && coordinates.empty()) {
     return;
   }
+
+  Event e{fmt::format("getMeshVertexIDsAndCoordinates.{}", meshName), profiling::Fundamental};
+
   const MeshContext & context = _accessor->meshContext(meshName);
   const mesh::PtrMesh mesh(context.mesh);
 
-  const auto meshSize = mesh->nVertices();
+  std::vector<std::reference_wrapper<const mesh::Vertex>> filteredVertices;
+  PRECICE_ASSERT(context.userDefinedAccessRegion);
+  for (const auto &v : mesh->vertices()) {
+    // If the user-defined region is not required OR the vertex lies within the region
+    if (!requiresBB || (context.userDefinedAccessRegion->contains(v))) {
+      filteredVertices.push_back(std::cref(v));
+    }
+  }
+
+  const auto meshSize = filteredVertices.size();
   const auto meshDims = mesh->getDimensions();
   PRECICE_CHECK(ids.size() == meshSize,
                 "Output size is incorrect attempting to get vertex ids of {}D mesh \"{}\". "
@@ -1387,16 +1424,16 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
                 "Use getMeshVertexSize(\"{}\") and getMeshDimensions(\"{}\") to receive the required amount components",
                 meshDims, meshName, coordinates.size(), expectedCoordinatesSize, meshSize, meshDims, meshName, meshName);
 
-  PRECICE_CHECK(ids.size() <= meshSize, "The queried size exceeds the number of available points.");
-  Event e{fmt::format("getMeshVertexIDsAndCoordinates.{}", meshName), profiling::Fundamental};
+  PRECICE_ASSERT(ids.size() <= mesh->nVertices(), "The queried size exceeds the number of available points.");
 
   Eigen::Map<Eigen::MatrixXd> posMatrix{
       coordinates.data(), mesh->getDimensions(), static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
 
   for (unsigned long i = 0; i < ids.size(); i++) {
-    PRECICE_ASSERT(mesh->isValidVertexID(i), i, meshSize);
-    ids[i]           = mesh->vertex(i).getID();
-    posMatrix.col(i) = mesh->vertex(i).getCoords();
+    auto localID = filteredVertices[i].get().getID();
+    PRECICE_ASSERT(mesh->isValidVertexID(localID), i, localID);
+    ids[i]           = localID;
+    posMatrix.col(i) = filteredVertices[i].get().getCoords();
   }
 }
 
