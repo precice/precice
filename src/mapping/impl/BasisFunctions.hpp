@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 #ifdef __CUDA_ARCH__
 #include <cuda_runtime.h>
 #endif
@@ -164,7 +166,14 @@ private:
 class InverseMultiquadrics : public NoCompactSupportBase,
                              public DefiniteFunction<true> {
 public:
-  explicit InverseMultiquadrics(double c);
+  explicit InverseMultiquadrics(double c)
+      : _cPow2(math::pow_int<2>(c))
+  {
+    if (!math::greater(c, 0.0)) {
+      throw std::invalid_argument{"Shape parameter for radial-basis-function inverse multiquadric has to be larger than zero. Please update the \"shape-parameter\" attribute."};
+    }
+    _params.parameter1 = _cPow2;
+  }
 
   double evaluate(double radius) const
   {
@@ -228,7 +237,29 @@ private:
 class Gaussian : public CompactSupportBase,
                  public DefiniteFunction<true> {
 public:
-  Gaussian(const double shape, const double supportRadius = std::numeric_limits<double>::infinity());
+  Gaussian(const double shape, const double supportRadius = std::numeric_limits<double>::infinity())
+      : _shape(shape),
+        _supportRadius(supportRadius)
+  {
+    if (math::greater(_shape, 0.0)) {
+      std::invalid_argument{
+          "Shape parameter for radial-basis-function gaussian has to be larger than zero. Please update the \"shape-parameter\" attribute."};
+    }
+    if (math::greater(_supportRadius, 0.0)) {
+      std::invalid_argument{
+          "Support radius for radial-basis-function gaussian has to be larger than zero. Please update the \"support-radius\" attribute."};
+    }
+
+    double threshold   = std::sqrt(-std::log(cutoffThreshold)) / shape;
+    _supportRadius     = std::min(supportRadius, threshold);
+    _params.parameter1 = _shape;
+    _params.parameter2 = _supportRadius;
+    _params.parameter3 = _deltaY;
+    if (supportRadius < std::numeric_limits<double>::infinity()) {
+      _deltaY            = evaluate(supportRadius);
+      _params.parameter3 = _deltaY;
+    }
+  }
 
   double getSupportRadius() const
   {
@@ -285,7 +316,15 @@ private:
 class CompactThinPlateSplinesC2 : public CompactSupportBase,
                                   public DefiniteFunction<true> {
 public:
-  explicit CompactThinPlateSplinesC2(double supportRadius);
+  explicit CompactThinPlateSplinesC2(double supportRadius)
+  {
+    if (math::greater(supportRadius, 0.0)) {
+      std::invalid_argument{
+          "Support radius for radial-basis-function compact thin-plate-splines c2 has to be larger than zero. Please update the \"support-radius\" attribute."};
+    }
+    _r_inv             = 1. / supportRadius;
+    _params.parameter1 = _r_inv;
+  }
 
   double getSupportRadius() const
   {
@@ -329,7 +368,15 @@ private:
 class CompactPolynomialC0 : public CompactSupportBase,
                             public DefiniteFunction<true> {
 public:
-  explicit CompactPolynomialC0(double supportRadius);
+  explicit CompactPolynomialC0(double supportRadius)
+  {
+    if (math::greater(supportRadius, 0.0)) {
+      std::invalid_argument{
+          "Support radius for radial-basis-function compact polynomial c0 has to be larger than zero. Please update the \"support-radius\" attribute."};
+    }
+    _r_inv             = 1. / supportRadius;
+    _params.parameter1 = _r_inv;
+  }
 
   double getSupportRadius() const
   {
@@ -373,7 +420,16 @@ private:
 class CompactPolynomialC2 : public CompactSupportBase,
                             public DefiniteFunction<true> {
 public:
-  explicit CompactPolynomialC2(double supportRadius);
+  explicit CompactPolynomialC2(double supportRadius)
+  {
+    if (math::greater(supportRadius, 0.0)) {
+      std::invalid_argument{
+          "Support radius for radial-basis-function compact polynomial c2 has to be larger than zero. Please update the \"support-radius\" attribute."};
+    }
+
+    _r_inv             = 1. / supportRadius;
+    _params.parameter1 = _r_inv;
+  }
 
   double getSupportRadius() const
   {
@@ -417,7 +473,16 @@ private:
 class CompactPolynomialC4 : public CompactSupportBase,
                             public DefiniteFunction<true> {
 public:
-  explicit CompactPolynomialC4(double supportRadius);
+  explicit CompactPolynomialC4(double supportRadius)
+  {
+    if (math::greater(supportRadius, 0.0)) {
+      std::invalid_argument{
+          "Support radius for radial-basis-function compact polynomial c4 has to be larger than zero. Please update the \"support-radius\" attribute."};
+    }
+
+    _r_inv             = 1. / supportRadius;
+    _params.parameter1 = _r_inv;
+  }
 
   double getSupportRadius() const
   {
@@ -461,7 +526,15 @@ private:
 class CompactPolynomialC6 : public CompactSupportBase,
                             public DefiniteFunction<true> {
 public:
-  explicit CompactPolynomialC6(double supportRadius);
+  explicit CompactPolynomialC6(double supportRadius)
+  {
+    if (math::greater(supportRadius, 0.0)) {
+      std::invalid_argument{
+          "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute."};
+    }
+    _r_inv             = 1. / supportRadius;
+    _params.parameter1 = _r_inv;
+  }
 
   double getSupportRadius() const
   {
@@ -505,7 +578,15 @@ private:
 class CompactPolynomialC8 : public CompactSupportBase,
                             public DefiniteFunction<true> {
 public:
-  explicit CompactPolynomialC8(double supportRadius);
+  explicit CompactPolynomialC8(double supportRadius)
+  {
+    if (math::greater(supportRadius, 0.0)) {
+      std::invalid_argument{
+          "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute."};
+    }
+    _r_inv             = 1. / supportRadius;
+    _params.parameter1 = _r_inv;
+  }
 
   double getSupportRadius() const
   {
