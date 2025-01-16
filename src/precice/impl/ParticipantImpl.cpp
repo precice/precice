@@ -696,7 +696,7 @@ int ParticipantImpl::getMeshVertexSize(
   PRECICE_ASSERT(context.mesh.get() != nullptr);
 
   // Returns true if we have api access configured and we run in parallel and have a received mesh
-  if (requiresUserDefinedAccessRegion(meshName) && _accessor->isDirectAccessAllowed(meshName)) {
+  if ((context.userDefinedAccessRegion || requiresUserDefinedAccessRegion(meshName)) && _accessor->isDirectAccessAllowed(meshName)) {
     // filter nVertices to the actual number of vertices queried by the user
     PRECICE_CHECK(context.userDefinedAccessRegion, "The function getMeshVertexSize was called on the received mesh \"{0}\", "
                                                    "but no access region was defined although this is necessary for parallel runs. "
@@ -1219,24 +1219,52 @@ void ParticipantImpl::mapAndReadData(
   PRECICE_REQUIRE_DATA_READ(meshName, dataName);
   PRECICE_VALIDATE_DATA(coordinates.begin(), coordinates.size());
 
+  PRECICE_CHECK(_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName),
+                "This participant attempteded to map and read data (via \"mapAndReadData\") from mesh \"{0}\", "
+                "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
+                "mapAndReadData({0}, ...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
+                meshName);
+  // If an access region is required, we have to check its existence
+  bool requiresBB = requiresUserDefinedAccessRegion(meshName);
+  PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->meshContext(meshName).userDefinedAccessRegion),
+                "The function \"mapAndReadData\" was called on mesh \"{0}\", "
+                "but no access region was defined although this is necessary for parallel runs. "
+                "Please define an access region using \"setMeshAccessRegion()\" before calling \"mapAndReadData()\".",
+                meshName);
+
   // Inconsistent sizes will be handled below
   if (coordinates.empty() && values.empty()) {
     return;
   }
 
-  // Make use of the read data context
   // Note that meshName refers here typically to a remote mesh
-  ReadDataContext &dataContext      = _accessor->readDataContext(meshName, dataName);
-  const auto       dataDims         = dataContext.getDataDimensions();
-  const auto       dim              = dataContext.getSpatialDimensions();
-  const auto       expectedDataSize = (coordinates.size() / dim) * dataDims;
-  PRECICE_CHECK(expectedDataSize == values.size(),
-                "Input sizes are inconsistent attempting to read {}D data \"{}\" from mesh \"{}\". "
+  ReadDataContext &dataContext = _accessor->readDataContext(meshName, dataName);
+  const auto       dataDims    = dataContext.getDataDimensions();
+  const auto       dim         = dataContext.getSpatialDimensions();
+  const auto       nVertices   = (coordinates.size() / dim);
+  MeshContext &    context     = _accessor->meshContext(meshName);
+
+  // Check that the vertex is actually within the defined access region
+  if (context.userDefinedAccessRegion) {
+    Eigen::Map<const Eigen::MatrixXd> C(coordinates.data(), dim, nVertices);
+    Eigen::VectorXd                   minCoeffs = C.rowwise().minCoeff();
+    Eigen::VectorXd                   maxCoeffs = C.rowwise().maxCoeff();
+    bool                              minCheck  = (minCoeffs.array() >= context.userDefinedAccessRegion->minCorner().array()).all();
+    bool                              maxCheck  = (maxCoeffs.array() <= context.userDefinedAccessRegion->maxCorner().array()).all();
+    PRECICE_CHECK(minCheck && maxCheck, "The provided coordinates in \"mapAndReadData()\" are not within the access region defined with \"setMeshAccessRegion()\". "
+                                        "Minimum coordinate values are (x,y,z) = ({}), the minimum corner of the access region is box is (x,y,z) = ({}). "
+                                        "Maximum coordinate values are (x,y,z) = ({}), the maximum corner of the access region is box is (x,y,z) = ({}). ",
+                  minCoeffs, context.userDefinedAccessRegion->minCorner(), maxCoeffs, context.userDefinedAccessRegion->maxCorner());
+    C.colwise().maxCoeff();
+  }
+
+  // Make use of the read data context
+  PRECICE_CHECK(nVertices * dataDims == values.size(),
+                "Input sizes are inconsistent attempting to mapAndRead {}D data \"{}\" from mesh \"{}\". "
                 "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
                 dataDims, dataName, meshName,
-                coordinates.size() / dim, values.size(), expectedDataSize, dataDims, coordinates.size() / dim);
+                nVertices, values.size(), nVertices * dataDims, dataDims, nVertices);
 
-  // TODO: Add check that this vertex is within the access region?
   double readTime = _couplingScheme->getTime() + relativeReadTime;
   dataContext.mapAndReadValues(coordinates, readTime, values);
 }
@@ -1252,26 +1280,54 @@ void ParticipantImpl::mapAndWriteData(
   PRECICE_CHECK(_state != State::Finalized, "mapAndWriteData(...) cannot be called after finalize().");
   PRECICE_CHECK(_state == State::Constructed || (_state == State::Initialized && isCouplingOngoing()), "Calling mapAndWriteData(...) is forbidden if coupling is not ongoing, because the data you are trying to write will not be used anymore. You can fix this by always calling mapAndWriteData(...) before the advance(...) call in your simulation loop or by using Participant::isCouplingOngoing() to implement a safeguard.");
   PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
+
+  PRECICE_VALIDATE_DATA(coordinates.begin(), coordinates.size());
+  PRECICE_VALIDATE_DATA(values.data(), values.size());
+  PRECICE_CHECK(_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName),
+                "This participant attempteded to map and read data (via \"mapAndWriteData\") from mesh \"{0}\", "
+                "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
+                "mapAndWriteData({0}, ...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
+                meshName);
+  // If an access region is required, we have to check its existence
+  bool requiresBB = requiresUserDefinedAccessRegion(meshName);
+  PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->meshContext(meshName).userDefinedAccessRegion),
+                "The function \"mapAndWriteData\" was called on mesh \"{0}\", "
+                "but no access region was defined although this is necessary for parallel runs. "
+                "Please define an access region using \"setMeshAccessRegion()\" before calling \"mapAndWriteData()\".",
+                meshName);
+
   // Inconsistent sizes will be handled below
   if (coordinates.empty() && values.empty()) {
     return;
   }
 
+  // Note that meshName refers here typically to a remote mesh
   WriteDataContext &dataContext = _accessor->writeDataContext(meshName, dataName);
+  const auto        dataDims    = dataContext.getDataDimensions();
+  const auto        dim         = dataContext.getSpatialDimensions();
+  const auto        nVertices   = (coordinates.size() / dim);
+  MeshContext &     context     = _accessor->meshContext(meshName);
 
-  const auto dataDims         = dataContext.getDataDimensions();
-  const auto dim              = dataContext.getSpatialDimensions();
-  const auto expectedDataSize = (coordinates.size() / dim) * dataDims;
-  PRECICE_CHECK(expectedDataSize == values.size(),
+  // Check that the vertex is actually within the defined access region
+  if (context.userDefinedAccessRegion) {
+    Eigen::Map<const Eigen::MatrixXd> C(coordinates.data(), dim, nVertices);
+    Eigen::VectorXd                   minCoeffs = C.rowwise().minCoeff();
+    Eigen::VectorXd                   maxCoeffs = C.rowwise().maxCoeff();
+    bool                              minCheck  = (minCoeffs.array() >= context.userDefinedAccessRegion->minCorner().array()).all();
+    bool                              maxCheck  = (maxCoeffs.array() <= context.userDefinedAccessRegion->maxCorner().array()).all();
+    PRECICE_CHECK(minCheck && maxCheck, "The provided coordinates in \"mapAndWriteData()\" are not within the access region defined with \"setMeshAccessRegion()\". "
+                                        "Minimum coordinate values are (x,y,z) = ({}), the minimum corner of the access region is box is (x,y,z) = ({}). "
+                                        "Maximum coordinate values are (x,y,z) = ({}), the maximum corner of the access region is box is (x,y,z) = ({}). ",
+                  minCoeffs, context.userDefinedAccessRegion->minCorner(), maxCoeffs, context.userDefinedAccessRegion->maxCorner());
+    C.colwise().maxCoeff();
+  }
+
+  PRECICE_CHECK(nVertices * dataDims == values.size(),
                 "Input sizes are inconsistent attempting to write {}D data \"{}\" to mesh \"{}\". "
                 "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
                 dataDims, dataName, meshName,
-                coordinates.size() / dim, values.size(), expectedDataSize, dataDims, coordinates.size() / dim);
+                nVertices, values.size(), nVertices * dataDims, dataDims, nVertices);
 
-  // Sizes are correct at this point
-  PRECICE_VALIDATE_DATA(values.data(), values.size()); // TODO Only take span
-
-  // TODO: Add check that this vertex is within the access region?
   dataContext.mapAndWriteValues(coordinates, values);
 }
 
@@ -1404,8 +1460,8 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
   std::vector<std::reference_wrapper<const mesh::Vertex>> filteredVertices;
   PRECICE_ASSERT(context.userDefinedAccessRegion);
   for (const auto &v : mesh->vertices()) {
-    // If the user-defined region is not required OR the vertex lies within the region
-    if (!requiresBB || (context.userDefinedAccessRegion->contains(v))) {
+    // either the vertex lies within the region OR the user-defined region is not strictly necessary
+    if ((context.userDefinedAccessRegion && context.userDefinedAccessRegion->contains(v)) || !requiresBB) {
       filteredVertices.push_back(std::cref(v));
     }
   }

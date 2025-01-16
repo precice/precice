@@ -567,7 +567,7 @@ public:
    * @param[in] meshName the name of the mesh
    * @returns the amount of the vertices of the mesh
    *
-   * @note the function returns the local number of vertices in the defined mesh access region ( @p setMeshAccessRegion() )
+   * @note the function returns the local number of vertices within the defined mesh access region ( @p setMeshAccessRegion() )
    * for direct mesh access and just-in-time mappings. Therefore, api-access needs to be enables when using the function
    * for either of these features ( <receive-mesh name="meshName" ... api-access="true" />).
    *

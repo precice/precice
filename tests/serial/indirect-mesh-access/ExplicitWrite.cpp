@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(ExplicitWrite)
   precice::Participant couplingInterface(context.name, context.config(), 0, 1);
 
   constexpr int               dim         = 2;
-  std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
+  std::array<double, dim * 2> boundingBox = {0.0, 1.0, -0.02, 1.0};
   std::vector<double>         writeData1({1, 2, -3, 4, 2});
   std::vector<double>         writeData2({-4, 12, 3, 5, 7});
   std::vector<double>         expectedData1({1, 4, -3, 4});
@@ -65,6 +65,24 @@ BOOST_AUTO_TEST_CASE(ExplicitWrite)
           PRECICE_ASSERT(false);
         }
       }
+
+      // Check that we catch vertice not within the access region.
+      {
+        std::vector<double> solverTwoCoord(dim);
+        double              value;
+        for (int d = 0; d < dim; ++d) {
+          solverTwoCoord[d] = 100 * tmpPositions[d];
+        }
+        // exceeding to the top
+        BOOST_CHECK_THROW(couplingInterface.mapAndWriteData(otherMeshName, dataName, solverTwoCoord, {&writeData1[0], 1}), ::precice::Error);
+
+        // exceeding to the bottom
+        for (int d = 0; d < dim; ++d) {
+          solverTwoCoord[d] = -1000 * tmpPositions[d];
+        }
+        BOOST_CHECK_THROW(couplingInterface.mapAndWriteData(otherMeshName, dataName, solverTwoCoord, {&writeData1[0], 1}), ::precice::Error);
+      }
+
       couplingInterface.advance(dt);
     }
   } else {

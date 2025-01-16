@@ -24,7 +24,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
   precice::Participant couplingInterface(context.name, context.config(), 0, 1);
 
   constexpr int               dim         = 2;
-  std::array<double, dim * 2> boundingBox = {0.0, 1.0, 0.0, 1.0};
+  std::array<double, dim * 2> boundingBox = {0.0, 1.0, -0.02, 1.0};
 
   if (context.isNamed("SolverOne")) {
     auto otherMeshName = "MeshTwo";
@@ -63,6 +63,24 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
           PRECICE_ASSERT(false);
         }
       }
+
+      // Check that we catch vertice not within the access region.
+      {
+        std::vector<double> solverTwoCoord(dim);
+        double              value;
+        for (int d = 0; d < dim; ++d) {
+          solverTwoCoord[d] = 100 * tmpPositions[d];
+        }
+        // exceeding to the top
+        BOOST_CHECK_THROW(couplingInterface.mapAndReadData(otherMeshName, dataName, solverTwoCoord, dt, {&value, 1}), ::precice::Error);
+
+        // exceeding to the bottom
+        for (int d = 0; d < dim; ++d) {
+          solverTwoCoord[d] = -1000 * tmpPositions[d];
+        }
+        BOOST_CHECK_THROW(couplingInterface.mapAndReadData(otherMeshName, dataName, solverTwoCoord, dt, {&value, 1}), ::precice::Error);
+      }
+
       // solve time step
       // write data (not necessary here)
       couplingInterface.advance(dt);
