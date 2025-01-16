@@ -2,15 +2,15 @@
 
 #include <stdexcept>
 
-#ifdef __CUDA_ARCH__
+#ifdef __CUDACC__
 #include <cuda_runtime.h>
 #endif
 
-#ifdef __HIP_ARCH__
+#ifdef __HIPCC__
 #include <hip/hip_runtime.h>
 #endif
 
-#if defined(__CUDA_ARCH__) || defined(__HIP_ARCH__)
+#if defined(__CUDACC__) || defined(__HIPCC__)
 
 #include <ginkgo/extensions/kokkos.hpp>
 #include <ginkgo/ginkgo.hpp>
