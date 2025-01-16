@@ -282,8 +282,8 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     _matrixV->fill(0.0);
 
     precice::profiling::Event _assemblyEvent{"map.rbf.ginkgo.assembleMatrices"};
-    kernel::fill_polynomial_matrix(_deviceExecutor, _matrixQ, dInputVertices, separatePolyParams);
-    kernel::fill_polynomial_matrix(_deviceExecutor, _matrixV, dOutputVertices, separatePolyParams);
+    kernel::fill_polynomial_matrix(_deviceExecutor, _ginkgoParameter.enableUnifiedMemory, _matrixQ, dInputVertices, separatePolyParams);
+    kernel::fill_polynomial_matrix(_deviceExecutor, _ginkgoParameter.enableUnifiedMemory, _matrixV, dOutputVertices, separatePolyParams);
     _assemblyEvent.stop();
 
     _deviceExecutor->synchronize();
@@ -315,14 +315,14 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   // Launch RBF fill kernel on device
   precice::profiling::Event _assemblyEvent{"map.rbf.ginkgo.assembleMatrices"};
   precice::profiling::Event systemMatrixAssemblyEvent{"map.rbf.ginkgo.assembleSystemMatrix"};
-  kernel::create_rbf_system_matrix(_deviceExecutor, _rbfSystemMatrix, activeAxis, dInputVertices, dInputVertices, basisFunction,
+  kernel::create_rbf_system_matrix(_deviceExecutor, _ginkgoParameter.enableUnifiedMemory, _rbfSystemMatrix, activeAxis, dInputVertices, dInputVertices, basisFunction,
                                    basisFunction.getFunctionParameters(), Polynomial::ON == polynomial,
                                    polyparams); // polynomial evaluates to true only if ON is set
   _deviceExecutor->synchronize();
   systemMatrixAssemblyEvent.stop();
 
   precice::profiling::Event outputMatrixAssemblyEvent{"map.rbf.ginkgo.assembleOutputMatrix"};
-  kernel::create_rbf_system_matrix(_deviceExecutor, _matrixA, activeAxis, dInputVertices, dOutputVertices, basisFunction,
+  kernel::create_rbf_system_matrix(_deviceExecutor, _ginkgoParameter.enableUnifiedMemory, _matrixA, activeAxis, dInputVertices, dOutputVertices, basisFunction,
                                    basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams);
 
   // Wait for the kernels to finish

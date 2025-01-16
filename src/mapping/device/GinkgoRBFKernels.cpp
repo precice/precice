@@ -27,12 +27,20 @@ std::shared_ptr<gko::Executor> create_device_executor(const std::string &execNam
 #endif
 #ifdef PRECICE_WITH_CUDA
   if (execName == "cuda-executor") {
-    return gko::ext::kokkos::create_executor(Kokkos::Cuda{});
+    if (enableUnifiedMemory) {
+      return gko::ext::kokkos::create_executor(Kokkos::Cuda{}, Kokkos::CudaUVMSpace{});
+    } else {
+      return gko::ext::kokkos::create_executor(Kokkos::Cuda{}, Kokkos::CudaSpace{});
+    }
   }
 #endif
 #ifdef PRECICE_WITH_HIP
   if (execName == "hip-executor") {
-    return gko::ext::kokkos::create_executor(Kokkos::HIP{});
+    if (enableUnifiedMemory) {
+      return gko::ext::kokkos::create_executor(Kokkos::HIP{}, Kokkos::HIPManagedSpace);
+    } else {
+      return gko::ext::kokkos::create_executor(Kokkos::HIP{}, Kokkos::HIPSpace);
+    }
   }
 #endif
   PRECICE_UNREACHABLE("Executor {} unknown to preCICE", execName);
@@ -109,6 +117,7 @@ void create_rbf_system_matrix_impl(std::shared_ptr<const gko::Executor>      exe
 
 template <typename EvalFunctionType>
 void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
+                              bool                                      unifiedMemory,
                               gko::ptr_param<GinkgoMatrix>              mtx,
                               const std::array<bool, 3>                 activeAxis,
                               gko::ptr_param<GinkgoMatrix>              supportPoints,
@@ -132,13 +141,21 @@ void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
 #endif
 #ifdef PRECICE_WITH_CUDA
   if (std::dynamic_pointer_cast<const gko::CudaExecutor>(exec)) {
-    create_rbf_system_matrix_impl<Kokkos::Cuda::memory_space>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+    if (unifiedMemory) {
+      create_rbf_system_matrix_impl<Kokkos::CudaSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+    } else {
+      create_rbf_system_matrix_impl<Kokkos::CudaUVMSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+    }
     return;
   }
 #endif
 #ifdef PRECICE_WITH_HIP
   if (std::dynamic_pointer_cast<const gko::HipExecutor>(exec)) {
-    create_rbf_system_matrix_impl<Kokkos::Hip::memory_space>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+    if (unifiedMemory) {
+      create_rbf_system_matrix_impl<Kokkos::HipManagedSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+    } else {
+      create_rbf_system_matrix_impl<Kokkos::HipSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+    }
     return;
   }
 #endif
@@ -147,6 +164,7 @@ void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
 
 #define PRECICE_INSTANTIATE_CREATE_RBF_SYSTEM_MATRIX(_function_type)                                                                            \
   template void create_rbf_system_matrix<_function_type>(std::shared_ptr<const gko::Executor> exec,                                             \
+                                                         bool                                 unifiedMemory,                                    \
                                                          gko::ptr_param<GinkgoMatrix> mtx, const std::array<bool, 3> activeAxis,                \
                                                          gko::ptr_param<GinkgoMatrix> supportPoints, gko::ptr_param<GinkgoMatrix> targetPoints, \
                                                          _function_type f, RadialBasisParameters rbf_params, bool addPolynomial, unsigned int extraDims)
@@ -204,6 +222,7 @@ void fill_polynomial_matrix_impl(std::shared_ptr<const gko::Executor> exec,
 }
 
 void fill_polynomial_matrix(std::shared_ptr<const gko::Executor> exec,
+                            bool                                 unifiedMemory,
                             gko::ptr_param<GinkgoMatrix>         mtx,
                             gko::ptr_param<const GinkgoMatrix>   x,
                             const unsigned int                   dims)
@@ -222,13 +241,21 @@ void fill_polynomial_matrix(std::shared_ptr<const gko::Executor> exec,
 #endif
 #ifdef PRECICE_WITH_CUDA
   if (auto p = std::dynamic_pointer_cast<const gko::CudaExecutor>(exec); p) {
-    fill_polynomial_matrix_impl<Kokkos::Cuda::memory_space>(exec, mtx, x, dims);
+    if (unifiedMemory) {
+      fill_polynomial_matrix_impl<Kokkos::CudaUVMSpace>(exec, mtx, x, dims);
+    } else {
+      fill_polynomial_matrix_impl<Kokkos::CudaSpace>(exec, mtx, x, dims);
+    }
     return;
   }
 #endif
 #ifdef PRECICE_WITH_HIP
   if (std::dynamic_pointer_cast<const gko::HipExecutor>(exec)) {
-    fill_polynomial_matrix_impl<Kokkos::Hip::memory_space>(exec, mtx, x, dims);
+    if (unifiedMemory) {
+      fill_polynomial_matrix_impl<Kokkos::HIPManagedSpace>(exec, mtx, x, dims);
+    } else {
+      fill_polynomial_matrix_impl<Kokkos::HIPSpace>(exec, mtx, x, dims);
+    }
     return;
   }
 #endif
