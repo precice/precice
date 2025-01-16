@@ -1,6 +1,18 @@
 #pragma once
 
-#if defined(__NVCC__)
+#if defined(__NVCC__) || (defined(__CUDA__) && defined(__CUDA_ARCH__))
+#define PRECICE_CUDA_DEVICE
+#endif
+
+#if defined(__HIPCC__)
+#define PRECICE_HIP_DEVICE
+#endif
+
+#if defined(PRECICE_CUDA_DEVICE) || defined(PRECICE_HIP_DEVICE)
+#define PRECICE_DEVICE
+#endif
+
+#if defined(PRECICE_CUDA_DEVICE)
 
 #include <cuda_runtime.h>
 #include <ginkgo/extensions/kokkos.hpp>
@@ -12,7 +24,7 @@
 #define PRECICE_FMA Kokkos::fma
 #define PRECICE_LOG Kokkos::log
 
-#elif defined(__HIPCC__)
+#elif defined(PRECICE_HIP_DEVICE)
 
 #include <ginkgo/extensions/kokkos.hpp>
 #include <ginkgo/ginkgo.hpp>
@@ -34,7 +46,7 @@
 
 #define NUMERICAL_ZERO_DIFFERENCE_DEVICE 1.0e-14
 
-#if !defined(__NVCC__) || !defined(__HIPCC__)
+#ifndef PRECICE_DEVICE
 #include "logging/Logger.hpp"
 #endif
 #include "math/math.hpp"
@@ -176,7 +188,7 @@ public:
   explicit InverseMultiquadrics(double c)
       : _cPow2(math::pow_int<2>(c))
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
+#ifndef PRECICE_DEVICE
     logging::Logger _log{"mapping::InverseMultiQuadrics"};
     PRECICE_CHECK(math::greater(c, 0.0),
                   "Shape parameter for radial-basis-function inverse multiquadric has to be larger than zero. Please update the \"shape-parameter\" attribute.");
@@ -250,7 +262,7 @@ public:
       : _shape(shape),
         _supportRadius(supportRadius)
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
+#ifndef PRECICE_DEVICE
     logging::Logger _log{"mapping::Gaussian"};
     PRECICE_CHECK(math::greater(_shape, 0.0),
                   "Shape parameter for radial-basis-function gaussian has to be larger than zero. Please update the \"shape-parameter\" attribute.");
@@ -326,7 +338,7 @@ class CompactThinPlateSplinesC2 : public CompactSupportBase,
 public:
   explicit CompactThinPlateSplinesC2(double supportRadius)
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
+#ifndef PRECICE_DEVICE
     logging::Logger _log{"mapping::CompactThinPlateSplinesC2"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact thin-plate-splines c2 has to be larger than zero. Please update the \"support-radius\" attribute.");
@@ -379,7 +391,7 @@ class CompactPolynomialC0 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC0(double supportRadius)
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
+#ifndef PRECICE_DEVICE
     logging::Logger _log{"mapping::CompactPolynomialC0"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c0 has to be larger than zero. Please update the \"support-radius\" attribute.");
@@ -432,7 +444,7 @@ class CompactPolynomialC2 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC2(double supportRadius)
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
+#ifndef PRECICE_DEVICE
     logging::Logger _log{"mapping::CompactPolynomialC2"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c2 has to be larger than zero. Please update the \"support-radius\" attribute.");
@@ -486,7 +498,7 @@ class CompactPolynomialC4 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC4(double supportRadius)
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
+#ifndef PRECICE_DEVICE
     logging::Logger _log{"mapping::CompactPolynomialC4"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c4 has to be larger than zero. Please update the \"support-radius\" attribute.");
@@ -540,7 +552,7 @@ class CompactPolynomialC6 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC6(double supportRadius)
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
+#ifndef PRECICE_DEVICE
     logging::Logger _log{"mapping::CompactPolynomialC6"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute.");
@@ -593,7 +605,7 @@ class CompactPolynomialC8 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC8(double supportRadius)
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
+#ifndef PRECICE_DEVICE
     logging::Logger _log{"mapping::CompactPolynomialC8"};
     PRECICE_CHECK(math::greater(supportRadius, 0.0),
                   "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute.");

@@ -424,46 +424,60 @@ endif()
 
 # Setup Ginkgo
 if (PRECICE_FEATURE_GINKGO_MAPPING)
+  add_library(ginkgoKernels STATIC)
+  set_target_properties(ginkgoKernels PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED Yes
+    CXX_EXTENSIONS No
+    POSITION_INDEPENDENT_CODE YES
+    )
     # Next we configure the common kernels for the matrix assembly
-    target_sources(preciceCore PRIVATE
+    target_sources(ginkgoKernels PRIVATE
     src/mapping/device/GinkgoRBFKernels.cpp
     src/mapping/device/Ginkgo.cpp
     )
 
-  target_link_libraries(preciceCore PRIVATE Ginkgo::ginkgo Kokkos::kokkos)
-  target_compile_definitions(preciceCore PUBLIC EIGEN_NO_CUDA)
+    target_include_directories(ginkgoKernels PUBLIC
+      $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
+      $<BUILD_INTERFACE:${preCICE_BINARY_DIR}/src>
+    )
+
+  target_link_libraries(ginkgoKernels PRIVATE Ginkgo::ginkgo Kokkos::kokkos fmtlib-static Eigen3::Eigen)
+  target_compile_definitions(ginkgoKernels PUBLIC EIGEN_NO_CUDA)
+
+  target_link_libraries(preciceCore PUBLIC ginkgoKernels)
 
   # Disable compiler launcher since Kokkos ships its own nvcc wrapper
-   set_target_properties(preciceCore PROPERTIES CXX_COMPILER_LAUNCHER "")
+   set_target_properties(ginkgoKernels PROPERTIES CXX_COMPILER_LAUNCHER "")
 
   # Now we setup cuSolver and hipSOLVER for preCICE
   if(PRECICE_WITH_CUDA)
-    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_CUDA)
+    target_compile_definitions(ginkgoKernels PUBLIC PRECICE_WITH_CUDA)
     # Required to make nvcc happy
-    target_compile_definitions(preciceCore PRIVATE BOOST_PP_VARIADICS=1)
-    target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cuh ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cu)
-    target_link_libraries(preciceCore PRIVATE cusolver cublas)
+    target_compile_definitions(ginkgoKernels PRIVATE BOOST_PP_VARIADICS=1)
+    target_sources(ginkgoKernels PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cuh ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cu)
+    target_link_libraries(ginkgoKernels PRIVATE cusolver cublas)
     message(STATUS "Enabled CUDA support for preCICE via the Ginkgo library.")
   endif()
 
   if(PRECICE_WITH_HIP)
-    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_HIP)
+    target_compile_definitions(ginkgoKernels PUBLIC PRECICE_WITH_HIP)
     set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.cpp)
-    target_sources(preciceCore PRIVATE ${_hiplist})
-    target_link_libraries(preciceCore PRIVATE hip::device Ginkgo::ginkgo roc::hipsolver roc::hipblas)
+    target_sources(ginkgoKernels PRIVATE ${_hiplist})
+    target_link_libraries(ginkgoKernels PRIVATE hip::device Ginkgo::ginkgo roc::hipsolver roc::hipblas)
 
     message(STATUS "Enabled HIP support for preCICE via the Ginkgo library.")
   endif()
 
   if(PRECICE_WITH_OPENMP)
-    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_OPENMP)
-    target_link_libraries(preciceCore PUBLIC OpenMP::OpenMP_CXX)
+    target_compile_definitions(ginkgoKernels PUBLIC PRECICE_WITH_OPENMP)
+    target_link_libraries(ginkgoKernels PUBLIC OpenMP::OpenMP_CXX)
     # There is nothing special required for OpenMP, looking for OpenMP and setting the flag is handled by the unified kernels
     message(STATUS "Enabled OpenMP support for preCICE via the Ginkgo library.")
   endif()
 
   # Finally, we link Ginkgo into preCICE
-  target_link_libraries(preciceCore PUBLIC Ginkgo::ginkgo)
+  # target_link_libraries(preciceCore PUBLIC Ginkgo::ginkgo)
 else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_GINKGO)
 endif()
