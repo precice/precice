@@ -20,17 +20,17 @@ std::shared_ptr<gko::Executor> create_device_executor(const std::string &execNam
     return gko::ext::kokkos::create_executor(Kokkos::Serial{});
   }
 #endif
-#ifdef KOKKOS_ENABLE_OPENMP
+#ifdef PRECICE_WITH_OPENMP
   if (execName == "omp-executor") {
     return gko::ext::kokkos::create_executor(Kokkos::OpenMP{});
   }
 #endif
-#ifdef KOKKOS_ENABLE_CUDA
+#ifdef PRECICE_WITH_CUDA
   if (execName == "cuda-executor") {
     return gko::ext::kokkos::create_executor(Kokkos::Cuda{});
   }
 #endif
-#ifdef KOKKOS_ENABLE_HIP
+#ifdef PRECICE_WITH_HIP
   if (execName == "hip-executor") {
     return gko::ext::kokkos::create_executor(Kokkos::HIP{});
   }
@@ -124,19 +124,19 @@ void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
     return;
   }
 #endif
-#ifdef KOKKOS_ENABLE_OPENMP
+#ifdef PRECICE_WITH_OPENMP
   if (std::dynamic_pointer_cast<const gko::OmpExecutor>(exec)) {
     create_rbf_system_matrix_impl<Kokkos::OpenMP::memory_space>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
     return;
   }
 #endif
-#ifdef KOKKOS_ENABLE_CUDA
+#ifdef PRECICE_WITH_CUDA
   if (std::dynamic_pointer_cast<const gko::CudaExecutor>(exec)) {
     create_rbf_system_matrix_impl<Kokkos::Cuda::memory_space>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
     return;
   }
 #endif
-#ifdef KOKKOS_ENABLE_HIP
+#ifdef PRECICE_WITH_HIP
   if (std::dynamic_pointer_cast<const gko::HipExecutor>(exec)) {
     create_rbf_system_matrix_impl<Kokkos::Hip::memory_space>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
     return;
@@ -214,19 +214,19 @@ void fill_polynomial_matrix(std::shared_ptr<const gko::Executor> exec,
     return;
   }
 #endif
-#ifdef KOKKOS_ENABLE_OPENMP
+#ifdef PRECICE_WITH_OPENMP
   if (std::dynamic_pointer_cast<const gko::OmpExecutor>(exec)) {
     fill_polynomial_matrix_impl<Kokkos::OpenMP::memory_space>(exec, mtx, x, dims);
     return;
   }
 #endif
-#ifdef KOKKOS_ENABLE_CUDA
-  if (std::dynamic_pointer_cast<const gko::CudaExecutor>(exec)) {
+#ifdef PRECICE_WITH_CUDA
+  if (auto p = std::dynamic_pointer_cast<const gko::CudaExecutor>(exec); p) {
     fill_polynomial_matrix_impl<Kokkos::Cuda::memory_space>(exec, mtx, x, dims);
     return;
   }
 #endif
-#ifdef KOKKOS_ENABLE_HIP
+#ifdef PRECICE_WITH_HIP
   if (std::dynamic_pointer_cast<const gko::HipExecutor>(exec)) {
     fill_polynomial_matrix_impl<Kokkos::Hip::memory_space>(exec, mtx, x, dims);
     return;
