@@ -1183,7 +1183,6 @@ void ParticipantImpl::readData(
   context.readValues(vertices, readTime, values);
 }
 
-//////////////////////////////////////////////
 void ParticipantImpl::mapAndReadData(
     std::string_view              meshName,
     std::string_view              dataName,
@@ -1224,7 +1223,6 @@ void ParticipantImpl::mapAndReadData(
   double readTime = _couplingScheme->getTime() + relativeReadTime;
   dataContext.mapAndReadValues(coordinates, readTime, values);
 }
-////////////////////////////////////////////////////
 
 void ParticipantImpl::mapAndWriteData(
     std::string_view              meshName,
@@ -1326,7 +1324,7 @@ void ParticipantImpl::setMeshAccessRegion(
   // Get the related mesh
   MeshContext &context = _accessor->meshContext(meshName);
 
-  PRECICE_CHECK(!context.accessRegionDefined, "A mesh access region was already defined for mesh \"{}\". setMeshAccessRegion may only be called once per mesh.", context.mesh->getName());
+  PRECICE_CHECK(!context.userDefinedAccessRegion, "A mesh access region was already defined for mesh \"{}\". setMeshAccessRegion may only be called once per mesh.", context.mesh->getName());
   mesh::PtrMesh mesh(context.mesh);
   int           dim = mesh->getDimensions();
   PRECICE_CHECK(boundingBox.size() == static_cast<unsigned long>(dim) * 2,
@@ -1345,11 +1343,9 @@ void ParticipantImpl::setMeshAccessRegion(
     bounds[2 * d + 1] = boundingBox[2 * d + 1];
   }
   // Create a bounding box
-  mesh::BoundingBox providedBoundingBox(bounds);
+  context.userDefinedAccessRegion = std::make_shared<mesh::BoundingBox>(bounds);
   // Expand the mesh associated bounding box
-  mesh->expandBoundingBox(providedBoundingBox);
-  // and set a flag so that we know the function was called
-  context.accessRegionDefined = true;
+  mesh->expandBoundingBox(*context.userDefinedAccessRegion.get());
 }
 
 void ParticipantImpl::getMeshVertexIDsAndCoordinates(
@@ -1805,6 +1801,11 @@ void ParticipantImpl::closeCommunicationChannels(CloseChannels close)
       bm2n.m2n->closeConnection();
     }
   }
+}
+
+bool ParticipantImpl::requiresUserDefinedAccessRegion(std::string_view meshName) const
+{
+  return _accessor->isMeshReceived(meshName) && utils::IntraComm::isParallel();
 }
 
 const mesh::Mesh &ParticipantImpl::mesh(const std::string &meshName) const

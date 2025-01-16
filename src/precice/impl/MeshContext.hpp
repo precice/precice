@@ -35,7 +35,12 @@ struct MeshContext {
   bool allowDirectAccess = false;
 
   /// setMeshAccessRegion may only be called once per mesh(context)
-  bool accessRegionDefined = false;
+  /// putting this into the mesh context means that we can only call
+  /// this once, regardless of combinations with just-in-time mappings
+  /// or multiple such mappings
+  /// if multiples are desired, we would need to shift this into the
+  /// MappingContext
+  std::shared_ptr<mesh::BoundingBox> userDefinedAccessRegion;
 
   /// True, if accessor does create the mesh.
   bool provideMesh = false;

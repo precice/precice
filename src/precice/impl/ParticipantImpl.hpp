@@ -487,6 +487,11 @@ private:
   /// Setup mesh watcher such as WatchPoints
   void setupWatcher();
 
+  /// Returns if a user has to define an access region for direct
+  /// mesh access and just-in-time mapping or not
+  /// Right now, that's required in parallel runs on received meshes
+  bool requiresUserDefinedAccessRegion(std::string_view meshName) const;
+
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;
   friend struct Integration::Serial::Whitebox::TestConfigurationComsol;
