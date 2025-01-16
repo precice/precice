@@ -924,10 +924,11 @@ public:
    *        The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    * @param[out] values the values containing the write data.
    *
-   * @pre the coordinates are within the bounding box previously defined via \ref setMeshAccessRegion()
+   * @pre the coordinates are within the bounding box previously defined via \ref setMeshAccessRegion(). In parallel
+   * runs, using coordinates outside the defined bounding box will throw an error.
    *
    * @note the evaluated mapping computes the values corresponding to the initial configuration of the other provided mesh.
-   * @note Only supported for conservative mapping constraints.
+   * @note Only supported for conservative mapping constraints and mapping:rbf-pum-direct or mapping:nearest-neighbot.
    * @note Caution when calling this function multiple times on the same data coordinates: There is no internal check and preCICE accumulates
    * data values for conservative mappings.
    * @note this function is currently part of the experimental API.
@@ -969,12 +970,13 @@ public:
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
    * @param[out] values the destination memory to read the data from.
    *
-   * @pre the coordinates are within the bounding box previously defined via \ref setMeshAccessRegion()
+   * @pre the coordinates are within the bounding box previously defined via \ref setMeshAccessRegion(). In parallel
+   * runs, using coordinates outside the defined bounding box will throw an error.
    *
    * @post values contain the read data as specified in the above format.
    *
    * @note Note that the evaluated mapping computes the values corresponding to the initial configuration of the other provided mesh.
-   *
+   * @note Only supported for consistent mapping constraints and mapping:rbf-pum-direct or mapping:nearest-neighbot.
    * @note this function is currently part of the experimental API.
    *
    * @see Participant::setMeshAccessRegion()
