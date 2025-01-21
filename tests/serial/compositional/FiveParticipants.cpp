@@ -73,6 +73,7 @@ BOOST_AUTO_TEST_CASE(FiveParticipants)
   std::vector<double> receivedStretch1{0.0};
   std::vector<double> receivedCrossStretch1{0.0};
   std::vector<double> receivedStretch2{0.0};
+  std::vector<double> receivedCrossStretch2{0.0};
 
   for (int timestep = 0; timestep < 2; ++timestep) {
 
@@ -96,7 +97,7 @@ BOOST_AUTO_TEST_CASE(FiveParticipants)
       participant.readData("Activation_M2SM_Mesh", "Activation2", activationVertexIDs, timestepSize, receivedActivation2);
 
     } else if (context.isNamed("M2")) {
-
+      participant.readData("Stretch_M2_Mesh", "Stretch1", stretchVertexIDs, timestepSize, receivedCrossStretch2);
       participant.readData("Stretch_M2_Mesh", "Stretch2", stretchVertexIDs, timestepSize, receivedStretch2);
       participant.writeData("Activation_M2_Mesh", "Activation2", stretchVertexIDs, activation2);
 
@@ -134,6 +135,8 @@ BOOST_AUTO_TEST_CASE(FiveParticipants)
 
     BOOST_TEST(receivedStretch1 == stretch1, boost::test_tools::per_element());
     BOOST_TEST(receivedCrossStretch1 == stretch2, boost::test_tools::per_element());
+  } else {
+    BOOST_TEST(receivedCrossStretch2 == stretch1, boost::test_tools::per_element());
   }
 
   participant.finalize();

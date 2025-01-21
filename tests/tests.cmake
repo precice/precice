@@ -194,7 +194,6 @@ target_sources(testprecice
     tests/serial/compositional/FiveParticipants.cpp
     tests/serial/compositional/OneActivatedMuscle.cpp
     tests/serial/compositional/TwoActivatedMuscles.cpp
-    tests/serial/compositional/TwoActivatedMuscles1.cpp
     tests/serial/compositional/data/implicit-first/AllParallel.cpp
     tests/serial/compositional/data/implicit-first/Parallel.cpp
     tests/serial/compositional/data/implicit-first/SerialFirst.cpp
