@@ -9,7 +9,7 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Compositional)
-PRECICE_TEST_SETUP("M1SM"_on(1_rank), "M2SM"_on(1_rank), "M1"_on(1_rank), "M2"_on(1_rank),"Tendon"_on(1_rank));
+PRECICE_TEST_SETUP("M1SM"_on(1_rank), "M2SM"_on(1_rank), "M1"_on(1_rank), "M2"_on(1_rank), "Tendon"_on(1_rank));
 BOOST_AUTO_TEST_CASE(FiveParticipants)
 {
   PRECICE_TEST();
@@ -33,13 +33,17 @@ BOOST_AUTO_TEST_CASE(FiveParticipants)
     participant.setMeshVertices("Activation_M1SM_Mesh", neuralCoords, activationVertexIDs);
     participant.setMeshVertices("Stretch_M1SM_Mesh", neuralCoords, stretchVertexIDs);
 
+  } else if (context.isNamed("Tendon")) {
+    participant.setMeshVertices("SurfaceTendon_M1SM_Mesh", surfaceCoords, surface1VertexIDs);
+    participant.setMeshVertices("SurfaceTendon_M2SM_Mesh", surfaceCoords, surface2VertexIDs);
+
   } else if (context.isNamed("M2SM")) {
 
     participant.setMeshVertices("Surface_M2SM_Mesh", surfaceCoords, surface2VertexIDs);
     participant.setMeshVertices("Activation_M2SM_Mesh", neuralCoords, activationVertexIDs);
     participant.setMeshVertices("Stretch_M2SM_Mesh", neuralCoords, stretchVertexIDs);
 
-  } else if (context.isNamed("M1"))  {
+  } else if (context.isNamed("M1")) {
 
     participant.setMeshVertices("Stretch_M1_Mesh", neuralCoords, stretchVertexIDs);
     participant.setMeshVertices("Activation_M1_Mesh", neuralCoords, activationVertexIDs);
@@ -51,10 +55,10 @@ BOOST_AUTO_TEST_CASE(FiveParticipants)
 
   participant.initialize();
 
-  std::vector<double> tractions1{1.2, 1.4};
   std::vector<double> displacements1{1.2, 1.4};
-  std::vector<double> tractions2{2.2, 2.4};
   std::vector<double> displacements2{2.2, 2.4};
+  std::vector<double> tractions1{1.2, 1.4};
+  std::vector<double> tractions2{2.2, 2.4};
   std::vector<double> activation1{1.0};
   std::vector<double> activation2{2.0};
   std::vector<double> stretch1{1.1};
@@ -62,45 +66,48 @@ BOOST_AUTO_TEST_CASE(FiveParticipants)
 
   std::vector<double> receivedDisplacements1{0.0, 0.0};
   std::vector<double> receivedDisplacements2{0.0, 0.0};
+  std::vector<double> receivedTractions1{0.0, 0.0};
+  std::vector<double> receivedTractions2{0.0, 0.0};
   std::vector<double> receivedActivation1{0.0};
- std::vector<double> receivedActivation2{0.0};
+  std::vector<double> receivedActivation2{0.0};
   std::vector<double> receivedStretch1{0.0};
   std::vector<double> receivedCrossStretch1{0.0};
   std::vector<double> receivedStretch2{0.0};
 
-
   for (int timestep = 0; timestep < 2; ++timestep) {
 
     if (context.isNamed("M1SM")) {
-      participant.writeData("Surface_M1SM_Mesh", "Displacement", surface1VertexIDs, displacements1);
+      participant.writeData("Surface_M1SM_Mesh", "Displacement1", surface1VertexIDs, displacements1);
+      participant.readData("Surface_M1SM_Mesh", "Traction1", surface1VertexIDs, timestepSize, tractions1);
       participant.readData("Activation_M1SM_Mesh", "Activation1", activationVertexIDs, timestepSize, receivedActivation1);
-      participant.writeData("Stretch_M1SM_Mesh", "stretch1", stretchVertexIDs, stretch1);
+      participant.writeData("Stretch_M1SM_Mesh", "Stretch1", stretchVertexIDs, stretch1);
 
-    } else  if (context.isNamed("Tendon")) {
+    } else if (context.isNamed("Tendon")) {
       participant.readData("SurfaceTendon_M1SM_Mesh", "Displacement1", surface1VertexIDs, timestepSize, receivedDisplacements1);
+      participant.readData("SurfaceTendon_M2SM_Mesh", "Traction2", surface2VertexIDs, timestepSize, receivedTractions2);
       participant.writeData("SurfaceTendon_M2SM_Mesh", "Displacement2", surface2VertexIDs, displacements2);
-    }
-    else if (context.isNamed("M2SM")) {
+      participant.writeData("SurfaceTendon_M1SM_Mesh", "Traction1", surface1VertexIDs, tractions1);
+    } else if (context.isNamed("M2SM")) {
 
       participant.readData("Surface_M2SM_Mesh", "Displacement2", surface2VertexIDs, timestepSize, receivedDisplacements2);
-      participant.writeData("Stretch_M2SM_Mesh", "stretch2", stretchVertexIDs, stretch2);
+      participant.writeData("Surface_M2SM_Mesh", "Traction2", surface2VertexIDs, tractions2);
+      participant.writeData("Stretch_M2SM_Mesh", "Stretch2", stretchVertexIDs, stretch2);
+
       participant.readData("Activation_M2SM_Mesh", "Activation2", activationVertexIDs, timestepSize, receivedActivation2);
 
+    } else if (context.isNamed("M2")) {
 
-    }   else if (context.isNamed("M2")) {
+      participant.readData("Stretch_M2_Mesh", "Stretch2", stretchVertexIDs, timestepSize, receivedStretch2);
+      participant.writeData("Activation_M2_Mesh", "Activation2", stretchVertexIDs, activation2);
 
-      participant.readData("Stretch_M2_Mesh", "stretch2", stretchVertexIDs, timestepSize, receivedStretch2);
-      participant.writeData("Activation_M2_Mesh", "activation2", stretchVertexIDs, activation2);
-
-    }else {
+    } else {
 
       BOOST_TEST(context.isNamed("M1"));
 
       participant.writeData("Activation_M1_Mesh", "Activation1", activationVertexIDs, activation1);
-      participant.readData("Stretch_M1_Mesh", "stretch1", stretchVertexIDs, timestepSize, receivedStretch1);
-      participant.readData("Stretch_M1_Mesh", "stretch2", stretchVertexIDs, timestepSize, receivedCrossStretch1);
-
-    } 
+      participant.readData("Stretch_M1_Mesh", "Stretch1", stretchVertexIDs, timestepSize, receivedStretch1);
+      participant.readData("Stretch_M1_Mesh", "Stretch2", stretchVertexIDs, timestepSize, receivedCrossStretch1);
+    }
 
     if (participant.requiresWritingCheckpoint()) {
     }
@@ -114,16 +121,20 @@ BOOST_AUTO_TEST_CASE(FiveParticipants)
 
     BOOST_TEST(receivedActivation1 == activation1, boost::test_tools::per_element());
 
+  } else if (context.isNamed("Tendon")) {
+    BOOST_TEST(receivedDisplacements1 == displacements1, boost::test_tools::per_element());
+
+    BOOST_TEST(receivedTractions2 == tractions2, boost::test_tools::per_element());
+
   } else if (context.isNamed("M2SM")) {
 
     BOOST_TEST(receivedDisplacements2 == displacements2, boost::test_tools::per_element());
 
-  } else {
+  } else if (context.isNamed("M1")) {
 
     BOOST_TEST(receivedStretch1 == stretch1, boost::test_tools::per_element());
     BOOST_TEST(receivedCrossStretch1 == stretch2, boost::test_tools::per_element());
-
-  } 
+  }
 
   participant.finalize();
 }
