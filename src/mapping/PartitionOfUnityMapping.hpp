@@ -78,9 +78,11 @@ public:
 
   void mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values) final override;
 
-  void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target) final override;
+  void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target) final override;
 
   void updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in) final override;
+
+  void completeJustInTimeMapping(MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer) final override;
 
 private:
   /// logger, as usual
@@ -327,9 +329,44 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time:
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target)
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd>)
 {
   precice::profiling::Event e("map.pou.mapConservativeAt.From" + input()->getName());
+  // @todo: it would most probably be more efficient to first group the vertices we receive here according to the clusters and then compute the solution
+
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_centerMesh);
+  cache.p.resize(_clusters.size());
+  cache.polynomialContributions.resize(_clusters.size());
+  int          dim = getDimensions();
+  mesh::Vertex vertex(coordinates.col(0), -1);
+  for (std::size_t v = 0; v < coordinates.cols(); ++v) {
+    vertex.setCoords(coordinates.col(v));
+    auto [clusterIDs, normalizedWeights] = computeNormalizedWeight(vertex, this->input()->getName());
+    // Use the weight to interpolate the solution
+    for (std::size_t i = 0; i < clusterIDs.size(); ++i) {
+      PRECICE_ASSERT(clusterIDs[i] < static_cast<int>(_clusters.size()));
+      auto id = clusterIDs[i];
+      // the input mesh refers here to a consistent constraint
+      Eigen::VectorXd res = normalizedWeights[i] * source.col(v);
+      _clusters[id].addWriteDataToCache(vertex, res, cache.polynomialContributions[id], cache.p[id], *this->output().get());
+    }
+  }
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::completeJustInTimeMapping(MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer)
+{
+  PRECICE_TRACE();
+  if (!cache.p.empty()) {
+    for (std::size_t c = 0; c < _clusters.size(); ++c) {
+      if (cache.p[c].squaredNorm() > 0) {
+        _clusters[c].evaluateConservativeCache(cache.polynomialContributions[c], cache.p[c], buffer);
+        cache.polynomialContributions[c].setZero();
+        cache.p[c].setZero();
+      }
+    }
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

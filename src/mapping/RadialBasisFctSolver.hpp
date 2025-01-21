@@ -61,6 +61,12 @@ public:
   Eigen::VectorXd interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs,
                                 const RADIAL_BASIS_FUNCTION_T &function, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const;
 
+  template <typename IndexContainer>
+  void addWriteDataToCache(const mesh::Vertex &v, const Eigen::VectorXd &load, Eigen::MatrixXd &epsilon, Eigen::MatrixXd &Au,
+                           const RADIAL_BASIS_FUNCTION_T &basisFunction, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const;
+
+  void evaluateConservativeCache(Eigen::MatrixXd &epsilon, const Eigen::MatrixXd &Au, Eigen::MatrixXd &result) const;
+
 private:
   mutable precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
 
@@ -513,6 +519,64 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::interpolateAt(con
     }
   }
   return result;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+template <typename IndexContainer>
+void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const mesh::Vertex &v, const Eigen::VectorXd &load, Eigen::MatrixXd &epsilon, Eigen::MatrixXd &Au,
+                                                                        const RADIAL_BASIS_FUNCTION_T &basisFunction, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const
+{
+  PRECICE_TRACE();
+  // We ignore the dead axis here for the evaluation matrix (matrixA), as the vertex coordinates are zero for a potential 2d case and there is no option in PUM to set them from the user
+
+  // 1. The matrix contribution
+  // Eigen::VectorXd Au = _matrixA.transpose() * inputData;
+  // Compute RBF values for matrix A
+  PRECICE_ASSERT(Au.cols() == load.size());
+  PRECICE_ASSERT(Au.rows() == inputIDs.size());
+  const auto &out = v.rawCoords();
+  for (const auto &j : inputIDs | boost::adaptors::indexed()) {
+    const auto &in                = inMesh.vertex(j.value()).rawCoords();
+    double      squaredDifference = computeSquaredDifference(out, in);
+    double      eval              = basisFunction.evaluate(std::sqrt(squaredDifference));
+
+    for (Eigen::Index c = 0; c < load.size(); ++c) {
+      Au(j.index(), c) += eval * load[c];
+    }
+  }
+
+  // 2. we have a separate polynomial, then we have to add it again here;
+  // Eigen::VectorXd epsilon = _matrixV.transpose() * inputData;
+  if (epsilon.size() > 0) {
+    epsilon.conservativeResize(1 + std::count(_localActiveAxis.begin(), _localActiveAxis.end(), true), load.size());
+    PRECICE_ASSERT(epsilon.rows() == (1 + std::count(_localActiveAxis.begin(), _localActiveAxis.end(), true)));
+    PRECICE_ASSERT(epsilon.cols() == load.size());
+    // constant polynomial
+    for (Eigen::Index c = 0; c < epsilon.cols(); ++c) {
+      epsilon(0, c) += 1 * load[c];
+      // the linear contributions
+      int k = 1;
+      for (std::size_t d = 0; d < _localActiveAxis.size(); ++d) {
+        if (_localActiveAxis[d]) {
+          epsilon(k, c) += out[d] * load[c];
+          ++k;
+        }
+      }
+    }
+  }
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::evaluateConservativeCache(Eigen::MatrixXd &epsilon, const Eigen::MatrixXd &Au, Eigen::MatrixXd &out) const
+{
+  // mu in the PETSc implementation
+  out = _decMatrixC.solve(Au);
+
+  if (epsilon.size() > 0) {
+    epsilon -= _matrixQ.transpose() * out;
+    // out  = out - solveTranspose tau (sigma in the PETSc impl)
+    out -= static_cast<Eigen::MatrixXd>(_qrMatrixQ.transpose().solve(-epsilon));
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

@@ -447,9 +447,20 @@ void ParticipantImpl::advance(
 
 void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo)
 {
+  // We only have to care about write data, in case substeps are enabled
+  // OR we are at the end of a timewindow, otherwise, we simply erase
+  // them as they have no relevance for the coupling (without time
+  // interpolation, only the time window end is relevant), the resetting
+  // happens regardless of the if-condition.
   if (reachedTimeWindowEnd || _couplingScheme->requiresSubsteps()) {
+
+    // Here, we add the written data to the waveform storage. In the
+    // mapWrittenData, we then take samples from the storage and execute
+    // the mapping using waveform samples on the (for write mappings) "to"
+    // side.
     samplizeWriteData(timeSteppedTo);
   }
+  // TODO: We need to reset here the buffer for just-in-time mappings as well
   resetWrittenData();
 
   // Reset mapping counters here to cover subcycling
@@ -514,6 +525,25 @@ void ParticipantImpl::samplizeWriteData(double time)
 {
   // store buffered write data in sample storage and reset the buffer
   for (auto &context : _accessor->writeDataContexts()) {
+
+    // Finalize conservative write mapping, later we reset
+    // the buffer in resetWrittenData
+    // The function should use _writeDataBuffer internally
+    // context.finishJustInTimeWriteMapping();
+
+    // Note that "samplizeWriteData" operates on _providedData of the
+    // DataContext, which is for just-in-time mappings the data we write
+    // on the received mesh.
+    // For just-in-time mappings, the _providedData should contain by now
+    // the "just-in-time" mapped data. However, it would be wasteful to
+    // execute expensive parts (in particular solving the RBF systems)
+    // for each mapAndWriteData call. Thus, we create a DataCache during
+    // the mapAndWriteData API calls, which contains pre-processed data
+    // values. Here, we now need to finalize the just-in-time mappings,
+    // before we can add it to the waveform buffer.
+    // For now, this only applies to just-in-time write mappings
+
+    context.completeJustInTimeMapping();
     context.storeBufferedData(time);
   }
 }
@@ -1794,6 +1824,10 @@ void ParticipantImpl::resetWrittenData()
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
+
+    // reset the buffered data here
+    // context.invalidateMappingCache();
+
     context.resetBuffer();
   }
 }

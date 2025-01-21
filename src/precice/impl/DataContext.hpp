@@ -143,6 +143,7 @@ protected:
   std::vector<MappingContext> _mappingContexts;
 
   /// Unique data this context is associated with
+  /// For direct and indirect access, this is data from the received mesh
   mesh::PtrData _providedData;
 
   /**

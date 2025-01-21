@@ -30,6 +30,15 @@ void WriteDataContext::trimAfter(double time)
   }
 }
 
+void WriteDataContext::completeJustInTimeMapping()
+{
+  PRECICE_TRACE();
+  if (indirectMapping) {
+    Eigen::Map<Eigen::MatrixXd> map(_writeDataBuffer.values.data(), _providedData->getDimensions(), _writeDataBuffer.values.size() / _providedData->getDimensions());
+    indirectMapping->completeJustInTimeMapping(*mappingCache.get(), map);
+  }
+}
+
 void WriteDataContext::mapAndWriteValues(::precice::span<const double> coordinates, ::precice::span<const double> values)
 {
   PRECICE_TRACE();
@@ -39,10 +48,11 @@ void WriteDataContext::mapAndWriteValues(::precice::span<const double> coordinat
   PRECICE_ASSERT(_writeDataBuffer.values.data());
 
   Eigen::Map<const Eigen::MatrixXd> coords(coordinates.data(), getSpatialDimensions(), coordinates.size() / getSpatialDimensions());
-  Eigen::Map<const Eigen::MatrixXd> inputData(values.data(), getDataDimensions(), coordinates.size() / getSpatialDimensions());
+  Eigen::Map<const Eigen::MatrixXd> inputData(values.data(), getDataDimensions(), coordinates.size() / getDataDimensions());
   Eigen::Map<Eigen::MatrixXd>       localData(_writeDataBuffer.values.data(), getDataDimensions(), getMeshVertexCount());
+
   // Function to fill the localData
-  indirectMapping->mapConservativeAt(coords, inputData, localData);
+  indirectMapping->mapConservativeAt(coords, *mappingCache.get(), inputData, localData);
 }
 
 void WriteDataContext::writeValuesIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> values)

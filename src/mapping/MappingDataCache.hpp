@@ -28,6 +28,7 @@ public:
   // an alternative layout of this data could be to wrap this in another struct ClusterData which is then within a vector
   std::vector<Eigen::MatrixXd> polynomialContributions;
   // ...and a vector of P/lambdas
+  // For conservative mappings, this vector refers to the Au, potentially as a vector components
   std::vector<Eigen::MatrixXd> p;
 
   // @todo: storing the sampled data for all other mapping methods but PUM

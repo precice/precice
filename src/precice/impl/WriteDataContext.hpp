@@ -78,6 +78,8 @@ public:
    */
   void appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext) override;
 
+  void completeJustInTimeMapping();
+
   /// Disable copy construction
   WriteDataContext(const WriteDataContext &copy) = delete;
 

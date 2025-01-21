@@ -206,7 +206,7 @@ public:
    * @note the default implementation in this class simply aborts the code and actual
    * implementations are in derived classes
    */
-  virtual void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target);
+  virtual void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target);
 
   /**
    * @brief Just-in-time or indirect access variant of mapConsistent
@@ -219,6 +219,7 @@ public:
    * implementations are in derived classes
    */
   virtual void mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values);
+  virtual void completeJustInTimeMapping(MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer);
 
   /**
    * @brief Allows to update a so-called MappingDataCache for more efficient just-in-time mappings

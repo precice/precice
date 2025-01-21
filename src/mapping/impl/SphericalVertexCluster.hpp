@@ -69,6 +69,8 @@ public:
   /// Set the normalized weight for the given \p vertexID in the outputMesh
   void setNormalizedWeight(double normalizedWeight, VertexID vertexID);
 
+  void evaluateConservativeCache(Eigen::MatrixXd &epsilon, const Eigen::MatrixXd &Au, Eigen::Ref<Eigen::MatrixXd> out);
+
   /// Compute the weight for a given vertex
   double computeWeight(const mesh::Vertex &v) const;
 
@@ -85,6 +87,9 @@ public:
   /// Returns, whether the current cluster is empty or not, where empty means that there
   /// are either no input vertices or output vertices.
   bool empty() const;
+
+  void addWriteDataToCache(const mesh::Vertex &v, const Eigen::VectorXd &load, Eigen::MatrixXd &epsilon, Eigen::MatrixXd &Au,
+                           const mesh::Mesh &inMesh);
 
 private:
   /// logger, as usual
@@ -232,6 +237,19 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::evaluateConservativeCache(Eigen::MatrixXd &epsilon, const Eigen::MatrixXd &Au, Eigen::Ref<Eigen::MatrixXd> out)
+{
+  Eigen::MatrixXd localIn(_inputIDs.size(), Au.cols());
+  _rbfSolver.evaluateConservativeCache(epsilon, Au, localIn);
+  // Step 3: now accumulate the result into our global output data
+  for (int i = 0; i < _inputIDs.size(); ++i) {
+    const auto dataIndex = *(_inputIDs.nth(i));
+    PRECICE_ASSERT(dataIndex < out.cols(), out.cols());
+    out.col(dataIndex) += localIn.row(i);
+  }
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
 void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::computeCacheData(const Eigen::VectorXd &globalIn, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffOut, int nComponents) const
 {
   PRECICE_TRACE();
@@ -255,8 +273,25 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::VectorXd SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs, const mesh::Mesh &inMesh) const
 {
   PRECICE_TRACE();
-
   return _rbfSolver.interpolateAt(v, poly, coeffs, _function, _inputIDs, inMesh);
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const mesh::Vertex &v, const Eigen::VectorXd &load,
+                                                                          Eigen::MatrixXd &epsilon, Eigen::MatrixXd &Au,
+                                                                          const mesh::Mesh &inMesh)
+{
+  PRECICE_TRACE();
+  if (Au.size() == 0) {
+    Au.resize(_inputIDs.size(), load.size());
+    Au.setZero();
+  }
+  // 4 is just the upper limit
+  if (Polynomial::SEPARATE == _polynomial && epsilon.size() == 0) {
+    epsilon.resize(4, load.size());
+    epsilon.setZero();
+  }
+  _rbfSolver.addWriteDataToCache(v, load, epsilon, Au, _function, _inputIDs, inMesh);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
