@@ -11,11 +11,11 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(JustInTimeMapping)
 PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 
-// Test case for a indirect mesh access on one participant to a mesh defined
+// Test case for a just-in-time mapping on one participant to a mesh defined
 // by another participant. The region of interest is defined through a
 // boundingBox. The test case here is the most basic variant using partition of unity to
 // use such a feature. SolverTwo defines the mesh whereas SolverOne reads
-// indirectly from this mesh.
+// just-in-time from this mesh.
 // pum-consistent-read with and without polynomial for scalar and vector data, reference is given by a conventional mapping
 BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
 {
@@ -66,32 +66,32 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
 
       // read data (for reference)
       std::vector<double> readData(meshSize);
-      std::vector<double> indirectReadData(meshSize);
+      std::vector<double> justInTimeReadData(meshSize);
       std::vector<double> readVectorData(meshSize * dim);
-      std::vector<double> indirectReadVectorData(meshSize * dim);
+      std::vector<double> justInTimeReadVectorData(meshSize * dim);
 
       // First, we check the separate polynomial PUM (scalar and vector)
       couplingInterface.readData(meshName, dataName, ids, dt, readData);
-      couplingInterface.mapAndReadData(otherMeshName, dataName, positions, dt, indirectReadData);
+      couplingInterface.mapAndReadData(otherMeshName, dataName, positions, dt, justInTimeReadData);
       couplingInterface.readData(meshName, vectorDataName, ids, dt, readVectorData);
-      couplingInterface.mapAndReadData(otherMeshName, vectorDataName, positions, dt, indirectReadVectorData);
+      couplingInterface.mapAndReadData(otherMeshName, vectorDataName, positions, dt, justInTimeReadVectorData);
 
       for (int r = 0; r < meshSize; ++r) {
-        BOOST_TEST(readData[r] == indirectReadData[r]);
-        BOOST_TEST(readVectorData[r * dim] == indirectReadVectorData[r * dim]);
-        BOOST_TEST(readVectorData[r * dim + 1] == indirectReadVectorData[r * dim + 1]);
+        BOOST_TEST(readData[r] == justInTimeReadData[r]);
+        BOOST_TEST(readVectorData[r * dim] == justInTimeReadVectorData[r * dim]);
+        BOOST_TEST(readVectorData[r * dim + 1] == justInTimeReadVectorData[r * dim + 1]);
       }
 
       // Second, we check the no polynomial PUM (scalar and vector)
       couplingInterface.readData(meshBName, dataName, ids, dt, readData);
-      couplingInterface.mapAndReadData(otherMeshBName, dataName, positions, dt, indirectReadData);
+      couplingInterface.mapAndReadData(otherMeshBName, dataName, positions, dt, justInTimeReadData);
       couplingInterface.readData(meshBName, vectorDataName, ids, dt, readVectorData);
-      couplingInterface.mapAndReadData(otherMeshBName, vectorDataName, positions, dt, indirectReadVectorData);
+      couplingInterface.mapAndReadData(otherMeshBName, vectorDataName, positions, dt, justInTimeReadVectorData);
 
       for (int r = 0; r < meshSize; ++r) {
-        BOOST_TEST(readData[r] == indirectReadData[r]);
-        BOOST_TEST(readVectorData[r * dim] == indirectReadVectorData[r * dim]);
-        BOOST_TEST(readVectorData[r * dim + 1] == indirectReadVectorData[r * dim + 1]);
+        BOOST_TEST(readData[r] == justInTimeReadData[r]);
+        BOOST_TEST(readVectorData[r * dim] == justInTimeReadVectorData[r * dim]);
+        BOOST_TEST(readVectorData[r * dim + 1] == justInTimeReadVectorData[r * dim + 1]);
       }
 
       // solve time step

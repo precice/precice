@@ -10,11 +10,11 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(JustInTimeMapping)
 PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 
-// Test case for a indirect mesh access on one participant to a mesh defined
+// Test case for a just-in-time mapping on one participant to a mesh defined
 // by another participant. The region of interest is defined through a
 // boundingBox. The test case here is the most basic variant in order
 // use such a feature. SolverTwo defines the mesh whereas SolverOne reads
-// indirectly from this mesh.
+// just-in-time from this mesh.
 // nearest-neighbor-consistent-read
 BOOST_AUTO_TEST_CASE(ExplicitRead)
 {

@@ -10,11 +10,11 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(JustInTimeMapping)
 PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 
-// Test case for an indirect mesh access on one participant to a mesh defined
+// Test case for a just-in-time mapping on one participant to a mesh defined
 // by another participant. The region of interest is defined through a
-// boundingBox. The read direction is tested by comparing the indirect access against
+// boundingBox. The read direction is tested by comparing the just-in-time mapping against
 // the conventional preCICE functions
-// implicit coupling, nearest-neighbor, indirect mesh access (write-conservative, read-consistent)
+// implicit coupling, nearest-neighbor, just-in-time mapping (write-conservative, read-consistent)
 BOOST_AUTO_TEST_CASE(Implicit)
 {
   PRECICE_TEST();

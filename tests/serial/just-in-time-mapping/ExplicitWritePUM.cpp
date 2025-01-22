@@ -11,13 +11,13 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(JustInTimeMapping)
 PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 
-// Test case for a indirect mesh access on one participant to a mesh defined
+// Test case for a just-in-time mapping on one participant to a mesh defined
 // by another participant. The region of interest is defined through a
 // boundingBox. The test case here is the most basic variant in order
 // use such a feature. SolverTwo defines the mesh whereas SolverOne writes
-// indirectly to this mesh.
+// just-in-time to this mesh.
 // pum-rbf-conservative-write
-// Note that a data initialization is not possible with indirect and direct mesh
+// Note that a data initialization is not possible with just-in-time mapping and direct mesh
 // access (see #1583)
 BOOST_AUTO_TEST_CASE(ExplicitWritePUM)
 {
@@ -70,9 +70,9 @@ BOOST_AUTO_TEST_CASE(ExplicitWritePUM)
 
       // write data (for reference)
       std::vector<double> writeData(meshSize);
-      std::vector<double> indirectWriteData(meshSize);
+      std::vector<double> justInTimeWriteData(meshSize);
       std::vector<double> writeVectorData(meshSize * dim);
-      std::vector<double> indirectWriteVectorData(meshSize * dim);
+      std::vector<double> justInTimeWriteVectorData(meshSize * dim);
 
       if (time == 1) {
         // Linear filling for writeData1
@@ -147,9 +147,9 @@ BOOST_AUTO_TEST_CASE(ExplicitWritePUM)
     couplingInterface.setMeshVertices(meshDName, positions, idsD);
     // Some dummy readData
     std::vector<double> readData(size);
-    std::vector<double> indirectReadData(size);
+    std::vector<double> justInTimeReadData(size);
     std::vector<double> readVectorData(size * dim);
-    std::vector<double> indirectReadVectorData(size * dim);
+    std::vector<double> justInTimeReadVectorData(size * dim);
 
     // Initialize
     couplingInterface.initialize();
@@ -159,26 +159,26 @@ BOOST_AUTO_TEST_CASE(ExplicitWritePUM)
       time += dt;
 
       // Meshes A and C have the same mapping
-      // indirect mapping
-      couplingInterface.readData(meshName, dataName, idsA, dt, indirectReadData);
-      couplingInterface.readData(meshName, vectorDataName, idsA, dt, indirectReadVectorData);
+      // just-in-time mapping
+      couplingInterface.readData(meshName, dataName, idsA, dt, justInTimeReadData);
+      couplingInterface.readData(meshName, vectorDataName, idsA, dt, justInTimeReadVectorData);
       // conventional
       couplingInterface.readData(meshCName, dataName, idsC, dt, readData);
       couplingInterface.readData(meshCName, vectorDataName, idsC, dt, readVectorData);
 
-      BOOST_TEST(indirectReadData == readData, boost::test_tools::per_element());
-      BOOST_TEST(indirectReadVectorData == readVectorData, boost::test_tools::per_element());
+      BOOST_TEST(justInTimeReadData == readData, boost::test_tools::per_element());
+      BOOST_TEST(justInTimeReadVectorData == readVectorData, boost::test_tools::per_element());
 
       // Meshes B and D have the same mapping
-      // indirect mapping
-      couplingInterface.readData(meshBName, dataName, idsB, dt, indirectReadData);
-      couplingInterface.readData(meshBName, vectorDataName, idsB, dt, indirectReadVectorData);
+      // just-in-time mapping
+      couplingInterface.readData(meshBName, dataName, idsB, dt, justInTimeReadData);
+      couplingInterface.readData(meshBName, vectorDataName, idsB, dt, justInTimeReadVectorData);
       // conventional
       couplingInterface.readData(meshDName, dataName, idsD, dt, readData);
       couplingInterface.readData(meshDName, vectorDataName, idsD, dt, readVectorData);
 
-      BOOST_TEST(indirectReadData == readData, boost::test_tools::per_element());
-      BOOST_TEST(indirectReadVectorData == readVectorData, boost::test_tools::per_element());
+      BOOST_TEST(justInTimeReadData == readData, boost::test_tools::per_element());
+      BOOST_TEST(justInTimeReadVectorData == readVectorData, boost::test_tools::per_element());
 
       // read data
       // solve time step
