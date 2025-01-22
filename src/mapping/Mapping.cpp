@@ -260,11 +260,11 @@ bool Mapping::isScaledConsistent() const
   return (hasConstraint(SCALED_CONSISTENT_SURFACE) || hasConstraint(SCALED_CONSISTENT_VOLUME));
 }
 
-bool Mapping::isIndirectMapping() const
+bool Mapping::isJustInTimeMapping() const
 {
   PRECICE_ASSERT(_input);
   PRECICE_ASSERT(_output);
-  return _input->isIndirect() || _output->isIndirect();
+  return _input->isJustInTime() || _output->isJustInTime();
 }
 
 void Mapping::updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in)

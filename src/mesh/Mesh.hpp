@@ -67,7 +67,7 @@ public:
       std::string name,
       int         dimensions,
       MeshID      id,
-      bool        isIndirect = false);
+      bool        isJustInTime = false);
 
   /// Mutable access to a vertex by VertexID
   Vertex &vertex(VertexID id);
@@ -326,9 +326,9 @@ public:
     return _index;
   }
 
-  bool isIndirect() const
+  bool isJustInTime() const
   {
-    return _isIndirect;
+    return _isJustInTime;
   }
 
   /**
@@ -395,8 +395,8 @@ private:
    */
   CommunicationMap _communicationMap;
 
-  /// for indirect mesh access, we need an artificial mesh, which we can use
-  bool _isIndirect = false;
+  /// for just-in-time mapping, we need an artificial mesh, which we can use
+  bool _isJustInTime = false;
 
   BoundingBox _boundingBox;
 

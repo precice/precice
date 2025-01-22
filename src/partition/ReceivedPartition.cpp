@@ -492,7 +492,7 @@ void ReceivedPartition::prepareBoundingBox()
   _bb = mesh::BoundingBox{_dimensions};
 
   // Create BB around all "other" meshes, where others are local meshes in parallel runs
-  // For indirect access, we enter the loops here for the (indirect) mapping we hold,
+  // For just-in-time mapping, we enter the loops here for the (just-in-time) mapping we hold,
   // however, any bounding box operation will be NOP because bounding boxes around local
   // meshes are empty
   for (mapping::PtrMapping &fromMapping : _fromMappings) {
@@ -513,13 +513,13 @@ void ReceivedPartition::prepareBoundingBox()
     auto &other_bb = _mesh->getBoundingBox();
     _bb.expandBy(other_bb);
 
-    // In case we have an indirect mapping associated to this direct access
+    // In case we have an just-in-time mapping associated to this direct access
     // we need to extend the bounding box for accuracy reasons
     // the behavior is then comparable to a conventional mapping
-    if (std::any_of(_fromMappings.begin(), _fromMappings.end(), [](auto m) { return m->isIndirectMapping(); }) ||
-        std::any_of(_toMappings.begin(), _toMappings.end(), [](auto m) { return m->isIndirectMapping(); })) {
+    if (std::any_of(_fromMappings.begin(), _fromMappings.end(), [](auto m) { return m->isJustInTimeMapping(); }) ||
+        std::any_of(_toMappings.begin(), _toMappings.end(), [](auto m) { return m->isJustInTimeMapping(); })) {
       // The (preliminary) repartitioning is based on the _bb
-      // we extend the _bb here and later on enable the (indirect) mappings
+      // we extend the _bb here and later on enable the (just-in-time) mappings
       // to apply any kind of tagging to account for the halo layer added here
       _bb.scaleBy(_safetyFactor);
     }
@@ -528,7 +528,7 @@ void ReceivedPartition::prepareBoundingBox()
     // If the user defines a safety factor and the partitioning is entirely based
     // on the defined access region (setMeshAccessRegion), we raise a warning
     // to inform the user
-    // hasAnyMapping is true for indirect accesses
+    // hasAnyMapping is true for just-in-time mappinges
     const float defaultSafetyFactor = 0.5;
     PRECICE_WARN_IF(
         utils::IntraComm::isPrimary() && !hasAnyMapping() && (_safetyFactor != defaultSafetyFactor),

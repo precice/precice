@@ -109,10 +109,10 @@ void NearestNeighborBaseMapping::tagMeshFirstRound()
   PRECICE_TRACE();
   precice::profiling::Event e("map." + mappingNameShort + ".tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
 
-  // parallel partitioning for indirect access:
-  if (this->isIndirectMapping()) {
+  // parallel partitioning for just-in-time mapping:
+  if (this->isJustInTimeMapping()) {
     // in the usual case, we make use of the indexSet, which is pre-computed from the mapping
-    // for the indirect access, we can't do that since we don't have the output (local) mesh
+    // for the just-in-time mapping, we can't do that since we don't have the output (local) mesh
     // what we would need to do in theory for a perfect partitioning:
     // find all nearest-neighbors at the 'boundary' of the access region, which would require an
     // infinite fine sampling of output mesh nodes to be used in the computeMapping below

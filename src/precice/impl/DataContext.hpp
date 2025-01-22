@@ -116,12 +116,12 @@ public:
    * No need to put this function into a derived class.
    * The Mapping class knows the direction and the DataContext states read or write.
    * Mappings in the DataContext only affect the mapData() steering.
-   * Thus, we don't add the indirect mapping anywhere in the conventional mapping
+   * Thus, we don't add the just-in-time mapping anywhere in the conventional mapping
    * data structures, i.e., _mappingContexts
    *
    * @param mappingContext
    */
-  void addIndirectAccessMapping(MappingContext mappingContext, MeshContext meshContext);
+  void addJustInTimeMapping(MappingContext mappingContext, MeshContext meshContext);
 
   void invalidateMappingCache()
   {
@@ -143,13 +143,13 @@ protected:
   std::vector<MappingContext> _mappingContexts;
 
   /// Unique data this context is associated with
-  /// For direct and indirect access, this is data from the received mesh
+  /// For direct and just-in-time mapping, this is data from the received mesh
   mesh::PtrData _providedData;
 
   /**
-   * @brief Cache for indirect mesh access.
+   * @brief Cache for just-in-time mapping.
    *
-   * Purpose: For indirect access, we want to pre-compute as much data as possible to not have
+   * Purpose: For just-in-time mapping, we want to pre-compute as much data as possible to not have
    * expensive operations repeated in every read/write call of the mapping class.
    *
    * The cache itself is updated in the associated Mapping class
@@ -159,13 +159,13 @@ protected:
    *
    * The \ref _mappingContexts in this class are a std::vector for multiple mappings associated
    * to the same DataContext. However, for one DataContext (read or write) there can only be one
-   * indirect mapping/indirect mesh access.
+   * just-in-time mapping.
    * For conventional mappings, multiple MappingContexts can only occur in write direction (write
-   * to one local mesh, map it to different remote meshes). Since the indirect mapping operates
+   * to one local mesh, map it to different remote meshes). Since the just-in-time mapping operates
    * on the remote meshes, this multiplicity cannot occur. Thus, one cache per DataContext is enough.
    */
   std::unique_ptr<mapping::MappingDataCache> mappingCache;
-  std::shared_ptr<mapping::Mapping>          indirectMapping;
+  std::shared_ptr<mapping::Mapping>          justInTimeMapping;
   /**
    * @brief Helper to append a mappingContext, fromData and toData to the corresponding data containers
    *

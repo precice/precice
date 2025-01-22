@@ -310,12 +310,12 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_ASSERT(inMesh->getDimensions() == outMesh->getDimensions());
 
   // If we have either no input or no output vertices, we return immediately
-  if (inMesh->nVertices() == 0 || (outMesh->nVertices() == 0 && !outMesh->isIndirect())) {
+  if (inMesh->nVertices() == 0 || (outMesh->nVertices() == 0 && !outMesh->isJustInTime())) {
     return {double{}, Vertices{}};
   }
 
   PRECICE_ASSERT(!inMesh->empty());
-  PRECICE_ASSERT(!outMesh->empty() || outMesh->isIndirect());
+  PRECICE_ASSERT(!outMesh->empty() || outMesh->isJustInTime());
   // startGridAtEdge boolean switch in order to decide either to start the clustering at the edge of the bounding box in each direction
   // (true) or start the clustering inside the bounding box (edge + 0.5 radius). The latter approach leads to fewer clusters,
   // but might result in a worse clustering
@@ -461,7 +461,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
 
   // Step 8a: tag empty clusters
   tagEmptyClusters(centers, clusterRadius, inMesh);
-  if (!outMesh->isIndirect()) {
+  if (!outMesh->isJustInTime()) {
     tagEmptyClusters(centers, clusterRadius, outMesh);
   }
   PRECICE_DEBUG("Number of non-tagged centers after empty clusters were filtered: {}", std::count_if(centers.begin(), centers.end(), [](auto &v) { return !v.isTagged(); }));
@@ -484,7 +484,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
     // the tagging here won't filter out a lot of clusters, but finding them anyway allows us to allocate the right amount of
     // memory for the cluster vector in the mapping, which would otherwise be expensive
     // we cannot hit any empty vertices in the inputmesh
-    if (!outMesh->isIndirect()) {
+    if (!outMesh->isJustInTime()) {
       tagEmptyClusters(centers, clusterRadius, outMesh);
     }
     PRECICE_DEBUG("Number of non-tagged centers after duplicate tagging : {}", std::count_if(centers.begin(), centers.end(), [](auto &v) { return !v.isTagged(); }));

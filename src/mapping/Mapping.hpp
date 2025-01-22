@@ -116,11 +116,11 @@ public:
   /// Return true if the mapping requires an initial guess
   bool requiresInitialGuess() const;
 
-  /// Returns true if either the input or output is an indirect (dummy) mesh
-  /// which is used for just-in-time mappings. The indirect mesh is essentially
+  /// Returns true if either the input or output is a just-in-time (dummy) mesh
+  /// which is used for just-in-time mappings. The just-in-time mesh is essentially
   /// a placeholder for the non-existent or just-in-time mesh provided
   /// by the user through the API functions
-  bool isIndirectMapping() const;
+  bool isJustInTimeMapping() const;
 
   /// Return the provided initial guess of a mapping using an initialGuess
   const Eigen::VectorXd &initialGuess() const;
@@ -197,7 +197,7 @@ public:
   virtual std::string getName() const = 0;
 
   /**
-   * @brief Just-in-time or indirect access variant of mapConservative
+   * @brief Just-in-time or just-in-time mapping variant of mapConservative
    *
    * @param coordinates[in] where to compute the mapping
    * @param source[in] the data values passed from the user
@@ -209,7 +209,7 @@ public:
   virtual void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target);
 
   /**
-   * @brief Just-in-time or indirect access variant of mapConsistent
+   * @brief Just-in-time or just-in-time mapping variant of mapConsistent
    *
    * @param coordinates[in] where to compute the mapping
    * @param cache[in] the mapping data cache previously computed with \p updateMappingDataCache

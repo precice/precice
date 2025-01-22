@@ -874,7 +874,7 @@ public:
       ::precice::span<double>         values) const;
   ///@}
 
-  /** @name Just-in-time mapping (or indirect access) (experimental)
+  /** @name Just-in-time mapping (or just-in-time mapping) (experimental)
    *
    * If one of your coupling meshes is not static and has varying locations over time, we can compute a data mapping
    * just-in-time. In such a case the user provides the coordinates of the moving mesh along with the API functions

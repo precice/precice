@@ -99,7 +99,7 @@ const PtrDataConfiguration &MeshConfiguration::getDataConfiguration() const
   return _dataConfig;
 }
 
-mesh::PtrMesh MeshConfiguration::getIndirectAccessMesh(int dimension)
+mesh::PtrMesh MeshConfiguration::getJustInTimeMappingMesh(int dimension)
 {
   PRECICE_ASSERT(dimension == 2 || dimension == 3);
 
@@ -107,7 +107,7 @@ mesh::PtrMesh MeshConfiguration::getIndirectAccessMesh(int dimension)
   static std::map<int, mesh::PtrMesh> meshes;
   // Check if the mesh for the given dimension already exists
   if (meshes.find(dimension) == meshes.end()) {
-    meshes[dimension] = std::make_shared<mesh::Mesh>("(indirect access)", dimension, mesh::Mesh::MESH_ID_UNDEFINED, true);
+    meshes[dimension] = std::make_shared<mesh::Mesh>("(just-in-time mapping)", dimension, mesh::Mesh::MESH_ID_UNDEFINED, true);
   }
   return meshes[dimension];
 }

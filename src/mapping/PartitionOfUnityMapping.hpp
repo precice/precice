@@ -224,7 +224,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // Step 3: Determine PU weights
   PRECICE_DEBUG("Computing cluster-vertex association");
   for (const auto &vertex : outMesh->vertices()) {
-    // we use a helper function, as we need the same functionality for indirect access
+    // we use a helper function, as we need the same functionality for just-in-time mapping
     auto [clusterIDs, normalizedWeights] = computeNormalizedWeight(vertex, outMesh->getName());
     // Step 4: store the normalized weight in all associated clusters
     for (unsigned int i = 0; i < clusterIDs.size(); ++i) {
@@ -235,7 +235,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   eWeights.stop();
 
   // we need the center mesh index data structure
-  if (!outMesh->isIndirect()) {
+  if (!outMesh->isJustInTime()) {
     _centerMesh.reset();
   }
   // Uncomment to add a VTK export of the cluster center distribution for visualization purposes

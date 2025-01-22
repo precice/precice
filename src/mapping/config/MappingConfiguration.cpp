@@ -383,17 +383,17 @@ void MappingConfiguration::xmlTagCallback(
 
     // Check that either of the two is provided
     PRECICE_CHECK(!toMesh.empty() || !fromMesh.empty(), "Neither a \"to\" nor a \"from\" mesh was defined in a preCICE mapping. Most data mappings require a \"to\" and a \"from\" mesh. "
-                                                        "For indirect mesh access, at least one of both attributes has to be specified.");
+                                                        "For just-in-time mapping, at least one of both attributes has to be specified.");
 
-    // Restrict to read-consistent and write-conservative for indirect access
+    // Restrict to read-consistent and write-conservative for just-in-time mapping
 
     // The from mesh cannot be empty due to the check above
     PRECICE_CHECK(!toMesh.empty() || (toMesh.empty() && dir == DIRECTION_READ && constraint == CONSTRAINT_CONSISTENT),
-                  "The mapping from mesh \"{0}\" has no \"to\" mesh, which configures an indirect mesh access for the mesh \"{0}\". For indirect mesh access, only read-consistent (direction = \"read\" and no \"to\" mesh) and write-conservative (direction = \"write\" and no \"from\" mesh) are implemented.", fromMesh);
+                  "The mapping from mesh \"{0}\" has no \"to\" mesh, which configures an just-in-time mapping for the mesh \"{0}\". For just-in-time mapping, only read-consistent (direction = \"read\" and no \"to\" mesh) and write-conservative (direction = \"write\" and no \"from\" mesh) are implemented.", fromMesh);
     PRECICE_CHECK(!fromMesh.empty() || (fromMesh.empty() && dir == DIRECTION_WRITE && constraint == CONSTRAINT_CONSERVATIVE),
-                  "The mapping to mesh \"{0}\" has no \"from\" mesh, which configures an indirect mesh access for the mesh \"{0}\". For indirect mesh access, only read-consistent (direction = \"read\" and no \"to\" mesh) and write-conservative (direction = \"write\" and no \"from\" mesh) are implemented.", toMesh);
-    PRECICE_INFO_IF(toMesh.empty(), "Using indirect mesh access from mesh \"{}\"", fromMesh);
-    PRECICE_INFO_IF(fromMesh.empty(), "Using indirect mesh access to mesh \"{}\"", toMesh);
+                  "The mapping to mesh \"{0}\" has no \"from\" mesh, which configures an just-in-time mapping for the mesh \"{0}\". For just-in-time mapping, only read-consistent (direction = \"read\" and no \"to\" mesh) and write-conservative (direction = \"write\" and no \"from\" mesh) are implemented.", toMesh);
+    PRECICE_INFO_IF(toMesh.empty(), "Using just-in-time mapping from mesh \"{}\"", fromMesh);
+    PRECICE_INFO_IF(fromMesh.empty(), "Using just-in-time mapping to mesh \"{}\"", toMesh);
 
     // optional tags
     // We set here default values, but their actual value doesn't really matter.
@@ -553,20 +553,20 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   mesh::PtrMesh     fromMesh(_meshConfig->getMesh(fromMeshName));
   mesh::PtrMesh     toMesh(_meshConfig->getMesh(toMeshName));
 
-  // Handle for indirect mesh access, we copy over the dimension and leave everything else
+  // Handle for just-in-time mapping, we copy over the dimension and leave everything else
   if (fromMesh.get() == nullptr && fromMeshName.empty()) {
     PRECICE_CHECK(toMesh.get() != nullptr,
                   "Mesh \"{0}\" was not found while creating a mapping. "
                   "Please correct the to=\"{0}\" attribute.",
                   toMeshName);
-    fromMesh = mesh::MeshConfiguration::getIndirectAccessMesh(toMesh->getDimensions());
+    fromMesh = mesh::MeshConfiguration::getJustInTimeMappingMesh(toMesh->getDimensions());
   }
   if (toMesh.get() == nullptr && toMeshName.empty()) {
     PRECICE_CHECK(fromMesh.get() != nullptr,
                   "Mesh \"{0}\" was not found while creating a mapping. "
                   "Please correct the from=\"{0}\" attribute.",
                   fromMeshName);
-    toMesh = mesh::MeshConfiguration::getIndirectAccessMesh(fromMesh->getDimensions());
+    toMesh = mesh::MeshConfiguration::getJustInTimeMappingMesh(fromMesh->getDimensions());
   }
 
   PRECICE_CHECK(fromMesh.get() != nullptr,

@@ -44,19 +44,19 @@ void ReadDataContext::mapAndReadValues(::precice::span<const double> coordinates
 {
   PRECICE_TRACE(getMeshName(), getDataName(), coordinates.size(), values.size(), readTime);
   PRECICE_ASSERT(mappingCache);
-  PRECICE_ASSERT(indirectMapping);
+  PRECICE_ASSERT(justInTimeMapping);
 
   if (!mappingCache->hasDataAtTimeStamp(readTime)) {
     // Sample waveform relaxation
     Eigen::VectorXd sample{_providedData->sampleAtTime(readTime)};
-    indirectMapping->updateMappingDataCache(*mappingCache.get(), sample);
+    justInTimeMapping->updateMappingDataCache(*mappingCache.get(), sample);
     mappingCache->setTimeStamp(readTime);
   }
   Eigen::Map<const Eigen::MatrixXd> coords(coordinates.data(), getSpatialDimensions(), coordinates.size() / getSpatialDimensions());
   Eigen::Map<Eigen::MatrixXd>       target(values.data(), getDataDimensions(), values.size() / getDataDimensions());
 
   // Function, which fills the values using the coordinates and the cache
-  indirectMapping->mapConsistentAt(coords, *mappingCache.get(), target);
+  justInTimeMapping->mapConsistentAt(coords, *mappingCache.get(), target);
 }
 
 int ReadDataContext::getWaveformDegree() const

@@ -28,11 +28,11 @@ Mesh::Mesh(
     std::string name,
     int         dimensions,
     MeshID      id,
-    bool        isIndirect)
+    bool        isJustInTime)
     : _name(std::move(name)),
       _dimensions(dimensions),
       _id(id),
-      _isIndirect(isIndirect),
+      _isJustInTime(isJustInTime),
       _boundingBox(dimensions),
       _index(*this)
 {
