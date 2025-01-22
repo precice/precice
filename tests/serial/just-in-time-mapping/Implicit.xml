@@ -28,7 +28,7 @@
     <provide-mesh name="TestMesh2" />
     <receive-mesh name="MeshTwo" from="SolverTwo" api-access="true" />
     <receive-mesh name="MeshTwoDuplicate" from="SolverTwo" />
-    <!-- both are indirect mesh access -->
+    <!-- both are just-in-time -->
     <write-data name="Velocities" mesh="MeshTwo" />
     <write-data name="Velocities" mesh="TestMesh2" />
     <read-data name="Forces" mesh="MeshTwo" />

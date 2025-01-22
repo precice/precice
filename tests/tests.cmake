@@ -41,7 +41,7 @@ target_sources(testprecice
     tests/parallel/gather-scatter/EnforceGatherScatterEmptyReceivedPrimaryRank.cpp
     tests/parallel/gather-scatter/helpers.cpp
     tests/parallel/gather-scatter/helpers.hpp
-    tests/parallel/indirect-mesh-access/ExplicitRead.cpp
+    tests/parallel/just-in-time-mapping/ExplicitRead.cpp
     tests/parallel/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/parallel/lifecycle/ConstructOnly.cpp
     tests/parallel/lifecycle/Full.cpp
@@ -223,12 +223,6 @@ target_sources(testprecice
     tests/serial/explicit/TestExplicitSockets.cpp
     tests/serial/explicit/helpers.cpp
     tests/serial/explicit/helpers.hpp
-    tests/serial/indirect-mesh-access/ExplicitMultipleReadWrite.cpp
-    tests/serial/indirect-mesh-access/ExplicitRead.cpp
-    tests/serial/indirect-mesh-access/ExplicitReadPUM.cpp
-    tests/serial/indirect-mesh-access/ExplicitWrite.cpp
-    tests/serial/indirect-mesh-access/ExplicitWritePUM.cpp
-    tests/serial/indirect-mesh-access/Implicit.cpp
     tests/serial/initialize-data/Explicit.cpp
     tests/serial/initialize-data/Implicit.cpp
     tests/serial/initialize-data/ImplicitBoth.cpp
@@ -236,6 +230,12 @@ target_sources(testprecice
     tests/serial/initialize-data/WriteMapping.cpp
     tests/serial/initialize-data/helpers.cpp
     tests/serial/initialize-data/helpers.hpp
+    tests/serial/just-in-time-mapping/ExplicitMultipleReadWrite.cpp
+    tests/serial/just-in-time-mapping/ExplicitRead.cpp
+    tests/serial/just-in-time-mapping/ExplicitReadPUM.cpp
+    tests/serial/just-in-time-mapping/ExplicitWrite.cpp
+    tests/serial/just-in-time-mapping/ExplicitWritePUM.cpp
+    tests/serial/just-in-time-mapping/Implicit.cpp
     tests/serial/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/serial/lifecycle/ConstructNoConfig.cpp
     tests/serial/lifecycle/ConstructNullComm.cpp

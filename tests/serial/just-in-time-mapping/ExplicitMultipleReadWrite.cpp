@@ -8,7 +8,7 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
-BOOST_AUTO_TEST_SUITE(IndirectMeshAccess)
+BOOST_AUTO_TEST_SUITE(JustInTimeMapping)
 PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 
 // Test case for a indirect mesh access on one participant to a mesh defined
