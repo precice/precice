@@ -619,14 +619,18 @@ def analyzeCommand(profilingfile, participant, event, outfile=None, unit="us"):
         minSecRank = rankAdvance.select(pl.first("rank")).item()
         maxSecRank = rankAdvance.select(pl.last("rank")).item()
 
-        ranksToPrint = (
-            (0, minSecRank) if minSecRank == maxSecRank else (0, minSecRank, maxSecRank)
-        )
-        if len(ranksToPrint) == 2:
+        if minSecRank is None or maxSecRank is None:
+            ranksToPrint = (0,)
+            print(
+                "Selection only contains the primary rank 0 as event isn't available on secondary ranks."
+            )
+        elif minSecRank == maxSecRank:
+            ranksToPrint = (0, minSecRank)
             print(
                 f"Selection contains the primary rank 0 and secondary rank {minSecRank}."
             )
         else:
+            ranksToPrint = (0, minSecRank, maxSecRank)
             print(
                 f"Selection contains the primary rank 0, the cheapest secondary rank {minSecRank}, and the most expensive secondary rank {maxSecRank}."
             )
