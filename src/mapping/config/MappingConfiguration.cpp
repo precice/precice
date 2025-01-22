@@ -695,6 +695,15 @@ void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
                   "Please remove one of the duplicated meshes. ",
                   mapping.fromMesh->getName(), mapping.toMesh->getName());
   }
+  for (const ConfiguredMapping &configuredMapping : _mappings) {
+    bool sameToMesh  = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
+    bool isWrite     = mapping.direction == mapping::MappingConfiguration::WRITE && configuredMapping.direction == mapping::MappingConfiguration::WRITE;
+    bool sameMapping = sameToMesh && isWrite && (mapping.fromMesh->isJustInTime() || configuredMapping.fromMesh->isJustInTime());
+    PRECICE_CHECK(!sameMapping,
+                  "There cannot be two mappings to mesh \"{}\". "
+                  "Here, we have a mixture of just-in-time mapping and a conventional mapping. ",
+                  mapping.toMesh->getName());
+  }
 }
 
 void MappingConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
