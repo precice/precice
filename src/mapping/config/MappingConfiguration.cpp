@@ -389,9 +389,10 @@ void MappingConfiguration::xmlTagCallback(
 
     // The from mesh cannot be empty due to the check above
     PRECICE_CHECK(!toMesh.empty() || (toMesh.empty() && dir == DIRECTION_READ && constraint == CONSTRAINT_CONSISTENT),
-                  "The mapping from mesh \"{0}\" has no \"to\" mesh, which configures an just-in-time mapping for the mesh \"{0}\". For just-in-time mapping, only read-consistent (direction = \"read\" and no \"to\" mesh) and write-conservative (direction = \"write\" and no \"from\" mesh) are implemented.", fromMesh);
+                  "The mapping from mesh \"{0}\" has no \"to\" mesh, which configures a just-in-time mapping for the mesh \"{0}\". For just-in-time mapping, only read-consistent (direction = \"read\" and no \"to\" mesh) and write-conservative (direction = \"write\" and no \"from\" mesh) are implemented.", fromMesh);
     PRECICE_CHECK(!fromMesh.empty() || (fromMesh.empty() && dir == DIRECTION_WRITE && constraint == CONSTRAINT_CONSERVATIVE),
-                  "The mapping to mesh \"{0}\" has no \"from\" mesh, which configures an just-in-time mapping for the mesh \"{0}\". For just-in-time mapping, only read-consistent (direction = \"read\" and no \"to\" mesh) and write-conservative (direction = \"write\" and no \"from\" mesh) are implemented.", toMesh);
+                  "The mapping to mesh \"{0}\" has no \"from\" mesh, which configures a just-in-time mapping for the mesh \"{0}\". For just-in-time mapping, only read-consistent (direction = \"read\" and no \"to\" mesh) and write-conservative (direction = \"write\" and no \"from\" mesh) are implemented.", toMesh);
+
     PRECICE_INFO_IF(toMesh.empty(), "Using just-in-time mapping from mesh \"{}\"", fromMesh);
     PRECICE_INFO_IF(fromMesh.empty(), "Using just-in-time mapping to mesh \"{}\"", toMesh);
 
@@ -577,6 +578,12 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
                 "Mesh \"{0}\" was not found while creating a mapping. "
                 "Please correct the to=\"{0}\" attribute.",
                 toMeshName);
+
+  PRECICE_CHECK((!toMesh->isJustInTime() && !fromMesh->isJustInTime()) ||
+                    ((toMesh->isJustInTime() || fromMesh->isJustInTime()) && (type == TYPE_NEAREST_NEIGHBOR || type == TYPE_RBF_PUM_DIRECT || type == TYPE_RBF_ALIAS)),
+                "A just-in-time mapping was configured from mesh \"{}\" to mesh \"{}\" using \"mapping:{}\", which is currently not implemented. "
+                "Available mapping types are \"mapping:{}\", \"mapping:{}\" and \"mapping:{}\".",
+                fromMesh->getName(), toMesh->getName(), type, TYPE_NEAREST_NEIGHBOR, TYPE_RBF_ALIAS, TYPE_RBF_PUM_DIRECT);
 
   // Check for compatible mesh dimensions
   PRECICE_CHECK(fromMesh->getDimensions() == toMesh->getDimensions(),
