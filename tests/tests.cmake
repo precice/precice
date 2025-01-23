@@ -236,6 +236,7 @@ target_sources(testprecice
     tests/serial/just-in-time-mapping/ExplicitWrite.cpp
     tests/serial/just-in-time-mapping/ExplicitWritePUM.cpp
     tests/serial/just-in-time-mapping/Implicit.cpp
+    tests/serial/just-in-time-mapping/ImplicitWithWaveform.cpp
     tests/serial/just-in-time-mapping/SingleWrite.cpp
     tests/serial/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/serial/lifecycle/ConstructNoConfig.cpp
