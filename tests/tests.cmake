@@ -231,6 +231,7 @@ target_sources(testprecice
     tests/serial/initialize-data/helpers.cpp
     tests/serial/initialize-data/helpers.hpp
     tests/serial/just-in-time-mapping/ExplicitMultipleReadWrite.cpp
+    tests/serial/just-in-time-mapping/ExplicitNoReadWrite.cpp
     tests/serial/just-in-time-mapping/ExplicitRead.cpp
     tests/serial/just-in-time-mapping/ExplicitReadPUM.cpp
     tests/serial/just-in-time-mapping/ExplicitWrite.cpp
