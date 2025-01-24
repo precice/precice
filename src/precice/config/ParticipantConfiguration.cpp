@@ -129,9 +129,6 @@ ParticipantConfiguration::ParticipantConfiguration(
   doc = "Mesh to be watched.";
   attrMesh.setDocumentation(doc);
   tagWatchIntegral.addAttribute(attrMesh);
-  doc = "Toggle writing initial data to watchpoint on/off.";
-  attrWriteInit.setDocumentation(doc);
-  tagWatchIntegral.addAttribute(attrWriteInit);
   tagWatchIntegral.addAttribute(attrScaleWitConn);
   tag.addSubtag(tagWatchIntegral);
 

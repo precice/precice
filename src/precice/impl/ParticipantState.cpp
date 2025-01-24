@@ -366,10 +366,6 @@ void ParticipantState::exportInitial()
   for (const PtrWatchPoint &watchPoint : watchPoints()) {
     watchPoint->exportPointData(0.0);
   }
-
-  for (const PtrWatchIntegral &watchIntegral : watchIntegrals()) {
-    watchIntegral->exportIntegralData(0.0);
-  }
 }
 
 bool ParticipantState::hasExports() const

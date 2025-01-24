@@ -73,7 +73,6 @@ private:
     std::string name;
     std::string nameMesh;
     bool        isScalingOn;
-    std::string writeInitialData; // default = "false", because "true" would break behavior of v3
   };
 
   mutable logging::Logger _log{"config::ParticipantConfiguration"};
