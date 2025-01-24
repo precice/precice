@@ -181,7 +181,7 @@ void tagDuplicateCenters(Vertices &centers, std::array<unsigned int, 3> nCells, 
   auto neighborOffsets = zCurveNeighborOffsets<dim>(nCells);
   static_assert((neighborOffsets.size() == 8 && dim == 2) || (neighborOffsets.size() == 26 && dim == 3));
 
-  //For the following to work, the vertexID has to correspond to the position in the centers
+  // For the following to work, the vertexID has to correspond to the position in the centers
   PRECICE_ASSERT(std::all_of(centers.begin(), centers.end(), [idx = 0](auto &v) mutable { return v.getID() == idx++; }));
   // we check all neighbors
   for (auto &v : centers) {
@@ -349,9 +349,14 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   // The single cluster has in principle a radius of inf. We use here twice the
   // length of the longest bounding box edge length and the center of the bounding
   // box for the center point.
-  if (inMesh->nVertices() < verticesPerCluster * 2)
-    return {localBB.longestEdgeLength() * 2, Vertices{mesh::Vertex({localBB.center(), 0})}};
-
+  if (inMesh->nVertices() < verticesPerCluster * 2) {
+    double cRadius = localBB.longestEdgeLength();
+    if (cRadius == 0) {
+      PRECICE_WARN("Determining a cluster radius failed. This is most likely a result of a coupling mesh consisting of just a single vertex. Setting the cluster radius to 1.");
+      cRadius = 1;
+    }
+    return {cRadius * 2, Vertices{mesh::Vertex({localBB.center(), 0})}};
+  }
   // We define a convenience alias for the localBB. In case we need to synchronize the clustering across ranks later on, we need
   // to work with the global bounding box of the whole domain.
   auto globalBB = localBB;
