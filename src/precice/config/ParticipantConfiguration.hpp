@@ -66,7 +66,6 @@ private:
     std::string     name;
     std::string     nameMesh;
     Eigen::VectorXd coordinates;
-    std::string     writeInitialData; // default = "false", because "true" would break behavior of v3
   };
 
   struct WatchIntegralConfig {
@@ -100,7 +99,6 @@ private:
   const std::string ATTR_PROVIDE            = "provide";
   const std::string ATTR_MESH               = "mesh";
   const std::string ATTR_COORDINATE         = "coordinate";
-  const std::string ATTR_WRITEINITIALDATA   = "write-initial-data";
   const std::string ATTR_COMMUNICATION      = "communication";
   const std::string ATTR_CONTEXT            = "context";
   const std::string ATTR_NETWORK            = "network";

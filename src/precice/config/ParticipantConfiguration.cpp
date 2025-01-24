@@ -104,13 +104,6 @@ ParticipantConfiguration::ParticipantConfiguration(
                                 "mesh is considered instead, and values/coordinates are interpolated "
                                 "linearly to that point.");
   tagWatchPoint.addAttribute(attrCoordinate);
-
-  auto attrWriteInit = XMLAttribute<std::string>(ATTR_WRITEINITIALDATA)
-                           .setDocumentation(
-                               "Toggle writing initial data to watchpoint on/off.")
-                           .setDefaultValue(
-                               "false"); // @todo potentially change to true; requires breaking release v3 -> v4
-  tagWatchPoint.addAttribute(attrWriteInit);
   tag.addSubtag(tagWatchPoint);
 
   auto attrScaleWitConn = XMLAttribute<bool>(ATTR_SCALE_WITH_CONN)

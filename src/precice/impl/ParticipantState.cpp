@@ -361,8 +361,6 @@ void ParticipantState::exportInitial()
     context.exporter->doExport(0, 0.0);
   }
 
-  // @todo make this conditional depending on config.
-  // Export watch point data
   for (const PtrWatchPoint &watchPoint : watchPoints()) {
     watchPoint->exportPointData(0.0);
   }
