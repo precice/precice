@@ -360,6 +360,16 @@ void ParticipantState::exportInitial()
     PRECICE_DEBUG("Exporting initial mesh {} to location \"{}\"", context.meshName, context.location);
     context.exporter->doExport(0, 0.0);
   }
+
+  // @todo make this conditional depending on config.
+  // Export watch point data
+  for (const PtrWatchPoint &watchPoint : watchPoints()) {
+    watchPoint->exportPointData(0.0);
+  }
+
+  for (const PtrWatchIntegral &watchIntegral : watchIntegrals()) {
+    watchIntegral->exportIntegralData(0.0);
+  }
 }
 
 bool ParticipantState::hasExports() const
