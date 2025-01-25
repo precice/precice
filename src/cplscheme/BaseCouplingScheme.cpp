@@ -595,24 +595,28 @@ std::string BaseCouplingScheme::printBasicState(
     double time) const
 {
   std::ostringstream os;
-  os << "time-window: " << timeWindows;
-  if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
-    os << " of " << _maxTimeWindows;
+  if (isCouplingOngoing()) {
+    os << "time-window: " << timeWindows;
+    if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
+      os << " of " << _maxTimeWindows;
+    }
+    os << ", time: " << time;
+    if (_maxTime != UNDEFINED_MAX_TIME) {
+      os << " of " << _maxTime;
+    }
+    if (hasTimeWindowSize()) {
+      os << ", time-window-size: " << _timeWindowSize;
+    }
+    if (hasTimeWindowSize() || (_maxTime != UNDEFINED_MAX_TIME)) {
+      os << ", max-time-step-size: " << getNextTimeStepMaxSize();
+    }
+    os << ", ongoing: ";
+    isCouplingOngoing() ? os << "yes" : os << "no";
+    os << ", time-window-complete: ";
+    _isTimeWindowComplete ? os << "yes" : os << "no";
+  } else {
+    os << "Reached end at: time-window: " << timeWindows << ", time: " << time;
   }
-  os << ", time: " << time;
-  if (_maxTime != UNDEFINED_MAX_TIME) {
-    os << " of " << _maxTime;
-  }
-  if (hasTimeWindowSize()) {
-    os << ", time-window-size: " << _timeWindowSize;
-  }
-  if (hasTimeWindowSize() || (_maxTime != UNDEFINED_MAX_TIME)) {
-    os << ", max-time-step-size: " << getNextTimeStepMaxSize();
-  }
-  os << ", ongoing: ";
-  isCouplingOngoing() ? os << "yes" : os << "no";
-  os << ", time-window-complete: ";
-  _isTimeWindowComplete ? os << "yes" : os << "no";
   return os.str();
 }
 
