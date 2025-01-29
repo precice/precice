@@ -45,6 +45,10 @@ void WriteDataContext::mapAndWriteValues(::precice::span<const double> coordinat
   PRECICE_ASSERT(mappingCache);
   PRECICE_ASSERT(justInTimeMapping);
   PRECICE_ASSERT((coordinates.size() / getSpatialDimensions()) * getDataDimensions() == values.size());
+
+  PRECICE_CHECK(_writeDataBuffer.values.size() > 0, "This participant tries to write data values for data \"{}\" on mesh \"{1}\", but the mesh \"{1}\" is empty within the defined access region on this rank. "
+                                                    "Where should the provided data values go? Please make sure the mesh \"{1}\" is non-empty within the access region.",
+                getDataName(), getMeshName());
   PRECICE_ASSERT(_writeDataBuffer.values.data());
 
   Eigen::Map<const Eigen::MatrixXd> coords(coordinates.data(), getSpatialDimensions(), coordinates.size() / getSpatialDimensions());

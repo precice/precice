@@ -1282,8 +1282,8 @@ void ParticipantImpl::mapAndReadData(
     bool                              minCheck  = (minCoeffs.array() >= context.userDefinedAccessRegion->minCorner().array()).all();
     bool                              maxCheck  = (maxCoeffs.array() <= context.userDefinedAccessRegion->maxCorner().array()).all();
     PRECICE_CHECK(minCheck && maxCheck, "The provided coordinates in \"mapAndReadData()\" are not within the access region defined with \"setMeshAccessRegion()\". "
-                                        "Minimum coordinate values are (x,y,z) = ({}), the minimum corner of the access region is box is (x,y,z) = ({}). "
-                                        "Maximum coordinate values are (x,y,z) = ({}), the maximum corner of the access region is box is (x,y,z) = ({}). ",
+                                        "Minimum corner of the provided values is (x,y,z) = ({}), the minimum corner of the access region box is (x,y,z) = ({}). "
+                                        "Maximum corner of the provided values is (x,y,z) = ({}), the maximum corner of the access region box is (x,y,z) = ({}). ",
                   minCoeffs, context.userDefinedAccessRegion->minCorner(), maxCoeffs, context.userDefinedAccessRegion->maxCorner());
     C.colwise().maxCoeff();
   }
