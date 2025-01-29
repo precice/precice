@@ -1262,6 +1262,10 @@ void ParticipantImpl::mapAndReadData(
                 "Please define an access region using \"setMeshAccessRegion()\" before calling \"mapAndReadData()\".",
                 meshName);
 
+  PRECICE_CHECK(!_accessor->meshContext(meshName).mesh->empty(), "This participant tries to mapAndRead data values for data \"{0}\" on mesh \"{1}\", but the mesh \"{1}\" is empty within the defined access region on this rank. "
+                                                                 "How should the provided data values be read? Please make sure the mesh \"{1}\" is non-empty within the access region.",
+                dataName, meshName);
+
   // Inconsistent sizes will be handled below
   if (coordinates.empty() && values.empty()) {
     return;
@@ -1358,6 +1362,9 @@ void ParticipantImpl::mapAndWriteData(
                 dataDims, dataName, meshName,
                 nVertices, values.size(), nVertices * dataDims, dataDims, nVertices);
 
+  PRECICE_CHECK(!context.mesh->empty(), "This participant tries to mapAndWrite data values for data \"{0}\" on mesh \"{1}\", but the mesh \"{1}\" is empty within the defined access region on this rank. "
+                                        "Where should the provided data go? Please make sure the mesh \"{1}\" is non-empty within the access region.",
+                dataName, meshName);
   dataContext.mapAndWriteValues(coordinates, values);
 }
 
