@@ -44,6 +44,7 @@ target_sources(testprecice
     tests/parallel/just-in-time-mapping/EmptyPartition.cpp
     tests/parallel/just-in-time-mapping/ExplicitRead.cpp
     tests/parallel/just-in-time-mapping/ExplicitWrite.cpp
+    tests/parallel/just-in-time-mapping/ImplicitPUM.cpp
     tests/parallel/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/parallel/lifecycle/ConstructOnly.cpp
     tests/parallel/lifecycle/Full.cpp
