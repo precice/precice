@@ -274,11 +274,55 @@ std::vector<TetrahedronID> Index::getEnclosingTetrahedra(const Eigen::VectorXd &
 
 ProjectionMatch Index::findNearestProjection(const Eigen::VectorXd &location, int n)
 {
+#if 0
+  std::vector<ProjectionMatch> candidates;
   if (_mesh->getDimensions() == 2) {
-    return findEdgeProjection(location, n, findVertexProjection(location));
+    candidates.reserve(1+n);
   } else {
-    return findTriangleProjection(location, n, findVertexProjection(location));
+    candidates.reserve(1+2*n);
   }
+
+  auto match = getClosestVertex(location);
+  candidates.emplace_back(mapping::Polation{location, _mesh->vertex(match.index)});
+
+  for (const auto &match : getClosestEdges(location, n)) {
+    auto polation = mapping::Polation(location, _mesh->edges()[match.index]);
+    if (polation.isInterpolation()) {
+      candidates.emplace_back(std::move(polation));
+    }
+  }
+
+  if (_mesh->getDimensions() == 3) {
+    for (const auto &match : getClosestTriangles(location, n)) {
+      auto polation = mapping::Polation(location, _mesh->triangles()[match.index]);
+      if (polation.isInterpolation()) {
+        candidates.emplace_back(std::move(polation));
+      }
+    }
+  }
+
+  return *std::min_element(candidates.begin(), candidates.end());
+#else
+  auto              closest = getClosestVertex(location);
+  mapping::Polation nearest{location, _mesh->vertex(closest.index)};
+
+  for (const auto &match : getClosestEdges(location, n)) {
+    auto polation = mapping::Polation(location, _mesh->edges()[match.index]);
+    if (polation.isInterpolation() && polation < nearest) {
+      nearest = std::move(polation);
+    }
+  }
+
+  if (_mesh->getDimensions() == 3) {
+    for (const auto &match : getClosestTriangles(location, n)) {
+      auto polation = mapping::Polation(location, _mesh->triangles()[match.index]);
+      if (polation.isInterpolation() && polation < nearest) {
+        nearest = std::move(polation);
+      }
+    }
+  }
+  return nearest;
+#endif
 }
 
 ProjectionMatch Index::findCellOrProjection(const Eigen::VectorXd &location, int n)

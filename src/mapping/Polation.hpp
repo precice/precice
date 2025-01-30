@@ -47,6 +47,11 @@ public:
   /// Returns the projection distance
   double distance() const;
 
+  bool operator<(const Polation &other) const
+  {
+    return _distance < other._distance;
+  }
+
 private:
   std::vector<WeightedElement> _weightedElements;
   double                       _distance;
