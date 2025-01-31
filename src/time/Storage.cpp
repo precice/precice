@@ -251,11 +251,13 @@ time::Sample Storage::getSampleAtEnd()
 int Storage::findTimeId(double time) const
 {
   int i = 0;
-  while (math::smallerEquals(_stampleStorage[i].timestamp, time)) {
-    if (math::equals(_stampleStorage[i].timestamp, time)) {
+  PRECICE_ASSERT(_stampleStorage.size() > 0, _stampleStorage.size(), i);
+  while (math::smallerEquals(_stampleStorage.at(i).timestamp, time)) {
+    if (math::equals(_stampleStorage.at(i).timestamp, time)) {
       return i;
     }
     i++;
+    PRECICE_ASSERT(_stampleStorage.size() > i, _stampleStorage.size(), i);
   }
   return -1; // time not found in times
 }
