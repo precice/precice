@@ -250,7 +250,7 @@ time::Sample Storage::getSampleAtEnd()
 
 int Storage::findTimeId(double time) const
 {
-  int i = 0;
+  size_t i = 0;
   PRECICE_ASSERT(_stampleStorage.size() > 0, _stampleStorage.size(), i);
   while (math::smallerEquals(_stampleStorage.at(i).timestamp, time)) {
     if (math::equals(_stampleStorage.at(i).timestamp, time)) {
