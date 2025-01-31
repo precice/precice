@@ -81,14 +81,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivity)
         0.0, 10.0,
         1.0, 14.0,
         2.0, 14.0};
-    BOOST_TEST(result.size() == expected.size());
-    for (size_t i = 0; i < result.size(); ++i) {
-      BOOST_TEST_CONTEXT("entry index: " << i)
-      {
-        using testing::equals;
-        BOOST_TEST(equals(result.at(i), expected.at(i)));
-      }
-    }
+    BOOST_TEST(result == expected, boost::test_tools::per_element());
   }
 }
 
@@ -108,7 +101,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivity)
   mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
 
   PtrData doubleData = mesh->createData("DoubleData", 2, 0_dataID);
-  doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1., 2., 3., 4., 5., 6., 7., 8.}}));
+  doubleData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1., 2., 3., 4., 5., 6., 7., 8.}}));
 
   std::string fileName("precice-WatchIntegralTest-vectorData-noConnectivity.log");
 
@@ -120,7 +113,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivity)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{2., 3., 4., 5., 6., 7., 8., 9.}}));
+    doubleData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{2., 3., 4., 5., 6., 7., 8., 9.}}));
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
@@ -135,14 +128,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivity)
         0.0, 16.0, 20.0,
         1.0, 20.0, 24.0,
         2.0, 20.0, 24.0};
-    BOOST_TEST(result.size() == expected.size());
-    for (size_t i = 0; i < result.size(); ++i) {
-      BOOST_TEST_CONTEXT("entry index: " << i)
-      {
-        using testing::equals;
-        BOOST_TEST(equals(result.at(i), expected.at(i)));
-      }
-    }
+    BOOST_TEST(result == expected, boost::test_tools::per_element());
   }
 }
 
@@ -191,14 +177,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivity)
         0.0, 6.5, 3.0,
         1.0, 9.5, 3.0,
         2.0, 9.5, 3.0};
-    BOOST_TEST(result.size() == expected.size());
-    for (size_t i = 0; i < result.size(); ++i) {
-      BOOST_TEST_CONTEXT("entry index: " << i)
-      {
-        using testing::equals;
-        BOOST_TEST(equals(result.at(i), expected.at(i)));
-      }
-    }
+    BOOST_TEST(result == expected, boost::test_tools::per_element());
   }
 }
 
@@ -247,14 +226,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityNoScale)
         0.0, 6.0, 3.0,
         1.0, 9.0, 3.0,
         2.0, 9.0, 3.0};
-    BOOST_TEST(result.size() == expected.size());
-    for (size_t i = 0; i < result.size(); ++i) {
-      BOOST_TEST_CONTEXT("entry index: " << i)
-      {
-        using testing::equals;
-        BOOST_TEST(equals(result.at(i), expected.at(i)));
-      }
-    }
+    BOOST_TEST(result == expected, boost::test_tools::per_element());
   }
 }
 
@@ -276,7 +248,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivity)
   mesh->createEdge(v2, v3);
 
   PtrData doubleData = mesh->createData("DoubleData", 2, 0_dataID);
-  doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1., 2., 3., 4., 5., 6.}}));
+  doubleData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1., 2., 3., 4., 5., 6.}}));
 
   std::string fileName("precice-WatchIntegralTest-scalarData-edgeConnectivity.log");
 
@@ -288,7 +260,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivity)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{2., 3., 4., 5., 6., 7.}}));
+    doubleData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{2., 3., 4., 5., 6., 7.}}));
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
@@ -304,14 +276,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivity)
           0.0, 10.0, 13.0, 3.0,
           1.0, 13.0, 56.0, 3.0,
           2.0, 13.0, 56.0, 3.0};
-      BOOST_TEST(result.size() == expected.size());
-      for (size_t i = 0; i < result.size(); ++i) {
-        BOOST_TEST_CONTEXT("entry index: " << i)
-        {
-          using testing::equals;
-          BOOST_TEST(equals(result.at(i), expected.at(i)));
-        }
-      }
+      BOOST_TEST(result == expected, boost::test_tools::per_element());
     }
   }
 }
@@ -334,7 +299,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityNoScale)
   mesh->createEdge(v2, v3);
 
   PtrData doubleData = mesh->createData("DoubleData", 2, 0_dataID);
-  doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1., 2., 3., 4., 5., 6.}}));
+  doubleData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1., 2., 3., 4., 5., 6.}}));
 
   std::string fileName("precice-WatchIntegralTest-scalarData-edgeConnectivity-noScale.log");
 
@@ -346,7 +311,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityNoScale)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{2., 3., 4., 5., 6., 7.}}));
+    doubleData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{2., 3., 4., 5., 6., 7.}}));
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
@@ -362,14 +327,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityNoScale)
           0.0, 9.0, 12.0, 3.0,
           1.0, 12.0, 15.0, 3.0,
           2.0, 12.0, 15.0, 3.0};
-      BOOST_TEST(result.size() == expected.size());
-      for (size_t i = 0; i < result.size(); ++i) {
-        BOOST_TEST_CONTEXT("entry index: " << i)
-        {
-          using testing::equals;
-          BOOST_TEST(equals(result.at(i), expected.at(i)));
-        }
-      }
+      BOOST_TEST(result == expected, boost::test_tools::per_element());
     }
   }
 }
@@ -426,14 +384,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivity)
         0.0, 28.0, 12.0,
         1.0, 40.0, 12.0,
         2.0, 40.0, 12.0};
-    BOOST_TEST(result.size() == expected.size());
-    for (size_t i = 0; i < result.size(); ++i) {
-      BOOST_TEST_CONTEXT("entry index: " << i)
-      {
-        using testing::equals;
-        BOOST_TEST(equals(result.at(i), expected.at(i)));
-      }
-    }
+    BOOST_TEST(result == expected, boost::test_tools::per_element());
   }
 }
 
@@ -489,14 +440,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityNoScale)
         0.0, 10.0, 12.0,
         1.0, 14.0, 12.0,
         2.0, 14.0, 12.0};
-    BOOST_TEST(result.size() == expected.size());
-    for (size_t i = 0; i < result.size(); ++i) {
-      BOOST_TEST_CONTEXT("entry index: " << i)
-      {
-        using testing::equals;
-        BOOST_TEST(equals(result.at(i), expected.at(i)));
-      }
-    }
+    BOOST_TEST(result == expected, boost::test_tools::per_element());
   }
 }
 
@@ -525,7 +469,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivity)
   mesh->createTriangle(e3, e4, e5);
 
   PtrData doubleData = mesh->createData("DoubleData", 2, 0_dataID);
-  doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1., 2., 3., 4., 5., 6., 7., 8.}}));
+  doubleData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1., 2., 3., 4., 5., 6., 7., 8.}}));
 
   std::string fileName("precice-WatchIntegralTest-vectorData-faceConnectivity.log");
 
@@ -537,7 +481,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivity)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{2., 3., 4., 5., 6., 7., 8., 9.}}));
+    doubleData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{2., 3., 4., 5., 6., 7., 8., 9.}}));
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
@@ -552,14 +496,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivity)
         0.0, 44.0, 56.0, 12.0,
         1.0, 56.0, 68.0, 12.0,
         2.0, 56.0, 68.0, 12.0};
-    BOOST_TEST(result.size() == expected.size());
-    for (size_t i = 0; i < result.size(); ++i) {
-      BOOST_TEST_CONTEXT("entry index: " << i)
-      {
-        using testing::equals;
-        BOOST_TEST(equals(result.at(i), expected.at(i)));
-      }
-    }
+    BOOST_TEST(result == expected, boost::test_tools::per_element());
   }
 }
 
@@ -588,7 +525,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityNoScale)
   mesh->createTriangle(e3, e4, e5);
 
   PtrData doubleData = mesh->createData("DoubleData", 2, 0_dataID);
-  doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1., 2., 3., 4., 5., 6., 7., 8.}}));
+  doubleData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1., 2., 3., 4., 5., 6., 7., 8.}}));
 
   std::string fileName("precice-WatchIntegralTest-vectorData-faceConnectivity-noScale.log");
 
@@ -600,7 +537,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityNoScale)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{2., 3., 4., 5., 6., 7., 8., 9.}}));
+    doubleData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{2., 3., 4., 5., 6., 7., 8., 9.}}));
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
@@ -615,14 +552,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityNoScale)
         0.0, 16.0, 20.0, 12.0,
         1.0, 20.0, 24.0, 12.0,
         2.0, 20.0, 24.0, 12.0};
-    BOOST_TEST(result.size() == expected.size());
-    for (size_t i = 0; i < result.size(); ++i) {
-      BOOST_TEST_CONTEXT("entry index: " << i)
-      {
-        using testing::equals;
-        BOOST_TEST(equals(result.at(i), expected.at(i)));
-      }
-    }
+    BOOST_TEST(result == expected, boost::test_tools::per_element());
   }
 }
 
@@ -678,14 +608,7 @@ BOOST_AUTO_TEST_CASE(MeshChangeFaceConnectivity)
         0.0, 28.0, 12.0,
         1.0, 40.0, 18.0,
         2.0, 40.0, 18.0};
-    BOOST_TEST(result.size() == expected.size());
-    for (size_t i = 0; i < result.size(); ++i) {
-      BOOST_TEST_CONTEXT("entry index: " << i)
-      {
-        using testing::equals;
-        BOOST_TEST(equals(result.at(i), expected.at(i)));
-      }
-    }
+    BOOST_TEST(result == expected, boost::test_tools::per_element());
   }
 }
 
@@ -758,14 +681,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
           0.0, 36.0,
           1.0, 44.0,
           2.0, 44.0};
-      BOOST_TEST(result.size() == expected.size());
-      for (size_t i = 0; i < result.size(); ++i) {
-        BOOST_TEST_CONTEXT("entry index: " << i)
-        {
-          using testing::equals;
-          BOOST_TEST(equals(result.at(i), expected.at(i)));
-        }
-      }
+      BOOST_TEST(result == expected, boost::test_tools::per_element());
     }
   }
 }
@@ -796,13 +712,13 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
   }
 
   if (utils::IntraComm::isPrimary()) {
-    doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1.0, 2.0, 3.0, 4.0}}));
+    doubleData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1.0, 2.0, 3.0, 4.0}}));
   } else if (context.isRank(1)) {
-    doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{5.0, 6.0, 7.0, 8.0}}));
+    doubleData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{5.0, 6.0, 7.0, 8.0}}));
   } else if (context.isRank(2)) {
-    doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{9.0, 10.0, 11.0, 12.0}}));
+    doubleData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{9.0, 10.0, 11.0, 12.0}}));
   } else if (context.isRank(3)) {
-    doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{13.0, 14.0, 15.0, 16.0}}));
+    doubleData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{13.0, 14.0, 15.0, 16.0}}));
   }
 
   std::string fileName("precice-WatchIntegralTest-vectorData-noConnectivity-parallel.log");
@@ -816,13 +732,13 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
 
     // Change data (next timestep)
     if (utils::IntraComm::isPrimary()) {
-      doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{2.0, 3.0, 4.0, 5.0}}));
+      doubleData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{2.0, 3.0, 4.0, 5.0}}));
     } else if (context.isRank(1)) {
-      doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{6.0, 7.0, 8.0, 9.0}}));
+      doubleData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{6.0, 7.0, 8.0, 9.0}}));
     } else if (context.isRank(2)) {
-      doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{10.0, 11.0, 12.0, 13.0}}));
+      doubleData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{10.0, 11.0, 12.0, 13.0}}));
     } else if (context.isRank(3)) {
-      doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{14.0, 15.0, 16.0, 17.0}}));
+      doubleData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{14.0, 15.0, 16.0, 17.0}}));
     }
 
     // Write output again
@@ -839,14 +755,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
           0.0, 64.0, 72.0,
           1.0, 72.0, 80.0,
           2.0, 72.0, 80.0};
-      BOOST_TEST(result.size() == expected.size());
-      for (size_t i = 0; i < result.size(); ++i) {
-        BOOST_TEST_CONTEXT("entry index: " << i)
-        {
-          using testing::equals;
-          BOOST_TEST(equals(result.at(i), expected.at(i)));
-        }
-      }
+      BOOST_TEST(result == expected, boost::test_tools::per_element());
     }
   }
 }
@@ -934,14 +843,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
           0.0, 25.5, 5.0,
           1.0, 30.5, 5.0,
           2.0, 30.5, 5.0};
-      BOOST_TEST(result.size() == expected.size());
-      for (size_t i = 0; i < result.size(); ++i) {
-        BOOST_TEST_CONTEXT("entry index: " << i)
-        {
-          using testing::equals;
-          BOOST_TEST(equals(result.at(i), expected.at(i)));
-        }
-      }
+      BOOST_TEST(result == expected, boost::test_tools::per_element());
     }
   }
 }
@@ -980,16 +882,16 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
   PtrData doubleData = mesh->createData("DoubleData", 2, 0_dataID);
 
   if (utils::IntraComm::isPrimary()) {
-    doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1.0, 2.0, 3.0, 4.0}}));
+    doubleData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1.0, 2.0, 3.0, 4.0}}));
   }
   if (context.isRank(1)) {
-    doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{5.0, 6.0, 7.0, 8.0}}));
+    doubleData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{5.0, 6.0, 7.0, 8.0}}));
   }
   if (context.isRank(2)) {
-    doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{9.0, 10.0, 11.0, 12.0}}));
+    doubleData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{9.0, 10.0, 11.0, 12.0}}));
   }
   if (context.isRank(3)) {
-    doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{13.0, 14.0, 15.0, 16.0}}));
+    doubleData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{13.0, 14.0, 15.0, 16.0}}));
   }
 
   std::string fileName("precice-WatchIntegralTest-scalarData-edgeConnectivity-parallel.log");
@@ -1003,16 +905,16 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
 
     // Change data (next timestep)
     if (utils::IntraComm::isPrimary()) {
-      doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{2.0, 3.0, 4.0, 5.0}}));
+      doubleData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{2.0, 3.0, 4.0, 5.0}}));
     }
     if (context.isRank(1)) {
-      doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{6.0, 7.0, 8.0, 9.0}}));
+      doubleData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{6.0, 7.0, 8.0, 9.0}}));
     }
     if (context.isRank(2)) {
-      doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{10.0, 11.0, 12.0, 13.0}}));
+      doubleData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{10.0, 11.0, 12.0, 13.0}}));
     }
     if (context.isRank(3)) {
-      doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{14.0, 15.0, 16.0, 17.0}}));
+      doubleData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{14.0, 15.0, 16.0, 17.0}}));
     }
 
     // Write output again
@@ -1029,14 +931,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
           0.0, 46.0, 51.0, 5.0,
           1.0, 51.0, 56.0, 5.0,
           2.0, 51.0, 56.0, 5.0};
-      BOOST_TEST(result.size() == expected.size());
-      for (size_t i = 0; i < result.size(); ++i) {
-        BOOST_TEST_CONTEXT("entry index: " << i)
-        {
-          using testing::equals;
-          BOOST_TEST(equals(result.at(i), expected.at(i)));
-        }
-      }
+      BOOST_TEST(result == expected, boost::test_tools::per_element());
     }
   }
 }
@@ -1126,14 +1021,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
           0.0, 28.0, 12.0,
           1.0, 40.0, 12.0,
           2.0, 40.0, 12.0};
-      BOOST_TEST(result.size() == expected.size());
-      for (size_t i = 0; i < result.size(); ++i) {
-        BOOST_TEST_CONTEXT("entry index: " << i)
-        {
-          using testing::equals;
-          BOOST_TEST(equals(result.at(i), expected.at(i)));
-        }
-      }
+      BOOST_TEST(result == expected, boost::test_tools::per_element());
     }
   }
 }
@@ -1171,19 +1059,19 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
     mesh->createTriangle(e3, e4, e5);
   }
 
-  PtrData doubleData = mesh->createData("DoubleData", 2, 0_dataID);
+  PtrData doubleData = mesh->createData("DoubleData", 3, 0_dataID);
 
   if (utils::IntraComm::isPrimary()) {
-    doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1.0, 2.0, 3.0, 4.0, 5.0, 6.0}}));
+    doubleData->setSampleAtTime(0, time::Sample(3, Eigen::VectorXd{{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0}}));
   }
   if (context.isRank(1)) {
-    doubleData->setSampleAtTime(0, time::Sample(1));
+    doubleData->setSampleAtTime(0, time::Sample(3));
   }
   if (context.isRank(2)) {
-    doubleData->setSampleAtTime(0, time::Sample(1));
+    doubleData->setSampleAtTime(0, time::Sample(3));
   }
   if (context.isRank(3)) {
-    doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1.0, 2.0, 5.0, 6.0, 7.0, 8.0}}));
+    doubleData->setSampleAtTime(0, time::Sample(3, Eigen::VectorXd{{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0}}));
   }
 
   std::string fileName("precice-WatchIntegralTest-vectorData-faceConnectivity-parallel.log");
@@ -1197,16 +1085,16 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
 
     // Change data (next timestep)
     if (utils::IntraComm::isPrimary()) {
-      doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{2.0, 3.0, 4.0, 5.0, 6.0, 7.0}}));
+      doubleData->setSampleAtTime(1, time::Sample(3, Eigen::VectorXd{{2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0}}));
     }
     if (context.isRank(1)) {
-      doubleData->setSampleAtTime(1, time::Sample(1));
+      doubleData->setSampleAtTime(1, time::Sample(3));
     }
     if (context.isRank(2)) {
-      doubleData->setSampleAtTime(1, time::Sample(1));
+      doubleData->setSampleAtTime(1, time::Sample(3));
     }
     if (context.isRank(3)) {
-      doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{2.0, 3.0, 6.0, 7.0, 8.0, 9.0}}));
+      doubleData->setSampleAtTime(1, time::Sample(3, Eigen::VectorXd{{2.0, 3.0, 6.0, 7.0, 8.0, 9.0, 8.0, 9.0, 10.0}}));
     }
 
     // Write output again
@@ -1218,19 +1106,12 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
   BOOST_TEST_CONTEXT("Validating WatchIntegral VectorData FaceConnectivity Parallel")
   {
     if (utils::IntraComm::isPrimary()) {
-      auto result   = readDoublesFromTXTFile(fileName, 4);
+      auto result   = readDoublesFromTXTFile(fileName, 5);
       auto expected = std::vector<double>{
-          0.0, 44.0, 56.0, 12.0,
-          1.0, 56.0, 68.0, 12.0,
-          2.0, 56.0, 68.0, 12.0};
-      BOOST_TEST(result.size() == expected.size());
-      for (size_t i = 0; i < result.size(); ++i) {
-        BOOST_TEST_CONTEXT("entry index: " << i)
-        {
-          using testing::equals;
-          BOOST_TEST(equals(result.at(i), expected.at(i)));
-        }
-      }
+          0.0, 48.0, 60.0, 72.0, 12.0,
+          1.0, 64.0, 76.0, 92.0, 12.0,
+          2.0, 64.0, 76.0, 92.0, 12.0};
+      BOOST_TEST(result == expected, boost::test_tools::per_element());
     }
   }
 }
