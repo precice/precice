@@ -110,7 +110,7 @@ void WatchPoint::exportPointData(
   for (auto &elem : _dataToExport) {
     if (elem->getDimensions() > 1) {
       Eigen::VectorXd toExport = Eigen::VectorXd::Zero(_mesh->getDimensions());
-      getValue(toExport, elem);
+      getValue(toExport, elem, time);
       if (coords.size() == 2) {
         _txtWriter.writeData(elem->getName(), Eigen::Vector2d(toExport));
       } else {
@@ -119,7 +119,7 @@ void WatchPoint::exportPointData(
 
     } else {
       double valueToExport = 0.0;
-      getValue(valueToExport, elem);
+      getValue(valueToExport, elem, time);
       _txtWriter.writeData(elem->getName(), valueToExport);
     }
   }
@@ -127,11 +127,12 @@ void WatchPoint::exportPointData(
 
 void WatchPoint::getValue(
     Eigen::VectorXd &value,
-    mesh::PtrData &  data)
+    mesh::PtrData &  data,
+    double           time)
 {
   int                    dim = _mesh->getDimensions();
   Eigen::VectorXd        temp(dim);
-  const Eigen::VectorXd &values = data->timeStepsStorage().last().sample.values;
+  const Eigen::VectorXd &values = data->timeStepsStorage().sample(time);
   for (const auto &elem : _interpolation->getWeightedElements()) {
     int offset = elem.vertexID * dim;
     for (int i = 0; i < dim; i++) {
@@ -144,9 +145,10 @@ void WatchPoint::getValue(
 
 void WatchPoint::getValue(
     double &       value,
-    mesh::PtrData &data)
+    mesh::PtrData &data,
+    double         time)
 {
-  const Eigen::VectorXd &values = data->timeStepsStorage().last().sample.values;
+  const Eigen::VectorXd &values = data->timeStepsStorage().sample(time);
   for (const auto &elem : _interpolation->getWeightedElements()) {
     value += elem.weight * values[elem.vertexID];
   }
