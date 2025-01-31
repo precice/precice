@@ -1212,6 +1212,8 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
+    doubleData->moveToNextWindow();
+
     watchIntegral.exportIntegralData(2.0);
   }
   // File Format: Time  DoubleData SurfaceArea
