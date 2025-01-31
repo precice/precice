@@ -30,10 +30,10 @@
 
   <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
 
-  <coupling-scheme:serial-explicit>
+  <coupling-scheme:parallel-explicit>
     <participants first="SolverOne" second="SolverTwo" />
     <max-time-windows value="3" />
     <time-window-size value="1.0" />
     <exchange data="DataOne" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
-  </coupling-scheme:serial-explicit>
+  </coupling-scheme:parallel-explicit>
 </precice-configuration>

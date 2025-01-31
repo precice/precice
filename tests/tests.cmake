@@ -410,7 +410,8 @@ target_sources(testprecice
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSubcyclingThird.cpp
     tests/serial/time/implicit/serial-coupling/WaveformSubcyclingWithConstantAcceleration.cpp
     tests/serial/time/implicit/serial-coupling/WaveformSubcyclingWithConstantAccelerationNoInit.cpp
-    tests/serial/watch-integral/WatchIntegralScaleAndNoScale.cpp
+    tests/serial/watch-integral/WatchIntegralScaleAndNoScaleParallel.cpp
+    tests/serial/watch-integral/WatchIntegralScaleAndNoScaleSerial.cpp
     tests/serial/watch-integral/helpers.cpp
     tests/serial/watch-integral/helpers.hpp
     tests/serial/whitebox/TestConfigurationComsol.cpp
