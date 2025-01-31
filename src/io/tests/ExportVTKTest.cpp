@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
   time::Sample vectorial(dimensions, 2, dimensions);
   vectorial.values.setLinSpaced(0, 1);
   vectorial.gradients.setOnes();
-  dataScalar->setSampleAtTime(0, vectorial);
+  dataVector->setSampleAtTime(0, vectorial);
 
   io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTK.doExport(0, 0.0);
