@@ -776,7 +776,13 @@ void ParticipantImpl::resetMesh(
 
   PRECICE_DEBUG("Clear mesh positions for mesh \"{}\"", context.mesh->getName());
   _meshLock.unlock(meshName);
-  context.mesh->clear();
+  if (_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName)) {
+    MeshContext &context = _accessor->meshContext(meshName);
+    context.userDefinedAccessRegion.reset();
+    context.mesh->resetBoundingBox();
+  } else {
+    context.mesh->clear();
+  }
 }
 
 VertexID ParticipantImpl::setMeshVertex(
@@ -1423,7 +1429,6 @@ void ParticipantImpl::setMeshAccessRegion(
                 "setMeshAccessRegion(...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
                 meshName);
   PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().");
-  PRECICE_CHECK(_state != State::Initialized, "setMeshAccessRegion() needs to be called before initialize().");
 
   // Get the related mesh
   MeshContext &context = _accessor->meshContext(meshName);

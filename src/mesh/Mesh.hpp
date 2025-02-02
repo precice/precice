@@ -311,6 +311,11 @@ public:
    */
   const BoundingBox &getBoundingBox() const;
 
+  void resetBoundingBox()
+  {
+    _boundingBox = BoundingBox(_dimensions);
+  }
+
   void expandBoundingBox(const BoundingBox &bounding_box);
 
   bool operator==(const Mesh &other) const;
