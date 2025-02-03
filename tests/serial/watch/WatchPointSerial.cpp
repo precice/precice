@@ -75,6 +75,7 @@ BOOST_AUTO_TEST_CASE(WatchPointSerial)
       std::string fileName = "precice-SolverTwo-watchpoint-WatchPoint.log";
       auto        result   = readDoublesFromTXTFile(fileName, 4);
       auto        expected = std::vector<double>{
+          // Time  Coordinate0  Coordinate1  DataOne
           1.0, 0.0, 0.0, 2.0,
           2.0, 0.0, 0.0, 3.0,
           3.0, 0.0, 0.0, 4.0};

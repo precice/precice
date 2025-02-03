@@ -98,6 +98,7 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScaleSerial)
       std::string fileName = "precice-SolverTwo-watchintegral-WatchIntegral.log";
       auto        result   = readDoublesFromTXTFile(fileName, 3);
       auto        expected = std::vector<double>{
+          // Time  DataOne  SurfaceArea
           1.0, 6.5, 3.0,
           2.0, 9.5, 3.0,
           3.0, 12.5, 3.0};
@@ -115,6 +116,7 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScaleSerial)
       std::string fileName = "precice-SolverTwo-watchintegral-WatchIntegralNoScale.log";
       auto        result   = readDoublesFromTXTFile(fileName, 3);
       auto        expected = std::vector<double>{
+          // Time  DataOne  SurfaceArea
           1.0, 6.0, 3.0,
           2.0, 9.0, 3.0,
           3.0, 12.0, 3.0};
