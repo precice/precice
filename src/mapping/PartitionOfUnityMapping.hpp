@@ -380,8 +380,9 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(Ma
   // this here unconditionally
   cache.p.resize(_clusters.size());
   cache.polynomialContributions.resize(_clusters.size());
+  Eigen::Map<const Eigen::MatrixXd> inMatrix(in.data(), cache.getDataDimensions(), in.size() / cache.getDataDimensions());
   for (std::size_t c = 0; c < _clusters.size(); ++c) {
-    _clusters[c].computeCacheData(in, cache.polynomialContributions[c], cache.p[c], cache.getDataDimensions());
+    _clusters[c].computeCacheData(inMatrix, cache.polynomialContributions[c], cache.p[c]);
   }
 }
 

@@ -61,7 +61,7 @@ public:
   void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) const;
 
   /// Computes and saves the RBF coefficients
-  void computeCacheData(const Eigen::VectorXd &globalIn, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coefficientsOut, int components) const;
+  void computeCacheData(const Eigen::Ref<const Eigen::MatrixXd> &globalIn, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coefficientsOut) const;
 
   /// Evaluates a consistent mapping and agglomerates the result in the given output data
   void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) const;
@@ -250,20 +250,16 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::evaluateConservativeCache(
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::computeCacheData(const Eigen::VectorXd &globalIn, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffOut, int nComponents) const
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::computeCacheData(const Eigen::Ref<const Eigen::MatrixXd> &globalIn, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffOut) const
 {
   PRECICE_TRACE();
-
-  Eigen::MatrixXd in(_rbfSolver.getInputSize(), nComponents);
-  // Now we perform the data mapping component-wise
-  for (int c = 0; c < nComponents; ++c) {
-    // Step 1: extract the relevant input data from the global input data and store
-    // it in a contiguous array, which is required for the RBF solver (last polyparams entries remain zero)
-    for (std::size_t i = 0; i < _inputIDs.size(); i++) {
-      const auto dataIndex = *(_inputIDs.nth(i));
-      PRECICE_ASSERT(dataIndex * nComponents + c < globalIn.size(), dataIndex * nComponents + c, globalIn.size());
-      in(i, c) = globalIn[dataIndex * nComponents + c];
-    }
+  Eigen::MatrixXd in(_rbfSolver.getInputSize(), globalIn.rows());
+  // Step 1: extract the relevant input data from the global input data and store
+  // it in a contiguous array, which is required for the RBF solver (last polyparams entries remain zero)
+  for (std::size_t i = 0; i < _inputIDs.size(); i++) {
+    const auto dataIndex = *(_inputIDs.nth(i));
+    PRECICE_ASSERT(dataIndex < globalIn.cols(), globalIn.cols());
+    in.row(i) = globalIn.col(dataIndex);
   }
   // Step 2: solve the system using a consistent constraint
   _rbfSolver.computeCacheData(in, _polynomial, polyOut, coeffOut);
