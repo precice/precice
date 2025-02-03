@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivity)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
-    doubleData->moveToNextWindow();
+    vectorData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivity)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
-    doubleData->moveToNextWindow();
+    vectorData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityNoScale)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
-    doubleData->moveToNextWindow();
+    vectorData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }
@@ -502,7 +502,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivity)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
-    doubleData->moveToNextWindow();
+    vectorData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }
@@ -560,7 +560,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityNoScale)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
-    doubleData->moveToNextWindow();
+    vectorData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }
@@ -768,7 +768,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
-    doubleData->moveToNextWindow();
+    vectorData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }
@@ -948,7 +948,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
     // Write output again
     watchIntegral.exportIntegralData(1.0);
 
-    doubleData->moveToNextWindow();
+    vectorData->moveToNextWindow();
 
     watchIntegral.exportIntegralData(2.0);
   }
