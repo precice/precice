@@ -1025,10 +1025,10 @@ public:
    * limits in each space dimension [x, y, z].
    *
    * @note Defining a bounding box for serial runs of the solver (not
-   * to be confused with serial coupling mode) is valid. However, a
-   * warning is raised in case vertices are filtered out completely
-   * on the receiving side, since the associated data values of the
-   * filtered vertices are filled with zero data.
+   * to be confused with serial coupling mode) is valid and required.
+   * However, a warning is raised in case vertices are filtered out
+   * completely on the receiving side, since the associated data values
+   * of the filtered vertices are filled with zero data.
    *
    * @note This function can only be called once per mesh and rank
    * and trying to call it more than once results in an error.
@@ -1046,8 +1046,9 @@ public:
    * file) is not applied to the defined access region and a specified safety
    * will be ignored in case there is no additional mapping involved. However,
    * in case a mapping is in addition to the direct access involved, you will
-   * receive (and gain access to) vertices inside the defined access region
-   * plus vertices inside the safety factor region resulting from the mapping.
+   * receive vertices inside the defined access region plus vertices inside
+   * the safety factor region (but not gain access to the enlarged region)
+   * resulting from the mapping.
    * The default value of the safety factor is 0.5,i.e., the defined access
    * region as computed through the involved provided mesh is by 50% enlarged.
    *
