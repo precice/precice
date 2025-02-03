@@ -241,6 +241,8 @@ public:
    */
   virtual void updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &in);
 
+  virtual void initializeMappingDataCache(MappingDataCache &cache);
+
 protected:
   /// Returns pointer to input mesh.
   mesh::PtrMesh input() const;
@@ -315,15 +317,15 @@ private:
 };
 
 /** Defines an ordering for MeshRequirement in terms of specificality
-* @param[in] lhs the left-hand side of the binary operator
-* @param[in] rhs the right-hand side of the binary operator
-*/
+ * @param[in] lhs the left-hand side of the binary operator
+ * @param[in] rhs the right-hand side of the binary operator
+ */
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs);
 
 /** Defines the output operation to streams
-* @param[in,out] out stream to output to.
-* @param[in] val the value to output.
-*/
+ * @param[in,out] out stream to output to.
+ * @param[in] val the value to output.
+ */
 std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val);
 
 } // namespace precice::mapping

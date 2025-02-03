@@ -57,6 +57,9 @@ public:
   // Returns the size of the input data
   Eigen::Index getOutputSize() const;
 
+  // Returns the number of active axis in use
+  Eigen::Index getNumberOfPolynomials() const;
+
   template <typename IndexContainer>
   Eigen::VectorXd interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs,
                                 const RADIAL_BASIS_FUNCTION_T &function, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const;
@@ -375,7 +378,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 
     // 4 = 1 + dimensions(3) = maximum number of polynomial parameters
     _localActiveAxis        = activeAxis;
-    unsigned int polyParams = 4 - std::count(_localActiveAxis.begin(), _localActiveAxis.end(), false);
+    unsigned int polyParams = getNumberOfPolynomials();
 
     do {
       // First, build matrix Q and check for the condition number
@@ -392,7 +395,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
       // Disable one axis
       if (conditionNumber > 1e5) {
         reduceActiveAxis(inputMesh, inputIDs, _localActiveAxis);
-        polyParams = 4 - std::count(_localActiveAxis.begin(), _localActiveAxis.end(), false);
+        polyParams = getNumberOfPolynomials();
       } else {
         break;
       }
@@ -527,10 +530,10 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const me
   // We ignore the dead axis here for the evaluation matrix (matrixA), as the vertex coordinates are zero for a potential 2d case and there is no option in PUM to set them from the user
 
   // 1. The matrix contribution
-  // Eigen::VectorXd Au = _matrixA.transpose() * inputData;
   // Compute RBF values for matrix A
-  PRECICE_ASSERT(Au.cols() == load.size());
   PRECICE_ASSERT(Au.rows() == inputIDs.size());
+  PRECICE_ASSERT(Au.cols() == load.size());
+
   const auto &out = v.rawCoords();
   for (const auto &j : inputIDs | boost::adaptors::indexed()) {
     const auto &in                = inMesh.vertex(j.value()).rawCoords();
@@ -543,8 +546,7 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const me
   // 2. we have a separate polynomial, then we have to add it again here;
   // Eigen::VectorXd epsilon = _matrixV.transpose() * inputData;
   if (epsilon.size() > 0) {
-    epsilon.conservativeResize(1 + std::count(_localActiveAxis.begin(), _localActiveAxis.end(), true), load.size());
-    PRECICE_ASSERT(epsilon.rows() == (1 + std::count(_localActiveAxis.begin(), _localActiveAxis.end(), true)));
+    PRECICE_ASSERT(epsilon.rows() == getNumberOfPolynomials());
     PRECICE_ASSERT(epsilon.cols() == load.size());
     // constant polynomial
     epsilon.row(0) += 1 * load.transpose();
@@ -590,4 +592,11 @@ Eigen::Index RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getOutputSize() cons
 {
   return _matrixA.rows();
 }
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+Eigen::Index RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getNumberOfPolynomials() const
+{
+  return 1 + std::count(_localActiveAxis.begin(), _localActiveAxis.end(), true);
+}
+
 } // namespace precice::mapping

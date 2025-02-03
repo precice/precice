@@ -91,6 +91,8 @@ public:
   void addWriteDataToCache(const mesh::Vertex &v, const Eigen::VectorXd &load, Eigen::MatrixXd &epsilon, Eigen::MatrixXd &Au,
                            const mesh::Mesh &inMesh);
 
+  void initializeCacheData(Eigen::MatrixXd &polynomial, Eigen::MatrixXd &coeffs, const int nComponents);
+
 private:
   /// logger, as usual
   mutable precice::logging::Logger _log{"mapping::SphericalVertexCluster"};
@@ -278,16 +280,16 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const 
                                                                           const mesh::Mesh &inMesh)
 {
   PRECICE_TRACE();
-  if (Au.size() == 0) {
-    Au.resize(_inputIDs.size(), load.size());
-    Au.setZero();
-  }
-  // 4 is just the upper limit
-  if (Polynomial::SEPARATE == _polynomial && epsilon.size() == 0) {
-    epsilon.resize(4, load.size());
-    epsilon.setZero();
-  }
   _rbfSolver.addWriteDataToCache(v, load, epsilon, Au, _function, _inputIDs, inMesh);
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::initializeCacheData(Eigen::MatrixXd &poly, Eigen::MatrixXd &coeffs, const int nComponents)
+{
+  if (Polynomial::SEPARATE == _polynomial) {
+    poly.resize(_rbfSolver.getNumberOfPolynomials(), nComponents);
+  }
+  coeffs.resize(_inputIDs.size(), nComponents);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

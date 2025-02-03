@@ -6,7 +6,8 @@
 
 #include "MappingContext.hpp"
 #include "MeshContext.hpp"
-#include "mapping/NearestNeighborMapping.hpp"
+#include "mapping/SharedPointer.hpp"
+#include "mapping/config/MappingConfiguration.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Utils.hpp"
 namespace precice {
@@ -121,12 +122,28 @@ public:
    *
    * @param mappingContext
    */
-  void addJustInTimeMapping(MappingContext mappingContext, MeshContext meshContext);
+  void addJustInTimeMapping(MappingContext &mappingContext, MeshContext &meshContext);
 
-  void invalidateMappingCache()
+  /**
+   * @brief Resets the time stamp of the mappingdata cache and potentially resets the data it holds
+   *
+   * @param resetData whether to reset the data or not
+   */
+  void invalidateMappingCache(bool resetData)
   {
     if (mappingCache) {
       mappingCache->setTimeStamp(-1);
+      if (resetData) {
+        mappingCache->resetData();
+      }
+    }
+  }
+
+  void initializeMappingDataCache()
+  {
+    if (mappingCache) {
+      justInTimeMapping->initializeMappingDataCache(*mappingCache.get());
+      mappingCache->resetData();
     }
   }
 
@@ -165,7 +182,7 @@ protected:
    * on the remote meshes, this multiplicity cannot occur. Thus, one cache per DataContext is enough.
    */
   std::unique_ptr<mapping::MappingDataCache> mappingCache;
-  std::shared_ptr<mapping::Mapping>          justInTimeMapping;
+  mapping::PtrMapping                        justInTimeMapping;
   /**
    * @brief Helper to append a mappingContext, fromData and toData to the corresponding data containers
    *

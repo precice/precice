@@ -342,6 +342,7 @@ void ParticipantImpl::setupCommunication()
   PRECICE_INFO("Primary ranks are connected");
 
   Event e3("repartitioning");
+  // clears the mappings as well (see clearMappings)
   compareBoundingBoxes();
 
   PRECICE_INFO("Setting up preliminary secondary communication to coupling partner/s");
@@ -501,11 +502,12 @@ void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isT
 
   // Required for implicit coupling
   for (auto &context : _accessor->readDataContexts()) {
-    context.invalidateMappingCache();
+    context.invalidateMappingCache(false);
   }
 
+  // Strictly speaking, the write direction is not relevant here, but we will add it for the sake of completenss
   for (auto &context : _accessor->writeDataContexts()) {
-    context.invalidateMappingCache();
+    context.invalidateMappingCache(false);
   }
 
   if (isTimeWindowComplete) {
@@ -1695,6 +1697,7 @@ void ParticipantImpl::computeMappings(std::vector<MappingContext> &contexts, con
 {
   PRECICE_TRACE();
   using namespace mapping;
+  bool anyMappingChanged = false;
   for (impl::MappingContext &context : contexts) {
     if (not context.mapping->hasComputedMapping()) {
       PRECICE_INFO_IF(context.configuredWithAliasTag,
@@ -1703,6 +1706,18 @@ void ParticipantImpl::computeMappings(std::vector<MappingContext> &contexts, con
       PRECICE_INFO("Computing \"{}\" mapping from mesh \"{}\" to mesh \"{}\" in \"{}\" direction.",
                    context.mapping->getName(), context.mapping->getInputMesh()->getName(), context.mapping->getOutputMesh()->getName(), mappingType);
       context.mapping->computeMapping();
+      anyMappingChanged = true;
+    }
+  }
+  if (anyMappingChanged) {
+    if (mappingType == "write") {
+      for (auto &context : _accessor->writeDataContexts()) {
+        context.initializeMappingDataCache();
+      }
+    } else {
+      for (auto &context : _accessor->readDataContexts()) {
+        context.initializeMappingDataCache();
+      }
     }
   }
 }
@@ -1831,10 +1846,8 @@ void ParticipantImpl::resetWrittenData()
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
-
     // reset the buffered data here
-    // context.invalidateMappingCache();
-
+    context.invalidateMappingCache(true);
     context.resetBuffer();
   }
 }

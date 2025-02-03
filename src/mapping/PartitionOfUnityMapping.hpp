@@ -84,6 +84,8 @@ public:
 
   void completeJustInTimeMapping(MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer) final override;
 
+  void initializeMappingDataCache(MappingDataCache &cache) final override;
+
 private:
   /// logger, as usual
   precice::logging::Logger _log{"mapping::PartitionOfUnityMapping"};
@@ -337,8 +339,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservativeAt(const E
 
   PRECICE_TRACE();
   PRECICE_ASSERT(_centerMesh);
-  cache.p.resize(_clusters.size());
-  cache.polynomialContributions.resize(_clusters.size());
+  PRECICE_ASSERT(cache.p.size() == _clusters.size());
+  PRECICE_ASSERT(cache.polynomialContributions.size() == _clusters.size());
   int          dim = getDimensions();
   mesh::Vertex vertex(coordinates.col(0), -1);
   for (std::size_t v = 0; v < coordinates.cols(); ++v) {
@@ -359,14 +361,26 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::completeJustInTimeMapping(MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer)
 {
   PRECICE_TRACE();
-  if (!cache.p.empty()) {
-    for (std::size_t c = 0; c < _clusters.size(); ++c) {
-      if (cache.p[c].squaredNorm() > 0) {
-        _clusters[c].evaluateConservativeCache(cache.polynomialContributions[c], cache.p[c], buffer);
-        cache.polynomialContributions[c].setZero();
-        cache.p[c].setZero();
-      }
+  PRECICE_ASSERT(!cache.p.empty());
+  PRECICE_ASSERT(!cache.polynomialContributions.empty());
+
+  for (std::size_t c = 0; c < _clusters.size(); ++c) {
+    // If there is no contribution, we don't have to evaluate
+    if (cache.p[c].squaredNorm() > 0) {
+      _clusters[c].evaluateConservativeCache(cache.polynomialContributions[c], cache.p[c], buffer);
     }
+  }
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::initializeMappingDataCache(MappingDataCache &cache)
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_hasComputedMapping);
+  cache.p.resize(_clusters.size());
+  cache.polynomialContributions.resize(_clusters.size());
+  for (std::size_t c = 0; c < _clusters.size(); ++c) {
+    _clusters[c].initializeCacheData(cache.polynomialContributions[c], cache.p[c], cache.getDataDimensions());
   }
 }
 
@@ -375,12 +389,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(Ma
 {
   // We cannot synchronize this event, as the call to this function is rank-local only
   precice::profiling::Event e("map.pou.updateCache.From" + input()->getName());
-  // The polynomialContribution is unnecessary if we configure polynomial="off"
-  // However, the matrices remain empty and in most cases, the polynomial will be used
-  // and making this conditional would make the code more complex, so we just allocate
-  // this here unconditionally
-  cache.p.resize(_clusters.size());
-  cache.polynomialContributions.resize(_clusters.size());
+  PRECICE_ASSERT(cache.p.size() == _clusters.size());
+  PRECICE_ASSERT(cache.polynomialContributions.size() == _clusters.size());
   Eigen::Map<const Eigen::MatrixXd> inMatrix(in.data(), cache.getDataDimensions(), in.size() / cache.getDataDimensions());
   for (std::size_t c = 0; c < _clusters.size(); ++c) {
     _clusters[c].computeCacheData(inMatrix, cache.polynomialContributions[c], cache.p[c]);

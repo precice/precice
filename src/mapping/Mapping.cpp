@@ -273,6 +273,11 @@ void Mapping::updateMappingDataCache(MappingDataCache &cache, Eigen::VectorXd &i
   cache.inData = in;
 }
 
+void Mapping::initializeMappingDataCache(MappingDataCache &cache)
+{
+  // Do nothing by default, only relevant for PUM at the moment
+}
+
 void Mapping::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target)
 {
   PRECICE_ASSERT(false, "Not implemented");
