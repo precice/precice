@@ -497,24 +497,21 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::interpolateAt(con
     const auto &in                = inMesh.vertex(j.value()).rawCoords();
     double      squaredDifference = computeSquaredDifference(out, in);
     double      eval              = basisFunction.evaluate(std::sqrt(squaredDifference));
-    for (Eigen::Index c = 0; c < coeffs.cols(); ++c) {
-      result[c] += coeffs(j.index(), c) * eval;
-    }
+
+    result += eval * coeffs.row(j.index()).transpose();
   }
 
   // 2. we have a separate polynomial, then we have to add it again here;
   //   out += (_matrixV * polynomialContribution);
   if (poly.size() > 0) {
     // constant polynomial
-    for (Eigen::Index c = 0; c < poly.cols(); ++c) {
-      result[c] += 1 * poly(0, c);
-      // the linear contributions
-      int k = 1;
-      for (std::size_t d = 0; d < _localActiveAxis.size(); ++d) {
-        if (_localActiveAxis[d]) {
-          result[c] += out[d] * poly(k, c);
-          ++k;
-        }
+    result += 1 * poly.row(0).transpose();
+    // the linear contributions
+    int k = 1;
+    for (std::size_t d = 0; d < _localActiveAxis.size(); ++d) {
+      if (_localActiveAxis[d]) {
+        result += out[d] * poly.row(k).transpose();
+        ++k;
       }
     }
   }
@@ -540,9 +537,7 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const me
     double      squaredDifference = computeSquaredDifference(out, in);
     double      eval              = basisFunction.evaluate(std::sqrt(squaredDifference));
 
-    for (Eigen::Index c = 0; c < load.size(); ++c) {
-      Au(j.index(), c) += eval * load[c];
-    }
+    Au.row(j.index()) += eval * load.transpose();
   }
 
   // 2. we have a separate polynomial, then we have to add it again here;
@@ -552,15 +547,13 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const me
     PRECICE_ASSERT(epsilon.rows() == (1 + std::count(_localActiveAxis.begin(), _localActiveAxis.end(), true)));
     PRECICE_ASSERT(epsilon.cols() == load.size());
     // constant polynomial
-    for (Eigen::Index c = 0; c < epsilon.cols(); ++c) {
-      epsilon(0, c) += 1 * load[c];
-      // the linear contributions
-      int k = 1;
-      for (std::size_t d = 0; d < _localActiveAxis.size(); ++d) {
-        if (_localActiveAxis[d]) {
-          epsilon(k, c) += out[d] * load[c];
-          ++k;
-        }
+    epsilon.row(0) += 1 * load.transpose();
+    // the linear contributions
+    int k = 1;
+    for (std::size_t d = 0; d < _localActiveAxis.size(); ++d) {
+      if (_localActiveAxis[d]) {
+        epsilon.row(k) += out[d] * load.transpose();
+        ++k;
       }
     }
   }
