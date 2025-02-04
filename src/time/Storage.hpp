@@ -173,8 +173,6 @@ private:
   time::Sample getSampleAtBeginning();
 
   time::Sample getSampleAtEnd();
-
-  int findTimeId(double time) const;
 };
 
 } // namespace precice::time
