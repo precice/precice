@@ -206,10 +206,14 @@ Eigen::VectorXd Storage::sample(double time) const
 
   PRECICE_ASSERT(usedDegree >= 1);
 
-  //Return the sample corresponding to time if it exists
-  const int i = findTimeId(time);
-  if (i > -1) {                              // _stampleStorage contains sample at given time
-    return _stampleStorage[i].sample.values; // don't use getTimesAndValues, because this would iterate over the complete _stampleStorage.
+  // Find existing samples
+  for (const auto &stample : _stampleStorage) {
+    if (math::equals(stample.timestamp, time)) {
+      return stample.sample.values;
+    }
+    if (math::greater(stample.timestamp, time)) {
+      break;
+    }
   }
 
   //Create a new bspline if _bspline does not already contain a spline
@@ -246,20 +250,6 @@ time::Sample Storage::getSampleAtBeginning()
 time::Sample Storage::getSampleAtEnd()
 {
   return _stampleStorage.back().sample;
-}
-
-int Storage::findTimeId(double time) const
-{
-  size_t i = 0;
-  PRECICE_ASSERT(_stampleStorage.size() > 0, _stampleStorage.size(), i);
-  while (math::smallerEquals(_stampleStorage.at(i).timestamp, time)) {
-    if (math::equals(_stampleStorage.at(i).timestamp, time)) {
-      return i;
-    }
-    i++;
-    PRECICE_ASSERT(_stampleStorage.size() > i, _stampleStorage.size(), i);
-  }
-  return -1; // time not found in times
 }
 
 } // namespace precice::time
