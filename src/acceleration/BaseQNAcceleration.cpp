@@ -647,18 +647,9 @@ void BaseQNAcceleration::concatenateCouplingData(Eigen::VectorXd &data, Eigen::V
 
 void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplData)
 {
-
-  // If we are not subcycling then we only want to use the last time step in the QN system
-  bool subcycling = false;
-  for (const auto &data : cplData | boost::adaptors::map_values) {
-    if (data->exchangeSubsteps()) {
-      subcycling = true;
-    }
-  }
-
   // Saves the time grid of each waveform in the data field to be used in the QN method
-  _timeGrids.emplace(cplData, _dataIDs, !subcycling);
-  _primaryTimeGrids.emplace(cplData, _primaryDataIDs, !(subcycling and !_reducedTimeGrid));
+  _timeGrids.emplace(cplData, _dataIDs, false);
+  _primaryTimeGrids.emplace(cplData, _primaryDataIDs, _reducedTimeGrid);
 
   // Helper function
   auto addTimeSliceSize = [&](size_t sum, int id, precice::time::TimeGrids timeGrids) { return sum + timeGrids.getTimeGrid(id).size() * cplData.at(id)->getSize(); };
