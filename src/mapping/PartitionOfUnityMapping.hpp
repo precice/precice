@@ -341,9 +341,9 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservativeAt(const E
   PRECICE_ASSERT(_centerMesh);
   PRECICE_ASSERT(cache.p.size() == _clusters.size());
   PRECICE_ASSERT(cache.polynomialContributions.size() == _clusters.size());
-  int          dim = getDimensions();
+
   mesh::Vertex vertex(coordinates.col(0), -1);
-  for (std::size_t v = 0; v < coordinates.cols(); ++v) {
+  for (Eigen::Index v = 0; v < coordinates.cols(); ++v) {
     vertex.setCoords(coordinates.col(v));
     auto [clusterIDs, normalizedWeights] = computeNormalizedWeight(vertex, this->input()->getName());
     // Use the weight to interpolate the solution
@@ -408,7 +408,6 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistentAt(const Eig
   // First, make sure that everything is reset before we start
   values.setZero();
 
-  int          dim = getDimensions();
   mesh::Vertex vertex(coordinates.col(0), -1);
   for (std::size_t v = 0; v < values.cols(); ++v) {
     vertex.setCoords(coordinates.col(v));

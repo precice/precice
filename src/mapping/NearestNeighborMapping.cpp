@@ -60,7 +60,7 @@ void NearestNeighborMapping::mapConservative(const time::Sample &inData, Eigen::
   Eigen::Map<Eigen::MatrixXd>       outMap(outData.data(), valueDimensions, output()->nVertices());
 
   // Apply mapping
-  for (size_t i = 0; i < inMap.cols(); ++i) {
+  for (Eigen::Index i = 0; i < inMap.cols(); ++i) {
     outMap.col(_vertexIndices[i]) += inMap.col(i);
   }
 
@@ -78,7 +78,7 @@ void NearestNeighborMapping::mapConsistent(const time::Sample &inData, Eigen::Ve
   Eigen::Map<const Eigen::MatrixXd> inputMap(inData.values.data(), valueDimensions, input()->nVertices());
   Eigen::Map<Eigen::MatrixXd>       outputMap(outData.data(), valueDimensions, output()->nVertices());
 
-  for (size_t i = 0; i < outputMap.cols(); ++i) {
+  for (Eigen::Index i = 0; i < outputMap.cols(); ++i) {
     // _vertexIndices[i] is the solution of our mapping
     outputMap.col(i) = inputMap.col(_vertexIndices[i]);
   }
