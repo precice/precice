@@ -308,7 +308,7 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
     // Tests that the initial data of the time window is correct and has not been changed
     // See https://github.com/precice/precice/issues/2172
     if (nSubStepsDone == 0) {
-      interface.readData(meshName, readDataName, {vertexIDs, 2}, dt / 2, {inValuesStart, 2});
+      interface.readData(meshName, readDataName, {vertexIDs, 2}, 0, {inValuesStart, 2});
       BOOST_TEST(math::equals(inValuesStart[0], analyticalSolution(timeCheckpoint)[0], 1e-10));
       BOOST_TEST(math::equals(inValuesStart[1], analyticalSolution(timeCheckpoint)[1], 1e-10));
 
