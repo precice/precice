@@ -409,7 +409,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistentAt(const Eig
   values.setZero();
 
   mesh::Vertex vertex(coordinates.col(0), -1);
-  for (std::size_t v = 0; v < values.cols(); ++v) {
+  for (Eigen::Index v = 0; v < values.cols(); ++v) {
     vertex.setCoords(coordinates.col(v));
     auto [clusterIDs, normalizedWeights] = computeNormalizedWeight(vertex, this->output()->getName());
     // Use the weight to interpolate the solution
