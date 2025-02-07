@@ -38,9 +38,9 @@ Eigen::VectorXd TimeGrids::getTimeGridAfter(int dataID, double time) const
       reduced.push_back(d);
     }
   }
-  return Eigen::Map<const Eigen::VectorXd>(v.data(), v.size());
 
-  return reducedTimeGrid;
+  Eigen::VectorXd timeGridAfter = Eigen::Map<Eigen::VectorXd, Eigen::Unaligned>(reduced.data(), reduced.size());
+  return timeGridAfter;
 }
 
 void TimeGrids::moveTimeGridToNewWindow(const DataMap &cplData)
