@@ -119,8 +119,6 @@ void BaseQNAcceleration::updateDifferenceMatrices(
   // Compute current residual: vertex-data - oldData
   _primaryResiduals = _primaryValues;
   _primaryResiduals -= _oldPrimaryValues;
-  _residuals = _values;
-  _residuals -= _oldValues;
 
   PRECICE_WARN_IF(math::equals(utils::IntraComm::l2norm(_primaryResiduals), 0.0),
                   "The coupling residual equals almost zero. There is maybe something wrong in your adapter. "
@@ -313,7 +311,7 @@ void BaseQNAcceleration::performAcceleration(
    * PRECONDITION: All objects are unscaled, except the matrices within the QR-dec of V.
    *               Thus, the pseudo inverse needs to be reverted before using it.
    */
-  Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_values.size());
+  Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(getLSSystemRows());
   computeQNUpdate(xUpdate);
 
   // Apply the quasi-Newton update
@@ -590,7 +588,7 @@ int BaseQNAcceleration::getLSSystemRows() const
   if (utils::IntraComm::isParallel()) {
     return _dimOffsets.back();
   }
-  return _residuals.size();
+  return _values.size();
 }
 
 int BaseQNAcceleration::getPrimaryLSSystemRows() const
@@ -671,7 +669,6 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
   _values              = Eigen::VectorXd::Zero(dataSize);
   _oldValues           = Eigen::VectorXd::Zero(dataSize);
   _oldXTilde           = Eigen::VectorXd::Zero(dataSize);
-  _residuals           = Eigen::VectorXd::Zero(dataSize);
   _primaryValues       = Eigen::VectorXd::Zero(primaryDataSize);
   _oldPrimaryValues    = Eigen::VectorXd::Zero(primaryDataSize);
   _oldPrimaryXTilde    = Eigen::VectorXd::Zero(primaryDataSize);
