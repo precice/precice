@@ -33,10 +33,10 @@ Eigen::VectorXd TimeGrids::getTimeGridAfter(int dataID, double time) const
   PRECICE_ASSERT(_timeGrids.count(dataID), "there does not exists a stored time grid corresponding to this dataID");
 
   std::vector<double> reduced;
-  for (double d: _timeGrids.at(dataID)) {
-      if (math::greater(d, time)) {
-        reduced.push_back(d);
-      }
+  for (double d : _timeGrids.at(dataID)) {
+    if (math::greater(d, time)) {
+      reduced.push_back(d);
+    }
   }
   return Eigen::Map<const Eigen::VectorXd>(v.data(), v.size());
 
