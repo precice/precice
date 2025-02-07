@@ -250,108 +250,106 @@ void BaseQNAcceleration::performAcceleration(
     _oldXTilde           = _values;           // Store x tilde of primary and secondary data
     _oldPrimaryResiduals = _primaryResiduals; // Store current residual of primary data
 
-    // Perform constant relaxation
-    // with residual: x_new = x_old + omega * res
-    _residuals *= _initialRelaxation;
-    _residuals += _oldValues;
-    _values = _residuals;
+    applyRelaxation(_initialRelaxation, cplData);
+    its++;
+    _firstIteration = false;
+    return;
+  }
 
-  } else {
-    PRECICE_DEBUG("   Performing quasi-Newton Step");
+  PRECICE_DEBUG("   Performing quasi-Newton Step");
 
-    // If the previous time window converged within one single iteration, nothing was added
-    // to the LS system matrices and they need to be restored from the backup at time T-2
-    if (not _firstTimeWindow && (getLSSystemCols() < 1) && (_timeWindowsReused == 0) && not _forceInitialRelaxation) {
-      PRECICE_DEBUG("   Last time window converged after one iteration. Need to restore the matrices from backup.");
+  // If the previous time window converged within one single iteration, nothing was added
+  // to the LS system matrices and they need to be restored from the backup at time T-2
+  if (not _firstTimeWindow && (getLSSystemCols() < 1) && (_timeWindowsReused == 0) && not _forceInitialRelaxation) {
+    PRECICE_DEBUG("   Last time window converged after one iteration. Need to restore the matrices from backup.");
 
-      _matrixCols = _matrixColsBackup;
-      _matrixV    = _matrixVBackup;
-      _matrixW    = _matrixWBackup;
+    _matrixCols = _matrixColsBackup;
+    _matrixV    = _matrixVBackup;
+    _matrixW    = _matrixWBackup;
 
-      // re-computation of QR decomposition from _matrixV = _matrixVBackup
-      // this occurs very rarely, to be precise, it occurs only if the coupling terminates
-      // after the first iteration and the matrix data from time window t-2 has to be used
-      _preconditioner->apply(_matrixV);
+    // re-computation of QR decomposition from _matrixV = _matrixVBackup
+    // this occurs very rarely, to be precise, it occurs only if the coupling terminates
+    // after the first iteration and the matrix data from time window t-2 has to be used
+    _preconditioner->apply(_matrixV);
+    _qrV.reset(_matrixV, getLSSystemRows());
+    _preconditioner->revert(_matrixV);
+    _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
+  }
+
+  /**
+   *  === update and apply preconditioner ===
+   *
+   * The preconditioner is only applied to the matrix V and the columns that are inserted into the
+   * QR-decomposition of V.
+   */
+  _preconditioner->update(false, _primaryValues, _primaryResiduals);
+
+  // apply scaling to V, V' := P * V (only needed to reset the QR-dec of V)
+  _preconditioner->apply(_matrixV);
+
+  if (_preconditioner->requireNewQR()) {
+    if (not(_filter == Acceleration::QR2FILTER)) { // for QR2 filter, there is no need to do this twice
       _qrV.reset(_matrixV, getLSSystemRows());
-      _preconditioner->revert(_matrixV);
+    }
+    _preconditioner->newQRfulfilled();
+  }
+
+  if (_firstIteration) {
+    _nbDelCols  = 0;
+    _nbDropCols = 0;
+  }
+
+  // apply the configured filter to the LS system
+  profiling::Event applyingFilter("ApplyFilter");
+  applyFilter();
+  applyingFilter.stop();
+
+  // revert scaling of V, in computeQNUpdate all data objects are unscaled.
+  _preconditioner->revert(_matrixV);
+
+  /**
+   * compute quasi-Newton update
+   * PRECONDITION: All objects are unscaled, except the matrices within the QR-dec of V.
+   *               Thus, the pseudo inverse needs to be reverted before using it.
+   */
+  Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_values.size());
+  computeQNUpdate(xUpdate);
+
+  // Apply the quasi-Newton update
+  _values += xUpdate;
+
+  // pending deletion: delete old V, W matrices if timeWindowsReused = 0
+  // those were only needed for the first iteration (instead of underrelax.)
+  if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
+    // save current matrix data in case the coupling for the next time window will terminate
+    // after the first iteration (no new data, i.e., V = W = 0)
+    if (getLSSystemCols() > 0) {
+      _matrixColsBackup = _matrixCols;
+      _matrixVBackup    = _matrixV;
+      _matrixWBackup    = _matrixW;
+    }
+    // if no time windows reused, the matrix data needs to be cleared as it was only needed for the
+    // QN-step in the first iteration (idea: rather perform QN-step with information from last converged
+    // time window instead of doing a underrelaxation)
+    if (not _firstTimeWindow) {
+      _matrixV.resize(0, 0);
+      _matrixW.resize(0, 0);
+      _matrixCols.clear();
+      _matrixCols.push_front(0); // vital after clear()
+      _qrV.reset();
+      // set the number of global rows in the QRFactorization.
+      _qrV.setGlobalRows(getPrimaryLSSystemRows());
       _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
     }
-
-    /**
-     *  === update and apply preconditioner ===
-     *
-     * The preconditioner is only applied to the matrix V and the columns that are inserted into the
-     * QR-decomposition of V.
-     */
-    _preconditioner->update(false, _primaryValues, _primaryResiduals);
-
-    // apply scaling to V, V' := P * V (only needed to reset the QR-dec of V)
-    _preconditioner->apply(_matrixV);
-
-    if (_preconditioner->requireNewQR()) {
-      if (not(_filter == Acceleration::QR2FILTER)) { // for QR2 filter, there is no need to do this twice
-        _qrV.reset(_matrixV, getLSSystemRows());
-      }
-      _preconditioner->newQRfulfilled();
-    }
-
-    if (_firstIteration) {
-      _nbDelCols  = 0;
-      _nbDropCols = 0;
-    }
-
-    // apply the configured filter to the LS system
-    profiling::Event applyingFilter("ApplyFilter");
-    applyFilter();
-    applyingFilter.stop();
-
-    // revert scaling of V, in computeQNUpdate all data objects are unscaled.
-    _preconditioner->revert(_matrixV);
-
-    /**
-     * compute quasi-Newton update
-     * PRECONDITION: All objects are unscaled, except the matrices within the QR-dec of V.
-     *               Thus, the pseudo inverse needs to be reverted before using it.
-     */
-    Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_values.size());
-    computeQNUpdate(xUpdate);
-
-    // Apply the quasi-Newton update
-    _values += xUpdate;
-
-    // pending deletion: delete old V, W matrices if timeWindowsReused = 0
-    // those were only needed for the first iteration (instead of underrelax.)
-    if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
-      // save current matrix data in case the coupling for the next time window will terminate
-      // after the first iteration (no new data, i.e., V = W = 0)
-      if (getLSSystemCols() > 0) {
-        _matrixColsBackup = _matrixCols;
-        _matrixVBackup    = _matrixV;
-        _matrixWBackup    = _matrixW;
-      }
-      // if no time windows reused, the matrix data needs to be cleared as it was only needed for the
-      // QN-step in the first iteration (idea: rather perform QN-step with information from last converged
-      // time window instead of doing a underrelaxation)
-      if (not _firstTimeWindow) {
-        _matrixV.resize(0, 0);
-        _matrixW.resize(0, 0);
-        _matrixCols.clear();
-        _matrixCols.push_front(0); // vital after clear()
-        _qrV.reset();
-        // set the number of global rows in the QRFactorization.
-        _qrV.setGlobalRows(getPrimaryLSSystemRows());
-        _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
-      }
-    }
-
-    PRECICE_CHECK(
-        !std::isnan(utils::IntraComm::l2norm(xUpdate)),
-        "The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
-        "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
-        "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
-        "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "
-        "filter or increase its threshold (larger epsilon).");
   }
+
+  PRECICE_CHECK(
+      !std::isnan(utils::IntraComm::l2norm(xUpdate)),
+      "The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
+      "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
+      "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
+      "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "
+      "filter or increase its threshold (larger epsilon).");
 
   // updates the waveform and values in coupling data by splitting the primary and secondary data back into the individual data objects
   updateCouplingData(cplData);
