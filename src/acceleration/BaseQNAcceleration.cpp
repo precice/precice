@@ -740,7 +740,7 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
   _qrV.setGlobalRows(getPrimaryLSSystemRows());
 
   std::vector<size_t> subVectorSizes; // needed for preconditioner
-  std::transform(_primaryDataIDs.cbegin(), _primaryDataIDs.cend(), std::back_inserter(subVectorSizes), [&cplData, this](const auto &d) { return _primaryTimeGrids.value().getTimeGrid(d).size() * cplData.at(d)->getSize(); });
+  std::transform(_primaryDataIDs.cbegin(), _primaryDataIDs.cend(), std::back_inserter(subVectorSizes), [&cplData, windowStart, this](const auto &d) { return _primaryTimeGrids.value().getTimeGridAfter(d, windowStart).size() * cplData.at(d)->getSize(); });
   _preconditioner->initialize(subVectorSizes);
 
   specializedInitializeVectorsAndPreconditioner(cplData);
