@@ -531,7 +531,7 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const me
 
   // 1. The matrix contribution
   // Compute RBF values for matrix A
-  PRECICE_ASSERT(Au.rows() == inputIDs.size());
+  PRECICE_ASSERT(Au.rows() == static_cast<Eigen::Index>(inputIDs.size()));
   PRECICE_ASSERT(Au.cols() == load.size());
 
   const auto &out = v.rawCoords();
