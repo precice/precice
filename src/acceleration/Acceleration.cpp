@@ -14,7 +14,7 @@ void Acceleration::checkDataIDs(const DataMap &cplData) const
 #endif
 }
 
-void Acceleration::applyRelaxation(double omega, DataMap &cplData)
+void Acceleration::applyRelaxation(double omega, DataMap &cplData, double windowStart)
 {
   for (auto &pair : cplData) {
     auto &couplingData = *(pair.second);
@@ -26,8 +26,8 @@ void Acceleration::applyRelaxation(double omega, DataMap &cplData)
     // calling performAcceleration the first time. Computations at the
     // previousValuesAtTime/oldValues don't change anything and are unneeded
     for (auto &stample : couplingData.timeStepsStorage().stamples()) {
-      if (stample.timestamp == couplingData.timeStepsStorage().stamples().front().timestamp) {
-        continue; // skip stample at beginning of this window since this is either initial data or already converged data from previous window
+      if (stample.timestamp <= windowStart) {
+        continue; // skip stamples at beginning of this window or earlier since this is either initial data or already converged data from previous windows
       }
 
       auto &values    = stample.sample.values;

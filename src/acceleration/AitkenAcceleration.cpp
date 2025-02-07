@@ -57,7 +57,8 @@ void AitkenAcceleration::initialize(const DataMap &cplData)
 }
 
 void AitkenAcceleration::performAcceleration(
-    DataMap &cplData)
+    DataMap &cplData,
+    double   windowStart)
 {
   PRECICE_TRACE();
 
@@ -97,7 +98,7 @@ void AitkenAcceleration::performAcceleration(
   PRECICE_DEBUG("AitkenFactor: {}", _aitkenFactor);
 
   // Perform relaxation with aitken factor
-  applyRelaxation(_aitkenFactor, cplData);
+  applyRelaxation(_aitkenFactor, cplData, windowStart);
 
   // Store residuals for next iteration
   _oldResiduals = std::move(residuals);

@@ -210,7 +210,8 @@ void BaseQNAcceleration::updateDifferenceMatrices(
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::performAcceleration(
-    DataMap &cplData)
+    DataMap &cplData,
+    double   windowStart)
 {
   PRECICE_TRACE(_primaryDataIDs.size(), cplData.size());
 
@@ -250,7 +251,7 @@ void BaseQNAcceleration::performAcceleration(
     _oldXTilde           = _values;           // Store x tilde of primary and secondary data
     _oldPrimaryResiduals = _primaryResiduals; // Store current residual of primary data
 
-    applyRelaxation(_initialRelaxation, cplData);
+    applyRelaxation(_initialRelaxation, cplData, windowStart);
     its++;
     _firstIteration = false;
     return;

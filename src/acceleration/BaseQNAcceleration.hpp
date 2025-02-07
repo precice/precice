@@ -105,7 +105,7 @@ public:
    *
    * Has to be called after every implicit coupling iteration.
    */
-  virtual void performAcceleration(DataMap &cplData) override final;
+  virtual void performAcceleration(DataMap &cplData, double windowStart) override final;
 
   /**
    * @brief Marks a iteration sequence as converged.

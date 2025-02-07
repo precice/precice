@@ -31,7 +31,8 @@ public:
       const DataMap &cpldata) override final;
 
   virtual void performAcceleration(
-      DataMap &cpldata) override final;
+      DataMap &cpldata,
+      double   windowStart) override final;
 
   virtual void iterationsConverged(
       const DataMap &cpldata) override final;
