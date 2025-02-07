@@ -33,8 +33,6 @@ public:
    */
   TimeGrids(const DataMap &cplData, std::vector<int> dataIDs, bool reduced);
 
-  Eigen::VectorXd getTimeGrid(int dataID) const;
-
   Eigen::VectorXd getTimeGridAfter(int dataID, double time) const;
 
   //  Linearly transforms the time grid from the old time window [t_{N-1}, t_N] to the new time window [t_N, t_{N+1}]

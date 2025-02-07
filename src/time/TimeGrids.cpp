@@ -21,13 +21,6 @@ TimeGrids::TimeGrids(const DataMap &cplData, std::vector<int> dataIDs, bool redu
   }
 }
 
-Eigen::VectorXd TimeGrids::getTimeGrid(int dataID) const
-{
-  PRECICE_ASSERT(_timeGrids.count(dataID), "there does not exists a stored time grid corresponding to this dataID");
-
-  return _timeGrids.at(dataID);
-}
-
 Eigen::VectorXd TimeGrids::getTimeGridAfter(int dataID, double time) const
 {
   PRECICE_ASSERT(_timeGrids.count(dataID), "there does not exists a stored time grid corresponding to this dataID");
