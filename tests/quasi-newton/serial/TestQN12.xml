@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration experimental="true">
-  <data:scalar name="Data1" waveform-degree="2" />
-  <data:scalar name="Data2" waveform-degree="2" />
+  <data:scalar name="Data1" waveform-degree="1" />
+  <data:scalar name="Data2" waveform-degree="1" />
 
   <mesh name="MeshOne" dimensions="2">
     <use-data name="Data1" />

@@ -295,6 +295,8 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
 
     interface.readData(meshName, readDataName, {vertexIDs, 2}, dt, {inValues, 2});
 
+    interface.readData(meshName, readDataName, {vertexIDs, 2}, dt, {inValuesOff, 2});
+
     /*
       Solves the following linear system
       2*x1 + x2 = t**2
