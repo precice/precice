@@ -498,6 +498,69 @@ PRECICE_API void precicef_read_data_(
 
 ///@}
 
+///@name Just-in-time mapping
+///@{
+
+/**
+ * @brief Writes data just-in-time
+ * See @see precice::Participant::mapAndWriteData() and the just-in-time mapping doxygen section for more information.
+ *
+ * Fortran syntax:
+ * precicef_map_and_write_data_(
+ *   CHARACTER meshName(*),
+ *   CHARACTER dataName(*),
+ *   INTEGER size,
+ *   DOUBLE PRECISION coordinates(dataDim*size),
+ *   DOUBLE PRECISION values(meshDim*size),
+ *   INTEGER meshNameLength,
+ *   INTEGER dataNameLength)
+ *
+ * IN:  mesh, data, size, coordinates, values, meshNameLength, dataNameLength
+ * OUT: -
+ *
+ * @copydoc precice::Participant::mapAndWriteData()
+ */
+PRECICE_API void precicef_map_and_write_data_(
+    const char *meshName,
+    const char *dataName,
+    const int * size,
+    double *    coordinates,
+    double *    values,
+    int         meshNameLength,
+    int         dataNameLength);
+
+/**
+ * @brief Reads data just-in-time.
+ * See @see precice::Participant::mapAndReadData() and the just-in-time mapping doxygen section for more information.
+ *
+ * Fortran syntax:
+ * precicef_map_and_read_data_(
+ *   CHARACTER meshName(*),
+ *   CHARACTER dataName(*),
+ *   INTEGER size,
+ *   DOUBLE PRECISION coordinates(dataDim*size),
+ *   DOUBLE PRECISION relativeReadTime,
+ *   DOUBLE PRECISION values(meshDim*size),
+ *   INTEGER meshNameLength,
+ *   INTEGER dataNameLength)
+ *
+ * IN:  mesh, data, size, coordinates, relativeReadTime, meshNameLength, dataNameLength
+ * OUT: values
+ *
+ * @copydoc precice::Participant::mapAndReadData()
+ *
+ */
+PRECICE_API void precicef_map_and_read_data_(
+    const char *  meshName,
+    const char *  dataName,
+    const int *   size,
+    double *      coordinates,
+    const double *relativeReadTime,
+    double *      values,
+    int           meshNameLength,
+    int           dataNameLength);
+///@}
+
 ///@name Direct mesh access
 ///@{
 
