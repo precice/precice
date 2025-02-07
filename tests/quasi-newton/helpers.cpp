@@ -276,15 +276,22 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
   int             nSubsteps = 5;             // perform subcycling on solvers. 5 steps happen in each window.
   Eigen::MatrixXd savedValues(nSubsteps, 2); // save the solution to check for correctness after it has converged
 
+  // Initialize coupling data
+  double inValues[2]      = {0.0, 0.0};
+  double inValuesStart[2] = {0.0, 0.0};
+  double outValues[2]     = {4.0 / 3, 7.0 / 3};
+
+  if (interface.requiresInitialData())
+    interface.writeData(meshName, writeDataName, {vertexIDs, 2}, {outValues, 2});
+
   interface.initialize();
   double maxDt         = interface.getMaxTimeStepSize();
-  double inValues[2]   = {0.0, 0.0};
-  double outValues[2]  = {0.0, 0.0};
   double dt            = maxDt / nSubsteps; //Do 5 substeps to check if QN and Waveform iterations work together
   int    nSubStepsDone = 0;                 // Counts the number of substeps that are done
   double t             = 0;
   int    iterations    = 0;
   double timeCheckpoint;
+
   while (interface.isCouplingOngoing()) {
 
     if (interface.requiresWritingCheckpoint()) {
@@ -295,13 +302,15 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
 
     interface.readData(meshName, readDataName, {vertexIDs, 2}, dt, {inValues, 2});
 
-    interface.readData(meshName, readDataName, {vertexIDs, 2}, dt, {inValuesOff, 2});
+    // Save initial data at the start of the time window
+    if (nSubStepsDone == 0)
+      interface.readData(meshName, readDataName, {vertexIDs, 2}, 0, {inValuesStart, 2});
 
     /*
       Solves the following linear system
-      2*x1 + x2 = t**2
-      -x1 + x2 = t
-      Analytical solutions are x1 = 1/3*(t**2 - t) and x2 = 1/3*(t**2 + 2*t).
+      2*x1 + x2 = 5*t + 5
+      -x1 + x2 = t + 1
+      Analytical solutions are x1 = 4/3*t+4/3 and x2 = 7/3*t + 7/3.
     */
 
     if (context.isNamed("SolverOne")) {
@@ -309,8 +318,8 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
         outValues[i] = inValues[i]; //only pushes solution through
       }
     } else {
-      outValues[0] = (-inValues[0] - inValues[1] + t * t);
-      outValues[1] = inValues[0] + t;
+      outValues[0] = (-inValues[0] - inValues[1] + 5 * t + 5);
+      outValues[1] = inValues[0] + t + 1;
     }
 
     // save the outValues in savedValues to check for correctness later
@@ -335,13 +344,22 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
   interface.finalize();
 
   // Check that the last time window has converged to the analytical solution
-  auto analyticalSolution = [](double localTime) { return std::vector<double>{(localTime * localTime - localTime) / 3, (localTime * localTime + 2 * localTime) / 3}; };
+  auto analyticalSolution = [](double localTime) { return std::vector<double>{4 * localTime / 3 + 4.0 / 3, 7 * localTime / 3 + 7.0 / 3}; };
   for (int i = 0; i < nSubsteps; i++) {
     // scaling with the time window length which is equal to 1
     double localTime = (1.0 * i) / nSubStepsDone + timeCheckpoint;
     BOOST_TEST(math::equals(savedValues(i, 0), analyticalSolution(localTime)[0], 1e-10));
     BOOST_TEST(math::equals(savedValues(i, 1), analyticalSolution(localTime)[1], 1e-10));
   }
+  // Tests that the initial data of the time window is correct and has not been changed
+  // See https://github.com/precice/precice/issues/2172
+  std::cout << "\n";
+  std::cout << inValuesStart[0];
+  std::cout << "\n";
+  std::cout << analyticalSolution(timeCheckpoint)[0];
+  std::cout << "\n";
+  BOOST_TEST(math::equals(inValuesStart[0], analyticalSolution(timeCheckpoint)[0], 1e-10));
+  BOOST_TEST(math::equals(inValuesStart[1], analyticalSolution(timeCheckpoint)[1], 1e-10));
 }
 
 void runTestQNWithWaveformsReducedTimeGrid(std::string const &config, TestContext const &context)
