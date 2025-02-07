@@ -409,6 +409,10 @@ void BaseQNAcceleration::updateCouplingData(
       couplingData.sample().values = temp;
       couplingData.setSampleAtTime(timeGrid(i), couplingData.sample());
     }
+    std::cout << "\n Stored time grid \n";
+    std::cout << couplingData.timeStepsStorage().getTimes();
+    std::cout << "\n first sample \n";
+    std::cout << couplingData.timeStepsStorage().sample(couplingData.timeStepsStorage().getTimes()[0])[0];
   }
 }
 
@@ -655,6 +659,9 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
       subcycling = true;
     }
   }
+  std::cout << "\n subcycling \n";
+  std::cout << subcycling;
+  std::cout << "\n subcycling \n";
 
   // Saves the time grid of each waveform in the data field to be used in the QN method
   _timeGrids.emplace(cplData, _dataIDs, !subcycling);
