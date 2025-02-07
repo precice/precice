@@ -36,7 +36,7 @@ public:
 
   virtual void performAcceleration(DataMap &cpldata, double windowStart) = 0;
 
-  virtual void iterationsConverged(const DataMap &cpldata) = 0;
+  virtual void iterationsConverged(const DataMap &cpldata, double windowStart) = 0;
 
   virtual void exportState(io::TXTWriter &writer) {}
 

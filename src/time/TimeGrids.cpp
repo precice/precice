@@ -23,10 +23,26 @@ TimeGrids::TimeGrids(const DataMap &cplData, std::vector<int> dataIDs, bool redu
 
 Eigen::VectorXd TimeGrids::getTimeGrid(int dataID) const
 {
-
   PRECICE_ASSERT(_timeGrids.count(dataID), "there does not exists a stored time grid corresponding to this dataID");
 
   return _timeGrids.at(dataID);
+}
+
+Eigen::VectorXd TimeGrids::getTimeGridAfter(int dataID, double time) const
+{
+  PRECICE_ASSERT(_timeGrids.count(dataID), "there does not exists a stored time grid corresponding to this dataID");
+
+  auto            fullTimeGrid = _timeGrids.at(dataID);
+  Eigen::VectorXd reducedTimeGrid((fullTimeGrid.array() > 0).count());
+
+  Eigen::Index idx = 0;
+  for (int i = 0; i < fullTimeGrid.size(); ++i) {
+    if (fullTimeGrid(i) > 0) {
+      reducedTimeGrid(idx++) = fullTimeGrid(i);
+    }
+  }
+
+  return reducedTimeGrid;
 }
 
 void TimeGrids::moveTimeGridToNewWindow(const DataMap &cplData)

@@ -35,6 +35,8 @@ public:
 
   Eigen::VectorXd getTimeGrid(int dataID) const;
 
+  Eigen::VectorXd getTimeGridAfter(int dataID, double time) const;
+
   //  Linearly transforms the time grid from the old time window [t_{N-1}, t_N] to the new time window [t_N, t_{N+1}]
   // This is done to allow the QN methods to sample from the new time window while keeping the structure and vector dimensions inside the QN method
   void moveTimeGridToNewWindow(const DataMap &cplData);

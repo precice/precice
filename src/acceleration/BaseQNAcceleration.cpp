@@ -219,7 +219,7 @@ void BaseQNAcceleration::performAcceleration(
 
   // We can only initialize here since we need to know the time grid already.
   if (_firstTimeWindow and _firstIteration) {
-    initializeVectorsAndPreconditioner(cplData);
+    initializeVectorsAndPreconditioner(cplData, windowStart);
   }
 
   PRECICE_ASSERT(_oldPrimaryResiduals.size() == _oldPrimaryXTilde.size(), _oldPrimaryResiduals.size(), _oldPrimaryXTilde.size());
@@ -235,8 +235,8 @@ void BaseQNAcceleration::performAcceleration(
 
   /// Sample all the data to the corresponding time grid in _timeGrids and concatenate everything into a long vector
   /// timeGrids are stored using std::opional, thus the .value() to get the actual object
-  concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value());
-  concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value());
+  concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value(), windowStart);
+  concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value(), windowStart);
 
   /** update the difference matrices V,W  includes:
    * scaling of values
@@ -353,7 +353,7 @@ void BaseQNAcceleration::performAcceleration(
       "filter or increase its threshold (larger epsilon).");
 
   // updates the waveform and values in coupling data by splitting the primary and secondary data back into the individual data objects
-  updateCouplingData(cplData);
+  updateCouplingData(cplData, windowStart);
 
   // number of iterations (usually equals number of columns in LS-system)
   its++;
@@ -383,7 +383,7 @@ void BaseQNAcceleration::applyFilter()
 }
 
 void BaseQNAcceleration::updateCouplingData(
-    const DataMap &cplData)
+    const DataMap &cplData, double windowStart)
 {
 
   PRECICE_TRACE();
@@ -395,8 +395,8 @@ void BaseQNAcceleration::updateCouplingData(
     auto & couplingData = *cplData.at(id);
     size_t dataSize     = couplingData.getSize();
 
-    Eigen::VectorXd timeGrid = _timeGrids->getTimeGrid(id);
-    couplingData.timeStepsStorage().clear();
+    Eigen::VectorXd timeGrid = _timeGrids->getTimeGridAfter(id, windowStart);
+    couplingData.timeStepsStorage().trimAfter(windowStart);
     for (int i = 0; i < timeGrid.size(); i++) {
 
       Eigen::VectorXd temp = Eigen::VectorXd::Zero(dataSize);
@@ -420,7 +420,7 @@ void BaseQNAcceleration::updateCouplingData(
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::iterationsConverged(
-    const DataMap &cplData)
+    const DataMap &cplData, double windowStart)
 {
   PRECICE_TRACE();
 
@@ -437,7 +437,7 @@ void BaseQNAcceleration::iterationsConverged(
 
   // If, in the first time window, we converge already in the first iteration, we have not yet initialized. Then, we need to do it here.
   if (_firstTimeWindow and _firstIteration) {
-    initializeVectorsAndPreconditioner(cplData);
+    initializeVectorsAndPreconditioner(cplData, windowStart);
   }
 
   // Needs to be called in the first iteration of each time window.
@@ -447,8 +447,8 @@ void BaseQNAcceleration::iterationsConverged(
   }
   /// Sample all the data to the corresponding time grid in _timeGrids and concatenate everything into a long vector
   /// timeGrids are stored using std::opional, thus the .value() to get the actual object
-  concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value());
-  concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value());
+  concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value(), windowStart);
+  concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value(), windowStart);
   updateDifferenceMatrices(cplData);
 
   if (not _matrixCols.empty() && _matrixCols.front() == 0) { // Did only one iteration
@@ -620,12 +620,12 @@ void BaseQNAcceleration::writeInfo(
   _infostringstream << std::flush;
 }
 
-void BaseQNAcceleration::concatenateCouplingData(Eigen::VectorXd &data, Eigen::VectorXd &oldData, const DataMap &cplData, std::vector<int> dataIDs, precice::time::TimeGrids timeGrids) const
+void BaseQNAcceleration::concatenateCouplingData(Eigen::VectorXd &data, Eigen::VectorXd &oldData, const DataMap &cplData, std::vector<int> dataIDs, precice::time::TimeGrids timeGrids, double windowStart) const
 {
   Eigen::Index offset = 0;
   for (int id : dataIDs) {
     Eigen::Index    dataSize = cplData.at(id)->getSize();
-    Eigen::VectorXd timeGrid = timeGrids.getTimeGrid(id);
+    Eigen::VectorXd timeGrid = timeGrids.getTimeGridAfter(id, windowStart);
 
     for (int i = 0; i < timeGrid.size(); i++) {
 
@@ -644,7 +644,7 @@ void BaseQNAcceleration::concatenateCouplingData(Eigen::VectorXd &data, Eigen::V
   }
 }
 
-void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplData)
+void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplData, double windowStart)
 {
 
   // If we are not subcycling then we only want to use the last time step in the QN system
@@ -660,7 +660,7 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
   _primaryTimeGrids.emplace(cplData, _primaryDataIDs, !(subcycling and !_reducedTimeGrid));
 
   // Helper function
-  auto addTimeSliceSize = [&](size_t sum, int id, precice::time::TimeGrids timeGrids) { return sum + timeGrids.getTimeGrid(id).size() * cplData.at(id)->getSize(); };
+  auto addTimeSliceSize = [&](size_t sum, int id, precice::time::TimeGrids timeGrids) { return sum + timeGrids.getTimeGridAfter(id, windowStart).size() * cplData.at(id)->getSize(); };
 
   // Size of primary data
   const size_t primaryDataSize = std::accumulate(_primaryDataIDs.begin(), _primaryDataIDs.end(), (size_t) 0, [&](size_t sum, int id) { return addTimeSliceSize(sum, id, _primaryTimeGrids.value()); });
@@ -711,10 +711,10 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
       for (auto &elem : _dataIDs) {
         const auto &offsets = cplData.at(elem)->getVertexOffsets();
 
-        accumulatedNumberOfUnknowns += offsets[i] * cplData.at(elem)->getDimensions() * _timeGrids.value().getTimeGrid(elem).size();
+        accumulatedNumberOfUnknowns += offsets[i] * cplData.at(elem)->getDimensions() * _timeGrids.value().getTimeGridAfter(elem, windowStart).size();
 
         if (utils::contained(elem, _primaryDataIDs)) {
-          accumulatedNumberOfPrimaryUnknowns += offsets[i] * cplData.at(elem)->getDimensions() * _primaryTimeGrids.value().getTimeGrid(elem).size();
+          accumulatedNumberOfPrimaryUnknowns += offsets[i] * cplData.at(elem)->getDimensions() * _primaryTimeGrids.value().getTimeGridAfter(elem, windowStart).size();
         }
       }
       _dimOffsets[i + 1]        = accumulatedNumberOfUnknowns;

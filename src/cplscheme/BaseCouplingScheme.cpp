@@ -882,7 +882,7 @@ void BaseCouplingScheme::doImplicitStep()
   if (_hasConverged) {
     if (_acceleration) {
       profiling::Event e("accelerate", profiling::Fundamental);
-      _acceleration->iterationsConverged(getAccelerationData());
+      _acceleration->iterationsConverged(getAccelerationData(), getTimeWindowStart());
     }
     newConvergenceMeasurements();
   } else {

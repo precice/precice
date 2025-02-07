@@ -505,7 +505,7 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
   data4->values() << 42, 60, 81.3, 91;
   data4->setSampleAtTime(windowEnd, data4->sample());
 
-  acc.iterationsConverged(data);
+  acc.iterationsConverged(data, windowStart);
 
   // move to next window
   windowStart += dt;

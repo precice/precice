@@ -1241,7 +1241,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   data.begin()->second->values() = newdvalues2;
   dpcd->setSampleAtTime(windowEnd, dpcd->sample());
 
-  acc.iterationsConverged(data);
+  acc.iterationsConverged(data, windowStart);
 
   BOOST_TEST(acc.getLSSystemCols() == 2);
   BOOST_TEST(acc.getDeletedColumns() == 0);
@@ -1277,7 +1277,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   data.begin()->second->values() = newdvalues4;
   dpcd->setSampleAtTime(windowEnd, dpcd->sample());
 
-  acc.iterationsConverged(data);
+  acc.iterationsConverged(data, windowStart);
 
   BOOST_TEST(acc.getLSSystemCols() == 1);
   BOOST_TEST(acc.getDeletedColumns() == 1);
