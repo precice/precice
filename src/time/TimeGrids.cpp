@@ -32,15 +32,13 @@ Eigen::VectorXd TimeGrids::getTimeGridAfter(int dataID, double time) const
 {
   PRECICE_ASSERT(_timeGrids.count(dataID), "there does not exists a stored time grid corresponding to this dataID");
 
-  auto            fullTimeGrid = _timeGrids.at(dataID);
-  Eigen::VectorXd reducedTimeGrid((fullTimeGrid.array() > time).count());
-
-  Eigen::Index idx = 0;
-  for (int i = 0; i < fullTimeGrid.size(); ++i) {
-    if (math::greater(fullTimeGrid(i), time)) {
-      reducedTimeGrid(idx++) = fullTimeGrid(i);
-    }
+  std::vector<double> reduced;
+  for (double d: _timeGrids.at(dataID)) {
+      if (math::greater(d, time)) {
+        reduced.push_back(d);
+      }
   }
+  return Eigen::Map<const Eigen::VectorXd>(v.data(), v.size());
 
   return reducedTimeGrid;
 }
