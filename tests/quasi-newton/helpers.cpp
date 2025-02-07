@@ -277,14 +277,15 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
   Eigen::MatrixXd savedValues(nSubsteps, 2); // save the solution to check for correctness after it has converged
 
   interface.initialize();
-  double maxDt         = interface.getMaxTimeStepSize();
-  double inValues[2]   = {0.0, 0.0};
-  double outValues[2]  = {0.0, 0.0};
-  double dt            = maxDt / nSubsteps; //Do 5 substeps to check if QN and Waveform iterations work together
-  int    nSubStepsDone = 0;                 // Counts the number of substeps that are done
-  double t             = 0;
-  int    iterations    = 0;
-  double timeCheckpoint;
+  double       maxDt         = interface.getMaxTimeStepSize();
+  double       inValues[2]   = {0.0, 0.0};
+  double       outValues[2]  = {0.0, 0.0};
+  const double solverDt      = maxDt / nSubsteps;                   //Do 5 substeps to check if QN and Waveform iterations work together
+  double       dt            = solverDt > maxDt ? maxDt : solverDt; // actual dt that will be updated on-the-fly
+  int          nSubStepsDone = 0;                                   // Counts the number of substeps that are done
+  double       t             = 0;
+  int          iterations    = 0;
+  double       timeCheckpoint;
   while (interface.isCouplingOngoing()) {
 
     if (interface.requiresWritingCheckpoint()) {
@@ -322,7 +323,7 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
 
     interface.advance(dt);
     maxDt = interface.getMaxTimeStepSize();
-    dt    = dt > maxDt ? maxDt : dt;
+    dt    = solverDt > maxDt ? maxDt : solverDt;
 
     if (interface.requiresReadingCheckpoint()) {
       nSubStepsDone = 0;
@@ -384,15 +385,16 @@ void runTestQNWithWaveformsReducedTimeGrid(std::string const &config, TestContex
   Eigen::VectorXd savedValues(nSubsteps); // save the solution to check for correctness after it has converged
 
   interface.initialize();
-  double maxDt         = interface.getMaxTimeStepSize();
-  double inValues[1]   = {0.0};
-  double outValues[1]  = {0.0};
-  double dt            = maxDt / nSubsteps; //Do 2 substeps to check if QN and Waveform iterations work together
-  int    nSubStepsDone = 0;                 // Counts the number of substeps that are done
-  double t             = 0;
-  int    iterations    = 0;
-  double timeCheckpoint;
-  double pastXValue = 1;
+  double       maxDt         = interface.getMaxTimeStepSize();
+  double       inValues[1]   = {0.0};
+  double       outValues[1]  = {0.0};
+  const double solverDt      = maxDt / nSubsteps;                   //Do 2 substeps to check if QN and Waveform iterations work together
+  double       dt            = solverDt > maxDt ? maxDt : solverDt; // actual dt that will be updated on-the-fly
+  int          nSubStepsDone = 0;                                   // Counts the number of substeps that are done
+  double       t             = 0;
+  int          iterations    = 0;
+  double       timeCheckpoint;
+  double       pastXValue = 1;
   while (interface.isCouplingOngoing()) {
 
     if (interface.requiresWritingCheckpoint()) {
@@ -430,7 +432,7 @@ void runTestQNWithWaveformsReducedTimeGrid(std::string const &config, TestContex
 
     interface.advance(dt);
     maxDt = interface.getMaxTimeStepSize();
-    dt    = dt > maxDt ? maxDt : dt;
+    dt    = solverDt > maxDt ? maxDt : solverDt;
 
     if (interface.requiresReadingCheckpoint()) {
       nSubStepsDone = 0;
