@@ -12,6 +12,7 @@
 #include "math/differences.hpp"
 #include "math/math.hpp"
 #include "utils/IntraComm.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -60,6 +61,7 @@ public:
       const Eigen::VectorXd &oldValues,
       const Eigen::VectorXd &newValues)
   {
+    PRECICE_ASSERT(oldValues.size() == newValues.size());
     /*
      std::cout<<"\n-------\n";
      std::cout<<"   old val: \n"<<oldValues<<'\n';

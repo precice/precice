@@ -7,6 +7,7 @@
 #include "ConvergenceMeasure.hpp"
 #include "logging/Logger.hpp"
 #include "utils/IntraComm.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -45,6 +46,7 @@ public:
       const Eigen::VectorXd &oldValues,
       const Eigen::VectorXd &newValues)
   {
+    PRECICE_ASSERT(oldValues.size() == newValues.size());
     _normDiff      = utils::IntraComm::l2norm(newValues - oldValues);
     _isConvergence = _normDiff <= _convergenceLimit;
   }
