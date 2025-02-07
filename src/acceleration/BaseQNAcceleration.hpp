@@ -196,6 +196,9 @@ protected:
   /// @brief Current iteration residuals of primary IQN data. Temporary.
   Eigen::VectorXd _primaryResiduals;
 
+  /// @brief Current iteration residuals of IQN data. Temporary.
+  Eigen::VectorXd _residuals;
+
   /// @brief Stores residual deltas.
   Eigen::MatrixXd _matrixV;
 

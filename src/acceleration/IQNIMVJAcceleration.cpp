@@ -219,7 +219,7 @@ void IQNIMVJAcceleration::buildWtil()
   PRECICE_ASSERT(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());
   PRECICE_ASSERT(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
 
-  _Wtil = Eigen::MatrixXd::Zero(getLSSystemRows(), _qrV.cols());
+  _Wtil = Eigen::MatrixXd::Zero(_residuals.rows(), _qrV.cols());
 
   // imvj restart mode: re-compute Wtil: Wtil = W - sum_q [ Wtil^q * (Z^q*V) ]
   //                                                      |--- J_prev ---|
@@ -351,8 +351,8 @@ void IQNIMVJAcceleration::computeNewtonUpdateEfficient(Eigen::VectorXd &xUpdate)
    *
    * Note: r_til is not distributed but locally stored on each proc (dimension m x 1)
    */
-  Eigen::VectorXd xUptmp(getLSSystemRows());
-  xUpdate = Eigen::VectorXd::Zero(getLSSystemRows());
+  Eigen::VectorXd xUptmp(_residuals.size());
+  xUpdate = Eigen::VectorXd::Zero(_residuals.size());
   xUptmp  = _Wtil * r_til; // local product, result is naturally distributed.
 
   /**
@@ -594,7 +594,7 @@ void IQNIMVJAcceleration::restartIMVJ()
       // multiply: ZV := Z^q * V of size (m x m) with m=#cols, stored on each proc.
       _parMatrixOps->multiply(_pseudoInverseChunk.front(), _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), _qrV.cols());
       // multiply: Wtil^0 * (Z_0*V)  dimensions: (n x m) * (m x m), fully local and embarrassingly parallel
-      Eigen::MatrixXd tmp = Eigen::MatrixXd::Zero(getLSSystemRows(), _qrV.cols());
+      Eigen::MatrixXd tmp = Eigen::MatrixXd::Zero(_residuals.rows(), _qrV.cols());
       tmp                 = _WtilChunk.front() * ZV;
       _WtilChunk[i] += tmp;
 
@@ -736,7 +736,7 @@ void IQNIMVJAcceleration::removeMatrixColumn(
 void IQNIMVJAcceleration::specializedInitializeVectorsAndPreconditioner(const DataMap &cplData)
 {
   int entries        = _primaryResiduals.size();
-  int cplDataEntries = getLSSystemRows();
+  int cplDataEntries = _residuals.size();
   int global_n       = 0;
 
   if (!utils::IntraComm::isParallel()) {
