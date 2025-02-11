@@ -119,7 +119,6 @@ void AitkenAcceleration::iterationsConverged(
 void AitkenAcceleration::concatenateCouplingData(
     const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues, double windowStart) const
 {
-  //@todo need to skip sample at beginning of window as well.
   Eigen::Index offset = 0;
   for (auto id : dataIDs) {
     Eigen::Index size      = cplData.at(id)->values().size();
