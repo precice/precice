@@ -198,15 +198,24 @@ void testVIQNPP(bool exchangeSubsteps)
   forces->setSampleAtTime(1, forces->sample());
 
   pp.performAcceleration(data);
+  // Check that the initial data has not been modified
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(0)(0), 1.00, 1e-15));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(0)(1), 1.00, 1e-15));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(0)(2), 1.00, 1e-15));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(0)(3), 1.00, 1e-15));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(0)(0), 0.2, 1e-15));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(0)(1), 0.2, 1e-15));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(0)(2), 0.2, 1e-15));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(0)(3), 0.2, 1e-15));
 
-  BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00));
-  BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01));
-  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.02));
-  BOOST_TEST(testing::equals(data.at(0)->values()(3), 1.03));
-  BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.199));
-  BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.199));
-  BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.199));
-  BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.199));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(1)(0), 1.00));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(1)(1), 1.01));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(1)(2), 1.02));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(1)(3), 1.03));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(1)(0), 0.199));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(1)(1), 0.199));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(1)(2), 0.199));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(1)(3), 0.199));
 
   Eigen::VectorXd newdvalues;
   utils::append(newdvalues, 10.0);
@@ -220,6 +229,26 @@ void testVIQNPP(bool exchangeSubsteps)
 
   pp.performAcceleration(data);
 
+  // Check that the initial data has not been modified
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(0)(0), 1.00, 1e-15));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(0)(1), 1.00, 1e-15));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(0)(2), 1.00, 1e-15));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(0)(3), 1.00, 1e-15));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(0)(0), 0.2, 1e-15));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(0)(1), 0.2, 1e-15));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(0)(2), 0.2, 1e-15));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(0)(3), 0.2, 1e-15));
+
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(1)(0), -5.63401340929692295845e-01));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(1)(1), 6.10309919173607440257e-01));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(1)(2), 1.78402117927690717636e+00));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(1)(3), 2.95773243938020513610e+00));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(1)(0), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(1)(1), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(1)(2), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(1)(3), 8.28025852497733944046e-02));
+
+  // Check that the values stored in data are updated as well
   BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929692295845e-01));
   BOOST_TEST(testing::equals(data.at(0)->values()(1), 6.10309919173607440257e-01));
   BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.78402117927690717636e+00));

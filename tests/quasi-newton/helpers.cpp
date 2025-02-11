@@ -288,12 +288,13 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
     interface.writeData(meshName, writeDataName, {vertexIDs, 2}, {outValues, 2});
 
   interface.initialize();
-  double maxDt         = interface.getMaxTimeStepSize();
-  double dt            = maxDt / nSubsteps; //Do 5 substeps to check if QN and Waveform iterations work together
-  int    nSubStepsDone = 0;                 // Counts the number of substeps that are done
-  double t             = 0;
-  int    iterations    = 0;
-  double timeCheckpoint;
+  double       maxDt         = interface.getMaxTimeStepSize();
+  const double solverDt      = maxDt / nSubsteps;                   //Do nSubsteps substeps to check if QN and Waveform iterations work together
+  double       dt            = solverDt > maxDt ? maxDt : solverDt; // actual dt that will be updated on-the-fly
+  int          nSubStepsDone = 0;                                   // Counts the number of substeps that are done
+  double       t             = 0;
+  int          iterations    = 0;
+  double       timeCheckpoint;
 
   while (interface.isCouplingOngoing()) {
 
@@ -311,10 +312,6 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
       interface.readData(meshName, readDataName, {vertexIDs, 2}, 0, {inValuesStart, 2});
       BOOST_TEST(math::equals(inValuesStart[0], analyticalSolution(timeCheckpoint)[0], 1e-10));
       BOOST_TEST(math::equals(inValuesStart[1], analyticalSolution(timeCheckpoint)[1], 1e-10));
-
-      std::cout << "\n what the hell:\n";
-      std::cout << inValuesStart[0];
-      std::cout << "\n this should not be correct\n";
     }
     /*
       Solves the following linear system
@@ -343,7 +340,7 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
 
     interface.advance(dt);
     maxDt = interface.getMaxTimeStepSize();
-    dt    = dt > maxDt ? maxDt : dt;
+    dt    = solverDt > maxDt ? maxDt : solverDt;
 
     if (interface.requiresReadingCheckpoint()) {
       nSubStepsDone = 0;

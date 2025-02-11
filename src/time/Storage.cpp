@@ -221,7 +221,6 @@ Eigen::VectorXd Storage::sample(double time) const
     auto [times, values] = getTimesAndValues();
     _bspline.emplace(times, values, usedDegree);
   }
-
   return _bspline.value().interpolateAt(time);
 }
 
