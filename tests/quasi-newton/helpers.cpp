@@ -273,7 +273,7 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
     }
   }
 
-  int             nSubsteps = 10;            // perform subcycling on solvers. 5 steps happen in each window.
+  int             nSubsteps = 10;            // perform subcycling on solvers. 10 steps happen in each window.
   Eigen::MatrixXd savedValues(nSubsteps, 2); // save the solution to check for correctness after it has converged
 
   // Initialize coupling data
@@ -289,9 +289,7 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
 
   interface.initialize();
   double       maxDt         = interface.getMaxTimeStepSize();
-  double       inValues[2]   = {0.0, 0.0};
-  double       outValues[2]  = {0.0, 0.0};
-  const double solverDt      = maxDt / nSubsteps;                   //Do 5 substeps to check if QN and Waveform iterations work together
+  const double solverDt      = maxDt / nSubsteps;                   //Do 10 substeps to check if QN and Waveform iterations work together
   double       dt            = solverDt > maxDt ? maxDt : solverDt; // actual dt that will be updated on-the-fly
   int          nSubStepsDone = 0;                                   // Counts the number of substeps that are done
   double       t             = 0;
