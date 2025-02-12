@@ -396,7 +396,6 @@ target_sources(testprecice
     tests/serial/time/implicit/parallel-coupling/InitialDataAitken2.cpp
     tests/serial/time/implicit/parallel-coupling/InitialDataConstantAcceleration1.cpp
     tests/serial/time/implicit/parallel-coupling/InitialDataConstantAcceleration2.cpp
-    tests/serial/time/implicit/parallel-coupling/InitialDataIQNILSAcceleration.cpp
     tests/serial/time/implicit/parallel-coupling/InitialDataIQNILSAcceleration1.cpp
     tests/serial/time/implicit/parallel-coupling/InitialDataIQNILSAcceleration2.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
