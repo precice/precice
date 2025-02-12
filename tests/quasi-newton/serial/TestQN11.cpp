@@ -12,7 +12,7 @@ PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(TestQN11)
 {
   PRECICE_TEST();
-  // serial coupling,no subcycling but with interpolation, IQN-ILS
+  // serial coupling,Waveform iterations, IQN-ILS
   runTestQNWithWaveforms(context.config(), context);
 }
 
