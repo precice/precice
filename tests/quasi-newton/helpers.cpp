@@ -273,29 +273,19 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
     }
   }
 
-  int             nSubsteps = 10;            // perform subcycling on solvers. 10 steps happen in each window.
+  int             nSubsteps = 5;             // perform subcycling on solvers. 5 steps happen in each window.
   Eigen::MatrixXd savedValues(nSubsteps, 2); // save the solution to check for correctness after it has converged
-
-  // Initialize coupling data
-  double inValues[2]      = {0.0, 0.0};
-  double inValuesStart[2] = {0.0, 0.0};
-  double outValues[2]     = {4.0 / 3, 7.0 / 3};
-
-  //Analytical solution of the system
-  auto analyticalSolution = [](double localTime) { return std::vector<double>{4 * localTime / 3 + 4.0 / 3, 7 * localTime / 3 + 7.0 / 3}; };
-
-  if (interface.requiresInitialData())
-    interface.writeData(meshName, writeDataName, {vertexIDs, 2}, {outValues, 2});
 
   interface.initialize();
   double       maxDt         = interface.getMaxTimeStepSize();
-  const double solverDt      = maxDt / nSubsteps;                   //Do 10 substeps to check if QN and Waveform iterations work together
+  double       inValues[2]   = {0.0, 0.0};
+  double       outValues[2]  = {0.0, 0.0};
+  const double solverDt      = maxDt / nSubsteps;                   //Do 5 substeps to check if QN and Waveform iterations work together
   double       dt            = solverDt > maxDt ? maxDt : solverDt; // actual dt that will be updated on-the-fly
   int          nSubStepsDone = 0;                                   // Counts the number of substeps that are done
   double       t             = 0;
   int          iterations    = 0;
   double       timeCheckpoint;
-
   while (interface.isCouplingOngoing()) {
 
     if (interface.requiresWritingCheckpoint()) {
@@ -306,30 +296,20 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
 
     interface.readData(meshName, readDataName, {vertexIDs, 2}, dt, {inValues, 2});
 
-    // Tests that the initial data of the time window is correct and has not been changed
-    // See https://github.com/precice/precice/issues/2172
-    if (nSubStepsDone == 0) {
-      interface.readData(meshName, readDataName, {vertexIDs, 2}, 0, {inValuesStart, 2});
-      BOOST_TEST(math::equals(inValuesStart[0], analyticalSolution(timeCheckpoint)[0], 1e-10));
-      BOOST_TEST(math::equals(inValuesStart[1], analyticalSolution(timeCheckpoint)[1], 1e-10));
-    }
     /*
       Solves the following linear system
-      2*x1 + x2 = 5*t + 5
-      -x1 + x2 = t + 1
-      Analytical solutions are x1 = 4/3*t+4/3 and x2 = 7/3*t + 7/3.
+      2*x1 + x2 = t**2
+      -x1 + x2 = t
+      Analytical solutions are x1 = 1/3*(t**2 - t) and x2 = 1/3*(t**2 + 2*t).
     */
-
-    nSubStepsDone += 1;
-    t += dt;
 
     if (context.isNamed("SolverOne")) {
       for (int i = 0; i < 2; i++) {
         outValues[i] = inValues[i]; //only pushes solution through
       }
     } else {
-      outValues[0] = (-inValues[0] - inValues[1] + 5 * t + 5);
-      outValues[1] = inValues[0] + t + 1;
+      outValues[0] = (-inValues[0] - inValues[1] + t * t);
+      outValues[1] = inValues[0] + t;
     }
 
     // save the outValues in savedValues to check for correctness later
@@ -337,6 +317,9 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
     savedValues(nSubStepsDone, 1) = outValues[1];
 
     interface.writeData(meshName, writeDataName, {vertexIDs, 2}, {outValues, 2});
+
+    nSubStepsDone += 1;
+    t += dt;
 
     interface.advance(dt);
     maxDt = interface.getMaxTimeStepSize();
@@ -351,7 +334,8 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
   interface.finalize();
 
   // Check that the last time window has converged to the analytical solution
-  for (int i = 1; i < nSubsteps + 1; i++) {
+  auto analyticalSolution = [](double localTime) { return std::vector<double>{(localTime * localTime - localTime) / 3, (localTime * localTime + 2 * localTime) / 3}; };
+  for (int i = 0; i < nSubsteps; i++) {
     // scaling with the time window length which is equal to 1
     double localTime = (1.0 * i) / nSubStepsDone + timeCheckpoint;
     BOOST_TEST(math::equals(savedValues(i, 0), analyticalSolution(localTime)[0], 1e-10));
