@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(ExplicitNoReadWrite)
         // Do nothing
       } else if (time == 2) {
         // The second time, we pass all data at once
-        couplingInterface.mapAndWriteData(otherMeshName, velocityData, positions, ref);
+        couplingInterface.writeAndMapData(otherMeshName, velocityData, positions, ref);
       } else {
         PRECICE_ASSERT(false);
       }

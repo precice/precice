@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(Implicit)
       // solve timestep
       // write data
       std::transform(writeData.begin(), writeData.end(), writeData.begin(), [&](auto &w) { return timestep * 500 + 50 * std::pow(10, -iteration); });
-      couplingInterface.mapAndWriteData(otherMeshName, ownDataName, tmpMeshCoordsWrite, writeData);
+      couplingInterface.writeAndMapData(otherMeshName, ownDataName, tmpMeshCoordsWrite, writeData);
       couplingInterface.writeData(testMesh2Name, ownDataName, test2IDs, writeData);
       couplingInterface.advance(dt);
 

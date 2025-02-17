@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(ExplicitWrite)
         for (int d = 0; d < dim; ++d) {
           solverTwoCoord[d] = tmpPositions[i * dim + d];
         }
-        couplingInterface.mapAndWriteData(otherMeshName, dataName, solverTwoCoord, {&value, 1});
+        couplingInterface.writeAndMapData(otherMeshName, dataName, solverTwoCoord, {&value, 1});
       }
       // solve time step
       // write data (not necessary here)

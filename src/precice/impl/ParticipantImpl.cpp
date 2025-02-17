@@ -539,8 +539,8 @@ void ParticipantImpl::samplizeWriteData(double time)
     // For just-in-time mappings, the _providedData should contain by now
     // the "just-in-time" mapped data. However, it would be wasteful to
     // execute expensive parts (in particular solving the RBF systems)
-    // for each mapAndWriteData call. Thus, we create a DataCache during
-    // the mapAndWriteData API calls, which contains pre-processed data
+    // for each writeAndMapData call. Thus, we create a DataCache during
+    // the writeAndMapData API calls, which contains pre-processed data
     // values. Here, we now need to finalize the just-in-time mappings,
     // before we can add it to the waveform buffer.
     // For now, this only applies to just-in-time write mappings
@@ -1305,7 +1305,7 @@ void ParticipantImpl::mapAndReadData(
   dataContext.mapAndReadValues(coordinates, readTime, values);
 }
 
-void ParticipantImpl::mapAndWriteData(
+void ParticipantImpl::writeAndMapData(
     std::string_view              meshName,
     std::string_view              dataName,
     ::precice::span<const double> coordinates,
@@ -1313,23 +1313,23 @@ void ParticipantImpl::mapAndWriteData(
 {
   PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshName, dataName, coordinates.size());
-  PRECICE_CHECK(_state != State::Finalized, "mapAndWriteData(...) cannot be called after finalize().");
-  PRECICE_CHECK(_state == State::Constructed || (_state == State::Initialized && isCouplingOngoing()), "Calling mapAndWriteData(...) is forbidden if coupling is not ongoing, because the data you are trying to write will not be used anymore. You can fix this by always calling mapAndWriteData(...) before the advance(...) call in your simulation loop or by using Participant::isCouplingOngoing() to implement a safeguard.");
+  PRECICE_CHECK(_state != State::Finalized, "writeAndMapData(...) cannot be called after finalize().");
+  PRECICE_CHECK(_state == State::Constructed || (_state == State::Initialized && isCouplingOngoing()), "Calling writeAndMapData(...) is forbidden if coupling is not ongoing, because the data you are trying to write will not be used anymore. You can fix this by always calling writeAndMapData(...) before the advance(...) call in your simulation loop or by using Participant::isCouplingOngoing() to implement a safeguard.");
   PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
 
   PRECICE_VALIDATE_DATA(coordinates.begin(), coordinates.size());
   PRECICE_VALIDATE_DATA(values.data(), values.size());
   PRECICE_CHECK(_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName),
-                "This participant attempteded to map and read data (via \"mapAndWriteData\") from mesh \"{0}\", "
+                "This participant attempteded to map and read data (via \"writeAndMapData\") from mesh \"{0}\", "
                 "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
-                "mapAndWriteData({0}, ...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
+                "writeAndMapData({0}, ...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
                 meshName);
   // If an access region is required, we have to check its existence
   bool requiresBB = requiresUserDefinedAccessRegion(meshName);
   PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->meshContext(meshName).userDefinedAccessRegion),
-                "The function \"mapAndWriteData\" was called on mesh \"{0}\", "
+                "The function \"writeAndMapData\" was called on mesh \"{0}\", "
                 "but no access region was defined although this is necessary for parallel runs. "
-                "Please define an access region using \"setMeshAccessRegion()\" before calling \"mapAndWriteData()\".",
+                "Please define an access region using \"setMeshAccessRegion()\" before calling \"writeAndMapData()\".",
                 meshName);
 
   // Inconsistent sizes will be handled below
@@ -1351,7 +1351,7 @@ void ParticipantImpl::mapAndWriteData(
     Eigen::VectorXd                   maxCoeffs = C.rowwise().maxCoeff();
     bool                              minCheck  = (minCoeffs.array() >= context.userDefinedAccessRegion->minCorner().array()).all();
     bool                              maxCheck  = (maxCoeffs.array() <= context.userDefinedAccessRegion->maxCorner().array()).all();
-    PRECICE_CHECK(minCheck && maxCheck, "The provided coordinates in \"mapAndWriteData()\" are not within the access region defined with \"setMeshAccessRegion()\". "
+    PRECICE_CHECK(minCheck && maxCheck, "The provided coordinates in \"writeAndMapData()\" are not within the access region defined with \"setMeshAccessRegion()\". "
                                         "Minimum coordinate values are (x,y,z) = ({}), the minimum corner of the access region is box is (x,y,z) = ({}). "
                                         "Maximum coordinate values are (x,y,z) = ({}), the maximum corner of the access region is box is (x,y,z) = ({}). ",
                   minCoeffs, context.userDefinedAccessRegion->minCorner(), maxCoeffs, context.userDefinedAccessRegion->maxCorner());

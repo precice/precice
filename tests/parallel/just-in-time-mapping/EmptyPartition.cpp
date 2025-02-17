@@ -48,16 +48,16 @@ BOOST_AUTO_TEST_CASE(EmptyPartition)
       if (context.isPrimary()) {
         // interface.writeData(otherMeshName, velocityName, ids, writeData);
         // The non-empty partition
-        interface.mapAndWriteData(otherMeshName, velocityName, positions, writeData);
+        interface.writeAndMapData(otherMeshName, velocityName, positions, writeData);
         interface.mapAndReadData(otherMeshName, uncertaintyName, positions, dt, writeData);
       } else {
         // The empty partition
         BOOST_TEST(interface.getMeshVertexSize(otherMeshName) == 0);
         // Not possible due to the configuration
         BOOST_CHECK_THROW(interface.mapAndReadData(otherMeshName, velocityName, positions, dt, writeData), ::precice::Error);
-        BOOST_CHECK_THROW(interface.mapAndWriteData(otherMeshName, uncertaintyName, positions, writeData), ::precice::Error);
+        BOOST_CHECK_THROW(interface.writeAndMapData(otherMeshName, uncertaintyName, positions, writeData), ::precice::Error);
         // Not possible due to the empty partition/access region
-        BOOST_CHECK_THROW(interface.mapAndWriteData(otherMeshName, velocityName, positions, writeData), ::precice::Error);
+        BOOST_CHECK_THROW(interface.writeAndMapData(otherMeshName, velocityName, positions, writeData), ::precice::Error);
         BOOST_CHECK_THROW(interface.mapAndReadData(otherMeshName, uncertaintyName, positions, dt, writeData), ::precice::Error);
       }
       interface.advance(dt);

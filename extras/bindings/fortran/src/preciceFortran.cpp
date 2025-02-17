@@ -434,7 +434,7 @@ try {
   std::abort();
 }
 
-void precicef_map_and_write_data_(
+void precicef_write_and_map_data_(
     const char *meshName,
     const char *dataName,
     const int * size,
@@ -448,7 +448,7 @@ try {
   auto strippedDataName = precice::impl::strippedStringView(dataName, dataNameLength);
   auto coordinatesSize  = *size * impl->getMeshDimensions(strippedMeshName);
   auto dataSize         = *size * impl->getDataDimensions(strippedMeshName, strippedDataName);
-  impl->mapAndWriteData(strippedMeshName,
+  impl->writeAndMapData(strippedMeshName,
                         strippedDataName,
                         {coordinates, static_cast<unsigned long>(coordinatesSize)},
                         {values, static_cast<unsigned long>(dataSize)});

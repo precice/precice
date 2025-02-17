@@ -878,7 +878,7 @@ public:
    *
    * If one of your coupling meshes is not static and has varying locations over time, we can compute a data mapping
    * just-in-time. In such a case the user provides the coordinates of the moving mesh along with the API functions
-   * \p mapAndWriteData or \p mapAndReadData to read and write data.
+   * \p writeAndMapData or \p mapAndReadData to read and write data.
    *
    * The just-in-time mapping is closely connected to the \p Direct Access (see section below):
    *
@@ -889,7 +889,7 @@ public:
    *
    * 1) The static mesh which is not moving (which is always a received mesh) needs api-access enabled
    * via `<receive-mesh name="StaticMesh" ... api-access="true"/>`. Similar to the Direct Access, the name of this static
-   * mesh is then also the mesh name used in the API functions below, e.g., mapAndWriteData(StaticMesh, ...).
+   * mesh is then also the mesh name used in the API functions below, e.g., writeAndMapData(StaticMesh, ...).
    *
    * 2) A mapping "from" or "to" the received mesh needs to be defined, where the "to" or "from" attribute in the configuration
    * needs to remain empty, e.g., ` <mapping:nearest-neighbor direction="read" from="StaticMesh" constraint="consistent" />`.
@@ -935,7 +935,7 @@ public:
    *
    * @see Participant::setMeshAccessRegion()
    */
-  void mapAndWriteData(
+  void writeAndMapData(
       ::precice::string_view        meshName,
       ::precice::string_view        dataName,
       ::precice::span<const double> coordinates,

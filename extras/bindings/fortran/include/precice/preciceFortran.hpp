@@ -503,7 +503,7 @@ PRECICE_API void precicef_read_data_(
 
 /**
  * @brief Writes data just-in-time
- * See @see precice::Participant::mapAndWriteData() and the just-in-time mapping doxygen section for more information.
+ * See @see precice::Participant::writeAndMapData() and the just-in-time mapping doxygen section for more information.
  *
  * Fortran syntax:
  * precicef_map_and_write_data_(
@@ -518,9 +518,9 @@ PRECICE_API void precicef_read_data_(
  * IN:  mesh, data, size, coordinates, values, meshNameLength, dataNameLength
  * OUT: -
  *
- * @copydoc precice::Participant::mapAndWriteData()
+ * @copydoc precice::Participant::writeAndMapData()
  */
-PRECICE_API void precicef_map_and_write_data_(
+PRECICE_API void precicef_write_and_map_data_(
     const char *meshName,
     const char *dataName,
     const int * size,

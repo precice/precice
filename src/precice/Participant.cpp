@@ -230,13 +230,13 @@ void Participant::mapAndReadData(
   _impl->mapAndReadData(toSV(meshName), toSV(dataName), coordinates, relativeReadTime, values);
 }
 
-void Participant::mapAndWriteData(
+void Participant::writeAndMapData(
     ::precice::string_view        meshName,
     ::precice::string_view        dataName,
     ::precice::span<const double> coordinates,
     ::precice::span<const double> values)
 {
-  _impl->mapAndWriteData(toSV(meshName), toSV(dataName), coordinates, values);
+  _impl->writeAndMapData(toSV(meshName), toSV(dataName), coordinates, values);
 }
 
 void Participant::setMeshAccessRegion(::precice::string_view        meshName,

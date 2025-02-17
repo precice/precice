@@ -58,9 +58,9 @@ BOOST_AUTO_TEST_CASE(ExplicitWrite)
           solverTwoCoord[d] = tmpPositions[i * dim + d];
         }
         if (time == 1) {
-          couplingInterface.mapAndWriteData(otherMeshName, dataName, solverTwoCoord, {&writeData1[i], 1});
+          couplingInterface.writeAndMapData(otherMeshName, dataName, solverTwoCoord, {&writeData1[i], 1});
         } else if (time == 2) {
-          couplingInterface.mapAndWriteData(otherMeshName, dataName, solverTwoCoord, {&writeData2[i], 1});
+          couplingInterface.writeAndMapData(otherMeshName, dataName, solverTwoCoord, {&writeData2[i], 1});
         } else {
           PRECICE_ASSERT(false);
         }
@@ -74,13 +74,13 @@ BOOST_AUTO_TEST_CASE(ExplicitWrite)
           solverTwoCoord[d] = 100 * tmpPositions[d];
         }
         // exceeding to the top
-        BOOST_CHECK_THROW(couplingInterface.mapAndWriteData(otherMeshName, dataName, solverTwoCoord, {&writeData1[0], 1}), ::precice::Error);
+        BOOST_CHECK_THROW(couplingInterface.writeAndMapData(otherMeshName, dataName, solverTwoCoord, {&writeData1[0], 1}), ::precice::Error);
 
         // exceeding to the bottom
         for (int d = 0; d < dim; ++d) {
           solverTwoCoord[d] = -1000 * tmpPositions[d];
         }
-        BOOST_CHECK_THROW(couplingInterface.mapAndWriteData(otherMeshName, dataName, solverTwoCoord, {&writeData1[0], 1}), ::precice::Error);
+        BOOST_CHECK_THROW(couplingInterface.writeAndMapData(otherMeshName, dataName, solverTwoCoord, {&writeData1[0], 1}), ::precice::Error);
       }
 
       couplingInterface.advance(dt);

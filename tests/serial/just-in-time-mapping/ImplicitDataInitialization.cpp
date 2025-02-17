@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ImplicitDataInitialization)
       }
 
       BOOST_TEST(expectedData == readData, boost::test_tools::per_element());
-      interface.mapAndWriteData(otherMeshID, writeDataID, ownPositions, writeData);
+      interface.writeAndMapData(otherMeshID, writeDataID, ownPositions, writeData);
       interface.advance(dt);
       double dt = interface.getMaxTimeStepSize();
       iterations++;

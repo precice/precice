@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(ImplicitNoSubsteps)
       });
 
       // Just in time variant
-      interface.mapAndWriteData(otherMeshName, writeDataName, positions, writeData);
+      interface.writeAndMapData(otherMeshName, writeDataName, positions, writeData);
       interface.writeData(ownMeshName, writeDataName, ownIDs, writeData);
       interface.advance(0.2 * dt);
       iterations++;

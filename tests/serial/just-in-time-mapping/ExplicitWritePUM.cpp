@@ -101,13 +101,13 @@ BOOST_AUTO_TEST_CASE(ExplicitWritePUM)
       }
       // First, we check the separate polynomial PUM (scalar and vector)
       couplingInterface.writeData(meshName, dataName, ids, writeData);
-      couplingInterface.mapAndWriteData(otherMeshName, dataName, positions, writeData);
+      couplingInterface.writeAndMapData(otherMeshName, dataName, positions, writeData);
       couplingInterface.writeData(meshName, vectorDataName, ids, writeVectorData);
-      couplingInterface.mapAndWriteData(otherMeshName, vectorDataName, positions, writeVectorData);
+      couplingInterface.writeAndMapData(otherMeshName, vectorDataName, positions, writeVectorData);
 
       // Second, we check the no polynomial PUM (scalar and vector)
-      couplingInterface.mapAndWriteData(otherMeshBName, dataName, positions, writeData);
-      couplingInterface.mapAndWriteData(otherMeshBName, vectorDataName, positions, writeVectorData);
+      couplingInterface.writeAndMapData(otherMeshBName, dataName, positions, writeData);
+      couplingInterface.writeAndMapData(otherMeshBName, vectorDataName, positions, writeVectorData);
 
       // solve time step
       // write data (not necessary here)

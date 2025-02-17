@@ -114,13 +114,13 @@ BOOST_AUTO_TEST_CASE(ExplicitMultipleReadWrite)
           for (int d = 0; d < dim; ++d) {
             solverTwoCoord[d] = tmpPositions1[i * dim + d];
           }
-          couplingInterface.mapAndWriteData(otherMeshName, velocityData, solverTwoCoord, {&velocityData1[i], 1});
-          couplingInterface.mapAndWriteData(otherMeshName, vorticityData, solverTwoCoord, {&vorticityData1[i * dim], dim});
+          couplingInterface.writeAndMapData(otherMeshName, velocityData, solverTwoCoord, {&velocityData1[i], 1});
+          couplingInterface.writeAndMapData(otherMeshName, vorticityData, solverTwoCoord, {&vorticityData1[i * dim], dim});
         }
       } else if (time == 2) {
         // The second time, we pass all data at once
-        couplingInterface.mapAndWriteData(otherMeshName, velocityData, tmpPositions2, velocityData2);
-        couplingInterface.mapAndWriteData(otherMeshName, vorticityData, tmpPositions2, vorticityData2);
+        couplingInterface.writeAndMapData(otherMeshName, velocityData, tmpPositions2, velocityData2);
+        couplingInterface.writeAndMapData(otherMeshName, vorticityData, tmpPositions2, vorticityData2);
       } else {
         PRECICE_ASSERT(false);
       }

@@ -333,7 +333,7 @@ try {
   std::abort();
 }
 
-void precicec_mapAndWriteData(
+void precicec_writeAndMapData(
     const char *  meshName,
     const char *  dataName,
     int           size,
@@ -343,7 +343,7 @@ try {
   PRECICE_CHECK(impl != nullptr, errormsg);
   auto coordinatesSize = size * impl->getMeshDimensions(meshName);
   auto dataSize        = size * impl->getDataDimensions(meshName, dataName);
-  impl->mapAndWriteData(meshName, dataName, {coordinates, static_cast<unsigned long>(coordinatesSize)}, {values, static_cast<unsigned long>(dataSize)});
+  impl->writeAndMapData(meshName, dataName, {coordinates, static_cast<unsigned long>(coordinatesSize)}, {values, static_cast<unsigned long>(dataSize)});
 } catch (::precice::Error &e) {
   std::abort();
 }

@@ -95,9 +95,9 @@ BOOST_AUTO_TEST_CASE(ImplicitPUM)
         return 4 * n++ + timeWindow * n - iterations + r;
       });
       // Just in time variant
-      interface.mapAndWriteData(otherMeshName, writeDataName, positions, writeData);
+      interface.writeAndMapData(otherMeshName, writeDataName, positions, writeData);
       interface.writeData(ownMeshName, writeDataName, ownIDs, writeData);
-      interface.mapAndWriteData(otherMeshName, writeDataName1, positions, writeData1);
+      interface.writeAndMapData(otherMeshName, writeDataName1, positions, writeData1);
       interface.writeData(ownMeshName, writeDataName1, ownIDs, writeData1);
       interface.advance(0.2 * dt);
       iterations++;
