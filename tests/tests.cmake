@@ -398,6 +398,8 @@ target_sources(testprecice
     tests/serial/time/implicit/parallel-coupling/InitialDataConstantAcceleration2.cpp
     tests/serial/time/implicit/parallel-coupling/InitialDataIQNILSAcceleration1.cpp
     tests/serial/time/implicit/parallel-coupling/InitialDataIQNILSAcceleration2.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataIQNIMVJAcceleration1.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataIQNIMVJAcceleration2.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcyclingNoSubstepsUseInitFirst.cpp
@@ -414,6 +416,8 @@ target_sources(testprecice
     tests/serial/time/implicit/serial-coupling/InitialDataConstantAcceleration2.cpp
     tests/serial/time/implicit/serial-coupling/InitialDataIQNILSAcceleration1.cpp
     tests/serial/time/implicit/serial-coupling/InitialDataIQNILSAcceleration2.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataIQNIMVJAcceleration1.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataIQNIMVJAcceleration2.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataFirstParticipant.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
