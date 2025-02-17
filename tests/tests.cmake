@@ -189,8 +189,10 @@ target_sources(testprecice
     tests/serial/action-timings/ActionTimingsSerialImplicit.cpp
     tests/serial/aitken/DefaultInitialRelaxation.cpp
     tests/serial/aitken/DefinedInitialRelaxation.cpp
+    tests/serial/aitken/WithSubsteps.cpp
     tests/serial/circular/Explicit.cpp
     tests/serial/circular/helper.hpp
+    tests/serial/compositional/FiveParticipants.cpp
     tests/serial/compositional/OneActivatedMuscle.cpp
     tests/serial/compositional/TwoActivatedMuscles.cpp
     tests/serial/compositional/data/implicit-first/AllParallel.cpp
@@ -381,6 +383,7 @@ target_sources(testprecice
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipantInitData.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
+    tests/serial/time/explicit/serial-coupling/SecondTimeBug.cpp
     tests/serial/time/implicit/compositional/DoNothingWithSubcycling.cpp
     tests/serial/time/implicit/compositional/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/multi-coupling/DoNothingWithSubcycling.cpp

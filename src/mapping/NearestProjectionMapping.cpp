@@ -81,6 +81,7 @@ void NearestProjectionMapping::computeMapping()
   constexpr int nnearest = 4;
 
   utils::statistics::DistanceAccumulator distanceStatistics;
+  std::size_t                            toTriangles{0}, toEdges{0}, toVertices{0};
 
   _interpolations.clear();
   _interpolations.reserve(fVertices.size());
@@ -91,6 +92,20 @@ void NearestProjectionMapping::computeMapping()
     // Nearest projection element is triangle for 3d if exists, if not the edge and at the worst case it is the nearest vertex
     auto match = index.findNearestProjection(fVertex.getCoords(), nnearest);
     distanceStatistics(match.polation.distance());
+    switch (match.polation.nElements()) {
+    case 1:
+      ++toVertices;
+      break;
+    case 2:
+      ++toEdges;
+      break;
+    case 3:
+      ++toTriangles;
+      break;
+    default:
+      PRECICE_UNREACHABLE("");
+    }
+
     _interpolations.push_back(std::move(match.polation));
   }
 
@@ -98,6 +113,7 @@ void NearestProjectionMapping::computeMapping()
     PRECICE_INFO("Mapping distance not available due to empty partition.");
   } else {
     PRECICE_INFO("Mapping distance {}", distanceStatistics);
+    PRECICE_INFO("Nearest-projections are {} triangles, {} edges, and {} vertices", toTriangles, toEdges, toVertices);
   }
 
   _hasComputedMapping = true;

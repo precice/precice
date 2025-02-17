@@ -48,7 +48,7 @@ AccelerationConfiguration::AccelerationConfiguration(
       ATTR_SINGULARITYLIMIT("limit"),
       ATTR_TYPE("type"),
       ATTR_BUILDJACOBIAN("always-build-jacobian"),
-      ATTR_REDUCEDTIMEGRIDQN("reducedTimeGrid"),
+      ATTR_REDUCEDTIMEGRIDQN("reduced-time-grid"),
       ATTR_IMVJCHUNKSIZE("chunk-size"),
       ATTR_RSLS_REUSED_TIME_WINDOWS("reused-time-windows-at-restart"),
       ATTR_RSSVD_TRUNCATIONEPS("truncation-threshold"),

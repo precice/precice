@@ -4,6 +4,7 @@
 #include <array>
 #include <cmath>
 #include <deque>
+#include <filesystem>
 #include <functional>
 #include <iterator>
 #include <memory>
@@ -196,6 +197,11 @@ void ParticipantImpl::configure(
 #endif
 #endif // NDEBUG
     );
+    try {
+      PRECICE_INFO("Working directory \"{}\"", std::filesystem::current_path().string());
+    } catch (std::filesystem::filesystem_error &fse) {
+      PRECICE_INFO("Working directory unknown due to error \"{}\"", fse.what());
+    }
     PRECICE_INFO("Configuring preCICE with configuration \"{}\"", configurationFileName);
     PRECICE_INFO("I am participant \"{}\"", _accessorName);
   }
