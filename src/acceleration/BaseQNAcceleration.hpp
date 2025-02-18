@@ -142,6 +142,16 @@ public:
    */
   int getLSSystemCols() const;
 
+/**
+   * @brief Get the maximum number of reused iterations.
+   */
+  int getMaxUsedIterations() const;
+
+  /**
+   * @brief Get the maximum number of reused time windows.
+   */
+  int getMaxUsedTimeWindows() const;
+
 protected:
   logging::Logger _log{"acceleration::BaseQNAcceleration"};
 
