@@ -257,6 +257,8 @@ void ParticipantImpl::initialize()
                 "Initial data has to be written to preCICE before calling initialize(). "
                 "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using the writeData() function.");
 
+  PRECICE_CHECK(_userEvents.empty(), "There are unstopped user defined events");
+
   _solverInitEvent.reset();
   Event e("initialize", profiling::Fundamental, profiling::Synchronize);
 
@@ -385,6 +387,8 @@ void ParticipantImpl::advance(
 {
 
   PRECICE_TRACE(computedTimeStepSize);
+
+  PRECICE_CHECK(_userEvents.empty(), "There are unstopped user defined events");
 
   // Events for the solver time, stopped when we enter, restarted when we leave advance
   PRECICE_ASSERT(_solverAdvanceEvent, "The advance event is created in initialize");
@@ -568,6 +572,8 @@ void ParticipantImpl::finalize()
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.");
+
+  _userEvents.clear();
 
   // Events for the solver time, finally stopped here
   _solverAdvanceEvent.reset();
@@ -1978,6 +1984,17 @@ bool ParticipantImpl::reinitHandshake(bool requestReinit) const
     utils::IntraComm::broadcast(swarmReinitRequired);
     return swarmReinitRequired;
   }
+}
+
+void ParticipantImpl::startProfilingSection(std::string_view eventName)
+{
+  _userEvents.emplace_back(eventName, profiling::Fundamental);
+}
+
+void ParticipantImpl::stopLastProfilingSection()
+{
+  PRECICE_CHECK(!_userEvents.empty(), "There is no user-started event to stop.");
+  _userEvents.pop_back();
 }
 
 } // namespace precice::impl

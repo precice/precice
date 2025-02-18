@@ -273,6 +273,18 @@ public:
 
   ///@}
 
+  /** @name User profiling
+   */
+  ///@{
+
+  /// @copydoc Participant::startProfilingSection()
+  void startProfilingSection(std::string_view eventName);
+
+  /// @copydoc Participant::stopLastProfilingSection()
+  void stopLastProfilingSection();
+
+  ///@}
+
   /**
    * @brief Allows to access a registered mesh
    */
@@ -501,6 +513,8 @@ private:
 
   std::unique_ptr<profiling::Event> _solverInitEvent;
   std::unique_ptr<profiling::Event> _solverAdvanceEvent;
+
+  std::vector<profiling::Event> _userEvents;
 };
 
 } // namespace impl

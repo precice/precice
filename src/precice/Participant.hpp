@@ -1168,6 +1168,18 @@ public:
 
   ///@}
 
+  /** @name User profiling
+   */
+  ///@{
+
+  /// Start a section
+  void startProfilingSection(::precice::string_view eventName);
+
+  /// Stop the last section
+  void stopLastProfilingSection();
+
+  ///@}
+
   /// Disable copy construction
   Participant(const Participant &copy) = delete;
 
