@@ -16,8 +16,10 @@ BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
 BOOST_AUTO_TEST_SUITE(SerializedStamples)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SerializeValues)
 {
+  PRECICE_TEST();
   std::vector<int> vertexOffsets{4, 8, 8, 10};
 
   const int meshDimensions = 3;
@@ -55,8 +57,10 @@ BOOST_AUTO_TEST_CASE(SerializeValues)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DeserializeValues)
 {
+  PRECICE_TEST();
   std::vector<int> vertexOffsets{4, 8, 8, 10};
 
   const int meshDimensions = 3;
@@ -107,8 +111,10 @@ BOOST_AUTO_TEST_CASE(DeserializeValues)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SerializeValuesAndGradients)
 {
+  PRECICE_TEST();
   std::vector<int> vertexOffsets{4, 8, 8, 10};
 
   const int meshDimensions = 3;
@@ -167,8 +173,10 @@ BOOST_AUTO_TEST_CASE(SerializeValuesAndGradients)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
 {
+  PRECICE_TEST();
   std::vector<int> vertexOffsets{4, 8, 8, 10};
 
   const int meshDimensions = 3;

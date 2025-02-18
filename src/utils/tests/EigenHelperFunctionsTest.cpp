@@ -14,9 +14,10 @@ using namespace precice::utils;
 BOOST_AUTO_TEST_SUITE(UtilsTests)
 BOOST_AUTO_TEST_SUITE(EigenHelperFunctionsTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(FirstN)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Eigen::VectorXd a(7);
   a << 1, 2, 3, 4, 5, 6, 7;
   Eigen::RowVectorXd b(3);
@@ -26,9 +27,10 @@ BOOST_AUTO_TEST_CASE(FirstN)
 
 BOOST_AUTO_TEST_SUITE(RangePreview)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EigenVector)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Eigen::VectorXd a{7};
   a << 1, 2, 3, 4, 5, 6, 0;
   std::ostringstream oss;
@@ -39,9 +41,10 @@ BOOST_AUTO_TEST_CASE(EigenVector)
 
 BOOST_AUTO_TEST_SUITE_END()
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ComponentWiseLess)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   precice::utils::ComponentWiseLess cwl;
 
   Eigen::VectorXd a(8);

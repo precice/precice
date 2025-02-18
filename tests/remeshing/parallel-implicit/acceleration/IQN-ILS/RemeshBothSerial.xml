@@ -29,7 +29,7 @@
     <mapping:nearest-neighbor direction="read" from="MA" to="MB" constraint="consistent" />
   </participant>
 
-  <m2n:sockets acceptor="B" connector="A" exchange-directory=".." />
+  <m2n:sockets acceptor="B" connector="A" />
 
   <coupling-scheme:parallel-implicit>
     <participants first="A" second="B" />

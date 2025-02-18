@@ -1114,9 +1114,10 @@ void perform3DTestConservativeMappingVector(Mapping &mapping)
   // The remaining parts should already be covered by the other 3D/2D tests
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(PartitionOfUnityMappingTests)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   mapping::CompactPolynomialC0                          function(3);
   mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap2D(Mapping::CONSISTENT, 2, function, Polynomial::SEPARATE, 5, 0.4, false);
   perform2DTestConsistentMapping(consistentMap2D);
@@ -1141,9 +1142,10 @@ BOOST_AUTO_TEST_CASE(PartitionOfUnityMappingTests)
 }
 
 // Test for small meshes, where the number of requested vertices per cluster is bigger than the global
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TestSingleClusterPartitionOfUnity)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   mapping::CompactPolynomialC0                          function(3);
   mapping::PartitionOfUnityMapping<CompactPolynomialC0> mapping(Mapping::CONSISTENT, 3, function, Polynomial::SEPARATE, 50, 0.4, false);
 
@@ -1390,9 +1392,10 @@ void testDistributed(const TestContext &    context,
   BOOST_TEST(outData->values().size() == index * valueDimension);
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConsistent2D)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
   MeshSpecification in{// Consistent mapping: The inMesh is communicated
@@ -1429,9 +1432,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2D)
 }
 
 // Same as above, but including empty ranks not participating
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DEmptyOut)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
   MeshSpecification in{// Consistent mapping: The inMesh is communicated
@@ -1468,9 +1472,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DEmptyOut)
 }
 
 // Same as above, but including empty ranks not participating
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DEmptyRank)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
   MeshSpecification in{// Consistent mapping: The inMesh is communicated
@@ -1501,9 +1506,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DEmptyRank)
   testDistributed(context, consistentMap2D, in, out, ref, globalIndexOffsets.at(context.rank));
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConservative2D)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
   MeshSpecification in{// Conservative mapping: The inMesh is local
@@ -1540,9 +1546,10 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2D)
 }
 
 // Same as above, but checking with empty ranks
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConservative2DEmptyRank)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   std::vector<int> globalIndexOffsets = {0, 2, 4, 6};
 
   MeshSpecification in{// Conservative mapping: The inMesh is local
@@ -1603,9 +1610,10 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DEmptyRank)
 }
 
 // Same as above, but checking the primary rank for all output vertices
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConservative2DTwoRanks)
 {
-  PRECICE_TEST(""_on(2_ranks).setupIntraComm());
+  PRECICE_TEST();
   std::vector<int> globalIndexOffsets = {0, 2};
 
   MeshSpecification in{// Conservative mapping: The inMesh is local
@@ -1709,9 +1717,10 @@ void testTagging(const TestContext &context,
   }
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(testTagFirstRound)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm())
+  PRECICE_TEST();
 
   MeshSpecification outMeshSpec = {
       {0, -1, {0, 0}, {0}}};

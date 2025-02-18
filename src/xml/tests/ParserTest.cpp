@@ -61,9 +61,10 @@ struct CallbackHostAttr : public XMLTag::Listener {
   }
 };
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(AttributeTypeTest)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/xmlparser_test.xml");
 
   CallbackHostAttr cb;
@@ -122,9 +123,10 @@ BOOST_AUTO_TEST_CASE(AttributeTypeTest)
   BOOST_TEST(cb.eigenValue3(2) == 1.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(OccurenceTest)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/xmlparser_occtest.xml");
 
   CallbackHostAttr cb;
@@ -152,9 +154,10 @@ BOOST_AUTO_TEST_CASE(OccurenceTest)
   configure(rootTag, ConfigurationContext{}, filename);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(NamespaceTest)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/xmlparser_nstest.xml");
 
   CallbackHostAttr cb;
@@ -189,9 +192,10 @@ struct ContextListener : public XMLTag::Listener {
   }
 };
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Context)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/config_xmltest_context.xml");
 
   ContextListener      cl;
@@ -206,9 +210,10 @@ BOOST_AUTO_TEST_CASE(Context)
   BOOST_TEST(cl.endContext.size == 32);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Decode)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   BOOST_TEST(decodeXML("Less than &lt; test") == "Less than < test");
   BOOST_TEST(decodeXML("Greater than &gt; test") == "Greater than > test");

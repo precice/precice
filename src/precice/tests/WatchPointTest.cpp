@@ -78,15 +78,15 @@ void testWatchPoint(const TestContext & context,
 
   if (context.size > 1) {
     if (context.isPrimary()) {
-      doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1.0, 2.0}}));
-      vectorData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1.0, 2.0, 3.0, 4.0}}));
+      doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1.0, 2.0}}));
+      vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{1.0, 2.0, 3.0, 4.0}}));
     } else {
-      doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{2.0, 3.0}}));
-      vectorData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{3.0, 4.0, 5.0, 6.0}}));
+      doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{2.0, 3.0}}));
+      vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{3.0, 4.0, 5.0, 6.0}}));
     }
   } else {
-    doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1., 2., 3.}}));
-    vectorData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1., 2., 3., 4., 5., 6.}}));
+    doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1., 2., 3.}}));
+    vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{1., 2., 3., 4., 5., 6.}}));
   }
 
   std::string filename0("precice-WatchPointTest-timeseries-0.log");
@@ -107,15 +107,15 @@ void testWatchPoint(const TestContext & context,
     // Change data (next timestep)
     if (context.size > 1) {
       if (context.isPrimary()) {
-        doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{2., 3.}}));
-        vectorData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{2., 3., 4., 5.}}));
+        doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{2., 3.}}));
+        vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{2., 3., 4., 5.}}));
       } else {
-        doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{3., 4.}}));
-        vectorData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{4., 5., 6., 7.}}));
+        doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{3., 4.}}));
+        vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{4., 5., 6., 7.}}));
       }
     } else {
-      doubleData->setSampleAtTime(1, time::Sample(1, Eigen::VectorXd{{2., 3., 4.}}));
-      vectorData->setSampleAtTime(1, time::Sample(2, Eigen::VectorXd{{2., 3., 4., 5., 6., 7.}}));
+      doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{2., 3., 4.}}));
+      vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{2., 3., 4., 5., 6., 7.}}));
     }
 
     // Write output again
@@ -144,9 +144,10 @@ void testWatchPoint(const TestContext & context,
 
 BOOST_AUTO_TEST_SUITE(WatchPoint)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeSerialPoint1)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   bool withEdge           = false;
   auto watchPointPosition = std::vector<double>{-0.5, 0.6};
   auto expected           = std::vector<double>{
@@ -156,9 +157,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeSerialPoint1)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeSerialPoint1)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   bool withEdge           = true;
   auto watchPointPosition = std::vector<double>{-0.5, 0.6};
   auto expected           = std::vector<double>{
@@ -168,9 +170,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeSerialPoint1)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeSerialPoint2)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   bool withEdge           = false;
   auto watchPointPosition = std::vector<double>{0.0, 1.6};
   auto expected           = std::vector<double>{
@@ -180,9 +183,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeSerialPoint2)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeSerialPoint2)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   bool withEdge           = true;
   auto watchPointPosition = std::vector<double>{0.0, 1.6};
   auto expected           = std::vector<double>{
@@ -192,9 +196,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeSerialPoint2)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeParallelPoint1)
 {
-  PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   bool withEdge           = false;
   auto watchPointPosition = std::vector<double>{-0.5, 0.6};
   auto expected           = std::vector<double>{
@@ -204,9 +209,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeParallelPoint1)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeParallelPoint1)
 {
-  PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   bool withEdge           = true;
   auto watchPointPosition = std::vector<double>{-0.5, 0.6};
   auto expected           = std::vector<double>{
@@ -216,9 +222,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeParallelPoint1)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeParallelPoint2)
 {
-  PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   bool withEdge           = false;
   auto watchPointPosition = std::vector<double>{0.0, 1.6};
   auto expected           = std::vector<double>{
@@ -228,9 +235,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesNoEdgeParallelPoint2)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeParallelPoint2)
 {
-  PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   bool withEdge           = true;
   auto watchPointPosition = std::vector<double>{0.0, 1.6};
   auto expected           = std::vector<double>{
@@ -240,9 +248,10 @@ BOOST_AUTO_TEST_CASE(TimeSeriesWithEdgeParallelPoint2)
   testWatchPoint(context, withEdge, watchPointPosition, expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Reinitialize)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   using Eigen::VectorXd;
   // Setup geometry
@@ -259,8 +268,8 @@ BOOST_AUTO_TEST_CASE(Reinitialize)
 
   // v1, v2 carry data 1
   // v2 and later v3 carry data 2
-  doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1., 1., 2.}}));
-  vectorData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1., 1., 1., 1., 2., 2.}}));
+  doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1., 1., 2.}}));
+  vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{1., 1., 1., 1., 2., 2.}}));
 
   std::string filename0("precice-WatchPointTest-reinit-0.log");
   std::string filename1("precice-WatchPointTest-reinit-1.log");
@@ -285,8 +294,8 @@ BOOST_AUTO_TEST_CASE(Reinitialize)
     mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
     mesh->createEdge(v3, v4);
     mesh->index().clear();
-    doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1., 1., 2., 2.}}));
-    vectorData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1., 1., 1., 1., 2., 2., 2., 2.}}));
+    doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1., 1., 2., 2.}}));
+    vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{1., 1., 1., 1., 2., 2., 2., 2.}}));
 
     // Re-Initialize
     watchpoint0.initialize();
@@ -331,9 +340,10 @@ BOOST_AUTO_TEST_CASE(Reinitialize)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(VolumetricInterpolation2D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   using Eigen::VectorXd;
   // Setup geometry
@@ -352,8 +362,8 @@ BOOST_AUTO_TEST_CASE(VolumetricInterpolation2D)
   PtrData vectorData = mesh->createData("VectorData", 2, 1_dataID);
 
   // Data is (1,1,2) for the scalar, and same for each vector component.
-  doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1., 1., 2., 2.}}));
-  vectorData->setSampleAtTime(0, time::Sample(2, Eigen::VectorXd{{1., 1., 1., 1., 2., 2., 2., 2.}}));
+  doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1., 1., 2., 2.}}));
+  vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{1., 1., 1., 1., 2., 2., 2., 2.}}));
 
   std::string filename0("precice-WatchPointTest-volumetric2d-0.log");
   std::string filename1("precice-WatchPointTest-volumetric2d-1.log");
@@ -407,9 +417,10 @@ BOOST_AUTO_TEST_CASE(VolumetricInterpolation2D)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(VolumetricInterpolation3D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   using Eigen::VectorXd;
   // Setup geometry
@@ -426,7 +437,7 @@ BOOST_AUTO_TEST_CASE(VolumetricInterpolation3D)
   PtrData doubleData = mesh->createData("DoubleData", 1, 0_dataID);
 
   // Data is (1,1,2) for the scalar, and same for each vector component.
-  doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd{{1., 2., 3., 4.}}));
+  doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1., 2., 3., 4.}}));
 
   std::string filename0("precice-WatchPointTest-volumetric3d-0.log");
   std::string filename1("precice-WatchPointTest-volumetric3d-1.log");
@@ -480,9 +491,10 @@ BOOST_AUTO_TEST_CASE(VolumetricInterpolation3D)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(VolumetricParallel)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   using namespace mesh;
   using Eigen::VectorXd;
   // Setup geometry
@@ -518,7 +530,7 @@ BOOST_AUTO_TEST_CASE(VolumetricParallel)
   PtrData doubleData = mesh->createData("DoubleData", 1, 0_dataID);
 
   // Data is (1, 2, 3, 4) on the tetra, other ranks agree on their subset
-  doubleData->setSampleAtTime(0, time::Sample(1, Eigen::VectorXd(context.rank + 1).setLinSpaced(1., context.rank + 1)));
+  doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd(context.rank + 1).setLinSpaced(1., context.rank + 1)));
 
   std::string filename0("precice-WatchPointTest-volumetricParallel-0.log");
   bool        isClosest;

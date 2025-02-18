@@ -295,6 +295,8 @@ target_sources(preciceCore
     src/time/Storage.hpp
     src/time/Time.cpp
     src/time/Time.hpp
+    src/time/TimeGrids.cpp
+    src/time/TimeGrids.hpp
     src/time/Waveform.cpp
     src/time/Waveform.hpp
     src/utils/ArgumentFormatter.hpp

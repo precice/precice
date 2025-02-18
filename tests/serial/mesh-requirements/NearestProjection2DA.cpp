@@ -7,9 +7,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MeshRequirements)
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(NearestProjection2DA)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   precice::Participant interface("A", context.config(), 0, 1);
   auto                 meshName = "MeshA";
   BOOST_TEST(interface.requiresMeshConnectivityFor(meshName));

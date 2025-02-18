@@ -9,9 +9,10 @@ BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Remeshing)
 BOOST_AUTO_TEST_SUITE(ParallelExplicit)
 BOOST_AUTO_TEST_SUITE(TwoMeshes)
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(1_rank))
 BOOST_AUTO_TEST_CASE(LocalMapping)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank));
+  PRECICE_TEST();
 
   precice::Participant p(context.name, context.config(), context.rank, context.size);
 

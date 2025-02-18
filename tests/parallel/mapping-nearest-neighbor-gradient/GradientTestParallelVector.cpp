@@ -37,10 +37,10 @@ BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(MappingNearestNeighborGradient)
 
 // Bidirectional test : Read: Vector & NNG - Write: Scalar & NN (Parallel Coupling)
+PRECICE_TEST_SETUP("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(GradientTestParallelVector)
 {
-
-  PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   if (context.isNamed("SolverOne")) {
     Participant interface(context.name, context.config(), context.rank, context.size);

@@ -96,6 +96,14 @@ void ExportCSV::doExport(int index, double time)
   // Prepare writing data
   std::vector<StridedAccess> dataColumns;
   for (const auto &data : _mesh->data()) {
+    if (data->timeStepsStorage().empty()) {
+      if (data->hasGradient()) {
+        data->timeStepsStorage().setSampleAtTime(0, time::Sample(data->getDimensions(), _mesh->nVertices(), _mesh->getDimensions()).setZero());
+      } else {
+        data->timeStepsStorage().setSampleAtTime(0, time::Sample(data->getDimensions(), _mesh->nVertices()).setZero());
+      }
+    }
+
     auto          dim    = data->getDimensions();
     double const *values = data->timeStepsStorage().last().sample.values.data();
     for (int i = 0; i < dim; ++i) {

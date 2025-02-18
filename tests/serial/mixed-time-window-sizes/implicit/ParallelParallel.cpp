@@ -10,9 +10,10 @@ BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MixedTimeWindowSizes)
 BOOST_AUTO_TEST_SUITE(Implicit)
+PRECICE_TEST_SETUP("Left"_on(1_rank), "Center"_on(1_rank), "Right"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ParallelParallel)
 {
-  PRECICE_TEST("Left"_on(1_rank), "Center"_on(1_rank), "Right"_on(1_rank));
+  PRECICE_TEST();
 
   precice::testing::testThreeSolverStepOnlyImplicit(context);
 }

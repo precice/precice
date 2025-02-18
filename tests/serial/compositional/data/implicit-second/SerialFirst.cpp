@@ -10,9 +10,10 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Compositional)
 BOOST_AUTO_TEST_SUITE(Data)
 BOOST_AUTO_TEST_SUITE(ImplicitSecond)
+PRECICE_TEST_SETUP("EA"_on(1_rank), "IA"_on(1_rank), "IB"_on(1_rank), "EB"_on(1_rank))
 BOOST_AUTO_TEST_CASE(SerialFirst)
 {
-  PRECICE_TEST("EA"_on(1_rank), "IA"_on(1_rank), "IB"_on(1_rank), "EB"_on(1_rank));
+  PRECICE_TEST();
 
   // Format of data is timewindow.iteration, with 0.1 being initial data
 

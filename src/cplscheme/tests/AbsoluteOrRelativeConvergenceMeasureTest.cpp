@@ -9,9 +9,10 @@ using namespace cplscheme;
 
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(AbsoluteOrRelativeConvergenceMeasureTest)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector3d;
   // Create convergence measure for Vector data
   double                                                absLimit1 = 1.0;

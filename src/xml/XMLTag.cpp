@@ -2,6 +2,7 @@
 #include <Eigen/Core>
 #include <utility>
 #include "logging/LogMacros.hpp"
+#include "utils/String.hpp"
 #include "utils/assertion.hpp"
 #include "xml/ConfigParser.hpp"
 
@@ -17,6 +18,7 @@ XMLTag::XMLTag(
       _namespace(std::move(xmlNamespace)),
       _occurrence(occurrence)
 {
+  PRECICE_ASSERT(utils::isKebabStyle(_namespace), _namespace);
   if (not _namespace.empty()) {
     _fullName = _namespace + ":" + _name;
   } else {

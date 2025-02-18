@@ -12,6 +12,7 @@
 #include "math/differences.hpp"
 #include "math/math.hpp"
 #include "utils/IntraComm.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -64,6 +65,7 @@ public:
       const Eigen::VectorXd &oldValues,
       const Eigen::VectorXd &newValues)
   {
+    PRECICE_ASSERT(oldValues.size() == newValues.size());
     _normDiff      = utils::IntraComm::l2norm(newValues - oldValues);
     _norm          = utils::IntraComm::l2norm(newValues);
     _isConvergence = (_normDiff <= _norm * _convergenceLimitPercent) or (_normDiff <= _convergenceLimit);

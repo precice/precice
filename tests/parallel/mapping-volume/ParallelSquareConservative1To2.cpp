@@ -8,12 +8,12 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(MappingVolume)
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(2_ranks))
 BOOST_AUTO_TEST_CASE(ParallelSquareConservative1To2)
 {
+  PRECICE_TEST();
   using precice::VertexID;
   using precice::testing::equals;
-
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(2_ranks));
   precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;

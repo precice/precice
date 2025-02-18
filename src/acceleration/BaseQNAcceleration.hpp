@@ -12,6 +12,7 @@
 #include "acceleration/impl/QRFactorization.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
 #include "logging/Logger.hpp"
+#include "time/TimeGrids.hpp"
 
 /* ****************************************************************************
  *
@@ -70,7 +71,8 @@ public:
       int                     filter,
       double                  singularityLimit,
       std::vector<int>        dataIDs,
-      impl::PtrPreconditioner preconditioner);
+      impl::PtrPreconditioner preconditioner,
+      bool                    reducedTimeGrid);
 
   /**
    * @brief Destructor, empty.
@@ -88,7 +90,7 @@ public:
   /**
    * @brief Returns all IQN involved data IDs.
    */
-  virtual std::vector<int> getPrimaryDataIDs() const
+  virtual std::vector<int> getPrimaryDataIDs() const override final
   {
     return _primaryDataIDs;
   }
@@ -103,7 +105,7 @@ public:
    *
    * Has to be called after every implicit coupling iteration.
    */
-  virtual void performAcceleration(DataMap &cplData) override final;
+  virtual void performAcceleration(DataMap &cplData, double windowStart) override final;
 
   /**
    * @brief Marks a iteration sequence as converged.
@@ -111,7 +113,7 @@ public:
    * Since convergence measurements are done outside the acceleration, this
    * method has to be used to signalize convergence to the acceleration.
    */
-  virtual void iterationsConverged(const DataMap &cplData) override final;
+  virtual void iterationsConverged(const DataMap &cplData, double windowStart) override final;
 
   /**
    * @brief Exports the current state of the acceleration to a file.
@@ -195,13 +197,16 @@ protected:
   Eigen::VectorXd _primaryResiduals;
 
   /// @brief Current iteration residuals of IQN data. Temporary.
-  Eigen::VectorXd _residuals;
+  Eigen::VectorXd _residuals; // @todo is this member still needed? Potential refactoring.
 
   /// @brief Stores residual deltas.
   Eigen::MatrixXd _matrixV;
 
   /// @brief Stores x tilde deltas, where x tilde are values computed by solvers.
   Eigen::MatrixXd _matrixW;
+
+  /// @brief  if _reducedTimeGrid = false uses the full QN-WI and if _reducedTimeGrid = true uses rQN-WI form the paper https://onlinelibrary.wiley.com/doi/10.1002/nme.6443
+  const bool _reducedTimeGrid;
 
   /// @brief Stores the current QR decomposition ov _matrixV, can be updated via deletion/insertion of columns
   impl::QRFactorization _qrV;
@@ -255,8 +260,8 @@ protected:
   /// Updates the V, W matrices (as well as the matrices for the secondary data)
   virtual void updateDifferenceMatrices(const DataMap &cplData);
 
-  /// Splits up QN system vector back into the coupling data
-  virtual void splitCouplingData(const DataMap &cplData);
+  /// Splits up QN system vector back into the waveforms in coupling data
+  virtual void updateCouplingData(const DataMap &cplData, double windowStart);
 
   /// Applies the filter method for the least-squares system, defined in the configuration
   virtual void applyFilter();
@@ -270,15 +275,12 @@ protected:
   /// Writes info to the _infostream (also in parallel)
   void writeInfo(const std::string &s, bool allProcs = false);
 
-  /// @copydoc acceleration::Acceleration::concatenateCouplingData
-  void concatenateCouplingData(
-      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const override final;
-
   int its = 0, tWindows = 0;
 
 private:
   /// @brief Initializes the vectors, matrices and preconditioner
-  void initializeVectorsAndPreconditioner(const DataMap &cplData);
+  /// This has to be done after the first iteration of the first time window, since everything in the QN-algorithm is sampled to the timegrid of the first waveform
+  void initializeVectorsAndPreconditioner(const DataMap &cplData, double windowStart);
 
   /**
    * @brief handles the initialization of matrices and vectors in the sub-classes
@@ -286,6 +288,16 @@ private:
    * called by the initializeVectorsAndPreconditioner method in the BaseQNAcceleration class
    */
   virtual void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) = 0;
+
+  /// @brief Samples and concatenates the data and old data in cplData into a long vector
+  void concatenateCouplingData(Eigen::VectorXd &data, Eigen::VectorXd &oldData, const DataMap &cplData, std::vector<int> dataIDs, precice::time::TimeGrids timeGrids, double windowStart) const;
+
+  /// @brief Stores the time grids to which the primary and secondary data involved in the QN system will be interpolated to.
+  std::optional<time::TimeGrids> _timeGrids;
+
+  /// @brief Stores the time grids to which the primary data involved in the QN system will be interpolated to.
+  /// If _reducedTimeGrids is true then this will only contain the last time stamp of the time window, see https://doi.org/10.1002/nme.6443
+  std::optional<time::TimeGrids> _primaryTimeGrids;
 
   /// @brief Concatenation of all primary data involved in the QN system.
   Eigen::VectorXd _primaryValues;

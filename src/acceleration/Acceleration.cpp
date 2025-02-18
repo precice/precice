@@ -14,7 +14,7 @@ void Acceleration::checkDataIDs(const DataMap &cplData) const
 #endif
 }
 
-void Acceleration::applyRelaxation(double omega, DataMap &cplData)
+void Acceleration::applyRelaxation(double omega, DataMap &cplData, double windowStart)
 {
   for (auto &pair : cplData) {
     auto &couplingData = *(pair.second);
@@ -26,6 +26,11 @@ void Acceleration::applyRelaxation(double omega, DataMap &cplData)
     // calling performAcceleration the first time. Computations at the
     // previousValuesAtTime/oldValues don't change anything and are unneeded
     for (auto &stample : couplingData.timeStepsStorage().stamples()) {
+      if (!math::greater(stample.timestamp, windowStart)) {
+        // skip stamples at beginning of this window or earlier since this is either initial data or already converged data from previous windows
+        continue;
+      }
+
       auto &values    = stample.sample.values;
       auto  oldValues = couplingData.getPreviousValuesAtTime(stample.timestamp); // IMPORTANT DETAIL: The interpolation that we use for resampling does not necessarily have to be the same interpolation as the interpolation the user accesses via read-data. (But probably it is easier to just use the same)
       values          = values * omega + oldValues * (1.0 - omega);
@@ -36,7 +41,6 @@ void Acceleration::applyRelaxation(double omega, DataMap &cplData)
         gradients          = gradients * omega + oldGradients * (1.0 - omega);
       }
     }
-
     // @todo remove
     // update the "sample"
     couplingData.sample() = couplingData.timeStepsStorage().last().sample;

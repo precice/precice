@@ -13,9 +13,10 @@ BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Whitebox)
 /// Test reading of a full features coupling configuration file.
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TestConfigurationComsol)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   // Test configuration for accessor "Comsol"
   Participant interfaceComsol("Comsol", context.config(), 0, 1);
   BOOST_TEST(testing::WhiteboxAccessor::impl(interfaceComsol)._participants.size() == 2);

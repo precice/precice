@@ -9,9 +9,10 @@ using namespace precice::testing;
 BOOST_AUTO_TEST_SUITE(MathTests)
 BOOST_AUTO_TEST_SUITE(BSpline)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TwoPointsLinear)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Eigen::Vector2d ts;
   ts << 1, 2;
   Eigen::MatrixXd xs(3, 2);
@@ -30,9 +31,10 @@ BOOST_AUTO_TEST_CASE(TwoPointsLinear)
   BOOST_TEST(equals(bspline.interpolateAt(1.75), Eigen::Vector3d(1.75, 17.5, 175)));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TwoPointsLinearRoundoff)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Eigen::Vector2d ts;
   ts << 1e-6, 2e-6;
 
@@ -52,9 +54,10 @@ BOOST_AUTO_TEST_CASE(TwoPointsLinearRoundoff)
   BOOST_TEST(equals(bspline.interpolateAt(teval[1]), Eigen::Vector3d(2, 20, 200)));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ThreePointsLinear)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Eigen::Vector3d ts;
   ts << 0, 1, 2;
   Eigen::MatrixXd xs(3, 3);
@@ -70,8 +73,10 @@ BOOST_AUTO_TEST_CASE(ThreePointsLinear)
   BOOST_TEST(equals(bspline.interpolateAt(1.5), Eigen::Vector3d(2.5, 25, 250)));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ThreePointsLinearNonEquidistant)
 {
+  PRECICE_TEST();
   Eigen::Vector3d ts;
   ts << 0, 1, 3;
   Eigen::MatrixXd xs(3, 3);
@@ -87,9 +92,10 @@ BOOST_AUTO_TEST_CASE(ThreePointsLinearNonEquidistant)
   BOOST_TEST(equals(bspline.interpolateAt(2.0), Eigen::Vector3d(2.5, 25, 250), 1e-13));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ThreePointsQuadratic)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Eigen::Vector3d ts;
   ts << 0, 1, 2;
   Eigen::MatrixXd xs(3, 3);
@@ -105,9 +111,10 @@ BOOST_AUTO_TEST_CASE(ThreePointsQuadratic)
   BOOST_TEST(equals(bspline.interpolateAt(1.5), Eigen::Vector3d(2.5, 25, 250)));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ThreePointsQuadraticNonEquidistant)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Eigen::Vector3d ts;
   ts << 0, 1, 3;
   Eigen::MatrixXd xs(3, 3);
@@ -123,9 +130,10 @@ BOOST_AUTO_TEST_CASE(ThreePointsQuadraticNonEquidistant)
   BOOST_TEST(equals(bspline.interpolateAt(2.0), Eigen::Vector3d(8.0 / 3, 80.0 / 3, 800.0 / 3), 1e-13));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(FloatingPointAccuracy) // see https://github.com/precice/precice/issues/1981
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Eigen::Vector2d ts;
   ts << 256.1, 256.2;
   Eigen::MatrixXd xs(3, 2);

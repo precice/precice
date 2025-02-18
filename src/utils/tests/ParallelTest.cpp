@@ -16,9 +16,10 @@ BOOST_AUTO_TEST_SUITE(Parallel)
 
 #ifndef PRECICE_NO_MPI
 
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(Primary1SecondaryTest)
 {
-  PRECICE_TEST(""_on(2_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   BOOST_TEST(context.hasSize(2));
   auto &com = precice::utils::IntraComm::getCommunication();
@@ -42,9 +43,10 @@ BOOST_AUTO_TEST_CASE(Primary1SecondaryTest)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(3_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(Primary2SecondaryTest)
 {
-  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   BOOST_TEST(context.hasSize(3));
   auto &com = precice::utils::IntraComm::getCommunication();
@@ -75,9 +77,10 @@ BOOST_AUTO_TEST_CASE(Primary2SecondaryTest)
   }
 }
 
+PRECICE_TEST_SETUP("Offset"_on(1_rank), "Test"_on(2_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(OffsetPrimary1SecondaryTest)
 {
-  PRECICE_TEST("Offset"_on(1_rank), "Test"_on(2_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   if (context.isNamed("Offset"))
     return;
@@ -104,9 +107,10 @@ BOOST_AUTO_TEST_CASE(OffsetPrimary1SecondaryTest)
   }
 }
 
+PRECICE_TEST_SETUP("Offset"_on(1_rank), "Test"_on(3_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(OffsetPrimary2SecondaryTest)
 {
-  PRECICE_TEST("Offset"_on(1_rank), "Test"_on(3_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   if (context.isNamed("Offset"))
     return;

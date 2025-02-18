@@ -54,7 +54,8 @@ public:
       int                            imvjRestartType,
       int                            chunkSize,
       int                            RSLSreusedTimeWindows,
-      double                         RSSVDtruncationEps);
+      double                         RSSVDtruncationEps,
+      bool                           reducedTimeGrid);
 
   /**
    * @brief Destructor, empty.

@@ -11,9 +11,10 @@ using precice::testing::TestContext;
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(GeometricMultiscale)
+PRECICE_TEST_SETUP("Fluid1D"_on(1_rank), "Fluid3D"_on(1_rank))
 BOOST_AUTO_TEST_CASE(AxialGeoMultiscale)
 {
-  PRECICE_TEST("Fluid1D"_on(1_rank), "Fluid3D"_on(1_rank))
+  PRECICE_TEST();
 
   /*  In this test case, Fluid1D is the 1D code (despite having 3D vertices, due to current shortcomings)
       and we're testing the AxialGeoMultiscaleMapping feature with a parabolic inlet profile at the (downstream) 3D inlet.

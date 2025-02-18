@@ -66,6 +66,7 @@ option(PRECICE_BINDINGS_FORTRAN "Enable the native Fortran bindings" ON)
 option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
 option(PRECICE_BUILD_UNITY "Use unity builds in preCICE" ON)
 option(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES "Enable libbacktrace for stacktrace generation." OFF)
+option(PRECICE_BUILD_BENCHMARKS "Build the preCICE-internal benchmarks" OFF)
 
 option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization for all targets." OFF)
 
@@ -223,7 +224,9 @@ if (PRECICE_FEATURE_MPI_COMMUNICATION)
   set(MPI_DETERMINE_LIBRARY_VERSION ON) # Try to detect the library vendor
 
   find_package(MPI REQUIRED)
-  message(STATUS "MPI Version: ${MPI_CXX_LIBRARY_VERSION_STRING}")
+
+  string(REGEX MATCH "^[^\n]*" PRECICE_MPI_VERSION "${MPI_CXX_LIBRARY_VERSION_STRING}")
+  message(STATUS "MPI Version: ${PRECICE_MPI_VERSION}")
 endif()
 
 # Option: PETSC
@@ -292,6 +295,7 @@ endif()
     endif()
 
     find_package(hipsolver REQUIRED)
+    find_package(hipblas REQUIRED)
   endif()
 
   if(PRECICE_WITH_OPENMP)
@@ -438,7 +442,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     # Required to make nvcc happy
     target_compile_definitions(preciceCore PRIVATE BOOST_PP_VARIADICS=1)
     target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cuh ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cu)
-    target_link_libraries(preciceCore PRIVATE cusolver)
+    target_link_libraries(preciceCore PRIVATE cusolver cublas)
     message(STATUS "Enabled CUDA support for preCICE via the Ginkgo library.")
   endif()
 
@@ -446,7 +450,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_HIP)
     set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.cpp)
     target_sources(preciceCore PRIVATE ${_hiplist})
-    target_link_libraries(preciceCore PRIVATE hip::device Ginkgo::ginkgo roc::hipsolver)
+    target_link_libraries(preciceCore PRIVATE hip::device Ginkgo::ginkgo roc::hipsolver roc::hipblas)
 
     message(STATUS "Enabled HIP support for preCICE via the Ginkgo library.")
   endif()
@@ -617,6 +621,32 @@ if (PRECICE_BINDINGS_FORTRAN)
   # include((${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran/CMakeLists.txt)
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran)
 endif()
+
+# Build benchmarks if enabled
+if(PRECICE_BUILD_BENCHMARKS)
+  find_package(benchmark REQUIRED)
+
+  add_executable(precice-bench)
+  include(${CMAKE_CURRENT_LIST_DIR}/benchmarks/sources.cmake)
+
+  target_link_libraries(precice-bench
+    PRIVATE
+    preciceCore
+    benchmark::benchmark
+    )
+  set_target_properties(precice-bench PROPERTIES
+    # precice is a C++17 project
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED Yes
+    CXX_EXTENSIONS No
+    )
+  target_include_directories(precice-bench PRIVATE
+    ${preCICE_SOURCE_DIR}/src
+    ${preCICE_SOURCE_DIR}/benchmark
+    )
+endif()
+
+
 #
 # Install Targets for precice
 #

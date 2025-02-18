@@ -237,16 +237,27 @@ void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveDat
 
 PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool communicateSubsteps, CouplingData::Direction direction)
 {
-  int             id = data->getID();
-  PtrCouplingData ptrCplData;
-  if (!utils::contained(id, _allData)) { // data is not used by this coupling scheme yet, create new CouplingData
-    ptrCplData = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps, direction);
-    _allData.emplace(id, ptrCplData);
-  } else { // data is already used by another exchange of this coupling scheme, use existing CouplingData
-    ptrCplData = _allData[id];
-    PRECICE_CHECK(ptrCplData->getDirection() == direction, "Data \"{0}\" cannot be added for sending and for receiving. Please remove either <exchange data=\"{0}\" ... /> tag", data->getName());
+  const DataID id = data->getID();
+
+  // new data
+  if (_allData.count(id) == 0) {
+    auto ptr = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps, direction);
+    _allData.emplace(id, ptr);
+    return ptr;
   }
-  return ptrCplData;
+
+  // data is already used by another exchange of this coupling scheme, use existing CouplingData
+  auto &existing = _allData[id];
+  PRECICE_CHECK(existing->getDirection() == direction,
+                "Data \"{0}\" cannot be added for sending and for receiving. Please remove either <exchange data=\"{0}\" ... /> tag", data->getName());
+  PRECICE_CHECK(direction == CouplingData::Direction::Send,
+                "Data \"{0}\" cannot be received from multiple sources. Please remove either <exchange data=\"{0}\" ... /> tag", data->getName());
+  PRECICE_CHECK(existing->exchangeSubsteps() == communicateSubsteps,
+                "Data \"{0}\" is configured with substeps enabled and disabled at the same time. Please make the configuration consistent in the <exchange data=\"{0}\" ... substeps=\"True/False\" ... /> tags", data->getName());
+  PRECICE_CHECK(existing->requiresInitialization == requiresInitialization,
+                "Data \"{0}\" is configured with data initialization enabled and disabled at the same time. Please make the configuration consistent in the <exchange data=\"{0}\" ... /> tags", data->getName());
+
+  return existing;
 }
 
 bool BaseCouplingScheme::isExplicitCouplingScheme() const
@@ -391,7 +402,7 @@ void BaseCouplingScheme::secondExchange()
           requireAction(CouplingScheme::Action::WriteCheckpoint);
         }
       }
-      //update iterations
+      // update iterations
       _totalIterations++;
       if (not hasConverged()) {
         _iterations++;
@@ -568,14 +579,21 @@ void BaseCouplingScheme::requireAction(
 std::string BaseCouplingScheme::printCouplingState() const
 {
   std::ostringstream os;
-  os << "iteration: " << _iterations; //_iterations;
-  if ((_maxIterations != UNDEFINED_MAX_ITERATIONS) && (_maxIterations != INFINITE_MAX_ITERATIONS)) {
-    os << " of " << _maxIterations;
+  if (isCouplingOngoing()) {
+    os << "iteration: " << _iterations; //_iterations;
+    if ((_maxIterations != UNDEFINED_MAX_ITERATIONS) && (_maxIterations != INFINITE_MAX_ITERATIONS)) {
+      os << " of " << _maxIterations;
+    }
+    if (_minIterations != UNDEFINED_MIN_ITERATIONS) {
+      os << " (min " << _minIterations << ")";
+    }
+    os << ", ";
   }
-  if (_minIterations != UNDEFINED_MIN_ITERATIONS) {
-    os << " (min " << _minIterations << ")";
+  os << printBasicState(_timeWindows, getTime());
+  std::string actionsState = printActionsState();
+  if (!actionsState.empty()) {
+    os << ", " << actionsState;
   }
-  os << ", " << printBasicState(_timeWindows, getTime()) << ", " << printActionsState();
   return os.str();
 }
 
@@ -584,24 +602,28 @@ std::string BaseCouplingScheme::printBasicState(
     double time) const
 {
   std::ostringstream os;
-  os << "time-window: " << timeWindows;
-  if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
-    os << " of " << _maxTimeWindows;
+  if (isCouplingOngoing()) {
+    os << "time-window: " << timeWindows;
+    if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
+      os << " of " << _maxTimeWindows;
+    }
+    os << ", time: " << time;
+    if (_maxTime != UNDEFINED_MAX_TIME) {
+      os << " of " << _maxTime;
+    }
+    if (hasTimeWindowSize()) {
+      os << ", time-window-size: " << _timeWindowSize;
+    }
+    if (hasTimeWindowSize() || (_maxTime != UNDEFINED_MAX_TIME)) {
+      os << ", max-time-step-size: " << getNextTimeStepMaxSize();
+    }
+    os << ", ongoing: ";
+    isCouplingOngoing() ? os << "yes" : os << "no";
+    os << ", time-window-complete: ";
+    _isTimeWindowComplete ? os << "yes" : os << "no";
+  } else {
+    os << "Reached end at: final time-window: " << (timeWindows - 1) << ", final time: " << time;
   }
-  os << ", time: " << time;
-  if (_maxTime != UNDEFINED_MAX_TIME) {
-    os << " of " << _maxTime;
-  }
-  if (hasTimeWindowSize()) {
-    os << ", time-window-size: " << _timeWindowSize;
-  }
-  if (hasTimeWindowSize() || (_maxTime != UNDEFINED_MAX_TIME)) {
-    os << ", max-time-step-size: " << getNextTimeStepMaxSize();
-  }
-  os << ", ongoing: ";
-  isCouplingOngoing() ? os << "yes" : os << "no";
-  os << ", time-window-complete: ";
-  _isTimeWindowComplete ? os << "yes" : os << "no";
   return os.str();
 }
 
@@ -871,7 +893,7 @@ void BaseCouplingScheme::doImplicitStep()
   if (_hasConverged) {
     if (_acceleration) {
       profiling::Event e("accelerate", profiling::Fundamental);
-      _acceleration->iterationsConverged(getAccelerationData());
+      _acceleration->iterationsConverged(getAccelerationData(), getTimeWindowStart());
     }
     newConvergenceMeasurements();
   } else {
@@ -888,7 +910,7 @@ void BaseCouplingScheme::doImplicitStep()
         data->sample() = stamples.back().sample;
       }
 
-      _acceleration->performAcceleration(getAccelerationData());
+      _acceleration->performAcceleration(getAccelerationData(), getTimeWindowStart());
 
       // Store from buffer
       // @todo Currently only data at end of window is accelerated. Remaining data in storage stays as it is.

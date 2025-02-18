@@ -8,9 +8,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(MappingVolume)
+PRECICE_TEST_SETUP("SolverOne"_on(2_ranks), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
 {
-  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   using precice::VertexID;
   using precice::testing::equals;
