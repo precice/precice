@@ -210,7 +210,8 @@ void BaseQNAcceleration::updateDifferenceMatrices(
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::performAcceleration(
-    DataMap &cplData)
+    DataMap &cplData,
+    double   windowStart)
 {
   PRECICE_TRACE(_primaryDataIDs.size(), cplData.size());
 
@@ -218,7 +219,7 @@ void BaseQNAcceleration::performAcceleration(
 
   // We can only initialize here since we need to know the time grid already.
   if (_firstTimeWindow and _firstIteration) {
-    initializeVectorsAndPreconditioner(cplData);
+    initializeVectorsAndPreconditioner(cplData, windowStart);
   }
 
   PRECICE_ASSERT(_oldPrimaryResiduals.size() == _oldPrimaryXTilde.size(), _oldPrimaryResiduals.size(), _oldPrimaryXTilde.size());
@@ -234,8 +235,8 @@ void BaseQNAcceleration::performAcceleration(
 
   /// Sample all the data to the corresponding time grid in _timeGrids and concatenate everything into a long vector
   /// timeGrids are stored using std::opional, thus the .value() to get the actual object
-  concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value());
-  concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value());
+  concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value(), windowStart);
+  concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value(), windowStart);
 
   /** update the difference matrices V,W  includes:
    * scaling of values
@@ -250,111 +251,109 @@ void BaseQNAcceleration::performAcceleration(
     _oldXTilde           = _values;           // Store x tilde of primary and secondary data
     _oldPrimaryResiduals = _primaryResiduals; // Store current residual of primary data
 
-    // Perform constant relaxation
-    // with residual: x_new = x_old + omega * res
-    _residuals *= _initialRelaxation;
-    _residuals += _oldValues;
-    _values = _residuals;
-
-  } else {
-    PRECICE_DEBUG("   Performing quasi-Newton Step");
-
-    // If the previous time window converged within one single iteration, nothing was added
-    // to the LS system matrices and they need to be restored from the backup at time T-2
-    if (not _firstTimeWindow && (getLSSystemCols() < 1) && (_timeWindowsReused == 0) && not _forceInitialRelaxation) {
-      PRECICE_DEBUG("   Last time window converged after one iteration. Need to restore the matrices from backup.");
-
-      _matrixCols = _matrixColsBackup;
-      _matrixV    = _matrixVBackup;
-      _matrixW    = _matrixWBackup;
-
-      // re-computation of QR decomposition from _matrixV = _matrixVBackup
-      // this occurs very rarely, to be precise, it occurs only if the coupling terminates
-      // after the first iteration and the matrix data from time window t-2 has to be used
-      _preconditioner->apply(_matrixV);
-      _qrV.reset(_matrixV, getLSSystemRows());
-      _preconditioner->revert(_matrixV);
-      _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
-    }
-
-    /**
-     *  === update and apply preconditioner ===
-     *
-     * The preconditioner is only applied to the matrix V and the columns that are inserted into the
-     * QR-decomposition of V.
-     */
-    _preconditioner->update(false, _primaryValues, _primaryResiduals);
-
-    // apply scaling to V, V' := P * V (only needed to reset the QR-dec of V)
-    _preconditioner->apply(_matrixV);
-
-    if (_preconditioner->requireNewQR()) {
-      if (not(_filter == Acceleration::QR2FILTER)) { // for QR2 filter, there is no need to do this twice
-        _qrV.reset(_matrixV, getLSSystemRows());
-      }
-      _preconditioner->newQRfulfilled();
-    }
-
-    if (_firstIteration) {
-      _nbDelCols  = 0;
-      _nbDropCols = 0;
-    }
-
-    // apply the configured filter to the LS system
-    profiling::Event applyingFilter("ApplyFilter");
-    applyFilter();
-    applyingFilter.stop();
-
-    // revert scaling of V, in computeQNUpdate all data objects are unscaled.
-    _preconditioner->revert(_matrixV);
-
-    /**
-     * compute quasi-Newton update
-     * PRECONDITION: All objects are unscaled, except the matrices within the QR-dec of V.
-     *               Thus, the pseudo inverse needs to be reverted before using it.
-     */
-    Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_values.size());
-    computeQNUpdate(xUpdate);
-
-    // Apply the quasi-Newton update
-    _values += xUpdate;
-
-    // pending deletion: delete old V, W matrices if timeWindowsReused = 0
-    // those were only needed for the first iteration (instead of underrelax.)
-    if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
-      // save current matrix data in case the coupling for the next time window will terminate
-      // after the first iteration (no new data, i.e., V = W = 0)
-      if (getLSSystemCols() > 0) {
-        _matrixColsBackup = _matrixCols;
-        _matrixVBackup    = _matrixV;
-        _matrixWBackup    = _matrixW;
-      }
-      // if no time windows reused, the matrix data needs to be cleared as it was only needed for the
-      // QN-step in the first iteration (idea: rather perform QN-step with information from last converged
-      // time window instead of doing a underrelaxation)
-      if (not _firstTimeWindow) {
-        _matrixV.resize(0, 0);
-        _matrixW.resize(0, 0);
-        _matrixCols.clear();
-        _matrixCols.push_front(0); // vital after clear()
-        _qrV.reset();
-        // set the number of global rows in the QRFactorization.
-        _qrV.setGlobalRows(getPrimaryLSSystemRows());
-        _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
-      }
-    }
-
-    PRECICE_CHECK(
-        !std::isnan(utils::IntraComm::l2norm(xUpdate)),
-        "The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
-        "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
-        "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
-        "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "
-        "filter or increase its threshold (larger epsilon).");
+    applyRelaxation(_initialRelaxation, cplData, windowStart);
+    its++;
+    _firstIteration = false;
+    return;
   }
 
+  PRECICE_DEBUG("   Performing quasi-Newton Step");
+
+  // If the previous time window converged within one single iteration, nothing was added
+  // to the LS system matrices and they need to be restored from the backup at time T-2
+  if (not _firstTimeWindow && (getLSSystemCols() < 1) && (_timeWindowsReused == 0) && not _forceInitialRelaxation) {
+    PRECICE_DEBUG("   Last time window converged after one iteration. Need to restore the matrices from backup.");
+
+    _matrixCols = _matrixColsBackup;
+    _matrixV    = _matrixVBackup;
+    _matrixW    = _matrixWBackup;
+
+    // re-computation of QR decomposition from _matrixV = _matrixVBackup
+    // this occurs very rarely, to be precise, it occurs only if the coupling terminates
+    // after the first iteration and the matrix data from time window t-2 has to be used
+    _preconditioner->apply(_matrixV);
+    _qrV.reset(_matrixV, getLSSystemRows());
+    _preconditioner->revert(_matrixV);
+    _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
+  }
+
+  /**
+   *  === update and apply preconditioner ===
+   *
+   * The preconditioner is only applied to the matrix V and the columns that are inserted into the
+   * QR-decomposition of V.
+   */
+  _preconditioner->update(false, _primaryValues, _primaryResiduals);
+
+  // apply scaling to V, V' := P * V (only needed to reset the QR-dec of V)
+  _preconditioner->apply(_matrixV);
+
+  if (_preconditioner->requireNewQR()) {
+    if (not(_filter == Acceleration::QR2FILTER)) { // for QR2 filter, there is no need to do this twice
+      _qrV.reset(_matrixV, getLSSystemRows());
+    }
+    _preconditioner->newQRfulfilled();
+  }
+
+  if (_firstIteration) {
+    _nbDelCols  = 0;
+    _nbDropCols = 0;
+  }
+
+  // apply the configured filter to the LS system
+  profiling::Event applyingFilter("ApplyFilter");
+  applyFilter();
+  applyingFilter.stop();
+
+  // revert scaling of V, in computeQNUpdate all data objects are unscaled.
+  _preconditioner->revert(_matrixV);
+
+  /**
+   * compute quasi-Newton update
+   * PRECONDITION: All objects are unscaled, except the matrices within the QR-dec of V.
+   *               Thus, the pseudo inverse needs to be reverted before using it.
+   */
+  Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_values.size());
+  computeQNUpdate(xUpdate);
+
+  // Apply the quasi-Newton update
+  _values += xUpdate;
+
+  // pending deletion: delete old V, W matrices if timeWindowsReused = 0
+  // those were only needed for the first iteration (instead of underrelax.)
+  if (_firstIteration && _timeWindowsReused == 0 && not _forceInitialRelaxation) {
+    // save current matrix data in case the coupling for the next time window will terminate
+    // after the first iteration (no new data, i.e., V = W = 0)
+    if (getLSSystemCols() > 0) {
+      _matrixColsBackup = _matrixCols;
+      _matrixVBackup    = _matrixV;
+      _matrixWBackup    = _matrixW;
+    }
+    // if no time windows reused, the matrix data needs to be cleared as it was only needed for the
+    // QN-step in the first iteration (idea: rather perform QN-step with information from last converged
+    // time window instead of doing a underrelaxation)
+    if (not _firstTimeWindow) {
+      _matrixV.resize(0, 0);
+      _matrixW.resize(0, 0);
+      _matrixCols.clear();
+      _matrixCols.push_front(0); // vital after clear()
+      _qrV.reset();
+      // set the number of global rows in the QRFactorization.
+      _qrV.setGlobalRows(getPrimaryLSSystemRows());
+      _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
+    }
+  }
+
+  PRECICE_CHECK(
+      !std::isnan(utils::IntraComm::l2norm(xUpdate)),
+      "The quasi-Newton update contains NaN values. This means that the quasi-Newton acceleration failed to converge. "
+      "When writing your own adapter this could indicate that you give wrong information to preCICE, such as identical "
+      "data in succeeding iterations. Or you do not properly save and reload checkpoints. "
+      "If you give the correct data this could also mean that the coupled problem is too hard to solve. Try to use a QR "
+      "filter or increase its threshold (larger epsilon).");
+
   // updates the waveform and values in coupling data by splitting the primary and secondary data back into the individual data objects
-  updateCouplingData(cplData);
+  updateCouplingData(cplData, windowStart);
 
   // number of iterations (usually equals number of columns in LS-system)
   its++;
@@ -384,7 +383,7 @@ void BaseQNAcceleration::applyFilter()
 }
 
 void BaseQNAcceleration::updateCouplingData(
-    const DataMap &cplData)
+    const DataMap &cplData, double windowStart)
 {
 
   PRECICE_TRACE();
@@ -396,8 +395,8 @@ void BaseQNAcceleration::updateCouplingData(
     auto & couplingData = *cplData.at(id);
     size_t dataSize     = couplingData.getSize();
 
-    Eigen::VectorXd timeGrid = _timeGrids->getTimeGrid(id);
-    couplingData.timeStepsStorage().clear();
+    Eigen::VectorXd timeGrid = _timeGrids->getTimeGridAfter(id, windowStart);
+    couplingData.timeStepsStorage().trimAfter(windowStart);
     for (int i = 0; i < timeGrid.size(); i++) {
 
       Eigen::VectorXd temp = Eigen::VectorXd::Zero(dataSize);
@@ -421,7 +420,7 @@ void BaseQNAcceleration::updateCouplingData(
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::iterationsConverged(
-    const DataMap &cplData)
+    const DataMap &cplData, double windowStart)
 {
   PRECICE_TRACE();
 
@@ -438,7 +437,7 @@ void BaseQNAcceleration::iterationsConverged(
 
   // If, in the first time window, we converge already in the first iteration, we have not yet initialized. Then, we need to do it here.
   if (_firstTimeWindow and _firstIteration) {
-    initializeVectorsAndPreconditioner(cplData);
+    initializeVectorsAndPreconditioner(cplData, windowStart);
   }
 
   // Needs to be called in the first iteration of each time window.
@@ -448,8 +447,8 @@ void BaseQNAcceleration::iterationsConverged(
   }
   /// Sample all the data to the corresponding time grid in _timeGrids and concatenate everything into a long vector
   /// timeGrids are stored using std::opional, thus the .value() to get the actual object
-  concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value());
-  concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value());
+  concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value(), windowStart);
+  concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value(), windowStart);
   updateDifferenceMatrices(cplData);
 
   if (not _matrixCols.empty() && _matrixCols.front() == 0) { // Did only one iteration
@@ -631,12 +630,12 @@ void BaseQNAcceleration::writeInfo(
   _infostringstream << std::flush;
 }
 
-void BaseQNAcceleration::concatenateCouplingData(Eigen::VectorXd &data, Eigen::VectorXd &oldData, const DataMap &cplData, std::vector<int> dataIDs, precice::time::TimeGrids timeGrids) const
+void BaseQNAcceleration::concatenateCouplingData(Eigen::VectorXd &data, Eigen::VectorXd &oldData, const DataMap &cplData, std::vector<int> dataIDs, precice::time::TimeGrids timeGrids, double windowStart) const
 {
   Eigen::Index offset = 0;
   for (int id : dataIDs) {
     Eigen::Index    dataSize = cplData.at(id)->getSize();
-    Eigen::VectorXd timeGrid = timeGrids.getTimeGrid(id);
+    Eigen::VectorXd timeGrid = timeGrids.getTimeGridAfter(id, windowStart);
 
     for (int i = 0; i < timeGrid.size(); i++) {
 
@@ -655,7 +654,7 @@ void BaseQNAcceleration::concatenateCouplingData(Eigen::VectorXd &data, Eigen::V
   }
 }
 
-void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplData)
+void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplData, double windowStart)
 {
 
   // If we are not subcycling then we only want to use the last time step in the QN system
@@ -671,7 +670,7 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
   _primaryTimeGrids.emplace(cplData, _primaryDataIDs, !(subcycling and !_reducedTimeGrid));
 
   // Helper function
-  auto addTimeSliceSize = [&](size_t sum, int id, precice::time::TimeGrids timeGrids) { return sum + timeGrids.getTimeGrid(id).size() * cplData.at(id)->getSize(); };
+  auto addTimeSliceSize = [&](size_t sum, int id, precice::time::TimeGrids timeGrids) { return sum + timeGrids.getTimeGridAfter(id, windowStart).size() * cplData.at(id)->getSize(); };
 
   // Size of primary data
   const size_t primaryDataSize = std::accumulate(_primaryDataIDs.begin(), _primaryDataIDs.end(), (size_t) 0, [&](size_t sum, int id) { return addTimeSliceSize(sum, id, _primaryTimeGrids.value()); });
@@ -722,10 +721,10 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
       for (auto &elem : _dataIDs) {
         const auto &offsets = cplData.at(elem)->getVertexOffsets();
 
-        accumulatedNumberOfUnknowns += offsets[i] * cplData.at(elem)->getDimensions() * _timeGrids.value().getTimeGrid(elem).size();
+        accumulatedNumberOfUnknowns += offsets[i] * cplData.at(elem)->getDimensions() * _timeGrids.value().getTimeGridAfter(elem, windowStart).size();
 
         if (utils::contained(elem, _primaryDataIDs)) {
-          accumulatedNumberOfPrimaryUnknowns += offsets[i] * cplData.at(elem)->getDimensions() * _primaryTimeGrids.value().getTimeGrid(elem).size();
+          accumulatedNumberOfPrimaryUnknowns += offsets[i] * cplData.at(elem)->getDimensions() * _primaryTimeGrids.value().getTimeGridAfter(elem, windowStart).size();
         }
       }
       _dimOffsets[i + 1]        = accumulatedNumberOfUnknowns;
@@ -751,7 +750,7 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
   _qrV.setGlobalRows(getPrimaryLSSystemRows());
 
   std::vector<size_t> subVectorSizes; // needed for preconditioner
-  std::transform(_primaryDataIDs.cbegin(), _primaryDataIDs.cend(), std::back_inserter(subVectorSizes), [&cplData, this](const auto &d) { return _primaryTimeGrids.value().getTimeGrid(d).size() * cplData.at(d)->getSize(); });
+  std::transform(_primaryDataIDs.cbegin(), _primaryDataIDs.cend(), std::back_inserter(subVectorSizes), [&cplData, windowStart, this](const auto &d) { return _primaryTimeGrids.value().getTimeGridAfter(d, windowStart).size() * cplData.at(d)->getSize(); });
   _preconditioner->initialize(subVectorSizes);
 
   specializedInitializeVectorsAndPreconditioner(cplData);
