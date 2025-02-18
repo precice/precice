@@ -405,8 +405,7 @@ void BaseQNAcceleration::updateCouplingData(
       }
       offset += dataSize;
 
-      couplingData.sample().values = temp;
-      couplingData.setSampleAtTime(timeGrid(i), couplingData.sample());
+      couplingData.setSampleAtTime(timeGrid(i), time::Sample(couplingData.getDimensions(), temp));
     }
   }
 }

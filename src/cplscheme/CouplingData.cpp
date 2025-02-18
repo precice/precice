@@ -39,24 +39,20 @@ int CouplingData::getSize() const
   return sample().values.size();
 }
 
-Eigen::VectorXd &CouplingData::values()
-{
-  return sample().values;
-}
-
 const Eigen::VectorXd &CouplingData::values() const
 {
   return sample().values;
 }
 
-Eigen::MatrixXd &CouplingData::gradients()
+const Eigen::MatrixXd &CouplingData::gradients() const
 {
   return sample().gradients;
 }
 
-const Eigen::MatrixXd &CouplingData::gradients() const
+const time::Sample &CouplingData::sample() const
 {
-  return sample().gradients;
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->timeStepsStorage().last().sample;
 }
 
 time::Storage &CouplingData::timeStepsStorage()
@@ -84,7 +80,6 @@ Eigen::MatrixXd CouplingData::getPreviousGradientsAtTime(double relativeDt)
 void CouplingData::setSampleAtTime(double time, time::Sample sample)
 {
   PRECICE_ASSERT(not sample.values.hasNaN());
-  this->sample() = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _data->setSampleAtTime(time, sample);
 }
 
@@ -118,7 +113,6 @@ void CouplingData::storeIteration()
 {
   const auto &stamples = this->stamples();
   PRECICE_ASSERT(stamples.size() > 0);
-  this->sample()            = stamples.back().sample;
   _previousTimeStepsStorage = _data->timeStepsStorage();
 }
 
@@ -178,18 +172,6 @@ void CouplingData::moveToNextWindow()
   }
   _data->moveToNextWindow();
   _previousTimeStepsStorage = _data->timeStepsStorage();
-}
-
-time::Sample &CouplingData::sample()
-{
-  PRECICE_ASSERT(_data != nullptr);
-  return _data->sample();
-}
-
-const time::Sample &CouplingData::sample() const
-{
-  PRECICE_ASSERT(_data != nullptr);
-  return _data->sample();
 }
 
 bool CouplingData::exchangeSubsteps() const

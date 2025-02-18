@@ -143,8 +143,6 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
         m2n->send(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * serialized.nTimeSteps());
       }
     } else {
-      data->sample() = stamples.back().sample;
-
       // Data is only received on ranks with size>0, which is checked in the derived class implementation
       m2n->send(data->values(), data->getMeshID(), data->getDimensions());
 
@@ -202,13 +200,15 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
       serialized.deserializeInto(timesAscending, data);
     } else {
       // Data is only received on ranks with size>0, which is checked in the derived class implementation
-      m2n->receive(data->values(), data->getMeshID(), data->getDimensions());
+      time::Sample recvSample(data->getDimensions(), data->getSize(), data->meshDimensions());
+      m2n->receive(recvSample.values, data->getMeshID(), data->getDimensions());
 
       if (data->hasGradient()) {
         PRECICE_ASSERT(data->hasGradient());
-        m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
+        m2n->receive(recvSample.gradients, data->getMeshID(), data->getDimensions() * data->meshDimensions());
       }
-      data->setSampleAtTime(getTime(), data->sample());
+
+      data->setSampleAtTime(getTime(), recvSample);
     }
   }
 }
@@ -900,23 +900,7 @@ void BaseCouplingScheme::doImplicitStep()
     // no convergence achieved for the coupling iteration within the current time window
     if (_acceleration) {
       profiling::Event e("accelerate", profiling::Fundamental);
-      // Acceleration works on CouplingData::values(), so we retrieve the data from the storage, perform the acceleration and then put the data back into the storage. See also https://github.com/precice/precice/issues/1645.
-      // @todo For acceleration schemes as described in "Rüth, B, Uekermann, B, Mehl, M, Birken, P, Monge, A, Bungartz, H-J. Quasi-Newton waveform iteration for partitioned surface-coupled multiphysics applications. https://doi.org/10.1002/nme.6443" we need a more elaborate implementation.
-
-      // Load from storage into buffer
-      for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
-        const auto &stamples = data->stamples();
-        PRECICE_ASSERT(stamples.size() > 0);
-        data->sample() = stamples.back().sample;
-      }
-
       _acceleration->performAcceleration(getAccelerationData(), getTimeWindowStart());
-
-      // Store from buffer
-      // @todo Currently only data at end of window is accelerated. Remaining data in storage stays as it is.
-      for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
-        data->setSampleAtTime(getTime(), data->sample());
-      }
     }
   }
 }
