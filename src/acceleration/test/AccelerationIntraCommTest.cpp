@@ -77,40 +77,28 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
   const double windowStart = 0;
   const double windowEnd   = 1;
 
+  data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
+  data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
+
   if (context.isPrimary()) { // Primary
     /**
      * processor with 4 vertices
      */
 
-    // init displacements
-    Eigen::VectorXd insert(4);
-    insert << 1.0, 1.0, 1.0, 1.0;
-    utils::append(displacements->values(), insert);
-    // init forces
-    insert << 0.2, 0.2, 0.2, 0.2;
-    utils::append(forces->values(), insert);
+    // init displacements & forces
+    dpcd->setSampleAtTime(windowStart, time::Sample(dpcd->getDimensions(), Eigen::Vector4d{1.0, 1.0, 1.0, 1.0}));
+    dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), Eigen::Vector4d{1.0, 1.0, 1.0, 1.0}));
 
-    dpcd->setSampleAtTime(windowStart, dpcd->sample());
-    dpcd->setSampleAtTime(windowEnd, dpcd->sample());
-
-    fpcd->setSampleAtTime(windowStart, fpcd->sample());
-    fpcd->setSampleAtTime(windowEnd, fpcd->sample());
-
-    data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
-    data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
+    fpcd->setSampleAtTime(windowStart, time::Sample(fpcd->getDimensions(), Eigen::Vector4d{0.2, 0.2, 0.2, 0.2}));
+    fpcd->setSampleAtTime(windowEnd, time::Sample(fpcd->getDimensions(), Eigen::Vector4d{0.2, 0.2, 0.2, 0.2}));
 
     dpcd->storeIteration();
     fpcd->storeIteration();
 
     pp.initialize(data);
 
-    insert << 1.0, 2.0, 3.0, 4.0;
-    displacements->values() = insert;
-    insert << 0.1, 0.1, 0.1, 0.1;
-    forces->values() = insert;
-
-    dpcd->setSampleAtTime(windowEnd, dpcd->sample());
-    fpcd->setSampleAtTime(windowEnd, fpcd->sample());
+    dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), Eigen::Vector4d{1.0, 2.0, 3.0, 4.0}));
+    fpcd->setSampleAtTime(windowEnd, time::Sample(fpcd->getDimensions(), Eigen::Vector4d{0.1, 0.1, 0.1, 0.1}));
 
   } else if (context.isRank(1)) { // SecondaryRank1
 
@@ -118,35 +106,20 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
      * processor with 4 vertices
      */
 
-    // init displacements
-    Eigen::VectorXd insert(4);
-    insert << 1.0, 1.0, 1.0, 1.0;
-    utils::append(displacements->values(), insert);
-    // init forces
-    insert << 0.2, 0.2, 0.2, 0.2;
-    utils::append(forces->values(), insert);
+    // init displacements & forces
+    dpcd->setSampleAtTime(windowStart, time::Sample(dpcd->getDimensions(), Eigen::Vector4d{1.0, 1.0, 1.0, 1.0}));
+    dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), Eigen::Vector4d{1.0, 1.0, 1.0, 1.0}));
 
-    dpcd->setSampleAtTime(windowStart, dpcd->sample());
-    dpcd->setSampleAtTime(windowEnd, dpcd->sample());
-
-    fpcd->setSampleAtTime(windowStart, fpcd->sample());
-    fpcd->setSampleAtTime(windowEnd, fpcd->sample());
-
-    data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
-    data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
+    fpcd->setSampleAtTime(windowStart, time::Sample(fpcd->getDimensions(), Eigen::Vector4d{0.2, 0.2, 0.2, 0.2}));
+    fpcd->setSampleAtTime(windowEnd, time::Sample(fpcd->getDimensions(), Eigen::Vector4d{0.2, 0.2, 0.2, 0.2}));
 
     dpcd->storeIteration();
     fpcd->storeIteration();
 
     pp.initialize(data);
 
-    insert << 5.0, 6.0, 7.0, 8.0;
-    displacements->values() = insert;
-    insert << 0.1, 0.1, 0.1, 0.1;
-    forces->values() = insert;
-
-    dpcd->setSampleAtTime(windowEnd, dpcd->sample());
-    fpcd->setSampleAtTime(windowEnd, fpcd->sample());
+    dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), Eigen::Vector4d{5.0, 6.0, 7.0, 8.0}));
+    fpcd->setSampleAtTime(windowEnd, time::Sample(fpcd->getDimensions(), Eigen::Vector4d{0.1, 0.1, 0.1, 0.1}));
 
   } else if (context.isRank(2)) { // Secondary rank 2
 
@@ -155,12 +128,12 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
      */
 
     // init displacements
-    dpcd->setSampleAtTime(windowStart, dpcd->sample());
-    dpcd->setSampleAtTime(windowEnd, dpcd->sample());
+    dpcd->setSampleAtTime(windowStart, time::Sample(dpcd->getDimensions()));
+    dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions()));
 
     // init forces
-    fpcd->setSampleAtTime(windowStart, fpcd->sample());
-    fpcd->setSampleAtTime(windowEnd, fpcd->sample());
+    fpcd->setSampleAtTime(windowStart, time::Sample(fpcd->getDimensions()));
+    fpcd->setSampleAtTime(windowEnd, time::Sample(fpcd->getDimensions()));
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -170,8 +143,8 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
 
     pp.initialize(data);
 
-    dpcd->setSampleAtTime(windowEnd, dpcd->sample());
-    fpcd->setSampleAtTime(windowEnd, fpcd->sample());
+    dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions()));
+    fpcd->setSampleAtTime(windowEnd, time::Sample(fpcd->getDimensions()));
 
   } else if (context.isRank(3)) { // Secondary rank 3
 
@@ -179,19 +152,12 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
      * processor with 2 vertices
      */
 
-    // init displacements
-    Eigen::VectorXd insert(2);
-    insert << 1.0, 1.0;
-    utils::append(displacements->values(), insert);
-    // init forces
-    insert << 0.2, 0.2;
-    utils::append(forces->values(), insert);
+    // init displacements & forces
+    dpcd->setSampleAtTime(windowStart, time::Sample(dpcd->getDimensions(), Eigen::Vector2d{1.0, 1.0}));
+    dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), Eigen::Vector2d{1.0, 1.0}));
 
-    dpcd->setSampleAtTime(windowStart, dpcd->sample());
-    dpcd->setSampleAtTime(windowEnd, dpcd->sample());
-
-    fpcd->setSampleAtTime(windowStart, fpcd->sample());
-    fpcd->setSampleAtTime(windowEnd, fpcd->sample());
+    fpcd->setSampleAtTime(windowStart, time::Sample(fpcd->getDimensions(), Eigen::Vector2d{0.2, 0.2}));
+    fpcd->setSampleAtTime(windowEnd, time::Sample(fpcd->getDimensions(), Eigen::Vector2d{0.2, 0.2}));
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -201,13 +167,8 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
 
     pp.initialize(data);
 
-    insert << 1.0, 2.0;
-    displacements->values() = insert;
-    insert << 0.1, 0.1;
-    forces->values() = insert;
-
-    dpcd->setSampleAtTime(windowEnd, dpcd->sample());
-    fpcd->setSampleAtTime(windowEnd, fpcd->sample());
+    dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), Eigen::Vector2d{1.0, 2.0}));
+    fpcd->setSampleAtTime(windowEnd, time::Sample(fpcd->getDimensions(), Eigen::Vector2d{0.1, 0.1}));
   }
 
   pp.performAcceleration(data, windowStart);
@@ -259,7 +220,7 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
   }
 
   dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues));
-  fpcd->setSampleAtTime(windowEnd, time::Sample(fpcd->getDimensions(), newdvalues));
+  fpcd->setSampleAtTime(windowEnd, fpcd->sample());
 
   pp.performAcceleration(data, windowStart);
 
