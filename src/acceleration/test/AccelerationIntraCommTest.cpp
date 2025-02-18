@@ -258,9 +258,8 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
     utils::append(newdvalues, 10.0);
   }
 
-  data.begin()->second->values() = newdvalues;
-  dpcd->setSampleAtTime(windowEnd, dpcd->sample());
-  fpcd->setSampleAtTime(windowEnd, fpcd->sample());
+  dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues));
+  fpcd->setSampleAtTime(windowEnd, time::Sample(fpcd->getDimensions(), newdvalues));
 
   pp.performAcceleration(data, windowStart);
 
@@ -366,17 +365,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 
     pp.initialize(data);
 
-    // update displacement
-    insert << 1.0, 2.0, 3.0, 4.0;
-    dpcd->values() = insert;
-
-    // update forces
-    insert << 0.1, 0.1, 0.1, 0.1;
-    fpcd->values() = insert;
-
-    // Only the newest value is updated
-    dpcd->setSampleAtTime(windowEnd, dpcd->sample());
-    fpcd->setSampleAtTime(windowEnd, fpcd->sample());
+    // update displacement & forces
+    dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), Eigen::Vector4d{1.0, 2.0, 3.0, 4.0}));
+    fpcd->setSampleAtTime(windowEnd, time::Sample(fpcd->getDimensions(), Eigen::Vector4d{0.1, 0.1, 0.1, 0.1}));
 
     // check for correct initial data
     BOOST_TEST(testing::equals(data.at(0)->previousIteration()(0), 1.0), data.at(0)->previousIteration()(0));
@@ -422,15 +413,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 
     pp.initialize(data);
 
-    // update displacements
-    insert << 5.0, 6.0, 7.0, 8.0;
-    dpcd->values() = insert;
-    // update forces
-    insert << 0.1, 0.1, 0.1, 0.1;
-    fpcd->values() = insert;
-
-    dpcd->setSampleAtTime(windowEnd, dpcd->sample());
-    fpcd->setSampleAtTime(windowEnd, fpcd->sample());
+    // update displacements & forces
+    dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), Eigen::Vector4d{5.0, 6.0, 7.0, 8.0}));
+    fpcd->setSampleAtTime(windowEnd, time::Sample(fpcd->getDimensions(), Eigen::Vector4d{0.1, 0.1, 0.1, 0.1}));
 
     // check for correct initial data
     BOOST_TEST(testing::equals(data.at(0)->previousIteration()(0), 1.0), data.at(0)->previousIteration()(0));
@@ -500,16 +485,9 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 
     pp.initialize(data);
 
-    // update displacements
-    insert << 1.0, 2.0;
-    displacements->values() = insert;
-
-    // update forces
-    insert << 0.1, 0.1;
-    forces->values() = insert;
-
-    dpcd->setSampleAtTime(windowEnd, dpcd->sample());
-    fpcd->setSampleAtTime(windowEnd, fpcd->sample());
+    // update displacements & forces
+    dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), Eigen::Vector2d{1.0, 2.0}));
+    fpcd->setSampleAtTime(windowEnd, time::Sample(fpcd->getDimensions(), Eigen::Vector2d{0.1, 0.1}));
 
     // check for correct initial data
     BOOST_TEST(testing::equals(data.at(0)->previousIteration()(0), 1.0), data.at(0)->previousIteration()(0));
@@ -562,10 +540,8 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
     utils::append(newdvalues, 10.0);
   }
 
-  data.begin()->second->values() = newdvalues;
-
-  dpcd->setSampleAtTime(windowEnd, dpcd->sample());
-  fpcd->setSampleAtTime(windowEnd, fpcd->sample());
+  dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues));
+  fpcd->setSampleAtTime(windowEnd, time::Sample(fpcd->getDimensions(), newdvalues));
 
   pp.performAcceleration(data, windowStart);
 
@@ -1222,8 +1198,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
     utils::append(newdvalues1, 1.0);
   }
 
-  data.begin()->second->values() = newdvalues1;
-  dpcd->setSampleAtTime(windowEnd, dpcd->sample());
+  dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues1));
 
   acc.performAcceleration(data, windowStart);
 
@@ -1238,8 +1213,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
     utils::append(newdvalues2, 1.0);
   }
 
-  data.begin()->second->values() = newdvalues2;
-  dpcd->setSampleAtTime(windowEnd, dpcd->sample());
+  dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues2));
 
   acc.iterationsConverged(data, windowStart);
 
@@ -1258,8 +1232,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
     utils::append(newdvalues3, 1.0);
   }
 
-  data.begin()->second->values() = newdvalues3;
-  dpcd->setSampleAtTime(windowEnd, dpcd->sample());
+  dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues3));
 
   acc.performAcceleration(data, windowStart);
 
@@ -1274,8 +1247,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
     utils::append(newdvalues4, 5.0);
   }
 
-  data.begin()->second->values() = newdvalues4;
-  dpcd->setSampleAtTime(windowEnd, dpcd->sample());
+  dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues4));
 
   acc.iterationsConverged(data, windowStart);
 
