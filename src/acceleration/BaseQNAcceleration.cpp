@@ -585,6 +585,16 @@ int BaseQNAcceleration::getLSSystemCols() const
   return cols;
 }
 
+int BaseQNAcceleration::getMaxUsedIterations() const
+{
+  return _maxIterationsUsed;
+}
+
+int BaseQNAcceleration::getMaxUsedTimeWindows() const
+{
+  return _timeWindowsReused;
+}
+
 int BaseQNAcceleration::getLSSystemRows() const
 {
   if (utils::IntraComm::isParallel()) {
