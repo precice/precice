@@ -142,7 +142,7 @@ public:
    */
   int getLSSystemCols() const;
 
-/**
+  /**
    * @brief Get the maximum number of reused iterations.
    */
   int getMaxUsedIterations() const;
