@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(DeserializeValues)
   mesh::PtrData              toData(new mesh::Data("to", -1, 1));
   cplscheme::PtrCouplingData toDataPtr = makeCouplingData(toData, dummyMesh);
 
-  toDataPtr->setSampleAtTime(0, time::Sample(toDataPtr->getDimensions()));
+  toDataPtr->setSampleAtTime(0, time::Sample(toDataPtr->getDimensions(), Eigen::VectorXd(nValues)));
 
   Eigen::VectorXd timeStamps(nTimeSteps);
   timeStamps << 0, 0.5, 1;
