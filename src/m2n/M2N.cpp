@@ -10,6 +10,9 @@
 #include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
+#include "precice/impl/versions.hpp"
+#include "logging/LogConfiguration.hpp"
+#include "logging/LogMacros.hpp"
 
 using precice::profiling::Event;
 
@@ -51,6 +54,13 @@ void M2N::acceptPrimaryRankConnection(
     PRECICE_ASSERT(_interComm);
     _interComm->acceptConnection(acceptorName, requesterName, "PRIMARYCOM", utils::IntraComm::getRank());
     _isPrimaryRankConnected = _interComm->isConnected();
+    std::string acceptorVersion = PRECICE_VERSION;
+    auto requesterVersion = acceptorVersion;
+    _interComm->send(acceptorVersion, 0);
+    _interComm->receive(requesterVersion, 0);
+    if (requesterVersion != acceptorVersion){
+      PRECICE_ERROR("Participant {} uses preCICE version {} but participant {} uses preCICE version {}.", requesterName, requesterVersion, acceptorName, acceptorVersion);
+    }
   }
 
   utils::IntraComm::broadcast(_isPrimaryRankConnected);
@@ -69,6 +79,17 @@ void M2N::requestPrimaryRankConnection(
     PRECICE_DEBUG("Request primary connection");
     _interComm->requestConnection(acceptorName, requesterName, "PRIMARYCOM", 0, 1);
     _isPrimaryRankConnected = _interComm->isConnected();
+
+
+    //check that local and remote have the same precice version
+    std::string requesterVersion = PRECICE_VERSION;
+    auto acceptorVersion = requesterVersion;
+    _interComm->send(requesterVersion, 0);
+    _interComm->receive(acceptorVersion, 0);
+    if (acceptorVersion != requesterVersion){
+      PRECICE_ERROR("Participant {} uses preCICE version {} but participant {} uses preCICE version {}.", acceptorName, acceptorVersion, requesterName, requesterVersion);  
+    } 
+  
   }
 
   utils::IntraComm::broadcast(_isPrimaryRankConnected);
