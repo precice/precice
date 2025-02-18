@@ -893,7 +893,7 @@ void BaseCouplingScheme::doImplicitStep()
   if (_hasConverged) {
     if (_acceleration) {
       profiling::Event e("accelerate", profiling::Fundamental);
-      _acceleration->iterationsConverged(getAccelerationData());
+      _acceleration->iterationsConverged(getAccelerationData(), getTimeWindowStart());
     }
     newConvergenceMeasurements();
   } else {
@@ -910,7 +910,7 @@ void BaseCouplingScheme::doImplicitStep()
         data->sample() = stamples.back().sample;
       }
 
-      _acceleration->performAcceleration(getAccelerationData());
+      _acceleration->performAcceleration(getAccelerationData(), getTimeWindowStart());
 
       // Store from buffer
       // @todo Currently only data at end of window is accelerated. Remaining data in storage stays as it is.
