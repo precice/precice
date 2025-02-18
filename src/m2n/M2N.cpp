@@ -57,9 +57,7 @@ void M2N::acceptPrimaryRankConnection(
     auto        requesterVersion = acceptorVersion;
     _interComm->send(acceptorVersion, 0);
     _interComm->receive(requesterVersion, 0);
-    if (requesterVersion != acceptorVersion) {
-      PRECICE_ERROR("Participant {} uses preCICE version {} but participant {} uses preCICE version {}.", requesterName, requesterVersion, acceptorName, acceptorVersion);
-    }
+    PRECICE_CHECK(requesterVersion != acceptorVersion, "Participant {} uses preCICE version {} but participant {} uses preCICE version {}.", requesterName, requesterVersion, acceptorName, acceptorVersion);
   }
 
   utils::IntraComm::broadcast(_isPrimaryRankConnected);
@@ -82,11 +80,9 @@ void M2N::requestPrimaryRankConnection(
     //check that local and remote have the same precice version
     std::string requesterVersion = PRECICE_VERSION;
     auto        acceptorVersion  = requesterVersion;
-    _interComm->send(requesterVersion, 0);
     _interComm->receive(acceptorVersion, 0);
-    if (acceptorVersion != requesterVersion) {
-      PRECICE_ERROR("Participant {} uses preCICE version {} but participant {} uses preCICE version {}.", acceptorName, acceptorVersion, requesterName, requesterVersion);
-    }
+    _interComm->send(requesterVersion, 0);
+    PRECICE_CHECK(requesterVersion != acceptorVersion, "Participant {} uses preCICE version {} but participant {} uses preCICE version {}.", requesterName, requesterVersion, acceptorName, acceptorVersion);
   }
 
   utils::IntraComm::broadcast(_isPrimaryRankConnected);
