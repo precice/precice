@@ -102,7 +102,7 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.199000000000000010214));
 
   // Update the waveform as well
-  displacements->setSampleAtTime(windowEnd, time::Sample(displacements->getDimensions(), Eigen::Vector4d{10, 10, 10, 10}));
+  displacements->emplaceSampleAtTime(windowEnd, {10, 10, 10, 10});
   forces->setSampleAtTime(windowEnd, forces->sample());
 
   pp.performAcceleration(data, windowStart);
@@ -376,10 +376,10 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
   mesh::PtrData data4 = std::make_shared<mesh::Data>("hvalues", -1, 1);
 
   // init data
-  data1->setSampleAtTime(windowStart, time::Sample(data1->getDimensions(), Eigen::Vector2d{40, 80}));
-  data2->setSampleAtTime(windowStart, time::Sample(data2->getDimensions(), Eigen::Vector2d{5, 5}));
-  data3->setSampleAtTime(windowStart, time::Sample(data3->getDimensions(), Eigen::Vector3d{1, 2, 3}));
-  data4->setSampleAtTime(windowStart, time::Sample(data4->getDimensions(), Eigen::Vector4d{20, 40, 60, 80}));
+  data1->emplaceSampleAtTime(windowStart, {40, 80});
+  data2->emplaceSampleAtTime(windowStart, {5, 5});
+  data3->emplaceSampleAtTime(windowStart, {1, 2, 3});
+  data4->emplaceSampleAtTime(windowStart, {20, 40, 60, 80});
 
   cplscheme::PtrCouplingData dpcd = makeCouplingData(data1, dummyMesh, false);
   cplscheme::PtrCouplingData fpcd = makeCouplingData(data2, dummyMesh, false);
@@ -398,10 +398,10 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
 
   acc.initialize(data);
 
-  data1->setSampleAtTime(windowEnd, time::Sample(data1->getDimensions(), Eigen::Vector2d{1, 7}));
-  data2->setSampleAtTime(windowEnd, time::Sample(data2->getDimensions(), Eigen::Vector2d{10, 10}));
-  data3->setSampleAtTime(windowEnd, time::Sample(data3->getDimensions(), Eigen::Vector3d{10, 11, 12}));
-  data4->setSampleAtTime(windowEnd, time::Sample(data4->getDimensions(), Eigen::Vector4d{40, 60, 80, 100}));
+  data1->emplaceSampleAtTime(windowEnd, {1, 7});
+  data2->emplaceSampleAtTime(windowEnd, {10, 10});
+  data3->emplaceSampleAtTime(windowEnd, {10, 11, 12});
+  data4->emplaceSampleAtTime(windowEnd, {40, 60, 80, 100});
 
   acc.performAcceleration(data, windowStart);
 
@@ -417,10 +417,10 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
   BOOST_TEST(data.at(3)->values()(2) == 76);
   BOOST_TEST(data.at(3)->values()(3) == 96);
 
-  data1->setSampleAtTime(windowEnd, time::Sample(data1->getDimensions(), Eigen::Vector2d{2, 14}));
-  data2->setSampleAtTime(windowEnd, time::Sample(data2->getDimensions(), Eigen::Vector2d{8, 8}));
-  data3->setSampleAtTime(windowEnd, time::Sample(data3->getDimensions(), Eigen::Vector3d{13, 14, 15}));
-  data4->setSampleAtTime(windowEnd, time::Sample(data4->getDimensions(), Eigen::Vector4d{41, 61, 81, 90}));
+  data1->emplaceSampleAtTime(windowEnd, {2, 14});
+  data2->emplaceSampleAtTime(windowEnd, {8, 8});
+  data3->emplaceSampleAtTime(windowEnd, {13, 14, 15});
+  data4->emplaceSampleAtTime(windowEnd, {41, 61, 81, 90});
 
   acc.performAcceleration(data, windowStart);
 
@@ -436,10 +436,10 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
   BOOST_TEST(data.at(3)->values()(2) == 91.912064609583652);
   BOOST_TEST(data.at(3)->values()(3) == 95.196221242658879);
 
-  data1->setSampleAtTime(windowEnd, time::Sample(data1->getDimensions(), Eigen::Vector2d{2.1, 14.1}));
-  data2->setSampleAtTime(windowEnd, time::Sample(data2->getDimensions(), Eigen::Vector2d{8, 8}));
-  data3->setSampleAtTime(windowEnd, time::Sample(data3->getDimensions(), Eigen::Vector3d{13.05, 14.07, 15.1}));
-  data4->setSampleAtTime(windowEnd, time::Sample(data4->getDimensions(), Eigen::Vector4d{42, 60, 81.3, 91}));
+  data1->emplaceSampleAtTime(windowEnd, {2.1, 14.1});
+  data2->emplaceSampleAtTime(windowEnd, {8, 8});
+  data3->emplaceSampleAtTime(windowEnd, {13.05, 14.07, 15.1});
+  data4->emplaceSampleAtTime(windowEnd, {42, 60, 81.3, 91});
 
   acc.iterationsConverged(data, windowStart);
 
@@ -451,10 +451,10 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
   windowStart += dt;
   windowEnd += dt;
 
-  data1->setSampleAtTime(windowEnd, time::Sample(data1->getDimensions(), Eigen::Vector2d{3, 16}));
-  data2->setSampleAtTime(windowEnd, time::Sample(data2->getDimensions(), Eigen::Vector2d{7, 7}));
-  data3->setSampleAtTime(windowEnd, time::Sample(data3->getDimensions(), Eigen::Vector3d{18, 19, 20}));
-  data4->setSampleAtTime(windowEnd, time::Sample(data4->getDimensions(), Eigen::Vector4d{50, 70, 90, 110}));
+  data1->emplaceSampleAtTime(windowEnd, {3, 16});
+  data2->emplaceSampleAtTime(windowEnd, {7, 7});
+  data3->emplaceSampleAtTime(windowEnd, {18, 19, 20});
+  data4->emplaceSampleAtTime(windowEnd, {50, 70, 90, 110});
 
   acc.performAcceleration(data, windowStart);
 
@@ -585,8 +585,8 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
   mesh::PtrData displacements = std::make_shared<mesh::Data>("dvalues", -1, 1);
   mesh::PtrData forces        = std::make_shared<mesh::Data>("fvalues", -1, 1);
 
-  displacements->setSampleAtTime(windowStart, time::Sample(displacements->getDimensions(), Eigen::Vector4d{1.0, 2.0, 3.0, 4.0}));
-  forces->setSampleAtTime(windowStart, time::Sample(forces->getDimensions(), Eigen::Vector4d{0.2, 0.2, 0.2, 0.2}));
+  displacements->emplaceSampleAtTime(windowStart, {1.0, 2.0, 3.0, 4.0});
+  forces->emplaceSampleAtTime(windowStart, {0.2, 0.2, 0.2, 0.2});
 
   bool exchangeSubsteps = false;
 
@@ -601,8 +601,8 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
 
   acc.initialize(data);
 
-  displacements->setSampleAtTime(windowEnd, time::Sample(displacements->getDimensions(), Eigen::Vector4d{3.5, 2.0, 2.0, 1.0}));
-  forces->setSampleAtTime(windowEnd, time::Sample(forces->getDimensions(), Eigen::Vector4d{0.1, 0.1, 0.1, 0.1}));
+  displacements->emplaceSampleAtTime(windowEnd, {3.5, 2.0, 2.0, 1.0});
+  forces->emplaceSampleAtTime(windowEnd, {0.1, 0.1, 0.1, 0.1});
 
   acc.performAcceleration(data, windowStart);
 
@@ -615,7 +615,8 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
   BOOST_TEST(data.at(1)->values()(2) == 0.16);
   BOOST_TEST(data.at(1)->values()(3) == 0.16);
 
-  displacements->setSampleAtTime(windowEnd, time::Sample(displacements->getDimensions(), Eigen::Vector4d{10, 10, 10, 10}));
+  displacements->emplaceSampleAtTime(windowEnd, {10, 10, 10, 10});
+
   forces->setSampleAtTime(windowEnd, forces->sample());
 
   acc.performAcceleration(data, windowStart);
