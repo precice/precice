@@ -98,7 +98,7 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   forces->values() << 0.1, 0.1, 0.1, 0.1;
   forces->setSampleAtTime(windowEnd, forces->sample());
 
-  pp.performAcceleration(data, windowStart);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00000000000000000000));
   BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01000000000000000888));
@@ -115,7 +115,7 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   displacements->setSampleAtTime(windowEnd, displacements->sample());
   forces->setSampleAtTime(windowEnd, forces->sample());
 
-  pp.performAcceleration(data, windowStart);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929695848558e-01));
   BOOST_TEST(testing::equals(data.at(0)->values()(1), 6.10309919173602111186e-01));
@@ -203,7 +203,7 @@ void testVIQNPP(bool exchangeSubsteps)
   forces->values() << 0.1, 0.1, 0.1, 0.1;
   forces->setSampleAtTime(windowEnd, forces->sample());
 
-  pp.performAcceleration(data, windowStart);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00));
   BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01));
@@ -224,7 +224,7 @@ void testVIQNPP(bool exchangeSubsteps)
   displacements->setSampleAtTime(windowEnd, displacements->sample());
   forces->setSampleAtTime(windowEnd, forces->sample());
 
-  pp.performAcceleration(data, windowStart);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929692295845e-01));
   BOOST_TEST(testing::equals(data.at(0)->values()(1), 6.10309919173607440257e-01));
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
   forces->values() << 0.1, 0.1, 0.1, 0.1;
   forces->setSampleAtTime(windowEnd, forces->sample());
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   BOOST_TEST(data.at(0)->values()(0) == 2);
   BOOST_TEST(data.at(0)->values()(1) == 2);
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
   displacements->setSampleAtTime(windowEnd, displacements->sample());
   forces->setSampleAtTime(windowEnd, forces->sample());
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   BOOST_TEST(data.at(0)->values()(0) == 4.6);
   BOOST_TEST(data.at(0)->values()(1) == 5.2);
@@ -365,7 +365,7 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithoutSubsteps)
   forces->values() << 0.1, 0.1, 0.1, 0.1;
   forces->setSampleAtTime(windowEnd, forces->sample());
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   BOOST_TEST(data.at(0)->values()(0) == 2);
   BOOST_TEST(data.at(0)->values()(1) == 2);
@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithoutSubsteps)
   displacements->setSampleAtTime(windowEnd, displacements->sample());
   forces->setSampleAtTime(windowEnd, forces->sample());
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   BOOST_TEST(data.at(0)->values()(0) == 1.2689851805508461);
   BOOST_TEST(data.at(0)->values()(1) == 2.2390979382674185);
@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
   data4->values() << 40, 60, 80, 100;
   data4->setSampleAtTime(windowEnd, data4->sample());
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   BOOST_TEST(data.at(0)->values()(0) == 8.8);
   BOOST_TEST(data.at(0)->values()(1) == 21.6);
@@ -482,7 +482,7 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
   data4->values() << 41, 61, 81, 90;
   data4->setSampleAtTime(windowEnd, data4->sample());
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   BOOST_TEST(data.at(0)->values()(0) == -17.745640722103754);
   BOOST_TEST(data.at(0)->values()(1) == -20.295060201548626);
@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
   data4->values() << 50, 70, 90, 110;
   data4->setSampleAtTime(windowEnd, data4->sample());
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   BOOST_TEST(data.at(0)->values()(0) == 10.4);
   BOOST_TEST(data.at(0)->values()(1) == 28.8);
@@ -594,7 +594,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
   forces->gradients().setConstant(3);
   forces->setSampleAtTime(windowEnd, forces->sample());
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   // Test value data
   BOOST_TEST(data.at(0)->values()(0) == 2);
@@ -625,7 +625,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
   displacements->setSampleAtTime(windowEnd, displacements->sample());
   forces->setSampleAtTime(windowEnd, forces->sample());
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   // Check that store iteration works properly
   BOOST_TEST(data.at(0)->values()(0) == 4.6);
@@ -689,7 +689,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
   forces->values() << 0.1, 0.1, 0.1, 0.1;
   forces->setSampleAtTime(windowEnd, forces->sample());
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   BOOST_TEST(data.at(0)->values()(0) == 2);
   BOOST_TEST(data.at(0)->values()(1) == 2);
@@ -704,7 +704,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
   displacements->setSampleAtTime(windowEnd, displacements->sample());
   forces->setSampleAtTime(windowEnd, forces->sample());
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   BOOST_TEST(data.at(0)->values()(0) == 4.6);
   BOOST_TEST(data.at(0)->values()(1) == 5.2);
@@ -771,7 +771,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
   forces->gradients().setConstant(3);
   forces->setSampleAtTime(windowEnd, forces->sample());
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   // Test value data
   BOOST_TEST(data.at(0)->values()(0) == 2);
@@ -802,7 +802,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
   displacements->setSampleAtTime(windowEnd, displacements->sample());
   forces->setSampleAtTime(windowEnd, forces->sample());
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   // Check that store iteration works properly
   BOOST_TEST(data.at(0)->values()(0) == 4.6);

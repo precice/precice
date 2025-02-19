@@ -58,14 +58,15 @@ void AitkenAcceleration::initialize(const DataMap &cplData)
 
 void AitkenAcceleration::performAcceleration(
     DataMap &cplData,
-    double   windowStart)
+    double   windowStart,
+    double   windowEnd)
 {
   PRECICE_TRACE();
 
   // Compute aitken relaxation factor
   PRECICE_ASSERT(utils::contained(*_primaryDataIDs.begin(), cplData));
 
-  concatenateCouplingData(cplData, _primaryDataIDs, _values, _oldValues, windowStart);
+  concatenateCouplingData(cplData, _primaryDataIDs, _values, _oldValues, windowStart, windowEnd);
 
   // Compute current residual = values - oldValues
   Eigen::VectorXd residuals = _values - _oldValues;
@@ -117,13 +118,16 @@ void AitkenAcceleration::iterationsConverged(
 }
 
 void AitkenAcceleration::concatenateCouplingData(
-    const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues, double windowStart) const
+    const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues, double windowStart, double windowEnd) const
 {
   Eigen::Index offset = 0;
+
   for (auto id : dataIDs) {
-    Eigen::Index size      = cplData.at(id)->values().size();
-    auto &       values    = cplData.at(id)->values();
-    const auto & oldValues = cplData.at(id)->previousIteration();
+    Eigen::Index size = cplData.at(id)->values().size();
+
+    Eigen::VectorXd values    = cplData.at(id)->timeStepsStorage().sample(windowEnd);
+    Eigen::VectorXd oldValues = cplData.at(id)->getPreviousValuesAtTime(windowEnd);
+
     PRECICE_ASSERT(targetValues.size() >= offset + size, "Target vector was not initialized.", targetValues.size(), offset + size);
     PRECICE_ASSERT(targetOldValues.size() >= offset + size, "Target vector was not initialized.");
     for (Eigen::Index i = 0; i < size; i++) {
