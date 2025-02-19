@@ -326,9 +326,11 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 
   // Get the local bounding boxes
   auto localBB = outMesh->getBoundingBox();
-  // could run into issues if the output mesh is only a single mesh
-  // vertex in the outpur mesh
-  PRECICE_ASSERT(!localBB.empty());
+  // we cannot check for empty'ness here, as a single output mesh vertex
+  // would lead to a 0D box with zero volume (considered empty). Thus, we
+  // simply check here for default'ness, which is equivalent to outMesh->empty()
+  // further above
+  PRECICE_ASSERT(!localBB.isDefault());
 
   if (_clusterRadius == 0)
     _clusterRadius = impl::estimateClusterRadius(_verticesPerCluster, filterMesh, localBB);
