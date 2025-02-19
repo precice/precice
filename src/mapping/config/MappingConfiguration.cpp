@@ -686,12 +686,6 @@ void MappingConfiguration::finishRBFConfiguration()
   PRECICE_ASSERT(_executorConfig);
   ConfiguredMapping &mapping = _mappings.back();
 
-  // We disable the geometric filter in case we have global RBF mappings, as the default safety factor is not reliable enough to provide a robust
-  // safety margin such that the mapping is still correct. For PUM, we still perform the filtering, as it accelerates the tagging and leads to
-  // more accurate settings of the cluster radius
-  PRECICE_ASSERT(mapping.requiresBasisFunction);
-  mapping.allowsGeometricFilter = _rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect;
-
   // Instantiate the RBF mapping classes
   // We first categorize according to the executor
   // 1. the CPU executor
