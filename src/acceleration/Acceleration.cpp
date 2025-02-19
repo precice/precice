@@ -31,7 +31,7 @@ void Acceleration::applyRelaxation(double omega, DataMap &cplData, double window
         continue;
       }
 
-      auto &values    = stample.sample.values;
+      auto &values = stample.sample.values;
       auto  old    = couplingData.getPreviousValuesAtTime(stample.timestamp); // IMPORTANT DETAIL: The interpolation that we use for resampling does not necessarily have to be the same interpolation as the interpolation the user accesses via read-data. (But probably it is easier to just use the same)
       values       = values * omega + old.values() * (1.0 - omega);
 
