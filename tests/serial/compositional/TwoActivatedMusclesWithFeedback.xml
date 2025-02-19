@@ -140,35 +140,35 @@
   <m2n:sockets acceptor="M2SM" connector="M1" />
   <m2n:sockets acceptor="M1SM" connector="M2" />
 
-  <coupling-scheme:serial-explicit>
+  <coupling-scheme:parallel-explicit>
     <participants first="M1SM" second="M2" />
     <time-window-size value="1" />
     <max-time-windows value="2" />
     <exchange data="stretch1" mesh="Stretch_M1SM_Mesh" from="M1SM" to="M2" />
-  </coupling-scheme:serial-explicit>
+  </coupling-scheme:parallel-explicit>
 
-  <coupling-scheme:serial-explicit>
+  <coupling-scheme:parallel-explicit>
     <participants first="M2SM" second="M1" />
     <time-window-size value="1" />
     <max-time-windows value="2" />
     <exchange data="stretch2" mesh="Stretch_M2SM_Mesh" from="M2SM" to="M1" />
-  </coupling-scheme:serial-explicit>
+  </coupling-scheme:parallel-explicit>
 
-  <coupling-scheme:serial-explicit>
+  <coupling-scheme:parallel-explicit>
     <participants first="M1" second="M1SM" />
     <time-window-size value="1" />
     <max-time-windows value="2" />
     <exchange data="Activation1" mesh="Activation_M1SM_Mesh" from="M1" to="M1SM" />
     <exchange data="stretch1" mesh="Stretch_M1SM_Mesh" from="M1SM" to="M1" />
-  </coupling-scheme:serial-explicit>
+  </coupling-scheme:parallel-explicit>
 
-  <coupling-scheme:serial-explicit>
+  <coupling-scheme:parallel-explicit>
     <participants first="M2" second="M2SM" />
     <time-window-size value="1" />
     <max-time-windows value="2" />
     <exchange data="Activation2" mesh="Activation_M2SM_Mesh" from="M2" to="M2SM" />
     <exchange data="stretch2" mesh="Stretch_M2SM_Mesh" from="M2SM" to="M2" />
-  </coupling-scheme:serial-explicit>
+  </coupling-scheme:parallel-explicit>
 
   <coupling-scheme:parallel-implicit>
     <participants first="M1SM" second="M2SM" />
