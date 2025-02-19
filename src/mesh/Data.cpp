@@ -100,9 +100,10 @@ void Data::emplaceSampleAtTime(double time, std::initializer_list<double> values
 void Data::emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients)
 {
   PRECICE_ASSERT(gradients.size() == values.size() * getSpatialDimensions(), "Gradient isn't correctly sized", values.size(), gradients.size());
+  auto nVertices = values.size() / getDimensions();
   setSampleAtTime(time, time::Sample{getDimensions(),
                                      Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size()),
-                                     Eigen::Map<const Eigen::MatrixXd>(gradients.begin(), values.size(), getDimensions() * getSpatialDimensions())});
+                                     Eigen::Map<const Eigen::MatrixXd>(gradients.begin(), nVertices, getDimensions() * getSpatialDimensions())});
 }
 
 const std::string &Data::getName() const
