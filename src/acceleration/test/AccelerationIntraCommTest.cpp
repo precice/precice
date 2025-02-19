@@ -304,19 +304,12 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
      * processor with 4 vertices
      */
 
-    // init displacements
-    Eigen::VectorXd insert(4);
-    insert << 1.0, 1.0, 1.0, 1.0;
-    utils::append(displacements->values(), insert);
-    // init forces
-    insert << 0.2, 0.2, 0.2, 0.2;
-    utils::append(forces->values(), insert);
-
+    // init displacements & forces
     //Need to store 2 values in the waveform iteration
-    dpcd->setSampleAtTime(windowStart, dpcd->sample());
-    dpcd->setSampleAtTime(windowEnd, dpcd->sample());
-    fpcd->setSampleAtTime(windowStart, fpcd->sample());
-    fpcd->setSampleAtTime(windowEnd, fpcd->sample());
+    dpcd->emplaceSampleAtTime(windowStart, {1.0, 1.0, 1.0, 1.0});
+    dpcd->emplaceSampleAtTime(windowEnd, {1.0, 1.0, 1.0, 1.0});
+    fpcd->emplaceSampleAtTime(windowStart, {0.2, 0.2, 0.2, 0.2});
+    fpcd->emplaceSampleAtTime(windowEnd, {0.2, 0.2, 0.2, 0.2});
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -614,8 +607,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 
     pp.initialize(data);
 
-    forces->values() << -0.01765744149520443, -0.000534499502588083, 0.05397520666020422, 0.0005546984205735067, 0.05213823386543703, 0.0007618478879228568, -0.01944857239806249, -0.0009206665792022876, -0.02459872346309381, -0.001296931976456198, 0.04688718434761113, 0.001346643628716769, -0.01063536095060684, -0.01905148710330257, 0.02514593936525903, -0.01643393169986981, -0.02189723835016068, -0.000912218689367709, 0.04985117008772211, 0.0009615805506705544, 0.05534647415570375, 0.0004068469082890895;
-    fpcd->setSampleAtTime(windowEnd, fpcd->sample());
+    fpcd->emplaceSampleAtTime(windowEnd, {-0.01765744149520443, -0.000534499502588083, 0.05397520666020422, 0.0005546984205735067, 0.05213823386543703, 0.0007618478879228568, -0.01944857239806249, -0.0009206665792022876, -0.02459872346309381, -0.001296931976456198, 0.04688718434761113, 0.001346643628716769, -0.01063536095060684, -0.01905148710330257, 0.02514593936525903, -0.01643393169986981, -0.02189723835016068, -0.000912218689367709, 0.04985117008772211, 0.0009615805506705544, 0.05534647415570375, 0.0004068469082890895});
     dpcd->setSampleAtTime(windowEnd, dpcd->sample());
 
   } else if (context.isRank(2)) { // Secondary rank 2
