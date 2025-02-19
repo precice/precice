@@ -33,6 +33,7 @@ SerialCouplingScheme::SerialCouplingScheme(
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), minIterations, maxIterations, cplMode, dtMethod)
 {
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
+    PRECICE_ASSERT(timeWindowSize == UNDEFINED_TIME_WINDOW_SIZE);
     if (doesFirstStep()) {
       PRECICE_ASSERT(not _participantReceivesTimeWindowSize);
       setTimeWindowSize(UNDEFINED_TIME_WINDOW_SIZE);

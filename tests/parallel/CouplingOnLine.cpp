@@ -8,9 +8,10 @@
 /// This testcase is based on a bug reported by Thorsten for acoustic FASTEST-Ateles coupling
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
+PRECICE_TEST_SETUP("Ateles"_on(3_ranks), "FASTEST"_on(1_rank))
 BOOST_AUTO_TEST_CASE(CouplingOnLine)
 {
-  PRECICE_TEST("Ateles"_on(3_ranks), "FASTEST"_on(1_rank));
+  PRECICE_TEST();
 
   if (context.isNamed("Ateles")) {
     precice::Participant interface(context.name, context.config(), context.rank, context.size);

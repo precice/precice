@@ -3,6 +3,7 @@
 #include "utils/assertion.hpp"
 
 #include <Eigen/Core>
+#include <Eigen/Sparse>
 #include <algorithm>
 #include <cstdlib>
 #include <unsupported/Eigen/Splines>
@@ -15,11 +16,7 @@ Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree
 {
 
   PRECICE_ASSERT(ts.size() >= 2, "Interpolation requires at least 2 samples");
-#if EIGEN_VERSION_AT_LEAST(3, 4, 0)
   PRECICE_ASSERT(std::is_sorted(ts.begin(), ts.end()), "Timestamps must be sorted");
-#else
-  PRECICE_ASSERT(std::is_sorted(ts.data(), ts.data() + ts.size()), "Timestamps must be sorted");
-#endif
 
   // organize data in columns. Each column represents one sample in time.
   PRECICE_ASSERT(xs.cols() == ts.size());
@@ -29,44 +26,45 @@ Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree
   auto relativeTime = [tsMin = _tsMin, tsMax = _tsMax](double t) -> double { return (t - tsMin) / (tsMax - tsMin); };
   ts                = ts.unaryExpr(relativeTime);
 
-  //The code for computing the knots and the control points is copied from Eigens bspline interpolation with minor modifications, https://gitlab.com/libeigen/eigen/-/blob/master/unsupported/Eigen/src/Splines/SplineFitting.h
+  // The code for computing the knots and the control points is copied from Eigens bspline interpolation with some modifications
+  // https://gitlab.com/libeigen/eigen/-/blob/master/unsupported/Eigen/src/Splines/SplineFitting.h
 
+  // 1. Compute the knot vector
   Eigen::KnotAveraging(ts, splineDegree, _knots);
-  Eigen::DenseIndex n = xs.cols();
-  Eigen::MatrixXd   A = Eigen::MatrixXd::Zero(n, n);
 
+  // 2. Compute the control points
+  // We use a nxn sparse matrix with 2 + (n-2) * (d+1) entries and thus a fill-factor < 0.5.
+  Eigen::DenseIndex                   n = xs.cols();
+  std::vector<Eigen::Triplet<double>> matrixEntries;
+  matrixEntries.reserve(2 + (n - 2) * (splineDegree + 1));
+
+  matrixEntries.emplace_back(0, 0, 1.0);
   for (Eigen::DenseIndex i = 1; i < n - 1; ++i) {
-    //Attempt at hack... the spline dimension is not used here explicitly
-    const Eigen::DenseIndex span = Eigen::Spline<double, 1>::Span(ts[i], splineDegree, _knots);
+    const Eigen::DenseIndex span      = Eigen::Spline<double, 1>::Span(ts[i], splineDegree, _knots);
+    auto                    basisFunc = Eigen::Spline<double, 1>::BasisFunctions(ts[i], splineDegree, _knots);
 
-    // The segment call should somehow be told the spline order at compile time.
-    A.row(i).segment(span - splineDegree, splineDegree + 1) = Eigen::Spline<double, 1>::BasisFunctions(ts[i], splineDegree, _knots);
+    for (Eigen::DenseIndex j = 0; j < splineDegree + 1; ++j) {
+      matrixEntries.emplace_back(i, span - splineDegree + j, basisFunc(j));
+    }
   }
-  A(0, 0)         = 1.0;
-  A(n - 1, n - 1) = 1.0;
+  matrixEntries.emplace_back(n - 1, n - 1, 1.0);
+  PRECICE_ASSERT(matrixEntries.capacity() == matrixEntries.size(), matrixEntries.capacity(), matrixEntries.size(), n, splineDegree);
 
-  auto qr = A.householderQr();
+  Eigen::SparseMatrix<double> A(n, n);
+  A.setFromTriplets(matrixEntries.begin(), matrixEntries.end());
+  A.makeCompressed();
 
-  Eigen::MatrixXd controls = Eigen::MatrixXd::Zero(n, _ndofs);
+  Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> qr;
+  qr.analyzePattern(A);
+  qr.factorize(A);
 
-  for (int i = 0; i < _ndofs; i++) {
-    controls.col(i) = qr.solve(xs.row(i).transpose());
-  }
-  _ctrls = std::move(controls);
+  _ctrls = qr.solve(xs.transpose());
 }
 
 Eigen::VectorXd Bspline::interpolateAt(double t) const
 {
-  if (math::equals(t, _tsMax)) {
-    t = _tsMax; // set t exactly to _tsMax, to avoid artifacts originating from floating-point arithmetic
-  } else if (math::equals(t, _tsMin)) {
-    t = _tsMin; // set t exactly to _tsMin, to avoid artifacts originating from floating-point arithmetic
-  }
-
   // transform t to the relative interval [0; 1]
-  const double tRelative = (t - _tsMin) / (_tsMax - _tsMin);
-  PRECICE_ASSERT(math::greaterEquals(tRelative, 0.0), "t is before the first sample!", tRelative, 0.0, _tsMin); // Only allowed to use BSpline for interpolation, not extrapolation.
-  PRECICE_ASSERT(math::smallerEquals(tRelative, 1.0), "t is after the last sample!", tRelative, 1.0, _tsMax);   // Only allowed to use BSpline for interpolation, not extrapolation.
+  const double tRelative = std::clamp((t - _tsMin) / (_tsMax - _tsMin), 0.0, 1.0);
 
   Eigen::VectorXd interpolated(_ndofs);
   constexpr int   splineDimension = 1;

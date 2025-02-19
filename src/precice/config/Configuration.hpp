@@ -56,6 +56,12 @@ public:
     return _experimental;
   }
 
+  /// @brief Returns whether experimental remeshing is allowed or not
+  bool allowsRemeshing() const
+  {
+    return _remeshing;
+  }
+
   /// @brief Returns whether participants wait for each other in finalize
   bool waitInFinalize() const
   {
@@ -114,6 +120,9 @@ private:
   /// Allow the use of experimental features
   bool _experimental = false;
 
+  /// Allow the use of experimental remeshing features
+  bool _remeshing = false;
+
   /// Synchronize participants in finalize
   bool _waitInFinalize = false;
 
@@ -121,7 +130,7 @@ private:
   xml::XMLTag _tag;
 
   // The log configuration must be constructed first to prevent log clutter
-  LogConfiguration _logConfig;
+  logging::LogConfiguration _logConfig;
 
   // Handle other configuration afterwards
   precice::profiling::ProfilingConfiguration _profilingConfig;

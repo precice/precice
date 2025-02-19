@@ -554,7 +554,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::storeInitialGuessForDim(
   auto sizePerDim = source.getLocalSize();
 
   PRECICE_ASSERT(this->hasInitialGuess() || (sizePerDim == 0), "Call loadInitialGuessForDim first");
-  PRECICE_ASSERT(this->initialGuess().size() == sizePerDim * allDimensions, this->initialGuess().size(), sizePerDim * allDimensions);
+  PRECICE_ASSERT(this->initialGuess().size() == static_cast<Eigen::Index>(sizePerDim) * allDimensions, this->initialGuess().size(), static_cast<Eigen::Index>(sizePerDim) * allDimensions);
   auto offset = dimension * sizePerDim;
   auto begin  = std::next(this->initialGuess().data(), offset);
   source.copyTo({begin, static_cast<std::size_t>(sizePerDim)});

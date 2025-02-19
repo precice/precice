@@ -35,6 +35,9 @@ public:
   /// Calculate projection to a tetrahedron
   Polation(const Eigen::VectorXd &location, const mesh::Tetrahedron &element);
 
+  /// Amount of weighted elements
+  std::size_t nElements() const;
+
   /// Get the weights and indices of the calculated interpolation
   const std::vector<WeightedElement> &getWeightedElements() const;
 

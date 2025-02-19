@@ -48,9 +48,10 @@ BOOST_FIXTURE_TEST_SUITE(ParallelImplicitCouplingSchemeTests, ParallelImplicitCo
 
 #ifndef PRECICE_NO_MPI
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
 
   std::string path(_pathToTests + "parallel-implicit-cplscheme-relax-const-config.xml");
@@ -67,9 +68,10 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   BOOST_CHECK(cplSchemeConfig._accelerationConfig->getAcceleration().get());
 }
 
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testInitializeData)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
   auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
@@ -115,7 +117,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   // Create the coupling scheme object
   const int              minIterations = 1;
   const int              maxIterations = 3;
-  ParallelCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, minIterations, maxIterations);
+  ParallelCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, BaseCouplingScheme::Implicit, minIterations, maxIterations);
 
   using Fixture = testing::ParallelCouplingSchemeFixture;
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization, true);
@@ -133,7 +135,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     sendCouplingData->setSampleAtTime(0, time::Sample{1, Eigen::VectorXd::Constant(1, 4.0)});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
-    cplScheme.initialize(0.0, 0);
+    cplScheme.initialize();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(receiveCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 3);
@@ -167,7 +169,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(receiveCouplingData->values().size() == 1);
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
     BOOST_TEST(sendCouplingData->values().size() == 3);
-    cplScheme.initialize(0.0, 0);
+    cplScheme.initialize();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
     BOOST_TEST(receiveCouplingData->getPreviousIterationSize() == 1);

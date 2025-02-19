@@ -7,6 +7,17 @@
 
 namespace precice::io {
 
+ExportVTP::ExportVTP(
+    std::string_view  participantName,
+    std::string_view  location,
+    const mesh::Mesh &mesh,
+    ExportKind        kind,
+    int               frequency,
+    int               rank,
+    int               size)
+
+    : ExportXML(participantName, location, mesh, kind, frequency, rank, size){};
+
 std::string ExportVTP::getVTKFormat() const
 {
   return "PolyData";
@@ -14,12 +25,12 @@ std::string ExportVTP::getVTKFormat() const
 
 std::string ExportVTP::getParallelExtension() const
 {
-  return ".pvtp";
+  return "pvtp";
 }
 
 std::string ExportVTP::getPieceExtension() const
 {
-  return ".vtp";
+  return "vtp";
 }
 
 std::string ExportVTP::getPieceAttributes(const mesh::Mesh &mesh) const

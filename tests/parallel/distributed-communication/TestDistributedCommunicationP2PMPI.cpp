@@ -8,9 +8,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(DistributedCommunication)
+PRECICE_TEST_SETUP("Fluid"_on(2_ranks), "Structure"_on(2_ranks))
 BOOST_AUTO_TEST_CASE(TestDistributedCommunicationP2PMPI)
 {
-  PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
+  PRECICE_TEST();
   runTestDistributedCommunication(context.config(), context);
 }
 

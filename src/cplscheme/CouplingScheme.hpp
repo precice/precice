@@ -75,13 +75,13 @@ public:
   /**
    * @brief Initializes the coupling scheme and establishes a communication
    *        connection to the coupling partner. Initializes coupling data.
-   *
-   * @param[in] startTime starting time for coupling @BU correct?
-   * @param[in] startTimeWindow counter of time window for coupling @BU correct?
    */
-  virtual void initialize(
-      double startTime,
-      int    startTimeWindow) = 0;
+  virtual void initialize() = 0;
+
+  /**
+   * @brief Reinitializes the coupling scheme, coupling data, and acceleration schemes
+   */
+  virtual void reinitialize() = 0;
 
   /**
    * @brief Returns whether this participant of the coupling scheme sends initialized data.
@@ -157,6 +157,9 @@ public:
 
   /// Returns list of all coupling partners.
   virtual std::vector<std::string> getCouplingPartners() const = 0;
+
+  /// Returns the name of the local participant
+  virtual std::string localParticipant() const = 0;
 
   /**
    * @brief Returns true, if data will be exchanged when calling advance().

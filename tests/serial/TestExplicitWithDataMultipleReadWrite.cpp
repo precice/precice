@@ -13,9 +13,10 @@ BOOST_AUTO_TEST_SUITE(Serial)
  * The first solver performs multiple consistent readings of data sent by the second solver.
  * The second solver performs multiple sendings, of which the last is expected by the first solver.
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(TestExplicitWithDataMultipleReadWrite)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   using Eigen::Vector3d;
 

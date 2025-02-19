@@ -20,6 +20,7 @@
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctSolver.hpp"
 #include "mapping/RadialGeoMultiscaleMapping.hpp"
+#include "mapping/device/Ginkgo.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -112,42 +113,47 @@ PtrMapping instantiateRBFMapping(mapping::Mapping::Constraint &constraint, int d
 // Constructs the RBF function based on the functionType
 rbf_variant_t constructRBF(BasisFunction functionType, double supportRadius, double shapeParameter)
 {
-  switch (functionType) {
-  case BasisFunction::WendlandC0: {
-    return mapping::CompactPolynomialC0(supportRadius);
-  }
-  case BasisFunction::WendlandC2: {
-    return mapping::CompactPolynomialC2(supportRadius);
-  }
-  case BasisFunction::WendlandC4: {
-    return mapping::CompactPolynomialC4(supportRadius);
-  }
-  case BasisFunction::WendlandC6: {
-    return mapping::CompactPolynomialC6(supportRadius);
-  }
-  case BasisFunction::WendlandC8: {
-    return mapping::CompactPolynomialC8(supportRadius);
-  }
-  case BasisFunction::CompactThinPlateSplinesC2: {
-    return mapping::CompactThinPlateSplinesC2(supportRadius);
-  }
-  case BasisFunction::ThinPlateSplines: {
-    return mapping::ThinPlateSplines();
-  }
-  case BasisFunction::VolumeSplines: {
-    return mapping::VolumeSplines();
-  }
-  case BasisFunction::Multiquadrics: {
-    return mapping::Multiquadrics(shapeParameter);
-  }
-  case BasisFunction::InverseMultiquadrics: {
-    return mapping::InverseMultiquadrics(shapeParameter);
-  }
-  case BasisFunction::Gaussian: {
-    return mapping::Gaussian(shapeParameter);
-  }
-  default:
-    PRECICE_UNREACHABLE("No instantiation was found for the selected basis function.");
+  try {
+    switch (functionType) {
+    case BasisFunction::WendlandC0: {
+      return mapping::CompactPolynomialC0(supportRadius);
+    }
+    case BasisFunction::WendlandC2: {
+      return mapping::CompactPolynomialC2(supportRadius);
+    }
+    case BasisFunction::WendlandC4: {
+      return mapping::CompactPolynomialC4(supportRadius);
+    }
+    case BasisFunction::WendlandC6: {
+      return mapping::CompactPolynomialC6(supportRadius);
+    }
+    case BasisFunction::WendlandC8: {
+      return mapping::CompactPolynomialC8(supportRadius);
+    }
+    case BasisFunction::CompactThinPlateSplinesC2: {
+      return mapping::CompactThinPlateSplinesC2(supportRadius);
+    }
+    case BasisFunction::ThinPlateSplines: {
+      return mapping::ThinPlateSplines();
+    }
+    case BasisFunction::VolumeSplines: {
+      return mapping::VolumeSplines();
+    }
+    case BasisFunction::Multiquadrics: {
+      return mapping::Multiquadrics(shapeParameter);
+    }
+    case BasisFunction::InverseMultiquadrics: {
+      return mapping::InverseMultiquadrics(shapeParameter);
+    }
+    case BasisFunction::Gaussian: {
+      return mapping::Gaussian(shapeParameter);
+    }
+    default:
+      PRECICE_UNREACHABLE("No instantiation was found for the selected basis function.");
+    }
+  } catch (std::invalid_argument &e) {
+    logging::Logger _log{"MappingConfiguration"};
+    PRECICE_ERROR(e.what());
   }
 }
 
@@ -718,7 +724,7 @@ void MappingConfiguration::finishRBFConfiguration()
     } else if (_executorConfig->executor == ExecutorConfiguration::Executor::OpenMP) {
       _ginkgoParameter.executor = "omp-executor";
       _ginkgoParameter.nThreads = _executorConfig->nThreads;
-#ifndef PRECICE_WITH_OMP
+#ifndef PRECICE_WITH_OPENMP
       PRECICE_CHECK(false, "The omp-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with OpenMP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
     }
@@ -730,6 +736,7 @@ void MappingConfiguration::finishRBFConfiguration()
     } else {
       PRECICE_UNREACHABLE("Unknown solver type.");
     }
+
     mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
 #else
     PRECICE_CHECK(false, "The selected executor for the mapping from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());

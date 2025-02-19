@@ -48,6 +48,7 @@ AccelerationConfiguration::AccelerationConfiguration(
       ATTR_SINGULARITYLIMIT("limit"),
       ATTR_TYPE("type"),
       ATTR_BUILDJACOBIAN("always-build-jacobian"),
+      ATTR_REDUCEDTIMEGRIDQN("reduced-time-grid"),
       ATTR_IMVJCHUNKSIZE("chunk-size"),
       ATTR_RSLS_REUSED_TIME_WINDOWS("reused-time-windows-at-restart"),
       ATTR_RSSVD_TRUNCATIONEPS("truncation-threshold"),
@@ -101,6 +102,11 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
   {
     XMLTag tag(*this, VALUE_IQNILS, occ, TAG);
     tag.setDocumentation("Accelerates coupling data with the interface quasi-Newton inverse least-squares method.");
+
+    auto reducedTimeGridQN = makeXMLAttribute(ATTR_REDUCEDTIMEGRIDQN, true)
+                                 .setDocumentation("Whether only the last time step of each time window is used to construct the Jacobian.");
+    tag.addAttribute(reducedTimeGridQN);
+
     addTypeSpecificSubtags(tag);
     tags.push_back(tag);
   }
@@ -113,6 +119,10 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
                                                     " in each coupling iteration, which is inefficient. If set to false (or not set)"
                                                     " the Jacobian is only build in the last iteration and the updates are computed using (relatively) cheap MATVEC products.");
     tag.addAttribute(alwaybuildJacobian);
+
+    auto reducedTimeGridQN = makeXMLAttribute(ATTR_REDUCEDTIMEGRIDQN, true)
+                                 .setDocumentation("Whether only the last time step of each time window is used to construct the Jacobian.");
+    tag.addAttribute(reducedTimeGridQN);
 
     addTypeSpecificSubtags(tag);
     tags.push_back(tag);
@@ -139,6 +149,9 @@ void AccelerationConfiguration::xmlTagCallback(
 
     if (_config.type == VALUE_IQNIMVJ)
       _config.alwaysBuildJacobian = callingTag.getBooleanAttributeValue(ATTR_BUILDJACOBIAN);
+
+    if (_config.type == VALUE_IQNIMVJ || _config.type == VALUE_IQNILS)
+      _config.reducedTimeGridQN = callingTag.getBooleanAttributeValue(ATTR_REDUCEDTIMEGRIDQN);
   }
   if (callingTag.getName() == TAG_RELAX) {
     _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
@@ -200,7 +213,7 @@ void AccelerationConfiguration::xmlTagCallback(
     _config.preconditionerType                 = callingTag.getStringAttributeValue(ATTR_TYPE);
     _config.precond_nbNonConstTWindows         = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIME_WINDOWS);
   } else if (callingTag.getName() == TAG_IMVJRESTART) {
-
+    _userDefinitions.defineRestartType = true;
 #ifndef PRECICE_NO_MPI
     _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);
     const auto &f         = callingTag.getStringAttributeValue(ATTR_TYPE);
@@ -236,12 +249,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
   if (callingTag.getNamespace() == TAG) {
 
     //create preconditioner
-    if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_IQNIMVJ || callingTag.getName() == VALUE_AITKEN) {
-
-      // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time windows is limited by the chunksize
-      if (callingTag.getName() == VALUE_IQNIMVJ && _config.imvjRestartType > 0)
-        if (_config.precond_nbNonConstTWindows > _config.imvjChunkSize)
-          _config.precond_nbNonConstTWindows = _config.imvjChunkSize;
+    if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_AITKEN) {
       if (_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER) {
         _preconditioner = PtrPreconditioner(new ConstantPreconditioner(_config.scalingFactorsInOrder()));
       } else if (_config.preconditionerType == VALUE_VALUE_PRECONDITIONER) {
@@ -256,12 +264,14 @@ void AccelerationConfiguration::xmlEndTagCallback(
       }
     }
 
+    PRECICE_CHECK(!_acceleration, "You are trying to define multiple acceleration schemes, which is not allowed. Please remove one of them.");
     if (callingTag.getName() == VALUE_CONSTANT) {
       _acceleration = PtrAcceleration(
           new ConstantRelaxationAcceleration(
               _config.relaxationFactor, _config.dataIDs));
     } else if (callingTag.getName() == VALUE_AITKEN) {
-      _acceleration = PtrAcceleration(
+      _config.relaxationFactor = (_userDefinitions.definedRelaxationFactor) ? _config.relaxationFactor : _defaultAitkenRelaxationFactor;
+      _acceleration            = PtrAcceleration(
           new AitkenAcceleration(
               _config.relaxationFactor, _config.dataIDs, _preconditioner));
     } else if (callingTag.getName() == VALUE_IQNILS) {
@@ -278,7 +288,8 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
-              _preconditioner));
+              _preconditioner,
+              _config.reducedTimeGridQN));
     } else if (callingTag.getName() == VALUE_IQNIMVJ) {
 #ifndef PRECICE_NO_MPI
       _config.relaxationFactor  = (_userDefinitions.definedRelaxationFactor) ? _config.relaxationFactor : _defaultValuesIQNIMVJ.relaxationFactor;
@@ -286,7 +297,31 @@ void AccelerationConfiguration::xmlEndTagCallback(
       _config.timeWindowsReused = (_userDefinitions.definedTimeWindowsReused) ? _config.timeWindowsReused : _defaultValuesIQNIMVJ.timeWindowsReused;
       _config.filter            = (_userDefinitions.definedFilter) ? _config.filter : _defaultValuesIQNILS.filter;
       _config.singularityLimit  = (_userDefinitions.definedFilter) ? _config.singularityLimit : _defaultValuesIQNILS.singularityLimit;
-      _acceleration             = PtrAcceleration(
+      if (!_config.alwaysBuildJacobian) {
+        _config.imvjRestartType = (_userDefinitions.defineRestartType) ? _config.imvjRestartType : _defaultValuesIQNIMVJ.imvjRestartType;
+        _config.imvjChunkSize   = (_userDefinitions.defineRestartType) ? _config.imvjChunkSize : _defaultValuesIQNIMVJ.imvjChunkSize;
+      }
+
+      // create preconditioner
+      // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time windows is limited by the chunksize
+      // it is separated from the other acceleration methods, since SVD-restart might be chosen as default here
+      if (_config.imvjRestartType == IQNIMVJAcceleration::RS_SVD)
+        if (_config.precond_nbNonConstTWindows > _config.imvjChunkSize)
+          _config.precond_nbNonConstTWindows = _config.imvjChunkSize;
+      if (_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER) {
+        _preconditioner = PtrPreconditioner(new ConstantPreconditioner(_config.scalingFactorsInOrder()));
+      } else if (_config.preconditionerType == VALUE_VALUE_PRECONDITIONER) {
+        _preconditioner = PtrPreconditioner(new ValuePreconditioner(_config.precond_nbNonConstTWindows));
+      } else if (_config.preconditionerType == VALUE_RESIDUAL_PRECONDITIONER) {
+        _preconditioner = PtrPreconditioner(new ResidualPreconditioner(_config.precond_nbNonConstTWindows));
+      } else if (_config.preconditionerType == VALUE_RESIDUAL_SUM_PRECONDITIONER) {
+        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_config.precond_nbNonConstTWindows));
+      } else {
+        // no preconditioner defined
+        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_defaultValuesIQNILS.precond_nbNonConstTWindows));
+      }
+
+      _acceleration = PtrAcceleration(
           new IQNIMVJAcceleration(
               _config.relaxationFactor,
               _config.forceInitialRelaxation,
@@ -299,7 +334,8 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.imvjRestartType,
               _config.imvjChunkSize,
               _config.imvjRSLS_reusedTimeWindows,
-              _config.imvjRSSVD_truncationEps));
+              _config.imvjRSSVD_truncationEps,
+              _config.reducedTimeGridQN));
 #else
       PRECICE_ERROR("Acceleration IQN-IMVJ only works if preCICE is compiled with MPI");
 #endif
@@ -311,8 +347,9 @@ void AccelerationConfiguration::xmlEndTagCallback(
 
 void AccelerationConfiguration::clear()
 {
-  _config       = ConfigurationData();
-  _acceleration = PtrAcceleration();
+  _config          = ConfigurationData();
+  _userDefinitions = UserDefinitions();
+  _acceleration    = PtrAcceleration();
   _neededMeshes.clear();
 }
 
@@ -369,8 +406,8 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagRelax.addAttribute(attrValue);
     tag.addSubtag(tagRelax);
   } else if (tag.getName() == VALUE_AITKEN) {
-    XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE);
-    tagInitRelax.setDocumentation("Initial relaxation factor.");
+    XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_NOT_OR_ONCE);
+    tagInitRelax.setDocumentation("Initial relaxation factor. If this tag is not provided, an initial relaxation of 0.5 is used.");
     XMLAttribute<double> attrValue(ATTR_VALUE);
     attrValue.setDocumentation("Initial relaxation factor.");
     tagInitRelax.addAttribute(attrValue);
@@ -483,11 +520,11 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagIMVJRESTART.addAttribute(attrRestartName);
     tagIMVJRESTART.setDocumentation("Type of IMVJ restart mode that is used:\n"
                                     "- `no-restart`: IMVJ runs in normal mode with explicit representation of Jacobian\n"
-                                    "- `RS-ZERO`:    IMVJ runs in restart mode. After M time windows all Jacobain information is dropped, restart with no information\n"
+                                    "- `RS-0`:    IMVJ runs in restart mode. After M time windows all Jacobain information is dropped, restart with no information\n"
                                     "- `RS-LS`:      IMVJ runs in restart mode. After M time windows a IQN-LS like approximation for the initial guess of the Jacobian is computed.\n"
                                     "- `RS-SVD`:     IMVJ runs in restart mode. After M time windows a truncated SVD of the Jacobian is updated.\n"
                                     "- `RS-SLIDE`:   IMVJ runs in sliding window restart mode.\n"
-                                    "If this tag is not provided, IMVJ runs in normal mode with explicit representation of Jacobian.");
+                                    "If this tag is not provided, IMVJ runs in restart mode with SVD-method.");
     auto attrChunkSize = makeXMLAttribute(ATTR_IMVJCHUNKSIZE, 8)
                              .setDocumentation("Specifies the number of time windows M after which the IMVJ restarts, if run in restart-mode. Default value is M=8.");
     auto attrReusedTimeWindowsAtRestart = makeXMLAttribute(ATTR_RSLS_REUSED_TIME_WINDOWS, 8)

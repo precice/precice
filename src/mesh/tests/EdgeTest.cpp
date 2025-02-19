@@ -15,9 +15,10 @@ using namespace Eigen;
 BOOST_AUTO_TEST_SUITE(MeshTests)
 BOOST_AUTO_TEST_SUITE(EdgeTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Edges)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Vertex v1(Vector3d::Constant(0.0), 0);
   Vertex v2(Vector3d::Constant(1.0), 1);
   Edge   edge(v1, v2);
@@ -35,9 +36,10 @@ BOOST_AUTO_TEST_CASE(Edges)
   BOOST_TEST(testing::equals(edge.getCenter(), (coords1 + coords2) / 2));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Dimensions2D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Vertex v1(Vector2d::Constant(0.0), 0);
   Vertex v2(Vector2d::Constant(1.0), 1);
   Edge   edge(v1, v2);
@@ -50,9 +52,10 @@ BOOST_AUTO_TEST_CASE(Dimensions2D)
   BOOST_TEST(testing::equals(edge.getCenter(), Vector2d{0.5, 0.5}));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Dimensions2DX)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Vertex v1(Vector2d::Constant(0.0), 0);
   Vertex v2(Vector2d{1, 0}, 1);
   Edge   edge(v1, v2);
@@ -65,9 +68,10 @@ BOOST_AUTO_TEST_CASE(Dimensions2DX)
   BOOST_TEST(testing::equals(edge.getCenter(), Vector2d{0.5, 0}));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Dimensions2DY)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Vertex v1(Vector2d::Constant(0.0), 0);
   Vertex v2(Vector2d{0, 1}, 1);
   Edge   edge(v1, v2);
@@ -80,9 +84,10 @@ BOOST_AUTO_TEST_CASE(Dimensions2DY)
   BOOST_TEST(testing::equals(edge.getCenter(), Vector2d{0, 0.5}));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Dimensions3DX)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Vertex v1(Vector3d::Constant(0.0), 0);
   Vertex v2(Vector3d{1, 0, 0}, 1);
   Edge   edge(v1, v2);
@@ -95,9 +100,10 @@ BOOST_AUTO_TEST_CASE(Dimensions3DX)
   BOOST_TEST(testing::equals(edge.getCenter(), Vector3d{0.5, 0, 0}));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Dimensions3DY)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Vertex v1(Vector3d::Constant(0.0), 0);
   Vertex v2(Vector3d{0, 1, 0}, 1);
   Edge   edge(v1, v2);
@@ -110,9 +116,10 @@ BOOST_AUTO_TEST_CASE(Dimensions3DY)
   BOOST_TEST(testing::equals(edge.getCenter(), Vector3d{0, 0.5, 0}));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Dimensions3DZ)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Vertex v1(Vector3d::Constant(0.0), 0);
   Vertex v2(Vector3d{0, 0, 1}, 1);
   Edge   edge(v1, v2);
@@ -125,9 +132,10 @@ BOOST_AUTO_TEST_CASE(Dimensions3DZ)
   BOOST_TEST(testing::equals(edge.getCenter(), Vector3d{0, 0, 0.5}));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Dimensions3D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Vertex v1(Vector3d::Constant(0.0), 0);
   Vertex v2(Vector3d::Constant(1.0), 1);
   Edge   edge(v1, v2);
@@ -140,9 +148,10 @@ BOOST_AUTO_TEST_CASE(Dimensions3D)
   BOOST_TEST(testing::equals(edge.getCenter(), Vector3d::Constant(0.5)));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EdgeEquality)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Vertex v1(Vector3d(0, 0, 0), 0);
   Vertex v2(Vector3d(0, 0, 1), 0);
   Vertex v3(Vector3d(0, 0, 2), 0);
@@ -155,9 +164,10 @@ BOOST_AUTO_TEST_CASE(EdgeEquality)
   BOOST_TEST(edge3 == edge4);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EdgeWKTPrint)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Vertex            v1(Vector2d(1., 2.), 0);
   Vertex            v2(Vector2d(2., 3.), 0);
   Edge              e1(v1, v2);
@@ -174,9 +184,10 @@ BOOST_AUTO_TEST_CASE(EdgeWKTPrint)
   BOOST_TEST(e2str == e2stream.str());
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EdgeConnectedTo)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Vertex v1(Vector3d(0, 0, 1), 0);
   Vertex v2(Vector3d(0, 0, 2), 0);
   Vertex v3(Vector3d(0, 0, 3), 0);

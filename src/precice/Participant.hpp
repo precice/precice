@@ -526,13 +526,33 @@ public:
   bool requiresMeshConnectivityFor(::precice::string_view meshName) const;
 
   /**
+   * @brief Removes all vertices and connectivity information from the mesh
+   *
+   * @experimental
+   *
+   * Allows redefining a mesh during runtime.
+   * After the call to resetMesh(), the mesh vertices need to be set with setMeshVertex() and setMeshVertices() again.
+   * Connectivity information may be set as well.
+   *
+   * Reading data from this mesh using readData() is not possible until the next call to advance().
+   *
+   * @param[in] meshName the name of the mesh to reset
+   *
+   * @pre initialize() has been called
+   * @pre isCouplingOngoing() is true
+   *
+   * @post previously returned vertex ids from setMeshVertex() and setMeshVertices() of the given mesh are invalid.
+   */
+  void resetMesh(::precice::string_view meshName);
+
+  /**
    * @brief Creates a mesh vertex
    *
    * @param[in] meshName the name of the mesh to add the vertex to.
    * @param[in] position the coordinates of the vertex.
    * @returns the id of the created vertex
    *
-   * @pre initialize() has not yet been called
+   * @pre either initialize() has not yet been called or resetMesh(meshName) has been called since the last call to initialize() or advance()
    * @pre position.size() == getMeshDimensions(meshName)
    *
    * @see getMeshDimensions()
@@ -564,7 +584,7 @@ public:
    *
    * @param[out] ids The ids of the created vertices
    *
-   * @pre initialize() has not yet been called
+   * @pre either initialize() has not yet been called or resetMesh(meshName) has been called since the last call to initialize() or advance()
    * @pre \p coordinates.size() == getMeshDimensions(meshName) * ids.size()
    *
    * @see getDimensions()
@@ -834,6 +854,7 @@ public:
    *
    * @pre every VertexID in ids is a return value of setMeshVertex or setMeshVertices
    * @pre values.size() == getDataDimensions(meshName, dataName) * ids.size()
+   * @pre resetMesh(meshName) has not been called since the last call to Participant::initialize() or Participant::advance()
    *
    * @post values contain the read data as specified in the above format.
    *
@@ -890,8 +911,8 @@ public:
    * on the receiving side, since the associated data values of the
    * filtered vertices are filled with zero data.
    *
-   * @note This function can only be called once per participant and
-   * rank and trying to call it more than once results in an error.
+   * @note This function can only be called once per mesh and rank
+   * and trying to call it more than once results in an error.
    *
    * @note If you combine the direct access with a mpping (say you want
    * to read data from a defined mesh, as usual, but you want to directly

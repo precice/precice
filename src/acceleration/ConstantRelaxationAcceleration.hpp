@@ -16,17 +16,18 @@ public:
       double           relaxation,
       std::vector<int> dataIDs);
 
-  virtual std::vector<int> getDataIDs() const override
+  virtual std::vector<int> getPrimaryDataIDs() const override final
   {
     return _dataIDs;
   }
 
   virtual void initialize(const DataMap &cplData) override;
 
-  virtual void performAcceleration(DataMap &cplData) override;
+  virtual void performAcceleration(DataMap &cplData, double windowStart) override;
 
-  virtual void iterationsConverged(const DataMap &cplData) override
+  virtual void iterationsConverged(const DataMap &cplData, double windowStart) override
   {
+    // function not needed in ConstantRelaxationAcceleration
   }
 
 private:

@@ -33,7 +33,6 @@ public:
  * @param[in] timeWindowSize Simulation time window size.
  * @param[in] localParticipant Name of participant using this coupling scheme.
  * @param[in] m2ns M2N communications to all other participants of coupling scheme.
- * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
  * @param[in] maxIterations maximum number of coupling sub-iterations allowed.
  */
   MultiCouplingScheme(
@@ -42,7 +41,6 @@ public:
       double                             timeWindowSize,
       const std::string &                localParticipant,
       std::map<std::string, m2n::PtrM2N> m2ns,
-      constants::TimesteppingMethod      dtMethod,
       const std::string &                controller,
       int                                minIterations,
       int                                maxIterations);
@@ -85,11 +83,21 @@ private:
    */
   std::map<std::string, DataMap> _sendDataVector;
 
+  /// Coupling partners to receive initial data from
+  std::set<std::string> _receiveInitialFrom;
+
+  /// Coupling partners to send initial data to
+  std::set<std::string> _sendInitialTo;
+
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
   void exchangeFirstData() override final;
 
   void exchangeSecondData() override final;
+
+  bool sendsInitializedDataTo(const std::string &to) const;
+
+  bool receivesInitializedDataFrom(const std::string &from) const;
 
   DataMap &getAccelerationData() override final;
 

@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 3.1.2
+
+- Fixed incorrect handling of compositional coupling involving an implicit scheme. Explicit schemes now run after the implicit scheme has reached convergence, correctly receive data of the final iteration.
+
+## 3.1.1
+
+- Added missing checks for incorrect Participant names in M2N and coupling-scheme. (https://github.com/precice/precice/pull/1995)
+- Fixed skipping initial mapping when data contains only zeros in parallel. (https://github.com/precice/precice/pull/1999)
+
+## 3.1.0
+
+- Added warnings when using invalid options inside log configuration files. (https://github.com/precice/precice/pull/1956)
+- Changed the output of `precice-profiling analyze` to be sorted by event name. (https://github.com/precice/precice/pull/1953)
+- Fixed a bug where reading from the end of the time window can trigger an assertion. (https://github.com/precice/precice/pull/1982)
+- Fixed bug when using log configuration files with invalid options. (https://github.com/precice/precice/pull/1956)
+- Fixed oversubscription errors when running tests. (https://github.com/precice/precice/pull/1960)
+- Fixed too strict check on allowed mapping types when combining serial and parallel participants. (https://github.com/precice/precice/pull/1964)
+- Improved numerical accuracy of time handling for simulations with many time steps or time windows, using separate Kahan sums for time-window start and window progress. (https://github.com/precice/precice/pull/1954)
+- Replaced boost.filesystem with `std::filesystem`. (https://github.com/precice/precice/pull/1972)
+
 ## 3.0.0
 
 - Added API method `getMaxTimeStepSize()`, replacing return values and simplifying usability of `advance(double dt)` and `initialize()`. (https://github.com/precice/precice/pull/1623)

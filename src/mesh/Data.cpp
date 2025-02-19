@@ -81,6 +81,7 @@ void Data::moveToNextWindow()
 
 void Data::setSampleAtTime(double time, const time::Sample &sample)
 {
+  PRECICE_ASSERT(sample.dataDims == getDimensions(), "Sample has incorrect data dimension");
   _sample = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _waveform.timeStepsStorage().setSampleAtTime(time, sample);
 }
@@ -106,6 +107,11 @@ void Data::toZero()
 bool Data::hasGradient() const
 {
   return _hasGradient;
+}
+
+bool Data::hasSamples() const
+{
+  return !_waveform.stamples().empty();
 }
 
 void Data::requireDataGradient()

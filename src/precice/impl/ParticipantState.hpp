@@ -266,6 +266,7 @@ public:
     size_t iteration;
     double time;
     bool   complete;
+    bool   final;
   };
 
   /// Exports timewindows and iterations of meshes and watchpoints
@@ -280,6 +281,12 @@ public:
 
   /// Returns true, if the participant uses a primary tag.
   bool useIntraComm() const;
+
+  /// Returns true, if the participant has at least one read mapping
+  bool hasReadMappings() const;
+
+  /// Returns true, if the participant has at least one write mapping
+  bool hasWriteMappings() const;
 
   /// Provided access to all read \ref MappingContext
   std::vector<MappingContext> &readMappingContexts();
@@ -301,6 +308,9 @@ public:
 
   /// Returns all \ref ExportContext for exporting meshes and data.
   const std::vector<io::ExportContext> &exportContexts() const;
+
+  /// Returns true, if the participant has any exports enabled
+  bool hasExports() const;
   /// @}
 
   /// @name Error helpers

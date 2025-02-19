@@ -13,9 +13,10 @@ BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
 // boundingBox. The test case here is the most basic variant in order
 // use such a feature. SolverTwo defines the mesh whereas SolverOne reads
 // directly from this mesh.
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ExplicitRead)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   // Set up Participant
   precice::Participant couplingInterface(context.name, context.config(), 0, 1);

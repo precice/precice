@@ -55,6 +55,32 @@ std::string getTestName()
   return boost::unit_test::framework::get<boost::unit_test::test_suite>(parent).p_name;
 }
 
+std::string getFullTestName()
+{
+  return boost::unit_test::framework::current_test_case().full_name();
+}
+
+TestSetup getTestSetup()
+{
+  if (auto setup = getTestSetupFor(boost::unit_test::framework::current_test_case());
+      setup) {
+    return *setup;
+  }
+  throw std::runtime_error{"Use PRECICE_TEST_SETUP(...) to define the setup directly before the BOOST_[AUTO_]TEST_CASE."};
+}
+
+std::optional<TestSetup> getTestSetupFor(const boost::unit_test::test_unit &tu)
+{
+  auto &list = tu.p_decorators;
+  for (auto iter = list->begin(); iter != list->end(); ++iter) {
+    auto ptr = dynamic_cast<precice::testing::precice_testsetup_fixture *>(iter->get());
+    if (ptr) {
+      return ptr->testSetup;
+    }
+  }
+  return std::nullopt;
+}
+
 int nextMeshID()
 {
   static utils::ManageUniqueIDs manager;
@@ -104,6 +130,11 @@ boost::test_tools::predicate_result equals(double a, double b, double tolerance)
     return res;
   }
   return true;
+}
+
+void expectFile(std::string_view name)
+{
+  BOOST_TEST(std::filesystem::is_regular_file(name), "File " << name << " is not a regular file or doesn't exist.");
 }
 
 } // namespace precice::testing

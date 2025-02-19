@@ -39,6 +39,16 @@ public:
    */
   void setSampleAtTime(double time, const Sample &sample);
 
+  /**
+   * @brief Overrides all existing samples
+   *
+   * This keeps time stamps, but overwrites all samples with a given one.
+   * Required in reinitialization
+   *
+   * @param sample new sample value
+   */
+  void setAllSamples(const Sample &sample);
+
   void setInterpolationDegree(int interpolationDegree);
 
   int getInterpolationDegree() const;
@@ -163,8 +173,6 @@ private:
   time::Sample getSampleAtBeginning();
 
   time::Sample getSampleAtEnd();
-
-  int findTimeId(double time) const;
 };
 
 } // namespace precice::time

@@ -58,7 +58,7 @@ public:
       m2n::M2NConfiguration::SharedPointer m2nConfig,
       config::PtrParticipantConfiguration  participantConfig);
 
-  void setExperimental(bool experimental);
+  void setRemeshing(bool allowed);
 
   /// Destructor, empty.
   virtual ~CouplingSchemeConfiguration() {}
@@ -82,6 +82,7 @@ public:
   void addCouplingScheme(const PtrCouplingScheme &cplScheme, const std::string &participantName);
 
 private:
+  bool                    _allowRemeshing = false;
   mutable logging::Logger _log{"cplscheme::CouplingSchemeConfiguration"};
 
   const std::string TAG;
@@ -135,7 +136,6 @@ private:
     bool                        strict;
     std::string                 meshName;
     impl::PtrConvergenceMeasure measure;
-    bool                        doesLogging;
   };
 
   struct Config {

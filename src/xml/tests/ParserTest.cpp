@@ -16,7 +16,9 @@ using precice::testing::getPathToSources;
 BOOST_AUTO_TEST_SUITE(XML)
 
 struct CallbackHostAttr : public XMLTag::Listener {
-  Eigen::VectorXd eigenValue;
+  Eigen::VectorXd eigenValue1;
+  Eigen::VectorXd eigenValue2;
+  Eigen::VectorXd eigenValue3;
   double          doubleValue;
   int             intValue;
   bool            boolValue;
@@ -28,8 +30,16 @@ struct CallbackHostAttr : public XMLTag::Listener {
       doubleValue = callingTag.getDoubleAttributeValue("attribute");
     }
 
-    if (callingTag.getName() == "test-eigen") {
-      eigenValue = callingTag.getEigenVectorXdAttributeValue("attribute", 3);
+    if (callingTag.getName() == "test-eigen-1") {
+      eigenValue1 = callingTag.getEigenVectorXdAttributeValue("attribute");
+    }
+
+    if (callingTag.getName() == "test-eigen-2") {
+      eigenValue2 = callingTag.getEigenVectorXdAttributeValue("attribute");
+    }
+
+    if (callingTag.getName() == "test-eigen-3") {
+      eigenValue3 = callingTag.getEigenVectorXdAttributeValue("attribute");
     }
 
     if (callingTag.getName() == "test-int") {
@@ -51,9 +61,10 @@ struct CallbackHostAttr : public XMLTag::Listener {
   }
 };
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(AttributeTypeTest)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/xmlparser_test.xml");
 
   CallbackHostAttr cb;
@@ -61,7 +72,9 @@ BOOST_AUTO_TEST_CASE(AttributeTypeTest)
   XMLTag           testcaseTag(cb, "test-config", XMLTag::OCCUR_ONCE);
 
   XMLTag doubleTag(cb, "test-double", XMLTag::OCCUR_ONCE_OR_MORE);
-  XMLTag eigenTag(cb, "test-eigen", XMLTag::OCCUR_ONCE_OR_MORE);
+  XMLTag eigen1Tag(cb, "test-eigen-1", XMLTag::OCCUR_ONCE_OR_MORE);
+  XMLTag eigen2Tag(cb, "test-eigen-2", XMLTag::OCCUR_ONCE_OR_MORE);
+  XMLTag eigen3Tag(cb, "test-eigen-3", XMLTag::OCCUR_ONCE_OR_MORE);
   XMLTag intTag(cb, "test-int", XMLTag::OCCUR_ONCE_OR_MORE);
   XMLTag stringTag(cb, "test-string", XMLTag::OCCUR_ONCE_OR_MORE);
   XMLTag boolTag(cb, "test-bool", XMLTag::OCCUR_ONCE_OR_MORE);
@@ -73,13 +86,17 @@ BOOST_AUTO_TEST_CASE(AttributeTypeTest)
   XMLAttribute<std::string>     stringAttr("text");
 
   doubleTag.addAttribute(doubleAttr);
-  eigenTag.addAttribute(eigenAttr);
+  eigen1Tag.addAttribute(eigenAttr);
+  eigen2Tag.addAttribute(eigenAttr);
+  eigen3Tag.addAttribute(eigenAttr);
   intTag.addAttribute(intAttr);
   boolTag.addAttribute(boolAttr);
   stringTag.addAttribute(stringAttr);
 
   testcaseTag.addSubtag(doubleTag);
-  testcaseTag.addSubtag(eigenTag);
+  testcaseTag.addSubtag(eigen1Tag);
+  testcaseTag.addSubtag(eigen2Tag);
+  testcaseTag.addSubtag(eigen3Tag);
   testcaseTag.addSubtag(intTag);
   testcaseTag.addSubtag(boolTag);
   testcaseTag.addSubtag(stringTag);
@@ -93,14 +110,23 @@ BOOST_AUTO_TEST_CASE(AttributeTypeTest)
   BOOST_TEST(cb.intValue == 4);
   BOOST_TEST(cb.stringValue == "Hello World");
 
-  BOOST_TEST(cb.eigenValue(0) == 3.0);
-  BOOST_TEST(cb.eigenValue(1) == 2.0);
-  BOOST_TEST(cb.eigenValue(2) == 1.0);
+  BOOST_TEST(cb.eigenValue1.size() == 1);
+  BOOST_TEST(cb.eigenValue1(0) == 3.0);
+
+  BOOST_TEST(cb.eigenValue2.size() == 2);
+  BOOST_TEST(cb.eigenValue2(0) == 3.0);
+  BOOST_TEST(cb.eigenValue2(1) == 2.0);
+
+  BOOST_TEST(cb.eigenValue3.size() == 3);
+  BOOST_TEST(cb.eigenValue3(0) == 3.0);
+  BOOST_TEST(cb.eigenValue3(1) == 2.0);
+  BOOST_TEST(cb.eigenValue3(2) == 1.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(OccurenceTest)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/xmlparser_occtest.xml");
 
   CallbackHostAttr cb;
@@ -128,9 +154,10 @@ BOOST_AUTO_TEST_CASE(OccurenceTest)
   configure(rootTag, ConfigurationContext{}, filename);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(NamespaceTest)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/xmlparser_nstest.xml");
 
   CallbackHostAttr cb;
@@ -165,9 +192,10 @@ struct ContextListener : public XMLTag::Listener {
   }
 };
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Context)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/config_xmltest_context.xml");
 
   ContextListener      cl;
@@ -182,9 +210,10 @@ BOOST_AUTO_TEST_CASE(Context)
   BOOST_TEST(cl.endContext.size == 32);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Decode)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   BOOST_TEST(decodeXML("Less than &lt; test") == "Less than < test");
   BOOST_TEST(decodeXML("Greater than &gt; test") == "Greater than > test");

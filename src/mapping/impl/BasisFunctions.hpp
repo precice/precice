@@ -1,36 +1,39 @@
 #pragma once
 
-#if defined(__NVCC__)
+#include <stdexcept>
 
+#ifdef __CUDACC__
 #include <cuda_runtime.h>
-#define BOOST_PP_VARIADICS 1
-#define PRECICE_HOST_DEVICE __host__ __device__
-#define PRECICE_MEMORY_SPACE __device__
-#define FMA fma
+#endif
 
-#elif defined(__HIPCC__)
-
-// #define __HIP_PLATFORM_AMD__
+#ifdef __HIPCC__
 #include <hip/hip_runtime.h>
+#endif
+
+#if defined(__CUDACC__) || defined(__HIPCC__)
+
+#include <ginkgo/extensions/kokkos.hpp>
+#include <ginkgo/ginkgo.hpp>
+
 #define PRECICE_HOST_DEVICE __host__ __device__
 #define PRECICE_MEMORY_SPACE __device__
-#define FMA fma
+#define PRECICE_FMA Kokkos::fma
+#define PRECICE_LOG Kokkos::log
 
 #else
 
 #define PRECICE_HOST_DEVICE
 #define PRECICE_MEMORY_SPACE
-#define FMA std::fma
+#define PRECICE_FMA std::fma
+#define PRECICE_LOG std::log
 
 #endif
 
-PRECICE_MEMORY_SPACE const double NUMERICAL_ZERO_DIFFERENCE = 1.0e-14;
+#define NUMERICAL_ZERO_DIFFERENCE_DEVICE 1.0e-14
 
-#include "logging/Logger.hpp"
 #include "math/math.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /**
  * @brief Wrapper struct that is used to transfer RBF-specific parameters to the GPU.
@@ -103,7 +106,7 @@ public:
   PRECICE_HOST_DEVICE inline double operator()(const double radius, const RadialBasisParameters params) const
   {
     // We don't need to read any values from params since there is no need here
-    return std::log(std::max(radius, NUMERICAL_ZERO_DIFFERENCE)) * math::pow_int<2>(radius);
+    return PRECICE_LOG(std::max(radius, NUMERICAL_ZERO_DIFFERENCE_DEVICE)) * math::pow_int<2>(radius);
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -166,11 +169,9 @@ public:
   explicit InverseMultiquadrics(double c)
       : _cPow2(math::pow_int<2>(c))
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
-    logging::Logger _log{"mapping::InverseMultiQuadrics"};
-    PRECICE_CHECK(math::greater(c, 0.0),
-                  "Shape parameter for radial-basis-function inverse multiquadric has to be larger than zero. Please update the \"shape-parameter\" attribute.");
-#endif
+    if (!math::greater(c, 0.0)) {
+      throw std::invalid_argument{"Shape parameter for radial-basis-function inverse multiquadric has to be larger than zero. Please update the \"shape-parameter\" attribute."};
+    }
     _params.parameter1 = _cPow2;
   }
 
@@ -240,13 +241,14 @@ public:
       : _shape(shape),
         _supportRadius(supportRadius)
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
-    logging::Logger _log{"mapping::Gaussian"};
-    PRECICE_CHECK(math::greater(_shape, 0.0),
-                  "Shape parameter for radial-basis-function gaussian has to be larger than zero. Please update the \"shape-parameter\" attribute.");
-    PRECICE_CHECK(math::greater(_supportRadius, 0.0),
-                  "Support radius for radial-basis-function gaussian has to be larger than zero. Please update the \"support-radius\" attribute.");
-#endif
+    if (math::greater(_shape, 0.0)) {
+      std::invalid_argument{
+          "Shape parameter for radial-basis-function gaussian has to be larger than zero. Please update the \"shape-parameter\" attribute."};
+    }
+    if (math::greater(_supportRadius, 0.0)) {
+      std::invalid_argument{
+          "Support radius for radial-basis-function gaussian has to be larger than zero. Please update the \"support-radius\" attribute."};
+    }
 
     double threshold   = std::sqrt(-std::log(cutoffThreshold)) / shape;
     _supportRadius     = std::min(supportRadius, threshold);
@@ -316,11 +318,10 @@ class CompactThinPlateSplinesC2 : public CompactSupportBase,
 public:
   explicit CompactThinPlateSplinesC2(double supportRadius)
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
-    logging::Logger _log{"mapping::CompactThinPlateSplinesC2"};
-    PRECICE_CHECK(math::greater(supportRadius, 0.0),
-                  "Support radius for radial-basis-function compact thin-plate-splines c2 has to be larger than zero. Please update the \"support-radius\" attribute.");
-#endif
+    if (math::greater(supportRadius, 0.0)) {
+      std::invalid_argument{
+          "Support radius for radial-basis-function compact thin-plate-splines c2 has to be larger than zero. Please update the \"support-radius\" attribute."};
+    }
     _r_inv             = 1. / supportRadius;
     _params.parameter1 = _r_inv;
   }
@@ -341,7 +342,7 @@ public:
     const double p     = radius * r_inv;
     if (p >= 1)
       return 0.0;
-    return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * std::log(std::max(p, NUMERICAL_ZERO_DIFFERENCE));
+    return 1.0 - 30.0 * math::pow_int<2>(p) - 10.0 * math::pow_int<3>(p) + 45.0 * math::pow_int<4>(p) - 6.0 * math::pow_int<5>(p) - math::pow_int<3>(p) * 60.0 * PRECICE_LOG(std::max(p, NUMERICAL_ZERO_DIFFERENCE_DEVICE));
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -369,11 +370,10 @@ class CompactPolynomialC0 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC0(double supportRadius)
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
-    logging::Logger _log{"mapping::CompactPolynomialC0"};
-    PRECICE_CHECK(math::greater(supportRadius, 0.0),
-                  "Support radius for radial-basis-function compact polynomial c0 has to be larger than zero. Please update the \"support-radius\" attribute.");
-#endif
+    if (math::greater(supportRadius, 0.0)) {
+      std::invalid_argument{
+          "Support radius for radial-basis-function compact polynomial c0 has to be larger than zero. Please update the \"support-radius\" attribute."};
+    }
     _r_inv             = 1. / supportRadius;
     _params.parameter1 = _r_inv;
   }
@@ -422,11 +422,10 @@ class CompactPolynomialC2 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC2(double supportRadius)
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
-    logging::Logger _log{"mapping::CompactPolynomialC2"};
-    PRECICE_CHECK(math::greater(supportRadius, 0.0),
-                  "Support radius for radial-basis-function compact polynomial c2 has to be larger than zero. Please update the \"support-radius\" attribute.");
-#endif
+    if (math::greater(supportRadius, 0.0)) {
+      std::invalid_argument{
+          "Support radius for radial-basis-function compact polynomial c2 has to be larger than zero. Please update the \"support-radius\" attribute."};
+    }
 
     _r_inv             = 1. / supportRadius;
     _params.parameter1 = _r_inv;
@@ -448,7 +447,7 @@ public:
     const double p     = radius * r_inv;
     if (p >= 1)
       return 0.0;
-    return math::pow_int<4>(1.0 - p) * FMA(4, p, 1);
+    return math::pow_int<4>(1.0 - p) * PRECICE_FMA(4, p, 1);
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -476,11 +475,10 @@ class CompactPolynomialC4 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC4(double supportRadius)
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
-    logging::Logger _log{"mapping::CompactPolynomialC4"};
-    PRECICE_CHECK(math::greater(supportRadius, 0.0),
-                  "Support radius for radial-basis-function compact polynomial c4 has to be larger than zero. Please update the \"support-radius\" attribute.");
-#endif
+    if (math::greater(supportRadius, 0.0)) {
+      std::invalid_argument{
+          "Support radius for radial-basis-function compact polynomial c4 has to be larger than zero. Please update the \"support-radius\" attribute."};
+    }
 
     _r_inv             = 1. / supportRadius;
     _params.parameter1 = _r_inv;
@@ -502,7 +500,7 @@ public:
     const double p     = radius * r_inv;
     if (p >= 1)
       return 0.0;
-    return math::pow_int<6>(1.0 - p) * (35 * math::pow_int<2>(p) + FMA(18, p, 3));
+    return math::pow_int<6>(1.0 - p) * (35 * math::pow_int<2>(p) + PRECICE_FMA(18, p, 3));
   }
 
   RadialBasisParameters getFunctionParameters()
@@ -530,11 +528,10 @@ class CompactPolynomialC6 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC6(double supportRadius)
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
-    logging::Logger _log{"mapping::CompactPolynomialC6"};
-    PRECICE_CHECK(math::greater(supportRadius, 0.0),
-                  "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute.");
-#endif
+    if (math::greater(supportRadius, 0.0)) {
+      std::invalid_argument{
+          "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute."};
+    }
     _r_inv             = 1. / supportRadius;
     _params.parameter1 = _r_inv;
   }
@@ -555,7 +552,7 @@ public:
     const double p     = radius * r_inv;
     if (p >= 1)
       return 0.0;
-    return math::pow_int<8>(1.0 - p) * (32.0 * math::pow_int<3>(p) + 25.0 * math::pow_int<2>(p) + FMA(8.0, p, 1.0));
+    return math::pow_int<8>(1.0 - p) * (32.0 * math::pow_int<3>(p) + 25.0 * math::pow_int<2>(p) + PRECICE_FMA(8.0, p, 1.0));
   };
 
   const RadialBasisParameters getFunctionParameters()
@@ -583,11 +580,10 @@ class CompactPolynomialC8 : public CompactSupportBase,
 public:
   explicit CompactPolynomialC8(double supportRadius)
   {
-#if !defined(__NVCC__) || !defined(__HIPCC__)
-    logging::Logger _log{"mapping::CompactPolynomialC8"};
-    PRECICE_CHECK(math::greater(supportRadius, 0.0),
-                  "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute.");
-#endif
+    if (math::greater(supportRadius, 0.0)) {
+      std::invalid_argument{
+          "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero. Please update the \"support-radius\" attribute."};
+    }
     _r_inv             = 1. / supportRadius;
     _params.parameter1 = _r_inv;
   }
@@ -620,5 +616,11 @@ private:
   double                _r_inv;
   RadialBasisParameters _params;
 };
-} // namespace mapping
-} // namespace precice
+
+#undef PRECICE_FMA
+#undef PRECICE_LOG
+#undef PRECICE_MEMORY_SPACE
+#undef PRECICE_HOST_DEVICE
+#undef NUMERICAL_ZERO_DIFFERENCE_DEVICE
+
+} // namespace precice::mapping

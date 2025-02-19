@@ -64,15 +64,15 @@ public:
      *
      */
     if (_initialSVD) {
-      PRECICE_ASSERT(A.rows() == _rows, A.rows(), _rows);
-      PRECICE_ASSERT(B.rows() == _rows, B.rows(), _rows);
+      PRECICE_ASSERT(A.rows() == _rowsA, A.rows(), _rowsA);
+      PRECICE_ASSERT(B.rows() == _rowsB, B.rows(), _rowsB);
     } else {
-      PRECICE_ASSERT(A.rows() == B.rows(), A.rows(), B.rows());
       PRECICE_ASSERT(A.cols() == B.cols(), A.cols(), B.cols());
-      _rows  = A.rows();
+      _rowsA = A.rows();
+      _rowsB = B.rows();
       _cols  = 0;
-      _psi   = Matrix::Zero(_rows, 0);
-      _phi   = Matrix::Zero(_rows, 0);
+      _psi   = Matrix::Zero(_rowsA, 0);
+      _phi   = Matrix::Zero(_rowsB, 0);
       _sigma = Vector::Zero(0);
     }
 
@@ -82,7 +82,7 @@ public:
 
     // Atil := \psi^T *A
     // local computation of \psi^T * A and allreduce_sum to Atil (global), stored local on each proc
-    _parMatrixOps->multiply(_psi.transpose(), A, Atil, (int) _psi.cols(), _globalRows, (int) A.cols());
+    _parMatrixOps->multiply(_psi.transpose(), A, Atil, (int) _psi.cols(), _globalRowsA, (int) A.cols());
 
     // Ptil := (I-\psi\psi^T)A
     // Atil is local on each proc, thus fully local computation, embarrassingly parallel
@@ -90,19 +90,19 @@ public:
 
     // compute orthogonal basis P of Ptil, i.e., QR-dec (P, R_A) = QR(Ptil)
     Matrix P, R_A;
-    computeQRdecomposition(Ptil, P, R_A);
+    computeQRdecomposition(Ptil, _globalRowsA, P, R_A);
 
     /**  (2): compute orthogonal basis Q of (I-\phi\phi^T)B
      */
     Matrix Btil(_phi.cols(), B.cols()); // Btil is of size (K_bar x m)
     // Btil := \phi^T *B
-    _parMatrixOps->multiply(_phi.transpose(), B, Btil, (int) _phi.cols(), _globalRows, (int) B.cols());
+    _parMatrixOps->multiply(_phi.transpose(), B, Btil, (int) _phi.cols(), _globalRowsB, (int) B.cols());
     // Qtil := (I-\phi\phi^T)B
     Matrix Qtil = B - _phi * Btil;
 
     // compute orthogonal basis Q of Qtil, i.e., QR-dec (Q, R_B) = QR(Qtil)
     Matrix Q, R_B;
-    computeQRdecomposition(Qtil, Q, R_B);
+    computeQRdecomposition(Qtil, _globalRowsB, Q, R_B);
 
     //     e_orthModes.stop(true);
 
@@ -136,13 +136,13 @@ public:
 
     /** (4) rotate left and right subspaces
      */
-    Matrix rotLeft(_rows, _psi.cols() + P.cols());
-    Matrix rotRight(_rows, _phi.cols() + Q.cols());
+    Matrix rotLeft(_rowsA, _psi.cols() + P.cols());
+    Matrix rotRight(_rowsB, _phi.cols() + Q.cols());
 
-    rotLeft.block(0, 0, _rows, _psi.cols())         = _psi;
-    rotLeft.block(0, _psi.cols(), _rows, P.cols())  = P;
-    rotRight.block(0, 0, _rows, _phi.cols())        = _phi;
-    rotRight.block(0, _phi.cols(), _rows, Q.cols()) = Q;
+    rotLeft.block(0, 0, _rowsA, _psi.cols())         = _psi;
+    rotLeft.block(0, _psi.cols(), _rowsA, P.cols())  = P;
+    rotRight.block(0, 0, _rowsB, _phi.cols())        = _phi;
+    rotRight.block(0, _phi.cols(), _rowsB, Q.cols()) = Q;
 
     // [\psi,P] is distributed block-row wise, but \psiPrime is local on each proc, hence local mult.
     _psi = rotLeft * psiPrime;
@@ -164,8 +164,8 @@ public:
     }
     _waste += waste;
 
-    _psi.conservativeResize(_rows, _cols);
-    _phi.conservativeResize(_rows, _cols);
+    _psi.conservativeResize(_rowsA, _cols);
+    _phi.conservativeResize(_rowsB, _cols);
     _sigma.conservativeResize(_cols);
     PRECICE_ASSERT(_sigma(0) >= 0.0);
     PRECICE_DEBUG("SVD factorization of Jacobian is truncated to {} DOFs. Cut off {} DOFs", _cols, waste);
@@ -177,7 +177,7 @@ public:
    * @brief: initializes the updated SVD factorization, i.e., sets the object for
    * parallel matrix-matrix operations and the number of global rows.
    */
-  void initialize(PtrParMatrixOps parMatOps, int globalRows);
+  void initialize(PtrParMatrixOps parMatOps, int globalRowsA, int globalRowsB);
 
   /**
    * @brief: resets the SVD factorization
@@ -201,9 +201,6 @@ public:
 
   /// @brief: returns the number of columns in the QR-decomposition
   int cols();
-
-  /// @brief: returns the number of rows in the QR-decomposition
-  int rows();
 
   /// @brief: returns the rank of the truncated SVD factorization
   Rank rank();
@@ -248,7 +245,7 @@ private:
    *  The threshold parameter eps, indicates whether a column is seen to be in the column space
    *  of Q via the criterium ||v_orth|| / ||v|| <= eps (cmp. QR2 Filter)
    */
-  void computeQRdecomposition(Matrix const &A, Matrix &Q, Matrix &R);
+  void computeQRdecomposition(Matrix const &A, int globalRows, Matrix &Q, Matrix &R);
 
   logging::Logger _log{"acceleration::SVDFactorization"};
 
@@ -263,14 +260,20 @@ private:
   Matrix _phi;
   Vector _sigma;
 
-  /// Number of rows (on each proc, i.e., local)
-  int _rows = 0;
+  /// Number of rows of first multiplicator (on each proc, i.e., local)
+  int _rowsA = 0;
+
+  /// Number of rows of second multiplicator (on each proc, i.e., local)
+  int _rowsB = 0;
 
   /// Number of columns, i.e., rank of the truncated svd
   int _cols = 0;
 
-  /// Number of global rows, i.e., sum of _rows for all procs
-  int _globalRows = 0;
+  /// Number of global rows of first multiplicator, i.e., sum of _rows for all procs
+  int _globalRowsA = 0;
+
+  /// Number of global rows of second multiplicator, i.e., sum of _rows for all procs
+  int _globalRowsB = 0;
 
   // Total number of truncated modes after last call to method getWaste()
   int _waste = 0;

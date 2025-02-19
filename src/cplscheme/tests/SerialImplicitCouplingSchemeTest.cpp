@@ -73,8 +73,8 @@ void runCoupling(
   std::vector<int>::const_iterator iterValidIterations = validIterations.begin();
 
   if (nameParticipant == nameParticipant0) {
-    mesh->data(0)->setSampleAtTime(0, time::Sample{1, mesh->data(0)->values()});
-    cplScheme.initialize(0.0, 1);
+    mesh->data(0)->setSampleAtTime(0, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
+    cplScheme.initialize();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -90,7 +90,7 @@ void runCoupling(
       // The max time step size is required to be obeyed.
       double maxTimeStepSize = cplScheme.getNextTimeStepMaxSize();
       cplScheme.addComputedTime(maxTimeStepSize);
-      mesh->data(0)->setSampleAtTime(cplScheme.getTime(), time::Sample{1, mesh->data(0)->values()});
+      mesh->data(0)->setSampleAtTime(cplScheme.getTime(), time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -142,8 +142,8 @@ void runCoupling(
     BOOST_TEST(testing::equals(computedTime, 0.3));
     BOOST_TEST(computedTimesteps == 3);
   } else if (nameParticipant == nameParticipant1) {
-    mesh->data(1)->setSampleAtTime(0, time::Sample{1, mesh->data(1)->values()});
-    cplScheme.initialize(0.0, 1);
+    mesh->data(1)->setSampleAtTime(0, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
+    cplScheme.initialize();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -162,7 +162,7 @@ void runCoupling(
       // The max time step size is required to be obeyed.
       double maxTimeStepSize = cplScheme.getNextTimeStepMaxSize();
       cplScheme.addComputedTime(maxTimeStepSize);
-      mesh->data(1)->setSampleAtTime(cplScheme.getTime(), time::Sample{1, mesh->data(1)->values()});
+      mesh->data(1)->setSampleAtTime(cplScheme.getTime(), time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -246,8 +246,8 @@ void runCouplingWithSubcycling(
 
   if (nameParticipant == nameParticipant0) {
     iterationCount++; // different handling due to subcycling
-    mesh->data(0)->setSampleAtTime(0, time::Sample{1, mesh->data(0)->values()});
-    cplScheme.initialize(0.0, 1);
+    mesh->data(0)->setSampleAtTime(0, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
+    cplScheme.initialize();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -268,7 +268,7 @@ void runCouplingWithSubcycling(
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
       cplScheme.addComputedTime(computedTimeStepSize);
-      mesh->data(0)->setSampleAtTime(cplScheme.getTime(), time::Sample{1, mesh->data(0)->values()});
+      mesh->data(0)->setSampleAtTime(cplScheme.getTime(), time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -335,8 +335,8 @@ void runCouplingWithSubcycling(
 
   else if (nameParticipant == nameParticipant1) {
     iterationCount++; // different handling due to subcycling
-    mesh->data(1)->setSampleAtTime(0, time::Sample{1, mesh->data(1)->values()});
-    cplScheme.initialize(0.0, 1);
+    mesh->data(1)->setSampleAtTime(0, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
+    cplScheme.initialize();
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -358,7 +358,7 @@ void runCouplingWithSubcycling(
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
       cplScheme.addComputedTime(computedTimeStepSize);
-      mesh->data(1)->setSampleAtTime(cplScheme.getTime(), time::Sample{1, mesh->data(1)->values()});
+      mesh->data(1)->setSampleAtTime(cplScheme.getTime(), time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -438,9 +438,10 @@ struct SerialImplicitCouplingSchemeFixture : m2n::WhiteboxAccessor {
 
 BOOST_FIXTURE_TEST_SUITE(SerialImplicitCouplingSchemeTests, SerialImplicitCouplingSchemeFixture)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
 
   int dimensions = 3;
@@ -465,9 +466,10 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
 }
 
 /// Test that runs on 2 processors.
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
   auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
@@ -521,16 +523,17 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   double                                 convergenceLimit1 = sqrt(3.0); // when diff_vector = (1.0, 1.0, 1.0)
   cplscheme::impl::PtrConvergenceMeasure absoluteConvMeasure1(
       new cplscheme::impl::AbsoluteConvergenceMeasure(convergenceLimit1));
-  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, absoluteConvMeasure1, true);
+  cplScheme.addConvergenceMeasure(convergenceDataIndex, false, false, absoluteConvMeasure1);
 
   // Expected iterations per implicit timesptep
   std::vector<int> validIterations = {5, 5, 5};
   runCoupling(cplScheme, context.name, meshConfig, validIterations);
 }
 
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
 
   using namespace mesh;
 
@@ -569,9 +572,10 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
               context.name, *meshConfig, validIterations);
 }
 
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
   auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
@@ -620,9 +624,10 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   runCoupling(cplScheme, context.name, meshConfig, validIterations);
 }
 
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
   auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
@@ -673,9 +678,10 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
       cplScheme, context.name, meshConfig, validIterations);
 }
 
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testInitializeData)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
   auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
@@ -737,8 +743,8 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(testing::equals(sendCouplingData->values()(0), 0.0));
 
     BOOST_TEST(Fixture::isImplicitCouplingScheme(cplScheme));
-    sendCouplingData->setSampleAtTime(0, time::Sample{1, sendCouplingData->values()});
-    cplScheme.initialize(0.0, 1);
+    sendCouplingData->setSampleAtTime(0, time::Sample{sendCouplingData->getDimensions(), sendCouplingData->values()});
+    cplScheme.initialize();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     // ensure that initial data was read
     BOOST_TEST(receiveCouplingData->getSize() == 3);
@@ -757,9 +763,9 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
         cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
       }
       BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == timeStepSize);
-      sendCouplingData->setSampleAtTime(cplScheme.getTime() + timeStepSize, time::Sample{1, Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0)});
+      sendCouplingData->setSampleAtTime(cplScheme.getTime() + timeStepSize, time::Sample{sendCouplingData->getDimensions(), Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0)});
       cplScheme.addComputedTime(timeStepSize);
-      sendCouplingData->setSampleAtTime(cplScheme.getTime(), time::Sample{1, Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0)});
+      sendCouplingData->setSampleAtTime(cplScheme.getTime(), time::Sample{sendCouplingData->getDimensions(), Eigen::VectorXd::Constant(sendCouplingData->getSize(), 4.0)});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -774,13 +780,13 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
     BOOST_TEST(cplScheme.isActionRequired(CouplingScheme::Action::InitializeData));
     Eigen::VectorXd v(3);
     v << 1.0, 2.0, 3.0;
-    sendCouplingData->setSampleAtTime(0, time::Sample{1, v});
+    sendCouplingData->setSampleAtTime(0, time::Sample{sendCouplingData->getDimensions(), v});
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(receiveCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 0.0));
     BOOST_TEST(sendCouplingData->getSize() == 3);
     BOOST_TEST(testing::equals(sendCouplingData->values(), Eigen::Vector3d(1.0, 2.0, 3.0)));
-    cplScheme.initialize(0.0, 1);
+    cplScheme.initialize();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(receiveCouplingData->getSize() == 1);
     BOOST_TEST(testing::equals(receiveCouplingData->values()(0), 4.0));
@@ -795,7 +801,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
         cplScheme.markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
       }
       BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == timeStepSize);
-      sendCouplingData->setSampleAtTime(cplScheme.getTime() + timeStepSize, time::Sample{1, v});
+      sendCouplingData->setSampleAtTime(cplScheme.getTime() + timeStepSize, time::Sample{sendCouplingData->getDimensions(), v});
       cplScheme.addComputedTime(timeStepSize);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();

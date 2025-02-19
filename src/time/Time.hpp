@@ -10,9 +10,6 @@ public:
 
   /// The minimum required interpolation degree.
   static const int MIN_WAVEFORM_DEGREE;
-
-  /// The maximum allowed interpolation degree.
-  static const int MAX_WAVEFORM_DEGREE;
 };
 
 } // namespace time

@@ -8,9 +8,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(MappingVolume)
+PRECICE_TEST_SETUP("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ParallelCube3To1)
 {
-  PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
   // Split the unit cube in 6 tetrahedra (2 per rank) and set up a consistent mapping
 
   using precice::VertexID;

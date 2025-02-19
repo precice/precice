@@ -19,6 +19,17 @@
 
 namespace precice::io {
 
+ExportVTU::ExportVTU(
+    std::string_view  participantName,
+    std::string_view  location,
+    const mesh::Mesh &mesh,
+    ExportKind        kind,
+    int               frequency,
+    int               rank,
+    int               size)
+
+    : ExportXML(participantName, location, mesh, kind, frequency, rank, size){};
+
 std::string ExportVTU::getVTKFormat() const
 {
   return "UnstructuredGrid";
@@ -26,12 +37,12 @@ std::string ExportVTU::getVTKFormat() const
 
 std::string ExportVTU::getParallelExtension() const
 {
-  return ".pvtu";
+  return "pvtu";
 }
 
 std::string ExportVTU::getPieceExtension() const
 {
-  return ".vtu";
+  return "vtu";
 }
 
 std::string ExportVTU::getPieceAttributes(const mesh::Mesh &mesh) const

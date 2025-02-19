@@ -99,6 +99,21 @@ int CouplingData::meshDimensions() const
   return _mesh->getDimensions();
 }
 
+void CouplingData::reinitialize()
+{
+  // TODO port this to subcyling
+
+  // The mesh was reinitialized and new written data will be added later in advance().
+  // Meaning all samples are based on a different mesh.
+  // Without remapping, the best we can do is setting them to zero samples.
+  // We keep the timestamps not to break convergence measures, accelerations, and actions
+  auto zero = time::Sample(_data->getDimensions(), _mesh->nVertices());
+  zero.setZero();
+
+  _data->timeStepsStorage().setAllSamples(zero);
+  _previousTimeStepsStorage.setAllSamples(zero);
+}
+
 void CouplingData::storeIteration()
 {
   const auto &stamples = this->stamples();
@@ -135,9 +150,14 @@ int CouplingData::getDataID()
   return _data->getID();
 }
 
-std::string CouplingData::getDataName()
+std::string CouplingData::getDataName() const
 {
   return _data->getName();
+}
+
+std::string CouplingData::getMeshName() const
+{
+  return _mesh->getName();
 }
 
 std::vector<int> CouplingData::getVertexOffsets()

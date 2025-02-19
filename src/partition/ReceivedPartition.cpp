@@ -85,6 +85,8 @@ void ReceivedPartition::communicate()
     PRECICE_ASSERT(globalNumberOfVertices >= 0);
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
   }
+
+  PRECICE_ASSERT(_mesh->getGlobalNumberOfVertices() >= 0);
 }
 
 void ReceivedPartition::compute()
@@ -133,7 +135,7 @@ void ReceivedPartition::compute()
   // check to prevent false configuration
   if (not utils::IntraComm::isSecondary()) {
     PRECICE_CHECK(hasAnyMapping() || _allowDirectAccess,
-                  "The received mesh {} needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?",
+                  "The received mesh {} needs a mapping (either from it, to it, or both) or API access enabled (enable-access=\"true\"). Maybe you don't want to receive this mesh at all?",
                   _mesh->getName());
   }
 
@@ -209,7 +211,6 @@ void ReceivedPartition::compute()
       PRECICE_DEBUG("Send partition feedback to primary rank");
       utils::IntraComm::getCommunication()->sendRange(vertexIDs, 0);
     } else { // Primary
-
       mesh::Mesh::VertexDistribution vertexDistribution;
       int                            numberOfVertices = _mesh->nVertices();
       std::vector<VertexID>          vertexIDs(numberOfVertices, -1);
@@ -220,7 +221,7 @@ void ReceivedPartition::compute()
 
       for (int secondaryRank : utils::IntraComm::allSecondaryRanks()) {
         PRECICE_DEBUG("Receive partition feedback from the secondary rank {}", secondaryRank);
-        vertexDistribution[secondaryRank] = utils::IntraComm::getCommunication()->receiveRange(secondaryRank, com::AsVectorTag<VertexID>{});
+        vertexDistribution[secondaryRank] = utils::IntraComm::getCommunication()->receiveRange(secondaryRank, com::asVector<VertexID>);
       }
       PRECICE_ASSERT(_mesh->getVertexDistribution().empty());
       _mesh->setVertexDistribution(std::move(vertexDistribution));
@@ -261,6 +262,11 @@ void ReceivedPartition::compute()
     utils::IntraComm::getCommunication()->broadcast(vertexOffsets);
     PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
     _mesh->setVertexOffsets(std::move(vertexOffsets));
+  }
+
+  PRECICE_ASSERT(!_mesh->getVertexOffsets().empty());
+  if (!m2n().usesTwoLevelInitialization() && utils::IntraComm::isPrimary()) {
+    PRECICE_ASSERT(!_mesh->getVertexDistribution().empty());
   }
 }
 
@@ -441,7 +447,7 @@ void ReceivedPartition::compareBoundingBoxes()
 
     // receive connected ranks from secondary ranks and add them to the connection map
     for (int rank : utils::IntraComm::allSecondaryRanks()) {
-      std::vector<Rank> secondaryConnectedRanks = utils::IntraComm::getCommunication()->receiveRange(rank, com::AsVectorTag<Rank>{});
+      std::vector<Rank> secondaryConnectedRanks = utils::IntraComm::getCommunication()->receiveRange(rank, com::asVector<Rank>);
       if (!secondaryConnectedRanks.empty()) {
         connectedRanksList.push_back(rank);
         connectionMap.emplace(rank, std::move(secondaryConnectedRanks));
@@ -752,7 +758,7 @@ void ReceivedPartition::createOwnerInformation()
         utils::IntraComm::getCommunication()->send(atInterface, 0);
 
         PRECICE_DEBUG("Receive owner information");
-        std::vector<VertexID> ownerVec = utils::IntraComm::getCommunication()->receiveRange(0, com::AsVectorTag<VertexID>{});
+        std::vector<VertexID> ownerVec = utils::IntraComm::getCommunication()->receiveRange(0, com::asVector<VertexID>);
         PRECICE_DEBUG("My owner information: {}", ownerVec);
         PRECICE_ASSERT(ownerVec.size() == static_cast<std::size_t>(numberOfVertices));
         setOwnerInformation(ownerVec);
@@ -799,8 +805,8 @@ void ReceivedPartition::createOwnerInformation()
 
         if (localNumberOfVertices != 0) {
           PRECICE_DEBUG("Receive tags from secondary rank {}", rank);
-          secondaryTags[rank]      = utils::IntraComm::getCommunication()->receiveRange(rank, com::AsVectorTag<int>{});
-          secondaryGlobalIDs[rank] = utils::IntraComm::getCommunication()->receiveRange(rank, com::AsVectorTag<VertexID>{});
+          secondaryTags[rank]      = utils::IntraComm::getCommunication()->receiveRange(rank, com::asVector<int>);
+          secondaryGlobalIDs[rank] = utils::IntraComm::getCommunication()->receiveRange(rank, com::asVector<VertexID>);
           PRECICE_DEBUG("Rank {} has tags {}", rank, secondaryTags[rank]);
           PRECICE_DEBUG("Rank {} has global IDs {}", rank, secondaryGlobalIDs[rank]);
           bool atInterface = false;
@@ -900,8 +906,20 @@ void ReceivedPartition::tagMeshFirstRound()
 {
   // We want to have every vertex within the box if we access the mesh directly
   if (_allowDirectAccess) {
-    _mesh->tagAll();
-    return;
+    // _mesh->getBoundingBox is based on the bounding box of the mesh, which is
+    // - set via the API function (setMeshAccessRegion)
+    // - potentially enlarged with another bounding box if there is another mapping defined
+    // i.e. we have a local mesh involved with a bounding box used to enlarge the original one
+    // concluding: it might be that the boundingBox is not (purely) the one asked for by the user
+    // but using mesh-tagAll() would tag the safety margin. Of course, this only applied for combinations of direct access plus mapping, for pure
+    // direct accesses, there is no safety factor
+
+    auto userDefinedBB = _mesh->getBoundingBox();
+    for (auto &vertex : _mesh->vertices()) {
+      if (userDefinedBB.contains(vertex)) {
+        vertex.tag();
+      }
+    }
   }
 
   for (const mapping::PtrMapping &fromMapping : _fromMappings) {
@@ -914,11 +932,6 @@ void ReceivedPartition::tagMeshFirstRound()
 
 void ReceivedPartition::tagMeshSecondRound()
 {
-  // We have already tagged every node in this case in the first round
-  if (_allowDirectAccess) {
-    return;
-  }
-
   for (const mapping::PtrMapping &fromMapping : _fromMappings) {
     fromMapping->tagMeshSecondRound();
   }

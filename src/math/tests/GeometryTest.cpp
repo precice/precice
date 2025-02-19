@@ -13,9 +13,10 @@ using namespace precice::math;
 BOOST_AUTO_TEST_SUITE(MathTests)
 BOOST_AUTO_TEST_SUITE(Geometry)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Collinear)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   // 2D test setup
   Eigen::Vector2d a2D(0, 0);
   Eigen::Vector2d b2D(1, 1);
@@ -37,10 +38,11 @@ BOOST_AUTO_TEST_CASE(Collinear)
   BOOST_CHECK(!geometry::collinear(a3D, b3D, notCollinearPoint3D));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TetraVolume,
                      *boost::unit_test::tolerance(1e-3))
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Eigen::Vector3d a(1, 2, 3);
   Eigen::Vector3d b(3, 2, 1);
   Eigen::Vector3d c(4, 5, 6);
@@ -57,9 +59,10 @@ BOOST_AUTO_TEST_CASE(TetraVolume,
   BOOST_TEST(geometry::tetraVolume(a, b, c, d) == 62.1816);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Between)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   for (int dim = 2; dim <= 3; dim++) {
     Eigen::VectorXd a(dim);
     Eigen::VectorXd b(dim);
@@ -89,9 +92,10 @@ BOOST_AUTO_TEST_CASE(Between)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TriangleArea)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   { // 2D
     Eigen::Vector2d a, b, c;
     double          area;
@@ -118,9 +122,10 @@ BOOST_AUTO_TEST_CASE(TriangleArea)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SegmentPlaneIntersection)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector3d;
   Vector3d planeNormal        = Vector3d::Constant(1.0);
   Vector3d pointOnPlane       = Vector3d::Constant(0.0);
@@ -191,9 +196,10 @@ BOOST_AUTO_TEST_CASE(SegmentPlaneIntersection)
   BOOST_CHECK(equals(intersectionPoint, expected));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ProjectVector)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Eigen::Vector3d vector3D(1.0, 2.0, 3.0);
   Eigen::Vector2d vector2D;
   Eigen::Vector2d vectorExpected(1.0, 2.0);
@@ -210,9 +216,10 @@ BOOST_AUTO_TEST_CASE(ProjectVector)
   BOOST_CHECK(equals(vector2D, vectorExpected));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ContainedInHyperrectangle)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   // 2D
   Eigen::Vector2d center2D(0, 0);
   Eigen::Vector2d sidelengths2D(1, 1);
@@ -620,9 +627,10 @@ BOOST_AUTO_TEST_CASE(ContainedInHyperrectangle)
 
 BOOST_AUTO_TEST_SUITE(Convexity)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ComputeUnitQuadConvexity)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int             dim = 3;
   Eigen::VectorXd coords0(dim);
   Eigen::VectorXd coords1(dim);
@@ -645,9 +653,10 @@ BOOST_AUTO_TEST_CASE(ComputeUnitQuadConvexity)
   BOOST_TEST(result.vertexOrder.at(3) == 1);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ComputeReversedUnitQuadConvexity)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int             dim = 3;
   Eigen::VectorXd coords0(dim);
   Eigen::VectorXd coords1(dim);
@@ -670,9 +679,10 @@ BOOST_AUTO_TEST_CASE(ComputeReversedUnitQuadConvexity)
   BOOST_TEST(result.vertexOrder.at(3) == 1);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexity)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int             dim = 3;
   Eigen::VectorXd coords0(dim);
   Eigen::VectorXd coords1(dim);
@@ -695,9 +705,10 @@ BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexity)
   BOOST_TEST(result.vertexOrder.at(3) == 0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexityWithOffPlane)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int             dim = 3;
   Eigen::VectorXd coords0(dim);
   Eigen::VectorXd coords1(dim);
@@ -721,9 +732,10 @@ BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexityWithOffPlane)
   // BOOST_TEST(result.vertexOrder.at(3) == 0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ComputeInvalidUnitQuadConvexity)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int             dim = 3;
   Eigen::VectorXd coords0(dim);
   Eigen::VectorXd coords1(dim);
@@ -740,9 +752,10 @@ BOOST_AUTO_TEST_CASE(ComputeInvalidUnitQuadConvexity)
   BOOST_TEST(!result.convex);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ComputeInvalidQuadConvexity)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int             dim = 3;
   Eigen::VectorXd coords0(dim);
   Eigen::VectorXd coords1(dim);

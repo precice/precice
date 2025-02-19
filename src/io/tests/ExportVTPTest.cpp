@@ -23,12 +23,155 @@ using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(VTPExport)
 
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm());
+BOOST_AUTO_TEST_CASE(ExportScalar)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
+  mesh.createVertex(Eigen::Vector2d::Zero());
+  mesh.createVertex(Eigen::Vector2d::Constant(1));
+  mesh::PtrData data = mesh.createData("data", 1, 0_dataID);
+  data->setSampleAtTime(0, time::Sample{1, 2}.setZero());
+
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTP.doExport(0, 0.0);
+  testing::expectFiles("Mesh-io-VTPExport.init.vtp");
+}
+
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm());
+BOOST_AUTO_TEST_CASE(ExportVector)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
+  mesh.createVertex(Eigen::Vector2d::Zero());
+  mesh.createVertex(Eigen::Vector2d::Constant(1));
+  mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
+  data->setSampleAtTime(0, time::Sample{2, 2}.setZero());
+
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTP.doExport(0, 0.0);
+  testing::expectFiles("Mesh-io-VTPExport.init.vtp");
+}
+
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm());
+BOOST_AUTO_TEST_CASE(ExportMissing)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
+  mesh.createVertex(Eigen::Vector2d::Zero());
+  mesh.createVertex(Eigen::Vector2d::Constant(1));
+  mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
+  // no sample
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTP.doExport(0, 0.0);
+  testing::expectFiles("Mesh-io-VTPExport.init.vtp");
+}
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportScalarParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  mesh::PtrData data = mesh.createData("data", 1, 0_dataID);
+  data->setSampleAtTime(0, time::Sample{1, 1}.setZero());
+
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTP.doExport(0, 0.0);
+  if (context.isPrimary()) {
+    testing::expectFiles(
+        "Mesh-io-VTPExport.init_0.vtp",
+        "Mesh-io-VTPExport.init.pvtp");
+  } else {
+    testing::expectFiles("Mesh-io-VTPExport.init_1.vtp");
+  }
+}
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportVectorParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
+  data->setSampleAtTime(0, time::Sample{2, 1}.setZero());
+
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTP.doExport(0, 0.0);
+  if (context.isPrimary()) {
+    testing::expectFiles(
+        "Mesh-io-VTPExport.init_0.vtp",
+        "Mesh-io-VTPExport.init.pvtp");
+  } else {
+    testing::expectFiles("Mesh-io-VTPExport.init_1.vtp");
+  }
+}
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportMissingParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
+  BOOST_TEST_REQUIRE(data->timeStepsStorage().empty());
+  // no sample
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTP.doExport(0, 0.0);
+  if (context.isPrimary()) {
+    testing::expectFiles(
+        "Mesh-io-VTPExport.init_0.vtp",
+        "Mesh-io-VTPExport.init.pvtp");
+  } else {
+    testing::expectFiles("Mesh-io-VTPExport.init_1.vtp");
+  }
+}
+
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
+BOOST_AUTO_TEST_CASE(ExportScalarAndMissingParallel)
+{
+  PRECICE_TEST();
+  mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
+  if (context.isPrimary()) {
+    mesh.createVertex(Eigen::Vector2d::Zero());
+  } else {
+    mesh.createVertex(Eigen::Vector2d::Constant(1));
+  }
+  auto missing = mesh.createData("missing", 2, 0_dataID);
+  BOOST_TEST_REQUIRE(missing->timeStepsStorage().empty());
+  mesh::PtrData data = mesh.createData("data", 2, 1_dataID);
+  data->setSampleAtTime(0, time::Sample{2, 1}.setZero());
+  // no sample
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTP.doExport(0, 0.0);
+  if (context.isPrimary()) {
+    testing::expectFiles(
+        "Mesh-io-VTPExport.init_0.vtp",
+        "Mesh-io-VTPExport.init.pvtp");
+  } else {
+    testing::expectFiles("Mesh-io-VTPExport.init_1.vtp");
+  }
+}
+
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm());
 BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
 {
-  PRECICE_TEST(1_rank)
+  PRECICE_TEST();
   const int dimensions = 2;
   // Create mesh to map from
-  mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
+  mesh::Mesh    mesh("Mesh", dimensions, testing::nextMeshID());
   mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
   mesh::PtrData dataVector = mesh.createData("dataVector", dimensions, 1_dataID);
   dataScalar->requireDataGradient();
@@ -36,30 +179,29 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
   mesh.createVertex(Eigen::Vector2d::Constant(0.0));
   mesh.createVertex(Eigen::Vector2d::Constant(1.0));
 
-  // Create data
-  mesh.allocateDataValues();
-  Eigen::VectorXd &valuesScalar = dataScalar->values();
-  Eigen::VectorXd &valuesVector = dataVector->values();
-  valuesScalar.setLinSpaced(1., 5.);
-  valuesVector.setLinSpaced(1., 5.);
+  time::Sample scalar(1, 2, dimensions);
+  scalar.values.setLinSpaced(0, 1);
+  scalar.gradients.setOnes();
+  dataScalar->setSampleAtTime(0, scalar);
 
-  // Create corresponding gradient data (all gradient values = const = 1)
-  Eigen::MatrixXd &gradientsScalar = dataScalar->gradients();
-  Eigen::MatrixXd &gradientsVector = dataVector->gradients();
-  gradientsScalar.setOnes();
-  gradientsVector.setOnes();
-  io::ExportVTP exportVTP;
-  std::string   filename = "io-VTPExport-ExportDatawithGradient" + std::to_string(dimensions);
-  std::string   location = "";
-  exportVTP.doExport(filename, location, mesh);
+  time::Sample vectorial(dimensions, 2, dimensions);
+  vectorial.values.setLinSpaced(0, 1);
+  vectorial.gradients.setOnes();
+  dataVector->setSampleAtTime(0, vectorial);
+
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTP.doExport(0, 0.0);
+  exportVTP.doExport(1, 1.0);
+  testing::expectFiles("Mesh-io-VTPExport.init.vtp", "Mesh-io-VTPExport.dt1.vtp");
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
 {
-  PRECICE_TEST(1_rank)
+  PRECICE_TEST();
   const int dimensions = 3;
   // Create mesh to map from
-  mesh::Mesh    mesh("MyMesh", dimensions, testing::nextMeshID());
+  mesh::Mesh    mesh("Mesh", dimensions, testing::nextMeshID());
   mesh::PtrData dataScalar = mesh.createData("dataScalar", 1, 0_dataID);
   mesh::PtrData dataVector = mesh.createData("dataVector", dimensions, 1_dataID);
   dataScalar->requireDataGradient();
@@ -67,30 +209,28 @@ BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
   mesh.createVertex(Eigen::Vector3d::Constant(0.0));
   mesh.createVertex(Eigen::Vector3d::Constant(1.0));
 
-  // Create data
-  mesh.allocateDataValues();
-  Eigen::VectorXd &valuesScalar = dataScalar->values();
-  Eigen::VectorXd &valuesVector = dataVector->values();
+  time::Sample scalar(1, 2, dimensions);
+  scalar.values.setLinSpaced(0, 1);
+  scalar.gradients.setOnes();
+  dataScalar->setSampleAtTime(0, scalar);
 
-  valuesScalar.setLinSpaced(1., 5.);
-  valuesVector.setLinSpaced(1., 5.);
+  time::Sample vectorial(dimensions, 2, dimensions);
+  vectorial.values.setLinSpaced(0, 1);
+  vectorial.gradients.setOnes();
+  dataVector->setSampleAtTime(0, vectorial);
 
-  // Create corresponding gradient data (all gradient values = const = 1)
-  Eigen::MatrixXd &gradientsScalar = dataScalar->gradients();
-  Eigen::MatrixXd &gradientsVector = dataVector->gradients();
-  gradientsScalar.setOnes();
-  gradientsVector.setOnes();
-  io::ExportVTP exportVTP;
-  std::string   filename = "io-VTPExport-ExportDatawithGradient" + std::to_string(dimensions);
-  std::string   location = "";
-  exportVTP.doExport(filename, location, mesh);
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTP.doExport(0, 0.0);
+  exportVTP.doExport(1, 1.0);
+  testing::expectFiles("Mesh-io-VTPExport.init.vtp", "Mesh-io-VTPExport.dt1.vtp");
 }
 
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 {
-  PRECICE_TEST(""_on(1_rank).setupIntraComm());
+  PRECICE_TEST();
   int           dim = 2;
-  mesh::Mesh    mesh("MyMesh", dim, testing::nextMeshID());
+  mesh::Mesh    mesh("Mesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Zero());
   mesh::Vertex &v2 = mesh.createVertex(Eigen::Vector2d::Constant(1));
   mesh::Vertex &v3 = mesh.createVertex(Eigen::Vector2d{1.0, 0.0});
@@ -99,17 +239,18 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
   mesh.createEdge(v2, v3);
   mesh.createEdge(v3, v1);
 
-  io::ExportVTP exportVTP;
-  std::string   filename = "io-VTPExport-ExportPolygonalMesh";
-  std::string   location = "";
-  exportVTP.doExport(filename, location, mesh);
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTP.doExport(0, 0.0);
+  exportVTP.doExport(1, 1.0);
+  testing::expectFiles("Mesh-io-VTPExport.init.vtp", "Mesh-io-VTPExport.dt1.vtp");
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   int        dim = 2;
-  mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", dim, testing::nextMeshID());
 
   if (context.isRank(0)) {
     mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Zero());
@@ -134,17 +275,24 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
     mesh.createVertex(Eigen::Vector2d::Constant(3.0));
   }
 
-  io::ExportVTP exportVTP;
-  std::string   filename = "io-ExportVTPTest-testExportPolygonalMesh";
-  std::string   location = "";
-  exportVTP.doExport(filename, location, mesh);
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTP.doExport(0, 0.0);
+  exportVTP.doExport(1, 1.0);
+  testing::expectFiles(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank),
+                       fmt::format("Mesh-io-VTPExport.dt1_{}.vtp", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles(
+        "Mesh-io-VTPExport.init.pvtp",
+        "Mesh-io-VTPExport.dt1.pvtp");
+  }
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   int        dim = 3;
-  mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", dim, testing::nextMeshID());
 
   if (context.isRank(0)) {
     mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Zero());
@@ -172,17 +320,24 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
     mesh.createVertex(Eigen::Vector3d::Constant(3.0));
   }
 
-  io::ExportVTP exportVTP;
-  std::string   filename = "io-ExportVTPTest-testExportTriangulatedMesh";
-  std::string   location = "";
-  exportVTP.doExport(filename, location, mesh);
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTP.doExport(0, 0.0);
+  exportVTP.doExport(1, 1.0);
+  testing::expectFiles(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank),
+                       fmt::format("Mesh-io-VTPExport.dt1_{}.vtp", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles(
+        "Mesh-io-VTPExport.init.pvtp",
+        "Mesh-io-VTPExport.dt1.pvtp");
+  }
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportSplitSquare)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   int        dim = 3;
-  mesh::Mesh mesh("MyMesh", dim, testing::nextMeshID());
+  mesh::Mesh mesh("Mesh", dim, testing::nextMeshID());
 
   mesh::Vertex &vm = mesh.createVertex(Eigen::Vector3d::Zero());
   if (context.isRank(0)) {
@@ -233,10 +388,16 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh.createTriangle(eo1, e12, e2o);
   }
 
-  io::ExportVTP exportVTP;
-  std::string   filename = "io-ExportVTPTest-Square";
-  std::string   location = "";
-  exportVTP.doExport(filename, location, mesh);
+  io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  exportVTP.doExport(0, 0.0);
+  exportVTP.doExport(1, 1.0);
+  testing::expectFiles(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank),
+                       fmt::format("Mesh-io-VTPExport.dt1_{}.vtp", context.rank));
+  if (context.isPrimary()) {
+    testing::expectFiles(
+        "Mesh-io-VTPExport.init.pvtp",
+        "Mesh-io-VTPExport.dt1.pvtp");
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END() // IOTests

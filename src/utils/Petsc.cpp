@@ -27,46 +27,6 @@
 
 namespace precice::utils {
 
-#ifndef PRECICE_NO_PETSC
-
-namespace {
-
-using new_signature = PetscErrorCode(PetscOptions, const char[], const char[]);
-using old_signature = PetscErrorCode(const char[], const char[]);
-
-/**
- * @brief Fix for compatibility with PETSc < 3.7.
- *
- * This enables to call PetscOptionsSetValue with proper number of arguments.
- * This instantiates only the template, that specifies correct function signature, whilst
- * the other one is discarded ( https://en.cppreference.com/w/cpp/language/sfinae )
- */
-template <typename curr_signature = decltype(PetscOptionsSetValue)>
-PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[],
-                                           typename std::enable_if<std::is_same<curr_signature, new_signature>::value, curr_signature>::type PetscOptionsSetValueImpl =
-                                               PetscOptionsSetValue)
-{
-  return PetscOptionsSetValueImpl(nullptr, name, value);
-}
-
-/**
- * @brief Fix for compatibility with PETSc < 3.7.
- *
- * This enables to call PetscOptionsSetValue with proper number of arguments.
- * This instantiates only the template, that specifies correct function signature, whilst
- * the other one is discarded ( https://en.cppreference.com/w/cpp/language/sfinae )
- */
-template <typename curr_signature = decltype(PetscOptionsSetValue)>
-PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[],
-                                           typename std::enable_if<std::is_same<curr_signature, old_signature>::value, curr_signature>::type PetscOptionsSetValueImpl =
-                                               PetscOptionsSetValue)
-{
-  return PetscOptionsSetValueImpl(name, value);
-}
-
-} // namespace
-#endif
-
 precice::logging::Logger precice::utils::Petsc::_log("utils::Petsc");
 
 #ifndef PRECICE_NO_PETSC
@@ -104,7 +64,7 @@ void Petsc::finalize()
   PetscBool petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
   if (petscIsInitialized) {
-    PetscOptionsSetValueWrapper("-options_left", "no");
+    PetscOptionsSetValue(nullptr, "-options_left", "no");
     PetscFinalize();
   }
 #endif // not PRECICE_NO_PETSC

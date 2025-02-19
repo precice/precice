@@ -10,9 +10,10 @@ BOOST_AUTO_TEST_SUITE(TimeTests)
 BOOST_AUTO_TEST_SUITE(StorageTests)
 
 // create storage and test for correct initial values.
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testInitialize)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   auto storage = Storage();
   int  nValues = 3;
   BOOST_TEST(storage.nTimes() == 0);
@@ -27,9 +28,10 @@ BOOST_AUTO_TEST_CASE(testInitialize)
 }
 
 // create storage and trim it.
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testClear)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   auto storage = Storage();
   int  nValues = 3;
   BOOST_TEST(storage.nTimes() == 0);
@@ -48,9 +50,10 @@ BOOST_AUTO_TEST_CASE(testClear)
 }
 
 // create storage, add some values and then move to next window.
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testMove)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   auto storage = Storage();
   int  nValues = 3;
   BOOST_TEST(storage.nTimes() == 0);
@@ -80,9 +83,10 @@ BOOST_AUTO_TEST_CASE(testMove)
 }
 
 // get times and values
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testGetTimesAndValues)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   auto storage = Storage();
   int  nValues = 3;
   storage.setSampleAtTime(0, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
@@ -104,9 +108,10 @@ BOOST_AUTO_TEST_CASE(testGetTimesAndValues)
 }
 
 BOOST_AUTO_TEST_SUITE(ExtrapolationTests)
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testExtrapolateDataZerothOrder)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   auto      storage = Storage();
   const int nValues = 1;

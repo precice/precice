@@ -106,7 +106,7 @@ void ProvidedPartition::communicate()
 
       if (not utils::IntraComm::isSecondary()) {
         PRECICE_CHECK(globalMesh.nVertices() > 0,
-                      "The provided mesh \"{}\" is empty. Please set the mesh using setMeshXXX() prior to calling initialize().",
+                      "The provided mesh \"{}\" is empty. Please set the mesh using setMeshVertex()/setMeshVertices() prior to calling initialize().",
                       globalMesh.getName());
         com::sendMesh(*m2n->getPrimaryRankCommunication(), 0, globalMesh);
       }
@@ -119,6 +119,10 @@ void ProvidedPartition::prepare()
   PRECICE_TRACE();
   PRECICE_INFO("Prepare partition for mesh {}", _mesh->getName());
   Event e("partition.prepareMesh." + _mesh->getName(), profiling::Synchronize);
+
+  PRECICE_ASSERT(_mesh->getGlobalNumberOfVertices() <= 0, _mesh->getGlobalNumberOfVertices());
+  PRECICE_ASSERT(_mesh->getVertexOffsets().empty(), _mesh->getVertexOffsets());
+  PRECICE_ASSERT(_mesh->getVertexDistribution().empty(), _mesh->getVertexDistribution());
 
   int numberOfVertices = _mesh->nVertices();
 
@@ -143,7 +147,6 @@ void ProvidedPartition::prepare()
       globalNumberOfVertices += numberOfSecondaryRankVertices;
     }
     PRECICE_ASSERT(std::all_of(vertexOffsets.begin(), vertexOffsets.end(), [](auto i) { return i >= 0; }));
-    PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
     _mesh->setVertexOffsets(vertexOffsets);
 
     // set and broadcast global number of vertices
@@ -203,9 +206,7 @@ void ProvidedPartition::prepare()
     _mesh->setVertexOffsets(std::move(vertexOffsets));
 
   } else {
-
     // The only rank of the participant contains all vertices
-    PRECICE_ASSERT(_mesh->getVertexDistribution().empty());
     _mesh->setVertexDistribution([&] {
       mesh::Mesh::VertexDistribution vertexDistribution;
       for (int i = 0; i < numberOfVertices; i++) {
@@ -214,15 +215,18 @@ void ProvidedPartition::prepare()
       }
       return vertexDistribution;
     }());
-    PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
     _mesh->setVertexOffsets({numberOfVertices});
     _mesh->setGlobalNumberOfVertices(numberOfVertices);
+    PRECICE_ASSERT(!_mesh->getVertexDistribution().empty());
   }
 
   PRECICE_DEBUG("Set owner information");
   for (mesh::Vertex &v : _mesh->vertices()) {
     v.setOwner(true);
   }
+
+  PRECICE_ASSERT(_mesh->getGlobalNumberOfVertices() > 0);
+  PRECICE_ASSERT(!_mesh->getVertexOffsets().empty());
 }
 
 void ProvidedPartition::compute()
@@ -241,10 +245,11 @@ void ProvidedPartition::compute()
 void ProvidedPartition::compareBoundingBoxes()
 {
   PRECICE_TRACE();
-  if (_m2ns.empty())
-    return;
 
   _mesh->clearPartitioning();
+
+  if (_m2ns.empty())
+    return;
 
   //@todo coupling mode
 
@@ -286,7 +291,7 @@ void ProvidedPartition::compareBoundingBoxes()
 
     // primary rank receives feedback map (map of other participant ranks -> connected ranks at this participant)
     // from other participants primary rank
-    std::vector<Rank> connectedRanksList = _m2ns[0]->getPrimaryRankCommunication()->receiveRange(0, com::AsVectorTag<Rank>{});
+    std::vector<Rank> connectedRanksList = _m2ns[0]->getPrimaryRankCommunication()->receiveRange(0, com::asVector<Rank>);
     remoteConnectionMapSize              = connectedRanksList.size();
 
     mesh::Mesh::CommunicationMap remoteConnectionMap;

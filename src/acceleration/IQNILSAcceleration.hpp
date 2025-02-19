@@ -33,12 +33,10 @@ public:
       int                     filter,
       double                  singularityLimit,
       std::vector<int>        dataIDs,
-      impl::PtrPreconditioner preconditioner);
+      impl::PtrPreconditioner preconditioner,
+      bool                    reducedTimeGrid);
 
   virtual ~IQNILSAcceleration() {}
-
-  /// Initializes the acceleration.
-  virtual void initialize(const DataMap &cplData);
 
   /**
     * @brief Marks a iteration sequence as converged.
@@ -52,23 +50,17 @@ private:
   /// Secondary data solver output from last iteration.
   std::map<int, Eigen::VectorXd> _secondaryOldXTildes;
 
-  // @brief Secondary data x-tilde deltas.
-  //
-  // Stores x-tilde deltas for data not involved in least-squares computation.
-  std::map<int, Eigen::MatrixXd> _secondaryMatricesW;
-  std::map<int, Eigen::MatrixXd> _secondaryMatricesWBackup;
-
   /// updates the V, W matrices (as well as the matrices for the secondary data)
   virtual void updateDifferenceMatrices(const DataMap &cplData);
 
   /// computes the IQN-ILS update using QR decomposition
-  virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate);
-
-  /// computes underrelaxation for the secondary data
-  virtual void computeUnderrelaxationSecondaryData(const DataMap &cplData);
+  virtual void computeQNUpdate(Eigen::VectorXd &xUpdate);
 
   /// Removes one iteration from V,W matrices and adapts _matrixCols.
   virtual void removeMatrixColumn(int columnIndex);
+
+  /// @copydoc precice::Acceleration::BaseQNAcceleration::specializedInitializeVectorsAndPreconditioner()
+  virtual void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) override final{};
 };
 } // namespace acceleration
 } // namespace precice
