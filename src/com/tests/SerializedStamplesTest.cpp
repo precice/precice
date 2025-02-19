@@ -63,8 +63,8 @@ BOOST_AUTO_TEST_CASE(DeserializeValues)
   PRECICE_TEST();
   std::vector<int> vertexOffsets{4, 8, 8, 10};
 
-  const int meshDimensions = 3;
   const int nValues        = 4;
+  const int dataDimensions = 1;
   const int nTimeSteps     = 3;
 
   Eigen::VectorXd serializedValues(nTimeSteps * nValues);
@@ -73,10 +73,13 @@ BOOST_AUTO_TEST_CASE(DeserializeValues)
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
 
-  mesh::PtrData              toData(new mesh::Data("to", -1, 1));
+  mesh::PtrData              toData(new mesh::Data("to", -1, dataDimensions));
   cplscheme::PtrCouplingData toDataPtr = makeCouplingData(toData, dummyMesh);
 
-  toDataPtr->setSampleAtTime(0, time::Sample(toDataPtr->getDimensions(), Eigen::VectorXd(nValues)));
+  Eigen::VectorXd initValues(nValues);
+  initValues.setZero();
+
+  toDataPtr->setSampleAtTime(0, time::Sample(toDataPtr->getDimensions(), initValues));
 
   Eigen::VectorXd timeStamps(nTimeSteps);
   timeStamps << 0, 0.5, 1;
@@ -179,6 +182,7 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
 
   const int meshDimensions = 3;
   const int nValues        = 4;
+  const int dataDimensions = 1;
   const int nTimeSteps     = 3;
 
   Eigen::VectorXd serializedValues(nTimeSteps * nValues);
@@ -190,12 +194,18 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
 
-  mesh::PtrData toData(new mesh::Data("to", -1, 1));
+  mesh::PtrData toData(new mesh::Data("to", -1, dataDimensions));
   toData->requireDataGradient();
 
   cplscheme::PtrCouplingData toDataPtr = makeCouplingData(toData, dummyMesh);
 
-  toDataPtr->setSampleAtTime(0, time::Sample(toDataPtr->getDimensions(), Eigen::VectorXd(nValues), Eigen::MatrixXd(nValues, meshDimensions)));
+  Eigen::VectorXd initValues(nValues);
+  initValues.setZero();
+
+  Eigen::MatrixXd initGradients(nValues, meshDimensions);
+  initGradients.setZero();
+
+  toDataPtr->setSampleAtTime(0, time::Sample(toDataPtr->getDimensions(), initValues, initGradients));
 
   Eigen::VectorXd timeStamps(nTimeSteps);
   timeStamps << 0, 0.5, 1;

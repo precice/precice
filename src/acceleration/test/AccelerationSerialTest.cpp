@@ -70,17 +70,11 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
-  // init displacements
-  displacements->values().resize(4);
-  displacements->values() << 1.0, 1.0, 1.0, 1.0;
-  displacements->setSampleAtTime(windowStart, displacements->sample());
-  displacements->setSampleAtTime(windowEnd, displacements->sample());
-
-  // init forces
-  forces->values().resize(4);
-  forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(windowStart, forces->sample());
-  forces->setSampleAtTime(windowEnd, forces->sample());
+  // init displacements & forces
+  displacements->setSampleAtTime(windowStart, time::Sample(displacements->getDimensions(), Eigen::Vector4d{1.0, 1.0, 1.0, 1.0}));
+  displacements->setSampleAtTime(windowEnd, time::Sample(displacements->getDimensions(), Eigen::Vector4d{1.0, 1.0, 1.0, 1.0}));
+  forces->setSampleAtTime(windowStart, time::Sample(forces->getDimensions(), Eigen::Vector4d{0.2, 0.2, 0.2, 0.2}));
+  forces->setSampleAtTime(windowEnd, time::Sample(forces->getDimensions(), Eigen::Vector4d{0.2, 0.2, 0.2, 0.2}));
 
   cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
   cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
@@ -93,10 +87,8 @@ void testIQNIMVJPP(bool exchangeSubsteps)
 
   pp.initialize(data);
 
-  displacements->values() << 1.0, 2.0, 3.0, 4.0;
-  displacements->setSampleAtTime(windowEnd, displacements->sample());
-  forces->values() << 0.1, 0.1, 0.1, 0.1;
-  forces->setSampleAtTime(windowEnd, forces->sample());
+  displacements->setSampleAtTime(windowEnd, time::Sample(displacements->getDimensions(), Eigen::Vector4d{1.0, 2.0, 3.0, 4.0}));
+  forces->setSampleAtTime(windowEnd, time::Sample(forces->getDimensions(), Eigen::Vector4d{0.1, 0.1, 0.1, 0.1}));
 
   pp.performAcceleration(data, windowStart);
 
@@ -171,17 +163,11 @@ void testVIQNPP(bool exchangeSubsteps)
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
-  // init displacements
-  displacements->values().resize(4);
-  displacements->values() << 1.0, 1.0, 1.0, 1.0;
-  displacements->setSampleAtTime(windowStart, displacements->sample());
-  displacements->setSampleAtTime(windowEnd, displacements->sample());
-
-  // init forces
-  forces->values().resize(4);
-  forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(windowStart, forces->sample());
-  forces->setSampleAtTime(windowEnd, forces->sample());
+  // init displacements & forces
+  displacements->setSampleAtTime(windowStart, time::Sample(displacements->getDimensions(), Eigen::Vector4d{1.0, 1.0, 1.0, 1.0}));
+  displacements->setSampleAtTime(windowEnd, time::Sample(displacements->getDimensions(), Eigen::Vector4d{1.0, 1.0, 1.0, 1.0}));
+  forces->setSampleAtTime(windowStart, time::Sample(forces->getDimensions(), Eigen::Vector4d{0.2, 0.2, 0.2, 0.2}));
+  forces->setSampleAtTime(windowEnd, time::Sample(forces->getDimensions(), Eigen::Vector4d{0.2, 0.2, 0.2, 0.2}));
 
   cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
   cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
@@ -260,15 +246,9 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
   mesh::PtrData displacements = std::make_shared<mesh::Data>("dvalues", -1, 1);
   mesh::PtrData forces        = std::make_shared<mesh::Data>("fvalues", -1, 1);
 
-  // //init displacements
-  displacements->values().resize(4);
-  displacements->values() << 1.0, 2.0, 3.0, 4.0;
-  displacements->setSampleAtTime(windowStart, displacements->sample());
-
-  // //init forces
-  forces->values().resize(4);
-  forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(windowStart, forces->sample());
+  // init displacements & forces
+  displacements->setSampleAtTime(windowStart, time::Sample(displacements->getDimensions(), Eigen::Vector4d{1.0, 2.0, 3.0, 4.0}));
+  forces->setSampleAtTime(windowStart, time::Sample(forces->getDimensions(), Eigen::Vector4d{0.2, 0.2, 0.2, 0.2}));
 
   bool exchangeSubsteps = false;
 
@@ -508,23 +488,21 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
   mesh::PtrData displacements = std::make_shared<mesh::Data>("dvalues", -1, 1);
   mesh::PtrData forces        = std::make_shared<mesh::Data>("fvalues", -1, 1);
 
-  // //init displacements
-  displacements->values().resize(4);
-  displacements->values() << 1.0, 2.0, 3.0, 4.0;
+  // init displacements
   displacements->requireDataGradient();
-  displacements->gradients().resize(dim, 4);
+  Eigen::MatrixXd displacementGradient(displacements->gradients());
+  displacementGradient.resize(dim, 4);
   for (unsigned int r = 0; r < dim; ++r) {
     for (unsigned int c = 0; c < 4; ++c)
-      displacements->gradients()(r, c) = r + r * c;
+      displacementGradient(r, c) = r + r * c;
   }
-  displacements->setSampleAtTime(windowStart, displacements->sample());
-  // //init forces
-  forces->values().resize(4);
-  forces->values() << 0.2, 0.2, 0.2, 0.2;
+  displacements->setSampleAtTime(windowStart, time::Sample(displacements->getDimensions(), Eigen::Vector4d{1.0, 2.0, 3.0, 4.0}, displacementGradient));
+  // init forces
   forces->requireDataGradient();
-  forces->gradients().resize(dim, 4);
-  forces->gradients().setConstant(-2);
-  forces->setSampleAtTime(windowStart, forces->sample());
+  Eigen::MatrixXd forcesGradient(forces->gradients());
+  forcesGradient.resize(dim, 4);
+  forcesGradient.setConstant(-2);
+  forces->setSampleAtTime(windowStart, time::Sample(forces->getDimensions(), Eigen::Vector4d{0.2, 0.2, 0.2, 0.2}, forcesGradient));
 
   bool exchangeSubsteps = true;
 
@@ -669,23 +647,21 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
   mesh::PtrData displacements = std::make_shared<mesh::Data>("dvalues", -1, 1);
   mesh::PtrData forces        = std::make_shared<mesh::Data>("fvalues", -1, 1);
 
-  // //init displacements
-  displacements->values().resize(4);
-  displacements->values() << 1.0, 2.0, 3.0, 4.0;
+  // init displacements
   displacements->requireDataGradient();
-  displacements->gradients().resize(dim, 4);
+  Eigen::MatrixXd displacementGradient(displacements->gradients());
+  displacementGradient.resize(dim, 4);
   for (unsigned int r = 0; r < dim; ++r) {
     for (unsigned int c = 0; c < 4; ++c)
-      displacements->gradients()(r, c) = r + r * c;
+      displacementGradient(r, c) = r + r * c;
   }
-  displacements->setSampleAtTime(windowStart, displacements->sample());
-  // //init forces
-  forces->values().resize(4);
-  forces->values() << 0.2, 0.2, 0.2, 0.2;
+  displacements->setSampleAtTime(windowStart, time::Sample(displacements->getDimensions(), Eigen::Vector4d{1.0, 2.0, 3.0, 4.0}, displacementGradient));
+  // init forces
   forces->requireDataGradient();
-  forces->gradients().resize(dim, 4);
-  forces->gradients().setConstant(-2);
-  forces->setSampleAtTime(windowStart, forces->sample());
+  Eigen::MatrixXd forcesGradient(forces->gradients());
+  forcesGradient.resize(dim, 4);
+  forcesGradient.setConstant(-2);
+  forces->setSampleAtTime(windowStart, time::Sample(forces->getDimensions(), Eigen::Vector4d{0.2, 0.2, 0.2, 0.2}, forcesGradient));
 
   bool exchangeSubsteps = false;
 
@@ -700,12 +676,8 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
 
   acc.initialize(data);
 
-  displacements->values() << 3.5, 2.0, 2.0, 1.0;
-  displacements->gradients().setConstant(2.5);
-  displacements->setSampleAtTime(windowEnd, displacements->sample());
-  forces->values() << 0.1, 0.1, 0.1, 0.1;
-  forces->gradients().setConstant(3);
-  forces->setSampleAtTime(windowEnd, forces->sample());
+  displacements->setSampleAtTime(windowEnd, time::Sample(displacements->getDimensions(), Eigen::Vector4d{3.5, 2.0, 2.0, 1.0}, Eigen::MatrixXd(displacements->gradients()).setConstant(2.5)));
+  forces->setSampleAtTime(windowEnd, time::Sample(displacements->getDimensions(), Eigen::Vector4d{0.1, 0.1, 0.1, 0.1}, Eigen::MatrixXd(displacements->gradients()).setConstant(3)));
 
   acc.performAcceleration(data, windowStart);
 
