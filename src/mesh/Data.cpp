@@ -55,7 +55,7 @@ const time::Sample &Data::sample() const
   return _sample;
 }
 
-Eigen::VectorXd Data::sampleAtTime(double time) const
+time::SampleResult Data::sampleAtTime(double time) const
 {
   return _waveform.sample(time);
 }
