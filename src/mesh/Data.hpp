@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <initializer_list>
 #include <stddef.h>
 #include <string>
 
@@ -104,6 +105,15 @@ public:
 
   /// Add sample at given time to _timeStepsStorage.
   void setSampleAtTime(double time, const time::Sample &sample);
+
+  /// Creates an empty sample at given time
+  void emplaceSampleAtTime(double time);
+
+  /// Creates a sample at given time with given values
+  void emplaceSampleAtTime(double time, std::initializer_list<double> values);
+
+  /// Creates a sample at given time with given values and gradients
+  void emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients);
 
   /// Returns the name of the data set, as set in the config file.
   const std::string &getName() const;
