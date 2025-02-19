@@ -457,8 +457,9 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     impl::MeshContext &fromMeshContext = participant->meshContext(fromMesh);
     impl::MeshContext &toMeshContext   = participant->meshContext(toMesh);
 
-    // @TODO: is this still correct?
-    if (!confMapping.allowsGeometricFilter) {
+    // We disable the filtering for any kernel methods, as all of them operate on the full mesh,
+    // mostly for safety reasons
+    if (!confMapping.requiresBasisFunction) {
       fromMeshContext.geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
       toMeshContext.geoFilter   = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
     }
