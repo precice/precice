@@ -584,6 +584,16 @@ int BaseQNAcceleration::getLSSystemCols() const
   return cols;
 }
 
+int BaseQNAcceleration::getMaxUsedIterations() const
+{
+  return _maxIterationsUsed;
+}
+
+int BaseQNAcceleration::getMaxUsedTimeWindows() const
+{
+  return _timeWindowsReused;
+}
+
 int BaseQNAcceleration::getLSSystemRows() const
 {
   if (utils::IntraComm::isParallel()) {
@@ -628,15 +638,15 @@ void BaseQNAcceleration::concatenateCouplingData(Eigen::VectorXd &data, Eigen::V
 
     for (int i = 0; i < timeGrid.size(); i++) {
 
-      Eigen::VectorXd values    = cplData.at(id)->timeStepsStorage().sample(timeGrid(i));
-      Eigen::VectorXd oldValues = cplData.at(id)->getPreviousValuesAtTime(timeGrid(i));
+      auto current = cplData.at(id)->timeStepsStorage().sample(timeGrid(i));
+      auto old     = cplData.at(id)->getPreviousValuesAtTime(timeGrid(i));
 
       PRECICE_ASSERT(data.size() >= offset + dataSize, "the values were not initialized correctly");
       PRECICE_ASSERT(oldData.size() >= offset + dataSize, "the values were not initialized correctly");
 
       for (Eigen::Index i = 0; i < dataSize; i++) {
-        data(i + offset)    = values(i);
-        oldData(i + offset) = oldValues(i);
+        data(i + offset)    = current(i);
+        oldData(i + offset) = old(i);
       }
       offset += dataSize;
     }
