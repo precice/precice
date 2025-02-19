@@ -83,7 +83,7 @@ public:
    * @param time Time where the sampling happens.
    * @return Value of _waveform at time \ref time.
    */
-  Eigen::VectorXd sampleAtTime(double time) const;
+  time::SampleResult sampleAtTime(double time) const;
 
   /**
    * @brief get degree of _waveform.

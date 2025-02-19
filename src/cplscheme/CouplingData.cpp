@@ -71,7 +71,7 @@ const time::Storage &CouplingData::timeStepsStorage() const
   return _data->timeStepsStorage();
 }
 
-Eigen::VectorXd CouplingData::getPreviousValuesAtTime(double relativeDt)
+time::SampleResult CouplingData::getPreviousValuesAtTime(double relativeDt)
 {
   return _previousTimeStepsStorage.sample(relativeDt);
 }
