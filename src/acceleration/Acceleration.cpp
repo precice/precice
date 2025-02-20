@@ -31,19 +31,17 @@ void Acceleration::applyRelaxation(double omega, DataMap &cplData, double window
         continue;
       }
 
-      auto sample = couplingData.timeStepsStorage().getSampleAtOrAfter(time);
-      auto values = sample.values;
-      auto old    = couplingData.getPreviousValuesAtTime(time); // IMPORTANT DETAIL: The interpolation that we use for resampling does not necessarily have to be the same interpolation as the interpolation the user accesses via read-data. (But probably it is easier to just use the same)
-      values      = values * omega + old.values() * (1.0 - omega);
+      auto         sample = couplingData.timeStepsStorage().getSampleAtOrAfter(time);
+      time::Sample updatedSample(couplingData.getDimensions(), couplingData.nVertices(), couplingData.meshDimensions());
+      auto         old     = couplingData.getPreviousValuesAtTime(time); // IMPORTANT DETAIL: The interpolation that we use for resampling does not necessarily have to be the same interpolation as the interpolation the user accesses via read-data. (But probably it is easier to just use the same)
+      updatedSample.values = sample.values * omega + old.values() * (1.0 - omega);
 
-      if (!couplingData.hasGradient()) {
-        couplingData.setSampleAtTime(time, time::Sample(couplingData.getDimensions(), values));
-      } else {
-        auto gradients    = sample.gradients;
-        auto oldGradients = couplingData.getPreviousGradientsAtTime(time); // IMPORTANT DETAIL: The interpolation that we use for resampling does not necessarily have to be the same interpolation as the interpolation the user accesses via read-data. (But probably it is easier to just use the same)
-        gradients         = gradients * omega + oldGradients * (1.0 - omega);
-        couplingData.setSampleAtTime(time, time::Sample(couplingData.getDimensions(), values, gradients));
+      if (couplingData.hasGradient()) {
+        auto oldGradients       = couplingData.getPreviousGradientsAtTime(time); // IMPORTANT DETAIL: The interpolation that we use for resampling does not necessarily have to be the same interpolation as the interpolation the user accesses via read-data. (But probably it is easier to just use the same)
+        updatedSample.gradients = sample.gradients * omega + oldGradients * (1.0 - omega);
       }
+
+      couplingData.setSampleAtTime(time, updatedSample);
     }
     // @todo remove
     // update the "sample"
