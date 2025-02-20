@@ -116,14 +116,6 @@ DataID Data::getID() const
   return _id;
 }
 
-void Data::toZero()
-{
-  _sample.values.setZero();
-  if (_hasGradient) {
-    _sample.gradients.setZero();
-  }
-}
-
 bool Data::hasGradient() const
 {
   return _hasGradient;
