@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="Traction" />
+  <data:scalar name="Displacement" />
+  <data:scalar name="Activation1" />
+  <data:scalar name="Activation2" />
+  <data:scalar name="stretch1" />
+  <data:scalar name="stretch2" />
+
+  <mesh name="Surface_M1SM_Mesh" dimensions="2">
+    <use-data name="Traction" />
+    <use-data name="Displacement" />
+  </mesh>
+
+  <mesh name="Surface_M2SM_Mesh" dimensions="2">
+    <use-data name="Traction" />
+    <use-data name="Displacement" />
+  </mesh>
+
+  <mesh name="Activation_M1_Mesh" dimensions="2">
+    <use-data name="Activation1" />
+  </mesh>
+
+  <mesh name="Activation_M1SM_Mesh" dimensions="2">
+    <use-data name="Activation1" />
+  </mesh>
+
+  <mesh name="Activation_M2_Mesh" dimensions="2">
+    <use-data name="Activation2" />
+  </mesh>
+
+  <mesh name="Activation_M2SM_Mesh" dimensions="2">
+    <use-data name="Activation2" />
+  </mesh>
+
+  <mesh name="Stretch_M1_Mesh" dimensions="2">
+    <use-data name="stretch1" />
+    <use-data name="stretch2" />
+  </mesh>
+
+  <mesh name="Stretch_M1SM_Mesh" dimensions="2">
+    <use-data name="stretch1" />
+  </mesh>
+
+  <mesh name="Stretch_M2_Mesh" dimensions="2">
+    <use-data name="stretch1" />
+    <use-data name="stretch2" />
+  </mesh>
+
+  <mesh name="Stretch_M2SM_Mesh" dimensions="2">
+    <use-data name="stretch2" />
+  </mesh>
+
+  <participant name="M1SM">
+    <provide-mesh name="Surface_M1SM_Mesh" />
+    <receive-mesh name="Surface_M2SM_Mesh" from="M2SM" />
+    <provide-mesh name="Activation_M1SM_Mesh" />
+    <provide-mesh name="Stretch_M1SM_Mesh" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="Surface_M1SM_Mesh"
+      to="Surface_M2SM_Mesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="Surface_M2SM_Mesh"
+      to="Surface_M1SM_Mesh"
+      constraint="consistent" />
+    <write-data name="Displacement" mesh="Surface_M1SM_Mesh" />
+    <read-data name="Traction" mesh="Surface_M1SM_Mesh" />
+    <read-data name="Activation1" mesh="Activation_M1SM_Mesh" />
+    <write-data name="stretch1" mesh="Stretch_M1SM_Mesh" />
+  </participant>
+
+  <participant name="M2SM">
+    <provide-mesh name="Surface_M2SM_Mesh" />
+    <provide-mesh name="Activation_M2SM_Mesh" />
+    <provide-mesh name="Stretch_M2SM_Mesh" />
+    <write-data name="Traction" mesh="Surface_M2SM_Mesh" />
+    <read-data name="Displacement" mesh="Surface_M2SM_Mesh" />
+    <read-data name="Activation2" mesh="Activation_M2SM_Mesh" />
+    <write-data name="stretch2" mesh="Stretch_M2SM_Mesh" />
+  </participant>
+
+  <participant name="M1">
+    <provide-mesh name="Activation_M1_Mesh" />
+    <receive-mesh name="Activation_M1SM_Mesh" from="M1SM" />
+    <provide-mesh name="Stretch_M1_Mesh" />
+    <receive-mesh name="Stretch_M1SM_Mesh" from="M1SM" />
+    <receive-mesh name="Stretch_M2SM_Mesh" from="M2SM" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="Activation_M1_Mesh"
+      to="Activation_M1SM_Mesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      to="Stretch_M1_Mesh"
+      from="Stretch_M1SM_Mesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      to="Stretch_M1_Mesh"
+      from="Stretch_M2SM_Mesh"
+      constraint="consistent" />
+    <read-data name="stretch1" mesh="Stretch_M1_Mesh" />
+    <write-data name="Activation1" mesh="Activation_M1_Mesh" />
+    <read-data name="stretch2" mesh="Stretch_M1_Mesh" />
+  </participant>
+
+  <participant name="M2">
+    <provide-mesh name="Activation_M2_Mesh" />
+    <receive-mesh name="Activation_M2SM_Mesh" from="M2SM" />
+    <provide-mesh name="Stretch_M2_Mesh" />
+    <receive-mesh name="Stretch_M1SM_Mesh" from="M1SM" />
+    <receive-mesh name="Stretch_M2SM_Mesh" from="M2SM" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="Activation_M2_Mesh"
+      to="Activation_M2SM_Mesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      to="Stretch_M2_Mesh"
+      from="Stretch_M2SM_Mesh"
+      constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      to="Stretch_M2_Mesh"
+      from="Stretch_M1SM_Mesh"
+      constraint="consistent" />
+    <read-data name="stretch2" mesh="Stretch_M2_Mesh" />
+    <write-data name="Activation2" mesh="Activation_M2_Mesh" />
+    <read-data name="stretch1" mesh="Stretch_M2_Mesh" />
+  </participant>
+
+  <m2n:sockets acceptor="M1SM" connector="M2SM" />
+  <m2n:sockets acceptor="M1" connector="M1SM" />
+  <m2n:sockets acceptor="M2" connector="M2SM" />
+  <m2n:sockets acceptor="M2SM" connector="M1" />
+  <m2n:sockets acceptor="M1SM" connector="M2" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="M1SM" second="M2" />
+    <time-window-size value="1" />
+    <max-time-windows value="2" />
+    <exchange data="stretch1" mesh="Stretch_M1SM_Mesh" from="M1SM" to="M2" />
+  </coupling-scheme:serial-explicit>
+
+  <coupling-scheme:serial-explicit>
+    <participants first="M2SM" second="M1" />
+    <time-window-size value="1" />
+    <max-time-windows value="2" />
+    <exchange data="stretch2" mesh="Stretch_M2SM_Mesh" from="M2SM" to="M1" />
+  </coupling-scheme:serial-explicit>
+
+  <coupling-scheme:serial-explicit>
+    <participants second="M1" first="M1SM" />
+    <time-window-size value="1" />
+    <max-time-windows value="2" />
+    <exchange data="Activation1" mesh="Activation_M1SM_Mesh" from="M1" to="M1SM" />
+    <exchange data="stretch1" mesh="Stretch_M1SM_Mesh" from="M1SM" to="M1" />
+  </coupling-scheme:serial-explicit>
+
+  <coupling-scheme:serial-explicit>
+    <participants second="M2" first="M2SM" />
+    <time-window-size value="1" />
+    <max-time-windows value="2" />
+    <exchange data="Activation2" mesh="Activation_M2SM_Mesh" from="M2" to="M2SM" />
+    <exchange data="stretch2" mesh="Stretch_M2SM_Mesh" from="M2SM" to="M2" />
+  </coupling-scheme:serial-explicit>
+
+  <coupling-scheme:parallel-implicit>
+    <participants first="M1SM" second="M2SM" />
+    <time-window-size value="1" />
+    <max-time-windows value="2" />
+    <exchange data="Displacement" mesh="Surface_M2SM_Mesh" from="M1SM" to="M2SM" />
+    <exchange data="Traction" mesh="Surface_M2SM_Mesh" from="M2SM" to="M1SM" />
+    <max-iterations value="1" />
+    <min-iterations value="1" />
+  </coupling-scheme:parallel-implicit>
+</precice-configuration>
