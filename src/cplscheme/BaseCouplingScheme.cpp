@@ -202,14 +202,13 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
       serialized.deserializeInto(timesAscending, data);
     } else {
       // Data is only received on ranks with size>0, which is checked in the derived class implementation
-      time::Sample recvSample(data->getDimensions(), data->getSize(), data->meshDimensions());
+      time::Sample recvSample(data->getDimensions(), data->nVertices(), data->meshDimensions());
       m2n->receive(recvSample.values, data->getMeshID(), data->getDimensions());
 
       if (data->hasGradient()) {
         PRECICE_ASSERT(data->hasGradient());
         m2n->receive(recvSample.gradients, data->getMeshID(), data->getDimensions() * data->meshDimensions());
       }
-
       data->setSampleAtTime(getTime(), recvSample);
     }
   }

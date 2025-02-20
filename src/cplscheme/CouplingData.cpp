@@ -39,6 +39,11 @@ int CouplingData::getSize() const
   return sample().values.size();
 }
 
+int CouplingData::nVertices() const
+{
+  return sample().values.size() / getDimensions();
+}
+
 Eigen::VectorXd &CouplingData::values()
 {
   return sample().values;
@@ -101,8 +106,7 @@ void CouplingData::emplaceSampleAtTime(double time, std::initializer_list<double
 
 void CouplingData::emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients)
 {
-  auto nVertices = values.size() / getDimensions();
-  this->sample() = time::Sample(_data->getDimensions(), Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size()), Eigen::Map<const Eigen::MatrixXd>(gradients.begin(), nVertices, _data->getDimensions() * _data->getSpatialDimensions())); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
+  this->sample() = time::Sample(_data->getDimensions(), Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size()), Eigen::Map<const Eigen::MatrixXd>(gradients.begin(), nVertices(), _data->getDimensions() * _data->getSpatialDimensions())); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _data->emplaceSampleAtTime(time, values, gradients);
 }
 
