@@ -125,14 +125,14 @@ void AitkenAcceleration::concatenateCouplingData(
   for (auto id : dataIDs) {
     Eigen::Index size = cplData.at(id)->values().size();
 
-    Eigen::VectorXd values    = cplData.at(id)->timeStepsStorage().sample(windowEnd).values();
-    Eigen::VectorXd oldValues = cplData.at(id)->getPreviousValuesAtTime(windowEnd).values();
+    auto valuesSample    = cplData.at(id)->timeStepsStorage().sample(windowEnd);
+    auto oldValuesSample = cplData.at(id)->getPreviousValuesAtTime(windowEnd);
 
     PRECICE_ASSERT(targetValues.size() >= offset + size, "Target vector was not initialized.", targetValues.size(), offset + size);
     PRECICE_ASSERT(targetOldValues.size() >= offset + size, "Target vector was not initialized.");
     for (Eigen::Index i = 0; i < size; i++) {
-      targetValues(i + offset)    = values(i);
-      targetOldValues(i + offset) = oldValues(i);
+      targetValues(i + offset)    = valuesSample.values()(i);
+      targetOldValues(i + offset) = oldValuesSample.values()(i);
     }
     offset += size;
   }
