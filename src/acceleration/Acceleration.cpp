@@ -45,6 +45,9 @@ void Acceleration::applyRelaxation(double omega, DataMap &cplData, double window
         couplingData.setSampleAtTime(time, time::Sample(couplingData.getDimensions(), values, gradients));
       }
     }
+    // @todo remove
+    // update the "sample"
+    couplingData._sample() = couplingData.timeStepsStorage().last().sample;
   }
 }
 } // namespace precice::acceleration
