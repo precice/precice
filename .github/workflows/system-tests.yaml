@@ -76,7 +76,7 @@ jobs:
     uses: precice/tutorials/.github/workflows/run_testsuite_workflow.yml@develop
     with:
       suites: release_test
-      build_args: "PLATFORM:ubuntu_2204,\
+      build_args: "PLATFORM:ubuntu_2404,\
         PRECICE_REF:${{ github.event.pull_request.head.sha }},\
         PYTHON_BINDINGS_REF:${{ needs.gather-refs.outputs.ref-python-bindings }},\
         CALCULIX_VERSION:2.20,\
