@@ -44,7 +44,7 @@ void SerializedStamples::allocate(const cplscheme::PtrCouplingData data)
   }
 }
 
-void SerializedStamples::serializeValues(const cplscheme::PtrCouplingData data)
+void SerializedStamples::serializeValues(std::shared_ptr<const cplscheme::CouplingData> data)
 {
   const int nValues = data->sample().values.size();
   int       timeId  = 0;
@@ -57,7 +57,7 @@ void SerializedStamples::serializeValues(const cplscheme::PtrCouplingData data)
   }
 }
 
-void SerializedStamples::serializeGradients(const cplscheme::PtrCouplingData data)
+void SerializedStamples::serializeGradients(std::shared_ptr<const cplscheme::CouplingData> data)
 {
   const int nValues = data->sample().gradients.size();
   int       timeId  = 0;
@@ -92,7 +92,7 @@ void SerializedStamples::deserialize(const Eigen::VectorXd timeStamps, cplscheme
       continue;
     }
 
-    Eigen::MatrixXd gradientSlice(data->sample().gradients.rows(), data->sample().gradients.cols());
+    Eigen::MatrixXd gradientSlice(data->gradientsRows(), data->gradientsCols());
     auto            gradientView = Eigen::VectorXd::Map(gradientSlice.data(), gradientSlice.rows() * gradientSlice.cols());
     for (int gradientId = 0; gradientId < gradientView.size(); gradientId++) {
       gradientView(gradientId) = _gradients(gradientId * timeStamps.size() + timeId);

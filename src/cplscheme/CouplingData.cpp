@@ -49,6 +49,16 @@ const Eigen::MatrixXd &CouplingData::gradients() const
   return sample().gradients;
 }
 
+int CouplingData::gradientsRows() const
+{
+  return sample().gradients.rows();
+}
+
+int CouplingData::gradientsCols() const
+{
+  return sample().gradients.cols();
+}
+
 const time::Sample &CouplingData::sample() const
 {
   PRECICE_ASSERT(_data != nullptr);
@@ -80,7 +90,14 @@ Eigen::MatrixXd CouplingData::getPreviousGradientsAtTime(double relativeDt)
 void CouplingData::setSampleAtTime(double time, time::Sample sample)
 {
   PRECICE_ASSERT(not sample.values.hasNaN());
+  this->_sample() = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _data->setSampleAtTime(time, sample);
+}
+
+void CouplingData::initializeWithZeroAtTime(double time)
+{
+  this->_sample().setZero(); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
+  _data->setSampleAtTime(time, this->sample());
 }
 
 void CouplingData::emplaceSampleAtTime(double time)
@@ -90,11 +107,14 @@ void CouplingData::emplaceSampleAtTime(double time)
 
 void CouplingData::emplaceSampleAtTime(double time, std::initializer_list<double> values)
 {
+  this->_sample() = time::Sample(_data->getDimensions(), Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size())); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _data->emplaceSampleAtTime(time, values);
 }
 
 void CouplingData::emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients)
 {
+  auto nVertices  = values.size() / getDimensions();
+  this->_sample() = time::Sample(_data->getDimensions(), Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size()), Eigen::Map<const Eigen::MatrixXd>(gradients.begin(), nVertices, _data->getDimensions() * _data->getSpatialDimensions())); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _data->emplaceSampleAtTime(time, values, gradients);
 }
 
@@ -128,6 +148,7 @@ void CouplingData::storeIteration()
 {
   const auto &stamples = this->stamples();
   PRECICE_ASSERT(stamples.size() > 0);
+  this->_sample()           = stamples.back().sample;
   _previousTimeStepsStorage = _data->timeStepsStorage();
 }
 
@@ -187,6 +208,12 @@ void CouplingData::moveToNextWindow()
   }
   _data->moveToNextWindow();
   _previousTimeStepsStorage = _data->timeStepsStorage();
+}
+
+time::Sample &CouplingData::_sample()
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->sample();
 }
 
 bool CouplingData::exchangeSubsteps() const

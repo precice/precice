@@ -32,8 +32,17 @@ public:
   /// Returns a const reference to the gradient data values.
   const Eigen::MatrixXd &gradients() const;
 
+  /// Returns number of rows of the stored gradients.
+  int gradientsRows() const;
+
+  /// Returns number of columns of the stored gradients.
+  int gradientsCols() const;
+
   /// Returns a const reference to the data Sample.
   const time::Sample &sample() const;
+
+  /// Returns a reference to the data Sample. @todo try make private or (better) to remove this function
+  time::Sample &_sample();
 
   /// Returns a reference to the time step storage of the data.
   time::Storage &timeStepsStorage();
@@ -54,6 +63,9 @@ public:
 
   /// Add sample at given time to _timeStepsStorage.
   void setSampleAtTime(double time, time::Sample sample);
+
+  /// Add sample with zero values at given time to _timeStepsStorage.
+  void initializeWithZeroAtTime(double time);
 
   /// Creates an empty sample at given time
   void emplaceSampleAtTime(double time);
