@@ -197,7 +197,7 @@ public:
   virtual std::string getName() const = 0;
 
   /**
-   * @brief Just-in-time or just-in-time mapping variant of mapConservative
+   * @brief Just-in-time mapping variant of mapConservative
    *
    * @param coordinates[in] where to compute the mapping
    * @param source[in] the data values passed from the user
@@ -209,7 +209,7 @@ public:
   virtual void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target);
 
   /**
-   * @brief Just-in-time or just-in-time mapping variant of mapConsistent
+   * @brief Just-in-time mapping variant of mapConsistent
    *
    * @param coordinates[in] where to compute the mapping
    * @param cache[in] the mapping data cache previously computed with \p updateMappingDataCache
@@ -222,7 +222,7 @@ public:
   virtual void completeJustInTimeMapping(MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer);
 
   /**
-   * @brief Allows to update a so-called MappingDataCache for more efficient just-in-time mappings
+   * @brief Allows updating a so-called MappingDataCache for more efficient just-in-time mappings
    *
    * To compute a mapping just-in-time (either with \p mapConservativeAt or \p mapConsistentAt ), we
    * first sample in time and then compute an interpolant in time and then interpolate in space.

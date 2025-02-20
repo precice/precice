@@ -331,7 +331,7 @@ PRECICE_API void precicec_readData(
 ///@{
 
 /**
- * @brief Writes data just-in-time
+ * @brief Writes data using just-in-time data mapping
  * See @see precice::Participant::writeAndMapData() and the just-in-time mapping doxygen section for more information.
  *
  * @param[in] meshName Name of the mesh to write and map the data to. Typically a received mesh
@@ -350,7 +350,7 @@ PRECICE_API void precicec_writeAndMapData(
     const double *values);
 
 /**
- * @brief Reads data just-in-time.
+ * @brief Reads data using just-in-time data mapping.
  * See @see precice::Participant::mapAndReadData() and the just-in-time mapping doxygen section for more information.
  *
  * @param[in] meshName Name of the mesh to write and map the data to. Typically a received mesh

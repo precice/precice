@@ -567,9 +567,7 @@ public:
    * @param[in] meshName the name of the mesh
    * @returns the amount of the vertices of the mesh
    *
-   * @note the function returns the local number of vertices within the defined mesh access region ( @p setMeshAccessRegion() )
-   * for direct mesh access and just-in-time mappings. Therefore, api-access needs to be enables when using the function
-   * for either of these features ( <receive-mesh name="meshName" ... api-access="true" />).
+   * @note For received meshes with API access ( <receive-mesh name="meshName" ... api-access="true" />), the function returns the local number of vertices within the defined mesh access region ( @p setMeshAccessRegion() ).
    *
    * @pre This function can be called on received meshes as well as provided
    * meshes. However, you need to call this function after @p initialize(),
@@ -883,7 +881,7 @@ public:
    * The just-in-time mapping is closely connected to the \p Direct Access (see section below):
    *
    * Since one of the meshes is not given during the initialization, the user has to specify a region of interest
-   * using \p setMeshAccessRegion() before calling \p initialize() to enable preCICE computing the repartitioning.
+   * using \p setMeshAccessRegion() before calling \p initialize() to enable preCICE to compute the repartitioning.
    *
    * Configuring this feature in the preCICE configuration file, requires two things:
    *
@@ -893,21 +891,20 @@ public:
    *
    * 2) A mapping "from" or "to" the received mesh needs to be defined, where the "to" or "from" attribute in the configuration
    * needs to remain empty, e.g., ` <mapping:nearest-neighbor direction="read" from="StaticMesh" constraint="consistent" />`.
-   * Note how the "to" attribute is not given in this configuration, as opposed to the conventional mapping configurations
-   * in preCICE.
+   * Here, the "to" attribute is not given.
    *
    * @{
    */
 
   /**
-   * @brief Writes data values to a mesh just-in-time (experimental).
+   * @brief Writes data values to a mesh using a just-in-time mapping (experimental).
    *
-   * This function writes values of temporary vertices to data of a mesh.
+   * This function writes values at temporary locations to data of a mesh.
    * As opposed to the writeData function using VertexIDs, this function allows to write data via coordinates,
    * which don't have to be specified during the initialization. This is particularly useful for meshes, which
    * vary over time. Note that using this function comes at a performance cost, since the specified mapping
    * needs to be computed locally for the given locations, whereas the other variant (writeData) can typically
-   * exploit the static interface mesh and pre-compute data structures more efficient.
+   * exploit the static interface mesh and pre-compute data structures more efficiently.
    *
    * Values are passed via a block of continuous memory defined by values in the order specified by vertices.
    *
@@ -915,9 +912,8 @@ public:
    * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    *
-   * The time associated to the data is derived from the last call of \ref advance().
    *
-   * @param[in] meshName the name of mesh that hold the data, typically a remote mesh from another participant.
+   * @param[in] meshName the name of the mesh that holds the data, needs to be a mesh received from another participant.
    * @param[in] dataName the name of the data to write.
    * @param[in] coordinates a span to the coordinates of the vertices
    *        The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
@@ -942,10 +938,10 @@ public:
       ::precice::span<const double> values);
 
   /**
-   * @brief Reads data values from a mesh just-in-time. Values correspond to a given point in time relative to the beginning of the current timestep (experimental).
+   * @brief Reads data values from a mesh using a just-in-time data mapping. Values correspond to a given point in time relative to the beginning of the current timestep (experimental).
    *
-   * This function reads values of temporary vertices from data of a mesh.
-   * As opposed to the readData function using VertexIDs, this function allows to read data via coordinates,
+   * This function reads values at temporary locations from data of a mesh.
+   * As opposed to the readData function using VertexIDs, this function allows reading data via coordinates,
    * which don't have to be specified during the initialization. This is particularly useful for meshes, which
    * vary over time. Note that using this function comes at a performance cost, since the specified mapping
    * needs to be computed locally for the given locations, whereas the other variant (readData) can typically
@@ -962,7 +958,7 @@ public:
    * end of the time step, dt indicates the size of the current time step. Then relativeReadTime = dt corresponds to the data at
    * the end of the time step.
    *
-   * @param[in] meshName the name of mesh that hold the data, typically a remote mesh from another participant.
+   * @param[in] meshName the name of the mesh that holds the data, needs to be a mesh received from another participant.
    * @param[in] dataName the name of the data to read from.
    * @param[in] coordinates a span to the coordinates of the vertices
    *        The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)

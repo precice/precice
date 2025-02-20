@@ -502,7 +502,7 @@ PRECICE_API void precicef_read_data_(
 ///@{
 
 /**
- * @brief Writes data just-in-time
+ * @brief Writes data using just-in-time data mapping
  * See @see precice::Participant::writeAndMapData() and the just-in-time mapping doxygen section for more information.
  *
  * Fortran syntax:
@@ -530,7 +530,7 @@ PRECICE_API void precicef_write_and_map_data_(
     int         dataNameLength);
 
 /**
- * @brief Reads data just-in-time.
+ * @brief Reads data using just-in-time data mapping.
  * See @see precice::Participant::mapAndReadData() and the just-in-time mapping doxygen section for more information.
  *
  * Fortran syntax:

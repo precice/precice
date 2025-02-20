@@ -1273,7 +1273,7 @@ void ParticipantImpl::mapAndReadData(
     return;
   }
 
-  // Note that meshName refers here typically to a remote mesh
+  // Note that meshName refers to a remote mesh
   ReadDataContext &dataContext = _accessor->readDataContext(meshName, dataName);
   const auto       dataDims    = dataContext.getDataDimensions();
   const auto       dim         = dataContext.getSpatialDimensions();

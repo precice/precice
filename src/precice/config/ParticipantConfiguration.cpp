@@ -144,10 +144,10 @@ ParticipantConfiguration::ParticipantConfiguration(
   auto attrEnableAccess = makeXMLAttribute(ATTR_API_ACCESS, false)
                               .setDocumentation(
                                   "Enables access to the data on this received mesh via the preCICE API functions without having to map it to a provided mesh. "
-                                  "This is useful for a direct or an just-in-time mapping. "
+                                  "This is useful for direct access or just-in-time mappings. "
                                   "A received mesh needs to be decomposed in preCICE using a region of interest, which cannot be inferred, if there are no mappings to or from a provided mesh. "
                                   "In such cases the API function `setMeshAccessRegion()` must be used to define the region of interest. "
-                                  "See the preCICE documentation for more information.");
+                                  "See the user documentation for more information.");
   tagReceiveMesh.addAttribute(attrEnableAccess);
   // @todo: remove with the next breaking release
   auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
@@ -501,7 +501,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     map->setMeshes(input, output);
 
     // just-in-time mappings go for now into the participant's mapping context
-    // Add the mappingcontext to the participant, separated by direction
+    // Add the mapping context to the participant, separated by direction
     if (confMapping.direction == mapping::MappingConfiguration::WRITE) {
       participant->addWriteMappingContext(mappingContext);
     } else {
@@ -510,7 +510,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     }
 
     // configure the involved mesh context with connectivity requirements stemming from the mapping
-    // Add the mappingcontext to the mesh context, only required to later on forward them to the Partition
+    // Add the mapping context to the mesh context, only required to later on forward them to the Partition
     if (!input->isJustInTime()) {
       participant->meshContext(fromMesh).meshRequirement = std::max(
           participant->meshContext(fromMesh).meshRequirement, map->getInputRequirement());
