@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivity)
   mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
 
   PtrData doubleData = mesh->createData("DoubleData", 1, 0_dataID);
-  doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1., 2., 3., 4.}}));
+  doubleData->emplaceSampleAtTime(0, {1., 2., 3., 4.});
 
   std::string fileName("precice-WatchIntegralTest-scalarData-noConnectivity.log");
 
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivity)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{2., 3., 4., 5.}}));
+    doubleData->emplaceSampleAtTime(1, {2., 3., 4., 5.});
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivity)
   mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
 
   PtrData vectorData = mesh->createData("DoubleData", 2, 0_dataID);
-  vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{1., 2., 3., 4., 5., 6., 7., 8.}}));
+  vectorData->emplaceSampleAtTime(0, {1., 2., 3., 4., 5., 6., 7., 8.});
 
   std::string fileName("precice-WatchIntegralTest-vectorData-noConnectivity.log");
 
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivity)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{2., 3., 4., 5., 6., 7., 8., 9.}}));
+    vectorData->emplaceSampleAtTime(1, {2., 3., 4., 5., 6., 7., 8., 9.});
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
@@ -150,8 +150,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivity)
   mesh->createEdge(v2, v3);
 
   PtrData doubleData = mesh->createData("DoubleData", 1, 0_dataID);
-  doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1., 2., 3.}}));
-
+  doubleData->emplaceSampleAtTime(0, {1., 2., 3.});
   std::string fileName("precice-WatchIntegralTest-scalarData-edgeConnectivity.log");
 
   {
@@ -162,7 +161,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivity)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{2., 3., 4.}}));
+    doubleData->emplaceSampleAtTime(1, {2., 3., 4.});
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
@@ -199,7 +198,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityNoScale)
   mesh->createEdge(v2, v3);
 
   PtrData doubleData = mesh->createData("DoubleData", 1, 0_dataID);
-  doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1., 2., 3.}}));
+  doubleData->emplaceSampleAtTime(0, {1., 2., 3.});
 
   std::string fileName("precice-WatchIntegralTest-scalarData-edgeConnectivity-noScale.log");
 
@@ -211,7 +210,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityNoScale)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{2., 3., 4.}}));
+    doubleData->emplaceSampleAtTime(1, {2., 3., 4.});
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
@@ -248,7 +247,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivity)
   mesh->createEdge(v2, v3);
 
   PtrData vectorData = mesh->createData("DoubleData", 2, 0_dataID);
-  vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{1., 2., 3., 4., 5., 6.}}));
+  vectorData->emplaceSampleAtTime(0, {1., 2., 3., 4., 5., 6.});
 
   std::string fileName("precice-WatchIntegralTest-scalarData-edgeConnectivity.log");
 
@@ -260,7 +259,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivity)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{2., 3., 4., 5., 6., 7.}}));
+    vectorData->emplaceSampleAtTime(1, {2., 3., 4., 5., 6., 7.});
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
@@ -299,7 +298,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityNoScale)
   mesh->createEdge(v2, v3);
 
   PtrData vectorData = mesh->createData("DoubleData", 2, 0_dataID);
-  vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{1., 2., 3., 4., 5., 6.}}));
+  vectorData->emplaceSampleAtTime(0, {1., 2., 3., 4., 5., 6.});
 
   std::string fileName("precice-WatchIntegralTest-scalarData-edgeConnectivity-noScale.log");
 
@@ -311,7 +310,7 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityNoScale)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{2., 3., 4., 5., 6., 7.}}));
+    vectorData->emplaceSampleAtTime(1, {2., 3., 4., 5., 6., 7.});
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
@@ -357,7 +356,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivity)
   mesh->createTriangle(e3, e4, e5);
 
   PtrData doubleData = mesh->createData("DoubleData", 1, 0_dataID);
-  doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1., 2., 3., 4.}}));
+  doubleData->emplaceSampleAtTime(0, {1., 2., 3., 4.});
 
   std::string fileName("precice-WatchIntegralTest-scalarData-faceConnectivity.log");
 
@@ -369,7 +368,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivity)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{2., 3., 4., 5.}}));
+    doubleData->emplaceSampleAtTime(1, {2., 3., 4., 5.});
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
@@ -413,7 +412,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityNoScale)
   mesh->createTriangle(e3, e4, e5);
 
   PtrData doubleData = mesh->createData("DoubleData", 1, 0_dataID);
-  doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1., 2., 3., 4.}}));
+  doubleData->emplaceSampleAtTime(0, {1., 2., 3., 4.});
 
   std::string fileName("precice-WatchIntegralTest-scalarData-faceConnectivity-noScale.log");
 
@@ -425,7 +424,7 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityNoScale)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{2., 3., 4., 5.}}));
+    doubleData->emplaceSampleAtTime(1, {2., 3., 4., 5.});
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
@@ -469,7 +468,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivity)
   mesh->createTriangle(e3, e4, e5);
 
   PtrData vectorData = mesh->createData("DoubleData", 2, 0_dataID);
-  vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{1., 2., 3., 4., 5., 6., 7., 8.}}));
+  vectorData->emplaceSampleAtTime(0, {1., 2., 3., 4., 5., 6., 7., 8.});
 
   std::string fileName("precice-WatchIntegralTest-vectorData-faceConnectivity.log");
 
@@ -481,7 +480,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivity)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{2., 3., 4., 5., 6., 7., 8., 9.}}));
+    vectorData->emplaceSampleAtTime(1, {2., 3., 4., 5., 6., 7., 8., 9.});
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
@@ -525,7 +524,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityNoScale)
   mesh->createTriangle(e3, e4, e5);
 
   PtrData vectorData = mesh->createData("DoubleData", 2, 0_dataID);
-  vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{1., 2., 3., 4., 5., 6., 7., 8.}}));
+  vectorData->emplaceSampleAtTime(0, {1., 2., 3., 4., 5., 6., 7., 8.});
 
   std::string fileName("precice-WatchIntegralTest-vectorData-faceConnectivity-noScale.log");
 
@@ -537,7 +536,7 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityNoScale)
     watchIntegral.exportIntegralData(0.0);
 
     // Change data (next timestep)
-    vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{2., 3., 4., 5., 6., 7., 8., 9.}}));
+    vectorData->emplaceSampleAtTime(1, {2., 3., 4., 5., 6., 7., 8., 9.});
 
     // Write output again
     watchIntegral.exportIntegralData(1.0);
@@ -581,7 +580,7 @@ BOOST_AUTO_TEST_CASE(MeshChangeFaceConnectivity)
   mesh->createTriangle(e3, e4, e5);
 
   PtrData doubleData = mesh->createData("DoubleData", 1, 0_dataID);
-  doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1., 2., 3., 4.}}));
+  doubleData->emplaceSampleAtTime(0, {1., 2., 3., 4.});
 
   std::string fileName("precice-WatchIntegralTest-meshChange-faceConnectivity.log");
 
@@ -638,13 +637,13 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
   }
 
   if (utils::IntraComm::isPrimary()) {
-    doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1.0, 2.0}}));
+    doubleData->emplaceSampleAtTime(0, {1.0, 2.0});
   } else if (context.isRank(1)) {
-    doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{3.0, 4.0}}));
+    doubleData->emplaceSampleAtTime(0, {3.0, 4.0});
   } else if (context.isRank(2)) {
-    doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{5.0, 6.0}}));
+    doubleData->emplaceSampleAtTime(0, {5.0, 6.0});
   } else if (context.isRank(3)) {
-    doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{7.0, 8.0}}));
+    doubleData->emplaceSampleAtTime(0, {7.0, 8.0});
   }
 
   std::string fileName("precice-WatchIntegralTest-scalarData-noConnectivity-parallel.log");
@@ -658,13 +657,13 @@ BOOST_AUTO_TEST_CASE(ScalarDataNoConnectivityParallel)
 
     // Change data (next timestep)
     if (utils::IntraComm::isPrimary()) {
-      doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{2.0, 3.0}}));
+      doubleData->emplaceSampleAtTime(1, {2.0, 3.0});
     } else if (context.isRank(1)) {
-      doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{4.0, 5.0}}));
+      doubleData->emplaceSampleAtTime(1, {4.0, 5.0});
     } else if (context.isRank(2)) {
-      doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{6.0, 7.0}}));
+      doubleData->emplaceSampleAtTime(1, {6.0, 7.0});
     } else if (context.isRank(3)) {
-      doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{8.0, 9.0}}));
+      doubleData->emplaceSampleAtTime(1, {8.0, 9.0});
     }
 
     // Write output again
@@ -712,13 +711,13 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
   }
 
   if (utils::IntraComm::isPrimary()) {
-    vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{1.0, 2.0, 3.0, 4.0}}));
+    vectorData->emplaceSampleAtTime(0, {1.0, 2.0, 3.0, 4.0});
   } else if (context.isRank(1)) {
-    vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{5.0, 6.0, 7.0, 8.0}}));
+    vectorData->emplaceSampleAtTime(0, {5.0, 6.0, 7.0, 8.0});
   } else if (context.isRank(2)) {
-    vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{9.0, 10.0, 11.0, 12.0}}));
+    vectorData->emplaceSampleAtTime(0, {9.0, 10.0, 11.0, 12.0});
   } else if (context.isRank(3)) {
-    vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{13.0, 14.0, 15.0, 16.0}}));
+    vectorData->emplaceSampleAtTime(0, {13.0, 14.0, 15.0, 16.0});
   }
 
   std::string fileName("precice-WatchIntegralTest-vectorData-noConnectivity-parallel.log");
@@ -732,13 +731,13 @@ BOOST_AUTO_TEST_CASE(VectorDataNoConnectivityParallel)
 
     // Change data (next timestep)
     if (utils::IntraComm::isPrimary()) {
-      vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{2.0, 3.0, 4.0, 5.0}}));
+      vectorData->emplaceSampleAtTime(1, {2.0, 3.0, 4.0, 5.0});
     } else if (context.isRank(1)) {
-      vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{6.0, 7.0, 8.0, 9.0}}));
+      vectorData->emplaceSampleAtTime(1, {6.0, 7.0, 8.0, 9.0});
     } else if (context.isRank(2)) {
-      vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{10.0, 11.0, 12.0, 13.0}}));
+      vectorData->emplaceSampleAtTime(1, {10.0, 11.0, 12.0, 13.0});
     } else if (context.isRank(3)) {
-      vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{14.0, 15.0, 16.0, 17.0}}));
+      vectorData->emplaceSampleAtTime(1, {14.0, 15.0, 16.0, 17.0});
     }
 
     // Write output again
@@ -794,16 +793,16 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
   PtrData doubleData = mesh->createData("DoubleData", 1, 0_dataID);
 
   if (utils::IntraComm::isPrimary()) {
-    doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1.0, 2.0}}));
+    doubleData->emplaceSampleAtTime(0, {1.0, 2.0});
   }
   if (context.isRank(1)) {
-    doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{3.0, 4.0}}));
+    doubleData->emplaceSampleAtTime(0, {3.0, 4.0});
   }
   if (context.isRank(2)) {
-    doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{5.0, 6.0}}));
+    doubleData->emplaceSampleAtTime(0, {5.0, 6.0});
   }
   if (context.isRank(3)) {
-    doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{7.0, 8.0}}));
+    doubleData->emplaceSampleAtTime(0, {7.0, 8.0});
   }
 
   std::string fileName("precice-WatchIntegralTest-scalarData-edgeConnectivity-parallel.log");
@@ -817,16 +816,16 @@ BOOST_AUTO_TEST_CASE(ScalarDataEdgeConnectivityParallel)
 
     // Change data (next timestep)
     if (utils::IntraComm::isPrimary()) {
-      doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{2.0, 3.0}}));
+      doubleData->emplaceSampleAtTime(1, {2.0, 3.0});
     }
     if (context.isRank(1)) {
-      doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{4.0, 5.0}}));
+      doubleData->emplaceSampleAtTime(1, {4.0, 5.0});
     }
     if (context.isRank(2)) {
-      doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{6.0, 7.0}}));
+      doubleData->emplaceSampleAtTime(1, {6.0, 7.0});
     }
     if (context.isRank(3)) {
-      doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{8.0, 9.0}}));
+      doubleData->emplaceSampleAtTime(1, {8.0, 9.0});
     }
 
     // Write output again
@@ -882,16 +881,16 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
   PtrData vectorData = mesh->createData("DoubleData", 2, 0_dataID);
 
   if (utils::IntraComm::isPrimary()) {
-    vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{1.0, 2.0, 3.0, 4.0}}));
+    vectorData->emplaceSampleAtTime(0, {1.0, 2.0, 3.0, 4.0});
   }
   if (context.isRank(1)) {
-    vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{5.0, 6.0, 7.0, 8.0}}));
+    vectorData->emplaceSampleAtTime(0, {5.0, 6.0, 7.0, 8.0});
   }
   if (context.isRank(2)) {
-    vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{9.0, 10.0, 11.0, 12.0}}));
+    vectorData->emplaceSampleAtTime(0, {9.0, 10.0, 11.0, 12.0});
   }
   if (context.isRank(3)) {
-    vectorData->setSampleAtTime(0, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{13.0, 14.0, 15.0, 16.0}}));
+    vectorData->emplaceSampleAtTime(0, {13.0, 14.0, 15.0, 16.0});
   }
 
   std::string fileName("precice-WatchIntegralTest-scalarData-edgeConnectivity-parallel.log");
@@ -905,16 +904,16 @@ BOOST_AUTO_TEST_CASE(VectorDataEdgeConnectivityParallel)
 
     // Change data (next timestep)
     if (utils::IntraComm::isPrimary()) {
-      vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{2.0, 3.0, 4.0, 5.0}}));
+      vectorData->emplaceSampleAtTime(1, {2.0, 3.0, 4.0, 5.0});
     }
     if (context.isRank(1)) {
-      vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{6.0, 7.0, 8.0, 9.0}}));
+      vectorData->emplaceSampleAtTime(1, {6.0, 7.0, 8.0, 9.0});
     }
     if (context.isRank(2)) {
-      vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{10.0, 11.0, 12.0, 13.0}}));
+      vectorData->emplaceSampleAtTime(1, {10.0, 11.0, 12.0, 13.0});
     }
     if (context.isRank(3)) {
-      vectorData->setSampleAtTime(1, time::Sample(vectorData->getDimensions(), Eigen::VectorXd{{14.0, 15.0, 16.0, 17.0}}));
+      vectorData->emplaceSampleAtTime(1, {14.0, 15.0, 16.0, 17.0});
     }
 
     // Write output again
@@ -972,16 +971,16 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
   PtrData doubleData = mesh->createData("DoubleData", 1, 0_dataID);
 
   if (utils::IntraComm::isPrimary()) {
-    doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1.0, 2.0, 3.0}}));
+    doubleData->emplaceSampleAtTime(0, {1.0, 2.0, 3.0});
   }
   if (context.isRank(1)) {
-    doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions()));
+    doubleData->emplaceSampleAtTime(0);
   }
   if (context.isRank(2)) {
-    doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions()));
+    doubleData->emplaceSampleAtTime(0);
   }
   if (context.isRank(3)) {
-    doubleData->setSampleAtTime(0, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{1.0, 3.0, 4.0}}));
+    doubleData->emplaceSampleAtTime(0, {1.0, 3.0, 4.0});
   }
 
   std::string fileName("precice-WatchIntegralTest-scalarData-faceConnectivity-parallel.log");
@@ -995,16 +994,16 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
 
     // Change data (next timestep)
     if (utils::IntraComm::isPrimary()) {
-      doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{2.0, 3.0, 4.0}}));
+      doubleData->emplaceSampleAtTime(1, {2.0, 3.0, 4.0});
     }
     if (context.isRank(1)) {
-      doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions()));
+      doubleData->emplaceSampleAtTime(1);
     }
     if (context.isRank(2)) {
-      doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions()));
+      doubleData->emplaceSampleAtTime(1);
     }
     if (context.isRank(3)) {
-      doubleData->setSampleAtTime(1, time::Sample(doubleData->getDimensions(), Eigen::VectorXd{{2.0, 4.0, 5.0}}));
+      doubleData->emplaceSampleAtTime(1, {2.0, 4.0, 5.0});
     }
 
     // Write output again
@@ -1062,16 +1061,16 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
   PtrData doubleData = mesh->createData("DoubleData", 3, 0_dataID);
 
   if (utils::IntraComm::isPrimary()) {
-    doubleData->setSampleAtTime(0, time::Sample(3, Eigen::VectorXd{{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0}}));
+    doubleData->emplaceSampleAtTime(0, {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0});
   }
   if (context.isRank(1)) {
-    doubleData->setSampleAtTime(0, time::Sample(3));
+    doubleData->emplaceSampleAtTime(0);
   }
   if (context.isRank(2)) {
-    doubleData->setSampleAtTime(0, time::Sample(3));
+    doubleData->emplaceSampleAtTime(0);
   }
   if (context.isRank(3)) {
-    doubleData->setSampleAtTime(0, time::Sample(3, Eigen::VectorXd{{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0}}));
+    doubleData->emplaceSampleAtTime(0, {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0});
   }
 
   std::string fileName("precice-WatchIntegralTest-vectorData-faceConnectivity-parallel.log");
@@ -1085,16 +1084,16 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
 
     // Change data (next timestep)
     if (utils::IntraComm::isPrimary()) {
-      doubleData->setSampleAtTime(1, time::Sample(3, Eigen::VectorXd{{2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0}}));
+      doubleData->emplaceSampleAtTime(1, {2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0});
     }
     if (context.isRank(1)) {
-      doubleData->setSampleAtTime(1, time::Sample(3));
+      doubleData->emplaceSampleAtTime(1);
     }
     if (context.isRank(2)) {
-      doubleData->setSampleAtTime(1, time::Sample(3));
+      doubleData->emplaceSampleAtTime(1);
     }
     if (context.isRank(3)) {
-      doubleData->setSampleAtTime(1, time::Sample(3, Eigen::VectorXd{{2.0, 3.0, 6.0, 7.0, 8.0, 9.0, 8.0, 9.0, 10.0}}));
+      doubleData->emplaceSampleAtTime(1, {2.0, 3.0, 6.0, 7.0, 8.0, 9.0, 8.0, 9.0, 10.0});
     }
 
     // Write output again

@@ -52,7 +52,7 @@ public:
    * @param time Time where the sampling inside the window happens.
    * @return Value of Waveform at given time.
    */
-  Eigen::VectorXd sample(const double time) const;
+  SampleResult sample(const double time) const;
 
 private:
   /// Stores time steps in the current time window

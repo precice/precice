@@ -48,7 +48,7 @@ public:
   time::Storage &timeStepsStorage();
 
   /// returns previous data interpolated to the relativeDt time
-  Eigen::VectorXd getPreviousValuesAtTime(double relativeDt);
+  time::SampleResult getPreviousValuesAtTime(double relativeDt);
 
   Eigen::MatrixXd getPreviousGradientsAtTime(double relativeDt);
 
