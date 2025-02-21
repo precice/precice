@@ -143,14 +143,15 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
         m2n->send(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * serialized.nTimeSteps());
       }
     } else {
-      data->sample() = stamples.back().sample;
-
-      // Data is only received on ranks with size>0, which is checked in the derived class implementation
-      m2n->send(data->values(), data->getMeshID(), data->getDimensions());
-
       if (data->hasGradient()) {
-        PRECICE_ASSERT(data->hasGradient());
+        data->sample() = stamples.back().sample;
+        // Data is only received on ranks with size>0, which is checked in the derived class implementation
+        m2n->send(data->values(), data->getMeshID(), data->getDimensions());
         m2n->send(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
+      } else {
+        data->sample() = stamples.back().sample;
+        // Data is only received on ranks with size>0, which is checked in the derived class implementation
+        m2n->send(data->values(), data->getMeshID(), data->getDimensions());
       }
     }
   }
