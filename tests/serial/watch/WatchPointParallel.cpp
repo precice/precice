@@ -76,6 +76,7 @@ BOOST_AUTO_TEST_CASE(WatchPointParallel)
       auto        result   = readDoublesFromTXTFile(fileName, 4);
       auto        expected = std::vector<double>{
           //   Time  Coordinate0  Coordinate1  DataOne
+          0.0, 0.0, 0.0, 0.0,
           1.0, 0.0, 0.0, 2.0,
           2.0, 0.0, 0.0, 3.0,
           3.0, 0.0, 0.0, 4.0};
