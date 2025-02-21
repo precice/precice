@@ -107,20 +107,20 @@ void WatchIntegral::exportIntegralData(
 
 Eigen::VectorXd WatchIntegral::calculateIntegral(double time, const mesh::PtrData &data) const
 {
-  int                    dim    = data->getDimensions();
-  const Eigen::VectorXd &values = data->timeStepsStorage().sample(time);
-  Eigen::VectorXd        sum    = Eigen::VectorXd::Zero(dim);
+  int             dim    = data->getDimensions();
+  const auto      sample = data->timeStepsStorage().sample(time);
+  Eigen::VectorXd sum    = Eigen::VectorXd::Zero(dim);
 
   if (_mesh->edges().empty() || (not _isScalingOn)) {
     for (const auto &vertex : _mesh->vertices()) {
       int offset = vertex.getID() * dim;
       for (int i = 0; i < dim; i++) {
-        sum[i] += values[offset + i];
+        sum[i] += sample.values()[offset + i];
       }
     }
     return sum;
   } else { // Connectivity information is given
-    return mesh::integrateSurface(_mesh, data->timeStepsStorage().sample(time));
+    return mesh::integrateSurface(_mesh, data->timeStepsStorage().sample(time).values());
   }
 }
 
