@@ -244,7 +244,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::evaluateConservativeCache(
   Eigen::MatrixXd localIn(_inputIDs.size(), Au.cols());
   _rbfSolver.evaluateConservativeCache(epsilon, Au, localIn);
   // Step 3: now accumulate the result into our global output data
-  for (int i = 0; i < _inputIDs.size(); ++i) {
+  for (std::size_t i = 0; i < _inputIDs.size(); ++i) {
     const auto dataIndex = *(_inputIDs.nth(i));
     PRECICE_ASSERT(dataIndex < out.cols(), out.cols());
     out.col(dataIndex) += localIn.row(i);

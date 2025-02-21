@@ -80,7 +80,7 @@ public:
 
   void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target) final override;
 
-  void updateMappingDataCache(MappingDataCache &cache, const Eigen::Ref<const VectorXd> &in) final override;
+  void updateMappingDataCache(MappingDataCache &cache, const Eigen::Ref<const Eigen::VectorXd> &in) final override;
 
   void completeJustInTimeMapping(MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer) final override;
 
@@ -385,7 +385,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::initializeMappingDataCach
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(MappingDataCache &cache, const Eigen::Ref<const VectorXd> &in)
+void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(MappingDataCache &cache, const Eigen::Ref<const Eigen::VectorXd> &in)
 {
   // We cannot synchronize this event, as the call to this function is rank-local only
   precice::profiling::Event e("map.pou.updateCache.From" + input()->getName());

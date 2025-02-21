@@ -267,7 +267,7 @@ bool Mapping::isJustInTimeMapping() const
   return _input->isJustInTime() || _output->isJustInTime();
 }
 
-void Mapping::updateMappingDataCache(MappingDataCache &cache, const Eigen::Ref<const VectorXd> &in)
+void Mapping::updateMappingDataCache(MappingDataCache &cache, const Eigen::Ref<const Eigen::VectorXd> &in)
 {
   precice::profiling::Event e("map.updateMappingDataCache.From" + input()->getName());
   cache.inData = in;

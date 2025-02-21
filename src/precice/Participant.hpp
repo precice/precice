@@ -874,9 +874,10 @@ public:
 
   /** @name Just-in-time mapping (experimental)
    *
-   * If one of your coupling meshes is not static and has varying locations over time, we can compute a data mapping
-   * just-in-time. In such a case the user provides the coordinates of the moving mesh along with the API functions
-   * \p writeAndMapData or \p mapAndReadData to read and write data.
+   * To model non-static coupling meshes (i.e. varying locations over time), we can compute data mappings
+   * just-in-time instead of setting mesh vertices at initialization. In such a case, the user provides the
+   * coordinates of the moving mesh along with the API functions \p writeAndMapData or \p mapAndReadData to
+   * read and write data.
    *
    * The just-in-time mapping is closely connected to the \p Direct Access (see section below):
    *

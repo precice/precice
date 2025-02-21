@@ -239,7 +239,7 @@ public:
    * @param cache the cache in use
    * @param in the time-interpolated data values
    */
-  virtual void updateMappingDataCache(MappingDataCache &cache, const Eigen::Ref<const VectorXd> &in);
+  virtual void updateMappingDataCache(MappingDataCache &cache, const Eigen::Ref<const Eigen::VectorXd> &in);
 
   virtual void initializeMappingDataCache(MappingDataCache &cache);
 
