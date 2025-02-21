@@ -61,6 +61,10 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
+  dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                         timeWindowsReused, filter, singularityLimit, dataIDs, prec, !exchangeSubsteps);
@@ -280,6 +284,10 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
+  dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                          timeWindowsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
@@ -541,6 +549,10 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("dummyMesh", 2, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
+  dummyMesh->createVertex(Eigen::Vector2d{0, 0});
+  dummyMesh->createVertex(Eigen::Vector2d{1, 0});
+  dummyMesh->createVertex(Eigen::Vector2d{2, 0});
+  dummyMesh->createVertex(Eigen::Vector2d{3, 0});
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                          timeWindowsReused, filter, singularityLimit, dataIDs, _preconditioner, alwaysBuildJacobian,
@@ -1046,6 +1058,10 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
+  dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
   IQNILSAcceleration acc(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                          timeWindowsReused, filter, singularityLimit, dataIDs, prec, !exchangeSubsteps);

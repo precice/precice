@@ -29,6 +29,10 @@ BOOST_AUTO_TEST_CASE(SerializeValues)
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
+  dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
   mesh::PtrData fromData(new mesh::Data("from", -1, dataDimensions));
   mesh::PtrData toData(new mesh::Data("to", -1, dataDimensions));
