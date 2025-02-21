@@ -27,7 +27,8 @@ namespace impl {
  * In the most basic configuration scenarios (NN mapping), the cache simply holds the latest
  * time interpolant to prevent repeated time interpolation for each function call. For
  * more advanced mappings (PUM), the mapping stores intermediate basis-function coefficients
- * of the latest time interpolant.
+ * of the resulting from the last time interpolant. The cache data always holds time-specific
+ * data for all data sites.
  *
  * Note that the MappingDataCache mostly provides the memory and data structures. All data structures
  * are filled within the configured mapping class.

@@ -112,20 +112,45 @@ public:
   }
 
   /**
-   * @brief
+   * @brief Attach a just-in-time mapping to this data context and setup a corresponding MappingDataCache
    *
-   * No need to put this function into a derived class.
-   * The Mapping class knows the direction and the DataContext states read or write.
-   * Mappings in the DataContext only affect the mapData() steering.
-   * Thus, we don't add the just-in-time mapping anywhere in the conventional mapping
-   * data structures, i.e., _mappingContexts
+   * A just-in-time mapping ( \p justInTimeMapping ) might be shared across multiple data contexts (it's a PtrMapping).
+   * The MappingDataCache ( \p mappingCache ), however, is unique for each data context.
    *
-   * @param mappingContext
+   * There is no need to put this function into a derived class:
+   * The Mapping class knows the direction of the mapping and the DataContext is directly called
+   * via the API function. Since all mappings within the DataContexts (stored in a std::vector
+   * as \p _mappingContexts ) only call and steer the mapData() execution (and not the
+   * computeMapping() execution), we don't register the just-in-time mapping in the \p _mappingContexts
+   * data structures. For just-in-time mappings, only the computeMapping() part is relevant, whereas
+   * the mapData() part is essentially handled through the API function calls.
+   *
+   * @param[in] mappingContext The MappingContext which holds the mapping configuration
+   * @param[in] meshContext The MeshContext holding the relevant data to map
    */
   void addJustInTimeMapping(MappingContext &mappingContext, MeshContext &meshContext);
 
   /**
-   * @brief Resets the time stamp of the mappingdata cache and potentially resets the data it holds
+   * @brief Initializes the MappingDataCache
+   *
+   * Essentially a forward to Mapping::initializeMappingDataCache,
+   * where we provide the cache from this class itself.
+   *
+   * See Mapping::initializeMappingDataCache and the MappingDataCache documentation
+   * for more information.
+   */
+  void initializeMappingDataCache()
+  {
+    if (mappingCache) {
+      justInTimeMapping->initializeMappingDataCache(*mappingCache.get());
+      mappingCache->resetData();
+    }
+  }
+
+  /**
+   * @brief Resets the time stamp of the MappingDataCache and potentially resets the data it holds
+   *
+   * See also the impl::MappingDataCache for more details.
    *
    * @param resetData whether to reset the data or not
    */
@@ -136,14 +161,6 @@ public:
       if (resetData) {
         mappingCache->resetData();
       }
-    }
-  }
-
-  void initializeMappingDataCache()
-  {
-    if (mappingCache) {
-      justInTimeMapping->initializeMappingDataCache(*mappingCache.get());
-      mappingCache->resetData();
     }
   }
 
@@ -174,15 +191,19 @@ protected:
    * multiple data from the same mesh. In preCICE, this leads to one (shared) MappingContext in
    * different DataContexts. Hence, we store the data in this unique Mesh-Data pair.
    *
-   * The \ref _mappingContexts in this class are a std::vector for multiple mappings associated
+   * The \p _mappingContexts in this class are a std::vector for multiple mappings associated
    * to the same DataContext. However, for one DataContext (read or write) there can only be one
    * just-in-time mapping.
    * For conventional mappings, multiple MappingContexts can only occur in write direction (write
    * to one local mesh, map it to different remote meshes). Since the just-in-time mapping operates
    * on the remote meshes, this multiplicity cannot occur. Thus, one cache per DataContext is enough.
+   * See the documentation of impl::MappingDataCache for more information.
    */
   std::unique_ptr<mapping::impl::MappingDataCache> mappingCache;
-  mapping::PtrMapping                              justInTimeMapping;
+
+  /// The just-in-time mapping for this data context
+  mapping::PtrMapping justInTimeMapping;
+
   /**
    * @brief Helper to append a mappingContext, fromData and toData to the corresponding data containers
    *

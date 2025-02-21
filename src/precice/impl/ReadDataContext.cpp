@@ -46,16 +46,17 @@ void ReadDataContext::mapAndReadValues(::precice::span<const double> coordinates
   PRECICE_ASSERT(mappingCache);
   PRECICE_ASSERT(justInTimeMapping);
 
+  // First, check if we have the current readTime already in our MappingDataCache
   if (!mappingCache->hasDataAtTimeStamp(readTime)) {
-    // Sample waveform relaxation
-
+    // if not, sample our waveform and update the cache
     justInTimeMapping->updateMappingDataCache(*mappingCache.get(), _providedData->sampleAtTime(readTime).values());
     mappingCache->setTimeStamp(readTime);
   }
+  // Now we are certain that our cache contains the data at readTime
   Eigen::Map<const Eigen::MatrixXd> coords(coordinates.data(), getSpatialDimensions(), coordinates.size() / getSpatialDimensions());
   Eigen::Map<Eigen::MatrixXd>       target(values.data(), getDataDimensions(), values.size() / getDataDimensions());
 
-  // Function, which fills the values using the coordinates and the cache
+  // ...hence, we forward the coordinates, cache and the target to the just-in-time mapping
   justInTimeMapping->mapConsistentAt(coords, *mappingCache.get(), target);
 }
 

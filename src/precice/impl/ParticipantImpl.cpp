@@ -530,8 +530,6 @@ void ParticipantImpl::samplizeWriteData(double time)
 
     // Finalize conservative write mapping, later we reset
     // the buffer in resetWrittenData
-    // The function should use _writeDataBuffer internally
-    // context.finishJustInTimeWriteMapping();
 
     // Note that "samplizeWriteData" operates on _providedData of the
     // DataContext, which is for just-in-time mappings the data we write

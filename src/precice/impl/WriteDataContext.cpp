@@ -34,12 +34,13 @@ void WriteDataContext::completeJustInTimeMapping()
 {
   PRECICE_TRACE();
   if (justInTimeMapping) {
+    // finalize  mapping the data stored in the cache and transfer it to the _writeDataBuffer
     Eigen::Map<Eigen::MatrixXd> map(_writeDataBuffer.values.data(), _providedData->getDimensions(), _writeDataBuffer.values.size() / _providedData->getDimensions());
     justInTimeMapping->completeJustInTimeMapping(*mappingCache.get(), map);
   }
 }
 
-void WriteDataContext::mapAndWriteValues(::precice::span<const double> coordinates, ::precice::span<const double> values)
+void WriteDataContext::writeAndMapValues(::precice::span<const double> coordinates, ::precice::span<const double> values)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(mappingCache);
@@ -47,6 +48,7 @@ void WriteDataContext::mapAndWriteValues(::precice::span<const double> coordinat
   PRECICE_ASSERT((coordinates.size() / getSpatialDimensions()) * getDataDimensions() == values.size());
   PRECICE_ASSERT(_writeDataBuffer.values.data());
 
+  // We forward both, the _writeDataBuffer and the cache to the justInTimeMapping
   Eigen::Map<const Eigen::MatrixXd> coords(coordinates.data(), getSpatialDimensions(), coordinates.size() / getSpatialDimensions());
   Eigen::Map<const Eigen::MatrixXd> inputData(values.data(), getDataDimensions(), coordinates.size() / getDataDimensions());
   Eigen::Map<Eigen::MatrixXd>       localData(_writeDataBuffer.values.data(), getDataDimensions(), getMeshVertexCount());

@@ -53,6 +53,17 @@ public:
    */
   void readValues(::precice::span<const VertexID> vertices, double time, ::precice::span<double> values) const;
 
+  /**
+   * @brief Forwards the just-in-time mapping API call for reading data to the data context
+   *
+   * mapAndReadValues takes care of time interpolation then, updates the MappingDataCache to
+   * the latest time interpolant (if necessary) and then forwards the MappingDataCache to the
+   * just-in-time mapping to query the mapped data, which is then passed back to the user.
+   *
+   * @param[in] coordinates As provided by the user through mapAndReadData
+   * @param[in] readTime The relative read time specified by the user
+   * @param[out] values The memory block to write the result into
+   */
   void mapAndReadValues(::precice::span<const double> coordinates, double readTime, ::precice::span<double> values);
 
   /// Are there samples to read from?
