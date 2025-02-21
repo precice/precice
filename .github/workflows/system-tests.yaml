@@ -88,4 +88,4 @@ jobs:
         SU2_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-su2-adapter }},\
         TUTORIALS_REF:${{ needs.gather-refs.outputs.ref-tutorials }}"
       systests_branch: develop
-      loglevel: "DEBUG"
+      loglevel: "INFO"
