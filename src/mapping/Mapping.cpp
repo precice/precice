@@ -270,22 +270,51 @@ bool Mapping::isJustInTimeMapping() const
 void Mapping::updateMappingDataCache(impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::VectorXd> &in)
 {
   precice::profiling::Event e("map.updateMappingDataCache.From" + input()->getName());
+  // By default, we simply store the time interpolant of the last function call,
+  // such that we don't need to evaluate the waveform relaxation for each provided
+  // coordinate. That's already sufficient for NN, as we cannot precompute anything
+  // more specific (as opposed to PUM or (albeit not implemented) RBF interpolation,
+  // where we can further compute the RBF coefficients belonging to the time sample)
   cache.inData = in;
 }
 
 void Mapping::initializeMappingDataCache(impl::MappingDataCache &cache)
 {
-  // Do nothing by default, only relevant for PUM at the moment
+  // Do nothing by default, only relevant for just-in-time mapping using PUM, but we need the interface.
+  // We don't enforce its implementation through the (virtual) base class,
+  // but instead provide an empty default implementation and implement it
+  // only in derived classes where necessary.
+
+  // Note that an implementation for NN is not required, and this function is for NN a NOOP
+  // as opposed to the default of, e.g., mapConsistentAt, where we abort in the default setting
 }
 
 void Mapping::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target)
 {
+  // Function for just-in-time mapping. Only implemented for PUM and NN.
+  // We don't enforce its implementation through the (virtual) base class,
+  // but instead provide an abortive default implementation and implement it
+  // only in derived classes where deemed useful
   PRECICE_ASSERT(false, "Not implemented");
 }
-void Mapping::completeJustInTimeMapping(impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer) {}
+
+void Mapping::completeJustInTimeMapping(impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer)
+{
+  // Do nothing by default, only relevant for just-in-time mapping using PUM, but we need the interface.
+  // We don't enforce its implementation through the (virtual) base class,
+  // but instead provide an empty default implementation and implement it
+  // only in derived classes where necessary.
+
+  // Note that an implementation for NN is not required, and this function is for NN a NOOP
+  // as opposed to the default of mapConsistentAt, where we abort in the default setting
+}
 
 void Mapping::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
 {
+  // Function for just-in-time mapping. Only implemented for PUM and NN.
+  // We don't enforce its implementation through the (virtual) base class,
+  // but instead provide an abortive default implementation and implement it
+  // only in derived classes where deemed useful
   PRECICE_ASSERT(false, "Not implemented");
 }
 

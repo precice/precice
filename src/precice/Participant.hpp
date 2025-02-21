@@ -900,6 +900,8 @@ public:
   /**
    * @brief Writes data values to a mesh using a just-in-time mapping (experimental).
    *
+   * @experimental
+   *
    * This function writes values at temporary locations to data of a mesh.
    * As opposed to the writeData function using VertexIDs, this function allows to write data via coordinates,
    * which don't have to be specified during the initialization. This is particularly useful for meshes, which
@@ -914,21 +916,19 @@ public:
    * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    *
    *
-   * @param[in] meshName the name of the mesh that holds the data, needs to be a mesh received from another participant.
-   * @param[in] dataName the name of the data to write.
-   * @param[in] coordinates a span to the coordinates of the vertices
+   * @param[in] meshName The name of the mesh that holds the data, needs to be a mesh received from another participant.
+   * @param[in] dataName The name of the data to write.
+   * @param[in] coordinates A span to the coordinates of the vertices
    *        The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    *        The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
-   * @param[out] values the values containing the write data.
+   * @param[out] values The values containing the write data.
    *
-   * @pre the coordinates are within the bounding box previously defined via \ref setMeshAccessRegion(). In parallel
-   * runs, using coordinates outside the defined bounding box will throw an error.
+   * @pre The coordinates are within the bounding box previously defined via \ref setMeshAccessRegion(). Using coordinates
+   * outside the defined bounding box will throw an error.
    *
-   * @note the evaluated mapping computes the values corresponding to the initial configuration of the other provided mesh.
    * @note Only supported for conservative mapping constraints and mapping:rbf-pum-direct or mapping:nearest-neighbot.
    * @note Caution when calling this function multiple times on the same data coordinates: There is no internal check and preCICE accumulates
    * data values for conservative mappings.
-   * @note this function is currently part of the experimental API.
    *
    * @see Participant::setMeshAccessRegion()
    */
@@ -940,6 +940,8 @@ public:
 
   /**
    * @brief Reads data values from a mesh using a just-in-time data mapping. Values correspond to a given point in time relative to the beginning of the current timestep (experimental).
+   *
+   * @experimental
    *
    * This function reads values at temporary locations from data of a mesh.
    * As opposed to the readData function using VertexIDs, this function allows reading data via coordinates,
@@ -959,22 +961,20 @@ public:
    * end of the time step, dt indicates the size of the current time step. Then relativeReadTime = dt corresponds to the data at
    * the end of the time step.
    *
-   * @param[in] meshName the name of the mesh that holds the data, needs to be a mesh received from another participant.
-   * @param[in] dataName the name of the data to read from.
+   * @param[in] meshName The name of the mesh that holds the data, needs to be a mesh received from another participant.
+   * @param[in] dataName The name of the data to read from.
    * @param[in] coordinates a span to the coordinates of the vertices
    *        The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    *        The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
-   * @param[out] values the destination memory to read the data from.
+   * @param[out] values The destination memory to read the data from.
    *
-   * @pre the coordinates are within the bounding box previously defined via \ref setMeshAccessRegion(). In parallel
-   * runs, using coordinates outside the defined bounding box will throw an error.
+   * @pre The coordinates are within the bounding box previously defined via \ref setMeshAccessRegion(). Using coordinates
+   * outside the defined bounding box will throw an error.
    *
-   * @post values contain the read data as specified in the above format.
+   * @post \p values contain the read data as specified in the above format.
    *
-   * @note Note that the evaluated mapping computes the values corresponding to the initial configuration of the other provided mesh.
    * @note Only supported for consistent mapping constraints and mapping:rbf-pum-direct or mapping:nearest-neighbot.
-   * @note this function is currently part of the experimental API.
    *
    * @see Participant::setMeshAccessRegion()
    */
