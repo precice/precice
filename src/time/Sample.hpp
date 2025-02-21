@@ -39,7 +39,7 @@ struct Sample {
       : dataDims(dims), values(std::move(inValues)), gradients(std::move(inGradients))
   {
     PRECICE_ASSERT(dataDims > 0);
-    PRECICE_ASSERT(gradients.size() == 0 || gradients.cols() == values.size());
+    PRECICE_ASSERT(gradients.size() == 0 || gradients.cols() == values.size(), gradients.size(), gradients.cols(), values.size());
   }
 
   Sample(const Sample &) = default;
