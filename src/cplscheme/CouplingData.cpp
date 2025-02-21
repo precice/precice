@@ -116,7 +116,7 @@ void CouplingData::reinitialize()
   // Meaning all samples are based on a different mesh.
   // Without remapping, the best we can do is setting them to zero samples.
   // We keep the timestamps not to break convergence measures, accelerations, and actions
-  auto zero = time::Sample(_data->getDimensions(), _mesh->nVertices());
+  auto zero = time::Sample(getDimensions(), nVertices());
   zero.setZero();
 
   _data->timeStepsStorage().setAllSamples(zero);
