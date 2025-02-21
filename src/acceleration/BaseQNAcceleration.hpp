@@ -105,7 +105,7 @@ public:
    *
    * Has to be called after every implicit coupling iteration.
    */
-  virtual void performAcceleration(DataMap &cplData) override final;
+  virtual void performAcceleration(DataMap &cplData, double windowStart) override final;
 
   /**
    * @brief Marks a iteration sequence as converged.
@@ -113,7 +113,7 @@ public:
    * Since convergence measurements are done outside the acceleration, this
    * method has to be used to signalize convergence to the acceleration.
    */
-  virtual void iterationsConverged(const DataMap &cplData) override final;
+  virtual void iterationsConverged(const DataMap &cplData, double windowStart) override final;
 
   /**
    * @brief Exports the current state of the acceleration to a file.
@@ -141,6 +141,16 @@ public:
    *  intra-participant communication. Number of its =! _cols in general.
    */
   int getLSSystemCols() const;
+
+  /**
+   * @brief Get the maximum number of reused iterations.
+   */
+  int getMaxUsedIterations() const;
+
+  /**
+   * @brief Get the maximum number of reused time windows.
+   */
+  int getMaxUsedTimeWindows() const;
 
 protected:
   logging::Logger _log{"acceleration::BaseQNAcceleration"};
@@ -197,7 +207,7 @@ protected:
   Eigen::VectorXd _primaryResiduals;
 
   /// @brief Current iteration residuals of IQN data. Temporary.
-  Eigen::VectorXd _residuals;
+  Eigen::VectorXd _residuals; // @todo is this member still needed? Potential refactoring.
 
   /// @brief Stores residual deltas.
   Eigen::MatrixXd _matrixV;
@@ -261,7 +271,7 @@ protected:
   virtual void updateDifferenceMatrices(const DataMap &cplData);
 
   /// Splits up QN system vector back into the waveforms in coupling data
-  virtual void updateCouplingData(const DataMap &cplData);
+  virtual void updateCouplingData(const DataMap &cplData, double windowStart);
 
   /// Applies the filter method for the least-squares system, defined in the configuration
   virtual void applyFilter();
@@ -280,7 +290,7 @@ protected:
 private:
   /// @brief Initializes the vectors, matrices and preconditioner
   /// This has to be done after the first iteration of the first time window, since everything in the QN-algorithm is sampled to the timegrid of the first waveform
-  void initializeVectorsAndPreconditioner(const DataMap &cplData);
+  void initializeVectorsAndPreconditioner(const DataMap &cplData, double windowStart);
 
   /**
    * @brief handles the initialization of matrices and vectors in the sub-classes
@@ -290,7 +300,7 @@ private:
   virtual void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) = 0;
 
   /// @brief Samples and concatenates the data and old data in cplData into a long vector
-  void concatenateCouplingData(Eigen::VectorXd &data, Eigen::VectorXd &oldData, const DataMap &cplData, std::vector<int> dataIDs, precice::time::TimeGrids timeGrids) const;
+  void concatenateCouplingData(Eigen::VectorXd &data, Eigen::VectorXd &oldData, const DataMap &cplData, std::vector<int> dataIDs, precice::time::TimeGrids timeGrids, double windowStart) const;
 
   /// @brief Stores the time grids to which the primary and secondary data involved in the QN system will be interpolated to.
   std::optional<time::TimeGrids> _timeGrids;

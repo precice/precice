@@ -38,11 +38,16 @@ BOOST_AUTO_TEST_CASE(TestMoveAndScaleTimeGrids)
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
 
   // init displacements and waveform
+
+  double timeWindowStart = 0.0;
+  double dt              = 1.0;
+  double timeWindowEnd   = timeWindowStart + dt;
+
   displacements->values().resize(4);
   displacements->values() << 1.0, 1.0, 1.0, 1.0;
-  displacements->setSampleAtTime(0, displacements->sample());
-  displacements->setSampleAtTime(0.5, displacements->sample());
-  displacements->setSampleAtTime(1, displacements->sample());
+  displacements->setSampleAtTime(timeWindowStart, displacements->sample());
+  displacements->setSampleAtTime(timeWindowStart + 0.5 * dt, displacements->sample());
+  displacements->setSampleAtTime(timeWindowEnd, displacements->sample());
 
   cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, true);
 
@@ -52,23 +57,30 @@ BOOST_AUTO_TEST_CASE(TestMoveAndScaleTimeGrids)
   time::TimeGrids fullTimeGrid(data, dataIDs, false);
   time::TimeGrids reducedTimeGrid(data, dataIDs, true);
 
-  Eigen::VectorXd storedFullTimeGrid    = fullTimeGrid.getTimeGrid(dataIDs[0]);
-  Eigen::VectorXd storedReducedTimeGrid = reducedTimeGrid.getTimeGrid(dataIDs[0]);
+  Eigen::VectorXd storedFullTimeGrid    = fullTimeGrid.getTimeGridAfter(dataIDs[0], timeWindowStart);
+  Eigen::VectorXd storedReducedTimeGrid = reducedTimeGrid.getTimeGridAfter(dataIDs[0], timeWindowStart);
 
   /// Test that the time grids contain the correct gridpoints
-  BOOST_TEST(testing::equals(storedFullTimeGrid(0), 0.0));
-  BOOST_TEST(testing::equals(storedFullTimeGrid(1), 0.5));
-  BOOST_TEST(testing::equals(storedFullTimeGrid(2), 1.0));
+  BOOST_TEST(storedFullTimeGrid.size() == 2);
+  BOOST_TEST(testing::equals(storedFullTimeGrid(0), 0.5));
+  BOOST_TEST(testing::equals(storedFullTimeGrid(1), 1.0));
+
+  BOOST_TEST(storedReducedTimeGrid.size() == 1);
   BOOST_TEST(testing::equals(storedReducedTimeGrid(0), 1.0));
 
   // Create a second data pointer with the contentes of the second time window
   mesh::PtrData newdisplacements(new mesh::Data("dvalues", -1, 1));
 
+  // move to next window
+  timeWindowStart = timeWindowEnd;
+  dt              = 2 * dt;
+  timeWindowEnd   = timeWindowStart + dt;
+
   // init newdisplacements
   newdisplacements->values().resize(4);
   newdisplacements->values() << 1.0, 1.0, 1.0, 1.0;
-  newdisplacements->setSampleAtTime(1.0, newdisplacements->sample());
-  newdisplacements->setSampleAtTime(3.0, newdisplacements->sample());
+  newdisplacements->setSampleAtTime(timeWindowStart, newdisplacements->sample());
+  newdisplacements->setSampleAtTime(timeWindowEnd, newdisplacements->sample());
 
   cplscheme::PtrCouplingData newdpcd = makeCouplingData(newdisplacements, dummyMesh, true);
 
@@ -79,14 +91,15 @@ BOOST_AUTO_TEST_CASE(TestMoveAndScaleTimeGrids)
   fullTimeGrid.moveTimeGridToNewWindow(newdata);
   reducedTimeGrid.moveTimeGridToNewWindow(newdata);
 
-  storedFullTimeGrid    = fullTimeGrid.getTimeGrid(dataIDs[0]);
-  storedReducedTimeGrid = reducedTimeGrid.getTimeGrid(dataIDs[0]);
+  storedFullTimeGrid    = fullTimeGrid.getTimeGridAfter(dataIDs[0], timeWindowStart);
+  storedReducedTimeGrid = reducedTimeGrid.getTimeGridAfter(dataIDs[0], timeWindowStart);
 
   /// Test that the time grids contain the correct gridpoints
+  BOOST_TEST(storedFullTimeGrid.size() == 2);
+  BOOST_TEST(testing::equals(storedFullTimeGrid(0), 2.0));
+  BOOST_TEST(testing::equals(storedFullTimeGrid(1), 3.0));
 
-  BOOST_TEST(testing::equals(storedFullTimeGrid(0), 1.0));
-  BOOST_TEST(testing::equals(storedFullTimeGrid(1), 2.0));
-  BOOST_TEST(testing::equals(storedFullTimeGrid(2), 3.0));
+  BOOST_TEST(storedReducedTimeGrid.size() == 1);
   BOOST_TEST(testing::equals(storedReducedTimeGrid(0), 3.0));
 }
 

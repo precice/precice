@@ -302,6 +302,10 @@ void BaseCouplingScheme::initialize()
       // reserve memory and initialize data with zero
       if (_acceleration) {
         _acceleration->initialize(getAccelerationData());
+        if (auto qnAcceleration = std::dynamic_pointer_cast<precice::acceleration::BaseQNAcceleration>(_acceleration);
+            qnAcceleration) {
+          PRECICE_WARN_IF((qnAcceleration->getMaxUsedTimeWindows() == 0) && (qnAcceleration->getMaxUsedIterations() > _maxIterations), "The maximum number of iterations used in the quasi-Newton acceleration scheme is greater than the maximum number of iterations allowed in one time window. When time-windows-reused is set to 0, and therefore no previous time windows are reused, the actual max-used-ietrations is equal to max-iterations.");
+        }
       }
     }
     requireAction(CouplingScheme::Action::WriteCheckpoint);
@@ -893,7 +897,7 @@ void BaseCouplingScheme::doImplicitStep()
   if (_hasConverged) {
     if (_acceleration) {
       profiling::Event e("accelerate", profiling::Fundamental);
-      _acceleration->iterationsConverged(getAccelerationData());
+      _acceleration->iterationsConverged(getAccelerationData(), getTimeWindowStart());
     }
     newConvergenceMeasurements();
   } else {
@@ -910,7 +914,7 @@ void BaseCouplingScheme::doImplicitStep()
         data->sample() = stamples.back().sample;
       }
 
-      _acceleration->performAcceleration(getAccelerationData());
+      _acceleration->performAcceleration(getAccelerationData(), getTimeWindowStart());
 
       // Store from buffer
       // @todo Currently only data at end of window is accelerated. Remaining data in storage stays as it is.

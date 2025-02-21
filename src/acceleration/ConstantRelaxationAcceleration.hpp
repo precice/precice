@@ -23,9 +23,9 @@ public:
 
   virtual void initialize(const DataMap &cplData) override;
 
-  virtual void performAcceleration(DataMap &cplData) override;
+  virtual void performAcceleration(DataMap &cplData, double windowStart) override;
 
-  virtual void iterationsConverged(const DataMap &cplData) override
+  virtual void iterationsConverged(const DataMap &cplData, double windowStart) override
   {
     // function not needed in ConstantRelaxationAcceleration
   }
