@@ -1364,7 +1364,7 @@ void ParticipantImpl::writeAndMapData(
   PRECICE_CHECK(!context.mesh->empty(), "This participant tries to mapAndWrite data values for data \"{0}\" on mesh \"{1}\", but the mesh \"{1}\" is empty within the defined access region on this rank. "
                                         "Where should the provided data go? Please make sure the mesh \"{1}\" is non-empty within the access region.",
                 dataName, meshName);
-  dataContext.mapAndWriteValues(coordinates, values);
+  dataContext.writeAndMapValues(coordinates, values);
 }
 
 void ParticipantImpl::writeGradientData(
