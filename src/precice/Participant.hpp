@@ -976,6 +976,14 @@ public:
    *
    * @note Only supported for consistent mapping constraints and mapping:rbf-pum-direct or mapping:nearest-neighbot.
    *
+   * @note The function makes use of a caching mechanism that reuses the result from the previous call
+   * with the same \p relativeReadTime on each individual rank. As a result, calling the function
+   * for different \p coordinates while keeping the \p relativeReadTime constant is more efficient
+   * than calling it for varying \p relativeReadTime values at each \p coordinate.
+   * In practice, this means that iterating over time (i.e., varying \p relativeReadTime) in the outer loop
+   * and over space (i.e., iterating over \p coordinates) in the inner loop gives a significantly better
+   * performance than vice versa.
+   *
    * @see Participant::setMeshAccessRegion()
    */
   void mapAndReadData(
