@@ -48,8 +48,8 @@ void ReadDataContext::mapAndReadValues(::precice::span<const double> coordinates
 
   if (!mappingCache->hasDataAtTimeStamp(readTime)) {
     // Sample waveform relaxation
-    Eigen::VectorXd sample{_providedData->sampleAtTime(readTime)};
-    justInTimeMapping->updateMappingDataCache(*mappingCache.get(), sample);
+
+    justInTimeMapping->updateMappingDataCache(*mappingCache.get(), _providedData->sampleAtTime(readTime).values());
     mappingCache->setTimeStamp(readTime);
   }
   Eigen::Map<const Eigen::MatrixXd> coords(coordinates.data(), getSpatialDimensions(), coordinates.size() / getSpatialDimensions());
