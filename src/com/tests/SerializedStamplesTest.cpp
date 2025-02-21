@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
   Eigen::VectorXd initValues(nValues);
   initValues.setZero();
 
-  Eigen::MatrixXd initGradients(nValues, meshDimensions);
+  Eigen::MatrixXd initGradients(meshDimensions, nValues);
   initGradients.setZero();
 
   toDataPtr->setSampleAtTime(0, time::Sample(toDataPtr->getDimensions(), initValues, initGradients));
