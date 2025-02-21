@@ -8,6 +8,7 @@
 
 namespace precice {
 namespace mapping {
+namespace impl {
 
 /**
  * Struct to store temporary data tied to a specific Mapping-Data pair
@@ -83,5 +84,6 @@ inline void MappingDataCache::resetData()
     mat.setZero();
   }
 }
+} // namespace impl
 } // namespace mapping
 } // namespace precice

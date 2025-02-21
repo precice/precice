@@ -182,7 +182,6 @@ target_sources(preciceCore
     src/mapping/LinearCellInterpolationMapping.hpp
     src/mapping/Mapping.cpp
     src/mapping/Mapping.hpp
-    src/mapping/MappingDataCache.hpp
     src/mapping/MathHelper.hpp
     src/mapping/NearestNeighborBaseMapping.cpp
     src/mapping/NearestNeighborBaseMapping.hpp
@@ -207,6 +206,7 @@ target_sources(preciceCore
     src/mapping/config/MappingConfigurationTypes.hpp
     src/mapping/impl/BasisFunctions.hpp
     src/mapping/impl/CreateClustering.hpp
+    src/mapping/impl/MappingDataCache.hpp
     src/mapping/impl/SphericalVertexCluster.hpp
     src/math/Bspline.cpp
     src/math/Bspline.hpp

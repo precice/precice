@@ -181,8 +181,8 @@ protected:
    * to one local mesh, map it to different remote meshes). Since the just-in-time mapping operates
    * on the remote meshes, this multiplicity cannot occur. Thus, one cache per DataContext is enough.
    */
-  std::unique_ptr<mapping::MappingDataCache> mappingCache;
-  mapping::PtrMapping                        justInTimeMapping;
+  std::unique_ptr<mapping::impl::MappingDataCache> mappingCache;
+  mapping::PtrMapping                              justInTimeMapping;
   /**
    * @brief Helper to append a mappingContext, fromData and toData to the corresponding data containers
    *

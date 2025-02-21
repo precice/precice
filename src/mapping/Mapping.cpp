@@ -267,24 +267,24 @@ bool Mapping::isJustInTimeMapping() const
   return _input->isJustInTime() || _output->isJustInTime();
 }
 
-void Mapping::updateMappingDataCache(MappingDataCache &cache, const Eigen::Ref<const Eigen::VectorXd> &in)
+void Mapping::updateMappingDataCache(impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::VectorXd> &in)
 {
   precice::profiling::Event e("map.updateMappingDataCache.From" + input()->getName());
   cache.inData = in;
 }
 
-void Mapping::initializeMappingDataCache(MappingDataCache &cache)
+void Mapping::initializeMappingDataCache(impl::MappingDataCache &cache)
 {
   // Do nothing by default, only relevant for PUM at the moment
 }
 
-void Mapping::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target)
+void Mapping::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target)
 {
   PRECICE_ASSERT(false, "Not implemented");
 }
-void Mapping::completeJustInTimeMapping(MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer) {}
+void Mapping::completeJustInTimeMapping(impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer) {}
 
-void Mapping::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
+void Mapping::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
 {
   PRECICE_ASSERT(false, "Not implemented");
 }

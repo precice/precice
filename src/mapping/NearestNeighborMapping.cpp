@@ -26,7 +26,7 @@ NearestNeighborMapping::NearestNeighborMapping(
   }
 }
 
-void NearestNeighborMapping::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
+void NearestNeighborMapping::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
 {
   precice::profiling::Event e("map.nn.mapConsistentAt.From" + input()->getName());
   auto &                    index = input()->index();
@@ -38,7 +38,7 @@ void NearestNeighborMapping::mapConsistentAt(const Eigen::Ref<const Eigen::Matri
   }
 }
 
-void NearestNeighborMapping::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target)
+void NearestNeighborMapping::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target)
 {
   precice::profiling::Event e("map.nn.mapConservativeAt.From" + input()->getName());
   auto &                    index = output()->index();

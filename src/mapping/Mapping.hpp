@@ -3,7 +3,7 @@
 #include <Eigen/Core>
 #include <iosfwd>
 
-#include "mapping/MappingDataCache.hpp"
+#include "mapping/impl/MappingDataCache.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "precice/span.hpp"
@@ -206,7 +206,7 @@ public:
    * @note the default implementation in this class simply aborts the code and actual
    * implementations are in derived classes
    */
-  virtual void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target);
+  virtual void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target);
 
   /**
    * @brief Just-in-time mapping variant of mapConsistent
@@ -218,8 +218,8 @@ public:
    * @note the default implementation in this class simply aborts the code and actual
    * implementations are in derived classes
    */
-  virtual void mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values);
-  virtual void completeJustInTimeMapping(MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer);
+  virtual void mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values);
+  virtual void completeJustInTimeMapping(impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer);
 
   /**
    * @brief Allows updating a so-called MappingDataCache for more efficient just-in-time mappings
@@ -239,9 +239,9 @@ public:
    * @param cache the cache in use
    * @param in the time-interpolated data values
    */
-  virtual void updateMappingDataCache(MappingDataCache &cache, const Eigen::Ref<const Eigen::VectorXd> &in);
+  virtual void updateMappingDataCache(impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::VectorXd> &in);
 
-  virtual void initializeMappingDataCache(MappingDataCache &cache);
+  virtual void initializeMappingDataCache(impl::MappingDataCache &cache);
 
 protected:
   /// Returns pointer to input mesh.

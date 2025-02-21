@@ -461,7 +461,7 @@ void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double 
     // side.
     samplizeWriteData(timeSteppedTo);
   }
-  // TODO: We need to reset here the buffer for just-in-time mappings as well
+
   resetWrittenData();
 
   // Reset mapping counters here to cover subcycling
@@ -1241,7 +1241,6 @@ void ParticipantImpl::mapAndReadData(
 {
   PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshName, dataName, coordinates.size(), relativeReadTime);
-  // TODO: Make these checks conditional
   PRECICE_CHECK(_state != State::Constructed, "mapAndReadData(...) cannot be called before initialize().");
   PRECICE_CHECK(_state != State::Finalized, "mapAndReadData(...) cannot be called after finalize().");
   PRECICE_CHECK(math::smallerEquals(relativeReadTime, _couplingScheme->getNextTimeStepMaxSize()), "readData(...) cannot sample data outside of current time window.");
@@ -1696,7 +1695,6 @@ void ParticipantImpl::computePartitions()
 void ParticipantImpl::computeMappings(std::vector<MappingContext> &contexts, const std::string &mappingType)
 {
   PRECICE_TRACE();
-  using namespace mapping;
   bool anyMappingChanged = false;
   for (impl::MappingContext &context : contexts) {
     if (not context.mapping->hasComputedMapping()) {

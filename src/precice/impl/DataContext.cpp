@@ -98,7 +98,7 @@ void DataContext::addJustInTimeMapping(MappingContext &mappingContext, MeshConte
   PRECICE_ASSERT(mappingContext.toData);
 
   PRECICE_ASSERT(mappingContext.fromData == _providedData || mappingContext.toData == _providedData, "Either fromData or toData has to equal _providedData.");
-  mappingCache      = std::make_unique<mapping::MappingDataCache>(data->getDimensions());
+  mappingCache      = std::make_unique<mapping::impl::MappingDataCache>(data->getDimensions());
   justInTimeMapping = mappingContext.mapping;
 }
 
