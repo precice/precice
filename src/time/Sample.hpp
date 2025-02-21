@@ -3,8 +3,6 @@
 
 #include <Eigen/Core>
 
-#include "utils/assertion.hpp"
-
 namespace precice::time {
 
 /** Sample of a \ref mesh::Data on a \ref mesh::Mesh
@@ -23,24 +21,15 @@ struct Sample {
 
   /// Constructs a Sample of given data and mesh dimensionality, and size with gradients
   Sample(int dataDims, int nVertices, int meshDims)
-      : dataDims(dataDims), values(nVertices * dataDims), gradients(meshDims, nVertices * dataDims)
-  {
-  }
+      : dataDims(dataDims), values(nVertices * dataDims), gradients(nVertices, dataDims * meshDims) {}
 
   /// Constructs a Sample of given data dimensionality and data values
   Sample(int dims, Eigen::VectorXd inValues)
-      : dataDims(dims), values(std::move(inValues))
-  {
-    PRECICE_ASSERT(dataDims > 0);
-  }
+      : dataDims(dims), values(std::move(inValues)) {}
 
   /// Constructs a Sample of given data dimensionality, data values, and data gradients
   Sample(int dims, Eigen::VectorXd inValues, Eigen::MatrixXd inGradients)
-      : dataDims(dims), values(std::move(inValues)), gradients(std::move(inGradients))
-  {
-    PRECICE_ASSERT(dataDims > 0);
-    PRECICE_ASSERT(gradients.size() == 0 || gradients.cols() == values.size());
-  }
+      : dataDims(dims), values(std::move(inValues)), gradients(std::move(inGradients)) {}
 
   Sample(const Sample &) = default;
   Sample(Sample &&)      = default;

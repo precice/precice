@@ -121,9 +121,6 @@ public:
   /// Returns the ID of the data set (supposed to be unique).
   DataID getID() const;
 
-  /// Sets all values to zero
-  void toZero();
-
   /// Returns if the data contains gradient data
   bool hasGradient() const;
 
