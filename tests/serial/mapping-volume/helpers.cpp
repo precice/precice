@@ -33,7 +33,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     BOOST_CHECK(participant.getMeshVertexSize(meshName) == 3);
 
     auto &mesh = precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
-    BOOST_REQUIRE(mesh.vertices().size() == 3);
+    BOOST_REQUIRE(mesh.nVertices() == 3);
     BOOST_REQUIRE(mesh.edges().size() == 3);
     BOOST_REQUIRE(mesh.triangles().size() == 1);
 
@@ -69,7 +69,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     // If "read" mapping, check received mesh
     if (read) {
       auto &mesh = precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
-      BOOST_REQUIRE(mesh.vertices().size() == 3);
+      BOOST_REQUIRE(mesh.nVertices() == 3);
       BOOST_REQUIRE(mesh.edges().size() == 3);
       BOOST_REQUIRE(mesh.triangles().size() == 1);
     }
@@ -82,7 +82,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     Eigen::VectorXd readData(1);
     // Expected value in the middle of the triangle is the average of inputs (1, 10, 100)
     expected << 111.0 / 3;
-
+    dt = participant.getMaxTimeStepSize();
     participant.readData(meshName, dataName, vertexIDs, dt, readData);
     BOOST_CHECK(equals(expected, readData));
 
@@ -190,7 +190,7 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
 
     auto &mesh = precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
     // setMeshTetrahedron currently adds underlying connectivity
-    BOOST_REQUIRE(mesh.vertices().size() == 4);
+    BOOST_REQUIRE(mesh.nVertices() == 4);
     BOOST_REQUIRE(mesh.edges().empty());
     BOOST_REQUIRE(mesh.triangles().empty());
     BOOST_REQUIRE(mesh.tetrahedra().size() == 1);
@@ -231,7 +231,7 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
     // If "read" mapping, check received mesh, including connectivity
     if (read) {
       auto &mesh = precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
-      BOOST_CHECK(mesh.vertices().size() == 4);
+      BOOST_CHECK(mesh.nVertices() == 4);
       BOOST_CHECK(mesh.edges().size() == 6);
       BOOST_CHECK(mesh.triangles().size() == 4);
       BOOST_CHECK(mesh.tetrahedra().size() == 1);
@@ -306,7 +306,7 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
 
     auto &mesh = precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshTwo");
     // setMeshTetrahedron currently adds underlying connectivity
-    BOOST_REQUIRE(mesh.vertices().size() == 4);
+    BOOST_REQUIRE(mesh.nVertices() == 4);
     BOOST_REQUIRE(mesh.edges().empty());
     BOOST_REQUIRE(mesh.triangles().empty());
     BOOST_REQUIRE(mesh.tetrahedra().size() == 1);

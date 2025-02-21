@@ -92,31 +92,34 @@ BOOST_AUTO_TEST_SUITE(QueryTests)
 BOOST_AUTO_TEST_SUITE(MeshTests)
 BOOST_AUTO_TEST_SUITE(Vertex)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Query2DVertex)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   auto            mesh = edgeMesh2D();
   Index           indexTree(mesh);
   Eigen::Vector2d location(0.2, 0.8);
 
   auto result = indexTree.getClosestVertex(location);
-  BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector2d(0, 1));
+  BOOST_TEST(mesh->vertex(result.index).getCoords() == Eigen::Vector2d(0, 1));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Query3DVertex)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   auto            mesh = edgeMesh3D();
   Index           indexTree(mesh);
   Eigen::Vector3d location(0.8, 0.0, 0.8);
 
   auto result = indexTree.getClosestVertex(location);
-  BOOST_TEST(mesh->vertices().at(result.index).getCoords() == Eigen::Vector3d(1, 0, 1));
+  BOOST_TEST(mesh->vertex(result.index).getCoords() == Eigen::Vector3d(1, 0, 1));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Query3DFullVertex)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   PtrMesh      mesh(new precice::mesh::Mesh("MyMesh", 3, precice::testing::nextMeshID()));
   const double z1  = 0.1;
   const double z2  = -0.1;
@@ -148,7 +151,7 @@ BOOST_AUTO_TEST_CASE(Query3DFullVertex)
     Eigen::Vector3d location(0.8, 0.0, 0.8);
     auto            result = indexTree.getClosestVertex(location);
 
-    BOOST_TEST(mesh->vertices().at(result.index).getID() == v10.getID());
+    BOOST_TEST(mesh->vertex(result.index).getID() == v10.getID());
   }
   {
     Eigen::Vector3d       location(0.8, 0.0, 0.8);
@@ -171,9 +174,10 @@ BOOST_AUTO_TEST_CASE(Query3DFullVertex)
 }
 
 /// Resembles how boost geometry is used inside the PetRBF
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(QueryWithBoxEmpty)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   auto         mesh = vertexMesh3D();
   Index        indexTree(mesh);
   mesh::Vertex searchVertex(Eigen::Vector3d(0.8, 1, 0), 0);
@@ -184,9 +188,10 @@ BOOST_AUTO_TEST_CASE(QueryWithBoxEmpty)
 }
 
 /// Resembles how boost geometry is used inside the PetRBF
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(QueryWithBox2Matches)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   auto  mesh = vertexMesh3D();
   Index indexTree(mesh);
 
@@ -195,14 +200,15 @@ BOOST_AUTO_TEST_CASE(QueryWithBox2Matches)
 
   auto results = indexTree.getVerticesInsideBox(searchVertex, radius);
   BOOST_TEST(results.size() == 2);
-  BOOST_TEST(mesh->vertices().at(results.at(0)).getCoords() == Eigen::Vector3d(0, 1, 0));
-  BOOST_TEST(mesh->vertices().at(results.at(1)).getCoords() == Eigen::Vector3d(1, 1, 0));
+  BOOST_TEST(mesh->vertex(results.at(0)).getCoords() == Eigen::Vector3d(0, 1, 0));
+  BOOST_TEST(mesh->vertex(results.at(1)).getCoords() == Eigen::Vector3d(1, 1, 0));
 }
 
 /// Resembles how boost geometry is used inside the PetRBF
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(QueryWithBoxEverything)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   auto  mesh = vertexMesh3D();
   Index indexTree(mesh);
 
@@ -213,13 +219,60 @@ BOOST_AUTO_TEST_CASE(QueryWithBoxEverything)
   BOOST_TEST(results.size() == 8);
 }
 
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(QueryRtreeBoundingBox2D)
+{
+  PRECICE_TEST();
+  auto mesh   = edgeMesh2D();
+  auto result = mesh->index().getRtreeBounds();
+  mesh->computeBoundingBox();
+  auto comparison = mesh->getBoundingBox();
+
+  BOOST_TEST(result == comparison);
+  BOOST_TEST(result.minCorner() == Eigen::Vector2d(0, 0));
+  BOOST_TEST(result.maxCorner() == Eigen::Vector2d(1, 1));
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(QueryRtreeBoundingBox3D)
+{
+  PRECICE_TEST();
+  auto mesh   = vertexMesh3D();
+  auto result = mesh->index().getRtreeBounds();
+  mesh->computeBoundingBox();
+  auto comparison = mesh->getBoundingBox();
+
+  BOOST_TEST(result == comparison);
+  BOOST_TEST(result.minCorner() == Eigen::Vector3d(0, 0, 0));
+  BOOST_TEST(result.maxCorner() == Eigen::Vector3d(1, 1, 1));
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(QueryRtreeBoundingBox3DComplex)
+{
+  PRECICE_TEST();
+  PtrMesh mesh(new precice::mesh::Mesh("MyMesh", 3, precice::testing::nextMeshID()));
+  mesh->createVertex(Eigen::Vector3d(7, 4, 3.3));
+  mesh->createVertex(Eigen::Vector3d(26.4777, 5, 8));
+  mesh->createVertex(Eigen::Vector3d(-23.4, 100000.2, 7));
+  mesh->createVertex(Eigen::Vector3d(0.211, -21.37, 0.00003));
+  auto result = mesh->index().getRtreeBounds();
+  mesh->computeBoundingBox();
+  auto comparison = mesh->getBoundingBox();
+
+  BOOST_TEST(result == comparison);
+  BOOST_TEST(result.minCorner() == Eigen::Vector3d(-23.4, -21.37, 0.00003));
+  BOOST_TEST(result.maxCorner() == Eigen::Vector3d(26.4777, 100000.2, 8));
+}
+
 BOOST_AUTO_TEST_SUITE_END() // Vertex
 
 BOOST_AUTO_TEST_SUITE(Edge)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Query2DEdge)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   auto            mesh = edgeMesh2D();
   Index           indexTree(mesh);
   Eigen::Vector2d location(0.2, 0.8);
@@ -232,9 +285,10 @@ BOOST_AUTO_TEST_CASE(Query2DEdge)
   BOOST_TEST(edge.vertex(1).getCoords() == Eigen::Vector2d(1, 1));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Query3DEdge)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   auto            mesh = edgeMesh3D();
   Index           indexTree(mesh);
   Eigen::Vector3d location(1.8, 0.0, 0.8);
@@ -256,9 +310,10 @@ BOOST_AUTO_TEST_CASE(Query3DEdge)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Query3DFullEdge)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   PtrMesh      mesh(new precice::mesh::Mesh("MyMesh", 3, precice::testing::nextMeshID()));
   const double z1  = 0.1;
   const double z2  = -0.1;
@@ -301,9 +356,10 @@ BOOST_AUTO_TEST_SUITE_END() // Edge
 
 BOOST_AUTO_TEST_SUITE(Triangle)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   PtrMesh      mesh(new precice::mesh::Mesh("MyMesh", 3, precice::testing::nextMeshID()));
   const double z1  = 0.1;
@@ -350,9 +406,10 @@ BOOST_AUTO_TEST_SUITE_END() // Triangle
 
 BOOST_AUTO_TEST_SUITE(Projection)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ProjectionToVertex)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   auto  meshPtr = fullMesh();
   Index indexTree(meshPtr);
 
@@ -372,9 +429,10 @@ BOOST_AUTO_TEST_CASE(ProjectionToVertex)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ProjectionToEdge)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   auto  meshPtr = fullMesh();
   Index indexTree(meshPtr);
 
@@ -394,9 +452,10 @@ BOOST_AUTO_TEST_CASE(ProjectionToEdge)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ProjectionToTriangle)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   auto  meshPtr = fullMesh();
   Index indexTree(meshPtr);
 
@@ -420,9 +479,10 @@ BOOST_AUTO_TEST_SUITE_END() // Projection
 
 BOOST_AUTO_TEST_SUITE(Tetrahedra)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(CubeBoundingBoxIndex)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
   auto &  mesh = *ptr;
   Index   indexTree(ptr);
@@ -444,8 +504,10 @@ BOOST_AUTO_TEST_CASE(CubeBoundingBoxIndex)
   BOOST_TEST(match.size() == 2);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TetraIndexing)
 {
+  PRECICE_TEST();
   /*
   For a location and 3 tetrahedra such that:
   - First contains the location
@@ -453,7 +515,6 @@ BOOST_AUTO_TEST_CASE(TetraIndexing)
   - Third doesn't and neither does its AABB
   Check that only 1st and 2nd are found by getEnclosingTetrahedra
   */
-  PRECICE_TEST(1_rank);
   PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
   auto &  mesh = *ptr;
   Index   indexTree(ptr);
@@ -488,12 +549,13 @@ BOOST_AUTO_TEST_CASE(TetraIndexing)
   BOOST_TEST(((match[0] == 0 && match[1] == 1) || (match[0] == 1 && match[1] == 0)));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TetraWorksOnBoundary)
 {
+  PRECICE_TEST();
   /*
  Check that the AABB safety factor is high enough. Do all the corners of a tetra fit inside its AABB?
   */
-  PRECICE_TEST(1_rank);
   PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
   auto &  mesh = *ptr;
   Index   indexTree(ptr);

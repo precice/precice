@@ -3,8 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace precice {
-namespace logging {
+namespace precice::logging {
 
 /// Holds the configuration for one logging backend (sink) and takes care of default values.
 struct BackendConfiguration {
@@ -21,6 +20,9 @@ struct BackendConfiguration {
 
   /// Sets on option, overwrites default values.
   void setOption(std::string key, std::string value);
+
+  /// Checks if an option is usable
+  static bool isValidOption(std::string key);
 
   /// Sets weather the sink is enabled or disabled
   void setEnabled(bool enabled);
@@ -60,5 +62,4 @@ struct GlobalLoggingConfig {
 /// Returns the global logging configuration
 GlobalLoggingConfig &getGlobalLoggingConfig();
 
-} // namespace logging
-} // namespace precice
+} // namespace precice::logging

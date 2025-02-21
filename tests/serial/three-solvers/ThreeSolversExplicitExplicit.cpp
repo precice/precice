@@ -8,9 +8,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(ThreeSolvers)
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ThreeSolversExplicitExplicit)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
+  PRECICE_TEST();
   std::string      config = context.config();
   std::vector<int> expectedCallsOfAdvance{10, 10, 10};
   runTestThreeSolvers(config, expectedCallsOfAdvance, context);

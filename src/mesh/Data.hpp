@@ -1,12 +1,13 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <initializer_list>
 #include <stddef.h>
 #include <string>
 
 #include "SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "time/Sample.hpp"
 #include "time/Storage.hpp"
 #include "time/Time.hpp"
@@ -79,10 +80,10 @@ public:
   /**
    * @brief Samples _waveform at given time
    *
-   * @param normalizedDt Time where the sampling inside the window happens. Only allows values between 0 and 1. 0 refers to the beginning of the window and 1 to the end.
-   * @return Value of _waveform at time normalizedDt.
+   * @param time Time where the sampling happens.
+   * @return Value of _waveform at time \ref time.
    */
-  Eigen::VectorXd sampleAtTime(double normalizedDt) const;
+  time::SampleResult sampleAtTime(double time) const;
 
   /**
    * @brief get degree of _waveform.
@@ -103,7 +104,16 @@ public:
   }
 
   /// Add sample at given time to _timeStepsStorage.
-  void setSampleAtTime(double time, time::Sample sample);
+  void setSampleAtTime(double time, const time::Sample &sample);
+
+  /// Creates an empty sample at given time
+  void emplaceSampleAtTime(double time);
+
+  /// Creates a sample at given time with given values
+  void emplaceSampleAtTime(double time, std::initializer_list<double> values);
+
+  /// Creates a sample at given time with given values and gradients
+  void emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients);
 
   /// Returns the name of the data set, as set in the config file.
   const std::string &getName() const;
@@ -111,11 +121,11 @@ public:
   /// Returns the ID of the data set (supposed to be unique).
   DataID getID() const;
 
-  /// Sets all values to zero
-  void toZero();
-
   /// Returns if the data contains gradient data
   bool hasGradient() const;
+
+  /// Returns if there are sample of this data
+  bool hasSamples() const;
 
   /// Set the additional requirement of gradient data
   void requireDataGradient();

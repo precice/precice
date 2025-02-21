@@ -361,18 +361,18 @@ void runP2PMeshBroadcastTest(const TestContext &context, com::PtrCommunicationFa
 
     if (context.isPrimary()) {
       // This rank should receive the mesh from rank 0 (fluid primary)
-      BOOST_TEST(mesh->vertices().size() == 2);
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 5.50);
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(0) == 1.0);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(1) == 2.0);
+      BOOST_TEST(mesh->nVertices() == 2);
+      BOOST_TEST(mesh->vertex(0).coord(0) == 5.50);
+      BOOST_TEST(mesh->vertex(0).coord(1) == 0.0);
+      BOOST_TEST(mesh->vertex(1).coord(0) == 1.0);
+      BOOST_TEST(mesh->vertex(1).coord(1) == 2.0);
     } else {
       // This rank should receive the mesh from rank 1 (fluid secondary)
-      BOOST_TEST(mesh->vertices().size() == 2);
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(0) == 1.50);
-      BOOST_TEST(mesh->vertices().at(0).getCoords()(1) == 0.0);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(0) == 1.50);
-      BOOST_TEST(mesh->vertices().at(1).getCoords()(1) == 2.0);
+      BOOST_TEST(mesh->nVertices() == 2);
+      BOOST_TEST(mesh->vertex(0).coord(0) == 1.50);
+      BOOST_TEST(mesh->vertex(0).coord(1) == 0.0);
+      BOOST_TEST(mesh->vertex(1).coord(0) == 1.50);
+      BOOST_TEST(mesh->vertex(1).coord(1) == 2.0);
     }
   }
 }
@@ -461,51 +461,58 @@ void runP2PComLocalCommunicationMapTest(const TestContext &context, com::PtrComm
 
 BOOST_AUTO_TEST_SUITE(Sockets)
 
+PRECICE_TEST_SETUP("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(P2PComTest1)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   runP2PComTest1(context, cf);
 }
 
+PRECICE_TEST_SETUP("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(P2PComTest2)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   runP2PComTest2(context, cf);
 }
 
+PRECICE_TEST_SETUP("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TestSameConnection)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   runSameConnectionTest(context, cf);
 }
 
+PRECICE_TEST_SETUP("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TestCrossConnection)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   runCrossConnectionTest(context, cf);
 }
 
+PRECICE_TEST_SETUP("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(EmptyConnectionTest)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   runEmptyConnectionTest(context, cf);
 }
 
+PRECICE_TEST_SETUP("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(P2PMeshBroadcastTest)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   runP2PMeshBroadcastTest(context, cf);
 }
 
+PRECICE_TEST_SETUP("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(P2PComLocalCommunicationMapTest)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
   runP2PComLocalCommunicationMapTest(context, cf);
 }
@@ -514,37 +521,42 @@ BOOST_AUTO_TEST_SUITE_END() // Sockets
 
 BOOST_AUTO_TEST_SUITE(MPIPorts, *boost::unit_test::label("MPI_Ports"))
 
+PRECICE_TEST_SETUP("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(P2PComTest1)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
   runP2PComTest1(context, cf);
 }
 
+PRECICE_TEST_SETUP("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(P2PComTest2)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
   runP2PComTest2(context, cf);
 }
 
+PRECICE_TEST_SETUP("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TestSameConnection)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
   runSameConnectionTest(context, cf);
 }
 
+PRECICE_TEST_SETUP("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(TestCrossConnection)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
   runCrossConnectionTest(context, cf);
 }
 
+PRECICE_TEST_SETUP("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(EmptyConnectionTest)
 {
-  PRECICE_TEST("A"_on(2_ranks).setupIntraComm(), "B"_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
   runEmptyConnectionTest(context, cf);
 }

@@ -19,9 +19,10 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
  *
  * Ensures that time window sizes are passed correctly and that reading and writing is possible.
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   Participant precice(context.name, context.config(), 0, 1);
 
@@ -47,11 +48,21 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
 
   double   v0[]     = {0, 0, 0};
   VertexID vertexID = precice.setMeshVertex(meshName, v0);
+  BOOST_TEST(!precice.requiresInitialData());
   precice.initialize();
-  double dt = precice.getMaxTimeStepSize();
+
+  int window = 0;
 
   for (auto prescribed_dt : timestepSizes) {
     BOOST_TEST(precice.isCouplingOngoing());
+    double dt = precice.getMaxTimeStepSize();
+
+    precice.readData(meshName, readDataName, {&vertexID, 1}, dt, {&actualDataValue, 1});
+    if (window == 0 && context.isNamed("SolverOne")) {
+      BOOST_TEST(actualDataValue == 0);
+    } else {
+      BOOST_TEST(actualDataValue == expectedDataValue);
+    }
     precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&expectedDataValue, 1});
 
     if (context.isNamed("SolverOne")) {
@@ -60,10 +71,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipant)
       BOOST_TEST(dt == prescribed_dt);
       precice.advance(dt);
     }
-    dt = precice.getMaxTimeStepSize();
-
-    precice.readData(meshName, readDataName, {&vertexID, 1}, dt, {&actualDataValue, 1});
-    BOOST_TEST(actualDataValue == expectedDataValue);
+    window++;
   }
 
   BOOST_TEST(not precice.isCouplingOngoing());

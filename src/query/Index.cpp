@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 #include "query/Index.hpp"
 #include "query/impl/RTreeAdapter.hpp"
@@ -56,7 +56,7 @@ VertexTraits::Ptr Index::IndexImpl::getVertexRTree(const mesh::Mesh &mesh)
   impl::RTreeParameters     params;
   VertexTraits::IndexGetter ind(mesh.vertices());
   auto                      tree = std::make_shared<VertexTraits::RTree>(
-      boost::irange<std::size_t>(0lu, mesh.vertices().size()), params, ind);
+      boost::irange<std::size_t>(0lu, mesh.nVertices()), params, ind);
 
   indices.vertexRTree = std::move(tree);
   return indices.vertexRTree;
@@ -172,7 +172,7 @@ VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
 {
   PRECICE_TRACE();
 
-  PRECICE_ASSERT(not _mesh->vertices().empty(), _mesh->getName());
+  PRECICE_ASSERT(not _mesh->empty(), _mesh->getName());
   VertexMatch match;
   const auto &rtree = _pimpl->getVertexRTree(*_mesh);
   rtree->query(bgi::nearest(sourceCoord, 1), boost::make_function_output_iterator([&](size_t matchID) {
@@ -184,7 +184,7 @@ VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
 std::vector<VertexID> Index::getClosestVertices(const Eigen::VectorXd &sourceCoord, int n)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(!(_mesh->vertices().empty()), _mesh->getName());
+  PRECICE_ASSERT(!(_mesh->empty()), _mesh->getName());
   std::vector<VertexID> matches;
   const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
 
@@ -230,9 +230,24 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::Vertex &centerVert
 
   const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
   std::vector<VertexID> matches;
-  rtree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertices()[i]) < radius; }),
+  rtree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertex(i)) < radius; }),
                std::back_inserter(matches));
   return matches;
+}
+
+bool Index::isAnyVertexInsideBox(const mesh::Vertex &centerVertex, double radius)
+{
+  PRECICE_TRACE();
+
+  // Prepare boost::geometry box
+  auto coords    = centerVertex.getCoords();
+  auto searchBox = query::makeBox(coords.array() - radius, coords.array() + radius);
+
+  const auto &rtree = _pimpl->getVertexRTree(*_mesh);
+
+  auto queryIter = rtree->qbegin(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertex(i)) < radius; }));
+  bool hasMatch  = queryIter != rtree->qend();
+  return hasMatch;
 }
 
 std::vector<VertexID> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
@@ -297,7 +312,7 @@ ProjectionMatch Index::findCellOrProjection(const Eigen::VectorXd &location, int
 ProjectionMatch Index::findVertexProjection(const Eigen::VectorXd &location)
 {
   auto match = getClosestVertex(location);
-  return {mapping::Polation{location, _mesh->vertices()[match.index]}};
+  return {mapping::Polation{location, _mesh->vertex(match.index)}};
 }
 
 ProjectionMatch Index::findEdgeProjection(const Eigen::VectorXd &location, int n, ProjectionMatch closestVertex)
@@ -347,6 +362,30 @@ ProjectionMatch Index::findTriangleProjection(const Eigen::VectorXd &location, i
   }
 
   return *min;
+}
+
+mesh::BoundingBox Index::getRtreeBounds()
+{
+  PRECICE_TRACE();
+  // if the mesh is empty, we will most likely hit an assertion in the bounding box class
+  // therefore, we keep the assert here, but might want to return an empty bounding box in case
+  // we want to allow calling this function with empty meshes
+  PRECICE_ASSERT(_mesh->nVertices() > 0);
+
+  auto            rtreeBox = _pimpl->getVertexRTree(*_mesh)->bounds();
+  int             dim      = _mesh->getDimensions();
+  Eigen::VectorXd min(dim), max(dim);
+
+  min[0] = rtreeBox.min_corner().get<0>();
+  min[1] = rtreeBox.min_corner().get<1>();
+  max[0] = rtreeBox.max_corner().get<0>();
+  max[1] = rtreeBox.max_corner().get<1>();
+
+  if (dim > 2) {
+    min[2] = rtreeBox.min_corner().get<2>();
+    max[2] = rtreeBox.max_corner().get<2>();
+  }
+  return mesh::BoundingBox{min, max};
 }
 
 void Index::clear()

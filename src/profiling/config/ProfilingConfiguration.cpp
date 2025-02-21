@@ -1,6 +1,6 @@
 #include "profiling/config/ProfilingConfiguration.hpp"
-#include <boost/filesystem/path.hpp>
 #include <cstdlib>
+#include <filesystem>
 #include <string_view>
 #include "logging/LogMacros.hpp"
 #include "profiling/EventUtils.hpp"
@@ -52,7 +52,7 @@ ProfilingConfiguration::ProfilingConfiguration(xml::XMLTag &parent)
 
   auto attrDirectory = makeXMLAttribute<std::string>("directory", DEFAULT_DIRECTORY)
                            .setDocumentation("Directory to use as a root directory to  write the events to. "
-                                             "Events will be written to `<directory>/precice-events/`");
+                                             "Events will be written to `<directory>/precice-profiling/`");
   tag.addAttribute(attrDirectory);
 
   auto attrSynchronize = xml::makeXMLAttribute("synchronize", false)
@@ -70,7 +70,7 @@ void ProfilingConfiguration::xmlTagCallback(
   precice::syncMode = tag.getBooleanAttributeValue("synchronize");
   auto mode         = tag.getStringAttributeValue("mode");
   auto flushEvery   = tag.getIntAttributeValue("flush-every");
-  auto directory    = boost::filesystem::path(tag.getStringAttributeValue("directory"));
+  auto directory    = std::filesystem::path(tag.getStringAttributeValue("directory"));
   PRECICE_CHECK(flushEvery >= 0, "You configured the profiling to flush-every=\"{}\", which is invalid. "
                                  "Please choose a number >= 0.");
 
@@ -79,7 +79,7 @@ void ProfilingConfiguration::xmlTagCallback(
 
   er.setWriteQueueMax(flushEvery);
 
-  directory /= "precice-events";
+  directory /= "precice-profiling";
   er.setDirectory(directory.string());
 
   er.setMode(fromString(mode));
@@ -92,8 +92,8 @@ void applyDefaults()
 
   er.setWriteQueueMax(DEFAULT_SYNC_EVERY);
 
-  auto directory = boost::filesystem::path(DEFAULT_DIRECTORY);
-  directory /= "precice-events";
+  auto directory = std::filesystem::path(DEFAULT_DIRECTORY);
+  directory /= "precice-profiling";
   er.setDirectory(directory.string());
 
   er.setMode(fromString(DEFAULT_MODE));

@@ -14,6 +14,7 @@
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "math/differences.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -42,8 +43,8 @@ void runSimpleExplicitCoupling(
   BOOST_TEST(mesh->data().size() == 2);
   auto &dataValues0 = mesh->data(0)->values();
   auto &dataValues1 = mesh->data(1)->values();
-  BOOST_TEST(mesh->vertices().size() > 0);
-  mesh::Vertex &  vertex     = mesh->vertices().at(0);
+  BOOST_TEST(mesh->nVertices() > 0);
+  mesh::Vertex &  vertex     = mesh->vertex(0);
   double          valueData0 = 1.0;
   Eigen::VectorXd valueData1 = Eigen::VectorXd::Constant(3, 1.0);
 
@@ -51,8 +52,8 @@ void runSimpleExplicitCoupling(
   int    computedTimesteps = 0;
 
   if (participantName == std::string("Participant0")) {
-    mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
-    cplScheme.initialize(0.0, 1);
+    mesh->data(0)->setSampleAtTime(0, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
+    cplScheme.initialize();
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
@@ -60,10 +61,11 @@ void runSimpleExplicitCoupling(
     BOOST_TEST(cplScheme.isCouplingOngoing());
     while (cplScheme.isCouplingOngoing()) {
       dataValues0(vertex.getID()) = valueData0;
-      mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
+      BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
       computedTime += cplScheme.getNextTimeStepMaxSize();
       computedTimesteps++;
       cplScheme.addComputedTime(cplScheme.getNextTimeStepMaxSize());
+      mesh->data(0)->setSampleAtTime(cplScheme.getTime(), time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -94,10 +96,10 @@ void runSimpleExplicitCoupling(
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     BOOST_TEST(cplScheme.isTimeWindowComplete());
     BOOST_TEST(not cplScheme.isCouplingOngoing());
-    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
+    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == 0.0);
   } else if (participantName == std::string("Participant1")) {
-    mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
-    cplScheme.initialize(0.0, 1);
+    mesh->data(1)->setSampleAtTime(0, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
+    cplScheme.initialize();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     double value = dataValues0(vertex.getID());
     BOOST_TEST(testing::equals(value, valueData0));
@@ -108,10 +110,11 @@ void runSimpleExplicitCoupling(
     BOOST_TEST(cplScheme.isCouplingOngoing());
     while (cplScheme.isCouplingOngoing()) {
       dataValues1.segment(vertex.getID() * 3, 3) = valueData1;
-      mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
+      BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
       computedTime += cplScheme.getNextTimeStepMaxSize();
       computedTimesteps++;
       cplScheme.addComputedTime(cplScheme.getNextTimeStepMaxSize());
+      mesh->data(1)->setSampleAtTime(cplScheme.getTime(), time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -139,7 +142,7 @@ void runSimpleExplicitCoupling(
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     BOOST_TEST(cplScheme.isTimeWindowComplete());
     BOOST_TEST(not cplScheme.isCouplingOngoing());
-    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
+    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == 0.0);
   }
 }
 
@@ -151,8 +154,8 @@ void runExplicitCouplingWithSubcycling(
   BOOST_TEST(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
   BOOST_TEST(mesh->data().size() == 2);
-  BOOST_TEST(mesh->vertices().size() > 0);
-  mesh::Vertex &  vertex      = mesh->vertices().at(0);
+  BOOST_TEST(mesh->nVertices() > 0);
+  mesh::Vertex &  vertex      = mesh->vertex(0);
   double          valueData0  = 1.0;
   Eigen::VectorXd valueData1  = Eigen::VectorXd::Constant(3, 1.0);
   auto &          dataValues0 = mesh->data(0)->values();
@@ -164,8 +167,8 @@ void runExplicitCouplingWithSubcycling(
   std::string nameParticipant1("Participant1");
   BOOST_TEST(((participantName == nameParticipant0) || (participantName == nameParticipant1)));
   if (participantName == nameParticipant0) {
-    mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
-    cplScheme.initialize(0.0, 1);
+    mesh->data(0)->setSampleAtTime(0, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
+    cplScheme.initialize();
     mesh->data(0)->timeStepsStorage().trim();
     double dtDesired = cplScheme.getNextTimeStepMaxSize() / 2.0;
     double dtUsed    = dtDesired;
@@ -175,24 +178,24 @@ void runExplicitCouplingWithSubcycling(
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isCouplingOngoing());
     while (cplScheme.isCouplingOngoing()) {
-      dataValues0(vertex.getID()) = valueData0;
-      computedTime += dtUsed;
-      computedTimesteps++;
-      cplScheme.addComputedTime(dtUsed);
-      auto relativeDt = cplScheme.getNormalizedWindowTime();
-      mesh->data(0)->setSampleAtTime(relativeDt, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
-      cplScheme.firstSynchronization({});
-      cplScheme.firstExchange();
-      cplScheme.secondSynchronization();
-      cplScheme.secondExchange();
       // If the dt from preCICE is larger than the desired one, do subcycling,
       // else, use the dt from preCICE
+      BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
       dtUsed = cplScheme.getNextTimeStepMaxSize() > dtDesired
                    ? dtDesired
                    : cplScheme.getNextTimeStepMaxSize();
       BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
       BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::WriteCheckpoint));
       BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
+      dataValues0(vertex.getID()) = valueData0;
+      computedTime += dtUsed;
+      computedTimesteps++;
+      cplScheme.addComputedTime(dtUsed);
+      mesh->data(0)->setSampleAtTime(cplScheme.getTime(), time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
+      cplScheme.firstSynchronization({});
+      cplScheme.firstExchange();
+      cplScheme.secondSynchronization();
+      cplScheme.secondExchange();
       if (computedTimesteps % 2 == 0) {
         // Data exchange takes only place at every second local timestep,
         // since a subcycling of 2 is used.
@@ -220,11 +223,11 @@ void runExplicitCouplingWithSubcycling(
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     BOOST_TEST(cplScheme.isTimeWindowComplete());
     BOOST_TEST(not cplScheme.isCouplingOngoing());
-    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
+    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == 0.0);
   } else if (participantName == nameParticipant1) {
     // Start coupling
-    mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
-    cplScheme.initialize(0.0, 1);
+    mesh->data(1)->setSampleAtTime(0, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
+    cplScheme.initialize();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     // Validate current coupling status
     BOOST_TEST(testing::equals(dataValues0(vertex.getID()), valueData0));
@@ -235,11 +238,11 @@ void runExplicitCouplingWithSubcycling(
     BOOST_TEST(cplScheme.isCouplingOngoing());
     while (cplScheme.isCouplingOngoing()) {
       dataValues1.segment(vertex.getID() * 3, 3) = valueData1;
+      BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
       computedTime += cplScheme.getNextTimeStepMaxSize();
       computedTimesteps++;
       cplScheme.addComputedTime(cplScheme.getNextTimeStepMaxSize());
-      auto relativeDt = cplScheme.getNormalizedWindowTime();
-      mesh->data(1)->setSampleAtTime(relativeDt, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
+      mesh->data(1)->setSampleAtTime(cplScheme.getTime(), time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -266,7 +269,7 @@ void runExplicitCouplingWithSubcycling(
     BOOST_TEST(not cplScheme.isActionRequired(CouplingScheme::Action::ReadCheckpoint));
     BOOST_TEST(cplScheme.isTimeWindowComplete());
     BOOST_TEST(not cplScheme.isCouplingOngoing());
-    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() > 0.0);
+    BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == 0.0);
   }
 }
 
@@ -300,9 +303,10 @@ BOOST_FIXTURE_TEST_SUITE(ExplicitCouplingSchemeTests, ExplicitCouplingSchemeFixt
 
 /// Test that runs on 2 processors.
 
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
   auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
@@ -336,10 +340,7 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
     sendDataIndex    = 1;
     receiveDataIndex = 0;
   }
-  cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 12, nameParticipant0,
-      nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Explicit);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Explicit);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
@@ -347,9 +348,10 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
 }
 
 /// Test that runs on 2 processors.
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
 
   using namespace mesh;
 
@@ -381,9 +383,10 @@ BOOST_AUTO_TEST_CASE(testConfiguredSimpleExplicitCoupling)
 }
 
 /// Test that runs on 2 processors.
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
 
   using namespace mesh;
   std::string configurationPath(_pathToTests + "explicit-coupling-scheme-2.xml");
@@ -420,8 +423,8 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
   if (context.isNamed(nameParticipant0)) {
     double solverDt = 0.3;
     double preciceDt, dt;
-    mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
-    cplScheme.initialize(0.0, 1);
+    mesh->data(0)->setSampleAtTime(0, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
+    cplScheme.initialize();
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
     BOOST_TEST(cplScheme.getNextTimeStepMaxSize() == 1);
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
@@ -430,10 +433,10 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
     while (cplScheme.isCouplingOngoing()) {
       preciceDt = cplScheme.getNextTimeStepMaxSize();
       dt        = std::min({solverDt, preciceDt});
+      mesh->data(0)->setSampleAtTime(computedTime + dt, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
+      cplScheme.addComputedTime(dt);
       computedTime += dt;
       computedTimesteps++;
-      mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
-      cplScheme.addComputedTime(dt);
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -452,16 +455,16 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
     BOOST_TEST(not cplScheme.isCouplingOngoing());
   } else {
     BOOST_TEST(context.isNamed(nameParticipant1));
-    mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
-    cplScheme.initialize(0.0, 1);
+    mesh->data(1)->setSampleAtTime(0, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
+    cplScheme.initialize();
     BOOST_TEST(cplScheme.hasDataBeenReceived());
     BOOST_TEST(not cplScheme.isTimeWindowComplete());
     BOOST_TEST(cplScheme.isCouplingOngoing());
     while (cplScheme.isCouplingOngoing()) {
+      mesh->data(1)->setSampleAtTime(computedTime + cplScheme.getTimeWindowSize(), time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
+      cplScheme.addComputedTime(cplScheme.getTimeWindowSize());
       computedTime += cplScheme.getTimeWindowSize();
       computedTimesteps++;
-      mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
-      cplScheme.addComputedTime(cplScheme.getTimeWindowSize());
       cplScheme.firstSynchronization({});
       cplScheme.firstExchange();
       cplScheme.secondSynchronization();
@@ -487,9 +490,10 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingFirstParticipantSetsDt)
  * Participant0 reads Data0 and Data1 from Participant1. Data0 is not initialized. Data1 is initialized.
  * Participant1 reads Data2 from Participant0. Data2 is initialized.
  */
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
 
   using namespace mesh;
 
@@ -535,15 +539,15 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
     dataValues2(0) = 3.0;
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
-    mesh->data(2)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(2)->getDimensions(), mesh->data(2)->values()});
-    cplScheme.initialize(0.0, 1);
+    mesh->data(2)->setSampleAtTime(0, time::Sample{mesh->data(2)->getDimensions(), mesh->data(2)->values()});
+    cplScheme.initialize();
     BOOST_TEST(cplScheme.hasDataBeenReceived()); // receives initial data
     // BOOST_TEST(testing::equals(dataValues0(0), 0.0));  // @todo Should receive 0.0, because Data0 is not initialized. See https://github.com/precice/precice/issues/1693
     BOOST_TEST(testing::equals(dataValues0(0), 5.0)); // @todo Incorrect due to bug. See https://github.com/precice/precice/issues/1693
     BOOST_TEST(testing::equals(dataValues1(0), 1.0));
     dataValues2(0) = 2.0;
-    mesh->data(2)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{mesh->data(2)->getDimensions(), mesh->data(2)->values()});
     cplScheme.addComputedTime(cplScheme.getNextTimeStepMaxSize());
+    mesh->data(2)->setSampleAtTime(cplScheme.getTime(), time::Sample{mesh->data(2)->getDimensions(), mesh->data(2)->values()});
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();
     cplScheme.secondSynchronization();
@@ -558,15 +562,15 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
     dataValues0(0) = 5.0; // Data0 is written, but initialization is turned off.
     dataValues1(0) = 1.0;
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
-    mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
-    mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
-    cplScheme.initialize(0.0, 1);
+    mesh->data(0)->setSampleAtTime(0, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
+    mesh->data(1)->setSampleAtTime(0, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
+    cplScheme.initialize();
     BOOST_TEST(cplScheme.hasDataBeenReceived()); // receives initial data
     BOOST_TEST(testing::equals(dataValues2(0), 2.0));
     dataValues0(0) = 4.0;
-    mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
-    mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
     cplScheme.addComputedTime(cplScheme.getNextTimeStepMaxSize());
+    mesh->data(0)->setSampleAtTime(cplScheme.getTime(), time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
+    mesh->data(1)->setSampleAtTime(cplScheme.getTime(), time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();
     cplScheme.secondSynchronization();
@@ -583,9 +587,10 @@ BOOST_AUTO_TEST_CASE(testSerialDataInitialization)
  * Participant0 reads Data0 and Data1 from Participant1. Data0 is not initialized. Data1 is initialized.
  * Participant1 reads Data2 from Participant0. Data2 is initialized.
  */
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
 
   using namespace mesh;
 
@@ -631,15 +636,15 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
     dataValues2(0) = 3.0;
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
-    mesh->data(2)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(2)->getDimensions(), mesh->data(2)->values()});
-    cplScheme.initialize(0.0, 1);
+    mesh->data(2)->setSampleAtTime(0, time::Sample{mesh->data(2)->getDimensions(), mesh->data(2)->values()});
+    cplScheme.initialize();
     BOOST_TEST(cplScheme.hasDataBeenReceived()); // receives initial data
     // BOOST_TEST(testing::equals(dataValues0(0), 0.0));  // @todo Should receive 0.0, because Data0 is not initialized. See https://github.com/precice/precice/issues/1693
     BOOST_TEST(testing::equals(dataValues0(0), 5.0)); // @todo Incorrect due to bug. See https://github.com/precice/precice/issues/1693
     BOOST_TEST(testing::equals(dataValues1(0), 1.0));
     dataValues2(0) = 2.0;
-    mesh->data(2)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{mesh->data(2)->getDimensions(), mesh->data(2)->values()});
     cplScheme.addComputedTime(cplScheme.getNextTimeStepMaxSize());
+    mesh->data(2)->setSampleAtTime(cplScheme.getTime(), time::Sample{mesh->data(2)->getDimensions(), mesh->data(2)->values()});
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();
     cplScheme.secondSynchronization();
@@ -654,15 +659,15 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
     dataValues0(0) = 5.0; // Data0 is written, but initialization is turned off.
     dataValues1(0) = 1.0;
     cplScheme.markActionFulfilled(CouplingScheme::Action::InitializeData);
-    mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
-    mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_START, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
-    cplScheme.initialize(0.0, 1);
+    mesh->data(0)->setSampleAtTime(0, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
+    mesh->data(1)->setSampleAtTime(0, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
+    cplScheme.initialize();
     BOOST_TEST(cplScheme.hasDataBeenReceived()); // receives initial data
     BOOST_TEST(testing::equals(dataValues2(0), 3.0));
     dataValues0(0) = 4.0;
-    mesh->data(0)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
-    mesh->data(1)->setSampleAtTime(time::Storage::WINDOW_END, time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
     cplScheme.addComputedTime(cplScheme.getNextTimeStepMaxSize());
+    mesh->data(0)->setSampleAtTime(cplScheme.getTime(), time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
+    mesh->data(1)->setSampleAtTime(cplScheme.getTime(), time::Sample{mesh->data(1)->getDimensions(), mesh->data(1)->values()});
     cplScheme.firstSynchronization({});
     cplScheme.firstExchange();
     cplScheme.secondSynchronization();
@@ -675,9 +680,10 @@ BOOST_AUTO_TEST_CASE(testParallelDataInitialization)
 }
 
 /// Test that runs on 2 processors.
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   testing::ConnectionOptions options;
   options.useOnlyPrimaryCom = true;
   auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
@@ -710,10 +716,7 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
     sendDataIndex    = 1;
     receiveDataIndex = 0;
   }
-  cplscheme::SerialCouplingScheme cplScheme(
-      maxTime, maxTimeWindows, timeWindowSize, 12, nameParticipant0,
-      nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE,
-      BaseCouplingScheme::Explicit);
+  cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Explicit);
   cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
   cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
   cplScheme.determineInitialDataExchange();
@@ -721,9 +724,10 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
 }
 
 /// Test that runs on 2 processors.
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testConfiguredExplicitCouplingWithSubcycling)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), Require::Events);
+  PRECICE_TEST();
 
   using namespace mesh;
 

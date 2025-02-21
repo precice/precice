@@ -27,46 +27,6 @@
 
 namespace precice::utils {
 
-#ifndef PRECICE_NO_PETSC
-
-namespace {
-
-using new_signature = PetscErrorCode(PetscOptions, const char[], const char[]);
-using old_signature = PetscErrorCode(const char[], const char[]);
-
-/**
- * @brief Fix for compatibility with PETSc < 3.7.
- *
- * This enables to call PetscOptionsSetValue with proper number of arguments.
- * This instantiates only the template, that specifies correct function signature, whilst
- * the other one is discarded ( https://en.cppreference.com/w/cpp/language/sfinae )
- */
-template <typename curr_signature = decltype(PetscOptionsSetValue)>
-PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[],
-                                           typename std::enable_if<std::is_same<curr_signature, new_signature>::value, curr_signature>::type PetscOptionsSetValueImpl =
-                                               PetscOptionsSetValue)
-{
-  return PetscOptionsSetValueImpl(nullptr, name, value);
-}
-
-/**
- * @brief Fix for compatibility with PETSc < 3.7.
- *
- * This enables to call PetscOptionsSetValue with proper number of arguments.
- * This instantiates only the template, that specifies correct function signature, whilst
- * the other one is discarded ( https://en.cppreference.com/w/cpp/language/sfinae )
- */
-template <typename curr_signature = decltype(PetscOptionsSetValue)>
-PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[],
-                                           typename std::enable_if<std::is_same<curr_signature, old_signature>::value, curr_signature>::type PetscOptionsSetValueImpl =
-                                               PetscOptionsSetValue)
-{
-  return PetscOptionsSetValueImpl(name, value);
-}
-
-} // namespace
-#endif
-
 precice::logging::Logger precice::utils::Petsc::_log("utils::Petsc");
 
 #ifndef PRECICE_NO_PETSC
@@ -75,10 +35,7 @@ precice::logging::Logger precice::utils::petsc::Vector::_log("utils::Petsc::Vect
 
 bool Petsc::weInitialized = false;
 
-void Petsc::initialize(
-    int *                  argc,
-    char ***               argv,
-    Parallel::Communicator comm)
+void Petsc::initialize(Parallel::Communicator comm)
 {
   PRECICE_TRACE();
 #ifndef PRECICE_NO_PETSC
@@ -89,7 +46,9 @@ void Petsc::initialize(
     // Disable the default signal handler
     PetscOptionsSetValue(nullptr, "-no_signal_handler", nullptr);
     PetscErrorCode ierr;
-    ierr = PetscInitialize(argc, argv, "", nullptr);
+    int            argc = 0;
+    char **        argv = nullptr;
+    ierr                = PetscInitialize(&argc, &argv, "", nullptr);
     CHKERRV(ierr);
     weInitialized = true;
   }
@@ -99,10 +58,13 @@ void Petsc::initialize(
 void Petsc::finalize()
 {
 #ifndef PRECICE_NO_PETSC
+  if (!weInitialized) {
+    return;
+  }
   PetscBool petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
-  if (petscIsInitialized and weInitialized) {
-    PetscOptionsSetValueWrapper("-options_left", "no");
+  if (petscIsInitialized) {
+    PetscOptionsSetValue(nullptr, "-options_left", "no");
     PetscFinalize();
   }
 #endif // not PRECICE_NO_PETSC
@@ -359,29 +321,37 @@ void Vector::fillWithRandoms()
 
 Vector &Vector::copyFrom(precice::span<const double> source)
 {
-  if (source.empty()) {
+  // This is collective, so we can only skip if the global size is 0
+  if (getSize() == 0) {
     return *this;
   }
-  PRECICE_ASSERT(source.size() == getLocalSize());
-  PetscScalar *data;
-  VecGetArray(vector, &data);
+  PRECICE_ASSERT(static_cast<PetscInt>(source.size()) == getLocalSize());
+  PetscScalar *  data;
+  PetscErrorCode ierr = 0;
+  ierr                = VecGetArray(vector, &data);
+  PRECICE_ASSERT(ierr == 0);
   std::copy(source.begin(), source.end(), data);
-  VecRestoreArray(vector, &data);
+  ierr = VecRestoreArray(vector, &data);
+  PRECICE_ASSERT(ierr == 0);
   return *this;
 }
 
 Vector &Vector::copyTo(precice::span<double> destination)
 {
-  if (destination.empty()) {
+  // This is collective, so we can only skip if the global size is 0
+  if (getSize() == 0) {
     return *this;
   }
   auto localSize = getLocalSize();
-  PRECICE_ASSERT(destination.size() == localSize);
-  PetscScalar *data;
-  VecGetArray(vector, &data);
+  PRECICE_ASSERT(static_cast<PetscInt>(destination.size()) == localSize);
+  PetscScalar *  data;
+  PetscErrorCode ierr = 0;
+  ierr                = VecGetArray(vector, &data);
+  PRECICE_ASSERT(ierr == 0);
   auto dataEnd = std::next(data, localSize);
   std::copy(data, dataEnd, destination.begin());
-  VecRestoreArray(vector, &data);
+  ierr = VecRestoreArray(vector, &data);
+  PRECICE_ASSERT(ierr == 0);
   return *this;
 }
 

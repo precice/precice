@@ -3,8 +3,8 @@
 #include "PythonAction.hpp"
 #include <Eigen/Core>
 #include <Python.h>
-#include <boost/filesystem/operations.hpp>
 #include <cstdlib>
+#include <filesystem>
 #include <memory>
 #include <ostream>
 #include <pthread.h>
@@ -63,7 +63,7 @@ PythonAction::PythonAction(
       _modulePath(std::move(modulePath)),
       _moduleName(std::move(moduleName))
 {
-  PRECICE_CHECK(boost::filesystem::is_directory(_modulePath),
+  PRECICE_CHECK(std::filesystem::is_directory(_modulePath),
                 "The module path of the python action \"{}\" does not exist. The configured path is \"{}\".",
                 _moduleName, _modulePath);
   if (targetDataID != -1) {
@@ -87,20 +87,22 @@ PythonAction::~PythonAction()
   }
 }
 
-void PythonAction::performAction(double time)
+void PythonAction::performAction()
 {
-  PRECICE_TRACE(time);
+  PRECICE_TRACE();
 
-  if (not _isInitialized)
+  if (not _isInitialized) {
     initialize();
+  }
 
-  PyObject *dataArgs   = PyTuple_New(_numberArguments);
-  PyObject *pythonTime = PyFloat_FromDouble(time);
-  PyTuple_SetItem(dataArgs, 0, pythonTime);
+  PyObject *dataArgs = PyTuple_New(_numberArguments);
 
   int i = 0;
   for (auto &targetStample : _targetData->stamples()) { // iterate over _targetData, because it must always exist
     PRECICE_ASSERT(_targetData);                        // _targetData is mandatory, cannot call setSampleAtTime, if target data is not provided!
+
+    PyObject *pythonTime = PyFloat_FromDouble(targetStample.timestamp);
+    PyTuple_SetItem(dataArgs, 0, pythonTime);
 
     if (_sourceData) {                                     // _sourceData is optional
       auto &sourceStample   = _sourceData->stamples()[i];  // simultaneously iterate over _targetData->stamples()
@@ -124,16 +126,14 @@ void PythonAction::performAction(double time)
     PyTuple_SetItem(dataArgs, argumentIndex, _targetValues);
 
     PyObject_CallObject(_performAction, dataArgs);
-    if (PyErr_Occurred()) {
-      PRECICE_ERROR("Error occurred during call of function performAction() in python module \"{}\". "
-                    "The error message is: {}",
-                    _moduleName, python_error_as_string());
-    }
-
-    Py_DECREF(dataArgs);
+    PRECICE_CHECK(!PyErr_Occurred(),
+                  "Error occurred during call of function performAction() in python module \"{}\". "
+                  "The error message is: {}",
+                  _moduleName, python_error_as_string());
 
     _targetData->setSampleAtTime(targetStample.timestamp, _targetData->sample());
   }
+  Py_DECREF(dataArgs);
 }
 
 void PythonAction::initialize()
@@ -148,9 +148,8 @@ void PythonAction::initialize()
   PyRun_SimpleString(appendPathCommand.c_str());
   _moduleNameObject = PyUnicode_FromString(_moduleName.c_str());
   _module           = PyImport_Import(_moduleNameObject);
-  if (_module == nullptr) {
-    PRECICE_ERROR("An error occurred while loading python module \"{}\": {}", _moduleName, python_error_as_string());
-  }
+  PRECICE_CHECK(_module,
+                "An error occurred while loading python module \"{}\": {}", _moduleName, python_error_as_string());
 
   // Construct method performAction
   _performAction = PyObject_GetAttrString(_module, "performAction");

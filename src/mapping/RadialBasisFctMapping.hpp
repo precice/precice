@@ -8,7 +8,7 @@
 #include "config/MappingConfiguration.hpp"
 #include "mapping/RadialBasisFctBaseMapping.hpp"
 #include "mesh/Filter.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 
@@ -156,11 +156,11 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::computeMapping()
 
     // Forwarding the tuples here requires some template magic I don't want to implement
     if constexpr (std::tuple_size_v<std::tuple<Args...>>> 0) {
-      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
-                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial, std::get<0>(optionalArgs));
+      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.nVertices()),
+                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.nVertices()), this->_deadAxis, _polynomial, std::get<0>(optionalArgs));
     } else {
-      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.vertices().size()),
-                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.vertices().size()), this->_deadAxis, _polynomial);
+      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.nVertices()),
+                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.nVertices()), this->_deadAxis, _polynomial);
     }
   }
   this->_hasComputedMapping = true;
@@ -178,7 +178,17 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::clear()
 template <typename SOLVER_T, typename... Args>
 std::string RadialBasisFctMapping<SOLVER_T, Args...>::getName() const
 {
-  return "global-direct RBF";
+  if constexpr (std::tuple_size_v<std::tuple<Args...>>> 0) {
+    auto        param = std::get<0>(optionalArgs);
+    std::string exec  = param.executor;
+    if (param.solver == "qr-solver") {
+      return "global-direct RBF (" + exec + ")";
+    } else {
+      return "global-iterative RBF (" + exec + ")";
+    }
+  } else {
+    return "global-direct RBF (cpu-executor)";
+  }
 }
 
 template <typename SOLVER_T, typename... Args>
@@ -186,7 +196,6 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
-  using precice::com::AsVectorTag;
 
   PRECICE_DEBUG("Map conservative using {}", getName());
 
@@ -230,7 +239,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
     {
       int secondaryOutputValueSize;
       for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
-        std::vector<double> secondaryBuffer = utils::IntraComm::getCommunication()->receiveRange(rank, AsVectorTag<double>{});
+        std::vector<double> secondaryBuffer = utils::IntraComm::getCommunication()->receiveRange(rank, com::asVector<double>);
         globalInValues.insert(globalInValues.end(), secondaryBuffer.begin(), secondaryBuffer.end());
 
         utils::IntraComm::getCommunication()->receive(secondaryOutputValueSize, rank);
@@ -268,8 +277,8 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
 
       // Filter data
       int outputCounter = 0;
-      for (int i = 0; i < static_cast<int>(this->output()->vertices().size()); ++i) {
-        if (this->output()->vertices()[i].isOwner()) {
+      for (int i = 0; i < static_cast<int>(this->output()->nVertices()); ++i) {
+        if (this->output()->vertex(i).isOwner()) {
           for (int dim = 0; dim < valueDim; ++dim) {
             outData[i * valueDim + dim] = outputValues(outputCounter);
             ++outputCounter;
@@ -289,13 +298,13 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
     }
   }
   if (utils::IntraComm::isSecondary()) {
-    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, AsVectorTag<double>{});
+    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, com::asVector<double>);
 
     const int valueDim = inData.dataDims;
 
     int outputCounter = 0;
-    for (int i = 0; i < static_cast<int>(this->output()->vertices().size()); ++i) {
-      if (this->output()->vertices()[i].isOwner()) {
+    for (int i = 0; i < static_cast<int>(this->output()->nVertices()); ++i) {
+      if (this->output()->vertex(i).isOwner()) {
         for (int dim = 0; dim < valueDim; ++dim) {
           outData[i * valueDim + dim] = receivedValues.at(outputCounter);
           ++outputCounter;
@@ -310,7 +319,6 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map.rbf.mapData.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
-  using precice::com::AsVectorTag;
 
   PRECICE_DEBUG("Map {} using {}", (this->hasConstraint(Mapping::CONSISTENT) ? "consistent" : "scaled-consistent"), getName());
 
@@ -342,7 +350,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
       int secondaryOutDataSize{0};
 
       for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
-        std::vector<double> secondaryBuffer = utils::IntraComm::getCommunication()->receiveRange(rank, AsVectorTag<double>{});
+        std::vector<double> secondaryBuffer = utils::IntraComm::getCommunication()->receiveRange(rank, com::asVector<double>);
         std::copy(secondaryBuffer.begin(), secondaryBuffer.end(), globalInValues.begin() + inputSizeCounter);
         inputSizeCounter += secondaryBuffer.size();
 
@@ -399,7 +407,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
     }
   }
   if (utils::IntraComm::isSecondary()) {
-    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, AsVectorTag<double>{});
+    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, com::asVector<double>);
     outData                            = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
   }
 }

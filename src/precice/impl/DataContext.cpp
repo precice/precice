@@ -1,8 +1,10 @@
-#include "precice/impl/DataContext.hpp"
+#include <iterator>
 #include <memory>
 #include <utility>
-#include "utils/EigenHelperFunctions.hpp"
 
+#include "precice/impl/DataContext.hpp"
+#include "utils/EigenHelperFunctions.hpp"
+#include "utils/IntraComm.hpp"
 namespace precice::impl {
 
 logging::Logger DataContext::_log{"impl::DataContext"};
@@ -49,7 +51,7 @@ std::string DataContext::getMeshName() const
 int DataContext::getMeshVertexCount() const
 {
   PRECICE_ASSERT(_mesh);
-  return _mesh->vertices().size();
+  return _mesh->nVertices();
 }
 
 MeshID DataContext::getMeshID() const
@@ -85,39 +87,70 @@ bool DataContext::hasMapping() const
   return hasReadMapping() || hasWriteMapping();
 }
 
-void DataContext::mapData()
+int DataContext::mapData(std::optional<double> after, bool skipZero)
 {
+  PRECICE_TRACE(getMeshName(), getDataName());
   PRECICE_ASSERT(hasMapping());
-  // Execute the mapping
+
+  int executedMappings{0};
+
+  // Execute the mappings
   for (auto &context : _mappingContexts) {
-    // Reset the toData before mapping any samples
-    context.clearToDataStorage();
-    PRECICE_ASSERT(context.fromData->stamples().size() > 0);
+    PRECICE_CHECK(!context.fromData->stamples().empty(),
+                  "Data {0} on mesh {1} didn't contain any data samples while attempting to map to mesh {2}. "
+                  "Check your exchange tags to ensure your coupling scheme exchanges the data or the pariticipant produces it using an action. "
+                  "The expected exchange tag should look like this: <exchange data=\"{0}\" mesh=\"{1}\" from=... to=... />.",
+                  context.fromData->getName(), context.mapping->getInputMesh()->getName(), context.mapping->getOutputMesh()->getName());
+
+    // linear lookup should be sufficient here
+    const auto timestampExists = [times = context.toData->timeStepsStorage().getTimes()](double lookup) -> bool {
+      return std::any_of(times.data(), std::next(times.data(), times.size()), [lookup](double time) {
+        return math::equals(time, lookup);
+      });
+    };
 
     auto &mapping = *context.mapping;
 
     const auto dataDims = context.fromData->getDimensions();
 
     for (const auto &stample : context.fromData->stamples()) {
-      PRECICE_INFO("Mapping \"{}\" for t={} from \"{}\" to \"{}\"",
-                   getDataName(), stample.timestamp, mapping.getInputMesh()->getName(), mapping.getOutputMesh()->getName());
-      time::Sample outSample{
-          dataDims,
-          Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->vertices().size())};
-
-      if (mapping.requiresInitialGuess()) {
-        const FromToDataIDs key{context.fromData->getID(), context.toData->getID()};
-        mapping.map(stample.sample, outSample.values, _initialGuesses[key]);
-      } else {
-        mapping.map(stample.sample, outSample.values);
+      // skip stamples before given time
+      if (after && math::smallerEquals(stample.timestamp, *after)) {
+        PRECICE_DEBUG("Skipping stample t={} (not after {})", stample.timestamp, *after);
+        continue;
+      }
+      // skip existing stamples
+      if (timestampExists(stample.timestamp)) {
+        PRECICE_DEBUG("Skipping stample t={} (exists)", stample.timestamp);
+        continue;
       }
 
-      PRECICE_DEBUG("Mapped values (t={}) = {}", stample.timestamp, utils::previewRange(3, outSample.values));
+      time::Sample outSample{
+          dataDims,
+          Eigen::VectorXd::Zero(dataDims * mapping.getOutputMesh()->nVertices())};
+
+      // Note that the l2norm is only computed during initialization due to short-circuit evaluation in C++
+      bool skipMapping = skipZero && (utils::IntraComm::l2norm(stample.sample.values) < math::NUMERICAL_ZERO_DIFFERENCE);
+
+      PRECICE_INFO("Mapping \"{}\" for t={} from \"{}\" to \"{}\"{}",
+                   getDataName(), stample.timestamp, mapping.getInputMesh()->getName(), mapping.getOutputMesh()->getName(),
+                   (skipMapping ? " (skipped zero sample)" : ""));
+      if (!skipMapping) {
+        if (mapping.requiresInitialGuess()) {
+          const FromToDataIDs key{context.fromData->getID(), context.toData->getID()};
+          mapping.map(stample.sample, outSample.values, _initialGuesses[key]);
+        } else {
+          mapping.map(stample.sample, outSample.values);
+        }
+        PRECICE_DEBUG("Mapped values (t={}) = {}", stample.timestamp, utils::previewRange(3, outSample.values));
+        ++executedMappings;
+      }
 
       // Store data from mapping buffer in storage
       context.toData->setSampleAtTime(stample.timestamp, std::move(outSample));
     }
   }
+  return executedMappings;
 }
 
 bool DataContext::hasReadMapping() const

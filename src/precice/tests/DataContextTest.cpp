@@ -16,9 +16,10 @@ BOOST_AUTO_TEST_SUITE(PreciceTests)
 
 BOOST_AUTO_TEST_SUITE(DataContextTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   testing::DataContextFixture fixture;
 
@@ -72,9 +73,10 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteMapping)
   BOOST_TEST(fixture.mappingContexts(dataContext)[0].mapping == mappingContext.mapping);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testDataContextMultipleWriteMapping)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   testing::DataContextFixture fixture;
 
@@ -161,9 +163,10 @@ BOOST_AUTO_TEST_CASE(testDataContextMultipleWriteMapping)
   BOOST_TEST(fixture.mappingContexts(dataContext)[1].mapping == mappingContext2.mapping);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testDataContextWriteBuffer)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   testing::DataContextFixture fixture;
 
@@ -208,9 +211,10 @@ BOOST_AUTO_TEST_CASE(testDataContextWriteBuffer)
   dataContext.writeValuesIntoDataBuffer(ids, values);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testDataContextReadMapping)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   testing::DataContextFixture fixture;
 

@@ -8,7 +8,7 @@
 #include "m2n/M2N.hpp"
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Mesh.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/IntraComm.hpp"
@@ -20,9 +20,10 @@ BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
 BOOST_AUTO_TEST_SUITE(CommunicateBoundingBoxTests)
 
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("A", "B");
 
   for (int dim = 2; dim <= 3; dim++) {
@@ -47,9 +48,10 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBox)
   }
 }
 
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("A", "B");
 
   for (int dim = 2; dim <= 3; dim++) {
@@ -87,9 +89,10 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveBoundingBoxMap)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
 
   // Build BB/BBMap to communicate
   int                        dimension = 3;
@@ -123,9 +126,10 @@ BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveBoundingBoxMap)
   }
 }
 
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("A", "B");
 
   std::vector<int>                fb;
@@ -169,9 +173,10 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveConnectionMap)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(BroadcastSendAndReceiveConnectionMap)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
 
   std::vector<int>                fb;
   std::map<int, std::vector<int>> fbm;

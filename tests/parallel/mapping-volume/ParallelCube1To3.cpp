@@ -9,12 +9,12 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(MappingVolume)
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(3_ranks))
 BOOST_AUTO_TEST_CASE(ParallelCube1To3)
 {
+  PRECICE_TEST();
   using precice::VertexID;
   using precice::testing::equals;
-
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(3_ranks));
 
   precice::Participant participant(context.name, context.config(), context.rank, context.size);
 
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube1To3)
     participant.setMeshTetrahedron(meshName, v000, v100, v110, v111);
 
     auto &mesh = precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
-    BOOST_REQUIRE(mesh.vertices().size() == 8);
+    BOOST_REQUIRE(mesh.nVertices() == 8);
     BOOST_REQUIRE(mesh.tetrahedra().size() == 6);
 
     participant.initialize();

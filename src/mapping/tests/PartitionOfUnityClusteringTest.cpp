@@ -26,9 +26,10 @@ BOOST_AUTO_TEST_SUITE(PartitionOfUnityClustering)
 
 BOOST_AUTO_TEST_SUITE(Serial)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(createClustering2D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   int meshDimension = 2;
   // Generate the meshes
@@ -59,9 +60,10 @@ BOOST_AUTO_TEST_CASE(createClustering2D)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(createClustering3D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   int meshDimension = 3;
   // Generate the meshes
@@ -77,7 +79,7 @@ BOOST_AUTO_TEST_CASE(createClustering3D)
       }
     }
   }
-  double       relativeOverlap      = 0.3;
+  double       relativeOverlap      = 0.15;
   unsigned int verticesPerPartition = 10;
   bool         projectToInput       = false;
   {

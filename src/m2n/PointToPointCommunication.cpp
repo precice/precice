@@ -19,9 +19,10 @@
 #include "logging/LogMacros.hpp"
 #include "m2n/DistributedCommunication.hpp"
 #include "mesh/Mesh.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
+#include "utils/algorithm.hpp"
 #include "utils/assertion.hpp"
 
 using precice::profiling::Event;
@@ -46,7 +47,6 @@ void receive(mesh::Mesh::VertexDistribution &m,
              int                             rankSender,
              const com::PtrCommunication &   communication)
 {
-  using precice::com::AsVectorTag;
   m.clear();
   int size = 0;
   communication->receive(size, rankSender);
@@ -54,7 +54,7 @@ void receive(mesh::Mesh::VertexDistribution &m,
   while (size--) {
     Rank rank = -1;
     communication->receive(rank, rankSender);
-    m[rank] = communication->receiveRange(rankSender, AsVectorTag<int>{});
+    m[rank] = communication->receiveRange(rankSender, com::asVector<int>);
   }
 }
 
@@ -245,12 +245,18 @@ void printLocalIndexCountStats(std::map<int, std::vector<int>> const &m)
  *
  * @returns the resulting communication map for rank thisRank
  *
- * The approximate complexity of this function is:
- * \f$ \mathcal{O}(n \log(n) + m \log(n)) \f$
+ * The worst case complexity of the function is:
+ * \f$ \mathcal{O}(p 2 (2 n)) \f$
  *
- * * n is the total number of data indices for all ranks in `otherVertexDistribution'
- * * m is the number of local data indices for the current rank in `thisVertexDistribution`
+ * which consists of the computation of all intersections.
  *
+ * * n is the number of data indices for each vector in `otherVertexDistribution'
+ * * p number of ranks
+ * * Note that n becomes smaller, if we have more ranks.
+ *
+ * However, in case of a proper partitioning and communication between neighbor
+ * ranks (r), we would most likely end up with a factor r<<p
+ * \f$ \mathcal{O}(r 2 (2 n)) \f$
  */
 std::map<int, std::vector<int>> buildCommunicationMap(
     // `thisVertexDistribution' is input vertex distribution from this participant.
@@ -260,27 +266,40 @@ std::map<int, std::vector<int>> buildCommunicationMap(
     int                                   thisRank = utils::IntraComm::getRank())
 {
   auto iterator = thisVertexDistribution.find(thisRank);
-  if (iterator == thisVertexDistribution.end())
+  if (iterator == thisVertexDistribution.end()) {
     return {};
-
-  // Build lookup table from otherIndex -> rank for the otherVertexDistribution
-  const auto lookupIndexRank = [&otherVertexDistribution] {
-    boost::container::flat_multimap<int, int> lookupIndexRank;
-    for (const auto &other : otherVertexDistribution) {
-      for (const auto &otherIndex : other.second) {
-        lookupIndexRank.emplace(otherIndex, other.first);
-      }
-    }
-    return lookupIndexRank;
-  }();
-
-  auto const &indices = iterator->second;
+  }
 
   std::map<int, std::vector<int>> communicationMap;
-  for (size_t index = 0lu; index < indices.size(); ++index) {
-    auto range = lookupIndexRank.equal_range(indices[index]);
-    for (auto iter = range.first; iter != range.second; ++iter) {
-      communicationMap[iter->second].push_back(index);
+  // first a safety check, that we are actually sorted, as the function below operates
+  // on sorted data sets
+  PRECICE_ASSERT(std::is_sorted(iterator->second.begin(), iterator->second.end()));
+
+  // now we iterate over all other vertex distributions to compute the intersection
+  for (const auto &[rank, vertices] : otherVertexDistribution) {
+    // first a safety check, that we are actually sorted, as the function below operates
+    // on sorted data sets
+    PRECICE_ASSERT(std::is_sorted(vertices.begin(), vertices.end()));
+
+    // before starting to compute an actual intersection, we first check if elements can
+    // possibly be in both data sets by comparing upper and lower index bounds of both
+    // data sets. For typical partitioning schemes, each rank only exchanges data with
+    // a few neighbors such that this check already filters out a significant amount of
+    // computations
+    if (iterator->second.empty() || vertices.empty() || (vertices.back() < iterator->second.at(0)) || (vertices.at(0) > iterator->second.back())) {
+      // in this case there is nothing to be done
+      continue;
+    }
+    // we have an intersection, let's compute it
+    std::vector<int> inters;
+    // the actual worker function, which gives us the indices of intersecting elements
+    // have a look at the documentation of the function for more details
+    precice::utils::set_intersection_indices(iterator->second.begin(), iterator->second.begin(), iterator->second.end(),
+                                             vertices.begin(), vertices.end(),
+                                             std::back_inserter(inters));
+    // we have the results, now commit it into the final map
+    if (!inters.empty()) {
+      communicationMap.insert({rank, std::move(inters)});
     }
   }
   return communicationMap;
@@ -675,9 +694,8 @@ void PointToPointCommunication::scatterAllCommunicationMap(CommunicationMap &loc
 
 void PointToPointCommunication::gatherAllCommunicationMap(CommunicationMap &localCommunicationMap)
 {
-  using precice::com::AsVectorTag;
   for (auto &connectionData : _connectionDataVector) {
-    localCommunicationMap[connectionData.remoteRank] = _communication->receiveRange(connectionData.remoteRank, AsVectorTag<int>{});
+    localCommunicationMap[connectionData.remoteRank] = _communication->receiveRange(connectionData.remoteRank, com::asVector<int>);
   }
 }
 

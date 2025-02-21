@@ -8,7 +8,8 @@
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Filter.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
+#include "profiling/Event.hpp"
 
 namespace precice {
 
@@ -45,7 +46,6 @@ public:
    * @param[in] center Spatial center of the vertex cluster
    * @param[in] radius Spatial radius of the cluster associated to the \p center
    * @param[in] function Radial basis function type used in interpolation
-   * @param[in] deadAxis dead axis as set by the user. Required for the RBF solver
    * @param[in] polynomial The polynomial treatment in the RBF system.
    * @param[in] inputMesh mesh where the interpolants are build on, i.e., the input mesh for consistent
    *                      mappings and the output mesh for conservative mappings
@@ -55,7 +55,6 @@ public:
   SphericalVertexCluster(mesh::Vertex            center,
                          double                  radius,
                          RADIAL_BASIS_FUNCTION_T function,
-                         std::vector<bool>       deadAxis,
                          Polynomial              polynomial,
                          mesh::PtrMesh           inputMesh,
                          mesh::PtrMesh           outputMesh);
@@ -130,16 +129,15 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
     mesh::Vertex            center,
     double                  radius,
     RADIAL_BASIS_FUNCTION_T function,
-    std::vector<bool>       deadAxis,
     Polynomial              polynomial,
     mesh::PtrMesh           inputMesh,
     mesh::PtrMesh           outputMesh)
     : _center(center), _radius(radius), _polynomial(polynomial), _weightingFunction(radius)
 {
   PRECICE_TRACE(_center.getCoords(), _radius);
+  precice::profiling::Event eq("map.pou.computeMapping.queryVertices");
   // Disable integrated polynomial, as it might cause locally singular matrices
-  PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.")
-  PRECICE_ASSERT(deadAxis.size() == inputMesh->getDimensions());
+  PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.");
 
   // Get vertices to be mapped
   // Subtract a safety margin to exclude the vertices at the edge
@@ -151,7 +149,7 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
   // The IDs are sorted in the boost flat_set, hence, the function here has N log(N) complexity
   _inputIDs.insert(inIDs.begin(), inIDs.end());
   _outputIDs.insert(outIDs.begin(), outIDs.end());
-
+  eq.stop();
   // If the cluster is empty, we return immediately
   if (empty()) {
     return;
@@ -166,6 +164,8 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
 
   // Construct the solver. Here, the constructor of the RadialBasisFctSolver computes already the decompositions etc, such that we can mark the
   // mapping in this cluster as computed (mostly for debugging purpose)
+  std::vector<bool>         deadAxis(inputMesh->getDimensions(), false);
+  precice::profiling::Event e("map.pou.computeMapping.rbfSolver");
   _rbfSolver          = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{function, *inputMesh.get(), _inputIDs, *outputMesh.get(), _outputIDs, deadAxis, _polynomial};
   _hasComputedMapping = true;
 }
@@ -183,7 +183,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::setNormalizedWeight(double
   // The find method of boost flat_set comes with O(log(N)) complexity (the more expensive part here)
   auto localID = _outputIDs.index_of(_outputIDs.find(id));
 
-  PRECICE_ASSERT(localID < _normalizedWeights.size(), localID, _normalizedWeights.size());
+  PRECICE_ASSERT(static_cast<Eigen::Index>(localID) < _normalizedWeights.size(), localID, _normalizedWeights.size());
   _normalizedWeights[localID] = normalizedWeight;
 }
 
@@ -193,7 +193,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
   // First, a few sanity checks. Empty partitions shouldn't be stored at all
   PRECICE_ASSERT(!empty());
   PRECICE_ASSERT(_hasComputedMapping);
-  PRECICE_ASSERT(_normalizedWeights.size() == _outputIDs.size());
+  PRECICE_ASSERT(_normalizedWeights.size() == static_cast<Eigen::Index>(_outputIDs.size()));
 
   // Define an alias for data dimension in order to avoid ambiguity
   const unsigned int nComponents = inData.dataDims;
@@ -216,7 +216,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
 
     // Step 2: solve the system using a conservative constraint
     auto result = _rbfSolver.solveConservative(in, _polynomial);
-    PRECICE_ASSERT(result.size() == _inputIDs.size());
+    PRECICE_ASSERT(result.size() == static_cast<Eigen::Index>(_inputIDs.size()));
 
     // Step 3: now accumulate the result into our global output data
     for (unsigned int i = 0; i < _inputIDs.size(); ++i) {
@@ -233,7 +233,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
   // First, a few sanity checks. Empty partitions shouldn't be stored at all
   PRECICE_ASSERT(!empty());
   PRECICE_ASSERT(_hasComputedMapping);
-  PRECICE_ASSERT(_normalizedWeights.size() == _outputIDs.size());
+  PRECICE_ASSERT(_normalizedWeights.size() == static_cast<Eigen::Index>(_outputIDs.size()));
 
   // Define an alias for data dimension in order to avoid ambiguity
   const unsigned int nComponents = inData.dataDims;
@@ -253,7 +253,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
 
     // Step 2: solve the system using a consistent constraint
     auto result = _rbfSolver.solveConsistent(in, _polynomial);
-    PRECICE_ASSERT(_outputIDs.size() == result.size());
+    PRECICE_ASSERT(static_cast<Eigen::Index>(_outputIDs.size()) == result.size());
 
     // Step 3: now accumulate the result into our global output data
     for (unsigned int i = 0; i < _outputIDs.size(); ++i) {

@@ -23,13 +23,12 @@ MultiCouplingScheme::MultiCouplingScheme(
     double                             maxTime,
     int                                maxTimeWindows,
     double                             timeWindowSize,
-    int                                validDigits,
     const std::string &                localParticipant,
     std::map<std::string, m2n::PtrM2N> m2ns,
-    constants::TimesteppingMethod      dtMethod,
     const std::string &                controller,
+    int                                minIterations,
     int                                maxIterations)
-    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, validDigits, localParticipant, maxIterations, Implicit, dtMethod),
+    : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, localParticipant, minIterations, maxIterations, Implicit, constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE),
       _m2ns(std::move(m2ns)), _controller(controller), _isController(controller == localParticipant)
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
@@ -64,7 +63,7 @@ bool MultiCouplingScheme::hasAnySendData()
   return std::any_of(_sendDataVector.cbegin(), _sendDataVector.cend(), [](const auto &sendExchange) { return not sendExchange.second.empty(); });
 }
 
-const DataMap &MultiCouplingScheme::getAccelerationData()
+DataMap &MultiCouplingScheme::getAccelerationData()
 {
   // MultiCouplingScheme applies acceleration to all CouplingData
   return _allData;
@@ -82,42 +81,46 @@ void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
 
-  bool initialCommunication = true;
-
   if (_isController) {
-    if (receivesInitializedData()) {
-      for (auto &receiveExchange : _receiveDataVector) {
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialCommunication);
-      }
-      checkDataHasBeenReceived();
-    } else {
-      for (auto &receiveExchange : _receiveDataVector) {
-        initializeWithZeroInitialData(receiveExchange.second);
+    for (auto &[from, data] : _receiveDataVector) {
+      if (receivesInitializedDataFrom(from)) {
+        receiveData(_m2ns.at(from), data);
+      } else {
+        initializeWithZeroInitialData(data);
       }
     }
-    if (sendsInitializedData()) {
-      for (auto &sendExchange : _sendDataVector) {
-        sendData(_m2ns[sendExchange.first], sendExchange.second, initialCommunication);
+    notifyDataHasBeenReceived();
+    for (auto &[to, data] : _sendDataVector) {
+      if (sendsInitializedDataTo(to)) {
+        sendData(_m2ns.at(to), data);
       }
     }
   } else {
-    if (sendsInitializedData()) {
-      for (auto &sendExchange : _sendDataVector) {
-        sendData(_m2ns[sendExchange.first], sendExchange.second, initialCommunication);
+    for (auto &[to, data] : _sendDataVector) {
+      if (sendsInitializedDataTo(to)) {
+        sendData(_m2ns.at(to), data);
       }
     }
-    if (receivesInitializedData()) {
-      for (auto &receiveExchange : _receiveDataVector) {
-        receiveData(_m2ns[receiveExchange.first], receiveExchange.second, initialCommunication);
-      }
-      checkDataHasBeenReceived();
-    } else {
-      for (auto &receiveExchange : _receiveDataVector) {
-        initializeWithZeroInitialData(receiveExchange.second);
+    for (auto &[from, data] : _receiveDataVector) {
+      if (receivesInitializedDataFrom(from)) {
+        receiveData(_m2ns.at(from), data);
+      } else {
+        initializeWithZeroInitialData(data);
       }
     }
+    notifyDataHasBeenReceived();
   }
   PRECICE_DEBUG("Initial data is exchanged in MultiCouplingScheme");
+}
+
+bool MultiCouplingScheme::sendsInitializedDataTo(const std::string &to) const
+{
+  return _sendInitialTo.count(to) > 0;
+}
+
+bool MultiCouplingScheme::receivesInitializedDataFrom(const std::string &from) const
+{
+  return _receiveInitialFrom.count(from) > 0;
 }
 
 void MultiCouplingScheme::exchangeFirstData()
@@ -131,7 +134,7 @@ void MultiCouplingScheme::exchangeFirstData()
     for (auto &receiveExchange : _receiveDataVector) {
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
-    checkDataHasBeenReceived();
+    notifyDataHasBeenReceived();
   } else {
     for (auto &sendExchange : _sendDataVector) {
       sendData(_m2ns[sendExchange.first], sendExchange.second);
@@ -146,29 +149,22 @@ void MultiCouplingScheme::exchangeSecondData()
 
   if (not _isController) {
     receiveConvergence(_m2ns[_controller]);
-    if (hasConverged()) {
-      moveToNextWindow();
-    }
     for (auto &receiveExchange : _receiveDataVector) {
       receiveData(_m2ns[receiveExchange.first], receiveExchange.second);
     }
-    checkDataHasBeenReceived();
-  }
-
-  if (_isController) {
+    notifyDataHasBeenReceived();
+  } else {
     doImplicitStep();
-  }
-
-  if (_isController) {
     for (const auto &m2n : _m2ns | boost::adaptors::map_values) {
       sendConvergence(m2n);
-    }
-    if (hasConverged()) {
-      moveToNextWindow();
     }
     for (auto &sendExchange : _sendDataVector) {
       sendData(_m2ns[sendExchange.first], sendExchange.second);
     }
+  }
+
+  if (hasConverged()) {
+    moveToNextWindow();
   }
 
   storeIteration();
@@ -181,9 +177,12 @@ void MultiCouplingScheme::addDataToSend(
     bool                 exchangeSubsteps,
     const std::string &  to)
 {
-  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps);
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps, CouplingData::Direction::Send);
   PRECICE_DEBUG("Configuring send data to {}", to);
   _sendDataVector[to].emplace(data->getID(), ptrCplData);
+  if (requiresInitialization) {
+    _sendInitialTo.emplace(to);
+  }
 }
 
 void MultiCouplingScheme::addDataToReceive(
@@ -193,9 +192,12 @@ void MultiCouplingScheme::addDataToReceive(
     bool                 exchangeSubsteps,
     const std::string &  from)
 {
-  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps);
+  PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps, CouplingData::Direction::Receive);
   PRECICE_DEBUG("Configuring receive data from {}", from);
   _receiveDataVector[from].emplace(data->getID(), ptrCplData);
+  if (requiresInitialization) {
+    _receiveInitialFrom.emplace(from);
+  }
 }
 
 } // namespace precice::cplscheme

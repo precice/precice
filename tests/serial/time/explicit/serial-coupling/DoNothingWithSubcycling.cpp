@@ -17,9 +17,10 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
  * @brief Test to run a simple "do nothing" coupling with subcycling solvers.
  *
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   double v0[] = {0, 0, 0};
   double v1[] = {1, 0, 0};
@@ -53,9 +54,9 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
     double dt        = maxDt / 3.0; // Time step size desired by solver
     double currentDt = dt;          // Time step size used by solver
     while (precice.isCouplingOngoing()) {
-      precice.advance(currentDt);
       maxDt     = precice.getMaxTimeStepSize();
       currentDt = dt > maxDt ? maxDt : dt;
+      precice.advance(currentDt);
       timestep++;
     }
     precice.finalize();

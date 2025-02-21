@@ -6,7 +6,7 @@
 #include "Communication.hpp"
 #include "Request.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::com {
@@ -136,8 +136,7 @@ void Communication::allreduceSum(double itemToSend, double &itemToReceive)
   // send reduced result to all secondary ranks
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
   for (Rank rank : remoteCommunicatorRanks()) {
-    auto request   = aSend(itemToReceive, rank + _rankOffset);
-    requests[rank] = request;
+    requests[rank] = aSend(itemToReceive, rank + _rankOffset);
   }
   Request::wait(requests);
 }
@@ -168,8 +167,7 @@ void Communication::allreduceSum(int itemToSend, int &itemToReceive)
   // send reduced result to all secondary ranks
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
   for (Rank rank : remoteCommunicatorRanks()) {
-    auto request   = aSend(itemToReceive, rank + _rankOffset);
-    requests[rank] = request;
+    requests[rank] = aSend(itemToReceive, rank + _rankOffset);
   }
   Request::wait(requests);
 }
@@ -191,8 +189,7 @@ void Communication::broadcast(precice::span<const int> itemsToSend)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
   for (Rank rank : remoteCommunicatorRanks()) {
-    auto request   = aSend(itemsToSend, rank + _rankOffset);
-    requests[rank] = request;
+    requests[rank] = aSend(itemsToSend, rank + _rankOffset);
   }
 
   Request::wait(requests);
@@ -212,8 +209,7 @@ void Communication::broadcast(int itemToSend)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
   for (Rank rank : remoteCommunicatorRanks()) {
-    auto request   = aSend(itemToSend, rank + _rankOffset);
-    requests[rank] = request;
+    requests[rank] = aSend(itemToSend, rank + _rankOffset);
   }
 
   Request::wait(requests);
@@ -232,8 +228,7 @@ void Communication::broadcast(precice::span<const double> itemsToSend)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
   for (Rank rank : remoteCommunicatorRanks()) {
-    auto request   = aSend(itemsToSend, rank + _rankOffset);
-    requests[rank] = request;
+    requests[rank] = aSend(itemsToSend, rank + _rankOffset);
   }
 
   Request::wait(requests);
@@ -253,8 +248,7 @@ void Communication::broadcast(double itemToSend)
   std::vector<PtrRequest> requests(getRemoteCommunicatorSize());
 
   for (Rank rank : remoteCommunicatorRanks()) {
-    auto request   = aSend(itemToSend, rank + _rankOffset);
-    requests[rank] = request;
+    requests[rank] = aSend(itemToSend, rank + _rankOffset);
   }
 
   Request::wait(requests);

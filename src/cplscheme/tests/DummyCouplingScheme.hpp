@@ -34,9 +34,9 @@ public:
   /**
    * @brief
    */
-  void initialize(
-      double startTime,
-      int    startTimeWindows) override final;
+  void initialize() override final;
+
+  void reinitialize() override final{};
 
   /**
    * @brief Not implemented.
@@ -56,14 +56,7 @@ public:
     return false;
   }
 
-  /**
-   * @brief Not implemented.
-   */
-  bool addComputedTime(double timeToAdd) override final
-  {
-    PRECICE_ASSERT(false);
-    return false;
-  }
+  bool addComputedTime(double timeToAdd) override final;
 
   /**
    * @brief
@@ -92,6 +85,12 @@ public:
     return std::vector<std::string>();
   }
 
+  std::string localParticipant() const override final
+  {
+    PRECICE_ASSERT(false);
+    return "unknown";
+  }
+
   /**
    * @brief Not implemented.
    */
@@ -113,11 +112,9 @@ public:
   /**
    * @brief Not implemented.
    */
-  double getTime() const override final
-  {
-    PRECICE_ASSERT(false);
-    return 0;
-  }
+  double getTime() const override final;
+
+  double getTimeWindowStart() const override final;
 
   /**
    * @brief Not implemented.
@@ -125,16 +122,11 @@ public:
   int getTimeWindows() const override final
   {
     return _timeWindows;
-    return 0;
   }
 
-  /**
-   * @brief Not implemented.
-   */
   bool hasTimeWindowSize() const override final
   {
-    PRECICE_ASSERT(false);
-    return false;
+    return true;
   }
 
   /**
@@ -142,17 +134,7 @@ public:
    */
   double getTimeWindowSize() const override final
   {
-    PRECICE_ASSERT(false);
-    return 0;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  double getNormalizedWindowTime() const override final
-  {
-    PRECICE_ASSERT(false);
-    return 0;
+    return 1.0;
   }
 
   /**
@@ -227,6 +209,16 @@ public:
   }
 
   bool hasConverged() const override;
+
+  bool requiresSubsteps() const override final
+  {
+    return true;
+  }
+
+  ImplicitData implicitDataToReceive() const override final
+  {
+    return {};
+  }
 
 private:
   mutable logging::Logger _log{"cplscheme::tests::DummyCouplingScheme"};

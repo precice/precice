@@ -2,17 +2,19 @@
 
 #include "testing/Testing.hpp"
 
+#include <boost/test/data/test_case.hpp>
 #include <precice/precice.hpp>
 #include "../helpers.hpp"
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(QuasiNewton)
 BOOST_AUTO_TEST_SUITE(Parallel)
-BOOST_AUTO_TEST_CASE(TestQN3)
+PRECICE_TEST_SETUP("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks))
+BOOST_DATA_TEST_CASE(TestQN3, boost::unit_test::data::make({true, false}), includeSecondaryData)
 {
-  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  PRECICE_TEST();
   // serial coupling, IQN-IMVJ (which is identical to IQN-ILS as only first timestep is considered), relaxed QR2 filter
-  runTestQN(context.config(), context);
+  runTestQN(includeSecondaryData, context.config(), context);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Integration

@@ -17,9 +17,10 @@ using namespace precice::mapping;
 BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(Configuration)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Configuration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-config.xml");
@@ -45,9 +46,10 @@ BOOST_AUTO_TEST_CASE(Configuration)
   BOOST_TEST(mappingConfig.mappings().at(2).direction == MappingConfiguration::WRITE);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(RBFDirectConfiguration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-direct-config.xml");
@@ -58,8 +60,8 @@ BOOST_AUTO_TEST_CASE(RBFDirectConfiguration)
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, file);
 
-  BOOST_TEST(meshConfig->meshes().size() == 12);
-  BOOST_TEST(mappingConfig.mappings().size() == 11);
+  BOOST_TEST(meshConfig->meshes().size() == 13);
+  BOOST_TEST(mappingConfig.mappings().size() == 12);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
     BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
@@ -81,9 +83,10 @@ BOOST_AUTO_TEST_CASE(RBFDirectConfiguration)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(RBFPUMConfiguration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-pum-direct-config.xml");
@@ -94,8 +97,8 @@ BOOST_AUTO_TEST_CASE(RBFPUMConfiguration)
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, file);
 
-  BOOST_TEST(meshConfig->meshes().size() == 12);
-  BOOST_TEST(mappingConfig.mappings().size() == 11);
+  BOOST_TEST(meshConfig->meshes().size() == 13);
+  BOOST_TEST(mappingConfig.mappings().size() == 12);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
     BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
@@ -110,9 +113,6 @@ BOOST_AUTO_TEST_CASE(RBFPUMConfiguration)
     BOOST_TEST(solverSelection);
     bool poly = mappingConfig.rbfConfig().polynomial == Polynomial::OFF;
     BOOST_TEST(poly);
-    BOOST_TEST(mappingConfig.rbfConfig().deadAxis[0] == true);
-    BOOST_TEST(mappingConfig.rbfConfig().deadAxis[1] == false);
-    BOOST_TEST(mappingConfig.rbfConfig().deadAxis[2] == true);
     BOOST_TEST(mappingConfig.rbfConfig().solverRtol == 1e-9);
     BOOST_TEST(mappingConfig.rbfConfig().verticesPerCluster == 10);
     BOOST_TEST(mappingConfig.rbfConfig().relativeOverlap == 0.4);
@@ -122,9 +122,10 @@ BOOST_AUTO_TEST_CASE(RBFPUMConfiguration)
 
 #ifndef PRECICE_NO_PETSC
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(RBFIterativeConfiguration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-iterative-config.xml");
@@ -135,8 +136,8 @@ BOOST_AUTO_TEST_CASE(RBFIterativeConfiguration)
   mapping::MappingConfiguration mappingConfig(tag, meshConfig);
   xml::configure(tag, xml::ConfigurationContext{}, file);
 
-  BOOST_TEST(meshConfig->meshes().size() == 12);
-  BOOST_TEST(mappingConfig.mappings().size() == 11);
+  BOOST_TEST(meshConfig->meshes().size() == 13);
+  BOOST_TEST(mappingConfig.mappings().size() == 12);
   for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
     BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
     BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
@@ -159,9 +160,10 @@ BOOST_AUTO_TEST_CASE(RBFIterativeConfiguration)
 }
 #endif
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(RBFAliasConfiguration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-alias-config.xml");
@@ -209,9 +211,10 @@ BOOST_AUTO_TEST_CASE(RBFAliasConfiguration)
 // This test mostly runs the configuration path, but it does not test the actual
 // setting in the Ginkgo solver class (being a cuda executor), since the mapping
 // configuration does not expose this information
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(RBFGinkgoCudaConfiguration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-cuda-config.xml");
@@ -250,9 +253,10 @@ BOOST_AUTO_TEST_CASE(RBFGinkgoCudaConfiguration)
 // This test mostly runs the configuration path, but it does not test the actual
 // setting in the Ginkgo solver class (being a hip executor), since the mapping
 // configuration does not expose this information
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(RBFGinkgoHipConfiguration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-hip-config.xml");
@@ -287,13 +291,14 @@ BOOST_AUTO_TEST_CASE(RBFGinkgoHipConfiguration)
 }
 #endif
 
-#ifdef PRECICE_WITH_OMP
+#ifdef PRECICE_WITH_OPENMP
 // This test mostly runs the configuration path, but it does not test the actual
 // setting in the Ginkgo solver class (being an OpenMP executor), since the mapping
 // configuration does not expose this information
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(RBFGinkgoOMPConfiguration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-omp-config.xml");

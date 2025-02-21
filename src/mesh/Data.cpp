@@ -3,7 +3,7 @@
 #include <utility>
 
 #include "math/differences.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/assertion.hpp"
 
@@ -15,12 +15,12 @@ Data::Data(
     int         dimensions,
     int         spatialDimensions,
     int         waveformDegree)
-    : _name(std::move(name)),
+    : _waveform(waveformDegree),
+      _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
       _spatialDimensions(spatialDimensions),
-      _sample(_dimensions),
-      _waveform(waveformDegree)
+      _sample(_dimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
 }
@@ -55,14 +55,14 @@ const time::Sample &Data::sample() const
   return _sample;
 }
 
-Eigen::VectorXd Data::sampleAtTime(double normalizedDt) const
+time::SampleResult Data::sampleAtTime(double time) const
 {
-  return _waveform.sample(normalizedDt);
+  return _waveform.sample(time);
 }
 
 int Data::getWaveformDegree() const
 {
-  return _waveform.getDegree();
+  return _waveform.timeStepsStorage().getInterpolationDegree();
 }
 
 time::Storage &Data::timeStepsStorage()
@@ -72,18 +72,38 @@ time::Storage &Data::timeStepsStorage()
 
 void Data::moveToNextWindow()
 {
-  if (stamples().size() > 0) {
+  if (stamples().size() > 1) { // Needed to avoid CompositionalCouplingScheme callong moveToNextWindow on same Data multiple times. Could be simplified by replacing Storage::move() with clearBefore(double time). See https://github.com/precice/precice/issues/1821.
     timeStepsStorage().move();
-    const auto &atEnd = stamples().back();
-    PRECICE_ASSERT(math::equals(atEnd.timestamp, time::Storage::WINDOW_END));
-    sample() = atEnd.sample;
+    PRECICE_ASSERT(stamples().size() == 1);
+    sample() = stamples().back().sample;
   }
 }
 
-void Data::setSampleAtTime(double time, time::Sample sample)
+void Data::setSampleAtTime(double time, const time::Sample &sample)
 {
+  PRECICE_ASSERT(sample.dataDims == getDimensions(), "Sample has incorrect data dimension");
   _sample = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _waveform.timeStepsStorage().setSampleAtTime(time, sample);
+}
+
+void Data::emplaceSampleAtTime(double time)
+{
+  setSampleAtTime(time, time::Sample{getDimensions()});
+}
+
+void Data::emplaceSampleAtTime(double time, std::initializer_list<double> values)
+{
+  setSampleAtTime(time, time::Sample{getDimensions(),
+                                     Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size())});
+}
+
+void Data::emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients)
+{
+  PRECICE_ASSERT(gradients.size() == values.size() * getSpatialDimensions(), "Gradient isn't correctly sized", values.size(), gradients.size());
+  auto nVertices = values.size() / getDimensions();
+  setSampleAtTime(time, time::Sample{getDimensions(),
+                                     Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size()),
+                                     Eigen::Map<const Eigen::MatrixXd>(gradients.begin(), nVertices, getDimensions() * getSpatialDimensions())});
 }
 
 const std::string &Data::getName() const
@@ -96,17 +116,14 @@ DataID Data::getID() const
   return _id;
 }
 
-void Data::toZero()
-{
-  _sample.values.setZero();
-  if (_hasGradient) {
-    _sample.gradients.setZero();
-  }
-}
-
 bool Data::hasGradient() const
 {
   return _hasGradient;
+}
+
+bool Data::hasSamples() const
+{
+  return !_waveform.stamples().empty();
 }
 
 void Data::requireDataGradient()

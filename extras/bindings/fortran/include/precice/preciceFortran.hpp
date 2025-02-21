@@ -4,7 +4,7 @@
 
 /** @file
  * This file contains a Fortran 77 compatible interface written in C/C++.
- *
+ * The Fortran bindings are thin wrappers around the C++ API.
  *
  * Every method has a Fortran syntax equivalent in the method comment, and a
  * listing for input and output variables. A variable can be input and output
@@ -14,6 +14,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+///@name Construction and Configuration
+///@{
 
 /**
  * Fortran syntax:
@@ -36,6 +39,11 @@ PRECICE_API void precicef_create_(
     const int * solverProcessSize,
     int         participantNameLength,
     int         configFileNameLength);
+
+///@}
+
+/// @name Steering Methods
+///@{
 
 /**
  * Fortran syntax:
@@ -69,6 +77,42 @@ PRECICE_API void precicef_advance_(const double *timeStepSize);
  *
  */
 PRECICE_API void precicef_finalize_();
+
+///@}
+
+///@name Implicit coupling
+///@{
+
+/**
+ * Fortran syntax:
+ * precicef_requires_reading_checkpoint_(
+ *   INTEGER   isRequired )
+ *
+ * IN:  -
+ * OUT: isRequired(1:true, 0:false)
+ *
+ * @copydoc precice::Participant::requiresReadingCheckpoint()
+ */
+PRECICE_API void precicef_requires_reading_checkpoint_(
+    int *isRequired);
+
+/**
+ * Fortran syntax:
+ * precicef_requires_writing_checkpoint_(
+ *   INTEGER   isRequired )
+ *
+ * IN:  -
+ * OUT: isRequired(1:true, 0:false)
+ *
+ * @copydoc precice::Participant::requiresWritingCheckpoint()
+ */
+PRECICE_API void precicef_requires_writing_checkpoint_(
+    int *isRequired);
+
+///@}
+
+///@name Status Queries
+///@{
 
 /**
  * Fortran syntax:
@@ -143,44 +187,11 @@ PRECICE_API void precicef_is_time_window_complete_(int *isComplete);
  */
 PRECICE_API void precicef_get_max_time_step_size_(double *maxTimeStepSize);
 
-/**
- * Fortran syntax:
- * precicef_requires_initial_data_(
- *   INTEGER   isRequired )
- *
- * IN:  -
- * OUT: isRequired(1:true, 0:false)
- *
- * @copydoc precice::Participant::requiresInitialData()
- */
-PRECICE_API void precicef_requires_initial_data_(
-    int *isRequired);
+///@}
 
-/**
- * Fortran syntax:
- * precicef_requires_reading_checkpoint_(
- *   INTEGER   isRequired )
- *
- * IN:  -
- * OUT: isRequired(1:true, 0:false)
- *
- * @copydoc precice::Participant::requiresReadingCheckpoint()
- */
-PRECICE_API void precicef_requires_reading_checkpoint_(
-    int *isRequired);
-
-/**
- * Fortran syntax:
- * precicef_requires_writing_checkpoint_(
- *   INTEGER   isRequired )
- *
- * IN:  -
- * OUT: isRequired(1:true, 0:false)
- *
- * @copydoc precice::Participant::requiresWritingCheckpoint()
- */
-PRECICE_API void precicef_requires_writing_checkpoint_(
-    int *isRequired);
+///@name Mesh Access
+///@anchor precice-mesh-access
+///@{
 
 /**
  * Fortran syntax:
@@ -202,19 +213,19 @@ PRECICE_API void precicef_requires_mesh_connectivity_for_(
  * Fortran syntax:
  * precicef_set_vertex(
  *   CHARACTER        meshName(*),
- *   DOUBLE PRECISION position(dim),
- *   INTEGER          vertexID )
+ *   DOUBLE PRECISION coordinates(dim),
+ *   INTEGER          id )
  *
- * IN:  mesh, position, meshNameLength
- * OUT: vertexID
+ * IN:  mesh, coordinates, meshNameLength
+ * OUT: id
  *
  * @copydoc precice::Participant::setMeshVertex()
  *
  */
 PRECICE_API void precicef_set_vertex_(
     const char *  meshName,
-    const double *position,
-    int *         vertexID,
+    const double *coordinates,
+    int *         id,
     int           meshNameLength);
 
 /**
@@ -239,11 +250,11 @@ PRECICE_API void precicef_get_mesh_vertex_size_(
  * precicef_set_vertices(
  *   CHARACTER        meshName(*),
  *   INTEGER          size,
- *   DOUBLE PRECISION positions(dim*size),
- *   INTEGER          positionIDs(size) )
+ *   DOUBLE PRECISION coordinates(dim*size),
+ *   INTEGER          ids(size) )
  *
- * IN:  mesh, size, positions, meshNameLength
- * OUT: positionIDs
+ * IN:  mesh, size, coordinates, meshNameLength
+ * OUT: ids
  *
  * @copydoc precice::Participant::setMeshVertices()
  *
@@ -251,8 +262,8 @@ PRECICE_API void precicef_get_mesh_vertex_size_(
 PRECICE_API void precicef_set_vertices_(
     const char *meshName,
     const int * size,
-    double *    positions,
-    int *       positionIDs,
+    double *    coordinates,
+    int *       ids,
     int         meshNameLength);
 
 /**
@@ -279,9 +290,9 @@ PRECICE_API void precicef_set_edge_(
  * precicef_set_mesh_edges_(
  *   CHARACTER meshName(*),
  *   INTEGER size,
- *   INTEGER vertices(size*2) )
+ *   INTEGER ids(size*2) )
  *
- * IN:  mesh, size, vertices, meshNameLength
+ * IN:  mesh, size, ids, meshNameLength
  * OUT: -
  *
  * @copydoc precice::Participant::setMeshEdges()
@@ -290,7 +301,7 @@ PRECICE_API void precicef_set_edge_(
 PRECICE_API void precicef_set_mesh_edges_(
     const char *meshName,
     const int * size,
-    const int * vertices,
+    const int * ids,
     int         meshNameLength);
 
 /**
@@ -319,9 +330,9 @@ PRECICE_API void precicef_set_triangle_(
  * precicef_set_mesh_triangles_(
  *   CHARACTER meshName(*),
  *   INTEGER size,
- *   INTEGER vertices(size*3) )
+ *   INTEGER ids(size*3) )
  *
- * IN:  mesh, size, vertices, meshNameLength
+ * IN:  mesh, size, ids, meshNameLength
  * OUT: -
  *
  * @copydoc precice::Participant::setMeshTriangles()
@@ -330,7 +341,7 @@ PRECICE_API void precicef_set_triangle_(
 PRECICE_API void precicef_set_mesh_edges_(
     const char *meshName,
     const int * size,
-    const int * vertices,
+    const int * ids,
     int         meshNameLength);
 
 /**
@@ -361,9 +372,9 @@ PRECICE_API void precicef_set_quad_(
  * precicef_set_mesh_quads(
  *   CHARACTER meshName(*),
  *   INTEGER size,
- *   INTEGER vertices(size*4) )
+ *   INTEGER ids(size*4) )
  *
- * IN:  mesh, size, vertices, meshNameLength
+ * IN:  mesh, size, ids, meshNameLength
  * OUT: -
  *
  * @copydoc precice::Participant::setMeshQuads()
@@ -372,7 +383,7 @@ PRECICE_API void precicef_set_quad_(
 PRECICE_API void precicef_set_mesh_quads_(
     const char *meshName,
     const int * size,
-    const int * vertices,
+    const int * ids,
     int         meshNameLength);
 
 /**
@@ -403,9 +414,9 @@ PRECICE_API void precicef_set_tetrahedron(
  * precicef_set_mesh_tetrahedra_(
  *   CHARACTER meshName(*),
  *   INTEGER size,
- *   INTEGER vertices(size*4) )
+ *   INTEGER ids(size*4) )
  *
- * IN:  mesh, size, vertices, meshNameLength
+ * IN:  mesh, size, ids, meshNameLength
  * OUT: -
  *
  * @copydoc precice::Participant::setMeshTetrahedra()
@@ -414,8 +425,81 @@ PRECICE_API void precicef_set_tetrahedron(
 PRECICE_API void precicef_set_mesh_tetrahedra_(
     const char *meshName,
     const int * size,
-    const int * vertices,
+    const int * ids,
     int         meshNameLength);
+
+///@}
+
+///@name Data Access
+///@{
+
+/**
+ * Fortran syntax:
+ * precicef_requires_initial_data_(
+ *   INTEGER   isRequired )
+ *
+ * IN:  -
+ * OUT: isRequired(1:true, 0:false)
+ *
+ * @copydoc precice::Participant::requiresInitialData()
+ */
+PRECICE_API void precicef_requires_initial_data_(
+    int *isRequired);
+
+/**
+ * Fortran syntax:
+ * precicef_write_data(
+ *   CHARACTER meshName(*),
+ *   CHARACTER dataName(*),
+ *   INTEGER size,
+ *   INTEGER ids,
+ *   DOUBLE PRECISION values(dim*size) )
+ *
+ * IN:  mesh, data, size, ids, values, meshNameLength, dataNameLength
+ * OUT: -
+ *
+ * @copydoc precice::Participant::writeData
+ *
+ */
+PRECICE_API void precicef_write_data_(
+    const char *meshName,
+    const char *dataName,
+    const int * size,
+    int *       ids,
+    double *    values,
+    int         meshNameLength,
+    int         dataNameLength);
+
+/**
+ * Fortran syntax:
+ * precicef_read_data(
+ *   CHARACTER meshName(*),
+ *   CHARACTER dataName(*),
+ *   INTEGER size,
+ *   INTEGER ids,
+ *   DOUBLE PRECISION relativeReadTime,
+ *   DOUBLE PRECISION values(dim*size) )
+ *
+ * IN:  mesh, data, size, ids, meshNameLength, dataNameLength
+ * OUT: values
+ *
+ * @copydoc precice::Participant::readData
+ *
+ */
+PRECICE_API void precicef_read_data_(
+    const char *  meshName,
+    const char *  dataName,
+    const int *   size,
+    int *         ids,
+    const double *relativeReadTime,
+    double *      values,
+    int           meshNameLength,
+    int           dataNameLength);
+
+///@}
+
+///@name Direct mesh access
+///@{
 
 /**
  * Fortran syntax:
@@ -453,61 +537,9 @@ PRECICE_API void precicef_get_mesh_vertex_ids_and_coordinates_(
     double *    coordinates,
     int         meshNameLength);
 
-/**
- * Fortran syntax:
- * precicef_write_data(
- *   CHARACTER meshName(*),
- *   CHARACTER dataName(*),
- *   INTEGER size,
- *   INTEGER valueIndices,
- *   DOUBLE PRECISION values(dim*size) )
- *
- * IN:  mesh, data, size, valueIndices, values, meshNameLength, dataNameLength
- * OUT: -
- *
- * @copydoc precice::Participant::writeData
- *
- */
-PRECICE_API void precicef_write_data_(
-    const char *meshName,
-    const char *dataName,
-    const int * size,
-    int *       valueIndices,
-    double *    values,
-    int         meshNameLength,
-    int         dataNameLength);
+///@}
 
-/**
- * Fortran syntax:
- * precicef_read_data(
- *   CHARACTER meshName(*),
- *   CHARACTER dataName(*),
- *   INTEGER size,
- *   INTEGER valueIndices,
- *   DOUBLE PRECISION relativeReadTime,
- *   DOUBLE PRECISION values(dim*size) )
- *
- * IN:  mesh, data, size, valueIndices, meshNameLength, dataNameLength
- * OUT: values
- *
- * @copydoc precice::Participant::readData
- *
- */
-PRECICE_API void precicef_read_data_(
-    const char *  meshName,
-    const char *  dataName,
-    const int *   size,
-    int *         valueIndices,
-    const double *relativeReadTime,
-    double *      values,
-    int           meshNameLength,
-    int           dataNameLength);
-
-PRECICE_API void precicef_get_version_information_(
-    char *versionInfo,
-    int   lengthVersionInfo);
-
-/** @name Experimental Data Access
+/** @name Experimental Gradient Data
  * These API functions are \b experimental and may change in future versions.
  */
 ///@{
@@ -536,10 +568,10 @@ PRECICE_API void precicef_requires_gradient_data_for_(
  *   CHARACTER meshName(*),
  *   CHARACTER dataName(*),
  *   INTEGER size,
- *   INTEGER valueIndices,
+ *   INTEGER ids,
  *   DOUBLE PRECISION gradients )
  *
- * IN:  mesh, data, size, valueIndices, gradients, meshNameLength, dataNameLength
+ * IN:  mesh, data, size, ids, gradients, meshNameLength, dataNameLength
  * OUT: -
  *
  * @copydoc precice::Participant::writeGradientData
@@ -548,12 +580,16 @@ PRECICE_API void precicef_write_gradient_data_(
     const char *  meshName,
     const char *  dataName,
     const int *   size,
-    const int *   valueIndices,
+    const int *   ids,
     const double *gradients,
     int           meshNameLength,
     int           dataNameLength);
 
 ///@}
+
+PRECICE_API void precicef_get_version_information_(
+    char *versionInfo,
+    int   lengthVersionInfo);
 
 #ifdef __cplusplus
 }

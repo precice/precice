@@ -16,55 +16,10 @@ BOOST_AUTO_TEST_SUITE(Parallel)
 
 #ifndef PRECICE_NO_MPI
 
-BOOST_AUTO_TEST_CASE(RestrictCommTest)
-{
-  PRECICE_TEST(4_ranks);
-  using Par = utils::Parallel;
-
-  auto baseComm = Par::current();
-  Par::restrictCommunicator(3);
-  auto restComm = Par::current();
-  BOOST_TEST(restComm);
-  BOOST_TEST(restComm->parent == baseComm);
-
-  if (context.rank == 3) {
-    BOOST_TEST(restComm->isNull());
-  } else {
-    BOOST_TEST(!restComm->isNull());
-    BOOST_TEST(restComm->size() == 3);
-    BOOST_TEST(restComm->rank() <= 2);
-  }
-}
-
-BOOST_AUTO_TEST_CASE(SplitCommTest)
-{
-  PRECICE_TEST(3_ranks);
-  using Par = utils::Parallel;
-
-  std::string name{"Group"};
-  name.append(context.rank == 2 ? "Two" : "One");
-  auto baseComm = Par::current();
-  Par::splitCommunicator(name);
-  auto splitComm = Par::current();
-  BOOST_TEST(splitComm->parent == baseComm);
-
-  BOOST_TEST(!splitComm->isNull());
-
-  const auto &groups = splitComm->groups;
-  BOOST_TEST(groups.size() == 2);
-  BOOST_TEST(groups.at(0).id == 0);
-  BOOST_TEST(groups.at(1).id == 1);
-  BOOST_TEST(groups.at(0).name == std::string("GroupOne"));
-  BOOST_TEST(groups.at(1).name == std::string("GroupTwo"));
-  BOOST_TEST(groups.at(0).leaderRank == 0);
-  BOOST_TEST(groups.at(1).leaderRank == 2);
-  BOOST_TEST(groups.at(0).size == 2);
-  BOOST_TEST(groups.at(1).size == 1);
-}
-
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(Primary1SecondaryTest)
 {
-  PRECICE_TEST(""_on(2_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   BOOST_TEST(context.hasSize(2));
   auto &com = precice::utils::IntraComm::getCommunication();
@@ -88,9 +43,10 @@ BOOST_AUTO_TEST_CASE(Primary1SecondaryTest)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(3_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(Primary2SecondaryTest)
 {
-  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   BOOST_TEST(context.hasSize(3));
   auto &com = precice::utils::IntraComm::getCommunication();
@@ -121,9 +77,10 @@ BOOST_AUTO_TEST_CASE(Primary2SecondaryTest)
   }
 }
 
+PRECICE_TEST_SETUP("Offset"_on(1_rank), "Test"_on(2_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(OffsetPrimary1SecondaryTest)
 {
-  PRECICE_TEST("Offset"_on(1_rank), "Test"_on(2_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   if (context.isNamed("Offset"))
     return;
@@ -150,9 +107,10 @@ BOOST_AUTO_TEST_CASE(OffsetPrimary1SecondaryTest)
   }
 }
 
+PRECICE_TEST_SETUP("Offset"_on(1_rank), "Test"_on(3_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(OffsetPrimary2SecondaryTest)
 {
-  PRECICE_TEST("Offset"_on(1_rank), "Test"_on(3_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   if (context.isNamed("Offset"))
     return;

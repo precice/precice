@@ -1,8 +1,8 @@
 #include <algorithm>
 #include <array>
-#include <boost/filesystem/operations.hpp>
 #include <cassert>
 #include <ctime>
+#include <filesystem>
 #include <fstream>
 #include <iomanip>
 #include <iterator>
@@ -10,6 +10,7 @@
 #include <optional>
 #include <ratio>
 #include <string>
+#include <string_view>
 #include <sys/types.h>
 #include <tuple>
 #include <utility>
@@ -51,7 +52,7 @@ EventRegistry &EventRegistry::instance()
   return instance;
 }
 
-void EventRegistry::initialize(std::string applicationName, int rank, int size)
+void EventRegistry::initialize(std::string_view applicationName, int rank, int size)
 {
   auto initClock = Event::Clock::now();
   auto initTime  = std::chrono::system_clock::now();
@@ -62,12 +63,18 @@ void EventRegistry::initialize(std::string applicationName, int rank, int size)
   this->_initTime        = initTime;
   this->_initClock       = initClock;
 
-  _writeQueue.clear();
   _firstwrite = true;
-  _globalId   = std::nullopt;
+  _writeQueue.clear();
+  _nameDict.clear();
+
+  _globalId = nameToID("_GLOBAL");
+  _writeQueue.emplace_back(StartEntry{_globalId.value(), _initClock});
 
   _initialized = true;
   _finalized   = false;
+  if (_isBackendRunning) {
+    stopBackend();
+  }
 }
 
 void EventRegistry::setWriteQueueMax(std::size_t size)
@@ -75,7 +82,7 @@ void EventRegistry::setWriteQueueMax(std::size_t size)
   _writeQueueMax = size;
 }
 
-void EventRegistry::setDirectory(std::string directory)
+void EventRegistry::setDirectory(std::string_view directory)
 {
   _directory = directory;
 }
@@ -106,24 +113,25 @@ void EventRegistry::startBackend()
     PRECICE_DEBUG("Profiling is turned off. Backend will not start.");
     return;
   }
+
+  PRECICE_ASSERT(!_isBackendRunning);
+
   // Create the directory if necessary
   bool isLocal = _directory.empty() || _directory == ".";
   if (!isLocal) {
-    auto exists = boost::filesystem::exists(_directory);
+    auto exists = std::filesystem::exists(_directory);
     PRECICE_CHECK(
-        !(exists && !boost::filesystem::is_directory(_directory)),
+        !(exists && !std::filesystem::is_directory(_directory)),
         "The destination folder \"{}\" exists but isn't a directory. Please remove the directory \"precice-run\" and try again.",
         _directory);
     if (!exists) {
-      boost::filesystem::create_directories(_directory);
+      std::filesystem::create_directories(_directory);
     }
   }
   auto filename = fmt::format("{}/{}-{}-{}.json", _directory, _applicationName, _rank, _size);
   PRECICE_DEBUG("Starting backend with events-file: \"{}\"", filename);
   _output.open(filename);
   PRECICE_CHECK(_output, "Unable to open the events-file: \"{}\"", filename);
-  _globalId = nameToID("_GLOBAL");
-  _writeQueue.emplace_back(StartEntry{_globalId.value(), _initClock});
 
   // write header
   fmt::print(_output,
@@ -145,27 +153,31 @@ void EventRegistry::startBackend()
              timepoint_to_string(_initTime),
              toString(_mode));
   _output.flush();
+  _isBackendRunning = true;
 }
 
 void EventRegistry::stopBackend()
 {
-  if (_mode == Mode::Off) {
+  if (_mode == Mode::Off || !_isBackendRunning) {
     return;
   }
   // create end of global event
   auto now = Event::Clock::now();
-  put(StopEntry{_globalId.value(), now});
+  put(StopEntry{*_globalId, now});
   // flush the queue
   flush();
   _output << "]}";
   _output.close();
   _nameDict.clear();
+
+  _isBackendRunning = false;
 }
 
 void EventRegistry::finalize()
 {
-  if (_finalized)
+  if (_finalized || !_initialized) {
     return;
+  }
 
   stopBackend();
 
@@ -180,11 +192,21 @@ void EventRegistry::clear()
 
 void EventRegistry::put(PendingEntry pe)
 {
-  PRECICE_ASSERT(_mode != Mode::Off, "The profiling is off.")
+  PRECICE_ASSERT(_mode != Mode::Off, "The profiling is off.");
+
+  // avoid flushing the queue when we start measuring but only if we don't explicitly want to write every entry
+  auto skipFlush = _writeQueueMax != 1 && std::holds_alternative<StartEntry>(pe);
+
   _writeQueue.emplace_back(std::move(pe));
-  if (_writeQueueMax > 0 && _writeQueue.size() > _writeQueueMax) {
+  if (!skipFlush && _writeQueueMax > 0 && _writeQueue.size() > _writeQueueMax) {
     flush();
   }
+}
+
+void EventRegistry::putCritical(PendingEntry pe)
+{
+  PRECICE_ASSERT(_mode != Mode::Off, "The profiling is off.");
+  _writeQueue.emplace_back(std::move(pe));
 }
 
 namespace {
@@ -253,13 +275,13 @@ try {
   PRECICE_UNREACHABLE(e.what());
 }
 
-int EventRegistry::nameToID(const std::string &name)
+int EventRegistry::nameToID(std::string_view name)
 {
   if (auto iter = _nameDict.find(name);
       iter == _nameDict.end()) {
     int id = _nameDict.size();
-    _nameDict.insert(iter, {name, id});
-    _writeQueue.emplace_back(NameEntry{name, id});
+    _nameDict.insert(iter, {std::string(name), id});
+    _writeQueue.emplace_back(NameEntry{std::string(name), id});
     return id;
   } else {
     return iter->second;

@@ -6,7 +6,7 @@
 #include "com/MPICommunication.hpp"
 #include "com/MPIRequest.hpp"
 #include "logging/LogMacros.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/span_tools.hpp"
 
 template <size_t>

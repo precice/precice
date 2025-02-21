@@ -16,9 +16,10 @@ BOOST_AUTO_TEST_SUITE(Serial)
   *
   * @todo Maybe remove this test.
   */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   int    timesteps = 0;
   double time      = 0;

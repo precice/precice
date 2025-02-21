@@ -11,7 +11,7 @@
 #include "mesh/Tetrahedron.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 
 namespace precice {
 namespace query {
@@ -87,6 +87,9 @@ public:
   /// Return all the vertices inside a bounding box
   std::vector<VertexID> getVerticesInsideBox(const mesh::BoundingBox &bb);
 
+  /// Returns
+  bool isAnyVertexInsideBox(const mesh::Vertex &centerVertex, double radius);
+
   /// Return all the tetrahedra whose axis-aligned bounding box contains a vertex
   std::vector<TetrahedronID> getEnclosingTetrahedra(const Eigen::VectorXd &location);
 
@@ -103,6 +106,10 @@ public:
   ProjectionMatch findNearestProjection(const Eigen::VectorXd &location, int n);
 
   ProjectionMatch findCellOrProjection(const Eigen::VectorXd &location, int n);
+
+  // Index tree, bounds
+  mesh::BoundingBox getRtreeBounds();
+
   /// Clear the index
   void clear();
 

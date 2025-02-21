@@ -5,7 +5,8 @@
 #include <vector>
 
 #include "com/SharedPointer.hpp"
-#include "precice/types.hpp"
+#include "cplscheme/ImplicitData.hpp"
+#include "precice/impl/Types.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -52,6 +53,12 @@ public:
   /// To be used, when the number of max iterations is not defined (for explicit coupling).
   static const int UNDEFINED_MAX_ITERATIONS;
 
+  /// To be used, when the number of min iterations is not defined (for explicit coupling).
+  static const int UNDEFINED_MIN_ITERATIONS;
+
+  /// To be used, when the number of max iterations is infinite (for implicit coupling).
+  static const int INFINITE_MAX_ITERATIONS;
+
   /// Actions that are required by CouplingSchemes
   enum struct Action {
     InitializeData, ///< Is the initialization of coupling data required?
@@ -68,13 +75,13 @@ public:
   /**
    * @brief Initializes the coupling scheme and establishes a communication
    *        connection to the coupling partner. Initializes coupling data.
-   *
-   * @param[in] startTime starting time for coupling @BU correct?
-   * @param[in] startTimeWindow counter of time window for coupling @BU correct?
    */
-  virtual void initialize(
-      double startTime,
-      int    startTimeWindow) = 0;
+  virtual void initialize() = 0;
+
+  /**
+   * @brief Reinitializes the coupling scheme, coupling data, and acceleration schemes
+   */
+  virtual void reinitialize() = 0;
 
   /**
    * @brief Returns whether this participant of the coupling scheme sends initialized data.
@@ -151,6 +158,9 @@ public:
   /// Returns list of all coupling partners.
   virtual std::vector<std::string> getCouplingPartners() const = 0;
 
+  /// Returns the name of the local participant
+  virtual std::string localParticipant() const = 0;
+
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
    *
@@ -164,6 +174,10 @@ public:
 
   /// @brief Returns true, if data has been exchanged in last call of advance().
   virtual bool hasDataBeenReceived() const = 0;
+
+  /// Returns the time window start time of the current time window
+  /// For compositional schemes, this returns the earliest start of an active time window
+  virtual double getTimeWindowStart() const = 0;
 
   /// Returns the currently computed time of the coupling scheme.
   virtual double getTime() const = 0;
@@ -181,15 +195,6 @@ public:
    * hasTimeWindowSize().
    */
   virtual double getTimeWindowSize() const = 0;
-
-  /**
-   * @brief Returns the normalized time within the current time window.
-   *
-   * TODO: Where do we define what the normalized time is? Refer this part in the docs!
-   *
-   * @return time normalized to [0,1] w.r.t current time window.
-   */
-  virtual double getNormalizedWindowTime() const = 0;
 
   /**
    * @brief Returns the maximal size of the next time step to be computed.
@@ -225,6 +230,12 @@ public:
 
   /// Returns false if the scheme is implicit and hasn't converged
   virtual bool hasConverged() const = 0;
+
+  /// Returns true if any send data of the scheme requires substeps
+  virtual bool requiresSubsteps() const = 0;
+
+  /// Returns a vector of implicit data to receive in the next advance
+  virtual ImplicitData implicitDataToReceive() const = 0;
 };
 
 } // namespace cplscheme

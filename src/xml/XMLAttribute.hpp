@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 #include "logging/Logger.hpp"
+#include "utils/String.hpp"
 #include "utils/assertion.hpp"
 #include "xml/ValueParser.hpp"
 
@@ -24,17 +25,23 @@ public:
   XMLAttribute() = delete;
 
   explicit XMLAttribute(std::string name)
-      : _name(std::move(name)){};
+      : _name(std::move(name))
+  {
+    PRECICE_ASSERT(utils::isKebabStyle(_name), _name);
+  };
 
   XMLAttribute(std::string name, ATTRIBUTE_T defaultValue)
-      : _name(std::move(name)), _hasDefaultValue(true), _defaultValue(std::move(defaultValue)){};
+      : _name(std::move(name)), _hasDefaultValue(true), _defaultValue(std::move(defaultValue))
+  {
+    PRECICE_ASSERT(utils::isKebabStyle(_name), _name);
+  };
 
   XMLAttribute(const XMLAttribute<ATTRIBUTE_T> &other) = default;
 
   XMLAttribute &operator=(const XMLAttribute<ATTRIBUTE_T> &other) = default;
 
   /// Sets a documentation string for the attribute.
-  XMLAttribute &setDocumentation(std::string documentation);
+  XMLAttribute &setDocumentation(std::string_view documentation);
 
   const std::string &getUserDocumentation() const
   {
@@ -127,9 +134,9 @@ private:
 };
 
 template <typename ATTRIBUTE_T>
-XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDocumentation(std::string documentation)
+XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDocumentation(std::string_view documentation)
 {
-  _doc = std::move(documentation);
+  _doc = documentation;
   return *this;
 }
 
@@ -159,9 +166,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::strin
 
   const auto position = aAttributes.find(getName());
   if (position == aAttributes.end()) {
-    if (not _hasDefaultValue) {
-      PRECICE_ERROR("Attribute \"{}\" is required, but was not defined.", _name);
-    }
+    PRECICE_CHECK(_hasDefaultValue, "Attribute \"{}\" is required, but was not defined.", _name);
     set(_value, _defaultValue);
   } else {
     try {

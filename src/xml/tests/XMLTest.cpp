@@ -20,7 +20,7 @@ struct CallbackHost : public XMLTag::Listener {
   void xmlTagCallback(const ConfigurationContext &context, XMLTag &callingTag) override
   {
     if (callingTag.getName() == "test-eigen-vectorxd-attributes") {
-      eigenVectorXd = callingTag.getEigenVectorXdAttributeValue("value", 3);
+      eigenVectorXd = callingTag.getEigenVectorXdAttributeValue("value");
     }
   }
 
@@ -30,9 +30,10 @@ struct CallbackHost : public XMLTag::Listener {
   }
 };
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(AttributeConcatenation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/config_xmltest_concatenation.xml");
 
   CallbackHost cb;
@@ -49,9 +50,10 @@ BOOST_AUTO_TEST_CASE(AttributeConcatenation)
   configure(rootTag, ConfigurationContext{}, filename);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(VectorAttributes)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/config_xmltest_vectorattributes.xml");
 
   CallbackHost cb;
@@ -63,6 +65,7 @@ BOOST_AUTO_TEST_CASE(VectorAttributes)
   rootTag.addSubtag(testTagEigenXd);
 
   configure(rootTag, ConfigurationContext{}, filename);
+  BOOST_TEST(cb.eigenVectorXd.size() == 3);
   BOOST_TEST(cb.eigenVectorXd(0) == 3.0);
   BOOST_TEST(cb.eigenVectorXd(1) == 2.0);
   BOOST_TEST(cb.eigenVectorXd(2) == 1.0);

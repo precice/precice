@@ -101,6 +101,8 @@ target_sources(preciceCore
     src/cplscheme/CouplingData.hpp
     src/cplscheme/CouplingScheme.cpp
     src/cplscheme/CouplingScheme.hpp
+    src/cplscheme/ImplicitData.cpp
+    src/cplscheme/ImplicitData.hpp
     src/cplscheme/MultiCouplingScheme.cpp
     src/cplscheme/MultiCouplingScheme.hpp
     src/cplscheme/ParallelCouplingScheme.cpp
@@ -112,14 +114,17 @@ target_sources(preciceCore
     src/cplscheme/config/CouplingSchemeConfiguration.hpp
     src/cplscheme/impl/AbsoluteConvergenceMeasure.cpp
     src/cplscheme/impl/AbsoluteConvergenceMeasure.hpp
+    src/cplscheme/impl/AbsoluteOrRelativeConvergenceMeasure.cpp
+    src/cplscheme/impl/AbsoluteOrRelativeConvergenceMeasure.hpp
     src/cplscheme/impl/ConvergenceMeasure.hpp
-    src/cplscheme/impl/MinIterationConvergenceMeasure.cpp
-    src/cplscheme/impl/MinIterationConvergenceMeasure.hpp
     src/cplscheme/impl/RelativeConvergenceMeasure.cpp
     src/cplscheme/impl/RelativeConvergenceMeasure.hpp
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.cpp
     src/cplscheme/impl/ResidualRelativeConvergenceMeasure.hpp
     src/cplscheme/impl/SharedPointer.hpp
+    src/cplscheme/impl/TimeHandler.cpp
+    src/cplscheme/impl/TimeHandler.hpp
+    src/io/Export.cpp
     src/io/Export.hpp
     src/io/ExportCSV.cpp
     src/io/ExportCSV.hpp
@@ -167,13 +172,17 @@ target_sources(preciceCore
     src/m2n/SharedPointer.hpp
     src/m2n/config/M2NConfiguration.cpp
     src/m2n/config/M2NConfiguration.hpp
+    src/mapping/AxialGeoMultiscaleMapping.cpp
+    src/mapping/AxialGeoMultiscaleMapping.hpp
     src/mapping/BarycentricBaseMapping.cpp
     src/mapping/BarycentricBaseMapping.hpp
+    src/mapping/GinkgoDefinitions.hpp
     src/mapping/GinkgoRadialBasisFctSolver.hpp
     src/mapping/LinearCellInterpolationMapping.cpp
     src/mapping/LinearCellInterpolationMapping.hpp
     src/mapping/Mapping.cpp
     src/mapping/Mapping.hpp
+    src/mapping/MathHelper.hpp
     src/mapping/NearestNeighborBaseMapping.cpp
     src/mapping/NearestNeighborBaseMapping.hpp
     src/mapping/NearestNeighborGradientMapping.cpp
@@ -189,6 +198,8 @@ target_sources(preciceCore
     src/mapping/RadialBasisFctBaseMapping.hpp
     src/mapping/RadialBasisFctMapping.hpp
     src/mapping/RadialBasisFctSolver.hpp
+    src/mapping/RadialGeoMultiscaleMapping.cpp
+    src/mapping/RadialGeoMultiscaleMapping.hpp
     src/mapping/SharedPointer.hpp
     src/mapping/config/MappingConfiguration.cpp
     src/mapping/config/MappingConfiguration.hpp
@@ -196,10 +207,10 @@ target_sources(preciceCore
     src/mapping/impl/BasisFunctions.hpp
     src/mapping/impl/CreateClustering.hpp
     src/mapping/impl/SphericalVertexCluster.hpp
+    src/math/Bspline.cpp
+    src/math/Bspline.hpp
     src/math/barycenter.cpp
     src/math/barycenter.hpp
-    src/math/bspline.cpp
-    src/math/bspline.hpp
     src/math/constants.hpp
     src/math/differences.hpp
     src/math/geometry.cpp
@@ -236,10 +247,12 @@ target_sources(preciceCore
     src/partition/ReceivedPartition.cpp
     src/partition/ReceivedPartition.hpp
     src/partition/SharedPointer.hpp
+    src/precice/Exceptions.hpp
     src/precice/Participant.cpp
     src/precice/Participant.hpp
     src/precice/Tooling.cpp
     src/precice/Tooling.hpp
+    src/precice/Types.hpp
     src/precice/config/Configuration.cpp
     src/precice/config/Configuration.hpp
     src/precice/config/ParticipantConfiguration.cpp
@@ -257,6 +270,7 @@ target_sources(preciceCore
     src/precice/impl/ReadDataContext.cpp
     src/precice/impl/ReadDataContext.hpp
     src/precice/impl/SharedPointer.hpp
+    src/precice/impl/Types.hpp
     src/precice/impl/ValidationMacros.hpp
     src/precice/impl/WatchIntegral.cpp
     src/precice/impl/WatchIntegral.hpp
@@ -266,7 +280,6 @@ target_sources(preciceCore
     src/precice/impl/WriteDataContext.hpp
     src/precice/precice.hpp
     src/precice/span.hpp
-    src/precice/types.hpp
     src/profiling/Event.cpp
     src/profiling/Event.hpp
     src/profiling/EventUtils.cpp
@@ -277,16 +290,20 @@ target_sources(preciceCore
     src/query/Index.hpp
     src/query/impl/RTreeAdapter.hpp
     src/time/Sample.hpp
+    src/time/SampleResult.hpp
     src/time/Stample.hpp
     src/time/Storage.cpp
     src/time/Storage.hpp
     src/time/Time.cpp
     src/time/Time.hpp
+    src/time/TimeGrids.cpp
+    src/time/TimeGrids.hpp
     src/time/Waveform.cpp
     src/time/Waveform.hpp
     src/utils/ArgumentFormatter.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp
+    src/utils/DoubleAggregator.hpp
     src/utils/EigenHelperFunctions.cpp
     src/utils/EigenHelperFunctions.hpp
     src/utils/EigenIO.hpp
@@ -314,6 +331,7 @@ target_sources(preciceCore
     src/utils/fmt.hpp
     src/utils/fmtEigen.hpp
     src/utils/fmtSTL.hpp
+    src/utils/ignore.hpp
     src/utils/networking.cpp
     src/utils/networking.hpp
     src/utils/span_tools.hpp
@@ -337,9 +355,10 @@ target_sources(preciceCore
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/Version.h
+    src/precice/Exceptions.hpp
     src/precice/Participant.hpp
     src/precice/Tooling.hpp
+    src/precice/Types.hpp
     src/precice/precice.hpp
     src/precice/span.hpp
-    src/precice/types.hpp
     )

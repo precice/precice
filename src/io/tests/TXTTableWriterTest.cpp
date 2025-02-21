@@ -7,9 +7,10 @@ BOOST_AUTO_TEST_SUITE(IOTests)
 
 using namespace precice::io;
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TXTTableWriterTest)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   TXTTableWriter writer("io-TXTTableWriterTest.log");
   writer.addData("Timestep", TXTTableWriter::INT);
   writer.addData("Flowrate", TXTTableWriter::DOUBLE);

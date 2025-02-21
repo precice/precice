@@ -3,8 +3,7 @@
 #include "mapping/Mapping.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 /**
  * @brief Abstract base class for configurable actions on data and/or meshes.
@@ -41,14 +40,12 @@ public:
   Action &operator=(Action &&) = delete;
 
   /// Destructor, empty.
-  virtual ~Action() {}
+  virtual ~Action() = default;
 
   /**
    * @brief Performs the action, to be overwritten by subclasses.
-   *
-   * @param[in] time the current total simulation time.
    */
-  virtual void performAction(double time) = 0;
+  virtual void performAction() = 0;
 
   /// Returns the timing of the action.
   Timing getTiming() const
@@ -79,5 +76,4 @@ private:
   mapping::Mapping::MeshRequirement _meshRequirement = mapping::Mapping::MeshRequirement::UNDEFINED;
 };
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action

@@ -16,9 +16,10 @@ BOOST_AUTO_TEST_SUITE(MultiCoupling)
 /**
  * @brief Test to run a multi coupling with zeroth order waveform subcycling. Uses different time step sizes for each solver.
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
+  PRECICE_TEST();
 
   Participant precice(context.name, context.config(), 0, 1);
 
@@ -129,13 +130,13 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
+    maxDt     = precice.getMaxTimeStepSize();
+    currentDt = dt > maxDt ? maxDt : dt;
+    BOOST_CHECK(math::equals(currentDt, windowDt / nSubsteps)); // subcycling.
     time += currentDt;
     writeData = writeFunction(time);
     precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
     precice.advance(currentDt);
-    double maxDt = precice.getMaxTimeStepSize();
-    currentDt    = dt > maxDt ? maxDt : dt;
-    BOOST_CHECK(currentDt == windowDt / nSubsteps); // no subcycling.
     timestep++;
     if (precice.requiresReadingCheckpoint()) { // at end of window and we have to repeat it.
       iterations++;

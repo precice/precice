@@ -29,6 +29,7 @@ public:
       mesh::PtrMeshConfiguration meshConfiguration);
 
   void setExperimental(bool experimental);
+  void setRemeshing(bool allowed);
 
   /**
    * @brief Callback function required for use of automatic configuration.
@@ -53,6 +54,12 @@ public:
 
   /// Returns a participant with the given name
   const impl::PtrParticipant getParticipant(const std::string &participantName) const;
+
+  std::set<std::string> knownParticipants() const;
+
+  bool hasParticipant(std::string_view name) const;
+
+  std::string hintFor(std::string_view wrongName) const;
 
 private:
   struct WatchPointConfig {
@@ -108,6 +115,7 @@ private:
   const std::string VALUE_CSV = "csv";
 
   bool _experimental = false;
+  bool _remeshing    = false;
 
   mesh::PtrMeshConfiguration _meshConfig;
 

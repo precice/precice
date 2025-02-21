@@ -44,9 +44,10 @@ void testQTQequalsIdentity(Eigen::MatrixXd &Q)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testQRFactorization)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int             m = 6, n = 8;
   int             filter = BaseQNAcceleration::QR1FILTER;
   Eigen::MatrixXd A(n, m);

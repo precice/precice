@@ -8,7 +8,7 @@
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 
 namespace precice {
 namespace com {

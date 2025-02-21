@@ -10,9 +10,9 @@ namespace precice::mesh {
 /// Given the data and the mesh, this function returns the surface integral. Assumes no overlap exists for the mesh
 Eigen::VectorXd integrateSurface(const PtrMesh &mesh, const Eigen::VectorXd &input)
 {
-  PRECICE_ASSERT(mesh->vertices().size() > 0);
+  PRECICE_ASSERT(mesh->nVertices() > 0);
   const int       meshDimensions  = mesh->getDimensions();
-  const int       valueDimensions = input.size() / mesh->vertices().size();
+  const int       valueDimensions = input.size() / mesh->nVertices();
   const auto &    values          = input;
   Eigen::VectorXd integral        = Eigen::VectorXd::Zero(valueDimensions);
 
@@ -40,9 +40,9 @@ Eigen::VectorXd integrateSurface(const PtrMesh &mesh, const Eigen::VectorXd &inp
 
 Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const Eigen::VectorXd &input)
 {
-  PRECICE_ASSERT(mesh->vertices().size() > 0);
+  PRECICE_ASSERT(mesh->nVertices() > 0);
   const int       meshDimensions  = mesh->getDimensions();
-  const int       valueDimensions = input.size() / mesh->vertices().size();
+  const int       valueDimensions = input.size() / mesh->nVertices();
   const auto &    values          = input;
   Eigen::VectorXd integral        = Eigen::VectorXd::Zero(valueDimensions);
   if (meshDimensions == 2) {

@@ -74,12 +74,10 @@ public:
   /**
    * @brief Initializes the coupling scheme and establishes a communication
    *        connection to the coupling partner.
-   * @param[in] startTime TODO
-   * @param[in] startTimeWindow TODO
    */
-  void initialize(
-      double startTime,
-      int    startTimeWindow) final override;
+  void initialize() final override;
+
+  void reinitialize() override final;
 
   /// Returns true, if any of the composed coupling schemes sendsInitializedData for this participant
   bool sendsInitializedData() const override final;
@@ -107,6 +105,9 @@ public:
   /// Returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const final override;
 
+  /// @copydoc cplscheme::CouplingScheme::localParticipant()
+  std::string localParticipant() const override final;
+
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
    *
@@ -131,6 +132,8 @@ public:
    */
   double getTime() const final override;
 
+  double getTimeWindowStart() const override final;
+
   /**
    * @brief Returns the currently computed time windows of the coupling scheme.
    *
@@ -152,9 +155,6 @@ public:
    *
    */
   double getTimeWindowSize() const final override;
-
-  /// @copydoc CouplingScheme::getNormalizedWindowTime
-  double getNormalizedWindowTime() const override final;
 
   /**
    * @brief Returns the maximal size of the next time step to be computed.
@@ -205,6 +205,12 @@ public:
   /// True if the implicit scheme has converged or no implicit scheme is defined
   bool hasConverged() const final;
 
+  /// @copydoc cplscheme::CouplingScheme::requiresSubsteps()
+  bool requiresSubsteps() const override final;
+
+  /// @copydoc cplscheme::CouplingScheme::implicitDataToReceive()
+  ImplicitData implicitDataToReceive() const override final;
+
 private:
   mutable logging::Logger _log{"cplscheme::CompositionalCouplingScheme"};
 
@@ -216,14 +222,31 @@ private:
   /// The optional implicit scheme to be handled last
   PtrCouplingScheme _implicitScheme;
 
-  /// Is the implicit scheme still iterating?
-  bool _iterating = false;
+  /// Are explicit schemes on hold?
+  bool _explicitOnHold = false;
 
-  /// Returns all schemes at the beginning of a timestep or the implicit one until convergence
-  std::vector<CouplingScheme *> schemesToRun() const;
+  /** All schemes to run next
+   *
+   * This is the core of the CompositionalCouplingScheme
+   *
+   * All schemes start at t=0, so they all run on the first time step.
+   * This is updated by finishing the complete advance calling secondExchange() using updateActiveSchemes().
+   */
+  std::vector<CouplingScheme *> _activeSchemes;
 
-  /// Returns all schemes
+  /** Updates _activeSchemes to the next ones that will participate in the upcoming step in time
+   * Called from secondExchange
+   */
+  void updateActiveSchemes();
+
+  /// Returns all schemes in execution order, explicit as well as implicit
   std::vector<CouplingScheme *> allSchemes() const;
+
+  /// Actions also work before initialize is called
+  std::vector<CouplingScheme *> activeOrAllSchemes() const;
+
+  /// check if time windows are compatible
+  void checkCompatibleTimeWindowSizes(const CouplingScheme &impl, const CouplingScheme &expl) const;
 };
 
 } // namespace cplscheme

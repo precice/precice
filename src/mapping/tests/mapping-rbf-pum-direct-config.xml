@@ -12,6 +12,7 @@
   <mesh name="TestMeshTen" dimensions="3" />
   <mesh name="TestMeshEleven" dimensions="3" />
   <mesh name="TestMeshTwelve" dimensions="3" />
+  <mesh name="TestMeshThirteen" dimensions="3" />
 
   <mapping:rbf-pum-direct
     direction="read"
@@ -87,7 +88,7 @@
     project-to-input="false"
     vertices-per-cluster="10"
     relative-overlap="0.4">
-    <basis-function:multiquadrics shape-parameter="0.3" />
+    <basis-function:compact-polynomial-c8 support-radius="0.3" />
   </mapping:rbf-pum-direct>
 
   <mapping:rbf-pum-direct
@@ -98,7 +99,7 @@
     project-to-input="false"
     vertices-per-cluster="10"
     relative-overlap="0.4">
-    <basis-function:inverse-multiquadrics shape-parameter="0.3" />
+    <basis-function:multiquadrics shape-parameter="0.3" />
   </mapping:rbf-pum-direct>
 
   <mapping:rbf-pum-direct
@@ -109,7 +110,7 @@
     project-to-input="false"
     vertices-per-cluster="10"
     relative-overlap="0.4">
-    <basis-function:compact-tps-c2 support-radius="0.3" />
+    <basis-function:inverse-multiquadrics shape-parameter="0.3" />
   </mapping:rbf-pum-direct>
 
   <mapping:rbf-pum-direct
@@ -120,7 +121,7 @@
     project-to-input="false"
     vertices-per-cluster="10"
     relative-overlap="0.4">
-    <basis-function:gaussian support-radius="0.3" />
+    <basis-function:compact-tps-c2 support-radius="0.3" />
     <executor:cpu />
   </mapping:rbf-pum-direct>
 
@@ -129,13 +130,22 @@
     from="TestMeshTwelve"
     to="TestMeshEleven"
     constraint="consistent"
+    project-to-input="false"
+    vertices-per-cluster="10"
+    relative-overlap="0.4">
+    <basis-function:gaussian support-radius="0.3" />
+    <executor:cpu />
+  </mapping:rbf-pum-direct>
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshThirteen"
+    to="TestMeshTwelve"
+    constraint="consistent"
     project-to-input="true"
     vertices-per-cluster="10"
     relative-overlap="0.4"
-    polynomial="off"
-    x-dead="true"
-    y-dead="false"
-    z-dead="true">
+    polynomial="off">
     <executor:cpu />
     <basis-function:gaussian shape-parameter="0.3" />
   </mapping:rbf-pum-direct>

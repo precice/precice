@@ -19,8 +19,8 @@
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
 #include "precice/impl/ReadDataContext.hpp"
+#include "precice/impl/Types.hpp"
 #include "precice/impl/WriteDataContext.hpp"
-#include "precice/types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 
@@ -261,14 +261,12 @@ public:
   /// Exports the initial state of meshes
   void exportInitial();
 
-  /// Exports the final state of meshes
-  void exportFinal();
-
   struct IntermediateExport {
     size_t timewindow;
     size_t iteration;
     double time;
     bool   complete;
+    bool   final;
   };
 
   /// Exports timewindows and iterations of meshes and watchpoints
@@ -283,6 +281,12 @@ public:
 
   /// Returns true, if the participant uses a primary tag.
   bool useIntraComm() const;
+
+  /// Returns true, if the participant has at least one read mapping
+  bool hasReadMappings() const;
+
+  /// Returns true, if the participant has at least one write mapping
+  bool hasWriteMappings() const;
 
   /// Provided access to all read \ref MappingContext
   std::vector<MappingContext> &readMappingContexts();
@@ -304,6 +308,9 @@ public:
 
   /// Returns all \ref ExportContext for exporting meshes and data.
   const std::vector<io::ExportContext> &exportContexts() const;
+
+  /// Returns true, if the participant has any exports enabled
+  bool hasExports() const;
   /// @}
 
   /// @name Error helpers

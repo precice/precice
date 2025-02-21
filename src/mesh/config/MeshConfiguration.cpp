@@ -81,11 +81,10 @@ void MeshConfiguration::xmlTagCallback(
         break;
       }
     }
-    if (not found) {
-      PRECICE_ERROR("Data with name \"{}\" used by mesh \"{}\" is not defined. "
-                    "Please define a data tag with name=\"{}\".",
-                    name, _meshes.back()->getName(), name);
-    }
+    PRECICE_CHECK(found,
+                  "Data with name \"{}\" used by mesh \"{}\" is not defined. "
+                  "Please define a data tag with name=\"{}\".",
+                  name, _meshes.back()->getName(), name);
   }
 }
 
@@ -163,14 +162,14 @@ void MeshConfiguration::insertMeshToMeshDimensionsMap(
     const std::string &mesh,
     int                dimensions)
 {
-  PRECICE_ASSERT(_meshDimensionsMap.count(mesh) == 0, "Mesh {} already exists in the mesh-dimensions map.", mesh)
+  PRECICE_ASSERT(_meshDimensionsMap.count(mesh) == 0, "Mesh {} already exists in the mesh-dimensions map.", mesh);
   _meshDimensionsMap.insert(std::pair<std::string, int>(mesh, dimensions));
 }
 
 int MeshConfiguration::getDataDimensions(const std::string &meshName, const Data::typeName dataTypeName) const
 {
   if (dataTypeName == Data::typeName::VECTOR) {
-    PRECICE_ASSERT(_meshDimensionsMap.count(meshName) > 0, "Mesh {} does not exist in the mesh-dimensions map.", meshName)
+    PRECICE_ASSERT(_meshDimensionsMap.count(meshName) > 0, "Mesh {} does not exist in the mesh-dimensions map.", meshName);
     return _meshDimensionsMap.at(meshName);
   } else if (dataTypeName == Data::typeName::SCALAR) {
     return 1;

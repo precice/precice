@@ -17,7 +17,7 @@
 #include "mesh/Tetrahedron.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "query/Index.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/assertion.hpp"
@@ -69,11 +69,26 @@ public:
       int         dimensions,
       MeshID      id);
 
+  /// Mutable access to a vertex by VertexID
+  Vertex &vertex(VertexID id);
+
+  /// Const access to a vertex by VertexID
+  const Vertex &vertex(VertexID id) const;
+
   /// Returns modifieable container holding all vertices.
   VertexContainer &vertices();
 
   /// Returns const container holding all vertices.
   const VertexContainer &vertices() const;
+
+  /// Returns the number of vertices
+  std::size_t nVertices() const;
+
+  /// Does the mesh contain any vertices?
+  bool empty() const
+  {
+    return _vertices.empty();
+  }
 
   /// Returns modifiable container holding all edges.
   EdgeContainer &edges();
@@ -116,7 +131,7 @@ public:
   int getDimensions() const;
 
   /// Creates and initializes a Vertex object.
-  Vertex &createVertex(const Eigen::VectorXd &coords);
+  Vertex &createVertex(const Eigen::Ref<const Eigen::VectorXd> &coords);
 
   /**
    * @brief Creates and initializes an Edge object.
@@ -206,7 +221,7 @@ public:
   void computeBoundingBox();
 
   /**
-   * @brief Removes all mesh elements and data values (does not remove data).
+   * @brief Removes all mesh elements and data values (does not remove data or the bounding boxes).
    *
    * A mesh element is a
    * - vertex
@@ -220,6 +235,7 @@ public:
 
   void setVertexDistribution(VertexDistribution vd)
   {
+    PRECICE_ASSERT(std::all_of(vd.begin(), vd.end(), [](const auto &p) { return std::is_sorted(p.second.begin(), p.second.end()); }));
     _vertexDistribution = std::move(vd);
   }
 
@@ -233,6 +249,9 @@ public:
   {
     return _vertexOffsets;
   }
+
+  /// checks if the given ranks partition is empty
+  bool isPartitionEmpty(Rank rank) const;
 
   /// Only used for tests
   void setVertexOffsets(VertexOffsets vertexOffsets)
@@ -280,6 +299,12 @@ public:
    * @brief Returns the bounding box of the mesh.
    *
    * BoundingBox is a vector of pairs (min, max), one pair for each dimension.
+   * Note that the bounding box does not necessarily need to match the bounding
+   * box of the contained vertices of the mesh. Examples are the direct mesh access
+   * or a computation of the bounding box before applying additional filtering
+   * during the repartitioning. Note that mesh::clear doesn't clear the underlying
+   * bounding box (which is potentially a user input when using and defining
+   * direct mesh access)
    */
   const BoundingBox &getBoundingBox() const;
 

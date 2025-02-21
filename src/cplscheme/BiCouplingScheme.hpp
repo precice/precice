@@ -9,7 +9,7 @@
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice {
@@ -31,11 +31,11 @@ public:
       double                        maxTime,
       int                           maxTimeWindows,
       double                        timeWindowSize,
-      int                           validDigits,
       std::string                   firstParticipant,
       std::string                   secondParticipant,
       const std::string &           localParticipant,
       m2n::PtrM2N                   m2n,
+      int                           minIterations,
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod);
@@ -75,6 +75,9 @@ protected:
 
   /// Returns all data to be received.
   DataMap &getReceiveData();
+
+  /// Returns all data to be received.
+  const DataMap &getReceiveData() const;
 
   /// Sets the values
   CouplingData *getSendData(DataID dataID);

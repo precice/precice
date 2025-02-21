@@ -1,5 +1,5 @@
-cmake_minimum_required (VERSION 3.16.3)
-project(preCICE VERSION 3.0.0 LANGUAGES CXX)
+cmake_minimum_required (VERSION 3.22.1)
+project(preCICE VERSION 3.1.2 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -57,14 +57,16 @@ option(PRECICE_FEATURE_MPI_COMMUNICATION "Enables MPI-based communication and ru
 option(PRECICE_FEATURE_PETSC_MAPPING "Enable use of the PETSc linear algebra library for global-iterative RBF data mappings." ON)
 option(PRECICE_FEATURE_PYTHON_ACTIONS "Enable Python support for preCICE actions." ON)
 option(PRECICE_CONFIGURE_PACKAGE_GENERATION "Configure package generation." ON)
-option(PRECICE_FEATURE_GINKGO_MAPPING "**Experimental** Enable use of Ginkgo (unreleased version) for data mapping." OFF)
+option(PRECICE_FEATURE_GINKGO_MAPPING "Enable use of Ginkgo for accelerated data mapping." OFF)
 option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
 option(BUILD_TESTING "Build tests" ON)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
 option(PRECICE_BINDINGS_C "Enable the native C bindings" ON)
 option(PRECICE_BINDINGS_FORTRAN "Enable the native Fortran bindings" ON)
 option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
+option(PRECICE_BUILD_UNITY "Use unity builds in preCICE" ON)
 option(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES "Enable libbacktrace for stacktrace generation." OFF)
+option(PRECICE_BUILD_BENCHMARKS "Build the preCICE-internal benchmarks" OFF)
 
 option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization for all targets." OFF)
 
@@ -113,13 +115,13 @@ add_feature_info(PRECICE_FEATURE_PETSC_MAPPING PRECICE_FEATURE_PETSC_MAPPING
   ")
 
   add_feature_info(PRECICE_FEATURE_GINKGO_MAPPING PRECICE_FEATURE_GINKGO_MAPPING
-  "**Experimental** Enables the Ginkgo (requires branch public_common_kernels) backend which supports the usage of GPUs and OpenMP for (global) radial-basis function mappings.
+  "Enables the Ginkgo backend which supports the usage of GPUs and OpenMP for (global) radial-basis function mappings.
 
    Currently, this enables radial-basis function mappings to leverage the compute power of Nvidia/AMD GPUs and OpenMP.
    It uses iterative solvers provided by Ginkgo or direct solvers offered by hip/cuSolver.
 
    This feature can be enabled/disabled by setting the PRECICE_FEATURE_GINKGO_MAPPING CMake option.
-   Requires the Ginkgo library (branch public_common_kernels) and Eigen 3.4. Note that this feature is still experimental.
+   Requires the Ginkgo library, Kokkos (v4.1 or higher) and Eigen 3.4.
   ")
 
   add_feature_info(PRECICE_FEATURE_PYTHON_ACTIONS PRECICE_FEATURE_PYTHON_ACTIONS
@@ -184,11 +186,16 @@ if(TPL_ENABLE_BOOST)
   set(Boost_NO_SYSTEM_PATHS ON CACHE BOOL "" FORCE)
   unset(ENV{BOOST_ROOT})
 endif()
-find_package(Boost 1.71.0 REQUIRED
-  COMPONENTS filesystem log log_setup program_options system thread unit_test_framework
+
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
+
+find_package(Boost 1.74.0 REQUIRED CONFIG
+  COMPONENTS log log_setup program_options system thread unit_test_framework
   )
-mark_as_advanced(Boost_FILESYSTEM_LIBRARY_RELEASE Boost_INCLUDE_DIR Boost_LOG_LIBRARY_RELEASE Boost_LOG_SETUP_LIBRARY_RELEASE Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE Boost_SYSTEM_LIBRARY_RELEASE Boost_THREAD_LIBRARY_RELEASE Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE)
-mark_as_advanced(Boost_FILESYSTEM_LIBRARY_DEBUG Boost_INCLUDE_DIR Boost_LOG_LIBRARY_DEBUG Boost_LOG_SETUP_LIBRARY_DEBUG Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG Boost_SYSTEM_LIBRARY_DEBUG Boost_THREAD_LIBRARY_DEBUG Boost_UNIT_TEST_FRAMEWORK_LIBRARY_DEBUG)
+mark_as_advanced(Boost_INCLUDE_DIR Boost_LOG_LIBRARY_RELEASE Boost_LOG_SETUP_LIBRARY_RELEASE Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE Boost_SYSTEM_LIBRARY_RELEASE Boost_THREAD_LIBRARY_RELEASE Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE)
+mark_as_advanced(Boost_INCLUDE_DIR Boost_LOG_LIBRARY_DEBUG Boost_LOG_SETUP_LIBRARY_DEBUG Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG Boost_SYSTEM_LIBRARY_DEBUG Boost_THREAD_LIBRARY_DEBUG Boost_UNIT_TEST_FRAMEWORK_LIBRARY_DEBUG)
 message(STATUS "Found Boost ${Boost_VERSION}")
 
 # Eigen
@@ -196,12 +203,7 @@ if(TPL_ENABLE_EIGEN3)
   # Use EIGEN3_ROOT to set the directory
   xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
 endif()
-# We need Eigen 3.4.0 such that Eigen deals properly with cuda
-if(PRECICE_FEATURE_GINKGO_MAPPING)
-  find_package(Eigen3 3.4.0 REQUIRED)
-else()
-  find_package(Eigen3 3.3.7 REQUIRED)
-endif()
+find_package(Eigen3 3.4.0 REQUIRED)
 message(STATUS "Found Eigen ${EIGEN3_VERSION}")
 precice_validate_eigen()
 
@@ -212,7 +214,6 @@ precice_validate_libxml2()
 
 # libfmt
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt)
-precice_validate_fmtlib()
 
 #
 # Find Configurable Dependencies
@@ -223,13 +224,9 @@ if (PRECICE_FEATURE_MPI_COMMUNICATION)
   set(MPI_DETERMINE_LIBRARY_VERSION ON) # Try to detect the library vendor
 
   find_package(MPI REQUIRED)
-  message(STATUS "MPI Version: ${MPI_CXX_LIBRARY_VERSION_STRING}")
 
-  # We need to disable the MPIPorts tests in case we detect Open MPI
-  if(MPI_CXX_LIBRARY_VERSION_STRING MATCHES "Open MPI")
-    set(PRECICE_MPI_OPENMPI TRUE CACHE BOOL "Is the MPI implementation OpenMPI?" FORCE)
-    mark_as_advanced(PRECICE_MPI_OPENMPI)
-  endif()
+  string(REGEX MATCH "^[^\n]*" PRECICE_MPI_VERSION "${MPI_CXX_LIBRARY_VERSION_STRING}")
+  message(STATUS "MPI Version: ${PRECICE_MPI_VERSION}")
 endif()
 
 # Option: PETSC
@@ -238,7 +235,7 @@ if (PRECICE_FEATURE_PETSC_MAPPING)
     xsdk_tpl_require(PETSC PETSC_DIR PETSC_ARCH)
     # PETSc detection uses primarily these ENVs
   endif()
-  find_package(PETSc 3.12 REQUIRED)
+  find_package(PETSc 3.15 REQUIRED)
   # No validation required as PETSc does this internally
   message(STATUS "Found PETSc ${PETSc_VERSION}")
 else()
@@ -247,13 +244,16 @@ endif()
 
 # Option: Ginkgo
 if (PRECICE_FEATURE_GINKGO_MAPPING)
-  find_package(Ginkgo 1.5 REQUIRED)
-  message(STATUS "Found Ginkgo ${GINKGO_PROJECT_VERSION} at ${GINKGO_INSTALL_PREFIX}")
+  find_package(Ginkgo 1.8.0 REQUIRED)
+  message(STATUS "Found Ginkgo ${GINKGO_PROJECT_VERSION} at ${Ginkgo_DIR}")
+
+  find_package(Kokkos 4.1 REQUIRED)
+  message(STATUS "Found Kokkos version ${Kokkos_VERSION} at ${Kokkos_DIR}")
 
   include(CMakeDependentOption)
-  cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;GINKGO_BUILD_CUDA" OFF)
-  cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;GINKGO_BUILD_HIP" OFF)
-  cmake_dependent_option(PRECICE_WITH_OMP "Enable Ginkgo OpenMP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;GINKGO_BUILD_OMP" OFF)
+  cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_CUDA" OFF)
+  cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_HIP" OFF)
+  cmake_dependent_option(PRECICE_WITH_OPENMP "Enable Ginkgo OpenMP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_OPENMP" OFF)
 
   # We aim for the same configuration as Ginkgo itself and check immediately for device compiler
   # such that preciceCore inherits all relevant flags directly
@@ -271,10 +271,15 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
       set(CMAKE_CUDA_ARCHITECTURES OFF)
     endif()
-  endif()
+endif()
 
   # 2. Check if Ginkgo was built with HIP and if HIP is available on the system
   if(PRECICE_WITH_HIP)
+    include(CheckLanguage)
+    check_language(HIP)
+    enable_language(HIP)
+    set(CMAKE_HIP_STANDARD 17)
+    set(CMAKE_HIP_STANDARD_REQUIRED ON)
     if(NOT DEFINED HIP_PATH)
      if(NOT DEFINED $ENV{HIP_PATH})
        set(HIP_PATH "/opt/rocm/hip" CACHE PATH "Path to which HIP has been installed")
@@ -289,14 +294,11 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
      set(ENV{ROCM_PATH} ${ROCM_PATH})
     endif()
 
-    find_package(HIP REQUIRED)
     find_package(hipsolver REQUIRED)
-
-    set(HIP_CLANG_FLAGS "-fPIC -w")
-    set(HIP_NVCC_FLAGS "-fPIC")
+    find_package(hipblas REQUIRED)
   endif()
 
-  if(PRECICE_WITH_OMP)
+  if(PRECICE_WITH_OPENMP)
     find_package(OpenMP 3.0 REQUIRED)
   endif()
   # That's essentially all backends we use from Ginkgo. The reference executor and OMP doesn't need any special treatments and
@@ -306,7 +308,7 @@ else()
 endif()
 
 if (PRECICE_BUILD_TOOLS AND BUILD_TESTING)
-  # We need this to run the precice-events
+  # We need this to run the script precice-profiling
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
   message(STATUS "Found Python ${Python3_VERSION}")
 endif()
@@ -350,9 +352,14 @@ set_target_properties(preciceCore PROPERTIES
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
   POSITION_INDEPENDENT_CODE YES
-  CXX_VISIBILITY_PRESET hidden
-  VISIBILITY_INLINES_HIDDEN YES
   )
+
+if(NOT Kokkos_VERSION OR NOT Kokkos_VERSION VERSION_LESS 4.4)
+  set_target_properties(preciceCore PROPERTIES
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN YES
+  )
+endif()
 
 # Setup release override options
 if(PRECICE_RELEASE_WITH_DEBUG_LOG)
@@ -372,7 +379,6 @@ endif()
 target_compile_definitions(preciceCore PUBLIC BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING)
 target_link_libraries(preciceCore PUBLIC
   Boost::boost
-  Boost::filesystem
   Boost::log
   Boost::log_setup
   Boost::program_options
@@ -389,6 +395,9 @@ if(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES)
   target_link_libraries(preciceCore PRIVATE internal::libbacktrace)
 endif()
 
+# Force Intel compiler to honor nan and infinite and use value-preserving floating point mode
+target_compile_options(preciceCore PUBLIC $<$<CXX_COMPILER_ID:IntelLLVM>:-fhonor-infinities -fhonor-nans -fp-model=precise>)
+
 # Setup Eigen3
 target_link_libraries(preciceCore PUBLIC Eigen3::Eigen)
 target_compile_definitions(preciceCore PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
@@ -397,7 +406,7 @@ target_compile_definitions(preciceCore PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZ
 target_link_libraries(preciceCore PUBLIC LibXml2::LibXml2)
 
 # Setup FMT
-target_link_libraries(preciceCore PUBLIC fmt-header-only)
+target_link_libraries(preciceCore PUBLIC fmtlib-static)
 
 # Setup MPI
 if (PRECICE_FEATURE_MPI_COMMUNICATION)
@@ -415,49 +424,39 @@ endif()
 
 # Setup Ginkgo
 if (PRECICE_FEATURE_GINKGO_MAPPING)
-  # Next we configure the common kernels for the matrix assembly
-  # This CMake part is still a shortcoming from the experimental Ginkgo we are using right now
-  # TODO: Remove as soon as GPU feature is in main branch
-  set(Ginkgo_Path "${Ginkgo_DIR}/.." CACHE STRING "Path to the experimental Ginkgo Repository of branch a195f856e.")
-  include(${Ginkgo_Path}/cmake/unified_kernels.cmake)
+    # Next we configure the common kernels for the matrix assembly
+    target_sources(preciceCore PRIVATE
+    src/mapping/device/GinkgoRBFKernels.cpp
+    src/mapping/device/Ginkgo.cpp
+    )
 
-  # This command registers Ginkgo kernels for different execution backends
-  ginkgo_add_unified_kernels(preciceCore src/mapping/device/GinkgoRBFKernels.cpp)
-  # shortcoming of the kernel registration: we need to add the includes here to all generated targets
-  include_directories(${PROJECT_SOURCE_DIR}/src)
-  include_directories(${EIGEN3_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/thirdparty/fmt/include)
-  target_compile_definitions(preciceCore_cuda PUBLIC EIGEN_NO_CUDA)
-  target_compile_definitions(preciceCore_hip PUBLIC EIGEN_NO_CUDA)
-  set_target_properties(preciceCore_cuda PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_target_properties(preciceCore_reference PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_target_properties(preciceCore_hip PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_target_properties(preciceCore_omp PROPERTIES POSITION_INDEPENDENT_CODE ON)
-  set_target_properties(preciceCore_dpcpp PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  target_link_libraries(preciceCore PRIVATE Ginkgo::ginkgo Kokkos::kokkos)
+  target_compile_definitions(preciceCore PUBLIC EIGEN_NO_CUDA)
+
+  # Disable compiler launcher since Kokkos ships its own nvcc wrapper
+   set_target_properties(preciceCore PROPERTIES CXX_COMPILER_LAUNCHER "")
 
   # Now we setup cuSolver and hipSOLVER for preCICE
   if(PRECICE_WITH_CUDA)
     target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_CUDA)
+    # Required to make nvcc happy
+    target_compile_definitions(preciceCore PRIVATE BOOST_PP_VARIADICS=1)
     target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cuh ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cu)
-    target_link_libraries(preciceCore PUBLIC cusolver)
+    target_link_libraries(preciceCore PRIVATE cusolver cublas)
     message(STATUS "Enabled CUDA support for preCICE via the Ginkgo library.")
   endif()
 
   if(PRECICE_WITH_HIP)
     target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_HIP)
     set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.cpp)
-    set_source_files_properties(${_hiplist} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT TRUE)
-    hip_add_library(preciceCore_qr_hip ${_hiplist}
-        HIPCC_OPTIONS ${GINKGO_HIPCC_OPTIONS} "-std=c++17 -DPRECICE_WITH_HIP"
-        CLANG_OPTIONS ${GINKGO_HIP_CLANG_OPTIONS}
-        NVCC_OPTIONS ${GINKGO_HIP_NVCC_OPTIONS}
-        STATIC)
-        target_link_libraries(preciceCore_qr_hip PRIVATE Ginkgo::ginkgo roc::hipsolver)
-        target_link_libraries(preciceCore PRIVATE preciceCore_qr_hip)
+    target_sources(preciceCore PRIVATE ${_hiplist})
+    target_link_libraries(preciceCore PRIVATE hip::device Ginkgo::ginkgo roc::hipsolver roc::hipblas)
+
     message(STATUS "Enabled HIP support for preCICE via the Ginkgo library.")
   endif()
 
-  if(PRECICE_WITH_OMP)
-    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_OMP)
+  if(PRECICE_WITH_OPENMP)
+    target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_OPENMP)
     target_link_libraries(preciceCore PUBLIC OpenMP::OpenMP_CXX)
     # There is nothing special required for OpenMP, looking for OpenMP and setting the flag is handled by the unified kernels
     message(STATUS "Enabled OpenMP support for preCICE via the Ginkgo library.")
@@ -489,9 +488,17 @@ add_library(precice)
 set_target_properties(precice PROPERTIES
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
-  CXX_VISIBILITY_PRESET hidden
-  VISIBILITY_INLINES_HIDDEN YES
+  CXX_VISIBILITY_PRESET default
+  VISIBILITY_INLINES_HIDDEN NO
   )
+
+if(NOT Kokkos_VERSION OR NOT Kokkos_VERSION VERSION_LESS 4.4)
+  set_target_properties(precice PROPERTIES
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN YES
+   )
+endif()
+
 
 target_include_directories(precice PUBLIC
   $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
@@ -505,11 +512,31 @@ target_link_libraries(precice PRIVATE preciceCore)
 include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 
 # File Configuration
-include(GenerateVersionInformation)
-include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectGitRevision.cmake)
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/impl/versions.hpp.in" "${PROJECT_BINARY_DIR}/src/precice/impl/versions.hpp" @ONLY)
 configure_file("${PROJECT_SOURCE_DIR}/src/testing/SourceLocation.hpp.in" "${PROJECT_BINARY_DIR}/src/testing/SourceLocation.hpp" @ONLY)
 configure_file("${PROJECT_SOURCE_DIR}/src/precice/Version.h.in" "${PROJECT_BINARY_DIR}/src/precice/Version.h" @ONLY)
+
+if(PRECICE_BUILD_UNITY)
+  set_target_properties(preciceCore PROPERTIES
+    UNITY_BUILD Yes
+    UNITY_BUILD_MODE GROUP
+  )
+  get_target_property(_precice_sources preciceCore SOURCES)
+  foreach(SOURCE_FILE IN LISTS _precice_sources)
+    if(SOURCE_FILE MATCHES "^src/([a-z0-9]+)/")
+      set_source_files_properties(${SOURCE_FILE} PROPERTIES UNITY_GROUP "${CMAKE_MATCH_1}")
+    endif()
+  endforeach()
+  unset(_precice_sources)
+endif()
+
+# Configure version file generation
+include(GenerateVersionInformation)
+# Configure CMake variables only. The result contains a placeholder for the git revision
+configure_file("${PROJECT_SOURCE_DIR}/src/precice/impl/versions.cpp.in" "${PROJECT_BINARY_DIR}/src/precice/impl/versions.cpp.in" @ONLY)
+# Dynamically replace the git revision information.
+include(${CMAKE_CURRENT_LIST_DIR}/cmake/DetectGitRevision.cmake)
+
 
 # Setup export header
 include(GenerateExportHeader)
@@ -564,6 +591,21 @@ IF (BUILD_TESTING)
   # Test Sources Configuration
   include(${CMAKE_CURRENT_LIST_DIR}/src/tests.cmake)
   include(${CMAKE_CURRENT_LIST_DIR}/tests/tests.cmake)
+
+  if(PRECICE_BUILD_UNITY)
+    set_target_properties(testprecice PROPERTIES
+      UNITY_BUILD Yes
+      UNITY_BUILD_MODE GROUP
+      )
+    # Add integration tests from tests/ sources to a single unity group
+    get_target_property(_testprecice_sources testprecice SOURCES)
+    foreach(SOURCE_FILE IN LISTS _testprecice_sources)
+      if(SOURCE_FILE MATCHES "^tests/")
+        set_source_files_properties(${SOURCE_FILE} PROPERTIES UNITY_GROUP "integration")
+      endif()
+    endforeach()
+  endif()
+
 else(BUILD_TESTING)
   message(STATUS "Excluding test sources")
 endif(BUILD_TESTING)
@@ -579,6 +621,32 @@ if (PRECICE_BINDINGS_FORTRAN)
   # include((${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran/CMakeLists.txt)
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran)
 endif()
+
+# Build benchmarks if enabled
+if(PRECICE_BUILD_BENCHMARKS)
+  find_package(benchmark REQUIRED)
+
+  add_executable(precice-bench)
+  include(${CMAKE_CURRENT_LIST_DIR}/benchmarks/sources.cmake)
+
+  target_link_libraries(precice-bench
+    PRIVATE
+    preciceCore
+    benchmark::benchmark
+    )
+  set_target_properties(precice-bench PROPERTIES
+    # precice is a C++17 project
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED Yes
+    CXX_EXTENSIONS No
+    )
+  target_include_directories(precice-bench PRIVATE
+    ${preCICE_SOURCE_DIR}/src
+    ${preCICE_SOURCE_DIR}/benchmark
+    )
+endif()
+
+
 #
 # Install Targets for precice
 #
@@ -601,7 +669,7 @@ if(PRECICE_BUILD_TOOLS)
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
 
-    install(FILES ${preCICE_SOURCE_DIR}/tools/profiling/precice-events
+  install(PROGRAMS ${preCICE_SOURCE_DIR}/tools/profiling/precice-profiling
     DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
@@ -669,11 +737,16 @@ else()
 endif()
 
 # Configure the pkg-config file for the binary directory
+set(_precice_bindings "")
+if (PRECICE_BINDINGS_C)
+  set(_precice_bindings "-I${PROJECT_SOURCE_DIR}/extras/bindings/c/include")
+endif()
 configure_file(
   "${PROJECT_SOURCE_DIR}/cmake/binary.pc.in"
   "libprecice.pc"
   @ONLY
   )
+unset(_precice_bindings)
 
 # Configure the pkg-config file for the installation
 configure_file(
@@ -710,7 +783,7 @@ if (BUILD_TESTING)
 
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 
-  # Add precice-events tests
+  # Add precice-profiling tests
   add_subdirectory(tools/profiling)
 
   #

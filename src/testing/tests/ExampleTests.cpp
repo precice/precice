@@ -15,9 +15,10 @@ BOOST_AUTO_TEST_SUITE(TestingTests) // Use name of the module, e.g. subdirectory
 BOOST_AUTO_TEST_SUITE(Examples) // If your file contains multiple tests, put them in a test suite
 
 /// This test runs on a single processor.
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SingleProcessor)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   /* Do not use DEBUG, TRACE, INFO calls inside tests, if you need to log a message use
      BOOST_TEST_MESSAGE("I have done that " << whatIHaveDone);
 
@@ -39,10 +40,11 @@ BOOST_AUTO_TEST_CASE(SingleProcessor)
 }
 
 /// Test with a modified numerical tolerance
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(NumericalTolerance,
                      *boost::unit_test::tolerance(1e-4))
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   // Default tolerance is 1e-9, it can be changed for the entire case or even suite
   // using the decorator above
   BOOST_TEST(1.0 == 1.0001);
@@ -51,30 +53,24 @@ BOOST_AUTO_TEST_CASE(NumericalTolerance,
   BOOST_TEST(1.0 == 1.01, boost::test_tools::tolerance(0.1));
 }
 
-/// Use testing::Deleted to unconditionally delete the test
-BOOST_AUTO_TEST_CASE(Deleted,
-                     *testing::Deleted())
-{
-  PRECICE_TEST(1_rank);
-  BOOST_TEST(false);
-}
-
 /// Test that requires 4 processors.
 /*
  * If less than 4 procs are available the test will fail.
  */
+PRECICE_TEST_SETUP(4_ranks)
 BOOST_AUTO_TEST_CASE(FourProcTests)
 {
-  PRECICE_TEST(4_ranks);
+  PRECICE_TEST();
   // Don't copy over that line, it's for testing the example
   BOOST_TEST(context.size == 4);
   BOOST_TEST(context.hasSize(4));
 }
 
 /// Test that runs on 2 processors.
+PRECICE_TEST_SETUP(2_ranks)
 BOOST_AUTO_TEST_CASE(TwoProcTests)
 {
-  PRECICE_TEST(2_ranks);
+  PRECICE_TEST();
 
   // Put your test code here
   BOOST_TEST(context.hasSize(2));
@@ -85,20 +81,23 @@ BOOST_AUTO_TEST_CASE(TwoProcTests)
 /*
  * For some primary tests, you might need an intra-participant communication. This example shows how to set one up.
  * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).
+ *
+ * The short syntax won't work here. You have to name the context
  */
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(FourProcTestsWithPrimaryCommmunication)
 {
-  // The short syntax won't work here. You have to name the context
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm())
+  PRECICE_TEST();
   // In this test you can use an intra-participant communication, here is an example how:
   BOOST_TEST(context.hasSize(4));
   BOOST_TEST(utils::IntraComm::getCommunication()->isConnected());
 }
 
 /// Test that requires 2 participants "A" on 1 rank and "B" on 2 ranks
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(2_ranks))
 BOOST_AUTO_TEST_CASE(NamedContexts)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(2_ranks));
+  PRECICE_TEST();
 
   if (context.isNamed("A")) {
     BOOST_TEST(context.hasSize(1));
@@ -116,9 +115,10 @@ BOOST_AUTO_TEST_CASE(NamedContexts)
  * M2N requires Events, thus you also need to list it as a requirement using Require::Events.
  * Please note: Such tests always need to be excluded for compilation without MPI (PRECICE_NO_MPI).
  */
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(TwoProcTestsWithM2NCommunication)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   BOOST_TEST(context.hasSize(1));
   BOOST_TEST(context.isRank(0));
   BOOST_TEST(context.isPrimary());
@@ -133,9 +133,10 @@ BOOST_AUTO_TEST_CASE(TwoProcTestsWithM2NCommunication)
 
 #endif // PRECICE_NO_MPI
 
+PRECICE_TEST_SETUP(2_ranks, Require::PETSc)
 BOOST_AUTO_TEST_CASE(TwoProcTestsWithPETSc)
 {
-  PRECICE_TEST(2_ranks, Require::PETSc); // implies Require::Events
+  PRECICE_TEST(); // implies Require::Events
   BOOST_TEST(context.hasSize(2));
 
   // Automatically finalizes PETSc and Events
@@ -149,9 +150,10 @@ BOOST_AUTO_TEST_CASE(TwoProcTestsWithPETSc)
  * In this case, you can simply create the participants and create a Participant object.
  * The context-object is of type TestContext and provides access to the name of the current context and the rank and size of its communicator.
  */
+PRECICE_TEST_SETUP("Solid"_on(2_ranks), "Fluid"_on(2_ranks))
 BOOST_AUTO_TEST_CASE(IntegrationTestsWithTwoParticipants)
 {
-  PRECICE_TEST("Solid"_on(2_ranks), "Fluid"_on(2_ranks));
+  PRECICE_TEST();
 
   if (context.isNamed("Solid")) {
     // This is the participant Solid

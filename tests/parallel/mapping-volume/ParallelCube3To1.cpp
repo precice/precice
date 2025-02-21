@@ -8,9 +8,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(MappingVolume)
+PRECICE_TEST_SETUP("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ParallelCube3To1)
 {
-  PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
   // Split the unit cube in 6 tetrahedra (2 per rank) and set up a consistent mapping
 
   using precice::VertexID;
@@ -112,10 +113,9 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
     interface.setMeshVertices(meshName, coords, vertexIDs);
 
     interface.initialize();
-    dt = interface.getMaxTimeStepSize();
 
     BOOST_TEST(interface.isCouplingOngoing(), "Receiving participant must advance once.");
-
+    dt = interface.getMaxTimeStepSize();
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Receiving participant must advance only once.");
 
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(ParallelCube3To1)
       expected(i) = values[i];
     }
     Eigen::VectorXd readData(values.size());
-
+    dt = interface.getMaxTimeStepSize();
     interface.readData(meshName, dataName, vertexIDs, dt, readData);
     //BOOST_CHECK(equals(expected, readData, 1e-3));
     for (int i = 0; i < expected.size(); ++i) {

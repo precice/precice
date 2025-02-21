@@ -44,7 +44,7 @@ NearestProjectionMapping::NearestProjectionMapping(
 
 void NearestProjectionMapping::computeMapping()
 {
-  PRECICE_TRACE(input()->vertices().size(), output()->vertices().size());
+  PRECICE_TRACE(input()->nVertices(), output()->nVertices());
   const std::string         baseEvent = "map.np.computeMapping.From" + input()->getName() + "To" + output()->getName();
   precice::profiling::Event e(baseEvent, profiling::Synchronize);
 
@@ -63,17 +63,15 @@ void NearestProjectionMapping::computeMapping()
   const auto &fVertices = origins->vertices();
 
   if (getDimensions() == 2) {
-    if (!fVertices.empty() && searchSpace->edges().empty()) {
-      PRECICE_WARN("2D Mesh \"{}\" does not contain edges. "
-                   "Nearest projection mapping falls back to nearest neighbor mapping.",
-                   searchSpace->getName());
-    }
+    PRECICE_WARN_IF(!fVertices.empty() && searchSpace->edges().empty(),
+                    "2D Mesh \"{}\" does not contain edges. "
+                    "Nearest projection mapping falls back to nearest neighbor mapping.",
+                    searchSpace->getName());
   } else {
-    if (!fVertices.empty() && searchSpace->triangles().empty()) {
-      PRECICE_WARN("3D Mesh \"{}\" does not contain triangles. "
-                   "Nearest projection mapping will map to primitives of lower dimension.",
-                   searchSpace->getName());
-    }
+    PRECICE_WARN_IF(!fVertices.empty() && searchSpace->triangles().empty(),
+                    "3D Mesh \"{}\" does not contain triangles. "
+                    "Nearest projection mapping will map to primitives of lower dimension.",
+                    searchSpace->getName());
   }
 
   // Amount of nearest elements to fetch for detailed comparison.
@@ -83,6 +81,7 @@ void NearestProjectionMapping::computeMapping()
   constexpr int nnearest = 4;
 
   utils::statistics::DistanceAccumulator distanceStatistics;
+  std::size_t                            toTriangles{0}, toEdges{0}, toVertices{0};
 
   _interpolations.clear();
   _interpolations.reserve(fVertices.size());
@@ -93,6 +92,20 @@ void NearestProjectionMapping::computeMapping()
     // Nearest projection element is triangle for 3d if exists, if not the edge and at the worst case it is the nearest vertex
     auto match = index.findNearestProjection(fVertex.getCoords(), nnearest);
     distanceStatistics(match.polation.distance());
+    switch (match.polation.nElements()) {
+    case 1:
+      ++toVertices;
+      break;
+    case 2:
+      ++toEdges;
+      break;
+    case 3:
+      ++toTriangles;
+      break;
+    default:
+      PRECICE_UNREACHABLE("");
+    }
+
     _interpolations.push_back(std::move(match.polation));
   }
 
@@ -100,6 +113,7 @@ void NearestProjectionMapping::computeMapping()
     PRECICE_INFO("Mapping distance not available due to empty partition.");
   } else {
     PRECICE_INFO("Mapping distance {}", distanceStatistics);
+    PRECICE_INFO("Nearest-projections are {} triangles, {} edges, and {} vertices", toTriangles, toEdges, toVertices);
   }
 
   _hasComputedMapping = true;

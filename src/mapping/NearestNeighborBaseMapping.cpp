@@ -22,14 +22,14 @@ NearestNeighborBaseMapping::NearestNeighborBaseMapping(
     std::string mappingName,
     std::string mappingNameShort)
     : Mapping(constraint, dimensions, requiresGradientData, Mapping::InitialGuessRequirement::None),
-      mappingName(mappingName),
-      mappingNameShort(mappingNameShort)
+      mappingName(std::move(mappingName)),
+      mappingNameShort(std::move(mappingNameShort))
 {
 }
 
 void NearestNeighborBaseMapping::computeMapping()
 {
-  PRECICE_TRACE(input()->vertices().size());
+  PRECICE_TRACE(input()->nVertices());
 
   PRECICE_ASSERT(input().get() != nullptr);
   PRECICE_ASSERT(output().get() != nullptr);
@@ -50,7 +50,7 @@ void NearestNeighborBaseMapping::computeMapping()
   }
 
   // Set up of output arrays
-  const size_t verticesSize   = origins->vertices().size();
+  const size_t verticesSize   = origins->nVertices();
   const auto & sourceVertices = origins->vertices();
   _vertexIndices.resize(verticesSize);
 
@@ -64,7 +64,7 @@ void NearestNeighborBaseMapping::computeMapping()
     _vertexIndices[i]         = matchedVertex.index;
 
     // Compute distance between input and output vertiex for the stats
-    const auto &matchCoords = searchSpace->vertices()[matchedVertex.index].getCoords();
+    const auto &matchCoords = searchSpace->vertex(matchedVertex.index).getCoords();
     auto        distance    = (sourceCoords - matchCoords).norm();
     distanceStatistics(distance);
   }

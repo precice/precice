@@ -10,6 +10,7 @@
 #include "action/Action.hpp"
 #include "boost/noncopyable.hpp"
 #include "com/Communication.hpp"
+#include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/BoundM2N.hpp"
@@ -17,7 +18,7 @@
 #include "precice/Participant.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "utils/MultiLock.hpp"
 
 namespace precice {
@@ -153,7 +154,7 @@ public:
                                std::string_view dataName) const;
 
   /// @copydoc Participant::setMeshVertex
-  int setMeshVertex(
+  VertexID setMeshVertex(
       std::string_view              meshName,
       ::precice::span<const double> position);
 
@@ -169,8 +170,8 @@ public:
   /// @copydoc Participant::setMeshEdge
   void setMeshEdge(
       std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID);
+      VertexID         first,
+      VertexID         second);
 
   /// @copydoc Participant::setMeshEdges
   void setMeshEdges(
@@ -180,9 +181,9 @@ public:
   /// @copydoc Participant::setMeshTriangle
   void setMeshTriangle(
       std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID,
-      int              thirdVertexID);
+      VertexID         first,
+      VertexID         second,
+      VertexID         third);
 
   /// @copydoc Participant::setMeshTriangles
   void setMeshTriangles(
@@ -192,10 +193,10 @@ public:
   /// @copydoc Participant::setMeshQuad
   void setMeshQuad(
       std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID,
-      int              thirdVertexID,
-      int              fourthVertexID);
+      VertexID         first,
+      VertexID         second,
+      VertexID         third,
+      VertexID         fourth);
 
   /// @copydoc Participant::setMeshQuads
   void setMeshQuads(
@@ -205,10 +206,10 @@ public:
   /// @copydoc Participant::setMeshTetrahedron
   void setMeshTetrahedron(
       std::string_view meshName,
-      int              firstVertexID,
-      int              secondVertexID,
-      int              thirdVertexID,
-      int              fourthVertexID);
+      VertexID         first,
+      VertexID         second,
+      VertexID         third,
+      VertexID         fourth);
 
   /// @copydoc Participant::setMeshTetrahedra
   void setMeshTetrahedra(
@@ -266,6 +267,13 @@ public:
   /// @todo try to remove or make private. See https://github.com/precice/precice/issues/1269
   const mesh::Mesh &mesh(const std::string &meshName) const;
 
+  struct MappedSamples {
+    int write, read;
+  };
+
+  /// Returns the amount of mapped read and write samples in the last call to advance.
+  MappedSamples mappedSamples() const;
+
   /// Disable copy construction
   ParticipantImpl(ParticipantImpl const &) = delete;
 
@@ -314,14 +322,23 @@ private:
   /// Are experimental API calls allowed?
   bool _allowsExperimental = false;
 
-  /// setMeshAccessRegion may only be called once
-  mutable bool _accessRegionDefined = false;
+  /// Are experimental remeshing API calls allowed?
+  bool _allowsRemeshing = false;
+
+  /// Are participants waiting for each other in finalize?
+  bool _waitInFinalize = false;
 
   /// The current State of the Participant
   State _state{State::Constructed};
 
   /// Counts calls to advance for plotting.
   long int _numberAdvanceCalls = 0;
+
+  /// Counts the amount of samples mapped in write mappings executed in the latest advance
+  int _executedWriteMappings = 0;
+
+  /// Counts the amount of samples mapped in read mappings executed in the latest advance
+  int _executedReadMappings = 0;
 
   /**
    * @brief Configures the coupling interface from the given xml file.
@@ -343,8 +360,14 @@ private:
 
   void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
 
+  enum struct ExportTiming : bool {
+    Advance = false,
+    Initial = true
+  };
+
   /// Exports meshes with data and watch point data.
-  void handleExports();
+  /// @param[in] timing when the exports are requested
+  void handleExports(ExportTiming timing);
 
   /// Determines participants providing meshes to other participants.
   void configurePartitions(
@@ -359,21 +382,31 @@ private:
   /// Helper for mapWrittenData and mapReadData
   void computeMappings(std::vector<MappingContext> &contexts, const std::string &mappingType);
 
-  /// Computes, performs, and resets all suitable write mappings.
-  void mapWrittenData();
+  /// Computes, and performs write mappings of the initial data in initialize
+  void mapInitialWrittenData();
 
-  /// Computes, performs, and resets all suitable read mappings.
+  /// Computes, and performs suitable write mappings either entirely or after given time
+  void mapWrittenData(std::optional<double> after = std::nullopt);
+
+  // Computes, and performs read mappings of the initial data in initialize
+  void mapInitialReadData();
+
+  // Computes, and performs read mappings
   void mapReadData();
+
+  /**
+   * @brief Removes samples in mapped to data connected to received data via a mapping.
+   *
+   * This prevents old samples from blocking remappings.
+   */
+  void trimReadMappedData(double timeAfterAdvance, bool isTimeWindowComplete, const cplscheme::ImplicitData &fromData);
 
   /**
    * @brief Performs all data actions with given timing.
    *
    * @param[in] timings the timings of the action.
-   * @param[in] time the current total simulation time.
    */
-  void performDataActions(
-      const std::set<action::Action::Timing> &timings,
-      double                                  time);
+  void performDataActions(const std::set<action::Action::Timing> &timings);
 
   /**
    * @brief Resets written data.
@@ -381,7 +414,7 @@ private:
    * @param isAtWindowEnd set true, if function is called at end of window to also trim the time sample storage
    * @param isTimeWindowComplete set true, if function is called at end of converged window to trim and move the sample storage.
    */
-  void resetWrittenData(bool isAtWindowEnd, bool isTimeWindowComplete);
+  void resetWrittenData(); //bool isAtWindowEnd, bool isTimeWindowComplete);
 
   /// Determines participant accessing this interface from the configuration.
   impl::PtrParticipant determineAccessingParticipant(
@@ -404,6 +437,43 @@ private:
 
   /// Syncs the primary ranks of all connected participants
   void closeCommunicationChannels(CloseChannels cc);
+
+  /// Completes everything data-related between adding time to and advancing the coupling scheme
+  void handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo);
+
+  /// Completes everything data-related after advancing the coupling scheme
+  void handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance, const cplscheme::ImplicitData &receivedData);
+
+  /// Creates a Stample at the given time for each write Data and zeros the buffers
+  void samplizeWriteData(double time);
+
+  /// Discards data before the given time for all meshes and data known by this participant
+  void trimOldDataBefore(double time);
+
+  /// Discards send (currently write) data of a participant after a given time when another iteration is required
+  void trimSendDataAfter(double time);
+
+  /** Allreduce of the amount of changed meshes on each rank.
+   * @return the total amount of changed meshes of all ranks on each rank
+   */
+  int getTotalMeshChanges() const;
+
+  /** Exchanges request to remesh with all connecting participants.
+   *
+   * @param[in] requestReinit does this participant request to remesh?
+   *
+   * @return does any participant request to remesh?
+   */
+  bool reinitHandshake(bool requestReinit) const;
+
+  /// Reinitializes preCICE
+  void reinitialize();
+
+  /// Connect participants including repartitioning
+  void setupCommunication();
+
+  /// Setup mesh watcher such as WatchPoints
+  void setupWatcher();
 
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;

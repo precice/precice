@@ -12,17 +12,17 @@ CouplingData::CouplingData(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
     bool          requiresInitialization,
-    bool          exchangeSubsteps)
+    bool          exchangeSubsteps,
+    Direction     direction)
     : requiresInitialization(requiresInitialization),
       _mesh(std::move(mesh)),
       _data(std::move(data)),
+      _previousTimeStepsStorage(),
       _exchangeSubsteps(exchangeSubsteps),
-      _previousTimeStepsStorage()
+      _direction(direction)
 {
   PRECICE_ASSERT(_data != nullptr);
-  _previousTimeStepsStorage.setInterpolationDegree(3); // @todo hard-coded for now, but we need to somehow link this to <read-data waveform-order="ORDER" />
-  _previousTimeStepsStorage.setSampleAtTime(time::Storage::WINDOW_START, time::Sample{getDimensions(), Eigen::VectorXd::Zero(getSize())});
-  _previousTimeStepsStorage.setSampleAtTime(time::Storage::WINDOW_END, time::Sample{getDimensions(), Eigen::VectorXd::Zero(getSize())});
+  _previousTimeStepsStorage = _data->timeStepsStorage();
 
   PRECICE_ASSERT(_mesh != nullptr);
   PRECICE_ASSERT(_mesh.use_count() > 0);
@@ -71,7 +71,7 @@ const time::Storage &CouplingData::timeStepsStorage() const
   return _data->timeStepsStorage();
 }
 
-Eigen::VectorXd CouplingData::getPreviousValuesAtTime(double relativeDt)
+time::SampleResult CouplingData::getPreviousValuesAtTime(double relativeDt)
 {
   return _previousTimeStepsStorage.sample(relativeDt);
 }
@@ -99,36 +99,44 @@ int CouplingData::meshDimensions() const
   return _mesh->getDimensions();
 }
 
+void CouplingData::reinitialize()
+{
+  // TODO port this to subcyling
+
+  // The mesh was reinitialized and new written data will be added later in advance().
+  // Meaning all samples are based on a different mesh.
+  // Without remapping, the best we can do is setting them to zero samples.
+  // We keep the timestamps not to break convergence measures, accelerations, and actions
+  auto zero = time::Sample(_data->getDimensions(), _mesh->nVertices());
+  zero.setZero();
+
+  _data->timeStepsStorage().setAllSamples(zero);
+  _previousTimeStepsStorage.setAllSamples(zero);
+}
+
 void CouplingData::storeIteration()
 {
   const auto &stamples = this->stamples();
   PRECICE_ASSERT(stamples.size() > 0);
-  this->sample() = stamples.back().sample;
-
-  _previousTimeStepsStorage.trim();
-  if (stamples.size() == 1) { // special treatment during initialization
-    const auto &stample = this->stamples().back();
-    PRECICE_ASSERT(math::equals(stample.timestamp, time::Storage::WINDOW_START), "stample.timestamp must be WINDOW_START", stample.timestamp);
-    _previousTimeStepsStorage.setSampleAtTime(time::Storage::WINDOW_START, stample.sample);
-    _previousTimeStepsStorage.setSampleAtTime(time::Storage::WINDOW_END, stample.sample);
-  } else {
-    PRECICE_ASSERT(math::equals(this->stamples().back().timestamp, time::Storage::WINDOW_END), "Only allowed to storeIteration, if at window end");
-    _previousTimeStepsStorage = _data->timeStepsStorage();
-  }
+  this->sample()            = stamples.back().sample;
+  _previousTimeStepsStorage = _data->timeStepsStorage();
 }
 
-const Eigen::VectorXd CouplingData::previousIteration() const
+const Eigen::VectorXd &CouplingData::previousIteration() const
 {
+  PRECICE_ASSERT(!_previousTimeStepsStorage.stamples().empty());
   return _previousTimeStepsStorage.stamples().back().sample.values;
 }
 
 const Eigen::MatrixXd &CouplingData::previousIterationGradients() const
 {
+  PRECICE_ASSERT(!_previousTimeStepsStorage.stamples().empty());
   return _previousTimeStepsStorage.stamples().back().sample.gradients;
 }
 
 int CouplingData::getPreviousIterationSize() const
 {
+  PRECICE_ASSERT(!_previousTimeStepsStorage.stamples().empty());
   return _previousTimeStepsStorage.stamples().back().sample.values.size();
 }
 
@@ -142,9 +150,14 @@ int CouplingData::getDataID()
   return _data->getID();
 }
 
-std::string CouplingData::getDataName()
+std::string CouplingData::getDataName() const
 {
   return _data->getName();
+}
+
+std::string CouplingData::getMeshName() const
+{
+  return _mesh->getName();
 }
 
 std::vector<int> CouplingData::getVertexOffsets()
@@ -152,13 +165,19 @@ std::vector<int> CouplingData::getVertexOffsets()
   return _mesh->getVertexOffsets();
 }
 
+CouplingData::Direction CouplingData::getDirection() const
+{
+  return _direction;
+}
+
 void CouplingData::moveToNextWindow()
 {
-  _data->moveToNextWindow();
-  if (this->stamples().size() > 0) {
-    PRECICE_ASSERT(math::equals(this->stamples().back().timestamp, time::Storage::WINDOW_END), "this->stamples() needs to be initialized properly for WINDOW_START and WINDOW_END");
-    _previousTimeStepsStorage = _data->timeStepsStorage();
+  if (_direction == Direction::Receive) {
+    //_data->moveToNextWindow();
+    // _previousTimeStepsStorage = _data->timeStepsStorage();
   }
+  _data->moveToNextWindow();
+  _previousTimeStepsStorage = _data->timeStepsStorage();
 }
 
 time::Sample &CouplingData::sample()
@@ -177,5 +196,4 @@ bool CouplingData::exchangeSubsteps() const
 {
   return _exchangeSubsteps;
 }
-
 } // namespace precice::cplscheme

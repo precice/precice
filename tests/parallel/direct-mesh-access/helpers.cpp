@@ -29,7 +29,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
     double dt = interface.getMaxTimeStepSize();
 
     // Get relevant size, allocate data structures and retrieve coordinates
-    const std::size_t meshSize = interface.getMeshVertexSize(otherMeshName);
+    const auto meshSize = interface.getMeshVertexSize(otherMeshName);
 
     // According to the bounding boxes and vertices: the primary rank receives 3 vertices, the secondary rank 2
     const bool expectedSize = (context.isPrimary() && meshSize == 3) ||
@@ -38,7 +38,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
 
     // Allocate memory
     std::vector<int>    ids(meshSize);
-    std::vector<double> coordinates(meshSize * dim);
+    std::vector<double> coordinates(static_cast<std::size_t>(meshSize) * static_cast<std::size_t>(dim));
     interface.getMeshVertexIDsAndCoordinates(otherMeshName, ids, coordinates);
 
     // Check the received vertex coordinates
@@ -61,7 +61,9 @@ void runTestAccessReceivedMesh(const TestContext &       context,
       if (context.isPrimary()) {
         interface.writeData(otherMeshName, dataName, ids, writeData);
       } else {
-        if (meshSize - startIndex > 0) {
+        // Corresponds semantically to meshSize - startIndex > 0
+        // but meshSize - startIndex > 0 might underflow and the static analysis complained
+        if (meshSize > startIndex) {
           const int *ids_ptr  = &ids.at(startIndex);
           const auto vertices = meshSize - startIndex;
           interface.writeData(otherMeshName, dataName, {ids_ptr, vertices}, {writeData.data(), vertices});

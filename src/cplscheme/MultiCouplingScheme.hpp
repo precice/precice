@@ -31,21 +31,18 @@ public:
  * @param[in] maxTime Simulation time limit, or UNDEFINED_MAX_TIME.
  * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIME_WINDOWS.
  * @param[in] timeWindowSize Simulation time window size.
- * @param[in] validDigits valid digits for computation of the remainder of a time window
  * @param[in] localParticipant Name of participant using this coupling scheme.
  * @param[in] m2ns M2N communications to all other participants of coupling scheme.
- * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
  * @param[in] maxIterations maximum number of coupling sub-iterations allowed.
  */
   MultiCouplingScheme(
       double                             maxTime,
       int                                maxTimeWindows,
       double                             timeWindowSize,
-      int                                validDigits,
       const std::string &                localParticipant,
       std::map<std::string, m2n::PtrM2N> m2ns,
-      constants::TimesteppingMethod      dtMethod,
       const std::string &                controller,
+      int                                minIterations,
       int                                maxIterations);
 
   /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
@@ -86,13 +83,23 @@ private:
    */
   std::map<std::string, DataMap> _sendDataVector;
 
+  /// Coupling partners to receive initial data from
+  std::set<std::string> _receiveInitialFrom;
+
+  /// Coupling partners to send initial data to
+  std::set<std::string> _sendInitialTo;
+
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
   void exchangeFirstData() override final;
 
   void exchangeSecondData() override final;
 
-  const DataMap &getAccelerationData() override final;
+  bool sendsInitializedDataTo(const std::string &to) const;
+
+  bool receivesInitializedDataFrom(const std::string &from) const;
+
+  DataMap &getAccelerationData() override final;
 
   /// @copydoc cplscheme::BaseCouplingScheme::initializeReceiveDataStorage()
   void initializeReceiveDataStorage() override final;

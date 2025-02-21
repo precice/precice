@@ -13,9 +13,10 @@ using namespace Eigen;
 BOOST_AUTO_TEST_SUITE(MeshTests)
 BOOST_AUTO_TEST_SUITE(FilterTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Vertices2D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   mesh::Mesh dest("2D dest", 2, testing::nextMeshID());
   mesh::Mesh src("2D src", 2, testing::nextMeshID());
@@ -31,14 +32,15 @@ BOOST_AUTO_TEST_CASE(Vertices2D)
   mesh::filterMesh(dest, src, p);
 
   // dest should contain Constante(4) and Constant(3), but not Constant(2)
-  BOOST_TEST(dest.vertices().size() == 2);
-  BOOST_TEST(dest.vertices()[0] == v0);
-  BOOST_TEST(dest.vertices()[1] == v1);
+  BOOST_TEST(dest.nVertices() == 2);
+  BOOST_TEST(dest.vertex(0) == v0);
+  BOOST_TEST(dest.vertex(1) == v1);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Vertices3D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   mesh::Mesh dest("3D dest", 3, testing::nextMeshID());
   mesh::Mesh src("3D src", 3, testing::nextMeshID());
@@ -54,14 +56,15 @@ BOOST_AUTO_TEST_CASE(Vertices3D)
   mesh::filterMesh(dest, src, p);
 
   // dest should contain Constante(4) and Constant(3), but not Constant(2)
-  BOOST_TEST(dest.vertices().size() == 2);
-  BOOST_TEST(dest.vertices()[0] == v0);
-  BOOST_TEST(dest.vertices()[1] == v1);
+  BOOST_TEST(dest.nVertices() == 2);
+  BOOST_TEST(dest.vertex(0) == v0);
+  BOOST_TEST(dest.vertex(1) == v1);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Edges)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   mesh::Mesh dest("3D dest", 3, testing::nextMeshID());
   mesh::Mesh src("3D src", 3, testing::nextMeshID());
@@ -81,19 +84,20 @@ BOOST_AUTO_TEST_CASE(Edges)
 
   mesh::filterMesh(dest, src, p);
 
-  BOOST_TEST(dest.vertices().size() == 3);
-  BOOST_TEST(dest.vertices()[0] == v0);
-  BOOST_TEST(dest.vertices()[1] == v1);
-  BOOST_TEST(dest.vertices()[2] == v2);
+  BOOST_TEST(dest.nVertices() == 3);
+  BOOST_TEST(dest.vertex(0) == v0);
+  BOOST_TEST(dest.vertex(1) == v1);
+  BOOST_TEST(dest.vertex(2) == v2);
 
   // Only e0 should survive
   BOOST_TEST(dest.edges().size() == 1);
   BOOST_TEST(dest.edges()[0] == e0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Triangles)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   mesh::Mesh dest("3D dest", 3, testing::nextMeshID());
   mesh::Mesh src("3D src", 3, testing::nextMeshID());
@@ -115,16 +119,17 @@ BOOST_AUTO_TEST_CASE(Triangles)
 
   mesh::filterMesh(dest, src, p);
 
-  BOOST_TEST(dest.vertices().size() == 4);
+  BOOST_TEST(dest.nVertices() == 4);
 
   // Only t1 should survive (because v4 not passed)
   BOOST_TEST(dest.triangles().size() == 1);
   BOOST_TEST(dest.triangles()[0] == t1);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Tetrahedra)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   mesh::Mesh dest("3D dest", 3, testing::nextMeshID());
   mesh::Mesh src("3D src", 3, testing::nextMeshID());
@@ -148,7 +153,7 @@ BOOST_AUTO_TEST_CASE(Tetrahedra)
 
   mesh::filterMesh(dest, src, p);
 
-  BOOST_TEST(dest.vertices().size() == 5);
+  BOOST_TEST(dest.nVertices() == 5);
 
   // Only t1 should survive (because v5 not passed)
   BOOST_TEST(dest.tetrahedra().size() == 1);

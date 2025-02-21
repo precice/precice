@@ -1,16 +1,13 @@
 #include <boost/range.hpp>
 
 #include "cplscheme/CouplingScheme.hpp"
-#include "math/bspline.hpp"
+#include "math/Bspline.hpp"
 #include "math/differences.hpp"
 #include "time/Storage.hpp"
+#include "time/Time.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::time {
-
-const double Storage::WINDOW_START = 0.0;
-
-const double Storage::WINDOW_END = 1.0;
 
 Storage::Storage()
     : _stampleStorage{}, _degree(0)
@@ -19,45 +16,61 @@ Storage::Storage()
 
 Storage &Storage::operator=(const Storage &other)
 {
+  this->clear();
+  this->_degree = other.getInterpolationDegree();
   for (const auto &stample : other.stamples()) {
     this->setSampleAtTime(stample.timestamp, stample.sample);
   }
   return *this;
 }
 
-void Storage::initialize(time::Sample sample)
+void Storage::setSampleAtTime(double time, const Sample &sample)
 {
-  _stampleStorage.emplace_back(Stample{WINDOW_START, sample});
-  _stampleStorage.emplace_back(Stample{WINDOW_END, sample});
-}
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
 
-void Storage::setSampleAtTime(double time, Sample sample)
-{
+  if (_stampleStorage.empty()) {
+    _stampleStorage.emplace_back(Stample{time, sample});
+    return;
+  }
+
+  const double currentWindowStart = _stampleStorage.front().timestamp;
+
   PRECICE_ASSERT(not sample.values.hasNaN());
-  PRECICE_ASSERT(math::smallerEquals(WINDOW_START, time), "Setting sample outside of valid range!");
-  PRECICE_ASSERT(math::smallerEquals(time, WINDOW_END), "Setting sample outside of valid range!");
+  PRECICE_ASSERT(math::smallerEquals(currentWindowStart, time), "Setting sample outside of valid range!", currentWindowStart, time);
   // check if key "time" exists.
   auto existingSample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&time](const auto &s) { return math::equals(s.timestamp, time); });
   if (existingSample == _stampleStorage.end()) { // key does not exist yet
-    PRECICE_ASSERT(math::smaller(maxStoredNormalizedDt(), time), maxStoredNormalizedDt(), time, "Trying to write sample with a time that is too small. Please use clear(), if you want to write new samples to the storage.");
+    PRECICE_ASSERT(math::smaller(maxStoredTime(), time), maxStoredTime(), time, "Trying to write sample with a time that is too small. Please use clear(), if you want to write new samples to the storage.");
     _stampleStorage.emplace_back(Stample{time, sample});
-  } else { // overwrite sample at "time"
-    for (auto &stample : _stampleStorage) {
-      if (math::equals(stample.timestamp, time)) {
-        stample.sample = sample;
-        return;
-      }
-    }
-    PRECICE_ASSERT(false, "unreachable!");
+  } else {
+    // Overriding sample
+    existingSample->sample = sample;
+  }
+}
+
+void Storage::setAllSamples(const Sample &sample)
+{
+  for (auto &stample : _stampleStorage) {
+    stample.sample = sample;
   }
 }
 
 void Storage::setInterpolationDegree(int interpolationDegree)
 {
+  PRECICE_ASSERT(interpolationDegree >= Time::MIN_WAVEFORM_DEGREE);
   _degree = interpolationDegree;
+
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
 }
 
-double Storage::maxStoredNormalizedDt() const
+int Storage::getInterpolationDegree() const
+{
+  return _degree;
+}
+
+double Storage::maxStoredTime() const
 {
   if (_stampleStorage.size() == 0) {
     return -1; // invalid return
@@ -80,29 +93,75 @@ int Storage::nDofs() const
 void Storage::move()
 {
   PRECICE_ASSERT(nTimes() >= 2, "Calling Storage::move() is only allowed, if there is a sample at the beginning and at the end. This ensures that this function is only called at the end of the window.", getTimes());
-  PRECICE_ASSERT(math::equals(_stampleStorage.front().timestamp, time::Storage::WINDOW_START), _stampleStorage.front().timestamp);
-  PRECICE_ASSERT(math::equals(_stampleStorage.back().timestamp, time::Storage::WINDOW_END), _stampleStorage.back().timestamp);
+  PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
+  const double nextWindowStart = _stampleStorage.back().timestamp;
+  _stampleStorage.erase(_stampleStorage.begin(), --_stampleStorage.end());
+  PRECICE_ASSERT(nextWindowStart == _stampleStorage.front().timestamp);
 
-  auto sampleAtBeginning = getSampleAtEnd();
-  auto sampleAtEnd       = getSampleAtEnd();
-  _stampleStorage.clear();
-  _stampleStorage.emplace_back(time::Stample{WINDOW_START, std::move(sampleAtBeginning)});
-  _stampleStorage.emplace_back(time::Stample{WINDOW_END, std::move(sampleAtEnd)});
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
 }
 
 void Storage::trim()
 {
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
-  PRECICE_ASSERT(_stampleStorage.front().timestamp == time::Storage::WINDOW_START);
+  const double thisWindowStart = _stampleStorage.front().timestamp;
   _stampleStorage.erase(++_stampleStorage.begin(), _stampleStorage.end());
+  PRECICE_ASSERT(_stampleStorage.size() == 1);
+  PRECICE_ASSERT(thisWindowStart == _stampleStorage.front().timestamp);
+
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
+}
+
+void Storage::clear()
+{
+  _stampleStorage.clear();
+  PRECICE_ASSERT(_stampleStorage.size() == 0);
+
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
+}
+
+void Storage::clearExceptLast()
+{
+  if (_stampleStorage.empty()) {
+    return;
+  }
+  _stampleStorage.erase(_stampleStorage.begin(), --_stampleStorage.end());
+
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
+}
+
+void Storage::trimBefore(double time)
+{
+  auto beforeTime = [time](const auto &s) { return math::smaller(s.timestamp, time); };
+  _stampleStorage.erase(std::remove_if(_stampleStorage.begin(), _stampleStorage.end(), beforeTime), _stampleStorage.end());
+
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
+}
+
+void Storage::trimAfter(double time)
+{
+  auto afterTime = [time](const auto &s) { return math::greater(s.timestamp, time); };
+  _stampleStorage.erase(std::remove_if(_stampleStorage.begin(), _stampleStorage.end(), afterTime), _stampleStorage.end());
+
+  // The spline has to be recomputed, since the underlying data has changed
+  _bspline.reset();
 }
 
 Sample Storage::getSampleAtOrAfter(double before) const
 {
-  auto stample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&before](const auto &s) { return math::greaterEquals(s.timestamp, before); });
-  PRECICE_ASSERT(stample != _stampleStorage.end(), "no values found!");
-
-  return stample->sample;
+  PRECICE_TRACE(before);
+  if (nTimes() == 1) {
+    return _stampleStorage.front().sample; // @todo in this case the name getSampleAtOrAfter does not fit, because _stampleStorage.front().sample is returned for any time before.
+  } else {
+    auto stample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&before](const auto &s) { return math::greaterEquals(s.timestamp, before); });
+    PRECICE_ASSERT(stample != _stampleStorage.end(), "no values found!");
+    return stample->sample;
+  }
 }
 
 Eigen::VectorXd Storage::getTimes() const
@@ -112,6 +171,17 @@ Eigen::VectorXd Storage::getTimes() const
     times[i] = _stampleStorage[i].timestamp;
   }
   return times;
+}
+
+bool Storage::empty() const
+{
+  return _stampleStorage.empty();
+}
+
+const time::Stample &Storage::last() const
+{
+  PRECICE_ASSERT(!_stampleStorage.empty());
+  return _stampleStorage[_stampleStorage.size() - 1];
 }
 
 std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
@@ -125,53 +195,51 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
   return std::make_pair(times, values);
 }
 
-Eigen::VectorXd Storage::sample(double normalizedDt) const
+SampleResult Storage::sample(double time) const
 {
+  PRECICE_ASSERT(this->nTimes() != 0, "There are no samples available");
   const int usedDegree = computeUsedDegree(_degree, nTimes());
 
-  PRECICE_ASSERT(math::equals(this->maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
-
-  if (_degree == 0) {
-    return this->getSampleAtOrAfter(normalizedDt).values;
+  if (usedDegree == 0) {
+    return this->getSampleAtOrAfter(time).values;
   }
 
   PRECICE_ASSERT(usedDegree >= 1);
 
-  auto data = getTimesAndValues();
+  // Find existing samples
+  for (const auto &stample : _stampleStorage) {
+    if (math::equals(stample.timestamp, time)) {
+      return stample.sample.values;
+    }
+    if (math::greater(stample.timestamp, time)) {
+      break;
+    }
+  }
 
-  return math::bspline::interpolateAt(data.first, data.second, usedDegree, normalizedDt);
+  //Create a new bspline if _bspline does not already contain a spline
+  if (!_bspline.has_value()) {
+    auto [times, values] = getTimesAndValues();
+    _bspline.emplace(times, values, usedDegree);
+  }
+
+  return _bspline.value().interpolateAt(time);
 }
 
-Eigen::MatrixXd Storage::sampleGradients(double normalizedDt) const
+Eigen::MatrixXd Storage::sampleGradients(double time) const
 {
   const int usedDegree = computeUsedDegree(_degree, nTimes());
 
-  PRECICE_ASSERT(math::equals(this->maxStoredNormalizedDt(), time::Storage::WINDOW_END), this->maxStoredNormalizedDt()); // sampling is only allowed, if a window is complete.
-
-  if (_degree == 0) {
-    return this->getSampleAtOrAfter(normalizedDt).gradients;
+  if (usedDegree == 0) {
+    return this->getSampleAtOrAfter(time).gradients;
   }
 
   PRECICE_WARN("You specified interpolation degree of {}, but only degree 0 is supported for gradient interpolation", usedDegree); // @todo implement this like for sampleAt
-  return this->getSampleAtOrAfter(normalizedDt).gradients;
+  return this->getSampleAtOrAfter(time).gradients;
 }
 
 int Storage::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const
 {
-  int usedDegree = -1;
-  PRECICE_ASSERT(requestedDegree <= 3);
-  if (requestedDegree == 0 || numberOfAvailableSamples < 2) {
-    usedDegree = 0;
-  } else if (requestedDegree == 1 || numberOfAvailableSamples < 3) {
-    usedDegree = 1;
-  } else if (requestedDegree == 2 || numberOfAvailableSamples < 4) {
-    usedDegree = 2;
-  } else if (requestedDegree == 3 || numberOfAvailableSamples < 5) {
-    usedDegree = 3;
-  } else {
-    PRECICE_ASSERT(false); // not supported
-  }
-  return usedDegree;
+  return std::min(requestedDegree, numberOfAvailableSamples - 1);
 }
 
 time::Sample Storage::getSampleAtBeginning()

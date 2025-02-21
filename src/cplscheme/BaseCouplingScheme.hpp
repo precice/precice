@@ -7,6 +7,7 @@
 #include <set>
 #include <string>
 #include <vector>
+
 #include "Constants.hpp"
 #include "CouplingData.hpp"
 #include "CouplingScheme.hpp"
@@ -14,12 +15,12 @@
 #include "acceleration/SharedPointer.hpp"
 #include "impl/ConvergenceMeasure.hpp"
 #include "impl/SharedPointer.hpp"
+#include "impl/TimeHandler.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "utils/assertion.hpp"
 
 namespace precice {
 namespace io {
@@ -67,8 +68,8 @@ public:
       double                        maxTime,
       int                           maxTimeWindows,
       double                        timeWindowSize,
-      int                           validDigits,
       std::string                   localParticipant,
+      int                           minIterations,
       int                           maxIterations,
       CouplingMode                  cplMode,
       constants::TimesteppingMethod dtMethod);
@@ -111,6 +112,8 @@ public:
    */
   double getTime() const override final;
 
+  double getTimeWindowStart() const override final;
+
   /**
    * @brief getter for _timeWindows
    * @returns the number of currently computed time windows of the coupling scheme.
@@ -135,9 +138,6 @@ public:
    * hasTimeWindowSize().
    */
   double getTimeWindowSize() const override final;
-
-  /// @copydoc CouplingScheme::getNormalizedWindowTime
-  double getNormalizedWindowTime() const override;
 
   /**
    * @brief Returns the maximal size of the next time step to be computed.
@@ -175,13 +175,10 @@ public:
   /// Finalizes the coupling scheme.
   void finalize() override final;
 
-  /**
-   * @brief Initializes the coupling scheme.
-   *
-   * @param[in] startTime starting time of coupling scheme
-   * @param[in] startTimeWindow starting counter of time window, from which coupling scheme starts
-   */
-  void initialize(double startTime, int startTimeWindow) override final;
+  /// @copydoc cplscheme::CouplingScheme::initialize()
+  void initialize() override final;
+
+  void reinitialize() override final;
 
   ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override final;
 
@@ -196,8 +193,7 @@ public:
       int                         dataID,
       bool                        suffices,
       bool                        strict,
-      impl::PtrConvergenceMeasure measure,
-      bool                        doesLogging);
+      impl::PtrConvergenceMeasure measure);
 
   /// Set an acceleration technique.
   void setAcceleration(const acceleration::PtrAcceleration &acceleration);
@@ -249,9 +245,8 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param sendData DataMap associated with sent data
-   * @param initialCommunication if true and exchange of substeps is deactivated, will send data for WINDOW_START, else will send data for WINDOW_END
    */
-  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData, bool initialCommunication = false);
+  void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
   int receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n);
 
@@ -262,9 +257,20 @@ protected:
    *
    * @param m2n M2N used for communication
    * @param receiveData DataMap associated with received data
-   * @param initialCommunication if true and exchange of substeps is deactivated, will store received data for WINDOW_START and WINDOW_END, else store received data only for WINDOW_END
    */
-  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData, bool initialCommunication = false);
+  void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
+
+  /**
+   * @brief Like receiveData, but temporarily sets window time to end of window.
+   *
+   * This function is only needed for SerialCouplingScheme, if substeps="false". Here, a special situation arises for the second participant, because it receives data for the end of the window from the first participant: If substeps="false" only values without timestamps are exchanged. Therefore, getTime() is used to determine the time associated with the values. However, getTime() of the second participant points to the beginning of the window, if we enter a new window. We need to temporarily modify the return value of getTime() to point to the end of the window to be able to store the values at the correct point in time.
+   *
+   * Note: This function could be removed by a) removing the option to turn off exchange of substeps or by b) refactoring the communication such that sent/received values always carry a timestamp.
+   *
+   * @param m2n M2N used for communication
+   * @param receiveData DataMap associated with received data
+   */
+  void receiveDataForWindowEnd(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
   /**
    * @brief Initializes storage in receiveData as zero
@@ -282,15 +288,17 @@ protected:
    * @param mesh mesh the CouplingData is associated with
    * @param requiresInitialization true, if CouplingData requires initialization
    * @param exchangeSubsteps true, if CouplingData exchanges all substeps in send/recv
+   * @param direction is the coupling data send or received?
+   *
    * @return PtrCouplingData pointer to CouplingData owned by the CouplingScheme
    */
-  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool exchangeSubsteps);
+  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool exchangeSubsteps, CouplingData::Direction direction);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
    * @returns true, if coupling scheme is explicit
    */
-  bool isExplicitCouplingScheme();
+  bool isExplicitCouplingScheme() const;
 
   /**
    * @brief Setter for _timeWindowSize
@@ -299,17 +307,16 @@ protected:
   void setTimeWindowSize(double timeWindowSize);
 
   /**
-   * @brief Getter for _computedTimeWindowPart
-   * @returns _computedTimeWindowPart
+   * @brief Getter for _nextTimeWindowSize
+   * @param timeWindowSize
    */
-  double getComputedTimeWindowPart() const;
+  double getNextTimeWindowSize() const;
 
   /**
-   * @brief Returns the time at the beginning of the current time window.
-   *
-   * @return time at beginning of the current time window.
+   * @brief Setter for _nextTimeWindowSize
+   * @param timeWindowSize
    */
-  double getWindowStartTime() const;
+  void setNextTimeWindowSize(double timeWindowSize);
 
   /**
    * @brief Setter for _doesFirstStep
@@ -319,7 +326,7 @@ protected:
   /**
    * @brief Used to set flag after data has been received using receiveData().
    */
-  void checkDataHasBeenReceived();
+  void notifyDataHasBeenReceived();
 
   /**
    * @brief Getter for _receivesInitializedData
@@ -380,6 +387,21 @@ protected:
    */
   void determineInitialReceive(DataMap &receiveData);
 
+  /**
+   * @brief Function to check whether end of time window is reached. Does not check for convergence
+   * @returns true if end time of time window is reached or if this participant defines time window size (participant first method)
+   */
+  bool reachedEndOfTimeWindow() const;
+
+  /// @copydoc cplscheme::CouplingScheme::requiresSubsteps()
+  bool requiresSubsteps() const override final;
+
+  /// @copydoc cplscheme::CouplingScheme::implicitDataToReceive()
+  ImplicitData implicitDataToReceive() const override;
+
+  /// @copydoc cplscheme::CouplingScheme::localParticipant()
+  std::string localParticipant() const override final;
+
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
@@ -389,9 +411,6 @@ private:
   /// Maximum time being computed. End of simulation is reached, if getTime() == _maxTime
   double _maxTime;
 
-  /// time of beginning of the current time window
-  double _timeWindowStartTime = 0;
-
   /// Number of time windows that have to be computed. End of simulation is reached, if _timeWindows == _maxTimeWindows
   int _maxTimeWindows;
 
@@ -399,10 +418,16 @@ private:
   int _timeWindows = 0;
 
   /// size of time window; _timeWindowSize <= _maxTime
-  double _timeWindowSize;
+  double _timeWindowSize = UNDEFINED_TIME_WINDOW_SIZE;
 
-  /// Part of the window that is already computed; _computedTimeWindowPart <= _timeWindowSize
-  double _computedTimeWindowPart = 0;
+  /// time window size of next window (acts as buffer for time windows size provided by first participant, if using first participant method)
+  double _nextTimeWindowSize = UNDEFINED_TIME_WINDOW_SIZE;
+
+  /// Time handler
+  impl::TimeHandler _time;
+
+  /// Lower limit of iterations during one time window. Prevents convergence if _iterations < _minIterations.
+  int _minIterations = -1;
 
   /// Limit of iterations during one time window. Continue to next time window, if _iterations == _maxIterations.
   int _maxIterations = -1;
@@ -416,7 +441,7 @@ private:
   /// True, if local participant is the one starting the explicit scheme.
   bool _doesFirstStep = false;
 
-  /// True, if _computedTimeWindowPart == _timeWindowSize and (coupling has converged or _iterations == _maxIterations)
+  /// True, if _time == _timeWindowStartTime + _timeWindowSize and (coupling has converged or _iterations == _maxIterations)
   bool _isTimeWindowComplete = false;
 
   /// True, if this participant has to send initialized data.
@@ -447,9 +472,6 @@ private:
   /// Local participant name.
   std::string _localParticipant = "unknown";
 
-  /// Smallest number, taking validDigits into account: eps = std::pow(10.0, -1 * validDigits)
-  const double _eps;
-
   /**
    * @brief Holds meta information to perform a convergence measurement.
    * @param data Associated data field
@@ -464,11 +486,10 @@ private:
     bool                        suffices;
     bool                        strict;
     impl::PtrConvergenceMeasure measure;
-    bool                        doesLogging;
 
     std::string logHeader() const
     {
-      return "Res" + measure->getAbbreviation() + "(" + couplingData->getDataName() + ")";
+      return fmt::format("Res{}({}:{})", measure->getAbbreviation(), couplingData->getMeshName(), couplingData->getDataName());
     }
   };
 
@@ -504,7 +525,7 @@ private:
    * @brief interface to provide accelerated data, depending on coupling scheme being used
    * @return data being accelerated
    */
-  virtual const DataMap &getAccelerationData() = 0;
+  virtual DataMap &getAccelerationData() = 0;
 
   /**
    * @brief If any required actions are open, an error message is issued.
@@ -512,10 +533,9 @@ private:
   void checkCompletenessRequiredActions();
 
   /**
-   * @brief Function to check whether end of time window is reached. Does not check for convergence
-   * @returns true if end time of time window is reached.
+   * @brief Issues an error if coupling data does not contain stamples.
    */
-  bool reachedEndOfTimeWindow();
+  void checkCouplingDataAvailable();
 
   /**
    * @brief Initialize txt writers for iterations and convergence tracking
@@ -560,6 +580,16 @@ private:
    * @return true, if any CouplingData in dataMap requires initialization
    */
   bool anyDataRequiresInitialization(DataMap &dataMap) const;
+
+  /**
+   * @return the end of the time window, defined as timeWindowStart + timeWindowSize
+   */
+  double getWindowEndTime() const;
+
+  /**
+   * @return the start of the time window
+   */
+  double getWindowStartTime() const;
 };
 } // namespace cplscheme
 } // namespace precice

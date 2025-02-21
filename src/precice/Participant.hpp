@@ -4,7 +4,7 @@
 #include <precice/Version.h>
 #include <precice/export.h>
 #include <precice/span.hpp>
-#include "precice/types.hpp"
+#include "precice/Types.hpp"
 
 /**
  * forward declarations.
@@ -22,18 +22,144 @@ struct WhiteboxAccessor;
 
 namespace precice {
 
-/// convenience type for compatibility
+/** @brief forwards-compatible typedef for C++17 \ref std::string_view.
+ *
+ * The \ref string_view is a read-only view into sequence of characters.
+ *
+ * A good mental model for this type is a struct containing a pointer and a size like the following:
+ *
+ * @code{cpp}
+ * struct string_view {
+ *   const char* first;
+ *   size_t size;
+ * };
+ * @endcode
+ *
+ * It can be constructed from:
+ * - a pointer to a NULL-terminated C-string
+ * - a pointer and a size
+ * - a pointer to the first and one past the last element
+ * - \ref std::string can directly convert itself to \ref std::string_view.
+ *
+ * In practise, using a function such as \ref Participant::getMeshDimensions() that expects a string_view looks like this:
+ *
+ * You can directly pass the string literal:
+ *
+ * @code{.cpp}
+ * getMeshDimensions("MyMesh");
+ * @endcode
+ *
+ * Or you can pass something string-like:
+ *
+ * @code{.cpp}
+ * // one of
+ * const char*      meshName = "MyMesh";
+ * std::string      meshName = "MyMesh";
+ * // followed by
+ * getMeshDimensions(meshName);
+ * @endcode
+ *
+ */
 using string_view = ::precice::span<const char>;
 
 /**
- * @brief Main Application Programming Interface of preCICE
+ * @brief Main Application Programming Interface of preCICE. Include using  `#include <precice/precice.hpp>`.
  *
- * To adapt a solver to preCICE, follow the following main structure:
+ * @hidecollaborationgraph
  *
- * -# Create an object of Participant with Participant()
- * -# Initialize preCICE with Participant::initialize()
- * -# Advance to the next (time)step with Participant::advance()
- * -# Finalize preCICE with Participant::finalize()
+ * The flow of the API looks as follows:
+ *
+ * @startuml
+ * skinparam conditionEndStyle hline
+ * start
+ * :Participant();
+ * note right: Create a participant
+ * :setMeshVertices();
+ * note right: Define your meshes
+ * rectangle {
+ * note right
+ * //Define mesh connectivity//
+ * ----
+ * Only required for
+ * * projection mappings
+ * * cell mappings
+ * * watch integrals
+ * * scaled-consistent mappings
+ * end note
+ * if ( requiresMeshConnectivityFor()) then (yes)
+ * :setMeshEdges()
+ * setMeshTriangles()
+ * setMeshTetrahedra();
+ * else (no)
+ * endif
+ * }
+ *
+ * rectangle {
+ *
+ * note right
+ * //Provide initial data//
+ * ----
+ * Only required for non-zero
+ * boundary conditions.
+ * end note
+ *
+ * if (requiresInitialData()) then (yes)
+ * :writeData();
+ * else (no)
+ * endif
+ * }
+ *
+ * :initialize();
+ * note right: Initialize coupling
+ *
+ * while (isCouplingOnGoing()) is (yes)
+ *
+ * rectangle {
+ * note right
+ * //Implicit coupling//
+ * ----
+ * New time window
+ * Save solver state
+ * end note
+ * if (requiresWritingCheckpoint()) then (yes)
+ * :solver writes checkpoint;
+ * else (no)
+ * endif
+ * }
+ *
+ * :precice_dt = getMaxTimeStepSize()
+ * solver_dt = solverGetAdaptiveDt()
+ * dt = min(precice_dt, solver_dt);
+ * note right: Agree on time step size
+ *
+ * :readData()
+ * solverDoTimeStep(dt)
+ * writeData()
+ * advance(dt);
+ * note right: Compute time step
+ *
+ * rectangle {
+ * note right
+ * //Implicit coupling//
+ * ----
+ * Iteration didn't converge
+ * Restore solver state
+ * ----
+ * Iteration converged
+ * Move solver to next time window
+ * end note
+ * if (requiresReadingCheckpoint()) then (yes)
+ * :solver reads checkpoint;
+ * else (no)
+ * :solver moves in time;
+ * endif
+ * }
+ *
+ * endwhile (no)
+ *
+ * stop
+ * @enduml
+ *
  *
  *  @note
  *  We use solver, simulation code, and participant as synonyms.
@@ -41,8 +167,24 @@ using string_view = ::precice::span<const char>;
  */
 class PRECICE_API Participant {
 public:
-  ///@name Construction and Configuration
-  ///@{
+  /**
+   * @name Construction and Configuration
+   *
+   * The API of preCICE is accessible via the \ref Participant class.
+   * A constructed \ref Participant directly corresponds to a participant in the configuration file.
+   *
+   * Constructors require defining the parallel context of the Participant by providing
+   * index and size of the current process, which are equivalent to rank and size in the MPI terminology.
+   *
+   * If preCICE is compiled with MPI, then there are multiple ways for it to be used:
+   * 1. if a custom communicator is provided, preCICE uses it
+   * 2. if MPI is already initialized, preCICE uses the MPI_COMM_WORLD
+   * 3. otherwise, preCICE initializes MPI itself and uses the MPI_COMM_WORLD
+   *
+   * The MPI initialization is independent of which kind IntraCommunicator is configured.
+   *
+   * @{
+   */
 
   /**
    * @brief Constructs a Participant for the given participant
@@ -84,45 +226,67 @@ public:
 
   ///@}
 
-  /// @name Steering Methods
-  ///@{
+  /** @name Steering Methods
+   *
+   * The steering methods are responsible for the coupling logic in preCICE.
+   *
+   * 1. \ref initialize() connects participants, handles partitioned meshes, initializes coupling data, and computes mappings.
+   * 2. \ref advance() steps the participant forwards in time, exchanging data, applying acceleration,
+   * and transparently handling subcycling as well as implicit coupling.
+   * 3. \ref finalize() closes down communication and optionally waits for other participants.
+   * This is implicitly called in \ref ~Participant().
+   *
+   * @{
+   */
 
   /**
    * @brief Fully initializes preCICE and coupling data.
    *
    * - Sets up a connection to the other participants of the coupled simulation.
-   * - Creates all meshes, solver meshes need to be submitted before.
+   * - Pre-processes defined meshes and handles partitions in parallel.
    * - Receives first coupling data. The starting values for coupling data are zero by default.
    * - Determines maximum allowed size of the first time step to be computed.
-   *
-   * @see getMaxTimeStepSize
    *
    * @pre initialize() has not yet been called.
    *
    * @post Parallel communication to the coupling partner(s) is setup.
    * @post Meshes are exchanged between coupling partners and the parallel partitions are created.
    * @post Initial coupling data was exchanged.
+   *
+   * @see getMaxTimeStepSize()
+   * @see requiresInitialData()
    */
   void initialize();
 
   /**
    * @brief Advances preCICE after the solver has computed one time step.
    *
-   * - Sends and resets coupling data written by solver to coupling partners.
-   * - Receives coupling data read by solver.
-   * - Computes and applies data mappings.
-   * - Computes acceleration of coupling data.
-   * - Exchanges and computes information regarding the state of the coupled
-   *   simulation.
+   * There are two cases to distinguish at this point.
+   * If \p computedTimeStepSize == \ref getMaxTimeStepSize(), then the solver has reached
+   * the end of a time window and proceeds the coupling.
+   * This call is a computationally expensive process as it involves among other tasks:
+   *
+   * - Sending and resetting coupling data written by solver to coupling partners.
+   * - Receiving coupling data read by solver.
+   * - Computing and applying data mappings.
+   * - Computing convergence measures in implicit coupling schemes.
+   * - Computing acceleration of coupling data.
+   * - Exchanging and computing information regarding the state of the coupled simulation.
+   *
+   * If \p computedTimeStepSize < \ref getMaxTimeStepSize(), then the solver hasn't reached the end of a time window and it is subcycling.
+   * Depending on the configuration, written data can be used by preCICE to generate additional samples allowing for time interpolation using \ref readData().
+   * This call is computationally inexpensive.
    *
    * @param[in] computedTimeStepSize Size of time step used by the solver.
+   *
+   * @attention All ranks of participants running in parallel \b must pass the same \p computedTimeStep to advance().
    *
    * @see getMaxTimeStepSize to get the maximum allowed value for \p computedTimeStepSize.
    *
    * @pre initialize() has been called successfully.
    * @pre The solver has computed one time step.
    * @pre The solver has written all coupling data.
-   * @pre isCouplngOngoing() returns true.
+   * @pre isCouplingOngoing() returns true.
    * @pre finalize() has not yet been called.
    *
    * @post Coupling data values specified in the configuration are exchanged.
@@ -162,8 +326,93 @@ public:
 
   ///@}
 
-  ///@name Status Queries
-  ///@{
+  /** @name Implicit Coupling
+   *
+   * These functions are only required when you configure implicit coupling schemes.
+   *
+   * Implicitly-coupled solvers may iterate each time step until convergence is achieved.
+   * This generally results in an outer loop handling time steps and an inner loop handling iterations.
+   *
+   * The preCICE abstracts the inner loop away by managing the iteration logic in advance.
+   * If implicit coupling is configured, the adapter is required to either read or
+   * write checkpoints using the API \ref requiresWritingCheckpoint() and \ref requiresReadingCheckpoint().
+   *
+   * The general flow looks as follows:
+   *
+   * @startuml
+   * skinparam ConditionEndStyle hline
+   * start
+   * :initialize();
+   *
+   * while (isCouplingOngoing()) is (yes)
+   *
+   * if (requiresWritingCheckpoint()) then (yes)
+   * :save solver checkpoint;
+   * else (no)
+   * endif
+   *
+   * :readData()
+   * solve time step
+   * writeData()
+   * advance();
+   *
+   * if (requiresReadingCheckpoint()) then (yes)
+   * : restore solver checkpoint;
+   * else (no)
+   * :move to next time window;
+   * endif
+   *
+   *
+   * endwhile (no)
+   *
+   * stop
+   *
+   * @enduml
+   *
+   *
+   * @{
+   */
+
+  /** Checks if the participant is required to write an iteration checkpoint.
+   *
+   * If true, the participant is required to write an iteration checkpoint before calling advance().
+   *
+   * @note If implicit coupling is configured for this Participant, then this function **needs** to be called.
+   *
+   * @pre initialize() has been called
+   *
+   * @see requiresReadingCheckpoint()
+   */
+  bool requiresWritingCheckpoint();
+
+  /** Checks if the participant is required to read an iteration checkpoint.
+   *
+   * If true, the participant is required to read an iteration checkpoint before calling advance().
+   *
+   * @note If implicit coupling is configured for this Participant, then this function **needs** to be called.
+   *
+   * @note This function returns false before the first call to advance().
+   *
+   * @pre initialize() has been called
+   *
+   * @see requiresWritingCheckpoint()
+   */
+  bool requiresReadingCheckpoint();
+
+  ///@}
+
+  /**
+   * @name Status Queries
+   *
+   * In addition to the steering methods, the participant still needs some information regarding the coupling state.
+   * Use \ref isCouplingOngoing() to check if the simulation has reached its end.
+   * Control your time stepping using \ref getMaxTimeStepSize().
+   *
+   * To correctly size input and output buffers, you can access the dimensionality
+   * of meshes using \ref getMeshDimensions() and data using \ref getDataDimensions().
+   *
+   * @{
+   */
 
   /**
    * @brief Returns the spatial dimensionality of the given mesh.
@@ -241,50 +490,6 @@ public:
 
   ///@}
 
-  ///@name Requirements
-  ///@{
-
-  /** Checks if the participant is required to provide initial data.
-   *
-   * If true, then the participant needs to write initial data to defined vertices
-   * prior to calling initialize().
-   *
-   * @pre initialize() has not yet been called
-   */
-  bool requiresInitialData();
-
-  /** Checks if the participant is required to write an iteration checkpoint.
-   *
-   * If true, the participant is required to write an iteration checkpoint before
-   * calling advance().
-   *
-   * preCICE refuses to proceed if writing a checkpoint is required,
-   * but this method isn't called prior to advance().
-   *
-   * @pre initialize() has been called
-   *
-   * @see requiresReadingCheckpoint()
-   */
-  bool requiresWritingCheckpoint();
-
-  /** Checks if the participant is required to read an iteration checkpoint.
-   *
-   * If true, the participant is required to read an iteration checkpoint before
-   * calling advance().
-   *
-   * preCICE refuses to proceed if reading a checkpoint is required,
-   * but this method isn't called prior to advance().
-   *
-   * @note This function returns false before the first call to advance().
-   *
-   * @pre initialize() has been called
-   *
-   * @see requiresWritingCheckpoint()
-   */
-  bool requiresReadingCheckpoint();
-
-  ///@}
-
   /** @name Mesh Access
    * @anchor precice-mesh-access
    *
@@ -308,17 +513,6 @@ public:
    *@{
    */
 
-  /*
-   * @brief Resets mesh with given ID.
-   *
-   * @experimental
-   *
-   * Has to be called, every time the positions for data to be mapped
-   * changes. Only has an effect, if the mapping used is non-stationary and
-   * non-incremental.
-   */
-  //  void resetMesh ( ::precice::string_view meshName );
-
   /**
    * @brief Checks if the given mesh requires connectivity.
    *
@@ -332,18 +526,38 @@ public:
   bool requiresMeshConnectivityFor(::precice::string_view meshName) const;
 
   /**
+   * @brief Removes all vertices and connectivity information from the mesh
+   *
+   * @experimental
+   *
+   * Allows redefining a mesh during runtime.
+   * After the call to resetMesh(), the mesh vertices need to be set with setMeshVertex() and setMeshVertices() again.
+   * Connectivity information may be set as well.
+   *
+   * Reading data from this mesh using readData() is not possible until the next call to advance().
+   *
+   * @param[in] meshName the name of the mesh to reset
+   *
+   * @pre initialize() has been called
+   * @pre isCouplingOngoing() is true
+   *
+   * @post previously returned vertex ids from setMeshVertex() and setMeshVertices() of the given mesh are invalid.
+   */
+  void resetMesh(::precice::string_view meshName);
+
+  /**
    * @brief Creates a mesh vertex
    *
    * @param[in] meshName the name of the mesh to add the vertex to.
    * @param[in] position the coordinates of the vertex.
    * @returns the id of the created vertex
    *
-   * @pre initialize() has not yet been called
+   * @pre either initialize() has not yet been called or resetMesh(meshName) has been called since the last call to initialize() or advance()
    * @pre position.size() == getMeshDimensions(meshName)
    *
    * @see getMeshDimensions()
    */
-  int setMeshVertex(
+  VertexID setMeshVertex(
       ::precice::string_view        meshName,
       ::precice::span<const double> position);
 
@@ -364,20 +578,20 @@ public:
    * @brief Creates multiple mesh vertices
    *
    * @param[in] meshName the name of the mesh to add the vertices to.
-   * @param[in] positions a span to the coordinates of the vertices
+   * @param[in] coordinates a span to the coordinates of the vertices
    *            The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    *            The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
    *
    * @param[out] ids The ids of the created vertices
    *
-   * @pre initialize() has not yet been called
-   * @pre position.size() == getMeshDimensions(meshName) * ids.size()
+   * @pre either initialize() has not yet been called or resetMesh(meshName) has been called since the last call to initialize() or advance()
+   * @pre \p coordinates.size() == getMeshDimensions(meshName) * ids.size()
    *
    * @see getDimensions()
    */
   void setMeshVertices(
       ::precice::string_view        meshName,
-      ::precice::span<const double> positions,
+      ::precice::span<const double> coordinates,
       ::precice::span<VertexID>     ids);
 
   /**
@@ -388,18 +602,18 @@ public:
    * @note The order of vertices does not matter.
    *
    * @param[in] meshName name of the mesh to add the edge to
-   * @param[in] firstVertexID ID of the first vertex of the edge
-   * @param[in] secondVertexID ID of the second vertex of the edge
+   * @param[in] first ID of the first vertex of the edge
+   * @param[in] second ID of the second vertex of the edge
    *
-   * @pre vertices with firstVertexID and secondVertexID were added to the mesh with the name meshName
+   * @pre vertices with IDs first and second were added to the mesh with the name meshName
    */
   void setMeshEdge(
       ::precice::string_view meshName,
-      int                    firstVertexID,
-      int                    secondVertexID);
+      VertexID               first,
+      VertexID               second);
 
   /**
-   * @brief Sets multiple mesh edge from vertex IDs
+   * @brief Sets multiple mesh edges from vertex IDs
    *
    * vertices contain pairs of vertex indices for each edge to define.
    * The format follows: e1a, e1b, e2a, e2b, ...
@@ -407,17 +621,17 @@ public:
    *
    * @note The order of vertices per edge does not matter.
    *
-   * @param[in] meshName the name of the mesh to add the edges to
-   * @param[in] vertices an array containing 2*size vertex IDs
+   * @param[in] meshName the name of the mesh to add the n edges to
+   * @param[in] ids an array containing 2n vertex IDs for n edges
    *
-   * @pre vertices were added to the mesh with the name meshName
-   * @pre vertices.size() is multiple of 2
+   * @pre vertices in \p ids were added to the mesh with the name meshName
+   * @pre \p ids.size() is multiple of 2
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshEdges(
       ::precice::string_view          meshName,
-      ::precice::span<const VertexID> vertices);
+      ::precice::span<const VertexID> ids);
 
   /**
    * @brief Sets mesh triangle from vertex IDs.
@@ -427,19 +641,19 @@ public:
    * @note The order of vertices does not matter.
    *
    * @param[in] meshName name of the mesh to add the triangle to
-   * @param[in] firstVertexID ID of the first vertex of the triangle
-   * @param[in] secondVertexID ID of the second vertex of the triangle
-   * @param[in] thirdVertexID ID of the third vertex of the triangle
+   * @param[in] first ID of the first vertex of the triangle
+   * @param[in] second ID of the second vertex of the triangle
+   * @param[in] third ID of the third vertex of the triangle
    *
-   * @pre edges with firstVertexID, secondVertexID, and thirdVertexID were added to the mesh with the name meshName
+   * @pre vertices with IDs first, second, and third were added to the mesh with the name meshName
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTriangle(
       ::precice::string_view meshName,
-      int                    firstVertexID,
-      int                    secondVertexID,
-      int                    thirdVertexID);
+      VertexID               first,
+      VertexID               second,
+      VertexID               third);
 
   /**
    * @brief Sets multiple mesh triangles from vertex IDs
@@ -450,17 +664,17 @@ public:
    *
    * @note The order of vertices per triangle does not matter.
    *
-   * @param[in] meshName name of the mesh to add the triangles to
-   * @param[in] vertices an array containing 3*size vertex IDs
+   * @param[in] meshName name of the mesh to add the n triangles to
+   * @param[in] ids an array containing 3n vertex IDs for n triangles
    *
-   * @pre vertices were added to the mesh with the name meshName
-   * @pre vertices.size() is multiple of 3
+   * @pre vertices in \p ids were added to the mesh with the name meshName
+   * @pre \p ids.size() is multiple of 3
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTriangles(
       ::precice::string_view          meshName,
-      ::precice::span<const VertexID> vertices);
+      ::precice::span<const VertexID> ids);
 
   /**
    * @brief Sets a planar surface mesh quadrangle from vertex IDs.
@@ -471,21 +685,21 @@ public:
    * @warning The order of vertices does not matter, however, only planar quads are allowed.
    *
    * @param[in] meshName name of the mesh to add the Quad to
-   * @param[in] firstVertexID ID of the first vertex of the Quad
-   * @param[in] secondVertexID ID of the second vertex of the Quad
-   * @param[in] thirdVertexID ID of the third vertex of the Quad
-   * @param[in] fourthVertexID ID of the fourth vertex of the Quad
+   * @param[in] first ID of the first vertex of the Quad
+   * @param[in] second ID of the second vertex of the Quad
+   * @param[in] third ID of the third vertex of the Quad
+   * @param[in] fourth ID of the fourth vertex of the Quad
    *
-   * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the name meshName
+   * @pre vertices with IDs first, second, third, and fourth were added to the mesh with the name meshName
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshQuad(
       ::precice::string_view meshName,
-      int                    firstVertexID,
-      int                    secondVertexID,
-      int                    thirdVertexID,
-      int                    fourthVertexID);
+      VertexID               first,
+      VertexID               second,
+      VertexID               third,
+      VertexID               fourth);
 
   /**
    * @brief Sets multiple mesh quads from vertex IDs
@@ -498,17 +712,17 @@ public:
    *
    * @warning The order of vertices per quad does not matter, however, only planar quads are allowed.
    *
-   * @param[in] meshName name of the mesh to add the quad to
-   * @param[in] vertices an array containing 4*size vertex IDs
+   * @param[in] meshName name of the mesh to add the n quads to
+   * @param[in] ids an array containing 4n vertex IDs for n quads
    *
-   * @pre vertices were added to the mesh with the name meshName
-   * @pre vertices.size() is multiple of 4
+   * @pre vertices in \p ids were added to the mesh with the name meshName
+   * @pre \p ids.size() is multiple of 4
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshQuads(
       ::precice::string_view          meshName,
-      ::precice::span<const VertexID> vertices);
+      ::precice::span<const VertexID> ids);
 
   /**
    * @brief Set tetrahedron in 3D mesh from vertex ID
@@ -516,21 +730,21 @@ public:
    * @note The order of vertices does not matter.
    *
    * @param[in] meshName name of the mesh to add the Tetrahedron to
-   * @param[in] firstVertexID ID of the first vertex of the Tetrahedron
-   * @param[in] secondVertexID ID of the second vertex of the Tetrahedron
-   * @param[in] thirdVertexID ID of the third vertex of the Tetrahedron
-   * @param[in] fourthVertexID ID of the fourth vertex of the Tetrahedron
+   * @param[in] first ID of the first vertex of the Tetrahedron
+   * @param[in] second ID of the second vertex of the Tetrahedron
+   * @param[in] third ID of the third vertex of the Tetrahedron
+   * @param[in] fourth ID of the fourth vertex of the Tetrahedron
    *
-   * @pre vertices with firstVertexID, secondVertexID, thirdVertexID, and fourthVertexID were added to the mesh with the name meshName
+   * @pre vertices with IDs first, second, third, and fourth were added to the mesh with the name meshName
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTetrahedron(
       ::precice::string_view meshName,
-      int                    firstVertexID,
-      int                    secondVertexID,
-      int                    thirdVertexID,
-      int                    fourthVertexID);
+      VertexID               first,
+      VertexID               second,
+      VertexID               third,
+      VertexID               fourth);
 
   /**
    * @brief Sets multiple mesh tetrahedra from vertex IDs
@@ -541,22 +755,52 @@ public:
    *
    * @note The order of vertices per tetrahedron does not matter.
    *
-   * @param[in] meshName name of the mesh to add the tetrahedra to
-   * @param[in] vertices an array containing 4*size vertex IDs
+   * @param[in] meshName name of the mesh to add the n tetrahedra to
+   * @param[in] ids an array containing 4n vertex IDs for n tetrahedra
    *
-   * @pre vertices were added to the mesh with the name meshName
-   * @pre vertices.size() is multiple of 4
+   * @pre vertices in \p ids were added to the mesh with the name meshName
+   * @pre ids.size() is multiple of 4
    *
    * @see requiresMeshConnectivityFor()
    */
   void setMeshTetrahedra(
       ::precice::string_view          meshName,
-      ::precice::span<const VertexID> vertices);
+      ::precice::span<const VertexID> ids);
 
   ///@}
 
-  ///@name Data Access
-  ///@{
+  /**
+   * @name Data Access
+   *
+   * Data in preCICE is always associated to vertices on a \ref precice-mesh-access "defined mesh".
+   * Use \ref getDataDimensions() to get the dimensionality of a data on a mesh.
+   *
+   * In each time step, you can access data on a mesh using \ref writeData() and \ref readData().
+   * Calling \ref advance() may use written data to create a new sample in time, maps data between meshes, and communicates between participants.
+   *
+   * If you perform multiple time steps per time window, then preCICE may decide to keep samples of written data
+   * to enable configured higher-order time interpolation in coupled participants.
+   * The time interpolation is implemented by the relative time in \ref readData().
+   * Written data is reset to 0 after each call to \ref advance().
+   *
+   * All data is initialized to 0 by default.
+   * If you configure preCICE to provide custom initial data, then participants need to provide this data before calling \ref initialize().
+   * After you defined the meshes, use \ref requiresInitialData() to check if initial data is required.
+   * Then use \ref writeData() to specify your initial data and continue to \ref initialize().
+   *
+   * @{
+   */
+
+  /** Checks if the participant is required to provide initial data.
+   *
+   * If true, then the participant needs to write initial data to defined vertices
+   * prior to calling initialize().
+   *
+   * @note If initial data is configured, then this function **needs** to be called.
+   *
+   * @pre initialize() has not yet been called
+   */
+  bool requiresInitialData();
 
   /**
    * @brief Writes data to a mesh.
@@ -571,11 +815,11 @@ public:
    *
    * @param[in] meshName the name of mesh that hold the data.
    * @param[in] dataName the name of the data to write to.
-   * @param[in] vertices the vertex ids of the vertices to write data to.
+   * @param[in] ids the vertex ids of the vertices to write data to.
    * @param[in] values the values to write to preCICE.
    *
-   * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
-   * @pre values.size() == getDataDimensions(meshName, dataName) * vertices.size()
+   * @pre every VertexID in \p ids is a return value of setMeshVertex or setMeshVertices
+   * @pre values.size() == getDataDimensions(meshName, dataName) * ids.size()
    *
    * @see Participant::setMeshVertex()
    * @see Participant::setMeshVertices()
@@ -584,7 +828,7 @@ public:
   void writeData(
       ::precice::string_view          meshName,
       ::precice::string_view          dataName,
-      ::precice::span<const VertexID> vertices,
+      ::precice::span<const VertexID> ids,
       ::precice::span<const double>   values);
 
   /**
@@ -604,12 +848,13 @@ public:
    *
    * @param[in] meshName the name of mesh that hold the data.
    * @param[in] dataName the name of the data to read from.
-   * @param[in] vertices the vertex ids of the vertices to read data from.
+   * @param[in] ids the vertex ids of the vertices to read data from.
    * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
    * @param[out] values the destination memory to read the data from.
    *
-   * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
-   * @pre values.size() == getDataDimensions(meshName, dataName) * vertices.size()
+   * @pre every VertexID in ids is a return value of setMeshVertex or setMeshVertices
+   * @pre values.size() == getDataDimensions(meshName, dataName) * ids.size()
+   * @pre resetMesh(meshName) has not been called since the last call to Participant::initialize() or Participant::advance()
    *
    * @post values contain the read data as specified in the above format.
    *
@@ -620,13 +865,23 @@ public:
   void readData(
       ::precice::string_view          meshName,
       ::precice::string_view          dataName,
-      ::precice::span<const VertexID> vertices,
+      ::precice::span<const VertexID> ids,
       double                          relativeReadTime,
       ::precice::span<double>         values) const;
 
   ///@}
 
   /** @name Direct Access
+   *
+   * If you want or need to provide your own data mapping scheme, then you
+   * can use direct mesh access to directly modify data on a received mesh.
+   *
+   * This requires to specify a region of interest using \ref setMeshAccessRegion() before calling \ref initialize().
+   *
+   * After \ref initialize(), you can use \ref getMeshVertexIDsAndCoordinates() to receive information on the received mesh.
+   * Use the coordinates to compute your own data mapping scheme, and use the vertex IDs to read data form and write data to the mesh.
+   *
+   * @{
    */
 
   /**
@@ -637,8 +892,6 @@ public:
    *        navigate manually to the page  Docs->Couple your code
    *        -> Advanced topics -> Accessing received meshes directly for
    *        a comprehensive documentation
-   *
-   * @experimental
    *
    * This function is required if you don't want to use the mapping
    * schemes in preCICE, but rather want to use your own solver for
@@ -658,8 +911,8 @@ public:
    * on the receiving side, since the associated data values of the
    * filtered vertices are filled with zero data.
    *
-   * @note This function can only be called once per participant and
-   * rank and trying to call it more than once results in an error.
+   * @note This function can only be called once per mesh and rank
+   * and trying to call it more than once results in an error.
    *
    * @note If you combine the direct access with a mpping (say you want
    * to read data from a defined mesh, as usual, but you want to directly
@@ -695,8 +948,6 @@ public:
    *        interest defined by bounding boxes and reads the corresponding
    *        coordinates omitting the mapping.
    *
-   * @experimental
-   *
    * @param[in]  meshName corresponding mesh name
    * @param[out] ids ids corresponding to the coordinates
    * @param[out] coordinates the coordinates associated to the \p ids and
@@ -717,6 +968,8 @@ public:
       ::precice::string_view    meshName,
       ::precice::span<VertexID> ids,
       ::precice::span<double>   coordinates) const;
+
+  ///@}
 
   /** @name Experimental: Gradient Data
    * These API functions are \b experimental and may change in future versions.
@@ -769,12 +1022,12 @@ public:
    *
    * @param[in] meshName the name of mesh that hold the data.
    * @param[in] dataName the name of the data to write to.
-   * @param[in] vertices the vertex ids of the vertices to write gradient data to.
+   * @param[in] ids the vertex ids of the vertices to write gradient data to.
    * @param[in] gradients the linearised gradient data to write to preCICE.
    *
    * @pre Data has attribute hasGradient = true
    * @pre every VertexID in vertices is a return value of setMeshVertex or setMeshVertices
-   * @pre gradients.size() == vertices.size() * getMeshDimensions(meshName) * getDataDimensions(meshName, dataName)
+   * @pre gradients.size() == ids.size() * getMeshDimensions(meshName) * getDataDimensions(meshName, dataName)
    *
    * @see Participant::setMeshVertex()
    * @see Participant::setMeshVertices()
@@ -785,7 +1038,7 @@ public:
   void writeGradientData(
       ::precice::string_view          meshName,
       ::precice::string_view          dataName,
-      ::precice::span<const VertexID> vertices,
+      ::precice::span<const VertexID> ids,
       ::precice::span<const double>   gradients);
 
   ///@}

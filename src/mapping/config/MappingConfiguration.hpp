@@ -53,6 +53,8 @@ public:
       xml::XMLTag &              parent,
       mesh::PtrMeshConfiguration meshConfiguration);
 
+  void setExperimental(bool experimental);
+
   /**
    * @brief Callback function required for use of automatic configuration.
    *
@@ -96,6 +98,13 @@ public:
     bool                basisFunctionDefined = false;
   };
 
+  struct GeoMultiscaleConfiguration {
+
+    double      multiscaleRadius{};
+    std::string multiscaleType{};
+    int         multiscaleAxis{};
+  };
+
   /// Returns the RBF configuration, which was configured at the latest.
   /// Only required for the configuration test
   const RBFConfiguration &rbfConfig() const
@@ -111,18 +120,22 @@ public:
 private:
   mutable logging::Logger _log{"config:MappingConfiguration"};
 
+  bool _experimental = false;
+
   const std::string TAG = "mapping";
 
   // First, declare common attributes and associated options
-  const std::string ATTR_TYPE                      = "type";
-  const std::string TYPE_NEAREST_NEIGHBOR          = "nearest-neighbor";
-  const std::string TYPE_NEAREST_NEIGHBOR_GRADIENT = "nearest-neighbor-gradient";
-  const std::string TYPE_NEAREST_PROJECTION        = "nearest-projection";
-  const std::string TYPE_LINEAR_CELL_INTERPOLATION = "linear-cell-interpolation";
-  const std::string TYPE_RBF_GLOBAL_DIRECT         = "rbf-global-direct";
-  const std::string TYPE_RBF_GLOBAL_ITERATIVE      = "rbf-global-iterative";
-  const std::string TYPE_RBF_PUM_DIRECT            = "rbf-pum-direct";
-  const std::string TYPE_RBF_ALIAS                 = "rbf";
+  const std::string ATTR_TYPE                        = "type";
+  const std::string TYPE_NEAREST_NEIGHBOR            = "nearest-neighbor";
+  const std::string TYPE_NEAREST_NEIGHBOR_GRADIENT   = "nearest-neighbor-gradient";
+  const std::string TYPE_NEAREST_PROJECTION          = "nearest-projection";
+  const std::string TYPE_LINEAR_CELL_INTERPOLATION   = "linear-cell-interpolation";
+  const std::string TYPE_RBF_GLOBAL_DIRECT           = "rbf-global-direct";
+  const std::string TYPE_RBF_GLOBAL_ITERATIVE        = "rbf-global-iterative";
+  const std::string TYPE_RBF_PUM_DIRECT              = "rbf-pum-direct";
+  const std::string TYPE_RBF_ALIAS                   = "rbf";
+  const std::string TYPE_AXIAL_GEOMETRIC_MULTISCALE  = "axial-geometric-multiscale";
+  const std::string TYPE_RADIAL_GEOMETRIC_MULTISCALE = "radial-geometric-multiscale";
 
   const std::string ATTR_DIRECTION  = "direction";
   const std::string DIRECTION_WRITE = "write";
@@ -172,10 +185,21 @@ private:
   const std::string RBF_CPOLYNOMIAL_C2    = "compact-polynomial-c2";
   const std::string RBF_CPOLYNOMIAL_C4    = "compact-polynomial-c4";
   const std::string RBF_CPOLYNOMIAL_C6    = "compact-polynomial-c6";
+  const std::string RBF_CPOLYNOMIAL_C8    = "compact-polynomial-c8";
 
   // Attributes for the subtag
   const std::string ATTR_SHAPE_PARAM    = "shape-parameter";
   const std::string ATTR_SUPPORT_RADIUS = "support-radius";
+
+  // Attributes for geometric multiscale
+  const std::string ATTR_GEOMETRIC_MULTISCALE_TYPE    = "multiscale-type";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_AXIS    = "multiscale-axis";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_RADIUS  = "multiscale-radius";
+  const std::string GEOMETRIC_MULTISCALE_TYPE_SPREAD  = "spread";
+  const std::string GEOMETRIC_MULTISCALE_TYPE_COLLECT = "collect";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_X       = "x";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_Y       = "y";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_Z       = "z";
 
   // For iterative RBFs using Ginkgo
   const std::string SUBTAG_EXECUTOR = "executor";
@@ -236,7 +260,10 @@ private:
       const std::string &direction,
       const std::string &type,
       const std::string &fromMeshName,
-      const std::string &toMeshName) const;
+      const std::string &toMeshName,
+      const std::string &geoMultiscaleType,
+      const std::string &geoMultiscaleAxis,
+      const double &     multiscaleRadius) const;
 
   /**
    * Stores additional information about the requested RBF mapping such as the

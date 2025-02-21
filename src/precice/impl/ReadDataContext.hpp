@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 
 #include "DataContext.hpp"
+#include "cplscheme/ImplicitData.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -48,10 +49,13 @@ public:
    * @brief Samples data at a given point in time within the current time window for given indices
    *
    * @param[in] vertices vertex ids
-   * @param[in] normalizedDt Point in time where waveform is sampled. Must be normalized to [0,1], where 0 refers to the beginning and 1 to the end of the current time window.
-   * @param[in] values read data associated with given indices for time normalizedDt will be returned into this span
+   * @param[in] time Point in time where waveform is sampled.
+   * @param[in] values read data associated with given indices for time \ref time will be returned into this span
    */
-  void readValues(::precice::span<const VertexID> vertices, double normalizedDt, ::precice::span<double> values) const;
+  void readValues(::precice::span<const VertexID> vertices, double time, ::precice::span<double> values) const;
+
+  /// Are there samples to read from?
+  bool hasSamples() const;
 
   /// Disable copy construction
   ReadDataContext(const ReadDataContext &copy) = delete;
@@ -62,6 +66,18 @@ public:
   /// Move constructor, use the implicitly declared.
   ReadDataContext(ReadDataContext &&) = default;
   ReadDataContext &operator=(ReadDataContext &&) = default;
+
+  /**
+   * @brief Removes all toData samples from mappings
+   */
+  void clearToDataFor(const cplscheme::ImplicitData &from);
+
+  /**
+   * @brief Trims all toData of associated mappings after the given t
+   *
+   * @param[in] t the time after which to trim data
+   */
+  void trimToDataAfterFor(const cplscheme::ImplicitData &from, double t);
 
 private:
   static logging::Logger _log;

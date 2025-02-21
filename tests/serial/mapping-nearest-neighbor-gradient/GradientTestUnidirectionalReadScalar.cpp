@@ -24,8 +24,8 @@
 #include "precice/impl/ParticipantImpl.hpp"
 #include "precice/impl/ParticipantState.hpp"
 #include "precice/impl/SharedPointer.hpp"
+#include "precice/impl/Types.hpp"
 #include "precice/precice.hpp"
-#include "precice/types.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
@@ -38,9 +38,10 @@ BOOST_AUTO_TEST_SUITE(MappingNearestNeighborGradient)
 
 // Unidirectional Nearest Neighbor Gradient Read Mapping
 // Also to test writeBlockScalarGradientData method
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(1_rank))
 BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadScalar)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank))
+  PRECICE_TEST();
   using Eigen::Vector3d;
 
   Participant cplInterface(context.name, context.config(), 0, 1);

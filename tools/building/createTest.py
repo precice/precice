@@ -5,6 +5,7 @@ import collections
 import os
 import pathlib
 import re
+import shutil
 
 
 def is_precice_root(dir):
@@ -20,6 +21,12 @@ def find_precice_root():
         if is_precice_root(dir):
             return dir
     raise BaseException("Unable to find the root directory of precice")
+
+
+def locateTemplate(filepath):
+    assert filepath is not None
+    base = os.path.splitext(filepath)[0]
+    return (base + ".cpp", base + ".xml")
 
 
 ABBREVIATIONS = ["MPI", "QN", "RBF", "NN", "NP"]
@@ -119,7 +126,7 @@ def testarg(arg):
 
 
 PRECICE_TEST_BODY = """{
-  PRECICE_TEST(TODO);
+  PRECICE_TEST();
 
   // Implement your test here.
   BOOST_TEST(false);
@@ -154,13 +161,41 @@ def generateTestSource(name, suite, filepath):
     lines += ["#include " + inc for inc in includes if inc[0] == "<"]
     lines += space
     lines += ["BOOST_AUTO_TEST_SUITE({})".format(s) for s in suites]
+    lines += ["PRECICE_TEST_SETUP(TODO)"]
     lines += ["BOOST_AUTO_TEST_CASE({})".format(name), PRECICE_TEST_BODY]
-    lines += ["BOOST_AUTO_TEST_SUITE_END() // " + s for s in suites]
+    lines += ["BOOST_AUTO_TEST_SUITE_END() // " + s for s in reversed(suites)]
     lines += space
     lines += ["#endif // PRECICE_NO_MPI"]
 
     with open(filepath, "w") as f:
         f.writelines([line + "\n" for line in lines])
+
+
+def generateTestSourceFromExisting(name, suite, filepath, existingSource):
+    if os.path.exists(filepath):
+        raise BaseException('The test source at "{}" already exists.'.format(filepath))
+    if not os.path.exists(existingSource):
+        raise BaseException(
+            'The template source at "{}" does not exist.'.format(existingSource)
+        )
+
+    suites = ["Integration"] + suite
+
+    templateContent = ["BOOST_AUTO_TEST_SUITE({})".format(s) for s in suites]
+    templateContent += [
+        "BOOST_AUTO_TEST_CASE({})".format(name),
+        "/* Test body goes here */",
+    ]
+    templateContent += ["// ORIGINAL START"]
+
+    with open(existingSource) as f:
+        templateContent += [line.rstrip("\n") for line in f.readlines()]
+
+    templateContent += ["// ORIGINAL END"]
+    templateContent += ["BOOST_AUTO_TEST_SUITE_END() // " + s for s in reversed(suites)]
+
+    with open(filepath, "w") as f:
+        f.writelines([line + "\n" for line in templateContent])
 
 
 def generateTestConfig(name, suite, filepath):
@@ -176,7 +211,7 @@ def main():
     )
     parser.add_argument(
         "test",
-        metavar="[Suite/]TestName",
+        metavar="[test-suite/]TestCase",
         type=testarg,
         help="The path to the test, the last component being the test name. "
         "If executed within tests/, then the test will be created relative to the local directory. "
@@ -184,6 +219,14 @@ def main():
     )
     parser.add_argument(
         "-n", "--dry-run", action="store_true", help="print actions only"
+    )
+    parser.add_argument(
+        "-t",
+        "--template",
+        metavar="[test-suite/]TestCase[.cpp|.xml]",
+        type=str,
+        default=None,
+        help="Test to use the given cpp and xml as a template to create a new test. Adds a comment to the top of the test to help changes.",
     )
     args = parser.parse_args()
 
@@ -196,13 +239,29 @@ def main():
     sourcePath = args.test.location.joinpath(source)
     configPath = args.test.location.joinpath(config)
 
-    print("Create test source {}".format(source))
-    if not args.dry_run:
-        generateTestSource(args.test.name, args.test.suites, sourcePath)
+    if not args.template:
+        # Generate from scratch
+        print("Create test source {}".format(source))
+        if not args.dry_run:
+            generateTestSource(args.test.name, args.test.suites, sourcePath)
 
-    print("Create test config {}".format(config))
-    if not args.dry_run:
-        generateTestConfig(args.test.name, args.test.suites, configPath)
+        print("Create test config {}".format(config))
+        if not args.dry_run:
+            generateTestConfig(args.test.name, args.test.suites, configPath)
+    else:
+        # Generate from existing
+        existingSource, existingConfig = locateTemplate(args.template)
+
+        print("Create test source {} from {}".format(source, existingSource))
+        if not args.dry_run:
+            generateTestSourceFromExisting(
+                args.test.name, args.test.suites, sourcePath, existingSource
+            )
+
+        print("Copy test config {} from {}".format(config, existingConfig))
+        if not args.dry_run:
+            shutil.copyfile(existingConfig, configPath)
+
     print("Remember to run tools/building/updateSourceFiles.py or make sourcesIndex")
 
 

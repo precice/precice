@@ -7,6 +7,7 @@
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "math/differences.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
@@ -38,6 +39,13 @@ Configuration::Configuration()
                               .setDocumentation("Enable experimental features.");
   _tag.addAttribute(attrExperimental);
 
+  auto attrRemeshing = xml::makeXMLAttribute("allow-remeshing", false)
+                           .setDocumentation("Enable experimental remeshing feature, requires experimental to be true.");
+  _tag.addAttribute(attrRemeshing);
+
+  auto attrWaitInFinalize = xml::makeXMLAttribute("wait-in-finalize", false)
+                                .setDocumentation("Connected participants wait for each other in finalize, which can be helpful in SLURM sessions.");
+  _tag.addAttribute(attrWaitInFinalize);
   _dataConfiguration = std::make_shared<mesh::DataConfiguration>(
       _tag);
   _meshConfiguration = std::make_shared<mesh::MeshConfiguration>(
@@ -60,7 +68,13 @@ void Configuration::xmlTagCallback(const xml::ConfigurationContext &context, xml
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == "precice-configuration") {
     _experimental = tag.getBooleanAttributeValue("experimental");
+    _remeshing    = tag.getBooleanAttributeValue("allow-remeshing");
+
+    PRECICE_CHECK(!_remeshing || _experimental, "Remeshing is considered an experimental feature. Please enable <precice-configuration experimental=\"1\" >.");
     _participantConfiguration->setExperimental(_experimental);
+    _participantConfiguration->setRemeshing(_remeshing);
+    _couplingSchemeConfiguration->setRemeshing(_remeshing);
+    _waitInFinalize = tag.getBooleanAttributeValue("wait-in-finalize");
   } else {
     PRECICE_UNREACHABLE("Received callback from unknown tag '{}'.", tag.getName());
   }
@@ -71,25 +85,36 @@ void Configuration::xmlEndTagCallback(
     xml::XMLTag &                    tag)
 {
   PRECICE_TRACE(tag.getName());
-  if (tag.getName() == "precice-configuration") {
-    //test if both participants do have the exchange meshes
-    typedef std::map<std::string, std::vector<std::string>>::value_type neededMeshPair;
-    for (const neededMeshPair &neededMeshes : _meshConfiguration->getNeededMeshes()) {
-      bool participantFound = false;
-      for (const impl::PtrParticipant &participant : _participantConfiguration->getParticipants()) {
-        if (participant->getName() == neededMeshes.first) {
-          for (const std::string &neededMesh : neededMeshes.second) {
-            PRECICE_CHECK(participant->isMeshUsed(neededMesh),
-                          "Participant \"{}\" needs to use the mesh \"{}\" to be able to use it in the coupling scheme. "
-                          "Please either add a provide-mesh or a receive-mesh tag in this participant's configuration, or use a different mesh in the coupling scheme.",
-                          neededMeshes.first, neededMesh);
-          }
-          participantFound = true;
-          break;
+  PRECICE_ASSERT(tag.getName() == "precice-configuration");
+
+  //test if both participants do have the exchange meshes
+  typedef std::map<std::string, std::vector<std::string>>::value_type neededMeshPair;
+  for (const neededMeshPair &neededMeshes : _meshConfiguration->getNeededMeshes()) {
+    bool participantFound = false;
+    for (const impl::PtrParticipant &participant : _participantConfiguration->getParticipants()) {
+      if (participant->getName() == neededMeshes.first) {
+        for (const std::string &neededMesh : neededMeshes.second) {
+          PRECICE_CHECK(participant->isMeshUsed(neededMesh),
+                        "Participant \"{}\" needs to use the mesh \"{}\" to be able to use it in the coupling scheme. "
+                        "Please either add a provide-mesh or a receive-mesh tag in this participant's configuration, or use a different mesh in the coupling scheme.",
+                        neededMeshes.first, neededMesh);
         }
+        participantFound = true;
+        break;
       }
-      PRECICE_ASSERT(participantFound);
     }
+    PRECICE_ASSERT(participantFound);
+  }
+
+  // test if all M2Ns use participants that exist
+  for (const auto &m2n : _m2nConfiguration->m2ns()) {
+    PRECICE_CHECK(_participantConfiguration->hasParticipant(m2n.acceptor),
+                  "The acceptor in <m2n:... acceptor=\"{}\" connector=\"{}\" /> is an unknown. {}",
+                  m2n.acceptor, m2n.connector, _participantConfiguration->hintFor(m2n.acceptor));
+
+    PRECICE_CHECK(_participantConfiguration->hasParticipant(m2n.connector),
+                  "The connector in <m2n:... acceptor=\"{}\" connector=\"{}\" /> is an unknown. {}",
+                  m2n.acceptor, m2n.connector, _participantConfiguration->hintFor(m2n.connector));
   }
 }
 

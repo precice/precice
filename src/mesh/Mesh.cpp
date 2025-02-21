@@ -18,7 +18,7 @@
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Vertex.hpp"
-#include "precice/types.hpp"
+#include "precice/impl/Types.hpp"
 #include "query/Index.hpp"
 #include "utils/assertion.hpp"
 
@@ -38,6 +38,18 @@ Mesh::Mesh(
   PRECICE_ASSERT(_name != std::string(""));
 }
 
+Vertex &Mesh::vertex(VertexID id)
+{
+  PRECICE_ASSERT(isValidVertexID(id), id, nVertices());
+  return _vertices.at(id);
+}
+
+const Vertex &Mesh::vertex(VertexID id) const
+{
+  PRECICE_ASSERT(isValidVertexID(id), id, nVertices());
+  return _vertices.at(id);
+}
+
 Mesh::VertexContainer &Mesh::vertices()
 {
   return _vertices;
@@ -46,6 +58,11 @@ Mesh::VertexContainer &Mesh::vertices()
 const Mesh::VertexContainer &Mesh::vertices() const
 {
   return _vertices;
+}
+
+std::size_t Mesh::nVertices() const
+{
+  return _vertices.size();
 }
 
 Mesh::EdgeContainer &Mesh::edges()
@@ -83,7 +100,7 @@ int Mesh::getDimensions() const
   return _dimensions;
 }
 
-Vertex &Mesh::createVertex(const Eigen::VectorXd &coords)
+Vertex &Mesh::createVertex(const Eigen::Ref<const Eigen::VectorXd> &coords)
 {
   PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
   auto nextID = _vertices.size();
@@ -210,7 +227,7 @@ MeshID Mesh::getID() const
 
 bool Mesh::isValidVertexID(VertexID vertexID) const
 {
-  return (0 <= vertexID) && (static_cast<size_t>(vertexID) < vertices().size());
+  return (0 <= vertexID) && (static_cast<size_t>(vertexID) < nVertices());
 }
 
 void Mesh::allocateDataValues()
@@ -246,6 +263,7 @@ void Mesh::clear()
 
   for (mesh::PtrData &data : _data) {
     data->values().resize(0);
+    data->timeStepsStorage().clear();
   }
 }
 
@@ -259,14 +277,27 @@ void Mesh::clearPartitioning()
   _globalNumberOfVertices = 0;
 }
 
+bool Mesh::isPartitionEmpty(Rank rank) const
+{
+  // Without offset data, we assume non-empty partititions
+  if (_vertexOffsets.empty()) {
+    return false;
+  }
+  PRECICE_ASSERT(_vertexOffsets.size() >= static_cast<std::size_t>(rank));
+  if (rank == 0) {
+    return _vertexOffsets[0] == 0;
+  }
+  return _vertexOffsets[rank] - _vertexOffsets[rank - 1] == 0;
+}
+
 Eigen::VectorXd Mesh::getOwnedVertexData(const Eigen::VectorXd &values)
 {
   std::vector<double> ownedDataVector;
-  PRECICE_ASSERT(static_cast<std::size_t>(values.size()) >= vertices().size());
-  if (vertices().empty()) {
+  PRECICE_ASSERT(static_cast<std::size_t>(values.size()) >= nVertices());
+  if (empty()) {
     return {};
   }
-  int valueDim = values.size() / vertices().size();
+  int valueDim = values.size() / nVertices();
   int index    = 0;
 
   for (const auto &vertex : vertices()) {
@@ -296,7 +327,7 @@ void Mesh::addMesh(
   PRECICE_ASSERT(_dimensions == deltaMesh.getDimensions());
 
   boost::container::flat_map<VertexID, Vertex *> vertexMap;
-  vertexMap.reserve(deltaMesh.vertices().size());
+  vertexMap.reserve(deltaMesh.nVertices());
   Eigen::VectorXd coords(_dimensions);
   for (const Vertex &vertex : deltaMesh.vertices()) {
     coords    = vertex.getCoords();

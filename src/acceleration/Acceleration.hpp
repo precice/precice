@@ -30,42 +30,24 @@ public:
 
   virtual ~Acceleration() = default;
 
-  virtual std::vector<int> getDataIDs() const = 0;
+  virtual std::vector<int> getPrimaryDataIDs() const = 0;
 
   virtual void initialize(const DataMap &cpldata) = 0;
 
-  virtual void performAcceleration(const DataMap &cpldata) = 0;
+  virtual void performAcceleration(DataMap &cpldata, double windowStart) = 0;
 
-  virtual void iterationsConverged(const DataMap &cpldata) = 0;
+  virtual void iterationsConverged(const DataMap &cpldata, double windowStart) = 0;
 
   virtual void exportState(io::TXTWriter &writer) {}
 
   virtual void importState(io::TXTReader &reader) {}
-
-  /// Gives the number of QN columns that where filtered out (i.e. deleted) in this time window
-  virtual int getDeletedColumns() const
-  {
-    return 0;
-  }
-
-  /// Gives the number of QN columns that went out of scope in this time window
-  virtual int getDroppedColumns() const
-  {
-    return 0;
-  }
-
-  /// Gives the number of current QN columns (LS = least squares)
-  virtual int getLSSystemCols() const
-  {
-    return 0;
-  }
 
 protected:
   /// Checks if all dataIDs are contained in cplData
   void checkDataIDs(const DataMap &cplData) const;
 
   /// performs a relaxation given a relaxation factor omega
-  void applyRelaxation(double omega, const DataMap &cplData) const;
+  static void applyRelaxation(double omega, DataMap &cplData, double windowStart);
 };
 } // namespace acceleration
 } // namespace precice

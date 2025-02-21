@@ -8,6 +8,7 @@
 #include <utility>
 #include <variant>
 #include "logging/LogMacros.hpp"
+#include "mapping/AxialGeoMultiscaleMapping.hpp"
 #include "mapping/GinkgoRadialBasisFctSolver.hpp"
 #include "mapping/LinearCellInterpolationMapping.hpp"
 #include "mapping/Mapping.hpp"
@@ -18,6 +19,8 @@
 #include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctSolver.hpp"
+#include "mapping/RadialGeoMultiscaleMapping.hpp"
+#include "mapping/device/Ginkgo.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -97,7 +100,7 @@ struct BackendSelector<RBFBackend::PUM, RBF> {
 };
 
 // Variant holding all available RBF classes
-using rbf_variant_t = std::variant<CompactPolynomialC0, CompactPolynomialC2, CompactPolynomialC4, CompactPolynomialC6, CompactThinPlateSplinesC2, ThinPlateSplines, VolumeSplines, Multiquadrics, InverseMultiquadrics, Gaussian>;
+using rbf_variant_t = std::variant<CompactPolynomialC0, CompactPolynomialC2, CompactPolynomialC4, CompactPolynomialC6, CompactPolynomialC8, CompactThinPlateSplinesC2, ThinPlateSplines, VolumeSplines, Multiquadrics, InverseMultiquadrics, Gaussian>;
 
 // The actual instantiation of the mapping class, which is called by the visitor \ref getRBFMapping
 template <RBFBackend T, typename RADIAL_BASIS_FUNCTION_T, typename... Args>
@@ -110,39 +113,47 @@ PtrMapping instantiateRBFMapping(mapping::Mapping::Constraint &constraint, int d
 // Constructs the RBF function based on the functionType
 rbf_variant_t constructRBF(BasisFunction functionType, double supportRadius, double shapeParameter)
 {
-  switch (functionType) {
-  case BasisFunction::WendlandC0: {
-    return mapping::CompactPolynomialC0(supportRadius);
-  }
-  case BasisFunction::WendlandC2: {
-    return mapping::CompactPolynomialC2(supportRadius);
-  }
-  case BasisFunction::WendlandC4: {
-    return mapping::CompactPolynomialC4(supportRadius);
-  }
-  case BasisFunction::WendlandC6: {
-    return mapping::CompactPolynomialC6(supportRadius);
-  }
-  case BasisFunction::CompactThinPlateSplinesC2: {
-    return mapping::CompactThinPlateSplinesC2(supportRadius);
-  }
-  case BasisFunction::ThinPlateSplines: {
-    return mapping::ThinPlateSplines();
-  }
-  case BasisFunction::VolumeSplines: {
-    return mapping::VolumeSplines();
-  }
-  case BasisFunction::Multiquadrics: {
-    return mapping::Multiquadrics(shapeParameter);
-  }
-  case BasisFunction::InverseMultiquadrics: {
-    return mapping::InverseMultiquadrics(shapeParameter);
-  }
-  case BasisFunction::Gaussian: {
-    return mapping::Gaussian(shapeParameter);
-  }
-  default:
-    PRECICE_UNREACHABLE("No instantiation was found for the selected basis function.");
+  try {
+    switch (functionType) {
+    case BasisFunction::WendlandC0: {
+      return mapping::CompactPolynomialC0(supportRadius);
+    }
+    case BasisFunction::WendlandC2: {
+      return mapping::CompactPolynomialC2(supportRadius);
+    }
+    case BasisFunction::WendlandC4: {
+      return mapping::CompactPolynomialC4(supportRadius);
+    }
+    case BasisFunction::WendlandC6: {
+      return mapping::CompactPolynomialC6(supportRadius);
+    }
+    case BasisFunction::WendlandC8: {
+      return mapping::CompactPolynomialC8(supportRadius);
+    }
+    case BasisFunction::CompactThinPlateSplinesC2: {
+      return mapping::CompactThinPlateSplinesC2(supportRadius);
+    }
+    case BasisFunction::ThinPlateSplines: {
+      return mapping::ThinPlateSplines();
+    }
+    case BasisFunction::VolumeSplines: {
+      return mapping::VolumeSplines();
+    }
+    case BasisFunction::Multiquadrics: {
+      return mapping::Multiquadrics(shapeParameter);
+    }
+    case BasisFunction::InverseMultiquadrics: {
+      return mapping::InverseMultiquadrics(shapeParameter);
+    }
+    case BasisFunction::Gaussian: {
+      return mapping::Gaussian(shapeParameter);
+    }
+    default:
+      PRECICE_UNREACHABLE("No instantiation was found for the selected basis function.");
+    }
+  } catch (std::invalid_argument &e) {
+    logging::Logger _log{"MappingConfiguration"};
+    PRECICE_ERROR(e.what());
   }
 }
 
@@ -183,6 +194,9 @@ MappingConfiguration::MappingConfiguration(
       XMLTag{*this, TYPE_RBF_PUM_DIRECT, occ, TAG}.setDocumentation("Radial-basis-function mapping using a partition of unity method, which supports a distributed parallelism.")};
   std::list<XMLTag> rbfAliasTag{
       XMLTag{*this, TYPE_RBF_ALIAS, occ, TAG}.setDocumentation("Alias tag, which auto-selects a radial-basis-function mapping depending on the simulation parameter,")};
+  std::list<XMLTag> geoMultiscaleTags{
+      XMLTag{*this, TYPE_AXIAL_GEOMETRIC_MULTISCALE, occ, TAG}.setDocumentation("Axial geometric multiscale mapping between one 1D and multiple 3D vertices."),
+      XMLTag{*this, TYPE_RADIAL_GEOMETRIC_MULTISCALE, occ, TAG}.setDocumentation("Radial geometric multiscale mapping between multiple 1D and multiple 3D vertices, distributed along a principle axis.")};
 
   // List of all attributes with corresponding documentation
   auto attrDirection = XMLAttribute<std::string>(ATTR_DIRECTION)
@@ -218,19 +232,29 @@ MappingConfiguration::MappingConfiguration(
   // auto attrMaxIterations = makeXMLAttribute(ATTR_MAX_ITERATIONS, 1e6)
   //                              .setDocumentation("Maximum number of iterations of the solver");
 
-  auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER, 100)
+  auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER, 50)
                                 .setDocumentation("Average number of vertices per cluster (partition) applied in the rbf partition of unity method.");
-  auto relativeOverlap = makeXMLAttribute(ATTR_RELATIVE_OVERLAP, 0.3)
-                             .setDocumentation("Value between 0 and 1 indicating the relative overlap between clusters. A value of 0.3 is usually a good trade-off between accuracy and efficiency.");
+  auto relativeOverlap = makeXMLAttribute(ATTR_RELATIVE_OVERLAP, 0.15)
+                             .setDocumentation("Value between 0 and 1 indicating the relative overlap between clusters. A value of 0.15 is usually a good trade-off between accuracy and efficiency.");
   auto projectToInput = XMLAttribute<bool>(ATTR_PROJECT_TO_INPUT, true)
                             .setDocumentation("If enabled, places the cluster centers at the closest vertex of the input mesh. Should be enabled in case of non-uniform point distributions such as for shell structures.");
+
+  auto attrGeoMultiscaleType = XMLAttribute<std::string>(ATTR_GEOMETRIC_MULTISCALE_TYPE)
+                                   .setDocumentation("Type of geometric multiscale mapping. Either 'spread' or 'collect'.")
+                                   .setOptions({GEOMETRIC_MULTISCALE_TYPE_SPREAD, GEOMETRIC_MULTISCALE_TYPE_COLLECT});
+  auto attrGeoMultiscaleAxis = XMLAttribute<std::string>(ATTR_GEOMETRIC_MULTISCALE_AXIS)
+                                   .setDocumentation("Principle axis along which geometric multiscale mapping is performed.")
+                                   .setOptions({GEOMETRIC_MULTISCALE_AXIS_X, GEOMETRIC_MULTISCALE_AXIS_Y, GEOMETRIC_MULTISCALE_AXIS_Z});
+  auto attrGeoMultiscaleRadius = XMLAttribute<double>(ATTR_GEOMETRIC_MULTISCALE_RADIUS)
+                                     .setDocumentation("Radius of the circular interface between the 1D and 3D participant.");
 
   // Add the relevant attributes to the relevant tags
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
   addAttributes(rbfDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead});
   addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol});
-  addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, attrXDead, attrYDead, attrZDead, verticesPerCluster, relativeOverlap, projectToInput});
+  addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, verticesPerCluster, relativeOverlap, projectToInput});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
+  addAttributes(geoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius});
 
   // Now we take care of the subtag executor. We repeat some of the subtags in order to add individual documentation
   XMLTag::Occurrence once = XMLTag::OCCUR_NOT_OR_ONCE;
@@ -282,6 +306,7 @@ MappingConfiguration::MappingConfiguration(
       XMLTag{*this, RBF_CPOLYNOMIAL_C2, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C2 function"),
       XMLTag{*this, RBF_CPOLYNOMIAL_C4, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C4 function"),
       XMLTag{*this, RBF_CPOLYNOMIAL_C6, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C6 function"),
+      XMLTag{*this, RBF_CPOLYNOMIAL_C8, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C8 function"),
       XMLTag{*this, RBF_CTPS_C2, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Compact thin-plate-spline C2")};
 
   auto attrSupportRadius = XMLAttribute<double>(ATTR_SUPPORT_RADIUS)
@@ -334,6 +359,13 @@ MappingConfiguration::MappingConfiguration(
   parent.addSubtags(rbfDirectTags);
   parent.addSubtags(pumDirectTags);
   parent.addSubtags(rbfAliasTag);
+  parent.addSubtags(geoMultiscaleTags);
+}
+
+void MappingConfiguration::setExperimental(
+    bool experimental)
+{
+  _experimental = experimental;
 }
 
 void MappingConfiguration::xmlTagCallback(
@@ -358,6 +390,23 @@ void MappingConfiguration::xmlTagCallback(
     double      solverRtol    = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL, 1e-9);
     std::string strPolynomial = tag.getStringAttributeValue(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
 
+    // geometric multiscale related tags
+    std::string geoMultiscaleType = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_TYPE, "");
+    std::string geoMultiscaleAxis = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_AXIS, "");
+    double      multiscaleRadius  = tag.getDoubleAttributeValue(ATTR_GEOMETRIC_MULTISCALE_RADIUS, 1.0);
+
+    if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE || type == TYPE_RADIAL_GEOMETRIC_MULTISCALE) {
+      PRECICE_CHECK(_experimental, "Axial geometric multiscale is experimental and the configuration can change between minor releases. Set experimental=\"on\" in the precice-configuration tag.");
+    }
+
+    if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE && context.size > 1) {
+      throw std::runtime_error{"Axial geometric multiscale mapping is not available for parallel participants."};
+    }
+
+    if (type == TYPE_RADIAL_GEOMETRIC_MULTISCALE && context.size > 1) {
+      throw std::runtime_error{"Radial geometric multiscale mapping is not available for parallel participants."};
+    }
+
     // pum related tags
     int    verticesPerCluster = tag.getIntAttributeValue(ATTR_VERTICES_PER_CLUSTER, 100);
     double relativeOverlap    = tag.getDoubleAttributeValue(ATTR_RELATIVE_OVERLAP, 0.3);
@@ -376,7 +425,7 @@ void MappingConfiguration::xmlTagCallback(
       PRECICE_UNREACHABLE("Unknown mapping constraint \"{}\".", constraint);
     }
 
-    ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh);
+    ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh, geoMultiscaleType, geoMultiscaleAxis, multiscaleRadius);
 
     _rbfConfig = configureRBFMapping(type, strPolynomial, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
@@ -479,7 +528,10 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     const std::string &direction,
     const std::string &type,
     const std::string &fromMeshName,
-    const std::string &toMeshName) const
+    const std::string &toMeshName,
+    const std::string &geoMultiscaleType,
+    const std::string &geoMultiscaleAxis,
+    const double &     multiscaleRadius) const
 {
   PRECICE_TRACE(direction, type);
 
@@ -528,6 +580,67 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
                   "Please select constraint=\" consistent\" or a different mapping method.");
 
     configuredMapping.mapping = PtrMapping(new NearestNeighborGradientMapping(constraintValue, fromMesh->getDimensions()));
+
+  } else if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE) {
+
+    // Axial geometric multiscale is not applicable with the conservative constraint
+    PRECICE_CHECK(constraintValue != Mapping::CONSERVATIVE,
+                  "Axial geometric multiscale mapping is not implemented for the \"conservative\" constraint. "
+                  "Please select constraint=\" consistent\" or a different mapping method.");
+
+    // Convert strings into enums
+    AxialGeoMultiscaleMapping::MultiscaleAxis multiscaleAxis;
+    if (geoMultiscaleAxis == "x") {
+      multiscaleAxis = AxialGeoMultiscaleMapping::MultiscaleAxis::X;
+    } else if (geoMultiscaleAxis == "y") {
+      multiscaleAxis = AxialGeoMultiscaleMapping::MultiscaleAxis::Y;
+    } else if (geoMultiscaleAxis == "z") {
+      multiscaleAxis = AxialGeoMultiscaleMapping::MultiscaleAxis::Z;
+    } else {
+      PRECICE_UNREACHABLE("Unknown geometric multiscale axis \"{}\".", geoMultiscaleAxis);
+    }
+
+    AxialGeoMultiscaleMapping::MultiscaleType multiscaleType;
+    if (geoMultiscaleType == "spread") {
+      multiscaleType = AxialGeoMultiscaleMapping::MultiscaleType::SPREAD;
+    } else if (geoMultiscaleType == "collect") {
+      multiscaleType = AxialGeoMultiscaleMapping::MultiscaleType::COLLECT;
+    } else {
+      PRECICE_UNREACHABLE("Unknown geometric multiscale type \"{}\".", geoMultiscaleType);
+    }
+
+    configuredMapping.mapping = PtrMapping(new AxialGeoMultiscaleMapping(constraintValue, fromMesh->getDimensions(), multiscaleType, multiscaleAxis, multiscaleRadius));
+
+  } else if (type == TYPE_RADIAL_GEOMETRIC_MULTISCALE) {
+
+    // Radial geometric multiscale is not applicable with the conservative constraint
+    PRECICE_CHECK(constraintValue != Mapping::CONSERVATIVE,
+                  "Radial geometric multiscale mapping is not implemented for the \"conservative\" constraint. "
+                  "Please select constraint=\" consistent\" or a different mapping method.");
+
+    // Convert strings into enums
+    RadialGeoMultiscaleMapping::MultiscaleAxis multiscaleAxis;
+    if (geoMultiscaleAxis == "x") {
+      multiscaleAxis = RadialGeoMultiscaleMapping::MultiscaleAxis::X;
+    } else if (geoMultiscaleAxis == "y") {
+      multiscaleAxis = RadialGeoMultiscaleMapping::MultiscaleAxis::Y;
+    } else if (geoMultiscaleAxis == "z") {
+      multiscaleAxis = RadialGeoMultiscaleMapping::MultiscaleAxis::Z;
+    } else {
+      PRECICE_UNREACHABLE("Unknown geometric multiscale axis \"{}\".", geoMultiscaleAxis);
+    }
+
+    RadialGeoMultiscaleMapping::MultiscaleType multiscaleType;
+    if (geoMultiscaleType == "spread") {
+      multiscaleType = RadialGeoMultiscaleMapping::MultiscaleType::SPREAD;
+    } else if (geoMultiscaleType == "collect") {
+      multiscaleType = RadialGeoMultiscaleMapping::MultiscaleType::COLLECT;
+    } else {
+      PRECICE_UNREACHABLE("Unknown geometric multiscale type \"{}\".", geoMultiscaleType);
+    }
+
+    configuredMapping.mapping = PtrMapping(new RadialGeoMultiscaleMapping(constraintValue, fromMesh->getDimensions(), multiscaleType, multiscaleAxis));
+
   } else {
     // We need knowledge about the basis function in order to instantiate the rbf related mapping
     PRECICE_ASSERT(requiresBasisFunction(type));
@@ -581,19 +694,14 @@ void MappingConfiguration::finishRBFConfiguration()
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
 #ifndef PRECICE_NO_PETSC
       // for petsc initialization
-      int   argc = 1;
-      char *arg  = new char[8];
-      strcpy(arg, "precice");
-      char **argv = &arg;
-      utils::Petsc::initialize(&argc, &argv, utils::Parallel::current()->comm);
-      delete[] arg;
+      utils::Petsc::initialize(utils::Parallel::current()->comm);
 
       mapping.mapping = getRBFMapping<RBFBackend::PETSc>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial);
 #else
       PRECICE_CHECK(false, "The global-iterative RBF solver on a CPU requires a preCICE build with PETSc enabled.");
 #endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
+      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
     } else {
       PRECICE_UNREACHABLE("Unknown RBF solver.");
     }
@@ -616,7 +724,7 @@ void MappingConfiguration::finishRBFConfiguration()
     } else if (_executorConfig->executor == ExecutorConfiguration::Executor::OpenMP) {
       _ginkgoParameter.executor = "omp-executor";
       _ginkgoParameter.nThreads = _executorConfig->nThreads;
-#ifndef PRECICE_WITH_OMP
+#ifndef PRECICE_WITH_OPENMP
       PRECICE_CHECK(false, "The omp-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with OpenMP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
     }
@@ -628,6 +736,7 @@ void MappingConfiguration::finishRBFConfiguration()
     } else {
       PRECICE_UNREACHABLE("Unknown solver type.");
     }
+
     mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
 #else
     PRECICE_CHECK(false, "The selected executor for the mapping from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
@@ -668,6 +777,8 @@ BasisFunction MappingConfiguration::parseBasisFunctions(const std::string &basis
     basisFunction = BasisFunction::WendlandC4;
   else if (basisFctName == RBF_CPOLYNOMIAL_C6)
     basisFunction = BasisFunction::WendlandC6;
+  else if (basisFctName == RBF_CPOLYNOMIAL_C8)
+    basisFunction = BasisFunction::WendlandC8;
   else
     PRECICE_UNREACHABLE("Unknown basis function \"{}\".", basisFctName);
   return basisFunction;

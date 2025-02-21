@@ -50,7 +50,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
                                "for the InfiniBand on SuperMUC. ");
     tag.addAttribute(attrNetwork);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, ".")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen, and both solvers have to be started "
@@ -63,7 +63,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     doc = "Communication via MPI with startup in separated communication spaces, using multiple communicators.";
     tag.setDocumentation(doc);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, ".")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen, and both solvers have to be started "
@@ -76,7 +76,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     doc = "Communication via MPI with startup in separated communication spaces, using a single communicator";
     tag.setDocumentation(doc);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, ".")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen, and both solvers have to be started "
@@ -111,12 +111,10 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
 
 m2n::PtrM2N M2NConfiguration::getM2N(const std::string &acceptor, const std::string &connector)
 {
-  using std::get;
-  for (M2NTuple &tuple : _m2ns) {
-    if ((get<1>(tuple) == acceptor) && (get<2>(tuple) == connector)) {
-      return get<0>(tuple);
-    } else if ((get<2>(tuple) == acceptor) && (get<1>(tuple) == connector)) {
-      return get<0>(tuple);
+  for (ConfiguredM2N &conf : _m2ns) {
+    if ((conf.acceptor == acceptor && conf.connector == connector) ||
+        (conf.connector == acceptor && conf.acceptor == connector)) {
+      return conf.m2n;
     }
   }
   PRECICE_ERROR("There is no m2n communication configured between participants \"" + acceptor + "\" and \"" + connector + "\". Please add an appropriate \"<m2n />\" tag.");
@@ -125,8 +123,8 @@ m2n::PtrM2N M2NConfiguration::getM2N(const std::string &acceptor, const std::str
 bool M2NConfiguration::isM2NConfigured(const std::string &acceptor, const std::string &connector)
 {
   return std::any_of(std::begin(_m2ns), std::end(_m2ns),
-                     [acceptor, connector](const auto &m2nTuple) {
-                       return ((std::get<1>(m2nTuple) == acceptor) && (std::get<2>(m2nTuple) == connector)) || ((std::get<1>(m2nTuple) == connector) && (std::get<2>(m2nTuple) == acceptor));
+                     [acceptor, connector](const auto &conf) {
+                       return (conf.acceptor == acceptor && conf.connector == connector) || (conf.connector == acceptor && conf.acceptor == connector);
                      });
 }
 
@@ -168,6 +166,9 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
 #ifdef OMPI_MAJOR_VERSION
       PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi-multiple-ports />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems. Ignore this warning if participants find each other and the simulation starts.");
 #endif
+#ifdef I_MPI_VERSION
+      PRECICE_WARN("preCICE was compiled with Intel MPI and configured to use <m2n:mpi-multiple-ports />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems. Ignore this warning if participants find each other and the simulation starts.");
+#endif
       comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();
 #endif
@@ -196,8 +197,10 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
     }
     PRECICE_ASSERT(distrFactory.get() != nullptr);
 
-    auto m2n = std::make_shared<m2n::M2N>(com, distrFactory, false, useTwoLevelInit);
-    _m2ns.emplace_back(m2n, acceptor, connector);
+    _m2ns.emplace_back(ConfiguredM2N{
+        std::make_shared<m2n::M2N>(com, distrFactory, false, useTwoLevelInit),
+        acceptor,
+        connector});
   }
 }
 
@@ -207,9 +210,9 @@ void M2NConfiguration::checkDuplicates(
 {
   using std::get;
   bool alreadyAdded = false;
-  for (M2NTuple &tuple : _m2ns) {
-    alreadyAdded |= (get<1>(tuple) == acceptor) && (get<2>(tuple) == connector);
-    alreadyAdded |= (get<2>(tuple) == acceptor) && (get<1>(tuple) == connector);
+  for (ConfiguredM2N &conf : _m2ns) {
+    alreadyAdded |= conf.acceptor == acceptor && conf.connector == connector;
+    alreadyAdded |= conf.connector == acceptor && conf.acceptor == connector;
   }
   PRECICE_CHECK(!alreadyAdded, "Multiple m2n communications between participant \"" + acceptor + "\" and \"" + connector + "\" are not allowed. Please remove redundant <m2n /> tags between them.");
 }

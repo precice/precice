@@ -179,9 +179,10 @@ void testDistributed(const TestContext &    context,
 }
 
 /// Test with a homogeneous distribution of mesh among ranks
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
+  PRECICE_TEST();
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
@@ -215,9 +216,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
                    {3, {8}}});
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
+  PRECICE_TEST();
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
@@ -252,9 +254,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
 }
 
 /// Using a more heterogeneous distributon of vertices and owner
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
+  PRECICE_TEST();
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
@@ -290,9 +293,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 }
 
 /// Test with a very heterogeneous distributed and non-continuous ownership
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
+  PRECICE_TEST();
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
@@ -346,9 +350,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 }
 
 /// Test with a very heterogeneous distributed and non-continuous ownership
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
+  PRECICE_TEST();
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
@@ -402,9 +407,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
 }
 
 /// Some ranks are empty, does not converge
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
+  PRECICE_TEST();
   ThinPlateSplines                           fct;
   PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
@@ -457,9 +463,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 }
 
 // same as 2DV4, but all ranks have vertices
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
+  PRECICE_TEST();
   ThinPlateSplines                           fct;
   PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
@@ -525,10 +532,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 }
 
 /// same as 2DV4, but strictly linear input values, converges and gives correct results
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                      *boost::unit_test::tolerance(1e-7))
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
+  PRECICE_TEST();
   ThinPlateSplines                           fct;
   PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, 2, fct, {{false, false, false}});
 
@@ -581,9 +589,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
 }
 
 /// Test with a homogeneous distribution of mesh among ranks
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
+  PRECICE_TEST();
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}});
 
@@ -644,9 +653,10 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 }
 
 /// Test with a homogeneous distribution of mesh among ranks
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
+  PRECICE_TEST();
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}});
 
@@ -707,9 +717,10 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
 }
 
 /// Using a more heterogeneous distribution of vertices and owner
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc)
+  PRECICE_TEST();
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}});
 
@@ -772,9 +783,10 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 }
 
 /// Using meshes of different sizes, inMesh is smaller then outMesh
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
+  PRECICE_TEST();
   Gaussian                           fct(2.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}});
 
@@ -836,10 +848,11 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
 }
 
 /// Using meshes of different sizes, outMesh is smaller then inMesh
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                      *boost::unit_test::tolerance(1e-6))
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
+  PRECICE_TEST();
   Gaussian                           fct(4.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}});
 
@@ -897,9 +910,10 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
 }
 
 /// Tests a non-contigous owner distributed at the outMesh
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
+  PRECICE_TEST();
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}});
 
@@ -960,9 +974,10 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
 }
 
 /// Tests a non-contigous owner distributed at the outMesh
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc);
+  PRECICE_TEST();
   Gaussian                           fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, {{false, false, false}});
 
@@ -1039,7 +1054,7 @@ void testTagging(const TestContext &context,
   mesh::PtrMesh outMesh(new mesh::Mesh("outMesh", meshDimension, testing::nextMeshID()));
   mesh::PtrData outData = outMesh->createData("OutData", valueDimension, 1_dataID);
   getDistributedMesh(context, outMeshSpec, outMesh, outData);
-  BOOST_TEST_MESSAGE("Mesh sizes in: " << inMesh->vertices().size() << " out: " << outMesh->vertices().size());
+  BOOST_TEST_MESSAGE("Mesh sizes in: " << inMesh->nVertices() << " out: " << outMesh->nVertices());
 
   Gaussian fct(4.5); // Support radius approx. 1
   BOOST_TEST_MESSAGE("Basis function has support radius " << fct.getSupportRadius());
@@ -1088,9 +1103,10 @@ void testTagging(const TestContext &context,
   }
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(TaggingConsistent)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc)
+  PRECICE_TEST();
   //    *
   //    + <-- owned
   //* * x * *
@@ -1118,9 +1134,10 @@ BOOST_AUTO_TEST_CASE(TaggingConsistent)
   testTagging(context, inMeshSpec, outMeshSpec, shouldTagFirstRound, shouldTagSecondRound, true);
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm(), Require::PETSc)
 BOOST_AUTO_TEST_CASE(TaggingConservative)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm(), Require::PETSc)
+  PRECICE_TEST();
   //    *
   //    + <-- owned
   //* * x * *
@@ -1869,9 +1886,10 @@ void perform3DTestConservativeMapping(Mapping &mapping)
   BOOST_TEST(guess.size() > 0);
 }
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
   bool                                       xDead = false;
   bool                                       yDead = false;
   bool                                       zDead = false;
@@ -1890,9 +1908,10 @@ BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(MapMultiquadrics)
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
   bool                                    xDead = false;
   bool                                    yDead = false;
   bool                                    zDead = false;
@@ -1915,9 +1934,10 @@ BOOST_AUTO_TEST_CASE(MapMultiquadrics)
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
   bool                                           xDead = false;
   bool                                           yDead = false;
   bool                                           zDead = false;
@@ -1936,9 +1956,10 @@ BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(MapVolumeSplines)
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
   bool                                    xDead = false;
   bool                                    yDead = false;
   bool                                    zDead = false;
@@ -1957,9 +1978,10 @@ BOOST_AUTO_TEST_CASE(MapVolumeSplines)
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(MapGaussian)
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
   bool                               xDead = false;
   bool                               yDead = false;
   bool                               zDead = false;
@@ -1978,9 +2000,10 @@ BOOST_AUTO_TEST_CASE(MapGaussian)
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
   double                    supportRadius = 1.2;
   bool                      xDead         = false;
   bool                      yDead         = false;
@@ -2001,9 +2024,10 @@ BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
   double              supportRadius = 1.2;
   bool                xDead         = false;
   bool                yDead         = false;
@@ -2024,9 +2048,10 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
   double              supportRadius = 1.2;
   bool                xDead         = false;
   bool                yDead         = false;
@@ -2047,9 +2072,10 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(DeadAxis2)
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
   using Eigen::Vector2d;
   int dimensions = 2;
 
@@ -2097,9 +2123,10 @@ BOOST_AUTO_TEST_CASE(DeadAxis2)
   BOOST_TEST(guess.size() > 0);
 }
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(DeadAxis3D)
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
   using Eigen::Vector3d;
   int dimensions = 3;
 
@@ -2153,10 +2180,11 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D)
   BOOST_TEST(outData->values()(3) == 4.3);
 }
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc);
 BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
                      *boost::unit_test::tolerance(1e-6))
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
   using Eigen::Vector2d;
   int dimensions = 2;
 
@@ -2224,10 +2252,11 @@ BOOST_AUTO_TEST_CASE(ConsistentPolynomialSwitch,
   BOOST_TEST(guess.size() > 0);
 }
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
                      *boost::unit_test::tolerance(1e-6))
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
   using Eigen::Vector2d;
   int dimensions = 2;
 
@@ -2304,9 +2333,10 @@ BOOST_AUTO_TEST_CASE(ConservativePolynomialSwitch,
   BOOST_TEST(outData->values()(2) == -22.0);
 }
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(NoMapping)
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
   /*
    * RATIONALE: Correctly destroying PETSc objects in OOP context can be a bit
    * tricky. We test if an RBF object can be destroyed right after creation
@@ -2343,9 +2373,10 @@ BOOST_AUTO_TEST_CASE(NoMapping)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(TestNonHomongenousGlobalIndex)
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
   using Eigen::Vector2d;
   int dimensions = 2;
 
