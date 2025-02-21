@@ -26,6 +26,8 @@ public:
 
   int getSize() const;
 
+  int nVertices() const;
+
   /// Returns a reference to the data values.
   Eigen::VectorXd &values();
 
