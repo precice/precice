@@ -103,7 +103,7 @@ void Data::emplaceSampleAtTime(double time, std::initializer_list<double> values
   auto nVertices = values.size() / getDimensions();
   setSampleAtTime(time, time::Sample{getDimensions(),
                                      Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size()),
-                                     Eigen::Map<const Eigen::MatrixXd>(gradients.begin(), nVertices, getDimensions() * getSpatialDimensions())});
+                                     Eigen::Map<const Eigen::MatrixXd>(gradients.begin(), getSpatialDimensions(), nVertices * getDimensions())});
 }
 
 const std::string &Data::getName() const
