@@ -4,6 +4,7 @@
 #include <array>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace precice {
@@ -103,6 +104,8 @@ std::vector<StringMatch> computeMatches(std::string_view given, const Container 
   std::sort(entries.begin(), entries.end());
   return entries;
 }
+
+bool isKebabStyle(std::string_view sv);
 
 } // namespace utils
 } // namespace precice

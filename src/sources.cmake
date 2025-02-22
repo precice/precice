@@ -290,11 +290,14 @@ target_sources(preciceCore
     src/query/Index.hpp
     src/query/impl/RTreeAdapter.hpp
     src/time/Sample.hpp
+    src/time/SampleResult.hpp
     src/time/Stample.hpp
     src/time/Storage.cpp
     src/time/Storage.hpp
     src/time/Time.cpp
     src/time/Time.hpp
+    src/time/TimeGrids.cpp
+    src/time/TimeGrids.hpp
     src/time/Waveform.cpp
     src/time/Waveform.hpp
     src/utils/ArgumentFormatter.hpp

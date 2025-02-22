@@ -64,6 +64,7 @@ target_sources(testprecice
     tests/quasi-newton/parallel/TestQN1.cpp
     tests/quasi-newton/parallel/TestQN10.cpp
     tests/quasi-newton/parallel/TestQN10EmptyPartition.cpp
+    tests/quasi-newton/parallel/TestQN11.cpp
     tests/quasi-newton/parallel/TestQN1EmptyPartition.cpp
     tests/quasi-newton/parallel/TestQN2.cpp
     tests/quasi-newton/parallel/TestQN2EmptyPartition.cpp
@@ -84,6 +85,10 @@ target_sources(testprecice
     tests/quasi-newton/serial/DefaultConfig.cpp
     tests/quasi-newton/serial/TestQN1.cpp
     tests/quasi-newton/serial/TestQN10.cpp
+    tests/quasi-newton/serial/TestQN11.cpp
+    tests/quasi-newton/serial/TestQN12.cpp
+    tests/quasi-newton/serial/TestQN13.cpp
+    tests/quasi-newton/serial/TestQN14.cpp
     tests/quasi-newton/serial/TestQN2.cpp
     tests/quasi-newton/serial/TestQN3.cpp
     tests/quasi-newton/serial/TestQN4.cpp
@@ -183,10 +188,13 @@ target_sources(testprecice
     tests/serial/action-timings/ActionTimingsSerialImplicit.cpp
     tests/serial/aitken/DefaultInitialRelaxation.cpp
     tests/serial/aitken/DefinedInitialRelaxation.cpp
+    tests/serial/aitken/WithSubsteps.cpp
     tests/serial/circular/Explicit.cpp
     tests/serial/circular/helper.hpp
+    tests/serial/compositional/FiveParticipants.cpp
     tests/serial/compositional/OneActivatedMuscle.cpp
     tests/serial/compositional/TwoActivatedMuscles.cpp
+    tests/serial/compositional/TwoActivatedMusclesWithFeedback.cpp
     tests/serial/compositional/data/implicit-first/AllParallel.cpp
     tests/serial/compositional/data/implicit-first/Parallel.cpp
     tests/serial/compositional/data/implicit-first/SerialFirst.cpp
@@ -325,9 +333,17 @@ target_sources(testprecice
     tests/serial/multi-coupling/MultiCouplingFourSolvers1.cpp
     tests/serial/multi-coupling/MultiCouplingFourSolvers2.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers1.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers10.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers2.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers3.cpp
-    tests/serial/multi-coupling/MultiCouplingTwoSolvers.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers4.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers5.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers6.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers7.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers8.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers9.cpp
+    tests/serial/multi-coupling/MultiCouplingTwoSolvers1.cpp
+    tests/serial/multi-coupling/MultiCouplingTwoSolvers2.cpp
     tests/serial/multi-coupling/helpers.cpp
     tests/serial/multi-coupling/helpers.hpp
     tests/serial/multiple-mappings/MultipleReadFromMappings.cpp
@@ -367,13 +383,24 @@ target_sources(testprecice
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipantInitData.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
+    tests/serial/time/explicit/serial-coupling/SecondTimeBug.cpp
     tests/serial/time/implicit/compositional/DoNothingWithSubcycling.cpp
     tests/serial/time/implicit/compositional/ReadWriteScalarDataWithSubcycling.cpp
+    tests/serial/time/implicit/helpers.cpp
+    tests/serial/time/implicit/helpers.hpp
     tests/serial/time/implicit/multi-coupling/DoNothingWithSubcycling.cpp
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithWaveformSamplingFirst.cpp
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithWaveformSubcyclingDifferentDts.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataAitken1.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataAitken2.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataConstantAcceleration1.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataConstantAcceleration2.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataIQNILSAcceleration1.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataIQNILSAcceleration2.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataIQNIMVJAcceleration1.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataIQNIMVJAcceleration2.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcyclingNoSubstepsUseInitFirst.cpp
@@ -384,6 +411,14 @@ target_sources(testprecice
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingMixed.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingThird.cpp
     tests/serial/time/implicit/parallel-coupling/WaveformSubcyclingWithDifferentNumberOfDts.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataAitken1.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataAitken2.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataConstantAcceleration1.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataConstantAcceleration2.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataIQNILSAcceleration1.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataIQNILSAcceleration2.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataIQNIMVJAcceleration1.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataIQNIMVJAcceleration2.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataFirstParticipant.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
@@ -402,6 +437,3 @@ target_sources(testprecice
     tests/serial/whitebox/TestConfigurationPeano.cpp
     tests/serial/whitebox/TestExplicitWithDataScaling.cpp
     )
-
-# Contains the list of integration test suites
-set(PRECICE_TEST_SUITES GeometricMultiscale Parallel QuasiNewton Remeshing Serial)

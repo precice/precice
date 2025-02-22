@@ -34,9 +34,9 @@ public:
 
   virtual void initialize(const DataMap &cpldata) = 0;
 
-  virtual void performAcceleration(DataMap &cpldata) = 0;
+  virtual void performAcceleration(DataMap &cpldata, double windowStart) = 0;
 
-  virtual void iterationsConverged(const DataMap &cpldata) = 0;
+  virtual void iterationsConverged(const DataMap &cpldata, double windowStart) = 0;
 
   virtual void exportState(io::TXTWriter &writer) {}
 
@@ -47,11 +47,7 @@ protected:
   void checkDataIDs(const DataMap &cplData) const;
 
   /// performs a relaxation given a relaxation factor omega
-  static void applyRelaxation(double omega, DataMap &cplData);
-
-  /// @brief Concatenates the data and old data in cplData into two long vectors
-  virtual void concatenateCouplingData(
-      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const = 0;
+  static void applyRelaxation(double omega, DataMap &cplData, double windowStart);
 };
 } // namespace acceleration
 } // namespace precice

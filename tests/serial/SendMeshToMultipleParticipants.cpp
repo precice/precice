@@ -10,9 +10,10 @@
  */
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank))
 BOOST_AUTO_TEST_CASE(SendMeshToMultipleParticipants)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
+  PRECICE_TEST();
 
   Eigen::Vector2d vertex{0.0, 0.0};
   double          value = 1.0;

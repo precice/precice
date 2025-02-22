@@ -15,44 +15,50 @@ BOOST_AUTO_TEST_SUITE(MPIDirect)
 
 BOOST_AUTO_TEST_SUITE(Intra)
 
+PRECICE_TEST_SETUP(2_ranks, Require::Events)
 BOOST_AUTO_TEST_CASE(SendReceivePrimitives)
 {
-  PRECICE_TEST(2_ranks, Require::Events);
+  PRECICE_TEST();
   using namespace precice::testing::com::intracomm;
   TestSendAndReceivePrimitiveTypes<MPIDirectCommunication>(context);
 }
 
+PRECICE_TEST_SETUP(2_ranks, Require::Events)
 BOOST_AUTO_TEST_CASE(SendReceiveEigen)
 {
-  PRECICE_TEST(2_ranks, Require::Events);
+  PRECICE_TEST();
   using namespace precice::testing::com::intracomm;
   TestSendAndReceiveEigen<MPIDirectCommunication>(context);
 }
 
+PRECICE_TEST_SETUP(2_ranks, Require::Events)
 BOOST_AUTO_TEST_CASE(BroadcastPrimitives)
 {
-  PRECICE_TEST(2_ranks, Require::Events);
+  PRECICE_TEST();
   using namespace precice::testing::com::intracomm;
   TestBroadcastPrimitiveTypes<MPIDirectCommunication>(context);
 }
 
+PRECICE_TEST_SETUP(2_ranks, Require::Events)
 BOOST_AUTO_TEST_CASE(BroadcastEigen)
 {
-  PRECICE_TEST(2_ranks, Require::Events);
+  PRECICE_TEST();
   using namespace precice::testing::com::intracomm;
   TestBroadcastVectors<MPIDirectCommunication>(context);
 }
 
+PRECICE_TEST_SETUP(2_ranks, Require::Events)
 BOOST_AUTO_TEST_CASE(ReducePrimitives)
 {
-  PRECICE_TEST(2_ranks, Require::Events);
+  PRECICE_TEST();
   using namespace precice::testing::com::intracomm;
   TestReducePrimitiveTypes<MPIDirectCommunication>(context);
 }
 
+PRECICE_TEST_SETUP(2_ranks, Require::Events)
 BOOST_AUTO_TEST_CASE(ReduceEigen)
 {
-  PRECICE_TEST(2_ranks, Require::Events);
+  PRECICE_TEST();
   using namespace precice::testing::com::intracomm;
   TestReduceVectors<MPIDirectCommunication>(context);
 }

@@ -265,23 +265,39 @@ bool ParticipantState::isMeshUsed(std::string_view mesh) const
 
 bool ParticipantState::isMeshProvided(std::string_view mesh) const
 {
-  PRECICE_ASSERT(hasMesh(mesh));
+  if (!hasMesh(mesh)) {
+    return false;
+  }
   return usedMeshContext(mesh).provideMesh;
 }
 
 bool ParticipantState::isMeshReceived(std::string_view mesh) const
 {
-  PRECICE_ASSERT(hasMesh(mesh));
+  if (!hasMesh(mesh)) {
+    return false;
+  }
   return !usedMeshContext(mesh).provideMesh;
 }
 
 bool ParticipantState::isDirectAccessAllowed(std::string_view mesh) const
 {
-  PRECICE_ASSERT(hasMesh(mesh));
+  if (!hasMesh(mesh)) {
+    return false;
+  }
   return meshContext(mesh).allowDirectAccess;
 }
 
 // Other queries
+
+bool ParticipantState::hasReadMappings() const
+{
+  return !_readMappingContexts.empty();
+}
+
+bool ParticipantState::hasWriteMappings() const
+{
+  return !_writeMappingContexts.empty();
+}
 
 std::vector<MappingContext> &ParticipantState::readMappingContexts()
 {
@@ -343,6 +359,14 @@ void ParticipantState::exportInitial()
 
     PRECICE_DEBUG("Exporting initial mesh {} to location \"{}\"", context.meshName, context.location);
     context.exporter->doExport(0, 0.0);
+  }
+
+  for (const PtrWatchPoint &watchPoint : watchPoints()) {
+    watchPoint->exportPointData(0.0);
+  }
+
+  for (const PtrWatchIntegral &watchIntegral : watchIntegrals()) {
+    watchIntegral->exportIntegralData(0.0);
   }
 }
 

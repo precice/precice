@@ -1,12 +1,10 @@
 #pragma once
 
-#include <string>
 #include "logging/LogConfiguration.hpp"
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace config {
+namespace precice::logging {
 
 /// Configures the log config file to use
 class LogConfiguration : public xml::XMLTag::Listener {
@@ -23,5 +21,4 @@ private:
   precice::logging::LoggingConfiguration _logconfig;
 };
 
-} // namespace config
-} // namespace precice
+} // namespace precice::logging

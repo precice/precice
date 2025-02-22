@@ -8,10 +8,11 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(TestImplicit)
 {
+  PRECICE_TEST();
   /// Test simple coupled simulation with coupling iterations.
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
 
   double state              = 0.0;
   double checkpoint         = 0.0;

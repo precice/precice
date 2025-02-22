@@ -113,42 +113,47 @@ PtrMapping instantiateRBFMapping(mapping::Mapping::Constraint &constraint, int d
 // Constructs the RBF function based on the functionType
 rbf_variant_t constructRBF(BasisFunction functionType, double supportRadius, double shapeParameter)
 {
-  switch (functionType) {
-  case BasisFunction::WendlandC0: {
-    return mapping::CompactPolynomialC0(supportRadius);
-  }
-  case BasisFunction::WendlandC2: {
-    return mapping::CompactPolynomialC2(supportRadius);
-  }
-  case BasisFunction::WendlandC4: {
-    return mapping::CompactPolynomialC4(supportRadius);
-  }
-  case BasisFunction::WendlandC6: {
-    return mapping::CompactPolynomialC6(supportRadius);
-  }
-  case BasisFunction::WendlandC8: {
-    return mapping::CompactPolynomialC8(supportRadius);
-  }
-  case BasisFunction::CompactThinPlateSplinesC2: {
-    return mapping::CompactThinPlateSplinesC2(supportRadius);
-  }
-  case BasisFunction::ThinPlateSplines: {
-    return mapping::ThinPlateSplines();
-  }
-  case BasisFunction::VolumeSplines: {
-    return mapping::VolumeSplines();
-  }
-  case BasisFunction::Multiquadrics: {
-    return mapping::Multiquadrics(shapeParameter);
-  }
-  case BasisFunction::InverseMultiquadrics: {
-    return mapping::InverseMultiquadrics(shapeParameter);
-  }
-  case BasisFunction::Gaussian: {
-    return mapping::Gaussian(shapeParameter);
-  }
-  default:
-    PRECICE_UNREACHABLE("No instantiation was found for the selected basis function.");
+  try {
+    switch (functionType) {
+    case BasisFunction::WendlandC0: {
+      return mapping::CompactPolynomialC0(supportRadius);
+    }
+    case BasisFunction::WendlandC2: {
+      return mapping::CompactPolynomialC2(supportRadius);
+    }
+    case BasisFunction::WendlandC4: {
+      return mapping::CompactPolynomialC4(supportRadius);
+    }
+    case BasisFunction::WendlandC6: {
+      return mapping::CompactPolynomialC6(supportRadius);
+    }
+    case BasisFunction::WendlandC8: {
+      return mapping::CompactPolynomialC8(supportRadius);
+    }
+    case BasisFunction::CompactThinPlateSplinesC2: {
+      return mapping::CompactThinPlateSplinesC2(supportRadius);
+    }
+    case BasisFunction::ThinPlateSplines: {
+      return mapping::ThinPlateSplines();
+    }
+    case BasisFunction::VolumeSplines: {
+      return mapping::VolumeSplines();
+    }
+    case BasisFunction::Multiquadrics: {
+      return mapping::Multiquadrics(shapeParameter);
+    }
+    case BasisFunction::InverseMultiquadrics: {
+      return mapping::InverseMultiquadrics(shapeParameter);
+    }
+    case BasisFunction::Gaussian: {
+      return mapping::Gaussian(shapeParameter);
+    }
+    default:
+      PRECICE_UNREACHABLE("No instantiation was found for the selected basis function.");
+    }
+  } catch (std::invalid_argument &e) {
+    logging::Logger _log{"MappingConfiguration"};
+    PRECICE_ERROR(e.what());
   }
 }
 

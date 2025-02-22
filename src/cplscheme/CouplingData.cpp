@@ -39,6 +39,11 @@ int CouplingData::getSize() const
   return sample().values.size();
 }
 
+int CouplingData::nVertices() const
+{
+  return sample().values.size() / getDimensions();
+}
+
 Eigen::VectorXd &CouplingData::values()
 {
   return sample().values;
@@ -71,7 +76,7 @@ const time::Storage &CouplingData::timeStepsStorage() const
   return _data->timeStepsStorage();
 }
 
-Eigen::VectorXd CouplingData::getPreviousValuesAtTime(double relativeDt)
+time::SampleResult CouplingData::getPreviousValuesAtTime(double relativeDt)
 {
   return _previousTimeStepsStorage.sample(relativeDt);
 }
@@ -86,6 +91,25 @@ void CouplingData::setSampleAtTime(double time, time::Sample sample)
   PRECICE_ASSERT(not sample.values.hasNaN());
   this->sample() = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _data->setSampleAtTime(time, sample);
+}
+
+void CouplingData::emplaceSampleAtTime(double time)
+{
+  _data->emplaceSampleAtTime(time);
+}
+
+void CouplingData::emplaceSampleAtTime(double time, std::initializer_list<double> values)
+{
+  this->sample() = time::Sample(_data->getDimensions(), Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size())); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
+  _data->emplaceSampleAtTime(time, values);
+}
+
+void CouplingData::emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients)
+{
+  this->sample() = time::Sample(_data->getDimensions(),
+                                Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size()),
+                                Eigen::Map<const Eigen::MatrixXd>(gradients.begin(), _data->getSpatialDimensions(), _data->getDimensions() * nVertices())); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
+  _data->emplaceSampleAtTime(time, values, gradients);
 }
 
 bool CouplingData::hasGradient() const
@@ -107,7 +131,7 @@ void CouplingData::reinitialize()
   // Meaning all samples are based on a different mesh.
   // Without remapping, the best we can do is setting them to zero samples.
   // We keep the timestamps not to break convergence measures, accelerations, and actions
-  auto zero = time::Sample(_data->getDimensions(), _mesh->nVertices());
+  auto zero = time::Sample(getDimensions(), nVertices());
   zero.setZero();
 
   _data->timeStepsStorage().setAllSamples(zero);

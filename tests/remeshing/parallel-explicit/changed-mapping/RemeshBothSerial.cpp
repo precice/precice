@@ -8,9 +8,10 @@ BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Remeshing)
 BOOST_AUTO_TEST_SUITE(ParallelExplicit)
 BOOST_AUTO_TEST_SUITE(ChangedMapping)
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(1_rank))
 BOOST_AUTO_TEST_CASE(RemeshBothSerial)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank));
+  PRECICE_TEST();
   using namespace precice::testing;
   constexpr double     y = 0.0;
   precice::Participant participant{context.name, context.config(), context.rank, context.size};

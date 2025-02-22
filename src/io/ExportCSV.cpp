@@ -101,7 +101,6 @@ void ExportCSV::doExport(int index, double time)
   for (const auto &data : _mesh->data()) {
     if (data->timeStepsStorage().empty()) {
       continue;
-      ;
     }
     auto          dim    = data->getDimensions();
     double const *values = data->timeStepsStorage().last().sample.values.data();

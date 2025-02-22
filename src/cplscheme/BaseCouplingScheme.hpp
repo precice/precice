@@ -486,7 +486,6 @@ private:
     bool                        suffices;
     bool                        strict;
     impl::PtrConvergenceMeasure measure;
-    bool                        doesLogging;
 
     std::string logHeader() const
     {

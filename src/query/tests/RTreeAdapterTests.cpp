@@ -28,18 +28,20 @@ BOOST_AUTO_TEST_SUITE(MeshTests)
 BOOST_AUTO_TEST_SUITE(RTreeTests)
 BOOST_AUTO_TEST_SUITE(BGAdapters)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(VectorAdapter)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Eigen::VectorXd vec = Eigen::Vector2d(1, 2);
   BOOST_TEST(bg::get<0>(vec) == 1);
   BOOST_TEST(bg::get<1>(vec) == 2);
   BOOST_TEST(bg::get<2>(vec) == 0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(VertexAdapter)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 2, precice::testing::nextMeshID());
   auto &              v = mesh.createVertex(Eigen::Vector2d(1, 2));
   BOOST_TEST(bg::get<0>(v) == 1);
@@ -47,9 +49,10 @@ BOOST_AUTO_TEST_CASE(VertexAdapter)
   BOOST_TEST(bg::get<2>(v) == 0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(RawCoordinateAdapter)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   mesh::Vertex::RawCoords v{1, 2, 3};
   BOOST_TEST(bg::get<0>(v) == 1);
   BOOST_TEST(bg::get<1>(v) == 2);
@@ -61,9 +64,10 @@ BOOST_AUTO_TEST_CASE(RawCoordinateAdapter)
   BOOST_TEST(bg::get<2>(v) == 1);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EdgeAdapter)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 2, precice::testing::nextMeshID());
   auto &              v1 = mesh.createVertex(Eigen::Vector2d(1, 2));
   auto &              v2 = mesh.createVertex(Eigen::Vector2d(3, 4));
@@ -76,9 +80,10 @@ BOOST_AUTO_TEST_CASE(EdgeAdapter)
   BOOST_TEST((bg::get<1, 2>(e)) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TriangleAdapter)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 3, precice::testing::nextMeshID());
   auto &              v1 = mesh.createVertex(Eigen::Vector3d(0, 2, 0));
   auto &              v2 = mesh.createVertex(Eigen::Vector3d(2, 1, 0));
@@ -99,9 +104,10 @@ BOOST_AUTO_TEST_CASE(TriangleAdapter)
       })));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DistanceTestFlatSingleTriangle)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
   auto &              v1 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
   auto &              v2 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
@@ -122,9 +128,10 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatSingleTriangle)
   BOOST_TEST(bg::comparable_distance(t, v5) < 0.01);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangle)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
   auto &              lv1 = mesh.createVertex(Eigen::Vector3d(-1, 1, 0.1));
   auto &              lv2 = mesh.createVertex(Eigen::Vector3d(0, -1, 0));
@@ -158,9 +165,10 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangle)
   BOOST_TEST(rt_v3 > 0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangleInsideOutside)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
   auto &              a = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
   auto &              b = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
@@ -192,9 +200,10 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangleInsideOutside)
   BOOST_TEST(precice::testing::equals(rv_rt, 0.0), rv_rt << " == 0.0");
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DistanceTestSlopedTriangle)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
   auto &              v1 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
   auto &              v2 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
@@ -221,9 +230,10 @@ BOOST_AUTO_TEST_CASE(DistanceTestSlopedTriangle)
   BOOST_TEST(v4_t < t_v5);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EnvelopeTriangleClockWise)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using precice::testing::equals;
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
   auto &              v1  = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
@@ -244,9 +254,10 @@ BOOST_AUTO_TEST_CASE(EnvelopeTriangleClockWise)
   BOOST_TEST(max[2] == 1.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EnvelopeTriangleCounterclockWise)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using precice::testing::equals;
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
   auto &              v1  = mesh.createVertex(Eigen::Vector3d(0, 1, 0));

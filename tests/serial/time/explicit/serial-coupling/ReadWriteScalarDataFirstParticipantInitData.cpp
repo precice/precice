@@ -18,9 +18,10 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
  *
  * Ensures that time window sizes are passed correctly and that reading and writing is possible.
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantInitData)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   Participant precice(context.name, context.config(), 0, 1);
 

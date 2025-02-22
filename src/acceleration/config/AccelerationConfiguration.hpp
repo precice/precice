@@ -61,6 +61,7 @@ private:
   const std::string ATTR_SINGULARITYLIMIT;
   const std::string ATTR_TYPE;
   const std::string ATTR_BUILDJACOBIAN;
+  const std::string ATTR_REDUCEDTIMEGRIDQN;
   const std::string ATTR_IMVJCHUNKSIZE;
   const std::string ATTR_RSLS_REUSED_TIME_WINDOWS;
   const std::string ATTR_RSSVD_TRUNCATIONEPS;
@@ -113,6 +114,7 @@ private:
     double                imvjRSSVD_truncationEps    = 0;
     bool                  estimateJacobian           = false;
     bool                  alwaysBuildJacobian        = false;
+    bool                  reducedTimeGridQN          = true;
     std::string           preconditionerType;
 
     std::vector<double> scalingFactorsInOrder() const;
@@ -136,6 +138,8 @@ private:
     double      singularityLimit           = 1e-2;
     std::string preconditionerType         = "residual-sum";
     int         precond_nbNonConstTWindows = -1;
+    int         imvjRestartType            = 3;
+    int         imvjChunkSize              = 8;
   } _defaultValuesIQNIMVJ;
 
   const double _defaultAitkenRelaxationFactor = 0.5;
@@ -146,6 +150,7 @@ private:
     bool definedTimeWindowsReused  = false;
     bool definedFilter             = false;
     bool definedPreconditionerType = false;
+    bool defineRestartType         = false;
   } _userDefinitions;
 
   void addTypeSpecificSubtags(xml::XMLTag &tag);

@@ -16,8 +16,10 @@ BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
 BOOST_AUTO_TEST_SUITE(SerializedStamples)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SerializeValues)
 {
+  PRECICE_TEST();
   std::vector<int> vertexOffsets{4, 8, 8, 10};
 
   const int meshDimensions = 3;
@@ -27,6 +29,10 @@ BOOST_AUTO_TEST_CASE(SerializeValues)
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
+  dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
   mesh::PtrData fromData(new mesh::Data("from", -1, dataDimensions));
   mesh::PtrData toData(new mesh::Data("to", -1, dataDimensions));
@@ -55,12 +61,14 @@ BOOST_AUTO_TEST_CASE(SerializeValues)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DeserializeValues)
 {
+  PRECICE_TEST();
   std::vector<int> vertexOffsets{4, 8, 8, 10};
 
-  const int meshDimensions = 3;
   const int nValues        = 4;
+  const int dataDimensions = 1;
   const int nTimeSteps     = 3;
 
   Eigen::VectorXd serializedValues(nTimeSteps * nValues);
@@ -68,13 +76,18 @@ BOOST_AUTO_TEST_CASE(DeserializeValues)
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
+  dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
-  mesh::PtrData              toData(new mesh::Data("to", -1, 1));
+  mesh::PtrData              toData(new mesh::Data("to", -1, dataDimensions));
   cplscheme::PtrCouplingData toDataPtr = makeCouplingData(toData, dummyMesh);
-  toDataPtr->sample().values           = Eigen::VectorXd(nValues);
-  toDataPtr->sample().setZero();
 
-  toDataPtr->setSampleAtTime(0, toDataPtr->sample());
+  Eigen::VectorXd initValues(nValues);
+  initValues.setZero();
+
+  toDataPtr->setSampleAtTime(0, time::Sample(toDataPtr->getDimensions(), initValues));
 
   Eigen::VectorXd timeStamps(nTimeSteps);
   timeStamps << 0, 0.5, 1;
@@ -107,8 +120,10 @@ BOOST_AUTO_TEST_CASE(DeserializeValues)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SerializeValuesAndGradients)
 {
+  PRECICE_TEST();
   std::vector<int> vertexOffsets{4, 8, 8, 10};
 
   const int meshDimensions = 3;
@@ -118,6 +133,10 @@ BOOST_AUTO_TEST_CASE(SerializeValuesAndGradients)
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", meshDimensions, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
+  dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
   mesh::PtrData fromData(new mesh::Data("from", -1, dataDimensions));
   fromData->requireDataGradient();
@@ -167,12 +186,15 @@ BOOST_AUTO_TEST_CASE(SerializeValuesAndGradients)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
 {
+  PRECICE_TEST();
   std::vector<int> vertexOffsets{4, 8, 8, 10};
 
   const int meshDimensions = 3;
   const int nValues        = 4;
+  const int dataDimensions = 1;
   const int nTimeSteps     = 3;
 
   Eigen::VectorXd serializedValues(nTimeSteps * nValues);
@@ -183,16 +205,23 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
+  dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+  dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
-  mesh::PtrData toData(new mesh::Data("to", -1, 1));
+  mesh::PtrData toData(new mesh::Data("to", -1, dataDimensions));
   toData->requireDataGradient();
 
   cplscheme::PtrCouplingData toDataPtr = makeCouplingData(toData, dummyMesh);
-  toDataPtr->sample().values           = Eigen::VectorXd(nValues);
-  toDataPtr->sample().gradients        = Eigen::MatrixXd(nValues, meshDimensions);
-  toDataPtr->sample().setZero();
 
-  toDataPtr->setSampleAtTime(0, toDataPtr->sample());
+  Eigen::VectorXd initValues(nValues);
+  initValues.setZero();
+
+  Eigen::MatrixXd initGradients(meshDimensions, nValues * dataDimensions);
+  initGradients.setZero();
+
+  toDataPtr->setSampleAtTime(0, time::Sample(toDataPtr->getDimensions(), initValues, initGradients));
 
   Eigen::VectorXd timeStamps(nTimeSteps);
   timeStamps << 0, 0.5, 1;

@@ -23,6 +23,10 @@ void multiCouplingTwoSolvers(const std::string configFile, const TestContext &co
     auto        dataABID = "DataAB";
     auto        dataBAID = "DataBA";
 
+    if (cplInterface.requiresInitialData()) {
+      cplInterface.writeData("MeshA", dataABID, {&vertexID, 1}, {&valueA, 1});
+    }
+
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
     double valueRead;
@@ -50,6 +54,10 @@ void multiCouplingTwoSolvers(const std::string configFile, const TestContext &co
     int         vertexID = cplInterface.setMeshVertex(meshName, coordOneA);
     auto        dataABID = "DataAB";
     auto        dataBAID = "DataBA";
+
+    if (cplInterface.requiresInitialData()) {
+      cplInterface.writeData("MeshB", dataBAID, {&vertexID, 1}, {&valueA, 1});
+    }
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
@@ -91,6 +99,10 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     auto        dataABID = "DataAB";
     auto        dataBAID = "DataBA";
 
+    if (cplInterface.requiresInitialData()) {
+      cplInterface.writeData("MeshA", dataABID, {&vertexID, 1}, {&valueA, 1});
+    }
+
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
     double valueRead;
@@ -123,7 +135,13 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     auto        dataCBID  = "DataCB";
     auto        dataBCID  = "DataBC";
 
+    if (cplInterface.requiresInitialData()) {
+      cplInterface.writeData("MeshB1", dataBAID, {&vertexID1, 1}, {&valueA, 1});
+      cplInterface.writeData("MeshB2", dataBCID, {&vertexID1, 1}, {&valueA, 1});
+    }
+
     cplInterface.initialize();
+
     double maxDt = cplInterface.getMaxTimeStepSize();
     double valueReadA, valueReadC;
 
@@ -131,14 +149,17 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     while (cplInterface.isCouplingOngoing()) {
       cplInterface.writeData(meshName1, dataBAID, {&vertexID1, 1}, {&valueB, 1});
       cplInterface.writeData(meshName2, dataBCID, {&vertexID2, 1}, {&valueB, 1});
+
       if (cplInterface.requiresWritingCheckpoint()) {
       }
 
       cplInterface.advance(maxDt);
+
       maxDt = cplInterface.getMaxTimeStepSize();
 
       if (cplInterface.requiresReadingCheckpoint()) {
       }
+
       cplInterface.readData(meshName1, dataABID, {&vertexID1, 1}, maxDt, {&valueReadA, 1});
       cplInterface.readData(meshName2, dataCBID, {&vertexID2, 1}, maxDt, {&valueReadC, 1});
     }
@@ -154,6 +175,10 @@ void multiCouplingThreeSolvers(const std::string configFile, const TestContext &
     int         vertexID = cplInterface.setMeshVertex(meshName, coordOneA);
     auto        dataCBID = "DataCB";
     auto        dataBCID = "DataBC";
+
+    if (cplInterface.requiresInitialData()) {
+      cplInterface.writeData("MeshC", dataCBID, {&vertexID, 1}, {&valueC, 1});
+    }
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();

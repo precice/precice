@@ -7,9 +7,10 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
+PRECICE_TEST_SETUP("ParallelSolver"_on(3_ranks), "SerialSolver"_on(1_rank))
 BOOST_AUTO_TEST_CASE(PrimaryRankSockets)
 {
-  PRECICE_TEST("ParallelSolver"_on(3_ranks), "SerialSolver"_on(1_rank));
+  PRECICE_TEST();
 
   std::string myMeshName;
   if (context.isNamed("ParallelSolver")) {

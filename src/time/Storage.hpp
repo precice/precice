@@ -5,6 +5,7 @@
 #include <optional>
 #include "logging/Logger.hpp"
 #include "math/Bspline.hpp"
+#include "time/SampleResult.hpp"
 #include "time/Stample.hpp"
 
 namespace precice::time {
@@ -144,7 +145,7 @@ public:
    * @param time a double, where we want to sample the waveform
    * @return Eigen::VectorXd values in this Storage at or directly after "before"
   */
-  Eigen::VectorXd sample(double time) const;
+  SampleResult sample(double time) const;
 
   Eigen::MatrixXd sampleGradients(double time) const;
 
@@ -173,8 +174,6 @@ private:
   time::Sample getSampleAtBeginning();
 
   time::Sample getSampleAtEnd();
-
-  int findTimeId(double time) const;
 };
 
 } // namespace precice::time

@@ -41,9 +41,10 @@ IQNIMVJAcceleration::IQNIMVJAcceleration(
     int                            imvjRestartType,
     int                            chunkSize,
     int                            RSLSreusedTimeWindows,
-    double                         RSSVDtruncationEps)
+    double                         RSSVDtruncationEps,
+    bool                           reducedTimeGrid)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
-                         filter, singularityLimit, std::move(dataIDs), preconditioner),
+                         filter, singularityLimit, std::move(dataIDs), preconditioner, reducedTimeGrid),
       //  _secondaryOldXTildes(),
       _invJacobian(),
       _oldInvJacobian(),
@@ -758,15 +759,22 @@ void IQNIMVJAcceleration::specializedInitializeVectorsAndPreconditioner(const Da
   // initialize parallel matrix-matrix operation module
   _parMatrixOps = std::make_shared<impl::ParallelMatrixOperations>();
   _parMatrixOps->initialize(not _imvjRestart);
+  _svdJ.reset();
   _svdJ.initialize(_parMatrixOps, global_n, getLSSystemRows());
 
   // initialize V, W matrices for the LS restart
   if (_imvjRestartType == RS_LS) {
+    _matrixCols_RSLS.clear();
     _matrixCols_RSLS.push_front(0);
     _matrixV_RSLS = Eigen::MatrixXd::Zero(entries, 0);
     _matrixW_RSLS = Eigen::MatrixXd::Zero(cplDataEntries, 0);
   }
   _Wtil = Eigen::MatrixXd::Zero(cplDataEntries, 0);
+  if (_imvjRestartType > 0) {
+    // drop all stored Wtil^q, Z^q matrices
+    _WtilChunk.clear();
+    _pseudoInverseChunk.clear();
+  }
 
   if (utils::IntraComm::isPrimary() || !utils::IntraComm::isParallel()) {
     _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimeWindows << "\n--------\n"
