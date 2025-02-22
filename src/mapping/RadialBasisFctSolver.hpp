@@ -39,10 +39,10 @@ public:
    */
   template <typename IndexContainer>
   RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
-                       const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial);
+                       const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, bool computeCrossValidation);
 
   /// Maps the given input data
-  Eigen::VectorXd solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const;
+  double solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial, Eigen::VectorXd &result) const;
 
   /// Maps the given input data
   Eigen::VectorXd solveConservative(const Eigen::VectorXd &inputData, Polynomial polynomial) const;
@@ -77,8 +77,6 @@ private:
 
   /// Evaluation matrix (output x input)
   Eigen::MatrixXd _matrixA;
-
-  bool computeCrossValidation = false;
 };
 
 // ------- Non-Member Functions ---------
@@ -325,7 +323,7 @@ double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::evaluateRippaLOOCVerror(co
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
-                                                                    const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial)
+                                                                    const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, bool computeCrossValidation)
 {
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
@@ -423,7 +421,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const
+double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial, Eigen::VectorXd &result) const
 {
   PRECICE_ASSERT((_matrixQ.size() > 0 && polynomial == Polynomial::SEPARATE) || _matrixQ.size() == 0);
   Eigen::VectorXd polynomialContribution;
@@ -437,18 +435,19 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   PRECICE_ASSERT(inputData.size() == _matrixA.cols());
   Eigen::VectorXd p = _decMatrixC.solve(inputData);
 
-  if (polynomial != Polynomial::ON && computeCrossValidation) {
-    precice::profiling::Event e("map.rbf.evaluateLOOCV");
-    PRECICE_INFO("Cross validation error (LOOCV): {}", evaluateRippaLOOCVerror(p));
+  double loocv = -1;
+  if (_inverseDiagonal.size() > 0) {
+    PRECICE_ASSERT(polynomial != Polynomial::ON);
+    loocv = evaluateRippaLOOCVerror(p);
   }
   PRECICE_ASSERT(p.size() == _matrixA.cols());
-  Eigen::VectorXd out = _matrixA * p;
+  result = _matrixA * p;
 
   // Add the polynomial part again for separated polynomial
   if (polynomial == Polynomial::SEPARATE) {
-    out += (_matrixV * polynomialContribution);
+    result += (_matrixV * polynomialContribution);
   }
-  return out;
+  return loocv;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

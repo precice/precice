@@ -75,7 +75,7 @@ struct BackendSelector {
 // Specialization for the RBF Eigen backend
 template <typename RBF>
 struct BackendSelector<RBFBackend::Eigen, RBF> {
-  typedef mapping::RadialBasisFctMapping<RadialBasisFctSolver<RBF>> type;
+  typedef mapping::RadialBasisFctMapping<RadialBasisFctSolver<RBF>, bool> type;
 };
 
 // Specialization for the PETSc RBF backend
@@ -222,6 +222,8 @@ MappingConfiguration::MappingConfiguration(
   auto attrPolynomial = makeXMLAttribute(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE)
                             .setDocumentation("Toggles use of the global polynomial")
                             .setOptions({POLYNOMIAL_ON, POLYNOMIAL_OFF, POLYNOMIAL_SEPARATE});
+  auto attrCrossValidation = makeXMLAttribute(ATTR_CROSS_VALIDATION, false)
+                                 .setDocumentation("Computes and logs a cross-validation error using the coupling data and the mapping matrix. This can be useful for tuning the basis function. Note that this might become computationally expensive.");
   auto attrPumPolynomial = makeXMLAttribute(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE)
                                .setDocumentation("Toggles use a local (per cluster) polynomial")
                                .setOptions({POLYNOMIAL_OFF, POLYNOMIAL_SEPARATE});
@@ -250,10 +252,10 @@ MappingConfiguration::MappingConfiguration(
 
   // Add the relevant attributes to the relevant tags
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
-  addAttributes(rbfDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead});
+  addAttributes(rbfDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrCrossValidation, attrXDead, attrYDead, attrZDead});
   addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol});
-  addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, verticesPerCluster, relativeOverlap, projectToInput});
-  addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
+  addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, verticesPerCluster, relativeOverlap, projectToInput, attrCrossValidation});
+  addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrCrossValidation, attrXDead, attrYDead, attrZDead});
   addAttributes(geoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius});
 
   // Now we take care of the subtag executor. We repeat some of the subtags in order to add individual documentation
@@ -384,11 +386,12 @@ void MappingConfiguration::xmlTagCallback(
     // optional tags
     // We set here default values, but their actual value doesn't really matter.
     // It's just for the mapping methods, which do not use these attributes at all.
-    bool        xDead         = tag.getBooleanAttributeValue(ATTR_X_DEAD, false);
-    bool        yDead         = tag.getBooleanAttributeValue(ATTR_Y_DEAD, false);
-    bool        zDead         = tag.getBooleanAttributeValue(ATTR_Z_DEAD, false);
-    double      solverRtol    = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL, 1e-9);
-    std::string strPolynomial = tag.getStringAttributeValue(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
+    bool        xDead           = tag.getBooleanAttributeValue(ATTR_X_DEAD, false);
+    bool        yDead           = tag.getBooleanAttributeValue(ATTR_Y_DEAD, false);
+    bool        zDead           = tag.getBooleanAttributeValue(ATTR_Z_DEAD, false);
+    bool        crossValidation = tag.getBooleanAttributeValue(ATTR_CROSS_VALIDATION, false);
+    double      solverRtol      = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL, 1e-9);
+    std::string strPolynomial   = tag.getStringAttributeValue(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
 
     // geometric multiscale related tags
     std::string geoMultiscaleType = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_TYPE, "");
@@ -427,7 +430,7 @@ void MappingConfiguration::xmlTagCallback(
 
     ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh, geoMultiscaleType, geoMultiscaleAxis, multiscaleRadius);
 
-    _rbfConfig = configureRBFMapping(type, strPolynomial, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
+    _rbfConfig = configureRBFMapping(type, strPolynomial, xDead, yDead, zDead, crossValidation, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
     checkDuplicates(configuredMapping);
     _mappings.push_back(configuredMapping);
@@ -483,6 +486,7 @@ void MappingConfiguration::xmlTagCallback(
 MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping(const std::string &type,
                                                                                  const std::string &polynomial,
                                                                                  bool xDead, bool yDead, bool zDead,
+                                                                                 bool   crossValidation,
                                                                                  double solverRtol,
                                                                                  double verticesPerCluster,
                                                                                  double relativeOverlap,
@@ -514,8 +518,9 @@ MappingConfiguration::RBFConfiguration MappingConfiguration::configureRBFMapping
   else
     PRECICE_UNREACHABLE("Unknown polynomial configuration.");
 
-  rbfConfig.deadAxis   = {{xDead, yDead, zDead}};
-  rbfConfig.solverRtol = solverRtol;
+  rbfConfig.deadAxis        = {{xDead, yDead, zDead}};
+  rbfConfig.crossValidation = crossValidation;
+  rbfConfig.solverRtol      = solverRtol;
 
   rbfConfig.verticesPerCluster = verticesPerCluster;
   rbfConfig.relativeOverlap    = relativeOverlap;
@@ -690,7 +695,7 @@ void MappingConfiguration::finishRBFConfiguration()
   // 1. the CPU executor
   if (_executorConfig->executor == ExecutorConfiguration::Executor::CPU) {
     if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::Eigen>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial);
+      mapping.mapping = getRBFMapping<RBFBackend::Eigen>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _rbfConfig.crossValidation);
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
 #ifndef PRECICE_NO_PETSC
       // for petsc initialization
@@ -701,7 +706,7 @@ void MappingConfiguration::finishRBFConfiguration()
       PRECICE_CHECK(false, "The global-iterative RBF solver on a CPU requires a preCICE build with PETSc enabled.");
 #endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
+      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _rbfConfig.crossValidation);
     } else {
       PRECICE_UNREACHABLE("Unknown RBF solver.");
     }

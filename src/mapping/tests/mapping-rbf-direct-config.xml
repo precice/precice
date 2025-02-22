@@ -110,7 +110,8 @@
     polynomial="off"
     x-dead="true"
     y-dead="false"
-    z-dead="true">
+    z-dead="true"
+    estimate-error="true">
     <basis-function:gaussian shape-parameter="0.3" />
   </mapping:rbf-global-direct>
 </configuration>

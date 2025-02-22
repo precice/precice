@@ -50,7 +50,8 @@ public:
       Polynomial              polynomial,
       unsigned int            verticesPerCluster,
       double                  relativeOverlap,
-      bool                    projectToInput);
+      bool                    projectToInput,
+      bool                    crossValidation = false);
 
   /**
    * Computes the clustering for the partition of unity method and fills the \p _clusters vector,
@@ -102,6 +103,9 @@ private:
   /// polynomial treatment of the RBF system
   Polynomial _polynomial;
 
+  /// if we should compute the crossValidation or not
+  const bool _crossValidation{};
+
   /// @copydoc Mapping::mapConservative
   virtual void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
@@ -121,9 +125,10 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
     Polynomial              polynomial,
     unsigned int            verticesPerCluster,
     double                  relativeOverlap,
-    bool                    projectToInput)
+    bool                    projectToInput,
+    bool                    crossValidation)
     : Mapping(constraint, dimension, false, Mapping::InitialGuessRequirement::None),
-      _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial)
+      _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial), _crossValidation(crossValidation)
 {
   PRECICE_ASSERT(this->getDimensions() <= 3);
   PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.");
@@ -180,7 +185,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
     const VertexID                                  vertexID = meshVertices.size();
     mesh::Vertex                                    center(c.getCoords(), vertexID);
-    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _polynomial, inMesh, outMesh);
+    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _polynomial, _crossValidation, inMesh, outMesh);
 
     // Consider only non-empty clusters (more of a safeguard here)
     if (!cluster.empty()) {
@@ -287,7 +292,22 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time:
   PRECICE_ASSERT(outData.isZero());
 
   // 2. Execute the actual mapping evaluation in all vertex clusters and accumulate the data
-  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &clusters) { clusters.mapConsistent(inData, outData); });
+  // std::for_each(_clusters.begin(), _clusters.end(), [&](auto &clusters) { clusters.mapConsistent(inData, outData); });
+  auto maxErrors = std::array<double, 3>{-1, -1, -1};
+  for (auto &cluster : _clusters) {
+    auto errors = cluster.mapConsistent(inData, outData);
+    for (int i = 0; i < 3; ++i) {
+      maxErrors[i] = std::max(maxErrors[i], errors[i]);
+    }
+  }
+  std::vector<double> logErrors;
+  std::copy_n(maxErrors.begin(), inData.dataDims, std::back_inserter(logErrors));
+  // Do we want to log every iteration about disabled error metrics?
+  if (std::all_of(logErrors.begin(), logErrors.end(), [](auto value) { return value == -1; })) {
+    PRECICE_INFO("Evaluation of cross-validation error (LOOCV) from \"{}\" to \"{}\" is disabled in the preCICE configuration.", input()->getName(), output()->getName());
+  } else {
+    PRECICE_INFO("Rank-local cross-validation error (LOOCV) from \"{}\" to \"{}\": [{:e}]", input()->getName(), output()->getName(), fmt::join(logErrors, ", "));
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
