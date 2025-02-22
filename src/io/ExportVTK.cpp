@@ -152,11 +152,7 @@ void ExportVTK::exportData(
 
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
     if (data->timeStepsStorage().empty()) {
-      if (data->hasGradient()) {
-        data->timeStepsStorage().setSampleAtTime(0, time::Sample(data->getDimensions(), mesh.nVertices(), mesh.getDimensions()).setZero());
-      } else {
-        data->timeStepsStorage().setSampleAtTime(0, time::Sample(data->getDimensions(), mesh.nVertices()).setZero());
-      }
+      continue;
     }
     const Eigen::VectorXd &values = data->timeStepsStorage().last().sample.values;
     if (data->getDimensions() > 1) {
@@ -192,25 +188,56 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
 {
   const int spaceDim = mesh.getDimensions();
   for (const mesh::PtrData &data : mesh.data()) {
-    if (data->hasGradient()) { // Check whether this data has gradient
-      const auto &gradients = data->timeStepsStorage().last().sample.gradients;
-      if (data->getDimensions() == 1) { // Scalar data, create a vector <dataname>_gradient
-        outFile << "VECTORS " << data->getName() << "_gradient"
-                << " double\n";
-        for (int i = 0; i < gradients.cols(); i++) { // Loop over vertices
-          int j = 0;                                 // Dimension counter
-          for (; j < gradients.rows(); j++) {        // Loop over space directions
-            outFile << gradients.coeff(j, i) << " ";
-          }
-          if (j < 3) { // If 2D data add additional zero as third component
-            outFile << '0';
-          }
-          outFile << "\n";
+    if (data->timeStepsStorage().empty() || !data->hasGradient()) {
+      continue;
+    }
+    const auto &gradients = data->timeStepsStorage().last().sample.gradients;
+    if (data->getDimensions() == 1) { // Scalar data, create a vector <dataname>_gradient
+      outFile << "VECTORS " << data->getName() << "_gradient"
+              << " double\n";
+      for (int i = 0; i < gradients.cols(); i++) { // Loop over vertices
+        int j = 0;                                 // Dimension counter
+        for (; j < gradients.rows(); j++) {        // Loop over space directions
+          outFile << gradients.coeff(j, i) << " ";
         }
-      } else { // Vector data, write n vector for n dimension <dataname>_(dx/dy/dz)
-        outFile << "VECTORS " << data->getName() << "_dx"
+        if (j < 3) { // If 2D data add additional zero as third component
+          outFile << '0';
+        }
+        outFile << "\n";
+      }
+    } else { // Vector data, write n vector for n dimension <dataname>_(dx/dy/dz)
+      outFile << "VECTORS " << data->getName() << "_dx"
+              << " double\n";
+      for (int i = 0; i < gradients.cols(); i += spaceDim) { // Loop over vertices
+        int j = 0;
+        for (; j < gradients.rows(); j++) { // Loop over components
+          outFile << gradients.coeff(j, i) << " ";
+        }
+        if (j < 3) { // If 2D data add additional zero as third component
+          outFile << '0';
+        }
+        outFile << "\n";
+      }
+      outFile << "\n";
+
+      outFile << "VECTORS " << data->getName() << "_dy"
+              << " double\n";
+      for (int i = 1; i < gradients.cols(); i += spaceDim) { // Loop over vertices
+        int j = 0;
+        for (; j < gradients.rows(); j++) { // Loop over components
+          outFile << gradients.coeff(j, i) << " ";
+        }
+        if (j < 3) { // If 2D data add additional zero as third component
+          outFile << '0';
+        }
+        outFile << "\n";
+      }
+      outFile << "\n";
+
+      if (spaceDim == 3) { // dz is only for 3D data
+        outFile << "VECTORS " << data->getName() << "_dz"
                 << " double\n";
-        for (int i = 0; i < gradients.cols(); i += spaceDim) { // Loop over vertices
+        for (int i = 2; i < gradients.cols(); i += spaceDim) { // Loop over vertices
           int j = 0;
           for (; j < gradients.rows(); j++) { // Loop over components
             outFile << gradients.coeff(j, i) << " ";
@@ -219,40 +246,10 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
             outFile << '0';
           }
           outFile << "\n";
-        }
-        outFile << "\n";
-
-        outFile << "VECTORS " << data->getName() << "_dy"
-                << " double\n";
-        for (int i = 1; i < gradients.cols(); i += spaceDim) { // Loop over vertices
-          int j = 0;
-          for (; j < gradients.rows(); j++) { // Loop over components
-            outFile << gradients.coeff(j, i) << " ";
-          }
-          if (j < 3) { // If 2D data add additional zero as third component
-            outFile << '0';
-          }
-          outFile << "\n";
-        }
-        outFile << "\n";
-
-        if (spaceDim == 3) { // dz is only for 3D data
-          outFile << "VECTORS " << data->getName() << "_dz"
-                  << " double\n";
-          for (int i = 2; i < gradients.cols(); i += spaceDim) { // Loop over vertices
-            int j = 0;
-            for (; j < gradients.rows(); j++) { // Loop over components
-              outFile << gradients.coeff(j, i) << " ";
-            }
-            if (j < 3) { // If 2D data add additional zero as third component
-              outFile << '0';
-            }
-            outFile << "\n";
-          }
         }
       }
-      outFile << '\n';
     }
+    outFile << '\n';
   }
 }
 
