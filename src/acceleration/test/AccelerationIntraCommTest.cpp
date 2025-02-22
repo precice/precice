@@ -175,7 +175,7 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
     fpcd->emplaceSampleAtTime(windowEnd, {0.1, 0.1});
   }
 
-  pp.performAcceleration(data, windowStart);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   Eigen::VectorXd newdvalues;
   if (context.isPrimary()) { // Primary
@@ -226,7 +226,7 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
   dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues));
   fpcd->setSampleAtTime(windowEnd, fpcd->sample());
 
-  pp.performAcceleration(data, windowStart);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   if (context.isPrimary()) { // Primary
     BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), -1.51483105223442748866e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
@@ -449,7 +449,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
     BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(1));
   }
 
-  pp.performAcceleration(data, windowStart);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   Eigen::VectorXd newdvalues;
   if (context.isPrimary()) { // Primary
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
   dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues));
   fpcd->setSampleAtTime(windowEnd, fpcd->sample());
 
-  pp.performAcceleration(data, windowStart);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   if (context.isPrimary()) { // Primary
     BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), -1.51483105223442748866e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
@@ -673,7 +673,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     pp.initialize(data);
   }
 
-  pp.performAcceleration(data, windowStart);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
@@ -743,7 +743,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
   }
 
   // QN- Update, 2. iteration
-  pp.performAcceleration(data, windowStart);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
@@ -818,7 +818,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
   }
 
   // QN- Update, 3. iteration
-  pp.performAcceleration(data, windowStart);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
@@ -888,7 +888,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
   }
 
   // QN- Update, 4. iteration
-  pp.performAcceleration(data, windowStart);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
@@ -958,7 +958,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
   }
 
   // QN- Update, 5. iteratidataon
-  pp.performAcceleration(data, windowStart);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
@@ -1114,7 +1114,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   dpcd->setSampleAtTime(windowStart, dpcd->sample());
   dpcd->setSampleAtTime(windowEnd, dpcd->sample());
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   Eigen::VectorXd newdvalues1;
   if (context.isPrimary()) {
@@ -1129,7 +1129,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
 
   dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues1));
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   Eigen::VectorXd newdvalues2;
   if (context.isPrimary()) {
@@ -1163,7 +1163,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
 
   dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues3));
 
-  acc.performAcceleration(data, windowStart);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   Eigen::VectorXd newdvalues4;
   if (context.isPrimary()) {

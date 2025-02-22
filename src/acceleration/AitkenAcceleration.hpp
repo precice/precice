@@ -32,7 +32,8 @@ public:
 
   virtual void performAcceleration(
       DataMap &cpldata,
-      double   windowStart) override final;
+      double   windowStart,
+      double   windowEnd) override final;
 
   virtual void iterationsConverged(
       const DataMap &cpldata, double windowStart) override final;
@@ -40,7 +41,7 @@ public:
 private:
   /// @brief Concatenates the data and old data in cplData into two long vectors
   void concatenateCouplingData(
-      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues, double windowStart) const;
+      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues, double windowStart, double windowEnd) const;
 
   logging::Logger _log{"acceleration::AitkenAcceleration"};
 

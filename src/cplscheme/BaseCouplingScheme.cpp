@@ -919,7 +919,7 @@ void BaseCouplingScheme::doImplicitStep()
         data->sample() = stamples.back().sample;
       }
 
-      _acceleration->performAcceleration(getAccelerationData(), getTimeWindowStart());
+      _acceleration->performAcceleration(getAccelerationData(), getTimeWindowStart(), getWindowEndTime());
 
       // Store from buffer
       // @todo Currently only data at end of window is accelerated. Remaining data in storage stays as it is.
