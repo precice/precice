@@ -243,6 +243,8 @@ target_sources(testprecice
     tests/serial/just-in-time-mapping/ImplicitDataInitialization.cpp
     tests/serial/just-in-time-mapping/ImplicitNoSubsteps.cpp
     tests/serial/just-in-time-mapping/ImplicitWithWaveform.cpp
+    tests/serial/just-in-time-mapping/MappingWithDirectAccessRead.cpp
+    tests/serial/just-in-time-mapping/MappingWithDirectAccessWrite.cpp
     tests/serial/just-in-time-mapping/SingleWrite.cpp
     tests/serial/just-in-time-mapping/UnsupportedConstraint.cpp
     tests/serial/just-in-time-mapping/UnsupportedMapping.cpp
