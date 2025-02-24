@@ -99,14 +99,14 @@ Eigen::MatrixXd CouplingData::getPreviousGradientsAtTime(double relativeDt)
 void CouplingData::setSampleAtTime(double time, time::Sample sample)
 {
   PRECICE_ASSERT(not sample.values.hasNaN());
-  this->_sample() = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _data->setSampleAtTime(time, sample);
 }
 
 void CouplingData::initializeWithZeroAtTime(double time)
 {
-  this->_sample().setZero(); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
-  _data->setSampleAtTime(time, this->sample());
+  auto zero = time::Sample(getDimensions(), nVertices());
+  zero.setZero();
+  _data->setSampleAtTime(time, zero);
 }
 
 void CouplingData::emplaceSampleAtTime(double time)
@@ -116,15 +116,11 @@ void CouplingData::emplaceSampleAtTime(double time)
 
 void CouplingData::emplaceSampleAtTime(double time, std::initializer_list<double> values)
 {
-  this->_sample() = time::Sample(_data->getDimensions(), Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size())); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _data->emplaceSampleAtTime(time, values);
 }
 
 void CouplingData::emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients)
 {
-  this->_sample() = time::Sample(_data->getDimensions(),
-                                 Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size()),
-                                 Eigen::Map<const Eigen::MatrixXd>(gradients.begin(), _data->getSpatialDimensions(), nVertices() * _data->getDimensions())); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _data->emplaceSampleAtTime(time, values, gradients);
 }
 
@@ -158,7 +154,6 @@ void CouplingData::storeIteration()
 {
   const auto &stamples = this->stamples();
   PRECICE_ASSERT(stamples.size() > 0);
-  this->_sample()           = stamples.back().sample;
   _previousTimeStepsStorage = _data->timeStepsStorage();
 }
 
@@ -218,12 +213,6 @@ void CouplingData::moveToNextWindow()
   }
   _data->moveToNextWindow();
   _previousTimeStepsStorage = _data->timeStepsStorage();
-}
-
-time::Sample &CouplingData::_sample()
-{
-  PRECICE_ASSERT(_data != nullptr);
-  return _data->sample();
 }
 
 bool CouplingData::exchangeSubsteps() const

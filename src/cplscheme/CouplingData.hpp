@@ -43,9 +43,6 @@ public:
   /// Returns a const reference to the data Sample.
   const time::Sample &sample() const;
 
-  /// Returns a reference to the data Sample. @todo try to make private; @todo if possible remove this function
-  time::Sample &_sample();
-
   /// Returns a reference to the time step storage of the data.
   time::Storage &timeStepsStorage();
 
