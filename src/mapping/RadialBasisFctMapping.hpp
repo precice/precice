@@ -12,8 +12,7 @@
 #include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /**
  * @brief Mapping with radial basis functions.
@@ -411,5 +410,4 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
     outData                            = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
   }
 }
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

@@ -6,9 +6,7 @@
 #include "logging/Logger.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace tests {
+namespace precice::cplscheme::tests {
 
 /**
  * @brief Used to test CompositionalCouplingScheme.
@@ -245,6 +243,4 @@ private:
   bool _hasConverged = false;
 };
 
-} // namespace tests
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme::tests

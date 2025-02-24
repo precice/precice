@@ -1,7 +1,6 @@
 #pragma once
 
-namespace precice {
-namespace device {
+namespace precice::device {
 
 class Ginkgo {
 public:
@@ -16,5 +15,4 @@ private:
   static bool weInitialized;
 };
 
-} // namespace device
-} // namespace precice
+} // namespace precice::device

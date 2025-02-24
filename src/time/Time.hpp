@@ -1,7 +1,6 @@
 #pragma once
 
-namespace precice {
-namespace time {
+namespace precice::time {
 
 class Time {
 public:
@@ -12,5 +11,4 @@ public:
   static const int MIN_WAVEFORM_DEGREE;
 };
 
-} // namespace time
-} // namespace precice
+} // namespace precice::time

@@ -9,8 +9,7 @@
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 /**
  * @brief Acts as one coupling scheme, but consists of several composed ones.
@@ -249,5 +248,4 @@ private:
   void checkCompatibleTimeWindowSizes(const CouplingScheme &impl, const CouplingScheme &expl) const;
 };
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

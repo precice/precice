@@ -12,8 +12,7 @@
 #include "precice/impl/Types.hpp"
 #include "precice/span.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 
 /**
  * @brief Interface for all interprocess communication classes.
@@ -394,5 +393,4 @@ void connectCircularComm(
     com::Communication &left,
     com::Communication &right);
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

@@ -8,8 +8,7 @@
 #include "cplscheme/ImplicitData.hpp"
 #include "precice/impl/Types.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 /**
  * @brief Interface for all coupling schemes.
@@ -238,5 +237,4 @@ public:
   virtual ImplicitData implicitDataToReceive() const = 0;
 };
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

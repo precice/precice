@@ -7,8 +7,7 @@
 #include "acceleration/BaseQNAcceleration.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 /**
  * @brief Interface quasi-Newton with interface least-squares approximation.
@@ -62,5 +61,4 @@ private:
   /// @copydoc precice::Acceleration::BaseQNAcceleration::specializedInitializeVectorsAndPreconditioner()
   void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) final{};
 };
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration

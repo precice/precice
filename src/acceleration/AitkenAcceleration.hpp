@@ -10,8 +10,7 @@
 #include "acceleration/impl/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 class AitkenAcceleration : public Acceleration {
 public:
@@ -60,5 +59,4 @@ private:
   /// Preconditioner for data vector if multiple data sets are used.
   impl::PtrPreconditioner _preconditioner;
 };
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration

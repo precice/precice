@@ -7,8 +7,7 @@
 #include "time/Storage.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 class CouplingData {
 public:
@@ -140,5 +139,4 @@ private:
   Direction _direction;
 };
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

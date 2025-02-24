@@ -4,8 +4,7 @@
 #include <string>
 #include "com/SharedPointer.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 class CommunicationFactory {
 
 public:
@@ -18,5 +17,4 @@ public:
     throw std::runtime_error("Not available!");
   }
 };
-} // namespace com
-} // namespace precice
+} // namespace precice::com

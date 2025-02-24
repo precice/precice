@@ -6,14 +6,11 @@
 #include "io/Export.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Mesh;
 }
-} // namespace precice
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 /// Writes polygonal, or triangle meshes to vtk files.
 class ExportVTK : public Export {
@@ -73,5 +70,4 @@ private:
       const mesh::Mesh &mesh);
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

@@ -19,8 +19,7 @@
 
 namespace petsc = precice::utils::petsc;
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 namespace {
 // VecChop was deprecated in PETSc 3.20 and is to be replaced by VecFilter
@@ -997,7 +996,6 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::bgPreallocationMatrixA(mesh::
   return vertexData;
 }
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping
 
 #endif // PRECICE_NO_PETSC

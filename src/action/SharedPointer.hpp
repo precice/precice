@@ -2,8 +2,7 @@
 
 #include <memory>
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 class Action;
 class ActionConfiguration;
@@ -11,5 +10,4 @@ class ActionConfiguration;
 using PtrAction              = std::unique_ptr<Action>;
 using PtrActionConfiguration = std::shared_ptr<ActionConfiguration>;
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action

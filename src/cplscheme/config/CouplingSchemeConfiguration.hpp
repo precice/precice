@@ -19,12 +19,10 @@
 #include "precice/impl/Types.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 class CompositionalCouplingScheme;
 class BiCouplingScheme;
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme
 
 // Forward declaration to friend the boost test struct
 namespace CplSchemeTests {
@@ -37,8 +35,8 @@ struct testParseConfigurationWithRelaxation;
 } // namespace CplSchemeTests
 
 // ----------------------------------------------------------- CLASS DEFINITION
-namespace precice {
-namespace cplscheme {
+
+namespace precice::cplscheme {
 class MultiCouplingScheme;
 
 /// Configuration for coupling schemes.
@@ -321,5 +319,4 @@ private:
    */
   void checkIterationLimits() const;
 };
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

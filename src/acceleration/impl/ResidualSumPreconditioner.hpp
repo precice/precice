@@ -7,9 +7,7 @@
 #include "acceleration/impl/Preconditioner.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 /**
  * @brief Preconditioner that uses the residuals of all iterations of the current time window summed up to scale the quasi-Newton system.
@@ -38,6 +36,4 @@ private:
   std::vector<double> _residualSum;
 };
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

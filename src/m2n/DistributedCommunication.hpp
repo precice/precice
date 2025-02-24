@@ -6,8 +6,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "precice/span.hpp"
 
-namespace precice {
-namespace m2n {
+namespace precice::m2n {
 
 /**
  * @brief Interface for all distributed solver to solver communication classes.
@@ -146,5 +145,4 @@ protected:
   mesh::PtrMesh _mesh;
 };
 
-} // namespace m2n
-} // namespace precice
+} // namespace precice::m2n

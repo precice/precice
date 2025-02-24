@@ -5,8 +5,7 @@
 #include "logging/Logger.hpp"
 #include "mapping/NearestNeighborBaseMapping.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /// Mapping using nearest neighboring vertices and their local gradient values.
 class NearestNeighborGradientMapping : public NearestNeighborBaseMapping {
@@ -33,5 +32,4 @@ protected:
   void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final;
 };
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

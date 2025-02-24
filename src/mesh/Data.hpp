@@ -13,16 +13,13 @@
 #include "time/Time.hpp"
 #include "time/Waveform.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Mesh;
 }
-} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 /**
  * @brief Describes a set of data values belonging to the vertices of a mesh.
@@ -167,5 +164,4 @@ private:
   time::Sample _sample;
 };
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

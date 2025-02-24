@@ -11,8 +11,7 @@
 #include "precice/impl/Types.hpp"
 #include "utils/Parallel.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 /** Represents a count of MPI Ranks
  * @see TestContext()
@@ -318,5 +317,4 @@ private:
   /// @}
 };
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

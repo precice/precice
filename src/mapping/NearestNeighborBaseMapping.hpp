@@ -5,8 +5,7 @@
 #include "logging/Logger.hpp"
 #include "mapping/Mapping.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /// Mapping using nearest neighboring vertices and (eventually) their local gradient values.
 /// Base class for Nearest Neighbor Mapping and Nearest Neighbor Gradient
@@ -53,5 +52,4 @@ protected:
   std::vector<int> _vertexIndices;
 };
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

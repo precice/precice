@@ -16,8 +16,7 @@
 #include "utils/networking.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace config {
+namespace precice::config {
 
 /**
  * @brief Performs XML configuration of a participant.
@@ -156,5 +155,4 @@ private:
       const impl::PtrParticipant &                            participant);
 };
 
-} // namespace config
-} // namespace precice
+} // namespace precice::config

@@ -7,9 +7,7 @@
 #include "acceleration/impl/Preconditioner.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 /// Preconditioner that uses the constant user-defined factors to scale the quasi-Newton system.
 class ConstantPreconditioner : public Preconditioner {
@@ -37,6 +35,4 @@ private:
   std::vector<double> _factors;
 };
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

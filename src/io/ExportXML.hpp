@@ -8,17 +8,14 @@
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Mesh;
 class Edge;
 class Triangle;
 class Tetrahedron;
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 /// Common class to generate the VTK XML-based formats.
 class ExportXML : public Export {
@@ -104,5 +101,4 @@ private:
   std::string serialPieceFilename(int index) const;
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

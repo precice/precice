@@ -14,19 +14,13 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace tests {
+namespace precice::cplscheme::tests {
 class RelativeConvergenceMeasureTest;
 }
-} // namespace cplscheme
-} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice::cplscheme::impl {
 
 /**
  * @brief Measures the convergence from an old data set to a new one.
@@ -122,6 +116,4 @@ private:
 
   bool _isConvergence = false;
 };
-} // namespace impl
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme::impl

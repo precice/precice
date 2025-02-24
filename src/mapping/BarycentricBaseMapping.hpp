@@ -5,8 +5,7 @@
 #include "mapping/Mapping.hpp"
 #include "mapping/Polation.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /**
  * @brief Base class for interpolation based mappings, where mapping is done using a geometry-based linear combination of input values.
@@ -35,5 +34,4 @@ protected:
   std::vector<Polation> _interpolations;
 };
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

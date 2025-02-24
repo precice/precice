@@ -3,8 +3,7 @@
 #include <vector>
 #include "com/SharedPointer.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 class Request {
 
 public:
@@ -16,5 +15,4 @@ public:
 
   virtual void wait() = 0;
 };
-} // namespace com
-} // namespace precice
+} // namespace precice::com

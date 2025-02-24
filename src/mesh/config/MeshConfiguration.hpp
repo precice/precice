@@ -12,16 +12,13 @@
 #include "utils/ManageUniqueIDs.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class DataConfiguration;
 }
-} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 class MeshConfiguration : public xml::XMLTag::Listener {
 public:
@@ -98,5 +95,4 @@ private:
   utils::ManageUniqueIDs _dataIDManager;
 };
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
