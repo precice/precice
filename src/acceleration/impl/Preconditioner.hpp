@@ -30,7 +30,7 @@ public:
   }
 
   /// Destructor, empty.
-  virtual ~Preconditioner() {}
+  virtual ~Preconditioner() = default;
 
   /**
    * @brief initialize the preconditioner

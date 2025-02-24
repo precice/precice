@@ -29,7 +29,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~Configuration() {}
+  virtual ~Configuration() = default;
 
   /**
    * @brief Returns root xml tag to start the automatic configuration process.

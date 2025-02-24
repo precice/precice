@@ -19,7 +19,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~ConstantPreconditioner() {}
+  virtual ~ConstantPreconditioner() = default;
 
   virtual void initialize(std::vector<size_t> &svs);
 

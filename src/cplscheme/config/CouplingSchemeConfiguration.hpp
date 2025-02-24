@@ -61,7 +61,7 @@ public:
   void setRemeshing(bool allowed);
 
   /// Destructor, empty.
-  virtual ~CouplingSchemeConfiguration() {}
+  virtual ~CouplingSchemeConfiguration() = default;
 
   /// Check, if a coupling scheme is configured for a participant.
   bool hasCouplingScheme(const std::string &participantName) const;

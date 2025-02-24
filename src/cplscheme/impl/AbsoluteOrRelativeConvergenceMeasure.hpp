@@ -54,7 +54,7 @@ public:
    */
   AbsoluteOrRelativeConvergenceMeasure(double absLimit, double relLimit);
 
-  virtual ~AbsoluteOrRelativeConvergenceMeasure(){};
+  virtual ~AbsoluteOrRelativeConvergenceMeasure() = default;
 
   virtual void newMeasurementSeries()
   {

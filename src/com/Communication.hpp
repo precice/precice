@@ -55,9 +55,7 @@ public:
   Communication &operator=(Communication &&) = delete;
 
   /// Destructor, empty.
-  virtual ~Communication()
-  {
-  }
+  virtual ~Communication() = default;
 
   /// @name Connection Setup
   /// @{

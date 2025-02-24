@@ -38,7 +38,7 @@ public:
     */
   explicit ResidualRelativeConvergenceMeasure(double convergenceLimitPercent);
 
-  virtual ~ResidualRelativeConvergenceMeasure(){};
+  virtual ~ResidualRelativeConvergenceMeasure() = default;
 
   virtual void newMeasurementSeries()
   {

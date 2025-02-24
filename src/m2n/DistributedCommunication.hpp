@@ -40,7 +40,7 @@ public:
   }
 
   /// Destructor, empty.
-  virtual ~DistributedCommunication() {}
+  virtual ~DistributedCommunication() = default;
 
   /// Returns true, if a connection to a remote participant has been setup.
   virtual bool isConnected() const = 0;

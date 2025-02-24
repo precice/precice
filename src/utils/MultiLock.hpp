@@ -15,7 +15,7 @@ public:
 
 class LockNotFoundException : public MultiLockException {
 public:
-  LockNotFoundException() {}
+  LockNotFoundException() = default;
   const char *what() const noexcept override
   {
     return "The multilock does not contain the requested lock!";

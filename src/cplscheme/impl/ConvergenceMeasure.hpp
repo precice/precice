@@ -22,7 +22,7 @@ namespace impl {
 class ConvergenceMeasure {
 public:
   /// Destructor, empty.
-  virtual ~ConvergenceMeasure() {}
+  virtual ~ConvergenceMeasure() = default;
 
   /// To be called when a new meas. series (iteration process) starts.
   virtual void newMeasurementSeries() = 0;

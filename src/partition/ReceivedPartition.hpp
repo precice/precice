@@ -42,7 +42,7 @@ public:
   /// Constructor
   ReceivedPartition(const mesh::PtrMesh &mesh, GeometricFilter geometricFilter, double safetyFactor, bool allowDirectAccess = false);
 
-  virtual ~ReceivedPartition() {}
+  virtual ~ReceivedPartition() = default;
 
   void communicate() override;
 

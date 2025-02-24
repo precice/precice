@@ -23,9 +23,7 @@ public:
   MPICommunication();
 
   /// Destructor, empty.
-  virtual ~MPICommunication()
-  {
-  }
+  virtual ~MPICommunication() = default;
 
   /**
    * @brief Sends a std::string to process with given rank.

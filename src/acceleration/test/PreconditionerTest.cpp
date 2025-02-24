@@ -114,9 +114,7 @@ struct ResPreconditionerFixture {
         6.99999999999999883585e+05,
         7.99999999999999650754e+05;
   }
-  ~ResPreconditionerFixture()
-  {
-  }
+  ~ResPreconditionerFixture() = default;
 };
 
 BOOST_FIXTURE_TEST_SUITE(ResPreconditionerTests, ResPreconditionerFixture)

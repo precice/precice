@@ -21,7 +21,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~ResidualSumPreconditioner() {}
+  virtual ~ResidualSumPreconditioner() = default;
 
   virtual void initialize(std::vector<size_t> &svs);
 

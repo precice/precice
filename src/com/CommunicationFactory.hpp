@@ -9,7 +9,7 @@ namespace com {
 class CommunicationFactory {
 
 public:
-  virtual ~CommunicationFactory(){};
+  virtual ~CommunicationFactory() = default;
 
   virtual PtrCommunication newCommunication() = 0;
 

@@ -36,7 +36,7 @@ public:
       impl::PtrPreconditioner preconditioner,
       bool                    reducedTimeGrid);
 
-  virtual ~IQNILSAcceleration() {}
+  virtual ~IQNILSAcceleration() = default;
 
   /**
     * @brief Marks a iteration sequence as converged.

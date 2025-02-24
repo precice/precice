@@ -35,7 +35,7 @@ class AbsoluteConvergenceMeasure : public ConvergenceMeasure {
 public:
   explicit AbsoluteConvergenceMeasure(double convergenceLimit);
 
-  virtual ~AbsoluteConvergenceMeasure(){};
+  virtual ~AbsoluteConvergenceMeasure() = default;
 
   virtual void newMeasurementSeries()
   {

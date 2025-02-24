@@ -57,7 +57,7 @@ namespace cplscheme {
 class CompositionalCouplingScheme final : public CouplingScheme {
 public:
   /// Destructor, empty.
-  virtual ~CompositionalCouplingScheme() {}
+  virtual ~CompositionalCouplingScheme() = default;
 
   /**
    * @brief Adds another coupling scheme in parallel to this scheme.

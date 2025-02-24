@@ -19,7 +19,7 @@ class ProvidedPartition : public Partition {
 public:
   ProvidedPartition(mesh::PtrMesh mesh);
 
-  virtual ~ProvidedPartition() {}
+  virtual ~ProvidedPartition() = default;
 
   /// The mesh is gathered and sent to another participant (if required)
   void communicate() override;
