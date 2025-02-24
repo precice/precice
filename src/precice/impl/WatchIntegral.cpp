@@ -115,7 +115,7 @@ Eigen::VectorXd WatchIntegral::calculateIntegral(double time, const mesh::PtrDat
     for (const auto &vertex : _mesh->vertices()) {
       int offset = vertex.getID() * dim;
       for (int i = 0; i < dim; i++) {
-        sum[i] += sample.values()[offset + i];
+        sum[i] += sample(offset + i);
       }
     }
     return sum;

@@ -136,7 +136,7 @@ void WatchPoint::getValue(
   for (const auto &elem : _interpolation->getWeightedElements()) {
     int offset = elem.vertexID * dim;
     for (int i = 0; i < dim; i++) {
-      temp[i] = sample.values()[offset + i];
+      temp[i] = sample(offset + i);
     }
     temp *= elem.weight;
     value += temp;
@@ -150,7 +150,7 @@ void WatchPoint::getValue(
 {
   const auto sample = data->timeStepsStorage().sample(time);
   for (const auto &elem : _interpolation->getWeightedElements()) {
-    value += elem.weight * sample.values()[elem.vertexID];
+    value += elem.weight * sample(elem.vertexID);
   }
 }
 
