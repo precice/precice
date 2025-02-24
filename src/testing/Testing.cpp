@@ -71,9 +71,9 @@ TestSetup getTestSetup()
 
 std::optional<TestSetup> getTestSetupFor(const boost::unit_test::test_unit &tu)
 {
-  auto &list = tu.p_decorators;
-  for (auto iter = list->begin(); iter != list->end(); ++iter) {
-    auto ptr = dynamic_cast<precice::testing::precice_testsetup_fixture *>(iter->get());
+  const auto &list = tu.p_decorators.get();
+  for (const auto &iter : list) {
+    auto ptr = dynamic_cast<precice::testing::precice_testsetup_fixture *>(iter.get());
     if (ptr) {
       return ptr->testSetup;
     }
