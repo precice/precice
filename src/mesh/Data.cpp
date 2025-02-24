@@ -75,14 +75,14 @@ void Data::moveToNextWindow()
   if (stamples().size() > 1) { // Needed to avoid CompositionalCouplingScheme callong moveToNextWindow on same Data multiple times. Could be simplified by replacing Storage::move() with clearBefore(double time). See https://github.com/precice/precice/issues/1821.
     timeStepsStorage().move();
     PRECICE_ASSERT(stamples().size() == 1);
-    // sample() = stamples().back().sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
+    sample() = stamples().back().sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage, see https://github.com/precice/precice/issues/1645
   }
 }
 
 void Data::setSampleAtTime(double time, const time::Sample &sample)
 {
   PRECICE_ASSERT(sample.dataDims == getDimensions(), "Sample has incorrect data dimension");
-  // _sample = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
+  _sample = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage, see https://github.com/precice/precice/issues/1645
   _waveform.timeStepsStorage().setSampleAtTime(time, sample);
 }
 
