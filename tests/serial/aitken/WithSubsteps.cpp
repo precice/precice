@@ -1,5 +1,6 @@
 #ifndef PRECICE_NO_MPI
 
+#include "math/differences.hpp"
 #include "testing/Testing.hpp"
 
 #include <precice/precice.hpp>
@@ -29,7 +30,7 @@ BOOST_AUTO_TEST_CASE(WithSubsteps)
   }
 
   precice::Participant interface(context.name, context.config(), context.rank, context.size);
-  VertexID             vertexIDs[2];
+  precice::VertexID    vertexIDs[2];
 
   // meshes for rank 0 and rank 1, we use matching meshes for both participants
   double positions0[4] = {1.0, 0.0, 1.0, 0.5};
@@ -114,8 +115,8 @@ BOOST_AUTO_TEST_CASE(WithSubsteps)
   for (int i = 0; i < nSubsteps; i++) {
     // scaling with the time window length which is equal to 1
     double localTime = (1.0 * i) / nSubStepsDone + timeCheckpoint;
-    BOOST_TEST(math::equals(savedValues(i, 0), analyticalSolution(localTime)[0], 1e-10));
-    BOOST_TEST(math::equals(savedValues(i, 1), analyticalSolution(localTime)[1], 1e-10));
+    BOOST_TEST(precice::math::equals(savedValues(i, 0), analyticalSolution(localTime)[0], 1e-10));
+    BOOST_TEST(precice::math::equals(savedValues(i, 1), analyticalSolution(localTime)[1], 1e-10));
   }
 }
 
