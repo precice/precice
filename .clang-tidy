@@ -1,5 +1,5 @@
 # clang-tidy settings to be used with ./tools/linting/run_clang_tidy.sh
 
-Checks:          "-*,modernize-deprecated-headers,modernize-make-shared,modernize-use-bool-literals,modernize-loop-convert,modernize-use-equals-default,modernize-use-emplace,modernize-use-nullptr,modernize-concat-nested-namespaces"
+Checks:          "-*,modernize-deprecated-headers,modernize-make-shared,modernize-use-bool-literals,modernize-loop-convert,modernize-use-equals-default,modernize-use-emplace,modernize-use-nullptr,modernize-concat-nested-namespaces,modernize-use-override"
 
 WarningsAsErrors: '*'
