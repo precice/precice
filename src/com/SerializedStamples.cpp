@@ -17,18 +17,18 @@ SerializedStamples SerializedStamples::serialize(const cplscheme::PtrCouplingDat
   return result;
 }
 
-SerializedStamples SerializedStamples::empty(Eigen::VectorXd timeStamps, const cplscheme::PtrCouplingData data)
+SerializedStamples SerializedStamples::empty(int nTimeStamps, const cplscheme::PtrCouplingData data)
 {
   SerializedStamples result;
 
-  result._timeSteps = timeStamps.size();
+  result._timeSteps = nTimeStamps;
 
   result.allocate(data);
 
   return result;
 }
 
-void SerializedStamples::deserializeInto(const Eigen::VectorXd &timeStamps, const cplscheme::PtrCouplingData data)
+void SerializedStamples::deserializeInto(precice::span<const double> timeStamps, const cplscheme::PtrCouplingData data)
 {
   PRECICE_ASSERT(_timeSteps == timeStamps.size());
 
@@ -71,7 +71,7 @@ void SerializedStamples::serializeGradients(std::shared_ptr<const cplscheme::Cou
   }
 }
 
-void SerializedStamples::deserialize(const Eigen::VectorXd timeStamps, cplscheme::PtrCouplingData data) const
+void SerializedStamples::deserialize(precice::span<const double> timeStamps, cplscheme::PtrCouplingData data) const
 {
   PRECICE_ASSERT(timeStamps.size() * data->getSize() == _values.size(), timeStamps.size() * data->getSize(), _values.size());
 
@@ -80,7 +80,7 @@ void SerializedStamples::deserialize(const Eigen::VectorXd timeStamps, cplscheme
   const auto dataDims = data->getDimensions();
 
   for (int timeId = 0; timeId < timeStamps.size(); timeId++) {
-    const double time = timeStamps(timeId);
+    const double time = timeStamps[timeId];
 
     Eigen::VectorXd slice(data->getSize());
     for (int valueId = 0; valueId < slice.size(); valueId++) {

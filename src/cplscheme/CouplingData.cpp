@@ -36,14 +36,14 @@ int CouplingData::getDimensions() const
 
 int CouplingData::getSize() const
 {
-  // @ŧodo this correct implementation breaks a ton of tests that don't define vertices of a test mesh
+  // @todo this correct implementation breaks a ton of tests that don't define vertices of a test mesh
   //return _mesh->nVertices() * getDimensions();
   return sample().values.size();
 }
 
 int CouplingData::nVertices() const
 {
-  // @ŧodo this correct implementation breaks a ton of tests that don't define vertices of a test mesh
+  // @todo this correct implementation breaks a ton of tests that don't define vertices of a test mesh
   //return _mesh->nVertices();
   return sample().values.size() / getDimensions();
 }
@@ -122,7 +122,9 @@ void CouplingData::emplaceSampleAtTime(double time, std::initializer_list<double
 
 void CouplingData::emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients)
 {
-  this->_sample() = time::Sample(_data->getDimensions(), Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size()), Eigen::Map<const Eigen::MatrixXd>(gradients.begin(), _data->getSpatialDimensions(), nVertices() * _data->getDimensions())); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
+  this->_sample() = time::Sample(_data->getDimensions(),
+                                 Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size()),
+                                 Eigen::Map<const Eigen::MatrixXd>(gradients.begin(), _data->getSpatialDimensions(), nVertices() * _data->getDimensions())); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _data->emplaceSampleAtTime(time, values, gradients);
 }
 

@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <vector>
 #include "cplscheme/SharedPointer.hpp"
+#include "precice/span.hpp"
 
 namespace precice {
 namespace com {
@@ -24,11 +25,11 @@ public:
   /**
    * @brief Create SerializedStamples with allocated buffers according to size of CouplingData
    *
-   * @param timeStamps Corresponding time stamps that will be stored in SerializedSamples
+   * @param nTimeSteps Amount of time stamps that will be stored in SerializedSamples
    * @param data pointer to CouplingData defining size of buffer and whether gradient data exists
    * @return SerializedStamples has allocated data buffers for serialized data
    */
-  static SerializedStamples empty(Eigen::VectorXd timeStamps, const cplscheme::PtrCouplingData data);
+  static SerializedStamples empty(int nTimeSteps, const cplscheme::PtrCouplingData data);
 
   /**
    * @brief Deserialize data from this SerializedStamples into provided CouplingData
@@ -36,7 +37,7 @@ public:
    * @param timeStamps Corresponding time stamps for deserialized data
    * @param data pointer to CouplingData the SerializedStampes will be deserialized into
    */
-  void deserializeInto(const Eigen::VectorXd &timeStamps, const cplscheme::PtrCouplingData data);
+  void deserializeInto(precice::span<const double> timeStamps, const cplscheme::PtrCouplingData data);
 
   /**
    * @brief const reference to serialized values. Used for sending serialized values.
@@ -99,7 +100,7 @@ private:
      * @param timeStamps
      * @param data
      */
-  void deserialize(const Eigen::VectorXd timeStamps, cplscheme::PtrCouplingData data) const;
+  void deserialize(precice::span<const double> timeStamps, cplscheme::PtrCouplingData data) const;
 
   /// Buffer for serialized values of stamples
   Eigen::VectorXd _values;

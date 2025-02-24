@@ -236,9 +236,7 @@ protected:
   /// Acceleration method to speedup iteration convergence.
   acceleration::PtrAcceleration _acceleration;
 
-  void sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps);
-
-  void sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd &times);
+  void sendTimes(const m2n::PtrM2N &m2n, precice::span<double const> times);
 
   /**
    * @brief Sends data sendDataIDs given in mapCouplingData with communication.
@@ -248,9 +246,7 @@ protected:
    */
   void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
-  int receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n);
-
-  Eigen::VectorXd receiveTimes(const m2n::PtrM2N &m2n, int nTimeSteps);
+  std::vector<double> receiveTimes(const m2n::PtrM2N &m2n);
 
   /**
    * @brief Receives data receiveDataIDs given in mapCouplingData with communication.

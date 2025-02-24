@@ -4,9 +4,11 @@
 #include "DistributedCommunication.hpp"
 #include "M2N.hpp"
 #include "com/Communication.hpp"
+#include "logging/LogConfiguration.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
+#include "precice/impl/versions.hpp"
 #include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
@@ -50,7 +52,12 @@ void M2N::acceptPrimaryRankConnection(
     PRECICE_DEBUG("Accept primary connection");
     PRECICE_ASSERT(_interComm);
     _interComm->acceptConnection(acceptorName, requesterName, "PRIMARYCOM", utils::IntraComm::getRank());
-    _isPrimaryRankConnected = _interComm->isConnected();
+    _isPrimaryRankConnected      = _interComm->isConnected();
+    std::string acceptorVersion  = PRECICE_VERSION;
+    auto        requesterVersion = acceptorVersion;
+    _interComm->send(acceptorVersion, 0);
+    _interComm->receive(requesterVersion, 0);
+    PRECICE_CHECK(requesterVersion == acceptorVersion, "This participant {} uses preCICE version {} but the requester participant {} uses preCICE version {}. Mixing preCICE versions can lead to undefined behavior and is, thus, forbidden.", acceptorName, acceptorVersion, requesterName, requesterVersion);
   }
 
   utils::IntraComm::broadcast(_isPrimaryRankConnected);
@@ -69,6 +76,13 @@ void M2N::requestPrimaryRankConnection(
     PRECICE_DEBUG("Request primary connection");
     _interComm->requestConnection(acceptorName, requesterName, "PRIMARYCOM", 0, 1);
     _isPrimaryRankConnected = _interComm->isConnected();
+
+    //check that local and remote have the same precice version
+    std::string requesterVersion = PRECICE_VERSION;
+    auto        acceptorVersion  = requesterVersion;
+    _interComm->receive(acceptorVersion, 0);
+    _interComm->send(requesterVersion, 0);
+    PRECICE_CHECK(requesterVersion == acceptorVersion, "This participant {} uses preCICE version {} but the acceptor participant {} uses preCICE version {}. Mixing preCICE versions can lead to undefined behavior and is, thus, forbidden.", requesterName, requesterVersion, acceptorName, acceptorVersion);
   }
 
   utils::IntraComm::broadcast(_isPrimaryRankConnected);

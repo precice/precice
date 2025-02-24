@@ -211,7 +211,8 @@ void BaseQNAcceleration::updateDifferenceMatrices(
  */
 void BaseQNAcceleration::performAcceleration(
     DataMap &cplData,
-    double   windowStart)
+    double   windowStart,
+    double   windowEnd)
 {
   PRECICE_TRACE(_primaryDataIDs.size(), cplData.size());
 

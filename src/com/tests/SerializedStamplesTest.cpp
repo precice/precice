@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(DeserializeValues)
   Eigen::VectorXd timeStamps(nTimeSteps);
   timeStamps << 0, 0.5, 1;
 
-  auto serialized = serialize::SerializedStamples::empty(timeStamps, toDataPtr);
+  auto serialized = serialize::SerializedStamples::empty(timeStamps.size(), toDataPtr);
 
   serialized.values() = serializedValues;
 
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
   Eigen::VectorXd initValues(nValues);
   initValues.setZero();
 
-  Eigen::MatrixXd initGradients(meshDimensions, nValues);
+  Eigen::MatrixXd initGradients(meshDimensions, nValues * dataDimensions);
   initGradients.setZero();
 
   toDataPtr->setSampleAtTime(0, time::Sample(toDataPtr->getDimensions(), initValues, initGradients));
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
   Eigen::VectorXd timeStamps(nTimeSteps);
   timeStamps << 0, 0.5, 1;
 
-  auto serialized = serialize::SerializedStamples::empty(timeStamps, toDataPtr);
+  auto serialized = serialize::SerializedStamples::empty(timeStamps.size(), toDataPtr);
 
   serialized.values()    = serializedValues;
   serialized.gradients() = serializedGradients;

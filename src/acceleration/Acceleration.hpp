@@ -34,7 +34,7 @@ public:
 
   virtual void initialize(const DataMap &cpldata) = 0;
 
-  virtual void performAcceleration(DataMap &cpldata, double windowStart) = 0;
+  virtual void performAcceleration(DataMap &cpldata, double windowStart, double windowEnd) = 0;
 
   virtual void iterationsConverged(const DataMap &cpldata, double windowStart) = 0;
 
