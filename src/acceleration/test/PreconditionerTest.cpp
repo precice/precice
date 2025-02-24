@@ -1,6 +1,6 @@
 #include <Eigen/Core>
 #include <algorithm>
-#include <stddef.h>
+#include <cstddef>
 #include <vector>
 #include "acceleration/impl/ConstantPreconditioner.hpp"
 #include "acceleration/impl/Preconditioner.hpp"
