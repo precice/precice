@@ -255,15 +255,15 @@ m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const 
   m2n::DistributedComFactory::SharedPointer distrFactory;
   switch (options.type) {
   case ConnectionType::GatherScatter:
-    distrFactory.reset(new m2n::GatherScatterComFactory(participantCom));
+    distrFactory = std::make_shared<m2n::GatherScatterComFactory>(participantCom);
     break;
   case ConnectionType::PointToPoint:
-    distrFactory.reset(new m2n::PointToPointComFactory(com::PtrCommunicationFactory(new com::SocketCommunicationFactory())));
+    distrFactory = std::make_shared<m2n::PointToPointComFactory>(com::PtrCommunicationFactory(new com::SocketCommunicationFactory()));
     break;
   default:
     throw std::runtime_error{"ConnectionType unknown"};
   };
-  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyPrimaryCom, options.useTwoLevelInit));
+  auto m2n = std::make_shared<m2n::M2N>(participantCom, distrFactory, options.useOnlyPrimaryCom, options.useTwoLevelInit);
 
   if (_names.count(acceptor) == 0) {
     throw std::runtime_error{
