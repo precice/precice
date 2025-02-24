@@ -71,7 +71,7 @@ int CouplingData::gradientsCols() const
 const time::Sample &CouplingData::sample() const
 {
   PRECICE_ASSERT(_data != nullptr);
-  return _data->timeStepsStorage().last().sample;
+  return _data->sample();
 }
 
 time::Storage &CouplingData::timeStepsStorage()
