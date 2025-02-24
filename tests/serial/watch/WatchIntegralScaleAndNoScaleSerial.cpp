@@ -20,42 +20,40 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScaleSerial)
     precice::Participant interface(context.name, context.config(), 0, 1);
 
     // Set mesh
-    Vector2d coordA{0.0, 0.0};
-    Vector2d coordB{1.0, 0.0};
-    Vector2d coordC{1.0, 2.0};
+    std::vector<double> coords{
+        0.0, 0.0,
+        1.0, 0.0,
+        1.0, 2.0};
 
     auto meshName = "MeshOne";
 
-    int idA = interface.setMeshVertex(meshName, coordA);
-    int idB = interface.setMeshVertex(meshName, coordB);
-    int idC = interface.setMeshVertex(meshName, coordC);
-
-    interface.setMeshEdge(meshName, idA, idB);
-    interface.setMeshEdge(meshName, idB, idC);
-
+    const int        nVertices = 3;
+    std::vector<int> ids(nVertices);
+    BOOST_TEST(true);
+    interface.setMeshVertices(meshName, coords, ids);
+    BOOST_TEST(true);
+    interface.setMeshEdge(meshName, ids[0], ids[1]);
+    interface.setMeshEdge(meshName, ids[1], ids[2]);
+    BOOST_TEST(true);
     // Initialize, the mesh
     interface.initialize();
     double dt = interface.getMaxTimeStepSize();
-
-    auto   dataOneID = "DataOne";
-    double valueA    = 1.0;
-    double valueB    = 2.0;
-    double valueC    = 3.0;
-
+    BOOST_TEST(true);
+    auto                dataOneID = "DataOne";
+    std::vector<double> values{1.0, 2.0, 3.0};
+    BOOST_TEST(true);
     double increment = 1.0;
 
     while (interface.isCouplingOngoing()) {
 
-      interface.writeData(meshName, dataOneID, {&idA, 1}, {&valueA, 1});
-      interface.writeData(meshName, dataOneID, {&idB, 1}, {&valueB, 1});
-      interface.writeData(meshName, dataOneID, {&idC, 1}, {&valueC, 1});
+      interface.writeData(meshName, dataOneID, ids, values);
 
       interface.advance(dt);
       double dt = interface.getMaxTimeStepSize();
 
-      valueA += increment;
-      valueB += increment;
-      valueC += increment;
+      for (int i = 0; i < nVertices; i++) {
+        values[i] += increment;
+      }
     }
     interface.finalize();
   } else if (context.isNamed("SolverTwo")) {
@@ -63,32 +61,29 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScaleSerial)
     precice::Participant interface(context.name, context.config(), 0, 1);
 
     // Set mesh
-    Vector2d coordA{0.0, 0.0};
-    Vector2d coordB{1.0, 0.0};
-    Vector2d coordC{1.0, 2.0};
+    std::vector<double> coords{
+        0.0, 0.0,
+        1.0, 0.0,
+        1.0, 2.0};
 
-    auto meshTwoID = "MeshTwo";
+    auto meshName = "MeshTwo";
 
-    int idA = interface.setMeshVertex(meshTwoID, coordA);
-    int idB = interface.setMeshVertex(meshTwoID, coordB);
-    int idC = interface.setMeshVertex(meshTwoID, coordC);
+    const int        nVertices = 3;
+    std::vector<int> ids(nVertices);
+    interface.setMeshVertices(meshName, coords, ids);
 
-    interface.setMeshEdge(meshTwoID, idA, idB);
-    interface.setMeshEdge(meshTwoID, idB, idC);
+    interface.setMeshEdge(meshName, ids[0], ids[1]);
+    interface.setMeshEdge(meshName, ids[1], ids[2]);
 
     // Initialize the mesh
     interface.initialize();
     double dt = interface.getMaxTimeStepSize();
 
-    auto   dataOneID = "DataOne";
-    double valueA, valueB, valueC;
+    auto                dataOneID = "DataOne";
+    std::vector<double> values(3);
 
     while (interface.isCouplingOngoing()) {
-
-      interface.readData(meshTwoID, dataOneID, {&idA, 1}, dt, {&valueA, 1});
-      interface.readData(meshTwoID, dataOneID, {&idB, 1}, dt, {&valueB, 1});
-      interface.readData(meshTwoID, dataOneID, {&idC, 1}, dt, {&valueC, 1});
-
+      interface.readData(meshName, dataOneID, ids, dt, values);
       interface.advance(dt);
       double dt = interface.getMaxTimeStepSize();
     }
