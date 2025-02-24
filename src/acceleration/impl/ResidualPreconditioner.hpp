@@ -20,7 +20,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~ResidualPreconditioner() {}
+  virtual ~ResidualPreconditioner() = default;
 
 private:
   /**

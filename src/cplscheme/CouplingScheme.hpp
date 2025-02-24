@@ -70,7 +70,7 @@ public:
 
   CouplingScheme &operator=(CouplingScheme &&) = delete;
 
-  virtual ~CouplingScheme() {}
+  virtual ~CouplingScheme() = default;
 
   /**
    * @brief Initializes the coupling scheme and establishes a communication

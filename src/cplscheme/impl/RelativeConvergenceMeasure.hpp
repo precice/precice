@@ -50,7 +50,7 @@ public:
     */
   RelativeConvergenceMeasure(double convergenceLimitPercent);
 
-  virtual ~RelativeConvergenceMeasure(){};
+  virtual ~RelativeConvergenceMeasure() = default;
 
   virtual void newMeasurementSeries()
   {

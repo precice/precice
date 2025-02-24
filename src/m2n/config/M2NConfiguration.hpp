@@ -29,7 +29,7 @@ public:
 public:
   explicit M2NConfiguration(xml::XMLTag &parent);
 
-  virtual ~M2NConfiguration() {}
+  virtual ~M2NConfiguration() = default;
 
   /**
     * @brief Returns the communication object for the given user names.

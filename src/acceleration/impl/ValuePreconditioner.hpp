@@ -17,7 +17,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~ValuePreconditioner() {}
+  virtual ~ValuePreconditioner() = default;
 
 private:
   logging::Logger _log{"acceleration::ValuePreconditioner"};

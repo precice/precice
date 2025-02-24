@@ -11,7 +11,7 @@ class DistributedComFactory {
 public:
   using SharedPointer = std::shared_ptr<DistributedComFactory>;
 
-  virtual ~DistributedComFactory(){};
+  virtual ~DistributedComFactory() = default;
 
   virtual DistributedCommunication::SharedPointer newDistributedCommunication(
       mesh::PtrMesh mesh) = 0;

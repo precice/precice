@@ -60,7 +60,7 @@ public:
   /**
     * @brief Destructor, empty.
     */
-  virtual ~QRFactorization() {}
+  virtual ~QRFactorization() = default;
 
   /**
     * @brief resets the QR factorization zo zero Q(0:0, 0:0)R(0:0, 0:0)

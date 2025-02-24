@@ -20,7 +20,7 @@ public:
       std::vector<int>        dataIDs,
       impl::PtrPreconditioner preconditioner);
 
-  virtual ~AitkenAcceleration() {}
+  virtual ~AitkenAcceleration() = default;
 
   virtual std::vector<int> getPrimaryDataIDs() const override final
   {

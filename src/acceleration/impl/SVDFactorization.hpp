@@ -44,7 +44,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~SVDFactorization() {}
+  virtual ~SVDFactorization() = default;
 
   /** @brief: updates the SVD decomposition with the rank-1 update A*B^T, i.e.,
    *               _psi * _sigma * _phi^T + A*B^T

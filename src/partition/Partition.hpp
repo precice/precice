@@ -33,7 +33,7 @@ public:
 
   Partition &operator=(Partition &&) = delete;
 
-  virtual ~Partition() {}
+  virtual ~Partition() = default;
 
   /// Intersections between bounding boxes around each rank are computed
   virtual void compareBoundingBoxes() = 0;
