@@ -17,7 +17,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~ValuePreconditioner() = default;
+  ~ValuePreconditioner() override = default;
 
 private:
   logging::Logger _log{"acceleration::ValuePreconditioner"};
@@ -27,7 +27,7 @@ private:
    *
    * @param[in] timeWindowComplete True if this FSI iteration also completed a time window
    */
-  virtual void _update_(bool timeWindowComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res);
+  void _update_(bool timeWindowComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res) override;
 
   bool _firstTimeWindow = true;
 };

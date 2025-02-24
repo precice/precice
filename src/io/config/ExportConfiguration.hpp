@@ -24,10 +24,10 @@ public:
     return _contexts;
   }
 
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
   /// Callback from automatic configuration. Not utilitzed here.
-  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) {}
+  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override {}
 
   void resetExports()
   {

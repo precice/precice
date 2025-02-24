@@ -37,19 +37,19 @@ public:
       std::array<bool, 3>            deadAxis,
       InitialGuessRequirement        mappingType);
 
-  virtual ~RadialBasisFctBaseMapping() = default;
+  ~RadialBasisFctBaseMapping() override = default;
 
   // Methods, which need to be implemented in a derived class
 
   /// Computes the mapping coefficients from the in- and output mesh.
-  virtual void computeMapping() = 0;
+  void computeMapping() override = 0;
 
   /// Removes a computed mapping.
-  virtual void clear() = 0;
+  void clear() override = 0;
 
-  virtual void tagMeshFirstRound() final;
+  void tagMeshFirstRound() final;
 
-  virtual void tagMeshSecondRound() final;
+  void tagMeshSecondRound() final;
 
 protected:
   /// Radial basis function type used in interpolation.

@@ -61,19 +61,19 @@ public:
    * In debug mode, the function also exports the partition centers as a separate mesh for visualization
    * purpose.
    */
-  void computeMapping() final override;
+  void computeMapping() final;
 
   /// Clears a computed mapping by deleting the content of the \p _clusters vector.
-  void clear() final override;
+  void clear() final;
 
   /// tag the vertices required for the mapping
-  void tagMeshFirstRound() final override;
+  void tagMeshFirstRound() final;
 
   /// nothing to do here
-  void tagMeshSecondRound() final override;
+  void tagMeshSecondRound() final;
 
   /// name of the pum mapping
-  std::string getName() const final override;
+  std::string getName() const final;
 
 private:
   /// logger, as usual
@@ -103,10 +103,10 @@ private:
   Polynomial _polynomial;
 
   /// @copydoc Mapping::mapConservative
-  virtual void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) override;
+  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
   /// @copydoc Mapping::mapConsistent
-  virtual void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) override;
+  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
   /// export the center vertices of all clusters as a mesh with some additional data on it such as vertex count
   /// only enabled in debug builds and mainly for debugging purpose

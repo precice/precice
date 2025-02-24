@@ -36,7 +36,7 @@ public:
       impl::PtrPreconditioner preconditioner,
       bool                    reducedTimeGrid);
 
-  virtual ~IQNILSAcceleration() = default;
+  ~IQNILSAcceleration() override = default;
 
   /**
     * @brief Marks a iteration sequence as converged.
@@ -44,23 +44,23 @@ public:
     * called by the iterationsConverged() method in the BaseQNAcceleration class
     * handles the acceleration specific action after the convergence of one iteration
     */
-  virtual void specializedIterationsConverged(const DataMap &cplData);
+  void specializedIterationsConverged(const DataMap &cplData) override;
 
 private:
   /// Secondary data solver output from last iteration.
   std::map<int, Eigen::VectorXd> _secondaryOldXTildes;
 
   /// updates the V, W matrices (as well as the matrices for the secondary data)
-  virtual void updateDifferenceMatrices(const DataMap &cplData);
+  void updateDifferenceMatrices(const DataMap &cplData) override;
 
   /// computes the IQN-ILS update using QR decomposition
-  virtual void computeQNUpdate(Eigen::VectorXd &xUpdate);
+  void computeQNUpdate(Eigen::VectorXd &xUpdate) override;
 
   /// Removes one iteration from V,W matrices and adapts _matrixCols.
-  virtual void removeMatrixColumn(int columnIndex);
+  void removeMatrixColumn(int columnIndex) override;
 
   /// @copydoc precice::Acceleration::BaseQNAcceleration::specializedInitializeVectorsAndPreconditioner()
-  virtual void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) override final{};
+  void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) final{};
 };
 } // namespace acceleration
 } // namespace precice

@@ -29,7 +29,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~Configuration() = default;
+  ~Configuration() override = default;
 
   /**
    * @brief Returns root xml tag to start the automatic configuration process.
@@ -41,14 +41,14 @@ public:
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag);
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag) override;
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag);
+  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag) override;
 
   /// @brief Returns whether experimental features are allowed or not
   bool allowsExperimental() const

@@ -29,7 +29,7 @@ public:
 public:
   explicit M2NConfiguration(xml::XMLTag &parent);
 
-  virtual ~M2NConfiguration() = default;
+  ~M2NConfiguration() override = default;
 
   /**
     * @brief Returns the communication object for the given user names.
@@ -49,9 +49,9 @@ public:
 
   bool isM2NConfigured(const std::string &acceptor, const std::string &connector);
 
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
-  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) {}
+  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override {}
 
 private:
   logging::Logger _log{"m2n::M2NConfiguration"};

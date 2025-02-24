@@ -34,14 +34,14 @@ public:
   /**
    * @brief
    */
-  void initialize() override final;
+  void initialize() final;
 
-  void reinitialize() override final{};
+  void reinitialize() final{};
 
   /**
    * @brief Not implemented.
    */
-  bool isInitialized() const override final
+  bool isInitialized() const final
   {
     PRECICE_ASSERT(false);
     return false;
@@ -50,13 +50,13 @@ public:
   /**
    * @brief Not implemented.
    */
-  bool sendsInitializedData() const override final
+  bool sendsInitializedData() const final
   {
     PRECICE_ASSERT(false);
     return false;
   }
 
-  bool addComputedTime(double timeToAdd) override final;
+  bool addComputedTime(double timeToAdd) final;
 
   /**
    * @brief
@@ -74,18 +74,18 @@ public:
   /**
    * @brief
    */
-  void finalize() override final;
+  void finalize() final;
 
   /*
    * @brief Not implemented.
    */
-  std::vector<std::string> getCouplingPartners() const override final
+  std::vector<std::string> getCouplingPartners() const final
   {
     PRECICE_ASSERT(false);
     return std::vector<std::string>();
   }
 
-  std::string localParticipant() const override final
+  std::string localParticipant() const final
   {
     PRECICE_ASSERT(false);
     return "unknown";
@@ -94,7 +94,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  bool willDataBeExchanged(double lastSolverTimeStepSize) const override final
+  bool willDataBeExchanged(double lastSolverTimeStepSize) const final
   {
     PRECICE_ASSERT(false);
     return false;
@@ -103,7 +103,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  bool hasDataBeenReceived() const override final
+  bool hasDataBeenReceived() const final
   {
     PRECICE_ASSERT(false);
     return false;
@@ -112,19 +112,19 @@ public:
   /**
    * @brief Not implemented.
    */
-  double getTime() const override final;
+  double getTime() const final;
 
-  double getTimeWindowStart() const override final;
+  double getTimeWindowStart() const final;
 
   /**
    * @brief Not implemented.
    */
-  int getTimeWindows() const override final
+  int getTimeWindows() const final
   {
     return _timeWindows;
   }
 
-  bool hasTimeWindowSize() const override final
+  bool hasTimeWindowSize() const final
   {
     return true;
   }
@@ -132,7 +132,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  double getTimeWindowSize() const override final
+  double getTimeWindowSize() const final
   {
     return 1.0;
   }
@@ -140,7 +140,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  double getNextTimeStepMaxSize() const override final
+  double getNextTimeStepMaxSize() const final
   {
     PRECICE_ASSERT(false);
     return 0;
@@ -149,12 +149,12 @@ public:
   /**
    * @brief Not implemented.
    */
-  bool isCouplingOngoing() const override final;
+  bool isCouplingOngoing() const final;
 
   /**
    * @brief Not implemented.
    */
-  bool isTimeWindowComplete() const override final
+  bool isTimeWindowComplete() const final
   {
     PRECICE_ASSERT(false);
     return false;
@@ -163,9 +163,9 @@ public:
   /**
    * @brief Not implemented.
    */
-  bool isActionRequired(Action action) const override final;
+  bool isActionRequired(Action action) const final;
 
-  bool isActionFulfilled(Action action) const override final
+  bool isActionFulfilled(Action action) const final
   {
     return true;
   }
@@ -173,7 +173,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  void markActionFulfilled(Action action) override final
+  void markActionFulfilled(Action action) final
   {
     PRECICE_ASSERT(false);
   }
@@ -190,7 +190,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  void requireAction(Action action) override final
+  void requireAction(Action action) final
   {
     PRECICE_ASSERT(false);
   }
@@ -198,7 +198,7 @@ public:
   /**
    * @brief Empty.
    */
-  std::string printCouplingState() const override final
+  std::string printCouplingState() const final
   {
     return std::string();
   }
@@ -210,12 +210,12 @@ public:
 
   bool hasConverged() const override;
 
-  bool requiresSubsteps() const override final
+  bool requiresSubsteps() const final
   {
     return true;
   }
 
-  ImplicitData implicitDataToReceive() const override final
+  ImplicitData implicitDataToReceive() const final
   {
     return {};
   }

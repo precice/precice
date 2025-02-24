@@ -23,46 +23,46 @@ class MPIPortsCommunication : public MPICommunication {
 public:
   explicit MPIPortsCommunication(std::string addressDirectory = ".");
 
-  virtual ~MPIPortsCommunication();
+  ~MPIPortsCommunication() override;
 
-  virtual size_t getRemoteCommunicatorSize() override;
+  size_t getRemoteCommunicatorSize() override;
 
-  virtual void acceptConnection(std::string const &acceptorName,
+  void acceptConnection(std::string const &acceptorName,
+                        std::string const &requesterName,
+                        std::string const &tag,
+                        int                acceptorRank,
+                        int                rankOffset = 0) override;
+
+  void acceptConnectionAsServer(std::string const &acceptorName,
                                 std::string const &requesterName,
                                 std::string const &tag,
                                 int                acceptorRank,
-                                int                rankOffset = 0) override;
+                                int                requesterCommunicatorSize) override;
 
-  virtual void acceptConnectionAsServer(std::string const &acceptorName,
-                                        std::string const &requesterName,
-                                        std::string const &tag,
-                                        int                acceptorRank,
-                                        int                requesterCommunicatorSize) override;
+  void requestConnection(std::string const &acceptorName,
+                         std::string const &requesterName,
+                         std::string const &tag,
+                         int                requesterRank,
+                         int                requesterCommunicatorSize) override;
 
-  virtual void requestConnection(std::string const &acceptorName,
-                                 std::string const &requesterName,
-                                 std::string const &tag,
-                                 int                requesterRank,
-                                 int                requesterCommunicatorSize) override;
+  void requestConnectionAsClient(std::string const &  acceptorName,
+                                 std::string const &  requesterName,
+                                 std::string const &  tag,
+                                 std::set<int> const &acceptorRanks,
+                                 int                  requesterRank) override;
 
-  virtual void requestConnectionAsClient(std::string const &  acceptorName,
-                                         std::string const &  requesterName,
-                                         std::string const &  tag,
-                                         std::set<int> const &acceptorRanks,
-                                         int                  requesterRank) override;
+  void closeConnection() override;
 
-  virtual void closeConnection() override;
+  void prepareEstablishment(std::string const &acceptorName,
+                            std::string const &requesterName) override;
 
-  virtual void prepareEstablishment(std::string const &acceptorName,
-                                    std::string const &requesterName) override;
-
-  virtual void cleanupEstablishment(std::string const &acceptorName,
-                                    std::string const &requesterName) override;
+  void cleanupEstablishment(std::string const &acceptorName,
+                            std::string const &requesterName) override;
 
 private:
-  virtual MPI_Comm &communicator(Rank rank) override;
+  MPI_Comm &communicator(Rank rank) override;
 
-  virtual Rank rank(int rank) override;
+  Rank rank(int rank) override;
 
   logging::Logger _log{"com::MPIPortsCommunication"};
 

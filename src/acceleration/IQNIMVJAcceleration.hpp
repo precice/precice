@@ -60,7 +60,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~IQNIMVJAcceleration();
+  ~IQNIMVJAcceleration() override;
 
   /**
    * @brief Marks a iteration sequence as converged.
@@ -68,7 +68,7 @@ public:
    * called by the iterationsConverged() method in the BaseQNAcceleration class
    * handles the acceleration specific action after the convergence of one iteration
    */
-  virtual void specializedIterationsConverged(const DataMap &cplData);
+  void specializedIterationsConverged(const DataMap &cplData) override;
 
 private:
   /// @brief stores the approximation of the inverse Jacobian of the system at current time window.
@@ -137,10 +137,10 @@ private:
   /** @brief: computes the IQNIMVJ update using QR decomposition of V,
    *        furthermore it updates the inverse of the system jacobian
    */
-  virtual void computeQNUpdate(Eigen::VectorXd &xUpdate);
+  void computeQNUpdate(Eigen::VectorXd &xUpdate) override;
 
   /// @brief: updates the V, W matrices (as well as the matrices for the secondary data)
-  virtual void updateDifferenceMatrices(const DataMap &cplData);
+  void updateDifferenceMatrices(const DataMap &cplData) override;
 
   /** @brief: computes the quasi-Newton update vector based on the matrices V and W using a QR
    *  decomposition of V. The decomposition is not re-computed en-block in every iteration
@@ -182,10 +182,10 @@ private:
   void restartIMVJ();
 
   /// @brief: Removes one iteration from V,W matrices and adapts _matrixCols.
-  virtual void removeMatrixColumn(int columnIndex);
+  void removeMatrixColumn(int columnIndex) override;
 
   /// @copydoc precice::Acceleration::BaseQNAcceleration::specializedInitializeVectorsAndPreconditioner()
-  virtual void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) override final;
+  void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) final;
 
   /// @brief: Removes one column form the V_RSLS and W_RSLS matrices and adapts _matrixCols_RSLS
   void removeMatrixColumnRSLS(int columnINdex);

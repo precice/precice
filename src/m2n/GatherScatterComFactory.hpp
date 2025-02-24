@@ -12,7 +12,7 @@ public:
   GatherScatterComFactory(com::PtrCommunication intraComm);
 
   DistributedCommunication::SharedPointer newDistributedCommunication(
-      mesh::PtrMesh mesh);
+      mesh::PtrMesh mesh) override;
 
 private:
   /// communication between the primary processes

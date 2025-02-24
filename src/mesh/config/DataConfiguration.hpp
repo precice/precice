@@ -32,13 +32,13 @@ public:
 
   ConfiguredData getRecentlyConfiguredData() const;
 
-  virtual void xmlTagCallback(
+  void xmlTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+      xml::XMLTag &                    callingTag) override;
 
-  virtual void xmlEndTagCallback(
+  void xmlEndTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+      xml::XMLTag &                    callingTag) override;
 
   /**
    * @brief Adds data manually.

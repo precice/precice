@@ -36,18 +36,18 @@ public:
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback(
+  void xmlTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+      xml::XMLTag &                    callingTag) override;
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback(
+  void xmlEndTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+      xml::XMLTag &                    callingTag) override;
 
   /// Returns all configured participants.
   const std::vector<impl::PtrParticipant> &getParticipants() const;

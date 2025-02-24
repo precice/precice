@@ -20,17 +20,17 @@ public:
   NearestNeighborGradientMapping(Constraint constraint, int dimensions);
 
   /// Calculates the offsets needed for the gradient mappings after calculating the matched vertices
-  void onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace) final override;
+  void onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace) final;
 
   /// name of the nng mapping
-  std::string getName() const final override;
+  std::string getName() const final;
 
 protected:
   /// @copydoc Mapping::mapConservative
-  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final override;
+  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final;
 
   /// @copydoc Mapping::mapConsistent
-  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final override;
+  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final;
 };
 
 } // namespace mapping

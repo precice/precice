@@ -16,10 +16,10 @@ public:
   LinearCellInterpolationMapping(Constraint constraint, int dimensions);
 
   /// Computes the projections and interpolation relations.
-  void computeMapping() final override;
+  void computeMapping() final;
 
   /// name of the lci mapping
-  std::string getName() const final override;
+  std::string getName() const final;
 
 private:
   logging::Logger _log{"mapping::LinearCellInterpolationMappingMapping"};

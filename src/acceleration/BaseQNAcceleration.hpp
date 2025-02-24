@@ -77,7 +77,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~BaseQNAcceleration()
+  ~BaseQNAcceleration() override
   {
     // not necessary for user, only for developer, if needed, this should be configurable
     //     if (utils::IntraComm::isPrimary() || !utils::IntraComm::isParallel()) {
@@ -90,7 +90,7 @@ public:
   /**
    * @brief Returns all IQN involved data IDs.
    */
-  virtual std::vector<int> getPrimaryDataIDs() const override final
+  std::vector<int> getPrimaryDataIDs() const final
   {
     return _primaryDataIDs;
   }
@@ -98,14 +98,14 @@ public:
   /**
    * @brief Initializes the acceleration.
    */
-  virtual void initialize(const DataMap &cplData) override final;
+  void initialize(const DataMap &cplData) final;
 
   /**
    * @brief Performs one acceleration step.
    *
    * Has to be called after every implicit coupling iteration.
    */
-  virtual void performAcceleration(DataMap &cplData, double windowStart, double windowEnd) override final;
+  void performAcceleration(DataMap &cplData, double windowStart, double windowEnd) final;
 
   /**
    * @brief Marks a iteration sequence as converged.
@@ -113,19 +113,19 @@ public:
    * Since convergence measurements are done outside the acceleration, this
    * method has to be used to signalize convergence to the acceleration.
    */
-  virtual void iterationsConverged(const DataMap &cplData, double windowStart) override final;
+  void iterationsConverged(const DataMap &cplData, double windowStart) final;
 
   /**
    * @brief Exports the current state of the acceleration to a file.
    */
-  virtual void exportState(io::TXTWriter &writer) override final;
+  void exportState(io::TXTWriter &writer) final;
 
   /**
    * @brief Imports the last exported state of the acceleration from file.
    *
    * Is empty at the moment!!!
    */
-  virtual void importState(io::TXTReader &reader) override final;
+  void importState(io::TXTReader &reader) final;
 
   /// how many QN columns were deleted in this time window
   int getDeletedColumns() const;

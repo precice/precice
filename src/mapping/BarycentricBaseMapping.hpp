@@ -17,10 +17,10 @@ public:
   BarycentricBaseMapping(Constraint constraint, int dimensions);
 
   /// Removes a computed mapping.
-  void clear() final override;
+  void clear() final;
 
-  void tagMeshFirstRound() final override;
-  void tagMeshSecondRound() final override;
+  void tagMeshFirstRound() final;
+  void tagMeshSecondRound() final;
 
 private:
   logging::Logger _log{"mapping::BarycentricBaseMapping"};

@@ -20,7 +20,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~ResidualPreconditioner() = default;
+  ~ResidualPreconditioner() override = default;
 
 private:
   /**
@@ -28,9 +28,9 @@ private:
     *
     * @param[in] timeWindowComplete True if this FSI iteration also completed a time window
     */
-  virtual void _update_(bool                   timeWindowComplete,
-                        const Eigen::VectorXd &oldValues,
-                        const Eigen::VectorXd &res);
+  void _update_(bool                   timeWindowComplete,
+                const Eigen::VectorXd &oldValues,
+                const Eigen::VectorXd &res) override;
 
   logging::Logger _log{"acceleration::ResidualPreconditioner"};
 };

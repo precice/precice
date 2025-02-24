@@ -61,7 +61,7 @@ public:
   void setRemeshing(bool allowed);
 
   /// Destructor, empty.
-  virtual ~CouplingSchemeConfiguration() = default;
+  ~CouplingSchemeConfiguration() override = default;
 
   /// Check, if a coupling scheme is configured for a participant.
   bool hasCouplingScheme(const std::string &participantName) const;
@@ -73,10 +73,10 @@ public:
   const std::string &getDataToExchange(int index) const;
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
   /// Adds a manually configured coupling scheme for a participant.
   void addCouplingScheme(const PtrCouplingScheme &cplScheme, const std::string &participantName);
