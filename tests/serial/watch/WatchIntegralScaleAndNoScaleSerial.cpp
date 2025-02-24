@@ -77,15 +77,8 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScaleSerial)
 
     // Initialize the mesh
     interface.initialize();
-    double dt = interface.getMaxTimeStepSize();
-
-    auto                dataOneID = "DataOne";
-    std::vector<double> values(3);
-
     while (interface.isCouplingOngoing()) {
-      interface.readData(meshName, dataOneID, ids, dt, values);
-      interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
+      interface.advance(interface.getMaxTimeStepSize());
     }
     interface.finalize();
 

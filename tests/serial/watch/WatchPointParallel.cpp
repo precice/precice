@@ -57,17 +57,8 @@ BOOST_AUTO_TEST_CASE(WatchPointParallel)
 
     // Initialize the mesh
     interface.initialize();
-    double dt = interface.getMaxTimeStepSize();
-
-    auto   dataOneID = "DataOne";
-    double value;
-
     while (interface.isCouplingOngoing()) {
-
-      interface.readData(meshTwoID, dataOneID, {&id, 1}, dt, {&value, 1});
-
-      interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
+      interface.advance(interface.getMaxTimeStepSize());
     }
     interface.finalize();
 
