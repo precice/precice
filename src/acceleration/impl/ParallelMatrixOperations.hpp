@@ -49,16 +49,16 @@ public:
 
       // if parallel computation on p processors
     } else {
-      PRECICE_ASSERT(utils::IntraComm::getCommunication() != NULL);
+      PRECICE_ASSERT(utils::IntraComm::getCommunication() != nullptr);
       PRECICE_ASSERT(utils::IntraComm::getCommunication()->isConnected());
 
       // The result matrix is of size (p x r)
       // if the cyclic communication is needed, we use block-wise matrix-matrix multiplication
       if (cyclicComm) {
         PRECICE_ASSERT(_needCyclicComm);
-        PRECICE_ASSERT(_cyclicCommLeft.get() != NULL);
+        PRECICE_ASSERT(_cyclicCommLeft.get() != nullptr);
         PRECICE_ASSERT(_cyclicCommLeft->isConnected());
-        PRECICE_ASSERT(_cyclicCommRight.get() != NULL);
+        PRECICE_ASSERT(_cyclicCommRight.get() != nullptr);
         PRECICE_ASSERT(_cyclicCommRight->isConnected());
 
         _multiply_cyclic(leftMatrix, rightMatrix, result, offsets, p, q, r);
@@ -171,9 +171,9 @@ private:
     for (int cycle = 1; cycle < utils::IntraComm::getSize(); cycle++) {
 
       // wait until W_til from previous processor is fully received
-      if (requestSend != NULL)
+      if (requestSend != nullptr)
         requestSend->wait();
-      if (requestRcv != NULL)
+      if (requestRcv != nullptr)
         requestRcv->wait();
 
       // leftMatrix (leftMatrix_rcv) is available - needed for local multiplication and hand over to next proc
@@ -200,7 +200,7 @@ private:
           requestRcv = _cyclicCommLeft->aReceive(leftMatrix_rcv, 0);
       }
 
-      if (requestSend != NULL)
+      if (requestSend != nullptr)
         requestSend->wait();
       // compute block with new local data
       Eigen::MatrixXd block(rows_rcv, rightMatrix.cols());
