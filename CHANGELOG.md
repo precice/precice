@@ -2,10 +2,6 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
-## 3.2.0
-
-- Throw an error if participants using different preCICE versions attempt coupling (https://github.com/precice/precice/pull/2202).
-
 ## 3.1.2
 
 - Fixed incorrect handling of compositional coupling involving an implicit scheme. Explicit schemes now run after the implicit scheme has reached convergence, correctly receive data of the final iteration.
