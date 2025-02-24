@@ -5,8 +5,7 @@
 #include "m2n/DistributedCommunication.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace m2n {
+namespace precice::m2n {
 class GatherScatterComFactory : public DistributedComFactory {
 public:
   GatherScatterComFactory(com::PtrCommunication intraComm);
@@ -18,5 +17,4 @@ private:
   /// communication between the primary processes
   com::PtrCommunication _intraComm;
 };
-} // namespace m2n
-} // namespace precice
+} // namespace precice::m2n

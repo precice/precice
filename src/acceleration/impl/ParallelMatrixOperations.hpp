@@ -18,9 +18,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 class ParallelMatrixOperations {
 public:
@@ -331,8 +329,6 @@ private:
   void closeCircularCommunication();
 };
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl
 
 #endif

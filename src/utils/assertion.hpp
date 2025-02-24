@@ -32,8 +32,7 @@
 #include "utils/Parallel.hpp"
 #include "utils/stacktrace.hpp"
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 static constexpr std::string_view ASSERT_FMT =
     "ASSERTION FAILED\n"
@@ -44,7 +43,6 @@ static constexpr std::string_view ASSERT_FMT =
     "Arguments:  {}\n"
     "Stacktrace:\n{}\n";
 }
-} // namespace precice
 
 // Create a wrapper around assert that also aborts if NDEBUG is defined.
 #ifndef NDEBUG

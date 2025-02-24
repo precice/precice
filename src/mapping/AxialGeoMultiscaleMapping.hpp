@@ -4,8 +4,7 @@
 #include "logging/Logger.hpp"
 #include "mapping/Mapping.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /// Geometric multiscale mapping in axial direction
 class AxialGeoMultiscaleMapping : public Mapping {
@@ -72,5 +71,4 @@ private:
   std::vector<double> _vertexDistances;
 };
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

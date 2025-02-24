@@ -5,8 +5,7 @@
 #include <string>
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 /**
  * @brief File writer for matrix in Matlab V7 ASCII format.
@@ -31,5 +30,4 @@ private:
   std::ofstream _file;
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

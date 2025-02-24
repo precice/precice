@@ -2,14 +2,9 @@
 
 #include <string>
 
-namespace precice {
-namespace utils {
-namespace networking {
+namespace precice::utils::networking {
 
 /// Returns the name of the canonical loopback interface on this system
 std::string loopbackInterfaceName();
 
-} // namespace networking
-
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils::networking

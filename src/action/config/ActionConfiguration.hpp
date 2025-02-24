@@ -9,8 +9,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace action {
+namespace precice::action {
 
 /**
  * @brief Configures an Action subclass object.
@@ -122,5 +121,4 @@ private:
   Action::Timing getTiming() const;
 };
 
-} // namespace action
-} // namespace precice
+} // namespace precice::action

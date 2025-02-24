@@ -9,8 +9,7 @@
 #include <Eigen/Core>
 #include <string>
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 inline std::string getTypeName(const double &var)
 {
@@ -37,5 +36,4 @@ inline std::string getTypeName(Eigen::VectorXd const &var)
   return "vector";
 }
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

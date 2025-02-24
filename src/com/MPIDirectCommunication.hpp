@@ -13,8 +13,7 @@
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 /**
  * @brief Provides connection methods for processes located in one communicator.
  *
@@ -137,7 +136,6 @@ protected:
   int adjustRank(Rank rank) const override;
 };
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

@@ -11,8 +11,7 @@
 #include "logging/Logger.hpp"
 #include "precice/impl/Types.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 /**
  * @brief Provides connection methods based on MPI ports (part of MPI 2.0).
  *
@@ -111,7 +110,6 @@ private:
 
   bool _isAcceptor = false;
 };
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

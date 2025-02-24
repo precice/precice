@@ -20,9 +20,7 @@
 
 // ------- CLASS DEFINITION
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 /**
  * @brief Class that provides functionality to maintain a SVD decomposition of a matrix
@@ -296,8 +294,6 @@ private:
   bool _applyFilterQR = false;
 };
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl
 
 #endif /* PRECICE_NO_MPI */

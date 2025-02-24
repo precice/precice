@@ -22,8 +22,7 @@
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 /**
  * @brief Container and creator for meshes.
@@ -406,5 +405,4 @@ private:
 
 std::ostream &operator<<(std::ostream &os, const Mesh &q);
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

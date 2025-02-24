@@ -9,8 +9,7 @@
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace partition {
+namespace precice::partition {
 
 /**
  * @brief Abstract base class for partitions.
@@ -73,5 +72,4 @@ private:
   logging::Logger _log{"partition::Partition"};
 };
 
-} // namespace partition
-} // namespace precice
+} // namespace precice::partition

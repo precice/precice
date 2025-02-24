@@ -7,8 +7,7 @@
 #include "acceleration/Acceleration.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 class ConstantRelaxationAcceleration : public Acceleration {
 public:
@@ -37,5 +36,4 @@ private:
 
   std::vector<int> _dataIDs;
 };
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration

@@ -2,9 +2,7 @@
 
 #include <Eigen/Core>
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice::cplscheme::impl {
 
 /**
  * @brief Interface for measures checking the convergence of a series of datasets.
@@ -55,6 +53,4 @@ public:
     return "";
   }
 };
-} // namespace impl
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme::impl

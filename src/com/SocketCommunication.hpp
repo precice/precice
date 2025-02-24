@@ -15,8 +15,7 @@
 #include "precice/impl/Types.hpp"
 #include "utils/networking.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 /// Implements Communication by using sockets.
 class SocketCommunication : public Communication {
 public:
@@ -159,5 +158,4 @@ private:
 
   std::string getIpAddress();
 };
-} // namespace com
-} // namespace precice
+} // namespace precice::com

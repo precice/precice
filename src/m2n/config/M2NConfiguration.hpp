@@ -10,8 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace precice {
-namespace m2n {
+namespace precice::m2n {
 
 /// Configuration for communication channels between solvers.
 class M2NConfiguration : public xml::XMLTag::Listener {
@@ -68,5 +67,4 @@ private:
       const std::string &connector);
 };
 
-} // namespace m2n
-} // namespace precice
+} // namespace precice::m2n

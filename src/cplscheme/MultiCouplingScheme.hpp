@@ -10,8 +10,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "utils/Helpers.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 class CouplingData;
 struct ExchangeData;
 
@@ -114,5 +113,4 @@ private:
   bool _isController;
 };
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

@@ -5,8 +5,7 @@
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace partition {
+namespace precice::partition {
 
 /**
  * @brief A partition that is provided by the participant.
@@ -35,5 +34,4 @@ private:
   logging::Logger _log{"partition::ProvidedPartition"};
 };
 
-} // namespace partition
-} // namespace precice
+} // namespace precice::partition

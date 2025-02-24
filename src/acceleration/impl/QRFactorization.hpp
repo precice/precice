@@ -8,9 +8,7 @@
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 /**
  * @brief Class that provides functionality for a dynamic QR-decomposition, that can be updated
@@ -222,6 +220,4 @@ private:
   int _globalRows;
 };
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

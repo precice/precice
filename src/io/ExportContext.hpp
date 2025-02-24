@@ -4,8 +4,7 @@
 #include <string>
 #include "io/SharedPointer.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 struct ExportContext {
   // @brief Exporters performing the actual export.
@@ -27,7 +26,6 @@ struct ExportContext {
   std::string type;
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io
 
 #endif /* PRECICE_IO_EXPORTCONTEXT_HPP_ */

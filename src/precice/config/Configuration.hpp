@@ -13,8 +13,7 @@
 #include "profiling/config/ProfilingConfiguration.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace config {
+namespace precice::config {
 
 /**
  * @brief Main class for preCICE XML configuration tree.
@@ -146,5 +145,4 @@ private:
   cplscheme::PtrCouplingSchemeConfiguration _couplingSchemeConfiguration;
 };
 
-} // namespace config
-} // namespace precice
+} // namespace precice::config

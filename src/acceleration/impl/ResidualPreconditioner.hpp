@@ -5,9 +5,7 @@
 #include "acceleration/impl/Preconditioner.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 /**
  * @brief Preconditioner that uses the recent residual to scale the quasi-Newton system.
@@ -35,6 +33,4 @@ private:
   logging::Logger _log{"acceleration::ResidualPreconditioner"};
 };
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

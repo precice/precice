@@ -8,18 +8,14 @@
 #include "mesh/Vertex.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Triangle;
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
 
 namespace pm = precice::mesh;
 namespace bg = boost::geometry;
 
-namespace boost {
-namespace geometry {
-namespace traits {
+namespace boost::geometry::traits {
 
 /// Adapts Eigen::VectorXd to boost.geometry
 /*
@@ -180,12 +176,9 @@ struct closure<pm::Triangle> {
 
 // BOOST_CONCEPT_ASSERT( (bg::concepts::Ring<pm::Triangle>));
 
-} // namespace traits
-} // namespace geometry
-} // namespace boost
+} // namespace boost::geometry::traits
 
-namespace precice {
-namespace query {
+namespace precice::query {
 
 /// The RTree box type
 using RTreeBox = boost::geometry::model::box<pm::Vertex::RawCoords>;
@@ -354,5 +347,4 @@ struct RTreeTraits {
 };
 
 } // namespace impl
-} // namespace query
-} // namespace precice
+} // namespace precice::query

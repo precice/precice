@@ -10,8 +10,7 @@
 #include "logging/Logger.hpp"
 #include "precice/impl/Types.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 /**
  * @brief Provides implementation for basic MPI point-to-point communication.
  *
@@ -129,7 +128,6 @@ protected:
 private:
   logging::Logger _log{"com::MPICommunication"};
 };
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

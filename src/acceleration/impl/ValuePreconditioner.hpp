@@ -5,9 +5,7 @@
 #include "acceleration/impl/Preconditioner.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 /// Preconditioner that uses the values from the previous time window to scale the quasi-Newton system.
 class ValuePreconditioner : public Preconditioner {
@@ -32,6 +30,4 @@ private:
   bool _firstTimeWindow = true;
 };
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

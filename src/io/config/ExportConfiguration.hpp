@@ -6,8 +6,7 @@
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 /**
  * @brief Configuration class for exports.
@@ -54,5 +53,4 @@ private:
   std::list<ExportContext> _contexts;
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

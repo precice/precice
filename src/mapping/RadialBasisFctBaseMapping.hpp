@@ -5,8 +5,7 @@
 #include "mesh/Filter.hpp"
 #include "precice/impl/Types.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /**
  * @brief Mapping with radial basis functions.
@@ -184,5 +183,4 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   auto vertices = mesh->index().getVerticesInsideBox(bb);
   std::for_each(vertices.begin(), vertices.end(), [&mesh](size_t v) { mesh->vertex(v).tag(); });
 }
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

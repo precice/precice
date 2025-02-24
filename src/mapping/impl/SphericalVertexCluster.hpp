@@ -11,9 +11,7 @@
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 
-namespace precice {
-
-namespace mapping {
+namespace precice::mapping {
 
 /**
  * The SphericalVertexCluster represents a single partition in the partition of unity mapping.
@@ -302,5 +300,4 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::clear()
   _rbfSolver.clear();
   _hasComputedMapping = false;
 }
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

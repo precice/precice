@@ -7,16 +7,13 @@
 #include "io/ExportXML.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Mesh;
 class Edge;
 class Triangle;
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 /** Exporter for VTU and PVTU.
  *
@@ -48,5 +45,4 @@ private:
   void exportConnectivity(std::ostream &outFile, const mesh::Mesh &mesh) const override;
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

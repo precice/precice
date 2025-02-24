@@ -10,14 +10,11 @@
 #include "mapping/Polation.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Vertex;
 }
-} // namespace precice
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 /// Observes and exports coordinates of a point on the geometry.
 class WatchPoint {
@@ -77,5 +74,4 @@ private:
       mesh::PtrData &data);
 };
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl
