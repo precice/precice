@@ -732,8 +732,10 @@ int ParticipantImpl::getMeshVertexSize(
                                                    "but no access region was defined although this is necessary for parallel runs. "
                                                    "Please define an access region using \"setMeshAccessRegion()\" before calling \"getMeshVertexSize()\".",
                   meshName);
-    return std::count_if(context.mesh->vertices().cbegin(), context.mesh->vertices().cend(),
-                         [bb = context.userDefinedAccessRegion](const auto &v) { return bb->contains(v); });
+    auto result = std::count_if(context.mesh->vertices().cbegin(), context.mesh->vertices().cend(),
+                                [bb = context.userDefinedAccessRegion](const auto &v) { return bb->contains(v); });
+    PRECICE_DEBUG("Filtered {} of {} vertices out on mesh {} due to the local access region. Mesh size in the access region: {}", context.mesh->nVertices() - result, context.mesh->nVertices(), meshName, result);
+    return result;
   } else {
     // For provided meshes and in case the api-access was not configured, we return here all vertices
     PRECICE_WARN_IF(_accessor->isMeshReceived(meshName) && !_accessor->isDirectAccessAllowed(meshName),
@@ -1494,7 +1496,6 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
   const mesh::PtrMesh mesh(context.mesh);
 
   std::vector<std::reference_wrapper<const mesh::Vertex>> filteredVertices;
-  PRECICE_ASSERT(context.userDefinedAccessRegion);
   for (const auto &v : mesh->vertices()) {
     // either the vertex lies within the region OR the user-defined region is not strictly necessary
     if (context.userDefinedAccessRegion) {

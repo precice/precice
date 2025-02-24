@@ -46,10 +46,32 @@ BOOST_AUTO_TEST_CASE(ImplicitWithWaveform)
 
     std::array<double, dim * 2> boundingBox = std::array<double, dim * 2>{0.0, 1.0, 0.0, 1.0, 0.0, 1.0};
     // Define region of interest, where we could obtain direct write access
-    interface.setMeshAccessRegion(otherMeshName, boundingBox);
+    // Combined with a mapping: setting the access region is (in serial) optional
+    // Hence, we omit this line
+    // interface.setMeshAccessRegion(otherMeshName, boundingBox);
 
     interface.initialize();
     double dt = interface.getMaxTimeStepSize();
+
+    // Although we don't use the direct mesh access here, we check that the initialization works
+    {
+      auto otherSize = interface.getMeshVertexSize(otherMeshName);
+      BOOST_TEST(otherSize == 125);
+      std::vector<double> receivedCoordinates(otherSize * dim);
+      std::vector<int>    receivedIDs(otherSize);
+      interface.getMeshVertexIDsAndCoordinates(otherMeshName, receivedIDs, receivedCoordinates);
+      std::vector<double> expectedCoordinates;
+      for (int i = 0; i < 5; ++i) {
+        for (int j = 0; j < 5; ++j) {
+          for (int k = 0; k < 5; ++k) {
+            expectedCoordinates.emplace_back(i * 0.2);
+            expectedCoordinates.emplace_back(j * 0.2);
+            expectedCoordinates.emplace_back(k * 0.2);
+          }
+        }
+      }
+      BOOST_TEST(receivedCoordinates == expectedCoordinates, boost::test_tools::per_element());
+    }
 
     // Some dummy writeData
     std::vector<double> readData(size, -1);

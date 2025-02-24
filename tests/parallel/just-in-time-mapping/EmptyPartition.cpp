@@ -40,6 +40,17 @@ BOOST_AUTO_TEST_CASE(EmptyPartition)
     // Allocate memory
     std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.5, 2.0, 1.0, 3.5}) : std::vector<double>({11.0, 13.0, 12.0, 12.0});
 
+    // Although we don't use the direct mesh access here, we check that the initialization works
+    {
+      auto meshSize = interface.getMeshVertexSize(otherMeshName);
+      BOOST_TEST(meshSize == (context.isPrimary() ? 3 : 0));
+      std::vector<double> receivedCoordinates(meshSize * dim);
+      std::vector<int>    receivedIDs(meshSize);
+      interface.getMeshVertexIDsAndCoordinates(otherMeshName, receivedIDs, receivedCoordinates);
+      std::vector<double> expectedCoordinates = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : std::vector<double>(0);
+      BOOST_TEST(receivedCoordinates == expectedCoordinates, boost::test_tools::per_element());
+    }
+
     // Create some unique writeData in order to check it in the other participant
     std::vector<double> writeData(2, 5);
 

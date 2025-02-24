@@ -52,6 +52,19 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
 
     couplingInterface.initialize();
 
+    // Although we don't use the direct mesh access here, we check that the initialization works
+    // the repartitioned rank-local mesh is here filered according to the access region
+    // the local mesh contains for both ranks more vertices
+    {
+      auto meshSize = couplingInterface.getMeshVertexSize(otherMeshName);
+      BOOST_TEST(meshSize == (context.isPrimary() ? 2 : 3));
+      std::vector<double> receivedCoordinates(meshSize * dim);
+      std::vector<int>    receivedIDs(meshSize);
+      couplingInterface.getMeshVertexIDsAndCoordinates(otherMeshName, receivedIDs, receivedCoordinates);
+      std::vector<double> expectedCoordinates = context.isPrimary() ? std::vector<double>({0.0, 0.0, 0.9, 0.8}) : std::vector<double>({1.2, 0.1, 1.2, 1.0, 2.0, 1.0});
+      BOOST_TEST(receivedCoordinates == expectedCoordinates, boost::test_tools::per_element());
+    }
+
     double time = 0;
     while (couplingInterface.isCouplingOngoing()) {
       double dt = couplingInterface.getMaxTimeStepSize();
