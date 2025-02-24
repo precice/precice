@@ -26,7 +26,7 @@ public:
       const mesh::PtrMesh &   mesh);
 
   /// Adding data and applying them to target
-  void performAction() final override;
+  void performAction() final;
 
 private:
   logging::Logger _log{"action::SummationAction"};

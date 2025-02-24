@@ -181,12 +181,12 @@ struct ContextListener : public XMLTag::Listener {
   ConfigurationContext startContext;
   ConfigurationContext endContext;
 
-  void xmlTagCallback(const ConfigurationContext &context, XMLTag &callingTag)
+  void xmlTagCallback(const ConfigurationContext &context, XMLTag &callingTag) override
   {
     startContext = context;
   }
 
-  void xmlEndTagCallback(const ConfigurationContext &context, XMLTag &callingTag)
+  void xmlEndTagCallback(const ConfigurationContext &context, XMLTag &callingTag) override
   {
     endContext = context;
   }

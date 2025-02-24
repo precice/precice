@@ -75,20 +75,20 @@ public:
   ~PetRadialBasisFctMapping() override;
 
   /// Computes the mapping coefficients from the in- and output mesh.
-  void computeMapping() final override;
+  void computeMapping() final;
 
   /// Removes a computed mapping.
-  void clear() final override;
+  void clear() final;
 
   /// name of the rbf mapping
-  std::string getName() const final override;
+  std::string getName() const final;
 
 private:
   /// @copydoc RadialBasisFctBaseMapping::mapConservative
-  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final override;
+  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final;
 
   /// @copydoc RadialBasisFctBaseMapping::mapConsistent
-  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final override;
+  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final;
 
   /// Stores col -> value for each row. Used to return the already computed values from the preconditioning
   using VertexData = std::vector<std::vector<std::pair<int, double>>>;

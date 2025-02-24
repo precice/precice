@@ -23,10 +23,10 @@ public:
   PtrAcceleration getAcceleration();
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
   /// Removes configured acceleration.
   void clear();

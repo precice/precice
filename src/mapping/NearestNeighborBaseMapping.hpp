@@ -22,10 +22,10 @@ public:
                              std::string mappingNameShort);
 
   /// Computes the mapping coefficients from the in- and output mesh.
-  void computeMapping() final override;
+  void computeMapping() final;
 
   /// Removes a computed mapping.
-  void clear() final override;
+  void clear() final;
 
   /**
    * Matches the offsets needed for the gradient mapping
@@ -33,8 +33,8 @@ public:
    */
   virtual void onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace);
 
-  void tagMeshFirstRound() final override;
-  void tagMeshSecondRound() final override;
+  void tagMeshFirstRound() final;
+  void tagMeshSecondRound() final;
 
 protected:
   /// NearestNeighborMapping or NearestNeighborGradientMapping

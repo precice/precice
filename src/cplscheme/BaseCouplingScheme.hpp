@@ -78,16 +78,16 @@ public:
    * @brief Getter for _sendsInitializedData
    * @returns _sendsInitializedData
    */
-  bool sendsInitializedData() const override final;
+  bool sendsInitializedData() const final;
 
   /**
    * @brief getter for _isInitialized
    * @returns true, if initialize has been called.
    */
-  bool isInitialized() const override final;
+  bool isInitialized() const final;
 
   /// @copydoc cplscheme::CouplingScheme::addComputedTime()
-  bool addComputedTime(double timeToAdd) override final;
+  bool addComputedTime(double timeToAdd) final;
 
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
@@ -98,27 +98,27 @@ public:
    * @param lastSolverTimeStepSize [IN] The size of the last time step
    *        computed by the solver calling willDataBeExchanged().
    */
-  bool willDataBeExchanged(double lastSolverTimeStepSize) const override final;
+  bool willDataBeExchanged(double lastSolverTimeStepSize) const final;
 
   /**
    * @brief getter for _hasDataBeenReceived
    * @returns true, if data has been received in last call of advance().
    */
-  bool hasDataBeenReceived() const override final;
+  bool hasDataBeenReceived() const final;
 
   /**
    * @brief getter for _time
    * @returns the currently computed time of the coupling scheme.
    */
-  double getTime() const override final;
+  double getTime() const final;
 
-  double getTimeWindowStart() const override final;
+  double getTimeWindowStart() const final;
 
   /**
    * @brief getter for _timeWindows
    * @returns the number of currently computed time windows of the coupling scheme.
    */
-  int getTimeWindows() const override final;
+  int getTimeWindows() const final;
 
   /**
    * @brief Function to check whether time window size is defined by coupling scheme.
@@ -129,7 +129,7 @@ public:
    *
    * @returns true, if time window size is available.
    */
-  bool hasTimeWindowSize() const override final;
+  bool hasTimeWindowSize() const final;
 
   /**
    * @brief Returns the time window size, if one is given by the coupling scheme.
@@ -137,7 +137,7 @@ public:
    * An assertion is thrown, if no valid time window size is given. Check with
    * hasTimeWindowSize().
    */
-  double getTimeWindowSize() const override final;
+  double getTimeWindowSize() const final;
 
   /**
    * @brief Returns the maximal size of the next time step to be computed.
@@ -145,25 +145,25 @@ public:
    * If no time window size is prescribed by the coupling scheme, always the
    * maximal double accuracy floating point number value is returned.
    */
-  double getNextTimeStepMaxSize() const override final;
+  double getNextTimeStepMaxSize() const final;
 
   /// Returns true, when the coupled simulation is still ongoing.
-  bool isCouplingOngoing() const override final;
+  bool isCouplingOngoing() const final;
 
   /// Returns true, when the accessor can advance to the next time window.
-  bool isTimeWindowComplete() const override final;
+  bool isTimeWindowComplete() const final;
 
   /// Returns true, if the given action has to be performed by the accessor.
-  bool isActionRequired(Action action) const override final;
+  bool isActionRequired(Action action) const final;
 
   /// Returns true, if the given action has to be performed by the accessor.
-  bool isActionFulfilled(Action action) const override final;
+  bool isActionFulfilled(Action action) const final;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  void markActionFulfilled(Action action) override final;
+  void markActionFulfilled(Action action) final;
 
   /// Sets an action required to be performed by the accessor.
-  void requireAction(Action action) override final;
+  void requireAction(Action action) final;
 
   /**
    * @brief Returns coupling state information.
@@ -173,20 +173,20 @@ public:
   std::string printCouplingState() const override;
 
   /// Finalizes the coupling scheme.
-  void finalize() override final;
+  void finalize() final;
 
   /// @copydoc cplscheme::CouplingScheme::initialize()
-  void initialize() override final;
+  void initialize() final;
 
-  void reinitialize() override final;
+  void reinitialize() final;
 
-  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override final;
+  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) final;
 
-  void firstExchange() override final;
+  void firstExchange() final;
 
-  ChangedMeshes secondSynchronization() override final;
+  ChangedMeshes secondSynchronization() final;
 
-  void secondExchange() override final;
+  void secondExchange() final;
 
   /// Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure(
@@ -394,13 +394,13 @@ protected:
   bool reachedEndOfTimeWindow() const;
 
   /// @copydoc cplscheme::CouplingScheme::requiresSubsteps()
-  bool requiresSubsteps() const override final;
+  bool requiresSubsteps() const final;
 
   /// @copydoc cplscheme::CouplingScheme::implicitDataToReceive()
   ImplicitData implicitDataToReceive() const override;
 
   /// @copydoc cplscheme::CouplingScheme::localParticipant()
-  std::string localParticipant() const override final;
+  std::string localParticipant() const final;
 
 private:
   /// Coupling mode used by coupling scheme.

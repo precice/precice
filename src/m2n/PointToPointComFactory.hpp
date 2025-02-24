@@ -14,7 +14,7 @@ public:
   explicit PointToPointComFactory(com::PtrCommunicationFactory comFactory);
 
   DistributedCommunication::SharedPointer newDistributedCommunication(
-      mesh::PtrMesh mesh);
+      mesh::PtrMesh mesh) override;
 
 private:
   /// communication factory for 1:M communications

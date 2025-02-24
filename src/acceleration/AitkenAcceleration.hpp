@@ -20,23 +20,23 @@ public:
       std::vector<int>        dataIDs,
       impl::PtrPreconditioner preconditioner);
 
-  virtual ~AitkenAcceleration() = default;
+  ~AitkenAcceleration() override = default;
 
-  virtual std::vector<int> getPrimaryDataIDs() const override final
+  std::vector<int> getPrimaryDataIDs() const final
   {
     return _primaryDataIDs;
   }
 
-  virtual void initialize(
-      const DataMap &cpldata) override final;
+  void initialize(
+      const DataMap &cpldata) final;
 
-  virtual void performAcceleration(
+  void performAcceleration(
       DataMap &cpldata,
       double   windowStart,
-      double   windowEnd) override final;
+      double   windowEnd) final;
 
-  virtual void iterationsConverged(
-      const DataMap &cpldata, double windowStart) override final;
+  void iterationsConverged(
+      const DataMap &cpldata, double windowStart) final;
 
 private:
   /// @brief Concatenates the data and old data in cplData into two long vectors
