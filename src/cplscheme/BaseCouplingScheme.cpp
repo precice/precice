@@ -118,13 +118,12 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   profiling::Event e("waitAndSendData", profiling::Fundamental);
 
   for (const auto &data : sendData | boost::adaptors::map_values) {
-    const auto &stamples = data->stamples();
-    PRECICE_ASSERT(!stamples.empty());
-
-    int nTimeSteps = data->timeStepsStorage().nTimes();
-    PRECICE_ASSERT(nTimeSteps > 0);
-
     if (data->exchangeSubsteps()) {
+      const auto &stamples = data->stamples();
+      PRECICE_ASSERT(!stamples.empty());
+
+      int nTimeSteps = data->timeStepsStorage().nTimes();
+      PRECICE_ASSERT(nTimeSteps > 0);
       const auto timesAscending = data->timeStepsStorage().getTimes();
       sendTimes(m2n, timesAscending);
 
@@ -137,13 +136,14 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
         m2n->send(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * serialized.nTimeSteps());
       }
     } else {
+      const auto sample = data->timeStepsStorage().getSampleAtOrAfter(this->getTime()); // this->getTime() returns getWindowStartTime() when exchanging initial data; returns getWindowEndTime() for data exchange at window end.
       if (data->hasGradient()) {
         // Data is only received on ranks with size>0, which is checked in the derived class implementation
-        m2n->send(data->stamples().back().sample.values, data->getMeshID(), data->getDimensions());
-        m2n->send(data->stamples().back().sample.gradients, data->getMeshID(), data->getDimensions() * data->meshDimensions());
+        m2n->send(sample.values, data->getMeshID(), data->getDimensions());
+        m2n->send(sample.gradients, data->getMeshID(), data->getDimensions() * data->meshDimensions());
       } else {
         // Data is only received on ranks with size>0, which is checked in the derived class implementation
-        m2n->send(data->stamples().back().sample.values, data->getMeshID(), data->getDimensions());
+        m2n->send(sample.values, data->getMeshID(), data->getDimensions());
       }
     }
   }
