@@ -923,7 +923,11 @@ double BaseCouplingScheme::getWindowStartTime() const
 
 double BaseCouplingScheme::getWindowEndTime() const
 {
-  return getWindowStartTime() + getTimeWindowSize();
+  if (hasTimeWindowSize()) {
+    return _time.time() + _time.untilWindowEnd(_timeWindowSize);
+  } else {
+    return _time.time() + _time.untilEnd();
+  }
 }
 
 bool BaseCouplingScheme::requiresSubsteps() const
