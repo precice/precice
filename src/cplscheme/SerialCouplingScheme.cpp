@@ -119,10 +119,14 @@ void SerialCouplingScheme::exchangeInitialData()
 
 void SerialCouplingScheme::exchangeFirstData()
 {
+  if (doesFirstStep()) {
+    PRECICE_DEBUG("Sending time window size...");
+    sendTimeWindowSize();
+  }
+
   if (isExplicitCouplingScheme()) {
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Sending data...");
-      sendTimeWindowSize();
       sendData(getM2N(), getSendData());
     } else { // second participant
       PRECICE_DEBUG("Sending data...");
@@ -130,10 +134,8 @@ void SerialCouplingScheme::exchangeFirstData()
     }
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
-
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Sending data...");
-      sendTimeWindowSize();
       sendData(getM2N(), getSendData());
     } else { // second participant
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
@@ -148,6 +150,11 @@ void SerialCouplingScheme::exchangeFirstData()
 
 void SerialCouplingScheme::exchangeSecondData()
 {
+  if (not doesFirstStep() && (isCouplingOngoing() || not hasConverged())) {
+    PRECICE_DEBUG("Receiving time window size...");
+    receiveAndSetTimeWindowSize();
+  }
+
   if (isExplicitCouplingScheme()) {
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving data...");
@@ -160,7 +167,6 @@ void SerialCouplingScheme::exchangeSecondData()
     if (not doesFirstStep()) { // second participant
       // the second participant does not want new data in the last iteration of the last time window
       if (isCouplingOngoing()) {
-        receiveAndSetTimeWindowSize();
         PRECICE_DEBUG("Receiving data...");
         receiveDataForWindowEnd(getM2N(), getReceiveData());
         notifyDataHasBeenReceived();
@@ -168,7 +174,6 @@ void SerialCouplingScheme::exchangeSecondData()
     }
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
-
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving convergence data...");
       receiveConvergence(getM2N());
@@ -186,7 +191,6 @@ void SerialCouplingScheme::exchangeSecondData()
     if (not doesFirstStep()) { // second participant
       // the second participant does not want new data in the last iteration of the last time window
       if (isCouplingOngoing() || not hasConverged()) {
-        receiveAndSetTimeWindowSize();
         PRECICE_DEBUG("Receiving data...");
         if (hasConverged()) {
           receiveDataForWindowEnd(getM2N(), getReceiveData());
