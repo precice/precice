@@ -35,19 +35,9 @@ const Eigen::VectorXd &Data::values() const
   return _sample.values;
 }
 
-Eigen::MatrixXd &Data::gradients()
-{
-  return _sample.gradients;
-}
-
 const Eigen::MatrixXd &Data::gradients() const
 {
   return _sample.gradients;
-}
-
-time::Sample &Data::sample()
-{
-  return _sample;
 }
 
 const time::Sample &Data::sample() const
@@ -75,7 +65,7 @@ void Data::moveToNextWindow()
   if (stamples().size() > 1) { // Needed to avoid CompositionalCouplingScheme callong moveToNextWindow on same Data multiple times. Could be simplified by replacing Storage::move() with clearBefore(double time). See https://github.com/precice/precice/issues/1821.
     timeStepsStorage().move();
     PRECICE_ASSERT(stamples().size() == 1);
-    sample() = stamples().back().sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage, see https://github.com/precice/precice/issues/1645
+    setGlobalSample(stamples().back().sample); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage, see https://github.com/precice/precice/issues/1645
   }
 }
 

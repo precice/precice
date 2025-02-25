@@ -65,14 +65,8 @@ public:
   /// Returns a const reference to the data values.
   const Eigen::VectorXd &values() const;
 
-  /// Returns a reference to the gradient data values.
-  Eigen::MatrixXd &gradients();
-
   /// Returns a const reference to the gradient data values.
   const Eigen::MatrixXd &gradients() const;
-
-  /// Returns a reference to the _sample.
-  time::Sample &sample();
 
   /// Returns a const reference to the _sample.
   const time::Sample &sample() const;

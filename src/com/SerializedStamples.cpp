@@ -46,7 +46,7 @@ void SerializedStamples::allocate(const cplscheme::PtrCouplingData data)
 
 void SerializedStamples::serializeValues(std::shared_ptr<const cplscheme::CouplingData> data)
 {
-  const int nValues = data->sample().values.size();
+  const int nValues = data->getSize();
   int       timeId  = 0;
   for (const auto &stample : data->stamples()) {
     const Eigen::VectorXd &slice = stample.sample.values;
