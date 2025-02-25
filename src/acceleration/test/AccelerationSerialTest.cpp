@@ -92,14 +92,14 @@ void testIQNIMVJPP(bool exchangeSubsteps)
 
   pp.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00000000000000000000));
-  BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01000000000000000888));
-  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.02000000000000001776));
-  BOOST_TEST(testing::equals(data.at(0)->values()(3), 1.03000000000000002665));
-  BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.199000000000000010214));
-  BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.199000000000000010214));
-  BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.199000000000000010214));
-  BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(0), 1.00000000000000000000));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(1), 1.01000000000000000888));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(2), 1.02000000000000001776));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(3), 1.03000000000000002665));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(0), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(1), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(2), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(3), 0.199000000000000010214));
 
   // Update the waveform as well
   displacements->emplaceSampleAtTime(windowEnd, {10, 10, 10, 10});
@@ -107,14 +107,14 @@ void testIQNIMVJPP(bool exchangeSubsteps)
 
   pp.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929695848558e-01));
-  BOOST_TEST(testing::equals(data.at(0)->values()(1), 6.10309919173602111186e-01));
-  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.78402117927690184729e+00));
-  BOOST_TEST(testing::equals(data.at(0)->values()(3), 2.95773243938020247157e+00));
-  BOOST_TEST(testing::equals(data.at(1)->values()(0), 8.28025852497733250157e-02));
-  BOOST_TEST(testing::equals(data.at(1)->values()(1), 8.28025852497733250157e-02));
-  BOOST_TEST(testing::equals(data.at(1)->values()(2), 8.28025852497733250157e-02));
-  BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(0), -5.63401340929695848558e-01));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(1), 6.10309919173602111186e-01));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(2), 1.78402117927690184729e+00));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(3), 2.95773243938020247157e+00));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(0), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(1), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(2), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(3), 8.28025852497733250157e-02));
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -186,14 +186,14 @@ void testVIQNPP(bool exchangeSubsteps)
 
   pp.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00));
-  BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01));
-  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.02));
-  BOOST_TEST(testing::equals(data.at(0)->values()(3), 1.03));
-  BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.199));
-  BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.199));
-  BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.199));
-  BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.199));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(0), 1.00));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(1), 1.01));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(2), 1.02));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(3), 1.03));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(0), 0.199));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(1), 0.199));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(2), 0.199));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(3), 0.199));
 
   Eigen::VectorXd newdvalues;
   utils::append(newdvalues, 10.0);
@@ -206,14 +206,14 @@ void testVIQNPP(bool exchangeSubsteps)
 
   pp.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929692295845e-01));
-  BOOST_TEST(testing::equals(data.at(0)->values()(1), 6.10309919173607440257e-01));
-  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.78402117927690717636e+00));
-  BOOST_TEST(testing::equals(data.at(0)->values()(3), 2.95773243938020513610e+00));
-  BOOST_TEST(testing::equals(data.at(1)->values()(0), 8.28025852497733944046e-02));
-  BOOST_TEST(testing::equals(data.at(1)->values()(1), 8.28025852497733944046e-02));
-  BOOST_TEST(testing::equals(data.at(1)->values()(2), 8.28025852497733944046e-02));
-  BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(0), -5.63401340929692295845e-01));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(1), 6.10309919173607440257e-01));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(2), 1.78402117927690717636e+00));
+  BOOST_TEST(testing::equals(data.at(0)->timeStepsStorage().sample(windowEnd)(3), 2.95773243938020513610e+00));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(0), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(1), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(2), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(1)->timeStepsStorage().sample(windowEnd)(3), 8.28025852497733944046e-02));
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -268,28 +268,28 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
 
   acc.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(data.at(0)->values()(0) == 2);
-  BOOST_TEST(data.at(0)->values()(1) == 2);
-  BOOST_TEST(data.at(0)->values()(2) == 2.6);
-  BOOST_TEST(data.at(0)->values()(3) == 2.8);
-  BOOST_TEST(data.at(1)->values()(0) == 0.16);
-  BOOST_TEST(data.at(1)->values()(1) == 0.16);
-  BOOST_TEST(data.at(1)->values()(2) == 0.16);
-  BOOST_TEST(data.at(1)->values()(3) == 0.16);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(0) == 2);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(1) == 2);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(2) == 2.6);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(3) == 2.8);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(0) == 0.16);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(1) == 0.16);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(2) == 0.16);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(3) == 0.16);
 
   displacements->emplaceSampleAtTime(windowEnd, {10, 10, 10, 10});
   forces->setSampleAtTime(windowEnd, forces->sample());
 
   acc.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(data.at(0)->values()(0) == 4.6);
-  BOOST_TEST(data.at(0)->values()(1) == 5.2);
-  BOOST_TEST(data.at(0)->values()(2) == 5.8);
-  BOOST_TEST(data.at(0)->values()(3) == 6.4);
-  BOOST_TEST(data.at(1)->values()(0) == 0.184);
-  BOOST_TEST(data.at(1)->values()(1) == 0.184);
-  BOOST_TEST(data.at(1)->values()(2) == 0.184);
-  BOOST_TEST(data.at(1)->values()(3) == 0.184);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(0) == 4.6);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(1) == 5.2);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(2) == 5.8);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(3) == 6.4);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(0) == 0.184);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(1) == 0.184);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(2) == 0.184);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(3) == 0.184);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -330,28 +330,28 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithoutSubsteps)
 
   acc.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(data.at(0)->values()(0) == 2);
-  BOOST_TEST(data.at(0)->values()(1) == 2);
-  BOOST_TEST(data.at(0)->values()(2) == 2.6);
-  BOOST_TEST(data.at(0)->values()(3) == 2.8);
-  BOOST_TEST(data.at(1)->values()(0) == 0.16);
-  BOOST_TEST(data.at(1)->values()(1) == 0.16);
-  BOOST_TEST(data.at(1)->values()(2) == 0.16);
-  BOOST_TEST(data.at(1)->values()(3) == 0.16);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(0) == 2);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(1) == 2);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(2) == 2.6);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(3) == 2.8);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(0) == 0.16);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(1) == 0.16);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(2) == 0.16);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(3) == 0.16);
 
   displacements->emplaceSampleAtTime(windowEnd, {10, 10, 10, 10});
   forces->setSampleAtTime(windowEnd, forces->sample());
 
   acc.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(data.at(0)->values()(0) == 1.2689851805508461);
-  BOOST_TEST(data.at(0)->values()(1) == 2.2390979382674185);
-  BOOST_TEST(data.at(0)->values()(2) == 3.2092106959839914);
-  BOOST_TEST(data.at(0)->values()(3) == 4.1793234537005644);
-  BOOST_TEST(data.at(1)->values()(0) == 0.19880451030866292);
-  BOOST_TEST(data.at(1)->values()(1) == 0.19880451030866292);
-  BOOST_TEST(data.at(1)->values()(2) == 0.19880451030866292);
-  BOOST_TEST(data.at(1)->values()(3) == 0.19880451030866292);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(0) == 1.2689851805508461);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(1) == 2.2390979382674185);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(2) == 3.2092106959839914);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(3) == 4.1793234537005644);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(0) == 0.19880451030866292);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(1) == 0.19880451030866292);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(2) == 0.19880451030866292);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(3) == 0.19880451030866292);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -405,17 +405,17 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
 
   acc.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(data.at(0)->values()(0) == 8.8);
-  BOOST_TEST(data.at(0)->values()(1) == 21.6);
-  BOOST_TEST(data.at(1)->values()(0) == 9);
-  BOOST_TEST(data.at(1)->values()(1) == 9);
-  BOOST_TEST(data.at(2)->values()(0) == 8.2);
-  BOOST_TEST(data.at(2)->values()(1) == 9.2);
-  BOOST_TEST(data.at(2)->values()(2) == 10.2);
-  BOOST_TEST(data.at(3)->values()(0) == 36);
-  BOOST_TEST(data.at(3)->values()(1) == 56);
-  BOOST_TEST(data.at(3)->values()(2) == 76);
-  BOOST_TEST(data.at(3)->values()(3) == 96);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(0) == 8.8);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(1) == 21.6);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(0) == 9);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(1) == 9);
+  BOOST_TEST(data.at(2)->timeStepsStorage().sample(windowEnd)(0) == 8.2);
+  BOOST_TEST(data.at(2)->timeStepsStorage().sample(windowEnd)(1) == 9.2);
+  BOOST_TEST(data.at(2)->timeStepsStorage().sample(windowEnd)(2) == 10.2);
+  BOOST_TEST(data.at(3)->timeStepsStorage().sample(windowEnd)(0) == 36);
+  BOOST_TEST(data.at(3)->timeStepsStorage().sample(windowEnd)(1) == 56);
+  BOOST_TEST(data.at(3)->timeStepsStorage().sample(windowEnd)(2) == 76);
+  BOOST_TEST(data.at(3)->timeStepsStorage().sample(windowEnd)(3) == 96);
 
   data1->emplaceSampleAtTime(windowEnd, {2, 14});
   data2->emplaceSampleAtTime(windowEnd, {8, 8});
@@ -424,17 +424,17 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
 
   acc.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(data.at(0)->values()(0) == -17.745640722103754);
-  BOOST_TEST(data.at(0)->values()(1) == -20.295060201548626);
-  BOOST_TEST(data.at(1)->values()(0) == 9.5588663727976648);
-  BOOST_TEST(data.at(1)->values()(1) == 9.5588663727976648);
-  BOOST_TEST(data.at(2)->values()(0) == 19.235465491190659);
-  BOOST_TEST(data.at(2)->values()(1) == 20.235465491190659);
-  BOOST_TEST(data.at(2)->values()(2) == 21.235465491190659);
-  BOOST_TEST(data.at(3)->values()(0) == 51.912064609583652);
-  BOOST_TEST(data.at(3)->values()(1) == 71.912064609583652);
-  BOOST_TEST(data.at(3)->values()(2) == 91.912064609583652);
-  BOOST_TEST(data.at(3)->values()(3) == 95.196221242658879);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(0) == -17.745640722103754);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(1) == -20.295060201548626);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(0) == 9.5588663727976648);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(1) == 9.5588663727976648);
+  BOOST_TEST(data.at(2)->timeStepsStorage().sample(windowEnd)(0) == 19.235465491190659);
+  BOOST_TEST(data.at(2)->timeStepsStorage().sample(windowEnd)(1) == 20.235465491190659);
+  BOOST_TEST(data.at(2)->timeStepsStorage().sample(windowEnd)(2) == 21.235465491190659);
+  BOOST_TEST(data.at(3)->timeStepsStorage().sample(windowEnd)(0) == 51.912064609583652);
+  BOOST_TEST(data.at(3)->timeStepsStorage().sample(windowEnd)(1) == 71.912064609583652);
+  BOOST_TEST(data.at(3)->timeStepsStorage().sample(windowEnd)(2) == 91.912064609583652);
+  BOOST_TEST(data.at(3)->timeStepsStorage().sample(windowEnd)(3) == 95.196221242658879);
 
   data1->emplaceSampleAtTime(windowEnd, {2.1, 14.1});
   data2->emplaceSampleAtTime(windowEnd, {8, 8});
@@ -458,17 +458,17 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
 
   acc.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(data.at(0)->values()(0) == 10.4);
-  BOOST_TEST(data.at(0)->values()(1) == 28.8);
-  BOOST_TEST(data.at(1)->values()(0) == 6.6);
-  BOOST_TEST(data.at(1)->values()(1) == 6.6);
-  BOOST_TEST(data.at(2)->values()(0) == 14.6);
-  BOOST_TEST(data.at(2)->values()(1) == 15.6);
-  BOOST_TEST(data.at(2)->values()(2) == 16.6);
-  BOOST_TEST(data.at(3)->values()(0) == 44);
-  BOOST_TEST(data.at(3)->values()(1) == 64);
-  BOOST_TEST(data.at(3)->values()(2) == 84);
-  BOOST_TEST(data.at(3)->values()(3) == 104);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(0) == 10.4);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(1) == 28.8);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(0) == 6.6);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(1) == 6.6);
+  BOOST_TEST(data.at(2)->timeStepsStorage().sample(windowEnd)(0) == 14.6);
+  BOOST_TEST(data.at(2)->timeStepsStorage().sample(windowEnd)(1) == 15.6);
+  BOOST_TEST(data.at(2)->timeStepsStorage().sample(windowEnd)(2) == 16.6);
+  BOOST_TEST(data.at(3)->timeStepsStorage().sample(windowEnd)(0) == 44);
+  BOOST_TEST(data.at(3)->timeStepsStorage().sample(windowEnd)(1) == 64);
+  BOOST_TEST(data.at(3)->timeStepsStorage().sample(windowEnd)(2) == 84);
+  BOOST_TEST(data.at(3)->timeStepsStorage().sample(windowEnd)(3) == 104);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -523,14 +523,14 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
   acc.performAcceleration(data, windowStart, windowEnd);
 
   // Test value data
-  BOOST_TEST(data.at(0)->values()(0) == 2);
-  BOOST_TEST(data.at(0)->values()(1) == 2);
-  BOOST_TEST(data.at(0)->values()(2) == 2.6);
-  BOOST_TEST(data.at(0)->values()(3) == 2.8);
-  BOOST_TEST(data.at(1)->values()(0) == 0.16);
-  BOOST_TEST(data.at(1)->values()(1) == 0.16);
-  BOOST_TEST(data.at(1)->values()(2) == 0.16);
-  BOOST_TEST(data.at(1)->values()(3) == 0.16);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(0) == 2);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(1) == 2);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(2) == 2.6);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(3) == 2.8);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(0) == 0.16);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(1) == 0.16);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(2) == 0.16);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(3) == 0.16);
 
   // Test gradient data
   BOOST_TEST(data.at(0)->gradients()(0, 0) == 1);
@@ -552,14 +552,14 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
   acc.performAcceleration(data, windowStart, windowEnd);
 
   // Check that store iteration works properly
-  BOOST_TEST(data.at(0)->values()(0) == 4.6);
-  BOOST_TEST(data.at(0)->values()(1) == 5.2);
-  BOOST_TEST(data.at(0)->values()(2) == 5.8);
-  BOOST_TEST(data.at(0)->values()(3) == 6.4);
-  BOOST_TEST(data.at(1)->values()(0) == 0.184);
-  BOOST_TEST(data.at(1)->values()(1) == 0.184);
-  BOOST_TEST(data.at(1)->values()(2) == 0.184);
-  BOOST_TEST(data.at(1)->values()(3) == 0.184);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(0) == 4.6);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(1) == 5.2);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(2) == 5.8);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(3) == 6.4);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(0) == 0.184);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(1) == 0.184);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(2) == 0.184);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(3) == 0.184);
 
   BOOST_TEST(data.at(0)->gradients()(0, 0) == 1.6);
   BOOST_TEST(data.at(0)->gradients()(0, 1) == 1.6);
@@ -606,14 +606,14 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
 
   acc.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(data.at(0)->values()(0) == 2);
-  BOOST_TEST(data.at(0)->values()(1) == 2);
-  BOOST_TEST(data.at(0)->values()(2) == 2.6);
-  BOOST_TEST(data.at(0)->values()(3) == 2.8);
-  BOOST_TEST(data.at(1)->values()(0) == 0.16);
-  BOOST_TEST(data.at(1)->values()(1) == 0.16);
-  BOOST_TEST(data.at(1)->values()(2) == 0.16);
-  BOOST_TEST(data.at(1)->values()(3) == 0.16);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(0) == 2);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(1) == 2);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(2) == 2.6);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(3) == 2.8);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(0) == 0.16);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(1) == 0.16);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(2) == 0.16);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(3) == 0.16);
 
   displacements->emplaceSampleAtTime(windowEnd, {10, 10, 10, 10});
 
@@ -621,14 +621,14 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
 
   acc.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(data.at(0)->values()(0) == 4.6);
-  BOOST_TEST(data.at(0)->values()(1) == 5.2);
-  BOOST_TEST(data.at(0)->values()(2) == 5.8);
-  BOOST_TEST(data.at(0)->values()(3) == 6.4);
-  BOOST_TEST(data.at(1)->values()(0) == 0.184);
-  BOOST_TEST(data.at(1)->values()(1) == 0.184);
-  BOOST_TEST(data.at(1)->values()(2) == 0.184);
-  BOOST_TEST(data.at(1)->values()(3) == 0.184);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(0) == 4.6);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(1) == 5.2);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(2) == 5.8);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(3) == 6.4);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(0) == 0.184);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(1) == 0.184);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(2) == 0.184);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(3) == 0.184);
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -683,14 +683,14 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
   acc.performAcceleration(data, windowStart, windowEnd);
 
   // Test value data
-  BOOST_TEST(data.at(0)->values()(0) == 2);
-  BOOST_TEST(data.at(0)->values()(1) == 2);
-  BOOST_TEST(data.at(0)->values()(2) == 2.6);
-  BOOST_TEST(data.at(0)->values()(3) == 2.8);
-  BOOST_TEST(data.at(1)->values()(0) == 0.16);
-  BOOST_TEST(data.at(1)->values()(1) == 0.16);
-  BOOST_TEST(data.at(1)->values()(2) == 0.16);
-  BOOST_TEST(data.at(1)->values()(3) == 0.16);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(0) == 2);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(1) == 2);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(2) == 2.6);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(3) == 2.8);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(0) == 0.16);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(1) == 0.16);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(2) == 0.16);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(3) == 0.16);
 
   // Test gradient data
   BOOST_TEST(data.at(0)->gradients()(0, 0) == 1);
@@ -712,14 +712,14 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
   acc.performAcceleration(data, windowStart, windowEnd);
 
   // Check that store iteration works properly
-  BOOST_TEST(data.at(0)->values()(0) == 4.6);
-  BOOST_TEST(data.at(0)->values()(1) == 5.2);
-  BOOST_TEST(data.at(0)->values()(2) == 5.8);
-  BOOST_TEST(data.at(0)->values()(3) == 6.4);
-  BOOST_TEST(data.at(1)->values()(0) == 0.184);
-  BOOST_TEST(data.at(1)->values()(1) == 0.184);
-  BOOST_TEST(data.at(1)->values()(2) == 0.184);
-  BOOST_TEST(data.at(1)->values()(3) == 0.184);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(0) == 4.6);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(1) == 5.2);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(2) == 5.8);
+  BOOST_TEST(data.at(0)->timeStepsStorage().sample(windowEnd)(3) == 6.4);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(0) == 0.184);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(1) == 0.184);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(2) == 0.184);
+  BOOST_TEST(data.at(1)->timeStepsStorage().sample(windowEnd)(3) == 0.184);
 
   BOOST_TEST(data.at(0)->gradients()(0, 0) == 1.6);
   BOOST_TEST(data.at(0)->gradients()(0, 1) == 1.6);
