@@ -211,7 +211,7 @@ void BaseCouplingScheme::receiveDataForWindowEnd(const m2n::PtrM2N &m2n, const D
   // set _time state to point to end of this window such that _time in receiveData is at end of window
   _time.progressBy(_nextTimeWindowSize);
   // receive data for end of window
-  PRECICE_ASSERT(getTime() == getWindowEndTime());
+  PRECICE_ASSERT(getTime() == oldTime.time() + _nextTimeWindowSize);
   this->receiveData(m2n, receiveData);
   // reset time state;
   _time = oldTime;
