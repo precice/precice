@@ -199,9 +199,15 @@ public:
   /**
    * @brief Just-in-time mapping variant of mapConservative
    *
+   * Depending on the underlying mapping implementation, the result is either stored
+   * in an intermediate \p cache or directly in the \p target values, i.e., one of both
+   * arguments is typically unused in the mapping method. In case the data is stored
+   * in the cache, final results may be computed using \p completeJustInTimeMapping
+   *
    * @param coordinates[in] where to compute the mapping
+   * @param cache[out] the mapping data cache previously initialized with \p initializeMappingDataCache
    * @param source[in] the data values passed from the user
-   * @param target[in/out] preCICE-interal buffer where we store the result
+   * @param target[out] preCICE-interal buffer where we store the result
    *
    * @note the default implementation in this class simply aborts the code and actual
    * implementations are in derived classes
@@ -213,7 +219,7 @@ public:
    *
    * @param coordinates[in] where to compute the mapping
    * @param cache[in] the mapping data cache previously computed with \p updateMappingDataCache
-   * @param values[in/out] data buffer passed from the user
+   * @param values[out] data buffer passed from the user (needs to have the correct shape)
    *
    * @note the default implementation in this class simply aborts the code and actual
    * implementations are in derived classes
