@@ -9,11 +9,13 @@
 #include "mapping/Mapping.hpp"
 #include "mapping/PartitionOfUnityMapping.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
+#include "mapping/impl/MappingDataCache.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
+#include "mesh/config/MeshConfiguration.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
@@ -766,6 +768,143 @@ void perform3DTestConsistentMapping(Mapping &mapping)
   BOOST_TEST(value == 1.5);
 }
 
+void perform3DTestJustInTimeMapping(Mapping &mapping)
+{
+  int dimensions     = 3;
+  int dataComponents = 1;
+
+  // Create mesh to map from
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
+  mesh::PtrData inData   = inMesh->createData("InData", dataComponents, 0_dataID);
+  int           inDataID = inData->getID();
+  inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+
+  inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
+  inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 1.0));
+  inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
+  inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 1.0));
+
+  inMesh->createVertex(Eigen::Vector3d(2.0, 0.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(3.0, 1.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(2.0, 1.0, 0.0));
+
+  inMesh->createVertex(Eigen::Vector3d(2.0, 0.0, 1.0));
+  inMesh->createVertex(Eigen::Vector3d(3.0, 0.0, 1.0));
+  inMesh->createVertex(Eigen::Vector3d(3.0, 1.0, 1.0));
+  inMesh->createVertex(Eigen::Vector3d(2.0, 1.0, 1.0));
+
+  inMesh->createVertex(Eigen::Vector3d(4.0, 0.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(5.0, 0.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(5.0, 1.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(4.0, 1.0, 0.0));
+
+  inMesh->createVertex(Eigen::Vector3d(4.0, 0.0, 1.0));
+  inMesh->createVertex(Eigen::Vector3d(5.0, 0.0, 1.0));
+  inMesh->createVertex(Eigen::Vector3d(5.0, 1.0, 1.0));
+  inMesh->createVertex(Eigen::Vector3d(4.0, 1.0, 1.0));
+
+  inMesh->allocateDataValues();
+  addGlobalIndex(inMesh);
+
+  auto &values = inData->values();
+
+  // Set the values in the parallel (z) plane 3*values
+  values << 1.0, 2.0, 2.0, 1.0, 3.0, 6.0, 6.0, 3.0, 3.0, 4.0, 4.0, 3.0, 9.0, 12.0, 12.0, 9.0, 5.0, 6.0, 6.0, 5.0, 15.0, 18.0, 18.0, 15.0;
+
+  // the dummy target mesh
+  mesh::PtrMesh toMesh = mesh::MeshConfiguration::getJustInTimeMappingMesh(dimensions);
+
+  // Setup mapping with mapping coordinates and geometry used
+  mapping.setMeshes(inMesh, toMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+  // compute the mapping (affects only the inMesh)
+  mapping.computeMapping();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // Now, we can setup the MappingDataCache with the structures
+  // from computeMapping
+  mapping::impl::MappingDataCache cache(dataComponents);
+  mapping.initializeMappingDataCache(cache);
+
+  // computeMapping and the initializeMappingDataCache are only required for changes in the input coords
+  // whereas the cache update is for new data values
+  mapping.updateMappingDataCache(cache, values);
+  // we can also give the cache a time stamp (not strictly necessary)
+  double stamp = 1;
+  cache.setTimeStamp(stamp);
+
+  // Test infrastructure
+  Eigen::MatrixXd coords(dimensions, 1);
+  Eigen::MatrixXd result(dataComponents, 1);
+
+  // Now we can evaluate at any point we want
+  coords.setZero();
+  // Check that we have the right time
+  BOOST_TEST(cache.hasDataAtTimeStamp(stamp));
+  mapping.mapConsistentAt(coords, cache, result);
+  BOOST_TEST(result(0, 0) == 1.0);
+
+  coords.col(0) = Eigen::RowVector3d(3.5, 0.5, 0.5);
+  // Check that we have the right time
+  BOOST_TEST(cache.hasDataAtTimeStamp(stamp));
+  mapping.mapConsistentAt(coords, cache, result);
+  BOOST_TEST(result(0, 0) == 9.0);
+
+  coords.col(0) = Eigen::RowVector3d(2.5, 0.5, 1.0);
+  // Check that we have the right time
+  BOOST_TEST(cache.hasDataAtTimeStamp(stamp));
+  mapping.mapConsistentAt(coords, cache, result);
+  BOOST_TEST(result(0, 0) == 10.5);
+
+  // We can also pass multiple vertices at once
+  coords.resize(dimensions, 3);
+  result.resize(dataComponents, 3);
+
+  coords.col(0) = Eigen::RowVector3d(0.0, 0.5, 0.5);
+  coords.col(1) = Eigen::RowVector3d(0.0, 1.0, 1.0);
+  coords.col(2) = Eigen::RowVector3d(1.0, 0.0, 0.0);
+  // Check that we have the right time
+  BOOST_TEST(cache.hasDataAtTimeStamp(stamp));
+  mapping.mapConsistentAt(coords, cache, result);
+  BOOST_TEST(result(0, 0) == 2.0);
+  BOOST_TEST(result(0, 1) == 3.0);
+  BOOST_TEST(result(0, 2) == 2.0);
+
+  // Now we alter the data (double values)
+  values *= 2;
+  // Mapping remains the same
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  // Step 1: invalidate cache (happens in the DataContext)
+  cache.setTimeStamp(-1);
+  BOOST_TEST(!cache.hasDataAtTimeStamp(stamp));
+  // Step 2: update the cache
+  mapping.updateMappingDataCache(cache, values);
+  // Step 3: mark the cache
+  stamp = 2.0;
+  cache.setTimeStamp(stamp);
+  BOOST_TEST(cache.hasDataAtTimeStamp(stamp));
+
+  // Ready for new mappings
+  mapping.mapConsistentAt(coords, cache, result);
+  BOOST_TEST(result(0, 0) == 4.0);
+  BOOST_TEST(result(0, 1) == 6.0);
+  BOOST_TEST(result(0, 2) == 4.0);
+
+  coords.col(0) = Eigen::RowVector3d(0.5, 0.0, 0.5);
+  coords.col(1) = Eigen::RowVector3d(0.5, 0.5, 1.0);
+  coords.col(2) = Eigen::RowVector3d(0.5, 1.0, 0.0);
+  // Check that we have the right time
+  BOOST_TEST(cache.hasDataAtTimeStamp(stamp));
+  mapping.mapConsistentAt(coords, cache, result);
+  BOOST_TEST(result(0, 0) == 6.0);
+  BOOST_TEST(result(0, 1) == 9.0);
+  BOOST_TEST(result(0, 2) == 3.0);
+}
+
 void perform3DTestConsistentMappingVector(Mapping &mapping)
 {
   int dimensions     = 3;
@@ -1139,6 +1278,15 @@ BOOST_AUTO_TEST_CASE(PartitionOfUnityMappingTests)
   perform3DTestConservativeMapping(conservativeMap3D);
   mapping::PartitionOfUnityMapping<CompactPolynomialC0> conservativeMap3DVector(Mapping::CONSERVATIVE, 3, function, Polynomial::SEPARATE, 5, 0.265, false);
   perform3DTestConservativeMappingVector(conservativeMap3DVector);
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(JustInTimeMapping)
+{
+  PRECICE_TEST();
+  mapping::CompactPolynomialC0                          function(3);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC0> noPolynomial3Dconsistent(Mapping::CONSISTENT, 3, function, Polynomial::SEPARATE, 5, 0.265, false);
+  perform3DTestJustInTimeMapping(noPolynomial3Dconsistent);
 }
 
 // Test for small meshes, where the number of requested vertices per cluster is bigger than the global
