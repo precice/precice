@@ -200,7 +200,6 @@ void SerialCouplingScheme::exchangeSecondData()
         if (hasConverged()) {
           receiveDataForWindowEnd(getM2N(), getReceiveData());
         } else {
-          PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
           receiveData(getM2N(), getReceiveData()); // receive data for end of window
         }
         notifyDataHasBeenReceived();
