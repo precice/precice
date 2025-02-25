@@ -60,12 +60,16 @@ const Eigen::MatrixXd &CouplingData::gradients() const
 
 int CouplingData::gradientsRows() const
 {
-  return sample().gradients.rows();
+  const int rows = meshDimensions();
+  PRECICE_ASSERT(sample().gradients.rows() == rows, sample().gradients.rows(), rows);
+  return rows;
 }
 
 int CouplingData::gradientsCols() const
 {
-  return sample().gradients.cols();
+  const int cols = getSize();
+  PRECICE_ASSERT(sample().gradients.cols() == cols, sample().gradients.cols(), cols);
+  return cols;
 }
 
 const time::Sample &CouplingData::sample() const
