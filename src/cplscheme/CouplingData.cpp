@@ -102,6 +102,12 @@ void CouplingData::setSampleAtTime(double time, time::Sample sample)
   _data->setSampleAtTime(time, sample);
 }
 
+void CouplingData::setGlobalSample(const time::Sample &sample)
+{
+  PRECICE_ASSERT(not sample.values.hasNaN());
+  _data->setGlobalSample(sample);
+}
+
 void CouplingData::initializeWithZeroAtTime(double time)
 {
   auto zero = time::Sample(getDimensions(), nVertices());

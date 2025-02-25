@@ -63,6 +63,9 @@ public:
   /// Add sample at given time to _timeStepsStorage.
   void setSampleAtTime(double time, time::Sample sample);
 
+  /// Set _data::_sample
+  void setGlobalSample(const time::Sample &sample); // @todo try to remove this function
+
   /// Add sample with zero values at given time to _timeStepsStorage.
   void initializeWithZeroAtTime(double time);
 

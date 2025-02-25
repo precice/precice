@@ -82,8 +82,14 @@ void Data::moveToNextWindow()
 void Data::setSampleAtTime(double time, const time::Sample &sample)
 {
   PRECICE_ASSERT(sample.dataDims == getDimensions(), "Sample has incorrect data dimension");
-  _sample = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage, see https://github.com/precice/precice/issues/1645
+  setGlobalSample(sample); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage, see https://github.com/precice/precice/issues/1645
   _waveform.timeStepsStorage().setSampleAtTime(time, sample);
+}
+
+void Data::setGlobalSample(const time::Sample &sample)
+{
+  PRECICE_ASSERT(not sample.values.hasNaN());
+  _sample = sample;
 }
 
 void Data::emplaceSampleAtTime(double time)
