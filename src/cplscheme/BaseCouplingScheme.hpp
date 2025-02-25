@@ -398,6 +398,17 @@ protected:
   /// @copydoc cplscheme::CouplingScheme::localParticipant()
   std::string localParticipant() const override final;
 
+protected:
+  /**
+   * @return the end of the time window, defined as timeWindowStart + timeWindowSize
+   */
+  double getWindowEndTime() const;
+
+  /**
+   * @return the start of the time window
+   */
+  double getWindowStartTime() const;
+
 private:
   /// Coupling mode used by coupling scheme.
   CouplingMode _couplingMode = Undefined;
@@ -576,16 +587,6 @@ private:
    * @return true, if any CouplingData in dataMap requires initialization
    */
   bool anyDataRequiresInitialization(DataMap &dataMap) const;
-
-  /**
-   * @return the end of the time window, defined as timeWindowStart + timeWindowSize
-   */
-  double getWindowEndTime() const;
-
-  /**
-   * @return the start of the time window
-   */
-  double getWindowStartTime() const;
 };
 } // namespace cplscheme
 } // namespace precice

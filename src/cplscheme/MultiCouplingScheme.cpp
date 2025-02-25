@@ -80,6 +80,7 @@ void MultiCouplingScheme::initializeReceiveDataStorage()
 void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
+  PRECICE_ASSERT(getTime() == getWindowStartTime());
 
   if (_isController) {
     for (auto &[from, data] : _receiveDataVector) {
@@ -126,6 +127,7 @@ bool MultiCouplingScheme::receivesInitializedDataFrom(const std::string &from) c
 void MultiCouplingScheme::exchangeFirstData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
+  PRECICE_ASSERT(getTime() == getWindowEndTime());
   // @todo implement MultiCouplingScheme for explicit coupling
 
   PRECICE_DEBUG("Computed full length of iteration");
@@ -145,6 +147,7 @@ void MultiCouplingScheme::exchangeFirstData()
 void MultiCouplingScheme::exchangeSecondData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
+  PRECICE_ASSERT(getTime() == getWindowEndTime());
   // @todo implement MultiCouplingScheme for explicit coupling
 
   if (not _isController) {
