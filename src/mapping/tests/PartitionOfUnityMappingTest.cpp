@@ -768,7 +768,8 @@ void perform3DTestConsistentMapping(Mapping &mapping)
   BOOST_TEST(value == 1.5);
 }
 
-void perform3DTestJustInTimeMapping(Mapping &mapping)
+// uses scalar data in 3D
+void perform3DTestJustInTimeMappingWithPolynomial(Mapping &mapping)
 {
   int dimensions     = 3;
   int dataComponents = 1;
@@ -933,6 +934,171 @@ void perform3DTestJustInTimeMapping(Mapping &mapping)
   BOOST_TEST(result(0, 0) == 7.5);
   BOOST_TEST(result(0, 1) == 4.5);
   BOOST_TEST(result(0, 2) == 1.5);
+}
+
+// uses vectorial data in 2D
+void perform3DTestJustInTimeMappingNoPolynomial(Mapping &mapping)
+{
+  int dimensions     = 2;
+  int dataComponents = 2;
+
+  // Create mesh to map from
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
+  mesh::PtrData inData   = inMesh->createData("InData", dataComponents, 0_dataID);
+  int           inDataID = inData->getID();
+  inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  inMesh->createVertex(Eigen::Vector2d(1.0, 0.0));
+  inMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
+  inMesh->createVertex(Eigen::Vector2d(0.0, 1.0));
+
+  inMesh->createVertex(Eigen::Vector2d(2.0, 0.0));
+  inMesh->createVertex(Eigen::Vector2d(3.0, 0.0));
+  inMesh->createVertex(Eigen::Vector2d(3.0, 1.0));
+  inMesh->createVertex(Eigen::Vector2d(2.0, 1.0));
+
+  inMesh->createVertex(Eigen::Vector2d(4.0, 0.0));
+  inMesh->createVertex(Eigen::Vector2d(5.0, 0.0));
+  inMesh->createVertex(Eigen::Vector2d(5.0, 1.0));
+  inMesh->createVertex(Eigen::Vector2d(4.0, 1.0));
+
+  inMesh->allocateDataValues();
+  addGlobalIndex(inMesh);
+
+  auto &values = inData->values();
+
+  // Set the values in the parallel (z) plane 3*values
+  values << 1.0, 2.0, 2.0, 1.0, 3.0, 6.0, 6.0, 3.0, 3.0, 4.0, 4.0, 3.0, 9.0, 12.0, 12.0, 9.0, 5.0, 6.0, 6.0, 5.0, 15.0, 18.0, 18.0, 15.0;
+
+  // the dummy target mesh
+  mesh::PtrMesh toMesh = mesh::MeshConfiguration::getJustInTimeMappingMesh(dimensions);
+
+  // Setup mapping with mapping coordinates and geometry used
+  mapping.setMeshes(inMesh, toMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+  // compute the mapping (affects only the inMesh)
+  mapping.computeMapping();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // Now, we can setup the MappingDataCache with the structures
+  // from computeMapping
+  mapping::impl::MappingDataCache cache(dataComponents);
+  mapping.initializeMappingDataCache(cache);
+
+  // computeMapping and the initializeMappingDataCache are only required for changes in the input coords
+  // whereas the cache update is for new data values
+  mapping.updateMappingDataCache(cache, values);
+  // we can also give the cache a time stamp (not strictly necessary)
+  double stamp = 1;
+  cache.setTimeStamp(stamp);
+
+  // Test infrastructure
+  Eigen::MatrixXd coords(dimensions, 1);
+  Eigen::MatrixXd result(dataComponents, 1);
+
+  // Now we can evaluate at any point we want
+  coords.setZero();
+  // Check that we have the right time
+  BOOST_TEST(cache.hasDataAtTimeStamp(stamp));
+  mapping.mapConsistentAt(coords, cache, result);
+  BOOST_TEST(result(0, 0) == 1.0);
+  BOOST_TEST(result(1, 0) == 2.0);
+
+  // Second last point given
+  coords.col(0) = Eigen::RowVector2d(5.0, 1.0);
+  // Check that we have the right time
+  BOOST_TEST(cache.hasDataAtTimeStamp(stamp));
+  mapping.mapConsistentAt(coords, cache, result);
+  BOOST_TEST(result(0, 0) == 15.0);
+  BOOST_TEST(result(1, 0) == 18.0);
+
+  // Between the first and the second point
+  coords.col(0) = Eigen::RowVector2d(0.5, 0.0);
+  // Check that we have the right time
+  BOOST_TEST(cache.hasDataAtTimeStamp(stamp));
+  mapping.mapConsistentAt(coords, cache, result);
+  BOOST_TEST(result(0, 0) == 1.71978075, boost::test_tools::tolerance(1e-7));
+  BOOST_TEST(result(1, 0) == 1.71978075, boost::test_tools::tolerance(1e-7));
+
+  coords.col(0) = Eigen::RowVector2d(3.5, 0.5);
+  // Check that we have the right time
+  BOOST_TEST(cache.hasDataAtTimeStamp(stamp));
+  mapping.mapConsistentAt(coords, cache, result);
+  BOOST_TEST(result(0, 0) == 10.39684625, boost::test_tools::tolerance(1e-7));
+  BOOST_TEST(result(1, 0) == 10.48101386, boost::test_tools::tolerance(1e-7));
+
+  // We can also pass multiple vertices at once
+  coords.resize(dimensions, 2);
+  result.resize(dataComponents, 2);
+
+  coords.col(0) = Eigen::RowVector2d(4.0, 0.0);
+  coords.col(1) = Eigen::RowVector2d(5.0, 0.0);
+  // // Check that we have the right time
+  BOOST_TEST(cache.hasDataAtTimeStamp(stamp));
+  mapping.mapConsistentAt(coords, cache, result);
+  BOOST_TEST(result(0, 0) == 5.0);
+  BOOST_TEST(result(1, 0) == 6.0);
+  BOOST_TEST(result(0, 1) == 6.0);
+  BOOST_TEST(result(1, 1) == 5.0);
+
+  // Now we alter the data (double values)
+  values *= 0.5;
+  // Mapping remains the same
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+  // Step 1: invalidate cache (happens in the DataContext)
+  cache.setTimeStamp(-1);
+  BOOST_TEST(!cache.hasDataAtTimeStamp(stamp));
+  // Step 2: update the cache
+  mapping.updateMappingDataCache(cache, values);
+  // Step 3: mark the cache
+  stamp = 2.0;
+  cache.setTimeStamp(stamp);
+  BOOST_TEST(cache.hasDataAtTimeStamp(stamp));
+
+  // Ready for new mappings
+  mapping.mapConsistentAt(coords, cache, result);
+  BOOST_TEST(result(0, 0) == 2.5);
+  BOOST_TEST(result(1, 0) == 3.0);
+  BOOST_TEST(result(0, 1) == 3.0);
+  BOOST_TEST(result(1, 1) == 2.5);
+
+  // If we clear the mapping, the we have to recompute it
+  mapping.clear();
+  // We just clear the mesh index here instead of calling mesh.clear
+  // to not repeat all the vertices above. Recomputing the index is require
+  // when altering the mesh
+  inMesh->index().clear();
+  // We extend the mesh a bit
+  inMesh->createVertex(Eigen::Vector2d(6.0, 0.0));
+  inMesh->createVertex(Eigen::Vector2d(7.0, 0.0));
+  inMesh->createVertex(Eigen::Vector2d(7.0, 1.0));
+  inMesh->createVertex(Eigen::Vector2d(6.0, 1.0));
+  inMesh->allocateDataValues();
+  values << 1.0, 2.0, 2.0, 1.0, 3.0, 6.0, 6.0, 3.0, 3.0, 4.0, 4.0, 3.0, 9.0, 12.0, 12.0, 9.0, 5.0, 6.0, 6.0, 5.0, 15.0, 18.0, 18.0, 15.0, 7.0, 8.0, 8.0, 7.0, 20.0, 22.0, 22.0, 20.0;
+  // Setup mapping with mapping coordinates and geometry used
+  mapping.setMeshes(inMesh, toMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+  // compute the mapping (affects only the inMesh)
+  mapping.computeMapping();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  cache.setTimeStamp(-1);
+  mapping.initializeMappingDataCache(cache);
+  mapping.updateMappingDataCache(cache, values);
+  cache.setTimeStamp(stamp);
+
+  mapping.mapConsistentAt(coords, cache, result);
+  BOOST_TEST(result(0, 0) == 5.0);
+  BOOST_TEST(result(1, 0) == 6.0);
+  BOOST_TEST(result(0, 1) == 6.0);
+  BOOST_TEST(result(1, 1) == 5.0);
+
+  coords.col(0) = Eigen::RowVector2d(7.0, 1.0);
+  coords.col(1) = Eigen::RowVector2d(6.0, 0.0);
+  mapping.mapConsistentAt(coords, cache, result);
+  BOOST_TEST(result(0, 0) == 20.0);
+  BOOST_TEST(result(1, 0) == 22.0);
+  BOOST_TEST(result(0, 1) == 7.0);
+  BOOST_TEST(result(1, 1) == 8.0);
 }
 
 void perform3DTestConsistentMappingVector(Mapping &mapping)
@@ -1314,9 +1480,14 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(JustInTimeMapping)
 {
   PRECICE_TEST();
-  mapping::CompactPolynomialC0                          function(3);
-  mapping::PartitionOfUnityMapping<CompactPolynomialC0> noPolynomial3Dconsistent(Mapping::CONSISTENT, 3, function, Polynomial::SEPARATE, 5, 0.265, false);
-  perform3DTestJustInTimeMapping(noPolynomial3Dconsistent);
+  mapping::CompactPolynomialC0 c0function(3);
+  // using scalar data
+  mapping::PartitionOfUnityMapping<CompactPolynomialC0> polynomial3Dconsistent(Mapping::CONSISTENT, 3, c0function, Polynomial::SEPARATE, 5, 0.265, false);
+  perform3DTestJustInTimeMappingWithPolynomial(polynomial3Dconsistent);
+  mapping::CompactPolynomialC4 c4function(3);
+  // using vector data
+  mapping::PartitionOfUnityMapping<CompactPolynomialC4> noPolynomial2Dconsistent(Mapping::CONSISTENT, 2, c4function, Polynomial::OFF, 5, 0.265, false);
+  perform3DTestJustInTimeMappingNoPolynomial(noPolynomial2Dconsistent);
 }
 
 // Test for small meshes, where the number of requested vertices per cluster is bigger than the global
@@ -1903,14 +2074,14 @@ BOOST_AUTO_TEST_CASE(testTagFirstRound)
   MeshSpecification outMeshSpec = {
       {0, -1, {0, 0}, {0}}};
   MeshSpecification inMeshSpec = {
-      {0, -1, {-1, 0}, {1}}, //inside
-      {0, -1, {-3, 0}, {1}}, //outside
-      {0, 0, {1, 0}, {1}},   //inside, owner
-      {0, -1, {3, 0}, {1}},  //outside
-      {0, -1, {0, -1}, {1}}, //inside
-      {0, -1, {0, -3}, {1}}, //outside
-      {0, -1, {0, 1}, {1}},  //inside
-      {0, -1, {0, 3}, {1}}   //outside
+      {0, -1, {-1, 0}, {1}}, // inside
+      {0, -1, {-3, 0}, {1}}, // outside
+      {0, 0, {1, 0}, {1}},   // inside, owner
+      {0, -1, {3, 0}, {1}},  // outside
+      {0, -1, {0, -1}, {1}}, // inside
+      {0, -1, {0, -3}, {1}}, // outside
+      {0, -1, {0, 1}, {1}},  // inside
+      {0, -1, {0, 3}, {1}}   // outside
   };
   MeshSpecification shouldTagFirstRound = {
       {0, -1, {-1, 0}, {1}},
