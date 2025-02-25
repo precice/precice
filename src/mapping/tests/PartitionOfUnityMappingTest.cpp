@@ -903,6 +903,36 @@ void perform3DTestJustInTimeMapping(Mapping &mapping)
   BOOST_TEST(result(0, 0) == 6.0);
   BOOST_TEST(result(0, 1) == 9.0);
   BOOST_TEST(result(0, 2) == 3.0);
+
+  // If we clear the mapping, the we have to recompute it
+  mapping.clear();
+  // We just clear the mesh index here instead of calling mesh.clear
+  // to not repeat all the vertices above. Recomputing the index is require
+  // when altering the mesh
+  inMesh->index().clear();
+  // We extend the mesh a bit
+  inMesh->createVertex(Eigen::Vector3d(6.0, 0.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(7.0, 0.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(7.0, 1.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(6.0, 1.0, 0.0));
+  inMesh->allocateDataValues();
+  values << 1.0, 2.0, 2.0, 1.0, 3.0, 6.0, 6.0, 3.0, 3.0, 4.0, 4.0, 3.0, 9.0, 12.0, 12.0, 9.0, 5.0, 6.0, 6.0, 5.0, 15.0, 18.0, 18.0, 15.0, 7.0, 8.0, 8.0, 7.0;
+  // Setup mapping with mapping coordinates and geometry used
+  mapping.setMeshes(inMesh, toMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+  // compute the mapping (affects only the inMesh)
+  mapping.computeMapping();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  cache.setTimeStamp(-1);
+  mapping.initializeMappingDataCache(cache);
+  mapping.updateMappingDataCache(cache, values);
+  cache.setTimeStamp(stamp);
+  coords.col(0) = Eigen::RowVector3d(6.5, 1.0, 0.0);
+  mapping.mapConsistentAt(coords, cache, result);
+  BOOST_TEST(result(0, 0) == 7.5);
+  BOOST_TEST(result(0, 1) == 4.5);
+  BOOST_TEST(result(0, 2) == 1.5);
 }
 
 void perform3DTestConsistentMappingVector(Mapping &mapping)
