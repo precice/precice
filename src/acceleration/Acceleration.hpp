@@ -35,9 +35,9 @@ public:
 
   virtual void initialize(const DataMap &cpldata) = 0;
 
-  virtual void performAcceleration(DataMap &cpldata) = 0;
+  virtual void performAcceleration(DataMap &cpldata, double windowStart, double windowEnd) = 0;
 
-  virtual void iterationsConverged(const DataMap &cpldata) = 0;
+  virtual void iterationsConverged(const DataMap &cpldata, double windowStart) = 0;
 
   virtual void exportState(io::TXTWriter &writer) {}
 
@@ -48,7 +48,7 @@ protected:
   void checkDataIDs(const DataMap &cplData) const;
 
   /// performs a relaxation given a relaxation factor omega
-  static void applyRelaxation(double omega, DataMap &cplData);
+  static void applyRelaxation(double omega, DataMap &cplData, double windowStart);
 };
 } // namespace acceleration
 } // namespace precice

@@ -100,16 +100,11 @@ bool BaseCouplingScheme::hasConverged() const
   return _hasConverged;
 }
 
-void BaseCouplingScheme::sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps)
+void BaseCouplingScheme::sendTimes(const m2n::PtrM2N &m2n, precice::span<double const> times)
 {
   PRECICE_TRACE();
-  PRECICE_DEBUG("Sending number or time steps {}...", numberOfTimeSteps);
-  m2n->send(numberOfTimeSteps);
-}
-
-void BaseCouplingScheme::sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd &times)
-{
-  PRECICE_TRACE();
+  PRECICE_DEBUG("Sending number or time steps {}...", times.size());
+  m2n->send(static_cast<int>(times.size()));
   PRECICE_DEBUG("Sending times...");
   m2n->send(times);
 }
@@ -130,8 +125,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
     PRECICE_ASSERT(nTimeSteps > 0);
 
     if (data->exchangeSubsteps()) {
-      const Eigen::VectorXd timesAscending = data->timeStepsStorage().getTimes();
-      sendNumberOfTimeSteps(m2n, nTimeSteps);
+      const auto timesAscending = data->timeStepsStorage().getTimes();
       sendTimes(m2n, timesAscending);
 
       const auto serialized = com::serialize::SerializedStamples::serialize(data);
@@ -143,33 +137,30 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
         m2n->send(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * serialized.nTimeSteps());
       }
     } else {
-      data->sample() = stamples.back().sample;
-
-      // Data is only received on ranks with size>0, which is checked in the derived class implementation
-      m2n->send(data->values(), data->getMeshID(), data->getDimensions());
-
       if (data->hasGradient()) {
-        PRECICE_ASSERT(data->hasGradient());
+        data->sample() = stamples.back().sample;
+        // Data is only received on ranks with size>0, which is checked in the derived class implementation
+        m2n->send(data->values(), data->getMeshID(), data->getDimensions());
         m2n->send(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
+      } else {
+        data->sample() = stamples.back().sample;
+        // Data is only received on ranks with size>0, which is checked in the derived class implementation
+        m2n->send(data->values(), data->getMeshID(), data->getDimensions());
       }
     }
   }
 }
 
-int BaseCouplingScheme::receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n)
+std::vector<double> BaseCouplingScheme::receiveTimes(const m2n::PtrM2N &m2n)
 {
   PRECICE_TRACE();
   PRECICE_DEBUG("Receiving number of time steps...");
   int numberOfTimeSteps;
   m2n->receive(numberOfTimeSteps);
-  return numberOfTimeSteps;
-}
+  PRECICE_ASSERT(numberOfTimeSteps > 0);
 
-Eigen::VectorXd BaseCouplingScheme::receiveTimes(const m2n::PtrM2N &m2n, int nTimeSteps)
-{
-  PRECICE_TRACE();
+  std::vector<double> times(numberOfTimeSteps);
   PRECICE_DEBUG("Receiving times....");
-  Eigen::VectorXd times(nTimeSteps);
   m2n->receive(times);
   PRECICE_DEBUG("Received times {}", times);
   return times;
@@ -184,13 +175,10 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   for (const auto &data : receiveData | boost::adaptors::map_values) {
 
     if (data->exchangeSubsteps()) {
-      const int nTimeSteps = receiveNumberOfTimeSteps(m2n);
+      auto       timesAscending = receiveTimes(m2n);
+      const auto nTimeSteps     = timesAscending.size();
 
-      Eigen::VectorXd serializedValues(nTimeSteps * data->getSize());
-      PRECICE_ASSERT(nTimeSteps > 0);
-      const Eigen::VectorXd timesAscending = receiveTimes(m2n, nTimeSteps);
-
-      auto serialized = com::serialize::SerializedStamples::empty(timesAscending, data);
+      auto serialized = com::serialize::SerializedStamples::empty(nTimeSteps, data);
 
       // Data is only received on ranks with size>0, which is checked in the derived class implementation
       m2n->receive(serialized.values(), data->getMeshID(), data->getDimensions() * nTimeSteps);
@@ -201,14 +189,18 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
 
       serialized.deserializeInto(timesAscending, data);
     } else {
-      // Data is only received on ranks with size>0, which is checked in the derived class implementation
-      m2n->receive(data->values(), data->getMeshID(), data->getDimensions());
-
       if (data->hasGradient()) {
-        PRECICE_ASSERT(data->hasGradient());
-        m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
+        // Data is only received on ranks with size>0, which is checked in the derived class implementation
+        time::Sample recvSample(data->getDimensions(), data->nVertices(), data->meshDimensions());
+        m2n->receive(recvSample.values, data->getMeshID(), data->getDimensions());
+        m2n->receive(recvSample.gradients, data->getMeshID(), data->getDimensions() * data->meshDimensions());
+        data->setSampleAtTime(getTime(), recvSample);
+      } else {
+        // Data is only received on ranks with size>0, which is checked in the derived class implementation
+        time::Sample recvSample(data->getDimensions(), data->nVertices());
+        m2n->receive(recvSample.values, data->getMeshID(), data->getDimensions());
+        data->setSampleAtTime(getTime(), recvSample);
       }
-      data->setSampleAtTime(getTime(), data->sample());
     }
   }
 }
@@ -302,6 +294,10 @@ void BaseCouplingScheme::initialize()
       // reserve memory and initialize data with zero
       if (_acceleration) {
         _acceleration->initialize(getAccelerationData());
+        if (auto qnAcceleration = std::dynamic_pointer_cast<precice::acceleration::BaseQNAcceleration>(_acceleration);
+            qnAcceleration) {
+          PRECICE_WARN_IF((qnAcceleration->getMaxUsedTimeWindows() == 0) && (qnAcceleration->getMaxUsedIterations() > _maxIterations), "The maximum number of iterations used in the quasi-Newton acceleration scheme is greater than the maximum number of iterations allowed in one time window. When time-windows-reused is set to 0, and therefore no previous time windows are reused, the actual max-used-ietrations is equal to max-iterations.");
+        }
       }
     }
     requireAction(CouplingScheme::Action::WriteCheckpoint);
@@ -893,7 +889,7 @@ void BaseCouplingScheme::doImplicitStep()
   if (_hasConverged) {
     if (_acceleration) {
       profiling::Event e("accelerate", profiling::Fundamental);
-      _acceleration->iterationsConverged(getAccelerationData());
+      _acceleration->iterationsConverged(getAccelerationData(), getTimeWindowStart());
     }
     newConvergenceMeasurements();
   } else {
@@ -910,7 +906,7 @@ void BaseCouplingScheme::doImplicitStep()
         data->sample() = stamples.back().sample;
       }
 
-      _acceleration->performAcceleration(getAccelerationData());
+      _acceleration->performAcceleration(getAccelerationData(), getTimeWindowStart(), getWindowEndTime());
 
       // Store from buffer
       // @todo Currently only data at end of window is accelerated. Remaining data in storage stays as it is.

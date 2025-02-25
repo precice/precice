@@ -26,6 +26,8 @@ public:
 
   int getSize() const;
 
+  int nVertices() const;
+
   /// Returns a reference to the data values.
   Eigen::VectorXd &values();
 
@@ -48,7 +50,7 @@ public:
   time::Storage &timeStepsStorage();
 
   /// returns previous data interpolated to the relativeDt time
-  Eigen::VectorXd getPreviousValuesAtTime(double relativeDt);
+  time::SampleResult getPreviousValuesAtTime(double relativeDt);
 
   Eigen::MatrixXd getPreviousGradientsAtTime(double relativeDt);
 
@@ -63,6 +65,15 @@ public:
 
   /// Add sample at given time to _timeStepsStorage.
   void setSampleAtTime(double time, time::Sample sample);
+
+  /// Creates an empty sample at given time
+  void emplaceSampleAtTime(double time);
+
+  /// Creates a sample at given time with given values
+  void emplaceSampleAtTime(double time, std::initializer_list<double> values);
+
+  /// Creates a sample at given time with given values and gradients
+  void emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients);
 
   /// Returns if the data contains gradient data
   bool hasGradient() const;

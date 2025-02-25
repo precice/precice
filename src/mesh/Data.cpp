@@ -55,7 +55,7 @@ const time::Sample &Data::sample() const
   return _sample;
 }
 
-Eigen::VectorXd Data::sampleAtTime(double time) const
+time::SampleResult Data::sampleAtTime(double time) const
 {
   return _waveform.sample(time);
 }
@@ -86,6 +86,26 @@ void Data::setSampleAtTime(double time, const time::Sample &sample)
   _waveform.timeStepsStorage().setSampleAtTime(time, sample);
 }
 
+void Data::emplaceSampleAtTime(double time)
+{
+  setSampleAtTime(time, time::Sample{getDimensions()});
+}
+
+void Data::emplaceSampleAtTime(double time, std::initializer_list<double> values)
+{
+  setSampleAtTime(time, time::Sample{getDimensions(),
+                                     Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size())});
+}
+
+void Data::emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients)
+{
+  PRECICE_ASSERT(gradients.size() == values.size() * getSpatialDimensions(), "Gradient isn't correctly sized", values.size(), gradients.size());
+  auto nVertices = values.size() / getDimensions();
+  setSampleAtTime(time, time::Sample{getDimensions(),
+                                     Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size()),
+                                     Eigen::Map<const Eigen::MatrixXd>(gradients.begin(), getSpatialDimensions(), nVertices * getDimensions())});
+}
+
 const std::string &Data::getName() const
 {
   return _name;
@@ -94,14 +114,6 @@ const std::string &Data::getName() const
 DataID Data::getID() const
 {
   return _id;
-}
-
-void Data::toZero()
-{
-  _sample.values.setZero();
-  if (_hasGradient) {
-    _sample.gradients.setZero();
-  }
 }
 
 bool Data::hasGradient() const
