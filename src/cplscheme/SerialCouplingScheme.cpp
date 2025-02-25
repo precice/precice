@@ -91,7 +91,7 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 void SerialCouplingScheme::exchangeInitialData()
 {
   // F: send, receive, S: receive, send
-  PRECICE_ASSERT(getTime() == getWindowStartTime());
+  PRECICE_ASSERT(math::equals(getTime(), getWindowStartTime()));
   if (doesFirstStep()) {
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
@@ -120,7 +120,7 @@ void SerialCouplingScheme::exchangeInitialData()
 
 void SerialCouplingScheme::exchangeFirstData()
 {
-  PRECICE_ASSERT(getTime() == getWindowEndTime());
+  PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()));
   if (isExplicitCouplingScheme()) {
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Sending data...");
@@ -150,7 +150,7 @@ void SerialCouplingScheme::exchangeFirstData()
 
 void SerialCouplingScheme::exchangeSecondData()
 {
-  PRECICE_ASSERT(getTime() == getWindowEndTime());
+  PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()));
   if (isExplicitCouplingScheme()) {
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving data...");
