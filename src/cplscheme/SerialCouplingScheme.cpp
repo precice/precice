@@ -150,45 +150,51 @@ void SerialCouplingScheme::exchangeFirstData()
 
 void SerialCouplingScheme::exchangeSecondData()
 {
-  if (not doesFirstStep() && (isCouplingOngoing() || not hasConverged())) {
-    PRECICE_DEBUG("Receiving time window size...");
-    receiveAndSetTimeWindowSize();
-  }
-
-  if (isExplicitCouplingScheme()) {
-    if (doesFirstStep()) { // first participant
+  if (doesFirstStep()) { // first participant
+    if (isExplicitCouplingScheme()) {
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
-    }
-
-    moveToNextWindow();
-
-    if (not doesFirstStep()) { // second participant
-      // the second participant does not want new data in the last iteration of the last time window
-      if (isCouplingOngoing()) {
-        PRECICE_DEBUG("Receiving data...");
-        receiveDataForWindowEnd(getM2N(), getReceiveData());
-        notifyDataHasBeenReceived();
-      }
-    }
-  } else {
-    PRECICE_ASSERT(isImplicitCouplingScheme());
-    if (doesFirstStep()) { // first participant
+    } else {
       PRECICE_DEBUG("Receiving convergence data...");
       receiveConvergence(getM2N());
       PRECICE_DEBUG("Receiving data...");
       receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
     }
+  }
 
+  if (isExplicitCouplingScheme()) {
+    moveToNextWindow();
+  } else {
+    PRECICE_ASSERT(isImplicitCouplingScheme());
     if (hasConverged()) {
       moveToNextWindow();
     }
-
     storeIteration();
+  }
 
-    if (not doesFirstStep()) { // second participant
+  if (not doesFirstStep()) { // second participant
+    if (isExplicitCouplingScheme()) {
+      if (isCouplingOngoing()) {
+        receiveAndSetTimeWindowSize();
+      }
+    } else {
+      if (isCouplingOngoing() || not hasConverged()) {
+        receiveAndSetTimeWindowSize();
+      }
+    }
+  }
+
+  if (not doesFirstStep()) { // second participant
+    if (isExplicitCouplingScheme()) {
+      // the second participant does not want new data in the last iteration of the last time window
+      if (isCouplingOngoing()) {
+        PRECICE_DEBUG("Receiving data...");
+        receiveDataForWindowEnd(getM2N(), getReceiveData());
+        notifyDataHasBeenReceived();
+      }
+    } else {
       // the second participant does not want new data in the last iteration of the last time window
       if (isCouplingOngoing() || not hasConverged()) {
         PRECICE_DEBUG("Receiving data...");
