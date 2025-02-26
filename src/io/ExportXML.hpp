@@ -29,9 +29,9 @@ public:
       int               rank,
       int               size);
 
-  void doExport(int index, double time) final;
+  void doExport(int index, double time) final override;
 
-  void exportSeries() const final;
+  void exportSeries() const final override;
 
   static void writeVertex(
       const Eigen::VectorXd &position,

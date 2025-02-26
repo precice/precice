@@ -65,13 +65,13 @@ private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
   /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
-  void exchangeInitialData() final;
+  void exchangeInitialData() final override;
 
-  void exchangeFirstData() final;
+  void exchangeFirstData() final override;
 
-  void exchangeSecondData() final;
+  void exchangeSecondData() final override;
 
-  DataMap &getAccelerationData() final;
+  DataMap &getAccelerationData() final override;
 };
 
 } // namespace cplscheme

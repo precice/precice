@@ -46,13 +46,13 @@ public:
       Args... args);
 
   /// Computes the mapping coefficients from the in- and output mesh.
-  void computeMapping() final;
+  void computeMapping() final override;
 
   /// Removes a computed mapping.
-  void clear() final;
+  void clear() final override;
 
   /// name of the rbf mapping
-  std::string getName() const final;
+  std::string getName() const final override;
 
 private:
   precice::logging::Logger _log{"mapping::RadialBasisFctMapping"};
@@ -61,10 +61,10 @@ private:
   std::unique_ptr<SOLVER_T> _rbfSolver;
 
   /// @copydoc RadialBasisFctBaseMapping::mapConservative
-  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final;
+  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final override;
 
   /// @copydoc RadialBasisFctBaseMapping::mapConsistent
-  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final;
+  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final override;
 
   /// Treatment of the polynomial
   Polynomial _polynomial;

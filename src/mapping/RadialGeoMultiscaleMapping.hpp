@@ -45,7 +45,7 @@ public:
   void tagMeshSecondRound() override;
 
   /// Returns name of the mapping
-  std::string getName() const final;
+  std::string getName() const final override;
 
 protected:
   /// @copydoc Mapping::mapConservative

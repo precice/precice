@@ -4,3 +4,5 @@ Checks:          "-*,modernize-deprecated-headers,modernize-make-shared,moderniz
 
 WarningsAsErrors: '*'
 HeaderFilterRegex: '/(src|extra|tests)/'
+CheckOptions:
+  modernize-use-override.AllowOverrideAndFinal: true

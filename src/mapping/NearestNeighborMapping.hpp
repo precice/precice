@@ -19,14 +19,14 @@ public:
   NearestNeighborMapping(Constraint constraint, int dimensions);
 
   /// name of the nn mapping
-  std::string getName() const final;
+  std::string getName() const final override;
 
 protected:
   /// @copydoc Mapping::mapConservative
-  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final;
+  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final override;
 
   /// @copydoc Mapping::mapConsistent
-  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final;
+  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final override;
 };
 
 } // namespace precice::mapping
