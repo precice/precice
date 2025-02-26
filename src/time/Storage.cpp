@@ -242,14 +242,9 @@ int Storage::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples
   return std::min(requestedDegree, numberOfAvailableSamples - 1);
 }
 
-time::Sample Storage::getSampleAtBeginning()
+Stample Storage::getStampleAtEnd()
 {
-  return _stampleStorage.front().sample;
-}
-
-time::Sample Storage::getSampleAtEnd()
-{
-  return _stampleStorage.back().sample;
+  return _stampleStorage.back();
 }
 
 } // namespace precice::time

@@ -71,6 +71,8 @@ public:
    */
   Sample getSampleAtOrAfter(double before) const;
 
+  Stample getStampleAtEnd();
+
   /**
    * @brief Get all normalized dts stored in this Storage sorted ascending.
    *
@@ -170,10 +172,6 @@ private:
    * @return B-spline degree that may be used.
    */
   int computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const;
-
-  time::Sample getSampleAtBeginning();
-
-  time::Sample getSampleAtEnd();
 };
 
 } // namespace precice::time
