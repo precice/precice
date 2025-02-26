@@ -71,6 +71,11 @@ public:
    */
   const Sample &getSampleAtOrAfter(double before) const;
 
+  /**
+   * @brief Returns the last Sample contained in this Storage.
+   *
+   * @return Last Sample in this Storage
+   */
   const Sample &getSampleAtEnd() const;
 
   /**
