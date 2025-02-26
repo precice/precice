@@ -63,7 +63,7 @@ struct Sample {
   /// @todo Change to matrix so that values.col(i) gets the value at vertex i
   Eigen::VectorXd values;
 
-  /// The gradients of the data. Use gradients.col(i) to get the gradient at vertex i
+  /// The gradients of the data. Use gradients.col(d*i+k) to get the gradient of vertex i, data component k, and data dimensionality d
   Eigen::MatrixXd gradients;
 };
 
