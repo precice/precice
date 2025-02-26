@@ -13,8 +13,7 @@
 #include "mesh/Vertex.hpp"
 #include "precice/impl/Types.hpp"
 
-namespace precice {
-namespace query {
+namespace precice::query {
 
 /// Type used for the IDs of matching entities
 using MatchID = int;
@@ -132,5 +131,4 @@ private:
   ProjectionMatch findTriangleProjection(const Eigen::VectorXd &location, int n, ProjectionMatch closestVertex);
 };
 
-} // namespace query
-} // namespace precice
+} // namespace precice::query

@@ -2,8 +2,7 @@
 
 #include <boost/iterator/iterator_facade.hpp>
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 /** random-access iterator over an indexable Source.
  *
  * @tparam Source the underlying container to index into
@@ -63,5 +62,4 @@ private:
   size_t  idx_{0};       ///< the current index to access
 };
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

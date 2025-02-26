@@ -7,9 +7,7 @@
 #include "acceleration/impl/Preconditioner.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 /**
  * @brief Preconditioner that uses the residuals of all iterations of the current time window summed up to scale the quasi-Newton system.
@@ -21,9 +19,9 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~ResidualSumPreconditioner() {}
+  ~ResidualSumPreconditioner() override = default;
 
-  virtual void initialize(std::vector<size_t> &svs);
+  void initialize(std::vector<size_t> &svs) override;
 
 private:
   /**
@@ -31,13 +29,11 @@ private:
    *
    * @param[in] timeWindowComplete True if this FSI iteration also completed a time window
    */
-  virtual void _update_(bool timeWindowComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res);
+  void _update_(bool timeWindowComplete, const Eigen::VectorXd &oldValues, const Eigen::VectorXd &res) override;
 
   logging::Logger _log{"acceleration::ResidualSumPreconditioner"};
 
   std::vector<double> _residualSum;
 };
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

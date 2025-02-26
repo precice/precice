@@ -46,11 +46,11 @@ void precicef_create_(
     int         participantNameLength,
     int         configFileNameLength)
 try {
-  impl.reset(new precice::Participant(
+  impl = std::make_unique<precice::Participant>(
       precice::impl::strippedStringView(participantName, participantNameLength),
       precice::impl::strippedStringView(configFileName, configFileNameLength),
       *solverProcessIndex,
-      *solverProcessSize));
+      *solverProcessSize);
 } catch (::precice::Error &e) {
   std::abort();
 }

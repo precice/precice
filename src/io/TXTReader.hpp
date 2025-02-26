@@ -7,8 +7,7 @@
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 /**
  * @brief File reader for matrix/vector in Matlab V7 ASCII format.
@@ -38,5 +37,4 @@ private:
   std::ifstream _file;
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

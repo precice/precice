@@ -14,8 +14,7 @@
 #include "utils/assertion.hpp"
 #include "xml/ValueParser.hpp"
 
-namespace precice {
-namespace xml {
+namespace precice::xml {
 
 template <typename ATTRIBUTE_T>
 class XMLAttribute {
@@ -240,5 +239,4 @@ XMLAttribute<T> makeXMLAttribute(std::string name, T defaultValue)
   return XMLAttribute<T>(std::move(name), std::move(defaultValue));
 }
 
-} // namespace xml
-} // namespace precice
+} // namespace precice::xml

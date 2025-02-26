@@ -6,8 +6,7 @@
 #include <vector>
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 /**
  * @brief File writer for table-data in text-format.
@@ -100,8 +99,8 @@ private:
   std::ofstream _outputStream;
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io
+
 //Required in order to print the vector types via the fmt interface
 template <>
 struct fmt::formatter<precice::io::TXTTableWriter::DataType> : formatter<string_view> {

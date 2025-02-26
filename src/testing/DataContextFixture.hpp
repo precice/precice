@@ -3,8 +3,7 @@
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/MappingContext.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 /*
  * @brief A fixture that is used to access private functions of the DataContext class.
  *
@@ -27,5 +26,4 @@ public:
   bool hasWriteMapping(precice::impl::DataContext &dataContext);
 };
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

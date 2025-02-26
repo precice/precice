@@ -6,8 +6,7 @@
 #include "cplscheme/ImplicitData.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 /**
  * @brief Stores one Data object with related mesh. Context stores data to be read from and potentially provides a read mapping. Additionally stores Waveform object associated with _providedData.
@@ -83,5 +82,4 @@ private:
   static logging::Logger _log;
 };
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

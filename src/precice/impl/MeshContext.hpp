@@ -9,8 +9,7 @@
 #include "partition/ReceivedPartition.hpp"
 #include "partition/SharedPointer.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 /// Stores a mesh and related objects and data.
 struct MeshContext {
@@ -69,5 +68,4 @@ inline void MeshContext::require(mapping::Mapping::MeshRequirement requirement)
   meshRequirement = std::max(meshRequirement, requirement);
 }
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

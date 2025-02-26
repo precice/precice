@@ -43,10 +43,8 @@ private:
 #include "petscmat.h"
 #include "petscvec.h"
 
-namespace precice {
-namespace utils {
 /// PETSc related utilities
-namespace petsc {
+namespace precice::utils::petsc {
 
 enum VIEWERFORMAT { ASCII,
                     BINARY };
@@ -297,8 +295,6 @@ void destroy(ISLocalToGlobalMapping *IS);
 /// Destroys an application ordering, if ao is not null and PetscIsInitialized
 void destroy(AO *ao);
 
-} // namespace petsc
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils::petsc
 
 #endif // PRECICE_NO_PETSC

@@ -6,8 +6,7 @@
 #include "logging/Logger.hpp"
 #include "time/Sample.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 /**
  * @brief Stores one Data object with related mesh. Context stores data to be written to and potentially provides a write mapping.
@@ -88,5 +87,4 @@ private:
   time::Sample _writeDataBuffer;
 };
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

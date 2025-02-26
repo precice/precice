@@ -18,7 +18,7 @@ namespace com {
  */
 class CommunicationConfiguration {
 public:
-  virtual ~CommunicationConfiguration() {}
+  virtual ~CommunicationConfiguration() = default;
 
   /// Returns a communication object of given type.
   PtrCommunication createCommunication(const xml::XMLTag &tag) const;

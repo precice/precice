@@ -2,8 +2,7 @@
 
 #include <memory>
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 class Data;
 class Group;
@@ -17,5 +16,4 @@ using PtrMesh              = std::shared_ptr<Mesh>;
 using PtrDataConfiguration = std::shared_ptr<DataConfiguration>;
 using PtrMeshConfiguration = std::shared_ptr<MeshConfiguration>;
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

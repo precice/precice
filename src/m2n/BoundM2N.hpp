@@ -4,8 +4,7 @@
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 
-namespace precice {
-namespace m2n {
+namespace precice::m2n {
 
 /// An M2N between participants with a configured direction
 class BoundM2N {
@@ -42,5 +41,4 @@ private:
   void waitForSecondaryRanks();
 };
 
-} // namespace m2n
-} // namespace precice
+} // namespace precice::m2n

@@ -2,12 +2,10 @@
 
 #include <memory>
 
-namespace precice {
-namespace config {
+namespace precice::config {
 
 class ParticipantConfiguration;
 
 using PtrParticipantConfiguration = std::shared_ptr<ParticipantConfiguration>;
 
-} // namespace config
-} // namespace precice
+} // namespace precice::config

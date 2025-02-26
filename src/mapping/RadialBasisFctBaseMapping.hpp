@@ -5,8 +5,7 @@
 #include "mesh/Filter.hpp"
 #include "precice/impl/Types.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /**
  * @brief Mapping with radial basis functions.
@@ -37,19 +36,19 @@ public:
       std::array<bool, 3>            deadAxis,
       InitialGuessRequirement        mappingType);
 
-  virtual ~RadialBasisFctBaseMapping() = default;
+  ~RadialBasisFctBaseMapping() override = default;
 
   // Methods, which need to be implemented in a derived class
 
   /// Computes the mapping coefficients from the in- and output mesh.
-  virtual void computeMapping() = 0;
+  void computeMapping() override = 0;
 
   /// Removes a computed mapping.
-  virtual void clear() = 0;
+  void clear() override = 0;
 
-  virtual void tagMeshFirstRound() final;
+  void tagMeshFirstRound() final override;
 
-  virtual void tagMeshSecondRound() final;
+  void tagMeshSecondRound() final override;
 
 protected:
   /// Radial basis function type used in interpolation.
@@ -184,5 +183,4 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   auto vertices = mesh->index().getVerticesInsideBox(bb);
   std::for_each(vertices.begin(), vertices.end(), [&mesh](size_t v) { mesh->vertex(v).tag(); });
 }
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping
