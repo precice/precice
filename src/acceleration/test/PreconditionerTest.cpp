@@ -25,6 +25,7 @@ struct ResPreconditionerFixture {
   Eigen::VectorXd _compareDataRes;
   Eigen::VectorXd _compareDataResSum;
   Eigen::VectorXd _compareDataResSum2;
+  Eigen::VectorXd _compareDataResSumThreshold;
   Eigen::VectorXd _compareDataResSumUpdate;
   Eigen::VectorXd _compareDataLargerSizeResSum;
   Eigen::VectorXd _compareDataSmallerSizeResSum;
@@ -74,6 +75,16 @@ struct ResPreconditionerFixture {
         6.00012000479918228280e+00,
         7.00014000559904481236e+00,
         8.00016000639890734192e+00;
+
+    _compareDataResSumThreshold.resize(8);
+    _compareDataResSumThreshold << 7.90585229434499154877e+00,
+        1.58117045886899830975e+01,
+        1.67708453051717078779e+03,
+        2.23611270735622783832e+03,
+        2.79514088419528488885e+03,
+        3.35416906103434157558e+03,
+        3.50007001329973377324e-01,
+        4.00008001519969536020e-01;
 
     _compareDataResSumUpdate.resize(8);
     _compareDataResSumUpdate << 1.43742768988091e+01,
@@ -173,7 +184,7 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditioner)
   svs.push_back(4);
   svs.push_back(2);
 
-  ResidualSumPreconditioner precond(-1);
+  ResidualSumPreconditioner precond(-1, false);
 
   precond.initialize(svs);
   Eigen::VectorXd backup = _data;
@@ -207,7 +218,7 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditionerUpdate)
   svs.push_back(4);
   svs.push_back(2);
 
-  ResidualSumPreconditioner precond(-1, false, 5.1);
+  ResidualSumPreconditioner precond(-1, true);
 
   precond.initialize(svs);
   Eigen::VectorXd backup = _data;
@@ -231,7 +242,7 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditionerUpdate)
   precond.revert(_data);
   BOOST_TEST(testing::equals(_data, backup));
 
-  // New time windows stops automatic update of values
+  // New time windows stops automatic update of weights
   precond.update(false, _data, _res * 3);
   // New residuals are not large enough to trigger a change
   BOOST_TEST(not precond.requireNewQR());
@@ -239,7 +250,7 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditionerUpdate)
   BOOST_TEST(testing::equals(_data, _compareDataResSum));
   precond.revert(_data);
 
-  // Apply multiple preconditioners until weights change enough
+  // Apply multiple preconditioners
   for (int i = 0; i < 5; i++) {
     precond.update(false, _data, _res * 3);
   }
@@ -250,14 +261,14 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditionerUpdate)
   precond.revert(_data);
 
   // Apply multiple preconditioners until weights change enough
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 14; i++) {
     precond.update(false, _data, _res * 3);
   }
   // New residuals are now large enough to trigger a change
   BOOST_TEST(precond.requireNewQR());
   precond.newQRfulfilled();
   precond.apply(_data);
-  BOOST_TEST(testing::equals(_data, _compareDataResSumUpdate));
+  BOOST_TEST(testing::equals(_data, _compareDataResSumThreshold));
   precond.revert(_data);
 }
 
@@ -343,7 +354,7 @@ BOOST_AUTO_TEST_CASE(testPreconditionerLargerDataSize)
   svs.push_back(4);
   svs.push_back(2);
 
-  ResidualSumPreconditioner precond(-1);
+  ResidualSumPreconditioner precond(-1, false);
 
   precond.initialize(svs);
   Eigen::VectorXd backup = _dataLargerSize;
@@ -377,7 +388,7 @@ BOOST_AUTO_TEST_CASE(testPreconditionerLargerResSize)
   svs.push_back(4);
   svs.push_back(2);
 
-  ResidualSumPreconditioner precond(-1);
+  ResidualSumPreconditioner precond(-1, false);
 
   precond.initialize(svs);
   Eigen::VectorXd backup = _dataSmallerSize;
@@ -410,7 +421,7 @@ BOOST_AUTO_TEST_CASE(testMultilpleMeshes)
   svs.push_back(3);
   svs.push_back(5);
 
-  ResidualSumPreconditioner precond(-1);
+  ResidualSumPreconditioner precond(-1, false);
 
   precond.initialize(svs);
   Eigen::VectorXd backup = _data;

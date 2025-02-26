@@ -140,24 +140,22 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
       }
     }
   } else if (_filter == Acceleration::QR2FILTER) {
-
     resetFilter(singularityLimit, delIndices, V);
 
   } else if (_filter == Acceleration::QR3FILTER) {
     int index = cols() - 1;
     // Iterate from the last column to the 2nd column from the left
-    if (computeQR2Filter == true) {
-      PRECICE_DEBUG("  Pre-scaling weights were reset. Reverting to QR2 and rebuilding QR.");
-      resetFilter(singularityLimit, delIndices, V);
-    } else {
-      for (size_t i = index; i > 0; i--) {
-        Eigen::VectorXd v    = V.col(i);
-        double          rho0 = utils::IntraComm::l2norm(v);
-        if (std::fabs(_R(i, i)) < rho0 * singularityLimit) {
-          resetFilter(singularityLimit, delIndices, V);
-          break;
-        }
+    for (size_t i = index; i > 0; i--) {
+      Eigen::VectorXd v    = V.col(i);
+      double          rho0 = utils::IntraComm::l2norm(v);
+      if (std::fabs(_R(i, i)) < rho0 * singularityLimit) {
+        computeQR2Filter = true;
+        break;
       }
+    }
+    if (computeQR2Filter == true) {
+      PRECICE_DEBUG("Pre-scaling weights were reset. Reverting to QR2 and rebuilding QR.");
+      resetFilter(singularityLimit, delIndices, V);
     }
     computeQR2Filter = false;
     PRECICE_DEBUG("Deleting {} columns in QR3 Filter", delIndices.size());
@@ -280,6 +278,7 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
   if (applyFilter && (rho0 * singularityLimit > rho_orth)) {
     PRECICE_DEBUG("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: {} > {}", rho0 * singularityLimit, rho_orth);
     _cols--;
+    computeQR2Filter = true;
     return false;
   }
 

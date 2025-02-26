@@ -544,7 +544,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
   std::vector<int> dataIDs;
   dataIDs.push_back(4);
   dataIDs.push_back(5);
-  PtrPreconditioner _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(-1, true, 10.0));
+  PtrPreconditioner _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(-1, true));
   std::vector<int>  vertexOffsets{0, 11, 22, 22};
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("dummyMesh", 2, testing::nextMeshID()));

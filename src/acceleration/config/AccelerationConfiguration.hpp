@@ -66,10 +66,7 @@ private:
   const std::string ATTR_RSLS_REUSED_TIME_WINDOWS;
   const std::string ATTR_RSSVD_TRUNCATIONEPS;
   const std::string ATTR_PRECOND_NONCONST_TIME_WINDOWS;
-  const std::string ATTR_PRECOND_UPDATE;
-  const std::string VALUE_RESIDUAL_SUM_ALWAYS;
-  const std::string VALUE_RESIDUAL_SUM_THRESHOLD;
-  const std::string VALUE_RESIDUAL_SUM_LIMIT;
+  const std::string ATTR_PRECOND_UPDATE_ON_THRESHOLD;
 
   const std::string VALUE_CONSTANT;
   const std::string VALUE_AITKEN;
@@ -106,47 +103,49 @@ private:
     std::vector<int>      dataIDs;
     std::map<int, double> scalings;
     std::string           type;
-    double                relaxationFactor           = 0;
-    bool                  forceInitialRelaxation     = false;
-    int                   maxIterationsUsed          = 0;
-    int                   timeWindowsReused          = 0;
-    int                   filter                     = Acceleration::NOFILTER;
-    int                   imvjRestartType            = 0;
-    int                   imvjChunkSize              = 0;
-    int                   imvjRSLS_reusedTimeWindows = 0;
-    int                   precond_nbNonConstTWindows = -1;
-    double                singularityLimit           = 0;
-    double                imvjRSSVD_truncationEps    = 0;
-    double                preconLimitUpdate          = 10;
-    bool                  estimateJacobian           = false;
-    bool                  alwaysBuildJacobian        = false;
-    bool                  reducedTimeGridQN          = true;
-    std::string           preconditionerUpdate;
+    double                relaxationFactor                 = 0;
+    bool                  forceInitialRelaxation           = false;
+    int                   maxIterationsUsed                = 0;
+    int                   timeWindowsReused                = 0;
+    int                   filter                           = Acceleration::NOFILTER;
+    int                   imvjRestartType                  = 0;
+    int                   imvjChunkSize                    = 0;
+    int                   imvjRSLS_reusedTimeWindows       = 0;
+    int                   preconditionerNbNonConstTWindows = -1;
+    double                singularityLimit                 = 0;
+    double                imvjRSSVD_truncationEps          = 0;
+    bool                  estimateJacobian                 = false;
+    bool                  alwaysBuildJacobian              = false;
+    bool                  reducedTimeGridQN                = true;
+    bool                  preconditionerUpdateOnThreshold  = true;
     std::string           preconditionerType;
 
     std::vector<double> scalingFactorsInOrder() const;
   } _config;
 
   const struct DefaultValuesIQN {
-    double      relaxationFactor           = 0.1;
-    int         maxIterationsUsed          = 100;
-    int         timeWindowsReused          = 10;
-    int         filter                     = Acceleration::QR2FILTER;
-    double      singularityLimit           = 1e-2;
-    std::string preconditionerType         = "residual-sum";
-    int         precond_nbNonConstTWindows = -1;
+    double      relaxationFactor                 = 0.1;
+    int         maxIterationsUsed                = 100;
+    int         timeWindowsReused                = 10;
+    int         filter                           = Acceleration::QR3FILTER;
+    double      singularityLimit                 = 1e-2;
+    std::string preconditionerType               = "residual-sum";
+    bool        preconditionerUpdateOnThreshold  = true;
+    int         preconditionerNbNonConstTWindows = -1;
   } _defaultValuesIQNILS;
 
   const struct DefaultValuesIMVJ {
-    double      relaxationFactor           = 0.1;
-    int         maxIterationsUsed          = 20;
-    int         timeWindowsReused          = 0;
-    int         filter                     = Acceleration::QR2FILTER;
-    double      singularityLimit           = 1e-2;
-    std::string preconditionerType         = "residual-sum";
-    int         precond_nbNonConstTWindows = -1;
-    int         imvjRestartType            = 3;
-    int         imvjChunkSize              = 8;
+    double      relaxationFactor                 = 0.1;
+    int         maxIterationsUsed                = 20;
+    int         timeWindowsReused                = 0;
+    int         filter                           = Acceleration::QR3FILTER;
+    double      singularityLimit                 = 1e-2;
+    std::string preconditionerType               = "residual-sum";
+    bool        preconditionerUpdateOnThreshold  = true;
+    int         preconditionerNbNonConstTWindows = -1;
+
+    int imvjRestartType = 3;
+    int imvjChunkSize   = 8;
   } _defaultValuesIQNIMVJ;
 
   const double _defaultAitkenRelaxationFactor = 0.5;

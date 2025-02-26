@@ -166,7 +166,7 @@ public:
   void setFilter(int filter);
 
   // @brief forces a complete QR decomposition using the QR2 filter
-  bool computeQR2Filter = false;
+  bool computeQR2Filter = true;
 
 private:
   struct givensRot {
