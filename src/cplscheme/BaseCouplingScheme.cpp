@@ -136,7 +136,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
         m2n->send(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * serialized.nTimeSteps());
       }
     } else {
-      const auto sample = data->timeStepsStorage().getSampleAtOrAfter(this->getTime()); // this->getTime() returns getWindowStartTime() when exchanging initial data; returns getWindowEndTime() for data exchange at window end.
+      const auto& sample = data->timeStepsStorage().getSampleAtEnd();
       if (data->hasGradient()) {
         // Data is only received on ranks with size>0, which is checked in the derived class implementation
         m2n->send(sample.values, data->getMeshID(), data->getDimensions());
