@@ -1493,6 +1493,152 @@ void perform3DTestJustInTimeMappingConservative(Mapping &mapping)
   BOOST_TEST(outValues2(0, 0) == 0.505106848, boost::test_tools::tolerance(1e-7));
 }
 
+void perform2DTestJustInTimeMappingConservative(Mapping &mapping)
+{
+  const int dimensions     = 2;
+  const int dataComponents = 2;
+
+  // the dummy from mesh
+  mesh::PtrMesh inMesh = mesh::MeshConfiguration::getJustInTimeMappingMesh(dimensions);
+
+  // Create mesh to map from
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  mesh::PtrData outData = outMesh->createData("OutData", dataComponents, 1_dataID);
+
+  outMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+  outMesh->createVertex(Eigen::Vector2d(1.0, 0.0));
+  outMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
+  outMesh->createVertex(Eigen::Vector2d(0.0, 1.0));
+
+  outMesh->createVertex(Eigen::Vector2d(2.0, 0.0));
+  outMesh->createVertex(Eigen::Vector2d(3.0, 0.0));
+  outMesh->createVertex(Eigen::Vector2d(3.0, 1.0));
+  outMesh->createVertex(Eigen::Vector2d(2.0, 1.0));
+
+  outMesh->createVertex(Eigen::Vector2d(4.0, 0.0));
+  outMesh->createVertex(Eigen::Vector2d(5.0, 0.0));
+  outMesh->createVertex(Eigen::Vector2d(5.0, 1.0));
+  outMesh->createVertex(Eigen::Vector2d(4.0, 1.0));
+
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  // Setup mapping with mapping coordinates and geometry used
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  mapping.computeMapping();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // Now, we can setup the MappingDataCache with the structures
+  // from computeMapping before starting the mappings
+  mapping::impl::MappingDataCache cache(dataComponents);
+  mapping.initializeMappingDataCache(cache);
+
+  // Test infrastructure/ the user input
+  Eigen::MatrixXd             coords(dimensions, 1);
+  Eigen::MatrixXd             inData(dataComponents, 1);
+  Eigen::Map<Eigen::MatrixXd> outValues(outData->values().data(), dataComponents, outMesh->vertices().size());
+
+  // before writing first, we have to reset the cache to contain zeros
+  cache.resetData();
+  outValues.setZero();
+
+  coords.col(0) = Eigen::RowVector2d(5.0, 0.0);
+  inData.col(0) = Eigen::RowVector2d(7.3, 14.6);
+
+  // note that the outvalues are only filled in the completeJustInTimeMapping
+  mapping.mapConservativeAt(coords, cache, inData, outValues);
+
+  // Once all values are written, we complete the mapping (expensive part)
+  mapping.completeJustInTimeMapping(cache, outValues);
+  BOOST_TEST(outValues.sum() == inData.sum());
+  Eigen::MatrixXd expectedValues(dataComponents, 12);
+  expectedValues.setZero();
+  expectedValues.col(9) = Eigen::RowVector2d(7.3, 14.6);
+  BOOST_TEST(outValues.row(0) == expectedValues.row(0), boost::test_tools::per_element());
+  BOOST_TEST(outValues.row(1) == expectedValues.row(1), boost::test_tools::per_element());
+  BOOST_TEST(outValues.row(0) == 0.5 * outValues.row(1), boost::test_tools::per_element());
+
+  // clear data again for the next go
+  cache.resetData();
+  outValues.setZero();
+
+  // // if we call the function twice for the same coordinate, we get twice the contribution
+  mapping.mapConservativeAt(coords, cache, inData, outValues);
+  mapping.mapConservativeAt(coords, cache, inData, outValues);
+  mapping.completeJustInTimeMapping(cache, outValues);
+  BOOST_TEST(outValues.row(0) == 2 * expectedValues.row(0), boost::test_tools::per_element());
+  BOOST_TEST(outValues.row(1) == 2 * expectedValues.row(1), boost::test_tools::per_element());
+  BOOST_TEST(outValues.row(0) == 0.5 * outValues.row(1), boost::test_tools::per_element());
+
+  // // clear data again for the next go
+  cache.resetData();
+  outValues.setZero();
+
+  Eigen::Vector2d expectedSum;
+  expectedSum.setZero();
+  mapping.mapConservativeAt(coords, cache, inData, outValues);
+  expectedSum += inData.rowwise().sum();
+
+  // We can also change the shape of the user input
+  coords.resize(dimensions, 3);
+  inData.resize(dataComponents, 3);
+  coords.col(0) = Eigen::RowVector2d(3.5, 0.5);
+  coords.col(1) = Eigen::RowVector2d(4.5, 1.0);
+  coords.col(2) = Eigen::RowVector2d(0.1, 0.0);
+
+  inData.col(0) = Eigen::RowVector2d(4.3, 8.6);
+  inData.col(1) = Eigen::RowVector2d(17.3, 34.6);
+  inData.col(2) = Eigen::RowVector2d(5.8, 11.6);
+
+  mapping.mapConservativeAt(coords, cache, inData, outValues);
+  expectedSum += inData.rowwise().sum();
+
+  mapping.completeJustInTimeMapping(cache, outValues);
+  // We don't reach full conservative'ness with the RBF config
+  BOOST_TEST(outValues.rowwise().sum()(0) == expectedSum(0), boost::test_tools::tolerance(0.6));
+  BOOST_TEST(outValues.rowwise().sum()(1) == expectedSum(1), boost::test_tools::tolerance(0.6));
+  BOOST_TEST(outValues.row(0) == 0.5 * outValues.row(1), boost::test_tools::per_element());
+  BOOST_TEST(outValues(0, 10) == 8.76997588, boost::test_tools::tolerance(1e-7));
+
+  // Now we check for re-computing the mapping after changing the mesh
+  mapping.clear();
+  outMesh->index().clear();
+  outMesh->createVertex(Eigen::Vector2d(6.0, 0.0));
+  outMesh->allocateDataValues();
+
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+  mapping.computeMapping();
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  mapping.initializeMappingDataCache(cache);
+
+  Eigen::Map<Eigen::MatrixXd> outValues2(outData->values().data(), dataComponents, outMesh->vertices().size());
+
+  // before writing first, we have to reset the cache to contain zeros
+  cache.resetData();
+  outValues2.setZero();
+  expectedSum.setZero();
+
+  coords.resize(dimensions, 1);
+  inData.resize(dataComponents, 1);
+  coords.col(0) = Eigen::RowVector2d(0.5, 0.5);
+  inData.col(0) = Eigen::RowVector2d(4.3, 43);
+  mapping.mapConservativeAt(coords, cache, inData, outValues2);
+  expectedSum += inData.rowwise().sum();
+  coords.col(0) = Eigen::RowVector2d(6.0, 0);
+  inData.col(0) = Eigen::RowVector2d(5.1, 51);
+  mapping.mapConservativeAt(coords, cache, inData, outValues2);
+  expectedSum += inData.rowwise().sum();
+
+  mapping.completeJustInTimeMapping(cache, outValues2);
+  BOOST_TEST(outValues2.rowwise().sum()(0) == expectedSum(0), boost::test_tools::tolerance(0.6));
+  BOOST_TEST(outValues2.rowwise().sum()(1) == expectedSum(1), boost::test_tools::tolerance(0.6));
+  BOOST_TEST(outValues2.col(12) == Eigen::RowVector2d(5.1, 51), boost::test_tools::per_element());
+  BOOST_TEST(outValues2(0, 0) == 1.13162327, boost::test_tools::tolerance(1e-7));
+}
+
 void perform3DTestConservativeMappingVector(Mapping &mapping)
 {
   const int dimensions    = 3;
@@ -1677,9 +1823,9 @@ BOOST_AUTO_TEST_CASE(JustInTimeMapping)
   mapping::PartitionOfUnityMapping<CompactPolynomialC2> polynomial3Dconservative(Mapping::CONSERVATIVE, 3, c2function, Polynomial::SEPARATE, 5, 0.265, false);
   perform3DTestJustInTimeMappingConservative(polynomial3Dconservative);
   // using vector data
-  // mapping::CompactPolynomialC4 c4function(3);
-  // mapping::PartitionOfUnityMapping<CompactPolynomialC4> noPolynomial2Dconsistent(Mapping::CONSISTENT, 2, c4function, Polynomial::OFF, 5, 0.265, false);
-  // perform3DTestJustInTimeMappingNoPolynomial(noPolynomial2Dconsistent);
+  mapping::CompactPolynomialC6                          c6function(10);
+  mapping::PartitionOfUnityMapping<CompactPolynomialC6> noPolynomial2Dconservative(Mapping::CONSERVATIVE, 2, c6function, Polynomial::OFF, 5, 0.265, false);
+  perform2DTestJustInTimeMappingConservative(noPolynomial2Dconservative);
 }
 
 // Test for small meshes, where the number of requested vertices per cluster is bigger than the global
