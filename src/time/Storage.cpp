@@ -152,7 +152,7 @@ void Storage::trimAfter(double time)
   _bspline.reset();
 }
 
-Sample Storage::getSampleAtOrAfter(double before) const
+const Sample &Storage::getSampleAtOrAfter(double before) const
 {
   PRECICE_TRACE(before);
   if (nTimes() == 1) {
@@ -242,9 +242,9 @@ int Storage::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples
   return std::min(requestedDegree, numberOfAvailableSamples - 1);
 }
 
-Stample Storage::getStampleAtEnd()
+const Sample &Storage::getSampleAtEnd() const
 {
-  return _stampleStorage.back();
+  return _stampleStorage.back().sample;
 }
 
 } // namespace precice::time

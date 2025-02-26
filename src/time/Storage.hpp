@@ -69,9 +69,9 @@ public:
    * @param before a double, where we want to find a normalized dt that comes directly after this one
    * @return Sample in this Storage at or directly after "before"
    */
-  Sample getSampleAtOrAfter(double before) const;
+  const Sample &getSampleAtOrAfter(double before) const;
 
-  Stample getStampleAtEnd();
+  const Sample &getSampleAtEnd() const;
 
   /**
    * @brief Get all normalized dts stored in this Storage sorted ascending.
