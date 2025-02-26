@@ -155,9 +155,13 @@ void Storage::trimAfter(double time)
 const Sample &Storage::getSampleAtOrAfter(double before) const
 {
   PRECICE_TRACE(before);
-  auto stample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&before](const auto &s) { return math::greaterEquals(s.timestamp, before); });
-  PRECICE_ASSERT(stample != _stampleStorage.end(), "no values found!");
-  return stample->sample;
+  if (nTimes() == 1) {
+    return _stampleStorage.front().sample; // @todo in this case the name getSampleAtOrAfter does not fit, because _stampleStorage.front().sample is returned for any time before.
+  } else {
+    auto stample = std::find_if(_stampleStorage.begin(), _stampleStorage.end(), [&before](const auto &s) { return math::greaterEquals(s.timestamp, before); });
+    PRECICE_ASSERT(stample != _stampleStorage.end(), "no values found!");
+    return stample->sample;
+  }
 }
 
 Eigen::VectorXd Storage::getTimes() const
