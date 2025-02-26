@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantInitData)
   }
   precice.initialize();
 
-  for (int i = 0; i < timestepSizes.size(); i++) {
+  for (double &timestepSize : timestepSizes) {
     double dt = precice.getMaxTimeStepSize();
 
     precice.readData(meshName, readDataName, {&vertexID, 1}, dt, {&actualDataValue, 1});
@@ -64,9 +64,9 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataFirstParticipantInitData)
     precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&expectedDataValue, 1});
 
     if (context.isNamed("SolverOne")) {
-      precice.advance(timestepSizes.at(i));
+      precice.advance(timestepSize);
     } else if (context.isNamed("SolverTwo")) {
-      BOOST_TEST(dt == timestepSizes.at(i));
+      BOOST_TEST(dt == timestepSize);
       precice.advance(dt);
     }
   }

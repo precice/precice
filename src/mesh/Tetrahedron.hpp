@@ -10,8 +10,7 @@
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 /// Tetrahedron of a mesh, defined by 4 vertices
 class Tetrahedron {
@@ -90,5 +89,4 @@ inline const Vertex &Tetrahedron::vertex(int i) const
 
 std::ostream &operator<<(std::ostream &os, const Tetrahedron &t);
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

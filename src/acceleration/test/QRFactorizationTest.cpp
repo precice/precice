@@ -1,5 +1,5 @@
 #include <Eigen/Core>
-#include <math.h>
+#include <cmath>
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/BaseQNAcceleration.hpp"
 #include "acceleration/SharedPointer.hpp"

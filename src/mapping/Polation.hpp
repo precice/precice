@@ -8,8 +8,7 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /// Struct that contains weight and index of a vertex
 struct WeightedElement {
@@ -58,5 +57,4 @@ std::ostream &operator<<(std::ostream &os, const WeightedElement &w);
 /// Make the Polation class printable
 std::ostream &operator<<(std::ostream &os, const Polation &p);
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

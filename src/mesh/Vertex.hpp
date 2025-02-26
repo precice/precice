@@ -9,8 +9,7 @@
 #include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 /// Vertex of a mesh.
 class Vertex {
@@ -149,5 +148,4 @@ inline bool Vertex::operator<(const Vertex &rhs) const
 /// Make Vertex printable
 std::ostream &operator<<(std::ostream &os, const Vertex &v);
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

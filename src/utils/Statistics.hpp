@@ -10,9 +10,7 @@
 #include <fmt/ostream.h>
 #include <iosfwd>
 
-namespace precice {
-namespace utils {
-namespace statistics {
+namespace precice::utils::statistics {
 
 /**
  * Accunulates distance measures and provides statistics based on them.
@@ -84,9 +82,7 @@ inline std::ostream &operator<<(std::ostream &out, const DistanceAccumulator &ac
   return out;
 }
 
-} // namespace statistics
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils::statistics
 
 template <>
 struct fmt::formatter<precice::utils::statistics::DistanceAccumulator> : ostream_formatter {

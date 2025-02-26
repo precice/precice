@@ -3,10 +3,10 @@
 
 #include <Eigen/Core>
 #include <algorithm>
-#include <math.h>
+#include <cmath>
+#include <cstdlib>
 #include <memory>
 #include <ostream>
-#include <stdlib.h>
 #include <string>
 #include <vector>
 #include "acceleration/impl/ParallelMatrixOperations.hpp"

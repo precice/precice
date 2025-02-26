@@ -6,8 +6,7 @@
 #include "utils/algorithm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 void shiftSetFirst(Eigen::MatrixXd &A, const Eigen::VectorXd &v);
 
@@ -91,5 +90,4 @@ struct ComponentWiseLess {
   }
 };
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

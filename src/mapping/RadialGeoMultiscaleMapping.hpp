@@ -4,8 +4,7 @@
 #include "logging/Logger.hpp"
 #include "mapping/Mapping.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /// Geometric multiscale mapping in radial direction
 class RadialGeoMultiscaleMapping : public Mapping {
@@ -72,5 +71,4 @@ private:
   std::vector<size_t> _vertexCounter;
 };
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

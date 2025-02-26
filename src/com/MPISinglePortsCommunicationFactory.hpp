@@ -7,8 +7,7 @@
 
 #include <string>
 
-namespace precice {
-namespace com {
+namespace precice::com {
 class MPISinglePortsCommunicationFactory : public CommunicationFactory {
 public:
   explicit MPISinglePortsCommunicationFactory(std::string addressDirectory = ".");
@@ -20,7 +19,6 @@ public:
 private:
   std::string _addressDirectory;
 };
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI
