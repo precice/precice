@@ -19,17 +19,17 @@ public:
   NearestNeighborGradientMapping(Constraint constraint, int dimensions);
 
   /// Calculates the offsets needed for the gradient mappings after calculating the matched vertices
-  void onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace) final;
+  void onMappingComputed(mesh::PtrMesh origins, mesh::PtrMesh searchSpace) final override;
 
   /// name of the nng mapping
-  std::string getName() const final;
+  std::string getName() const final override;
 
 protected:
   /// @copydoc Mapping::mapConservative
-  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final;
+  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final override;
 
   /// @copydoc Mapping::mapConsistent
-  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final;
+  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final override;
 };
 
 } // namespace precice::mapping

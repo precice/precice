@@ -21,21 +21,21 @@ public:
 
   ~AitkenAcceleration() override = default;
 
-  std::vector<int> getPrimaryDataIDs() const final
+  std::vector<int> getPrimaryDataIDs() const final override
   {
     return _primaryDataIDs;
   }
 
   void initialize(
-      const DataMap &cpldata) final;
+      const DataMap &cpldata) final override;
 
   void performAcceleration(
       DataMap &cpldata,
       double   windowStart,
-      double   windowEnd) final;
+      double   windowEnd) final override;
 
   void iterationsConverged(
-      const DataMap &cpldata, double windowStart) final;
+      const DataMap &cpldata, double windowStart) final override;
 
 private:
   /// @brief Concatenates the data and old data in cplData into two long vectors

@@ -90,7 +90,7 @@ public:
   /**
    * @brief Returns all IQN involved data IDs.
    */
-  std::vector<int> getPrimaryDataIDs() const final
+  std::vector<int> getPrimaryDataIDs() const final override
   {
     return _primaryDataIDs;
   }
@@ -98,14 +98,14 @@ public:
   /**
    * @brief Initializes the acceleration.
    */
-  void initialize(const DataMap &cplData) final;
+  void initialize(const DataMap &cplData) final override;
 
   /**
    * @brief Performs one acceleration step.
    *
    * Has to be called after every implicit coupling iteration.
    */
-  void performAcceleration(DataMap &cplData, double windowStart, double windowEnd) final;
+  void performAcceleration(DataMap &cplData, double windowStart, double windowEnd) final override;
 
   /**
    * @brief Marks a iteration sequence as converged.
@@ -113,19 +113,19 @@ public:
    * Since convergence measurements are done outside the acceleration, this
    * method has to be used to signalize convergence to the acceleration.
    */
-  void iterationsConverged(const DataMap &cplData, double windowStart) final;
+  void iterationsConverged(const DataMap &cplData, double windowStart) final override;
 
   /**
    * @brief Exports the current state of the acceleration to a file.
    */
-  void exportState(io::TXTWriter &writer) final;
+  void exportState(io::TXTWriter &writer) final override;
 
   /**
    * @brief Imports the last exported state of the acceleration from file.
    *
    * Is empty at the moment!!!
    */
-  void importState(io::TXTReader &reader) final;
+  void importState(io::TXTReader &reader) final override;
 
   /// how many QN columns were deleted in this time window
   int getDeletedColumns() const;

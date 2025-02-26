@@ -184,7 +184,7 @@ private:
   void removeMatrixColumn(int columnIndex) override;
 
   /// @copydoc precice::Acceleration::BaseQNAcceleration::specializedInitializeVectorsAndPreconditioner()
-  void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) final;
+  void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) final override;
 
   /// @brief: Removes one column form the V_RSLS and W_RSLS matrices and adapts _matrixCols_RSLS
   void removeMatrixColumnRSLS(int columnINdex);

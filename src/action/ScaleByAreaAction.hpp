@@ -31,7 +31,7 @@ public:
   /**
    * @brief Scales data on mesh nodes according to selected scaling type.
    */
-  void performAction() final;
+  void performAction() final override;
 
 private:
   logging::Logger _log{"action::ScaleByAreaAction"};

@@ -56,12 +56,12 @@ public:
   void determineInitialDataExchange() override;
 
   /// returns list of all coupling partners
-  std::vector<std::string> getCouplingPartners() const final;
+  std::vector<std::string> getCouplingPartners() const final override;
 
   /**
    * @returns true, if coupling scheme has any sendData
    */
-  bool hasAnySendData() final;
+  bool hasAnySendData() final override;
 
   /**
    * @returns true, if coupling scheme has sendData with given DataID
@@ -88,7 +88,7 @@ protected:
   m2n::PtrM2N getM2N() const;
 
   /// @copydoc cplscheme::BaseCouplingScheme::initializeReceiveDataStorage()
-  void initializeReceiveDataStorage() final;
+  void initializeReceiveDataStorage() final override;
 
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};

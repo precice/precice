@@ -59,6 +59,6 @@ private:
   void removeMatrixColumn(int columnIndex) override;
 
   /// @copydoc precice::Acceleration::BaseQNAcceleration::specializedInitializeVectorsAndPreconditioner()
-  void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) final{};
+  void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) final override{};
 };
 } // namespace precice::acceleration

@@ -25,9 +25,9 @@ public:
       int               size);
 
   /// Perform writing to VTK file
-  void doExport(int index, double time) final;
+  void doExport(int index, double time) final override;
 
-  void exportSeries() const final;
+  void exportSeries() const final override;
 
   static void initializeWriting(
       std::ofstream &filestream);

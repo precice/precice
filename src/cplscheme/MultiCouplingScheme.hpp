@@ -62,9 +62,9 @@ public:
 
   void determineInitialDataExchange() override;
 
-  std::vector<std::string> getCouplingPartners() const final;
+  std::vector<std::string> getCouplingPartners() const final override;
 
-  bool hasAnySendData() final;
+  bool hasAnySendData() final override;
 
 private:
   /**
@@ -90,21 +90,21 @@ private:
 
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
-  void exchangeFirstData() final;
+  void exchangeFirstData() final override;
 
-  void exchangeSecondData() final;
+  void exchangeSecondData() final override;
 
   bool sendsInitializedDataTo(const std::string &to) const;
 
   bool receivesInitializedDataFrom(const std::string &from) const;
 
-  DataMap &getAccelerationData() final;
+  DataMap &getAccelerationData() final override;
 
   /// @copydoc cplscheme::BaseCouplingScheme::initializeReceiveDataStorage()
-  void initializeReceiveDataStorage() final;
+  void initializeReceiveDataStorage() final override;
 
   /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
-  void exchangeInitialData() final;
+  void exchangeInitialData() final override;
 
   /// name of the controller participant
   std::string _controller;

@@ -46,9 +46,9 @@ public:
   /// Removes a computed mapping.
   void clear() override = 0;
 
-  void tagMeshFirstRound() final;
+  void tagMeshFirstRound() final override;
 
-  void tagMeshSecondRound() final;
+  void tagMeshSecondRound() final override;
 
 protected:
   /// Radial basis function type used in interpolation.

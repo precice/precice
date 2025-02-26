@@ -24,7 +24,7 @@ public:
 
   ~PythonAction() override;
 
-  void performAction() final;
+  void performAction() final override;
 
 private:
   logging::Logger _log{"action::PythonAction"};
