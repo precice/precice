@@ -127,7 +127,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
       const auto timesAscending = data->timeStepsStorage().getTimes();
       sendTimes(m2n, timesAscending);
 
-      const auto serialized = com::serialize::SerializedStamples::serialize(data);
+      const auto serialized = com::serialize::SerializedStamples::serialize(*data);
 
       // Data is actually only send if size>0, which is checked in the derived classes implementation
       m2n->send(serialized.values(), data->getMeshID(), data->getDimensions() * serialized.nTimeSteps());
@@ -176,7 +176,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
       auto       timesAscending = receiveTimes(m2n);
       const auto nTimeSteps     = timesAscending.size();
 
-      auto serialized = com::serialize::SerializedStamples::empty(nTimeSteps, data);
+      auto serialized = com::serialize::SerializedStamples::empty(nTimeSteps, *data);
 
       // Data is only received on ranks with size>0, which is checked in the derived class implementation
       m2n->receive(serialized.values(), data->getMeshID(), data->getDimensions() * nTimeSteps);
@@ -185,7 +185,7 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
         m2n->receive(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * nTimeSteps);
       }
 
-      serialized.deserializeInto(timesAscending, data);
+      serialized.deserializeInto(timesAscending, *data);
     } else {
       if (data->hasGradient()) {
         // Data is only received on ranks with size>0, which is checked in the derived class implementation
