@@ -244,6 +244,7 @@ int Storage::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples
 
 const Sample &Storage::getSampleAtEnd() const
 {
+  PRECICE_ASSERT(!_stampleStorage.empty());
   return _stampleStorage.back().sample;
 }
 
