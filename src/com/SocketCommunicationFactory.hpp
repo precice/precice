@@ -6,8 +6,7 @@
 
 #include <string>
 
-namespace precice {
-namespace com {
+namespace precice::com {
 class SocketCommunicationFactory : public CommunicationFactory {
 public:
   SocketCommunicationFactory(unsigned short portNumber       = 0,
@@ -27,5 +26,4 @@ private:
   std::string    _networkName;
   std::string    _addressDirectory;
 };
-} // namespace com
-} // namespace precice
+} // namespace precice::com

@@ -5,9 +5,7 @@
 #include "acceleration/impl/Preconditioner.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 /**
  * @brief Preconditioner that uses the recent residual to scale the quasi-Newton system.
@@ -20,7 +18,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~ResidualPreconditioner() {}
+  ~ResidualPreconditioner() override = default;
 
 private:
   /**
@@ -28,13 +26,11 @@ private:
     *
     * @param[in] timeWindowComplete True if this FSI iteration also completed a time window
     */
-  virtual void _update_(bool                   timeWindowComplete,
-                        const Eigen::VectorXd &oldValues,
-                        const Eigen::VectorXd &res);
+  void _update_(bool                   timeWindowComplete,
+                const Eigen::VectorXd &oldValues,
+                const Eigen::VectorXd &res) override;
 
   logging::Logger _log{"acceleration::ResidualPreconditioner"};
 };
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

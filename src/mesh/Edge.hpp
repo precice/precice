@@ -9,8 +9,7 @@
 #include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 /// Linear edge of a mesh, defined by two Vertex objects.
 class Edge {
@@ -95,5 +94,4 @@ inline int Edge::getDimensions() const
 
 std::ostream &operator<<(std::ostream &stream, const Edge &edge);
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

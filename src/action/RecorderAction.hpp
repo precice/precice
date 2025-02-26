@@ -21,7 +21,7 @@ public:
       const mesh::PtrMesh &mesh);
 
   /// Records the invocation and appends it to the records
-  virtual void performAction() final override;
+  void performAction() final override;
 
   struct Record {
     Timing timing;

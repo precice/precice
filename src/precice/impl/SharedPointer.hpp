@@ -2,8 +2,7 @@
 
 #include <memory>
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 class ParticipantState;
 class Coupling;
@@ -17,5 +16,4 @@ using PtrWatchPoint    = std::shared_ptr<WatchPoint>;
 using PtrWatchIntegral = std::shared_ptr<WatchIntegral>;
 using PtrMeshContext   = std::shared_ptr<MeshContext>;
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

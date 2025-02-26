@@ -1,10 +1,9 @@
-#pragma once
-
 #include <Eigen/Core>
 #include <numeric>
 #include <vector>
 
 #include "TimeGrids.hpp"
+#include "math/differences.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::time {

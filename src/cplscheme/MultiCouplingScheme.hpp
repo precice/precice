@@ -10,8 +10,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "utils/Helpers.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 class CouplingData;
 struct ExchangeData;
 
@@ -63,9 +62,9 @@ public:
 
   void determineInitialDataExchange() override;
 
-  std::vector<std::string> getCouplingPartners() const override final;
+  std::vector<std::string> getCouplingPartners() const final override;
 
-  bool hasAnySendData() override final;
+  bool hasAnySendData() final override;
 
 private:
   /**
@@ -91,21 +90,21 @@ private:
 
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
-  void exchangeFirstData() override final;
+  void exchangeFirstData() final override;
 
-  void exchangeSecondData() override final;
+  void exchangeSecondData() final override;
 
   bool sendsInitializedDataTo(const std::string &to) const;
 
   bool receivesInitializedDataFrom(const std::string &from) const;
 
-  DataMap &getAccelerationData() override final;
+  DataMap &getAccelerationData() final override;
 
   /// @copydoc cplscheme::BaseCouplingScheme::initializeReceiveDataStorage()
-  void initializeReceiveDataStorage() override final;
+  void initializeReceiveDataStorage() final override;
 
   /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
-  void exchangeInitialData() override final;
+  void exchangeInitialData() final override;
 
   /// name of the controller participant
   std::string _controller;
@@ -114,5 +113,4 @@ private:
   bool _isController;
 };
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

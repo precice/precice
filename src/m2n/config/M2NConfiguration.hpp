@@ -10,8 +10,7 @@
 #include <string>
 #include <vector>
 
-namespace precice {
-namespace m2n {
+namespace precice::m2n {
 
 /// Configuration for communication channels between solvers.
 class M2NConfiguration : public xml::XMLTag::Listener {
@@ -29,7 +28,7 @@ public:
 public:
   explicit M2NConfiguration(xml::XMLTag &parent);
 
-  virtual ~M2NConfiguration() {}
+  ~M2NConfiguration() override = default;
 
   /**
     * @brief Returns the communication object for the given user names.
@@ -49,9 +48,9 @@ public:
 
   bool isM2NConfigured(const std::string &acceptor, const std::string &connector);
 
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
-  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) {}
+  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override {}
 
 private:
   logging::Logger _log{"m2n::M2NConfiguration"};
@@ -68,5 +67,4 @@ private:
       const std::string &connector);
 };
 
-} // namespace m2n
-} // namespace precice
+} // namespace precice::m2n

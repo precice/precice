@@ -3,8 +3,7 @@
 #include <map>
 #include <memory>
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 class CouplingScheme;
 class CouplingSchemeConfiguration;
@@ -15,5 +14,4 @@ using PtrCouplingSchemeConfiguration = std::shared_ptr<CouplingSchemeConfigurati
 using PtrCouplingData                = std::shared_ptr<CouplingData>;
 using DataMap                        = std::map<int, PtrCouplingData>; /// Map that links DataID to CouplingData
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

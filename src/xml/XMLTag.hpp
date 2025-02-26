@@ -11,11 +11,9 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace xml {
+namespace precice::xml {
 class ConfigParser;
 }
-} // namespace precice
 
 namespace precice::xml {
 

@@ -24,22 +24,17 @@
 #include "utils/IntraComm.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 struct MeshContext;
 struct MappingContext;
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl
 
 // Forward declaration to friend the boost test struct
-namespace Integration {
-namespace Serial {
-namespace Whitebox {
+
+namespace Integration::Serial::Whitebox {
 struct TestConfigurationPeano;
 struct TestConfigurationComsol;
-} // namespace Whitebox
-} // namespace Serial
-} // namespace Integration
+} // namespace Integration::Serial::Whitebox
 
 namespace precice {
 namespace utils {

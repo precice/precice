@@ -1,6 +1,6 @@
 #include <Eigen/Core>
 #include <algorithm>
-#include <stddef.h>
+#include <cstddef>
 #include <vector>
 #include "acceleration/impl/ConstantPreconditioner.hpp"
 #include "acceleration/impl/Preconditioner.hpp"
@@ -136,9 +136,7 @@ struct ResPreconditionerFixture {
         6.99999999999999883585e+05,
         7.99999999999999650754e+05;
   }
-  ~ResPreconditionerFixture()
-  {
-  }
+  ~ResPreconditionerFixture() = default;
 };
 
 BOOST_FIXTURE_TEST_SUITE(ResPreconditionerTests, ResPreconditionerFixture)

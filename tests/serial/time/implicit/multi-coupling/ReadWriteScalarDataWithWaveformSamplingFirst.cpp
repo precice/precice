@@ -45,22 +45,22 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
     writeDataName    = "DataOne";
     writeFunction    = dataOneFunction;
     auto dataTwoName = "DataTwo";
-    readDataPairs.push_back(std::make_pair(dataTwoName, dataTwoFunction));
+    readDataPairs.emplace_back(dataTwoName, dataTwoFunction);
     auto dataThreeName = "DataThree";
-    readDataPairs.push_back(std::make_pair(dataThreeName, dataThreeFunction));
+    readDataPairs.emplace_back(dataThreeName, dataThreeFunction);
   } else if (context.isNamed("SolverTwo")) {
     meshName         = "MeshTwo";
     writeDataName    = "DataTwo";
     writeFunction    = dataTwoFunction;
     auto dataOneName = "DataOne";
-    readDataPairs.push_back(std::make_pair(dataOneName, dataOneFunction));
+    readDataPairs.emplace_back(dataOneName, dataOneFunction);
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
     meshName         = "MeshThree";
     writeDataName    = "DataThree";
     writeFunction    = dataThreeFunction;
     auto dataOneName = "DataOne";
-    readDataPairs.push_back(std::make_pair(dataOneName, dataOneFunction));
+    readDataPairs.emplace_back(dataOneName, dataOneFunction);
   }
 
   double   writeData = 0;

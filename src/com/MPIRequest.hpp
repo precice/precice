@@ -4,8 +4,7 @@
 #include <mpi.h>
 #include "com/Request.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 class MPIRequest : public Request {
 public:
   explicit MPIRequest(MPI_Request request);
@@ -17,7 +16,6 @@ public:
 private:
   MPI_Request _request;
 };
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

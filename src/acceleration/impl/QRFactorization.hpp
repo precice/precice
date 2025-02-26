@@ -8,9 +8,7 @@
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 /**
  * @brief Class that provides functionality for a dynamic QR-decomposition, that can be updated
@@ -60,7 +58,7 @@ public:
   /**
     * @brief Destructor, empty.
     */
-  virtual ~QRFactorization() {}
+  virtual ~QRFactorization() = default;
 
   /**
    * @brief Performs a reset of A = QR using the QR2 Filter. This eliminates
@@ -232,6 +230,4 @@ private:
   int _globalRows;
 };
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl
