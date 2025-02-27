@@ -307,6 +307,8 @@ target_sources(preciceCore
     src/utils/EigenHelperFunctions.cpp
     src/utils/EigenHelperFunctions.hpp
     src/utils/EigenIO.hpp
+    src/utils/Hash.cpp
+    src/utils/Hash.hpp
     src/utils/Helpers.cpp
     src/utils/Helpers.hpp
     src/utils/IntraComm.cpp
