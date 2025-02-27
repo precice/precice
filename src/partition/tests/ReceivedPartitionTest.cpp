@@ -1076,7 +1076,7 @@ void testParallelSetOwnerInformation(mesh::PtrMesh mesh, int dimensions)
   auto                                      participantCom = com::PtrCommunication(new com::SocketCommunication());
   m2n::DistributedComFactory::SharedPointer distrFactory;
 
-  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyPrimaryCom, options.useTwoLevelInit));
+  auto m2n = std::make_shared<m2n::M2N>(participantCom, distrFactory, options.useOnlyPrimaryCom, options.useTwoLevelInit);
 
   mapping::PtrMapping boundingFromMapping = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions));
   mapping::PtrMapping boundingToMapping   = mapping::PtrMapping(new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions));

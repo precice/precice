@@ -2,8 +2,7 @@
 
 #include "cplscheme/SerialCouplingScheme.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 /*
  * @brief A fixture that is used to access private functions of the SerialCouplingScheme class.
  *
@@ -25,5 +24,4 @@ struct SerialCouplingSchemeFixture {
   static void moveToNextWindow(cplscheme::SerialCouplingScheme &cplscheme);
 };
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

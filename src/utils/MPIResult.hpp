@@ -8,8 +8,7 @@
 
 #include "utils/String.hpp"
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 /** Utility class to simplify use of MPI return codes
  *
@@ -46,7 +45,6 @@ struct MPIResult {
   }
 };
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils
 
 #endif

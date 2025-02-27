@@ -8,8 +8,7 @@
 #include <string>
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 
 /// This Queue is intended for SocketCommunication to push requests which should be sent onto it.
 /// It ensures that the invocations of asio::aSend are done serially.
@@ -47,5 +46,4 @@ private:
   bool _ready = true;
 };
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

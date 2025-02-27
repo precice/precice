@@ -13,8 +13,7 @@
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 /**
  * @brief Provides connection methods for processes located in one communicator.
  *
@@ -32,30 +31,30 @@ public:
    */
   MPIDirectCommunication();
 
-  virtual ~MPIDirectCommunication();
+  ~MPIDirectCommunication() override;
 
   /**
    * @brief Returns the number of processes in the remote communicator.
    *
    * @pre A connection to the remote participant has been setup.
    */
-  virtual size_t getRemoteCommunicatorSize() override;
+  size_t getRemoteCommunicatorSize() override;
 
   /** See precice::com::Communication::acceptConnection().
    * @attention Calls precice::utils::Parallel::splitCommunicator()
    * if local and global communicators are equal.
    */
-  virtual void acceptConnection(std::string const &acceptorName,
+  void acceptConnection(std::string const &acceptorName,
+                        std::string const &requesterName,
+                        std::string const &tag,
+                        int                acceptorRank,
+                        int                rankOffset = 0) override;
+
+  void acceptConnectionAsServer(std::string const &acceptorName,
                                 std::string const &requesterName,
                                 std::string const &tag,
                                 int                acceptorRank,
-                                int                rankOffset = 0) override;
-
-  virtual void acceptConnectionAsServer(std::string const &acceptorName,
-                                        std::string const &requesterName,
-                                        std::string const &tag,
-                                        int                acceptorRank,
-                                        int                requesterCommunicatorSize) override
+                                int                requesterCommunicatorSize) override
   {
     PRECICE_ASSERT(false, "Not implemented!");
   }
@@ -64,68 +63,68 @@ public:
    * @attention Calls precice::utils::Parallel::splitCommunicator()
    * if local and global communicators are equal.
    */
-  virtual void requestConnection(std::string const &acceptorName,
-                                 std::string const &requesterName,
-                                 std::string const &tag,
-                                 int                requesterRank,
-                                 int                requesterCommunicatorSize) override;
+  void requestConnection(std::string const &acceptorName,
+                         std::string const &requesterName,
+                         std::string const &tag,
+                         int                requesterRank,
+                         int                requesterCommunicatorSize) override;
 
-  virtual void requestConnectionAsClient(std::string const &  acceptorName,
-                                         std::string const &  requesterName,
-                                         std::string const &  tag,
-                                         std::set<int> const &acceptorRanks,
-                                         int                  requesterRank) override
+  void requestConnectionAsClient(std::string const &  acceptorName,
+                                 std::string const &  requesterName,
+                                 std::string const &  tag,
+                                 std::set<int> const &acceptorRanks,
+                                 int                  requesterRank) override
   {
     PRECICE_ASSERT(false, "Not implemented!");
   }
 
   /// See precice::com::Communication::closeConnection().
-  virtual void closeConnection() override;
+  void closeConnection() override;
 
-  virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank) override;
+  void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank) override;
 
-  virtual void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive) override;
+  void reduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive) override;
 
-  virtual void reduceSum(int itemToSend, int &itemsToReceive, Rank primaryRank) override;
+  void reduceSum(int itemToSend, int &itemsToReceive, Rank primaryRank) override;
 
-  virtual void reduceSum(int itemToSend, int &itemsToReceive) override;
+  void reduceSum(int itemToSend, int &itemsToReceive) override;
 
-  virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank) override;
+  void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive, Rank primaryRank) override;
 
-  virtual void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive) override;
+  void allreduceSum(precice::span<double const> itemsToSend, precice::span<double> itemsToReceive) override;
 
-  virtual void allreduceSum(double itemToSend, double &itemsToReceive, Rank primaryRank) override;
+  void allreduceSum(double itemToSend, double &itemsToReceive, Rank primaryRank) override;
 
-  virtual void allreduceSum(double itemToSend, double &itemsToReceive) override;
+  void allreduceSum(double itemToSend, double &itemsToReceive) override;
 
-  virtual void allreduceSum(int itemToSend, int &itemsToReceive, Rank primaryRank) override;
+  void allreduceSum(int itemToSend, int &itemsToReceive, Rank primaryRank) override;
 
-  virtual void allreduceSum(int itemToSend, int &itemsToReceive) override;
+  void allreduceSum(int itemToSend, int &itemsToReceive) override;
 
-  virtual void broadcast(precice::span<const int> itemsToSend) override;
+  void broadcast(precice::span<const int> itemsToSend) override;
 
-  virtual void broadcast(precice::span<int> itemsToReceive, Rank rankBroadcaster) override;
+  void broadcast(precice::span<int> itemsToReceive, Rank rankBroadcaster) override;
 
-  virtual void broadcast(int itemToSend) override;
+  void broadcast(int itemToSend) override;
 
-  virtual void broadcast(int &itemToReceive, Rank rankBroadcaster) override;
+  void broadcast(int &itemToReceive, Rank rankBroadcaster) override;
 
-  virtual void broadcast(precice::span<const double> itemsToSend) override;
+  void broadcast(precice::span<const double> itemsToSend) override;
 
-  virtual void broadcast(precice::span<double> itemsToReceive, Rank rankBroadcaster) override;
+  void broadcast(precice::span<double> itemsToReceive, Rank rankBroadcaster) override;
 
-  virtual void broadcast(double itemToSend) override;
+  void broadcast(double itemToSend) override;
 
-  virtual void broadcast(double &itemToReceive, Rank rankBroadcaster) override;
+  void broadcast(double &itemToReceive, Rank rankBroadcaster) override;
 
-  virtual void broadcast(bool itemToSend) override;
+  void broadcast(bool itemToSend) override;
 
-  virtual void broadcast(bool &itemToReceive, Rank rankBroadcaster) override;
+  void broadcast(bool &itemToReceive, Rank rankBroadcaster) override;
 
 private:
-  virtual MPI_Comm &communicator(Rank rank = 0) override;
+  MPI_Comm &communicator(Rank rank = 0) override;
 
-  virtual Rank rank(int rank) override;
+  Rank rank(int rank) override;
 
   logging::Logger _log{"com::MPIDirectCommunication"};
 
@@ -134,10 +133,9 @@ private:
 
 protected:
   /// Turn the rank adjustment into a noop for direct communication
-  virtual int adjustRank(Rank rank) const override;
+  int adjustRank(Rank rank) const override;
 };
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

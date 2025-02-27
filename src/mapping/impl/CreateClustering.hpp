@@ -11,9 +11,7 @@
 // required for the squared distance computation
 #include "mapping/RadialBasisFctSolver.hpp"
 
-namespace precice {
-namespace mapping {
-namespace impl {
+namespace precice::mapping::impl {
 
 using Vertices = std::vector<mesh::Vertex>;
 
@@ -495,6 +493,4 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
 
   return {clusterRadius, centers};
 }
-} // namespace impl
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping::impl

@@ -561,10 +561,10 @@ BOOST_AUTO_TEST_CASE(TetraWorksOnBoundary)
   Index   indexTree(ptr);
 
   std::vector<Eigen::Vector3d> locations;
-  locations.push_back(Eigen::Vector3d(0, 0, 0));
-  locations.push_back(Eigen::Vector3d(1, 0, 0));
-  locations.push_back(Eigen::Vector3d(0, 1, 0));
-  locations.push_back(Eigen::Vector3d(0, 0, 1));
+  locations.emplace_back(0, 0, 0);
+  locations.emplace_back(1, 0, 0);
+  locations.emplace_back(0, 1, 0);
+  locations.emplace_back(0, 0, 1);
 
   // Set containing tetra
   auto &v00 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));

@@ -11,9 +11,7 @@
 /// Generic test function that is called from the tests for
 /// MPIPortsCommunication, MPIDirectCommunication and SocketCommunication
 
-namespace precice {
-namespace testing {
-namespace com {
+namespace precice::testing::com {
 
 namespace primaryprimary {
 
@@ -940,6 +938,4 @@ void TestSendReceiveFourProcessesServerClientV2(TestContext const &context)
 
 } // namespace serverclient
 
-} // namespace com
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing::com

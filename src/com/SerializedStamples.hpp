@@ -5,8 +5,7 @@
 #include "cplscheme/CouplingData.hpp"
 #include "precice/span.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 class Communication;
 
 namespace serialize {
@@ -113,5 +112,4 @@ private:
 };
 
 } // namespace serialize
-} // namespace com
-} // namespace precice
+} // namespace precice::com

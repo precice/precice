@@ -6,8 +6,7 @@
 #include <set>
 #include <vector>
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 /// Returns true, if numerical truncation happens in case of type conversion.
 template <class Out, class In>
@@ -60,5 +59,4 @@ bool contained(
 /// Returns true if machine is big-endian needed for parallel vtk output
 bool isMachineBigEndian();
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

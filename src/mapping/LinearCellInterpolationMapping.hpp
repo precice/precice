@@ -3,8 +3,7 @@
 #include "logging/Logger.hpp"
 #include "mapping/BarycentricBaseMapping.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /**
  * @brief Mapping using orthogonal projection to nearest triangle/edge/vertex and
@@ -25,5 +24,4 @@ private:
   logging::Logger _log{"mapping::LinearCellInterpolationMappingMapping"};
 };
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

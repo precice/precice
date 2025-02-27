@@ -3,8 +3,7 @@
 #include <Eigen/Core>
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace math {
+namespace precice::math {
 
 constexpr double NUMERICAL_ZERO_DIFFERENCE = 1.0e-14;
 
@@ -92,5 +91,4 @@ typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type smallerEq
   return A - B <= tolerance;
 }
 
-} // namespace math
-} // namespace precice
+} // namespace precice::math
