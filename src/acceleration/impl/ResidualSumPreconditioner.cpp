@@ -104,10 +104,8 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
     }
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
     }
-    _firstIteration = false;
   } else {
     _firstTimeWindow = false;
-    _firstIteration  = true;
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
       _residualSum[k] = 0.0;
     }

@@ -36,7 +36,6 @@ private:
   std::vector<double> _residualSum;
   std::vector<double> _previousResidualSum;
   bool                _firstTimeWindow = true;
-  bool                _firstIteration  = true;
   bool                _preconditionerUpdateOnThreshold;
 };
 
