@@ -12,6 +12,7 @@
 
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
+#include "utils/Hash.hpp"
 #include "utils/String.hpp"
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLTag.hpp"
@@ -159,6 +160,11 @@ void ConfigParser::MessageProxy(int level, std::string_view mess)
   }
 }
 
+std::string ConfigParser::hash() const
+{
+  return _hash;
+}
+
 int ConfigParser::readXmlFile(std::string const &filePath)
 {
   xmlSAXHandler SAXHandler;
@@ -177,6 +183,8 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   PRECICE_CHECK(ifs, "XML parser was unable to open configuration file \"{}\"", filePath);
 
   std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
+
+  _hash = utils::preciceHash(content);
 
   xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
                                                   content.c_str(), content.size(), nullptr);

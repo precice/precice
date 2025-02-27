@@ -103,7 +103,8 @@ BOOST_AUTO_TEST_CASE(AttributeTypeTest)
 
   rootTag.addSubtag(testcaseTag);
 
-  configure(rootTag, ConfigurationContext{}, filename);
+  auto hash = configure(rootTag, ConfigurationContext{}, filename);
+  BOOST_TEST(!hash.empty());
 
   BOOST_TEST(cb.boolValue == true);
   BOOST_TEST(cb.doubleValue == 3.1);
@@ -151,7 +152,8 @@ BOOST_AUTO_TEST_CASE(OccurenceTest)
 
   rootTag.addSubtag(testcaseTag);
 
-  configure(rootTag, ConfigurationContext{}, filename);
+  auto hash = configure(rootTag, ConfigurationContext{}, filename);
+  BOOST_TEST(!hash.empty());
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -174,7 +176,8 @@ BOOST_AUTO_TEST_CASE(NamespaceTest)
 
   rootTag.addSubtag(testcaseTag);
 
-  configure(rootTag, ConfigurationContext{}, filename);
+  auto hash = configure(rootTag, ConfigurationContext{}, filename);
+  BOOST_TEST(!hash.empty());
 }
 
 struct ContextListener : public XMLTag::Listener {
@@ -201,7 +204,8 @@ BOOST_AUTO_TEST_CASE(Context)
   ContextListener      cl;
   XMLTag               rootTag(cl, "configuration", XMLTag::OCCUR_ONCE);
   ConfigurationContext ccontext{"test", 12, 32};
-  configure(rootTag, ccontext, filename);
+  auto                 hash = configure(rootTag, ccontext, filename);
+  BOOST_TEST(!hash.empty());
   BOOST_TEST(cl.startContext.name == "test");
   BOOST_TEST(cl.startContext.rank == 12);
   BOOST_TEST(cl.startContext.size == 32);

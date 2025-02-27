@@ -256,7 +256,7 @@ struct NoPListener : public XMLTag::Listener {
 XMLTag getRootTag();
 
 /// Configures the given configuration from file configurationFilename.
-void configure(
+std::string configure(
     XMLTag &                                  tag,
     const precice::xml::ConfigurationContext &context,
     std::string_view                          configurationFilename);
