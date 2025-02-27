@@ -44,9 +44,9 @@ void SerializedStamples::allocate(const cplscheme::PtrCouplingData data)
   }
 }
 
-void SerializedStamples::serializeValues(const cplscheme::PtrCouplingData data)
+void SerializedStamples::serializeValues(std::shared_ptr<const cplscheme::CouplingData> data)
 {
-  const int nValues = data->sample().values.size();
+  const int nValues = data->getSize();
   int       timeId  = 0;
   for (const auto &stample : data->stamples()) {
     const Eigen::VectorXd &slice = stample.sample.values;
@@ -57,13 +57,11 @@ void SerializedStamples::serializeValues(const cplscheme::PtrCouplingData data)
   }
 }
 
-void SerializedStamples::serializeGradients(const cplscheme::PtrCouplingData data)
+void SerializedStamples::serializeGradients(std::shared_ptr<const cplscheme::CouplingData> data)
 {
-  const int nValues = data->sample().gradients.size();
-  int       timeId  = 0;
+  int timeId = 0;
   for (const auto &stample : data->stamples()) {
-    const Eigen::VectorXd &slice = Eigen::VectorXd::Map(stample.sample.gradients.data(), stample.sample.gradients.rows() * stample.sample.gradients.cols());
-    PRECICE_ASSERT(nValues == slice.size());
+    const Eigen::VectorXd &slice = Eigen::VectorXd::Map(stample.sample.gradients.data(), data->gradientsRows() * data->gradientsCols());
     for (int valueId = 0; valueId < slice.size(); valueId++) {
       _gradients(valueId * _timeSteps + timeId) = slice(valueId);
     }
@@ -92,7 +90,7 @@ void SerializedStamples::deserialize(precice::span<const double> timeStamps, cpl
       continue;
     }
 
-    Eigen::MatrixXd gradientSlice(data->sample().gradients.rows(), data->sample().gradients.cols());
+    Eigen::MatrixXd gradientSlice(data->gradientsRows(), data->gradientsCols());
     auto            gradientView = Eigen::VectorXd::Map(gradientSlice.data(), gradientSlice.rows() * gradientSlice.cols());
     for (int gradientId = 0; gradientId < gradientView.size(); gradientId++) {
       gradientView(gradientId) = _gradients(gradientId * timeStamps.size() + timeId);

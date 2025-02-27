@@ -84,14 +84,14 @@ private:
    *
    * @param data the data that is serialized
    */
-  void serializeValues(const cplscheme::PtrCouplingData data);
+  void serializeValues(std::shared_ptr<const cplscheme::CouplingData> data);
 
   /**
    * @brief Serialize gradients from timeStepsStorage of data into _gradients
    *
    * @param data the data that is serialized
    */
-  void serializeGradients(const cplscheme::PtrCouplingData data);
+  void serializeGradients(std::shared_ptr<const cplscheme::CouplingData> data);
 
   /**
      * @brief Deserialize _values and (if required by data) _gradients into  timeStepsStorage of data. Use provided timeStamps.

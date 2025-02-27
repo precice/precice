@@ -48,24 +48,34 @@ int CouplingData::nVertices() const
   return sample().values.size() / getDimensions();
 }
 
-Eigen::VectorXd &CouplingData::values()
-{
-  return sample().values;
-}
-
 const Eigen::VectorXd &CouplingData::values() const
 {
   return sample().values;
 }
 
-Eigen::MatrixXd &CouplingData::gradients()
+const Eigen::MatrixXd &CouplingData::gradients() const
 {
   return sample().gradients;
 }
 
-const Eigen::MatrixXd &CouplingData::gradients() const
+int CouplingData::gradientsRows() const
 {
-  return sample().gradients;
+  const int rows = meshDimensions();
+  PRECICE_ASSERT(sample().gradients.rows() == rows, sample().gradients.rows(), rows);
+  return rows;
+}
+
+int CouplingData::gradientsCols() const
+{
+  const int cols = getSize();
+  PRECICE_ASSERT(sample().gradients.cols() == cols, sample().gradients.cols(), cols);
+  return cols;
+}
+
+const time::Sample &CouplingData::sample() const
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->sample();
 }
 
 time::Storage &CouplingData::timeStepsStorage()
@@ -93,8 +103,20 @@ Eigen::MatrixXd CouplingData::getPreviousGradientsAtTime(double relativeDt)
 void CouplingData::setSampleAtTime(double time, time::Sample sample)
 {
   PRECICE_ASSERT(not sample.values.hasNaN());
-  this->sample() = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _data->setSampleAtTime(time, sample);
+}
+
+void CouplingData::setGlobalSample(const time::Sample &sample)
+{
+  PRECICE_ASSERT(not sample.values.hasNaN());
+  _data->setGlobalSample(sample);
+}
+
+void CouplingData::initializeWithZeroAtTime(double time)
+{
+  auto zero = time::Sample(getDimensions(), nVertices());
+  zero.setZero();
+  _data->setSampleAtTime(time, zero);
 }
 
 void CouplingData::emplaceSampleAtTime(double time)
@@ -104,15 +126,11 @@ void CouplingData::emplaceSampleAtTime(double time)
 
 void CouplingData::emplaceSampleAtTime(double time, std::initializer_list<double> values)
 {
-  this->sample() = time::Sample(_data->getDimensions(), Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size())); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _data->emplaceSampleAtTime(time, values);
 }
 
 void CouplingData::emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients)
 {
-  this->sample() = time::Sample(_data->getDimensions(),
-                                Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size()),
-                                Eigen::Map<const Eigen::MatrixXd>(gradients.begin(), _data->getSpatialDimensions(), _data->getDimensions() * nVertices())); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _data->emplaceSampleAtTime(time, values, gradients);
 }
 
@@ -146,7 +164,6 @@ void CouplingData::storeIteration()
 {
   const auto &stamples = this->stamples();
   PRECICE_ASSERT(stamples.size() > 0);
-  this->sample()            = stamples.back().sample;
   _previousTimeStepsStorage = _data->timeStepsStorage();
 }
 
@@ -206,18 +223,6 @@ void CouplingData::moveToNextWindow()
   }
   _data->moveToNextWindow();
   _previousTimeStepsStorage = _data->timeStepsStorage();
-}
-
-time::Sample &CouplingData::sample()
-{
-  PRECICE_ASSERT(_data != nullptr);
-  return _data->sample();
-}
-
-const time::Sample &CouplingData::sample() const
-{
-  PRECICE_ASSERT(_data != nullptr);
-  return _data->sample();
 }
 
 bool CouplingData::exchangeSubsteps() const

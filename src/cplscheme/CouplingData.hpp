@@ -27,20 +27,17 @@ public:
 
   int nVertices() const;
 
-  /// Returns a reference to the data values.
-  Eigen::VectorXd &values();
-
   /// Returns a const reference to the data values.
   const Eigen::VectorXd &values() const;
-
-  /// Returns a reference to the gradient data values.
-  Eigen::MatrixXd &gradients();
 
   /// Returns a const reference to the gradient data values.
   const Eigen::MatrixXd &gradients() const;
 
-  /// Returns a reference to the gradient data Sample.
-  time::Sample &sample();
+  /// Returns number of rows of the stored gradients.
+  int gradientsRows() const;
+
+  /// Returns number of columns of the stored gradients.
+  int gradientsCols() const;
 
   /// Returns a const reference to the data Sample.
   const time::Sample &sample() const;
@@ -64,6 +61,12 @@ public:
 
   /// Add sample at given time to _timeStepsStorage.
   void setSampleAtTime(double time, time::Sample sample);
+
+  /// Set _data::_sample
+  void setGlobalSample(const time::Sample &sample); // @todo try to remove this function
+
+  /// Add sample with zero values at given time to _timeStepsStorage.
+  void initializeWithZeroAtTime(double time);
 
   /// Creates an empty sample at given time
   void emplaceSampleAtTime(double time);
