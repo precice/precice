@@ -20,14 +20,14 @@ void BoundM2N::prepareEstablishment()
   m2n->prepareEstablishment(localName, remoteName);
 }
 
-void BoundM2N::connectPrimaryRanks()
+void BoundM2N::connectPrimaryRanks(std::string_view configHash)
 {
   std::string fullLocalName = localName;
 
   if (isRequesting) {
-    m2n->requestPrimaryRankConnection(remoteName, fullLocalName);
+    m2n->requestPrimaryRankConnection(remoteName, fullLocalName, configHash);
   } else {
-    m2n->acceptPrimaryRankConnection(fullLocalName, remoteName);
+    m2n->acceptPrimaryRankConnection(fullLocalName, remoteName, configHash);
   }
 }
 

@@ -40,9 +40,40 @@ bool M2N::isConnected()
   return _isPrimaryRankConnected;
 }
 
+namespace {
+std::string makeLocalInfo(std::string_view configHash)
+{
+  std::string info = PRECICE_VERSION;
+  info += ";";
+  info += configHash;
+  return info;
+}
+
+} // namespace
+
+void M2N::checkRemoteInfo(std::string_view localParticipant,
+                          std::string_view remoteParticipant,
+                          std::string_view localConfigHash,
+                          std::string_view remoteInfo)
+{
+  auto sep = remoteInfo.find(";");
+  PRECICE_CHECK(sep != std::string::npos, "The received information string from participant {} is damaged. \"{}\"");
+
+  auto remoteVersion = remoteInfo.substr(0, sep);
+  PRECICE_CHECK(remoteVersion == PRECICE_VERSION,
+                "This participant {} uses preCICE version {} but the requester participant {} uses preCICE version {}. Mixing preCICE versions can lead to undefined behavior and is, thus, forbidden.",
+                localParticipant, PRECICE_VERSION, remoteParticipant, remoteVersion);
+
+  auto remoteConfigHash = remoteInfo.substr(sep + 1);
+  PRECICE_CHECK(remoteConfigHash == localConfigHash,
+                "This participant {} uses a different configuration file than the remote participant {}. Hashes differ {} != {}.",
+                localParticipant, remoteParticipant, localConfigHash, remoteConfigHash);
+}
+
 void M2N::acceptPrimaryRankConnection(
     const std::string &acceptorName,
-    const std::string &requesterName)
+    const std::string &requesterName,
+    std::string_view   configHash)
 {
   PRECICE_TRACE(acceptorName, requesterName);
 
@@ -52,12 +83,17 @@ void M2N::acceptPrimaryRankConnection(
     PRECICE_DEBUG("Accept primary connection");
     PRECICE_ASSERT(_interComm);
     _interComm->acceptConnection(acceptorName, requesterName, "PRIMARYCOM", utils::IntraComm::getRank());
-    _isPrimaryRankConnected      = _interComm->isConnected();
-    std::string acceptorVersion  = PRECICE_VERSION;
-    auto        requesterVersion = acceptorVersion;
-    _interComm->send(acceptorVersion, 0);
-    _interComm->receive(requesterVersion, 0);
-    PRECICE_CHECK(requesterVersion == acceptorVersion, "This participant {} uses preCICE version {} but the requester participant {} uses preCICE version {}. Mixing preCICE versions can lead to undefined behavior and is, thus, forbidden.", acceptorName, acceptorVersion, requesterName, requesterVersion);
+    _isPrimaryRankConnected = _interComm->isConnected();
+
+    std::string localInfo = makeLocalInfo(configHash);
+    _interComm->send(localInfo, 0);
+    std::string remoteInfo;
+    _interComm->receive(remoteInfo, 0);
+
+    checkRemoteInfo(acceptorName,
+                    requesterName,
+                    configHash,
+                    remoteInfo);
   }
 
   utils::IntraComm::broadcast(_isPrimaryRankConnected);
@@ -65,7 +101,8 @@ void M2N::acceptPrimaryRankConnection(
 
 void M2N::requestPrimaryRankConnection(
     const std::string &acceptorName,
-    const std::string &requesterName)
+    const std::string &requesterName,
+    std::string_view   configHash)
 {
   PRECICE_TRACE(acceptorName, requesterName);
 
@@ -78,11 +115,15 @@ void M2N::requestPrimaryRankConnection(
     _isPrimaryRankConnected = _interComm->isConnected();
 
     //check that local and remote have the same precice version
-    std::string requesterVersion = PRECICE_VERSION;
-    auto        acceptorVersion  = requesterVersion;
-    _interComm->receive(acceptorVersion, 0);
-    _interComm->send(requesterVersion, 0);
-    PRECICE_CHECK(requesterVersion == acceptorVersion, "This participant {} uses preCICE version {} but the acceptor participant {} uses preCICE version {}. Mixing preCICE versions can lead to undefined behavior and is, thus, forbidden.", requesterName, requesterVersion, acceptorName, acceptorVersion);
+    std::string remoteInfo;
+    _interComm->receive(remoteInfo, 0);
+    std::string localInfo = makeLocalInfo(configHash);
+    _interComm->send(localInfo, 0);
+
+    checkRemoteInfo(requesterName,
+                    acceptorName,
+                    configHash,
+                    remoteInfo);
   }
 
   utils::IntraComm::broadcast(_isPrimaryRankConnected);

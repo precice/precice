@@ -333,7 +333,7 @@ void ParticipantImpl::setupCommunication()
     } else {
       PRECICE_DEBUG((requesting ? "Awaiting primary connection from {}" : "Establishing primary connection to {}"), bm2n.remoteName);
       bm2n.prepareEstablishment();
-      bm2n.connectPrimaryRanks();
+      bm2n.connectPrimaryRanks(_configHash);
       PRECICE_DEBUG("Established primary connection {} {}", (requesting ? "from " : "to "), bm2n.remoteName);
     }
   }
