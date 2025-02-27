@@ -4,8 +4,7 @@
 #include "mapping/BarycentricBaseMapping.hpp"
 #include "mapping/Polation.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /**
  * @brief Mapping using orthogonal projection to nearest triangle/edge/vertex and
@@ -26,5 +25,4 @@ private:
   logging::Logger _log{"mapping::NearestNeighborProjectionMapping"};
 };
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

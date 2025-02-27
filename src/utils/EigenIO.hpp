@@ -2,9 +2,7 @@
 
 #include <Eigen/Core>
 
-namespace precice {
-namespace utils {
-namespace eigenio {
+namespace precice::utils::eigenio {
 
 inline Eigen::IOFormat wkt()
 {
@@ -21,6 +19,4 @@ inline Eigen::IOFormat debug()
   return wkt();
 }
 
-} // namespace eigenio
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils::eigenio

@@ -2,8 +2,7 @@
 
 #include "time/Waveform.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 /*
  * @brief A fixture that is used to access private functions of the Waveform class.
  *
@@ -16,5 +15,4 @@ public:
   int valuesSize(time::Waveform &waveform);
 };
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

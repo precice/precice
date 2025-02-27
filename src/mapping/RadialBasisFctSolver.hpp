@@ -13,8 +13,7 @@
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /**
  * This class assembles and solves an RBF system, given an input mesh and an output mesh with relevant vertex IDs.
@@ -469,5 +468,4 @@ Eigen::Index RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getOutputSize() cons
 {
   return _matrixA.rows();
 }
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

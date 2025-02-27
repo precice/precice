@@ -103,10 +103,10 @@ private:
   Polynomial _polynomial;
 
   /// @copydoc Mapping::mapConservative
-  virtual void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) override;
+  void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
   /// @copydoc Mapping::mapConsistent
-  virtual void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) override;
+  void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
   /// export the center vertices of all clusters as a mesh with some additional data on it such as vertex count
   /// only enabled in debug builds and mainly for debugging purpose

@@ -12,8 +12,7 @@
 #include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 class CouplingData;
 
 /**
@@ -57,12 +56,12 @@ public:
   void determineInitialDataExchange() override;
 
   /// returns list of all coupling partners
-  std::vector<std::string> getCouplingPartners() const override final;
+  std::vector<std::string> getCouplingPartners() const final override;
 
   /**
    * @returns true, if coupling scheme has any sendData
    */
-  bool hasAnySendData() override final;
+  bool hasAnySendData() final override;
 
   /**
    * @returns true, if coupling scheme has sendData with given DataID
@@ -89,7 +88,7 @@ protected:
   m2n::PtrM2N getM2N() const;
 
   /// @copydoc cplscheme::BaseCouplingScheme::initializeReceiveDataStorage()
-  void initializeReceiveDataStorage() override final;
+  void initializeReceiveDataStorage() final override;
 
 private:
   mutable logging::Logger _log{"cplscheme::BiCouplingScheme"};
@@ -110,5 +109,4 @@ private:
   std::string _secondParticipant = "unknown";
 };
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

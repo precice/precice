@@ -7,14 +7,11 @@
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Vertex;
 }
-} // namespace precice
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 /**
  * @brief Track and output transient integral data on a mesh
@@ -60,5 +57,4 @@ private:
   double calculateSurfaceArea() const;
 };
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

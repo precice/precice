@@ -6,8 +6,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /**
  * @brief Abstract base class for mapping of data from one mesh to another.
@@ -274,5 +273,4 @@ bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs);
 */
 std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val);
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

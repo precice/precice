@@ -2,12 +2,10 @@
 
 #include <memory>
 
-namespace precice {
-namespace partition {
+namespace precice::partition {
 
 class Partition;
 
 using PtrPartition = std::shared_ptr<Partition>;
 
-} // namespace partition
-} // namespace precice
+} // namespace precice::partition

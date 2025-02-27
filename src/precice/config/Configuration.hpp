@@ -13,8 +13,7 @@
 #include "profiling/config/ProfilingConfiguration.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace config {
+namespace precice::config {
 
 /**
  * @brief Main class for preCICE XML configuration tree.
@@ -29,7 +28,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~Configuration() {}
+  ~Configuration() override = default;
 
   /**
    * @brief Returns root xml tag to start the automatic configuration process.
@@ -41,14 +40,14 @@ public:
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag);
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag) override;
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag);
+  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag) override;
 
   /// @brief Returns whether experimental features are allowed or not
   bool allowsExperimental() const
@@ -146,5 +145,4 @@ private:
   cplscheme::PtrCouplingSchemeConfiguration _couplingSchemeConfiguration;
 };
 
-} // namespace config
-} // namespace precice
+} // namespace precice::config

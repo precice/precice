@@ -9,8 +9,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 /**
    * @brief This function is by and large the same as std::set_intersection().
@@ -224,8 +223,7 @@ std::pair<InputIt, InputIt> find_first_range(InputIt first, InputIt last, Predic
   return {firstMatch, trailing};
 }
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils
 
 template <typename Iter>
 struct fmt::formatter<precice::utils::RangePreview<Iter>> : ostream_formatter {

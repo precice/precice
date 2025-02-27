@@ -29,7 +29,7 @@ void ConstantRelaxationAcceleration::initialize(const DataMap &cplData)
   checkDataIDs(cplData);
 }
 
-void ConstantRelaxationAcceleration::performAcceleration(DataMap &cplData, double windowStart)
+void ConstantRelaxationAcceleration::performAcceleration(DataMap &cplData, double windowStart, double windowEnd)
 {
   PRECICE_TRACE();
   applyRelaxation(_relaxation, cplData, windowStart);

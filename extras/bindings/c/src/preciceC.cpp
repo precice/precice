@@ -33,11 +33,11 @@ void precicec_createParticipant_withCommunicator(
     void *      communicator)
 try {
   PRECICE_CHECK(impl == nullptr, errormsgCreate);
-  impl.reset(new precice::Participant(participantName,
-                                      configFileName,
-                                      solverProcessIndex,
-                                      solverProcessSize,
-                                      communicator));
+  impl = std::make_unique<precice::Participant>(participantName,
+                                                configFileName,
+                                                solverProcessIndex,
+                                                solverProcessSize,
+                                                communicator);
 } catch (::precice::Error &e) {
   std::abort();
 }
@@ -49,10 +49,10 @@ void precicec_createParticipant(
     int         solverProcessSize)
 try {
   PRECICE_CHECK(impl == nullptr, errormsgCreate);
-  impl.reset(new precice::Participant(participantName,
-                                      configFileName,
-                                      solverProcessIndex,
-                                      solverProcessSize));
+  impl = std::make_unique<precice::Participant>(participantName,
+                                                configFileName,
+                                                solverProcessIndex,
+                                                solverProcessSize);
 } catch (::precice::Error &e) {
   std::abort();
 }

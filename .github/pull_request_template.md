@@ -16,6 +16,7 @@ Short rational why preCICE needs this change. If this is already described in an
 * [ ] I stuck to C++17 features.
 * [ ] I stuck to CMake version 3.22.1.
 * [ ] I squashed / am about to squash all commits that should be seen as one.
+* [ ] I ran the systemtests by adding the label `trigger-system-tests` (may be skipped if minor change)
 
 ## Reviewers' checklist
 

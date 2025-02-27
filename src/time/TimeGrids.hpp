@@ -10,8 +10,7 @@
 #include "logging/Logger.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace time {
+namespace precice::time {
 
 /**
  * @brief Interface for storing the time grids in the Quasi-Newton and Aitken methods.
@@ -47,5 +46,4 @@ private:
   std::map<int, Eigen::VectorXd> _timeGrids;
 };
 
-} // namespace time
-} // namespace precice
+} // namespace precice::time

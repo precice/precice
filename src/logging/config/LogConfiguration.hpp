@@ -11,9 +11,9 @@ class LogConfiguration : public xml::XMLTag::Listener {
 public:
   LogConfiguration(xml::XMLTag &parent);
 
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag);
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag) override;
 
-  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag);
+  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag) override;
 
 private:
   precice::logging::Logger _log{"logging::config::LogConfiguration"};

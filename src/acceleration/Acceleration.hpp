@@ -7,15 +7,12 @@
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 class TXTWriter;
 class TXTReader;
-} // namespace io
-} // namespace precice
+} // namespace precice::io
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 class Acceleration {
 public:
@@ -34,7 +31,7 @@ public:
 
   virtual void initialize(const DataMap &cpldata) = 0;
 
-  virtual void performAcceleration(DataMap &cpldata, double windowStart) = 0;
+  virtual void performAcceleration(DataMap &cpldata, double windowStart, double windowEnd) = 0;
 
   virtual void iterationsConverged(const DataMap &cpldata, double windowStart) = 0;
 
@@ -49,5 +46,4 @@ protected:
   /// performs a relaxation given a relaxation factor omega
   static void applyRelaxation(double omega, DataMap &cplData, double windowStart);
 };
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration

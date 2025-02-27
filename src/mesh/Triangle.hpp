@@ -12,16 +12,13 @@
 #include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Vertex;
 }
-} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 /// Triangle of a mesh, defined by three vertices.
 class Triangle {
@@ -184,5 +181,4 @@ inline Triangle::const_iterator Triangle::cend() const
 
 std::ostream &operator<<(std::ostream &os, const Triangle &t);
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

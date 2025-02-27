@@ -100,16 +100,11 @@ bool BaseCouplingScheme::hasConverged() const
   return _hasConverged;
 }
 
-void BaseCouplingScheme::sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps)
+void BaseCouplingScheme::sendTimes(const m2n::PtrM2N &m2n, precice::span<double const> times)
 {
   PRECICE_TRACE();
-  PRECICE_DEBUG("Sending number or time steps {}...", numberOfTimeSteps);
-  m2n->send(numberOfTimeSteps);
-}
-
-void BaseCouplingScheme::sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd &times)
-{
-  PRECICE_TRACE();
+  PRECICE_DEBUG("Sending number or time steps {}...", times.size());
+  m2n->send(static_cast<int>(times.size()));
   PRECICE_DEBUG("Sending times...");
   m2n->send(times);
 }
@@ -123,18 +118,16 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
   profiling::Event e("waitAndSendData", profiling::Fundamental);
 
   for (const auto &data : sendData | boost::adaptors::map_values) {
-    const auto &stamples = data->stamples();
-    PRECICE_ASSERT(!stamples.empty());
-
-    int nTimeSteps = data->timeStepsStorage().nTimes();
-    PRECICE_ASSERT(nTimeSteps > 0);
-
     if (data->exchangeSubsteps()) {
-      const Eigen::VectorXd timesAscending = data->timeStepsStorage().getTimes();
-      sendNumberOfTimeSteps(m2n, nTimeSteps);
+      const auto &stamples = data->stamples();
+      PRECICE_ASSERT(!stamples.empty());
+
+      int nTimeSteps = data->timeStepsStorage().nTimes();
+      PRECICE_ASSERT(nTimeSteps > 0);
+      const auto timesAscending = data->timeStepsStorage().getTimes();
       sendTimes(m2n, timesAscending);
 
-      const auto serialized = com::serialize::SerializedStamples::serialize(data);
+      const auto serialized = com::serialize::SerializedStamples::serialize(*data);
 
       // Data is actually only send if size>0, which is checked in the derived classes implementation
       m2n->send(serialized.values(), data->getMeshID(), data->getDimensions() * serialized.nTimeSteps());
@@ -143,33 +136,29 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
         m2n->send(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * serialized.nTimeSteps());
       }
     } else {
-      data->sample() = stamples.back().sample;
-
-      // Data is only received on ranks with size>0, which is checked in the derived class implementation
-      m2n->send(data->values(), data->getMeshID(), data->getDimensions());
-
+      const auto &sample = data->timeStepsStorage().getSampleAtEnd();
       if (data->hasGradient()) {
-        PRECICE_ASSERT(data->hasGradient());
-        m2n->send(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
+        // Data is only received on ranks with size>0, which is checked in the derived class implementation
+        m2n->send(sample.values, data->getMeshID(), data->getDimensions());
+        m2n->send(sample.gradients, data->getMeshID(), data->getDimensions() * data->meshDimensions());
+      } else {
+        // Data is only received on ranks with size>0, which is checked in the derived class implementation
+        m2n->send(sample.values, data->getMeshID(), data->getDimensions());
       }
     }
   }
 }
 
-int BaseCouplingScheme::receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n)
+std::vector<double> BaseCouplingScheme::receiveTimes(const m2n::PtrM2N &m2n)
 {
   PRECICE_TRACE();
   PRECICE_DEBUG("Receiving number of time steps...");
   int numberOfTimeSteps;
   m2n->receive(numberOfTimeSteps);
-  return numberOfTimeSteps;
-}
+  PRECICE_ASSERT(numberOfTimeSteps > 0);
 
-Eigen::VectorXd BaseCouplingScheme::receiveTimes(const m2n::PtrM2N &m2n, int nTimeSteps)
-{
-  PRECICE_TRACE();
+  std::vector<double> times(numberOfTimeSteps);
   PRECICE_DEBUG("Receiving times....");
-  Eigen::VectorXd times(nTimeSteps);
   m2n->receive(times);
   PRECICE_DEBUG("Received times {}", times);
   return times;
@@ -184,13 +173,10 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
   for (const auto &data : receiveData | boost::adaptors::map_values) {
 
     if (data->exchangeSubsteps()) {
-      const int nTimeSteps = receiveNumberOfTimeSteps(m2n);
+      auto       timesAscending = receiveTimes(m2n);
+      const auto nTimeSteps     = timesAscending.size();
 
-      Eigen::VectorXd serializedValues(nTimeSteps * data->getSize());
-      PRECICE_ASSERT(nTimeSteps > 0);
-      const Eigen::VectorXd timesAscending = receiveTimes(m2n, nTimeSteps);
-
-      auto serialized = com::serialize::SerializedStamples::empty(timesAscending, data);
+      auto serialized = com::serialize::SerializedStamples::empty(nTimeSteps, *data);
 
       // Data is only received on ranks with size>0, which is checked in the derived class implementation
       m2n->receive(serialized.values(), data->getMeshID(), data->getDimensions() * nTimeSteps);
@@ -199,16 +185,20 @@ void BaseCouplingScheme::receiveData(const m2n::PtrM2N &m2n, const DataMap &rece
         m2n->receive(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * nTimeSteps);
       }
 
-      serialized.deserializeInto(timesAscending, data);
+      serialized.deserializeInto(timesAscending, *data);
     } else {
-      // Data is only received on ranks with size>0, which is checked in the derived class implementation
-      m2n->receive(data->values(), data->getMeshID(), data->getDimensions());
-
       if (data->hasGradient()) {
-        PRECICE_ASSERT(data->hasGradient());
-        m2n->receive(data->gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions());
+        // Data is only received on ranks with size>0, which is checked in the derived class implementation
+        time::Sample recvSample(data->getDimensions(), data->nVertices(), data->meshDimensions());
+        m2n->receive(recvSample.values, data->getMeshID(), data->getDimensions());
+        m2n->receive(recvSample.gradients, data->getMeshID(), data->getDimensions() * data->meshDimensions());
+        data->setSampleAtTime(getTime(), recvSample);
+      } else {
+        // Data is only received on ranks with size>0, which is checked in the derived class implementation
+        time::Sample recvSample(data->getDimensions(), data->nVertices());
+        m2n->receive(recvSample.values, data->getMeshID(), data->getDimensions());
+        data->setSampleAtTime(getTime(), recvSample);
       }
-      data->setSampleAtTime(getTime(), data->sample());
     }
   }
 }
@@ -231,7 +221,7 @@ void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveDat
   for (const auto &data : receiveData | boost::adaptors::map_values) {
     PRECICE_DEBUG("Initialize {} as zero.", data->getDataName());
     // just store already initialized zero sample to storage.
-    data->setSampleAtTime(getTime(), data->sample());
+    data->initializeWithZeroAtTime(getTime());
   }
 }
 
@@ -904,23 +894,7 @@ void BaseCouplingScheme::doImplicitStep()
     // no convergence achieved for the coupling iteration within the current time window
     if (_acceleration) {
       profiling::Event e("accelerate", profiling::Fundamental);
-      // Acceleration works on CouplingData::values(), so we retrieve the data from the storage, perform the acceleration and then put the data back into the storage. See also https://github.com/precice/precice/issues/1645.
-      // @todo For acceleration schemes as described in "Rüth, B, Uekermann, B, Mehl, M, Birken, P, Monge, A, Bungartz, H-J. Quasi-Newton waveform iteration for partitioned surface-coupled multiphysics applications. https://doi.org/10.1002/nme.6443" we need a more elaborate implementation.
-
-      // Load from storage into buffer
-      for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
-        const auto &stamples = data->stamples();
-        PRECICE_ASSERT(stamples.size() > 0);
-        data->sample() = stamples.back().sample;
-      }
-
-      _acceleration->performAcceleration(getAccelerationData(), getTimeWindowStart());
-
-      // Store from buffer
-      // @todo Currently only data at end of window is accelerated. Remaining data in storage stays as it is.
-      for (auto &data : getAccelerationData() | boost::adaptors::map_values) {
-        data->setSampleAtTime(getTime(), data->sample());
-      }
+      _acceleration->performAcceleration(getAccelerationData(), getTimeWindowStart(), getWindowEndTime());
     }
   }
 }
@@ -948,7 +922,11 @@ double BaseCouplingScheme::getWindowStartTime() const
 
 double BaseCouplingScheme::getWindowEndTime() const
 {
-  return getWindowStartTime() + getTimeWindowSize();
+  if (hasTimeWindowSize()) {
+    return _time.time() + _time.untilWindowEnd(_timeWindowSize);
+  } else {
+    return _time.time() + _time.untilEnd();
+  }
 }
 
 bool BaseCouplingScheme::requiresSubsteps() const

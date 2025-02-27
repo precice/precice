@@ -4,17 +4,15 @@
 
 #include <memory>
 
-namespace precice {
-namespace m2n {
+namespace precice::m2n {
 class DistributedComFactory {
 
 public:
   using SharedPointer = std::shared_ptr<DistributedComFactory>;
 
-  virtual ~DistributedComFactory(){};
+  virtual ~DistributedComFactory() = default;
 
   virtual DistributedCommunication::SharedPointer newDistributedCommunication(
       mesh::PtrMesh mesh) = 0;
 };
-} // namespace m2n
-} // namespace precice
+} // namespace precice::m2n

@@ -11,8 +11,7 @@ namespace precice::mapping {
 struct Sample;
 }
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 /** return a pointer to the shared vertex of 2 edges
  *
@@ -154,5 +153,4 @@ std::optional<std::size_t> locateInvalidVertexID(const Mesh &mesh, const Contain
   return std::nullopt;
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

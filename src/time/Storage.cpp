@@ -152,7 +152,7 @@ void Storage::trimAfter(double time)
   _bspline.reset();
 }
 
-Sample Storage::getSampleAtOrAfter(double before) const
+const Sample &Storage::getSampleAtOrAfter(double before) const
 {
   PRECICE_TRACE(before);
   if (nTimes() == 1) {
@@ -242,13 +242,9 @@ int Storage::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples
   return std::min(requestedDegree, numberOfAvailableSamples - 1);
 }
 
-time::Sample Storage::getSampleAtBeginning()
+const Sample &Storage::getSampleAtEnd() const
 {
-  return _stampleStorage.front().sample;
-}
-
-time::Sample Storage::getSampleAtEnd()
-{
+  PRECICE_ASSERT(!_stampleStorage.empty());
   return _stampleStorage.back().sample;
 }
 

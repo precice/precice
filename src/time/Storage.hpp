@@ -69,7 +69,14 @@ public:
    * @param before a double, where we want to find a normalized dt that comes directly after this one
    * @return Sample in this Storage at or directly after "before"
    */
-  Sample getSampleAtOrAfter(double before) const;
+  const Sample &getSampleAtOrAfter(double before) const;
+
+  /**
+   * @brief Returns the last Sample contained in this Storage.
+   *
+   * @return Last Sample in this Storage
+   */
+  const Sample &getSampleAtEnd() const;
 
   /**
    * @brief Get all normalized dts stored in this Storage sorted ascending.
@@ -170,10 +177,6 @@ private:
    * @return B-spline degree that may be used.
    */
   int computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const;
-
-  time::Sample getSampleAtBeginning();
-
-  time::Sample getSampleAtEnd();
 };
 
 } // namespace precice::time
