@@ -352,6 +352,9 @@ private:
   /// Counts the amount of samples mapped in read mappings executed in the latest advance
   int _executedReadMappings = 0;
 
+  /// The hash of the configuration file used to configure this participant
+  std::string _configHash;
+
   /**
    * @brief Configures the coupling interface from the given xml file.
    *
