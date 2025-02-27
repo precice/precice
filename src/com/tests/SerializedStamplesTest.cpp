@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(SerializeValues)
   fromDataPtr->setSampleAtTime(0.5, time::Sample{dataDimensions, insert05});
   fromDataPtr->setSampleAtTime(1, time::Sample{dataDimensions, insert1});
 
-  const auto serialized = serialize::SerializedStamples::serialize(fromDataPtr);
+  const auto serialized = serialize::SerializedStamples::serialize(*fromDataPtr);
 
   Eigen::VectorXd expectedSerialized(nTimeSteps * nValues);
   expectedSerialized << 1.0, 10.0, 100.0, 2.0, 20.0, 200.0, 3.0, 30.0, 300.0, 4.0, 40.0, 400.0;
@@ -92,11 +92,11 @@ BOOST_AUTO_TEST_CASE(DeserializeValues)
   Eigen::VectorXd timeStamps(nTimeSteps);
   timeStamps << 0, 0.5, 1;
 
-  auto serialized = serialize::SerializedStamples::empty(timeStamps.size(), toDataPtr);
+  auto serialized = serialize::SerializedStamples::empty(timeStamps.size(), *toDataPtr);
 
   serialized.values() = serializedValues;
 
-  serialized.deserializeInto(timeStamps, toDataPtr);
+  serialized.deserializeInto(timeStamps, *toDataPtr);
 
   std::vector<Eigen::VectorXd> expectedValues;
 
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(SerializeValuesAndGradients)
   fromDataPtr->setSampleAtTime(0.5, time::Sample{dataDimensions, insert05, insertGradients05});
   fromDataPtr->setSampleAtTime(1, time::Sample{dataDimensions, insert1, insertGradients1});
 
-  const auto serialized = serialize::SerializedStamples::serialize(fromDataPtr);
+  const auto serialized = serialize::SerializedStamples::serialize(*fromDataPtr);
 
   Eigen::VectorXd expectedSerializedValues(nTimeSteps * nValues);
   expectedSerializedValues << 1.0, 10.0, 100.0, 2.0, 20.0, 200.0, 3.0, 30.0, 300.0, 4.0, 40.0, 400.0;
@@ -229,12 +229,12 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
   Eigen::VectorXd timeStamps(nTimeSteps);
   timeStamps << 0, 0.5, 1;
 
-  auto serialized = serialize::SerializedStamples::empty(timeStamps.size(), toDataPtr);
+  auto serialized = serialize::SerializedStamples::empty(timeStamps.size(), *toDataPtr);
 
   serialized.values()    = serializedValues;
   serialized.gradients() = serializedGradients;
 
-  serialized.deserializeInto(timeStamps, toDataPtr);
+  serialized.deserializeInto(timeStamps, *toDataPtr);
 
   std::vector<Eigen::VectorXd> expectedValues;
 
