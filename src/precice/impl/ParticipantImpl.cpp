@@ -175,7 +175,7 @@ void ParticipantImpl::configure(
       _accessorName,
       _accessorProcessRank,
       _accessorCommunicatorSize};
-  xml::configure(config.getXMLTag(), context, configurationFileName);
+  _configHash = xml::configure(config.getXMLTag(), context, configurationFileName);
   if (_accessorProcessRank == 0) {
     PRECICE_INFO("This is preCICE version {}", PRECICE_VERSION);
     PRECICE_INFO("Revision info: {}", precice::preciceRevision);
