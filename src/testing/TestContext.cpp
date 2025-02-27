@@ -274,10 +274,11 @@ m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const 
         "Requestor \"" + requestor + "\" not defined in this context."};
   }
 
+  std::string configHash = "NOPE";
   if (isNamed(acceptor)) {
-    m2n->acceptPrimaryRankConnection(acceptor, requestor);
+    m2n->acceptPrimaryRankConnection(acceptor, requestor, configHash);
   } else if (isNamed(requestor)) {
-    m2n->requestPrimaryRankConnection(acceptor, requestor);
+    m2n->requestPrimaryRankConnection(acceptor, requestor, configHash);
   } else {
     throw std::runtime_error{"You try to connect " + acceptor + " and " + requestor + ", but this context is named " + name};
   }
