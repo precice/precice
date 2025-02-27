@@ -7,8 +7,7 @@
 #include "time/Storage.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 class CouplingData {
 public:
@@ -26,20 +25,19 @@ public:
 
   int getSize() const;
 
-  /// Returns a reference to the data values.
-  Eigen::VectorXd &values();
+  int nVertices() const;
 
   /// Returns a const reference to the data values.
   const Eigen::VectorXd &values() const;
 
-  /// Returns a reference to the gradient data values.
-  Eigen::MatrixXd &gradients();
-
   /// Returns a const reference to the gradient data values.
   const Eigen::MatrixXd &gradients() const;
 
-  /// Returns a reference to the gradient data Sample.
-  time::Sample &sample();
+  /// Returns number of rows of the stored gradients.
+  int gradientsRows() const;
+
+  /// Returns number of columns of the stored gradients.
+  int gradientsCols() const;
 
   /// Returns a const reference to the data Sample.
   const time::Sample &sample() const;
@@ -48,7 +46,7 @@ public:
   time::Storage &timeStepsStorage();
 
   /// returns previous data interpolated to the relativeDt time
-  Eigen::VectorXd getPreviousValuesAtTime(double relativeDt);
+  time::SampleResult getPreviousValuesAtTime(double relativeDt);
 
   Eigen::MatrixXd getPreviousGradientsAtTime(double relativeDt);
 
@@ -63,6 +61,21 @@ public:
 
   /// Add sample at given time to _timeStepsStorage.
   void setSampleAtTime(double time, time::Sample sample);
+
+  /// Set _data::_sample
+  void setGlobalSample(const time::Sample &sample); // @todo try to remove this function
+
+  /// Add sample with zero values at given time to _timeStepsStorage.
+  void initializeWithZeroAtTime(double time);
+
+  /// Creates an empty sample at given time
+  void emplaceSampleAtTime(double time);
+
+  /// Creates a sample at given time with given values
+  void emplaceSampleAtTime(double time, std::initializer_list<double> values);
+
+  /// Creates a sample at given time with given values and gradients
+  void emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients);
 
   /// Returns if the data contains gradient data
   bool hasGradient() const;
@@ -129,5 +142,4 @@ private:
   Direction _direction;
 };
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

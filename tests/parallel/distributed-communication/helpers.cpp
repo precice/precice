@@ -22,15 +22,15 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
     position[0] = i * 1.0;
     position[1] = 0.0;
     position[2] = 0.0;
-    positions.push_back(position);
+    positions.emplace_back(position);
     datum[0] = i * 1.0;
     datum[1] = i * 1.0;
     datum[2] = 0.0;
-    data.push_back(datum);
+    data.emplace_back(datum);
     datum[0] = i * 2.0 + 1.0;
     datum[1] = i * 2.0 + 1.0;
     datum[2] = 1.0;
-    expectedData.push_back(datum);
+    expectedData.emplace_back(datum);
   }
 
   if (context.isNamed("Fluid")) {

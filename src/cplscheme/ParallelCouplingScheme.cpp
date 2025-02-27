@@ -35,6 +35,7 @@ ParallelCouplingScheme::ParallelCouplingScheme(
 void ParallelCouplingScheme::exchangeInitialData()
 {
   // F: send, receive, S: receive, send
+  PRECICE_ASSERT(math::equals(getTime(), getWindowStartTime()), getTime(), getWindowStartTime());
   if (doesFirstStep()) {
     if (sendsInitializedData()) {
       sendData(getM2N(), getSendData());
@@ -60,6 +61,7 @@ void ParallelCouplingScheme::exchangeInitialData()
 
 void ParallelCouplingScheme::exchangeFirstData()
 {
+  PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
     sendData(getM2N(), getSendData());
@@ -72,6 +74,7 @@ void ParallelCouplingScheme::exchangeFirstData()
 
 void ParallelCouplingScheme::exchangeSecondData()
 {
+  PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
   if (isExplicitCouplingScheme()) {
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving data...");

@@ -4,10 +4,8 @@
 #include <Eigen/Dense>
 #include "math/geometry.hpp"
 
-namespace precice {
-namespace math {
 /// Provides operations to calculate barycentric coordinates for a point's projection onto a primitive.
-namespace barycenter {
+namespace precice::math::barycenter {
 
 /** Takes the end vertices of an edge and a point in 2D or 3D space.
  *  Returns the barycentric coordinates for that point's projection onto the given edge.
@@ -61,6 +59,4 @@ Eigen::Vector4d calcBarycentricCoordsForTetrahedron(
     const Eigen::VectorXd &d,
     const Eigen::VectorXd &u);
 
-} // namespace barycenter
-} // namespace math
-} // namespace precice
+} // namespace precice::math::barycenter

@@ -57,14 +57,16 @@ void AitkenAcceleration::initialize(const DataMap &cplData)
 }
 
 void AitkenAcceleration::performAcceleration(
-    DataMap &cplData)
+    DataMap &cplData,
+    double   windowStart,
+    double   windowEnd)
 {
   PRECICE_TRACE();
 
   // Compute aitken relaxation factor
   PRECICE_ASSERT(utils::contained(*_primaryDataIDs.begin(), cplData));
 
-  concatenateCouplingData(cplData, _primaryDataIDs, _values, _oldValues);
+  concatenateCouplingData(cplData, _primaryDataIDs, _values, _oldValues, windowStart, windowEnd);
 
   // Compute current residual = values - oldValues
   Eigen::VectorXd residuals = _values - _oldValues;
@@ -97,7 +99,7 @@ void AitkenAcceleration::performAcceleration(
   PRECICE_DEBUG("AitkenFactor: {}", _aitkenFactor);
 
   // Perform relaxation with aitken factor
-  applyRelaxation(_aitkenFactor, cplData);
+  applyRelaxation(_aitkenFactor, cplData, windowStart);
 
   // Store residuals for next iteration
   _oldResiduals = std::move(residuals);
@@ -106,7 +108,7 @@ void AitkenAcceleration::performAcceleration(
 }
 
 void AitkenAcceleration::iterationsConverged(
-    const DataMap &cplData)
+    const DataMap &cplData, double windowStart)
 {
   _iterationCounter = 0;
   if (_primaryDataIDs.size() > 1) {
@@ -116,18 +118,21 @@ void AitkenAcceleration::iterationsConverged(
 }
 
 void AitkenAcceleration::concatenateCouplingData(
-    const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const
+    const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues, double windowStart, double windowEnd) const
 {
   Eigen::Index offset = 0;
+
   for (auto id : dataIDs) {
-    Eigen::Index size      = cplData.at(id)->values().size();
-    auto &       values    = cplData.at(id)->values();
-    const auto & oldValues = cplData.at(id)->previousIteration();
+    Eigen::Index size = cplData.at(id)->values().size();
+
+    auto valuesSample    = cplData.at(id)->timeStepsStorage().sample(windowEnd);
+    auto oldValuesSample = cplData.at(id)->getPreviousValuesAtTime(windowEnd);
+
     PRECICE_ASSERT(targetValues.size() >= offset + size, "Target vector was not initialized.", targetValues.size(), offset + size);
     PRECICE_ASSERT(targetOldValues.size() >= offset + size, "Target vector was not initialized.");
     for (Eigen::Index i = 0; i < size; i++) {
-      targetValues(i + offset)    = values(i);
-      targetOldValues(i + offset) = oldValues(i);
+      targetValues(i + offset)    = valuesSample.values()(i);
+      targetOldValues(i + offset) = oldValuesSample.values()(i);
     }
     offset += size;
   }

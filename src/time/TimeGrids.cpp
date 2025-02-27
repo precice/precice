@@ -1,10 +1,9 @@
-#pragma once
-
 #include <Eigen/Core>
 #include <numeric>
 #include <vector>
 
 #include "TimeGrids.hpp"
+#include "math/differences.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::time {
@@ -21,12 +20,18 @@ TimeGrids::TimeGrids(const DataMap &cplData, std::vector<int> dataIDs, bool redu
   }
 }
 
-Eigen::VectorXd TimeGrids::getTimeGrid(int dataID) const
+Eigen::VectorXd TimeGrids::getTimeGridAfter(int dataID, double time) const
 {
-
   PRECICE_ASSERT(_timeGrids.count(dataID), "there does not exists a stored time grid corresponding to this dataID");
 
-  return _timeGrids.at(dataID);
+  std::vector<double> reduced;
+  for (double d : _timeGrids.at(dataID)) {
+    if (math::greater(d, time)) {
+      reduced.push_back(d);
+    }
+  }
+
+  return Eigen::Map<Eigen::VectorXd>(reduced.data(), reduced.size());
 }
 
 void TimeGrids::moveTimeGridToNewWindow(const DataMap &cplData)

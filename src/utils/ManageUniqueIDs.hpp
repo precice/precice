@@ -3,8 +3,7 @@
 #include <boost/container/flat_set.hpp>
 #include <functional>
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 /// Manages a set of unique IDs.
 class ManageUniqueIDs {
@@ -31,5 +30,4 @@ private:
   int _lowerLimit = 0;
 };
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

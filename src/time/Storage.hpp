@@ -5,6 +5,7 @@
 #include <optional>
 #include "logging/Logger.hpp"
 #include "math/Bspline.hpp"
+#include "time/SampleResult.hpp"
 #include "time/Stample.hpp"
 
 namespace precice::time {
@@ -68,7 +69,14 @@ public:
    * @param before a double, where we want to find a normalized dt that comes directly after this one
    * @return Sample in this Storage at or directly after "before"
    */
-  Sample getSampleAtOrAfter(double before) const;
+  const Sample &getSampleAtOrAfter(double before) const;
+
+  /**
+   * @brief Returns the last Sample contained in this Storage.
+   *
+   * @return Last Sample in this Storage
+   */
+  const Sample &getSampleAtEnd() const;
 
   /**
    * @brief Get all normalized dts stored in this Storage sorted ascending.
@@ -144,7 +152,7 @@ public:
    * @param time a double, where we want to sample the waveform
    * @return Eigen::VectorXd values in this Storage at or directly after "before"
   */
-  Eigen::VectorXd sample(double time) const;
+  SampleResult sample(double time) const;
 
   Eigen::MatrixXd sampleGradients(double time) const;
 
@@ -169,10 +177,6 @@ private:
    * @return B-spline degree that may be used.
    */
   int computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const;
-
-  time::Sample getSampleAtBeginning();
-
-  time::Sample getSampleAtEnd();
 };
 
 } // namespace precice::time

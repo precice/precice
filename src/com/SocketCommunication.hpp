@@ -15,8 +15,7 @@
 #include "precice/impl/Types.hpp"
 #include "utils/networking.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 /// Implements Communication by using sockets.
 class SocketCommunication : public Communication {
 public:
@@ -27,105 +26,105 @@ public:
 
   explicit SocketCommunication(std::string const &addressDirectory);
 
-  virtual ~SocketCommunication();
+  ~SocketCommunication() override;
 
-  virtual size_t getRemoteCommunicatorSize() override;
+  size_t getRemoteCommunicatorSize() override;
 
-  virtual void acceptConnection(std::string const &acceptorName,
+  void acceptConnection(std::string const &acceptorName,
+                        std::string const &requesterName,
+                        std::string const &tag,
+                        int                acceptorRank,
+                        int                rankOffset = 0) override;
+
+  void acceptConnectionAsServer(std::string const &acceptorName,
                                 std::string const &requesterName,
                                 std::string const &tag,
                                 int                acceptorRank,
-                                int                rankOffset = 0) override;
+                                int                requesterCommunicatorSize) override;
 
-  virtual void acceptConnectionAsServer(std::string const &acceptorName,
-                                        std::string const &requesterName,
-                                        std::string const &tag,
-                                        int                acceptorRank,
-                                        int                requesterCommunicatorSize) override;
+  void requestConnection(std::string const &acceptorName,
+                         std::string const &requesterName,
+                         std::string const &tag,
+                         int                requesterRank,
+                         int                requesterCommunicatorSize) override;
 
-  virtual void requestConnection(std::string const &acceptorName,
-                                 std::string const &requesterName,
-                                 std::string const &tag,
-                                 int                requesterRank,
-                                 int                requesterCommunicatorSize) override;
+  void requestConnectionAsClient(std::string const &  acceptorName,
+                                 std::string const &  requesterName,
+                                 std::string const &  tag,
+                                 std::set<int> const &acceptorRanks,
+                                 int                  requesterRank) override;
 
-  virtual void requestConnectionAsClient(std::string const &  acceptorName,
-                                         std::string const &  requesterName,
-                                         std::string const &  tag,
-                                         std::set<int> const &acceptorRanks,
-                                         int                  requesterRank) override;
-
-  virtual void closeConnection() override;
+  void closeConnection() override;
 
   /// Sends a std::string to process with given rank.
-  virtual void send(std::string const &itemToSend, Rank rankReceiver) override;
+  void send(std::string const &itemToSend, Rank rankReceiver) override;
 
   /// Sends an array of integer values.
-  virtual void send(precice::span<const int> itemsToSend, Rank rankReceiver) override;
+  void send(precice::span<const int> itemsToSend, Rank rankReceiver) override;
 
   /// Asynchronously sends an array of integer values.
-  virtual PtrRequest aSend(precice::span<const int> itemsToSend, Rank rankReceiver) override;
+  PtrRequest aSend(precice::span<const int> itemsToSend, Rank rankReceiver) override;
 
   /// Sends an array of double values.
-  virtual void send(precice::span<const double> itemsToSend, Rank rankReceiver) override;
+  void send(precice::span<const double> itemsToSend, Rank rankReceiver) override;
 
   /// Asynchronously sends an array of double values.
-  virtual PtrRequest aSend(precice::span<const double> itemsToSend, Rank rankReceiver) override;
+  PtrRequest aSend(precice::span<const double> itemsToSend, Rank rankReceiver) override;
 
   /// Sends a double to process with given rank.
-  virtual void send(double itemToSend, Rank rankReceiver) override;
+  void send(double itemToSend, Rank rankReceiver) override;
 
   /// Asynchronously sends a double to process with given rank.
-  virtual PtrRequest aSend(const double &itemToSend, Rank rankReceiver) override;
+  PtrRequest aSend(const double &itemToSend, Rank rankReceiver) override;
 
   /// Sends an int to process with given rank.
-  virtual void send(int itemToSend, Rank rankReceiver) override;
+  void send(int itemToSend, Rank rankReceiver) override;
 
   /// Asynchronously sends an int to process with given rank.
-  virtual PtrRequest aSend(const int &itemToSend, Rank rankReceiver) override;
+  PtrRequest aSend(const int &itemToSend, Rank rankReceiver) override;
 
   /// Sends a bool to process with given rank.
-  virtual void send(bool itemToSend, Rank rankReceiver) override;
+  void send(bool itemToSend, Rank rankReceiver) override;
 
   /// Asynchronously sends a bool to process with given rank.
-  virtual PtrRequest aSend(const bool &itemToSend, Rank rankReceiver) override;
+  PtrRequest aSend(const bool &itemToSend, Rank rankReceiver) override;
 
   /// Receives a std::string from process with given rank.
-  virtual void receive(std::string &itemToReceive, Rank rankSender) override;
+  void receive(std::string &itemToReceive, Rank rankSender) override;
 
   /// Receives an array of integer values.
-  virtual void receive(precice::span<int> itemsToReceive, Rank rankSender) override;
+  void receive(precice::span<int> itemsToReceive, Rank rankSender) override;
 
   /// Receives an array of double values.
-  virtual void receive(precice::span<double> itemsToReceive, Rank rankSender) override;
+  void receive(precice::span<double> itemsToReceive, Rank rankSender) override;
 
   /// Asynchronously receives an array of double values.
-  virtual PtrRequest aReceive(precice::span<double> itemsToReceive,
-                              int                   rankSender) override;
+  PtrRequest aReceive(precice::span<double> itemsToReceive,
+                      int                   rankSender) override;
 
   /// Receives a double from process with given rank.
-  virtual void receive(double &itemToReceive, Rank rankSender) override;
+  void receive(double &itemToReceive, Rank rankSender) override;
 
   /// Asynchronously receives a double from process with given rank.
-  virtual PtrRequest aReceive(double &itemToReceive, Rank rankSender) override;
+  PtrRequest aReceive(double &itemToReceive, Rank rankSender) override;
 
   /// Receives an int from process with given rank.
-  virtual void receive(int &itemToReceive, Rank rankSender) override;
+  void receive(int &itemToReceive, Rank rankSender) override;
 
   /// Asynchronously receives an int from process with given rank.
-  virtual PtrRequest aReceive(int &itemToReceive, Rank rankSender) override;
+  PtrRequest aReceive(int &itemToReceive, Rank rankSender) override;
 
   /// Receives a bool from process with given rank.
-  virtual void receive(bool &itemToReceive, Rank rankSender) override;
+  void receive(bool &itemToReceive, Rank rankSender) override;
 
   /// Asynchronously receives a bool from process with given rank.
-  virtual PtrRequest aReceive(bool &itemToReceive, Rank rankSender) override;
+  PtrRequest aReceive(bool &itemToReceive, Rank rankSender) override;
 
-  virtual void prepareEstablishment(std::string const &acceptorName,
-                                    std::string const &requesterName) override;
+  void prepareEstablishment(std::string const &acceptorName,
+                            std::string const &requesterName) override;
 
-  virtual void cleanupEstablishment(std::string const &acceptorName,
-                                    std::string const &requesterName) override;
+  void cleanupEstablishment(std::string const &acceptorName,
+                            std::string const &requesterName) override;
 
 private:
   logging::Logger _log{"com::SocketCommunication"};
@@ -159,5 +158,4 @@ private:
 
   std::string getIpAddress();
 };
-} // namespace com
-} // namespace precice
+} // namespace precice::com

@@ -7,8 +7,7 @@
 #include <string_view>
 #include <vector>
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 /// Utility class to build a string from C functions with output pointers and static maximum length
 template <int MAX>
@@ -107,5 +106,4 @@ std::vector<StringMatch> computeMatches(std::string_view given, const Container 
 
 bool isKebabStyle(std::string_view sv);
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

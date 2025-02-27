@@ -4,8 +4,7 @@
 #include <exception>
 #include <map>
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 class MultiLockException : public std::runtime_error {
 public:
@@ -15,7 +14,7 @@ public:
 
 class LockNotFoundException : public MultiLockException {
 public:
-  LockNotFoundException() {}
+  LockNotFoundException() = default;
   const char *what() const noexcept override
   {
     return "The multilock does not contain the requested lock!";
@@ -158,5 +157,4 @@ private:
   /// The map that keeps track of the locks and their state.
   map_type _locks;
 };
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

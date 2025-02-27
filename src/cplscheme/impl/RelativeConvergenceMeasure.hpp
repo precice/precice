@@ -14,19 +14,13 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace tests {
+namespace precice::cplscheme::tests {
 class RelativeConvergenceMeasureTest;
 }
-} // namespace cplscheme
-} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice::cplscheme::impl {
 
 /**
  * @brief Measures the convergence from an old data set to a new one.
@@ -50,16 +44,16 @@ public:
     */
   RelativeConvergenceMeasure(double convergenceLimitPercent);
 
-  virtual ~RelativeConvergenceMeasure(){};
+  ~RelativeConvergenceMeasure() override = default;
 
-  virtual void newMeasurementSeries()
+  void newMeasurementSeries() override
   {
     _isConvergence = false;
   }
 
-  virtual void measure(
+  void measure(
       const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues)
+      const Eigen::VectorXd &newValues) override
   {
     PRECICE_ASSERT(oldValues.size() == newValues.size());
     /*
@@ -74,7 +68,7 @@ public:
     _isConvergence = _normDiff <= _norm * _convergenceLimitPercent;
   }
 
-  virtual bool isConvergence() const
+  bool isConvergence() const override
   {
     return _isConvergence;
   }
@@ -82,7 +76,7 @@ public:
   /**
     * @brief Adds current convergence information to output stream.
     */
-  virtual std::string printState(const std::string &dataName)
+  std::string printState(const std::string &dataName) override
   {
     std::ostringstream os;
     os << "relative convergence measure: ";
@@ -98,7 +92,7 @@ public:
     return os.str();
   }
 
-  virtual double getNormResidual()
+  double getNormResidual() override
   {
     if (math::equals(_norm, 0.))
       return std::numeric_limits<double>::infinity();
@@ -106,7 +100,7 @@ public:
       return _normDiff / _norm;
   }
 
-  virtual std::string getAbbreviation() const
+  std::string getAbbreviation() const override
   {
     return "Rel";
   }
@@ -122,6 +116,4 @@ private:
 
   bool _isConvergence = false;
 };
-} // namespace impl
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme::impl

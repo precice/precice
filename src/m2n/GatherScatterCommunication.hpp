@@ -8,8 +8,7 @@
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace m2n {
+namespace precice::m2n {
 
 /**
  * @brief Implements DistributedCommunication by using a gathering/scattering methodology.
@@ -118,5 +117,4 @@ private:
   bool _isConnected;
 };
 
-} // namespace m2n
-} // namespace precice
+} // namespace precice::m2n

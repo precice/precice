@@ -5,11 +5,8 @@
 #include "math/differences.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace math {
-
 /// Provides computational geometry operations.
-namespace geometry {
+namespace precice::math::geometry {
 
 enum ResultConstants {
   NO_INTERSECTION,
@@ -228,6 +225,4 @@ struct ConvexityResult {
 
 ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords);
 
-} // namespace geometry
-} // namespace math
-} // namespace precice
+} // namespace precice::math::geometry

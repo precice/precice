@@ -62,7 +62,7 @@ public:
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode);
 
-  ImplicitData implicitDataToReceive() const override final;
+  ImplicitData implicitDataToReceive() const final override;
 
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
@@ -80,13 +80,13 @@ private:
   void receiveAndSetTimeWindowSize();
 
   /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
-  void exchangeInitialData() override final;
+  void exchangeInitialData() final override;
 
-  void exchangeFirstData() override final;
+  void exchangeFirstData() final override;
 
-  void exchangeSecondData() override final;
+  void exchangeSecondData() final override;
 
-  DataMap &getAccelerationData() override final;
+  DataMap &getAccelerationData() final override;
 };
 
 } // namespace cplscheme

@@ -9,9 +9,7 @@
 #include "logging/Logger.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 /**
  * @brief Interface for preconditioner variants that can be applied to quasi-Newton acceleration schemes.
@@ -30,7 +28,7 @@ public:
   }
 
   /// Destructor, empty.
-  virtual ~Preconditioner() {}
+  virtual ~Preconditioner() = default;
 
   /**
    * @brief initialize the preconditioner
@@ -244,6 +242,4 @@ private:
   logging::Logger _log{"acceleration::Preconditioner"};
 };
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

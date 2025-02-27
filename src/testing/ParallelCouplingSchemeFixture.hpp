@@ -2,8 +2,7 @@
 
 #include "cplscheme/ParallelCouplingScheme.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 /*
  * @brief A fixture that is used to access private functions of the ParallelCouplingScheme class.
  *
@@ -24,5 +23,4 @@ struct ParallelCouplingSchemeFixture {
 
   static void moveToNextWindow(cplscheme::ParallelCouplingScheme &cplscheme);
 };
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

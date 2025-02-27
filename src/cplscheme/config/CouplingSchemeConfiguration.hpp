@@ -19,12 +19,10 @@
 #include "precice/impl/Types.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 class CompositionalCouplingScheme;
 class BiCouplingScheme;
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme
 
 // Forward declaration to friend the boost test struct
 namespace CplSchemeTests {
@@ -37,8 +35,8 @@ struct testParseConfigurationWithRelaxation;
 } // namespace CplSchemeTests
 
 // ----------------------------------------------------------- CLASS DEFINITION
-namespace precice {
-namespace cplscheme {
+
+namespace precice::cplscheme {
 class MultiCouplingScheme;
 
 /// Configuration for coupling schemes.
@@ -61,7 +59,7 @@ public:
   void setRemeshing(bool allowed);
 
   /// Destructor, empty.
-  virtual ~CouplingSchemeConfiguration() {}
+  ~CouplingSchemeConfiguration() override = default;
 
   /// Check, if a coupling scheme is configured for a participant.
   bool hasCouplingScheme(const std::string &participantName) const;
@@ -73,10 +71,10 @@ public:
   const std::string &getDataToExchange(int index) const;
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
   /// Adds a manually configured coupling scheme for a participant.
   void addCouplingScheme(const PtrCouplingScheme &cplScheme, const std::string &participantName);
@@ -321,5 +319,4 @@ private:
    */
   void checkIterationLimits() const;
 };
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

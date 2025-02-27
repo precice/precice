@@ -20,9 +20,7 @@
 
 // ------- CLASS DEFINITION
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 /**
  * @brief Class that provides functionality to maintain a SVD decomposition of a matrix
@@ -44,7 +42,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~SVDFactorization() {}
+  virtual ~SVDFactorization() = default;
 
   /** @brief: updates the SVD decomposition with the rank-1 update A*B^T, i.e.,
    *               _psi * _sigma * _phi^T + A*B^T
@@ -296,8 +294,6 @@ private:
   bool _applyFilterQR = false;
 };
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl
 
 #endif /* PRECICE_NO_MPI */
