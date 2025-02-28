@@ -3,6 +3,7 @@
 #
 target_sources(testprecice
     PRIVATE
+    tests/fundamental/DifferentConfigs.cpp
     tests/geometric-multiscale/AxialGeoMultiscale.cpp
     tests/geometric-multiscale/RadialGeoMultiscale.cpp
     tests/parallel/CouplingOnLine.cpp
