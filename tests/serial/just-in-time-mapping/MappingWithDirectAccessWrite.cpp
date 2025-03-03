@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(MappingWithDirectAccessWrite)
         } else if (time == 2) {
           BOOST_TEST(expectedData2[i] == value);
         } else {
-          PRECICE_ASSERT(false);
+          BOOST_TEST(false);
         }
       }
 
@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(MappingWithDirectAccessWrite)
       } else if (time == 2) {
         couplingInterface.writeData(otherMeshName, writeDataName, receivedIDs, writeData2);
       } else {
-        PRECICE_ASSERT(false);
+        BOOST_TEST(false);
       }
       couplingInterface.advance(dt);
     }
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(MappingWithDirectAccessWrite)
       } else if (time == 2) {
         BOOST_TEST(readData == readData1, boost::test_tools::per_element());
       } else {
-        PRECICE_ASSERT(false);
+        BOOST_TEST(false);
       }
       // solve time step
       // write data:
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(MappingWithDirectAccessWrite)
       } else if (time == 2) {
         couplingInterface.writeData(meshName, writeDataName, ids, writeData2);
       } else {
-        PRECICE_ASSERT(false);
+        BOOST_TEST(false);
       }
       couplingInterface.advance(dt);
     }

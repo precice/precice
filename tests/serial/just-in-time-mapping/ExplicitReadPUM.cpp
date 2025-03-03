@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
         couplingInterface.writeData(meshBName, dataName, ids, writeData2);
         couplingInterface.writeData(meshBName, vectorDataName, ids, vectorData2);
       } else {
-        PRECICE_ASSERT(false);
+        BOOST_TEST(false);
       }
       couplingInterface.advance(dt);
     }

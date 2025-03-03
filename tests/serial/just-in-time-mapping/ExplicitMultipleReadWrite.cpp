@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(ExplicitMultipleReadWrite)
         couplingInterface.mapAndReadData(otherMeshName, speedOfLightData, tmpPositions2, dt, readSpeedOfLightData2);
         BOOST_TEST(readSpeedOfLightData2 == expectedSpeedOfLightData2);
       } else {
-        PRECICE_ASSERT(false);
+        BOOST_TEST(false);
       }
       // solve time step
       // write data:
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(ExplicitMultipleReadWrite)
         couplingInterface.writeAndMapData(otherMeshName, velocityData, tmpPositions2, velocityData2);
         couplingInterface.writeAndMapData(otherMeshName, vorticityData, tmpPositions2, vorticityData2);
       } else {
-        PRECICE_ASSERT(false);
+        BOOST_TEST(false);
       }
       couplingInterface.advance(dt);
     }
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(ExplicitMultipleReadWrite)
         BOOST_TEST(readData == expectedVelocityData2);
         BOOST_TEST(expectedVorticityData2 == readData2);
       } else {
-        PRECICE_ASSERT(false);
+        BOOST_TEST(false);
       }
       // solve time step
       //write data

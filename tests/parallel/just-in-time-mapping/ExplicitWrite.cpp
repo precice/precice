@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(ExplicitWrite)
       } else if (time == 2) {
         BOOST_TEST(expectedData2 == readData, boost::test_tools::per_element());
       } else {
-        PRECICE_ASSERT(false);
+        BOOST_TEST(false);
       }
       // solve time step
       // write data (not necessary here)

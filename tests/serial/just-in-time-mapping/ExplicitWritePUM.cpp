@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(ExplicitWritePUM)
           writeVectorData[dim * i + 2] = 100 - 0.5 * i * i * i; // z component linearly decreasing
         }
       } else {
-        PRECICE_ASSERT(false);
+        BOOST_TEST(false);
       }
       // First, we check the separate polynomial PUM (scalar and vector)
       couplingInterface.writeData(meshName, dataName, ids, writeData);

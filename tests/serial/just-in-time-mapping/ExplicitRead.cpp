@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
         } else if (time == 2) {
           BOOST_TEST(expectedData2[i] == value);
         } else {
-          PRECICE_ASSERT(false);
+          BOOST_TEST(false);
         }
       }
 
@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
       } else if (time == 2) {
         couplingInterface.writeData(meshName, dataName, ids, writeData2);
       } else {
-        PRECICE_ASSERT(false);
+        BOOST_TEST(false);
       }
       couplingInterface.advance(dt);
     }

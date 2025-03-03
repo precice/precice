@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(ExplicitWrite)
         } else if (time == 2) {
           couplingInterface.writeAndMapData(otherMeshName, dataName, solverTwoCoord, {&writeData2[i], 1});
         } else {
-          PRECICE_ASSERT(false);
+          BOOST_TEST(false);
         }
       }
 
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(ExplicitWrite)
           BOOST_TEST(readData[i] == expectedData2[i]);
         }
       } else {
-        PRECICE_ASSERT(false);
+        BOOST_TEST(false);
       }
       // solve time step
       // write data (not necessary here)

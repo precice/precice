@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(ExplicitNoReadWrite)
         // BOOST_TEST(std::all_of(readData.begin(), readData.end(), [](auto r) { return r == 5.0; }));
         BOOST_TEST(readData == ref, boost::test_tools::per_element());
       } else {
-        PRECICE_ASSERT(false);
+        BOOST_TEST(false);
       }
       // solve time step
       // write data:
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(ExplicitNoReadWrite)
         // The second time, we pass all data at once
         couplingInterface.writeAndMapData(otherMeshName, velocityData, positions, ref);
       } else {
-        PRECICE_ASSERT(false);
+        BOOST_TEST(false);
       }
       couplingInterface.advance(dt);
     }
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(ExplicitNoReadWrite)
         // It's mostly to check that the caches are allocated correctly
         BOOST_TEST(std::accumulate(readData.begin(), readData.end(), 0.) == (20 * 5));
       } else {
-        PRECICE_ASSERT(false);
+        BOOST_TEST(false);
       }
       // solve time step
       // write data
