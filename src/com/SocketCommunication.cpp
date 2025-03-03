@@ -94,6 +94,9 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
       auto socket = std::make_shared<Socket>(*_ioContext);
 
       acceptor.accept(*socket);
+      boost::asio::ip::tcp::no_delay option(true);
+      socket->set_option(option);
+
       PRECICE_DEBUG("Accepted connection at {}", address);
       _isConnected = true;
 
@@ -178,6 +181,8 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
     for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
       auto socket = std::make_shared<Socket>(*_ioContext);
       acceptor.accept(*socket);
+      boost::asio::ip::tcp::no_delay option(true);
+      socket->set_option(option);
       PRECICE_DEBUG("Accepted connection at {}", address);
       _isConnected = true;
 
@@ -235,6 +240,8 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
         timer.wait();
       }
     }
+    boost::asio::ip::tcp::no_delay option(true);
+    socket->set_option(option);
 
     PRECICE_DEBUG("Requested connection to {}", address);
 
@@ -297,6 +304,8 @@ void SocketCommunication::requestConnectionAsClient(std::string const &  accepto
           timer.wait();
         }
       }
+      boost::asio::ip::tcp::no_delay option(true);
+      socket->set_option(option);
 
       PRECICE_DEBUG("Requested connection to {}, rank = {}", address, acceptorRank);
       _sockets[acceptorRank] = std::move(socket);
