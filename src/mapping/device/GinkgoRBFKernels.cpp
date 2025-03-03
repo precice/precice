@@ -15,18 +15,35 @@ namespace precice::mapping {
 
 std::shared_ptr<gko::Executor> create_device_executor(const std::string &execName, bool enableUnifiedMemory)
 {
-
 #ifdef KOKKOS_ENABLE_SERIAL
   if (execName == "reference-executor") {
     return gko::ext::kokkos::create_executor(Kokkos::Serial{});
   }
 #endif
-  if (enableUnifiedMemory) {
-    return gko::ext::kokkos::create_executor(Kokkos::DefaultExecutionSpace{},
-                                             Kokkos::SharedSpace{});
-  } else {
-    return gko::ext::kokkos::create_executor(Kokkos::DefaultExecutionSpace{});
+#ifdef PRECICE_WITH_OPENMP
+  if (execName == "omp-executor") {
+    return gko::ext::kokkos::create_executor(Kokkos::OpenMP{});
   }
+#endif
+#ifdef PRECICE_WITH_CUDA
+  if (execName == "cuda-executor") {
+    if (enableUnifiedMemory) {
+      return gko::ext::kokkos::create_executor(Kokkos::Cuda{}, Kokkos::CudaUVMSpace{});
+    } else {
+      return gko::ext::kokkos::create_executor(Kokkos::Cuda{}, Kokkos::CudaSpace{});
+    }
+  }
+#endif
+#ifdef PRECICE_WITH_HIP
+  if (execName == "hip-executor") {
+    if (enableUnifiedMemory) {
+      return gko::ext::kokkos::create_executor(Kokkos::HIP{}, Kokkos::HIPManagedSpace);
+    } else {
+      return gko::ext::kokkos::create_executor(Kokkos::HIP{}, Kokkos::HIPSpace);
+    }
+  }
+#endif
+  PRECICE_UNREACHABLE("Executor {} unknown to preCICE", execName);
 }
 
 namespace kernel {
@@ -100,6 +117,7 @@ void create_rbf_system_matrix_impl(std::shared_ptr<const gko::Executor>      exe
 
 template <typename EvalFunctionType>
 void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
+                              bool                                      unifiedMemory,
                               gko::ptr_param<GinkgoMatrix>              mtx,
                               const std::array<bool, 3>                 activeAxis,
                               gko::ptr_param<GinkgoMatrix>              supportPoints,
@@ -109,15 +127,44 @@ void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
                               bool                                      addPolynomial,
                               unsigned int                              extraDims)
 {
+#ifdef KOKKOS_ENABLE_SERIAL
   if (std::dynamic_pointer_cast<const gko::ReferenceExecutor>(exec)) {
-    create_rbf_system_matrix_impl<Kokkos::HostSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
-  } else {
-    create_rbf_system_matrix_impl<Kokkos::DefaultExecutionSpace::memory_space>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+    create_rbf_system_matrix_impl<Kokkos::Serial::memory_space>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+    return;
   }
+#endif
+#ifdef PRECICE_WITH_OPENMP
+  if (std::dynamic_pointer_cast<const gko::OmpExecutor>(exec)) {
+    create_rbf_system_matrix_impl<Kokkos::OpenMP::memory_space>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+    return;
+  }
+#endif
+#ifdef PRECICE_WITH_CUDA
+  if (std::dynamic_pointer_cast<const gko::CudaExecutor>(exec)) {
+    if (unifiedMemory) {
+      create_rbf_system_matrix_impl<Kokkos::CudaSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+    } else {
+      create_rbf_system_matrix_impl<Kokkos::CudaUVMSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+    }
+    return;
+  }
+#endif
+#ifdef PRECICE_WITH_HIP
+  if (std::dynamic_pointer_cast<const gko::HipExecutor>(exec)) {
+    if (unifiedMemory) {
+      create_rbf_system_matrix_impl<Kokkos::HipManagedSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+    } else {
+      create_rbf_system_matrix_impl<Kokkos::HipSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+    }
+    return;
+  }
+#endif
+  PRECICE_UNREACHABLE("Executor unknown to preCICE");
 }
 
 #define PRECICE_INSTANTIATE_CREATE_RBF_SYSTEM_MATRIX(_function_type)                                                                            \
   template void create_rbf_system_matrix<_function_type>(std::shared_ptr<const gko::Executor> exec,                                             \
+                                                         bool                                 unifiedMemory,                                    \
                                                          gko::ptr_param<GinkgoMatrix> mtx, const std::array<bool, 3> activeAxis,                \
                                                          gko::ptr_param<GinkgoMatrix> supportPoints, gko::ptr_param<GinkgoMatrix> targetPoints, \
                                                          _function_type f, RadialBasisParameters rbf_params, bool addPolynomial, unsigned int extraDims)
@@ -175,15 +222,44 @@ void fill_polynomial_matrix_impl(std::shared_ptr<const gko::Executor> exec,
 }
 
 void fill_polynomial_matrix(std::shared_ptr<const gko::Executor> exec,
+                            bool                                 unifiedMemory,
                             gko::ptr_param<GinkgoMatrix>         mtx,
                             gko::ptr_param<const GinkgoMatrix>   x,
                             const unsigned int                   dims)
 {
+#ifdef KOKKOS_ENABLE_SERIAL
   if (std::dynamic_pointer_cast<const gko::ReferenceExecutor>(exec)) {
-    fill_polynomial_matrix_impl<Kokkos::HostSpace>(exec, mtx, x, dims);
-  } else {
-    fill_polynomial_matrix_impl<Kokkos::DefaultExecutionSpace::memory_space>(exec, mtx, x, dims);
+    fill_polynomial_matrix_impl<Kokkos::Serial::memory_space>(exec, mtx, x, dims);
+    return;
   }
+#endif
+#ifdef PRECICE_WITH_OPENMP
+  if (std::dynamic_pointer_cast<const gko::OmpExecutor>(exec)) {
+    fill_polynomial_matrix_impl<Kokkos::OpenMP::memory_space>(exec, mtx, x, dims);
+    return;
+  }
+#endif
+#ifdef PRECICE_WITH_CUDA
+  if (auto p = std::dynamic_pointer_cast<const gko::CudaExecutor>(exec); p) {
+    if (unifiedMemory) {
+      fill_polynomial_matrix_impl<Kokkos::CudaUVMSpace>(exec, mtx, x, dims);
+    } else {
+      fill_polynomial_matrix_impl<Kokkos::CudaSpace>(exec, mtx, x, dims);
+    }
+    return;
+  }
+#endif
+#ifdef PRECICE_WITH_HIP
+  if (std::dynamic_pointer_cast<const gko::HipExecutor>(exec)) {
+    if (unifiedMemory) {
+      fill_polynomial_matrix_impl<Kokkos::HIPManagedSpace>(exec, mtx, x, dims);
+    } else {
+      fill_polynomial_matrix_impl<Kokkos::HIPSpace>(exec, mtx, x, dims);
+    }
+    return;
+  }
+#endif
+  PRECICE_UNREACHABLE("Executor unknown to preCICE");
 }
 } // namespace kernel
 } // namespace precice::mapping
