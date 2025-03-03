@@ -29,7 +29,7 @@ void computeQRDecompositionCuda(const std::shared_ptr<gko::Executor> &exec, Gink
   // NOTE: It's important to transpose since cuSolver assumes column-major memory layout
   // Making a copy since every value will be overridden
   auto A_T = gko::share(gko::matrix::Dense<>::create(exec, gko::dim<2>(A_Q->get_size()[1], A_Q->get_size()[0])));
-  A_Q->transpose(gko::lend(A_T));
+  A_Q->transpose(A_T);
 
   // Setting dimensions for solver
   const unsigned int M = A_T->get_size()[1];
@@ -69,7 +69,7 @@ void computeQRDecompositionCuda(const std::shared_ptr<gko::Executor> &exec, Gink
   assert(cudaSuccess == cudaErrorCode);
 
   // Copy A_T to R s.t. the upper triangle corresponds to R
-  A_T->transpose(gko::lend(R));
+  A_T->transpose(R);
 
   // Compute Q
   cusolverStatus = cusolverDnDorgqr(solverHandle, M, N, k, A_T->get_values(), lda, dTau, (double *) dWork, dLwork, devInfo);
@@ -77,7 +77,7 @@ void computeQRDecompositionCuda(const std::shared_ptr<gko::Executor> &exec, Gink
   assert(cusolverStatus == CUSOLVER_STATUS_SUCCESS);
   assert(cudaSuccess == cudaErrorCode);
 
-  A_T->transpose(gko::lend(A_Q));
+  A_T->transpose(A_Q);
 
   cudaErrorCode = cudaDeviceSynchronize();
   assert(cudaSuccess == cudaErrorCode);
