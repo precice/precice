@@ -76,6 +76,9 @@ public:
   /// Set the timestamp of the MappingDataCache to the specified time
   void setTimeStamp(double time);
 
+  /// Reset the time stamp associated with the data
+  void resetTimeStamp();
+
   /// Reset all data containers to zero
   void resetData();
 
@@ -103,6 +106,12 @@ inline bool MappingDataCache::hasDataAtTimeStamp(double time) const
 inline void MappingDataCache::setTimeStamp(double time)
 {
   _timeStamp = time;
+}
+
+inline void MappingDataCache::resetTimeStamp()
+{
+  // Set the timestamp to -1, which is invalid anyway, since the time simulation time can only be positive
+  _timeStamp = -1;
 }
 
 inline void MappingDataCache::resetData()

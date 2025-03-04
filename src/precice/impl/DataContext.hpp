@@ -157,7 +157,7 @@ public:
   void invalidateMappingCache(bool resetData)
   {
     if (mappingCache) {
-      mappingCache->setTimeStamp(-1);
+      mappingCache->resetTimeStamp();
       if (resetData) {
         mappingCache->resetData();
       }

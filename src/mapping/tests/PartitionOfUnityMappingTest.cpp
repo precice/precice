@@ -880,7 +880,7 @@ void perform3DTestJustInTimeMappingWithPolynomial(Mapping &mapping)
   // Mapping remains the same
   BOOST_TEST(mapping.hasComputedMapping() == true);
   // Step 1: invalidate cache (happens in the DataContext)
-  cache.setTimeStamp(-1);
+  cache.resetTimeStamp();
   BOOST_TEST(!cache.hasDataAtTimeStamp(stamp));
   // Step 2: update the cache
   mapping.updateMappingDataCache(cache, values);
@@ -925,7 +925,7 @@ void perform3DTestJustInTimeMappingWithPolynomial(Mapping &mapping)
   mapping.computeMapping();
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
-  cache.setTimeStamp(-1);
+  cache.resetTimeStamp();
   mapping.initializeMappingDataCache(cache);
   mapping.updateMappingDataCache(cache, values);
   cache.setTimeStamp(stamp);
@@ -1045,7 +1045,7 @@ void perform2DTestJustInTimeMappingNoPolynomial(Mapping &mapping)
   // Mapping remains the same
   BOOST_TEST(mapping.hasComputedMapping() == true);
   // Step 1: invalidate cache (happens in the DataContext)
-  cache.setTimeStamp(-1);
+  cache.resetTimeStamp();
   BOOST_TEST(!cache.hasDataAtTimeStamp(stamp));
   // Step 2: update the cache
   mapping.updateMappingDataCache(cache, values);
@@ -1081,7 +1081,7 @@ void perform2DTestJustInTimeMappingNoPolynomial(Mapping &mapping)
   mapping.computeMapping();
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
-  cache.setTimeStamp(-1);
+  cache.resetTimeStamp();
   mapping.initializeMappingDataCache(cache);
   mapping.updateMappingDataCache(cache, values);
   cache.setTimeStamp(stamp);
