@@ -85,8 +85,8 @@ void DataContext::appendMapping(MappingContext mappingContext)
 void DataContext::addJustInTimeMapping(MappingContext &mappingContext, MeshContext &meshContext)
 {
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
-  PRECICE_ASSERT(justInTimeMapping.get() == nullptr);
-  PRECICE_ASSERT(mappingCache.get() == nullptr);
+  PRECICE_ASSERT(justInTimeMapping == nullptr);
+  PRECICE_ASSERT(mappingCache == nullptr);
   mesh::PtrData data = meshContext.mesh->data(getDataName());
   // the mapping itself has even for just-in-time mapping no notion about the data
   // maybe remove the data pointer here or set them to nullptr

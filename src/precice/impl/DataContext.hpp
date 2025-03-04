@@ -142,7 +142,7 @@ public:
   void initializeMappingDataCache()
   {
     if (mappingCache) {
-      justInTimeMapping->initializeMappingDataCache(*mappingCache.get());
+      justInTimeMapping->initializeMappingDataCache(*mappingCache);
       mappingCache->resetData();
     }
   }

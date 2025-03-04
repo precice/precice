@@ -310,7 +310,7 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_ASSERT(inMesh->getDimensions() == outMesh->getDimensions());
 
   // If we have either no input or no output vertices, we return immediately
-  if (inMesh->nVertices() == 0 || (outMesh->nVertices() == 0 && !outMesh->isJustInTime())) {
+  if (inMesh->empty() || (outMesh->empty() && !outMesh->isJustInTime())) {
     return {double{}, Vertices{}};
   }
 

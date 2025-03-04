@@ -144,7 +144,7 @@ ParticipantConfiguration::ParticipantConfiguration(
   auto attrEnableAccess = makeXMLAttribute(ATTR_API_ACCESS, false)
                               .setDocumentation(
                                   "Enables access to the data on this received mesh via the preCICE API functions without having to map it to a provided mesh. "
-                                  "This is useful for direct access or just-in-time mappings. "
+                                  "This is required for direct access or just-in-time mappings. "
                                   "A received mesh needs to be decomposed in preCICE using a region of interest, which cannot be inferred, if there are no mappings to or from a provided mesh. "
                                   "In such cases the API function `setMeshAccessRegion()` must be used to define the region of interest. "
                                   "See the user documentation for more information.");
