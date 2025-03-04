@@ -25,7 +25,7 @@ public:
   void mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values) final override;
 
   /// For writing data just-in-time (only conservative at the moment)
-  void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target) final override;
+  void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> target) final override;
 
 protected:
   /// @copydoc Mapping::mapConservative

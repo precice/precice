@@ -1379,7 +1379,7 @@ void perform3DTestJustInTimeMappingConservative(Mapping &mapping)
   coords.col(0) = Eigen::RowVector3d(5.0, 0.0, 1.0);
   inData(0, 0)  = 4.3;
   // note that the outvalues are only filled in the completeJustInTimeMapping
-  mapping.mapConservativeAt(coords, cache, inData, outValues);
+  mapping.mapConservativeAt(coords, inData, cache, outValues);
 
   // Once all values are written, we complete the mapping (expensive part)
   mapping.completeJustInTimeMapping(cache, outValues);
@@ -1394,8 +1394,8 @@ void perform3DTestJustInTimeMappingConservative(Mapping &mapping)
   outValues.setZero();
 
   // if we call the function twice for the same coordinate, we get twice the contribution
-  mapping.mapConservativeAt(coords, cache, inData, outValues);
-  mapping.mapConservativeAt(coords, cache, inData, outValues);
+  mapping.mapConservativeAt(coords, inData, cache, outValues);
+  mapping.mapConservativeAt(coords, inData, cache, outValues);
   mapping.completeJustInTimeMapping(cache, outValues);
   BOOST_TEST(outValues.sum() == 2 * inData.sum());
   BOOST_TEST(outData->values() == 2 * expectedValues, boost::test_tools::per_element());
@@ -1405,7 +1405,7 @@ void perform3DTestJustInTimeMappingConservative(Mapping &mapping)
   outValues.setZero();
 
   double expectedSum = 0;
-  mapping.mapConservativeAt(coords, cache, inData, outValues);
+  mapping.mapConservativeAt(coords, inData, cache, outValues);
   expectedSum += inData.sum();
 
   // We can also change the shape of the user input
@@ -1417,7 +1417,7 @@ void perform3DTestJustInTimeMappingConservative(Mapping &mapping)
   inData(0, 0)  = 4.3;
   inData(0, 1)  = 17.3;
   inData(0, 2)  = 5.8;
-  mapping.mapConservativeAt(coords, cache, inData, outValues);
+  mapping.mapConservativeAt(coords, inData, cache, outValues);
   expectedSum += inData.sum();
 
   mapping.completeJustInTimeMapping(cache, outValues);
@@ -1437,7 +1437,7 @@ void perform3DTestJustInTimeMappingConservative(Mapping &mapping)
   inData(0, 0)  = 0;
   inData(0, 1)  = 50;
   inData(0, 2)  = 107;
-  mapping.mapConservativeAt(coords, cache, inData, outValues);
+  mapping.mapConservativeAt(coords, inData, cache, outValues);
   expectedSum += inData.sum();
 
   coords.resize(dimensions, 2);
@@ -1446,7 +1446,7 @@ void perform3DTestJustInTimeMappingConservative(Mapping &mapping)
   coords.col(1) = Eigen::RowVector3d(5, 1, 0.5);
   inData(0, 0)  = 108;
   inData(0, 1)  = 48;
-  mapping.mapConservativeAt(coords, cache, inData, outValues);
+  mapping.mapConservativeAt(coords, inData, cache, outValues);
   expectedSum += inData.sum();
 
   mapping.completeJustInTimeMapping(cache, outValues);
@@ -1480,11 +1480,11 @@ void perform3DTestJustInTimeMappingConservative(Mapping &mapping)
   inData.resize(dataComponents, 1);
   coords.col(0) = Eigen::RowVector3d(0.5, 0.5, 0.5);
   inData(0, 0)  = 4.3;
-  mapping.mapConservativeAt(coords, cache, inData, outValues2);
+  mapping.mapConservativeAt(coords, inData, cache, outValues2);
   expectedSum += inData.sum();
   coords.col(0) = Eigen::RowVector3d(6.0, 0, 0);
   inData(0, 0)  = 42;
-  mapping.mapConservativeAt(coords, cache, inData, outValues2);
+  mapping.mapConservativeAt(coords, inData, cache, outValues2);
   expectedSum += inData.sum();
 
   mapping.completeJustInTimeMapping(cache, outValues2);
@@ -1548,7 +1548,7 @@ void perform2DTestJustInTimeMappingConservative(Mapping &mapping)
   inData.col(0) = Eigen::RowVector2d(7.3, 14.6);
 
   // note that the outvalues are only filled in the completeJustInTimeMapping
-  mapping.mapConservativeAt(coords, cache, inData, outValues);
+  mapping.mapConservativeAt(coords, inData, cache, outValues);
 
   // Once all values are written, we complete the mapping (expensive part)
   mapping.completeJustInTimeMapping(cache, outValues);
@@ -1565,8 +1565,8 @@ void perform2DTestJustInTimeMappingConservative(Mapping &mapping)
   outValues.setZero();
 
   // // if we call the function twice for the same coordinate, we get twice the contribution
-  mapping.mapConservativeAt(coords, cache, inData, outValues);
-  mapping.mapConservativeAt(coords, cache, inData, outValues);
+  mapping.mapConservativeAt(coords, inData, cache, outValues);
+  mapping.mapConservativeAt(coords, inData, cache, outValues);
   mapping.completeJustInTimeMapping(cache, outValues);
   BOOST_TEST(outValues.row(0) == 2 * expectedValues.row(0), boost::test_tools::per_element());
   BOOST_TEST(outValues.row(1) == 2 * expectedValues.row(1), boost::test_tools::per_element());
@@ -1578,7 +1578,7 @@ void perform2DTestJustInTimeMappingConservative(Mapping &mapping)
 
   Eigen::Vector2d expectedSum;
   expectedSum.setZero();
-  mapping.mapConservativeAt(coords, cache, inData, outValues);
+  mapping.mapConservativeAt(coords, inData, cache, outValues);
   expectedSum += inData.rowwise().sum();
 
   // We can also change the shape of the user input
@@ -1592,7 +1592,7 @@ void perform2DTestJustInTimeMappingConservative(Mapping &mapping)
   inData.col(1) = Eigen::RowVector2d(17.3, 34.6);
   inData.col(2) = Eigen::RowVector2d(5.8, 11.6);
 
-  mapping.mapConservativeAt(coords, cache, inData, outValues);
+  mapping.mapConservativeAt(coords, inData, cache, outValues);
   expectedSum += inData.rowwise().sum();
 
   mapping.completeJustInTimeMapping(cache, outValues);
@@ -1625,11 +1625,11 @@ void perform2DTestJustInTimeMappingConservative(Mapping &mapping)
   inData.resize(dataComponents, 1);
   coords.col(0) = Eigen::RowVector2d(0.5, 0.5);
   inData.col(0) = Eigen::RowVector2d(4.3, 43);
-  mapping.mapConservativeAt(coords, cache, inData, outValues2);
+  mapping.mapConservativeAt(coords, inData, cache, outValues2);
   expectedSum += inData.rowwise().sum();
   coords.col(0) = Eigen::RowVector2d(6.0, 0);
   inData.col(0) = Eigen::RowVector2d(5.1, 51);
-  mapping.mapConservativeAt(coords, cache, inData, outValues2);
+  mapping.mapConservativeAt(coords, inData, cache, outValues2);
   expectedSum += inData.rowwise().sum();
 
   mapping.completeJustInTimeMapping(cache, outValues2);

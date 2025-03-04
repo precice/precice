@@ -205,14 +205,14 @@ public:
    * in the cache, final results may be computed using \p completeJustInTimeMapping
    *
    * @param coordinates[in] where to compute the mapping
-   * @param cache[out] the mapping data cache previously initialized with \p initializeMappingDataCache
    * @param source[in] the data values passed from the user
+   * @param cache[out] the mapping data cache previously initialized with \p initializeMappingDataCache
    * @param target[out] preCICE-interal buffer where we store the result
    *
    * @note the default implementation in this class simply aborts the code and actual
    * implementations are in derived classes
    */
-  virtual void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target);
+  virtual void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> target);
 
   /**
    * @brief Just-in-time mapping variant of mapConsistent

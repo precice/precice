@@ -37,7 +37,7 @@ void WriteDataContext::completeJustInTimeMapping()
   if (justInTimeMapping) {
     // finalize  mapping the data stored in the cache and transfer it to the _writeDataBuffer
     Eigen::Map<Eigen::MatrixXd> map(_writeDataBuffer.values.data(), _providedData->getDimensions(), _writeDataBuffer.values.size() / _providedData->getDimensions());
-    justInTimeMapping->completeJustInTimeMapping(*mappingCache.get(), map);
+    justInTimeMapping->completeJustInTimeMapping(*mappingCache, map);
   }
 }
 
@@ -55,7 +55,7 @@ void WriteDataContext::writeAndMapValues(::precice::span<const double> coordinat
   Eigen::Map<Eigen::MatrixXd>       localData(_writeDataBuffer.values.data(), getDataDimensions(), getMeshVertexCount());
 
   // Function to fill the localData
-  justInTimeMapping->mapConservativeAt(coords, *mappingCache.get(), inputData, localData);
+  justInTimeMapping->mapConservativeAt(coords, inputData, *mappingCache, localData);
 }
 
 void WriteDataContext::writeValuesIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> values)

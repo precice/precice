@@ -289,7 +289,7 @@ void Mapping::initializeMappingDataCache(impl::MappingDataCache &cache)
   // as opposed to the default of, e.g., mapConsistentAt, where we abort in the default setting
 }
 
-void Mapping::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::MatrixXd> &source, Eigen::Ref<Eigen::MatrixXd> target)
+void Mapping::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> target)
 {
   // Function for just-in-time mapping. Only implemented for PUM and NN.
   // We don't enforce its implementation through the (virtual) base class,
