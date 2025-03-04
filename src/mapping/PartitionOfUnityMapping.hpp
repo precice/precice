@@ -306,47 +306,38 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   if (outMesh->empty())
     return; // Ranks not at the interface should never hold interface vertices
 
-  // Note that we don't use the corresponding bounding box functions from
-  // precice::mesh (e.g. ::getBoundingBox), as the stored bounding box might
-  // have the wrong size (e.g. direct access)
-  precice::mesh::BoundingBox bb = filterMesh->index().getRtreeBounds();
+  // The geometric filter of the repartitioning is always disabled for the PU-RBF.
+  // The main rationale: if we use only a fraction of the mesh then we might end up
+  // with too few vertices per rank and we cannot prevent too few vertices from being
+  // tagged, if we have filtered too much vertices beforehand. When using the filtering,
+  // the user could increase the safety-factor or disable the filtering, but that's
+  // a bit hard to understand for users. When no geometric filter is applid,
+  // vertices().size() is here the same as getGlobalNumberOfVertices. Hence, it is much
+  // safer to make use of the unfiltered mesh for the parallel tagging.
+  //
+  // Drawback: the "estimateClusterRadius" below makes use of the mesh R* index tree, and
+  // constructing the tree on the (unfiltered) global mesh is computationally expensive (O( N logN)).
+  // We could pre-filter the global mesh to a local fraction (using our own geometric filtering,
+  // maybe with an increased safety margin or even an iterative increase of the safety margin),
+  // but then there is again the question on how to do this in a safe way, without risking
+  // failures depending on the partitioning. So we stick here to the computationally more
+  // demanding, but safer version.
+  // See also https://github.com/precice/precice/pull/1912#issuecomment-2551143620
 
-#ifndef NDEBUG
-  // Safety check
-  precice::mesh::BoundingBox bb_check(filterMesh->getDimensions());
-  for (const mesh::Vertex &vertex : filterMesh->vertices()) {
-    bb_check.expandBy(vertex);
-  }
-  PRECICE_ASSERT(bb_check == bb);
-#endif
-  // @TODO: This is assert and the function might run into problems if we have only a single.
-  // vertex in the received mesh
-  // However, with the current BB implementation, the expandBy function will just do nothing.
-  PRECICE_ASSERT(!bb.empty());
-  // This function behaves differently when disabling the geometric filtering
-  // without filter, we look at the complete mesh, whereas otherwise, we look at
-  // a fraction of the mesh and we might end up with too few vertices per rank
-  // We cannot prevent too few vertices from being tagged, if we have filtered too much
-  // vertices, but the user could increase the safety-factor or disable the filtering.
-  // When no geometric filter is applid, vertices().size() is here the same as
-  // getGlobalNumberOfVertices
-  if (filterMesh->nVertices() < _verticesPerCluster &&
-      filterMesh->nVertices() < static_cast<std::size_t>(filterMesh->getGlobalNumberOfVertices())) {
-    PRECICE_WARN("The repartitioning of the received mesh \"{}\" resulted in {} vertices on this "
-                 "rank, which is less than the desired number of vertices per cluster configured "
-                 "in the partition of unity mapping ({}). Consider increasing the safety-factor "
-                 "or switching off the geometric filter (<receive-mesh: ... geometric-filter=\"no-filter\" .../>)",
-                 filterMesh->getName(), filterMesh->nVertices(), _verticesPerCluster);
-  }
+  // Get the local bounding boxes
+  auto localBB = outMesh->getBoundingBox();
+  // we cannot check for empty'ness here, as a single output mesh vertex
+  // would lead to a 0D box with zero volume (considered empty). Thus, we
+  // simply check here for default'ness, which is equivalent to outMesh->empty()
+  // further above
+  PRECICE_ASSERT(!localBB.isDefault());
 
   if (_clusterRadius == 0)
-    _clusterRadius = impl::estimateClusterRadius(_verticesPerCluster, filterMesh, bb);
+    _clusterRadius = impl::estimateClusterRadius(_verticesPerCluster, filterMesh, localBB);
 
   PRECICE_DEBUG("Cluster radius estimate: {}", _clusterRadius);
   PRECICE_ASSERT(_clusterRadius > 0);
 
-  // Get the local bounding boxes
-  auto localBB = outMesh->getBoundingBox();
   // Now we extend the bounding box by the radius
   localBB.expandBy(2 * _clusterRadius);
 

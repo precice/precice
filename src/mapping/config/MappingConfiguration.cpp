@@ -685,6 +685,7 @@ void MappingConfiguration::finishRBFConfiguration()
 {
   PRECICE_ASSERT(_executorConfig);
   ConfiguredMapping &mapping = _mappings.back();
+
   // Instantiate the RBF mapping classes
   // We first categorize according to the executor
   // 1. the CPU executor

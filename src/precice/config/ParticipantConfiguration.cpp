@@ -156,7 +156,8 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "`on-primary-rank` is beneficial for a huge mesh and a low number of processors, but is incompatible with two-level initialization. "
                                "`on-secondary-ranks` performs better for a very high number of processors. "
                                "Both result in the same distribution if the safety-factor is sufficiently large. "
-                               "`no-filter` may be useful for very asymmetric cases and for debugging.")
+                               "`no-filter` may be useful for very asymmetric cases and for debugging. "
+                               "If a mapping based on RBFs (rbf-pum,global-rbf) is used, the filter has no influence and is always `no-filter`.")
                            .setOptions({VALUE_NO_FILTER, VALUE_FILTER_ON_PRIMARY_RANK, VALUE_FILTER_ON_SECONDARY_RANKS})
                            .setDefaultValue(VALUE_FILTER_ON_SECONDARY_RANKS);
   tagReceiveMesh.addAttribute(attrGeoFilter);
@@ -457,7 +458,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     impl::MeshContext &fromMeshContext = participant->meshContext(fromMesh);
     impl::MeshContext &toMeshContext   = participant->meshContext(toMesh);
 
-    // @TODO: is this still correct?
+    // We disable the geometric filter for any kernel method, as the default safety factor is not reliable enough to provide a robust
+    // safety margin such that the mapping is still correct.
     if (confMapping.requiresBasisFunction) {
       fromMeshContext.geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
       toMeshContext.geoFilter   = partition::ReceivedPartition::GeometricFilter::NO_FILTER;

@@ -225,7 +225,7 @@ inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMe
   // Step 1: Generate random samples from the input mesh
   std::vector<VertexID> randomSamples;
 
-  PRECICE_ASSERT(!bb.empty(), "Center computation won't work right now.");
+  PRECICE_ASSERT(!bb.isDefault(), "Invalid bounding box.");
   // All samples are 'moved' to the closest vertex from the input mesh in order
   // to avoid empty clusters when we have shell-like meshes (as in surface coupling)
   // The first sample: the vertex closest to the bounding box center
