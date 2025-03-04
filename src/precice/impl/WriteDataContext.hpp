@@ -25,8 +25,8 @@ public:
       mesh::PtrData data,
       mesh::PtrMesh mesh);
 
-  /// Resets writeDataBuffer
-  void resetBuffer();
+  /// Resets the writeDataBuffer and the mapping data cache
+  void resetBufferedData();
 
   /**
    * @brief Removes stample before \ref time and (if mapping exists) fromData or toData

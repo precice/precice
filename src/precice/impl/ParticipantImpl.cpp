@@ -1808,8 +1808,7 @@ void ParticipantImpl::resetWrittenData()
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
     // reset the buffered data here
-    context.invalidateMappingCache(true);
-    context.resetBuffer();
+    context.resetBufferedData();
   }
 }
 
