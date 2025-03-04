@@ -650,6 +650,17 @@ PRECICE_API void precicef_write_gradient_data_(
 
 ///@}
 
+/// @name User-defined profiling
+///@{
+
+/// @copydoc precice::Participant::startProfilingSection()
+PRECICE_API void precicef_start_profiling_section_(const char *sectionName, int sectionNameLength);
+
+/// @copydoc precice::Participant::stopLastProfilingSection()
+PRECICE_API void precicef_stop_last_profiling_section_();
+
+///@}
+
 PRECICE_API void precicef_get_version_information_(
     char *versionInfo,
     int   lengthVersionInfo);

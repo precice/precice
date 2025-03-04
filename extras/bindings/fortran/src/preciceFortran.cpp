@@ -509,6 +509,25 @@ try {
   std::abort();
 }
 
+void precicef_start_profiling_section_(
+    const char *sectionName,
+    int         sectionNameLength)
+try {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  auto sv = precice::impl::strippedStringView(sectionName, sectionNameLength);
+  impl->startProfilingSection(sv);
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
+void precicef_stop_last_profiling_section_()
+try {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->stopLastProfilingSection();
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
