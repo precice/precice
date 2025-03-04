@@ -1280,18 +1280,7 @@ void ParticipantImpl::mapAndReadData(
   MeshContext &    context     = _accessor->meshContext(meshName);
 
   // Check that the vertex is actually within the defined access region
-  if (context.userDefinedAccessRegion) {
-    Eigen::Map<const Eigen::MatrixXd> C(coordinates.data(), dim, nVertices);
-    Eigen::VectorXd                   minCoeffs = C.rowwise().minCoeff();
-    Eigen::VectorXd                   maxCoeffs = C.rowwise().maxCoeff();
-    bool                              minCheck  = (minCoeffs.array() >= context.userDefinedAccessRegion->minCorner().array()).all();
-    bool                              maxCheck  = (maxCoeffs.array() <= context.userDefinedAccessRegion->maxCorner().array()).all();
-    PRECICE_CHECK(minCheck && maxCheck, "The provided coordinates in \"mapAndReadData()\" are not within the access region defined with \"setMeshAccessRegion()\". "
-                                        "Minimum corner of the provided values is (x,y,z) = ({}), the minimum corner of the access region box is (x,y,z) = ({}). "
-                                        "Maximum corner of the provided values is (x,y,z) = ({}), the maximum corner of the access region box is (x,y,z) = ({}). ",
-                  minCoeffs, context.userDefinedAccessRegion->minCorner(), maxCoeffs, context.userDefinedAccessRegion->maxCorner());
-    C.colwise().maxCoeff();
-  }
+  context.checkVerticesInsideAccessRegion(coordinates, dim, "mapAndReadData");
 
   // Make use of the read data context
   PRECICE_CHECK(nVertices * dataDims == values.size(),
@@ -1344,18 +1333,7 @@ void ParticipantImpl::writeAndMapData(
   MeshContext &     context     = _accessor->meshContext(meshName);
 
   // Check that the vertex is actually within the defined access region
-  if (context.userDefinedAccessRegion) {
-    Eigen::Map<const Eigen::MatrixXd> C(coordinates.data(), dim, nVertices);
-    Eigen::VectorXd                   minCoeffs = C.rowwise().minCoeff();
-    Eigen::VectorXd                   maxCoeffs = C.rowwise().maxCoeff();
-    bool                              minCheck  = (minCoeffs.array() >= context.userDefinedAccessRegion->minCorner().array()).all();
-    bool                              maxCheck  = (maxCoeffs.array() <= context.userDefinedAccessRegion->maxCorner().array()).all();
-    PRECICE_CHECK(minCheck && maxCheck, "The provided coordinates in \"writeAndMapData()\" are not within the access region defined with \"setMeshAccessRegion()\". "
-                                        "Minimum coordinate values are (x,y,z) = ({}), the minimum corner of the access region is box is (x,y,z) = ({}). "
-                                        "Maximum coordinate values are (x,y,z) = ({}), the maximum corner of the access region is box is (x,y,z) = ({}). ",
-                  minCoeffs, context.userDefinedAccessRegion->minCorner(), maxCoeffs, context.userDefinedAccessRegion->maxCorner());
-    C.colwise().maxCoeff();
-  }
+  context.checkVerticesInsideAccessRegion(coordinates, dim, "writeAndMapData");
 
   PRECICE_CHECK(nVertices * dataDims == values.size(),
                 "Input sizes are inconsistent attempting to write {}D data \"{}\" to mesh \"{}\". "

@@ -14,8 +14,8 @@ namespace precice::impl {
 /// Stores a mesh and related objects and data.
 struct MeshContext {
   /** Upgrades the mesh requirement to a more specific level.
-    * @param[in] requirement The requirement to upgrade to.
-    */
+   * @param[in] requirement The requirement to upgrade to.
+   */
   void require(mapping::Mapping::MeshRequirement requirement);
 
   /// Mesh holding the geometry data structure.
@@ -57,6 +57,11 @@ struct MeshContext {
   /// Mappings used when mapping data to the mesh. Can be empty.
   std::vector<MappingContext> toMappingContexts;
 
+  /// Checks, that all vertices are within the user-defined access region and throws
+  /// an error if vertices are not. The function does not return the result to be able
+  /// to log the actual outliers
+  void checkVerticesInsideAccessRegion(precice::span<const double> coordinates, const int meshDim, std::string_view functionName) const;
+
   void clearMappings()
   {
     for (auto &mc : fromMappingContexts) {
@@ -66,11 +71,32 @@ struct MeshContext {
       mc.mapping->clear();
     }
   }
+
+private:
+  mutable logging::Logger _log{"impl::MeshContext"};
 };
 
 inline void MeshContext::require(mapping::Mapping::MeshRequirement requirement)
 {
   meshRequirement = std::max(meshRequirement, requirement);
+}
+
+inline void MeshContext::checkVerticesInsideAccessRegion(precice::span<const double> coordinates, const int meshDim, std::string_view functionName) const
+{
+
+  if (userDefinedAccessRegion) {
+    const auto                        nVertices = (coordinates.size() / meshDim);
+    Eigen::Map<const Eigen::MatrixXd> C(coordinates.data(), meshDim, nVertices);
+    Eigen::VectorXd                   minCoeffs = C.rowwise().minCoeff();
+    Eigen::VectorXd                   maxCoeffs = C.rowwise().maxCoeff();
+    bool                              minCheck  = (minCoeffs.array() >= userDefinedAccessRegion->minCorner().array()).all();
+    bool                              maxCheck  = (maxCoeffs.array() <= userDefinedAccessRegion->maxCorner().array()).all();
+    PRECICE_CHECK(minCheck && maxCheck, "The provided coordinates in \"{}\" are not within the access region defined with \"setMeshAccessRegion()\". "
+                                        "Minimum corner of the provided values is (x,y,z) = ({}), the minimum corner of the access region box is (x,y,z) = ({}). "
+                                        "Maximum corner of the provided values is (x,y,z) = ({}), the maximum corner of the access region box is (x,y,z) = ({}). ",
+                  functionName, minCoeffs, userDefinedAccessRegion->minCorner(), maxCoeffs, userDefinedAccessRegion->maxCorner());
+    C.colwise().maxCoeff();
+  }
 }
 
 } // namespace precice::impl
