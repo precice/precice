@@ -732,8 +732,9 @@ int ParticipantImpl::getMeshVertexSize(
                                                    "but no access region was defined although this is necessary for parallel runs. "
                                                    "Please define an access region using \"setMeshAccessRegion()\" before calling \"getMeshVertexSize()\".",
                   meshName);
-    auto result = std::count_if(context.mesh->vertices().cbegin(), context.mesh->vertices().cend(),
-                                [bb = context.userDefinedAccessRegion](const auto &v) { return bb->contains(v); });
+
+    auto result = mesh::countVerticesInBoundingBox(context.mesh, *context.userDefinedAccessRegion);
+
     PRECICE_DEBUG("Filtered {} of {} vertices out on mesh {} due to the local access region. Mesh size in the access region: {}", context.mesh->nVertices() - result, context.mesh->nVertices(), meshName, result);
     return result;
   } else {
