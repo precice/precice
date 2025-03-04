@@ -72,9 +72,11 @@ int main(int argc, char **argv)
     double dt = participant.getMaxTimeStepSize();
     participant.readData(meshName, dataReadName, vertexIDs, dt, readData);
 
+    participant.startProfilingSection("Solve");
     for (int i = 0; i < numberOfVertices * dimensions; i++) {
       writeData.at(i) = readData.at(i) + 1;
     }
+    participant.stopLastProfilingSection();
 
     participant.writeData(meshName, dataWriteName, vertexIDs, writeData);
 
