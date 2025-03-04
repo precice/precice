@@ -502,12 +502,12 @@ void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isT
 
   // Required for implicit coupling
   for (auto &context : _accessor->readDataContexts()) {
-    context.invalidateMappingCache(false);
+    context.invalidateMappingCache();
   }
 
   // Strictly speaking, the write direction is not relevant here, but we will add it for the sake of completenss
   for (auto &context : _accessor->writeDataContexts()) {
-    context.invalidateMappingCache(false);
+    context.invalidateMappingCache();
   }
 
   if (isTimeWindowComplete) {

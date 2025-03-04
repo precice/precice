@@ -15,7 +15,7 @@ WriteDataContext::WriteDataContext(mesh::PtrData data,
 
 void WriteDataContext::resetBufferedData()
 {
-  invalidateMappingCache(true);
+  invalidateMappingCacheAndResetData();
   _writeDataBuffer.values.setZero();
   _writeDataBuffer.gradients.setZero();
 }

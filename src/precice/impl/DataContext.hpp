@@ -148,19 +148,27 @@ public:
   }
 
   /**
-   * @brief Resets the time stamp of the MappingDataCache and potentially resets the data it holds
+   * @brief Resets the time stamp of the MappingDataCache
    *
    * See also the impl::MappingDataCache for more details.
-   *
-   * @param resetData whether to reset the data or not
    */
-  void invalidateMappingCache(bool resetData)
+  void invalidateMappingCache()
   {
     if (mappingCache) {
       mappingCache->resetTimeStamp();
-      if (resetData) {
-        mappingCache->resetData();
-      }
+    }
+  }
+
+  /**
+   * @brief Resets the time stamp of the MappingDataCache and resets the data it holds
+   *
+   * See also the impl::MappingDataCache for more details.
+   */
+  void invalidateMappingCacheAndResetData()
+  {
+    invalidateMappingCache();
+    if (mappingCache) {
+      mappingCache->resetData();
     }
   }
 
