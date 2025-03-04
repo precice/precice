@@ -555,26 +555,26 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   mesh::PtrMesh     toMesh(_meshConfig->getMesh(toMeshName));
 
   // Handle for just-in-time mapping, we copy over the dimension and leave everything else
-  if (fromMesh.get() == nullptr && fromMeshName.empty()) {
-    PRECICE_CHECK(toMesh.get() != nullptr,
+  if (!fromMesh && fromMeshName.empty()) {
+    PRECICE_CHECK(toMesh,
                   "Mesh \"{0}\" was not found while creating a mapping. "
                   "Please correct the to=\"{0}\" attribute.",
                   toMeshName);
     fromMesh = mesh::MeshConfiguration::getJustInTimeMappingMesh(toMesh->getDimensions());
   }
-  if (toMesh.get() == nullptr && toMeshName.empty()) {
-    PRECICE_CHECK(fromMesh.get() != nullptr,
+  if (!toMesh && toMeshName.empty()) {
+    PRECICE_CHECK(fromMesh,
                   "Mesh \"{0}\" was not found while creating a mapping. "
                   "Please correct the from=\"{0}\" attribute.",
                   fromMeshName);
     toMesh = mesh::MeshConfiguration::getJustInTimeMappingMesh(fromMesh->getDimensions());
   }
 
-  PRECICE_CHECK(fromMesh.get() != nullptr,
+  PRECICE_CHECK(fromMesh,
                 "Mesh \"{0}\" was not found while creating a mapping. "
                 "Please correct the from=\"{0}\" attribute.",
                 fromMeshName);
-  PRECICE_CHECK(toMesh.get() != nullptr,
+  PRECICE_CHECK(toMesh,
                 "Mesh \"{0}\" was not found while creating a mapping. "
                 "Please correct the to=\"{0}\" attribute.",
                 toMeshName);
