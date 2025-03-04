@@ -1470,25 +1470,13 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
 
   Event e{fmt::format("getMeshVertexIDsAndCoordinates.{}", meshName), profiling::Fundamental};
 
-  const MeshContext & context = _accessor->meshContext(meshName);
+  const MeshContext &context = _accessor->meshContext(meshName);
+
+  auto       filteredVertices = context.filterVerticesToLocalAccessRegion(requiresBB);
+  const auto meshSize         = filteredVertices.size();
+
   const mesh::PtrMesh mesh(context.mesh);
-
-  std::vector<std::reference_wrapper<const mesh::Vertex>> filteredVertices;
-  for (const auto &v : mesh->vertices()) {
-    // either the vertex lies within the region OR the user-defined region is not strictly necessary
-    if (context.userDefinedAccessRegion) {
-      // region is defined: only add if the vertex is inside the region
-      if (context.userDefinedAccessRegion->contains(v)) {
-        filteredVertices.push_back(std::cref(v));
-      }
-    } else if (!requiresBB) {
-      // region is not defined, so if filtering isn't required, add all vertices
-      filteredVertices.push_back(std::cref(v));
-    }
-  }
-
-  const auto meshSize = filteredVertices.size();
-  const auto meshDims = mesh->getDimensions();
+  const auto          meshDims = mesh->getDimensions();
   PRECICE_CHECK(ids.size() == meshSize,
                 "Output size is incorrect attempting to get vertex ids of {}D mesh \"{}\". "
                 "You passed {} vertices indices, but we expected {}. "

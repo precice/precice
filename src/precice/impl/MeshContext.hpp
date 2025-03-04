@@ -62,6 +62,8 @@ struct MeshContext {
   /// to log the actual outliers
   void checkVerticesInsideAccessRegion(precice::span<const double> coordinates, const int meshDim, std::string_view functionName) const;
 
+  std::vector<std::reference_wrapper<const mesh::Vertex>> filterVerticesToLocalAccessRegion(bool requiresBB) const;
+
   void clearMappings()
   {
     for (auto &mc : fromMappingContexts) {
@@ -97,6 +99,24 @@ inline void MeshContext::checkVerticesInsideAccessRegion(precice::span<const dou
                   functionName, minCoeffs, userDefinedAccessRegion->minCorner(), maxCoeffs, userDefinedAccessRegion->maxCorner());
     C.colwise().maxCoeff();
   }
+}
+
+inline std::vector<std::reference_wrapper<const mesh::Vertex>> MeshContext::filterVerticesToLocalAccessRegion(bool requiresBB) const
+{
+  std::vector<std::reference_wrapper<const mesh::Vertex>> filteredVertices;
+  for (const auto &v : mesh->vertices()) {
+    // either the vertex lies within the region OR the user-defined region is not strictly necessary
+    if (userDefinedAccessRegion) {
+      // region is defined: only add if the vertex is inside the region
+      if (userDefinedAccessRegion->contains(v)) {
+        filteredVertices.push_back(std::cref(v));
+      }
+    } else if (!requiresBB) {
+      // region is not defined, so if filtering isn't required, add all vertices
+      filteredVertices.push_back(std::cref(v));
+    }
+  }
+  return filteredVertices;
 }
 
 } // namespace precice::impl
