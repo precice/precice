@@ -1679,15 +1679,7 @@ void ParticipantImpl::computeMappings(std::vector<MappingContext> &contexts, con
     }
   }
   if (anyMappingChanged) {
-    if (mappingType == "write") {
-      for (auto &context : _accessor->writeDataContexts()) {
-        context.initializeMappingDataCache();
-      }
-    } else {
-      for (auto &context : _accessor->readDataContexts()) {
-        context.initializeMappingDataCache();
-      }
-    }
+    _accessor->initializeMappingDataCache(mappingType);
   }
 }
 

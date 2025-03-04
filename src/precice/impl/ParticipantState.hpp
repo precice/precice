@@ -251,6 +251,9 @@ public:
   bool isDirectAccessAllowed(std::string_view mesh) const;
   /// @}
 
+  /// Initializes the MappingDataCache in the DataContext after having computed the mappings
+  void initializeMappingDataCache(std::string_view mappingType);
+
   /// @name Exporting interface
   /// @{
   /// Exports the initial state of meshes

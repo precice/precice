@@ -470,4 +470,17 @@ std::string ParticipantState::hintForMeshData(std::string_view mesh, std::string
   return fmt::format(" Available data are: {}", fmt::join(localData, ", "));
 }
 
+void ParticipantState::initializeMappingDataCache(std::string_view mappingType)
+{
+  if (mappingType == "write") {
+    for (auto &context : writeDataContexts()) {
+      context.initializeMappingDataCache();
+    }
+  } else {
+    for (auto &context : readDataContexts()) {
+      context.initializeMappingDataCache();
+    }
+  }
+}
+
 } // namespace precice::impl
