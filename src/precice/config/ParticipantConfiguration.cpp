@@ -512,14 +512,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     // configure the involved mesh context with connectivity requirements stemming from the mapping
     // Add the mapping context to the mesh context, only required to later on forward them to the Partition
     if (!input->isJustInTime()) {
-      participant->meshContext(fromMesh).meshRequirement = std::max(
-          participant->meshContext(fromMesh).meshRequirement, map->getInputRequirement());
-      participant->meshContext(fromMesh).fromMappingContexts.push_back(mappingContext);
+      participant->configureInputMeshContext(fromMesh, mappingContext, map->getInputRequirement());
     }
     if (!output->isJustInTime()) {
-      participant->meshContext(toMesh).toMappingContexts.push_back(mappingContext);
-      participant->meshContext(toMesh).meshRequirement = std::max(
-          participant->meshContext(toMesh).meshRequirement, map->getOutputRequirement());
+      participant->configureOutputMeshContext(toMesh, mappingContext, map->getOutputRequirement());
     }
   }
   // clear the data structure we just transformed and don't need anymore

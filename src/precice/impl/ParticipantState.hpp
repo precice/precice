@@ -254,6 +254,12 @@ public:
   /// Initializes the MappingDataCache in the DataContext after having computed the mappings
   void initializeMappingDataCache(std::string_view mappingType);
 
+  /// Configures the mesh context with connectivity requirements and adds it to the mappingcontext
+  void configureInputMeshContext(std::string_view fromMesh, impl::MappingContext &mappingContext, mapping::Mapping::MeshRequirement requirement);
+
+  /// Configures the mesh context with connectivity requirements and adds it to the mappingcontext
+  void configureOutputMeshContext(std::string_view toMesh, impl::MappingContext &mappingContext, mapping::Mapping::MeshRequirement requirement);
+
   /// @name Exporting interface
   /// @{
   /// Exports the initial state of meshes

@@ -483,4 +483,16 @@ void ParticipantState::initializeMappingDataCache(std::string_view mappingType)
   }
 }
 
+void ParticipantState::configureInputMeshContext(std::string_view fromMesh, impl::MappingContext &mappingContext, mapping::Mapping::MeshRequirement requirement)
+{
+  meshContext(fromMesh).meshRequirement = std::max(meshContext(fromMesh).meshRequirement, requirement);
+  meshContext(fromMesh).fromMappingContexts.push_back(mappingContext);
+}
+
+void ParticipantState::configureOutputMeshContext(std::string_view toMesh, impl::MappingContext &mappingContext, mapping::Mapping::MeshRequirement requirement)
+{
+  meshContext(toMesh).toMappingContexts.push_back(mappingContext);
+  meshContext(toMesh).meshRequirement = std::max(meshContext(toMesh).meshRequirement, requirement);
+}
+
 } // namespace precice::impl
