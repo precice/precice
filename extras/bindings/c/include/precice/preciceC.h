@@ -411,6 +411,17 @@ PRECICE_API void precicec_writeGradientData(
 
 ///@}
 
+/// @name User-defined profiling
+///@{
+
+/// @copydoc precice::Participant::startProfilingSection()
+PRECICE_API void precicec_startProfilingSection(const char *sectionName);
+
+/// @copydoc precice::Participant::stopLastProfilingSection()
+PRECICE_API void precicec_stopLastProfilingSection();
+
+///@}
+
 /**
  * @brief Returns information on the version of preCICE.
  *

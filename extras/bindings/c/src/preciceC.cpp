@@ -419,6 +419,20 @@ try {
   std::abort();
 }
 
+void precicec_startProfilingSection(const char *sectionName)
+try {
+  impl->startProfilingSection(sectionName);
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
+void precicec_stopLastProfilingSection()
+try {
+  impl->stopLastProfilingSection();
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
