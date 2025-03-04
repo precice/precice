@@ -226,6 +226,21 @@ public:
       double                          relativeReadTime,
       ::precice::span<double>         values) const;
 
+  /// @copydoc Participant::mapAndReadData
+  void mapAndReadData(
+      std::string_view              meshName,
+      std::string_view              dataName,
+      ::precice::span<const double> coordinates,
+      double                        relativeReadTime,
+      ::precice::span<double>       values) const;
+
+  /// @copydoc Participant::writeAndMapData
+  void writeAndMapData(
+      std::string_view              meshName,
+      std::string_view              dataName,
+      ::precice::span<const double> coordinates,
+      ::precice::span<const double> values);
+
   /// @copydoc Participant::writeData
   void writeData(
       std::string_view                meshName,
@@ -471,6 +486,11 @@ private:
 
   /// Setup mesh watcher such as WatchPoints
   void setupWatcher();
+
+  /// Returns if a user has to define an access region for direct
+  /// mesh access and just-in-time mapping or not
+  /// Right now, that's required in parallel runs on received meshes
+  bool requiresUserDefinedAccessRegion(std::string_view meshName) const;
 
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;

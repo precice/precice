@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration experimental="true">
+  <data:scalar name="Velocities" />
+  <data:scalar name="Uncertainty" />
+
+  <mesh name="MeshTwo" dimensions="2">
+    <use-data name="Velocities" />
+    <use-data name="Uncertainty" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <receive-mesh name="MeshTwo" from="SolverTwo" api-access="true" />
+    <write-data name="Velocities" mesh="MeshTwo" />
+    <read-data name="Uncertainty" mesh="MeshTwo" />
+    <mapping:nearest-neighbor direction="write" to="MeshTwo" constraint="conservative" />
+    <mapping:nearest-neighbor direction="read" from="MeshTwo" constraint="consistent" />
+  </participant>
+
+  <participant name="SolverTwo">
+    <provide-mesh name="MeshTwo" />
+    <read-data name="Velocities" mesh="MeshTwo" />
+    <write-data name="Uncertainty" mesh="MeshTwo" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="2" />
+    <time-window-size value="1.0" />
+    <exchange data="Velocities" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
+    <exchange data="Uncertainty" mesh="MeshTwo" from="SolverTwo" to="SolverOne" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

@@ -181,7 +181,7 @@ void tagDuplicateCenters(Vertices &centers, std::array<unsigned int, 3> nCells, 
   auto neighborOffsets = zCurveNeighborOffsets<dim>(nCells);
   static_assert((neighborOffsets.size() == 8 && dim == 2) || (neighborOffsets.size() == 26 && dim == 3));
 
-  //For the following to work, the vertexID has to correspond to the position in the centers
+  // For the following to work, the vertexID has to correspond to the position in the centers
   PRECICE_ASSERT(std::all_of(centers.begin(), centers.end(), [idx = 0](auto &v) mutable { return v.getID() == idx++; }));
   // we check all neighbors
   for (auto &v : centers) {
@@ -310,11 +310,12 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   PRECICE_ASSERT(inMesh->getDimensions() == outMesh->getDimensions());
 
   // If we have either no input or no output vertices, we return immediately
-  if (inMesh->nVertices() == 0 || outMesh->nVertices() == 0)
+  if (inMesh->empty() || (outMesh->empty() && !outMesh->isJustInTime())) {
     return {double{}, Vertices{}};
+  }
 
-  PRECICE_ASSERT(!outMesh->empty() && !inMesh->empty());
-
+  PRECICE_ASSERT(!inMesh->empty());
+  PRECICE_ASSERT(!outMesh->empty() || outMesh->isJustInTime());
   // startGridAtEdge boolean switch in order to decide either to start the clustering at the edge of the bounding box in each direction
   // (true) or start the clustering inside the bounding box (edge + 0.5 radius). The latter approach leads to fewer clusters,
   // but might result in a worse clustering
@@ -348,9 +349,14 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
   // The single cluster has in principle a radius of inf. We use here twice the
   // length of the longest bounding box edge length and the center of the bounding
   // box for the center point.
-  if (inMesh->nVertices() < verticesPerCluster * 2)
-    return {localBB.longestEdgeLength() * 2, Vertices{mesh::Vertex({localBB.center(), 0})}};
-
+  if (inMesh->nVertices() < verticesPerCluster * 2) {
+    double cRadius = localBB.longestEdgeLength();
+    if (cRadius == 0) {
+      PRECICE_WARN("Determining a cluster radius failed. This is most likely a result of a coupling mesh consisting of just a single vertex. Setting the cluster radius to 1.");
+      cRadius = 1;
+    }
+    return {cRadius * 2, Vertices{mesh::Vertex({localBB.center(), 0})}};
+  }
   // We define a convenience alias for the localBB. In case we need to synchronize the clustering across ranks later on, we need
   // to work with the global bounding box of the whole domain.
   auto globalBB = localBB;
@@ -460,7 +466,9 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
 
   // Step 8a: tag empty clusters
   tagEmptyClusters(centers, clusterRadius, inMesh);
-  tagEmptyClusters(centers, clusterRadius, outMesh);
+  if (!outMesh->isJustInTime()) {
+    tagEmptyClusters(centers, clusterRadius, outMesh);
+  }
   PRECICE_DEBUG("Number of non-tagged centers after empty clusters were filtered: {}", std::count_if(centers.begin(), centers.end(), [](auto &v) { return !v.isTagged(); }));
 
   // Step 9: Move the cluster centers if desired
@@ -481,7 +489,9 @@ inline std::tuple<double, Vertices> createClustering(mesh::PtrMesh inMesh, mesh:
     // the tagging here won't filter out a lot of clusters, but finding them anyway allows us to allocate the right amount of
     // memory for the cluster vector in the mapping, which would otherwise be expensive
     // we cannot hit any empty vertices in the inputmesh
-    tagEmptyClusters(centers, clusterRadius, outMesh);
+    if (!outMesh->isJustInTime()) {
+      tagEmptyClusters(centers, clusterRadius, outMesh);
+    }
     PRECICE_DEBUG("Number of non-tagged centers after duplicate tagging : {}", std::count_if(centers.begin(), centers.end(), [](auto &v) { return !v.isTagged(); }));
   }
   PRECICE_ASSERT(std::all_of(centers.begin(), centers.end(), [idx = 0](auto &v) mutable { return v.getID() == idx++; }));

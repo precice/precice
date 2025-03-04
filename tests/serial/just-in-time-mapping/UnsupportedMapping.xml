@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration experimental="true">
+  <data:scalar name="Velocities" />
+  <data:scalar name="Porosity" />
+
+  <mesh name="MeshTwo" dimensions="3">
+    <use-data name="Velocities" />
+    <use-data name="Porosity" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <receive-mesh name="MeshTwo" from="SolverTwo" api-access="true" />
+    <write-data name="Velocities" mesh="MeshTwo" />
+    <read-data name="Porosity" mesh="MeshTwo" />
+    <!-- just-in-time, but the mappings are not supported -->
+    <mapping:rbf-global-direct
+      direction="read"
+      from="MeshTwo"
+      constraint="consistent"
+      polynomial="separate">
+      <basis-function:compact-polynomial-c6 support-radius="1." />
+    </mapping:rbf-global-direct>
+    <mapping:linear-cell-interpolation direction="write" to="MeshTwo" constraint="conservative" />
+  </participant>
+
+  <participant name="SolverTwo">
+    <provide-mesh name="MeshTwo" />
+    <read-data name="Velocities" mesh="MeshTwo" />
+    <write-data name="Porosity" mesh="MeshTwo" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="2" />
+    <time-window-size value="1.0" />
+    <exchange data="Velocities" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
+    <exchange data="Porosity" mesh="MeshTwo" from="SolverTwo" to="SolverOne" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

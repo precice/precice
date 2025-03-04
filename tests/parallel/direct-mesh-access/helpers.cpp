@@ -91,16 +91,18 @@ void runTestAccessReceivedMesh(const TestContext &       context,
 
     interface.setMeshVertices(meshName, positions, ids);
 
+    // This is not allowed, as meshName is a local mesh
+    std::vector<double> dummyBB({0.0, 1.0, 0.0, 3.5});
+    BOOST_CHECK_THROW(interface.setMeshAccessRegion(meshName, dummyBB), ::precice::Error);
+
     {
-      // Check, if we can use the 'getMeshVertexIDsAndCoordinates' function on provided meshes as well,
-      // though the actual purpose is of course using it on received meshes
+      // Check, that we can't use the 'getMeshVertexIDsAndCoordinates' function on the provided meshes,
+      // (the actual purpose is of course using it on received meshes)
       const std::size_t ownMeshSize = interface.getMeshVertexSize(meshName);
       BOOST_TEST(ownMeshSize == size);
       std::vector<int>    ownIDs(ownMeshSize);
       std::vector<double> ownCoordinates(ownMeshSize * dim);
-      interface.getMeshVertexIDsAndCoordinates(meshName, ownIDs, ownCoordinates);
-      BOOST_TEST(ownIDs == ids);
-      BOOST_TEST(testing::equals(positions, ownCoordinates));
+      BOOST_CHECK_THROW(interface.getMeshVertexIDsAndCoordinates(meshName, ownIDs, ownCoordinates), ::precice::Error);
     }
 
     // Initialize the Participant
