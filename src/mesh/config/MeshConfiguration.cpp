@@ -101,15 +101,7 @@ const PtrDataConfiguration &MeshConfiguration::getDataConfiguration() const
 
 mesh::PtrMesh MeshConfiguration::getJustInTimeMappingMesh(int dimension)
 {
-  PRECICE_ASSERT(dimension == 2 || dimension == 3);
-
-  // Using a static map to store meshes by dimension
-  static std::map<int, mesh::PtrMesh> meshes;
-  // Check if the mesh for the given dimension already exists
-  if (meshes.find(dimension) == meshes.end()) {
-    meshes[dimension] = std::make_shared<mesh::Mesh>("(just-in-time mapping)", dimension, mesh::Mesh::MESH_ID_UNDEFINED, true);
-  }
-  return meshes[dimension];
+  return std::make_shared<mesh::Mesh>("(just-in-time mapping)", dimension, mesh::Mesh::MESH_ID_UNDEFINED, true);
 }
 
 void MeshConfiguration::addMesh(
