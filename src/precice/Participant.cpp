@@ -261,9 +261,9 @@ void Participant::writeGradientData(
   _impl->writeGradientData(toSV(meshName), toSV(dataName), ids, gradients);
 }
 
-void Participant::startProfilingSection(::precice::string_view eventName)
+void Participant::startProfilingSection(::precice::string_view sectionName)
 {
-  _impl->startProfilingSection(toSV(eventName));
+  _impl->startProfilingSection(toSV(sectionName));
 }
 
 void Participant::stopLastProfilingSection()

@@ -1986,9 +1986,9 @@ bool ParticipantImpl::reinitHandshake(bool requestReinit) const
   }
 }
 
-void ParticipantImpl::startProfilingSection(std::string_view eventName)
+void ParticipantImpl::startProfilingSection(std::string_view sectionName)
 {
-  _userEvents.emplace_back(eventName, profiling::Fundamental);
+  _userEvents.emplace_back(sectionName, profiling::Fundamental);
 }
 
 void ParticipantImpl::stopLastProfilingSection()
