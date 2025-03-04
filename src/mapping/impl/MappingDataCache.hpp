@@ -46,6 +46,11 @@ public:
   /// Constructor
   explicit MappingDataCache(int dataDim);
 
+  // The inData member is for basic mappings (such as NN) and simply stores
+  // the latest evaluation of the waveform relaxation to prevent repeated time
+  // interpolation
+  time::Stample inData;
+
   // The std::vector<> member variables here are specific to PUM:
   // we store cache data for each cluster:
   // We need a sequence of polynomial contributions
@@ -58,14 +63,6 @@ public:
   // ...and a vector of P/lambdas (the RBF coefficients)
   // For conservative mappings, this vector refers to the Au, potentially as vector components
   std::vector<Eigen::MatrixXd> p;
-
-  // The inData member is for basic mappings (such as NN) and simply stores
-  // the latest evaluation of the waveform relaxation to prevent repeated time
-  // interpolation
-  // @note: We could make this a sample rather than a VectorXd, as we might want to operate on gradient data as well
-  // std::unique_ptr<time::Sample> inData;
-  // however, there doesn't seem to be any compatible interface in time::Sample, so we simply use a vector here
-  Eigen::VectorXd inData;
 
   /// Returns the number of data components
   int getDataDimensions() const;
@@ -81,42 +78,38 @@ public:
 
   /// Reset all data containers to zero
   void resetData();
-
-private:
-  double    _timeStamp = -1;
-  const int _dataDim{};
 };
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION
 inline MappingDataCache::MappingDataCache(int dataDim)
-    : _dataDim(dataDim)
+    : inData{-1, time::Sample(dataDim)}
 {
 }
 
 inline int MappingDataCache::getDataDimensions() const
 {
-  return _dataDim;
+  return inData.sample.dataDims;
 }
 
 inline bool MappingDataCache::hasDataAtTimeStamp(double time) const
 {
-  return math::equals(_timeStamp, time);
+  return math::equals(inData.timestamp, time);
 }
 
 inline void MappingDataCache::setTimeStamp(double time)
 {
-  _timeStamp = time;
+  inData.timestamp = time;
 }
 
 inline void MappingDataCache::resetTimeStamp()
 {
   // Set the timestamp to -1, which is invalid anyway, since the time simulation time can only be positive
-  _timeStamp = -1;
+  inData.timestamp = -1;
 }
 
 inline void MappingDataCache::resetData()
 {
-  inData.setZero();
+  inData.sample.setZero();
 
   for (auto &mat : polynomialContributions) {
     mat.setZero();

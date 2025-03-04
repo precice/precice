@@ -32,7 +32,7 @@ void NearestNeighborMapping::mapConsistentAt(const Eigen::Ref<const Eigen::Matri
   auto &                    index = input()->index();
 
   // Set up of output arrays
-  Eigen::Map<const Eigen::MatrixXd> localData(cache.inData.data(), cache.getDataDimensions(), cache.inData.size() / cache.getDataDimensions());
+  Eigen::Map<const Eigen::MatrixXd> localData(cache.inData.sample.values.data(), cache.getDataDimensions(), cache.inData.sample.values.size() / cache.getDataDimensions());
   for (Eigen::Index i = 0; i < coordinates.cols(); ++i) {
     values.col(i) = localData.col(index.getClosestVertex(coordinates.col(i)).index);
   }

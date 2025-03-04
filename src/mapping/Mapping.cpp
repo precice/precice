@@ -275,7 +275,7 @@ void Mapping::updateMappingDataCache(impl::MappingDataCache &cache, const Eigen:
   // coordinate. That's already sufficient for NN, as we cannot precompute anything
   // more specific (as opposed to PUM or (albeit not implemented) RBF interpolation,
   // where we can further compute the RBF coefficients belonging to the time sample)
-  cache.inData = in;
+  cache.inData.sample.values = in;
 }
 
 void Mapping::initializeMappingDataCache(impl::MappingDataCache &cache)
