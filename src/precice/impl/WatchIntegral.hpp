@@ -52,7 +52,7 @@ private:
 
   bool _isScalingOn;
 
-  Eigen::VectorXd calculateIntegral(const mesh::PtrData &data) const;
+  Eigen::VectorXd calculateIntegral(double time, const mesh::PtrData &data) const;
 
   double calculateSurfaceArea() const;
 };
