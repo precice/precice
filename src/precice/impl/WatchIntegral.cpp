@@ -120,7 +120,7 @@ Eigen::VectorXd WatchIntegral::calculateIntegral(double time, const mesh::PtrDat
     }
     return sum;
   } else { // Connectivity information is given
-    return mesh::integrateSurface(_mesh, data->timeStepsStorage().sample(time).values());
+    return mesh::integrateSurface(_mesh, sample.values());
   }
 }
 
