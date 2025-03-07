@@ -573,9 +573,8 @@ void ParticipantImpl::finalize()
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.");
 
+  // First we gracefully stop all existing user events and finally the last solver.advance event
   _userEvents.clear();
-
-  // Events for the solver time, finally stopped here
   _solverAdvanceEvent.reset();
 
   Event e("finalize", profiling::Fundamental);
