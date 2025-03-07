@@ -1179,7 +1179,7 @@ public:
    * This feature is especially useful as it integrates the profiling sections directly into the preCICE profiling.
    * This means that the context of rank and participant are preserved.
    *
-   * Not stopping all user-defined profiling sections before handing back to preCICE in initialize or advance leads to a crash.
+   * Not stopping all user-defined profiling sections before handing back to preCICE in initialize or advance leads to an error.
    */
   ///@{
 
