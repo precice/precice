@@ -257,7 +257,8 @@ void ParticipantImpl::initialize()
                 "Initial data has to be written to preCICE before calling initialize(). "
                 "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using the writeData() function.");
 
-  PRECICE_CHECK(_userEvents.empty(), "There are unstopped user defined events");
+  // Enforce that all user-created events are stopped to prevent incorrect nesting.
+  PRECICE_CHECK(_userEvents.empty(), "There are unstopped user defined events. Please stop them using stopLastProfilingSection() before calling initialize().");
 
   _solverInitEvent.reset();
   Event e("initialize", profiling::Fundamental, profiling::Synchronize);
@@ -388,7 +389,8 @@ void ParticipantImpl::advance(
 
   PRECICE_TRACE(computedTimeStepSize);
 
-  PRECICE_CHECK(_userEvents.empty(), "There are unstopped user defined events");
+  // Enforce that all user-created events are stopped to prevent incorrect nesting.
+  PRECICE_CHECK(_userEvents.empty(), "There are unstopped user defined events. Please stop them using stopLastProfilingSection() before calling advance().");
 
   // Events for the solver time, stopped when we enter, restarted when we leave advance
   PRECICE_ASSERT(_solverAdvanceEvent, "The advance event is created in initialize");
@@ -574,7 +576,10 @@ void ParticipantImpl::finalize()
   PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.");
 
   // First we gracefully stop all existing user events and finally the last solver.advance event
-  _userEvents.clear();
+  while (!_userEvents.empty()) {
+    // Ensure reverse destruction order for correct nesting
+    _userEvents.pop_back();
+  }
   _solverAdvanceEvent.reset();
 
   Event e("finalize", profiling::Fundamental);
