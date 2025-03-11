@@ -1168,6 +1168,41 @@ public:
 
   ///@}
 
+  /** @name User-defined profiling
+   *
+   * These functions offer access to the preCICE internal profiling functionality.
+   *
+   * Named profiling sections can be started with startProfilingSection() and stopped with stopLastProfilingSection().
+   * Sections can be freely nested.
+   * These sections are always considered fundamental and are recorded by default.
+   *
+   * This feature is especially useful as it integrates the profiling sections directly into the preCICE profiling.
+   * This means that the context of rank and participant are preserved.
+   *
+   * Not stopping all user-defined profiling sections before handing back to preCICE in initialize or advance leads to an error.
+   */
+  ///@{
+
+  /** Start a named user-defined profiling section
+   *
+   * Starts a profiling section to record with the given name.
+   * This action is active until it is stopped by stopLastProfilingSection().
+   *
+   * All active sections must be stopped before calling initialize() or advance().
+   *
+   * \param[in] sectionName the name of the profiling section to start
+   *
+   */
+  void startProfilingSection(::precice::string_view sectionName);
+
+  /** Stop the last profiling section
+   *
+   * @pre a profiling section has been started using startProfilingSection()
+   */
+  void stopLastProfilingSection();
+
+  ///@}
+
   /// Disable copy construction
   Participant(const Participant &copy) = delete;
 

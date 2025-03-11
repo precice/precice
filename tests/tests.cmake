@@ -4,6 +4,9 @@
 target_sources(testprecice
     PRIVATE
     tests/fundamental/DifferentConfigs.cpp
+    tests/fundamental/profiling/NotAllStopped.cpp
+    tests/fundamental/profiling/NotStoppedAtFinalize.cpp
+    tests/fundamental/profiling/UserProfiling.cpp
     tests/geometric-multiscale/AxialGeoMultiscale.cpp
     tests/geometric-multiscale/RadialGeoMultiscale.cpp
     tests/parallel/CouplingOnLine.cpp

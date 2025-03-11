@@ -261,4 +261,14 @@ void Participant::writeGradientData(
   _impl->writeGradientData(toSV(meshName), toSV(dataName), ids, gradients);
 }
 
+void Participant::startProfilingSection(::precice::string_view sectionName)
+{
+  _impl->startProfilingSection(toSV(sectionName));
+}
+
+void Participant::stopLastProfilingSection()
+{
+  _impl->stopLastProfilingSection();
+}
+
 } // namespace precice

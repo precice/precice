@@ -257,6 +257,9 @@ void ParticipantImpl::initialize()
                 "Initial data has to be written to preCICE before calling initialize(). "
                 "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using the writeData() function.");
 
+  // Enforce that all user-created events are stopped to prevent incorrect nesting.
+  PRECICE_CHECK(_userEvents.empty(), "There are unstopped user defined events. Please stop them using stopLastProfilingSection() before calling initialize().");
+
   _solverInitEvent.reset();
   Event e("initialize", profiling::Fundamental, profiling::Synchronize);
 
@@ -385,6 +388,9 @@ void ParticipantImpl::advance(
 {
 
   PRECICE_TRACE(computedTimeStepSize);
+
+  // Enforce that all user-created events are stopped to prevent incorrect nesting.
+  PRECICE_CHECK(_userEvents.empty(), "There are unstopped user defined events. Please stop them using stopLastProfilingSection() before calling advance().");
 
   // Events for the solver time, stopped when we enter, restarted when we leave advance
   PRECICE_ASSERT(_solverAdvanceEvent, "The advance event is created in initialize");
@@ -569,7 +575,11 @@ void ParticipantImpl::finalize()
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.");
 
-  // Events for the solver time, finally stopped here
+  // First we gracefully stop all existing user events and finally the last solver.advance event
+  while (!_userEvents.empty()) {
+    // Ensure reverse destruction order for correct nesting
+    _userEvents.pop_back();
+  }
   _solverAdvanceEvent.reset();
 
   Event e("finalize", profiling::Fundamental);
@@ -1978,6 +1988,17 @@ bool ParticipantImpl::reinitHandshake(bool requestReinit) const
     utils::IntraComm::broadcast(swarmReinitRequired);
     return swarmReinitRequired;
   }
+}
+
+void ParticipantImpl::startProfilingSection(std::string_view sectionName)
+{
+  _userEvents.emplace_back(sectionName, profiling::Fundamental);
+}
+
+void ParticipantImpl::stopLastProfilingSection()
+{
+  PRECICE_CHECK(!_userEvents.empty(), "There is no user-started event to stop.");
+  _userEvents.pop_back();
 }
 
 } // namespace precice::impl
