@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration experimental="true">
+  <data:scalar name="Temperature" />
+  <data:vector name="Velocity" />
+
+  <mesh name="MeshOne" dimensions="3">
+    <use-data name="Temperature" />
+    <use-data name="Velocity" />
+  </mesh>
+
+  <mesh name="MeshTwo" dimensions="3">
+    <use-data name="Temperature" />
+    <use-data name="Velocity" />
+  </mesh>
+
+  <mesh name="MeshTwoB" dimensions="3">
+    <use-data name="Temperature" />
+    <use-data name="Velocity" />
+  </mesh>
+
+  <mesh name="MeshTwoC" dimensions="3">
+    <use-data name="Temperature" />
+    <use-data name="Velocity" />
+  </mesh>
+
+  <mesh name="MeshTwoD" dimensions="3">
+    <use-data name="Temperature" />
+    <use-data name="Velocity" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <receive-mesh name="MeshTwo" from="SolverTwo" api-access="true" />
+    <receive-mesh name="MeshTwoB" from="SolverTwo" api-access="true" />
+    <receive-mesh name="MeshTwoC" from="SolverTwo" api-access="false" />
+    <receive-mesh name="MeshTwoD" from="SolverTwo" api-access="false" />
+    <provide-mesh name="MeshOne" />
+    <write-data name="Velocity" mesh="MeshTwo" />
+    <write-data name="Temperature" mesh="MeshTwo" />
+    <write-data name="Velocity" mesh="MeshTwoB" />
+    <write-data name="Temperature" mesh="MeshTwoB" />
+    <write-data name="Velocity" mesh="MeshOne" />
+    <write-data name="Temperature" mesh="MeshOne" />
+    <!-- just-in-time variants -->
+    <mapping:rbf-pum-direct
+      direction="write"
+      to="MeshTwo"
+      constraint="conservative"
+      vertices-per-cluster="30"
+      project-to-input="off"
+      polynomial="separate">
+      <basis-function:gaussian support-radius="1." />
+    </mapping:rbf-pum-direct>
+    <mapping:rbf-pum-direct
+      direction="write"
+      to="MeshTwoB"
+      constraint="conservative"
+      vertices-per-cluster="30"
+      project-to-input="off"
+      polynomial="off">
+      <basis-function:gaussian support-radius="1." />
+    </mapping:rbf-pum-direct>
+    <!-- conventional variants -->
+    <mapping:rbf-pum-direct
+      direction="write"
+      from="MeshOne"
+      to="MeshTwoC"
+      constraint="conservative"
+      vertices-per-cluster="30"
+      project-to-input="off"
+      polynomial="separate">
+      <basis-function:gaussian support-radius="1." />
+    </mapping:rbf-pum-direct>
+    <mapping:rbf-pum-direct
+      direction="write"
+      from="MeshOne"
+      to="MeshTwoD"
+      constraint="conservative"
+      vertices-per-cluster="30"
+      project-to-input="off"
+      polynomial="off">
+      <basis-function:gaussian support-radius="1." />
+    </mapping:rbf-pum-direct>
+  </participant>
+
+  <participant name="SolverTwo">
+    <provide-mesh name="MeshTwo" />
+    <provide-mesh name="MeshTwoB" />
+    <provide-mesh name="MeshTwoC" />
+    <provide-mesh name="MeshTwoD" />
+    <read-data name="Velocity" mesh="MeshTwo" />
+    <read-data name="Temperature" mesh="MeshTwo" />
+    <read-data name="Velocity" mesh="MeshTwoB" />
+    <read-data name="Temperature" mesh="MeshTwoB" />
+    <read-data name="Velocity" mesh="MeshTwoC" />
+    <read-data name="Temperature" mesh="MeshTwoC" />
+    <read-data name="Velocity" mesh="MeshTwoD" />
+    <read-data name="Temperature" mesh="MeshTwoD" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="2" />
+    <time-window-size value="1.0" />
+    <exchange data="Velocity" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
+    <exchange data="Temperature" mesh="MeshTwo" from="SolverOne" to="SolverTwo" />
+    <exchange data="Velocity" mesh="MeshTwoB" from="SolverOne" to="SolverTwo" />
+    <exchange data="Temperature" mesh="MeshTwoB" from="SolverOne" to="SolverTwo" />
+    <exchange data="Velocity" mesh="MeshTwoC" from="SolverOne" to="SolverTwo" />
+    <exchange data="Temperature" mesh="MeshTwoC" from="SolverOne" to="SolverTwo" />
+    <exchange data="Velocity" mesh="MeshTwoD" from="SolverOne" to="SolverTwo" />
+    <exchange data="Temperature" mesh="MeshTwoD" from="SolverOne" to="SolverTwo" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

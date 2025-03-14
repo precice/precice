@@ -67,11 +67,13 @@ private:
 
   void getValue(
       Eigen::VectorXd &value,
-      mesh::PtrData &  data);
+      mesh::PtrData &  data,
+      double           time);
 
   void getValue(
       double &       value,
-      mesh::PtrData &data);
+      mesh::PtrData &data,
+      double         time);
 };
 
 } // namespace precice::impl

@@ -13,13 +13,13 @@
 
   <participant name="SolverOne">
     <provide-mesh name="MeshOne" />
-    <receive-mesh name="MeshTwo" from="SolverTwo" direct-access="true" />
+    <receive-mesh name="MeshTwo" from="SolverTwo" api-access="true" />
     <write-data name="Velocities" mesh="MeshTwo" />
     <read-data name="Forces" mesh="MeshOne" />
   </participant>
 
   <participant name="SolverTwo">
-    <receive-mesh name="MeshOne" from="SolverOne" direct-access="true" />
+    <receive-mesh name="MeshOne" from="SolverOne" api-access="true" />
     <provide-mesh name="MeshTwo" />
     <write-data name="Forces" mesh="MeshOne" />
     <read-data name="Velocities" mesh="MeshTwo" />

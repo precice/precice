@@ -39,6 +39,8 @@ public:
   /// Returns the configured mesh with given name, or NULL.
   mesh::PtrMesh getMesh(const std::string &meshName) const;
 
+  static mesh::PtrMesh getJustInTimeMappingMesh(int dimension);
+
   void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
   void xmlEndTagCallback(

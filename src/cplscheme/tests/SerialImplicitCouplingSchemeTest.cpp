@@ -563,9 +563,9 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
   std::vector<int> validIterations = {5, 5, 5};
 
   if (context.isNamed("Participant0")) {
-    m2n->requestPrimaryRankConnection("Participant1", "Participant0");
+    m2n->requestPrimaryRankConnection("Participant1", "Participant0", "");
   } else {
-    m2n->acceptPrimaryRankConnection("Participant1", "Participant0");
+    m2n->acceptPrimaryRankConnection("Participant1", "Participant0", "");
   }
 
   runCoupling(*cplSchemeConfig.getCouplingScheme(context.name),

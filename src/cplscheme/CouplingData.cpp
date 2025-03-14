@@ -114,7 +114,13 @@ void CouplingData::setGlobalSample(const time::Sample &sample)
 
 void CouplingData::initializeWithZeroAtTime(double time)
 {
-  auto zero = time::Sample(getDimensions(), nVertices());
+  if (!hasGradient()) {
+    auto zero = time::Sample(getDimensions(), nVertices());
+    zero.setZero();
+    _data->setSampleAtTime(time, zero);
+    return;
+  }
+  auto zero = time::Sample(getDimensions(), nVertices(), meshDimensions());
   zero.setZero();
   _data->setSampleAtTime(time, zero);
 }

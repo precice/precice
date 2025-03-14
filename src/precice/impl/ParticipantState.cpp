@@ -470,4 +470,29 @@ std::string ParticipantState::hintForMeshData(std::string_view mesh, std::string
   return fmt::format(" Available data are: {}", fmt::join(localData, ", "));
 }
 
+void ParticipantState::initializeMappingDataCache(std::string_view mappingType)
+{
+  if (mappingType == "write") {
+    for (auto &context : writeDataContexts()) {
+      context.initializeMappingDataCache();
+    }
+  } else {
+    for (auto &context : readDataContexts()) {
+      context.initializeMappingDataCache();
+    }
+  }
+}
+
+void ParticipantState::configureInputMeshContext(std::string_view fromMesh, impl::MappingContext &mappingContext, mapping::Mapping::MeshRequirement requirement)
+{
+  meshContext(fromMesh).meshRequirement = std::max(meshContext(fromMesh).meshRequirement, requirement);
+  meshContext(fromMesh).fromMappingContexts.push_back(mappingContext);
+}
+
+void ParticipantState::configureOutputMeshContext(std::string_view toMesh, impl::MappingContext &mappingContext, mapping::Mapping::MeshRequirement requirement)
+{
+  meshContext(toMesh).toMappingContexts.push_back(mappingContext);
+  meshContext(toMesh).meshRequirement = std::max(meshContext(toMesh).meshRequirement, requirement);
+}
+
 } // namespace precice::impl

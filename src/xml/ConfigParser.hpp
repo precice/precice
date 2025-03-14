@@ -37,6 +37,9 @@ public:
 private:
   static precice::logging::Logger _log;
 
+  /// the hash of the last processed config
+  std::string _hash;
+
   CTagPtrVec m_AllTags;
   CTagPtrVec m_CurrentTags;
 
@@ -51,6 +54,9 @@ public:
 
   /// Reads the xml file
   int readXmlFile(std::string const &filePath);
+
+  /// returns the hash of the processed XML file
+  std::string hash() const;
 
   /**
    * @brief Connects the actual tags of an xml layer with the predefined tags
