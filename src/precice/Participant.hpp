@@ -926,7 +926,7 @@ public:
    * @pre The coordinates are within the bounding box previously defined via \ref setMeshAccessRegion(). Using coordinates
    * outside the defined bounding box will throw an error.
    *
-   * @note Only supported for conservative mapping constraints and mapping:rbf-pum-direct or mapping:nearest-neighbot.
+   * @note Only supported for conservative mapping constraints and mapping:rbf-pum-direct or mapping:nearest-neighbor.
    * @note Caution when calling this function multiple times on the same data coordinates: There is no internal check and preCICE accumulates
    * data values for conservative mappings.
    *
@@ -974,7 +974,7 @@ public:
    *
    * @post \p values contain the read data as specified in the above format.
    *
-   * @note Only supported for consistent mapping constraints and mapping:rbf-pum-direct or mapping:nearest-neighbot.
+   * @note Only supported for consistent mapping constraints and mapping:rbf-pum-direct or mapping:nearest-neighbor.
    *
    * @note The function makes use of a caching mechanism that reuses the result from the previous call
    * with the same \p relativeReadTime on each individual rank. As a result, calling the function
