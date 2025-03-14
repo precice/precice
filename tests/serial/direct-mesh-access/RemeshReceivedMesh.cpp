@@ -12,7 +12,7 @@ BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
 PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
-BOOST_AUTO_TEST_CASE(RemeshProvidedMesh)
+BOOST_AUTO_TEST_CASE(RemeshReceivedMesh)
 {
   PRECICE_TEST();
 
