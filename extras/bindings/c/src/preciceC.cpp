@@ -333,6 +333,37 @@ try {
   std::abort();
 }
 
+void precicec_writeAndMapData(
+    const char *  meshName,
+    const char *  dataName,
+    int           size,
+    const double *coordinates,
+    const double *values)
+try {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  auto coordinatesSize = size * impl->getMeshDimensions(meshName);
+  auto dataSize        = size * impl->getDataDimensions(meshName, dataName);
+  impl->writeAndMapData(meshName, dataName, {coordinates, static_cast<unsigned long>(coordinatesSize)}, {values, static_cast<unsigned long>(dataSize)});
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
+void precicec_mapAndReadData(
+    const char *  meshName,
+    const char *  dataName,
+    int           size,
+    const double *coordinates,
+    double        relativeReadTime,
+    double *      values)
+try {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  auto coordinatesSize = size * impl->getMeshDimensions(meshName);
+  auto dataSize        = size * impl->getDataDimensions(meshName, dataName);
+  impl->mapAndReadData(meshName, dataName, {coordinates, static_cast<unsigned long>(coordinatesSize)}, relativeReadTime, {values, static_cast<unsigned long>(dataSize)});
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
 int precicec_requiresGradientDataFor(const char *meshName,
                                      const char *dataName)
 try {
@@ -384,6 +415,20 @@ void precicec_getMeshVertexIDsAndCoordinates(
 try {
   auto coordinatesSize = static_cast<long unsigned>(impl->getMeshDimensions(meshName) * size);
   impl->getMeshVertexIDsAndCoordinates(meshName, {ids, static_cast<unsigned long>(size)}, {coordinates, coordinatesSize});
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
+void precicec_startProfilingSection(const char *sectionName)
+try {
+  impl->startProfilingSection(sectionName);
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
+void precicec_stopLastProfilingSection()
+try {
+  impl->stopLastProfilingSection();
 } catch (::precice::Error &e) {
   std::abort();
 }

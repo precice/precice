@@ -226,6 +226,21 @@ public:
       double                          relativeReadTime,
       ::precice::span<double>         values) const;
 
+  /// @copydoc Participant::mapAndReadData
+  void mapAndReadData(
+      std::string_view              meshName,
+      std::string_view              dataName,
+      ::precice::span<const double> coordinates,
+      double                        relativeReadTime,
+      ::precice::span<double>       values) const;
+
+  /// @copydoc Participant::writeAndMapData
+  void writeAndMapData(
+      std::string_view              meshName,
+      std::string_view              dataName,
+      ::precice::span<const double> coordinates,
+      ::precice::span<const double> values);
+
   /// @copydoc Participant::writeData
   void writeData(
       std::string_view                meshName,
@@ -255,6 +270,18 @@ public:
       std::string_view          meshName,
       ::precice::span<VertexID> ids,
       ::precice::span<double>   coordinates) const;
+
+  ///@}
+
+  /** @name User profiling
+   */
+  ///@{
+
+  /// @copydoc Participant::startProfilingSection()
+  void startProfilingSection(std::string_view eventName);
+
+  /// @copydoc Participant::stopLastProfilingSection()
+  void stopLastProfilingSection();
 
   ///@}
 
@@ -336,6 +363,9 @@ private:
 
   /// Counts the amount of samples mapped in read mappings executed in the latest advance
   int _executedReadMappings = 0;
+
+  /// The hash of the configuration file used to configure this participant
+  std::string _configHash;
 
   /**
    * @brief Configures the coupling interface from the given xml file.
@@ -472,12 +502,19 @@ private:
   /// Setup mesh watcher such as WatchPoints
   void setupWatcher();
 
+  /// Returns if a user has to define an access region for direct
+  /// mesh access and just-in-time mapping or not
+  /// Right now, that's required in parallel runs on received meshes
+  bool requiresUserDefinedAccessRegion(std::string_view meshName) const;
+
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;
   friend struct Integration::Serial::Whitebox::TestConfigurationComsol;
 
   std::unique_ptr<profiling::Event> _solverInitEvent;
   std::unique_ptr<profiling::Event> _solverAdvanceEvent;
+
+  std::vector<profiling::Event> _userEvents;
 };
 
 } // namespace impl

@@ -327,6 +327,50 @@ PRECICE_API void precicec_readData(
 
 ///@}
 
+///@name Just-in-time mapping
+///@{
+
+/**
+ * @brief Writes data using just-in-time data mapping
+ * See @see precice::Participant::writeAndMapData() and the just-in-time mapping doxygen section for more information.
+ *
+ * @param[in] meshName Name of the mesh to write and map the data to. Typically a received mesh
+ * @param[in] dataName Name of the data to field on this mesh.
+ * @param[in] size Number of vertices to write
+ * @param[in] coordinates Pointer to the coordinates where we write the data. Needs to have \p size x \ref precicec_getMeshDimensions( \p meshName ) entries
+ * @param[in] values Pointer to the data values we want to pass to preCICE. Needs  to have \p size x \ref precicec_getDataDimensions( \p meshName , \p dataName ) entries
+ *
+ * @copydoc precice::Participant::writeAndMapData()
+ */
+PRECICE_API void precicec_writeAndMapData(
+    const char *  meshName,
+    const char *  dataName,
+    int           size,
+    const double *coordinates,
+    const double *values);
+
+/**
+ * @brief Reads data using just-in-time data mapping.
+ * See @see precice::Participant::mapAndReadData() and the just-in-time mapping doxygen section for more information.
+ *
+ * @param[in] meshName Name of the mesh to write and map the data to. Typically a received mesh
+ * @param[in] dataName Name of the data to field on this mesh.
+ * @param[in] size Number of vertices to write
+ * @param [in] coordinates Pointer to the coordinates where we read the data. Needs to have \p size x \ref precicec_getMeshDimensions( \p meshName ) entries
+ * @param[in] relativeReadTime Same as in @see precice::Participant::readData()
+ * @param[in/out] values Pointer to the values to be filled by preCICE. Needs to have \p size x \ref precicec_getDataDimensions( \p meshName , \p dataName ) entries
+ *
+ * @copydoc precice::Participant::mapAndReadData()
+ */
+PRECICE_API void precicec_mapAndReadData(
+    const char *  meshName,
+    const char *  dataName,
+    int           size,
+    const double *coordinates,
+    double        relativeReadTime,
+    double *      values);
+///@}
+
 ///@name Direct mesh access
 ///@{
 
@@ -364,6 +408,17 @@ PRECICE_API void precicec_writeGradientData(
     int           size,
     const int *   valueIndices,
     const double *gradients);
+
+///@}
+
+/// @name User-defined profiling
+///@{
+
+/// @copydoc precice::Participant::startProfilingSection()
+PRECICE_API void precicec_startProfilingSection(const char *sectionName);
+
+/// @copydoc precice::Participant::stopLastProfilingSection()
+PRECICE_API void precicec_stopLastProfilingSection();
 
 ///@}
 

@@ -175,7 +175,7 @@ void ParticipantImpl::configure(
       _accessorName,
       _accessorProcessRank,
       _accessorCommunicatorSize};
-  xml::configure(config.getXMLTag(), context, configurationFileName);
+  _configHash = xml::configure(config.getXMLTag(), context, configurationFileName);
   if (_accessorProcessRank == 0) {
     PRECICE_INFO("This is preCICE version {}", PRECICE_VERSION);
     PRECICE_INFO("Revision info: {}", precice::preciceRevision);
@@ -257,6 +257,9 @@ void ParticipantImpl::initialize()
                 "Initial data has to be written to preCICE before calling initialize(). "
                 "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using the writeData() function.");
 
+  // Enforce that all user-created events are stopped to prevent incorrect nesting.
+  PRECICE_CHECK(_userEvents.empty(), "There are unstopped user defined events. Please stop them using stopLastProfilingSection() before calling initialize().");
+
   _solverInitEvent.reset();
   Event e("initialize", profiling::Fundamental, profiling::Synchronize);
 
@@ -333,7 +336,7 @@ void ParticipantImpl::setupCommunication()
     } else {
       PRECICE_DEBUG((requesting ? "Awaiting primary connection from {}" : "Establishing primary connection to {}"), bm2n.remoteName);
       bm2n.prepareEstablishment();
-      bm2n.connectPrimaryRanks();
+      bm2n.connectPrimaryRanks(_configHash);
       PRECICE_DEBUG("Established primary connection {} {}", (requesting ? "from " : "to "), bm2n.remoteName);
     }
   }
@@ -342,6 +345,7 @@ void ParticipantImpl::setupCommunication()
   PRECICE_INFO("Primary ranks are connected");
 
   Event e3("repartitioning");
+  // clears the mappings as well (see clearMappings)
   compareBoundingBoxes();
 
   PRECICE_INFO("Setting up preliminary secondary communication to coupling partner/s");
@@ -384,6 +388,9 @@ void ParticipantImpl::advance(
 {
 
   PRECICE_TRACE(computedTimeStepSize);
+
+  // Enforce that all user-created events are stopped to prevent incorrect nesting.
+  PRECICE_CHECK(_userEvents.empty(), "There are unstopped user defined events. Please stop them using stopLastProfilingSection() before calling advance().");
 
   // Events for the solver time, stopped when we enter, restarted when we leave advance
   PRECICE_ASSERT(_solverAdvanceEvent, "The advance event is created in initialize");
@@ -447,9 +454,20 @@ void ParticipantImpl::advance(
 
 void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo)
 {
+  // We only have to care about write data, in case substeps are enabled
+  // OR we are at the end of a timewindow, otherwise, we simply erase
+  // them as they have no relevance for the coupling (without time
+  // interpolation, only the time window end is relevant), the resetting
+  // happens regardless of the if-condition.
   if (reachedTimeWindowEnd || _couplingScheme->requiresSubsteps()) {
+
+    // Here, we add the written data to the waveform storage. In the
+    // mapWrittenData, we then take samples from the storage and execute
+    // the mapping using waveform samples on the (for write mappings) "to"
+    // side.
     samplizeWriteData(timeSteppedTo);
   }
+
   resetWrittenData();
 
   // Reset mapping counters here to cover subcycling
@@ -488,6 +506,16 @@ void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isT
     performDataActions({action::Action::READ_MAPPING_POST});
   }
 
+  // Required for implicit coupling
+  for (auto &context : _accessor->readDataContexts()) {
+    context.invalidateMappingCache();
+  }
+
+  // Strictly speaking, the write direction is not relevant here, but we will add it for the sake of completenss
+  for (auto &context : _accessor->writeDataContexts()) {
+    context.invalidateMappingCache();
+  }
+
   if (isTimeWindowComplete) {
     // Reset initial guesses for iterative mappings
     for (auto &context : _accessor->readDataContexts()) {
@@ -505,6 +533,23 @@ void ParticipantImpl::samplizeWriteData(double time)
 {
   // store buffered write data in sample storage and reset the buffer
   for (auto &context : _accessor->writeDataContexts()) {
+
+    // Finalize conservative write mapping, later we reset
+    // the buffer in resetWrittenData
+
+    // Note that "samplizeWriteData" operates on _providedData of the
+    // DataContext, which is for just-in-time mappings the data we write
+    // on the received mesh.
+    // For just-in-time mappings, the _providedData should contain by now
+    // the "just-in-time" mapped data. However, it would be wasteful to
+    // execute expensive parts (in particular solving the RBF systems)
+    // for each writeAndMapData call. Thus, we create a DataCache during
+    // the writeAndMapData API calls, which contains pre-processed data
+    // values. Here, we now need to finalize the just-in-time mappings,
+    // before we can add it to the waveform buffer.
+    // For now, this only applies to just-in-time write mappings
+
+    context.completeJustInTimeMapping();
     context.storeBufferedData(time);
   }
 }
@@ -530,7 +575,11 @@ void ParticipantImpl::finalize()
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.");
 
-  // Events for the solver time, finally stopped here
+  // First we gracefully stop all existing user events and finally the last solver.advance event
+  while (!_userEvents.empty()) {
+    // Ensure reverse destruction order for correct nesting
+    _userEvents.pop_back();
+  }
   _solverAdvanceEvent.reset();
 
   Event e("finalize", profiling::Fundamental);
@@ -685,7 +734,27 @@ int ParticipantImpl::getMeshVertexSize(
                 meshName, _accessor->getName());
   MeshContext &context = _accessor->usedMeshContext(meshName);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
-  return context.mesh->nVertices();
+
+  // Returns true if we have api access configured and we run in parallel and have a received mesh
+  if ((context.userDefinedAccessRegion || requiresUserDefinedAccessRegion(meshName)) && _accessor->isDirectAccessAllowed(meshName)) {
+    // filter nVertices to the actual number of vertices queried by the user
+    PRECICE_CHECK(context.userDefinedAccessRegion, "The function getMeshVertexSize was called on the received mesh \"{0}\", "
+                                                   "but no access region was defined although this is necessary for parallel runs. "
+                                                   "Please define an access region using \"setMeshAccessRegion()\" before calling \"getMeshVertexSize()\".",
+                  meshName);
+
+    auto result = mesh::countVerticesInBoundingBox(context.mesh, *context.userDefinedAccessRegion);
+
+    PRECICE_DEBUG("Filtered {} of {} vertices out on mesh {} due to the local access region. Mesh size in the access region: {}", context.mesh->nVertices() - result, context.mesh->nVertices(), meshName, result);
+    return result;
+  } else {
+    // For provided meshes and in case the api-access was not configured, we return here all vertices
+    PRECICE_WARN_IF(_accessor->isMeshReceived(meshName) && !_accessor->isDirectAccessAllowed(meshName),
+                    "You are calling \"getMeshVertexSize()\" on a received mesh without api-access enabled (<receive-mesh name=\"{0}\" ... api-access=\"false\"/>). "
+                    "Note that enabling api-access is required for this function to work properly with direct mesh access and just-in-time mappings.",
+                    meshName);
+    return context.mesh->nVertices();
+  }
 }
 
 /// @todo Currently not supported as we would need to re-compute the re-partition
@@ -1174,6 +1243,121 @@ void ParticipantImpl::readData(
   context.readValues(vertices, readTime, values);
 }
 
+void ParticipantImpl::mapAndReadData(
+    std::string_view              meshName,
+    std::string_view              dataName,
+    ::precice::span<const double> coordinates,
+    double                        relativeReadTime,
+    ::precice::span<double>       values) const
+{
+  PRECICE_EXPERIMENTAL_API();
+  PRECICE_TRACE(meshName, dataName, coordinates.size(), relativeReadTime);
+  PRECICE_CHECK(_state != State::Constructed, "mapAndReadData(...) cannot be called before initialize().");
+  PRECICE_CHECK(_state != State::Finalized, "mapAndReadData(...) cannot be called after finalize().");
+  PRECICE_CHECK(math::smallerEquals(relativeReadTime, _couplingScheme->getNextTimeStepMaxSize()), "readData(...) cannot sample data outside of current time window.");
+  PRECICE_CHECK(relativeReadTime >= 0, "mapAndReadData(...) cannot sample data before the current time.");
+  PRECICE_CHECK(isCouplingOngoing() || math::equals(relativeReadTime, 0.0), "Calling mapAndReadData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only data for relativeReadTime = 0 is available. Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.", relativeReadTime);
+
+  PRECICE_REQUIRE_DATA_READ(meshName, dataName);
+  PRECICE_VALIDATE_DATA(coordinates.begin(), coordinates.size());
+
+  PRECICE_CHECK(_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName),
+                "This participant attempteded to map and read data (via \"mapAndReadData\") from mesh \"{0}\", "
+                "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
+                "mapAndReadData({0}, ...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
+                meshName);
+  // If an access region is required, we have to check its existence
+  bool requiresBB = requiresUserDefinedAccessRegion(meshName);
+  PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->meshContext(meshName).userDefinedAccessRegion),
+                "The function \"mapAndReadData\" was called on mesh \"{0}\", "
+                "but no access region was defined although this is necessary for parallel runs. "
+                "Please define an access region using \"setMeshAccessRegion()\" before calling \"mapAndReadData()\".",
+                meshName);
+
+  PRECICE_CHECK(!_accessor->meshContext(meshName).mesh->empty(), "This participant tries to mapAndRead data values for data \"{0}\" on mesh \"{1}\", but the mesh \"{1}\" is empty within the defined access region on this rank. "
+                                                                 "How should the provided data values be read? Please make sure the mesh \"{1}\" is non-empty within the access region.",
+                dataName, meshName);
+
+  // Inconsistent sizes will be handled below
+  if (coordinates.empty() && values.empty()) {
+    return;
+  }
+
+  // Note that meshName refers to a remote mesh
+  ReadDataContext &dataContext = _accessor->readDataContext(meshName, dataName);
+  const auto       dataDims    = dataContext.getDataDimensions();
+  const auto       dim         = dataContext.getSpatialDimensions();
+  const auto       nVertices   = (coordinates.size() / dim);
+  MeshContext &    context     = _accessor->meshContext(meshName);
+
+  // Check that the vertex is actually within the defined access region
+  context.checkVerticesInsideAccessRegion(coordinates, dim, "mapAndReadData");
+
+  // Make use of the read data context
+  PRECICE_CHECK(nVertices * dataDims == values.size(),
+                "Input sizes are inconsistent attempting to mapAndRead {}D data \"{}\" from mesh \"{}\". "
+                "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
+                dataDims, dataName, meshName,
+                nVertices, values.size(), nVertices * dataDims, dataDims, nVertices);
+
+  double readTime = _couplingScheme->getTime() + relativeReadTime;
+  dataContext.mapAndReadValues(coordinates, readTime, values);
+}
+
+void ParticipantImpl::writeAndMapData(
+    std::string_view              meshName,
+    std::string_view              dataName,
+    ::precice::span<const double> coordinates,
+    ::precice::span<const double> values)
+{
+  PRECICE_EXPERIMENTAL_API();
+  PRECICE_TRACE(meshName, dataName, coordinates.size());
+  PRECICE_CHECK(_state != State::Finalized, "writeAndMapData(...) cannot be called after finalize().");
+  PRECICE_CHECK(_state == State::Constructed || (_state == State::Initialized && isCouplingOngoing()), "Calling writeAndMapData(...) is forbidden if coupling is not ongoing, because the data you are trying to write will not be used anymore. You can fix this by always calling writeAndMapData(...) before the advance(...) call in your simulation loop or by using Participant::isCouplingOngoing() to implement a safeguard.");
+  PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
+
+  PRECICE_VALIDATE_DATA(coordinates.begin(), coordinates.size());
+  PRECICE_VALIDATE_DATA(values.data(), values.size());
+  PRECICE_CHECK(_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName),
+                "This participant attempteded to map and read data (via \"writeAndMapData\") from mesh \"{0}\", "
+                "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
+                "writeAndMapData({0}, ...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
+                meshName);
+  // If an access region is required, we have to check its existence
+  bool requiresBB = requiresUserDefinedAccessRegion(meshName);
+  PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->meshContext(meshName).userDefinedAccessRegion),
+                "The function \"writeAndMapData\" was called on mesh \"{0}\", "
+                "but no access region was defined although this is necessary for parallel runs. "
+                "Please define an access region using \"setMeshAccessRegion()\" before calling \"writeAndMapData()\".",
+                meshName);
+
+  // Inconsistent sizes will be handled below
+  if (coordinates.empty() && values.empty()) {
+    return;
+  }
+
+  // Note that meshName refers here typically to a remote mesh
+  WriteDataContext &dataContext = _accessor->writeDataContext(meshName, dataName);
+  const auto        dataDims    = dataContext.getDataDimensions();
+  const auto        dim         = dataContext.getSpatialDimensions();
+  const auto        nVertices   = (coordinates.size() / dim);
+  MeshContext &     context     = _accessor->meshContext(meshName);
+
+  // Check that the vertex is actually within the defined access region
+  context.checkVerticesInsideAccessRegion(coordinates, dim, "writeAndMapData");
+
+  PRECICE_CHECK(nVertices * dataDims == values.size(),
+                "Input sizes are inconsistent attempting to write {}D data \"{}\" to mesh \"{}\". "
+                "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
+                dataDims, dataName, meshName,
+                nVertices, values.size(), nVertices * dataDims, dataDims, nVertices);
+
+  PRECICE_CHECK(!context.mesh->empty(), "This participant tries to mapAndWrite data values for data \"{0}\" on mesh \"{1}\", but the mesh \"{1}\" is empty within the defined access region on this rank. "
+                                        "Where should the provided data go? Please make sure the mesh \"{1}\" is non-empty within the access region.",
+                dataName, meshName);
+  dataContext.writeAndMapValues(coordinates, values);
+}
+
 void ParticipantImpl::writeGradientData(
     std::string_view                meshName,
     std::string_view                dataName,
@@ -1229,13 +1413,18 @@ void ParticipantImpl::setMeshAccessRegion(
 {
   PRECICE_TRACE(meshName, boundingBox.size());
   PRECICE_REQUIRE_MESH_USE(meshName);
+  PRECICE_CHECK(_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName),
+                "This participant attempteded to set an access region (via \"setMeshAccessRegion\") on mesh \"{0}\", "
+                "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
+                "setMeshAccessRegion(...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
+                meshName);
   PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().");
   PRECICE_CHECK(_state != State::Initialized, "setMeshAccessRegion() needs to be called before initialize().");
 
   // Get the related mesh
   MeshContext &context = _accessor->meshContext(meshName);
 
-  PRECICE_CHECK(!context.accessRegionDefined, "A mesh access region was already defined for mesh \"{}\". setMeshAccessRegion may only be called once per mesh.", context.mesh->getName());
+  PRECICE_CHECK(!context.userDefinedAccessRegion, "A mesh access region was already defined for mesh \"{}\". setMeshAccessRegion may only be called once per mesh.", context.mesh->getName());
   mesh::PtrMesh mesh(context.mesh);
   int           dim = mesh->getDimensions();
   PRECICE_CHECK(boundingBox.size() == static_cast<unsigned long>(dim) * 2,
@@ -1254,11 +1443,9 @@ void ParticipantImpl::setMeshAccessRegion(
     bounds[2 * d + 1] = boundingBox[2 * d + 1];
   }
   // Create a bounding box
-  mesh::BoundingBox providedBoundingBox(bounds);
+  context.userDefinedAccessRegion = std::make_shared<mesh::BoundingBox>(bounds);
   // Expand the mesh associated bounding box
-  mesh->expandBoundingBox(providedBoundingBox);
-  // and set a flag so that we know the function was called
-  context.accessRegionDefined = true;
+  mesh->expandBoundingBox(*context.userDefinedAccessRegion.get());
 }
 
 void ParticipantImpl::getMeshVertexIDsAndCoordinates(
@@ -1268,6 +1455,19 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
 {
   PRECICE_TRACE(meshName, ids.size(), coordinates.size());
   PRECICE_REQUIRE_MESH_USE(meshName);
+  PRECICE_CHECK(_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName),
+                "This participant attempteded to get mesh vertex IDs and coordinates (via \"getMeshVertexIDsAndCoordinates\") from mesh \"{0}\", "
+                "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
+                "getMeshVertexIDsAndCoordinates(...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
+                meshName);
+  // If an access region is required, we have to check its existence
+  bool requiresBB = requiresUserDefinedAccessRegion(meshName);
+  PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->meshContext(meshName).userDefinedAccessRegion),
+                "The function \"getMeshVertexIDsAndCoordinates\" was called on mesh \"{0}\", "
+                "but no access region was defined although this is necessary for parallel runs. "
+                "Please define an access region using \"setMeshAccessRegion()\" before calling \"getMeshVertexIDsAndCoordinates()\".",
+                meshName);
+
   PRECICE_DEBUG("Get {} mesh vertices with IDs", ids.size());
 
   // Check, if the requested mesh data has already been received. Otherwise, the function call doesn't make any sense
@@ -1278,11 +1478,16 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
   if (ids.empty() && coordinates.empty()) {
     return;
   }
-  const MeshContext & context = _accessor->meshContext(meshName);
-  const mesh::PtrMesh mesh(context.mesh);
 
-  const auto meshSize = mesh->nVertices();
-  const auto meshDims = mesh->getDimensions();
+  Event e{fmt::format("getMeshVertexIDsAndCoordinates.{}", meshName), profiling::Fundamental};
+
+  const MeshContext &context = _accessor->meshContext(meshName);
+
+  auto       filteredVertices = context.filterVerticesToLocalAccessRegion(requiresBB);
+  const auto meshSize         = filteredVertices.size();
+
+  const mesh::PtrMesh mesh(context.mesh);
+  const auto          meshDims = mesh->getDimensions();
   PRECICE_CHECK(ids.size() == meshSize,
                 "Output size is incorrect attempting to get vertex ids of {}D mesh \"{}\". "
                 "You passed {} vertices indices, but we expected {}. "
@@ -1295,16 +1500,16 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
                 "Use getMeshVertexSize(\"{}\") and getMeshDimensions(\"{}\") to receive the required amount components",
                 meshDims, meshName, coordinates.size(), expectedCoordinatesSize, meshSize, meshDims, meshName, meshName);
 
-  PRECICE_CHECK(ids.size() <= meshSize, "The queried size exceeds the number of available points.");
-  Event e{fmt::format("getMeshVertexIDsAndCoordinates.{}", meshName), profiling::Fundamental};
+  PRECICE_ASSERT(ids.size() <= mesh->nVertices(), "The queried size exceeds the number of available points.");
 
   Eigen::Map<Eigen::MatrixXd> posMatrix{
       coordinates.data(), mesh->getDimensions(), static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
 
   for (unsigned long i = 0; i < ids.size(); i++) {
-    PRECICE_ASSERT(mesh->isValidVertexID(i), i, meshSize);
-    ids[i]           = mesh->vertex(i).getID();
-    posMatrix.col(i) = mesh->vertex(i).getCoords();
+    auto localID = filteredVertices[i].get().getID();
+    PRECICE_ASSERT(mesh->isValidVertexID(localID), i, localID);
+    ids[i]           = localID;
+    posMatrix.col(i) = filteredVertices[i].get().getCoords();
   }
 }
 
@@ -1472,7 +1677,7 @@ void ParticipantImpl::computePartitions()
 void ParticipantImpl::computeMappings(std::vector<MappingContext> &contexts, const std::string &mappingType)
 {
   PRECICE_TRACE();
-  using namespace mapping;
+  bool anyMappingChanged = false;
   for (impl::MappingContext &context : contexts) {
     if (not context.mapping->hasComputedMapping()) {
       PRECICE_INFO_IF(context.configuredWithAliasTag,
@@ -1481,7 +1686,11 @@ void ParticipantImpl::computeMappings(std::vector<MappingContext> &contexts, con
       PRECICE_INFO("Computing \"{}\" mapping from mesh \"{}\" to mesh \"{}\" in \"{}\" direction.",
                    context.mapping->getName(), context.mapping->getInputMesh()->getName(), context.mapping->getOutputMesh()->getName(), mappingType);
       context.mapping->computeMapping();
+      anyMappingChanged = true;
     }
+  }
+  if (anyMappingChanged) {
+    _accessor->initializeMappingDataCache(mappingType);
   }
 }
 
@@ -1609,7 +1818,8 @@ void ParticipantImpl::resetWrittenData()
 {
   PRECICE_TRACE();
   for (auto &context : _accessor->writeDataContexts()) {
-    context.resetBuffer();
+    // reset the buffered data here
+    context.resetBufferedData();
   }
 }
 
@@ -1711,6 +1921,11 @@ void ParticipantImpl::closeCommunicationChannels(CloseChannels close)
   }
 }
 
+bool ParticipantImpl::requiresUserDefinedAccessRegion(std::string_view meshName) const
+{
+  return _accessor->isMeshReceived(meshName) && utils::IntraComm::isParallel();
+}
+
 const mesh::Mesh &ParticipantImpl::mesh(const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
@@ -1773,6 +1988,17 @@ bool ParticipantImpl::reinitHandshake(bool requestReinit) const
     utils::IntraComm::broadcast(swarmReinitRequired);
     return swarmReinitRequired;
   }
+}
+
+void ParticipantImpl::startProfilingSection(std::string_view sectionName)
+{
+  _userEvents.emplace_back(sectionName, profiling::Fundamental);
+}
+
+void ParticipantImpl::stopLastProfilingSection()
+{
+  PRECICE_CHECK(!_userEvents.empty(), "There is no user-started event to stop.");
+  _userEvents.pop_back();
 }
 
 } // namespace precice::impl

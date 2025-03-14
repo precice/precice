@@ -81,9 +81,11 @@ int main(int argc, char **argv)
     dt = precicec_getMaxTimeStepSize();
     precicec_readData(meshName, readDataName, numberOfVertices, vertexIDs, dt, readData);
 
+    precicec_startProfilingSection("Solve");
     for (int i = 0; i < numberOfVertices * dimensions; i++) {
       writeData[i] = readData[i] + 1;
     }
+    precicec_stopLastProfilingSection();
 
     precicec_writeData(meshName, writeDataName, numberOfVertices, vertexIDs, writeData);
 
