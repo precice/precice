@@ -215,6 +215,8 @@ inline void runResetInput(testing::TestContext &context)
           .initialize()
           .write({1.01, 1.02})
           .advance()
+          .resetMesh()
+          .setVertices({2.0, y, 3.0, y})
           .write({1.11, 1.12})
           .advance()
           .finalize();
