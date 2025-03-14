@@ -97,6 +97,64 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
 }
 
 PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(ResetBoundingBox)
+{
+  PRECICE_TEST();
+  // First test 2D mesh
+  mesh::Mesh mesh2D("2D Testmesh", 2, testing::nextMeshID());
+  {
+    Eigen::Vector2d coords0(2, 0);
+    Eigen::Vector2d coords1(-1, 4);
+    Eigen::Vector2d coords2(0, 1);
+
+    mesh2D.createVertex(coords0);
+    mesh2D.createVertex(coords1);
+    mesh2D.createVertex(coords2);
+    mesh2D.computeBoundingBox();
+  }
+
+  const mesh::BoundingBox &bBox2D = mesh2D.getBoundingBox();
+  mesh::BoundingBox        referenceBox2D({-1.0, 2.0,
+                                    0.0, 4.0});
+
+  BOOST_TEST(bBox2D.getDimension() == 2);
+  BOOST_TEST(referenceBox2D == bBox2D);
+
+  // The dimension remains
+  mesh2D.resetBoundingBox();
+  BOOST_TEST(bBox2D.getDimension() == 2);
+  mesh::BoundingBox resetBox2D(bBox2D.getDimension());
+  // Test that we reset the box
+  BOOST_TEST(resetBox2D == bBox2D);
+
+  // Now the 3D case
+  mesh::Mesh mesh3D("3D Testmesh", 3, testing::nextMeshID());
+  {
+    Eigen::Vector3d coords0(2, 0, -3);
+    Eigen::Vector3d coords1(-1, 4, 8);
+    Eigen::Vector3d coords2(0, 1, -2);
+    Eigen::Vector3d coords3(3.5, 2, -2);
+    mesh3D.createVertex(coords0);
+    mesh3D.createVertex(coords1);
+    mesh3D.createVertex(coords2);
+    mesh3D.createVertex(coords3);
+  }
+
+  mesh3D.computeBoundingBox();
+  mesh::BoundingBox bBox3D = mesh3D.getBoundingBox();
+  mesh::BoundingBox referenceBox3D({-1.0, 3.5,
+                                    0.0, 4.0,
+                                    -3.0, 8.0});
+
+  BOOST_TEST(bBox3D.getDimension() == 3);
+  BOOST_TEST(referenceBox3D == bBox3D);
+  mesh3D.resetBoundingBox();
+  mesh::BoundingBox resetBox3D(bBox3D.getDimension());
+  // Test that we reset the box
+  BOOST_TEST(resetBox3D == bBox3D);
+}
+
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Demonstration)
 {
   PRECICE_TEST();
