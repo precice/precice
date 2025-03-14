@@ -776,13 +776,14 @@ void ParticipantImpl::resetMesh(
 
   PRECICE_DEBUG("Clear mesh positions for mesh \"{}\"", context.mesh->getName());
   _meshLock.unlock(meshName);
-  if (_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName)) {
-    MeshContext &context = _accessor->meshContext(meshName);
-    context.userDefinedAccessRegion.reset();
-    context.mesh->resetBoundingBox();
-  } else {
-    context.mesh->clear();
-  }
+  context.mesh->clear();
+}
+
+void ParticipantImpl::resetMeshAccessRegion(std::string_view meshName)
+{
+  PRECICE_EXPERIMENTAL_API();
+  PRECICE_CHECK(_allowsRemeshing, "Cannot reset access region. This feature needs to be enabled using <precice-configuration experimental=\"1\" allow-remeshing=\"1\">.");
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before resetMesh().");
 }
 
 VertexID ParticipantImpl::setMeshVertex(
