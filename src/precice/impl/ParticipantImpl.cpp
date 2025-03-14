@@ -782,8 +782,20 @@ void ParticipantImpl::resetMesh(
 void ParticipantImpl::resetMeshAccessRegion(std::string_view meshName)
 {
   PRECICE_EXPERIMENTAL_API();
-  PRECICE_CHECK(_allowsRemeshing, "Cannot reset access region. This feature needs to be enabled using <precice-configuration experimental=\"1\" allow-remeshing=\"1\">.");
-  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before resetMesh().");
+  PRECICE_CHECK(_allowsRemeshing, "Cannot reset access region. This feature needs to be enabled in the precice configuration file using <precice-configuration experimental=\"1\" allow-remeshing=\"1\">.");
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before resetMeshAccessRegion().");
+
+  PRECICE_CHECK(_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName),
+                "This participant attempteded to reset the mesh access region (via \"resetMeshAccessRegion\") on mesh \"{0}\", "
+                "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
+                "resetMeshAccessRegion({0}) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
+                meshName);
+
+  MeshContext &context = _accessor->meshContext(meshName);
+  PRECICE_WARN_IF(!context.userDefinedAccessRegion, "This participant called \"resetMeshAccessRegion({0})\", but a mesh access region on mesh \"{0}\" was not defined.", meshName);
+  context.userDefinedAccessRegion.reset();
+  context.mesh->resetBoundingBox();
+  _meshLock.unlock(meshName);
 }
 
 VertexID ParticipantImpl::setMeshVertex(
