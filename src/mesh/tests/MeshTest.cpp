@@ -141,8 +141,8 @@ BOOST_AUTO_TEST_CASE(ResetBoundingBox)
   }
 
   mesh3D.computeBoundingBox();
-  mesh::BoundingBox bBox3D = mesh3D.getBoundingBox();
-  mesh::BoundingBox referenceBox3D({-1.0, 3.5,
+  const mesh::BoundingBox &bBox3D = mesh3D.getBoundingBox();
+  mesh::BoundingBox        referenceBox3D({-1.0, 3.5,
                                     0.0, 4.0,
                                     -3.0, 8.0});
 
