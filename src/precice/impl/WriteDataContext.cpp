@@ -110,17 +110,16 @@ void WriteDataContext::resizeBufferTo(int nVertices)
   if (_providedData->hasGradient()) {
     const SizeType spaceDimensions = getSpatialDimensions();
 
-    const SizeType expectedColumnSize = expectedSize * getDataDimensions();
-    const auto     actualColumnSize   = static_cast<SizeType>(_writeDataBuffer.gradients.cols());
+    const auto actualColumnSize = static_cast<SizeType>(_writeDataBuffer.gradients.cols());
 
     // Shrink Buffer
-    if (expectedColumnSize < actualColumnSize) {
-      _writeDataBuffer.gradients.resize(spaceDimensions, expectedColumnSize);
+    if (expectedSize < actualColumnSize) {
+      _writeDataBuffer.gradients.resize(spaceDimensions, expectedSize);
     }
 
     // Enlarge Buffer
-    if (expectedColumnSize > actualColumnSize) {
-      const auto columnLeftToAllocate = expectedColumnSize - actualColumnSize;
+    if (expectedSize > actualColumnSize) {
+      const auto columnLeftToAllocate = expectedSize - actualColumnSize;
       utils::append(_writeDataBuffer.gradients, Eigen::MatrixXd(Eigen::MatrixXd::Zero(spaceDimensions, columnLeftToAllocate)));
     }
     PRECICE_DEBUG("Gradient Data {} now has {} x {} values", getDataName(), _writeDataBuffer.gradients.rows(), _writeDataBuffer.gradients.cols());
