@@ -88,7 +88,8 @@ BOOST_AUTO_TEST_CASE(ExplicitWritePUM)
       } else if (time == 2) {
         // Quadratic filling for writeData2
         std::generate(writeData.begin(), writeData.end(), [n = 0]() mutable {
-          return -28.0 + 0.1 * (n * n++); // Quadratic pattern, n^2 scaled by 0.1
+          auto old = n++;
+          return -28.0 + 0.1 * (old * old); // Quadratic pattern, n^2 scaled by 0.1
         });
         // vectorData2 with quadratic and linear patterns
         for (int i = 0; i < meshSize; ++i) {

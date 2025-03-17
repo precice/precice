@@ -107,11 +107,13 @@ BOOST_AUTO_TEST_CASE(ImplicitWithWaveform)
       BOOST_TEST(referenceReadData1 == readData1, boost::test_tools::per_element());
       // Some quadratic filling including contributions from the iteration and timeWindow
       std::generate(writeData.begin(), writeData.end(), [n = 0, timeWindow, iterations]() mutable {
-        return 28 * n * n++ + timeWindow - iterations * n;
+        auto old = n++;
+        return 28 * old * old + timeWindow - iterations * n;
       });
 
       std::generate(writeData1.begin(), writeData1.end(), [n = 0, timeWindow, iterations]() mutable {
-        return 4 * n++ + timeWindow * n - iterations;
+        auto old = n++;
+        return 4 * old + timeWindow * n - iterations;
       });
       // Just in time variant
       interface.writeAndMapData(otherMeshName, writeDataName, positions, writeData);
@@ -184,10 +186,12 @@ BOOST_AUTO_TEST_CASE(ImplicitWithWaveform)
 
       // Some quadratic filling including contributions from the iteration and timeWindow
       std::generate(writeData.begin(), writeData.end(), [n = 0, timeWindow, iterations]() mutable {
-        return 0.8 * n * n++ + timeWindow - iterations * n;
+        auto old = n++;
+        return 0.8 * old * old + timeWindow - iterations * n;
       });
       std::generate(writeData1.begin(), writeData1.end(), [n = 0, timeWindow, iterations]() mutable {
-        return 1e-3 * n * n * n++ + timeWindow - iterations * n;
+        auto old = n++;
+        return 1e-3 * old * old * old + timeWindow - iterations * n;
       });
 
       interface.writeData(meshID, writeDataID, ids, writeData);

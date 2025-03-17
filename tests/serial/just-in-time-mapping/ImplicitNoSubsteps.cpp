@@ -75,7 +75,8 @@ BOOST_AUTO_TEST_CASE(ImplicitNoSubsteps)
 
       // Some quadratic filling including contributions from the iteration and timeWindow
       std::generate(writeData.begin(), writeData.end(), [n = 0, timeWindow, iterations]() mutable {
-        return 28 * n * n++ + timeWindow - iterations * n;
+        auto old = n++;
+        return 28 * old * old + timeWindow - iterations * n;
       });
 
       // Just in time variant
@@ -139,7 +140,8 @@ BOOST_AUTO_TEST_CASE(ImplicitNoSubsteps)
 
       // Some quadratic filling including contributions from the iteration and timeWindow
       std::generate(writeData.begin(), writeData.end(), [n = 0, timeWindow, iterations]() mutable {
-        return 0.8 * n * n++ + timeWindow - iterations * n;
+        auto old = n++;
+        return 0.8 * old * old + timeWindow - iterations * n;
       });
 
       interface.writeData(meshID, writeDataID, ids, writeData);
