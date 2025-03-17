@@ -88,11 +88,13 @@ BOOST_AUTO_TEST_CASE(ImplicitPUM)
       BOOST_TEST(referenceReadData1 == readData1, boost::test_tools::per_element());
       // Some quadratic filling including contributions from the iteration and timeWindow
       std::generate(writeData.begin(), writeData.end(), [n = 0, timeWindow, iterations, r = context.rank]() mutable {
-        return 28 * n * n++ + timeWindow - iterations * n + r;
+        auto old = n++;
+        return 28 * old * old++ + timeWindow - iterations * n + r;
       });
 
       std::generate(writeData1.begin(), writeData1.end(), [n = 0, timeWindow, iterations, r = context.rank]() mutable {
-        return 4 * n++ + timeWindow * n - iterations + r;
+        auto old = n++;
+        return 4 * old + timeWindow * n - iterations + r;
       });
       // Just in time variant
       interface.writeAndMapData(otherMeshName, writeDataName, positions, writeData);
@@ -167,10 +169,12 @@ BOOST_AUTO_TEST_CASE(ImplicitPUM)
 
       // Some quadratic filling including contributions from the iteration and timeWindow
       std::generate(writeData.begin(), writeData.end(), [n = 0, timeWindow, iterations, r = context.rank]() mutable {
-        return 0.8 * n * n++ + timeWindow - iterations * n + r;
+        auto old = n++;
+        return 0.8 * old * old + timeWindow - iterations * n + r;
       });
       std::generate(writeData1.begin(), writeData1.end(), [n = 0, timeWindow, iterations, r = context.rank]() mutable {
-        return 1e-3 * n * n * n++ + timeWindow - iterations * n + r;
+        auto old = n++;
+        return 1e-3 * old * old * old + timeWindow - iterations * n + r;
       });
 
       interface.writeData(meshID, writeDataID, ids, writeData);
