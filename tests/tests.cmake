@@ -230,6 +230,7 @@ target_sources(testprecice
     tests/serial/direct-mesh-access/ExplicitReadNoFlag.cpp
     tests/serial/direct-mesh-access/Implicit.cpp
     tests/serial/direct-mesh-access/RemeshReceivedMesh.cpp
+    tests/serial/direct-mesh-access/ResetMeshAccessRegion.cpp
     tests/serial/explicit/TestExplicitMPI.cpp
     tests/serial/explicit/TestExplicitMPISingle.cpp
     tests/serial/explicit/TestExplicitSockets.cpp
