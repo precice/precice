@@ -16,6 +16,7 @@
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Filter.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
 #include "partition/Partition.hpp"
 #include "precice/impl/Types.hpp"
@@ -100,22 +101,19 @@ void ReceivedPartition::compute()
     if (_allowDirectAccess) {
       // Prepare the bounding boxes
       prepareBoundingBox();
-      // Filter out vertices not laying in the bounding box
-      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
+
       // To discuss: maybe check this somewhere in the ParticipantImpl, as we have now a similar check for the parallel case
       PRECICE_CHECK(!_bb.empty(), "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setMeshAccessRegion with valid data?", _mesh->getName());
-      unsigned int nFilteredVertices = 0;
-      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { if(!_bb.contains(v))
-              ++nFilteredVertices;
-          return _bb.contains(v); });
+
+      // In serial mode, we keep the vertices, but filter them in the API functions
+      const auto   nVerticesInBox    = mesh::countVerticesInBoundingBox(_mesh, _bb);
+      unsigned int nFilteredVertices = nVerticesInBox - _mesh->nVertices();
 
       PRECICE_WARN_IF(nFilteredVertices > 0,
                       "{} vertices on mesh \"{}\" have been filtered out due to the defined bounding box in \"setMeshAccessRegion\" "
-                      "in serial mode. Associated data values of the filtered vertices will be filled with zero values in order to provide valid data for other participants when reading data.",
+                      "in serial mode. For direct-mesh access via \"getMeshVertexCoordinatesAndIDs()\", these vertices are not accessible. "
+                      "Their data values will internally be filled with zero values in order to provide valid data for other participants when reading data.",
                       nFilteredVertices, _mesh->getName());
-
-      _mesh->clear();
-      _mesh->addMesh(filteredMesh);
     }
 
     mesh::Mesh::VertexDistribution vertexDistribution;
