@@ -1,7 +1,5 @@
 #include "WriteDataContext.hpp"
 
-#include "utils/EigenHelperFunctions.hpp"
-
 namespace precice::impl {
 
 logging::Logger WriteDataContext::_log{"impl::WriteDataContext"};
