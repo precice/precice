@@ -3,6 +3,10 @@
 #
 target_sources(testprecice
     PRIVATE
+    tests/fundamental/DifferentConfigs.cpp
+    tests/fundamental/profiling/NotAllStopped.cpp
+    tests/fundamental/profiling/NotStoppedAtFinalize.cpp
+    tests/fundamental/profiling/UserProfiling.cpp
     tests/geometric-multiscale/AxialGeoMultiscale.cpp
     tests/geometric-multiscale/RadialGeoMultiscale.cpp
     tests/parallel/CouplingOnLine.cpp
@@ -41,6 +45,10 @@ target_sources(testprecice
     tests/parallel/gather-scatter/EnforceGatherScatterEmptyReceivedPrimaryRank.cpp
     tests/parallel/gather-scatter/helpers.cpp
     tests/parallel/gather-scatter/helpers.hpp
+    tests/parallel/just-in-time-mapping/EmptyPartition.cpp
+    tests/parallel/just-in-time-mapping/ExplicitRead.cpp
+    tests/parallel/just-in-time-mapping/ExplicitWrite.cpp
+    tests/parallel/just-in-time-mapping/ImplicitPUM.cpp
     tests/parallel/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/parallel/lifecycle/ConstructOnly.cpp
     tests/parallel/lifecycle/Full.cpp
@@ -215,6 +223,7 @@ target_sources(testprecice
     tests/serial/direct-mesh-access/Explicit.cpp
     tests/serial/direct-mesh-access/ExplicitAndMapping.cpp
     tests/serial/direct-mesh-access/ExplicitRead.cpp
+    tests/serial/direct-mesh-access/ExplicitReadNoFlag.cpp
     tests/serial/direct-mesh-access/Implicit.cpp
     tests/serial/explicit/TestExplicitMPI.cpp
     tests/serial/explicit/TestExplicitMPISingle.cpp
@@ -228,6 +237,21 @@ target_sources(testprecice
     tests/serial/initialize-data/WriteMapping.cpp
     tests/serial/initialize-data/helpers.cpp
     tests/serial/initialize-data/helpers.hpp
+    tests/serial/just-in-time-mapping/ExplicitMultipleReadWrite.cpp
+    tests/serial/just-in-time-mapping/ExplicitNoReadWrite.cpp
+    tests/serial/just-in-time-mapping/ExplicitRead.cpp
+    tests/serial/just-in-time-mapping/ExplicitReadPUM.cpp
+    tests/serial/just-in-time-mapping/ExplicitWrite.cpp
+    tests/serial/just-in-time-mapping/ExplicitWritePUM.cpp
+    tests/serial/just-in-time-mapping/Implicit.cpp
+    tests/serial/just-in-time-mapping/ImplicitDataInitialization.cpp
+    tests/serial/just-in-time-mapping/ImplicitNoSubsteps.cpp
+    tests/serial/just-in-time-mapping/ImplicitWithWaveform.cpp
+    tests/serial/just-in-time-mapping/MappingWithDirectAccessRead.cpp
+    tests/serial/just-in-time-mapping/MappingWithDirectAccessWrite.cpp
+    tests/serial/just-in-time-mapping/SingleWrite.cpp
+    tests/serial/just-in-time-mapping/UnsupportedConstraint.cpp
+    tests/serial/just-in-time-mapping/UnsupportedMapping.cpp
     tests/serial/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/serial/lifecycle/ConstructNoConfig.cpp
     tests/serial/lifecycle/ConstructNullComm.cpp
@@ -439,9 +463,12 @@ target_sources(testprecice
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSubcyclingThird.cpp
     tests/serial/time/implicit/serial-coupling/WaveformSubcyclingWithConstantAcceleration.cpp
     tests/serial/time/implicit/serial-coupling/WaveformSubcyclingWithConstantAccelerationNoInit.cpp
-    tests/serial/watch-integral/WatchIntegralScaleAndNoScale.cpp
-    tests/serial/watch-integral/helpers.cpp
-    tests/serial/watch-integral/helpers.hpp
+    tests/serial/watch/WatchIntegralScaleAndNoScaleParallel.cpp
+    tests/serial/watch/WatchIntegralScaleAndNoScaleSerial.cpp
+    tests/serial/watch/WatchPointParallel.cpp
+    tests/serial/watch/WatchPointSerial.cpp
+    tests/serial/watch/helpers.cpp
+    tests/serial/watch/helpers.hpp
     tests/serial/whitebox/TestConfigurationComsol.cpp
     tests/serial/whitebox/TestConfigurationPeano.cpp
     tests/serial/whitebox/TestExplicitWithDataScaling.cpp

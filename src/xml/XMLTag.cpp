@@ -281,7 +281,7 @@ XMLTag getRootTag()
   return XMLTag(listener, "configuration", XMLTag::OCCUR_ONCE);
 }
 
-void configure(
+std::string configure(
     XMLTag &                                  tag,
     const precice::xml::ConfigurationContext &context,
     std::string_view                          configurationFilename)
@@ -295,6 +295,8 @@ void configure(
   precice::xml::ConfigParser p(configurationFilename, context, std::make_shared<XMLTag>(tag));
 
   root.addSubtag(tag);
+
+  return p.hash();
 }
 
 std::string_view XMLTag::getOccurrenceString(XMLTag::Occurrence occurrence)

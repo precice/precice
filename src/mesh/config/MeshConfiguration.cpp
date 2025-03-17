@@ -99,6 +99,11 @@ const PtrDataConfiguration &MeshConfiguration::getDataConfiguration() const
   return _dataConfig;
 }
 
+mesh::PtrMesh MeshConfiguration::getJustInTimeMappingMesh(int dimension)
+{
+  return std::make_shared<mesh::Mesh>("(just-in-time mapping)", dimension, mesh::Mesh::MESH_ID_UNDEFINED, true);
+}
+
 void MeshConfiguration::addMesh(
     const mesh::PtrMesh &mesh)
 {

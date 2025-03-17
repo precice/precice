@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <string_view>
+
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 
@@ -13,7 +15,7 @@ public:
   void prepareEstablishment();
 
   /// Connect the Primary Ranks of the M2N
-  void connectPrimaryRanks();
+  void connectPrimaryRanks(std::string_view configHash);
 
   /// Connect the Secondary ranks of the M2N
   void connectSecondaryRanks();

@@ -27,10 +27,12 @@ namespace precice::mesh {
 Mesh::Mesh(
     std::string name,
     int         dimensions,
-    MeshID      id)
+    MeshID      id,
+    bool        isJustInTime)
     : _name(std::move(name)),
       _dimensions(dimensions),
       _id(id),
+      _isJustInTime(isJustInTime),
       _boundingBox(dimensions),
       _index(*this)
 {
