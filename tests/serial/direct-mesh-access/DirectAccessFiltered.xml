@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:vector name="Velocities" />
+  <data:vector name="Forces" />
+
+  <mesh name="MeshOne" dimensions="2">
+    <use-data name="Forces" />
+    <use-data name="Velocities" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <provide-mesh name="MeshOne" />
+    <write-data name="Velocities" mesh="MeshOne" />
+    <read-data name="Forces" mesh="MeshOne" />
+  </participant>
+
+  <participant name="SolverTwo">
+    <receive-mesh name="MeshOne" from="SolverOne" safety-factor="0" api-access="true" />
+    <read-data name="Velocities" mesh="MeshOne" />
+    <write-data name="Forces" mesh="MeshOne" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="3" />
+    <time-window-size value="1.0" />
+    <exchange data="Velocities" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
+    <exchange data="Forces" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
+  </coupling-scheme:parallel-explicit>
+</precice-configuration>

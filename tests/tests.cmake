@@ -217,6 +217,7 @@ target_sources(testprecice
     tests/serial/convergence-measures/testConvergenceMeasures2.cpp
     tests/serial/convergence-measures/testConvergenceMeasures3.cpp
     tests/serial/convergence-measures/testConvergenceMeasures4.cpp
+    tests/serial/direct-mesh-access/DirectAccessFiltered.cpp
     tests/serial/direct-mesh-access/DirectAccessReadWrite.cpp
     tests/serial/direct-mesh-access/DirectAccessWithDataInitialization.cpp
     tests/serial/direct-mesh-access/DirectAccessWithWaveform.cpp
