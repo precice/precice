@@ -8,6 +8,7 @@
 #include <functional>
 #include <iterator>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <ostream>
 #include <sstream>
@@ -419,8 +420,11 @@ void ParticipantImpl::advance(
 
   if (_allowsRemeshing) {
     if (isAtWindowEnd) {
-      int totalMeshChanges = getTotalMeshChanges();
-      if (reinitHandshake(totalMeshChanges)) {
+      auto totalMeshChanges = getTotalMeshChanges();
+      clearStamplesOfChangedMeshes(totalMeshChanges);
+
+      int sumOfChanges = std::accumulate(totalMeshChanges.begin(), totalMeshChanges.end(), 0);
+      if (reinitHandshake(sumOfChanges)) {
         reinitialize();
       }
     } else {
@@ -1942,18 +1946,39 @@ ParticipantImpl::MappedSamples ParticipantImpl::mappedSamples() const
 
 // Reinitialization
 
-int ParticipantImpl::getTotalMeshChanges() const
+ParticipantImpl::MeshChanges ParticipantImpl::getTotalMeshChanges() const
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_allowsRemeshing);
   Event e("remesh.exchangeLocalMeshChanges", profiling::Synchronize);
-  int   localMeshesChanges = _meshLock.countUnlocked();
-  PRECICE_DEBUG("Mesh changes of rank: {}", localMeshesChanges);
 
-  int totalMeshesChanges = 0;
-  utils::IntraComm::allreduceSum(localMeshesChanges, totalMeshesChanges);
-  PRECICE_DEBUG("Mesh changes of participant: {}", totalMeshesChanges);
-  return totalMeshesChanges;
+  // Gather local changes
+  std::vector<double> localMeshChanges;
+  for (auto context : _accessor->usedMeshContexts()) {
+    localMeshChanges.push_back(_meshLock.check(context->mesh->getName()) ? 0.0 : 1.0);
+  }
+  PRECICE_DEBUG("Mesh changes of rank: {}", localMeshChanges);
+
+  // TODO implement int version of allreduceSum
+  std::vector<double> totalMeshChanges(localMeshChanges.size(), 0.0);
+  utils::IntraComm::allreduceSum(localMeshChanges, totalMeshChanges);
+
+  // Convert the doubles to int
+  MeshChanges totalMeshChangesI(totalMeshChanges.begin(), totalMeshChanges.end());
+  PRECICE_DEBUG("Mesh changes of participant: {}", totalMeshChangesI);
+  return totalMeshChangesI;
+}
+
+void ParticipantImpl::clearStamplesOfChangedMeshes(MeshChanges totalMeshChanges)
+{
+  auto meshContexts = _accessor->usedMeshContexts();
+  for (std::size_t i = 0; i < totalMeshChanges.size(); ++i) {
+    if (totalMeshChanges[i] > 0.0) {
+      for (auto d : meshContexts[i]->mesh->data()) {
+        d->timeStepsStorage().clear();
+      }
+    }
+  }
 }
 
 bool ParticipantImpl::reinitHandshake(bool requestReinit) const
