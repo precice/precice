@@ -4,6 +4,8 @@
 target_sources(testprecice
     PRIVATE
     tests/fundamental/DifferentConfigs.cpp
+    tests/fundamental/initial-data/InterleavedCreation.cpp
+    tests/fundamental/initial-data/InterleavedCreationWithGradients.cpp
     tests/fundamental/profiling/NotAllStopped.cpp
     tests/fundamental/profiling/NotStoppedAtFinalize.cpp
     tests/fundamental/profiling/UserProfiling.cpp
@@ -217,6 +219,7 @@ target_sources(testprecice
     tests/serial/convergence-measures/testConvergenceMeasures2.cpp
     tests/serial/convergence-measures/testConvergenceMeasures3.cpp
     tests/serial/convergence-measures/testConvergenceMeasures4.cpp
+    tests/serial/direct-mesh-access/DirectAccessFiltered.cpp
     tests/serial/direct-mesh-access/DirectAccessReadWrite.cpp
     tests/serial/direct-mesh-access/DirectAccessWithDataInitialization.cpp
     tests/serial/direct-mesh-access/DirectAccessWithWaveform.cpp

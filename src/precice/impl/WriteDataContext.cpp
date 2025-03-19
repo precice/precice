@@ -1,7 +1,5 @@
 #include "WriteDataContext.hpp"
 
-#include "utils/EigenHelperFunctions.hpp"
-
 namespace precice::impl {
 
 logging::Logger WriteDataContext::_log{"impl::WriteDataContext"};
@@ -95,35 +93,27 @@ void WriteDataContext::resizeBufferTo(int nVertices)
   // Allocate data values
   const SizeType expectedSize = nVertices * getDataDimensions();
   const auto     actualSize   = static_cast<SizeType>(_writeDataBuffer.values.size());
-  // Shrink Buffer
-  if (expectedSize < actualSize) {
-    _writeDataBuffer.values.resize(expectedSize);
-  }
+  const auto     change       = expectedSize - actualSize;
+
+  _writeDataBuffer.values.conservativeResize(expectedSize);
   // Enlarge Buffer
-  if (expectedSize > actualSize) {
-    const auto leftToAllocate = expectedSize - actualSize;
-    utils::append(_writeDataBuffer.values, Eigen::VectorXd(Eigen::VectorXd::Zero(leftToAllocate)));
+  if (change > 0) {
+    _writeDataBuffer.values.tail(change).setZero();
   }
   PRECICE_DEBUG("Data {} now has {} values", getDataName(), _writeDataBuffer.values.size());
 
-  // Allocate gradient data values
-  if (_providedData->hasGradient()) {
-    const SizeType spaceDimensions = getSpatialDimensions();
-
-    const auto actualColumnSize = static_cast<SizeType>(_writeDataBuffer.gradients.cols());
-
-    // Shrink Buffer
-    if (expectedSize < actualColumnSize) {
-      _writeDataBuffer.gradients.resize(spaceDimensions, expectedSize);
-    }
-
-    // Enlarge Buffer
-    if (expectedSize > actualColumnSize) {
-      const auto columnLeftToAllocate = expectedSize - actualColumnSize;
-      utils::append(_writeDataBuffer.gradients, Eigen::MatrixXd(Eigen::MatrixXd::Zero(spaceDimensions, columnLeftToAllocate)));
-    }
-    PRECICE_DEBUG("Gradient Data {} now has {} x {} values", getDataName(), _writeDataBuffer.gradients.rows(), _writeDataBuffer.gradients.cols());
+  if (!_providedData->hasGradient()) {
+    return;
   }
+
+  // Allocate gradient data values
+  _writeDataBuffer.gradients.conservativeResize(getSpatialDimensions(), expectedSize);
+
+  // Enlarge Buffer
+  if (change > 0) {
+    _writeDataBuffer.gradients.rightCols(change).setZero();
+  }
+  PRECICE_DEBUG("Gradient Data {} now has {} x {} values", getDataName(), _writeDataBuffer.gradients.rows(), _writeDataBuffer.gradients.cols());
 }
 
 void WriteDataContext::storeBufferedData(double currentTime)

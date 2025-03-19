@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration experimental="true">
+  <data:scalar name="DA" />
+
+  <mesh name="MA" dimensions="2">
+    <use-data name="DA" />
+  </mesh>
+
+  <mesh name="MB" dimensions="2">
+    <use-data name="DA" />
+  </mesh>
+
+  <participant name="PA">
+    <provide-mesh name="MA" />
+    <receive-mesh name="MB" from="PB" />
+    <write-data name="DA" mesh="MA" />
+    <mapping:nearest-neighbor-gradient
+      direction="write"
+      from="MA"
+      to="MB"
+      constraint="consistent" />
+  </participant>
+
+  <participant name="PB">
+    <provide-mesh name="MB" />
+    <read-data name="DA" mesh="MB" />
+  </participant>
+
+  <m2n:sockets acceptor="PA" connector="PB" />
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="PA" second="PB" />
+    <max-time-windows value="1" />
+    <time-window-size value="1.0" />
+    <exchange data="DA" mesh="MB" from="PA" to="PB" initialize="true" />
+  </coupling-scheme:parallel-explicit>
+</precice-configuration>

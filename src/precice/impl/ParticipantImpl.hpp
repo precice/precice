@@ -481,9 +481,9 @@ private:
   void trimSendDataAfter(double time);
 
   /** Allreduce of the amount of changed meshes on each rank.
-   * @return the total amount of changed meshes of all ranks on each rank
+   * @return a vector of the size of meshcontexts which contain >0.0 if the mesh was changed or 0.0 otherwise
    */
-  int getTotalMeshChanges() const;
+  std::vector<double> getTotalMeshChanges() const;
 
   /** Exchanges request to remesh with all connecting participants.
    *
