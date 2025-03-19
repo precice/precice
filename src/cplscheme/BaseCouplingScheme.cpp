@@ -866,13 +866,8 @@ void BaseCouplingScheme::determineInitialReceive(DataMap &receiveData)
 
 bool BaseCouplingScheme::anyDataRequiresInitialization(DataMap &dataMap) const
 {
-  /// @todo implement this function using https://en.cppreference.com/w/cpp/algorithm/all_any_none_of
-  for (const auto &data : dataMap | boost::adaptors::map_values) {
-    if (data->requiresInitialization) {
-      return true;
-    }
-  }
-  return false;
+  return std::any_of(dataMap.begin(), dataMap.end(),
+                     [](auto const &map) { return map.second->requiresInitialization; });
 }
 
 void BaseCouplingScheme::doImplicitStep()
