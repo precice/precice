@@ -8,6 +8,7 @@
 #include <functional>
 #include <iterator>
 #include <memory>
+#include <numeric>
 #include <optional>
 #include <ostream>
 #include <sstream>
@@ -419,8 +420,19 @@ void ParticipantImpl::advance(
 
   if (_allowsRemeshing) {
     if (isAtWindowEnd) {
-      int totalMeshChanges = getTotalMeshChanges();
-      if (reinitHandshake(totalMeshChanges)) {
+      auto totalMeshChanges = getTotalMeshChanges();
+      auto meshContexts     = _accessor->usedMeshContexts();
+
+      for (std::size_t i = 0; i < totalMeshChanges.size(); ++i) {
+        if (totalMeshChanges[i] > 0.0) {
+          for (auto d : meshContexts[i]->mesh->data()) {
+            d->timeStepsStorage().clear();
+          }
+        }
+      }
+
+      int sum = std::accumulate(totalMeshChanges.begin(), totalMeshChanges.end(), 0.0);
+      if (reinitHandshake(sum)) {
         reinitialize();
       }
     } else {
@@ -1942,18 +1954,26 @@ ParticipantImpl::MappedSamples ParticipantImpl::mappedSamples() const
 
 // Reinitialization
 
-int ParticipantImpl::getTotalMeshChanges() const
+std::vector<double> ParticipantImpl::getTotalMeshChanges() const
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_allowsRemeshing);
   Event e("remesh.exchangeLocalMeshChanges", profiling::Synchronize);
-  int   localMeshesChanges = _meshLock.countUnlocked();
-  PRECICE_DEBUG("Mesh changes of rank: {}", localMeshesChanges);
 
-  int totalMeshesChanges = 0;
-  utils::IntraComm::allreduceSum(localMeshesChanges, totalMeshesChanges);
-  PRECICE_DEBUG("Mesh changes of participant: {}", totalMeshesChanges);
-  return totalMeshesChanges;
+  // TODO implement such an all reduce sum for int
+  std::vector<double> localMeshChanges;
+  auto                meshContexts = _accessor->usedMeshContexts();
+  localMeshChanges.resize(meshContexts.size(), 0.0);
+  std::transform(meshContexts.begin(), meshContexts.end(), localMeshChanges.begin(), [&](MeshContext *context) {
+    return this->_meshLock.check(context->mesh->getName()) ? 0.0 : 1.0;
+  });
+  PRECICE_DEBUG("Mesh changes of rank: {}", localMeshChanges);
+
+  std::vector<double> totalMeshChanges(localMeshChanges.size(), 0.0);
+  utils::IntraComm::allreduceSum(localMeshChanges, totalMeshChanges);
+
+  PRECICE_DEBUG("Mesh changes of participant: {}", totalMeshChanges);
+  return totalMeshChanges;
 }
 
 bool ParticipantImpl::reinitHandshake(bool requestReinit) const
