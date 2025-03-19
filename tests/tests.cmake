@@ -5,6 +5,7 @@ target_sources(testprecice
     PRIVATE
     tests/fundamental/DifferentConfigs.cpp
     tests/fundamental/initial-data/InterleavedCreation.cpp
+    tests/fundamental/initial-data/InterleavedCreationWithGradients.cpp
     tests/fundamental/profiling/NotAllStopped.cpp
     tests/fundamental/profiling/NotStoppedAtFinalize.cpp
     tests/fundamental/profiling/UserProfiling.cpp
