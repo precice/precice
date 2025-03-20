@@ -1992,6 +1992,9 @@ bool ParticipantImpl::reinitHandshake(bool requestReinit) const
 
 void ParticipantImpl::startProfilingSection(std::string_view sectionName)
 {
+  PRECICE_CHECK(std::find(sectionName.begin(), sectionName.end(), '/') == sectionName.end(),
+                "The provided section name \"{}\" may not contain a forward-slash \"/\"",
+                sectionName);
   _userEvents.emplace_back(sectionName, profiling::Fundamental);
 }
 

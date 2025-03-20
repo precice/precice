@@ -1190,7 +1190,7 @@ public:
    *
    * All active sections must be stopped before calling initialize() or advance().
    *
-   * \param[in] sectionName the name of the profiling section to start
+   * \param[in] sectionName the name of the profiling section to start. The name may not contain forward slashes `/`.
    *
    */
   void startProfilingSection(::precice::string_view sectionName);
