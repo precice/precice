@@ -288,7 +288,7 @@ protected:
    *
    * @return PtrCouplingData pointer to CouplingData owned by the CouplingScheme
    */
-  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool exchangeSubsteps, CouplingData::Direction direction);
+  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool directAccessData, bool exchangeSubsteps, CouplingData::Direction direction);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme

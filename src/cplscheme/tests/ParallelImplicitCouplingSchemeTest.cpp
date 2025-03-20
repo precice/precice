@@ -104,6 +104,7 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   int          sendDataIndex              = -1;
   int          receiveDataIndex           = -1;
   bool         dataRequiresInitialization = false;
+  bool         isDirectAccessData         = false;
   if (context.isNamed(nameParticipant0)) {
     sendDataIndex              = dataID0;
     receiveDataIndex           = dataID1;
@@ -120,9 +121,9 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   ParallelCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, BaseCouplingScheme::Implicit, minIterations, maxIterations);
 
   using Fixture = testing::ParallelCouplingSchemeFixture;
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization, true);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization, isDirectAccessData, true);
   CouplingData *sendCouplingData = Fixture::getSendData(cplScheme, sendDataIndex);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, dataRequiresInitialization, true);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, dataRequiresInitialization, isDirectAccessData, true);
   CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
   cplScheme.determineInitialDataExchange();
 

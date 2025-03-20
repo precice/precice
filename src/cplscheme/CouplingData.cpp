@@ -12,9 +12,11 @@ CouplingData::CouplingData(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
     bool          requiresInitialization,
+    bool          isDirectAccessWrittenData,
     bool          exchangeSubsteps,
     Direction     direction)
     : requiresInitialization(requiresInitialization),
+      isDirectAccessWrittenData(isDirectAccessWrittenData),
       _mesh(std::move(mesh)),
       _data(std::move(data)),
       _previousTimeStepsStorage(),
@@ -37,14 +39,14 @@ int CouplingData::getDimensions() const
 int CouplingData::getSize() const
 {
   // @todo this correct implementation breaks a ton of tests that don't define vertices of a test mesh
-  //return _mesh->nVertices() * getDimensions();
+  // return _mesh->nVertices() * getDimensions();
   return sample().values.size();
 }
 
 int CouplingData::nVertices() const
 {
   // @todo this correct implementation breaks a ton of tests that don't define vertices of a test mesh
-  //return _mesh->nVertices();
+  // return _mesh->nVertices();
   return sample().values.size() / getDimensions();
 }
 
