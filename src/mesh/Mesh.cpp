@@ -263,9 +263,9 @@ void Mesh::clear()
   _tetrahedra.clear();
   _index.clear();
 
+  clearDataStamples();
   for (mesh::PtrData &data : _data) {
     data->values().resize(0);
-    data->timeStepsStorage().clear();
   }
 }
 
@@ -277,6 +277,13 @@ void Mesh::clearPartitioning()
   _vertexDistribution.clear();
   _vertexOffsets.clear();
   _globalNumberOfVertices = 0;
+}
+
+void Mesh::clearDataStamples()
+{
+  for (mesh::PtrData &data : _data) {
+    data->timeStepsStorage().clear();
+  }
 }
 
 bool Mesh::isPartitionEmpty(Rank rank) const
