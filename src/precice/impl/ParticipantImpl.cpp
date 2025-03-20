@@ -257,6 +257,10 @@ void ParticipantImpl::initialize()
                 "Initial data has to be written to preCICE before calling initialize(). "
                 "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using the writeData() function.");
 
+  for (auto &context : _accessor->writeDataContexts()) {
+    PRECICE_CHECK(!_accessor->isDirectAccessAllowed(context.getMeshName()), "Writing data via API access (configuration <write-data ... mesh=\"{}\") is not (yet) supported with remeshing", context.getMeshName());
+  }
+
   // Enforce that all user-created events are stopped to prevent incorrect nesting.
   PRECICE_CHECK(_userEvents.empty(), "There are unstopped user defined events. Please stop them using stopLastProfilingSection() before calling initialize().");
 
