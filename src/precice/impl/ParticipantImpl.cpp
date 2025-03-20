@@ -1669,7 +1669,7 @@ void ParticipantImpl::computePartitions()
     const auto requiredSize = meshContext->mesh->nVertices();
     for (auto &context : _accessor->writeDataContexts()) {
       if (context.getMeshName() == meshContext->mesh->getName()) {
-        context.resizeBufferTo(requiredSize, true);
+        context.resizeBufferTo(requiredSize, !meshContext->provideMesh);
       }
     }
   }
