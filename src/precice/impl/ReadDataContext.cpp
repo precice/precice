@@ -14,6 +14,8 @@ ReadDataContext::ReadDataContext(
 void ReadDataContext::appendMappingConfiguration(MappingContext &mappingContext, const MeshContext &meshContext)
 {
   PRECICE_ASSERT(!hasReadMapping(), "The read data context must be unique. Otherwise we would have an ambiguous read data operation on the user side.");
+  // The read mapping must be unique, but having read and write in the same context is not possible either
+  PRECICE_ASSERT(_mappingContexts.empty());
   PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
   mesh::PtrData data = meshContext.mesh->data(getDataName());
   PRECICE_ASSERT(data != _providedData, "Data the read mapping is mapping from needs to be different from _providedData");
@@ -36,6 +38,26 @@ void ReadDataContext::readValues(::precice::span<const VertexID> vertices, doubl
   for (int i = 0; i < static_cast<int>(vertices.size()); ++i) {
     outputData.col(i) = localData.col(vertices[i]);
   }
+}
+
+void ReadDataContext::mapAndReadValues(::precice::span<const double> coordinates, double readTime, ::precice::span<double> values)
+{
+  PRECICE_TRACE(getMeshName(), getDataName(), coordinates.size(), values.size(), readTime);
+  PRECICE_ASSERT(mappingCache);
+  PRECICE_ASSERT(justInTimeMapping);
+
+  // First, check if we have the current readTime already in our MappingDataCache
+  if (!mappingCache->hasDataAtTimeStamp(readTime)) {
+    // if not, sample our waveform and update the cache
+    justInTimeMapping->updateMappingDataCache(*mappingCache.get(), _providedData->sampleAtTime(readTime).values());
+    mappingCache->setTimeStamp(readTime);
+  }
+  // Now we are certain that our cache contains the data at readTime
+  Eigen::Map<const Eigen::MatrixXd> coords(coordinates.data(), getSpatialDimensions(), coordinates.size() / getSpatialDimensions());
+  Eigen::Map<Eigen::MatrixXd>       target(values.data(), getDataDimensions(), values.size() / getDataDimensions());
+
+  // ...hence, we forward the coordinates, cache and the target to the just-in-time mapping
+  justInTimeMapping->mapConsistentAt(coords, *mappingCache.get(), target);
 }
 
 int ReadDataContext::getWaveformDegree() const

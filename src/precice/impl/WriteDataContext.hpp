@@ -25,8 +25,8 @@ public:
       mesh::PtrData data,
       mesh::PtrMesh mesh);
 
-  /// Resets writeDataBuffer
-  void resetBuffer();
+  /// Resets the writeDataBuffer and the mapping data cache
+  void resetBufferedData();
 
   /**
    * @brief Removes stample before \ref time and (if mapping exists) fromData or toData
@@ -34,6 +34,39 @@ public:
    * @param time the point in time after which to remove samples
    */
   void trimAfter(double time);
+
+  /**
+   * @brief Forwards the just-in-time mapping API call for writing data to the data context
+   *
+   * writeAndMapValues then forwards the arguments along with a target buffer
+   * to the \p justInTimeMapping this DataContext holds. The function always forwards both,
+   * the \p _writeDataBuffer and the \p mappingCache. The \p justInTimeMapping then decides,
+   * whether the data can directly be stored in the actual target \p _writeDataBuffer or whether
+   * intermediate results are stored in the \p mappingCache.
+   *
+   * If written data is stored in the \p mappingCache, the function \p completeJustInTimeMapping
+   * is responsible for evaluating the cache and storing the result in the \p _writeDataBuffer.
+   *
+   * See also the documentation of the impl::MappingDataCache class.
+   *
+   * @param[in] coordinates Provided by the user through the API function
+   * @param[in] values Containing the write data values given by the user
+   */
+  void writeAndMapValues(::precice::span<const double> coordinates, ::precice::span<const double> values);
+
+  /**
+   * @brief Evaluates the MappingDataCache and stores the result in the \p _writeDataBuffer
+   *
+   * If a just-in-time mapping stores intermediate results in the \p mappingCache, we need
+   * to finalize the mapping in the cache and store the mapped values in the \p _writeDataBuffer.
+   *
+   * See also \p writeAndMapValues and the documentation of Mapping::completeJustInTimeMapping as well as
+   * the impl::MappingDataCache class for more details.
+   *
+   * This function needs to be called before calling \p storeBufferedData, which stores the buffer
+   * into the time step storage.
+   */
+  void completeJustInTimeMapping();
 
   /**
    * @brief Store values in _writeDataBuffer

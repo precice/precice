@@ -40,10 +40,8 @@ void Acceleration::applyRelaxation(double omega, DataMap &cplData, double window
         auto  oldGradients = couplingData.getPreviousGradientsAtTime(stample.timestamp); // IMPORTANT DETAIL: The interpolation that we use for resampling does not necessarily have to be the same interpolation as the interpolation the user accesses via read-data. (But probably it is easier to just use the same)
         gradients          = gradients * omega + oldGradients * (1.0 - omega);
       }
+      couplingData.setGlobalSample(stample.sample); // @todo try to remove, currently we have to set CouplingData::_data::_sample to the final stample in the storage. Should not be needed anymore when https://github.com/precice/precice/issues/1645 is resolved.
     }
-    // @todo remove
-    // update the "sample"
-    couplingData.sample() = couplingData.timeStepsStorage().last().sample;
   }
 }
 } // namespace precice::acceleration

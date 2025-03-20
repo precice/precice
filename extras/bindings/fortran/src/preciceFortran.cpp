@@ -434,6 +434,53 @@ try {
   std::abort();
 }
 
+void precicef_write_and_map_data_(
+    const char *meshName,
+    const char *dataName,
+    const int * size,
+    double *    coordinates,
+    double *    values,
+    int         meshNameLength,
+    int         dataNameLength)
+try {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  auto strippedMeshName = precice::impl::strippedStringView(meshName, meshNameLength);
+  auto strippedDataName = precice::impl::strippedStringView(dataName, dataNameLength);
+  auto coordinatesSize  = *size * impl->getMeshDimensions(strippedMeshName);
+  auto dataSize         = *size * impl->getDataDimensions(strippedMeshName, strippedDataName);
+  impl->writeAndMapData(strippedMeshName,
+                        strippedDataName,
+                        {coordinates, static_cast<unsigned long>(coordinatesSize)},
+                        {values, static_cast<unsigned long>(dataSize)});
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
+void precicef_map_and_read_data_(
+    const char *  meshName,
+    const char *  dataName,
+    const int *   size,
+    double *      coordinates,
+    const double *relativeReadTime,
+    double *      values,
+    int           meshNameLength,
+    int           dataNameLength)
+try {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  auto strippedMeshName = precice::impl::strippedStringView(meshName, meshNameLength);
+  auto strippedDataName = precice::impl::strippedStringView(dataName, dataNameLength);
+  auto coordinatesSize  = *size * impl->getMeshDimensions(strippedMeshName);
+  auto dataSize         = *size * impl->getDataDimensions(strippedMeshName, strippedDataName);
+  impl->mapAndReadData(
+      strippedMeshName,
+      strippedDataName,
+      {coordinates, static_cast<unsigned long>(coordinatesSize)},
+      *relativeReadTime,
+      {values, static_cast<unsigned long>(dataSize)});
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
 void precicef_set_mesh_access_region_(
     const char *  meshName,
     const double *boundingBox,
@@ -458,6 +505,25 @@ try {
   auto sv              = precice::impl::strippedStringView(meshName, meshNameLength);
   auto coordinatesSize = static_cast<unsigned long>(impl->getMeshDimensions(sv) * size);
   impl->getMeshVertexIDsAndCoordinates(sv, {ids, static_cast<unsigned long>(size)}, {coordinates, coordinatesSize});
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
+void precicef_start_profiling_section_(
+    const char *sectionName,
+    int         sectionNameLength)
+try {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  auto sv = precice::impl::strippedStringView(sectionName, sectionNameLength);
+  impl->startProfilingSection(sv);
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
+void precicef_stop_last_profiling_section_()
+try {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->stopLastProfilingSection();
 } catch (::precice::Error &e) {
   std::abort();
 }

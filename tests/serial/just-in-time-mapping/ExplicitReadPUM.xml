@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration experimental="true">
+  <data:scalar name="Temperature" />
+  <data:vector name="Velocity" />
+
+  <mesh name="MeshOne" dimensions="2">
+    <use-data name="Temperature" />
+    <use-data name="Velocity" />
+  </mesh>
+
+  <mesh name="MeshTwo" dimensions="2">
+    <use-data name="Temperature" />
+    <use-data name="Velocity" />
+  </mesh>
+
+  <mesh name="MeshOneB" dimensions="2">
+    <use-data name="Temperature" />
+    <use-data name="Velocity" />
+  </mesh>
+
+  <mesh name="MeshTwoB" dimensions="2">
+    <use-data name="Temperature" />
+    <use-data name="Velocity" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <provide-mesh name="MeshOne" />
+    <provide-mesh name="MeshOneB" />
+    <receive-mesh name="MeshTwo" from="SolverTwo" api-access="true" />
+    <receive-mesh name="MeshTwoB" from="SolverTwo" api-access="true" />
+    <read-data name="Temperature" mesh="MeshTwo" />
+    <read-data name="Temperature" mesh="MeshOne" />
+    <read-data name="Velocity" mesh="MeshTwo" />
+    <read-data name="Velocity" mesh="MeshOne" />
+    <read-data name="Temperature" mesh="MeshTwoB" />
+    <read-data name="Temperature" mesh="MeshOneB" />
+    <read-data name="Velocity" mesh="MeshTwoB" />
+    <read-data name="Velocity" mesh="MeshOneB" />
+    <!-- PUM with polynomial for scalar and vector data -->
+    <mapping:rbf-pum-direct
+      direction="read"
+      from="MeshTwo"
+      constraint="consistent"
+      vertices-per-cluster="30"
+      project-to-input="off"
+      polynomial="separate">
+      <basis-function:compact-polynomial-c6 support-radius="1." />
+    </mapping:rbf-pum-direct>
+    <mapping:rbf-pum-direct
+      direction="read"
+      from="MeshTwo"
+      to="MeshOne"
+      constraint="consistent"
+      vertices-per-cluster="30"
+      project-to-input="off"
+      polynomial="separate">
+      <basis-function:compact-polynomial-c6 support-radius="1." />
+    </mapping:rbf-pum-direct>
+    <!-- PUM without polynomial for scalar and vector data -->
+    <mapping:rbf-pum-direct
+      direction="read"
+      from="MeshTwoB"
+      constraint="consistent"
+      vertices-per-cluster="30"
+      project-to-input="off"
+      polynomial="off">
+      <basis-function:compact-polynomial-c6 support-radius="1." />
+    </mapping:rbf-pum-direct>
+    <mapping:rbf-pum-direct
+      direction="read"
+      from="MeshTwoB"
+      to="MeshOneB"
+      constraint="consistent"
+      vertices-per-cluster="30"
+      project-to-input="off"
+      polynomial="off">
+      <basis-function:compact-polynomial-c6 support-radius="1." />
+    </mapping:rbf-pum-direct>
+  </participant>
+
+  <participant name="SolverTwo">
+    <provide-mesh name="MeshTwo" />
+    <provide-mesh name="MeshTwoB" />
+    <write-data name="Temperature" mesh="MeshTwo" />
+    <write-data name="Velocity" mesh="MeshTwo" />
+    <write-data name="Temperature" mesh="MeshTwoB" />
+    <write-data name="Velocity" mesh="MeshTwoB" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="SolverTwo" second="SolverOne" />
+    <max-time-windows value="2" />
+    <time-window-size value="1.0" />
+    <exchange data="Temperature" mesh="MeshTwo" from="SolverTwo" to="SolverOne" />
+    <exchange data="Velocity" mesh="MeshTwo" from="SolverTwo" to="SolverOne" />
+    <exchange data="Temperature" mesh="MeshTwoB" from="SolverTwo" to="SolverOne" />
+    <exchange data="Velocity" mesh="MeshTwoB" from="SolverTwo" to="SolverOne" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

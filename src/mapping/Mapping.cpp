@@ -3,6 +3,7 @@
 #include <ostream>
 #include "math/differences.hpp"
 #include "mesh/Utils.hpp"
+#include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
@@ -242,7 +243,7 @@ void Mapping::scaleConsistentMapping(const Eigen::VectorXd &input, Eigen::Vector
         math::greater(std::abs(consistency), 0.0),
         "Failed to fulfill consistency constraint of component {} for scaled-consistent mapping from mesh \"{}\" to mesh \"{}\". Consistency difference between input and scaled output is \"{}\".", i, this->input()->getName(), this->output()->getName(), consistency);
   }
-} // namespace mapping
+}
 
 bool Mapping::hasConstraint(const Constraint &constraint) const
 {
@@ -257,6 +258,64 @@ bool Mapping::hasComputedMapping() const
 bool Mapping::isScaledConsistent() const
 {
   return (hasConstraint(SCALED_CONSISTENT_SURFACE) || hasConstraint(SCALED_CONSISTENT_VOLUME));
+}
+
+bool Mapping::isJustInTimeMapping() const
+{
+  PRECICE_ASSERT(_input);
+  PRECICE_ASSERT(_output);
+  return _input->isJustInTime() || _output->isJustInTime();
+}
+
+void Mapping::updateMappingDataCache(impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::VectorXd> &in)
+{
+  precice::profiling::Event e("map.updateMappingDataCache.From" + input()->getName());
+  // By default, we simply store the time interpolant of the last function call,
+  // such that we don't need to evaluate the waveform relaxation for each provided
+  // coordinate. That's already sufficient for NN, as we cannot precompute anything
+  // more specific (as opposed to PUM or (albeit not implemented) RBF interpolation,
+  // where we can further compute the RBF coefficients belonging to the time sample)
+  cache.inData.sample.values = in;
+}
+
+void Mapping::initializeMappingDataCache(impl::MappingDataCache &cache)
+{
+  // Do nothing by default, only relevant for just-in-time mapping using PUM, but we need the interface.
+  // We don't enforce its implementation through the (virtual) base class,
+  // but instead provide an empty default implementation and implement it
+  // only in derived classes where necessary.
+
+  // Note that an implementation for NN is not required, and this function is for NN a NOOP
+  // as opposed to the default of, e.g., mapConsistentAt, where we abort in the default setting
+}
+
+void Mapping::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> target)
+{
+  // Function for just-in-time mapping. Only implemented for PUM and NN.
+  // We don't enforce its implementation through the (virtual) base class,
+  // but instead provide an abortive default implementation and implement it
+  // only in derived classes where deemed useful
+  PRECICE_ASSERT(false, "Not implemented");
+}
+
+void Mapping::completeJustInTimeMapping(impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer)
+{
+  // Do nothing by default, only relevant for just-in-time mapping using PUM, but we need the interface.
+  // We don't enforce its implementation through the (virtual) base class,
+  // but instead provide an empty default implementation and implement it
+  // only in derived classes where necessary.
+
+  // Note that an implementation for NN is not required, and this function is for NN a NOOP
+  // as opposed to the default of mapConsistentAt, where we abort in the default setting
+}
+
+void Mapping::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
+{
+  // Function for just-in-time mapping. Only implemented for PUM and NN.
+  // We don't enforce its implementation through the (virtual) base class,
+  // but instead provide an abortive default implementation and implement it
+  // only in derived classes where deemed useful
+  PRECICE_ASSERT(false, "Not implemented");
 }
 
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs)

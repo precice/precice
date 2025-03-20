@@ -66,7 +66,8 @@ public:
   Mesh(
       std::string name,
       int         dimensions,
-      MeshID      id);
+      MeshID      id,
+      bool        isJustInTime = false);
 
   /// Mutable access to a vertex by VertexID
   Vertex &vertex(VertexID id);
@@ -325,6 +326,11 @@ public:
     return _index;
   }
 
+  bool isJustInTime() const
+  {
+    return _isJustInTime;
+  }
+
   /**
    * Removes all duplicates and generates implicit primitives.
    *
@@ -388,6 +394,9 @@ private:
    * In the m2n package, this is used to create the final communication channels.
    */
   CommunicationMap _communicationMap;
+
+  /// for just-in-time mapping, we need an artificial mesh, which we can use
+  bool _isJustInTime = false;
 
   BoundingBox _boundingBox;
 

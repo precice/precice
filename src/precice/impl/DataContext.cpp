@@ -82,6 +82,26 @@ void DataContext::appendMapping(MappingContext mappingContext)
   PRECICE_ASSERT(mappingContext.toData->getName() == getDataName());
 }
 
+void DataContext::addJustInTimeMapping(MappingContext &mappingContext, MeshContext &meshContext)
+{
+  PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
+  PRECICE_ASSERT(justInTimeMapping == nullptr);
+  PRECICE_ASSERT(mappingCache == nullptr);
+  mesh::PtrData data = meshContext.mesh->data(getDataName());
+  // the mapping itself has even for just-in-time mapping no notion about the data
+  // maybe remove the data pointer here or set them to nullptr
+  // the data access happens through the API functions
+  mappingContext.toData   = data;
+  mappingContext.fromData = data;
+
+  PRECICE_ASSERT(mappingContext.fromData);
+  PRECICE_ASSERT(mappingContext.toData);
+
+  PRECICE_ASSERT(mappingContext.fromData == _providedData || mappingContext.toData == _providedData, "Either fromData or toData has to equal _providedData.");
+  mappingCache      = std::make_unique<mapping::impl::MappingDataCache>(data->getDimensions());
+  justInTimeMapping = mappingContext.mapping;
+}
+
 bool DataContext::hasMapping() const
 {
   return hasReadMapping() || hasWriteMapping();
