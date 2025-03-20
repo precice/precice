@@ -1974,9 +1974,7 @@ void ParticipantImpl::clearStamplesOfChangedMeshes(MeshChanges totalMeshChanges)
   auto meshContexts = _accessor->usedMeshContexts();
   for (std::size_t i = 0; i < totalMeshChanges.size(); ++i) {
     if (totalMeshChanges[i] > 0.0) {
-      for (auto d : meshContexts[i]->mesh->data()) {
-        d->timeStepsStorage().clear();
-      }
+      meshContexts[i]->mesh->clearDataStamples();
     }
   }
 }
