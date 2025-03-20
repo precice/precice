@@ -1665,10 +1665,11 @@ void ParticipantImpl::computePartitions()
 
     meshContext->mesh->allocateDataValues();
 
+    // Should be relevant for direct mesh access only
     const auto requiredSize = meshContext->mesh->nVertices();
     for (auto &context : _accessor->writeDataContexts()) {
       if (context.getMeshName() == meshContext->mesh->getName()) {
-        context.resizeBufferTo(requiredSize);
+        context.resizeBufferTo(requiredSize, true);
       }
     }
   }
