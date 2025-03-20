@@ -269,10 +269,6 @@ void ParticipantImpl::initialize()
   _meshLock.lockAll();
 
   for (auto &context : _accessor->writeDataContexts()) {
-    PRECICE_CHECK(_accessor->meshContext(context.getMeshName()).provideMesh || !(_accessor->isDirectAccessAllowed(context.getMeshName()) && _allowsRemeshing), "Writing data via API access (configuration <write-data ... mesh=\"{}\") is not (yet) supported with remeshing", context.getMeshName());
-  }
-
-  for (auto &context : _accessor->writeDataContexts()) {
     const double startTime = 0.0;
     context.storeBufferedData(startTime);
   }
