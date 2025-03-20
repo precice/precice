@@ -421,18 +421,10 @@ void ParticipantImpl::advance(
   if (_allowsRemeshing) {
     if (isAtWindowEnd) {
       auto totalMeshChanges = getTotalMeshChanges();
-      auto meshContexts     = _accessor->usedMeshContexts();
+      clearStamplesOfChangedMeshes(totalMeshChanges);
 
-      for (std::size_t i = 0; i < totalMeshChanges.size(); ++i) {
-        if (totalMeshChanges[i] > 0.0) {
-          for (auto d : meshContexts[i]->mesh->data()) {
-            d->timeStepsStorage().clear();
-          }
-        }
-      }
-
-      int sum = std::accumulate(totalMeshChanges.begin(), totalMeshChanges.end(), 0.0);
-      if (reinitHandshake(sum)) {
+      int sumOfChanges = std::accumulate(totalMeshChanges.begin(), totalMeshChanges.end(), 0);
+      if (reinitHandshake(sumOfChanges)) {
         reinitialize();
       }
     } else {
@@ -1954,26 +1946,37 @@ ParticipantImpl::MappedSamples ParticipantImpl::mappedSamples() const
 
 // Reinitialization
 
-std::vector<double> ParticipantImpl::getTotalMeshChanges() const
+ParticipantImpl::MeshChanges ParticipantImpl::getTotalMeshChanges() const
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_allowsRemeshing);
   Event e("remesh.exchangeLocalMeshChanges", profiling::Synchronize);
 
-  // TODO implement such an all reduce sum for int
+  // Gather local changes
   std::vector<double> localMeshChanges;
-  auto                meshContexts = _accessor->usedMeshContexts();
-  localMeshChanges.resize(meshContexts.size(), 0.0);
-  std::transform(meshContexts.begin(), meshContexts.end(), localMeshChanges.begin(), [&](MeshContext *context) {
-    return this->_meshLock.check(context->mesh->getName()) ? 0.0 : 1.0;
-  });
+  for (auto context : _accessor->usedMeshContexts()) {
+    localMeshChanges.push_back(_meshLock.check(context->mesh->getName()) ? 0.0 : 1.0);
+  }
   PRECICE_DEBUG("Mesh changes of rank: {}", localMeshChanges);
 
+  // TODO implement int version of allreduceSum
   std::vector<double> totalMeshChanges(localMeshChanges.size(), 0.0);
   utils::IntraComm::allreduceSum(localMeshChanges, totalMeshChanges);
 
-  PRECICE_DEBUG("Mesh changes of participant: {}", totalMeshChanges);
-  return totalMeshChanges;
+  // Convert the doubles to int
+  MeshChanges totalMeshChangesInt(totalMeshChanges.begin(), totalMeshChanges.end());
+  PRECICE_DEBUG("Mesh changes of participant: {}", totalMeshChangesInt);
+  return totalMeshChangesInt;
+}
+
+void ParticipantImpl::clearStamplesOfChangedMeshes(MeshChanges totalMeshChanges)
+{
+  auto meshContexts = _accessor->usedMeshContexts();
+  for (std::size_t i = 0; i < totalMeshChanges.size(); ++i) {
+    if (totalMeshChanges[i] > 0.0) {
+      meshContexts[i]->mesh->clearDataStamples();
+    }
+  }
 }
 
 bool ParticipantImpl::reinitHandshake(bool requestReinit) const
@@ -2012,6 +2015,9 @@ bool ParticipantImpl::reinitHandshake(bool requestReinit) const
 
 void ParticipantImpl::startProfilingSection(std::string_view sectionName)
 {
+  PRECICE_CHECK(std::find(sectionName.begin(), sectionName.end(), '/') == sectionName.end(),
+                "The provided section name \"{}\" may not contain a forward-slash \"/\"",
+                sectionName);
   _userEvents.emplace_back(sectionName, profiling::Fundamental);
 }
 

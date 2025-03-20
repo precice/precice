@@ -480,10 +480,16 @@ private:
   /// Discards send (currently write) data of a participant after a given time when another iteration is required
   void trimSendDataAfter(double time);
 
+  /// How many ranks have changed each used mesh
+  using MeshChanges = std::vector<int>;
+
   /** Allreduce of the amount of changed meshes on each rank.
-   * @return a vector of the size of meshcontexts which contain >0.0 if the mesh was changed or 0.0 otherwise
+   * @return a vector of the size of meshcontexts which contain the amount of ranks that changed each mesh
    */
-  std::vector<double> getTotalMeshChanges() const;
+  MeshChanges getTotalMeshChanges() const;
+
+  /// Clears stample of changed meshes to make them consistent after the reinitialization.
+  void clearStamplesOfChangedMeshes(MeshChanges totalMeshChanges);
 
   /** Exchanges request to remesh with all connecting participants.
    *
