@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration experimental="yes" allow-remeshing="yes">
-  <data:scalar name="Velocities" />
-  <data:scalar name="Forces" />
+  <data:vector name="Velocities" />
+  <data:vector name="Forces" />
 
   <mesh name="MeshOne" dimensions="2">
     <use-data name="Forces" />
@@ -24,7 +24,7 @@
 
   <coupling-scheme:parallel-explicit>
     <participants first="SolverOne" second="SolverTwo" />
-    <max-time-windows value="3" />
+    <max-time-windows value="4" />
     <time-window-size value="1.0" />
     <exchange data="Velocities" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
     <exchange data="Forces" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
