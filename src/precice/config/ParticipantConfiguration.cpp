@@ -635,6 +635,11 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     _participants.back()->addAction(std::move(action));
   }
 
+  // Check for unsupported remeshing options
+  for (auto &context : participant->writeDataContexts()) {
+    PRECICE_CHECK(participant->meshContext(context.getMeshName()).provideMesh || !(participant->isDirectAccessAllowed(context.getMeshName()) && _remeshing), "Writing data via API access (configuration <write-data ... mesh=\"{}\") is not (yet) supported with remeshing", context.getMeshName());
+  }
+
   // Add export contexts
   for (io::ExportContext &exportContext : _exportConfig->exportContexts()) {
     auto kind = exportContext.everyIteration ? io::Export::ExportKind::Iterations : io::Export::ExportKind::TimeWindows;
