@@ -1964,9 +1964,9 @@ ParticipantImpl::MeshChanges ParticipantImpl::getTotalMeshChanges() const
   utils::IntraComm::allreduceSum(localMeshChanges, totalMeshChanges);
 
   // Convert the doubles to int
-  MeshChanges totalMeshChangesI(totalMeshChanges.begin(), totalMeshChanges.end());
-  PRECICE_DEBUG("Mesh changes of participant: {}", totalMeshChangesI);
-  return totalMeshChangesI;
+  MeshChanges totalMeshChangesInt(totalMeshChanges.begin(), totalMeshChanges.end());
+  PRECICE_DEBUG("Mesh changes of participant: {}", totalMeshChangesInt);
+  return totalMeshChangesInt;
 }
 
 void ParticipantImpl::clearStamplesOfChangedMeshes(MeshChanges totalMeshChanges)
