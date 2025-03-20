@@ -163,8 +163,8 @@ public:
   // @brief sets the filtering technique to maintain good conditioning of the least squares system
   void setFilter(int filter);
 
-  // @brief forces a complete QR decomposition using the QR2 filter
-  bool computeQR2Filter = true;
+  // @brief return the boolean flag that indicates if the QR2 filter step should be performed
+  bool getComputeQR2Filter() const;
 
 private:
   struct givensRot {
@@ -222,6 +222,8 @@ private:
   double _omega;
   double _theta;
   double _sigma;
+
+  bool computeQR2Filter = true; // flag to indicate if the QR2 filter step should be performed
 
   // @brief optional infostream that writes information to file
   std::fstream *_infostream;

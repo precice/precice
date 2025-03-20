@@ -710,6 +710,11 @@ int QRFactorization::rows() const
   return _rows;
 }
 
+bool QRFactorization::getComputeQR2Filter() const
+{
+  return computeQR2Filter;
+}
+
 void QRFactorization::reset()
 {
   _Q.resize(0, 0);

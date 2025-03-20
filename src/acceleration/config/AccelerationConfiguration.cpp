@@ -500,9 +500,8 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagPreconditioner.addAttribute(attrPreconditionerType);
     auto attrpreconditionerUpdateOnThreshold = XMLAttribute<bool>(ATTR_PRECOND_UPDATE_ON_THRESHOLD, true)
                                                    .setDocumentation("To update the preconditioner weights after the first time window:"
-                                                                     "- `true`: The preconditioner weights are only updated if the relative difference of the weights is larger than the limit.\n"
-                                                                     "- `false`: The preconditioner weights are updated after every iteration.\n"
-                                                                     "When this tag is not provided, the value is set to `true` by default.");
+                                                                     "- `true`: The preconditioner weights are only updated if the weights will change by more than one order of magnitude.\n"
+                                                                     "- `false`: The preconditioner weights are updated after every iteration.");
     tagPreconditioner.addAttribute(attrpreconditionerUpdateOnThreshold);
     auto nonconstTWindows = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
                                 .setDocumentation(
@@ -579,9 +578,8 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tagPreconditioner.addAttribute(attrPreconditionerType);
     auto attrpreconditionerUpdateOnThreshold = XMLAttribute<bool>(ATTR_PRECOND_UPDATE_ON_THRESHOLD, true)
                                                    .setDocumentation("To update the preconditioner weights after the first time window:"
-                                                                     "- `true`: The preconditioner weights are only updated if the relative difference of the weights is larger than the limit.\n"
-                                                                     "- `false`: The preconditioner weights are updated after every iteration.\n"
-                                                                     "When this tag is not provided, the value is set to `true` by default.");
+                                                                     "- `true`:  The preconditioner weights are only updated if the weights will change by more than one order of magnitude.\n"
+                                                                     "- `false`: The preconditioner weights are updated after every iteration.");
     tagPreconditioner.addAttribute(attrpreconditionerUpdateOnThreshold);
     auto nonconstTWindows = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
                                 .setDocumentation("After the given number of time windows, the preconditioner weights are frozen and the preconditioner acts like a constant preconditioner.");
