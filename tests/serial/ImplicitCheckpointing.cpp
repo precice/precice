@@ -13,13 +13,6 @@ BOOST_AUTO_TEST_CASE(ImplicitCheckpointing)
   PRECICE_TEST();
   /// Test simple implicit coupling with checkpointing. Checks correct tracking of time, see https://github.com/precice/precice/pull/1704.
 
-  double state              = 0.0;
-  double checkpoint         = 0.0;
-  int    iterationCount     = 0;
-  double initialStateChange = 5.0;
-  double stateChange        = initialStateChange;
-  int    computedTimesteps  = 0;
-
   precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   if (context.isNamed("SolverOne")) {

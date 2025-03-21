@@ -12,10 +12,6 @@ void checkinit(const TestContext &context)
 
   Participant precice(context.name, context.config(), 0, 1);
 
-  MeshID meshID;
-  DataID writeDataID;
-  DataID readDataID;
-
   typedef double (*DataFunction)(double);
 
   DataFunction dataOneFunction = [](double t) -> double {
@@ -62,7 +58,6 @@ void checkinit(const TestContext &context)
 
   precice.initialize();
   double maxDt     = precice.getMaxTimeStepSize();
-  double windowDt  = maxDt;
   double dt        = maxDt;
   double currentDt = dt; // Timestep length used by solver
 

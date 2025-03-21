@@ -25,7 +25,6 @@ void doManySteps(TestContext const &context)
   double   v0[]     = {0, 0, 0};
   VertexID vertexID = precice.setMeshVertex(meshName, v0);
   precice.initialize();
-  double dt = precice.getMaxTimeStepSize();
 
   while (precice.isCouplingOngoing()) {
     double dt = precice.getMaxTimeStepSize();

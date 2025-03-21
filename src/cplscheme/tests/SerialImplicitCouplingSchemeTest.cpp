@@ -444,8 +444,6 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   PRECICE_TEST();
   using namespace mesh;
 
-  int dimensions = 3;
-
   std::string path(_pathToTests + "serial-implicit-cplscheme-relax-const-config.xml");
 
   xml::XMLTag                          root = xml::getRootTag();
@@ -475,8 +473,6 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   using namespace mesh;
-
-  int dimensions = 3;
 
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
@@ -536,8 +532,6 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
   PRECICE_TEST();
 
   using namespace mesh;
-
-  int dimensions = 3;
 
   std::string configurationPath(
       _pathToTests + "serial-implicit-cplscheme-absolute-config.xml");

@@ -78,7 +78,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
   int    timewindow      = 0;
   double windowStartTime = 0;
   int    windowStartStep = 0;
-  int    nSamples        = 4;
   int    iterations      = 0;
   double time            = 0;
 

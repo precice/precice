@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
   auto &       tlt = mesh->createTriangle(ell, elt, eld);
   auto &       tlb = mesh->createTriangle(eld, elb, elr);
   auto &       trt = mesh->createTriangle(erl, ert, erd);
-  auto &       trb = mesh->createTriangle(erd, erb, err);
+  mesh->createTriangle(erd, erb, err);
 
   Index indexTree(mesh);
 

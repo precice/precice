@@ -327,7 +327,6 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
   const double maxTime        = 1.0;
   const int    maxTimeWindows = 10;
   const double timeWindowSize = 0.1;
-  const double timeStepSize   = timeWindowSize; // solver is not subcycling
   std::string  nameParticipant0("Participant0");
   std::string  nameParticipant1("Participant1");
   int          sendDataIndex    = -1;
@@ -704,7 +703,6 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
   const double maxTime        = 1.0;
   const int    maxTimeWindows = 10;
   const double timeWindowSize = 0.1;
-  const double timeStepSize   = timeWindowSize; // solver is not subcycling
   std::string  nameParticipant0("Participant0");
   std::string  nameParticipant1("Participant1");
   int          sendDataIndex    = -1;

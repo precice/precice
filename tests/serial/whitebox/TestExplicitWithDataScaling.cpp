@@ -47,7 +47,6 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
       }
       cplInterface.writeData(meshName, velocitiesID, ids, data);
       cplInterface.advance(dt);
-      double dt = cplInterface.getMaxTimeStepSize();
     }
     cplInterface.finalize();
   } else {
@@ -75,7 +74,6 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
       BOOST_TEST(data == expected, boost::test_tools::per_element());
 
       cplInterface.advance(dt);
-      double dt = cplInterface.getMaxTimeStepSize();
     }
     cplInterface.finalize();
   }

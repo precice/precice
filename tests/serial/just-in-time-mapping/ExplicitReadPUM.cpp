@@ -59,10 +59,8 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
 
     couplingInterface.initialize();
 
-    double time = 0;
     while (couplingInterface.isCouplingOngoing()) {
       double dt = couplingInterface.getMaxTimeStepSize();
-      time += dt;
 
       // read data (for reference)
       std::vector<double> readData(meshSize);
@@ -132,7 +130,7 @@ BOOST_AUTO_TEST_CASE(ExplicitReadPUM)
 
     // Quadratic filling for writeData2
     std::generate(writeData2.begin(), writeData2.end(), [n = 0]() mutable {
-      return -100.0 + 0.1 * (n * n++); // Quadratic pattern, n^2 scaled by 0.1
+      return -100.0 + 0.1 * std::pow(n++, 2); // Quadratic pattern, n^2 scaled by 0.1
     });
 
     // vectorData1 with linearly increasing values

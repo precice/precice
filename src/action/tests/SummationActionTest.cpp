@@ -218,15 +218,15 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensionalSubcycling)
 
   // Load and check data from 0.5
 
-  auto &loadedStample1 = sourceData1->stamples().front();
+  auto loadedStample1 = sourceData1->stamples().front();
   BOOST_TEST(loadedStample1.timestamp == 0.5);
   sourceData1->values() = loadedStample1.sample.values;
 
-  auto &loadedStample2 = sourceData2->stamples().front();
+  auto loadedStample2 = sourceData2->stamples().front();
   BOOST_TEST(loadedStample2.timestamp == 0.5);
   sourceData2->values() = loadedStample2.sample.values;
 
-  auto &loadedStample3 = targetData->stamples().front();
+  auto loadedStample3 = targetData->stamples().front();
   BOOST_TEST(loadedStample3.timestamp == 0.5);
   targetData->values() = loadedStample3.sample.values;
 

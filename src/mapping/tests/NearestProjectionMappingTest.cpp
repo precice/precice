@@ -573,17 +573,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
 
 namespace {
 using namespace precice::mesh;
-const Eigen::VectorXd &runNPMapping(mapping::Mapping::Constraint constraint, PtrMesh &inMesh, PtrData &inData, PtrMesh &outMesh, PtrData &outData)
-{
-  BOOST_REQUIRE(inMesh->getDimensions() == outMesh->getDimensions());
-  precice::mapping::NearestProjectionMapping mapping(constraint, inMesh->getDimensions());
-  mapping.setMeshes(inMesh, outMesh);
-  BOOST_REQUIRE(mapping.hasComputedMapping() == false);
-  mapping.computeMapping();
-  BOOST_REQUIRE(mapping.hasComputedMapping() == true);
-  mapping.map(inData->getID(), outData->getID());
-  return outData->values();
-}
 const Eigen::VectorXd &runNPMapping(mapping::Mapping::Constraint constraint, PtrMesh &inMesh, Eigen::VectorXd *inData, PtrMesh &outMesh, Eigen::VectorXd *outData)
 {
   BOOST_REQUIRE(inMesh->getDimensions() == outMesh->getDimensions());
