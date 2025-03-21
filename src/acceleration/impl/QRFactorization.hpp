@@ -163,8 +163,8 @@ public:
   // @brief sets the filtering technique to maintain good conditioning of the least squares system
   void setFilter(int filter);
 
-  // @brief return the boolean flag that indicates if the QR2 filter step should be performed
-  bool getComputeQR2Filter() const;
+  // @brief returns the number of times the QR2 filter step was performed
+  size_t getResetFilterCounter() const;
 
 private:
   struct givensRot {
@@ -223,7 +223,8 @@ private:
   double _theta;
   double _sigma;
 
-  bool computeQR2Filter = true; // flag to indicate if the QR2 filter step should be performed
+  bool   _computeQR2Filter   = true; // flag to indicate if the QR2 filter step should be performed
+  size_t _resetFilterCounter = 0;    // counter for the number of times the QR2 filter step was performed
 
   // @brief optional infostream that writes information to file
   std::fstream *_infostream;
