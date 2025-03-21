@@ -75,7 +75,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   double expectedDts[] = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0}; // If solver uses timestep size of 4/7, fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
 
   while (precice.isCouplingOngoing()) {
-    double readTime;
     double preciceDt = precice.getMaxTimeStepSize();
     double currentDt = solverDt > preciceDt ? preciceDt : solverDt; // determine actual time step size; must fit into remaining time in window
 

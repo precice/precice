@@ -54,7 +54,6 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
       BOOST_TEST(precice::testing::equals(expectedData, readData));
       interface.writeData(providedMeshName, writeDataName, ids, writeData);
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
         // do nothing
@@ -110,7 +109,6 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
       BOOST_TEST(precice::testing::equals(expectedData, readData));
       interface.writeData(receivedMeshName, writeDataName, receiveMeshIDs, writeData);
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
         // do nothing

@@ -39,7 +39,6 @@ BOOST_AUTO_TEST_CASE(WatchPointParallel)
       interface.writeData(meshName, dataOneID, {&id, 1}, {&value, 1});
 
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
 
       value += increment;
     }
@@ -53,7 +52,7 @@ BOOST_AUTO_TEST_CASE(WatchPointParallel)
 
     auto meshTwoID = "MeshTwo";
 
-    int id = interface.setMeshVertex(meshTwoID, coord);
+    interface.setMeshVertex(meshTwoID, coord);
 
     // Initialize the mesh
     interface.initialize();

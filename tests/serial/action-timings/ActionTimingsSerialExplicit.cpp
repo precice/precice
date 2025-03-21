@@ -66,7 +66,6 @@ BOOST_AUTO_TEST_CASE(ActionTimingsSerialExplicit)
     interface.readData(meshName, readDataName, {&vertexID, 1}, dt, readData);
     interface.writeData(meshName, writeDataName, {&vertexID, 1}, writeData);
     interface.advance(dt);
-    double dt = interface.getMaxTimeStepSize();
     BOOST_TEST(interface.isTimeWindowComplete());
     iteration++;
 

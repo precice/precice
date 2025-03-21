@@ -23,10 +23,6 @@ BOOST_AUTO_TEST_CASE(WaveformSubcyclingWithConstantAcceleration)
 
   Participant precice(context.name, context.config(), 0, 1);
 
-  MeshID meshID;
-  DataID writeDataID;
-  DataID readDataID;
-
   typedef double (*DataFunction)(double);
 
   DataFunction dataOneFunction = [](double t) -> double {
@@ -61,7 +57,6 @@ BOOST_AUTO_TEST_CASE(WaveformSubcyclingWithConstantAcceleration)
   vertexID = precice.setMeshVertex(meshName, v0);
 
   int    nSubsteps          = 7; // perform subcycling on solvers. 4 steps happen in each window.
-  int    nWindows           = 5; // perform 5 windows.
   int    timestep           = 0;
   double time               = 0;
   int    timestepCheckpoint = timestep;

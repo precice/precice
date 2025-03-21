@@ -71,7 +71,6 @@ void runTestAccessReceivedMesh(const TestContext &       context,
       }
 
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
     }
   } else {
     // Defines the mesh and reads data

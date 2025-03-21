@@ -69,7 +69,6 @@ BOOST_AUTO_TEST_CASE(ExplicitWrite)
       // Check that we catch vertice not within the access region.
       {
         std::vector<double> solverTwoCoord(dim);
-        double              value;
         for (int d = 0; d < dim; ++d) {
           solverTwoCoord[d] = 100 * tmpPositions[d];
         }

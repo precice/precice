@@ -91,8 +91,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
 
     precice.advance(currentDt);
-    double maxDt = precice.getMaxTimeStepSize();
-    currentDt    = solverDt > preciceDt ? preciceDt : solverDt;
+    currentDt = solverDt > preciceDt ? preciceDt : solverDt;
     timestep++;
     if (precice.isTimeWindowComplete()) {
       timewindow++;

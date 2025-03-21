@@ -80,7 +80,6 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
       BOOST_TEST(precice::testing::equals(expectedData, readData));
       interface.writeData(otherMeshName, writeDataName, otherIDs, writeData);
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
         // do nothing
@@ -146,7 +145,6 @@ BOOST_AUTO_TEST_CASE(DirectAccessWithWaveform)
       BOOST_TEST(precice::testing::equals(expectedData, readData));
       interface.writeData(meshID, writeDataID, ids, writeData);
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
         // do nothing
