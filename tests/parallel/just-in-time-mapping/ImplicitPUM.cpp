@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(ImplicitPUM)
       // Some quadratic filling including contributions from the iteration and timeWindow
       std::generate(writeData.begin(), writeData.end(), [n = 0, timeWindow, iterations, r = context.rank]() mutable {
         auto old = n++;
-        return 28 * old * old++ + timeWindow - iterations * n + r;
+        return 28 * old * old + timeWindow - iterations * n + r;
       });
 
       std::generate(writeData1.begin(), writeData1.end(), [n = 0, timeWindow, iterations, r = context.rank]() mutable {

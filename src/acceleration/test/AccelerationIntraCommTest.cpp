@@ -21,6 +21,7 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "testing/Meshes.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -61,10 +62,6 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
-  dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
-  dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
-  dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
-  dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                         timeWindowsReused, filter, singularityLimit, dataIDs, prec, !exchangeSubsteps);
@@ -88,6 +85,10 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
     /**
      * processor with 4 vertices
      */
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
     // init displacements & forces
     dpcd->emplaceSampleAtTime(windowStart, {1.0, 1.0, 1.0, 1.0});
@@ -109,6 +110,10 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
     /**
      * processor with 4 vertices
      */
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
     // init displacements & forces
     dpcd->emplaceSampleAtTime(windowStart, {1.0, 1.0, 1.0, 1.0});
@@ -155,6 +160,8 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
     /**
      * processor with 2 vertices
      */
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
 
     // init displacements & forces
     dpcd->emplaceSampleAtTime(windowStart, {1.0, 1.0});
@@ -284,10 +291,6 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
-  dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
-  dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
-  dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
-  dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                          timeWindowsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
@@ -311,6 +314,10 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
     /**
      * processor with 4 vertices
      */
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
     // init displacements & forces
     //Need to store 2 values in the waveform iteration
@@ -354,6 +361,10 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
     /**
      * processor with 4 vertices
      */
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
     // init displacements & forces
     dpcd->emplaceSampleAtTime(windowStart, {1.0, 1.0, 1.0, 1.0});
@@ -419,6 +430,8 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
     /**
      * processor with 2 vertices
      */
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
 
     // init displacements & forces
     dpcd->emplaceSampleAtTime(windowStart, {1.0, 1.0});
@@ -549,10 +562,6 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("dummyMesh", 2, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
-  dummyMesh->createVertex(Eigen::Vector2d{0, 0});
-  dummyMesh->createVertex(Eigen::Vector2d{1, 0});
-  dummyMesh->createVertex(Eigen::Vector2d{2, 0});
-  dummyMesh->createVertex(Eigen::Vector2d{3, 0});
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                          timeWindowsReused, filter, singularityLimit, dataIDs, _preconditioner, alwaysBuildJacobian,
@@ -599,8 +608,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     pp.initialize(data);
   } else if (context.isRank(1)) { // SecondaryRank1
     /**
-     * processor with 4 vertices
+     * processor with 11 vertices
      */
+    testing::addDummyVertices(11, *dummyMesh);
 
     // init displacements & forces
     dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
@@ -624,8 +634,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 
   } else if (context.isRank(2)) { // Secondary rank 2
     /**
-     * processor with 4 vertices
+     * processor with 11 vertices
      */
+    testing::addDummyVertices(11, *dummyMesh);
 
     // init displacements & forces
     dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
@@ -1058,10 +1069,15 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
-  dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
-  dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
-  dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
-  dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
+  if (context.isPrimary()) { // 2 vertices
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+  } else if (context.isRank(1)) { // 1 vertex
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+  } else if (context.isRank(2)) { // no vertices
+  } else {                        // 1 vertex
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+  }
 
   IQNILSAcceleration acc(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                          timeWindowsReused, filter, singularityLimit, dataIDs, prec, !exchangeSubsteps);

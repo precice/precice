@@ -14,6 +14,7 @@
 #include "acceleration/test/helper.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
+#include "testing/Meshes.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -59,7 +60,7 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   std::vector<double> factors;
   factors.resize(2, 1.0);
   impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
-  mesh::PtrMesh           dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
+  auto                    dummyMesh = testing::makeDummy2DMesh(4);
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                          timeWindowsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
@@ -155,7 +156,7 @@ void testVIQNPP(bool exchangeSubsteps)
   std::map<int, double> scalings;
   scalings.insert(std::make_pair(0, 1.0));
   scalings.insert(std::make_pair(1, 1.0));
-  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
+  auto dummyMesh = testing::makeDummy2DMesh(4);
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                         timeWindowsReused, filter, singularityLimit, dataIDs, prec, !exchangeSubsteps);
@@ -237,7 +238,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
   // use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
-  mesh::PtrMesh    dummyMesh   = std::make_shared<mesh::Mesh>("DummyMesh", 3, testing::nextMeshID());
+  auto             dummyMesh   = testing::makeDummy3DMesh(4);
   const double     windowStart = 0;
   const double     windowEnd   = 1;
 
@@ -300,7 +301,7 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithoutSubsteps)
   double              relaxation = 0.4;
   std::vector<int>    dataIDs{0, 1};
   std::vector<double> factors{1, 1};
-  mesh::PtrMesh       dummyMesh   = std::make_shared<mesh::Mesh>("DummyMesh", 3, testing::nextMeshID());
+  auto                dummyMesh   = testing::makeDummy3DMesh(4);
   const double        windowStart = 0;
   const double        windowEnd   = 1;
 
@@ -361,7 +362,7 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
 
   double           relaxation = 0.8;
   std::vector<int> dataIDs{0, 1, 2, 3};
-  mesh::PtrMesh    dummyMesh = std::make_shared<mesh::Mesh>("DummyMesh", 3, testing::nextMeshID());
+  auto             dummyMesh = testing::makeDummy2DMesh(2);
 
   double       windowStart = 0;
   double       windowEnd   = 1;
@@ -372,13 +373,13 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
 
   mesh::PtrData data1 = std::make_shared<mesh::Data>("dvalues", -1, 1);
   mesh::PtrData data2 = std::make_shared<mesh::Data>("fvalues", -1, 1);
-  mesh::PtrData data3 = std::make_shared<mesh::Data>("gvalues", -1, 3);
-  mesh::PtrData data4 = std::make_shared<mesh::Data>("hvalues", -1, 1);
+  mesh::PtrData data3 = std::make_shared<mesh::Data>("gvalues", -1, 2);
+  mesh::PtrData data4 = std::make_shared<mesh::Data>("hvalues", -1, 2);
 
   // init data
   data1->emplaceSampleAtTime(windowStart, {40, 80});
   data2->emplaceSampleAtTime(windowStart, {5, 5});
-  data3->emplaceSampleAtTime(windowStart, {1, 2, 3});
+  data3->emplaceSampleAtTime(windowStart, {1, 2, 3, 4});
   data4->emplaceSampleAtTime(windowStart, {20, 40, 60, 80});
 
   cplscheme::PtrCouplingData dpcd = makeCouplingData(data1, dummyMesh, false);
@@ -400,7 +401,7 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
 
   data1->emplaceSampleAtTime(windowEnd, {1, 7});
   data2->emplaceSampleAtTime(windowEnd, {10, 10});
-  data3->emplaceSampleAtTime(windowEnd, {10, 11, 12});
+  data3->emplaceSampleAtTime(windowEnd, {10, 11, 12, 13});
   data4->emplaceSampleAtTime(windowEnd, {40, 60, 80, 100});
 
   acc.performAcceleration(data, windowStart, windowEnd);
@@ -419,7 +420,7 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
 
   data1->emplaceSampleAtTime(windowEnd, {2, 14});
   data2->emplaceSampleAtTime(windowEnd, {8, 8});
-  data3->emplaceSampleAtTime(windowEnd, {13, 14, 15});
+  data3->emplaceSampleAtTime(windowEnd, {13, 14, 15, 16});
   data4->emplaceSampleAtTime(windowEnd, {41, 61, 81, 90});
 
   acc.performAcceleration(data, windowStart, windowEnd);
@@ -438,7 +439,7 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
 
   data1->emplaceSampleAtTime(windowEnd, {2.1, 14.1});
   data2->emplaceSampleAtTime(windowEnd, {8, 8});
-  data3->emplaceSampleAtTime(windowEnd, {13.05, 14.07, 15.1});
+  data3->emplaceSampleAtTime(windowEnd, {13.05, 14.07, 15.1, 16.1});
   data4->emplaceSampleAtTime(windowEnd, {42, 60, 81.3, 91});
 
   acc.iterationsConverged(data, windowStart);
@@ -453,7 +454,7 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
 
   data1->emplaceSampleAtTime(windowEnd, {3, 16});
   data2->emplaceSampleAtTime(windowEnd, {7, 7});
-  data3->emplaceSampleAtTime(windowEnd, {18, 19, 20});
+  data3->emplaceSampleAtTime(windowEnd, {18, 19, 20, 21});
   data4->emplaceSampleAtTime(windowEnd, {50, 70, 90, 110});
 
   acc.performAcceleration(data, windowStart, windowEnd);
@@ -479,7 +480,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
   const int        dim         = 3;
-  mesh::PtrMesh    dummyMesh   = std::make_shared<mesh::Mesh>("DummyMesh", dim, testing::nextMeshID());
+  auto             dummyMesh   = testing::makeDummy3DMesh(4);
   const double     windowStart = 0;
   const double     windowEnd   = 1;
 
@@ -576,7 +577,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
   //use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
-  mesh::PtrMesh    dummyMesh   = std::make_shared<mesh::Mesh>("DummyMesh", 3, testing::nextMeshID());
+  auto             dummyMesh   = testing::makeDummy3DMesh(4);
   const double     windowStart = 0;
   const double     windowEnd   = 1;
 
@@ -639,7 +640,7 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
   const int        dim         = 3;
-  mesh::PtrMesh    dummyMesh   = std::make_shared<mesh::Mesh>("DummyMesh", dim, testing::nextMeshID());
+  auto             dummyMesh   = testing::makeDummy3DMesh(4);
   const double     windowStart = 0;
   const double     windowEnd   = 1;
 
