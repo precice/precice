@@ -154,10 +154,9 @@ BOOST_AUTO_TEST_CASE(Demonstration)
     BOOST_TEST(mesh.edges().size() == 3);
     BOOST_TEST(!mesh.hasTriangles());
 
-    Triangle *t = nullptr;
     if (dim == 3) {
       // Create triangle
-      t = &mesh.createTriangle(e0, e1, e2);
+      mesh.createTriangle(e0, e1, e2);
 
       BOOST_TEST(mesh.hasTriangles());
     } else {
