@@ -74,6 +74,8 @@ private:
   void exchangeSecondData() final override;
 
   DataMap &getAccelerationData() final override;
+
+  bool _directAccessDataWasSent = false;
 };
 
 } // namespace cplscheme

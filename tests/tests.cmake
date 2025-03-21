@@ -37,6 +37,7 @@ target_sources(testprecice
     tests/parallel/direct-mesh-access/AccessReceivedMeshOverlapNoWrite.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshOverlapNoWriteTwoLevelInit.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshOverlapTwoLevelInit.cpp
+    tests/parallel/direct-mesh-access/ResetMeshAccessRegion.cpp
     tests/parallel/direct-mesh-access/helpers.cpp
     tests/parallel/direct-mesh-access/helpers.hpp
     tests/parallel/distributed-communication/TestDistributedCommunicationGatherScatterMPI.cpp

@@ -434,8 +434,8 @@ void ParticipantImpl::advance(
 #endif
 
   // Update the coupling scheme time state. Necessary to get correct remainder.
-  const bool isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
-
+  const bool isAtWindowEnd   = _couplingScheme->addComputedTime(computedTimeStepSize);
+  bool       performedReinit = false;
   if (_allowsRemeshing) {
     if (isAtWindowEnd) {
       auto totalMeshChanges = getTotalMeshChanges();
@@ -444,6 +444,7 @@ void ParticipantImpl::advance(
       int sumOfChanges = std::accumulate(totalMeshChanges.begin(), totalMeshChanges.end(), 0);
       if (reinitHandshake(sumOfChanges)) {
         reinitialize();
+        performedReinit = true;
       }
     } else {
       PRECICE_CHECK(_meshLock.checkAll(), "The time window needs to end after remeshing.");
@@ -453,7 +454,7 @@ void ParticipantImpl::advance(
   const double timeSteppedTo = _couplingScheme->getTime();
   const auto   dataToReceive = _couplingScheme->implicitDataToReceive();
 
-  handleDataBeforeAdvance(isAtWindowEnd, timeSteppedTo);
+  handleDataBeforeAdvance(isAtWindowEnd, timeSteppedTo, performedReinit);
 
   advanceCouplingScheme();
 
@@ -474,7 +475,7 @@ void ParticipantImpl::advance(
   _solverAdvanceEvent->start();
 }
 
-void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo)
+void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo, bool performedReinit)
 {
   // We only have to care about write data, in case substeps are enabled
   // OR we are at the end of a timewindow, otherwise, we simply erase
@@ -487,7 +488,7 @@ void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double 
     // mapWrittenData, we then take samples from the storage and execute
     // the mapping using waveform samples on the (for write mappings) "to"
     // side.
-    samplizeWriteData(timeSteppedTo);
+    samplizeWriteData(timeSteppedTo, performedReinit);
   }
 
   resetWrittenData();
@@ -551,7 +552,7 @@ void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isT
   handleExports(ExportTiming::Advance);
 }
 
-void ParticipantImpl::samplizeWriteData(double time)
+void ParticipantImpl::samplizeWriteData(double time, bool performedReinit)
 {
   // store buffered write data in sample storage and reset the buffer
   for (auto &context : _accessor->writeDataContexts()) {
@@ -570,9 +571,10 @@ void ParticipantImpl::samplizeWriteData(double time)
     // values. Here, we now need to finalize the just-in-time mappings,
     // before we can add it to the waveform buffer.
     // For now, this only applies to just-in-time write mappings
-
-    context.completeJustInTimeMapping();
-    context.storeBufferedData(time);
+    if (!(performedReinit && _accessor->isDirectAccessAllowed(context.getMeshName()))) {
+      context.completeJustInTimeMapping();
+      context.storeBufferedData(time);
+    }
   }
 }
 
