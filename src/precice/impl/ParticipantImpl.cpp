@@ -300,8 +300,26 @@ void ParticipantImpl::reinitialize()
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_allowsRemeshing);
+
+  PRECICE_DEBUG("Handling direct-access data before reinitialization");
+  PRECICE_ASSERT(_couplingScheme->isTimeWindowComplete());
+  // In case we have data written via direct access, we need to first exchange these data samples
+  // Step 1: store data for those data contexts
+  for (auto &context : _accessor->writeDataContexts()) {
+    if (_accessor->isDirectAccessAllowed(context.getMeshName())) {
+      context.completeJustInTimeMapping();
+      context.storeBufferedData(_couplingScheme->getTime());
+      context.resetBufferedData();
+    }
+  }
+
+  // Step 2: exchange the data
+  PRECICE_DEBUG("Exchanging direct access data");
+  _couplingScheme->exchangeDirectAccessData();
+
   PRECICE_INFO("Reinitializing Participant");
   Event e("reinitialize", profiling::Fundamental);
+
   closeCommunicationChannels(CloseChannels::Distributed);
 
   setupCommunication();

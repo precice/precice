@@ -110,5 +110,4 @@ private:
   /// Second participant name.
   std::string _secondParticipant = "unknown";
 };
-
 } // namespace precice::cplscheme

@@ -59,6 +59,41 @@ void ParallelCouplingScheme::exchangeInitialData()
   }
 }
 
+// Exchanges data before we actually perform the repartitining
+void ParallelCouplingScheme::exchangeDirectAccessData()
+{
+  // F: send, receive, S: receive, send
+  PRECICE_ASSERT(math::equals(getTime(), getWindowStartTime()), getTime(), getWindowStartTime());
+
+  // get send and receive map
+  auto directSend    = filterDataMap(getSendData(), [](const auto &cplData) { return cplData->isDirectAccessWrittenData; });
+  auto directReceive = filterDataMap(getReceiveData(), [](const auto &cplData) { return cplData->isDirectAccessWrittenData; });
+
+  if (doesFirstStep()) {
+    if (!directSend.empty()) {
+      sendData(getM2N(), directSend);
+    }
+    if (!directReceive.empty()) {
+      receiveData(getM2N(), directReceive);
+      // notifyDataHasBeenReceived();
+    }
+    // else {
+    //   initializeWithZeroInitialData(getReceiveData());
+    // }
+  } else { // second participant
+    if (!directReceive.empty()) {
+      receiveData(getM2N(), directReceive);
+      // notifyDataHasBeenReceived();
+    }
+    // else {
+    //   initializeWithZeroInitialData(getReceiveData());
+    // }
+    if (!directSend.empty()) {
+      sendData(getM2N(), directSend);
+    }
+  }
+}
+
 void ParallelCouplingScheme::exchangeFirstData()
 {
   PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
