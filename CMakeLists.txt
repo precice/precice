@@ -582,6 +582,7 @@ IF (BUILD_TESTING)
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
+    ENABLE_EXPORTS Yes
     )
   target_include_directories(testprecice PRIVATE
     ${preCICE_SOURCE_DIR}/src
