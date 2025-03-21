@@ -33,22 +33,20 @@ BOOST_AUTO_TEST_CASE(PerformActionWithGlobalIterationsCounter)
   std::string  path = testing::getPathToSources() + "/action/tests/";
   PythonAction action(PythonAction::WRITE_MAPPING_POST, path, "TestAction", mesh, targetID, sourceID);
 
-  Eigen::VectorXd v(3);
-  v << 0.1, 0.2, 0.3;
-  mesh->data(sourceID)->setSampleAtTime(1, time::Sample{1, v});
-  mesh->data(targetID)->setSampleAtTime(1, time::Sample{1, Eigen::VectorXd::Zero(mesh->nVertices())});
+  mesh->data(sourceID)->emplaceSampleAtTime(1, {0.1, 0.2, 0.3});
+  mesh->data(targetID)->emplaceSampleAtTime(1, {0.0, 0.0, 0.0});
 
   action.performAction();
 
   Eigen::VectorXd result(3);
   result << 1.1, 1.2, 1.3;
-  BOOST_TEST(testing::equals(mesh->data(targetID)->values(), result));
-  mesh->data(sourceID)->setSampleAtTime(1, time::Sample{1, Eigen::VectorXd::Zero(mesh->nVertices())});
+  BOOST_TEST(testing::equals(mesh->data(targetID)->stamples().back().sample.values, result));
+  mesh->data(sourceID)->emplaceSampleAtTime(1, {0.0, 0.0, 0.0});
 
   action.performAction();
 
   result << 2.0, 2.0, 2.0;
-  BOOST_TEST(testing::equals(mesh->data(targetID)->values(), result));
+  BOOST_TEST(testing::equals(mesh->data(targetID)->stamples().back().sample.values, result));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Python
