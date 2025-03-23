@@ -33,7 +33,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
 
     // According to the bounding boxes and vertices: the primary rank receives 3 vertices, the secondary rank 2
     const bool expectedSize = (context.isPrimary() && meshSize == 3) ||
-                              (!context.isPrimary() && meshSize == expectedPositionSecondaryRank.size() / dim);
+                              (!context.isPrimary() && meshSize == static_cast<int>(expectedPositionSecondaryRank.size()) / dim);
     BOOST_TEST(expectedSize);
 
     // Allocate memory
@@ -47,7 +47,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
 
     // Check the received vertex IDs (IDs are local?!)
     std::vector<int> expectedIDs;
-    for (std::size_t i = 0; i < meshSize; ++i)
+    for (std::size_t i = 0; i < static_cast<size_t>(meshSize); ++i)
       expectedIDs.emplace_back(i);
     BOOST_TEST(expectedIDs == ids);
 
@@ -63,7 +63,7 @@ void runTestAccessReceivedMesh(const TestContext &       context,
       } else {
         // Corresponds semantically to meshSize - startIndex > 0
         // but meshSize - startIndex > 0 might underflow and the static analysis complained
-        if (meshSize > startIndex) {
+        if (meshSize > static_cast<int>(startIndex)) {
           const int *ids_ptr  = &ids.at(startIndex);
           const auto vertices = meshSize - startIndex;
           interface.writeData(otherMeshName, dataName, {ids_ptr, vertices}, {writeData.data(), vertices});
@@ -71,7 +71,6 @@ void runTestAccessReceivedMesh(const TestContext &       context,
       }
 
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
     }
   } else {
     // Defines the mesh and reads data

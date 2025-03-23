@@ -38,16 +38,12 @@ int CouplingData::getDimensions() const
 
 int CouplingData::getSize() const
 {
-  // @todo this correct implementation breaks a ton of tests that don't define vertices of a test mesh
-  // return _mesh->nVertices() * getDimensions();
-  return sample().values.size();
+  return _mesh->nVertices() * getDimensions();
 }
 
 int CouplingData::nVertices() const
 {
-  // @todo this correct implementation breaks a ton of tests that don't define vertices of a test mesh
-  // return _mesh->nVertices();
-  return sample().values.size() / getDimensions();
+  return _mesh->nVertices();
 }
 
 const Eigen::VectorXd &CouplingData::values() const

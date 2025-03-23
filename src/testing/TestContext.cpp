@@ -240,9 +240,9 @@ void TestContext::initializePetsc()
 void TestContext::initializeGinkgo()
 {
   if (!invalid && _setup.ginkgo) {
+#ifndef PRECICE_NO_GINKGO
     int    argc = 0;
     char **argv;
-#ifndef PRECICE_NO_GINKGO
     precice::device::Ginkgo::initialize(&argc, &argv);
 #endif
   }

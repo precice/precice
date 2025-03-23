@@ -85,6 +85,7 @@ target_sources(testprecice
     src/testing/DataContextFixture.cpp
     src/testing/DataContextFixture.hpp
     src/testing/GlobalFixtures.cpp
+    src/testing/Meshes.hpp
     src/testing/ParallelCouplingSchemeFixture.cpp
     src/testing/ParallelCouplingSchemeFixture.hpp
     src/testing/QuickTest.hpp

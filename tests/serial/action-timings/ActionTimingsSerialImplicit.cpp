@@ -69,7 +69,6 @@ BOOST_AUTO_TEST_CASE(ActionTimingsSerialImplicit)
     if (interface.requiresWritingCheckpoint()) {
     }
     interface.advance(dt);
-    double dt = interface.getMaxTimeStepSize();
     if (interface.requiresReadingCheckpoint()) {
     }
     if (interface.isTimeWindowComplete()) {

@@ -14,7 +14,6 @@ void multiCouplingTwoSolvers(const std::string configFile, const TestContext &co
 
   double valueA = 1.0;
   double valueB = 2.0;
-  double valueC = 3.0;
 
   if (context.isNamed("SolverA")) {
     Participant cplInterface("SolverA", configFile, 0, 1);

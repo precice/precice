@@ -22,7 +22,6 @@ BOOST_AUTO_TEST_CASE(SerializeValues)
   PRECICE_TEST();
   std::vector<int> vertexOffsets{4, 8, 8, 10};
 
-  const int meshDimensions = 3;
   const int dataDimensions = 1;
   const int nValues        = 4;
   const int nTimeSteps     = 3;

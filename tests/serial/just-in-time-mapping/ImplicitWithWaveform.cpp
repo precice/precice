@@ -44,7 +44,6 @@ BOOST_AUTO_TEST_CASE(ImplicitWithWaveform)
     std::vector<int> ownIDs(size, -1);
     interface.setMeshVertices(ownMeshName, positions, ownIDs);
 
-    std::array<double, dim * 2> boundingBox = std::array<double, dim * 2>{0.0, 1.0, 0.0, 1.0, 0.0, 1.0};
     // Define region of interest, where we could obtain direct write access
     // Combined with a mapping: setting the access region is (in serial) optional
     // Hence, we omit this line

@@ -58,7 +58,6 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
       BOOST_TEST(valueD == expectedValueD);
 
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
     }
 
     interface.finalize();
@@ -97,7 +96,6 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
       interface.writeData(meshName, dataAID, {&idD, 1}, {&valueD, 1});
 
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
     }
     interface.finalize();
   } else {
@@ -136,7 +134,6 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
       interface.writeData(meshName, dataAID, {&idD, 1}, {&valueD, 1});
 
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
     }
 
     interface.finalize();

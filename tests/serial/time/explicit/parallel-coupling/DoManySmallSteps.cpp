@@ -37,14 +37,10 @@ BOOST_AUTO_TEST_CASE(DoManySmallSteps)
     readDataName  = "DataOne";
   }
 
-  double writeData, readData;
+  double writeData;
 
   double   v0[]     = {0, 0, 0};
   VertexID vertexID = precice.setMeshVertex(meshName, v0);
-
-  int    timestep   = 0;
-  int    timewindow = 0;
-  double time       = 0;
 
   if (precice.requiresInitialData()) {
     writeData = 1; // don't care

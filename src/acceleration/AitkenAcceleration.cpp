@@ -123,11 +123,13 @@ void AitkenAcceleration::concatenateCouplingData(
   Eigen::Index offset = 0;
 
   for (auto id : dataIDs) {
-    Eigen::Index size = cplData.at(id)->values().size();
+    Eigen::Index size = cplData.at(id)->getSize();
 
     auto valuesSample    = cplData.at(id)->timeStepsStorage().sample(windowEnd);
     auto oldValuesSample = cplData.at(id)->getPreviousValuesAtTime(windowEnd);
 
+    PRECICE_ASSERT(valuesSample.values().size() == size, valuesSample.values().size(), size);
+    PRECICE_ASSERT(oldValuesSample.values().size() == size, oldValuesSample.values().size(), size);
     PRECICE_ASSERT(targetValues.size() >= offset + size, "Target vector was not initialized.", targetValues.size(), offset + size);
     PRECICE_ASSERT(targetOldValues.size() >= offset + size, "Target vector was not initialized.");
     for (Eigen::Index i = 0; i < size; i++) {
