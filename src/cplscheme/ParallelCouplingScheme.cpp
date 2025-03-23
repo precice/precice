@@ -60,10 +60,12 @@ void ParallelCouplingScheme::exchangeInitialData()
 }
 
 // Exchanges data before we actually perform the repartitining
+// We also set a flag indicating that this data doesn't need to be exchanged
+// when advancing the coupling scheme
 void ParallelCouplingScheme::exchangeDirectAccessData()
 {
   // F: send, receive, S: receive, send
-  PRECICE_ASSERT(math::equals(getTime(), getWindowStartTime()), getTime(), getWindowStartTime());
+  PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
 
   // get send and receive map
   auto directSend    = filterDataMap(getSendData(), [](const auto &cplData) { return cplData->isDirectAccessWrittenData; });
