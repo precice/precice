@@ -77,6 +77,7 @@ target_sources(testprecice
     src/precice/tests/ParallelTests.cpp
     src/precice/tests/SpanTests.cpp
     src/precice/tests/ToolingTests.cpp
+    src/precice/tests/UserInputTests.cpp
     src/precice/tests/VersioningTests.cpp
     src/precice/tests/WatchIntegralTest.cpp
     src/precice/tests/WatchPointTest.cpp
