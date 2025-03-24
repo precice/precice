@@ -21,6 +21,7 @@ public:
   static const int QR1FILTER_ABS = 2;
   static const int QR2FILTER     = 3;
   static const int PODFILTER     = 4;
+  static const int QR3FILTER     = 5;
 
   /// Map from data ID to data values.
   using DataMap = std::map<int, cplscheme::PtrCouplingData>;

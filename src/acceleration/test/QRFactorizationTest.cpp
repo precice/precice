@@ -151,4 +151,41 @@ BOOST_AUTO_TEST_CASE(testQRFactorization)
   testQRequalsA(qr_1.matrixQ(), qr_1.matrixR(), A);
 }
 
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(testQR3Filter)
+{
+  int              m = 6, n = 8;
+  int              filter2 = BaseQNAcceleration::QR2FILTER;
+  int              filter3 = BaseQNAcceleration::QR3FILTER;
+  std::vector<int> delIndices;
+  Eigen::MatrixXd  A2(n, m);
+  Eigen::MatrixXd  A3(n, m);
+
+  // Set values according to Hilbert matrix.
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      double entry = 1.0 / static_cast<double>(i + j + 1);
+      A2(i, j)     = entry;
+      A3(i, j)     = entry;
+    }
+  }
+
+  // compute QR factorization of A via successive inserting of columns
+  QRFactorization qr_2(A2, filter2);
+  QRFactorization qr_3(A3, filter3);
+
+  BOOST_TEST(precice::testing::equals(qr_2.matrixQ(), qr_3.matrixQ()));
+  qr_2.applyFilter(1e-3, delIndices, A2);
+  qr_3.applyFilter(1e-3, delIndices, A3);
+  BOOST_TEST(precice::testing::equals(qr_2.matrixQ(), qr_3.matrixQ()));
+  BOOST_TEST(qr_2.getResetFilterCounter() == 1);
+  BOOST_TEST(qr_3.getResetFilterCounter() == 1);
+
+  qr_2.applyFilter(1e-3, delIndices, A2);
+  qr_3.applyFilter(1e-3, delIndices, A3);
+  BOOST_TEST(precice::testing::equals(qr_2.matrixQ(), qr_3.matrixQ()));
+  BOOST_TEST(qr_2.getResetFilterCounter() == 2);
+  BOOST_TEST(qr_3.getResetFilterCounter() == 1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
