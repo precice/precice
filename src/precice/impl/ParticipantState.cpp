@@ -462,7 +462,7 @@ std::string ParticipantState::hintForMeshData(std::string_view mesh, std::string
   }
 
   // Was the data typoed?
-  auto matches = utils::computeMatches(mesh, localData);
+  auto matches = utils::computeMatches(data, localData);
   if (matches.front().distance < 3) {
     return " Did you mean data \"" + matches.front().name + "\"?";
   }
