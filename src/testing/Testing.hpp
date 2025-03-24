@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <boost/test/unit_test.hpp>
+#include <functional>
 #include <string>
 #include <type_traits>
 
@@ -166,6 +167,14 @@ void expectFiles(Args... args)
 {
   (expectFile(args), ...);
 }
+
+using ErrorPredicate = std::function<bool(::precice::Error)>;
+
+/// Checks if the message of a given precice::Error contains a substring
+ErrorPredicate errorContains(std::string_view substring);
+
+/// Checks if the message of a given precice::Error matches a regex
+ErrorPredicate errorMatches(std::string regex);
 
 } // namespace precice::testing
 

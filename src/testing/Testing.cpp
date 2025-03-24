@@ -1,10 +1,12 @@
 #include <algorithm>
 #include <boost/test/framework.hpp>
 #include <boost/test/tree/test_unit.hpp>
+#include <precice/Exceptions.hpp>
 
 #include <cstdlib>
 #include <filesystem>
 #include <limits>
+#include <regex>
 #include <string>
 
 #include "logging/LogMacros.hpp"
@@ -135,6 +137,21 @@ boost::test_tools::predicate_result equals(double a, double b, double tolerance)
 void expectFile(std::string_view name)
 {
   BOOST_TEST(std::filesystem::is_regular_file(name), "File " << name << " is not a regular file or doesn't exist.");
+}
+
+ErrorPredicate errorContains(std::string_view substring)
+{
+  return [substring](const ::precice::Error &e) -> bool {
+    std::string msg(e.what());
+    return msg.find(substring) != std::string::npos;
+  };
+}
+
+ErrorPredicate errorMatches(std::string pattern)
+{
+  return [regex = std::regex(pattern)](const ::precice::Error &e) -> bool {
+    return std::regex_search(e.what(), regex);
+  };
 }
 
 } // namespace precice::testing

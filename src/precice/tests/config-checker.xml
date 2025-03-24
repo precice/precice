@@ -1,26 +1,25 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <data:scalar name="Data1" />
-  <data:scalar name="Data2" />
+  <data:scalar name="DataOne" />
+  <data:scalar name="DataTwo" />
 
   <mesh name="MeshOne" dimensions="2">
-    <use-data name="Data1" />
-    <use-data name="Data2" />
+    <use-data name="DataOne" />
+    <use-data name="DataTwo" />
   </mesh>
 
   <mesh name="MeshTwo" dimensions="2">
-    <use-data name="Data1" />
-    <use-data name="Data2" />
+    <use-data name="DataOne" />
+    <use-data name="DataTwo" />
   </mesh>
 
   <participant name="SolverOne">
     <provide-mesh name="MeshOne" />
-    <write-data name="Data1" mesh="MeshOne" />
-    <read-data name="Data2" mesh="MeshOne" />
+    <write-data name="DataOne" mesh="MeshOne" />
+    <read-data name="DataTwo" mesh="MeshOne" />
   </participant>
 
   <participant name="SolverTwo">
-    <intra-comm:sockets />
     <receive-mesh name="MeshOne" from="SolverOne" safety-factor="0.1" />
     <provide-mesh name="MeshTwo" />
     <mapping:nearest-neighbor
@@ -33,8 +32,8 @@
       from="MeshTwo"
       to="MeshOne"
       constraint="conservative" />
-    <write-data name="Data2" mesh="MeshTwo" />
-    <read-data name="Data1" mesh="MeshTwo" />
+    <write-data name="DataTwo" mesh="MeshTwo" />
+    <read-data name="DataOne" mesh="MeshTwo" />
   </participant>
 
   <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
@@ -43,12 +42,12 @@
     <participants first="SolverOne" second="SolverTwo" />
     <max-time-windows value="1" />
     <time-window-size value="1.0" />
-    <exchange data="Data1" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
-    <exchange data="Data2" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
+    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
+    <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
     <max-iterations value="100" />
-    <relative-convergence-measure limit="1e-7" data="Data2" mesh="MeshOne" />
+    <relative-convergence-measure limit="1e-7" data="DataTwo" mesh="MeshOne" />
     <acceleration:IQN-ILS>
-      <data name="Data2" mesh="MeshOne" />
+      <data name="DataTwo" mesh="MeshOne" />
       <filter type="QR2" limit="1e-1" />
       <initial-relaxation value="1.0" />
       <max-used-iterations value="10" />

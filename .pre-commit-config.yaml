@@ -11,6 +11,7 @@ repos:
   rev: 'v4.3.0'
   hooks:
   - id: check-xml
+    exclude: "^src/precice/tests/emptyconfig.xml"
   - id: check-merge-conflict
   - id: mixed-line-ending
     exclude: "^thirdparty"
@@ -32,6 +33,7 @@ repos:
   hooks:
   - id: format-precice-config
     name: format preCICE configs
+    exclude: "^src/precice/tests/emptyconfig.xml"
 - repo: https://github.com/codespell-project/codespell
   rev: v2.2.2
   hooks:
