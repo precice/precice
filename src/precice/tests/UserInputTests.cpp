@@ -53,16 +53,17 @@ BOOST_AUTO_TEST_CASE(WrongConfigType)
   PRECICE_TEST();
 
   auto notaconfig = precice::testing::getPathToSources() + "/precice/tests/notaconfig.txt";
-  BOOST_CHECK_EXCEPTION(precice::Participant("SolverOne", notaconfig, context.rank, context.size), ::precice::Error, ::precice::testing::errorContains("Start tag expected"));
+  // The error depends on the libxml2 version
+  BOOST_CHECK_THROW(precice::Participant("SolverOne", notaconfig, context.rank, context.size), ::precice::Error);
 }
 
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(EmtyConfigFile)
+BOOST_AUTO_TEST_CASE(EmptyConfigFile)
 {
   PRECICE_TEST();
 
   auto notaconfig = precice::testing::getPathToSources() + "/precice/tests/emptyconfig.xml";
-  BOOST_CHECK_EXCEPTION(precice::Participant("SolverOne", notaconfig, context.rank, context.size), ::precice::Error, ::precice::testing::errorContains("Document is empty"));
+  BOOST_CHECK_EXCEPTION(precice::Participant("SolverOne", notaconfig, context.rank, context.size), ::precice::Error, ::precice::testing::errorContains(" is empty."));
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -117,6 +118,147 @@ BOOST_AUTO_TEST_CASE(NullptrAsCommunicator)
 
   auto config = precice::testing::getPathToSources() + "/precice/tests/config-checker.xml";
   BOOST_CHECK_EXCEPTION(precice::Participant("SolverOne", config, context.rank, context.size, nullptr), ::precice::Error, ::precice::testing::errorContains("nullptr"));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(MeshDimenstions)
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(NoName)
+{
+  PRECICE_TEST();
+
+  auto                 config = precice::testing::getPathToSources() + "/precice/tests/config-checker.xml";
+  precice::Participant p("SolverTwo", config, context.rank, context.size);
+  BOOST_CHECK_EXCEPTION(p.getMeshDimensions(""),
+                        ::precice::Error,
+                        precice::testing::errorContains("Available meshes are"));
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(WrongName)
+{
+  PRECICE_TEST();
+
+  auto                 config = precice::testing::getPathToSources() + "/precice/tests/config-checker.xml";
+  precice::Participant p("SolverTwo", config, context.rank, context.size);
+  BOOST_CHECK_EXCEPTION(p.getMeshDimensions("FaceCenters"),
+                        ::precice::Error,
+                        precice::testing::errorContains("Available meshes are"));
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(TypoNameChanged)
+{
+  PRECICE_TEST();
+
+  auto                 config = precice::testing::getPathToSources() + "/precice/tests/config-checker.xml";
+  precice::Participant p("SolverTwo", config, context.rank, context.size);
+  BOOST_CHECK_EXCEPTION(p.getMeshDimensions("MeshOno"),
+                        ::precice::Error,
+                        precice::testing::errorContains("Did you mean mesh"));
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(TypoNameMissing)
+{
+  PRECICE_TEST();
+
+  auto                 config = precice::testing::getPathToSources() + "/precice/tests/config-checker.xml";
+  precice::Participant p("SolverTwo", config, context.rank, context.size);
+  BOOST_CHECK_EXCEPTION(p.getMeshDimensions("MeshOn"),
+                        ::precice::Error,
+                        precice::testing::errorContains("Did you mean mesh"));
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(TypoNameExtra)
+{
+  PRECICE_TEST();
+
+  auto                  config = precice::testing::getPathToSources() + "/precice/tests/config-checker.xml";
+  precice::Participant  p("SolverTwo", config, context.rank, context.size);
+  std::array<double, 3> pos{1, 2, 3};
+  BOOST_CHECK_EXCEPTION(p.setMeshVertex("MeshOnee", pos),
+                        ::precice::Error,
+                        precice::testing::errorContains("Did you mean mesh"));
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE(DataDimensions)
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(WrongMesh)
+{
+  PRECICE_TEST();
+
+  auto                 config = precice::testing::getPathToSources() + "/precice/tests/config-checker.xml";
+  precice::Participant p("SolverTwo", config, context.rank, context.size);
+  BOOST_CHECK_EXCEPTION(p.getDataDimensions("CellCenters", "DataTwo"),
+                        ::precice::Error,
+                        precice::testing::errorContains("Available meshes are"));
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(TypoMesh)
+{
+  PRECICE_TEST();
+
+  auto                 config = precice::testing::getPathToSources() + "/precice/tests/config-checker.xml";
+  precice::Participant p("SolverTwo", config, context.rank, context.size);
+  BOOST_CHECK_EXCEPTION(p.getDataDimensions("MeshToo", "DataTwo"),
+                        ::precice::Error,
+                        precice::testing::errorContains("Did you mean mesh"));
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(WrongData)
+{
+  PRECICE_TEST();
+
+  auto                 config = precice::testing::getPathToSources() + "/precice/tests/config-checker.xml";
+  precice::Participant p("SolverTwo", config, context.rank, context.size);
+  BOOST_CHECK_EXCEPTION(p.getDataDimensions("MeshTwo", "Temperature"),
+                        ::precice::Error,
+                        precice::testing::errorContains("Available data are"));
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(TypoData)
+{
+  PRECICE_TEST();
+
+  auto                 config = precice::testing::getPathToSources() + "/precice/tests/config-checker.xml";
+  precice::Participant p("SolverTwo", config, context.rank, context.size);
+  BOOST_CHECK_EXCEPTION(p.getDataDimensions("MeshTwo", "DataTwi"),
+                        ::precice::Error,
+                        precice::testing::errorContains("Did you mean data"));
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(WrongMeshAndData)
+{
+  PRECICE_TEST();
+
+  auto                 config = precice::testing::getPathToSources() + "/precice/tests/config-checker.xml";
+  precice::Participant p("SolverTwo", config, context.rank, context.size);
+  BOOST_CHECK_EXCEPTION(p.getDataDimensions("CellCenters", "Temperature"),
+                        ::precice::Error,
+                        precice::testing::errorContains("Available meshes are"));
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(TypoMeshAndData)
+{
+  PRECICE_TEST();
+
+  auto                 config = precice::testing::getPathToSources() + "/precice/tests/config-checker.xml";
+  precice::Participant p("SolverTwo", config, context.rank, context.size);
+  BOOST_CHECK_EXCEPTION(p.getDataDimensions("MeshUne", "DataToo"),
+                        ::precice::Error,
+                        precice::testing::errorContains("Did you mean mesh"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
