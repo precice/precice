@@ -817,7 +817,7 @@ void ParticipantImpl::setMeshVertices(
   const auto expectedPositionSize = ids.size() * meshDims;
   PRECICE_CHECK(positions.size() == expectedPositionSize,
                 "Input sizes are inconsistent attempting to set vertices on {}D mesh \"{}\". "
-                "You passed {} vertices indices and {} position components, but we expected {} position components ({} x {}).",
+                "You passed {} vertex indices and {} position components, but we expected {} position components ({} x {}).",
                 meshDims, meshName, ids.size(), positions.size(), expectedPositionSize, ids.size(), meshDims);
 
   Event                                   e{fmt::format("setMeshVertices.{}", meshName), profiling::Fundamental};
@@ -870,7 +870,7 @@ void ParticipantImpl::setMeshEdges(
   mesh::PtrMesh &mesh = context.mesh;
   PRECICE_CHECK(vertices.size() % 2 == 0,
                 "Cannot interpret passed vertex IDs attempting to set edges of mesh \"{}\" . "
-                "You passed {} vertices, but we expected an even number.",
+                "You passed {} vertex indices, but we expected an even number.",
                 meshName, vertices.size());
   {
     auto end           = vertices.end();
@@ -944,7 +944,7 @@ void ParticipantImpl::setMeshTriangles(
   mesh::PtrMesh &mesh = context.mesh;
   PRECICE_CHECK(vertices.size() % 3 == 0,
                 "Cannot interpret passed vertex IDs attempting to set triangles of mesh \"{}\" . "
-                "You passed {} vertices, which isn't dividable by 3.",
+                "You passed {} vertex indices, which isn't dividable by 3.",
                 meshName, vertices.size());
   {
     auto end           = vertices.end();
@@ -1037,7 +1037,7 @@ void ParticipantImpl::setMeshQuads(
   mesh::Mesh &mesh = *(context.mesh);
   PRECICE_CHECK(vertices.size() % 4 == 0,
                 "Cannot interpret passed vertex IDs attempting to set quads of mesh \"{}\" . "
-                "You passed {} vertices, which isn't dividable by 4.",
+                "You passed {} vertex indices, which isn't dividable by 4.",
                 meshName, vertices.size());
   {
     auto end           = vertices.end();
@@ -1132,7 +1132,7 @@ void ParticipantImpl::setMeshTetrahedra(
   mesh::PtrMesh &mesh = context.mesh;
   PRECICE_CHECK(vertices.size() % 4 == 0,
                 "Cannot interpret passed vertex IDs attempting to set quads of mesh \"{}\" . "
-                "You passed {} vertices, which isn't dividable by 4.",
+                "You passed {} vertex indices, which isn't dividable by 4.",
                 meshName, vertices.size());
   {
     auto end           = vertices.end();
@@ -1180,7 +1180,7 @@ void ParticipantImpl::writeData(
   const auto expectedDataSize = vertices.size() * dataDims;
   PRECICE_CHECK(expectedDataSize == values.size(),
                 "Input sizes are inconsistent attempting to write {}D data \"{}\" to mesh \"{}\". "
-                "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
+                "You passed {} vertex indices and {} data components, but we expected {} data components ({} x {}).",
                 dataDims, dataName, meshName,
                 vertices.size(), values.size(), expectedDataSize, dataDims, vertices.size());
 
@@ -1231,7 +1231,7 @@ void ParticipantImpl::readData(
   const auto expectedDataSize = vertices.size() * dataDims;
   PRECICE_CHECK(expectedDataSize == values.size(),
                 "Input/Output sizes are inconsistent attempting to read {}D data \"{}\" from mesh \"{}\". "
-                "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
+                "You passed {} vertex indices and {} data components, but we expected {} data components ({} x {}).",
                 dataDims, dataName, meshName,
                 vertices.size(), values.size(), expectedDataSize, dataDims, vertices.size());
 
@@ -1300,7 +1300,7 @@ void ParticipantImpl::mapAndReadData(
   // Make use of the read data context
   PRECICE_CHECK(nVertices * dataDims == values.size(),
                 "Input sizes are inconsistent attempting to mapAndRead {}D data \"{}\" from mesh \"{}\". "
-                "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
+                "You passed {} vertex indices and {} data components, but we expected {} data components ({} x {}).",
                 dataDims, dataName, meshName,
                 nVertices, values.size(), nVertices * dataDims, dataDims, nVertices);
 
@@ -1352,7 +1352,7 @@ void ParticipantImpl::writeAndMapData(
 
   PRECICE_CHECK(nVertices * dataDims == values.size(),
                 "Input sizes are inconsistent attempting to write {}D data \"{}\" to mesh \"{}\". "
-                "You passed {} vertices and {} data components, but we expected {} data components ({} x {}).",
+                "You passed {} vertex indices and {} data components, but we expected {} data components ({} x {}).",
                 dataDims, dataName, meshName,
                 nVertices, values.size(), nVertices * dataDims, dataDims, nVertices);
 
@@ -1399,7 +1399,7 @@ void ParticipantImpl::writeGradientData(
   PRECICE_CHECK(expectedComponents == gradients.size(),
                 "Input sizes are inconsistent attempting to write gradient for data \"{}\" to mesh \"{}\". "
                 "A single gradient/Jacobian for {}D data on a {}D mesh has {} components. "
-                "You passed {} vertices and {} gradient components, but we expected {} gradient components. ",
+                "You passed {} vertex indices and {} gradient components, but we expected {} gradient components. ",
                 dataName, meshName,
                 dataDims, meshDims, gradientComponents,
                 vertices.size(), gradients.size(), expectedComponents);
@@ -1494,7 +1494,7 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
   const auto          meshDims = mesh->getDimensions();
   PRECICE_CHECK(ids.size() == meshSize,
                 "Output size is incorrect attempting to get vertex ids of {}D mesh \"{}\". "
-                "You passed {} vertices indices, but we expected {}. "
+                "You passed {} vertex indices, but we expected {}. "
                 "Use getMeshVertexSize(\"{}\") to receive the required amount of vertices.",
                 meshDims, meshName, ids.size(), meshSize, meshName);
   const auto expectedCoordinatesSize = static_cast<unsigned long>(meshDims * meshSize);
