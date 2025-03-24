@@ -184,6 +184,8 @@ int ConfigParser::readXmlFile(std::string const &filePath)
 
   std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
 
+  PRECICE_CHECK(!content.empty(), "The configuration file \"{}\" is empty.", filePath);
+
   _hash = utils::preciceHash(content);
 
   xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
