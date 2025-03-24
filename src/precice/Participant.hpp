@@ -921,7 +921,7 @@ public:
    * @param[in] coordinates A span to the coordinates of the vertices
    *        The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    *        The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
-   * @param[out] values The values containing the write data.
+   * @param[in] values The values containing the write data.
    *
    * @pre The coordinates are within the bounding box previously defined via \ref setMeshAccessRegion(). Using coordinates
    * outside the defined bounding box will throw an error.
