@@ -125,6 +125,9 @@ PRECICE_API double precicec_getMaxTimeStepSize();
 /// @copydoc precice::Participant::requiresMeshConnectivityFor()
 PRECICE_API int precicec_requiresMeshConnectivityFor(const char *meshName);
 
+/// @copydoc precice::Participant::resetMesh()
+PRECICE_API void precicec_resetMesh(const char *meshName);
+
 /**
  * @brief Creates a mesh vertex
  *
