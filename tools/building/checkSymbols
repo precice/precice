@@ -62,7 +62,7 @@ def check_symbols(lib: pathlib.Path):
 
     print(f"CF C++")
     print(f"-- ---")
-    for cpp in cppsym:
+    for cpp in sorted(cppsym):
         cmatch = cmap.get(cpp)
         if cmatch:
             cmap.pop(cpp)
