@@ -68,6 +68,48 @@ jobs:
           printf 'OpenFOAM adapter: ${{ steps.ref-openfoam-adapter.outputs.shorthash }} ${{ steps.ref-openfoam-adapter.outputs.description }}\n----------\n'
           printf 'SU2 adapter: ${{ steps.ref-su2-adapter.outputs.shorthash }}\n ${{ steps.ref-su2-adapter.outputs.description }}\n----------\n'
           printf 'Tutorials: ${{ steps.ref-tutorials.outputs.shorthash }} ${{ steps.ref-tutorials.outputs.description }}\n----------\n'
+      - id: summary
+        name: Prepare Markdown summary
+        run: |
+          echo "## Git references of latest (develop) components" >> $GITHUB_STEP_SUMMARY
+          echo "### preCICE" >> $GITHUB_STEP_SUMMARY
+          echo "Reference (pull request): \`${{ github.event.pull_request.head.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "### Python bindings" >> $GITHUB_STEP_SUMMARY
+          echo "Reference: [\`${{ steps.ref-python-bindings.outputs.shorthash }}\`](https://github.com/precice/python-bindings/commit/${{ steps.ref-python-bindings.outputs.shorthash }})" >> $GITHUB_STEP_SUMMARY
+          echo "Description:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.ref-python-bindings.outputs.description }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "### CalculiX adapter" >> $GITHUB_STEP_SUMMARY
+          echo "Reference: [\`${{ steps.ref-calculix-adapter.outputs.shorthash }}\`](https://github.com/precice/calculix-adapter/commit/${{ steps.ref-calculix-adapter.outputs.shorthash }})" >> $GITHUB_STEP_SUMMARY
+          echo "Description:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.ref-calculix-adapter.outputs.description }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "### FEniCS adapter" >> $GITHUB_STEP_SUMMARY
+          echo "Reference: [\`${{ steps.ref-fenics-adapter.outputs.shorthash }}\`](https://github.com/precice/fenics-adapter/commit/${{ steps.ref-fenics-adapter.outputs.shorthash }})" >> $GITHUB_STEP_SUMMARY
+          echo "Description:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.ref-fenics-adapter.outputs.description }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "### OpenFOAM adapter" >> $GITHUB_STEP_SUMMARY
+          echo "Reference: [\`${{ steps.ref-openfoam-adapter.outputs.shorthash }}\`](https://github.com/precice/openfoam-adapter/commit/${{ steps.ref-openfoam-adapter.outputs.shorthash }})" >> $GITHUB_STEP_SUMMARY
+          echo "Description:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.ref-openfoam-adapter.outputs.description }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "### SU2 adapter" >> $GITHUB_STEP_SUMMARY
+          echo "Reference: [\`${{ steps.ref-su2-adapter.outputs.shorthash }}\`](https://github.com/precice/su2-adapter/commit/${{ steps.ref-su2-adapter.outputs.shorthash }})" >> $GITHUB_STEP_SUMMARY
+          echo "Description:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.ref-su2-adapter.outputs.description }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "### Tutorials" >> $GITHUB_STEP_SUMMARY
+          echo "Reference: [\`${{ steps.ref-tutorials.outputs.shorthash }}\`](https://github.com/precice/tutorials/commit/${{ steps.ref-tutorials.outputs.shorthash }})" >> $GITHUB_STEP_SUMMARY
+          echo "Description:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.ref-tutorials.outputs.description }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
   run-system-tests:
     name: Trigger system tests
@@ -87,5 +129,5 @@ jobs:
         SU2_VERSION:7.5.1,\
         SU2_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-su2-adapter }},\
         TUTORIALS_REF:${{ needs.gather-refs.outputs.ref-tutorials }}"
-      systests_branch: develop
-      loglevel: "INFO"
+      system_tests_branch: develop
+      log_level: "INFO"
