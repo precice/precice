@@ -171,6 +171,14 @@ try {
   return -1;
 }
 
+void precicec_resetMesh(const char *meshName)
+try {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->resetMesh(meshName);
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
 int precicec_setMeshVertex(
     const char *  meshName,
     const double *position)

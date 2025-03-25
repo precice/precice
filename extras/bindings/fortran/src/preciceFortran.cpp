@@ -182,6 +182,16 @@ try {
   std::abort();
 }
 
+void precicef_reset_mesh_(
+    const char *meshName,
+    int         meshNameLength)
+try {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  impl->resetMesh(precice::impl::strippedStringView(meshName, meshNameLength));
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
 void precicef_set_vertex_(
     const char *  meshName,
     const double *position,

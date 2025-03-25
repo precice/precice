@@ -211,6 +211,19 @@ PRECICE_API void precicef_requires_mesh_connectivity_for_(
 
 /**
  * Fortran syntax:
+ * precicef_reset_mesh_(
+ *   CHARACTER meshName(*))
+ *
+ * IN:  mesh, meshNameLength
+ *
+ * @copydoc precice::Participant::resetMesh()
+ */
+PRECICE_API void precicef_reset_mesh_(
+    const char *meshName,
+    int         meshNameLength);
+
+/**
+ * Fortran syntax:
  * precicef_set_vertex(
  *   CHARACTER        meshName(*),
  *   DOUBLE PRECISION coordinates(dim),
