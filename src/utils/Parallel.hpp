@@ -219,7 +219,7 @@ private:
 
   static CommStatePtr _currentState;
 
-  /// Flag to saveguard against reinitializing MPI, which is forbidden
+  /// Flag to safeguard against reinitializing MPI, which is forbidden
   static bool _mpiInitializedByPrecice;
 
   /// Kind of initialization that took place

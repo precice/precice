@@ -96,7 +96,7 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    * @param[in] tag Tag for establishing this connection
-   * @param[in] acceptorRank Rank of the accpeting process, usually the calling one.
+   * @param[in] acceptorRank Rank of the accepting process, usually the calling one.
    */
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,

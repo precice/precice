@@ -15,7 +15,7 @@ namespace precice::acceleration::impl {
  * in O(mn) flops if a column is inserted or deleted.
  * The new column is orthogonalized to the existing columns in Q using a modified GramSchmidt algorithm.
  * The zero-elements are generated using suitable givens-roatations.
- * The Interface provides fnctions such as insertColumn, deleteColumn at arbitrary position an push or pull
+ * The Interface provides functions such as insertColumn, deleteColumn at arbitrary position an push or pull
  * column at front or back, resp.
  */
 class QRFactorization {

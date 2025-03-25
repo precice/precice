@@ -8,7 +8,7 @@ repos:
     exclude: "^thirdparty"
 # Official repo for default hooks
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: 'v4.3.0'
+  rev: 'v5.0.0'
   hooks:
   - id: check-xml
     exclude: "^src/precice/tests/emptyconfig.xml"
@@ -22,20 +22,20 @@ repos:
     exclude: "^thirdparty"
 # black repo for python formatting
 - repo: https://github.com/ambv/black
-  rev: 22.12.0
+  rev: 25.1.0
   hooks:
     - id: black
       name: format python
       exclude: "^thirdparty"
 # Custom repo for the preCICE configuration formatter
 - repo: https://github.com/precice/precice-pre-commit-hooks
-  rev: 'v3.1'
+  rev: 'v3.3'
   hooks:
   - id: format-precice-config
     name: format preCICE configs
     exclude: "^src/precice/tests/emptyconfig.xml"
 - repo: https://github.com/codespell-project/codespell
-  rev: v2.2.2
+  rev: v2.4.1
   hooks:
     - id: codespell
       name: check spelling

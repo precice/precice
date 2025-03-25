@@ -178,7 +178,7 @@ const RangePreview<Iter> previewRange(Size n, const Range &range)
 template <typename T, typename Index, size_t n>
 auto reorder_array(const std::array<Index, n> &order, const std::array<T, n> &elements) -> std::array<T, n>
 {
-  static_assert(n > 0, "Reodering nothing is pointless");
+  static_assert(n > 0, "Reordering nothing is pointless");
   std::array<T, n> reordered;
   for (std::size_t i = 0; i < n; ++i) {
     reordered[i] = elements[order[i]];

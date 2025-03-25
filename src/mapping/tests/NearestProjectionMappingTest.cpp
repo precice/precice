@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
   using namespace precice::mesh;
   constexpr int dimensions = 3;
 
-  // Create mesh to map from with Triangles ABD and BDC
+  // Create mesh to map from with Triangles A-B-D and B-D-C
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
   Vertex &inVA = inMesh->createVertex(Eigen::Vector3d{0, 0, 0});
   Vertex &inVB = inMesh->createVertex(Eigen::Vector3d{0, 1, 0});
@@ -624,7 +624,7 @@ BOOST_AUTO_TEST_CASE(AvoidClosestTriangle)
 
   const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, &inValues, outMesh, &outValues);
 
-  // Interpolatin triangle is further than NN => fall back on NN
+  // Interpolating triangle is further than NN => fall back on NN
   BOOST_TEST(values(0) == 0.0);
 }
 

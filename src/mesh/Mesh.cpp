@@ -288,7 +288,7 @@ void Mesh::clearDataStamples()
 
 bool Mesh::isPartitionEmpty(Rank rank) const
 {
-  // Without offset data, we assume non-empty partititions
+  // Without offset data, we assume non-empty partitions
   if (_vertexOffsets.empty()) {
     return false;
   }
