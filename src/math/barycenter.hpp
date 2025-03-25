@@ -45,7 +45,7 @@ Eigen::Vector3d calcBarycentricCoordsForTriangle(
  *  @param a point A of the tetrahedron ABCD
  *  @param b point B of the tetrahedron ABCD
  *  @param c point C of the tetrahedron ABCD
-*  @param d point D of the tetrahedron ABCD
+ *  @param d point D of the tetrahedron ABCD
  *  @param u the point to compute the barycentric coordinates for
  *
  * @note This implements an efficient one-step algorithm (no separate projection)

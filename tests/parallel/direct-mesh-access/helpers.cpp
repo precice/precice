@@ -7,7 +7,7 @@
 #include "testing/Testing.hpp"
 
 // StartIndex is here the first index to be used for writing on the secondary rank
-void runTestAccessReceivedMesh(const TestContext &       context,
+void runTestAccessReceivedMesh(const TestContext        &context,
                                const std::vector<double> boundingBoxSecondaryRank,
                                const std::vector<double> writeDataSecondaryRank,
                                const std::vector<double> expectedPositionSecondaryRank,

@@ -11,14 +11,14 @@ namespace precice::com {
 namespace impl {
 /// Returns the file name for the connection information.
 /**
-   * It has the form first two letters from hash of
-   * (acceptorName, requesterName, mesh, rank)/rest of hash.
-   */
+ * It has the form first two letters from hash of
+ * (acceptorName, requesterName, mesh, rank)/rest of hash.
+ */
 std::string hashedFilePath(std::string_view acceptorName, std::string_view requesterName, std::string_view meshName, Rank rank);
 
 /** Returns the local directory which is the root for storing connection information.
-   * It has the form addressDirectory/precice-run/acceptorName-requesterName
-   */
+ * It has the form addressDirectory/precice-run/acceptorName-requesterName
+ */
 std::string localDirectory(std::string_view acceptorName, std::string_view requesterName, std::string_view addressDirectory);
 } // namespace impl
 

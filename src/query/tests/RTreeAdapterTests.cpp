@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(VertexAdapter)
 {
   PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 2, precice::testing::nextMeshID());
-  auto &              v = mesh.createVertex(Eigen::Vector2d(1, 2));
+  auto               &v = mesh.createVertex(Eigen::Vector2d(1, 2));
   BOOST_TEST(bg::get<0>(v) == 1);
   BOOST_TEST(bg::get<1>(v) == 2);
   BOOST_TEST(bg::get<2>(v) == 0);
@@ -69,9 +69,9 @@ BOOST_AUTO_TEST_CASE(EdgeAdapter)
 {
   PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 2, precice::testing::nextMeshID());
-  auto &              v1 = mesh.createVertex(Eigen::Vector2d(1, 2));
-  auto &              v2 = mesh.createVertex(Eigen::Vector2d(3, 4));
-  auto &              e  = mesh.createEdge(v1, v2);
+  auto               &v1 = mesh.createVertex(Eigen::Vector2d(1, 2));
+  auto               &v2 = mesh.createVertex(Eigen::Vector2d(3, 4));
+  auto               &e  = mesh.createEdge(v1, v2);
   BOOST_TEST((bg::get<0, 0>(e)) == 1.0);
   BOOST_TEST((bg::get<0, 1>(e)) == 2.0);
   BOOST_TEST((bg::get<0, 2>(e)) == 0.0);
@@ -85,13 +85,13 @@ BOOST_AUTO_TEST_CASE(TriangleAdapter)
 {
   PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 3, precice::testing::nextMeshID());
-  auto &              v1 = mesh.createVertex(Eigen::Vector3d(0, 2, 0));
-  auto &              v2 = mesh.createVertex(Eigen::Vector3d(2, 1, 0));
-  auto &              v3 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
-  auto &              e1 = mesh.createEdge(v1, v2);
-  auto &              e2 = mesh.createEdge(v2, v3);
-  auto &              e3 = mesh.createEdge(v3, v1);
-  auto &              t  = mesh.createTriangle(e1, e2, e3);
+  auto               &v1 = mesh.createVertex(Eigen::Vector3d(0, 2, 0));
+  auto               &v2 = mesh.createVertex(Eigen::Vector3d(2, 1, 0));
+  auto               &v3 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto               &e1 = mesh.createEdge(v1, v2);
+  auto               &e2 = mesh.createEdge(v2, v3);
+  auto               &e3 = mesh.createEdge(v3, v1);
+  auto               &t  = mesh.createTriangle(e1, e2, e3);
 
   std::vector<Vertex::RawCoords> vertices(t.begin(), t.end());
   std::vector<Vertex::RawCoords> refs{v1.rawCoords(), v2.rawCoords(), v3.rawCoords()};
@@ -109,15 +109,15 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatSingleTriangle)
 {
   PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
-  auto &              v1 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
-  auto &              v2 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
-  auto &              v3 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
-  auto &              v4 = mesh.createVertex(Eigen::Vector3d(1, 1, 0));
-  auto &              v5 = mesh.createVertex(Eigen::Vector3d(0.2, 0.2, 0));
-  auto &              e1 = mesh.createEdge(v1, v2);
-  auto &              e2 = mesh.createEdge(v2, v3);
-  auto &              e3 = mesh.createEdge(v3, v1);
-  auto &              t  = mesh.createTriangle(e1, e2, e3);
+  auto               &v1 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
+  auto               &v2 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto               &v3 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto               &v4 = mesh.createVertex(Eigen::Vector3d(1, 1, 0));
+  auto               &v5 = mesh.createVertex(Eigen::Vector3d(0.2, 0.2, 0));
+  auto               &e1 = mesh.createEdge(v1, v2);
+  auto               &e2 = mesh.createEdge(v2, v3);
+  auto               &e3 = mesh.createEdge(v3, v1);
+  auto               &t  = mesh.createTriangle(e1, e2, e3);
 
   BOOST_TEST(bg::comparable_distance(v1, v2) > 0.5);
   BOOST_TEST(bg::comparable_distance(v1, v1) < 0.01);
@@ -133,13 +133,13 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangle)
 {
   PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
-  auto &              lv1 = mesh.createVertex(Eigen::Vector3d(-1, 1, 0.1));
-  auto &              lv2 = mesh.createVertex(Eigen::Vector3d(0, -1, 0));
-  auto &              lv3 = mesh.createVertex(Eigen::Vector3d(-2, 0, -0.1));
-  auto &              le1 = mesh.createEdge(lv1, lv2);
-  auto &              le2 = mesh.createEdge(lv2, lv3);
-  auto &              le3 = mesh.createEdge(lv3, lv1);
-  auto &              lt  = mesh.createTriangle(le1, le2, le3);
+  auto               &lv1 = mesh.createVertex(Eigen::Vector3d(-1, 1, 0.1));
+  auto               &lv2 = mesh.createVertex(Eigen::Vector3d(0, -1, 0));
+  auto               &lv3 = mesh.createVertex(Eigen::Vector3d(-2, 0, -0.1));
+  auto               &le1 = mesh.createEdge(lv1, lv2);
+  auto               &le2 = mesh.createEdge(lv2, lv3);
+  auto               &le3 = mesh.createEdge(lv3, lv1);
+  auto               &lt  = mesh.createTriangle(le1, le2, le3);
 
   auto &rv1 = mesh.createVertex(Eigen::Vector3d(0, 1, 0.1));
   auto &rv2 = mesh.createVertex(Eigen::Vector3d(2, 0, -0.1));
@@ -170,10 +170,10 @@ BOOST_AUTO_TEST_CASE(DistanceTestFlatDoubleTriangleInsideOutside)
 {
   PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
-  auto &              a = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
-  auto &              b = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
-  auto &              c = mesh.createVertex(Eigen::Vector3d(1, 1, 0));
-  auto &              d = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto               &a = mesh.createVertex(Eigen::Vector3d(0, 0, 0));
+  auto               &b = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto               &c = mesh.createVertex(Eigen::Vector3d(1, 1, 0));
+  auto               &d = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
 
   auto &ab = mesh.createEdge(a, b);
   auto &bd = mesh.createEdge(b, d);
@@ -205,15 +205,15 @@ BOOST_AUTO_TEST_CASE(DistanceTestSlopedTriangle)
 {
   PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
-  auto &              v1 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
-  auto &              v2 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
-  auto &              v3 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
-  auto &              v4 = mesh.createVertex(Eigen::Vector3d(0, 1, 1));
-  auto &              v5 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
-  auto &              e1 = mesh.createEdge(v1, v2);
-  auto &              e2 = mesh.createEdge(v2, v3);
-  auto &              e3 = mesh.createEdge(v3, v1);
-  auto &              t  = mesh.createTriangle(e1, e2, e3);
+  auto               &v1 = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto               &v2 = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+  auto               &v3 = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  auto               &v4 = mesh.createVertex(Eigen::Vector3d(0, 1, 1));
+  auto               &v5 = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto               &e1 = mesh.createEdge(v1, v2);
+  auto               &e2 = mesh.createEdge(v2, v3);
+  auto               &e3 = mesh.createEdge(v3, v1);
+  auto               &t  = mesh.createTriangle(e1, e2, e3);
 
   auto t_v4 = bg::comparable_distance(t, v4);
   auto v4_t = bg::comparable_distance(v4, t);
@@ -236,13 +236,13 @@ BOOST_AUTO_TEST_CASE(EnvelopeTriangleClockWise)
   PRECICE_TEST();
   using precice::testing::equals;
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
-  auto &              v1  = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
-  auto &              v2  = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
-  auto &              v3  = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
-  auto &              e1  = mesh.createEdge(v1, v2);
-  auto &              e2  = mesh.createEdge(v2, v3);
-  auto &              e3  = mesh.createEdge(v3, v1);
-  auto &              t   = mesh.createTriangle(e1, e2, e3);
+  auto               &v1  = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto               &v2  = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+  auto               &v3  = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  auto               &e1  = mesh.createEdge(v1, v2);
+  auto               &e2  = mesh.createEdge(v2, v3);
+  auto               &e3  = mesh.createEdge(v3, v1);
+  auto               &t   = mesh.createTriangle(e1, e2, e3);
   auto                box = bg::return_envelope<precice::query::RTreeBox>(t);
   auto                min = box.min_corner();
   BOOST_TEST(min[0] == 0.0);
@@ -260,13 +260,13 @@ BOOST_AUTO_TEST_CASE(EnvelopeTriangleCounterclockWise)
   PRECICE_TEST();
   using precice::testing::equals;
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
-  auto &              v1  = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
-  auto &              v2  = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
-  auto &              v3  = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
-  auto &              e1  = mesh.createEdge(v1, v3);
-  auto &              e2  = mesh.createEdge(v3, v2);
-  auto &              e3  = mesh.createEdge(v2, v1);
-  auto &              t   = mesh.createTriangle(e1, e2, e3);
+  auto               &v1  = mesh.createVertex(Eigen::Vector3d(0, 1, 0));
+  auto               &v2  = mesh.createVertex(Eigen::Vector3d(1, 1, 1));
+  auto               &v3  = mesh.createVertex(Eigen::Vector3d(0, 0, 1));
+  auto               &e1  = mesh.createEdge(v1, v3);
+  auto               &e2  = mesh.createEdge(v3, v2);
+  auto               &e3  = mesh.createEdge(v2, v1);
+  auto               &t   = mesh.createTriangle(e1, e2, e3);
   auto                box = bg::return_envelope<precice::query::RTreeBox>(t);
   auto                min = box.min_corner();
   BOOST_TEST(min[0] == 0.0);

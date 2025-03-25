@@ -167,13 +167,13 @@ public:
   /** Copying and assignment of this class would involve copying the pointer to
       the PETSc object and finally cause double destruction of it.
   */
-  Matrix(const Matrix &) = delete;
+  Matrix(const Matrix &)            = delete;
   Matrix &operator=(const Matrix &) = delete;
 
   explicit Matrix(std::string name = "");
 
   /// Move constructor, use the implicitly declared.
-  Matrix(Matrix &&) = default;
+  Matrix(Matrix &&)            = default;
   Matrix &operator=(Matrix &&) = default;
 
   ~Matrix();
@@ -241,7 +241,7 @@ public:
   /** Copying and assignment of this class would involve copying the pointer to
       the PETSc object and finally cause double destruction of it.
   */
-  KSPSolver(const KSPSolver &) = delete;
+  KSPSolver(const KSPSolver &)            = delete;
   KSPSolver &operator=(const KSPSolver &) = delete;
 
   explicit KSPSolver(std::string name = "");

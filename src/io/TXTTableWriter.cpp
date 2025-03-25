@@ -98,7 +98,7 @@ void TXTTableWriter::writeData(
 }
 
 void TXTTableWriter::writeData(
-    const std::string &    name,
+    const std::string     &name,
     const Eigen::Vector2d &value)
 {
   PRECICE_ASSERT(_outputStream);
@@ -123,7 +123,7 @@ void TXTTableWriter::writeData(
 }
 
 void TXTTableWriter::writeData(
-    const std::string &    name,
+    const std::string     &name,
     const Eigen::Vector3d &value)
 {
   PRECICE_ASSERT(_outputStream);

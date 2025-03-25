@@ -786,7 +786,7 @@ VertexID ParticipantImpl::setMeshVertex(
   PRECICE_TRACE(meshName);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
-  auto &       mesh    = *context.mesh;
+  auto        &mesh    = *context.mesh;
   PRECICE_CHECK(position.size() == static_cast<unsigned long>(mesh.getDimensions()),
                 "Cannot set vertex for mesh \"{}\". Expected {} position components but found {}.", meshName, mesh.getDimensions(), position.size());
   Event e{fmt::format("setMeshVertex.{}", meshName), profiling::Fundamental};
@@ -811,7 +811,7 @@ void ParticipantImpl::setMeshVertices(
   PRECICE_TRACE(meshName, positions.size(), ids.size());
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
-  auto &       mesh    = *context.mesh;
+  auto        &mesh    = *context.mesh;
 
   const auto meshDims             = mesh.getDimensions();
   const auto expectedPositionSize = ids.size() * meshDims;
@@ -1294,7 +1294,7 @@ void ParticipantImpl::mapAndReadData(
   const auto       dataDims    = dataContext.getDataDimensions();
   const auto       dim         = dataContext.getSpatialDimensions();
   const auto       nVertices   = (coordinates.size() / dim);
-  MeshContext &    context     = _accessor->meshContext(meshName);
+  MeshContext     &context     = _accessor->meshContext(meshName);
 
   // Check that the vertex is actually within the defined access region
   context.checkVerticesInsideAccessRegion(coordinates, dim, "mapAndReadData");
@@ -1349,7 +1349,7 @@ void ParticipantImpl::writeAndMapData(
   const auto        dataDims    = dataContext.getDataDimensions();
   const auto        dim         = dataContext.getSpatialDimensions();
   const auto        nVertices   = (coordinates.size() / dim);
-  MeshContext &     context     = _accessor->meshContext(meshName);
+  MeshContext      &context     = _accessor->meshContext(meshName);
 
   // Check that the vertex is actually within the defined access region
   context.checkVerticesInsideAccessRegion(coordinates, dim, "writeAndMapData");

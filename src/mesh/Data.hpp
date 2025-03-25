@@ -40,11 +40,11 @@ public:
   //  };
 
   // @brief Name of an undefined data type.
-  //static const std::string TYPE_NAME_UNDEFINED;
+  // static const std::string TYPE_NAME_UNDEFINED;
   // @brief Name of a double data type.
-  //static const std::string TYPE_NAME_DOUBLE;
+  // static const std::string TYPE_NAME_DOUBLE;
   // @brief Name of a vector data type.
-  //static const std::string TYPE_NAME_VECTOR;
+  // static const std::string TYPE_NAME_VECTOR;
 
   /**
    * @brief Constructor

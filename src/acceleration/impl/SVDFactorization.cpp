@@ -76,8 +76,8 @@ void SVDFactorization::reset()
 void SVDFactorization::computeQRdecomposition(
     Matrix const &A,
     int           globalRows,
-    Matrix &      Q,
-    Matrix &      R)
+    Matrix       &Q,
+    Matrix       &R)
 {
   PRECICE_TRACE();
 

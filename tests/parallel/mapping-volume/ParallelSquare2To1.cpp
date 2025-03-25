@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(ParallelSquare2To1)
     interface.advance(dt);
     BOOST_TEST(!interface.isCouplingOngoing(), "Receiving participant must advance only once.");
 
-    //Check expected VS read
+    // Check expected VS read
     Eigen::VectorXd expected(4);
     Eigen::VectorXd readData(4);
     expected << 7. / 6, 5. / 6, 11. / 6, 13. / 6;

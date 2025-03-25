@@ -82,12 +82,12 @@ void Configuration::xmlTagCallback(const xml::ConfigurationContext &context, xml
 
 void Configuration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE(tag.getName());
   PRECICE_ASSERT(tag.getName() == "precice-configuration");
 
-  //test if both participants do have the exchange meshes
+  // test if both participants do have the exchange meshes
   typedef std::map<std::string, std::vector<std::string>>::value_type neededMeshPair;
   for (const neededMeshPair &neededMeshes : _meshConfiguration->getNeededMeshes()) {
     bool participantFound = false;

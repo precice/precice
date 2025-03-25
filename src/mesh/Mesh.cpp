@@ -163,7 +163,7 @@ PtrData &Mesh::createData(
                   "Please rename or remove one of the use-data tags with name \"{}\".",
                   name, _name, name);
   }
-  //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
+  // #rows = dimensions of current mesh #columns = dimensions of corresponding data set
   PtrData data(new Data(name, id, dimension, _dimensions, waveformDegree));
   _data.push_back(data);
   return _data.back();

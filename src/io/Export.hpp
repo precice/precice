@@ -34,12 +34,12 @@ public:
         _kind(kind),
         _frequency(frequency),
         _rank(rank),
-        _size(size){};
+        _size(size) {};
 
-  Export(const Export &) = delete;
-  Export(Export &&)      = delete;
+  Export(const Export &)            = delete;
+  Export(Export &&)                 = delete;
   Export &operator=(const Export &) = delete;
-  Export &operator=(Export &&) = delete;
+  Export &operator=(Export &&)      = delete;
 
   /**
    * @brief Export the mesh and writes files.

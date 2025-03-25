@@ -46,7 +46,7 @@ struct Sample {
   Sample(Sample &&)      = default;
 
   Sample &operator=(const Sample &) = default;
-  Sample &operator=(Sample &&) = default;
+  Sample &operator=(Sample &&)      = default;
 
   /// Sets values and gradients to zero
   Sample &setZero()

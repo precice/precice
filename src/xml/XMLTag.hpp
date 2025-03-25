@@ -86,7 +86,7 @@ public:
    * @param[in] xmlNamespace Defines a prefix/namespace for the tag. Tags with equal namespace or treated as group.
    */
   XMLTag(
-      Listener &  listener,
+      Listener   &listener,
       std::string name,
       Occurrence  occurrence,
       std::string xmlNamespace = "");
@@ -257,7 +257,7 @@ XMLTag getRootTag();
 
 /// Configures the given configuration from file configurationFilename.
 std::string configure(
-    XMLTag &                                  tag,
+    XMLTag                                   &tag,
     const precice::xml::ConfigurationContext &context,
     std::string_view                          configurationFilename);
 

@@ -82,10 +82,10 @@ public:
   ~EventRegistry();
 
   /// Deleted copy and move SMFs for singleton pattern
-  EventRegistry(EventRegistry const &) = delete;
-  EventRegistry(EventRegistry &&)      = delete;
+  EventRegistry(EventRegistry const &)            = delete;
+  EventRegistry(EventRegistry &&)                 = delete;
   EventRegistry &operator=(EventRegistry const &) = delete;
-  EventRegistry &operator=(EventRegistry &&) = delete;
+  EventRegistry &operator=(EventRegistry &&)      = delete;
 
   /// Returns the only instance (singleton) of the EventRegistry class
   static EventRegistry &instance();

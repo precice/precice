@@ -88,7 +88,7 @@ public:
   bool addComputedTime(double timeToAdd) final override;
 
   /// Exchanges data and updates the state of the coupling scheme.
-  //void advance() final override override;
+  // void advance() final override override;
 
   ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override;
 

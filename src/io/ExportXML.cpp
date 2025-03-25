@@ -28,7 +28,7 @@ ExportXML::ExportXML(
     int               frequency,
     int               rank,
     int               size)
-    : Export(participantName, location, mesh, kind, frequency, rank, size){};
+    : Export(participantName, location, mesh, kind, frequency, rank, size) {};
 
 void ExportXML::doExport(int index, double time)
 {
@@ -193,7 +193,7 @@ void ExportXML::writeSubFile(int index, double time)
 
 void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std::ostream &outFile) const
 {
-  const auto &             gradients      = data->timeStepsStorage().last().sample.gradients;
+  const auto              &gradients      = data->timeStepsStorage().last().sample.gradients;
   const int                dataDimensions = data->getDimensions();
   std::vector<std::string> suffices;
   if (dataDimensions == 1) {
@@ -226,7 +226,7 @@ void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std
 }
 
 void ExportXML::exportData(
-    std::ostream &    outFile,
+    std::ostream     &outFile,
     const mesh::Mesh &mesh) const
 {
   outFile << "         <PointData Scalars=\"Rank ";
@@ -291,7 +291,7 @@ void ExportXML::exportData(
 
 void ExportXML::writeVertex(
     const Eigen::VectorXd &position,
-    std::ostream &         outFile)
+    std::ostream          &outFile)
 {
   outFile << "               ";
   for (int i = 0; i < position.size(); i++) {
@@ -305,7 +305,7 @@ void ExportXML::writeVertex(
 
 void ExportXML::writeTriangle(
     const mesh::Triangle &triangle,
-    std::ostream &        outFile)
+    std::ostream         &outFile)
 {
   outFile << triangle.vertex(0).getID() << "  ";
   outFile << triangle.vertex(1).getID() << "  ";
@@ -314,7 +314,7 @@ void ExportXML::writeTriangle(
 
 void ExportXML::writeTetrahedron(
     const mesh::Tetrahedron &tetra,
-    std::ostream &           outFile)
+    std::ostream            &outFile)
 {
   outFile << tetra.vertex(0).getID() << "  ";
   outFile << tetra.vertex(1).getID() << "  ";
@@ -324,14 +324,14 @@ void ExportXML::writeTetrahedron(
 
 void ExportXML::writeLine(
     const mesh::Edge &edge,
-    std::ostream &    outFile)
+    std::ostream     &outFile)
 {
   outFile << edge.vertex(0).getID() << "  ";
   outFile << edge.vertex(1).getID() << "  ";
 }
 
 void ExportXML::exportPoints(
-    std::ostream &    outFile,
+    std::ostream     &outFile,
     const mesh::Mesh &mesh) const
 {
   outFile << "         <Points> \n";

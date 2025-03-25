@@ -30,7 +30,7 @@ void testDataInitialization(precice::testing::TestContext context, std::string c
     Vector3d pos      = Vector3d::Zero();
     auto     vid      = cplInterface.setMeshVertex(meshName, pos);
 
-    //tell preCICE that data has been written
+    // tell preCICE that data has been written
     BOOST_REQUIRE(cplInterface.requiresInitialData());
 
     auto   dataName = "Data";

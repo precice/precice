@@ -43,7 +43,7 @@ ExportCSV::ExportCSV(
     int               frequency,
     int               rank,
     int               size)
-    : Export(participantName, location, mesh, kind, frequency, rank, size){};
+    : Export(participantName, location, mesh, kind, frequency, rank, size) {};
 
 void ExportCSV::doExport(int index, double time)
 {

@@ -110,8 +110,8 @@ BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
 
   // Create mesh to map from
   PtrMesh         inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  Vertex &        inVertex0 = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
-  Vertex &        inVertex1 = inMesh->createVertex(Eigen::Vector2d::Constant(1.0));
+  Vertex         &inVertex0 = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
+  Vertex         &inVertex1 = inMesh->createVertex(Eigen::Vector2d::Constant(1.0));
   Eigen::VectorXd inValues  = Eigen::VectorXd::Zero(2);
   inValues(0)               = 1.0;
   inValues(1)               = 2.0;

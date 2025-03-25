@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(WithSubsteps)
   double maxDt         = interface.getMaxTimeStepSize();
   double inValues[2]   = {0.0, 0.0};
   double outValues[2]  = {0.0, 0.0};
-  double dt            = maxDt / nSubsteps; //Do 5 substeps to check if QN and Waveform iterations work together
+  double dt            = maxDt / nSubsteps; // Do 5 substeps to check if QN and Waveform iterations work together
   int    nSubStepsDone = 0;                 // Counts the number of substeps that are done
   double t             = 0;
   int    iterations    = 0;
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(WithSubsteps)
 
     if (context.isNamed("A")) {
       for (int i = 0; i < 2; i++) {
-        outValues[i] = inValues[i]; //only pushes solution through
+        outValues[i] = inValues[i]; // only pushes solution through
       }
     } else {
       outValues[0] = (-inValues[0] - inValues[1] + t * t);

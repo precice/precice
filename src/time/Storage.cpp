@@ -216,7 +216,7 @@ SampleResult Storage::sample(double time) const
     }
   }
 
-  //Create a new bspline if _bspline does not already contain a spline
+  // Create a new bspline if _bspline does not already contain a spline
   if (!_bspline.has_value()) {
     auto [times, values] = getTimesAndValues();
     _bspline.emplace(times, values, usedDegree);

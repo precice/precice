@@ -9,7 +9,7 @@
 namespace precice::xml {
 
 XMLTag::XMLTag(
-    Listener &  listener,
+    Listener   &listener,
     std::string tagName,
     Occurrence  occurrence,
     std::string xmlNamespace)
@@ -282,7 +282,7 @@ XMLTag getRootTag()
 }
 
 std::string configure(
-    XMLTag &                                  tag,
+    XMLTag                                   &tag,
     const precice::xml::ConfigurationContext &context,
     std::string_view                          configurationFilename)
 {

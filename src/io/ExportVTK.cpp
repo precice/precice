@@ -25,7 +25,7 @@ ExportVTK::ExportVTK(
     int               frequency,
     int               rank,
     int               size)
-    : Export(participantName, location, mesh, kind, frequency, rank, size){};
+    : Export(participantName, location, mesh, kind, frequency, rank, size) {};
 
 void ExportVTK::doExport(int index, double time)
 {
@@ -65,7 +65,7 @@ void ExportVTK::exportSeries() const
 }
 
 void ExportVTK::exportMesh(
-    std::ofstream &   outFile,
+    std::ofstream    &outFile,
     const mesh::Mesh &mesh)
 {
   PRECICE_TRACE(mesh.getName());
@@ -140,7 +140,7 @@ void ExportVTK::exportMesh(
 }
 
 void ExportVTK::exportData(
-    std::ofstream &   outFile,
+    std::ofstream    &outFile,
     const mesh::Mesh &mesh)
 {
   outFile << "POINT_DATA " << mesh.nVertices() << "\n\n";
@@ -275,7 +275,7 @@ void ExportVTK::writeHeader(
 
 void ExportVTK::writeVertex(
     const Eigen::VectorXd &position,
-    std::ostream &         outFile)
+    std::ostream          &outFile)
 {
   if (position.size() == 2) {
     outFile << position(0) << "  " << position(1) << "  " << 0.0 << '\n';

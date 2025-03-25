@@ -30,7 +30,7 @@ void precicec_createParticipant_withCommunicator(
     const char *configFileName,
     int         solverProcessIndex,
     int         solverProcessSize,
-    void *      communicator)
+    void       *communicator)
 try {
   PRECICE_CHECK(impl == nullptr, errormsgCreate);
   impl = std::make_unique<precice::Participant>(participantName,
@@ -180,7 +180,7 @@ try {
 }
 
 int precicec_setMeshVertex(
-    const char *  meshName,
+    const char   *meshName,
     const double *position)
 try {
   PRECICE_CHECK(impl != nullptr, errormsg);
@@ -192,10 +192,10 @@ try {
 }
 
 void precicec_setMeshVertices(
-    const char *  meshName,
+    const char   *meshName,
     int           size,
     const double *positions,
-    int *         ids)
+    int          *ids)
 try {
   PRECICE_CHECK(impl != nullptr, errormsg);
   auto idsSize = static_cast<long unsigned>(size);
@@ -229,7 +229,7 @@ try {
 void precicec_setMeshEdges(
     const char *meshName,
     int         size,
-    const int * vertices)
+    const int  *vertices)
 try {
   PRECICE_CHECK(impl != nullptr, errormsg);
   auto verticesSize = static_cast<long unsigned>(size) * 2;
@@ -253,7 +253,7 @@ try {
 void precicec_setMeshTriangles(
     const char *meshName,
     int         size,
-    const int * vertices)
+    const int  *vertices)
 try {
   PRECICE_CHECK(impl != nullptr, errormsg);
   auto verticesSize = static_cast<long unsigned>(size) * 3;
@@ -278,7 +278,7 @@ try {
 void precicec_setMeshQuads(
     const char *meshName,
     int         size,
-    const int * vertices)
+    const int  *vertices)
 try {
   PRECICE_CHECK(impl != nullptr, errormsg);
   auto verticesSize = static_cast<long unsigned>(size) * 4;
@@ -303,7 +303,7 @@ try {
 void precicec_setMeshTetrahedra(
     const char *meshName,
     int         size,
-    const int * vertices)
+    const int  *vertices)
 try {
   PRECICE_CHECK(impl != nullptr, errormsg);
   auto verticesSize = static_cast<long unsigned>(size) * 4;
@@ -313,10 +313,10 @@ try {
 }
 
 void precicec_writeData(
-    const char *  meshName,
-    const char *  dataName,
+    const char   *meshName,
+    const char   *dataName,
     int           size,
-    const int *   valueIndices,
+    const int    *valueIndices,
     const double *values)
 try {
   PRECICE_CHECK(impl != nullptr, errormsg);
@@ -330,9 +330,9 @@ void precicec_readData(
     const char *meshName,
     const char *dataName,
     int         size,
-    const int * valueIndices,
+    const int  *valueIndices,
     double      relativeReadTime,
-    double *    values)
+    double     *values)
 try {
   PRECICE_CHECK(impl != nullptr, errormsg);
   auto dataSize = size * impl->getDataDimensions(meshName, dataName);
@@ -342,8 +342,8 @@ try {
 }
 
 void precicec_writeAndMapData(
-    const char *  meshName,
-    const char *  dataName,
+    const char   *meshName,
+    const char   *dataName,
     int           size,
     const double *coordinates,
     const double *values)
@@ -357,12 +357,12 @@ try {
 }
 
 void precicec_mapAndReadData(
-    const char *  meshName,
-    const char *  dataName,
+    const char   *meshName,
+    const char   *dataName,
     int           size,
     const double *coordinates,
     double        relativeReadTime,
-    double *      values)
+    double       *values)
 try {
   PRECICE_CHECK(impl != nullptr, errormsg);
   auto coordinatesSize = size * impl->getMeshDimensions(meshName);
@@ -386,10 +386,10 @@ try {
 }
 
 void precicec_writeGradientData(
-    const char *  meshName,
-    const char *  dataName,
+    const char   *meshName,
+    const char   *dataName,
     int           size,
-    const int *   valueIndices,
+    const int    *valueIndices,
     const double *gradients)
 try {
   PRECICE_CHECK(impl != nullptr, errormsg);
@@ -406,7 +406,7 @@ const char *precicec_getVersionInformation()
 }
 
 void precicec_setMeshAccessRegion(
-    const char *  meshName,
+    const char   *meshName,
     const double *boundingBox)
 try {
   auto bbSize = static_cast<long unsigned>(impl->getMeshDimensions(meshName)) * 2;
@@ -418,8 +418,8 @@ try {
 void precicec_getMeshVertexIDsAndCoordinates(
     const char *meshName,
     const int   size,
-    int *       ids,
-    double *    coordinates)
+    int        *ids,
+    double     *coordinates)
 try {
   auto coordinatesSize = static_cast<long unsigned>(impl->getMeshDimensions(meshName) * size);
   impl->getMeshVertexIDsAndCoordinates(meshName, {ids, static_cast<unsigned long>(size)}, {coordinates, coordinatesSize});

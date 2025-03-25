@@ -63,7 +63,7 @@ struct MeshDataKey {
 
 /// Deduction guide for two identical parameter types
 template <class T>
-MeshDataKey(T, T)->MeshDataKey<T>;
+MeshDataKey(T, T) -> MeshDataKey<T>;
 
 /// Holds coupling state of one participating solver in coupled simulation.
 class ParticipantState {
@@ -128,8 +128,8 @@ public:
   void provideMesh(const mesh::PtrMesh &mesh);
 
   /// Adds a mesh to be received by the participant.
-  void receiveMesh(const mesh::PtrMesh &                         mesh,
-                   const std::string &                           fromParticipant,
+  void receiveMesh(const mesh::PtrMesh                          &mesh,
+                   const std::string                            &fromParticipant,
                    double                                        safetyFactor,
                    partition::ReceivedPartition::GeometricFilter geoFilter,
                    const bool                                    allowDirectAccess);
@@ -366,7 +366,7 @@ private:
   template <typename ELEMENT_T>
   bool isDataValid(
       const std::vector<ELEMENT_T> &data,
-      const ELEMENT_T &             newElement) const;
+      const ELEMENT_T              &newElement) const;
 
   void checkDuplicatedUse(std::string_view mesh);
 
@@ -382,7 +382,7 @@ private:
 template <typename ELEMENT_T>
 bool ParticipantState::isDataValid(
     const std::vector<ELEMENT_T> &data,
-    const ELEMENT_T &             newElement) const
+    const ELEMENT_T              &newElement) const
 {
   for (size_t i = 0; i < data.size(); i++) {
     if (data[i].name == newElement.name) {

@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalReadScalar)
     double valueDataB = 1.0;
     cplInterface.writeData(meshName, dataBID, {&vid, 1}, {&valueDataB, 1});
 
-    //tell preCICE that data has been written and call initialize
+    // tell preCICE that data has been written and call initialize
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
 

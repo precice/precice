@@ -48,9 +48,9 @@ public:
                          int                requesterRank,
                          int                requesterCommunicatorSize) override;
 
-  void requestConnectionAsClient(std::string const &  acceptorName,
-                                 std::string const &  requesterName,
-                                 std::string const &  tag,
+  void requestConnectionAsClient(std::string const   &acceptorName,
+                                 std::string const   &requesterName,
+                                 std::string const   &tag,
                                  std::set<int> const &acceptorRanks,
                                  int                  requesterRank) override;
 

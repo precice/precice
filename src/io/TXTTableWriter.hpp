@@ -63,11 +63,11 @@ public:
    * The write order is fixed by the order addData() is called.
    */
   void writeData(
-      const std::string &    name,
+      const std::string     &name,
       const Eigen::Vector2d &value);
 
   void writeData(
-      const std::string &    name,
+      const std::string     &name,
       const Eigen::Vector3d &value);
 
   /// Closes the file, is automatically called on destruction.
@@ -101,7 +101,7 @@ private:
 
 } // namespace precice::io
 
-//Required in order to print the vector types via the fmt interface
+// Required in order to print the vector types via the fmt interface
 template <>
 struct fmt::formatter<precice::io::TXTTableWriter::DataType> : formatter<string_view> {
   // parse is inherited from formatter<string_view>.

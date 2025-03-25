@@ -38,7 +38,7 @@
 namespace precice::config {
 
 ParticipantConfiguration::ParticipantConfiguration(
-    xml::XMLTag &              parent,
+    xml::XMLTag               &parent,
     mesh::PtrMeshConfiguration meshConfiguration)
     : _meshConfig(std::move(meshConfiguration))
 {
@@ -248,11 +248,11 @@ void ParticipantConfiguration::setRemeshing(
 
 void ParticipantConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
-    const std::string &  name = tag.getStringAttributeValue(ATTR_NAME);
+    const std::string   &name = tag.getStringAttributeValue(ATTR_NAME);
     impl::PtrParticipant p(new impl::ParticipantState(name, _meshConfig));
     _participants.push_back(p);
   } else if (tag.getName() == TAG_PROVIDE_MESH) {
@@ -334,7 +334,7 @@ void ParticipantConfiguration::xmlTagCallback(
 
 void ParticipantConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   if (tag.getName() == TAG) {
     finishParticipantConfiguration(context, _participants.back());
@@ -395,7 +395,7 @@ partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFi
 
 const mesh::PtrData &ParticipantConfiguration::getData(
     const mesh::PtrMesh &mesh,
-    const std::string &  nameData) const
+    const std::string   &nameData) const
 {
   PRECICE_CHECK(mesh->hasDataName(nameData),
                 "Participant \"{}\" asks for data \"{}\" from mesh \"{}\", but this mesh does not use such data. "
@@ -406,7 +406,7 @@ const mesh::PtrData &ParticipantConfiguration::getData(
 
 void ParticipantConfiguration::finishParticipantConfiguration(
     const xml::ConfigurationContext &context,
-    const impl::PtrParticipant &     participant)
+    const impl::PtrParticipant      &participant)
 {
   PRECICE_TRACE(participant->getName());
 
@@ -766,7 +766,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
 void ParticipantConfiguration::checkIllDefinedMappings(
     const mapping::MappingConfiguration::ConfiguredMapping &mapping,
-    const impl::PtrParticipant &                            participant)
+    const impl::PtrParticipant                             &participant)
 {
   PRECICE_TRACE();
   using ConfMapping = mapping::MappingConfiguration::ConfiguredMapping;

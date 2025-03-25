@@ -39,7 +39,7 @@ void ConstantPreconditioner::_update_(bool                   timeWindowComplete,
                                       const Eigen::VectorXd &res)
 {
 
-  //nothing to do here
+  // nothing to do here
 }
 
 } // namespace precice::acceleration::impl
