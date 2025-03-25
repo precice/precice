@@ -1287,6 +1287,8 @@ void ParticipantImpl::mapAndReadData(
     return;
   }
 
+  Event e{fmt::format("mapAndReadData.{}_{}", meshName, dataName), profiling::Fundamental};
+
   // Note that meshName refers to a remote mesh
   ReadDataContext &dataContext = _accessor->readDataContext(meshName, dataName);
   const auto       dataDims    = dataContext.getDataDimensions();
@@ -1339,6 +1341,8 @@ void ParticipantImpl::writeAndMapData(
   if (coordinates.empty() && values.empty()) {
     return;
   }
+
+  Event e{fmt::format("writeAndMapData.{}_{}", meshName, dataName), profiling::Fundamental};
 
   // Note that meshName refers here typically to a remote mesh
   WriteDataContext &dataContext = _accessor->writeDataContext(meshName, dataName);
