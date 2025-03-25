@@ -9,3 +9,4 @@ building preCICE often.
   Useful when adding/removing source files.
 - `createChangelog`: Creates a changelog file for the current PR. This is based on the GitHub CLI.
 - `createTest.py`: Automatically creates integration tests
+- `checkSymbols`: Takes the preCICE library and uses `readelf` to check if all cpp functions have a counterpart in C and Fortran

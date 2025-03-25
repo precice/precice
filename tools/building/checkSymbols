@@ -1,0 +1,100 @@
+#!python3
+
+import argparse
+import subprocess
+import pathlib
+import re
+
+
+def load_precice_symbols(lib: pathlib.Path) -> set[str]:
+    run = subprocess.run(
+        ["readelf", "--dyn-syms", "-CW", lib], check=True, stdout=subprocess.PIPE
+    )
+    lines = run.stdout.decode().splitlines(keepends=False)
+
+    symbols = set()
+    for line in lines:
+        r = re.split(" +", line)
+        if len(r[0]) == 0:
+            r.pop(0)
+        if "FUNC" not in r:
+            continue
+        r = " ".join(r[7:]).strip()
+
+        r = re.sub(r"\(.*\)", "", r)  # remove argument information
+        r = re.sub(r"\[.+\]", "", r)  # remove abi information
+        r = r.removesuffix(" const")
+
+        # we only keep precice non-tooling symbols
+        if "precice" in r and "tooling" not in r:
+            symbols.add(r)
+    return symbols
+
+
+def to_cpp(symbol: str) -> str:
+    parts = symbol.removesuffix("_").split("_")
+
+    res = parts[1]
+    for p in parts[2:]:
+        res += p.capitalize()
+    return res
+
+
+def check_symbols(lib: pathlib.Path):
+    all = load_precice_symbols(lib)
+
+    cppsym = {
+        s.removeprefix("precice::").removeprefix("Participant::")
+        for s in all
+        if "precice::" in s
+    }
+    csym = {s for s in all if "precicec_" in s}
+    fsym = {s for s in all if "precicef_" in s}
+
+    cmap = {to_cpp(s): s for s in csym}
+    fmap = {to_cpp(s): s for s in fsym}
+
+    print(f"CF C++")
+    print(f"-- ---")
+    for cpp in cppsym:
+        cmatch = cmap.get(cpp)
+        if cmatch:
+            cmap.pop(cpp)
+
+        fmatch = fmap.get(cpp)
+        if fmatch:
+            fmap.pop(cpp)
+
+        if cmatch and fmatch:
+            print(f"CF {cpp}")
+        elif cmatch:
+            print(f"C. {cpp}")
+        elif fmatch:
+            print(f".F {cpp}")
+        else:
+            print(f".. {cpp}")
+    print()
+
+    print("C functions without counterpart:")
+    for cpp, c in cmap.items():
+        print(f" {c} expected {cpp}")
+    print()
+
+    print("Fortran functions without counterpart:")
+    for cpp, f in fmap.items():
+        print(f" {f} expected {cpp}")
+
+
+def parse_args():
+    p = argparse.ArgumentParser()
+    p.add_argument("library", type=pathlib.Path, help="The preCICE library to inspect")
+    return p.parse_args()
+
+
+def main():
+    args = parse_args()
+    check_symbols(args.library)
+
+
+if __name__ == "__main__":
+    main()
