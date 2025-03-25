@@ -72,6 +72,8 @@ jobs:
         name: Prepare Markdown summary
         run: |
           echo "## Git references of latest (develop) components" >> $GITHUB_STEP_SUMMARY
+          echo "### preCICE" >> $GITHUB_STEP_SUMMARY
+          echo "Reference (pull request): \`${{ github.event.pull_request.head.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "### Python bindings" >> $GITHUB_STEP_SUMMARY
           echo "Reference: [\`${{ steps.ref-python-bindings.outputs.shorthash }}\`](https://github.com/precice/python-bindings/commit/${{ steps.ref-python-bindings.outputs.shorthash }})" >> $GITHUB_STEP_SUMMARY
           echo "Description:" >> $GITHUB_STEP_SUMMARY
