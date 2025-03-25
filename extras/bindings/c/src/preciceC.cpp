@@ -415,6 +415,13 @@ try {
   std::abort();
 }
 
+void precicec_resetMeshAccessRegion(const char *meshName)
+try {
+  impl->resetMeshAccessRegion(meshName);
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
 void precicec_getMeshVertexIDsAndCoordinates(
     const char *meshName,
     const int   size,

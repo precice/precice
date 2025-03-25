@@ -109,6 +109,11 @@ void Participant::resetMesh(::precice::string_view meshName)
   return _impl->resetMesh(toSV(meshName));
 }
 
+void Participant::resetMeshAccessRegion(::precice::string_view meshName)
+{
+  return _impl->resetMeshAccessRegion(toSV(meshName));
+}
+
 bool Participant::requiresGradientDataFor(::precice::string_view meshName,
                                           ::precice::string_view dataName) const
 {

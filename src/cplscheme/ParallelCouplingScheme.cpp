@@ -59,15 +59,62 @@ void ParallelCouplingScheme::exchangeInitialData()
   }
 }
 
+// Exchanges data before we actually perform the repartitining
+// We also set a flag indicating that this data doesn't need to be exchanged
+// when advancing the coupling scheme
+void ParallelCouplingScheme::exchangeDirectAccessData()
+{
+  // F: send, receive, S: receive, send
+  PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
+
+  // get send and receive map
+  auto directSend    = filterDataMap(getSendData(), [](const auto &cplData) { return cplData->isDirectAccessWrittenData; });
+  auto directReceive = filterDataMap(getReceiveData(), [](const auto &cplData) { return cplData->isDirectAccessWrittenData; });
+
+  if (doesFirstStep()) {
+    if (!directSend.empty()) {
+      sendData(getM2N(), directSend);
+    }
+    if (!directReceive.empty()) {
+      receiveData(getM2N(), directReceive);
+      // notifyDataHasBeenReceived();
+    }
+    // else {
+    //   initializeWithZeroInitialData(getReceiveData());
+    // }
+  } else { // second participant
+    if (!directReceive.empty()) {
+      receiveData(getM2N(), directReceive);
+      // notifyDataHasBeenReceived();
+    }
+    // else {
+    //   initializeWithZeroInitialData(getReceiveData());
+    // }
+    if (!directSend.empty()) {
+      sendData(getM2N(), directSend);
+    }
+  }
+
+  _directAccessDataWasSent = true;
+}
+
 void ParallelCouplingScheme::exchangeFirstData()
 {
   PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
+
+  auto relevantSendData    = filterDataMap(getSendData(), [&](const auto &cplData) {
+    return !_directAccessDataWasSent || !cplData->isDirectAccessWrittenData;
+  });
+  auto relevantReceiveData = filterDataMap(getReceiveData(), [&](const auto &cplData) {
+    return !_directAccessDataWasSent || !cplData->isDirectAccessWrittenData;
+  });
+
   if (doesFirstStep()) { // first participant
     PRECICE_DEBUG("Sending data...");
-    sendData(getM2N(), getSendData());
+    sendData(getM2N(), relevantSendData);
   } else { // second participant
     PRECICE_DEBUG("Receiving data...");
-    receiveData(getM2N(), getReceiveData());
+    receiveData(getM2N(), relevantReceiveData);
     notifyDataHasBeenReceived();
   }
 }
@@ -75,18 +122,25 @@ void ParallelCouplingScheme::exchangeFirstData()
 void ParallelCouplingScheme::exchangeSecondData()
 {
   PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
+  auto relevantSendData    = filterDataMap(getSendData(), [&](const auto &cplData) {
+    return !_directAccessDataWasSent || !cplData->isDirectAccessWrittenData;
+  });
+  auto relevantReceiveData = filterDataMap(getReceiveData(), [&](const auto &cplData) {
+    return !_directAccessDataWasSent || !cplData->isDirectAccessWrittenData;
+  });
   if (isExplicitCouplingScheme()) {
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving data...");
-      receiveData(getM2N(), getReceiveData());
+      receiveData(getM2N(), relevantReceiveData);
       notifyDataHasBeenReceived();
     } else { // second participant
       PRECICE_DEBUG("Sending data...");
-      sendData(getM2N(), getSendData());
+      sendData(getM2N(), relevantSendData);
     }
     moveToNextWindow();
   } else {
     PRECICE_ASSERT(isImplicitCouplingScheme());
+    PRECICE_ASSERT(false, "Not (yet) considered");
 
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving convergence data...");
@@ -109,6 +163,7 @@ void ParallelCouplingScheme::exchangeSecondData()
 
     storeIteration();
   }
+  _directAccessDataWasSent = false;
 }
 
 DataMap &ParallelCouplingScheme::getAccelerationData()

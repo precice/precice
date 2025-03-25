@@ -107,6 +107,11 @@ public:
     return false;
   }
 
+  void exchangeDirectAccessData() final override
+  {
+    PRECICE_ASSERT(false);
+  }
+
   /**
    * @brief Not implemented.
    */

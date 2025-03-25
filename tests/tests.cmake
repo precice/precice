@@ -37,6 +37,7 @@ target_sources(testprecice
     tests/parallel/direct-mesh-access/AccessReceivedMeshOverlapNoWrite.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshOverlapNoWriteTwoLevelInit.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshOverlapTwoLevelInit.cpp
+    tests/parallel/direct-mesh-access/ResetMeshAccessRegion.cpp
     tests/parallel/direct-mesh-access/helpers.cpp
     tests/parallel/direct-mesh-access/helpers.hpp
     tests/parallel/distributed-communication/TestDistributedCommunicationGatherScatterMPI.cpp
@@ -230,6 +231,8 @@ target_sources(testprecice
     tests/serial/direct-mesh-access/ExplicitRead.cpp
     tests/serial/direct-mesh-access/ExplicitReadNoFlag.cpp
     tests/serial/direct-mesh-access/Implicit.cpp
+    tests/serial/direct-mesh-access/RemeshReceivedMesh.cpp
+    tests/serial/direct-mesh-access/ResetMeshAccessRegion.cpp
     tests/serial/explicit/TestExplicitMPI.cpp
     tests/serial/explicit/TestExplicitMPISingle.cpp
     tests/serial/explicit/TestExplicitSockets.cpp
