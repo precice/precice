@@ -364,6 +364,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::completeJustInTimeMapping
   PRECICE_TRACE();
   PRECICE_ASSERT(!cache.p.empty());
   PRECICE_ASSERT(!cache.polynomialContributions.empty());
+  precice::profiling::Event e("map.pou.completeJustInTimeMapping.From" + input()->getName());
 
   for (std::size_t c = 0; c < _clusters.size(); ++c) {
     // If there is no contribution, we don't have to evaluate
@@ -389,7 +390,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::VectorXd> &in)
 {
   // We cannot synchronize this event, as the call to this function is rank-local only
-  precice::profiling::Event e("map.pou.updateCache.From" + input()->getName());
+  precice::profiling::Event e("map.pou.updateMappingDataCache.From" + input()->getName());
   PRECICE_ASSERT(cache.p.size() == _clusters.size());
   PRECICE_ASSERT(cache.polynomialContributions.size() == _clusters.size());
   Eigen::Map<const Eigen::MatrixXd> inMatrix(in.data(), cache.getDataDimensions(), in.size() / cache.getDataDimensions());
