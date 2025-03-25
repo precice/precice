@@ -6,6 +6,7 @@ repos:
   - id: clang-format
     name: format C/C++
     exclude: "^thirdparty"
+    types_or: [c++]
 # Official repo for default hooks
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: 'v5.0.0'
