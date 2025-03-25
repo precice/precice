@@ -257,7 +257,7 @@ All notable changes to this project will be documented in this file. For future 
 ## 2.3.0
 
 - Added `isMeshConnectivityRequired(meshID)` to the SolverInterface API. This is useful to generate connectivity information only if required by preCICE.
-- Added a configuration option to enable experiemental API functions.
+- Added a configuration option to enable experimental API functions.
 - Added bindings to doxygen.
 - Added check of user-written data to be finite.
 - Added convergence information for linear solvers of PETSc-based RBF mappings. Reports of converged solvers are logged as DEBUG, stopped solvers as WARNING and diverged solvers as ERROR messages.
@@ -643,7 +643,7 @@ All notable changes to this project will be documented in this file. For future 
   - Remove the `staticlib` and `bin` from the default targets to reduce the building time and storage requirements.
   - Change build types to mixed case, i.e. ```Debug``` and ```Release```. Old versions are retained for backward compatibility.
   - Make `mpicxx` default setting for compiler.
-  - Experiemental support for building with Conda, see `tools/anaconda_building`
+  - Experimental support for building with Conda, see `tools/anaconda_building`
   - Use NumPy to figure out Python include paths.
   - Search for PETSc in more paths
   - Add experimental CMake build control files.

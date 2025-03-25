@@ -235,7 +235,7 @@ void BaseQNAcceleration::performAcceleration(
   }
 
   /// Sample all the data to the corresponding time grid in _timeGrids and concatenate everything into a long vector
-  /// timeGrids are stored using std::opional, thus the .value() to get the actual object
+  /// timeGrids are stored using std::optional, thus the .value() to get the actual object
   concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value(), windowStart);
   concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value(), windowStart);
 
@@ -446,7 +446,7 @@ void BaseQNAcceleration::iterationsConverged(
     _primaryTimeGrids->moveTimeGridToNewWindow(cplData);
   }
   /// Sample all the data to the corresponding time grid in _timeGrids and concatenate everything into a long vector
-  /// timeGrids are stored using std::opional, thus the .value() to get the actual object
+  /// timeGrids are stored using std::optional, thus the .value() to get the actual object
   concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value(), windowStart);
   concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value(), windowStart);
   updateDifferenceMatrices(cplData);

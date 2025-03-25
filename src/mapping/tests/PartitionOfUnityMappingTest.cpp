@@ -1751,7 +1751,7 @@ void perform3DTestConservativeMappingVector(Mapping &mapping)
     BOOST_TEST(outData->values()(i * dataDimension + 1) == 0);
   }
 
-  // Check for the correct relation between copmonents
+  // Check for the correct relation between components
   for (unsigned int i = 0; i < inData->values().size() / dataDimension; ++i) {
     inData->values()(i * dataDimension)     = std::pow(i * dataDimension, 3);
     inData->values()(i * dataDimension + 1) = 5 * std::pow(i * dataDimension, 3);

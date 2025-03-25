@@ -154,7 +154,7 @@ add_feature_info(PRECICE_BUILD_TOOLS PRECICE_BUILD_TOOLS
   "Build the \"precice-tools\" executable
 
    preCICE offers in addition to the core library a variety of tools in order to check configuration
-   files or generate xml references. The tools are copmiled into an executable called \"precice-tools\".
+   files or generate xml references. The tools are compiled into an executable called \"precice-tools\".
 
    This feature can be enabled/disabled by setting the PRECICE_BUILD_TOOLS CMake option.
   ")

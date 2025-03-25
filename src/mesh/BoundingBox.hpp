@@ -31,7 +31,7 @@ public:
   *
   * @brief Constructor.
   *
-  * @param[in] bounds Min-max values of the bounding box in each dimesion (x_min, x_max, y_min, y_max, z_min, z_max)
+  * @param[in] bounds Min-max values of the bounding box in each dimension (x_min, x_max, y_min, y_max, z_min, z_max)
   *
   */
   explicit BoundingBox(std::vector<double> bounds);

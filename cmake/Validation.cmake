@@ -2,7 +2,7 @@
 # preCICE Validation of Libraries
 #
 # This file contains macros which validate some libraries by trying to compile
-# a minimalisitic exectutable.
+# a minimalisitic executable.
 # They report their activity as STATUS messages.
 # A failing validation is reported as a FATAL_ERROR.
 #

@@ -159,7 +159,7 @@ rbf_variant_t constructRBF(BasisFunction functionType, double supportRadius, dou
 
 // The actual instantion helper, which avoids enumerating all mapping implementations (more will come) with all RBF kernels
 // The first three arguments of the constructor are prescribed: constraint, dimension and the RBF function object, all other
-// constructor arguments are just forwareded. The first argument (BasisFunction) indicates then the actual instantiation to return.
+// constructor arguments are just forwarded. The first argument (BasisFunction) indicates then the actual instantiation to return.
 template <RBFBackend T, typename... Args>
 PtrMapping getRBFMapping(BasisFunction functionType, mapping::Mapping::Constraint &constraint, int dimension, double supportRadius, double shapeParameter,
                          Args &&... args)
