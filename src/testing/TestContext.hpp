@@ -55,7 +55,7 @@ struct ParticipantState {
 
   /// Constructs a serial participant with a given name
   constexpr explicit ParticipantState(std::string_view n)
-      : name(std::move(n)){};
+      : name(std::move(n)) {};
 
   /** Injects the amount of ranks this participant should run on.
    *

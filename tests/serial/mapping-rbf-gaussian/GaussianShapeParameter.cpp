@@ -13,9 +13,9 @@ BOOST_AUTO_TEST_CASE(GaussianShapeParameter)
 {
   PRECICE_TEST();
   /**
- * @brief Tests the Gaussian rbf mapping using the shape parameter option
- *
- */
+   * @brief Tests the Gaussian rbf mapping using the shape parameter option
+   *
+   */
   testRBFMapping(context.config(), context);
 }
 

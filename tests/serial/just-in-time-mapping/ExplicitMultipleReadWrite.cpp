@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(ExplicitMultipleReadWrite)
         BOOST_TEST(false);
       }
       // solve time step
-      //write data
+      // write data
       couplingInterface.writeData(meshName, porosityData, ids, porosityData1);
       couplingInterface.writeData(meshName, speedOfLightData, ids, SpeedOfLightData1);
 

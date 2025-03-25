@@ -36,7 +36,7 @@ public:
 
   static void writeVertex(
       const Eigen::VectorXd &position,
-      std::ostream &         outFile);
+      std::ostream          &outFile);
 
   static void writeLine(
       int           vertexIndices[2],
@@ -54,19 +54,19 @@ private:
   mutable logging::Logger _log{"io::ExportVTK"};
 
   void openFile(
-      std::ofstream &    outFile,
+      std::ofstream     &outFile,
       const std::string &filename) const;
 
   void exportMesh(
-      std::ofstream &   outFile,
+      std::ofstream    &outFile,
       const mesh::Mesh &mesh);
 
   void exportData(
-      std::ofstream &   outFile,
+      std::ofstream    &outFile,
       const mesh::Mesh &mesh);
 
   void exportGradient(
-      std::ofstream &   outFile,
+      std::ofstream    &outFile,
       const mesh::Mesh &mesh);
 };
 

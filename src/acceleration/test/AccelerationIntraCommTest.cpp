@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
     dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
     // init displacements & forces
-    //Need to store 2 values in the waveform iteration
+    // Need to store 2 values in the waveform iteration
     dpcd->emplaceSampleAtTime(windowStart, {1.0, 1.0, 1.0, 1.0});
     dpcd->emplaceSampleAtTime(windowEnd, {1.0, 1.0, 1.0, 1.0});
     fpcd->emplaceSampleAtTime(windowStart, {0.2, 0.2, 0.2, 0.2});

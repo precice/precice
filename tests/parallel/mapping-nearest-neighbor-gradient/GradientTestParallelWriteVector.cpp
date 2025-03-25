@@ -76,9 +76,9 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       interface.initialize();
       auto                dataName = "Data2";
       std::vector<double> values   = {1.0, 2.0, 3.0,
-                                    -1.0, -1.0, -1.0,
-                                    4.0, 5.0, 6.0,
-                                    0.0, 0.0, 0.0};
+                                      -1.0, -1.0, -1.0,
+                                      4.0, 5.0, 6.0,
+                                      0.0, 0.0, 0.0};
 
       interface.writeData(meshName, dataName, vertexIDs, values);
 

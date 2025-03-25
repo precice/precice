@@ -106,8 +106,8 @@ public:
   }
 
   /**
-    * @brief For manual configuration in test cases.
-    */
+   * @brief For manual configuration in test cases.
+   */
   void setParticipantConfiguration(PtrParticipantConfiguration config)
   {
     _participantConfiguration = config;

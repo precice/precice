@@ -42,10 +42,10 @@ std::string decodeXML(std::string_view xml)
 // ------------------------- Callback functions for libxml2  -------------------------
 
 void OnStartElementNs(
-    void *          ctx,
-    const xmlChar * localname,
-    const xmlChar * prefix,
-    const xmlChar * URI,
+    void           *ctx,
+    const xmlChar  *localname,
+    const xmlChar  *prefix,
+    const xmlChar  *URI,
     int             nb_namespaces,
     const xmlChar **namespaces,
     int             nb_attributes,
@@ -73,7 +73,7 @@ void OnStartElementNs(
 }
 
 void OnEndElementNs(
-    void *         ctx,
+    void          *ctx,
     const xmlChar *localname,
     const xmlChar *prefix,
     const xmlChar *URI)

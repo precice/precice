@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(ConsistentOneTetra3D)
   inMesh->createEdge(inVertexB, inVertexD);
 
   Eigen::VectorXd &inValuesScalar = inDataScalar->values();
-  inValuesScalar << 1.0, 2.0, 3.0, 4.0; //1 + x + 2y + 3z
+  inValuesScalar << 1.0, 2.0, 3.0, 4.0; // 1 + x + 2y + 3z
 
   BOOST_CHECK(!inMesh->tetrahedra().empty());
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));

@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(testResPreconditioner)
   precond.initialize(svs);
   Eigen::VectorXd backup = _data;
 
-  //should change
+  // should change
   precond.update(false, _data, _res);
   BOOST_TEST(precond.requireNewQR());
   precond.newQRfulfilled();
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(testResPreconditioner)
   precond.revert(_data);
   BOOST_TEST(testing::equals(_data, backup));
 
-  //should not change weights
+  // should not change weights
   precond.update(true, _data, _res * 10);
   BOOST_TEST(not precond.requireNewQR());
   precond.apply(_data);
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditioner)
   precond.initialize(svs);
   Eigen::VectorXd backup = _data;
 
-  //should change, update twice to really test the summation
+  // should change, update twice to really test the summation
   precond.update(false, _data, _res);
   precond.update(false, _data, _res * 2);
   BOOST_TEST(precond.requireNewQR());
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditioner)
   precond.revert(_data);
   BOOST_TEST(testing::equals(_data, backup));
 
-  //should not change weights
+  // should not change weights
   precond.update(true, _data, _res * 10);
   BOOST_TEST(not precond.requireNewQR());
   precond.apply(_data);
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditionerUpdate)
   precond.initialize(svs);
   Eigen::VectorXd backup = _data;
 
-  //should change, update twice to really test the summation
+  // should change, update twice to really test the summation
   precond.update(false, _data, _res);
   precond.update(false, _data, _res * 2);
   BOOST_TEST(precond.requireNewQR());
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(testResSumPreconditionerUpdate)
   precond.revert(_data);
   BOOST_TEST(testing::equals(_data, backup));
 
-  //should not change weights
+  // should not change weights
   precond.update(true, _data, _res * 10);
   BOOST_TEST(not precond.requireNewQR());
   precond.apply(_data);
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(testValuePreconditioner)
   precond.initialize(svs);
   Eigen::VectorXd backup = _data;
 
-  //should change, since this is the first time window
+  // should change, since this is the first time window
   precond.update(false, _data, _res);
   BOOST_TEST(precond.requireNewQR());
   precond.newQRfulfilled();
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(testValuePreconditioner)
   precond.revert(_data);
   BOOST_TEST(testing::equals(_data, backup));
 
-  //now no change
+  // now no change
   precond.update(false, _data, _res);
   BOOST_TEST(not precond.requireNewQR());
   precond.apply(_data);
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(testValuePreconditioner)
   precond.revert(_data);
   BOOST_TEST(testing::equals(_data, backup));
 
-  //should change weights
+  // should change weights
   precond.update(true, _data * 2, _res);
   BOOST_TEST(precond.requireNewQR());
   precond.newQRfulfilled();
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(testConstPreconditioner)
 
   ConstantPreconditioner precond(factors);
 
-  precond.initialize(svs); //new weights already computed here
+  precond.initialize(svs); // new weights already computed here
   Eigen::VectorXd backup = _data;
 
   // should have no effect
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(testConstPreconditioner)
   precond.revert(_data);
   BOOST_TEST(testing::equals(_data, backup));
 
-  //should not change weights
+  // should not change weights
   precond.update(true, _data, _res);
   BOOST_TEST(not precond.requireNewQR());
   precond.apply(_data);
@@ -357,18 +357,18 @@ BOOST_AUTO_TEST_CASE(testPreconditionerLargerDataSize)
   precond.initialize(svs);
   Eigen::VectorXd backup = _dataLargerSize;
 
-  //should change, update twice to really test the summation
+  // should change, update twice to really test the summation
   precond.update(false, _data, _res);
   precond.update(false, _data, _res * 2);
   BOOST_TEST(precond.requireNewQR());
   precond.newQRfulfilled();
-  precond.apply(_dataLargerSize); //should only scale the first 8 values
+  precond.apply(_dataLargerSize); // should only scale the first 8 values
   BOOST_TEST(testing::equals(_dataLargerSize, _compareDataLargerSizeResSum));
 
   precond.revert(_dataLargerSize);
   BOOST_TEST(testing::equals(_dataLargerSize, backup));
 
-  //should not change weights
+  // should not change weights
   precond.update(true, _data, _res * 10);
   BOOST_TEST(not precond.requireNewQR());
   precond.apply(_dataLargerSize);
@@ -391,18 +391,18 @@ BOOST_AUTO_TEST_CASE(testPreconditionerLargerResSize)
   precond.initialize(svs);
   Eigen::VectorXd backup = _dataSmallerSize;
 
-  //should change, update twice to really test the summation
+  // should change, update twice to really test the summation
   precond.update(false, _data, _res);
   precond.update(false, _data, _res * 2);
   BOOST_TEST(precond.requireNewQR());
   precond.newQRfulfilled();
-  precond.apply(_dataSmallerSize); //should only use the first 6 scaling factors
+  precond.apply(_dataSmallerSize); // should only use the first 6 scaling factors
   BOOST_TEST(testing::equals(_dataSmallerSize, _compareDataSmallerSizeResSum));
 
   precond.revert(_dataSmallerSize);
   BOOST_TEST(testing::equals(_dataSmallerSize, backup));
 
-  //should not change weights
+  // should not change weights
   precond.update(true, _data, _res * 10);
   BOOST_TEST(not precond.requireNewQR());
   precond.apply(_dataSmallerSize);
@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(testMultilpleMeshes)
   precond.initialize(svs);
   Eigen::VectorXd backup = _data;
 
-  //should change
+  // should change
   precond.update(false, _data, _res);
   BOOST_TEST(precond.requireNewQR());
   precond.newQRfulfilled();
@@ -433,7 +433,7 @@ BOOST_AUTO_TEST_CASE(testMultilpleMeshes)
   precond.revert(_data);
   BOOST_TEST(testing::equals(_data, backup));
 
-  //should not change weights
+  // should not change weights
   precond.update(true, _data, _res * 10);
   BOOST_TEST(not precond.requireNewQR());
   precond.apply(_data);
@@ -447,7 +447,7 @@ PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(testParallelMatrixScaling)
 {
   PRECICE_TEST();
-  //setup data
+  // setup data
   int localN = -1;
   if (context.isPrimary()) {
     localN = 2;

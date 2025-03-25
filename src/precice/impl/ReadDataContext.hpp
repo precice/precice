@@ -76,7 +76,7 @@ public:
   ReadDataContext &operator=(const ReadDataContext &assign) = delete;
 
   /// Move constructor, use the implicitly declared.
-  ReadDataContext(ReadDataContext &&) = default;
+  ReadDataContext(ReadDataContext &&)            = default;
   ReadDataContext &operator=(ReadDataContext &&) = default;
 
   /**

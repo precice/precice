@@ -143,7 +143,7 @@ struct QuickTest {
     return *this;
   }
 
-  Participant &         interface;
+  Participant          &interface;
   std::string           meshName;
   std::string           readDataName  = "unused";
   std::string           writeDataName = "unused";

@@ -65,7 +65,7 @@ ProfilingConfiguration::ProfilingConfiguration(xml::XMLTag &parent)
 
 void ProfilingConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   precice::syncMode = tag.getBooleanAttributeValue("synchronize");
   auto mode         = tag.getStringAttributeValue("mode");

@@ -29,7 +29,7 @@ NearestNeighborMapping::NearestNeighborMapping(
 void NearestNeighborMapping::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
 {
   precice::profiling::Event e("map.nn.mapConsistentAt.From" + input()->getName());
-  auto &                    index = input()->index();
+  auto                     &index = input()->index();
 
   // Set up of output arrays
   Eigen::Map<const Eigen::MatrixXd> localData(cache.inData.sample.values.data(), cache.getDataDimensions(), cache.inData.sample.values.size() / cache.getDataDimensions());
@@ -41,7 +41,7 @@ void NearestNeighborMapping::mapConsistentAt(const Eigen::Ref<const Eigen::Matri
 void NearestNeighborMapping::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, impl::MappingDataCache &, Eigen::Ref<Eigen::MatrixXd> target)
 {
   precice::profiling::Event e("map.nn.mapConservativeAt.From" + input()->getName());
-  auto &                    index = output()->index();
+  auto                     &index = output()->index();
   for (Eigen::Index i = 0; i < coordinates.cols(); ++i) {
     target.col(index.getClosestVertex(coordinates.col(i)).index) += source.col(i);
   }

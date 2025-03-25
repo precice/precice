@@ -35,19 +35,19 @@ public:
 
   static void writeVertex(
       const Eigen::VectorXd &position,
-      std::ostream &         outFile);
+      std::ostream          &outFile);
 
   static void writeLine(
       const mesh::Edge &edge,
-      std::ostream &    outFile);
+      std::ostream     &outFile);
 
   static void writeTriangle(
       const mesh::Triangle &triangle,
-      std::ostream &        outFile);
+      std::ostream         &outFile);
 
   static void writeTetrahedron(
       const mesh::Tetrahedron &tetra,
-      std::ostream &           outFile);
+      std::ostream            &outFile);
 
 private:
   mutable logging::Logger _log{"io::ExportXML"};
@@ -84,15 +84,15 @@ private:
   void writeSubFile(int index, double time);
 
   void exportPoints(
-      std::ostream &    outFile,
+      std::ostream     &outFile,
       const mesh::Mesh &mesh) const;
 
   virtual void exportConnectivity(
-      std::ostream &    outFile,
+      std::ostream     &outFile,
       const mesh::Mesh &mesh) const = 0;
 
   void exportData(
-      std::ostream &    outFile,
+      std::ostream     &outFile,
       const mesh::Mesh &mesh) const;
 
   void exportGradient(const mesh::PtrData data, const int dataDim, std::ostream &outFile) const;

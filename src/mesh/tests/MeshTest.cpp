@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(MeshEquality)
   Mesh                  mesh2("Mesh2", dim, testing::nextMeshID());
   std::array<Mesh *, 2> meshes = {&mesh1, &mesh2};
   for (auto ptr : meshes) {
-    auto &          mesh = *ptr;
+    auto           &mesh = *ptr;
     Eigen::VectorXd coords0(dim);
     Eigen::VectorXd coords1(dim);
     Eigen::VectorXd coords2(dim);
@@ -217,9 +217,9 @@ BOOST_AUTO_TEST_CASE(MeshEquality)
     Vertex &v1 = mesh.createVertex(coords1);
     Vertex &v2 = mesh.createVertex(coords2);
     Vertex &v3 = mesh.createVertex(coords3);
-    Edge &  e0 = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
-    Edge &  e1 = mesh.createEdge(v1, v2); // LINESTRING (1 0 0, 0 0 1)
-    Edge &  e2 = mesh.createEdge(v2, v0); // LINESTRING (0 0 1, 0 0 0)
+    Edge   &e0 = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
+    Edge   &e1 = mesh.createEdge(v1, v2); // LINESTRING (1 0 0, 0 0 1)
+    Edge   &e2 = mesh.createEdge(v2, v0); // LINESTRING (0 0 1, 0 0 0)
     mesh.createEdge(v1, v3);              // LINESTRING (1 0 0, 1 0 1)
     mesh.createEdge(v3, v2);              // LINESTRING (1 0 1, 0 0 1)
     mesh.createTriangle(e0, e1, e2);
@@ -236,9 +236,9 @@ BOOST_AUTO_TEST_CASE(MeshWKTPrint)
   Vertex &v1 = mesh.createVertex(Eigen::Vector3d(1., 0., 0.));
   Vertex &v2 = mesh.createVertex(Eigen::Vector3d(0., 0., 1.));
   Vertex &v3 = mesh.createVertex(Eigen::Vector3d(1., 0., 1.));
-  Edge &  e0 = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
-  Edge &  e1 = mesh.createEdge(v1, v2); // LINESTRING (1 0 0, 0 0 1)
-  Edge &  e2 = mesh.createEdge(v2, v0); // LINESTRING (0 0 1, 0 0 0)
+  Edge   &e0 = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
+  Edge   &e1 = mesh.createEdge(v1, v2); // LINESTRING (1 0 0, 0 0 1)
+  Edge   &e2 = mesh.createEdge(v2, v0); // LINESTRING (0 0 1, 0 0 0)
   mesh.createEdge(v1, v3);              // LINESTRING (1 0 0, 1 0 1)
   mesh.createEdge(v3, v2);              // LINESTRING (1 0 1, 0 0 1)
   mesh.createTriangle(e0, e1, e2);
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataGrow)
 {
   PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
-  const auto &        values = mesh.createData("Data", 1, 0_dataID)->values();
+  const auto         &values = mesh.createData("Data", 1, 0_dataID)->values();
 
   // Create mesh
   mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(ResizeDataShrink)
 {
   PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
-  const auto &        values = mesh.createData("Data", 1, 0_dataID)->values();
+  const auto         &values = mesh.createData("Data", 1, 0_dataID)->values();
 
   // Create mesh
   mesh.createVertex(Vector3d(0.0, 0.0, 0.0));

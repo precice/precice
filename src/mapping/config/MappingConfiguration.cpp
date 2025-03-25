@@ -105,7 +105,7 @@ using rbf_variant_t = std::variant<CompactPolynomialC0, CompactPolynomialC2, Com
 // The actual instantiation of the mapping class, which is called by the visitor \ref getRBFMapping
 template <RBFBackend T, typename RADIAL_BASIS_FUNCTION_T, typename... Args>
 PtrMapping instantiateRBFMapping(mapping::Mapping::Constraint &constraint, int dimension, RADIAL_BASIS_FUNCTION_T function,
-                                 Args &&... args)
+                                 Args &&...args)
 {
   return PtrMapping(new typename BackendSelector<T, RADIAL_BASIS_FUNCTION_T>::type(constraint, dimension, function, std::forward<Args>(args)...));
 }
@@ -162,7 +162,7 @@ rbf_variant_t constructRBF(BasisFunction functionType, double supportRadius, dou
 // constructor arguments are just forwarded. The first argument (BasisFunction) indicates then the actual instantiation to return.
 template <RBFBackend T, typename... Args>
 PtrMapping getRBFMapping(BasisFunction functionType, mapping::Mapping::Constraint &constraint, int dimension, double supportRadius, double shapeParameter,
-                         Args &&... args)
+                         Args &&...args)
 {
   // First, construct the RBF function
   auto functionVariant = constructRBF(functionType, supportRadius, shapeParameter);
@@ -172,7 +172,7 @@ PtrMapping getRBFMapping(BasisFunction functionType, mapping::Mapping::Constrain
 } // namespace
 
 MappingConfiguration::MappingConfiguration(
-    xml::XMLTag &              parent,
+    xml::XMLTag               &parent,
     mesh::PtrMeshConfiguration meshConfiguration)
     : _meshConfig(std::move(meshConfiguration))
 {
@@ -370,7 +370,7 @@ void MappingConfiguration::setExperimental(
 
 void MappingConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getNamespace() == TAG) {
@@ -546,7 +546,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     const std::string &toMeshName,
     const std::string &geoMultiscaleType,
     const std::string &geoMultiscaleAxis,
-    const double &     multiscaleRadius) const
+    const double      &multiscaleRadius) const
 {
   PRECICE_TRACE(direction, type);
 

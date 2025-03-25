@@ -82,7 +82,7 @@ public:
   void revert(Eigen::MatrixXd &M, bool transpose)
   {
     PRECICE_TRACE();
-    //PRECICE_ASSERT(_needsGlobalWeights);
+    // PRECICE_ASSERT(_needsGlobalWeights);
     if (transpose) {
       PRECICE_DEBUG_IF((int) _weights.size() != M.cols(), "The number of columns of the matrix {} and weights size {} mismatched.", M.cols(), _weights.size());
 

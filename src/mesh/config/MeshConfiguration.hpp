@@ -24,7 +24,7 @@ class MeshConfiguration : public xml::XMLTag::Listener {
 public:
   /// Constructor, takes a valid data configuration as argument.
   MeshConfiguration(
-      xml::XMLTag &        parent,
+      xml::XMLTag         &parent,
       PtrDataConfiguration config);
 
   /// Returns all configured meshes.
@@ -45,7 +45,7 @@ public:
 
   void xmlEndTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag) override;
+      xml::XMLTag                     &callingTag) override;
 
   const PtrDataConfiguration &getDataConfiguration() const;
 

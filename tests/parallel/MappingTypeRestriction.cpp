@@ -12,12 +12,12 @@ BOOST_AUTO_TEST_CASE(MappingTypeRestriction)
 {
   PRECICE_TEST();
   /**
- * @brief Reproduces bug that disallowed read-conservative mapping on serial participant
- *
- * SolverOne runs in parallel and uses a read-consistent mapping.
- * SolverTwo runs in serial and uses a read-conservative mapping.
- * A previous bug disallowed the read-conservative mapping during the configuration on the parallel participant.
- */
+   * @brief Reproduces bug that disallowed read-conservative mapping on serial participant
+   *
+   * SolverOne runs in parallel and uses a read-consistent mapping.
+   * SolverTwo runs in serial and uses a read-conservative mapping.
+   * A previous bug disallowed the read-conservative mapping during the configuration on the parallel participant.
+   */
   if (context.name == "SolverOne") {
     precice::Participant interface(context.name, context.config(), context.rank, context.size);
     auto                 meshName = "MeshOne";

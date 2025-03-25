@@ -50,7 +50,7 @@ public:
   };
 
   MappingConfiguration(
-      xml::XMLTag &              parent,
+      xml::XMLTag               &parent,
       mesh::PtrMeshConfiguration meshConfiguration);
 
   void setExperimental(bool experimental);
@@ -62,7 +62,7 @@ public:
    */
   void xmlTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag) override;
+      xml::XMLTag                     &callingTag) override;
 
   /**
    * @brief Callback function required for use of automatic configuration.
@@ -71,7 +71,7 @@ public:
    */
   void xmlEndTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag) override;
+      xml::XMLTag                     &callingTag) override;
 
   /// Returns all configured mappings.
   const std::vector<ConfiguredMapping> &mappings();
@@ -263,7 +263,7 @@ private:
       const std::string &toMeshName,
       const std::string &geoMultiscaleType,
       const std::string &geoMultiscaleAxis,
-      const double &     multiscaleRadius) const;
+      const double      &multiscaleRadius) const;
 
   /**
    * Stores additional information about the requested RBF mapping such as the

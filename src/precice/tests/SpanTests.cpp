@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(FromStringRef)
 {
   PRECICE_TEST();
   std::string      s  = "hello there";
-  std::string &    sr = s;
+  std::string     &sr = s;
   span<const char> const_span{sr};
   BOOST_TEST(s == std::string(const_span.data(), const_span.size()));
 }
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(FromCString)
 {
   PRECICE_TEST();
   std::string      s  = "hello there";
-  char *           sp = s.data();
+  char            *sp = s.data();
   span<const char> const_span{sp};
   BOOST_TEST(s == std::string(const_span.data(), const_span.size()));
 }
@@ -122,7 +122,7 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(FromConstCString)
 {
   PRECICE_TEST();
-  const char *     s = "hello there";
+  const char      *s = "hello there";
   span<const char> const_span{s};
   BOOST_TEST(s == std::string(const_span.data(), const_span.size()));
 }
@@ -131,7 +131,7 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ToStringView)
 {
   PRECICE_TEST();
-  const char *     s = "hello there";
+  const char      *s = "hello there";
   span<const char> const_span{s};
   std::string_view sv{const_span.data(), const_span.size()};
 

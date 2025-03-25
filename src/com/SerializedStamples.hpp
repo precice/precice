@@ -67,10 +67,10 @@ public:
   Eigen::VectorXd &gradients();
 
   /**
- * @brief Returns number of timeSteps
- *
- * @return int number of time steps
- */
+   * @brief Returns number of timeSteps
+   *
+   * @return int number of time steps
+   */
   int nTimeSteps() const;
 
 private:
@@ -94,11 +94,11 @@ private:
   void serializeGradients(const cplscheme::CouplingData &data);
 
   /**
-     * @brief Deserialize _values and (if required by data) _gradients into  timeStepsStorage of data. Use provided timeStamps.
-     *
-     * @param timeStamps
-     * @param data
-     */
+   * @brief Deserialize _values and (if required by data) _gradients into  timeStepsStorage of data. Use provided timeStamps.
+   *
+   * @param timeStamps
+   * @param data
+   */
   void deserialize(precice::span<const double> timeStamps, cplscheme::CouplingData &data) const;
 
   /// Buffer for serialized values of stamples

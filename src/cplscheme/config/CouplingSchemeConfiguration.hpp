@@ -51,7 +51,7 @@ public:
    * @param[in] participantConfig For checking waveform degree.
    */
   CouplingSchemeConfiguration(
-      xml::XMLTag &                        parent,
+      xml::XMLTag                         &parent,
       mesh::PtrMeshConfiguration           meshConfig,
       m2n::M2NConfiguration::SharedPointer m2nConfig,
       config::PtrParticipantConfiguration  participantConfig);
@@ -264,7 +264,7 @@ private:
 
   /// Adds configured exchange data to be sent or received to scheme.
   void addDataToBeExchanged(
-      BiCouplingScheme & scheme,
+      BiCouplingScheme  &scheme,
       const std::string &accessor) const;
 
   /**
@@ -273,7 +273,7 @@ private:
    */
   void addMultiDataToBeExchanged(
       MultiCouplingScheme &scheme,
-      const std::string &  accessor) const;
+      const std::string   &accessor) const;
 
   void checkIfDataIsExchanged(
       DataID dataID) const;
@@ -282,18 +282,18 @@ private:
       DataID dataID, const std::string &first, const std::string &second) const;
 
   void addConvergenceMeasures(
-      BaseCouplingScheme *                            scheme,
-      const std::string &                             participant,
+      BaseCouplingScheme                             *scheme,
+      const std::string                              &participant,
       const std::vector<ConvergenceMeasureDefintion> &convergenceMeasureDefinitions) const;
 
   void setSerialAcceleration(
       BaseCouplingScheme *scheme,
-      const std::string & first,
-      const std::string & second) const;
+      const std::string  &first,
+      const std::string  &second) const;
 
   void setParallelAcceleration(
       BaseCouplingScheme *scheme,
-      const std::string & participant) const;
+      const std::string  &participant) const;
 
   friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation; // For whitebox tests
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;   // For whitebox tests

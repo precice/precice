@@ -30,7 +30,7 @@ ParallelCouplingScheme::ParallelCouplingScheme(
     const std::string &localParticipant,
     m2n::PtrM2N        m2n,
     CouplingMode       cplMode)
-    : ParallelCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), cplMode, UNDEFINED_MAX_ITERATIONS, UNDEFINED_MAX_ITERATIONS){};
+    : ParallelCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), cplMode, UNDEFINED_MAX_ITERATIONS, UNDEFINED_MAX_ITERATIONS) {};
 
 void ParallelCouplingScheme::exchangeInitialData()
 {

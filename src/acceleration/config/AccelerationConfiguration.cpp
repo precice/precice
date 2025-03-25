@@ -142,7 +142,7 @@ PtrAcceleration AccelerationConfiguration::getAcceleration()
 
 void AccelerationConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    callingTag)
+    xml::XMLTag                     &callingTag)
 {
   PRECICE_TRACE(callingTag.getFullName());
 
@@ -248,12 +248,12 @@ void AccelerationConfiguration::xmlTagCallback(
 
 void AccelerationConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    callingTag)
+    xml::XMLTag                     &callingTag)
 {
   PRECICE_TRACE(callingTag.getName());
   if (callingTag.getNamespace() == TAG) {
 
-    //create preconditioner
+    // create preconditioner
     if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_AITKEN) {
       if (_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER) {
         _preconditioner = PtrPreconditioner(new ConstantPreconditioner(_config.scalingFactorsInOrder()));

@@ -67,11 +67,11 @@ private:
 
   void getValue(
       Eigen::VectorXd &value,
-      mesh::PtrData &  data,
+      mesh::PtrData   &data,
       double           time);
 
   void getValue(
-      double &       value,
+      double        &value,
       mesh::PtrData &data,
       double         time);
 };

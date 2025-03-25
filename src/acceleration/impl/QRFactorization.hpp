@@ -56,8 +56,8 @@ public:
       double          sigma = std::numeric_limits<double>::min());
 
   /**
-    * @brief Destructor, empty.
-    */
+   * @brief Destructor, empty.
+   */
   virtual ~QRFactorization() = default;
 
   /**
@@ -68,13 +68,13 @@ public:
   void resetFilter(double singularityLimit, std::vector<int> &delIndices, Eigen::MatrixXd &V);
 
   /**
-    * @brief resets the QR factorization zo zero Q(0:0, 0:0)R(0:0, 0:0)
-    */
+   * @brief resets the QR factorization zo zero Q(0:0, 0:0)R(0:0, 0:0)
+   */
   void reset();
 
   /**
-    * @brief resets the QR factorization to the given factorization Q, R
-    */
+   * @brief resets the QR factorization to the given factorization Q, R
+   */
   void reset(
       Eigen::MatrixXd const &Q,
       Eigen::MatrixXd const &R,
@@ -85,8 +85,8 @@ public:
       double                 sigma = std::numeric_limits<double>::min());
 
   /**
-    * @brief resets the QR factorization to be the factorization of A = QR
-    */
+   * @brief resets the QR factorization to be the factorization of A = QR
+   */
   void reset(
       Eigen::MatrixXd const &A,
       int                    globalRows,
@@ -95,9 +95,9 @@ public:
       double                 sigma = std::numeric_limits<double>::min());
 
   /**
-    * @brief inserts a new column at arbitrary position and updates the QR factorization
-    * This function works on the memory of v, thus changes the Vector v.
-    */
+   * @brief inserts a new column at arbitrary position and updates the QR factorization
+   * This function works on the memory of v, thus changes the Vector v.
+   */
   bool insertColumn(int k, const Eigen::VectorXd &v, double singularityLimit = 0);
 
   /**
@@ -107,46 +107,46 @@ public:
   void deleteColumn(int k);
 
   /**
-    * @brief inserts a new column at position 0, i.e., shifts right and inserts at first position
-    * and updates the QR factorization.
-    * This function works on the memory of v, thus changes the Vector v.
-    */
+   * @brief inserts a new column at position 0, i.e., shifts right and inserts at first position
+   * and updates the QR factorization.
+   * This function works on the memory of v, thus changes the Vector v.
+   */
   void pushFront(const Eigen::VectorXd &v);
 
   /**
-    * @brief inserts a new column at position _cols-1, i.e., appends a column at the end
-    * and updates the QR factorization
-    * This function works on the memory of v, thus changes the Vector v.
-    */
+   * @brief inserts a new column at position _cols-1, i.e., appends a column at the end
+   * and updates the QR factorization
+   * This function works on the memory of v, thus changes the Vector v.
+   */
   void pushBack(const Eigen::VectorXd &v);
 
   /**
-    * @brief deletes the column at position 0, i.e., deletes and shifts columns to the left
-    * and updates the QR factorization
-    */
+   * @brief deletes the column at position 0, i.e., deletes and shifts columns to the left
+   * and updates the QR factorization
+   */
   void popFront();
 
   /**
-    * @brief deletes the column at position _cols-1, i.e., deletes the last column
-    * and updates the QR factorization
-    */
+   * @brief deletes the column at position _cols-1, i.e., deletes the last column
+   * and updates the QR factorization
+   */
   void popBack();
 
   /**
-    * @brief filters the least squares system, i.e., the decomposition Q*R = V according
-    * to the defined filter technique. This is done to ensure good conditioning
-    * @param [out] delIndices - a vector of indices of deleted columns from the LS-system
-    */
+   * @brief filters the least squares system, i.e., the decomposition Q*R = V according
+   * to the defined filter technique. This is done to ensure good conditioning
+   * @param [out] delIndices - a vector of indices of deleted columns from the LS-system
+   */
   void applyFilter(double singularityLimit, std::vector<int> &delIndices, Eigen::MatrixXd &V);
 
   /**
-    * @brief returns a matrix representation of the orthogonal matrix Q
-    */
+   * @brief returns a matrix representation of the orthogonal matrix Q
+   */
   Eigen::MatrixXd &matrixQ();
 
   /**
-    * @brief returns a matrix representation of the upper triangular matrix R
-    */
+   * @brief returns a matrix representation of the upper triangular matrix R
+   */
   Eigen::MatrixXd &matrixR();
 
   // @brief returns the number of columns in the QR-decomposition
@@ -173,41 +173,41 @@ private:
   };
 
   /**
-  * @short assuming Q(1:n,1:m) has nearly orthonormal columns, this procedure
-  *   orthogonlizes v(1:n) to the columns of Q, and normalizes the result.
-  *   r(1:n) is the array of Fourier coefficients, and rho is the distance
-  *   from v to range of Q, r and its corrections are computed in double
-  *   precision.
-  *   This method tries to re-orthogonalize the matrix Q for a maximum of 4 iterations
-  *   if ||v_orth|| / ||v|| <= 1/theta is too small, i.e. the gram schmidt process is iterated.
-  *   If ||v_orth|| / ||v|| <= std::numeric_limit, a unit vector that is orthogonal to Q is inserted
-  *   and rho is set to 0. i.e., R has a zero on the diagonal in the respective column.
-  */
+   * @short assuming Q(1:n,1:m) has nearly orthonormal columns, this procedure
+   *   orthogonlizes v(1:n) to the columns of Q, and normalizes the result.
+   *   r(1:n) is the array of Fourier coefficients, and rho is the distance
+   *   from v to range of Q, r and its corrections are computed in double
+   *   precision.
+   *   This method tries to re-orthogonalize the matrix Q for a maximum of 4 iterations
+   *   if ||v_orth|| / ||v|| <= 1/theta is too small, i.e. the gram schmidt process is iterated.
+   *   If ||v_orth|| / ||v|| <= std::numeric_limit, a unit vector that is orthogonal to Q is inserted
+   *   and rho is set to 0. i.e., R has a zero on the diagonal in the respective column.
+   */
   int orthogonalize_stable(Eigen::VectorXd &v, Eigen::VectorXd &r, double &rho, int colNum);
 
   /**
    * @short assuming Q(1:n,1:m) has nearly orthonormal columns, this procedure
-  *   orthogonlizes v(1:n) to the columns of Q, and normalizes the result.
-  *   r(1:n) is the array of Fourier coefficients, and rho is the distance
-  *   from v to range of Q, r and its corrections are computed in double
-  *   precision.
-  *   This method tries to re-orthogonalize the matrix Q for a maximum of 4 iterations
-  *   if ||v_orth|| / ||v|| <= 1/theta is toot small, i.e. the gram schmidt process is iterated.
-  *
-  *   Difference to the method orthogonalize_stable():
-  *   if ||v_orth||/||v|| approx 0, no unit vector is inserted.
+   *   orthogonlizes v(1:n) to the columns of Q, and normalizes the result.
+   *   r(1:n) is the array of Fourier coefficients, and rho is the distance
+   *   from v to range of Q, r and its corrections are computed in double
+   *   precision.
+   *   This method tries to re-orthogonalize the matrix Q for a maximum of 4 iterations
+   *   if ||v_orth|| / ||v|| <= 1/theta is toot small, i.e. the gram schmidt process is iterated.
+   *
+   *   Difference to the method orthogonalize_stable():
+   *   if ||v_orth||/||v|| approx 0, no unit vector is inserted.
    */
   int orthogonalize(Eigen::VectorXd &v, Eigen::VectorXd &r, double &rho, int colNum);
 
   /**
-  * @short computes parameters for givens matrix G for which  (x,y)G = (z,0). replaces (x,y) by (z,0)
-  */
+   * @short computes parameters for givens matrix G for which  (x,y)G = (z,0). replaces (x,y) by (z,0)
+   */
   void computeReflector(givensRot &grot, double &x, double &y);
 
   /**
-  *  @short this procedure replaces the two column matrix [p(k:l-1), q(k:l-1)] by [p(k:l), q(k:l)]*G,
-  *  where G is the Givens matrix grot, determined by sigma and gamma.
-  */
+   *  @short this procedure replaces the two column matrix [p(k:l-1), q(k:l-1)] by [p(k:l), q(k:l)]*G,
+   *  where G is the Givens matrix grot, determined by sigma and gamma.
+   */
   void applyReflector(const givensRot &grot, int k, int l, Eigen::VectorXd &p, Eigen::VectorXd &q);
 
   logging::Logger _log{"acceleration::QRFactorization"};

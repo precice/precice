@@ -22,9 +22,9 @@ SerialCouplingScheme::SerialCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
-    const std::string &           firstParticipant,
-    const std::string &           secondParticipant,
-    const std::string &           localParticipant,
+    const std::string            &firstParticipant,
+    const std::string            &secondParticipant,
+    const std::string            &localParticipant,
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
@@ -50,13 +50,13 @@ SerialCouplingScheme::SerialCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
-    const std::string &           firstParticipant,
-    const std::string &           secondParticipant,
-    const std::string &           localParticipant,
+    const std::string            &firstParticipant,
+    const std::string            &secondParticipant,
+    const std::string            &localParticipant,
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode)
-    : SerialCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), dtMethod, cplMode, UNDEFINED_MAX_ITERATIONS, UNDEFINED_MAX_ITERATIONS){};
+    : SerialCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), dtMethod, cplMode, UNDEFINED_MAX_ITERATIONS, UNDEFINED_MAX_ITERATIONS) {};
 
 void SerialCouplingScheme::sendTimeWindowSize()
 {

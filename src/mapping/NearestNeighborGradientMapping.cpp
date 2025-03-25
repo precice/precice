@@ -66,7 +66,7 @@ void NearestNeighborGradientMapping::mapConsistent(const time::Sample &inData, E
 
   const int              valueDimensions = inData.dataDims;
   const Eigen::VectorXd &inputValues     = inData.values;
-  Eigen::VectorXd &      outputValues    = outData;
+  Eigen::VectorXd       &outputValues    = outData;
   const Eigen::MatrixXd &gradients       = inData.gradients;
 
   // Consistent mapping

@@ -102,7 +102,7 @@ void PythonAction::performAction()
       PyTuple_SetItem(dataArgs, 0, pythonTime);
 
       npy_intp targetDim[]  = {targetStample.sample.values.size()};
-      double * targetValues = const_cast<double *>(targetStample.sample.values.data());
+      double  *targetValues = const_cast<double *>(targetStample.sample.values.data());
       _targetValues         = PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
       PRECICE_CHECK(_targetValues != nullptr, "Creating python target values failed. Please check that the target data name is used by the mesh in action:python.");
       PyTuple_SetItem(dataArgs, 1, _targetValues);
@@ -133,13 +133,13 @@ void PythonAction::performAction()
     PyTuple_SetItem(dataArgs, 0, pythonTime);
 
     npy_intp sourceDim[]  = {sourceStample.sample.values.size()};
-    double * sourceValues = const_cast<double *>(sourceStample.sample.values.data());
+    double  *sourceValues = const_cast<double *>(sourceStample.sample.values.data());
     _sourceValues         = PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
     PRECICE_CHECK(_sourceValues != nullptr, "Creating python source values failed. Please check that the source data name is used by the mesh in action:python.");
     PyTuple_SetItem(dataArgs, 1, _sourceValues);
 
     npy_intp targetDim[]  = {targetStample.sample.values.size()};
-    double * targetValues = const_cast<double *>(targetStample.sample.values.data());
+    double  *targetValues = const_cast<double *>(targetStample.sample.values.data());
     _targetValues         = PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
     PRECICE_CHECK(_targetValues != nullptr, "Creating python target values failed. Please check that the target data name is used by the mesh in action:python.");
     PyTuple_SetItem(dataArgs, 2, _targetValues);

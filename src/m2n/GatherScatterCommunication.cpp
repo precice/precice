@@ -65,10 +65,10 @@ void GatherScatterCommunication::closeConnection()
 namespace {
 template <class Indices, class Src, class Dst, class Size>
 void add_to_indirect_blocks(
-    const Src &    src,
+    const Src     &src,
     const Indices &indices,
     Size           blockSize,
-    Dst &          dst)
+    Dst           &dst)
 {
   for (size_t i = 0; i < indices.size(); ++i) {
     auto srcfirst = blockSize * i;
@@ -81,10 +81,10 @@ void add_to_indirect_blocks(
 
 template <class Indices, class Src, class Dst, class Size>
 void copy_from_indirect_blocks(
-    const Src &    src,
+    const Src     &src,
     const Indices &indices,
     Size           blockSize,
-    Dst &          dst)
+    Dst           &dst)
 {
   for (size_t i = 0; i < indices.size(); ++i) {
     auto srcfirst = blockSize * indices[i];

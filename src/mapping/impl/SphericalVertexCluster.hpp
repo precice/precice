@@ -208,7 +208,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
 
   // Define an alias for data dimension in order to avoid ambiguity
   const unsigned int nComponents = inData.dataDims;
-  const auto &       localInData = inData.values;
+  const auto        &localInData = inData.values;
 
   // TODO: We can probably reduce the temporary allocations here
   Eigen::VectorXd in(_rbfSolver.getOutputSize());
@@ -302,7 +302,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
 
   // Define an alias for data dimension in order to avoid ambiguity
   const unsigned int nComponents = inData.dataDims;
-  const auto &       localInData = inData.values;
+  const auto        &localInData = inData.values;
 
   Eigen::VectorXd in(_rbfSolver.getInputSize());
 

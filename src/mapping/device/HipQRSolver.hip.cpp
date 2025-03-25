@@ -13,7 +13,7 @@ void computeQRDecompositionHip(const std::shared_ptr<gko::Executor> &exec, Ginkg
   auto scope_guard = exec->get_scoped_device_id_guard();
 
   void *dWork{};
-  int * devInfo{};
+  int  *devInfo{};
 
   // Allocating important HIP variables
   hipError_t hipErrorCode;

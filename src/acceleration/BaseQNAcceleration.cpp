@@ -174,7 +174,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         // insert column deltaR = _primaryResiduals - _oldPrimaryResiduals at pos. 0 (front) into the
         // QR decomposition and update decomposition
 
-        //apply scaling here
+        // apply scaling here
         _preconditioner->apply(deltaR);
         _qrV.pushFront(deltaR);
 
@@ -290,7 +290,7 @@ void BaseQNAcceleration::performAcceleration(
   _preconditioner->apply(_matrixV);
 
   if (_preconditioner->requireNewQR()) {
-    if (not(_filter == Acceleration::QR2FILTER || _filter == Acceleration::QR3FILTER)) { //for QR2 and QR3 filter, there is no need to do this twice
+    if (not(_filter == Acceleration::QR2FILTER || _filter == Acceleration::QR3FILTER)) { // for QR2 and QR3 filter, there is no need to do this twice
       _qrV.reset(_matrixV, getLSSystemRows());
     }
     _preconditioner->newQRfulfilled();
@@ -393,7 +393,7 @@ void BaseQNAcceleration::updateCouplingData(
 
   for (int id : _dataIDs) {
 
-    auto & couplingData = *cplData.at(id);
+    auto  &couplingData = *cplData.at(id);
     size_t dataSize     = couplingData.getSize();
 
     Eigen::VectorXd timeGrid = _timeGrids->getTimeGridAfter(id, windowStart);

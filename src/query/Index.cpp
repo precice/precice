@@ -186,7 +186,7 @@ std::vector<VertexID> Index::getClosestVertices(const Eigen::VectorXd &sourceCoo
   PRECICE_TRACE();
   PRECICE_ASSERT(!(_mesh->empty()), _mesh->getName());
   std::vector<VertexID> matches;
-  const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
+  const auto           &rtree = _pimpl->getVertexRTree(*_mesh);
 
   rtree->query(bgi::nearest(sourceCoord, n), boost::make_function_output_iterator([&](size_t matchID) {
                  matches.emplace_back(matchID);
@@ -228,7 +228,7 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::Vertex &centerVert
   auto coords    = centerVertex.getCoords();
   auto searchBox = query::makeBox(coords.array() - radius, coords.array() + radius);
 
-  const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
+  const auto           &rtree = _pimpl->getVertexRTree(*_mesh);
   std::vector<VertexID> matches;
   rtree->query(bgi::intersects(searchBox) and bg::index::satisfies([&](size_t const i) { return bg::distance(centerVertex, _mesh->vertex(i)) < radius; }),
                std::back_inserter(matches));
@@ -254,7 +254,7 @@ std::vector<VertexID> Index::getVerticesInsideBox(const mesh::BoundingBox &bb)
 {
   PRECICE_TRACE();
   // Add tree to the local cache
-  const auto &          rtree = _pimpl->getVertexRTree(*_mesh);
+  const auto           &rtree = _pimpl->getVertexRTree(*_mesh);
   std::vector<VertexID> matches;
   rtree->query(bgi::intersects(query::makeBox(bb.minCorner(), bb.maxCorner())), std::back_inserter(matches));
   return matches;

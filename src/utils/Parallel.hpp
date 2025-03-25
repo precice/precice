@@ -52,7 +52,7 @@ public:
     /// @{
     CommState() = default;
 
-    CommState(const CommState &) = delete;
+    CommState(const CommState &)            = delete;
     CommState &operator=(const CommState &) = delete;
 
     CommState(CommState &&) noexcept;
@@ -158,7 +158,7 @@ public:
    * @param[in] argv Parameter values, is passed to MPI_Init
    */
   static void initializeTestingMPI(
-      int *   argc,
+      int    *argc,
       char ***argv);
 
   /// Unconditionally finalizes MPI environment.

@@ -37,7 +37,7 @@ std::vector<double> readDoublesFromTXTFile(std::string const &filename, int skip
 }
 } // namespace
 
-void testWatchPoint(const TestContext & context,
+void testWatchPoint(const TestContext  &context,
                     bool                withEdge,
                     std::vector<double> watchPosition,
                     std::vector<double> expected)

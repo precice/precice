@@ -31,7 +31,7 @@ namespace precice::com {
  * The latter, in contrast, is only called from m2n::PointToPointCommunication, due to that the p2p class was also heavily modified. But this connection method is the most important, because it does the m2n heavy lifiting.
  *
  * If we agree, that acceptConnection / requestConnection just does 1:1 connection, we can rewrite and simplify the code.
-**/
+ **/
 class MPISinglePortsCommunication : public MPICommunication {
 public:
   explicit MPISinglePortsCommunication(std::string addressDirectory = ".");
@@ -58,9 +58,9 @@ public:
                          int                requesterRank,
                          int                requesterCommunicatorSize) override;
 
-  void requestConnectionAsClient(std::string const &  acceptorName,
-                                 std::string const &  requesterName,
-                                 std::string const &  tag,
+  void requestConnectionAsClient(std::string const   &acceptorName,
+                                 std::string const   &requesterName,
+                                 std::string const   &tag,
                                  std::set<int> const &acceptorRanks,
                                  int                  requesterRank) override;
 

@@ -17,7 +17,7 @@
 namespace precice::mesh {
 
 MeshConfiguration::MeshConfiguration(
-    xml::XMLTag &        parent,
+    xml::XMLTag         &parent,
     PtrDataConfiguration config)
     : TAG("mesh"),
       ATTR_NAME("name"),
@@ -60,7 +60,7 @@ MeshConfiguration::MeshConfiguration(
 
 void MeshConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
@@ -90,7 +90,7 @@ void MeshConfiguration::xmlTagCallback(
 
 void MeshConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
 }
 

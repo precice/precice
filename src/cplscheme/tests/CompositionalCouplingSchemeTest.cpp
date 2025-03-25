@@ -80,7 +80,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
 
   void runThreeSolverCoupling(
       PtrCouplingScheme          cplScheme,
-      const std::string &        participantName,
+      const std::string         &participantName,
       mesh::PtrMeshConfiguration meshConfig)
   {
     BOOST_TEST(meshConfig->meshes().size() == 1);

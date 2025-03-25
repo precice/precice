@@ -476,7 +476,7 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
 {
   PRECICE_TEST();
-  //use two vectors and see if underrelaxation works
+  // use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
   const int        dim         = 3;
@@ -574,7 +574,7 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
 {
   PRECICE_TEST();
-  //use two vectors and see if underrelaxation works
+  // use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
   auto             dummyMesh   = testing::makeDummy3DMesh(4);

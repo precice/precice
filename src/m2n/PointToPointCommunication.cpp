@@ -31,7 +31,7 @@ namespace precice::m2n {
 
 void send(mesh::Mesh::VertexDistribution const &m,
           int                                   rankReceiver,
-          const com::PtrCommunication &         communication)
+          const com::PtrCommunication          &communication)
 {
   communication->send(static_cast<int>(m.size()), rankReceiver);
 
@@ -45,7 +45,7 @@ void send(mesh::Mesh::VertexDistribution const &m,
 
 void receive(mesh::Mesh::VertexDistribution &m,
              int                             rankSender,
-             const com::PtrCommunication &   communication)
+             const com::PtrCommunication    &communication)
 {
   m.clear();
   int size = 0;
@@ -59,7 +59,7 @@ void receive(mesh::Mesh::VertexDistribution &m,
 }
 
 void broadcastSend(mesh::Mesh::VertexDistribution const &m,
-                   const com::PtrCommunication &         communication = utils::IntraComm::getCommunication())
+                   const com::PtrCommunication          &communication = utils::IntraComm::getCommunication())
 {
   communication->broadcast(static_cast<int>(m.size()));
 
@@ -73,7 +73,7 @@ void broadcastSend(mesh::Mesh::VertexDistribution const &m,
 
 void broadcastReceive(mesh::Mesh::VertexDistribution &m,
                       int                             rankBroadcaster,
-                      const com::PtrCommunication &   communication = utils::IntraComm::getCommunication())
+                      const com::PtrCommunication    &communication = utils::IntraComm::getCommunication())
 {
   m.clear();
   int size = 0;
