@@ -426,7 +426,7 @@ public:
   /**
    * @brief Returns the spatial dimensionality of the given data on the given mesh.
    *
-   * Note that vectorial data dimensionality directly depends on the spacial dimensionality of the mesh.
+   * Note that vectorial data dimensionality directly depends on the spatial dimensionality of the mesh.
    *
    * @param[in] meshName the name of the associated mesh
    * @param[in] dataName the name of the data to get the dimensions for
@@ -1087,7 +1087,7 @@ public:
    * is exchanged during the @p initialize() call.
    *
    * @see getMeshVertexSize() to get the amount of vertices in the mesh
-   * @see getMeshDimensions() to get the spacial dimensionality of the mesh
+   * @see getMeshDimensions() to get the spatial dimensionality of the mesh
    */
   void getMeshVertexIDsAndCoordinates(
       ::precice::string_view    meshName,

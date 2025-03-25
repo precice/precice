@@ -248,7 +248,7 @@ void TestContext::initializeGinkgo()
   }
 }
 
-m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
+m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const std::string &connector, const ConnectionOptions &options) const
 {
   auto participantCom = com::PtrCommunication(new com::SocketCommunication());
 
@@ -269,18 +269,18 @@ m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const 
     throw std::runtime_error{
         "Acceptor \"" + acceptor + "\" not defined in this context."};
   }
-  if (_names.count(requestor) == 0) {
+  if (_names.count(connector) == 0) {
     throw std::runtime_error{
-        "Requestor \"" + requestor + "\" not defined in this context."};
+        "Connector \"" + connector + "\" not defined in this context."};
   }
 
   std::string configHash = "NOPE";
   if (isNamed(acceptor)) {
-    m2n->acceptPrimaryRankConnection(acceptor, requestor, configHash);
-  } else if (isNamed(requestor)) {
-    m2n->requestPrimaryRankConnection(acceptor, requestor, configHash);
+    m2n->acceptPrimaryRankConnection(acceptor, connector, configHash);
+  } else if (isNamed(connector)) {
+    m2n->requestPrimaryRankConnection(acceptor, connector, configHash);
   } else {
-    throw std::runtime_error{"You try to connect " + acceptor + " and " + requestor + ", but this context is named " + name};
+    throw std::runtime_error{"You try to connect " + acceptor + " and " + connector + ", but this context is named " + name};
   }
   return m2n;
 }
