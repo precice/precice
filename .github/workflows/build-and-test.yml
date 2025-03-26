@@ -110,7 +110,7 @@ jobs:
       - name: Install polars in venv
         run: |
           python3 -m venv --system-site-packages venv
-          venv/bin/pip install polars
+          venv/bin/pip install polars orjson
           venv/bin/pip list
       - name: Configure
         working-directory: build
