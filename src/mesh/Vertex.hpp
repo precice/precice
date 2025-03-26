@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <algorithm>
 #include <array>
 #include <iostream>
 #include <utility>
@@ -92,9 +93,8 @@ Vertex::Vertex(
       _id(id)
 {
   PRECICE_ASSERT(_dim == 2 || _dim == 3, _dim);
-  _coords[0] = coordinates[0];
-  _coords[1] = coordinates[1];
-  _coords[2] = (_dim == 3) ? coordinates[2] : 0.0;
+  _coords.fill(0.0);
+  std::copy_n(coordinates.begin(), _dim, _coords.data());
 }
 
 template <typename VECTOR_T>
@@ -102,9 +102,8 @@ void Vertex::setCoords(
     const VECTOR_T &coordinates)
 {
   PRECICE_ASSERT(coordinates.size() == _dim, coordinates.size(), _dim);
-  _coords[0] = coordinates[0];
-  _coords[1] = coordinates[1];
-  _coords[2] = (_dim == 3) ? coordinates[2] : 0.0;
+  _coords.fill(0.0);
+  std::copy_n(coordinates.begin(), _dim, _coords.data());
 }
 
 inline VertexID Vertex::getID() const
