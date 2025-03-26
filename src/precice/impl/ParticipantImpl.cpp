@@ -264,6 +264,12 @@ void ParticipantImpl::initialize()
   _solverInitEvent.reset();
   Event e("initialize", profiling::Fundamental, profiling::Synchronize);
 
+  for (const auto &context : _accessor->usedMeshContexts()) {
+    if (context->provideMesh) {
+      e.addData("meshSize" + context->mesh->getName(), context->mesh->nVertices());
+    }
+  }
+
   setupCommunication();
   setupWatcher();
 
@@ -303,6 +309,12 @@ void ParticipantImpl::reinitialize()
   PRECICE_INFO("Reinitializing Participant");
   Event e("reinitialize", profiling::Fundamental);
   closeCommunicationChannels(CloseChannels::Distributed);
+
+  for (const auto &context : _accessor->usedMeshContexts()) {
+    if (context->provideMesh) {
+      e.addData("meshSize" + context->mesh->getName(), context->mesh->nVertices());
+    }
+  }
 
   setupCommunication();
   setupWatcher();
