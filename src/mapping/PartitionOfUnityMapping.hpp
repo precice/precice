@@ -237,12 +237,13 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
   eWeights.stop();
 
+  // Uncomment to add a VTK export of the cluster center distribution for visualization purposes
+  // exportClusterCentersAsVTU(*_centerMesh);
+
   // we need the center mesh index data structure
   if (!outMesh->isJustInTime()) {
     _centerMesh.reset();
   }
-  // Uncomment to add a VTK export of the cluster center distribution for visualization purposes
-  // exportClusterCentersAsVTU(centerMesh);
 
   this->_hasComputedMapping = true;
 }
@@ -533,6 +534,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU
     centerMesh.setVertexOffsets(std::move(vertexOffsets));
   }
 
+  dataRadius->setSampleAtTime(0, time::Sample{1, dataRadius->values()});
+  dataCardinality->setSampleAtTime(0, time::Sample{1, dataCardinality->values()});
   io::ExportVTU exporter{"PoU", "exports", centerMesh, io::Export::ExportKind::TimeWindows, 1, utils::IntraComm::getRank(), utils::IntraComm::getSize()};
   exporter.doExport(0, 0.0);
 }
