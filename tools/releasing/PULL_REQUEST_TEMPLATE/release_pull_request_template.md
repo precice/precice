@@ -14,7 +14,7 @@ Only the release manager should update this post (even tickboxes, due to race co
    * Fix wording and tense
 * [ ] Make sure you have the latest `develop` and `main` branches locally.
 * [ ] Merge `main` to `develop` ( This should result in no commits )
-* [ ] Check code base w.r.t code formatting (run [`precice/tools/formatting/check-format`](https://github.com/precice/precice/blob/develop/tools/formatting/check-format)) and reformat if required (run [`precice/tools/formatting/format-all`](https://github.com/precice/precice/blob/develop/tools/formatting/format-all))
+* [ ] Check code base w.r.t code formatting (run `pre-commit run -va`)
 * [ ] Update the list of operating systems for the package generation in `.github/workflows/release.yml`
 * [ ] Create branch `release-vX.Y.Z` from develop. If needed, `git rebase develop`.
 * [ ] Run `tools/releasing/bumpversion.sh MAJOR.MINOR.PATCH` to bump the version
