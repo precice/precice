@@ -430,13 +430,13 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
 
   if (type == VALUE_SERIAL_EXPLICIT) {
     addTagParticipants(tag);
-    addTagExchange(tag);
+    addTagExchange(tag, false);
   } else if (type == VALUE_PARALLEL_EXPLICIT) {
     addTagParticipants(tag);
-    addTagExchange(tag);
+    addTagExchange(tag, false);
   } else if (type == VALUE_PARALLEL_IMPLICIT) {
     addTagParticipants(tag);
-    addTagExchange(tag);
+    addTagExchange(tag, true);
     addTagAcceleration(tag);
     addTagAbsoluteConvergenceMeasure(tag);
     addTagAbsoluteOrRelativeConvergenceMeasure(tag);
@@ -446,7 +446,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     addTagMaxIterations(tag);
   } else if (type == VALUE_MULTI) {
     addTagParticipant(tag);
-    addTagExchange(tag);
+    addTagExchange(tag, true);
     addTagAcceleration(tag);
     addTagAbsoluteConvergenceMeasure(tag);
     addTagAbsoluteOrRelativeConvergenceMeasure(tag);
@@ -456,7 +456,7 @@ void CouplingSchemeConfiguration::addTypespecifcSubtags(
     addTagMaxIterations(tag);
   } else if (type == VALUE_SERIAL_IMPLICIT) {
     addTagParticipants(tag);
-    addTagExchange(tag);
+    addTagExchange(tag, true);
     addTagAcceleration(tag);
     addTagAbsoluteConvergenceMeasure(tag);
     addTagAbsoluteOrRelativeConvergenceMeasure(tag);
@@ -537,7 +537,7 @@ void CouplingSchemeConfiguration::addTagParticipant(
 }
 
 void CouplingSchemeConfiguration::addTagExchange(
-    xml::XMLTag &tag)
+    xml::XMLTag &tag, bool substepsDefault)
 {
   using namespace xml;
   XMLTag tagExchange(*this, TAG_EXCHANGE, XMLTag::OCCUR_ONCE_OR_MORE);
@@ -553,7 +553,7 @@ void CouplingSchemeConfiguration::addTagExchange(
   tagExchange.addAttribute(participantTo);
   auto attrInitialize = XMLAttribute<bool>(ATTR_INITIALIZE, false).setDocumentation("Should this data be initialized during initialize?");
   tagExchange.addAttribute(attrInitialize);
-  auto attrExchangeSubsteps = XMLAttribute<bool>(ATTR_EXCHANGE_SUBSTEPS, true).setDocumentation("Should this data exchange substeps?");
+  auto attrExchangeSubsteps = XMLAttribute<bool>(ATTR_EXCHANGE_SUBSTEPS, substepsDefault).setDocumentation("Should this data exchange substeps?");
   tagExchange.addAttribute(attrExchangeSubsteps);
   tag.addSubtag(tagExchange);
 }

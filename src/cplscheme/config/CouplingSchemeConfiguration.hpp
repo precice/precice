@@ -190,7 +190,7 @@ private:
 
   void addTagParticipant(xml::XMLTag &tag);
 
-  void addTagExchange(xml::XMLTag &tag);
+  void addTagExchange(xml::XMLTag &tag, bool substepsDefault);
 
   void addTagAbsoluteConvergenceMeasure(xml::XMLTag &tag);
 
