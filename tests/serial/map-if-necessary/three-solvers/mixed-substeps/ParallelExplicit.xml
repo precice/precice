@@ -60,7 +60,7 @@
     <participants first="B" second="C" />
     <max-time-windows value="3" />
     <time-window-size value="1.0" />
-    <exchange data="DataB" mesh="MeshB" from="B" to="C" />
-    <exchange data="DataC" mesh="MeshB" from="C" to="B" />
+    <exchange data="DataB" mesh="MeshB" from="B" to="C" substeps="true" />
+    <exchange data="DataC" mesh="MeshB" from="C" to="B" substeps="true" />
   </coupling-scheme:parallel-explicit>
 </precice-configuration>
