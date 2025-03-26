@@ -813,10 +813,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
   for (const auto &exchange : _config.exchanges) {
     if ((exchange.from == _config.participants[1]) && exchange.exchangeSubsteps) {
       PRECICE_WARN(
-          "You enabled exchanging substeps in the serial-explicit coupling between the second participant \"{}\" and first participant \"{}\". "
-          "This is inefficient as these substeps will never be used.",
-          exchange.from, exchange.to);
-      break;
+          "Exchange of substeps is activated in the serial-explicit coupling between the second participant \"{}\" and first participant \"{}\". This is inefficient as these substeps will never be used. You can turn this off in your preCICE configuration setting substeps=\"False\" in <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" substeps=\"False\" />", exchange.from, exchange.to, exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
     }
   }
 
@@ -837,10 +834,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
   for (const auto &exchange : _config.exchanges) {
     if (exchange.exchangeSubsteps) {
       PRECICE_WARN(
-          "You enabled exchanging substeps in the parallel-explicit coupling between \"{}\" and \"{}\". "
-          "This is inefficient as these substeps will never be used.",
-          exchange.from, exchange.to);
-      break;
+          "Exchange of substeps is activated in the parallel-explicit coupling between \"{}\" and \"{}\". This is inefficient as these substeps will never be used. You can turn this off in your preCICE configuration setting substeps=\"False\" in <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" substeps=\"False\" />", exchange.from, exchange.to, exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
     }
   }
 
