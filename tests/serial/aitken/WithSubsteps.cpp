@@ -61,13 +61,11 @@ BOOST_AUTO_TEST_CASE(WithSubsteps)
   double dt            = maxDt / nSubsteps; // Do 5 substeps to check if QN and Waveform iterations work together
   int    nSubStepsDone = 0;                 // Counts the number of substeps that are done
   double t             = 0;
-  int    iterations    = 0;
   double timeCheckpoint;
   while (interface.isCouplingOngoing()) {
 
     if (interface.requiresWritingCheckpoint()) {
       timeCheckpoint = t;
-      iterations     = 0;
       nSubStepsDone  = 0;
     }
 
@@ -105,7 +103,6 @@ BOOST_AUTO_TEST_CASE(WithSubsteps)
     if (interface.requiresReadingCheckpoint()) {
       nSubStepsDone = 0;
       t             = timeCheckpoint;
-      iterations++;
     }
   }
   interface.finalize();

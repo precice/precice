@@ -154,10 +154,8 @@ BOOST_AUTO_TEST_CASE(ExplicitWritePUM)
 
     // Initialize
     couplingInterface.initialize();
-    double time = 0;
     while (couplingInterface.isCouplingOngoing()) {
       double dt = couplingInterface.getMaxTimeStepSize();
-      time += dt;
 
       // Meshes A and C have the same mapping
       // just-in-time mapping

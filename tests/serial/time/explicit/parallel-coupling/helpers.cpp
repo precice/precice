@@ -38,13 +38,11 @@ void subcyclingWithNSteps(TestContext const &context, int nSubsteps, bool useAdv
   double windowDt = precice.getMaxTimeStepSize();
   double solverDt = windowDt / nSubsteps;
   int    didSteps = 0;
-  int    nWindows = 0;
 
   while (precice.isCouplingOngoing()) {
     if (precice.isTimeWindowComplete()) {
       BOOST_TEST(didSteps == nSubsteps);
       didSteps = 0; // reset counter for next window
-      nWindows++;
     }
     double preciceDt = precice.getMaxTimeStepSize();
 

@@ -49,7 +49,6 @@ void checkinit(const TestContext &context)
   double time               = 0;
   int    timestepCheckpoint = timestep;
   double timeCheckpoint     = time;
-  int    iterations         = 0;
 
   if (precice.requiresInitialData()) {
     writeData = writeFunction(time);
@@ -65,7 +64,6 @@ void checkinit(const TestContext &context)
     if (precice.requiresWritingCheckpoint()) {
       timeCheckpoint     = time;
       timestepCheckpoint = timestep;
-      iterations         = 0;
     }
 
     // solve usually goes here. Dummy solve: Just sampling the writeFunction.
@@ -87,7 +85,6 @@ void checkinit(const TestContext &context)
     if (precice.requiresReadingCheckpoint()) {
       time     = timeCheckpoint;
       timestep = timestepCheckpoint;
-      iterations++;
     }
   }
 

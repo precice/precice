@@ -284,13 +284,11 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
   double       dt            = solverDt > maxDt ? maxDt : solverDt; // actual dt that will be updated on-the-fly
   int          nSubStepsDone = 0;                                   // Counts the number of substeps that are done
   double       t             = 0;
-  int          iterations    = 0;
   double       timeCheckpoint;
   while (interface.isCouplingOngoing()) {
 
     if (interface.requiresWritingCheckpoint()) {
       timeCheckpoint = t;
-      iterations     = 0;
       nSubStepsDone  = 0;
     }
 
@@ -328,7 +326,6 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
     if (interface.requiresReadingCheckpoint()) {
       nSubStepsDone = 0;
       t             = timeCheckpoint;
-      iterations++;
     }
   }
   interface.finalize();
@@ -392,14 +389,12 @@ void runTestQNWithWaveformsReducedTimeGrid(std::string const &config, TestContex
   double       dt            = solverDt > maxDt ? maxDt : solverDt; // actual dt that will be updated on-the-fly
   int          nSubStepsDone = 0;                                   // Counts the number of substeps that are done
   double       t             = 0;
-  int          iterations    = 0;
   double       timeCheckpoint;
   double       pastXValue = 1;
   while (interface.isCouplingOngoing()) {
 
     if (interface.requiresWritingCheckpoint()) {
       timeCheckpoint = t;
-      iterations     = 0;
       nSubStepsDone  = 0;
     }
 
@@ -438,7 +433,6 @@ void runTestQNWithWaveformsReducedTimeGrid(std::string const &config, TestContex
       nSubStepsDone = 0;
       t             = timeCheckpoint;
       pastXValue    = 1;
-      iterations++;
     }
   }
   interface.finalize();

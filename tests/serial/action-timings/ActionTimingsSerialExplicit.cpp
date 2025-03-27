@@ -60,14 +60,11 @@ BOOST_AUTO_TEST_CASE(ActionTimingsSerialExplicit)
   BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
   action::RecorderAction::reset();
 
-  int iteration = 0;
-
   while (interface.isCouplingOngoing()) {
     interface.readData(meshName, readDataName, {&vertexID, 1}, dt, readData);
     interface.writeData(meshName, writeDataName, {&vertexID, 1}, writeData);
     interface.advance(dt);
     BOOST_TEST(interface.isTimeWindowComplete());
-    iteration++;
 
     BOOST_TEST(action::RecorderAction::records.size() == 2);
     BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);

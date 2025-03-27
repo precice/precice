@@ -75,7 +75,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
 
   int    nWindows        = 5; // perform 5 windows.
   int    timestep        = 0;
-  int    timewindow      = 0;
   double windowStartTime = 0;
   int    windowStartStep = 0;
   int    iterations      = 0;
@@ -143,7 +142,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
       time     = windowStartTime;
     }
     if (precice.isTimeWindowComplete()) {
-      timewindow++;
       iterations = 0;
     }
   }
