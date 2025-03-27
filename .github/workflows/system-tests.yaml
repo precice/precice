@@ -120,6 +120,7 @@ jobs:
       suites: release_test
       build_args: "PLATFORM:ubuntu_2404,\
         PRECICE_REF:${{ github.event.pull_request.head.sha }},\
+        PRECICE_PR:${{ github.event.number }},\
         PYTHON_BINDINGS_REF:${{ needs.gather-refs.outputs.ref-python-bindings }},\
         CALCULIX_VERSION:2.20,\
         CALCULIX_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-calculix-adapter }},\
