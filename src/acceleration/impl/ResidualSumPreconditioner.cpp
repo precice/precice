@@ -72,15 +72,19 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
 
     offset = 0;
 
-    // Check if the ratio of the new scaling weight to the previous residual sum
-    // has changed significantly, either exceeding the threshold of 10.0
-    // or dropping below its inverse.
     if (_firstTimeWindow || (!_preconditionerUpdateOnThreshold)) {
       resetWeights = true;
     } else {
       for (size_t k = 0; k < _subVectorSizes.size(); k++) {
-        double newScalingWeight = (1 / _residualSum[k]);
-        if ((newScalingWeight * _previousResidualSum[k] > 10.0) || (newScalingWeight * _previousResidualSum[k] < 0.1)) {
+        double resSum = _residualSum[k];
+        if (math::equals(resSum, 0.0)) {
+          continue; // These will be ignored when resetting the weights
+        }
+        // Check if the ratio of the new scaling weight to the previous residual sum
+        // has changed significantly, either exceeding the threshold of 10.0
+        // or dropping below its inverse.
+        double factor = _previousResidualSum[k] / resSum;
+        if ((factor > 10.0) || (factor < 0.1)) {
           resetWeights = true;
           PRECICE_DEBUG("Significant scaling weight change is detected. The pre-scaling weights will be reset.");
           break;
@@ -101,8 +105,6 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
         offset += _subVectorSizes[k];
       }
       _requireNewQR = true;
-    }
-    for (size_t k = 0; k < _subVectorSizes.size(); k++) {
     }
   } else {
     _firstTimeWindow = false;
