@@ -37,9 +37,9 @@ std::shared_ptr<gko::Executor> create_device_executor(const std::string &execNam
 #ifdef PRECICE_WITH_HIP
   if (execName == "hip-executor") {
     if (enableUnifiedMemory) {
-      return gko::ext::kokkos::create_executor(Kokkos::HIP{}, Kokkos::HIPManagedSpace);
+      return gko::ext::kokkos::create_executor(Kokkos::HIP{}, Kokkos::HIPManagedSpace{});
     } else {
-      return gko::ext::kokkos::create_executor(Kokkos::HIP{}, Kokkos::HIPSpace);
+      return gko::ext::kokkos::create_executor(Kokkos::HIP{}, Kokkos::HIPSpace{});
     }
   }
 #endif
@@ -142,9 +142,9 @@ void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
 #ifdef PRECICE_WITH_CUDA
   if (std::dynamic_pointer_cast<const gko::CudaExecutor>(exec)) {
     if (unifiedMemory) {
-      create_rbf_system_matrix_impl<Kokkos::CudaSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
-    } else {
       create_rbf_system_matrix_impl<Kokkos::CudaUVMSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+    } else {
+      create_rbf_system_matrix_impl<Kokkos::CudaSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
     }
     return;
   }
@@ -152,9 +152,9 @@ void create_rbf_system_matrix(std::shared_ptr<const gko::Executor>      exec,
 #ifdef PRECICE_WITH_HIP
   if (std::dynamic_pointer_cast<const gko::HipExecutor>(exec)) {
     if (unifiedMemory) {
-      create_rbf_system_matrix_impl<Kokkos::HipManagedSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+      create_rbf_system_matrix_impl<Kokkos::HIPManagedSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
     } else {
-      create_rbf_system_matrix_impl<Kokkos::HipSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
+      create_rbf_system_matrix_impl<Kokkos::HIPSpace>(exec, mtx, activeAxis, supportPoints, targetPoints, f, rbf_params, addPolynomial, extraDims);
     }
     return;
   }
