@@ -39,15 +39,10 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
 
   double sum = 0.0;
 
-  int offset = 0;
   for (size_t k = 0; k < _subVectorSizes.size(); k++) {
-    Eigen::VectorXd part = Eigen::VectorXd::Zero(_subVectorSizes[k]);
-    for (size_t i = 0; i < _subVectorSizes[k]; i++) {
-      part(i) = res(i + offset);
-    }
-    norms[k] = utils::IntraComm::dot(part, part);
+    Eigen::VectorXd part = res.segment(_subVectorOffsets[k], _subVectorSizes[k]);
+    norms[k]             = utils::IntraComm::dot(part, part);
     sum += norms[k];
-    offset += _subVectorSizes[k];
     norms[k] = std::sqrt(norms[k]);
   }
   sum = std::sqrt(sum);
@@ -100,10 +95,10 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
   }
 
   // Reset the weights for non-zero residual sums
-  offset = 0;
   for (size_t k = 0; k < _subVectorSizes.size(); k++) {
     double resSum = _residualSum[k];
     if (not math::equals(resSum, 0.0)) {
+      auto offset = _subVectorOffsets[k];
       for (size_t i = 0; i < _subVectorSizes[k]; i++) {
         _weights[i + offset]    = 1 / resSum;
         _invWeights[i + offset] = resSum;
@@ -111,7 +106,6 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
       PRECICE_DEBUG("preconditioner scaling factor[{}] = {}", k, 1 / resSum);
     }
     _previousResidualSum[k] = resSum;
-    offset += _subVectorSizes[k];
   }
   _requireNewQR = true;
 }
