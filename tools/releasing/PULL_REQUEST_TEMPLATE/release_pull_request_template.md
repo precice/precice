@@ -16,8 +16,8 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Merge `main` to `develop` ( This should result in no commits )
 * [ ] Check code base w.r.t code formatting (run `pre-commit run -va`)
 * [ ] Update the list of operating systems for the package generation in `.github/workflows/release.yml`
-* [ ] Create branch `release-vX.Y.Z` from develop. `git switch -c release-vX.Y.Z develop`
-* [ ] Bump the version, running `tools/releasing/bumpversion.sh MAJOR.MINOR.PATCH`
+* [ ] Create branch `release-vX.Y.Z` from develop: `git switch -c release-vX.Y.Z develop`
+* [ ] Bump the version: `tools/releasing/bumpversion.sh MAJOR.MINOR.PATCH`
 * [ ] Look over the updated `CHANGELOG.md` of the release branch (all)
    * Check for merged lines
    * Add things, if necessary
@@ -29,8 +29,8 @@ Only the release manager should update this post (even tickboxes, due to race co
    * [ ] `CHANGELOG`
    * [ ] `CMakeLists.txt`
    * [ ] `tools/releasing/packaging/debian/changelog`
-* [ ] Commit the version bump `git commit -m "Bump version to X.Y.Z"`
-* [ ] Push the release branch to the precice repository `git push -u upstream release-vX.Y.Z`
+* [ ] Commit the version bump: `git commit -m "Bump version to X.Y.Z"`
+* [ ] Push the release branch to the precice repository: `git push -u upstream release-vX.Y.Z`
 * Prepare independent releases
    * [ ] [Python bindings](https://github.com/precice/python-bindings/blob/develop/docs/ReleaseGuide.md)
    * [ ] (if necessary!) [MATLAB bindings](https://github.com/precice/matlab-bindings/blob/develop/docs/ReleaseGuide.md)
@@ -49,12 +49,12 @@ Only the release manager should update this post (even tickboxes, due to race co
    * [ ] Update version in [precice/precice.github.io](https://github.com/precice/precice.github.io) `_config.yml`
 * [ ] Approve the PR with at least two reviews (all)
 * [ ] Merge PR to `main`: `git merge --no-ff -m "Release vX.Y.Z" release-vX.Y.Z`
-* [ ] Create an annotated tag on `main` using `git tag -a -m "preCICE version X.Y.Z" vX.Y.Z main`
-* [ ] Verify the tag by running `git describe --tags main`. It should be exactly `vX.Y.Z`
-* [ ] Switch to `develop` and merge `main` back `git merge --no-ff -m "Merge release back"`
-* [ ] Verify the tag on develop by running `git describe --tags develop`. It should be starting with `vX.Y.Z-1-` (tag plus the merge commit).
+* [ ] Create an annotated tag on `main`: `git tag -a -m "preCICE version X.Y.Z" vX.Y.Z main`
+* [ ] Verify the tag: `git describe --tags main`. It should be exactly `vX.Y.Z`
+* [ ] Switch to `develop` and merge `main` back into it: `git merge --no-ff -m "Merge release back"`
+* [ ] Verify the tag on develop: `git describe --tags develop`. It should start with `vX.Y.Z-1-` (i.e. tag plus the merge commit).
 * [ ] Triple check that you haven't messed anything up. You can always discard local changes using `git reset --hard upstream BRANCH` or by cloning the precice repository again and start from scratch.
-* [ ] Push `main` and the `vX.Y.Z` tag using `git push upstream main`, `git push upstream v3.2.0`
+* [ ] Push `main` and the `vX.Y.Z` tag: `git push upstream main`, `git push upstream v3.2.0`
 * [ ] Push `develop`: `git push upstream develop`
 * [ ] Wait for the release pipeline
   * [ ] [To create a new draft release on GitHub](https://github.com/precice/precice/releases)
