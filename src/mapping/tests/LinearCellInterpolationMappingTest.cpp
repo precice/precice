@@ -19,9 +19,10 @@ using namespace precice::mesh;
 BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(LinearCellInterpolationMapping)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Consistent)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int dimensions = 2;
   using testing::equals;
 
@@ -88,9 +89,10 @@ BOOST_AUTO_TEST_CASE(Consistent)
   BOOST_CHECK(equals(expected, outValuesScalar));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Conservative)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int dimensions = 2;
   using testing::equals;
 
@@ -160,9 +162,10 @@ BOOST_AUTO_TEST_CASE(Conservative)
   BOOST_CHECK(equals(netForce, outValuesScalar.sum()));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ConsistentOneTetra3D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int dimensions = 3;
   using testing::equals;
 
@@ -185,7 +188,7 @@ BOOST_AUTO_TEST_CASE(ConsistentOneTetra3D)
   inMesh->createEdge(inVertexB, inVertexD);
 
   Eigen::VectorXd &inValuesScalar = inDataScalar->values();
-  inValuesScalar << 1.0, 2.0, 3.0, 4.0; //1 + x + 2y + 3z
+  inValuesScalar << 1.0, 2.0, 3.0, 4.0; // 1 + x + 2y + 3z
 
   BOOST_CHECK(!inMesh->tetrahedra().empty());
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
@@ -225,9 +228,10 @@ BOOST_AUTO_TEST_CASE(ConsistentOneTetra3D)
   BOOST_CHECK(equals(expected, outValuesScalar));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ConservativeOneTetra3D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int dimensions = 3;
   using testing::equals;
 

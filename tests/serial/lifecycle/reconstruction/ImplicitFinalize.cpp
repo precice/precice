@@ -9,9 +9,10 @@ BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Lifecycle)
 BOOST_AUTO_TEST_SUITE(Reconstruction)
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ImplicitFinalize)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
   for (auto n : {1, 2, 3})
     BOOST_TEST_CONTEXT("construction #" << n)
     {

@@ -12,21 +12,7 @@
 #include "precice/impl/Types.hpp"
 #include "precice/span.hpp"
 
-namespace precice {
-namespace com {
-
-/** Tag used to specify which type of vector to return
- * @see Communication::receiveRange()
- */
-template <typename T>
-struct AsVectorTag {
-};
-
-/* TODO When moving to C++17 use inline variable:
- *
- * template<typename T>
- * inline constexpr auto asVector = Communication::AsVectorTag<T>{};
- */
+namespace precice::com {
 
 /**
  * @brief Interface for all interprocess communication classes.
@@ -68,9 +54,7 @@ public:
   Communication &operator=(Communication &&) = delete;
 
   /// Destructor, empty.
-  virtual ~Communication()
-  {
-  }
+  virtual ~Communication() = default;
 
   /// @name Connection Setup
   /// @{
@@ -112,7 +96,7 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    * @param[in] tag Tag for establishing this connection
-   * @param[in] acceptorRank Rank of the accpeting process, usually the calling one.
+   * @param[in] acceptorRank Rank of the accepting process, usually the calling one.
    */
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
@@ -176,9 +160,9 @@ public:
    * @param[in] acceptorRanks Set of ranks that accept a connection
    * @param[in] requesterRank Rank that requests the connection, usually the caller's rank
    */
-  virtual void requestConnectionAsClient(std::string const &  acceptorName,
-                                         std::string const &  requesterName,
-                                         std::string const &  tag,
+  virtual void requestConnectionAsClient(std::string const   &acceptorName,
+                                         std::string const   &requesterName,
+                                         std::string const   &tag,
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) = 0;
 
@@ -351,6 +335,14 @@ public:
   /// @name Range communication
   /// @{
 
+  /** Tag used to specify which type of vector to return
+   * Use @ref asVector instead
+   * @see Communication::receiveRange()
+   */
+  template <typename T>
+  struct AsVectorTag {
+  };
+
   /// Sends a range of doubles (size + content)
   void sendRange(precice::span<const double> itemsToSend, Rank rankReceiver);
 
@@ -384,18 +376,21 @@ private:
   logging::Logger _log{"com::Communication"};
 };
 
+/// Allows to use @ref Communication::AsVectorTag in a less verbose way.
+template <typename T>
+inline constexpr auto asVector = Communication::AsVectorTag<T>{};
+
 /** Establishes a circular communication for the given participant.
  *
  * rank "0" connects left to rank "size-1"
  * rank "size" connects right to rank "0"
  */
 void connectCircularComm(
-    std::string const & participantName,
-    std::string const & tag,
+    std::string const  &participantName,
+    std::string const  &tag,
     int                 rank,
     int                 size,
     com::Communication &left,
     com::Communication &right);
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

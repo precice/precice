@@ -17,7 +17,7 @@
 namespace precice::mesh {
 
 MeshConfiguration::MeshConfiguration(
-    xml::XMLTag &        parent,
+    xml::XMLTag         &parent,
     PtrDataConfiguration config)
     : TAG("mesh"),
       ATTR_NAME("name"),
@@ -60,7 +60,7 @@ MeshConfiguration::MeshConfiguration(
 
 void MeshConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
@@ -90,13 +90,18 @@ void MeshConfiguration::xmlTagCallback(
 
 void MeshConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
 }
 
 const PtrDataConfiguration &MeshConfiguration::getDataConfiguration() const
 {
   return _dataConfig;
+}
+
+mesh::PtrMesh MeshConfiguration::getJustInTimeMappingMesh(int dimension)
+{
+  return std::make_shared<mesh::Mesh>("(just-in-time mapping)", dimension, mesh::Mesh::MESH_ID_UNDEFINED, true);
 }
 
 void MeshConfiguration::addMesh(

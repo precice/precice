@@ -3,6 +3,13 @@
 #
 target_sources(testprecice
     PRIVATE
+    tests/fundamental/DifferentConfigs.cpp
+    tests/fundamental/initial-data/InterleavedCreation.cpp
+    tests/fundamental/initial-data/InterleavedCreationWithGradients.cpp
+    tests/fundamental/profiling/InvalidName.cpp
+    tests/fundamental/profiling/NotAllStopped.cpp
+    tests/fundamental/profiling/NotStoppedAtFinalize.cpp
+    tests/fundamental/profiling/UserProfiling.cpp
     tests/geometric-multiscale/AxialGeoMultiscale.cpp
     tests/geometric-multiscale/RadialGeoMultiscale.cpp
     tests/parallel/CouplingOnLine.cpp
@@ -41,6 +48,10 @@ target_sources(testprecice
     tests/parallel/gather-scatter/EnforceGatherScatterEmptyReceivedPrimaryRank.cpp
     tests/parallel/gather-scatter/helpers.cpp
     tests/parallel/gather-scatter/helpers.hpp
+    tests/parallel/just-in-time-mapping/EmptyPartition.cpp
+    tests/parallel/just-in-time-mapping/ExplicitRead.cpp
+    tests/parallel/just-in-time-mapping/ExplicitWrite.cpp
+    tests/parallel/just-in-time-mapping/ImplicitPUM.cpp
     tests/parallel/lifecycle/ConstructAndExplicitFinalize.cpp
     tests/parallel/lifecycle/ConstructOnly.cpp
     tests/parallel/lifecycle/Full.cpp
@@ -64,6 +75,7 @@ target_sources(testprecice
     tests/quasi-newton/parallel/TestQN1.cpp
     tests/quasi-newton/parallel/TestQN10.cpp
     tests/quasi-newton/parallel/TestQN10EmptyPartition.cpp
+    tests/quasi-newton/parallel/TestQN11.cpp
     tests/quasi-newton/parallel/TestQN1EmptyPartition.cpp
     tests/quasi-newton/parallel/TestQN2.cpp
     tests/quasi-newton/parallel/TestQN2EmptyPartition.cpp
@@ -84,6 +96,11 @@ target_sources(testprecice
     tests/quasi-newton/serial/DefaultConfig.cpp
     tests/quasi-newton/serial/TestQN1.cpp
     tests/quasi-newton/serial/TestQN10.cpp
+    tests/quasi-newton/serial/TestQN11.cpp
+    tests/quasi-newton/serial/TestQN12.cpp
+    tests/quasi-newton/serial/TestQN13.cpp
+    tests/quasi-newton/serial/TestQN14.cpp
+    tests/quasi-newton/serial/TestQN15.cpp
     tests/quasi-newton/serial/TestQN2.cpp
     tests/quasi-newton/serial/TestQN3.cpp
     tests/quasi-newton/serial/TestQN4.cpp
@@ -92,7 +109,82 @@ target_sources(testprecice
     tests/quasi-newton/serial/TestQN7.cpp
     tests/quasi-newton/serial/TestQN8.cpp
     tests/quasi-newton/serial/TestQN9.cpp
-    tests/serial/AitkenAcceleration.cpp
+    tests/remeshing/ReadAfterReset.cpp
+    tests/remeshing/ResetAfterSubcycling.cpp
+    tests/remeshing/ResetWhileIterating.cpp
+    tests/remeshing/SubcylingAfterReset.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshBoth.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshBoth2LI.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshBothSerial.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshInput.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshInput2LI.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshInputSerial.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshOutput.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshOutput2LI.cpp
+    tests/remeshing/parallel-explicit/changed-mapping/RemeshOutputSerial.cpp
+    tests/remeshing/parallel-explicit/changed-partition/OverlapBoth.cpp
+    tests/remeshing/parallel-explicit/changed-partition/OverlapBoth2LI.cpp
+    tests/remeshing/parallel-explicit/changed-partition/ScatterOutputs.cpp
+    tests/remeshing/parallel-explicit/changed-partition/ScatterOutputs2LI.cpp
+    tests/remeshing/parallel-explicit/changed-partition/SwapOutputs.cpp
+    tests/remeshing/parallel-explicit/changed-partition/SwapOutputs2LI.cpp
+    tests/remeshing/parallel-explicit/helper.hpp
+    tests/remeshing/parallel-explicit/noop/RemeshBoth.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshBoth2LI.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshBothSerial.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshInput.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshInput2LI.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshInputSerial.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshOutput.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshOutput2LI.cpp
+    tests/remeshing/parallel-explicit/noop/RemeshOutputSerial.cpp
+    tests/remeshing/parallel-explicit/two-meshes/LocalMapping.cpp
+    tests/remeshing/parallel-explicit/two-meshes/RemoteMapping.cpp
+    tests/remeshing/parallel-implicit/acceleration/IQN-ILS/RemeshBothSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/IQN-ILS/RemeshFirstSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/IQN-ILS/RemeshSecondSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/IQN-IMVJ/RemeshBothSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/IQN-IMVJ/RemeshFirstSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/IQN-IMVJ/RemeshSecondSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/aitken/RemeshBothSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/aitken/RemeshFirstSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/aitken/RemeshSecondSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/constant/RemeshBothSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/constant/RemeshFirstSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/constant/RemeshSecondSerial.cpp
+    tests/remeshing/parallel-implicit/acceleration/helper.hpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshBoth.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshBoth2LI.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshBothSerial.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshFirst.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshFirst2LI.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshFirstSerial.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshSecond.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshSecond2LI.cpp
+    tests/remeshing/parallel-implicit/changed-mapping/RemeshSecondSerial.cpp
+    tests/remeshing/parallel-implicit/changed-partition/OverlapBoth.cpp
+    tests/remeshing/parallel-implicit/changed-partition/OverlapBoth2LI.cpp
+    tests/remeshing/parallel-implicit/changed-partition/ScatterFirst.cpp
+    tests/remeshing/parallel-implicit/changed-partition/ScatterFirst2LI.cpp
+    tests/remeshing/parallel-implicit/changed-partition/ScatterSecond.cpp
+    tests/remeshing/parallel-implicit/changed-partition/ScatterSecond2LI.cpp
+    tests/remeshing/parallel-implicit/changed-partition/SwapFirst.cpp
+    tests/remeshing/parallel-implicit/changed-partition/SwapFirst2LI.cpp
+    tests/remeshing/parallel-implicit/changed-partition/SwapSecond.cpp
+    tests/remeshing/parallel-implicit/changed-partition/SwapSecond2LI.cpp
+    tests/remeshing/parallel-implicit/convergence/RemeshBothSerial.cpp
+    tests/remeshing/parallel-implicit/convergence/RemeshFirstSerial.cpp
+    tests/remeshing/parallel-implicit/convergence/RemeshSecondSerial.cpp
+    tests/remeshing/parallel-implicit/helper.hpp
+    tests/remeshing/parallel-implicit/noop/RemeshBoth.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshBoth2LI.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshBothSerial.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshFirst.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshFirst2LI.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshFirstSerial.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshSecond.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshSecond2LI.cpp
+    tests/remeshing/parallel-implicit/noop/RemeshSecondSerial.cpp
     tests/serial/ImplicitCheckpointing.cpp
     tests/serial/PreconditionerBug.cpp
     tests/serial/SendMeshToMultipleParticipants.cpp
@@ -101,14 +193,20 @@ target_sources(testprecice
     tests/serial/TestExplicitWithSolverGeometry.cpp
     tests/serial/TestImplicit.cpp
     tests/serial/TestReadAPI.cpp
+    tests/serial/TwoAccelerations.cpp
     tests/serial/action-timings/ActionTimingsParallelExplicit.cpp
     tests/serial/action-timings/ActionTimingsParallelImplicit.cpp
     tests/serial/action-timings/ActionTimingsSerialExplicit.cpp
     tests/serial/action-timings/ActionTimingsSerialImplicit.cpp
+    tests/serial/aitken/DefaultInitialRelaxation.cpp
+    tests/serial/aitken/DefinedInitialRelaxation.cpp
+    tests/serial/aitken/WithSubsteps.cpp
     tests/serial/circular/Explicit.cpp
     tests/serial/circular/helper.hpp
+    tests/serial/compositional/FiveParticipants.cpp
     tests/serial/compositional/OneActivatedMuscle.cpp
     tests/serial/compositional/TwoActivatedMuscles.cpp
+    tests/serial/compositional/TwoActivatedMusclesWithFeedback.cpp
     tests/serial/compositional/data/implicit-first/AllParallel.cpp
     tests/serial/compositional/data/implicit-first/Parallel.cpp
     tests/serial/compositional/data/implicit-first/SerialFirst.cpp
@@ -123,12 +221,14 @@ target_sources(testprecice
     tests/serial/convergence-measures/testConvergenceMeasures2.cpp
     tests/serial/convergence-measures/testConvergenceMeasures3.cpp
     tests/serial/convergence-measures/testConvergenceMeasures4.cpp
+    tests/serial/direct-mesh-access/DirectAccessFiltered.cpp
     tests/serial/direct-mesh-access/DirectAccessReadWrite.cpp
     tests/serial/direct-mesh-access/DirectAccessWithDataInitialization.cpp
     tests/serial/direct-mesh-access/DirectAccessWithWaveform.cpp
     tests/serial/direct-mesh-access/Explicit.cpp
     tests/serial/direct-mesh-access/ExplicitAndMapping.cpp
     tests/serial/direct-mesh-access/ExplicitRead.cpp
+    tests/serial/direct-mesh-access/ExplicitReadNoFlag.cpp
     tests/serial/direct-mesh-access/Implicit.cpp
     tests/serial/explicit/TestExplicitMPI.cpp
     tests/serial/explicit/TestExplicitMPISingle.cpp
@@ -142,9 +242,27 @@ target_sources(testprecice
     tests/serial/initialize-data/WriteMapping.cpp
     tests/serial/initialize-data/helpers.cpp
     tests/serial/initialize-data/helpers.hpp
+    tests/serial/just-in-time-mapping/ExplicitMultipleReadWrite.cpp
+    tests/serial/just-in-time-mapping/ExplicitNoReadWrite.cpp
+    tests/serial/just-in-time-mapping/ExplicitRead.cpp
+    tests/serial/just-in-time-mapping/ExplicitReadPUM.cpp
+    tests/serial/just-in-time-mapping/ExplicitWrite.cpp
+    tests/serial/just-in-time-mapping/ExplicitWritePUM.cpp
+    tests/serial/just-in-time-mapping/Implicit.cpp
+    tests/serial/just-in-time-mapping/ImplicitDataInitialization.cpp
+    tests/serial/just-in-time-mapping/ImplicitNoSubsteps.cpp
+    tests/serial/just-in-time-mapping/ImplicitWithWaveform.cpp
+    tests/serial/just-in-time-mapping/MappingWithDirectAccessRead.cpp
+    tests/serial/just-in-time-mapping/MappingWithDirectAccessWrite.cpp
+    tests/serial/just-in-time-mapping/SingleWrite.cpp
+    tests/serial/just-in-time-mapping/UnsupportedConstraint.cpp
+    tests/serial/just-in-time-mapping/UnsupportedMapping.cpp
     tests/serial/lifecycle/ConstructAndExplicitFinalize.cpp
+    tests/serial/lifecycle/ConstructNoConfig.cpp
+    tests/serial/lifecycle/ConstructNullComm.cpp
     tests/serial/lifecycle/ConstructOnly.cpp
     tests/serial/lifecycle/ConstructOnlyWait.cpp
+    tests/serial/lifecycle/ConstructWrongCommSize.cpp
     tests/serial/lifecycle/Full.cpp
     tests/serial/lifecycle/FullWait.cpp
     tests/serial/lifecycle/ImplicitFinalize.cpp
@@ -244,9 +362,17 @@ target_sources(testprecice
     tests/serial/multi-coupling/MultiCouplingFourSolvers1.cpp
     tests/serial/multi-coupling/MultiCouplingFourSolvers2.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers1.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers10.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers2.cpp
     tests/serial/multi-coupling/MultiCouplingThreeSolvers3.cpp
-    tests/serial/multi-coupling/MultiCouplingTwoSolvers.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers4.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers5.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers6.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers7.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers8.cpp
+    tests/serial/multi-coupling/MultiCouplingThreeSolvers9.cpp
+    tests/serial/multi-coupling/MultiCouplingTwoSolvers1.cpp
+    tests/serial/multi-coupling/MultiCouplingTwoSolvers2.cpp
     tests/serial/multi-coupling/helpers.cpp
     tests/serial/multi-coupling/helpers.hpp
     tests/serial/multiple-mappings/MultipleReadFromMappings.cpp
@@ -273,6 +399,8 @@ target_sources(testprecice
     tests/serial/time/explicit/compositional/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
     tests/serial/time/explicit/parallel-coupling/DoManySmallSteps.cpp
     tests/serial/time/explicit/parallel-coupling/DoNonfittingWindows.cpp
+    tests/serial/time/explicit/parallel-coupling/DoNothingWithSmallStepsNoSubsteps.cpp
+    tests/serial/time/explicit/parallel-coupling/DoNothingWithSmallStepsSubsteps.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling6400Steps.cpp
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcycling640Steps.cpp
@@ -280,19 +408,35 @@ target_sources(testprecice
     tests/serial/time/explicit/parallel-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
     tests/serial/time/explicit/parallel-coupling/helpers.cpp
     tests/serial/time/explicit/parallel-coupling/helpers.hpp
-    tests/serial/time/explicit/serial-coupling/DoNothingWithSmallSteps.cpp
+    tests/serial/time/explicit/serial-coupling/DoNothingWithSmallStepsNoSubsteps.cpp
+    tests/serial/time/explicit/serial-coupling/DoNothingWithSmallStepsSubsteps.cpp
     tests/serial/time/explicit/serial-coupling/DoNothingWithSubcycling.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipant.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipantInitData.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
+    tests/serial/time/explicit/serial-coupling/SecondTimeBug.cpp
+    tests/serial/time/helpers.cpp
+    tests/serial/time/helpers.hpp
     tests/serial/time/implicit/compositional/DoNothingWithSubcycling.cpp
     tests/serial/time/implicit/compositional/ReadWriteScalarDataWithSubcycling.cpp
+    tests/serial/time/implicit/helpers.cpp
+    tests/serial/time/implicit/helpers.hpp
     tests/serial/time/implicit/multi-coupling/DoNothingWithSubcycling.cpp
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithWaveformSamplingFirst.cpp
     tests/serial/time/implicit/multi-coupling/ReadWriteScalarDataWithWaveformSubcyclingDifferentDts.cpp
+    tests/serial/time/implicit/parallel-coupling/DoNothingWithSmallStepsNoSubsteps.cpp
+    tests/serial/time/implicit/parallel-coupling/DoNothingWithSmallStepsSubsteps.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataAitken1.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataAitken2.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataConstantAcceleration1.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataConstantAcceleration2.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataIQNILSAcceleration1.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataIQNILSAcceleration2.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataIQNIMVJAcceleration1.cpp
+    tests/serial/time/implicit/parallel-coupling/InitialDataIQNIMVJAcceleration2.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithSubcyclingNoSubstepsUseInitFirst.cpp
@@ -303,6 +447,16 @@ target_sources(testprecice
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingMixed.cpp
     tests/serial/time/implicit/parallel-coupling/ReadWriteScalarDataWithWaveformSubcyclingThird.cpp
     tests/serial/time/implicit/parallel-coupling/WaveformSubcyclingWithDifferentNumberOfDts.cpp
+    tests/serial/time/implicit/serial-coupling/DoNothingWithSmallStepsNoSubsteps.cpp
+    tests/serial/time/implicit/serial-coupling/DoNothingWithSmallStepsSubsteps.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataAitken1.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataAitken2.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataConstantAcceleration1.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataConstantAcceleration2.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataIQNILSAcceleration1.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataIQNILSAcceleration2.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataIQNIMVJAcceleration1.cpp
+    tests/serial/time/implicit/serial-coupling/InitialDataIQNIMVJAcceleration2.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataFirstParticipant.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithSubcyclingNoSubsteps.cpp
@@ -314,13 +468,13 @@ target_sources(testprecice
     tests/serial/time/implicit/serial-coupling/ReadWriteScalarDataWithWaveformSubcyclingThird.cpp
     tests/serial/time/implicit/serial-coupling/WaveformSubcyclingWithConstantAcceleration.cpp
     tests/serial/time/implicit/serial-coupling/WaveformSubcyclingWithConstantAccelerationNoInit.cpp
-    tests/serial/watch-integral/WatchIntegralScaleAndNoScale.cpp
-    tests/serial/watch-integral/helpers.cpp
-    tests/serial/watch-integral/helpers.hpp
+    tests/serial/watch/WatchIntegralScaleAndNoScaleParallel.cpp
+    tests/serial/watch/WatchIntegralScaleAndNoScaleSerial.cpp
+    tests/serial/watch/WatchPointParallel.cpp
+    tests/serial/watch/WatchPointSerial.cpp
+    tests/serial/watch/helpers.cpp
+    tests/serial/watch/helpers.hpp
     tests/serial/whitebox/TestConfigurationComsol.cpp
     tests/serial/whitebox/TestConfigurationPeano.cpp
     tests/serial/whitebox/TestExplicitWithDataScaling.cpp
     )
-
-# Contains the list of integration test suites
-set(PRECICE_TEST_SUITES GeometricMultiscale Parallel QuasiNewton Serial)

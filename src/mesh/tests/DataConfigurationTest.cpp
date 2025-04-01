@@ -11,9 +11,10 @@ using namespace precice;
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DataConfig)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(testing::getPathToSources() + "/mesh/tests/data-config.xml");
   using xml::XMLTag;
   XMLTag                  tag = xml::getRootTag();

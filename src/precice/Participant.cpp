@@ -36,7 +36,7 @@ Participant::Participant(
     ::precice::string_view configurationFileName,
     int                    solverProcessIndex,
     int                    solverProcessSize,
-    void *                 communicator)
+    void                  *communicator)
     : _impl(new impl::ParticipantImpl(toSV(participantName), toSV(configurationFileName), solverProcessIndex, solverProcessSize, {communicator}))
 {
 }
@@ -102,6 +102,11 @@ bool Participant::requiresWritingCheckpoint()
 bool Participant::requiresMeshConnectivityFor(::precice::string_view meshName) const
 {
   return _impl->requiresMeshConnectivityFor(toSV(meshName));
+}
+
+void Participant::resetMesh(::precice::string_view meshName)
+{
+  return _impl->resetMesh(toSV(meshName));
 }
 
 bool Participant::requiresGradientDataFor(::precice::string_view meshName,
@@ -215,6 +220,25 @@ void Participant::readData(
   _impl->readData(toSV(meshName), toSV(dataName), ids, relativeReadTime, values);
 }
 
+void Participant::mapAndReadData(
+    ::precice::string_view        meshName,
+    ::precice::string_view        dataName,
+    ::precice::span<const double> coordinates,
+    double                        relativeReadTime,
+    ::precice::span<double>       values) const
+{
+  _impl->mapAndReadData(toSV(meshName), toSV(dataName), coordinates, relativeReadTime, values);
+}
+
+void Participant::writeAndMapData(
+    ::precice::string_view        meshName,
+    ::precice::string_view        dataName,
+    ::precice::span<const double> coordinates,
+    ::precice::span<const double> values)
+{
+  _impl->writeAndMapData(toSV(meshName), toSV(dataName), coordinates, values);
+}
+
 void Participant::setMeshAccessRegion(::precice::string_view        meshName,
                                       ::precice::span<const double> boundingBox) const
 {
@@ -235,6 +259,16 @@ void Participant::writeGradientData(
     ::precice::span<const double>   gradients)
 {
   _impl->writeGradientData(toSV(meshName), toSV(dataName), ids, gradients);
+}
+
+void Participant::startProfilingSection(::precice::string_view sectionName)
+{
+  _impl->startProfilingSection(toSV(sectionName));
+}
+
+void Participant::stopLastProfilingSection()
+{
+  _impl->stopLastProfilingSection();
 }
 
 } // namespace precice

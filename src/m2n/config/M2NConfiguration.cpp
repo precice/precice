@@ -50,7 +50,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
                                "for the InfiniBand on SuperMUC. ");
     tag.addAttribute(attrNetwork);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, ".")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen, and both solvers have to be started "
@@ -63,7 +63,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     doc = "Communication via MPI with startup in separated communication spaces, using multiple communicators.";
     tag.setDocumentation(doc);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, ".")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen, and both solvers have to be started "
@@ -76,7 +76,7 @@ M2NConfiguration::M2NConfiguration(xml::XMLTag &parent)
     doc = "Communication via MPI with startup in separated communication spaces, using a single communicator";
     tag.setDocumentation(doc);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, ".")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen, and both solvers have to be started "
@@ -165,6 +165,9 @@ void M2NConfiguration::xmlTagCallback(const xml::ConfigurationContext &context, 
 #else
 #ifdef OMPI_MAJOR_VERSION
       PRECICE_WARN("preCICE was compiled with OpenMPI and configured to use <m2n:mpi-multiple-ports />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems. Ignore this warning if participants find each other and the simulation starts.");
+#endif
+#ifdef I_MPI_VERSION
+      PRECICE_WARN("preCICE was compiled with Intel MPI and configured to use <m2n:mpi-multiple-ports />, which can cause issues in connection build-up. Consider switching to sockets if you encounter problems. Ignore this warning if participants find each other and the simulation starts.");
 #endif
       comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
       com        = comFactory->newCommunication();

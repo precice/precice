@@ -8,9 +8,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 // Integration test for 2LI with PUM mapping
+PRECICE_TEST_SETUP("Fluid"_on(2_ranks), "Structure"_on(2_ranks))
 BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationPUM)
 {
-  PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
+  PRECICE_TEST();
 
   std::vector<double> positions;
   std::vector<double> data;
@@ -40,7 +41,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationPUM)
     BOOST_TEST(context.isNamed("Structure"));
     if (context.isPrimary()) {
       for (int x = 0; x < 20; ++x) {
-        for (int y = 0.5; y < 20.5; ++y) {
+        for (int y = 0; y < 20; ++y) {
           positions.push_back(x);
           positions.push_back(y);
           // method should be exact when using the polynomial
@@ -50,7 +51,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationPUM)
       data.resize(positions.size() / 2);
     } else {
       for (int x = 21; x < 41; ++x) {
-        for (int y = 0.5; y < 20.5; ++y) {
+        for (int y = 0; y < 20; ++y) {
           positions.push_back(x);
           positions.push_back(y);
           expectedData.push_back(x + y * 7);

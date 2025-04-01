@@ -10,9 +10,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   if (context.isNamed("SolverOne")) {
     // Set up Participant
@@ -53,7 +54,6 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
       BOOST_TEST(precice::testing::equals(expectedData, readData));
       interface.writeData(providedMeshName, writeDataName, ids, writeData);
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
         // do nothing
@@ -109,7 +109,6 @@ BOOST_AUTO_TEST_CASE(DirectAccessReadWrite)
       BOOST_TEST(precice::testing::equals(expectedData, readData));
       interface.writeData(receivedMeshName, writeDataName, receiveMeshIDs, writeData);
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
         // do nothing

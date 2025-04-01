@@ -15,7 +15,7 @@ namespace precice::com::serialize {
 SerializedConnectionMap SerializedConnectionMap::serialize(const ConnectionMap &cm)
 {
   SerializedConnectionMap scm;
-  auto &                  content = scm.content;
+  auto                   &content = scm.content;
 
   auto elements = std::transform_reduce(
       cm.begin(), cm.end(),
@@ -101,7 +101,7 @@ void SerializedConnectionMap::send(Communication &communication, int rankReceive
 SerializedConnectionMap SerializedConnectionMap::receive(Communication &communication, int rankSender)
 {
   SerializedConnectionMap scm;
-  scm.content = communication.receiveRange(rankSender, AsVectorTag<int>{});
+  scm.content = communication.receiveRange(rankSender, asVector<int>);
   scm.assertValid();
   return scm;
 }
@@ -176,7 +176,7 @@ void SerializedBoundingBox::send(Communication &communication, int rankReceiver)
 SerializedBoundingBox SerializedBoundingBox::receive(Communication &communication, int rankSender)
 {
   SerializedBoundingBox sbb;
-  sbb.coords = communication.receiveRange(rankSender, AsVectorTag<double>{});
+  sbb.coords = communication.receiveRange(rankSender, asVector<double>);
   sbb.assertValid();
   return sbb;
 }
@@ -192,8 +192,8 @@ SerializedBoundingBoxMap SerializedBoundingBoxMap::serialize(const BoundingBoxMa
   }
 
   SerializedBoundingBoxMap sbbm;
-  auto &                   info   = sbbm.info;
-  auto &                   coords = sbbm.coords;
+  auto                    &info   = sbbm.info;
+  auto                    &coords = sbbm.coords;
 
   // Entries, dimensions, ranks
   auto size = bbm.size();
@@ -280,9 +280,9 @@ void SerializedBoundingBoxMap::send(Communication &communication, int rankReceiv
 SerializedBoundingBoxMap SerializedBoundingBoxMap::receive(Communication &communication, int rankSender)
 {
   SerializedBoundingBoxMap sbbm;
-  sbbm.info = communication.receiveRange(rankSender, AsVectorTag<int>{});
+  sbbm.info = communication.receiveRange(rankSender, asVector<int>);
   if (sbbm.info.size() > 1) {
-    sbbm.coords = communication.receiveRange(rankSender, AsVectorTag<double>{});
+    sbbm.coords = communication.receiveRange(rankSender, asVector<double>);
   }
   sbbm.assertValid();
   return sbbm;

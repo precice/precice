@@ -74,11 +74,11 @@ public:
 
   Event(std::string_view eventName, Options options);
 
-  Event(Event &&) = default;
+  Event(Event &&)            = default;
   Event &operator=(Event &&) = default;
 
   // Copies would lead to duplicate entries
-  Event(const Event &other) = delete;
+  Event(const Event &other)       = delete;
   Event &operator=(const Event &) = delete;
 
   /// Stops the event if it's running and report its times to the EventRegistry
@@ -95,22 +95,10 @@ public:
 
 private:
   int   _eid;
+  int   _sid{-1};
   State _state = State::STOPPED;
   bool  _fundamental{false};
   bool  _synchronize{false};
-};
-
-/// Class that changes the prefix in its scope
-class ScopedEventPrefix {
-public:
-  ScopedEventPrefix(std::string_view name);
-
-  ~ScopedEventPrefix();
-
-  void pop();
-
-private:
-  std::string previousName = "";
 };
 
 } // namespace precice::profiling

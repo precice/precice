@@ -20,7 +20,7 @@
 namespace precice::action {
 
 ActionConfiguration::ActionConfiguration(
-    xml::XMLTag &              parent,
+    xml::XMLTag               &parent,
     mesh::PtrMeshConfiguration meshConfig)
     : NAME_DIVIDE_BY_AREA("divide-by-area"),
       NAME_MULTIPLY_BY_AREA("multiply-by-area"),
@@ -124,7 +124,7 @@ ActionConfiguration::ActionConfiguration(
 
 void ActionConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    callingTag)
+    xml::XMLTag                     &callingTag)
 {
   PRECICE_TRACE(callingTag.getName());
   if (callingTag.getNamespace() == TAG) {
@@ -151,7 +151,7 @@ void ActionConfiguration::xmlTagCallback(
 
 void ActionConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    callingTag)
+    xml::XMLTag                     &callingTag)
 {
   if (callingTag.getNamespace() == TAG) {
     createAction();

@@ -14,15 +14,6 @@
 #include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
 
-namespace {
-/// Required by STL algos, which get confused by std::min overloads
-template <typename T>
-T min(T a, T b)
-{
-  return std::min(a, b);
-}
-} // namespace
-
 namespace precice::cplscheme {
 
 namespace {
@@ -77,16 +68,20 @@ void CompositionalCouplingScheme::addCouplingScheme(
   }
 }
 
-void CompositionalCouplingScheme::initialize(
-    double startTime,
-    int    startTimeWindow)
+void CompositionalCouplingScheme::initialize()
 {
-  PRECICE_TRACE(startTime, startTimeWindow);
+  PRECICE_TRACE();
   PRECICE_ASSERT(_activeSchemes.empty());
   for (const auto scheme : allSchemes()) {
-    scheme->initialize(startTime, startTimeWindow);
+    scheme->initialize();
     _activeSchemes.push_back(scheme);
   }
+}
+
+void CompositionalCouplingScheme::reinitialize()
+{
+  PRECICE_TRACE();
+  PRECICE_UNREACHABLE("Not implemented and not allowed");
 }
 
 bool CompositionalCouplingScheme::sendsInitializedData() const
@@ -301,7 +296,7 @@ double CompositionalCouplingScheme::getTimeWindowStart() const
   return std::transform_reduce(
       schemes.begin(), schemes.end(),
       std::numeric_limits<double>::max(),
-      ::min<double>,
+      [](double a, double b) { return std::min(a, b); },
       std::mem_fn(&CouplingScheme::getTimeWindowStart));
 }
 
@@ -313,7 +308,7 @@ int CompositionalCouplingScheme::getTimeWindows() const
   auto timeWindows = std::transform_reduce(
       schemes.begin(), schemes.end(),
       std::numeric_limits<int>::max(),
-      ::min<int>,
+      [](int a, int b) { return std::min(a, b); },
       std::mem_fn(&CouplingScheme::getTimeWindows));
   PRECICE_DEBUG("return {}", timeWindows);
   return timeWindows;
@@ -355,7 +350,7 @@ double CompositionalCouplingScheme::getNextTimeStepMaxSize() const
 
   double maxLength = std::transform_reduce(
       _activeSchemes.begin(), _activeSchemes.end(), std::numeric_limits<double>::max(),
-      ::min<double>,
+      [](double a, double b) { return std::min(a, b); },
       std::mem_fn(&CouplingScheme::getNextTimeStepMaxSize));
   PRECICE_DEBUG("return {}", maxLength);
   return maxLength;

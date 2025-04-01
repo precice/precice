@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="Data" waveform-degree="2" />
+  <data:scalar name="Data2" waveform-degree="2" />
+
+  <mesh name="A-Mesh" dimensions="2">
+    <use-data name="Data" />
+    <use-data name="Data2" />
+  </mesh>
+
+  <mesh name="B-Mesh" dimensions="2">
+    <use-data name="Data" />
+    <use-data name="Data2" />
+  </mesh>
+
+  <participant name="A">
+    <provide-mesh name="A-Mesh" />
+    <receive-mesh name="B-Mesh" from="B" />
+    <read-data name="Data2" mesh="A-Mesh" />
+    <write-data name="Data" mesh="A-Mesh" />
+    <mapping:nearest-neighbor direction="write" from="A-Mesh" to="B-Mesh" constraint="consistent" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="B-Mesh"
+      to="A-Mesh"
+      constraint="conservative" />
+  </participant>
+
+  <participant name="B">
+    <provide-mesh name="B-Mesh" />
+    <read-data name="Data" mesh="B-Mesh" />
+    <write-data name="Data2" mesh="B-Mesh" />
+  </participant>
+
+  <m2n:sockets acceptor="B" connector="A" />
+
+  <coupling-scheme:serial-implicit>
+    <participants first="B" second="A" />
+    <max-time value="1.0" />
+    <time-window-size value="1.0" />
+    <exchange data="Data" mesh="B-Mesh" from="A" to="B" />
+    <exchange data="Data2" mesh="B-Mesh" from="B" to="A" />
+    <max-iterations value="100" />
+    <relative-convergence-measure limit="1.0e-10" data="Data" mesh="B-Mesh" />
+    <acceleration:aitken>
+      <data mesh="B-Mesh" name="Data" />
+      <initial-relaxation value="0.1" />
+    </acceleration:aitken>
+  </coupling-scheme:serial-implicit>
+</precice-configuration>

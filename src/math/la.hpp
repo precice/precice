@@ -1,8 +1,7 @@
 #include <Eigen/Core>
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace math {
+namespace precice::math {
 
 /// Sums up the components of subvectors in vector into result.
 /* Assumes vector has size k*size(result), i.e. the components of
@@ -12,7 +11,7 @@ namespace math {
  */
 template <typename DerivedA, typename DerivedB>
 void sumSubvectors(const Eigen::MatrixBase<DerivedA> &vector,
-                   Eigen::MatrixBase<DerivedB> &      result)
+                   Eigen::MatrixBase<DerivedB>       &result)
 {
   int vectorSize    = vector.size();
   int subvectorSize = result.size();
@@ -28,5 +27,4 @@ void sumSubvectors(const Eigen::MatrixBase<DerivedA> &vector,
   }
 }
 
-} // namespace math
-} // namespace precice
+} // namespace precice::math

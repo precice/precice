@@ -19,36 +19,36 @@ class BoundingBox {
 
 public:
   /***
-  *
-  * @brief Constructor
-  *
-  * @param[in] dimension Dimension of the bounding box
-  *
-  */
+   *
+   * @brief Constructor
+   *
+   * @param[in] dimension Dimension of the bounding box
+   *
+   */
   explicit BoundingBox(int dimension);
 
   /***
-  *
-  * @brief Constructor.
-  *
-  * @param[in] bounds Min-max values of the bounding box in each dimesion (x_min, x_max, y_min, y_max, z_min, z_max)
-  *
-  */
+   *
+   * @brief Constructor.
+   *
+   * @param[in] bounds Min-max values of the bounding box in each dimension (x_min, x_max, y_min, y_max, z_min, z_max)
+   *
+   */
   explicit BoundingBox(std::vector<double> bounds);
 
   /**
-  * @brief Constructor accepting Eigen::VectorXd
-  *
-  * @param boundMin: vertex at minCorner
-  * @param boundMax: vertex at maxCorner
-  */
+   * @brief Constructor accepting Eigen::VectorXd
+   *
+   * @param boundMin: vertex at minCorner
+   * @param boundMax: vertex at maxCorner
+   */
   explicit BoundingBox(Eigen::VectorXd boundMin, Eigen::VectorXd boundMax);
 
   /// Special Members
-  BoundingBox(const BoundingBox &) = default;
-  BoundingBox(BoundingBox &&)      = default;
+  BoundingBox(const BoundingBox &)              = default;
+  BoundingBox(BoundingBox &&)                   = default;
   BoundingBox &operator=(const BoundingBox &bb) = default;
-  BoundingBox &operator=(BoundingBox &&bb) = default;
+  BoundingBox &operator=(BoundingBox &&bb)      = default;
 
   /// Comparison Operator
   bool operator==(const BoundingBox &otherBB) const;

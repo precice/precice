@@ -10,9 +10,10 @@ using namespace precice::utils;
 BOOST_AUTO_TEST_SUITE(UtilsTests)
 BOOST_AUTO_TEST_SUITE(ManageUniqueIDsTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(UniqueIDs)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   ManageUniqueIDs uniqueIDs;
   int             id = uniqueIDs.getFreeID();
   BOOST_TEST(id == 0);

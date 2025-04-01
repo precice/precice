@@ -25,8 +25,7 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
 
   XMLTag tagVector(*this, VALUE_VECTOR, XMLTag::OCCUR_ARBITRARY, TAG);
   tagVector.setDocumentation("Defines a vector data set to be assigned to meshes. The number of "
-                             "components of each data entry depends on the spatial dimensions set "
-                             "in tag <precice-configuration>.");
+                             "components of each data entry depends on the spatial dimensions of the mesh.");
   tagVector.addAttribute(attrName);
   tagVector.addAttribute(attrDegree);
   parent.addSubtag(tagVector);
@@ -48,7 +47,7 @@ DataConfiguration::ConfiguredData DataConfiguration::getRecentlyConfiguredData()
 
 void DataConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   if (tag.getNamespace() == TAG) {
     const std::string &name = tag.getStringAttributeValue(ATTR_NAME);
@@ -63,8 +62,8 @@ void DataConfiguration::xmlTagCallback(
     };
 
     const int waveformDegree = tag.getIntAttributeValue(ATTR_DEGREE);
-    PRECICE_CHECK(!(waveformDegree < time::Time::MIN_WAVEFORM_DEGREE || waveformDegree > time::Time::MAX_WAVEFORM_DEGREE),
-                  "You tried to configure the data with name \"{}\" to use the waveform-degree=\"{}\", but the degree must be between \"{}\" and \"{}\". Please use a degree in the allowed range.", name, waveformDegree, time::Time::MIN_WAVEFORM_DEGREE, time::Time::MAX_WAVEFORM_DEGREE);
+    PRECICE_CHECK(!(waveformDegree < time::Time::MIN_WAVEFORM_DEGREE),
+                  "You tried to configure the data with name \"{}\" to use the waveform-degree=\"{}\", but the degree must be at least \"{}\".", name, waveformDegree, time::Time::MIN_WAVEFORM_DEGREE);
     addData(name, typeName, waveformDegree);
   } else {
     PRECICE_ASSERT(false, "Received callback from an unknown tag.", tag.getName());
@@ -73,12 +72,12 @@ void DataConfiguration::xmlTagCallback(
 
 void DataConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
 }
 
 void DataConfiguration::addData(
-    const std::string &  name,
+    const std::string   &name,
     const Data::typeName typeName,
     int                  waveformDegree)
 {

@@ -7,16 +7,13 @@
 #include "io/ExportXML.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Mesh;
 class Edge;
 class Triangle;
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 /** Exporter for VTU and PVTU.
  *
@@ -25,6 +22,16 @@ namespace io {
  * The naming scheme allows to import these files into Paraview as time series.
  */
 class ExportVTU : public ExportXML {
+public:
+  ExportVTU(
+      std::string_view  participantName,
+      std::string_view  location,
+      const mesh::Mesh &mesh,
+      ExportKind        kind,
+      int               frequency,
+      int               rank,
+      int               size);
+
 private:
   mutable logging::Logger _log{"io::ExportVTU"};
 
@@ -38,5 +45,4 @@ private:
   void exportConnectivity(std::ostream &outFile, const mesh::Mesh &mesh) const override;
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

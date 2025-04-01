@@ -14,8 +14,7 @@
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 /**
  * @brief Multi vector quasi-Newton update scheme
@@ -54,17 +53,13 @@ public:
       int                            imvjRestartType,
       int                            chunkSize,
       int                            RSLSreusedTimeWindows,
-      double                         RSSVDtruncationEps);
+      double                         RSSVDtruncationEps,
+      bool                           reducedTimeGrid);
 
   /**
    * @brief Destructor, empty.
    */
-  virtual ~IQNIMVJAcceleration();
-
-  /**
-   * @brief Initializes the acceleration.
-   */
-  virtual void initialize(const DataMap &cplData);
+  ~IQNIMVJAcceleration() override;
 
   /**
    * @brief Marks a iteration sequence as converged.
@@ -72,7 +67,7 @@ public:
    * called by the iterationsConverged() method in the BaseQNAcceleration class
    * handles the acceleration specific action after the convergence of one iteration
    */
-  virtual void specializedIterationsConverged(const DataMap &cplData);
+  void specializedIterationsConverged(const DataMap &cplData) override;
 
 private:
   /// @brief stores the approximation of the inverse Jacobian of the system at current time window.
@@ -117,13 +112,13 @@ private:
    *  - RS-LS:      imvj in restart-mode. After M time windows restart with LS approximation for initial Jacobian
    *  - RS-SVD:     imvj in restart mode. After M time windows, update of an truncated SVD of the Jacobian.
    */
-  int _imvjRestartType;
+  const int _imvjRestartType;
 
   /** @brief: If true, the imvj method is used with the restart chunk based approach that avoids
    *  to explicitly build and store the Jacobian. If false, the Jacobian is stored and build, however,
    *  no truncation of information is present.
    */
-  bool _imvjRestart;
+  const bool _imvjRestart;
 
   /// @brief: Number of time windows between restarts for the imvj method in restart mode
   int _chunkSize;
@@ -141,13 +136,10 @@ private:
   /** @brief: computes the IQNIMVJ update using QR decomposition of V,
    *        furthermore it updates the inverse of the system jacobian
    */
-  virtual void computeQNUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate);
+  void computeQNUpdate(Eigen::VectorXd &xUpdate) override;
 
   /// @brief: updates the V, W matrices (as well as the matrices for the secondary data)
-  virtual void updateDifferenceMatrices(const DataMap &cplData);
-
-  /// @brief: computes underrelaxation for the secondary data
-  virtual void computeUnderrelaxationSecondaryData(const DataMap &cplData);
+  void updateDifferenceMatrices(const DataMap &cplData) override;
 
   /** @brief: computes the quasi-Newton update vector based on the matrices V and W using a QR
    *  decomposition of V. The decomposition is not re-computed en-block in every iteration
@@ -156,7 +148,7 @@ private:
    *  This method rebuilds the Jacobian matrix and the matrix W_til in each iteration
    *  which is not necessary and thus inefficient.
    */
-  void computeNewtonUpdate(const DataMap &cplData, Eigen::VectorXd &update);
+  void computeNewtonUpdate(Eigen::VectorXd &update);
 
   /** @brief: computes the quasi-Newton update vector based on the same numerics as above.
    *  However, it exploits the fact that the matrix W_til can be updated according to V and W
@@ -166,7 +158,7 @@ private:
    *  The Jacobian matrix only needs to be set up in the very last iteration of one time window, i.e.
    *  in iterationsConverged.
    */
-  void computeNewtonUpdateEfficient(const DataMap &cplData, Eigen::VectorXd &update);
+  void computeNewtonUpdateEfficient(Eigen::VectorXd &update);
 
   /** @brief: computes the pseudo inverse of V multiplied with V^T, i.e., Z = (V^TV)^-1V^T via QR-dec
    */
@@ -189,12 +181,14 @@ private:
   void restartIMVJ();
 
   /// @brief: Removes one iteration from V,W matrices and adapts _matrixCols.
-  virtual void removeMatrixColumn(int columnIndex);
+  void removeMatrixColumn(int columnIndex) override;
+
+  /// @copydoc precice::Acceleration::BaseQNAcceleration::specializedInitializeVectorsAndPreconditioner()
+  void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) final override;
 
   /// @brief: Removes one column form the V_RSLS and W_RSLS matrices and adapts _matrixCols_RSLS
   void removeMatrixColumnRSLS(int columnINdex);
 };
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration
 
 #endif /* PRECICE_NO_MPI */

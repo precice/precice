@@ -42,7 +42,13 @@
     <participants first="SolverOne" second="SolverTwo" />
     <max-time-windows value="5" />
     <time-window-size value="2.0" />
-    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
-    <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" to="SolverOne" initialize="on" />
+    <exchange data="DataOne" mesh="MeshOne" from="SolverOne" to="SolverTwo" substeps="false" />
+    <exchange
+      data="DataTwo"
+      mesh="MeshOne"
+      from="SolverTwo"
+      to="SolverOne"
+      initialize="on"
+      substeps="false" />
   </coupling-scheme:serial-explicit>
 </precice-configuration>

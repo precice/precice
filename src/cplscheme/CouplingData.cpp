@@ -36,12 +36,12 @@ int CouplingData::getDimensions() const
 
 int CouplingData::getSize() const
 {
-  return sample().values.size();
+  return _mesh->nVertices() * getDimensions();
 }
 
-Eigen::VectorXd &CouplingData::values()
+int CouplingData::nVertices() const
 {
-  return sample().values;
+  return _mesh->nVertices();
 }
 
 const Eigen::VectorXd &CouplingData::values() const
@@ -49,14 +49,29 @@ const Eigen::VectorXd &CouplingData::values() const
   return sample().values;
 }
 
-Eigen::MatrixXd &CouplingData::gradients()
+const Eigen::MatrixXd &CouplingData::gradients() const
 {
   return sample().gradients;
 }
 
-const Eigen::MatrixXd &CouplingData::gradients() const
+int CouplingData::gradientsRows() const
 {
-  return sample().gradients;
+  const int rows = meshDimensions();
+  PRECICE_ASSERT(sample().gradients.rows() == rows, sample().gradients.rows(), rows);
+  return rows;
+}
+
+int CouplingData::gradientsCols() const
+{
+  const int cols = getSize();
+  PRECICE_ASSERT(sample().gradients.cols() == cols, sample().gradients.cols(), cols);
+  return cols;
+}
+
+const time::Sample &CouplingData::sample() const
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->sample();
 }
 
 time::Storage &CouplingData::timeStepsStorage()
@@ -71,7 +86,7 @@ const time::Storage &CouplingData::timeStepsStorage() const
   return _data->timeStepsStorage();
 }
 
-Eigen::VectorXd CouplingData::getPreviousValuesAtTime(double relativeDt)
+time::SampleResult CouplingData::getPreviousValuesAtTime(double relativeDt)
 {
   return _previousTimeStepsStorage.sample(relativeDt);
 }
@@ -84,8 +99,41 @@ Eigen::MatrixXd CouplingData::getPreviousGradientsAtTime(double relativeDt)
 void CouplingData::setSampleAtTime(double time, time::Sample sample)
 {
   PRECICE_ASSERT(not sample.values.hasNaN());
-  this->sample() = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
   _data->setSampleAtTime(time, sample);
+}
+
+void CouplingData::setGlobalSample(const time::Sample &sample)
+{
+  PRECICE_ASSERT(not sample.values.hasNaN());
+  _data->setGlobalSample(sample);
+}
+
+void CouplingData::initializeWithZeroAtTime(double time)
+{
+  if (!hasGradient()) {
+    auto zero = time::Sample(getDimensions(), nVertices());
+    zero.setZero();
+    _data->setSampleAtTime(time, zero);
+    return;
+  }
+  auto zero = time::Sample(getDimensions(), nVertices(), meshDimensions());
+  zero.setZero();
+  _data->setSampleAtTime(time, zero);
+}
+
+void CouplingData::emplaceSampleAtTime(double time)
+{
+  _data->emplaceSampleAtTime(time);
+}
+
+void CouplingData::emplaceSampleAtTime(double time, std::initializer_list<double> values)
+{
+  _data->emplaceSampleAtTime(time, values);
+}
+
+void CouplingData::emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients)
+{
+  _data->emplaceSampleAtTime(time, values, gradients);
 }
 
 bool CouplingData::hasGradient() const
@@ -99,11 +147,25 @@ int CouplingData::meshDimensions() const
   return _mesh->getDimensions();
 }
 
+void CouplingData::reinitialize()
+{
+  // TODO port this to subcyling
+
+  // The mesh was reinitialized and new written data will be added later in advance().
+  // Meaning all samples are based on a different mesh.
+  // Without remapping, the best we can do is setting them to zero samples.
+  // We keep the timestamps not to break convergence measures, accelerations, and actions
+  auto zero = time::Sample(getDimensions(), nVertices());
+  zero.setZero();
+
+  _data->timeStepsStorage().setAllSamples(zero);
+  _previousTimeStepsStorage.setAllSamples(zero);
+}
+
 void CouplingData::storeIteration()
 {
   const auto &stamples = this->stamples();
   PRECICE_ASSERT(stamples.size() > 0);
-  this->sample()            = stamples.back().sample;
   _previousTimeStepsStorage = _data->timeStepsStorage();
 }
 
@@ -135,9 +197,14 @@ int CouplingData::getDataID()
   return _data->getID();
 }
 
-std::string CouplingData::getDataName()
+std::string CouplingData::getDataName() const
 {
   return _data->getName();
+}
+
+std::string CouplingData::getMeshName() const
+{
+  return _mesh->getName();
 }
 
 std::vector<int> CouplingData::getVertexOffsets()
@@ -158,18 +225,6 @@ void CouplingData::moveToNextWindow()
   }
   _data->moveToNextWindow();
   _previousTimeStepsStorage = _data->timeStepsStorage();
-}
-
-time::Sample &CouplingData::sample()
-{
-  PRECICE_ASSERT(_data != nullptr);
-  return _data->sample();
-}
-
-const time::Sample &CouplingData::sample() const
-{
-  PRECICE_ASSERT(_data != nullptr);
-  return _data->sample();
 }
 
 bool CouplingData::exchangeSubsteps() const

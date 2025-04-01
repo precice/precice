@@ -1,4 +1,4 @@
-//#ifndef PRECICE_NO_MPI
+// #ifndef PRECICE_NO_MPI
 
 #include <Eigen/Core>
 #include <cmath>
@@ -68,18 +68,15 @@ double IntraComm::l2norm(const Eigen::VectorXd &vec)
 {
   PRECICE_TRACE();
 
-  if (not _isPrimaryRank && not _isSecondaryRank) { //old case
+  if (not _isPrimaryRank && not _isSecondaryRank) { // old case
     return vec.norm();
   }
 
   PRECICE_ASSERT(_communication.get() != nullptr);
   PRECICE_ASSERT(_communication->isConnected());
-  double localSum2  = 0.0;
-  double globalSum2 = 0.0;
 
-  for (int i = 0; i < vec.size(); i++) {
-    localSum2 += vec(i) * vec(i);
-  }
+  double globalSum2 = 0.0;
+  double localSum2  = vec.squaredNorm();
 
   // localSum is modified, do not use afterwards
   allreduceSum(localSum2, globalSum2);
@@ -106,19 +103,16 @@ double IntraComm::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2)
 {
   PRECICE_TRACE();
 
-  if (not _isPrimaryRank && not _isSecondaryRank) { //old case
+  if (not _isPrimaryRank && not _isSecondaryRank) { // old case
     return vec1.dot(vec2);
   }
 
   PRECICE_ASSERT(_communication.get() != nullptr);
   PRECICE_ASSERT(_communication->isConnected());
   PRECICE_ASSERT(vec1.size() == vec2.size(), vec1.size(), vec2.size());
-  double localSum  = 0.0;
-  double globalSum = 0.0;
 
-  for (int i = 0; i < vec1.size(); i++) {
-    localSum += vec1(i) * vec2(i);
-  }
+  double globalSum = 0.0;
+  double localSum  = vec1.dot(vec2);
 
   // localSum is modified, do not use afterwards
   allreduceSum(localSum, globalSum);
@@ -369,6 +363,11 @@ void IntraComm::synchronize()
   if (precice::syncMode) {
     barrier();
   }
+}
+
+bool IntraComm::willSynchronize()
+{
+  return precice::syncMode;
 }
 
 void IntraComm::barrier()

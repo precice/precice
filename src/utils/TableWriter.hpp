@@ -28,7 +28,7 @@ public:
   std::vector<Column> cols;
   std::string         sepChar = "|";
   char                padding = ' ';
-  std::ostream &      out     = std::cout;
+  std::ostream       &out     = std::cout;
 
   Table();
 
@@ -36,7 +36,7 @@ public:
 
   /// Adds a column of given name, width and float precision
   template <class... T>
-  void addColumn(T &&... arg)
+  void addColumn(T &&...arg)
   {
     cols.emplace_back(std::forward<T>(arg)...);
   }

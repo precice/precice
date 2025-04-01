@@ -12,11 +12,12 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MappingNearestProjection)
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_DATA_TEST_CASE(QuadMappingNearestProjectionEdges,
                      boost::unit_test::data::make({true, false}) * boost::unit_test::data::make({true, false}),
                      defineEdgesExplicitly, useBulkFunctions)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
   testQuadMappingNearestProjection(defineEdgesExplicitly, useBulkFunctions, context.config(), context);
 }
 

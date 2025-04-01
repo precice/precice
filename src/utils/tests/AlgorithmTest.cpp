@@ -19,9 +19,10 @@ namespace pu = precice::utils;
 BOOST_AUTO_TEST_SUITE(UtilsTests)
 BOOST_AUTO_TEST_SUITE(AlgorithmTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MakeArray)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   auto a = pu::make_array(1, 2, 3);
   BOOST_TEST(a.size() == 3);
   BOOST_TEST(a.at(0) == 1);
@@ -29,9 +30,10 @@ BOOST_AUTO_TEST_CASE(MakeArray)
   BOOST_TEST(a.at(2) == 3);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(UniqueElements)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector<int> y{1, 2, 3, 4, 5, 6, 7, 8, 9};
   BOOST_TEST(pu::unique_elements(y));
   BOOST_TEST(pu::unique_elements(y, [](int l, int r) { return l == r; }));
@@ -49,9 +51,10 @@ BOOST_AUTO_TEST_CASE(UniqueElements)
   BOOST_TEST(pu::unique_elements(e, [](int l, int r) { return l == r; }));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(UniqueEigenElements)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Eigen::VectorXd v1(3);
   v1 << 1.0, 0.1, 0.2;
   Eigen::VectorXd v2(3);
@@ -78,9 +81,10 @@ BOOST_AUTO_TEST_CASE(UniqueEigenElements)
   BOOST_TEST(!pu::unique_elements(case6));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Mismatch)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector<int> a{1, 2, 3, 4, 5, 6, 7, 8, 9};
   std::vector<int> b{1, 2, 3, 4, 5, 0, 9};
 
@@ -100,9 +104,10 @@ BOOST_AUTO_TEST_CASE(Mismatch)
 
 BOOST_AUTO_TEST_SUITE(RangePreview)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(NormalRangePreview)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector<int>   a{1, 2, 3, 4, 5, 6, 0};
   std::ostringstream oss;
   oss << pu::previewRange(2, a);
@@ -110,9 +115,10 @@ BOOST_AUTO_TEST_CASE(NormalRangePreview)
   BOOST_TEST(str == "[1, 2, ... , 6, 0] min:0 max:6");
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(PrintNoElements)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector<int>   a{1, 2, 3, 4, 5, 6, 0};
   std::ostringstream oss;
   oss << pu::previewRange(0, a);
@@ -120,9 +126,10 @@ BOOST_AUTO_TEST_CASE(PrintNoElements)
   BOOST_TEST(str == "[ ... ] min:0 max:6");
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EmptyRange)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector<int>   a;
   std::ostringstream oss;
   oss << pu::previewRange(3, a);
@@ -134,9 +141,10 @@ BOOST_AUTO_TEST_SUITE_END() // Range
 
 BOOST_AUTO_TEST_SUITE(ReorderArray)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(OneElement)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::array<int, 1> input{1};
   std::array<int, 1> order{0};
   std::array<int, 1> expected{1};
@@ -145,9 +153,10 @@ BOOST_AUTO_TEST_CASE(OneElement)
   BOOST_TEST(reordered == expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(AlreadySorted)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::array<int, 3> input{3, 4, 5};
   std::array<int, 3> order{0, 1, 2};
   std::array<int, 3> expected{3, 4, 5};
@@ -156,9 +165,10 @@ BOOST_AUTO_TEST_CASE(AlreadySorted)
   BOOST_TEST(reordered == expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Reverse)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::array<int, 3> input{3, 4, 5};
   std::array<int, 3> order{2, 1, 0};
   std::array<int, 3> expected{5, 4, 3};
@@ -167,9 +177,10 @@ BOOST_AUTO_TEST_CASE(Reverse)
   BOOST_TEST(reordered == expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Scramble)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::array<int, 3> input{3, 4, 5};
   std::array<int, 3> order{2, 0, 1};
   std::array<int, 3> expected{5, 3, 4};
@@ -178,9 +189,10 @@ BOOST_AUTO_TEST_CASE(Scramble)
   BOOST_TEST(reordered == expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ScramblePointer)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int a = 1, b = 2;
 
   std::array<int *, 3> input{&a, &b, nullptr};
@@ -195,9 +207,10 @@ BOOST_AUTO_TEST_SUITE_END() // ReorderArray
 
 BOOST_AUTO_TEST_SUITE(FindFirstRange)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(NoMatch)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector v{0, 1, 2, 3};
 
   auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return false; });
@@ -205,9 +218,10 @@ BOOST_AUTO_TEST_CASE(NoMatch)
   BOOST_TEST((last == v.end()));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(AllMatch)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector v{0, 1, 2, 3};
 
   auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return true; });
@@ -215,9 +229,10 @@ BOOST_AUTO_TEST_CASE(AllMatch)
   BOOST_TEST((last == v.end() - 1));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(BeginSingle)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector v{0, 1, 2, 3};
 
   auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 0; });
@@ -225,9 +240,10 @@ BOOST_AUTO_TEST_CASE(BeginSingle)
   BOOST_TEST((last == v.begin()));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(BeginMultiple)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector v{0, 0, 2, 3};
 
   auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 0; });
@@ -235,9 +251,10 @@ BOOST_AUTO_TEST_CASE(BeginMultiple)
   BOOST_TEST((last == v.begin() + 1));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EndSingle)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector v{0, 1, 2, 3};
 
   auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 3; });
@@ -245,9 +262,10 @@ BOOST_AUTO_TEST_CASE(EndSingle)
   BOOST_TEST((last == first));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EndMultiple)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector v{1, 2, 3, 3};
 
   auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 3; });
@@ -255,9 +273,10 @@ BOOST_AUTO_TEST_CASE(EndMultiple)
   BOOST_TEST((last == v.end() - 1));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MiddleSingle)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector v{1, 2, 3, 4};
 
   auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 2; });
@@ -265,9 +284,10 @@ BOOST_AUTO_TEST_CASE(MiddleSingle)
   BOOST_TEST((last == first));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MiddleMultiple)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector v{1, 2, 2, 3};
 
   auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 2; });
@@ -275,9 +295,10 @@ BOOST_AUTO_TEST_CASE(MiddleMultiple)
   BOOST_TEST((last == v.begin() + 2));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MultipleRangesSingleMatch)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector v{1, 2, 3, 4, 5, 3};
 
   auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 3; });
@@ -285,9 +306,10 @@ BOOST_AUTO_TEST_CASE(MultipleRangesSingleMatch)
   BOOST_TEST((last == first));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MultipleRangesMultipleMatches)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::vector v{1, 2, 2, 4, 2, 2};
 
   auto [first, last] = utils::find_first_range(v.begin(), v.end(), [](int i) { return i == 2; });

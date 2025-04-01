@@ -29,9 +29,10 @@ BOOST_AUTO_TEST_SUITE(MeshTests)
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Eigen::Vector2d coords0(2, 0);
   Eigen::Vector2d coords1(-1, 4);
   Eigen::Vector2d coords2(0, 1);
@@ -60,9 +61,10 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_2D)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Eigen::Vector3d coords0(2, 0, -3);
   Eigen::Vector3d coords1(-1, 4, 8);
   Eigen::Vector3d coords2(0, 1, -2);
@@ -94,9 +96,10 @@ BOOST_AUTO_TEST_CASE(BoundingBoxCOG_3D)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Demonstration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   for (int dim = 2; dim <= 3; dim++) {
     // Create mesh object
     std::string         meshName("MyMesh");
@@ -151,10 +154,9 @@ BOOST_AUTO_TEST_CASE(Demonstration)
     BOOST_TEST(mesh.edges().size() == 3);
     BOOST_TEST(!mesh.hasTriangles());
 
-    Triangle *t = nullptr;
     if (dim == 3) {
       // Create triangle
-      t = &mesh.createTriangle(e0, e1, e2);
+      mesh.createTriangle(e0, e1, e2);
 
       BOOST_TEST(mesh.hasTriangles());
     } else {
@@ -193,15 +195,16 @@ BOOST_AUTO_TEST_CASE(Demonstration)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MeshEquality)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int                   dim = 3;
   Mesh                  mesh1("Mesh1", dim, testing::nextMeshID());
   Mesh                  mesh2("Mesh2", dim, testing::nextMeshID());
   std::array<Mesh *, 2> meshes = {&mesh1, &mesh2};
   for (auto ptr : meshes) {
-    auto &          mesh = *ptr;
+    auto           &mesh = *ptr;
     Eigen::VectorXd coords0(dim);
     Eigen::VectorXd coords1(dim);
     Eigen::VectorXd coords2(dim);
@@ -214,9 +217,9 @@ BOOST_AUTO_TEST_CASE(MeshEquality)
     Vertex &v1 = mesh.createVertex(coords1);
     Vertex &v2 = mesh.createVertex(coords2);
     Vertex &v3 = mesh.createVertex(coords3);
-    Edge &  e0 = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
-    Edge &  e1 = mesh.createEdge(v1, v2); // LINESTRING (1 0 0, 0 0 1)
-    Edge &  e2 = mesh.createEdge(v2, v0); // LINESTRING (0 0 1, 0 0 0)
+    Edge   &e0 = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
+    Edge   &e1 = mesh.createEdge(v1, v2); // LINESTRING (1 0 0, 0 0 1)
+    Edge   &e2 = mesh.createEdge(v2, v0); // LINESTRING (0 0 1, 0 0 0)
     mesh.createEdge(v1, v3);              // LINESTRING (1 0 0, 1 0 1)
     mesh.createEdge(v3, v2);              // LINESTRING (1 0 1, 0 0 1)
     mesh.createTriangle(e0, e1, e2);
@@ -224,17 +227,18 @@ BOOST_AUTO_TEST_CASE(MeshEquality)
   BOOST_TEST(mesh1 == mesh2);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MeshWKTPrint)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh    mesh("WKTMesh", 3, testing::nextMeshID());
   Vertex &v0 = mesh.createVertex(Eigen::Vector3d(0., 0., 0.));
   Vertex &v1 = mesh.createVertex(Eigen::Vector3d(1., 0., 0.));
   Vertex &v2 = mesh.createVertex(Eigen::Vector3d(0., 0., 1.));
   Vertex &v3 = mesh.createVertex(Eigen::Vector3d(1., 0., 1.));
-  Edge &  e0 = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
-  Edge &  e1 = mesh.createEdge(v1, v2); // LINESTRING (1 0 0, 0 0 1)
-  Edge &  e2 = mesh.createEdge(v2, v0); // LINESTRING (0 0 1, 0 0 0)
+  Edge   &e0 = mesh.createEdge(v0, v1); // LINESTRING (0 0 0, 1 0 0)
+  Edge   &e1 = mesh.createEdge(v1, v2); // LINESTRING (1 0 0, 0 0 1)
+  Edge   &e2 = mesh.createEdge(v2, v0); // LINESTRING (0 0 1, 0 0 0)
   mesh.createEdge(v1, v3);              // LINESTRING (1 0 0, 1 0 1)
   mesh.createEdge(v3, v2);              // LINESTRING (1 0 1, 0 0 1)
   mesh.createTriangle(e0, e1, e2);
@@ -250,11 +254,12 @@ BOOST_AUTO_TEST_CASE(MeshWKTPrint)
   BOOST_TEST(reference == sstream.str());
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ResizeDataGrow)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
-  const auto &        values = mesh.createData("Data", 1, 0_dataID)->values();
+  const auto         &values = mesh.createData("Data", 1, 0_dataID)->values();
 
   // Create mesh
   mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
@@ -273,11 +278,12 @@ BOOST_AUTO_TEST_CASE(ResizeDataGrow)
   BOOST_TEST(values.size() == 5);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ResizeDataShrink)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   precice::mesh::Mesh mesh("MyMesh", 3, testing::nextMeshID());
-  const auto &        values = mesh.createData("Data", 1, 0_dataID)->values();
+  const auto         &values = mesh.createData("Data", 1, 0_dataID)->values();
 
   // Create mesh
   mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
@@ -300,9 +306,10 @@ BOOST_AUTO_TEST_CASE(ResizeDataShrink)
 
 BOOST_AUTO_TEST_SUITE(Utils)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(AsChain)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh("Mesh1", 3, testing::nextMeshID());
   mesh.createData("Data", 1, 0_dataID);
 
@@ -343,9 +350,10 @@ BOOST_AUTO_TEST_CASE(AsChain)
   BOOST_TEST(chain.vertices.at(3) == &v0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ShareVertex)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh("Mesh1", 3, testing::nextMeshID());
   mesh.createData("Data", 1, 0_dataID);
 
@@ -383,9 +391,10 @@ BOOST_AUTO_TEST_CASE(ShareVertex)
   BOOST_TEST(sharedVertex(e0, e2) == sharedVertex(e2, e0));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EdgeLength)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   Eigen::Vector3d coords0;
   Eigen::Vector3d coords1;
@@ -397,9 +406,10 @@ BOOST_AUTO_TEST_CASE(EdgeLength)
   BOOST_TEST(edgeLength(e) == std::sqrt(2));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(VertexPtrsFor)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh("Mesh1", 3, testing::nextMeshID());
   mesh.createData("Data", 1, 0_dataID);
 
@@ -425,9 +435,10 @@ BOOST_AUTO_TEST_CASE(VertexPtrsFor)
   BOOST_TEST(result == expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(CoordsForIDs)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh("Mesh1", 3, testing::nextMeshID());
   mesh.createData("Data", 1, 0_dataID);
 
@@ -453,9 +464,10 @@ BOOST_AUTO_TEST_CASE(CoordsForIDs)
   BOOST_TEST(result == expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(CoordsForPtrs)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh("Mesh1", 3, testing::nextMeshID());
   mesh.createData("Data", 1, 0_dataID);
 
@@ -481,9 +493,10 @@ BOOST_AUTO_TEST_CASE(CoordsForPtrs)
   BOOST_TEST(result == expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Integrate2DScalarData)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 2, testing::nextMeshID());
   mesh->createData("Data", 1, 0_dataID);
 
@@ -508,9 +521,10 @@ BOOST_AUTO_TEST_CASE(Integrate2DScalarData)
   BOOST_TEST(result(0) == expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Integrate2DVectorData)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 2, testing::nextMeshID());
   mesh->createData("Data", 2, 0_dataID);
 
@@ -540,9 +554,10 @@ BOOST_AUTO_TEST_CASE(Integrate2DVectorData)
   BOOST_TEST(result(1) == expected(1));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Integrate3DScalarData)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
   mesh->createData("Data", 1, 0_dataID);
 
@@ -572,9 +587,10 @@ BOOST_AUTO_TEST_CASE(Integrate3DScalarData)
   BOOST_TEST(result(0) == expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Integrate3DVectorData)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
   mesh->createData("Data", 2, 0_dataID);
 
@@ -620,9 +636,10 @@ struct UnitSquareFixture {
   Eigen::Vector2d x3{0.0, 1.0};
 };
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_FIXTURE_TEST_CASE(Integrate2DScalarDataVolume, UnitSquareFixture)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 2, testing::nextMeshID());
   mesh->createData("Data", 1, 0_dataID);
 
@@ -658,9 +675,10 @@ BOOST_FIXTURE_TEST_CASE(Integrate2DScalarDataVolume, UnitSquareFixture)
   BOOST_TEST(result(0) == expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_FIXTURE_TEST_CASE(Integrate2DVectorDataVolume, UnitSquareFixture)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 2, testing::nextMeshID());
   mesh->createData("Data", 2, 0_dataID);
 
@@ -709,9 +727,10 @@ struct OneTetraFixture {
   Eigen::Vector3d x4{0.0, 0.0, 1.0};
 };
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_FIXTURE_TEST_CASE(Integrate3DScalarDataVolume, OneTetraFixture)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
   mesh->createData("Data", 1, 0_dataID);
 
@@ -739,9 +758,10 @@ BOOST_FIXTURE_TEST_CASE(Integrate3DScalarDataVolume, OneTetraFixture)
   BOOST_TEST(result(0) == expected);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_FIXTURE_TEST_CASE(Integrate3DVectorDataVolume, OneTetraFixture)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   PtrMesh mesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
   mesh->createData("Data", 3, 0_dataID);
 
@@ -783,9 +803,10 @@ BOOST_FIXTURE_TEST_CASE(Integrate3DVectorDataVolume, OneTetraFixture)
 
 BOOST_AUTO_TEST_SUITE_END() // VolumeIntegrals
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(AddMesh)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   PtrMesh globalMesh = std::make_shared<Mesh>("Mesh1", 3, testing::nextMeshID());
   PtrMesh subMesh    = std::make_shared<Mesh>("Mesh2", 3, testing::nextMeshID());
 
@@ -823,9 +844,10 @@ BOOST_AUTO_TEST_CASE(AddMesh)
 
 BOOST_AUTO_TEST_SUITE(PreProcess);
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DuplicateEdges)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh{"Mesh1", 3, 0};
 
   auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -859,9 +881,10 @@ BOOST_AUTO_TEST_CASE(DuplicateEdges)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SingleTriangle)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh{"Mesh1", 3, 0};
 
   auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -877,9 +900,10 @@ BOOST_AUTO_TEST_CASE(SingleTriangle)
   BOOST_TEST(mesh.tetrahedra().size() == 0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SingleTriangulatedQuad)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh{"Mesh1", 3, 0};
 
   auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -897,9 +921,10 @@ BOOST_AUTO_TEST_CASE(SingleTriangulatedQuad)
   BOOST_TEST(mesh.tetrahedra().size() == 0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SingleTetrahedron)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh{"Mesh1", 3, 0};
 
   auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -916,9 +941,10 @@ BOOST_AUTO_TEST_CASE(SingleTetrahedron)
   BOOST_TEST(mesh.tetrahedra().size() == 1);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TouchingTetrahedra)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh{"Mesh1", 3, 0};
 
   auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -938,9 +964,10 @@ BOOST_AUTO_TEST_CASE(TouchingTetrahedra)
   BOOST_TEST(mesh.tetrahedra().size() == 2);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SingleTriangle2ImplicitEdges)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh{"Mesh1", 3, 0};
 
   auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -957,9 +984,10 @@ BOOST_AUTO_TEST_CASE(SingleTriangle2ImplicitEdges)
   BOOST_TEST(mesh.tetrahedra().size() == 0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SingleTriangle1ImplicitEdges)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh{"Mesh1", 3, 0};
 
   auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -977,9 +1005,10 @@ BOOST_AUTO_TEST_CASE(SingleTriangle1ImplicitEdges)
   BOOST_TEST(mesh.tetrahedra().size() == 0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SingleTetrahedron3ImplicitTriangles)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh{"Mesh1", 3, 0};
 
   auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -997,9 +1026,10 @@ BOOST_AUTO_TEST_CASE(SingleTetrahedron3ImplicitTriangles)
   BOOST_TEST(mesh.tetrahedra().size() == 1);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SingleTetrahedronNoImplicitTriangles)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh{"Mesh1", 3, 0};
 
   auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -1020,9 +1050,10 @@ BOOST_AUTO_TEST_CASE(SingleTetrahedronNoImplicitTriangles)
   BOOST_TEST(mesh.tetrahedra().size() == 1);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Mixed)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh{"Mesh1", 3, 0};
 
   auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -1041,9 +1072,10 @@ BOOST_AUTO_TEST_CASE(Mixed)
   BOOST_TEST(mesh.tetrahedra().size() == 1);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Complex)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Mesh mesh{"Mesh1", 3, 0};
 
   auto &v1 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));

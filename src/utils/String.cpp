@@ -2,6 +2,7 @@
 #include <Eigen/Dense>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <memory>
+#include <regex>
 #include <vector>
 #include "boost/algorithm/string/classification.hpp"
 #include "boost/algorithm/string/split.hpp"
@@ -42,7 +43,7 @@ std::string wrapText(
 }
 
 std::string &checkAppendExtension(
-    std::string &      filename,
+    std::string       &filename,
     const std::string &extension)
 {
   size_t pos = filename.rfind(extension);
@@ -97,6 +98,12 @@ std::size_t editDistance(std::string_view s1, std::string_view s2)
   }
 
   return distances(len1, len2);
+}
+
+bool isKebabStyle(std::string_view sv)
+{
+  std::regex kebabCaseRegex("^[a-z0-9]+(-[a-z0-9]+)*$");
+  return sv.empty() || std::regex_match(sv.begin(), sv.end(), kebabCaseRegex);
 }
 
 } // namespace precice::utils

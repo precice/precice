@@ -18,9 +18,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 
 class ParallelMatrixOperations {
 public:
@@ -34,8 +32,9 @@ public:
       Eigen::PlainObjectBase<Derived1> &leftMatrix,
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &          offsets,
+      const std::vector<int>           &offsets,
       int p, int q, int r,
+      bool cyclicComm            = true,
       bool dotProductComputation = true)
   {
     PRECICE_TRACE();
@@ -48,22 +47,21 @@ public:
 
       // if parallel computation on p processors
     } else {
-      PRECICE_ASSERT(utils::IntraComm::getCommunication() != NULL);
+      PRECICE_ASSERT(utils::IntraComm::getCommunication() != nullptr);
       PRECICE_ASSERT(utils::IntraComm::getCommunication()->isConnected());
 
       // The result matrix is of size (p x r)
-      // if p equals r (and p = global_n), we have to perform the
-      // cyclic communication with block-wise matrix-matrix multiplication
-      if (p == r) {
+      // if the cyclic communication is needed, we use block-wise matrix-matrix multiplication
+      if (cyclicComm) {
         PRECICE_ASSERT(_needCyclicComm);
-        PRECICE_ASSERT(_cyclicCommLeft.get() != NULL);
+        PRECICE_ASSERT(_cyclicCommLeft.get() != nullptr);
         PRECICE_ASSERT(_cyclicCommLeft->isConnected());
-        PRECICE_ASSERT(_cyclicCommRight.get() != NULL);
+        PRECICE_ASSERT(_cyclicCommRight.get() != nullptr);
         PRECICE_ASSERT(_cyclicCommRight->isConnected());
 
-        _multiplyNN(leftMatrix, rightMatrix, result, offsets, p, q, r);
+        _multiply_cyclic(leftMatrix, rightMatrix, result, offsets, p, q, r);
 
-        // case p != r, i.e., usually p = number of columns of the least squares system
+        // case the cyclic communication is not needed, i.e., usually p = number of columns of the least squares system
         // perform parallel multiplication based on dot-product
       } else {
         if (dotProductComputation)
@@ -75,22 +73,22 @@ public:
   }
 
   /** @brief: Method computes the matrix-matrix/matrix-vector product of a (p x q)
-    * matrix that is distributed column-wise (e.g. pseudoInverse Z), with a matrix/vector
-    * of size (q x r) with r=1/cols, that is distributed row-wise (e.g. _matrixW, _matrixV, residual).
-    *
-    * In each case mat-mat or mat-vec product, the result is of size (m x m) or (m x 1), where
-    * m is the number of cols, i.e., small such that the result is stored on each proc.
-    *
-    * @param[in] p - first dimension, i.e., overall (global) number of rows
-    * @param[in] q - inner dimension
-    * @param[in] r - second dimension, i.e., overall (global) number cols of result matrix
-    *
-    */
+   * matrix that is distributed column-wise (e.g. pseudoInverse Z), with a matrix/vector
+   * of size (q x r) with r=1 or r=cols, that is distributed row-wise (e.g. _matrixW, _matrixV, residual).
+   *
+   * In each case mat-mat or mat-vec product, the result is of size (m x m) or (m x 1), where
+   * m is the number of cols, i.e., small such that the result is stored on each proc.
+   *
+   * @param[in] p - first dimension, i.e., overall (global) number cols of result matrix
+   * @param[in] q - inner dimension
+   * @param[in] r - second dimension, i.e., 1 or overall (global) number cols of result matrix
+   *
+   */
   template <typename Derived1, typename Derived2, typename Derived3>
   void multiply(
       const Eigen::MatrixBase<Derived1> &leftMatrix,
       const Eigen::MatrixBase<Derived2> &rightMatrix,
-      Eigen::PlainObjectBase<Derived3> & result,
+      Eigen::PlainObjectBase<Derived3>  &result,
       int p, int q, int r)
   {
     PRECICE_TRACE();
@@ -113,36 +111,35 @@ public:
 private:
   logging::Logger _log{"acceleration::ParallelMatrixOperations"};
 
-  // @brief multiplies matrices based on a cyclic communication and block-wise matrix multiplication with a quadratic result matrix
+  // @brief multiplies matrices based on a cyclic communication and block-wise matrix multiplication
   template <typename Derived1, typename Derived2>
-  void _multiplyNN(
+  void _multiply_cyclic(
       Eigen::PlainObjectBase<Derived1> &leftMatrix,
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &          offsets,
+      const std::vector<int>           &offsets,
       int p, int q, int r)
   {
     PRECICE_TRACE();
     /*
      * For multiplication W_til * Z = J
      * -----------------------------------------------------------------------
-     * p = r = n_global, q = m
+     * p = n_global, q = m, r = n_global_primary
      *
      * leftMatrix:  local: (n_local x m) 		global: (n_global x m)
-     * rightMatrix: local: (m x n_local) 		global: (m x n_global)
-     * result: 		local: (n_global x n_local) global: (n_global x n_global)
+     * rightMatrix: local: (m x n_local_primary) 		global: (m x n_global_primary)
+     * result: 		local: (n_global x n_local_primary) global: (n_global x n_global_primary)
      * -----------------------------------------------------------------------
      */
 
     PRECICE_ASSERT(_needCyclicComm);
     PRECICE_ASSERT(leftMatrix.cols() == q, leftMatrix.cols(), q);
-    PRECICE_ASSERT(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
     PRECICE_ASSERT(result.rows() == p, result.rows(), p);
 
-    //int nextProc = (utils::IntraComm::getRank() + 1) % utils::IntraComm::getSize();
+    // int nextProc = (utils::IntraComm::getRank() + 1) % utils::IntraComm::getSize();
     int prevProc = (utils::IntraComm::getRank() - 1 < 0) ? utils::IntraComm::getSize() - 1 : utils::IntraComm::getRank() - 1;
     int rows_rcv = (prevProc > 0) ? offsets[prevProc + 1] - offsets[prevProc] : offsets[1];
-    //Eigen::MatrixXd leftMatrix_rcv = Eigen::MatrixXd::Zero(rows_rcv, q);
+    // Eigen::MatrixXd leftMatrix_rcv = Eigen::MatrixXd::Zero(rows_rcv, q);
     Eigen::MatrixXd leftMatrix_rcv(rows_rcv, q);
 
     com::PtrRequest requestSend;
@@ -167,14 +164,14 @@ private:
     result.block(off, 0, diagBlock.rows(), diagBlock.cols()) = diagBlock;
 
     /**
-		 * cyclic send-receive operation
-		 */
+     * cyclic send-receive operation
+     */
     for (int cycle = 1; cycle < utils::IntraComm::getSize(); cycle++) {
 
       // wait until W_til from previous processor is fully received
-      if (requestSend != NULL)
+      if (requestSend != nullptr)
         requestSend->wait();
-      if (requestRcv != NULL)
+      if (requestRcv != nullptr)
         requestRcv->wait();
 
       // leftMatrix (leftMatrix_rcv) is available - needed for local multiplication and hand over to next proc
@@ -186,7 +183,7 @@ private:
           requestSend = _cyclicCommRight->aSend(leftMatrix_copy, 0);
       }
 
-      // compute proc that owned leftMatrix_rcv (Wtil_rcv) at the very beginning for each cylce
+      // compute proc that owned leftMatrix_rcv (Wtil_rcv) at the very beginning for each cycle
       int sourceProc_nextCycle = (utils::IntraComm::getRank() - (cycle + 1) < 0) ? utils::IntraComm::getSize() + (utils::IntraComm::getRank() - (cycle + 1)) : utils::IntraComm::getRank() - (cycle + 1);
 
       int sourceProc = (utils::IntraComm::getRank() - cycle < 0) ? utils::IntraComm::getSize() + (utils::IntraComm::getRank() - cycle) : utils::IntraComm::getRank() - cycle;
@@ -201,7 +198,7 @@ private:
           requestRcv = _cyclicCommLeft->aReceive(leftMatrix_rcv, 0);
       }
 
-      if (requestSend != NULL)
+      if (requestSend != nullptr)
         requestSend->wait();
       // compute block with new local data
       Eigen::MatrixXd block(rows_rcv, rightMatrix.cols());
@@ -223,7 +220,7 @@ private:
       Eigen::PlainObjectBase<Derived1> &leftMatrix,
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &          offsets,
+      const std::vector<int>           &offsets,
       int p, int q, int r)
   {
     PRECICE_TRACE();
@@ -260,7 +257,7 @@ private:
       Eigen::PlainObjectBase<Derived1> &leftMatrix,
       Eigen::PlainObjectBase<Derived2> &rightMatrix,
       Eigen::PlainObjectBase<Derived2> &result,
-      const std::vector<int> &          offsets,
+      const std::vector<int>           &offsets,
       int p, int q, int r)
   {
     PRECICE_TRACE();
@@ -332,8 +329,6 @@ private:
   void closeCircularCommunication();
 };
 
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl
 
 #endif

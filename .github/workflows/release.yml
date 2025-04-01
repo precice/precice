@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        TARGET: ["ubuntu:20.04", "ubuntu:22.04", "debian:11", "debian:12"]
+        TARGET: ["ubuntu:22.04", "ubuntu:24.04", "debian:12"]
     steps:
       - uses: actions/checkout@v4
       - name: Generate build directory
@@ -81,7 +81,7 @@ jobs:
           username: ${{ env.docker_username }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push Dockerfile
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: true
           file: "./tools/releasing/packaging/docker/release.dockerfile"

@@ -39,7 +39,7 @@ void RadialGeoMultiscaleMapping::computeMapping()
     if (_type == MultiscaleType::SPREAD) {
       // Determine principle axis midpoints as borders to assign 3D vertices to their respective 1D vertex
       Eigen::VectorXd axisMidpoints(inSize);
-      auto &          inputVerticesRef = input()->vertices();
+      auto           &inputVerticesRef = input()->vertices();
       // Order the vertices of the 1D input mesh, to correctly compute the midpoints of the segments between neighboring vertices
       std::vector<size_t> ordered_vertex_indices(input()->nVertices());
       std::iota(ordered_vertex_indices.begin(), ordered_vertex_indices.end(), 0);
@@ -79,7 +79,7 @@ void RadialGeoMultiscaleMapping::computeMapping()
 
       // determine principle axis midpoints as borders to assign 3D vertices to their respective 1D vertex
       Eigen::VectorXd axisMidpoints(outSize);
-      auto &          outputVerticesRef = output()->vertices();
+      auto           &outputVerticesRef = output()->vertices();
 
       // Order the vertices of the 1D output mesh, to correctly compute the midpoints of the segments between neighboring vertices
       std::vector<size_t> ordered_vertex_indices(output()->nVertices());
@@ -143,7 +143,7 @@ void RadialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen
 
   const int              inDataDimensions = inData.dataDims;
   const Eigen::VectorXd &inputValues      = inData.values;
-  Eigen::VectorXd &      outputValues     = outData;
+  Eigen::VectorXd       &outputValues     = outData;
 
   size_t const inSize  = input()->nVertices();
   size_t const outSize = output()->nVertices();

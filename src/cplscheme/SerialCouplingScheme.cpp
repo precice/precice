@@ -22,9 +22,9 @@ SerialCouplingScheme::SerialCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
-    const std::string &           firstParticipant,
-    const std::string &           secondParticipant,
-    const std::string &           localParticipant,
+    const std::string            &firstParticipant,
+    const std::string            &secondParticipant,
+    const std::string            &localParticipant,
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode,
@@ -33,6 +33,7 @@ SerialCouplingScheme::SerialCouplingScheme(
     : BiCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), minIterations, maxIterations, cplMode, dtMethod)
 {
   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE) {
+    PRECICE_ASSERT(timeWindowSize == UNDEFINED_TIME_WINDOW_SIZE);
     if (doesFirstStep()) {
       PRECICE_ASSERT(not _participantReceivesTimeWindowSize);
       setTimeWindowSize(UNDEFINED_TIME_WINDOW_SIZE);
@@ -49,13 +50,13 @@ SerialCouplingScheme::SerialCouplingScheme(
     double                        maxTime,
     int                           maxTimeWindows,
     double                        timeWindowSize,
-    const std::string &           firstParticipant,
-    const std::string &           secondParticipant,
-    const std::string &           localParticipant,
+    const std::string            &firstParticipant,
+    const std::string            &secondParticipant,
+    const std::string            &localParticipant,
     m2n::PtrM2N                   m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                  cplMode)
-    : SerialCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), dtMethod, cplMode, UNDEFINED_MAX_ITERATIONS, UNDEFINED_MAX_ITERATIONS){};
+    : SerialCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, firstParticipant, secondParticipant, localParticipant, std::move(m2n), dtMethod, cplMode, UNDEFINED_MAX_ITERATIONS, UNDEFINED_MAX_ITERATIONS) {};
 
 void SerialCouplingScheme::sendTimeWindowSize()
 {
@@ -90,6 +91,7 @@ void SerialCouplingScheme::receiveAndSetTimeWindowSize()
 void SerialCouplingScheme::exchangeInitialData()
 {
   // F: send, receive, S: receive, send
+  PRECICE_ASSERT(math::equals(getTime(), getWindowStartTime()), getTime(), getWindowStartTime());
   if (doesFirstStep()) {
     if (receivesInitializedData()) {
       receiveData(getM2N(), getReceiveData());
@@ -122,9 +124,11 @@ void SerialCouplingScheme::exchangeFirstData()
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Sending data...");
       sendTimeWindowSize();
+      PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
       sendData(getM2N(), getSendData());
     } else { // second participant
       PRECICE_DEBUG("Sending data...");
+      PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
       sendData(getM2N(), getSendData());
     }
   } else {
@@ -133,6 +137,7 @@ void SerialCouplingScheme::exchangeFirstData()
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Sending data...");
       sendTimeWindowSize();
+      PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
       sendData(getM2N(), getSendData());
     } else { // second participant
       PRECICE_DEBUG("Perform acceleration (only second participant)...");
@@ -140,6 +145,7 @@ void SerialCouplingScheme::exchangeFirstData()
       PRECICE_DEBUG("Sending convergence...");
       sendConvergence(getM2N());
       PRECICE_DEBUG("Sending data...");
+      PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
       sendData(getM2N(), getSendData());
     }
   }
@@ -150,6 +156,7 @@ void SerialCouplingScheme::exchangeSecondData()
   if (isExplicitCouplingScheme()) {
     if (doesFirstStep()) { // first participant
       PRECICE_DEBUG("Receiving data...");
+      PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
       receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
     }
@@ -161,6 +168,7 @@ void SerialCouplingScheme::exchangeSecondData()
       if (isCouplingOngoing()) {
         receiveAndSetTimeWindowSize();
         PRECICE_DEBUG("Receiving data...");
+        PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
         receiveDataForWindowEnd(getM2N(), getReceiveData());
         notifyDataHasBeenReceived();
       }
@@ -172,6 +180,7 @@ void SerialCouplingScheme::exchangeSecondData()
       PRECICE_DEBUG("Receiving convergence data...");
       receiveConvergence(getM2N());
       PRECICE_DEBUG("Receiving data...");
+      PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
       receiveData(getM2N(), getReceiveData());
       notifyDataHasBeenReceived();
     }
@@ -187,6 +196,7 @@ void SerialCouplingScheme::exchangeSecondData()
       if (isCouplingOngoing() || not hasConverged()) {
         receiveAndSetTimeWindowSize();
         PRECICE_DEBUG("Receiving data...");
+        PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
         if (hasConverged()) {
           receiveDataForWindowEnd(getM2N(), getReceiveData());
         } else {

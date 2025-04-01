@@ -74,7 +74,7 @@ void LinearCellInterpolationMapping::computeMapping()
   // @TODO Add a configuration option for this factor
   constexpr int nnearest = 4;
 
-  auto &                                 index = searchSpace->index();
+  auto                                  &index = searchSpace->index();
   utils::statistics::DistanceAccumulator fallbackStatistics;
 
   _interpolations.clear();

@@ -1,15 +1,18 @@
 repos:
 # Official repo for the clang-format hook
 - repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: 'v8.0.1'
+  rev: 'v20.1.0'
   hooks:
   - id: clang-format
+    name: format C/C++
     exclude: "^thirdparty"
+    types_or: [c++]
 # Official repo for default hooks
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: 'v4.3.0'
+  rev: 'v5.0.0'
   hooks:
   - id: check-xml
+    exclude: "^src/precice/tests/emptyconfig.xml"
   - id: check-merge-conflict
   - id: mixed-line-ending
     exclude: "^thirdparty"
@@ -18,28 +21,25 @@ repos:
     exclude: "^thirdparty"
   - id: end-of-file-fixer
     exclude: "^thirdparty"
-# isort for python imports
-- repo: https://github.com/pycqa/isort
-  rev: 5.12.0
-  hooks:
-    - id: isort
-      name: isort (python)
-      exclude: "^thirdparty"
 # black repo for python formatting
 - repo: https://github.com/ambv/black
-  rev: 22.12.0
+  rev: 25.1.0
   hooks:
     - id: black
+      name: format python
       exclude: "^thirdparty"
 # Custom repo for the preCICE configuration formatter
 - repo: https://github.com/precice/precice-pre-commit-hooks
-  rev: 'v3.1'
+  rev: 'v3.3'
   hooks:
   - id: format-precice-config
+    name: format preCICE configs
+    exclude: "^src/precice/tests/emptyconfig.xml"
 - repo: https://github.com/codespell-project/codespell
-  rev: v2.2.2
+  rev: v2.4.1
   hooks:
     - id: codespell
+      name: check spelling
       exclude: "^thirdparty"
 - repo: local
   hooks:

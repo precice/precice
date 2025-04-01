@@ -78,16 +78,16 @@ public:
    * @brief Getter for _sendsInitializedData
    * @returns _sendsInitializedData
    */
-  bool sendsInitializedData() const override final;
+  bool sendsInitializedData() const final override;
 
   /**
    * @brief getter for _isInitialized
    * @returns true, if initialize has been called.
    */
-  bool isInitialized() const override final;
+  bool isInitialized() const final override;
 
   /// @copydoc cplscheme::CouplingScheme::addComputedTime()
-  bool addComputedTime(double timeToAdd) override final;
+  bool addComputedTime(double timeToAdd) final override;
 
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
@@ -98,27 +98,27 @@ public:
    * @param lastSolverTimeStepSize [IN] The size of the last time step
    *        computed by the solver calling willDataBeExchanged().
    */
-  bool willDataBeExchanged(double lastSolverTimeStepSize) const override final;
+  bool willDataBeExchanged(double lastSolverTimeStepSize) const final override;
 
   /**
    * @brief getter for _hasDataBeenReceived
    * @returns true, if data has been received in last call of advance().
    */
-  bool hasDataBeenReceived() const override final;
+  bool hasDataBeenReceived() const final override;
 
   /**
    * @brief getter for _time
    * @returns the currently computed time of the coupling scheme.
    */
-  double getTime() const override final;
+  double getTime() const final override;
 
-  double getTimeWindowStart() const override final;
+  double getTimeWindowStart() const final override;
 
   /**
    * @brief getter for _timeWindows
    * @returns the number of currently computed time windows of the coupling scheme.
    */
-  int getTimeWindows() const override final;
+  int getTimeWindows() const final override;
 
   /**
    * @brief Function to check whether time window size is defined by coupling scheme.
@@ -129,7 +129,7 @@ public:
    *
    * @returns true, if time window size is available.
    */
-  bool hasTimeWindowSize() const override final;
+  bool hasTimeWindowSize() const final override;
 
   /**
    * @brief Returns the time window size, if one is given by the coupling scheme.
@@ -137,7 +137,7 @@ public:
    * An assertion is thrown, if no valid time window size is given. Check with
    * hasTimeWindowSize().
    */
-  double getTimeWindowSize() const override final;
+  double getTimeWindowSize() const final override;
 
   /**
    * @brief Returns the maximal size of the next time step to be computed.
@@ -145,25 +145,25 @@ public:
    * If no time window size is prescribed by the coupling scheme, always the
    * maximal double accuracy floating point number value is returned.
    */
-  double getNextTimeStepMaxSize() const override final;
+  double getNextTimeStepMaxSize() const final override;
 
   /// Returns true, when the coupled simulation is still ongoing.
-  bool isCouplingOngoing() const override final;
+  bool isCouplingOngoing() const final override;
 
   /// Returns true, when the accessor can advance to the next time window.
-  bool isTimeWindowComplete() const override final;
+  bool isTimeWindowComplete() const final override;
 
   /// Returns true, if the given action has to be performed by the accessor.
-  bool isActionRequired(Action action) const override final;
+  bool isActionRequired(Action action) const final override;
 
   /// Returns true, if the given action has to be performed by the accessor.
-  bool isActionFulfilled(Action action) const override final;
+  bool isActionFulfilled(Action action) const final override;
 
   /// Tells the coupling scheme that the accessor has performed the given action.
-  void markActionFulfilled(Action action) override final;
+  void markActionFulfilled(Action action) final override;
 
   /// Sets an action required to be performed by the accessor.
-  void requireAction(Action action) override final;
+  void requireAction(Action action) final override;
 
   /**
    * @brief Returns coupling state information.
@@ -173,31 +173,27 @@ public:
   std::string printCouplingState() const override;
 
   /// Finalizes the coupling scheme.
-  void finalize() override final;
+  void finalize() final override;
 
-  /**
-   * @brief Initializes the coupling scheme.
-   *
-   * @param[in] startTime starting time of coupling scheme
-   * @param[in] startTimeWindow starting counter of time window, from which coupling scheme starts
-   */
-  void initialize(double startTime, int startTimeWindow) override final;
+  /// @copydoc cplscheme::CouplingScheme::initialize()
+  void initialize() final override;
 
-  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override final;
+  void reinitialize() final override;
 
-  void firstExchange() override final;
+  ChangedMeshes firstSynchronization(const ChangedMeshes &changes) final override;
 
-  ChangedMeshes secondSynchronization() override final;
+  void firstExchange() final override;
 
-  void secondExchange() override final;
+  ChangedMeshes secondSynchronization() final override;
+
+  void secondExchange() final override;
 
   /// Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure(
       int                         dataID,
       bool                        suffices,
       bool                        strict,
-      impl::PtrConvergenceMeasure measure,
-      bool                        doesLogging);
+      impl::PtrConvergenceMeasure measure);
 
   /// Set an acceleration technique.
   void setAcceleration(const acceleration::PtrAcceleration &acceleration);
@@ -240,9 +236,7 @@ protected:
   /// Acceleration method to speedup iteration convergence.
   acceleration::PtrAcceleration _acceleration;
 
-  void sendNumberOfTimeSteps(const m2n::PtrM2N &m2n, const int numberOfTimeSteps);
-
-  void sendTimes(const m2n::PtrM2N &m2n, const Eigen::VectorXd &times);
+  void sendTimes(const m2n::PtrM2N &m2n, precice::span<double const> times);
 
   /**
    * @brief Sends data sendDataIDs given in mapCouplingData with communication.
@@ -252,9 +246,7 @@ protected:
    */
   void sendData(const m2n::PtrM2N &m2n, const DataMap &sendData);
 
-  int receiveNumberOfTimeSteps(const m2n::PtrM2N &m2n);
-
-  Eigen::VectorXd receiveTimes(const m2n::PtrM2N &m2n, int nTimeSteps);
+  std::vector<double> receiveTimes(const m2n::PtrM2N &m2n);
 
   /**
    * @brief Receives data receiveDataIDs given in mapCouplingData with communication.
@@ -398,13 +390,24 @@ protected:
   bool reachedEndOfTimeWindow() const;
 
   /// @copydoc cplscheme::CouplingScheme::requiresSubsteps()
-  bool requiresSubsteps() const override final;
+  bool requiresSubsteps() const final override;
 
   /// @copydoc cplscheme::CouplingScheme::implicitDataToReceive()
   ImplicitData implicitDataToReceive() const override;
 
   /// @copydoc cplscheme::CouplingScheme::localParticipant()
-  std::string localParticipant() const override final;
+  std::string localParticipant() const final override;
+
+protected:
+  /**
+   * @return the end of the time window, defined as timeWindowStart + timeWindowSize
+   */
+  double getWindowEndTime() const;
+
+  /**
+   * @return the start of the time window
+   */
+  double getWindowStartTime() const;
 
 private:
   /// Coupling mode used by coupling scheme.
@@ -490,11 +493,10 @@ private:
     bool                        suffices;
     bool                        strict;
     impl::PtrConvergenceMeasure measure;
-    bool                        doesLogging;
 
     std::string logHeader() const
     {
-      return "Res" + measure->getAbbreviation() + "(" + couplingData->getDataName() + ")";
+      return fmt::format("Res{}({}:{})", measure->getAbbreviation(), couplingData->getMeshName(), couplingData->getDataName());
     }
   };
 
@@ -536,6 +538,11 @@ private:
    * @brief If any required actions are open, an error message is issued.
    */
   void checkCompletenessRequiredActions();
+
+  /**
+   * @brief Issues an error if coupling data does not contain stamples.
+   */
+  void checkCouplingDataAvailable();
 
   /**
    * @brief Initialize txt writers for iterations and convergence tracking
@@ -580,16 +587,6 @@ private:
    * @return true, if any CouplingData in dataMap requires initialization
    */
   bool anyDataRequiresInitialization(DataMap &dataMap) const;
-
-  /**
-   * @return the end of the time window, defined as timeWindowStart + timeWindowSize
-   */
-  double getWindowEndTime() const;
-
-  /**
-   * @return the start of the time window
-   */
-  double getWindowStartTime() const;
 };
 } // namespace cplscheme
 } // namespace precice

@@ -51,7 +51,7 @@ void NearestNeighborBaseMapping::computeMapping()
 
   // Set up of output arrays
   const size_t verticesSize   = origins->nVertices();
-  const auto & sourceVertices = origins->vertices();
+  const auto  &sourceVertices = origins->vertices();
   _vertexIndices.resize(verticesSize);
 
   // Needed for error calculations
@@ -60,7 +60,7 @@ void NearestNeighborBaseMapping::computeMapping()
   auto &index = searchSpace->index();
   for (size_t i = 0; i < verticesSize; ++i) {
     const auto &sourceCoords  = sourceVertices[i].getCoords();
-    const auto &matchedVertex = index.getClosestVertex(sourceCoords);
+    const auto  matchedVertex = index.getClosestVertex(sourceCoords);
     _vertexIndices[i]         = matchedVertex.index;
 
     // Compute distance between input and output vertiex for the stats
@@ -108,6 +108,25 @@ void NearestNeighborBaseMapping::tagMeshFirstRound()
 {
   PRECICE_TRACE();
   precice::profiling::Event e("map." + mappingNameShort + ".tagMeshFirstRound.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
+
+  // parallel partitioning for just-in-time mapping:
+  if (this->isJustInTimeMapping()) {
+    // in the usual case, we make use of the indexSet, which is pre-computed from the mapping
+    // for the just-in-time mapping, we can't do that since we don't have the output (local) mesh
+    // what we would need to do in theory for a perfect partitioning:
+    // find all nearest-neighbors at the 'boundary' of the access region, which would require an
+    // infinite fine sampling of output mesh nodes to be used in the computeMapping below
+    // for now, we simply tag everything and move on. The remote mesh is here already filtered
+    // through the geometric filter setting.
+    //
+    // Depending on the mapping constraint, one of these tagAll calls will do nothing, as the vertex
+    // set of the mesh is empty. From a practical point of view, we only need to apply the
+    // tagging to one of the meshes (the remote one). But calling it on both sides reliefs us from any
+    // conditional code.
+    output()->tagAll();
+    input()->tagAll();
+    return;
+  }
 
   computeMapping();
 

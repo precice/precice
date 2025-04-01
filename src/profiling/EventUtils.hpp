@@ -82,10 +82,10 @@ public:
   ~EventRegistry();
 
   /// Deleted copy and move SMFs for singleton pattern
-  EventRegistry(EventRegistry const &) = delete;
-  EventRegistry(EventRegistry &&)      = delete;
+  EventRegistry(EventRegistry const &)            = delete;
+  EventRegistry(EventRegistry &&)                 = delete;
   EventRegistry &operator=(EventRegistry const &) = delete;
-  EventRegistry &operator=(EventRegistry &&) = delete;
+  EventRegistry &operator=(EventRegistry &&)      = delete;
 
   /// Returns the only instance (singleton) of the EventRegistry class
   static EventRegistry &instance();
@@ -119,6 +119,9 @@ public:
   /// Records an event
   void put(PendingEntry pe);
 
+  /// Records an event without flushing events
+  void putCritical(PendingEntry pe);
+
   /// Writes all recorded events to file and flushes the buffer.
   void flush();
 
@@ -128,10 +131,13 @@ public:
     return _mode == Mode::All || (ec == EventClass::Fundamental && _mode == Mode::Fundamental);
   }
 
-  int nameToID(std::string_view name);
+  /// Is the solver running in parallel?
+  inline bool parallel() const
+  {
+    return _size > 1;
+  }
 
-  /// Currently active prefix. Changing that applies only to newly created events.
-  std::string prefix;
+  int nameToID(std::string_view name);
 
 private:
   /// The name of the current participant

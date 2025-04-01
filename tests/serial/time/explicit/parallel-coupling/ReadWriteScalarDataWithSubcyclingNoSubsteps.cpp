@@ -20,9 +20,10 @@ BOOST_AUTO_TEST_SUITE(ParallelCoupling)
  *
  * Deactivates exchange of substeps.
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingNoSubsteps)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   Participant precice(context.name, context.config(), 0, 1);
 
@@ -90,8 +91,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcyclingNoSubsteps)
     precice.writeData(meshName, writeDataName, {&vertexID, 1}, {&writeData, 1});
 
     precice.advance(currentDt);
-    double maxDt = precice.getMaxTimeStepSize();
-    currentDt    = solverDt > preciceDt ? preciceDt : solverDt;
+    currentDt = solverDt > preciceDt ? preciceDt : solverDt;
     timestep++;
     if (precice.isTimeWindowComplete()) {
       timewindow++;

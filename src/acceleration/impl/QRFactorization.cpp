@@ -73,7 +73,7 @@ QRFactorization::QRFactorization(
     Eigen::VectorXd v = A.col(k);
     insertColumn(k, v);
   }
-  //PRECICE_ASSERT(_R.rows() == _cols, _R.rows(), _cols);
+  // PRECICE_ASSERT(_R.rows() == _cols, _R.rows(), _cols);
   PRECICE_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
   PRECICE_ASSERT(_Q.cols() == _cols, _Q.cols(), _cols);
   PRECICE_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
@@ -131,7 +131,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
             delFlag[i]++;
             delIndices.push_back(i);
             delCols++;
-            //break;
+            // break;
             index--; // check same column index, as cols are shifted left
           }
           PRECICE_ASSERT(delCols + _cols == (int) delFlag.size(), (delCols + _cols), delFlag.size());
@@ -140,22 +140,51 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &del
       }
     }
   } else if (_filter == Acceleration::QR2FILTER) {
-    _Q.resize(0, 0);
-    _R.resize(0, 0);
-    _cols = 0;
-    _rows = V.rows();
-    // starting with the most recent input/output information, i.e., the latest column
-    // which is at position 0 in _matrixV (latest information is never filtered out!)
-    for (int k = 0; k < V.cols(); k++) {
-      Eigen::VectorXd v = V.col(k);
-      // this is the same as pushBack(v) as _cols grows within the insertion process
-      bool inserted = insertColumn(_cols, v, singularityLimit);
-      if (!inserted) {
-        delIndices.push_back(k);
+    resetFilter(singularityLimit, delIndices, V);
+
+  } else if (_filter == Acceleration::QR3FILTER) {
+    int index = cols() - 1;
+    // Iterate from the last column to the 2nd column from the left
+    for (size_t i = index; i > 0; i--) {
+      Eigen::VectorXd v    = V.col(i);
+      double          rho0 = utils::IntraComm::l2norm(v);
+      if (std::fabs(_R(i, i)) < rho0 * singularityLimit) {
+        _computeQR2Filter = true;
+        break;
       }
     }
+    if (_computeQR2Filter) {
+      PRECICE_DEBUG("Pre-scaling weights were reset. Reverting to QR2 and rebuilding QR.");
+      resetFilter(singularityLimit, delIndices, V);
+    }
+    _computeQR2Filter = false;
+    PRECICE_DEBUG("Deleting {} columns in QR3 Filter", delIndices.size());
   }
   std::sort(delIndices.begin(), delIndices.end());
+}
+
+/**
+ * Recomputes QR factorization using the QR2 filter.
+ * This removes columns during the QR factorization step.
+ * Returns Q and R.
+ */
+void QRFactorization::resetFilter(double singularityLimit, std::vector<int> &delIndices, Eigen::MatrixXd &V)
+{
+  _Q.resize(0, 0);
+  _R.resize(0, 0);
+  _cols = 0;
+  _rows = V.rows();
+  // starting with the most recent input/output information, i.e., the latest column
+  // which is at position 0 in _matrixV (latest information is never filtered out!)
+  for (int k = 0; k < V.cols(); k++) {
+    Eigen::VectorXd v = V.col(k);
+    // this is the same as pushBack(v) as _cols grows within the insertion process
+    bool inserted = insertColumn(_cols, v, singularityLimit);
+    if (!inserted) {
+      delIndices.push_back(k);
+    }
+  }
+  _resetFilterCounter++;
 }
 
 /**
@@ -200,7 +229,7 @@ void QRFactorization::deleteColumn(int k)
   PRECICE_ASSERT(_Q.cols() == _cols, _Q.cols(), _cols);
   PRECICE_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
   PRECICE_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
-  //PRECICE_ASSERT(_R.rows() == _cols, _Q.rows(), _cols);
+  // PRECICE_ASSERT(_R.rows() == _cols, _Q.rows(), _cols);
 }
 
 // ATTENTION: This method works on the memory of vector v, thus changes the vector v.
@@ -236,8 +265,9 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
   if (rho_orth <= std::numeric_limits<double>::min() || err < 0) {
     PRECICE_DEBUG("The ratio ||v_orth|| / ||v|| is extremely small and either the orthogonalization process of column v failed or the system is quadratic.");
 
-    // necessary for applyFilter with the QR-2 filer. In this case, the new column is not inserted, but discarded.
+    // necessary for applyFilter with the QR-2 filter. In this case, the new column is not inserted, but discarded.
     _cols--;
+    _computeQR2Filter = true;
     return false;
   }
 
@@ -249,6 +279,7 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
   if (applyFilter && (rho0 * singularityLimit > rho_orth)) {
     PRECICE_DEBUG("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: {} > {}", rho0 * singularityLimit, rho_orth);
     _cols--;
+    _computeQR2Filter = true;
     return false;
   }
 
@@ -268,7 +299,7 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
   }
 
   PRECICE_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
-  //PRECICE_ASSERT(_R.rows() == _cols, _R.rows(), _cols);
+  // PRECICE_ASSERT(_R.rows() == _cols, _R.rows(), _cols);
 
   // resize Q(1:n, 1:m) -> Q(1:n, 1:m+1)
   _Q.conservativeResize(_rows, _cols);
@@ -313,7 +344,7 @@ bool QRFactorization::insertColumn(int k, const Eigen::VectorXd &vec, double sin
 int QRFactorization::orthogonalize(
     Eigen::VectorXd &v,
     Eigen::VectorXd &r,
-    double &         rho,
+    double          &rho,
     int              colNum)
 {
   PRECICE_TRACE();
@@ -428,7 +459,7 @@ int QRFactorization::orthogonalize(
 int QRFactorization::orthogonalize_stable(
     Eigen::VectorXd &v,
     Eigen::VectorXd &r,
-    double &         rho,
+    double          &rho,
     int              colNum)
 {
   PRECICE_TRACE();
@@ -456,8 +487,8 @@ int QRFactorization::orthogonalize_stable(
     for (int j = 0; j < colNum; j++) {
 
       /*
-			 * dot-product <_Q(:,j), v >
-			 */
+       * dot-product <_Q(:,j), v >
+       */
       Eigen::VectorXd Qc = _Q.col(j);
 
       // dot product <_Q(:,j), v> =: r_ij
@@ -498,17 +529,17 @@ int QRFactorization::orthogonalize_stable(
     }
 
     /**   - test if reorthogonalization is necessary -
-		 *  rho0 = |v_init|, t = |r_(i,cols-1)|, rho1 = |v_orth|
-		 *  rho1 is small, if the new information incorporated in v is small,
-		 *  i.e., the part of v orthogonal to _Q is small.
-		 *  if rho1 is very small it is possible, that we are adding (more or less)
-		 *  only round-off errors to the decomposition. Later normalization will scale
-		 *  this new information so that it is equally weighted as the columns in Q.
-		 *  To keep a good orthogonality, some effort is done if comparatively little
-		 *  new information is added.
-		 *
-		 *  re-orthogonalize if: ||v_orth|| / ||v|| <= 1/theta
-		 */
+     *  rho0 = |v_init|, t = |r_(i,cols-1)|, rho1 = |v_orth|
+     *  rho1 is small, if the new information incorporated in v is small,
+     *  i.e., the part of v orthogonal to _Q is small.
+     *  if rho1 is very small it is possible, that we are adding (more or less)
+     *  only round-off errors to the decomposition. Later normalization will scale
+     *  this new information so that it is equally weighted as the columns in Q.
+     *  To keep a good orthogonality, some effort is done if comparatively little
+     *  new information is added.
+     *
+     *  re-orthogonalize if: ||v_orth|| / ||v|| <= 1/theta
+     */
     if (rho1 * _theta <= rho0 + _omega * t) {
       // exit to fail if too many iterations
       if (k >= 4) {
@@ -522,19 +553,19 @@ int QRFactorization::orthogonalize_stable(
       // discard information from column, use any unit vector orthogonal to Q
       if (!restart && rho1 <= rho * _sigma) {
         PRECICE_WARN("The new column is in the range of Q, thus not possible to orthogonalize. Try to insert a unit vector that is orthogonal to the columns space of Q.");
-        //PRECICE_DEBUG("[QR-dec] - reorthogonalization");
+        // PRECICE_DEBUG("[QR-dec] - reorthogonalization");
         if (_fstream_set)
           (*_infostream) << "[QR-dec] - reorthogonalization\n";
 
         restart = true;
 
         /**  - find first row of minimal length of Q -
-				 *  the squared l2-norm of each row is computed. Find row of minimal length.
-				 *  Start with a new vector v that is zero except for v(k) = rho1, where
-				 *  k is the index of the row of Q with minimal length.
-				 *  Note: the new information from v is discarded. Q is made orthogonal
-				 *        as good as possible.
-				 */
+         *  the squared l2-norm of each row is computed. Find row of minimal length.
+         *  Start with a new vector v that is zero except for v(k) = rho1, where
+         *  k is the index of the row of Q with minimal length.
+         *  Note: the new information from v is discarded. Q is made orthogonal
+         *        as good as possible.
+         */
         u = Eigen::VectorXd::Zero(_rows);
         for (int j = 0; j < colNum; j++) {
           for (int i = 0; i < _rows; i++) {
@@ -615,8 +646,8 @@ int QRFactorization::orthogonalize_stable(
  */
 void QRFactorization::computeReflector(
     QRFactorization::givensRot &grot,
-    double &                    x,
-    double &                    y)
+    double                     &x,
+    double                     &y)
 {
   double u = x;
   double v = y;
@@ -642,8 +673,8 @@ void QRFactorization::applyReflector(
     const QRFactorization::givensRot &grot,
     int                               k,
     int                               l,
-    Eigen::VectorXd &                 p,
-    Eigen::VectorXd &                 q)
+    Eigen::VectorXd                  &p,
+    Eigen::VectorXd                  &q)
 {
   double nu = grot.sigma / (1. + grot.gamma);
   for (int j = k; j < l; j++) {
@@ -678,6 +709,11 @@ int QRFactorization::cols() const
 int QRFactorization::rows() const
 {
   return _rows;
+}
+
+size_t QRFactorization::getResetFilterCounter() const
+{
+  return _resetFilterCounter;
 }
 
 void QRFactorization::reset()

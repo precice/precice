@@ -6,11 +6,12 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(MapInitialData)
+PRECICE_TEST_SETUP("One"_on(1_rank), "Two"_on(2_ranks))
 BOOST_AUTO_TEST_CASE(ZeroData)
 {
-  PRECICE_TEST("One"_on(1_rank), "Two"_on(2_ranks));
+  PRECICE_TEST();
 
-  testMapInitialData(context, 0.0, 0.0, 1, 0); // End of time window is not zero
+  testMapInitialDataP(context, 0.0, 0.0, 1, 0); // End of time window is not zero
 }
 
 BOOST_AUTO_TEST_SUITE_END() // MapInitialData

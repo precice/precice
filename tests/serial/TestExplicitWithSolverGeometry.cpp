@@ -8,17 +8,18 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 /**
-  * @brief Runs a coupled simulation where one solver supplies a geometry.
-  *
-  * SolverOne only reads the displacements of the geometry and checks whether
-  * they are equals to the coordinates of SolverTwo. SolverTwo creates and
-  * displaces the coordinates.
-  *
-  * @todo Maybe remove this test.
-  */
+ * @brief Runs a coupled simulation where one solver supplies a geometry.
+ *
+ * SolverOne only reads the displacements of the geometry and checks whether
+ * they are equals to the coordinates of SolverTwo. SolverTwo creates and
+ * displaces the coordinates.
+ *
+ * @todo Maybe remove this test.
+ */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   int    timesteps = 0;
   double time      = 0;
@@ -29,7 +30,7 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithSolverGeometry)
 
   precice::Participant couplingInterface(context.name, context.config(), 0, 1);
   if (context.isNamed("SolverOne")) {
-    //was necessary to replace pre-defined geometries
+    // was necessary to replace pre-defined geometries
     auto meshName = "MeshOne";
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(meshName) == 3);
     couplingInterface.setMeshVertex(meshName, v0);

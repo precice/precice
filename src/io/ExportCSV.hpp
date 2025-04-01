@@ -4,19 +4,25 @@
 #include "io/Export.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 class ExportCSV : public Export {
 public:
-  virtual void doExport(
-      const std::string &name,
-      const std::string &location,
-      const mesh::Mesh & mesh);
+  ExportCSV(
+      std::string_view  participantName,
+      std::string_view  location,
+      const mesh::Mesh &mesh,
+      ExportKind        kind,
+      int               frequency,
+      int               rank,
+      int               size);
+
+  void doExport(int index, double time) final override;
+
+  void exportSeries() const final override;
 
 private:
   mutable logging::Logger _log{"io::ExportCSV"};
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

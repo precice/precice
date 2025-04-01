@@ -10,7 +10,7 @@ on:
 jobs:
   latest:
     runs-on: ubuntu-latest
-    container: 'precice/ci-ubuntu-2004:latest'
+    container: 'precice/ci-ubuntu-2204:latest'
     steps:
       - name: Download Coverity Build Tool
         run: |
@@ -31,7 +31,7 @@ jobs:
           cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Debug ../precice
 
       - name: Build with cov-build
-        run: '../coverity/bin/cov-build --dir cov-int make'
+        run: '../coverity/bin/cov-build --dir cov-int make -j 4'
         working-directory: build
 
       - name: Submit the result to Coverity Scan

@@ -11,9 +11,10 @@ using precice::testing::TestContext;
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(GeometricMultiscale)
+PRECICE_TEST_SETUP("Fluid1D"_on(1_rank), "Solid3D"_on(1_rank))
 BOOST_AUTO_TEST_CASE(RadialGeoMultiscale)
 {
-  PRECICE_TEST("Fluid1D"_on(1_rank), "Solid3D"_on(1_rank));
+  PRECICE_TEST();
   using Eigen::Vector3d;
 
   Participant cplInterface(context.name, context.config(), context.rank, context.size);

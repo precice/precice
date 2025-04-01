@@ -13,9 +13,10 @@ using namespace precice::mapping;
 BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(Interpolation)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(VertexInterpolation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Eigen::Vector3d location(0.0, 0.0, 0.0);
   mesh::Vertex    vertex(Eigen::Vector3d(1.0, 2.0, 0.0), 0);
 
@@ -34,9 +35,10 @@ BOOST_AUTO_TEST_CASE(VertexInterpolation)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EdgeInterpolation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   mesh::Vertex v1(Eigen::Vector3d(0.0, 0.0, 0.0), 0);
   mesh::Vertex v2(Eigen::Vector3d(0.0, 2.0, 0.0), 1);
   mesh::Edge   edge(v1, v2);
@@ -58,9 +60,10 @@ BOOST_AUTO_TEST_CASE(EdgeInterpolation)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EdgeProjectedInterpolation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   mesh::Vertex v1(Eigen::Vector3d(0.0, 0.0, 0.0), 0);
   mesh::Vertex v2(Eigen::Vector3d(0.0, 2.0, 0.0), 1);
   mesh::Edge   edge(v1, v2);
@@ -82,9 +85,10 @@ BOOST_AUTO_TEST_CASE(EdgeProjectedInterpolation)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TriangleInterpolation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   mesh::Vertex   v1(Eigen::Vector3d(0.0, 0.0, 0.0), 0);
   mesh::Vertex   v2(Eigen::Vector3d(2.0, 0.0, 0.0), 1);
   mesh::Vertex   v3(Eigen::Vector3d(1.0, 2.0, 0.0), 2);
@@ -112,9 +116,10 @@ BOOST_AUTO_TEST_CASE(TriangleInterpolation)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TriangleProjectedInterpolation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   mesh::Vertex   v1(Eigen::Vector3d(0.0, 0.0, 0.0), 0);
   mesh::Vertex   v2(Eigen::Vector3d(2.0, 0.0, 0.0), 1);
   mesh::Vertex   v3(Eigen::Vector3d(1.0, 2.0, 0.0), 2);
@@ -142,9 +147,10 @@ BOOST_AUTO_TEST_CASE(TriangleProjectedInterpolation)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EdgeExtrapolation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   mesh::Vertex v1(Eigen::Vector3d(0.0, 0.0, 0.0), 0);
   mesh::Vertex v2(Eigen::Vector3d(0.0, 2.0, 0.0), 1);
   mesh::Edge   edge(v1, v2);
@@ -167,9 +173,10 @@ BOOST_AUTO_TEST_CASE(EdgeExtrapolation)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TriangleExtrapolation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   mesh::Vertex   v1(Eigen::Vector3d(0.0, 0.0, 0.0), 0);
   mesh::Vertex   v2(Eigen::Vector3d(2.0, 0.0, 0.0), 1);
   mesh::Vertex   v3(Eigen::Vector3d(1.0, 2.0, 0.0), 2);
@@ -198,9 +205,10 @@ BOOST_AUTO_TEST_CASE(TriangleExtrapolation)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TetrahedronInterpolation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   mesh::Vertex v1(Eigen::Vector3d(1.0, 0.0, 0.0), 0);
   mesh::Vertex v2(Eigen::Vector3d(0.0, 1.0, 0.0), 1);
   mesh::Vertex v3(Eigen::Vector3d(0.0, 0.0, 1.0), 2);
@@ -226,9 +234,10 @@ BOOST_AUTO_TEST_CASE(TetrahedronInterpolation)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TetrahedronExtrapolation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   mesh::Vertex v1(Eigen::Vector3d(1.0, 0.0, 0.0), 0);
   mesh::Vertex v2(Eigen::Vector3d(0.0, 1.0, 0.0), 1);
   mesh::Vertex v3(Eigen::Vector3d(0.0, 0.0, 1.0), 2);
@@ -255,9 +264,10 @@ BOOST_AUTO_TEST_CASE(TetrahedronExtrapolation)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(PolationToleranceEdge)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   mesh::Vertex v1(Eigen::Vector3d(1.0, 0.0, 0.0), 0);
   mesh::Vertex v2(Eigen::Vector3d(0.0, 1.0, 0.0), 1);
 
@@ -270,9 +280,10 @@ BOOST_AUTO_TEST_CASE(PolationToleranceEdge)
   BOOST_TEST(polation.isInterpolation());
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(PolationToleranceTriangle)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   mesh::Vertex v1(Eigen::Vector3d(1.0, 0.0, 0.0), 0);
   mesh::Vertex v2(Eigen::Vector3d(0.0, 1.0, 0.0), 1);
   mesh::Vertex v3(Eigen::Vector3d(0.0, 0.0, 0.0), 2);
@@ -286,9 +297,10 @@ BOOST_AUTO_TEST_CASE(PolationToleranceTriangle)
   BOOST_TEST(polation.isInterpolation());
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(PolationToleranceTetra)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   mesh::Vertex v1(Eigen::Vector3d(1.0, 0.0, 0.0), 0);
   mesh::Vertex v2(Eigen::Vector3d(0.0, 1.0, 0.0), 1);
   mesh::Vertex v3(Eigen::Vector3d(0.0, 0.0, 1.0), 2);

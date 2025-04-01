@@ -39,7 +39,7 @@ void testConvergenceMeasures(const std::string configFile, TestContext const &co
     ++numberOfIterations;
 
     if (interface.requiresReadingCheckpoint()) {
-    } else { //converged
+    } else { // converged
       BOOST_TEST(numberOfIterations == expectedIterations.at(timestep));
       ++timestep;
     }

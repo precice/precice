@@ -7,17 +7,11 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ImplicitCheckpointing)
 {
+  PRECICE_TEST();
   /// Test simple implicit coupling with checkpointing. Checks correct tracking of time, see https://github.com/precice/precice/pull/1704.
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
-
-  double state              = 0.0;
-  double checkpoint         = 0.0;
-  int    iterationCount     = 0;
-  double initialStateChange = 5.0;
-  double stateChange        = initialStateChange;
-  int    computedTimesteps  = 0;
 
   precice::Participant interface(context.name, context.config(), context.rank, context.size);
 

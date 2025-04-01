@@ -12,20 +12,15 @@
 #include "math/differences.hpp"
 #include "math/math.hpp"
 #include "utils/IntraComm.hpp"
+#include "utils/assertion.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace tests {
+namespace precice::cplscheme::tests {
 class RelativeConvergenceMeasureTest;
 }
-} // namespace cplscheme
-} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice::cplscheme::impl {
 
 /**
  * @brief Measures the convergence from an old data set to a new one.
@@ -41,25 +36,26 @@ namespace impl {
 class RelativeConvergenceMeasure : public ConvergenceMeasure {
 public:
   /**
-    * @brief Constructor.
-    *
-    * @param[in] convergenceLimitPercent
-    *        Limit to define convergence relative to the norm of the current
-    *        new dataset. Has to be in $] 0 ; 1 ]$.
-    */
+   * @brief Constructor.
+   *
+   * @param[in] convergenceLimitPercent
+   *        Limit to define convergence relative to the norm of the current
+   *        new dataset. Has to be in $] 0 ; 1 ]$.
+   */
   RelativeConvergenceMeasure(double convergenceLimitPercent);
 
-  virtual ~RelativeConvergenceMeasure(){};
+  ~RelativeConvergenceMeasure() override = default;
 
-  virtual void newMeasurementSeries()
+  void newMeasurementSeries() override
   {
     _isConvergence = false;
   }
 
-  virtual void measure(
+  void measure(
       const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues)
+      const Eigen::VectorXd &newValues) override
   {
+    PRECICE_ASSERT(oldValues.size() == newValues.size());
     /*
      std::cout<<"\n-------\n";
      std::cout<<"   old val: \n"<<oldValues<<'\n';
@@ -72,15 +68,15 @@ public:
     _isConvergence = _normDiff <= _norm * _convergenceLimitPercent;
   }
 
-  virtual bool isConvergence() const
+  bool isConvergence() const override
   {
     return _isConvergence;
   }
 
   /**
-    * @brief Adds current convergence information to output stream.
-    */
-  virtual std::string printState(const std::string &dataName)
+   * @brief Adds current convergence information to output stream.
+   */
+  std::string printState(const std::string &dataName) override
   {
     std::ostringstream os;
     os << "relative convergence measure: ";
@@ -96,7 +92,7 @@ public:
     return os.str();
   }
 
-  virtual double getNormResidual()
+  double getNormResidual() override
   {
     if (math::equals(_norm, 0.))
       return std::numeric_limits<double>::infinity();
@@ -104,7 +100,7 @@ public:
       return _normDiff / _norm;
   }
 
-  virtual std::string getAbbreviation() const
+  std::string getAbbreviation() const override
   {
     return "Rel";
   }
@@ -120,6 +116,4 @@ private:
 
   bool _isConvergence = false;
 };
-} // namespace impl
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme::impl

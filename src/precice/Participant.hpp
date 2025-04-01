@@ -220,7 +220,7 @@ public:
       ::precice::string_view configurationFileName,
       int                    solverProcessIndex,
       int                    solverProcessSize,
-      void *                 communicator);
+      void                  *communicator);
 
   ~Participant();
 
@@ -426,7 +426,7 @@ public:
   /**
    * @brief Returns the spatial dimensionality of the given data on the given mesh.
    *
-   * Note that vectorial data dimensionality directly depends on the spacial dimensionality of the mesh.
+   * Note that vectorial data dimensionality directly depends on the spatial dimensionality of the mesh.
    *
    * @param[in] meshName the name of the associated mesh
    * @param[in] dataName the name of the data to get the dimensions for
@@ -526,13 +526,33 @@ public:
   bool requiresMeshConnectivityFor(::precice::string_view meshName) const;
 
   /**
+   * @brief Removes all vertices and connectivity information from the mesh
+   *
+   * @experimental
+   *
+   * Allows redefining a mesh during runtime.
+   * After the call to resetMesh(), the mesh vertices need to be set with setMeshVertex() and setMeshVertices() again.
+   * Connectivity information may be set as well.
+   *
+   * Reading data from this mesh using readData() is not possible until the next call to advance().
+   *
+   * @param[in] meshName the name of the mesh to reset
+   *
+   * @pre initialize() has been called
+   * @pre isCouplingOngoing() is true
+   *
+   * @post previously returned vertex ids from setMeshVertex() and setMeshVertices() of the given mesh are invalid.
+   */
+  void resetMesh(::precice::string_view meshName);
+
+  /**
    * @brief Creates a mesh vertex
    *
    * @param[in] meshName the name of the mesh to add the vertex to.
    * @param[in] position the coordinates of the vertex.
    * @returns the id of the created vertex
    *
-   * @pre initialize() has not yet been called
+   * @pre either initialize() has not yet been called or resetMesh(meshName) has been called since the last call to initialize() or advance()
    * @pre position.size() == getMeshDimensions(meshName)
    *
    * @see getMeshDimensions()
@@ -546,6 +566,8 @@ public:
    *
    * @param[in] meshName the name of the mesh
    * @returns the amount of the vertices of the mesh
+   *
+   * @note For received meshes with API access ( <receive-mesh name="meshName" ... api-access="true" />), the function returns the local number of vertices within the defined mesh access region ( @p setMeshAccessRegion() ).
    *
    * @pre This function can be called on received meshes as well as provided
    * meshes. However, you need to call this function after @p initialize(),
@@ -564,7 +586,7 @@ public:
    *
    * @param[out] ids The ids of the created vertices
    *
-   * @pre initialize() has not yet been called
+   * @pre either initialize() has not yet been called or resetMesh(meshName) has been called since the last call to initialize() or advance()
    * @pre \p coordinates.size() == getMeshDimensions(meshName) * ids.size()
    *
    * @see getDimensions()
@@ -834,6 +856,7 @@ public:
    *
    * @pre every VertexID in ids is a return value of setMeshVertex or setMeshVertices
    * @pre values.size() == getDataDimensions(meshName, dataName) * ids.size()
+   * @pre resetMesh(meshName) has not been called since the last call to Participant::initialize() or Participant::advance()
    *
    * @post values contain the read data as specified in the above format.
    *
@@ -847,6 +870,128 @@ public:
       ::precice::span<const VertexID> ids,
       double                          relativeReadTime,
       ::precice::span<double>         values) const;
+  ///@}
+
+  /** @name Just-in-time mapping (experimental)
+   *
+   * To model non-static coupling meshes (i.e. varying locations over time), we can compute data mappings
+   * just-in-time instead of setting mesh vertices at initialization. In such a case, the user provides the
+   * coordinates of the moving mesh along with the API functions \p writeAndMapData or \p mapAndReadData to
+   * read and write data.
+   *
+   * The just-in-time mapping is closely connected to the \p Direct Access (see section below):
+   *
+   * Since one of the meshes is not given during the initialization, the user has to specify a region of interest
+   * using \p setMeshAccessRegion() before calling \p initialize() to enable preCICE to compute the repartitioning.
+   *
+   * Configuring this feature in the preCICE configuration file, requires two things:
+   *
+   * 1) The static mesh which is not moving (which is always a received mesh) needs api-access enabled
+   * via `<receive-mesh name="StaticMesh" ... api-access="true"/>`. Similar to the Direct Access, the name of this static
+   * mesh is then also the mesh name used in the API functions below, e.g., writeAndMapData(StaticMesh, ...).
+   *
+   * 2) A mapping "from" or "to" the received mesh needs to be defined, where the "to" or "from" attribute in the configuration
+   * needs to remain empty, e.g., ` <mapping:nearest-neighbor direction="read" from="StaticMesh" constraint="consistent" />`.
+   * Here, the "to" attribute is not given.
+   *
+   * @{
+   */
+
+  /**
+   * @brief Writes data values to a mesh using a just-in-time mapping (experimental).
+   *
+   * @experimental
+   *
+   * This function writes values at temporary locations to data of a mesh.
+   * As opposed to the writeData function using VertexIDs, this function allows to write data via coordinates,
+   * which don't have to be specified during the initialization. This is particularly useful for meshes, which
+   * vary over time. Note that using this function comes at a performance cost, since the specified mapping
+   * needs to be computed locally for the given locations, whereas the other variant (writeData) can typically
+   * exploit the static interface mesh and pre-compute data structures more efficiently.
+   *
+   * Values are passed via a block of continuous memory defined by values in the order specified by vertices.
+   *
+   * The 1D/Scalar-format of values is (d0, d1, ..., dn)
+   * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
+   * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
+   *
+   *
+   * @param[in] meshName The name of the mesh that holds the data, needs to be a mesh received from another participant.
+   * @param[in] dataName The name of the data to write.
+   * @param[in] coordinates A span to the coordinates of the vertices
+   *        The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
+   *        The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
+   * @param[in] values The values containing the write data.
+   *
+   * @pre The coordinates are within the bounding box previously defined via \ref setMeshAccessRegion(). Using coordinates
+   * outside the defined bounding box will throw an error.
+   *
+   * @note Only supported for conservative mapping constraints and mapping:rbf-pum-direct or mapping:nearest-neighbor.
+   * @note Caution when calling this function multiple times on the same data coordinates: There is no internal check and preCICE accumulates
+   * data values for conservative mappings.
+   *
+   * @see Participant::setMeshAccessRegion()
+   */
+  void writeAndMapData(
+      ::precice::string_view        meshName,
+      ::precice::string_view        dataName,
+      ::precice::span<const double> coordinates,
+      ::precice::span<const double> values);
+
+  /**
+   * @brief Reads data values from a mesh using a just-in-time data mapping. Values correspond to a given point in time relative to the beginning of the current timestep (experimental).
+   *
+   * @experimental
+   *
+   * This function reads values at temporary locations from data of a mesh.
+   * As opposed to the readData function using VertexIDs, this function allows reading data via coordinates,
+   * which don't have to be specified during the initialization. This is particularly useful for meshes, which
+   * vary over time. Note that using this function comes at a performance cost, since the specified mapping
+   * needs to be computed locally for the given locations, whereas the other variant (readData) can typically
+   * exploit the static interface mesh and pre-compute data structures more efficient.
+   *
+   * Values are read into a block of continuous memory defined by values in the order specified by vertices.
+   *
+   * The 1D/Scalar-format of values is (d0, d1, ..., dn)
+   * The 2D-format of values is (d0x, d0y, d1x, d1y, ..., dnx, dny)
+   * The 3D-format of values is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
+   *
+   * The data is read at relativeReadTime, which indicates the point in time measured from the beginning of the current time step.
+   * relativeReadTime = 0 corresponds to data at the beginning of the time step. Assuming that the user will call advance(dt) at the
+   * end of the time step, dt indicates the size of the current time step. Then relativeReadTime = dt corresponds to the data at
+   * the end of the time step.
+   *
+   * @param[in] meshName The name of the mesh that holds the data, needs to be a mesh received from another participant.
+   * @param[in] dataName The name of the data to read from.
+   * @param[in] coordinates a span to the coordinates of the vertices
+   *        The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
+   *        The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
+   * @param[in] relativeReadTime Point in time where data is read relative to the beginning of the current time step.
+   * @param[out] values The destination memory to read the data from.
+   *
+   * @pre The coordinates are within the bounding box previously defined via \ref setMeshAccessRegion(). Using coordinates
+   * outside the defined bounding box will throw an error.
+   *
+   * @post \p values contain the read data as specified in the above format.
+   *
+   * @note Only supported for consistent mapping constraints and mapping:rbf-pum-direct or mapping:nearest-neighbor.
+   *
+   * @note The function makes use of a caching mechanism that reuses the result from the previous call
+   * with the same \p relativeReadTime on each individual rank. As a result, calling the function
+   * for different \p coordinates while keeping the \p relativeReadTime constant is more efficient
+   * than calling it for varying \p relativeReadTime values at each \p coordinate.
+   * In practice, this means that iterating over time (i.e., varying \p relativeReadTime) in the outer loop
+   * and over space (i.e., iterating over \p coordinates) in the inner loop gives a significantly better
+   * performance than vice versa.
+   *
+   * @see Participant::setMeshAccessRegion()
+   */
+  void mapAndReadData(
+      ::precice::string_view        meshName,
+      ::precice::string_view        dataName,
+      ::precice::span<const double> coordinates,
+      double                        relativeReadTime,
+      ::precice::span<double>       values) const;
 
   ///@}
 
@@ -885,13 +1030,13 @@ public:
    * limits in each space dimension [x, y, z].
    *
    * @note Defining a bounding box for serial runs of the solver (not
-   * to be confused with serial coupling mode) is valid. However, a
-   * warning is raised in case vertices are filtered out completely
-   * on the receiving side, since the associated data values of the
-   * filtered vertices are filled with zero data.
+   * to be confused with serial coupling mode) is valid and required.
+   * However, a warning is raised in case vertices are filtered out
+   * completely on the receiving side, since the associated data values
+   * of the filtered vertices are filled with zero data.
    *
-   * @note This function can only be called once per participant and
-   * rank and trying to call it more than once results in an error.
+   * @note This function can only be called once per mesh and rank
+   * and trying to call it more than once results in an error.
    *
    * @note If you combine the direct access with a mpping (say you want
    * to read data from a defined mesh, as usual, but you want to directly
@@ -906,8 +1051,9 @@ public:
    * file) is not applied to the defined access region and a specified safety
    * will be ignored in case there is no additional mapping involved. However,
    * in case a mapping is in addition to the direct access involved, you will
-   * receive (and gain access to) vertices inside the defined access region
-   * plus vertices inside the safety factor region resulting from the mapping.
+   * receive vertices inside the defined access region plus vertices inside
+   * the safety factor region (but not gain access to the enlarged region)
+   * resulting from the mapping.
    * The default value of the safety factor is 0.5,i.e., the defined access
    * region as computed through the involved provided mesh is by 50% enlarged.
    *
@@ -941,7 +1087,7 @@ public:
    * is exchanged during the @p initialize() call.
    *
    * @see getMeshVertexSize() to get the amount of vertices in the mesh
-   * @see getMeshDimensions() to get the spacial dimensionality of the mesh
+   * @see getMeshDimensions() to get the spatial dimensionality of the mesh
    */
   void getMeshVertexIDsAndCoordinates(
       ::precice::string_view    meshName,
@@ -1019,6 +1165,41 @@ public:
       ::precice::string_view          dataName,
       ::precice::span<const VertexID> ids,
       ::precice::span<const double>   gradients);
+
+  ///@}
+
+  /** @name User-defined profiling
+   *
+   * These functions offer access to the preCICE internal profiling functionality.
+   *
+   * Named profiling sections can be started with startProfilingSection() and stopped with stopLastProfilingSection().
+   * Sections can be freely nested.
+   * These sections are always considered fundamental and are recorded by default.
+   *
+   * This feature is especially useful as it integrates the profiling sections directly into the preCICE profiling.
+   * This means that the context of rank and participant are preserved.
+   *
+   * Not stopping all user-defined profiling sections before handing back to preCICE in initialize or advance leads to an error.
+   */
+  ///@{
+
+  /** Start a named user-defined profiling section
+   *
+   * Starts a profiling section to record with the given name.
+   * This action is active until it is stopped by stopLastProfilingSection().
+   *
+   * All active sections must be stopped before calling initialize() or advance().
+   *
+   * \param[in] sectionName the name of the profiling section to start. The name may not contain forward slashes `/`.
+   *
+   */
+  void startProfilingSection(::precice::string_view sectionName);
+
+  /** Stop the last profiling section
+   *
+   * @pre a profiling section has been started using startProfilingSection()
+   */
+  void stopLastProfilingSection();
 
   ///@}
 

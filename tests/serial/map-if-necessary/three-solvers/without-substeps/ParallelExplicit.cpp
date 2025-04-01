@@ -12,9 +12,10 @@ BOOST_AUTO_TEST_SUITE(MapIfNecessary)
 BOOST_AUTO_TEST_SUITE(ThreeSolvers)
 BOOST_AUTO_TEST_SUITE(WithoutSubsteps)
 
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(1_rank), "C"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ParallelExplicit)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), "C"_on(1_rank));
+  PRECICE_TEST();
 
   std::vector<int> readMappings{2, 2, 2};
   std::vector<int> writeMappings{2, 2, 2};

@@ -16,9 +16,10 @@ BOOST_AUTO_TEST_SUITE(M2NTests)
 using namespace precice;
 using namespace m2n;
 
+PRECICE_TEST_SETUP("Part1"_on(1_rank), "Part2"_on(3_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(GatherScatterTest)
 {
-  PRECICE_TEST("Part1"_on(1_rank), "Part2"_on(3_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("Part1", "Part2");
 
   int             dimensions       = 2;

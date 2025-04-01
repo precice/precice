@@ -11,9 +11,10 @@ BOOST_AUTO_TEST_SUITE(Lifecycle)
 // Test representing the full lifecycle of a Participant
 // Finalize is not called explicitly here.
 // The destructor has to cleanup.
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ImplicitFinalize)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
   precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   if (context.isNamed("SolverOne")) {

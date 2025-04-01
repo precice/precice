@@ -38,7 +38,7 @@
 namespace precice::config {
 
 ParticipantConfiguration::ParticipantConfiguration(
-    xml::XMLTag &              parent,
+    xml::XMLTag               &parent,
     mesh::PtrMeshConfiguration meshConfiguration)
     : _meshConfig(std::move(meshConfiguration))
 {
@@ -126,56 +126,55 @@ ParticipantConfiguration::ParticipantConfiguration(
   tag.addSubtag(tagWatchIntegral);
 
   XMLTag tagProvideMesh(*this, TAG_PROVIDE_MESH, XMLTag::OCCUR_ARBITRARY);
-  doc = "Provide a mesh (see tag <mesh>) to other participants.";
+  doc = "Provide a mesh (see tag `<mesh>`) to other participants.";
   tagProvideMesh.setDocumentation(doc);
   attrName.setDocumentation("Name of the mesh to provide.");
   tagProvideMesh.addAttribute(attrName);
   tag.addSubtag(tagProvideMesh);
 
   XMLTag tagReceiveMesh(*this, TAG_RECEIVE_MESH, XMLTag::OCCUR_ARBITRARY);
-  doc = "Makes a remote mesh (see tag <mesh>) available to this participant.";
+  doc = "Makes a remote mesh (see tag `<mesh>`) available to this participant.";
   tagReceiveMesh.setDocumentation(doc);
   attrName.setDocumentation("Name of the mesh to receive.");
   tagReceiveMesh.addAttribute(attrName);
   auto attrFrom = XMLAttribute<std::string>(ATTR_FROM)
                       .setDocumentation("The name of the participant to receive the mesh from. "
-                                        "This participant needs to provide the mesh using <provide-mesh />.");
-  tagReceiveMesh.addAttribute(attrFrom);
-  auto attrSafetyFactor = makeXMLAttribute(ATTR_SAFETY_FACTOR, 0.5)
+                                        "This participant needs to provide the mesh using `<provide-mesh />`.");
+
+  auto attrEnableAccess = makeXMLAttribute(ATTR_API_ACCESS, false)
                               .setDocumentation(
-                                  "If a mesh is received from another partipant (see tag <from>), it needs to be"
-                                  "decomposed at the receiving participant. To speed up this process, "
-                                  "a geometric filter (see tag <geometric-filter>), i.e. filtering by bounding boxes around the local mesh, can be used. "
-                                  "This safety factor defines by which factor this local information is "
-                                  "increased. An example: 0.5 means that the bounding box is 150% of its original size.");
-  tagReceiveMesh.addAttribute(attrSafetyFactor);
+                                  "Enables access to the data on this received mesh via the preCICE API functions without having to map it to a provided mesh. "
+                                  "This is required for direct access or just-in-time mappings. "
+                                  "A received mesh needs to be decomposed in preCICE using a region of interest, which cannot be inferred, if there are no mappings to or from a provided mesh. "
+                                  "In such cases the API function `setMeshAccessRegion()` must be used to define the region of interest. "
+                                  "See the user documentation for more information.");
+  tagReceiveMesh.addAttribute(attrEnableAccess);
+  // @todo: remove with the next breaking release
+  auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
+                              .setDocumentation(
+                                  "Deprecated: use \"api-access\" instead.");
+  tagReceiveMesh.addAttribute(attrDirectAccess);
 
   auto attrGeoFilter = XMLAttribute<std::string>(ATTR_GEOMETRIC_FILTER)
                            .setDocumentation(
-                               "If a mesh is received from another partipant (see tag <from>), it needs to be"
-                               "decomposed at the receiving participant. To speed up this process, "
-                               "a geometric filter, i.e. filtering by bounding boxes around the local mesh, can be used. "
-                               "Two different variants are implemented: a filter \"on-primary\" strategy, "
-                               "which is beneficial for a huge mesh and a low number of processors, and a filter "
-                               "\"on-secondary\" strategy, which performs better for a very high number of "
-                               "processors. Both result in the same distribution (if the safety factor is sufficiently large). "
-                               "\"on-primary\" is not supported if you use two-level initialization. "
-                               "For very asymmetric cases, the filter can also be switched off completely (\"no-filter\").")
+                               "For parallel execution, a received mesh needs to be decomposed. "
+                               "A geometric filter based on bounding-boxes around the local mesh can speed up this process. "
+                               "This setting controls if and where this filter is applied. "
+                               "`on-primary-rank` is beneficial for a huge mesh and a low number of processors, but is incompatible with two-level initialization. "
+                               "`on-secondary-ranks` performs better for a very high number of processors. "
+                               "Both result in the same distribution if the safety-factor is sufficiently large. "
+                               "`no-filter` may be useful for very asymmetric cases and for debugging. "
+                               "If a mapping based on RBFs (rbf-pum,global-rbf) is used, the filter has no influence and is always `no-filter`.")
                            .setOptions({VALUE_NO_FILTER, VALUE_FILTER_ON_PRIMARY_RANK, VALUE_FILTER_ON_SECONDARY_RANKS})
                            .setDefaultValue(VALUE_FILTER_ON_SECONDARY_RANKS);
   tagReceiveMesh.addAttribute(attrGeoFilter);
 
-  auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
+  tagReceiveMesh.addAttribute(attrFrom);
+  auto attrSafetyFactor = makeXMLAttribute(ATTR_SAFETY_FACTOR, 0.5)
                               .setDocumentation(
-                                  "If a mesh is received from another partipant (see tag <from>), it needs to be"
-                                  "decomposed at the receiving participant. In case a mapping is defined, the "
-                                  "mesh is decomposed according to the local provided mesh associated to the mapping. "
-                                  "In case no mapping has been defined (you want to access "
-                                  "the mesh and related data direct), there is no obvious way on how to decompose the "
-                                  "mesh, since no mesh needs to be provided by the participant. For this purpose, bounding "
-                                  "boxes can be defined (see API function \"setMeshAccessRegion\") and used by selecting "
-                                  "the option direct-access=\"true\".");
-  tagReceiveMesh.addAttribute(attrDirectAccess);
+                                  "The safety factor of the geometric filter uniformly scales the rank-local bounding box by the given factor. "
+                                  "A safety-factor of `0.5` means that the bounding box is 150% of its original size.");
+  tagReceiveMesh.addAttribute(attrSafetyFactor);
 
   tag.addSubtag(tagReceiveMesh);
 
@@ -204,7 +203,7 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "for the InfiniBand on SuperMUC. ");
     tagIntraComm.addAttribute(attrNetwork);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, ".")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen.");
@@ -219,7 +218,7 @@ ParticipantConfiguration::ParticipantConfiguration(
     doc += "Use this tag to use MPI with separated communication spaces instead instead.";
     tagIntraComm.setDocumentation(doc);
 
-    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, "")
+    auto attrExchangeDirectory = makeXMLAttribute(ATTR_EXCHANGE_DIRECTORY, ".")
                                      .setDocumentation(
                                          "Directory where connection information is exchanged. By default, the "
                                          "directory of startup is chosen.");
@@ -241,13 +240,19 @@ void ParticipantConfiguration::setExperimental(
   _mappingConfig->setExperimental(_experimental);
 }
 
+void ParticipantConfiguration::setRemeshing(
+    bool allowed)
+{
+  _remeshing = allowed;
+}
+
 void ParticipantConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
-    const std::string &  name = tag.getStringAttributeValue(ATTR_NAME);
+    const std::string   &name = tag.getStringAttributeValue(ATTR_NAME);
     impl::PtrParticipant p(new impl::ParticipantState(name, _meshConfig));
     _participants.push_back(p);
   } else if (tag.getName() == TAG_PROVIDE_MESH) {
@@ -263,7 +268,8 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string                                   from              = tag.getStringAttributeValue(ATTR_FROM);
     double                                        safetyFactor      = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
     partition::ReceivedPartition::GeometricFilter geoFilter         = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
-    const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
+    const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_API_ACCESS) || tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
+    PRECICE_WARN_IF(tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS), "The 'direct-access' flag (<receive-mesh direct-access=\"...\" />) is deprecated and will be removed in preCICE v4. Use 'api-access' instead (<receive-mesh api-access=\"...\" />).");
 
     // Start with defining the mesh
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
@@ -293,7 +299,7 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh,
-                  R"(Participant "{}" attempts to read data "{}" from an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
+                  R"(Participant "{}" attempts to write data "{}" from an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), dataName, meshName, meshName);
     mesh::PtrData data = getData(mesh, dataName);
     _participants.back()->addWriteData(data, mesh);
@@ -302,7 +308,7 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string        meshName = tag.getStringAttributeValue(ATTR_MESH);
     mesh::PtrMesh      mesh     = _meshConfig->getMesh(meshName);
     PRECICE_CHECK(mesh,
-                  R"(Participant "{}" attempts to write data "{}" to an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
+                  R"(Participant "{}" attempts to read data "{}" to an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), dataName, meshName, meshName);
     mesh::PtrData data = getData(mesh, dataName);
     _participants.back()->addReadData(data, mesh);
@@ -310,7 +316,7 @@ void ParticipantConfiguration::xmlTagCallback(
     WatchPointConfig config;
     config.name        = tag.getStringAttributeValue(ATTR_NAME);
     config.nameMesh    = tag.getStringAttributeValue(ATTR_MESH);
-    config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE, _meshConfig->getMesh(config.nameMesh)->getDimensions());
+    config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE);
     _watchPointConfigs.push_back(config);
   } else if (tag.getName() == TAG_WATCH_INTEGRAL) {
     WatchIntegralConfig config;
@@ -328,7 +334,7 @@ void ParticipantConfiguration::xmlTagCallback(
 
 void ParticipantConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   if (tag.getName() == TAG) {
     finishParticipantConfiguration(context, _participants.back());
@@ -389,7 +395,7 @@ partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFi
 
 const mesh::PtrData &ParticipantConfiguration::getData(
     const mesh::PtrMesh &mesh,
-    const std::string &  nameData) const
+    const std::string   &nameData) const
 {
   PRECICE_CHECK(mesh->hasDataName(nameData),
                 "Participant \"{}\" asks for data \"{}\" from mesh \"{}\", but this mesh does not use such data. "
@@ -400,11 +406,13 @@ const mesh::PtrData &ParticipantConfiguration::getData(
 
 void ParticipantConfiguration::finishParticipantConfiguration(
     const xml::ConfigurationContext &context,
-    const impl::PtrParticipant &     participant)
+    const impl::PtrParticipant      &participant)
 {
   PRECICE_TRACE(participant->getName());
 
   // Set input/output meshes for data mappings and mesh requirements
+  // This for loop transforms the MappingConfiguration::ConfiguredMappings
+  // into a MappingContext
   using ConfMapping = mapping::MappingConfiguration::ConfiguredMapping;
   for (const ConfMapping &confMapping : _mappingConfig->mappings()) {
 
@@ -413,19 +421,30 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     auto fromMesh = confMapping.fromMesh->getName();
     auto toMesh   = confMapping.toMesh->getName();
 
+    // sanity checks
     if (confMapping.direction == mapping::MappingConfiguration::Direction::READ) {
-      /// A read mapping maps from received to provided
+      // A read mapping maps from received to provided
+      PRECICE_CHECK(participant->isMeshReceived(fromMesh) || confMapping.toMesh->isJustInTime() || participant->isMeshProvided(toMesh),
+                    "A read mapping of participant \"{}\" needs to map from a received to a provided mesh, but in this case they are swapped. "
+                    "Did you intent to map from mesh \"{}\" to mesh \"{}\", or use a write mapping instead?",
+                    participant->getName(), confMapping.toMesh->getName(), confMapping.fromMesh->getName());
       PRECICE_CHECK(participant->isMeshReceived(fromMesh),
                     "Participant \"{}\" has a read mapping from mesh \"{}\", without receiving it. "
                     "Please add a receive-mesh tag with name=\"{}\"",
                     participant->getName(), fromMesh, fromMesh);
-      PRECICE_CHECK(participant->isMeshProvided(toMesh),
+      // The just-in-time mesh cannot be on the "from" mesh, as only the combinations read-consistent and write-conservative are allowed
+      PRECICE_CHECK(confMapping.toMesh->isJustInTime() || participant->isMeshProvided(toMesh),
                     "Participant \"{}\" has a read mapping to mesh \"{}\", without providing it. "
                     "Please add a provide-mesh tag with name=\"{}\"",
                     participant->getName(), toMesh, toMesh);
     } else {
       // A write mapping maps from provided to received
-      PRECICE_CHECK(participant->isMeshProvided(fromMesh),
+      PRECICE_CHECK(confMapping.fromMesh->isJustInTime() || participant->isMeshProvided(fromMesh) || participant->isMeshReceived(toMesh),
+                    "A write mapping of participant \"{}\" needs to map from a provided to a received mesh, but in this case they are swapped. "
+                    "Did you intent to map from mesh \"{}\" to mesh \"{}\", or use a read mapping instead?",
+                    participant->getName(), confMapping.toMesh->getName(), confMapping.fromMesh->getName());
+      // The just-in-time mesh cannot be on the "to" mesh, as only the combinations read-consistent and write-conservative are allowed
+      PRECICE_CHECK(confMapping.fromMesh->isJustInTime() || participant->isMeshProvided(fromMesh),
                     "Participant \"{}\" has a write mapping from mesh \"{}\", without providing it. "
                     "Please add a provided-mesh tag with name=\"{}\"",
                     participant->getName(), fromMesh, fromMesh);
@@ -447,51 +466,42 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       }
     }
 
-    const auto &       fromMeshID      = confMapping.fromMesh->getID();
-    const auto &       toMeshID        = confMapping.toMesh->getID();
-    impl::MeshContext &fromMeshContext = participant->meshContext(fromMesh);
-    impl::MeshContext &toMeshContext   = participant->meshContext(toMesh);
+    PRECICE_CHECK(!confMapping.mapping->isScaledConsistent() || !(confMapping.fromMesh->isJustInTime() || confMapping.toMesh->isJustInTime()),
+                  "The just-in-time mapping from mesh \"{}\" to mesh \"{}\" was configured with a scaled-consistent constraint. A scaled-consistent constraint is not implemented for just-in-time mappings in preCICE.", confMapping.fromMesh->getName(), confMapping.toMesh->getName());
 
-    if (confMapping.direction == mapping::MappingConfiguration::READ) {
-      PRECICE_CHECK(toMeshContext.provideMesh,
-                    "A read mapping of participant \"{}\" needs to map TO a provided mesh. Mesh \"{1}\" is not provided. "
-                    "Please add the tag <provide-mesh name=\"{1}\" /> to the participant.",
-                    participant->getName(), confMapping.toMesh->getName());
-      PRECICE_CHECK(not fromMeshContext.receiveMeshFrom.empty(),
-                    "A read mapping of participant \"{}\" needs to map FROM a received mesh. Mesh \"{1}\" is not received. "
-                    "Please add the tag <receive-mesh name=\"{1}\" /> to the participant.",
-                    participant->getName(), confMapping.toMesh->getName());
-    } else {
-      PRECICE_CHECK(fromMeshContext.provideMesh,
-                    "A write mapping of participant \"{}\" needs to map FROM a provided mesh. Mesh \"{1}\" is not provided. "
-                    "Please add the tag <provide-mesh name=\"{1}\" /> to the participant.",
-                    participant->getName(), confMapping.fromMesh->getName());
-      PRECICE_CHECK(not toMeshContext.receiveMeshFrom.empty(),
-                    "A write mapping of participant \"{}\" needs to map TO a received mesh. Mesh \"{1}\" is not received. "
-                    "Please add the tag <receive-mesh name=\"{1}\" /> to the participant.",
-                    participant->getName(), confMapping.toMesh->getName());
-    }
-
-    // @TODO: is this still correct?
+    // We disable the geometric filter for any kernel method, as the default safety factor is not reliable enough to provide a robust
+    // safety margin such that the mapping is still correct.
     if (confMapping.requiresBasisFunction) {
-      fromMeshContext.geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
-      toMeshContext.geoFilter   = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+      if (!confMapping.fromMesh->isJustInTime()) {
+        participant->meshContext(fromMesh).geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+      }
+      if (!confMapping.toMesh->isJustInTime()) {
+        participant->meshContext(toMesh).geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+      }
     }
 
+    // Now we create the mappingContext, which will be stored permanently
     precice::impl::MappingContext mappingContext;
-    mappingContext.fromMeshID = fromMeshID;
-    mappingContext.toMeshID   = toMeshID;
+    // Copy over data from MappingConfiguration
+    // 1. the mesh data
+    mappingContext.fromMeshID = confMapping.fromMesh->getID();
+    mappingContext.toMeshID   = confMapping.toMesh->getID();
 
+    // Upon creation, the mapping should be empty
     mapping::PtrMapping &map = mappingContext.mapping;
     PRECICE_ASSERT(map.get() == nullptr);
+    // 2. ... and the mappings
     map                                   = confMapping.mapping;
     mappingContext.configuredWithAliasTag = confMapping.configuredWithAliasTag;
 
-    const mesh::PtrMesh &input  = fromMeshContext.mesh;
-    const mesh::PtrMesh &output = toMeshContext.mesh;
+    // Set input and output meshes in the Mapping from the mesh contexts
+    const mesh::PtrMesh &input  = confMapping.fromMesh->isJustInTime() ? confMapping.fromMesh : participant->meshContext(fromMesh).mesh;
+    const mesh::PtrMesh &output = confMapping.toMesh->isJustInTime() ? confMapping.toMesh : participant->meshContext(toMesh).mesh;
     PRECICE_DEBUG("Configure mapping for input={}, output={}", input->getName(), output->getName());
     map->setMeshes(input, output);
 
+    // just-in-time mappings go for now into the participant's mapping context
+    // Add the mapping context to the participant, separated by direction
     if (confMapping.direction == mapping::MappingConfiguration::WRITE) {
       participant->addWriteMappingContext(mappingContext);
     } else {
@@ -499,34 +509,47 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       participant->addReadMappingContext(mappingContext);
     }
 
-    fromMeshContext.meshRequirement = std::max(
-        fromMeshContext.meshRequirement, map->getInputRequirement());
-    toMeshContext.meshRequirement = std::max(
-        toMeshContext.meshRequirement, map->getOutputRequirement());
-
-    fromMeshContext.fromMappingContexts.push_back(mappingContext);
-    toMeshContext.toMappingContexts.push_back(mappingContext);
+    // configure the involved mesh context with connectivity requirements stemming from the mapping
+    // Add the mapping context to the mesh context, only required to later on forward them to the Partition
+    if (!input->isJustInTime()) {
+      participant->configureInputMeshContext(fromMesh, mappingContext, map->getInputRequirement());
+    }
+    if (!output->isJustInTime()) {
+      participant->configureOutputMeshContext(toMesh, mappingContext, map->getOutputRequirement());
+    }
   }
+  // clear the data structure we just transformed and don't need anymore
   _mappingConfig->resetMappings();
 
-  // Iterate over all write mappings
+  // Now we have the MappingContexts and need to add information on the associated Data we want to map
+  //
+  // First in write direction:
+  // for all writeMappingContexts ...
   for (impl::MappingContext &mappingContext : participant->writeMappingContexts()) {
     // Check, whether we can find a corresponding write data context
     bool dataFound = false;
     for (auto &dataContext : participant->writeDataContexts()) {
-      // First we look for the "from" mesh ID
+      // First we look for the "from" mesh ID from the "data perspective"
       const int fromMeshID = dataContext.getMeshID();
+      // and compare it against the "from" mesh ID from the "mapping perspective"
       if (mappingContext.fromMeshID == fromMeshID) {
-        // Second we look for the "to" mesh ID
+        // If these two are the same, we have a match of data and mapping contexts on the 'from' side
+        //
+        // the data context carries now the information about the associated name of the data itself
+        // Hence, we look if the "to" mesh (ID) stored in the mappingContext exists on the participant...
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.mapping->getOutputMesh()->getName());
-        // If this is true, we actually found a proper configuration
-        // If it is false, we look for another "from" mesh ID, because we might have multiple read and write mappings
+        // .. and if the mesh 'uses' the data to be mapped
+        // If this is true, we actually found a proper configuration and add the mapping
+        // If it is false, we look for another "from" mesh ID in the data context, because we might have multiple read and write mappings from the same 'from' mesh
         if (meshContext.mesh->hasDataName(dataContext.getDataName())) {
           // Check, if the fromMesh is a provided mesh
           PRECICE_CHECK(participant->isMeshProvided(dataContext.getMeshName()),
                         "Participant \"{}\" has to provide mesh \"{}\" to be able to write data to it. "
                         "Please add a provide-mesh node with name=\"{}\".",
                         participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
+          // here, the mappingContext receives its to and from data pointer
+          // we append the mappingContext into the dataContext by copying it over, which is fine, since the context
+          // structures operate only on shared object pointers
           dataContext.appendMappingConfiguration(mappingContext, meshContext);
           // Enable gradient data if required
           if (mappingContext.mapping->requiresGradientData() == true) {
@@ -534,6 +557,17 @@ void ParticipantConfiguration::finishParticipantConfiguration(
           }
           dataFound = true;
         }
+      } else if (mappingContext.mapping->getInputMesh()->isJustInTime()) {
+        const int toMeshID = dataContext.getMeshID();
+        // We compare here the to mesh instead of the from mesh
+        if (mappingContext.toMeshID == toMeshID) {
+          impl::MeshContext &meshContext = participant->meshContext(mappingContext.mapping->getOutputMesh()->getName());
+          dataContext.addJustInTimeMapping(mappingContext, meshContext);
+          if (mappingContext.mapping->requiresGradientData() == true) {
+            mappingContext.requireGradientData(dataContext.getDataName());
+          }
+        }
+        dataFound = true;
       }
     }
     PRECICE_CHECK(dataFound,
@@ -568,6 +602,18 @@ void ParticipantConfiguration::finishParticipantConfiguration(
           }
           dataFound = true;
         }
+      } else if (mappingContext.mapping->getOutputMesh()->isJustInTime()) {
+        const int fromMeshID = dataContext.getMeshID();
+        // We compare here the from mesh instead of the to mesh
+        if (mappingContext.fromMeshID == fromMeshID) {
+          impl::MeshContext &meshContext = participant->meshContext(mappingContext.mapping->getInputMesh()->getName());
+
+          dataContext.addJustInTimeMapping(mappingContext, meshContext);
+          if (mappingContext.mapping->requiresGradientData() == true) {
+            mappingContext.requireGradientData(dataContext.getDataName());
+          }
+        }
+        dataFound = true;
       }
     }
     PRECICE_CHECK(dataFound,
@@ -589,69 +635,119 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     _participants.back()->addAction(std::move(action));
   }
 
+  // Check for unsupported remeshing options
+  for (auto &context : participant->writeDataContexts()) {
+    PRECICE_CHECK(participant->meshContext(context.getMeshName()).provideMesh || !(participant->isDirectAccessAllowed(context.getMeshName()) && _remeshing), "Writing data via API access (configuration <write-data ... mesh=\"{}\") is not (yet) supported with remeshing", context.getMeshName());
+  }
+
   // Add export contexts
   for (io::ExportContext &exportContext : _exportConfig->exportContexts()) {
-    io::PtrExport exporter;
-    if (exportContext.type == VALUE_VTK) {
-      // This is handled with respect to the current configuration context.
-      // Hence, this is potentially wrong for every participant other than context.name.
-      if (context.size > 1) {
-        // Only display the warning message if this participant configuration is the current one.
-        if (context.name == participant->getName()) {
-          PRECICE_ERROR("You attempted to use the legacy VTK exporter with the parallel participant {}, which isn't supported."
-                        "Migrate to another exporter, such as the VTU exporter by specifying \"<export:vtu ... />\"  instead of \"<export:vtk ... />\".",
-                        participant->getName());
-        }
-      } else {
-        exporter = io::PtrExport(new io::ExportVTK());
-      }
-    } else if (exportContext.type == VALUE_VTU) {
-      exporter = io::PtrExport(new io::ExportVTU());
-    } else if (exportContext.type == VALUE_VTP) {
-      exporter = io::PtrExport(new io::ExportVTP());
-    } else if (exportContext.type == VALUE_CSV) {
-      exporter = io::PtrExport(new io::ExportCSV());
-    } else {
-      PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
-                    _participants.back()->getName(), exportContext.type);
-    }
-    exportContext.exporter = std::move(exporter);
+    auto kind = exportContext.everyIteration ? io::Export::ExportKind::Iterations : io::Export::ExportKind::TimeWindows;
+    // Create one exporter per mesh
+    for (const auto &meshContext : participant->usedMeshContexts()) {
 
-    _participants.back()->addExportContext(exportContext);
+      exportContext.meshName = meshContext->mesh->getName();
+
+      io::PtrExport exporter;
+      if (exportContext.type == VALUE_VTK) {
+        // This is handled with respect to the current configuration context.
+        // Hence, this is potentially wrong for every participant other than context.name.
+        if (context.size > 1) {
+          // Only display the warning message if this participant configuration is the current one.
+          if (context.name == participant->getName()) {
+            PRECICE_ERROR("You attempted to use the legacy VTK exporter with the parallel participant {}, which isn't supported."
+                          "Migrate to another exporter, such as the VTU exporter by specifying \"<export:vtu ... />\"  instead of \"<export:vtk ... />\".",
+                          participant->getName());
+          }
+        } else {
+          exporter = io::PtrExport(new io::ExportVTK(
+              participant->getName(),
+              exportContext.location,
+              *meshContext->mesh,
+              kind,
+              exportContext.everyNTimeWindows,
+              context.rank,
+              context.size));
+        }
+      } else if (exportContext.type == VALUE_VTU) {
+        exporter = io::PtrExport(new io::ExportVTU(
+            participant->getName(),
+            exportContext.location,
+            *meshContext->mesh,
+            kind,
+            exportContext.everyNTimeWindows,
+            context.rank,
+            context.size));
+      } else if (exportContext.type == VALUE_VTP) {
+        exporter = io::PtrExport(new io::ExportVTP(
+            participant->getName(),
+            exportContext.location,
+            *meshContext->mesh,
+            kind,
+            exportContext.everyNTimeWindows,
+            context.rank,
+            context.size));
+      } else if (exportContext.type == VALUE_CSV) {
+        exporter = io::PtrExport(new io::ExportCSV(
+            participant->getName(),
+            exportContext.location,
+            *meshContext->mesh,
+            kind,
+            exportContext.everyNTimeWindows,
+            context.rank,
+            context.size));
+      } else {
+        PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
+                      _participants.back()->getName(), exportContext.type);
+      }
+      exportContext.exporter = std::move(exporter);
+
+      _participants.back()->addExportContext(exportContext);
+    }
+    PRECICE_WARN_IF(exportContext.everyNTimeWindows > 1 && exportContext.everyIteration,
+                    "Participant {} defines an exporter of type {} which exports every iteration. "
+                    "This overrides the every-n-time-window value you provided.",
+                    _participants.back()->getName(), exportContext.type);
   }
   _exportConfig->resetExports();
 
   // Create watch points
-  for (const WatchPointConfig &config : _watchPointConfigs) {
-    PRECICE_CHECK(participant->isMeshUsed(config.nameMesh),
-                  "Participant \"{}\" defines watchpoint \"{}\" for mesh \"{}\" which is not provided by the participant. "
-                  "Please add <provide-mesh name=\"{}\" /> to the participant.",
-                  participant->getName(), config.name, config.nameMesh, config.nameMesh);
-    const auto &meshContext = participant->usedMeshContext(config.nameMesh);
-    PRECICE_CHECK(meshContext.provideMesh,
-                  "Participant \"{}\" defines watchpoint \"{}\" for the received mesh \"{}\", which is not allowed. "
-                  "Please move the watchpoint definition to the participant providing mesh \"{}\".",
-                  participant->getName(), config.name, config.nameMesh, config.nameMesh);
-
-    std::string filename = "precice-" + participant->getName() + "-watchpoint-" + config.name + ".log";
-    participant->addWatchPoint(std::make_shared<impl::WatchPoint>(config.coordinates, meshContext.mesh, std::move(filename)));
+  if (context.name == participant->getName()) {
+    for (const WatchPointConfig &config : _watchPointConfigs) {
+      PRECICE_CHECK(participant->isMeshUsed(config.nameMesh),
+                    "Participant \"{}\" defines watchpoint \"{}\" for mesh \"{}\" which is not provided by the participant. "
+                    "Please add <provide-mesh name=\"{}\" /> to the participant.",
+                    participant->getName(), config.name, config.nameMesh, config.nameMesh);
+      const auto &meshContext = participant->usedMeshContext(config.nameMesh);
+      PRECICE_CHECK(meshContext.provideMesh,
+                    "Participant \"{}\" defines watchpoint \"{}\" for the received mesh \"{}\", which is not allowed. "
+                    "Please move the watchpoint definition to the participant providing mesh \"{}\".",
+                    participant->getName(), config.name, config.nameMesh, config.nameMesh);
+      PRECICE_CHECK(config.coordinates.size() == meshContext.mesh->getDimensions(),
+                    "Provided coordinate to watch is {}D, which does not match the dimension of the {}D mesh \"{}\".",
+                    config.coordinates.size(), meshContext.mesh->getDimensions(), meshContext.mesh->getName());
+      std::string filename = "precice-" + participant->getName() + "-watchpoint-" + config.name + ".log";
+      participant->addWatchPoint(std::make_shared<impl::WatchPoint>(config.coordinates, meshContext.mesh, std::move(filename)));
+    }
   }
   _watchPointConfigs.clear();
 
   // Create watch integrals
-  for (const WatchIntegralConfig &config : _watchIntegralConfigs) {
-    PRECICE_CHECK(participant->isMeshUsed(config.nameMesh),
-                  "Participant \"{}\" defines watch integral \"{}\" for mesh \"{}\" which is not used by the participant. "
-                  "Please add a provide-mesh node with name=\"{}\".",
-                  participant->getName(), config.name, config.nameMesh, config.nameMesh);
-    const auto &meshContext = participant->usedMeshContext(config.nameMesh);
-    PRECICE_CHECK(meshContext.provideMesh,
-                  "Participant \"{}\" defines watch integral \"{}\" for the received mesh \"{}\", which is not allowed. "
-                  "Please move the watchpoint definition to the participant providing mesh \"{}\".",
-                  participant->getName(), config.name, config.nameMesh, config.nameMesh);
+  if (context.name == participant->getName()) {
+    for (const WatchIntegralConfig &config : _watchIntegralConfigs) {
+      PRECICE_CHECK(participant->isMeshUsed(config.nameMesh),
+                    "Participant \"{}\" defines watch integral \"{}\" for mesh \"{}\" which is not used by the participant. "
+                    "Please add a provide-mesh node with name=\"{}\".",
+                    participant->getName(), config.name, config.nameMesh, config.nameMesh);
+      const auto &meshContext = participant->usedMeshContext(config.nameMesh);
+      PRECICE_CHECK(meshContext.provideMesh,
+                    "Participant \"{}\" defines watch integral \"{}\" for the received mesh \"{}\", which is not allowed. "
+                    "Please move the watchpoint definition to the participant providing mesh \"{}\".",
+                    participant->getName(), config.name, config.nameMesh, config.nameMesh);
 
-    std::string filename = "precice-" + participant->getName() + "-watchintegral-" + config.name + ".log";
-    participant->addWatchIntegral(std::make_shared<impl::WatchIntegral>(meshContext.mesh, std::move(filename), config.isScalingOn));
+      std::string filename = "precice-" + participant->getName() + "-watchintegral-" + config.name + ".log";
+      participant->addWatchIntegral(std::make_shared<impl::WatchIntegral>(meshContext.mesh, std::move(filename), config.isScalingOn));
+    }
   }
   _watchIntegralConfigs.clear();
 
@@ -670,14 +766,14 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
 void ParticipantConfiguration::checkIllDefinedMappings(
     const mapping::MappingConfiguration::ConfiguredMapping &mapping,
-    const impl::PtrParticipant &                            participant)
+    const impl::PtrParticipant                             &participant)
 {
   PRECICE_TRACE();
   using ConfMapping = mapping::MappingConfiguration::ConfiguredMapping;
 
   for (const ConfMapping &configuredMapping : _mappingConfig->mappings()) {
-    bool sameToMesh   = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
-    bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
+    bool sameToMesh   = (mapping.toMesh->getName() == configuredMapping.toMesh->getName()) && !mapping.toMesh->isJustInTime();
+    bool sameFromMesh = (mapping.fromMesh->getName() == configuredMapping.fromMesh->getName()) && !mapping.fromMesh->isJustInTime();
     if (sameToMesh && sameFromMesh) {
       // It's really the same mapping, not a duplicated one. Those are already checked for in MappingConfiguration.
       return;

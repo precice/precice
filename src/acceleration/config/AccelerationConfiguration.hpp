@@ -12,8 +12,7 @@
 #include "precice/config/SharedPointer.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 class AccelerationConfiguration : public xml::XMLTag::Listener {
 public:
@@ -23,10 +22,10 @@ public:
   PtrAcceleration getAcceleration();
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
   /// Removes configured acceleration.
   void clear();
@@ -61,10 +60,12 @@ private:
   const std::string ATTR_SINGULARITYLIMIT;
   const std::string ATTR_TYPE;
   const std::string ATTR_BUILDJACOBIAN;
+  const std::string ATTR_REDUCEDTIMEGRIDQN;
   const std::string ATTR_IMVJCHUNKSIZE;
   const std::string ATTR_RSLS_REUSED_TIME_WINDOWS;
   const std::string ATTR_RSSVD_TRUNCATIONEPS;
   const std::string ATTR_PRECOND_NONCONST_TIME_WINDOWS;
+  const std::string ATTR_PRECOND_UPDATE_ON_THRESHOLD;
 
   const std::string VALUE_CONSTANT;
   const std::string VALUE_AITKEN;
@@ -73,6 +74,7 @@ private:
   const std::string VALUE_QR1FILTER;
   const std::string VALUE_QR1_ABSFILTER;
   const std::string VALUE_QR2FILTER;
+  const std::string VALUE_QR3FILTER;
   const std::string VALUE_CONSTANT_PRECONDITIONER;
   const std::string VALUE_VALUE_PRECONDITIONER;
   const std::string VALUE_RESIDUAL_PRECONDITIONER;
@@ -100,43 +102,52 @@ private:
     std::vector<int>      dataIDs;
     std::map<int, double> scalings;
     std::string           type;
-    double                relaxationFactor           = 0;
-    bool                  forceInitialRelaxation     = false;
-    int                   maxIterationsUsed          = 0;
-    int                   timeWindowsReused          = 0;
-    int                   filter                     = Acceleration::NOFILTER;
-    int                   imvjRestartType            = 0;
-    int                   imvjChunkSize              = 0;
-    int                   imvjRSLS_reusedTimeWindows = 0;
-    int                   precond_nbNonConstTWindows = -1;
-    double                singularityLimit           = 0;
-    double                imvjRSSVD_truncationEps    = 0;
-    bool                  estimateJacobian           = false;
-    bool                  alwaysBuildJacobian        = false;
+    double                relaxationFactor                 = 0;
+    bool                  forceInitialRelaxation           = false;
+    int                   maxIterationsUsed                = 0;
+    int                   timeWindowsReused                = 0;
+    int                   filter                           = Acceleration::NOFILTER;
+    int                   imvjRestartType                  = 0;
+    int                   imvjChunkSize                    = 0;
+    int                   imvjRSLS_reusedTimeWindows       = 0;
+    int                   preconditionerNbNonConstTWindows = -1;
+    double                singularityLimit                 = 0;
+    double                imvjRSSVD_truncationEps          = 0;
+    bool                  estimateJacobian                 = false;
+    bool                  alwaysBuildJacobian              = false;
+    bool                  reducedTimeGridQN                = true;
+    bool                  preconditionerUpdateOnThreshold  = true;
     std::string           preconditionerType;
 
     std::vector<double> scalingFactorsInOrder() const;
   } _config;
 
   const struct DefaultValuesIQN {
-    double      relaxationFactor           = 0.1;
-    int         maxIterationsUsed          = 100;
-    int         timeWindowsReused          = 10;
-    int         filter                     = Acceleration::QR2FILTER;
-    double      singularityLimit           = 1e-2;
-    std::string preconditionerType         = "residual-sum";
-    int         precond_nbNonConstTWindows = -1;
+    double      relaxationFactor                 = 0.1;
+    int         maxIterationsUsed                = 100;
+    int         timeWindowsReused                = 10;
+    int         filter                           = Acceleration::QR3FILTER;
+    double      singularityLimit                 = 1e-2;
+    std::string preconditionerType               = "residual-sum";
+    bool        preconditionerUpdateOnThreshold  = true;
+    int         preconditionerNbNonConstTWindows = -1;
   } _defaultValuesIQNILS;
 
   const struct DefaultValuesIMVJ {
-    double      relaxationFactor           = 0.1;
-    int         maxIterationsUsed          = 20;
-    int         timeWindowsReused          = 0;
-    int         filter                     = Acceleration::QR2FILTER;
-    double      singularityLimit           = 1e-2;
-    std::string preconditionerType         = "residual-sum";
-    int         precond_nbNonConstTWindows = -1;
+    double      relaxationFactor                 = 0.1;
+    int         maxIterationsUsed                = 20;
+    int         timeWindowsReused                = 0;
+    int         filter                           = Acceleration::QR3FILTER;
+    double      singularityLimit                 = 1e-2;
+    std::string preconditionerType               = "residual-sum";
+    bool        preconditionerUpdateOnThreshold  = true;
+    int         preconditionerNbNonConstTWindows = -1;
+
+    int imvjRestartType = 3;
+    int imvjChunkSize   = 8;
   } _defaultValuesIQNIMVJ;
+
+  const double _defaultAitkenRelaxationFactor = 0.5;
 
   struct UserDefinitions {
     bool definedRelaxationFactor   = false;
@@ -144,10 +155,10 @@ private:
     bool definedTimeWindowsReused  = false;
     bool definedFilter             = false;
     bool definedPreconditionerType = false;
+    bool defineRestartType         = false;
   } _userDefinitions;
 
   void addTypeSpecificSubtags(xml::XMLTag &tag);
   void addCommonIQNSubtags(xml::XMLTag &tag);
 };
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration

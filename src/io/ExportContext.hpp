@@ -4,8 +4,7 @@
 #include <string>
 #include "io/SharedPointer.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 struct ExportContext {
   // @brief Exporters performing the actual export.
@@ -13,6 +12,9 @@ struct ExportContext {
 
   // @brief Path to export location.
   std::string location;
+
+  // @brief Name of the mesh to export.
+  std::string meshName;
 
   // @brief Exporting every N time windows (equals -1 when not set).
   int everyNTimeWindows = -1;
@@ -24,7 +26,6 @@ struct ExportContext {
   std::string type;
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io
 
 #endif /* PRECICE_IO_EXPORTCONTEXT_HPP_ */

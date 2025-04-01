@@ -8,8 +8,7 @@
 #include "cplscheme/ImplicitData.hpp"
 #include "precice/impl/Types.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 /**
  * @brief Interface for all coupling schemes.
@@ -70,18 +69,18 @@ public:
 
   CouplingScheme &operator=(CouplingScheme &&) = delete;
 
-  virtual ~CouplingScheme() {}
+  virtual ~CouplingScheme() = default;
 
   /**
    * @brief Initializes the coupling scheme and establishes a communication
    *        connection to the coupling partner. Initializes coupling data.
-   *
-   * @param[in] startTime starting time for coupling @BU correct?
-   * @param[in] startTimeWindow counter of time window for coupling @BU correct?
    */
-  virtual void initialize(
-      double startTime,
-      int    startTimeWindow) = 0;
+  virtual void initialize() = 0;
+
+  /**
+   * @brief Reinitializes the coupling scheme, coupling data, and acceleration schemes
+   */
+  virtual void reinitialize() = 0;
 
   /**
    * @brief Returns whether this participant of the coupling scheme sends initialized data.
@@ -238,5 +237,4 @@ public:
   virtual ImplicitData implicitDataToReceive() const = 0;
 };
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

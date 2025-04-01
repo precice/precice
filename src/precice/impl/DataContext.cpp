@@ -82,6 +82,26 @@ void DataContext::appendMapping(MappingContext mappingContext)
   PRECICE_ASSERT(mappingContext.toData->getName() == getDataName());
 }
 
+void DataContext::addJustInTimeMapping(MappingContext &mappingContext, MeshContext &meshContext)
+{
+  PRECICE_ASSERT(meshContext.mesh->hasDataName(getDataName()));
+  PRECICE_ASSERT(justInTimeMapping == nullptr);
+  PRECICE_ASSERT(mappingCache == nullptr);
+  mesh::PtrData data = meshContext.mesh->data(getDataName());
+  // the mapping itself has even for just-in-time mapping no notion about the data
+  // maybe remove the data pointer here or set them to nullptr
+  // the data access happens through the API functions
+  mappingContext.toData   = data;
+  mappingContext.fromData = data;
+
+  PRECICE_ASSERT(mappingContext.fromData);
+  PRECICE_ASSERT(mappingContext.toData);
+
+  PRECICE_ASSERT(mappingContext.fromData == _providedData || mappingContext.toData == _providedData, "Either fromData or toData has to equal _providedData.");
+  mappingCache      = std::make_unique<mapping::impl::MappingDataCache>(data->getDimensions());
+  justInTimeMapping = mappingContext.mapping;
+}
+
 bool DataContext::hasMapping() const
 {
   return hasReadMapping() || hasWriteMapping();
@@ -96,8 +116,11 @@ int DataContext::mapData(std::optional<double> after, bool skipZero)
 
   // Execute the mappings
   for (auto &context : _mappingContexts) {
-    PRECICE_ASSERT(!context.fromData->stamples().empty(),
-                   "There must be samples at this point!");
+    PRECICE_CHECK(!context.fromData->stamples().empty(),
+                  "Data {0} on mesh {1} didn't contain any data samples while attempting to map to mesh {2}. "
+                  "Check your exchange tags to ensure your coupling scheme exchanges the data or the participant produces it using an action. "
+                  "The expected exchange tag should look like this: <exchange data=\"{0}\" mesh=\"{1}\" from=... to=... />.",
+                  context.fromData->getName(), context.mapping->getInputMesh()->getName(), context.mapping->getOutputMesh()->getName());
 
     // linear lookup should be sufficient here
     const auto timestampExists = [times = context.toData->timeStepsStorage().getTimes()](double lookup) -> bool {

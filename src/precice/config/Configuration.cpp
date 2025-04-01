@@ -39,6 +39,10 @@ Configuration::Configuration()
                               .setDocumentation("Enable experimental features.");
   _tag.addAttribute(attrExperimental);
 
+  auto attrRemeshing = xml::makeXMLAttribute("allow-remeshing", false)
+                           .setDocumentation("Enable experimental remeshing feature, requires experimental to be true.");
+  _tag.addAttribute(attrRemeshing);
+
   auto attrWaitInFinalize = xml::makeXMLAttribute("wait-in-finalize", false)
                                 .setDocumentation("Connected participants wait for each other in finalize, which can be helpful in SLURM sessions.");
   _tag.addAttribute(attrWaitInFinalize);
@@ -64,7 +68,12 @@ void Configuration::xmlTagCallback(const xml::ConfigurationContext &context, xml
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == "precice-configuration") {
     _experimental = tag.getBooleanAttributeValue("experimental");
+    _remeshing    = tag.getBooleanAttributeValue("allow-remeshing");
+
+    PRECICE_CHECK(!_remeshing || _experimental, "Remeshing is considered an experimental feature. Please enable <precice-configuration experimental=\"1\" >.");
     _participantConfiguration->setExperimental(_experimental);
+    _participantConfiguration->setRemeshing(_remeshing);
+    _couplingSchemeConfiguration->setRemeshing(_remeshing);
     _waitInFinalize = tag.getBooleanAttributeValue("wait-in-finalize");
   } else {
     PRECICE_UNREACHABLE("Received callback from unknown tag '{}'.", tag.getName());
@@ -73,12 +82,12 @@ void Configuration::xmlTagCallback(const xml::ConfigurationContext &context, xml
 
 void Configuration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE(tag.getName());
   PRECICE_ASSERT(tag.getName() == "precice-configuration");
 
-  //test if both participants do have the exchange meshes
+  // test if both participants do have the exchange meshes
   typedef std::map<std::string, std::vector<std::string>>::value_type neededMeshPair;
   for (const neededMeshPair &neededMeshes : _meshConfiguration->getNeededMeshes()) {
     bool participantFound = false;

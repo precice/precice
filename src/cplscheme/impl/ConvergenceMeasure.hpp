@@ -2,9 +2,7 @@
 
 #include <Eigen/Core>
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice::cplscheme::impl {
 
 /**
  * @brief Interface for measures checking the convergence of a series of datasets.
@@ -22,7 +20,7 @@ namespace impl {
 class ConvergenceMeasure {
 public:
   /// Destructor, empty.
-  virtual ~ConvergenceMeasure() {}
+  virtual ~ConvergenceMeasure() = default;
 
   /// To be called when a new meas. series (iteration process) starts.
   virtual void newMeasurementSeries() = 0;
@@ -55,6 +53,4 @@ public:
     return "";
   }
 };
-} // namespace impl
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme::impl

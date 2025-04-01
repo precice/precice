@@ -7,14 +7,11 @@
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Vertex;
 }
-} // namespace precice
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 /**
  * @brief Track and output transient integral data on a mesh
@@ -55,10 +52,9 @@ private:
 
   bool _isScalingOn;
 
-  Eigen::VectorXd calculateIntegral(const mesh::PtrData &data) const;
+  Eigen::VectorXd calculateIntegral(double time, const mesh::PtrData &data) const;
 
   double calculateSurfaceArea() const;
 };
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

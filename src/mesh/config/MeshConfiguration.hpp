@@ -12,22 +12,19 @@
 #include "utils/ManageUniqueIDs.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class DataConfiguration;
 }
-} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 class MeshConfiguration : public xml::XMLTag::Listener {
 public:
   /// Constructor, takes a valid data configuration as argument.
   MeshConfiguration(
-      xml::XMLTag &        parent,
+      xml::XMLTag         &parent,
       PtrDataConfiguration config);
 
   /// Returns all configured meshes.
@@ -42,11 +39,13 @@ public:
   /// Returns the configured mesh with given name, or NULL.
   mesh::PtrMesh getMesh(const std::string &meshName) const;
 
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  static mesh::PtrMesh getJustInTimeMappingMesh(int dimension);
 
-  virtual void xmlEndTagCallback(
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
+
+  void xmlEndTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+      xml::XMLTag                     &callingTag) override;
 
   const PtrDataConfiguration &getDataConfiguration() const;
 
@@ -98,5 +97,4 @@ private:
   utils::ManageUniqueIDs _dataIDManager;
 };
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

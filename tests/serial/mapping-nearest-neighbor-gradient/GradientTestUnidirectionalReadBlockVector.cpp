@@ -13,9 +13,10 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MappingNearestNeighborGradient)
 
 // Unidirectional Nearest Neighbor Gradient Read Mapping
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(1_rank))
 BOOST_AUTO_TEST_CASE(GradientTestUnidirectionalReadBlockVector)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank))
+  PRECICE_TEST();
   testVectorGradientFunctions(context);
 }
 

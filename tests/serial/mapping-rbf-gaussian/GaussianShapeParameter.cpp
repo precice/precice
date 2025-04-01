@@ -8,13 +8,14 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MappingRbfGaussian)
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(GaussianShapeParameter)
 {
+  PRECICE_TEST();
   /**
- * @brief Tests the Gaussian rbf mapping using the shape parameter option
- *
- */
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+   * @brief Tests the Gaussian rbf mapping using the shape parameter option
+   *
+   */
   testRBFMapping(context.config(), context);
 }
 

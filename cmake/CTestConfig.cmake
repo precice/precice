@@ -25,55 +25,6 @@ else()
 endif()
 mark_as_advanced(PRECICE_TEST_WRAPPER_SCRIPT)
 
-
-function(add_precice_test)
-  cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;MPIPORTS;GINKGO;GINKGO_OMP;GINKGO_CUDA;GINKGO_HIP" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
-  # Check arguments
-  if(NOT PAT_NAME)
-    message(FATAL_ERROR "Argument NAME not passed")
-  endif()
-
-  # We always prefix our tests
-  set(PAT_FULL_NAME "precice.${PAT_NAME}")
-
-  # Are direct dependencies fulfilled?
-  if( (NOT PRECICE_FEATURE_MPI_COMMUNICATION) OR (PAT_PETSC AND NOT PRECICE_FEATURE_PETSC_MAPPING)
-       OR (PAT_GINKGO AND NOT PRECICE_FEATURE_GINKGO_MAPPING)
-       OR (PAT_GINKGO_OMP AND NOT PRECICE_WITH_OMP)
-       OR (PAT_GINKGO_CUDA AND NOT PRECICE_WITH_CUDA)
-       OR (PAT_GINKGO_HIP AND NOT PRECICE_WITH_HIP))
-    message(STATUS "Test ${PAT_FULL_NAME} - skipped")
-    return()
-  endif()
-
-  if(PAT_MPIPORTS AND PRECICE_MPI_OPENMPI)
-    message(STATUS "Test ${PAT_FULL_NAME} - skipped (OpenMPI)")
-    return()
-  endif()
-
-  # Assemble the command
-  # Note that --map-by=:OVERSUBSCRIBE work for OpenMPI(4+5), MPICH, and Intel MPI.
-  message(STATUS "Test ${PAT_FULL_NAME}")
-  add_test(NAME ${PAT_FULL_NAME}
-    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 --map-by :OVERSUBSCRIBE ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${MPIEXEC_POSTFLAGS} ${PAT_ARGUMENTS}
-    )
-  unset(_extra_mpi_flags)
-  # Generate working directory
-  set(PAT_WDIR "${PRECICE_TEST_DIR}/${PAT_NAME}")
-  file(MAKE_DIRECTORY "${PAT_WDIR}")
-  # Setting properties
-  set_tests_properties(${PAT_FULL_NAME}
-    PROPERTIES
-    WORKING_DIRECTORY "${PAT_WDIR}"
-    ENVIRONMENT "OMP_NUM_THREADS=2"
-    )
-  if(PAT_TIMEOUT)
-    set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PAT_TIMEOUT} )
-  endif()
-  set(_labels ${PAT_LABELS})
-  set_tests_properties(${PAT_FULL_NAME} PROPERTIES LABELS "${_labels}")
-endfunction(add_precice_test)
-
 function(add_precice_test_build_solverdummy PAT_LANG)
   # Turn language to lowercase
   string(TOLOWER ${PAT_LANG} PAT_LANG)
@@ -118,7 +69,7 @@ function(add_precice_test_build_solverdummy PAT_LANG)
     PROPERTIES
     WORKING_DIRECTORY "${PAT_BIN_DIR}"
     FIXTURES_SETUP "${PAT_LANG}-solverdummy"
-    LABELS "Solverdummy"
+    LABELS "solverdummy"
     TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
     )
 endfunction(add_precice_test_build_solverdummy)
@@ -191,7 +142,7 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
     PROPERTIES
     WORKING_DIRECTORY "${PAT_RUN_DIR}"
     FIXTURES_REQUIRED "${PAT_LANG_A}-solverdummy;${PAT_LANG_B}-solverdummy"
-    LABELS "Solverdummy"
+    LABELS "solverdummy"
     TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
     )
 endfunction(add_precice_test_run_solverdummies)
@@ -199,164 +150,41 @@ endfunction(add_precice_test_run_solverdummies)
 
 enable_testing()
 
+# Autodiscovery of CTest
 if(NOT PRECICE_FEATURE_MPI_COMMUNICATION)
-  message("Tests require MPICommunication to be enabled.")
+  message(STATUS "Unit and integrationtests require MPI to be enabled.")
+else()
+
+  # This file is automatically loaded by CTEST and needs to exist to prevent strange errors
+  set(ctest_tests_file "${preCICE_BINARY_DIR}/ctest_tests.cmake")
+  if(NOT EXISTS "${ctest_tests_file}")
+    file(WRITE "${ctest_tests_file}" "")
+  endif()
+  set_property(DIRECTORY
+    APPEND PROPERTY TEST_INCLUDE_FILES "${ctest_tests_file}"
+  )
+
+  # Custom command that generates the tests list after the testprecice binary is build
+  add_custom_command(
+    TARGET testprecice POST_BUILD
+    COMMAND "${CMAKE_COMMAND}"
+    -D "TEST_EXECUTABLE=$<TARGET_FILE:testprecice>"
+    -D "TEST_FILE=${ctest_tests_file}"
+    -D "TEST_DIR=${PRECICE_TEST_DIR}"
+    -D "PRECICE_MPI_VERSION=${PRECICE_MPI_VERSION}"
+    -D "MPIEXEC_EXECUTABLE=${MPIEXEC_EXECUTABLE}"
+    -D "MPIEXEC_NUMPROC_FLAG=${MPIEXEC_NUMPROC_FLAG}"
+    -D "PRECICE_CTEST_MPI_FLAGS=${PRECICE_CTEST_MPI_FLAGS}"
+    -D "MPIEXEC_PREFLAGS=${MPIEXEC_PREFLAGS}"
+    -D "MPIEXEC_POSTFLAGS=${MPIEXEC_POSTFLAGS}"
+    -P "${preCICE_SOURCE_DIR}/cmake/discover_tests.cmake"
+    COMMENT "Generating list of tests"
+    BYPRODUCTS "${preCICE_BINARY_DIR}/tests.txt"
+    VERBATIM)
+
 endif()
 
-add_precice_test(
-  NAME acceleration
-  ARGUMENTS "--run_test=AccelerationTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME action
-  ARGUMENTS "--run_test=ActionTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME com
-  ARGUMENTS "--run_test=CommunicationTests:\!CommunicationTests/MPIPorts:\!CommunicationTests/MPISinglePorts"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME com.mpiports
-  ARGUMENTS "--run_test=CommunicationTests/MPIPorts:CommunicationTests/MPISinglePorts"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS "mpiports"
-  MPIPORTS
-  )
-add_precice_test(
-  NAME cplscheme
-  ARGUMENTS "--run_test=CplSchemeTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-  )
-add_precice_test(
-  NAME io
-  ARGUMENTS "--run_test=IOTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME m2n
-  ARGUMENTS "--run_test=M2NTests:\!M2NTests/MPIPorts:\!M2NTets/MPISinglePorts"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME m2n.mpiports
-  ARGUMENTS "--run_test=M2NTests/MPIPorts:M2NTests/MPISinglePorts"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS "mpiports"
-  MPIPORTS
-  )
-add_precice_test(
-  NAME mapping
-  ARGUMENTS "--run_test=MappingTests:\!MappingTests/PetRadialBasisFunctionMapping:\!MappingTests/GinkgoRadialBasisFunctionSolver"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_NORMAL}
-  )
-add_precice_test(
-  NAME mapping.petrbf
-  ARGUMENTS "--run_test=MappingTests/PetRadialBasisFunctionMapping"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-  LABELS petsc
-  PETSC
-  )
-add_precice_test(
-  NAME mapping.ginkgo.reference
-  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Reference"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS ginkgo
-  GINKGO
-  )
-add_precice_test(
-  NAME mapping.ginkgo.openmp
-  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/OpenMP"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-  LABELS ginkgo
-  GINKGO_OMP
-  )
-add_precice_test(
-  NAME mapping.ginkgo.cuda
-  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Cuda"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS ginkgo
-  GINKGO_CUDA
-  )
-add_precice_test(
-  NAME mapping.ginkgo.cuSolver
-  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/cuSolver"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS ginkgo
-  GINKGO_CUDA
-  )
-add_precice_test(
-  NAME mapping.ginkgo.hip
-  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Hip"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS ginkgo
-  GINKGO_HIP
-  )
-add_precice_test(
-  NAME mapping.ginkgo.hipSolver
-  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/hipSolver"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS ginkgo
-  GINKGO_HIP
-  )
-add_precice_test(
-  NAME math
-  ARGUMENTS "--run_test=MathTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME mesh
-  ARGUMENTS "--run_test=MeshTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME partition
-  ARGUMENTS "--run_test=PartitionTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME interface
-  ARGUMENTS "--run_test=PreciceTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME query
-  ARGUMENTS "--run_test=QueryTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME testing
-  ARGUMENTS "--run_test=TestingTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME time
-  ARGUMENTS "--run_test=TimeTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME utils
-  ARGUMENTS "--run_test=UtilsTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME xml
-  ARGUMENTS "--run_test=XML"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-
-# Register integration tests from tests/
-# These are defined in tests/tests.cmake
-foreach(testsuite IN LISTS PRECICE_TEST_SUITES)
-  add_precice_test(
-    NAME "integration.${testsuite}"
-    ARGUMENTS "--run_test=Integration/${testsuite}"
-    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-    )
-endforeach()
-
+# Add solverdummy tests
 add_precice_test_build_solverdummy(cpp)
 add_precice_test_build_solverdummy(c)
 add_precice_test_build_solverdummy(fortran)
