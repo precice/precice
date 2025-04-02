@@ -156,9 +156,8 @@ Run all these tests manually on your system. If you succeed, please write a comm
      * [ ] Forum (choose a central topic)
 * [ ] NADigest
 * [ ] [NAFEMS](https://www.nafems.org/mynafems/submitnews/) (needs account, appears in [Upcoming Industry Events](https://www.nafems.org/events/industry-events/))
-* [ ] Post on [Twitter](https://twitter.com/preCICE_org) (additionally to the automatic)
+* [ ] Post on [Bluesky](https://bsky.app/profile/precice.org)
 * [ ] Post on [Mastodon](https://fosstodon.org/@precice)
-* [ ] Post on [ResearchGate](https://www.researchgate.net/project/preCICE)
 * [ ] Post in LinkedIn. Relevant places:
     * [ ] [preCICE group](https://www.linkedin.com/groups/9073912/)
     * [ ] [OpenFOAM group](https://www.linkedin.com/groups/1920608/)
