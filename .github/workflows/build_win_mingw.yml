@@ -1,0 +1,24 @@
+name: Windows MinGW build
+on: [push, pull_request]
+
+jobs:
+  msys2-ucrt64:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: git mingw-w64-ucrt-x86_64-gcc-libs mingw-w64-ucrt-x86_64-boost-libs mingw-w64-ucrt-x86_64-libxml2 mingw-w64-ucrt-x86_64-python mingw-w64-ucrt-x86_64-python-numpy mingw-w64-ucrt-x86_64-cc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-msmpi mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-boost mingw-w64-ucrt-x86_64-eigen3
+      - name: CI-Build
+        run: |
+          mkdir build
+          cd build
+          export CXXFLAGS+=" -Wno-attributes"
+          cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DPRECICE_BUILD_TOOLS=ON -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DPRECICE_FEATURE_PETSC_MAPPING=OFF -DPRECICE_FEATURE_PYTHON_ACTIONS=OFF -DPRECICE_BUILD_TOOLS=OFF -DPRECICE_BUILD_UNITY=OFF ..
+          cmake --build . -j $(nproc)
+          
