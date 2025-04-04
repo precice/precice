@@ -307,7 +307,9 @@ def groupEvents(events: [dict], initTime: int):
                 begin.pop("et")
                 completed.append(begin)
                 if name != "_GLOBAL":
-                    assert stack[-1] == name
+                    assert (
+                        stack[-1] == name
+                    ), f"Expected to end event {name} but the currently active event is {stack[-1]}. Note that events need to follow a strict nesting and overlapping starts/stops are not permitted."
                     stack.pop()
         # Handle event data
         elif type == "d":
