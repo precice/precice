@@ -407,6 +407,10 @@ def loadProfilingOutputs(filenames):
 
         jsons.append(json)
 
+    if not jsons:
+        print("No files loaded")
+        sys.exit(1)
+
     # Grouping events
     print("Grouping events")
     events = {}
