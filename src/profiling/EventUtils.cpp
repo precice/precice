@@ -24,6 +24,9 @@
 
 namespace precice::profiling {
 
+/// The version of the Events file. Increase on changes
+constexpr int file_version{1};
+
 using sys_clk  = std::chrono::system_clock;
 using stdy_clk = std::chrono::steady_clock;
 
@@ -142,7 +145,8 @@ void EventRegistry::startBackend()
   "size": "{}",
   "unix_us": "{}",
   "tinit": "{}",
-  "mode": "{}"
+  "mode": "{}",
+  "file_version": {}
   }},
   "events":[
   )",
@@ -151,7 +155,8 @@ void EventRegistry::startBackend()
              _size,
              std::chrono::duration_cast<std::chrono::microseconds>(_initTime.time_since_epoch()).count(),
              timepoint_to_string(_initTime),
-             toString(_mode));
+             toString(_mode),
+             ::precice::profiling::file_version);
   _output.flush();
   _isBackendRunning = true;
 }
