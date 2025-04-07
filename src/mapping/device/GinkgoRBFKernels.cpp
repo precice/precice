@@ -1,4 +1,7 @@
 #include "mapping/device/GinkgoRBFKernels.hpp"
+#include <KokkosBatched_LU_Decl.hpp>
+#include <KokkosBatched_LU_Team_Impl.hpp>
+#include <KokkosBatched_Util.hpp>
 #include "mapping/impl/BasisFunctions.hpp"
 #include "math/math.hpp"
 
@@ -260,6 +263,149 @@ void fill_polynomial_matrix(std::shared_ptr<const gko::Executor> exec,
   }
 #endif
   PRECICE_UNREACHABLE("Executor unknown to preCICE");
+}
+
+void compute_offsets(const Kokkos::View<int *> src1, const Kokkos::View<int *> src2,
+                     Kokkos::View<std::size_t *> dst, int N)
+{
+  PRECICE_ASSERT(src1.extent(0) == src2.extent(0));
+  PRECICE_ASSERT(src2.extent(0) == dst.extent(0));
+  Kokkos::parallel_scan("compute_offsets", N, KOKKOS_LAMBDA(const int i, size_t &update, const bool final) {
+    // Number of rows for local system i
+    int nrows = src1(i+1) - src1(i);
+    // Number of columns for local system i
+    int ncols = src2(i+1) - src2(i);
+
+    // Number of entries in the i-th local matrix
+    size_t localSize = size_t(nrows) * size_t(ncols);
+
+    // Add to running sum
+    update += localSize;
+
+    // 'final == true' indicates we should write to matrixOffsets
+    if (final) {
+      // matrixOffsets(i+1) = partial sum up to i
+      dst(i+1) = update;
+    } });
+}
+
+template <typename EvalFunctionType, typename MemorySpace>
+void do_batched_assembly(
+    int                                                              N,   // Number of local systems
+    int                                                              dim, // Dimension of points
+    EvalFunctionType                                                 f,
+    ::precice::mapping::RadialBasisParameters                        rbf_params,
+    const Kokkos::View<int *, MemorySpace>                          &inOffsets, // vertex offsets (length N+1)
+    const Kokkos::View<double **, Kokkos::LayoutRight, MemorySpace> &inCoords,  // meshes
+    const Kokkos::View<int *, MemorySpace>                          &targetOffsets,
+    const Kokkos::View<double **, Kokkos::LayoutRight, MemorySpace> &targetCoords,
+    const Kokkos::View<size_t *, MemorySpace>                       &matrixOffsets,
+    Kokkos::View<double *, MemorySpace>                              matrices) // 1D view of batched matrices
+{
+  using ExecSpace  = typename MemorySpace::execution_space;
+  using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
+  using TeamMember = typename TeamPolicy::member_type;
+
+  // We launch one team per local system
+  Kokkos::parallel_for("do_batched_assembly", TeamPolicy(N, Kokkos::AUTO), KOKKOS_LAMBDA(const TeamMember &team) {
+    const int batch = team.league_rank();
+    // Ranges
+    const int inBegin     = inOffsets(batch);
+    const int inEnd       = inOffsets(batch + 1);
+    const int targetBegin = targetOffsets(batch);
+    const int targetEnd   = targetOffsets(batch + 1);
+
+    // For our batched matrix, this results in
+    const int nrows = targetEnd - targetBegin;
+    const int ncols = inEnd - inBegin;
+
+    // The matrix offset
+    const size_t matrixBegin = matrixOffsets(batch);
+    // const size_t matrixEnd   = matrixOffsets(batch + 1);
+
+    // Create an unmanaged 2D subview pointing into matrices
+    // This constructor: View(pointer, layout)
+    Kokkos::View<double **, MemorySpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        localMatrix(&matrices(matrixBegin), nrows, ncols);
+
+    // Now fill localMatrix(r,c). We'll do a standard 2D nested parallel loop
+    Kokkos::parallel_for(
+        Kokkos::TeamThreadRange(team, nrows),
+        [=](int r) {
+          Kokkos::parallel_for(
+              Kokkos::ThreadVectorRange(team, ncols),
+              [=](int c) {
+                // global indices in the original support/target arrays
+                int targetIdx = targetBegin + r;
+                int inIdx     = inBegin + c;
+
+                // 1) Compute Euclidean distance
+                double dist = 0;
+                // supportIdx, targetIdx,
+                //     inCoords, targetCoords, dim;
+
+                for (int d = 0; d < dim; ++d) {
+                  double diff = inCoords(inIdx, d) - targetCoords(targetIdx, d);
+                  dist += diff * diff;
+                }
+                dist = Kokkos::sqrt(dist);
+
+                // 2) Evaluate your RBF or similar function
+                double val = f(dist, rbf_params);
+
+                // 3) Store into localMatrix (2D)
+                localMatrix(r, c) = val;
+              }); // ThreadVectorRange
+        });       // TeamThreadRange
+  });
+}
+
+#define PRECICE_INSTANTIATE(_function_type)                                                             \
+  template void do_batched_assembly<_function_type, Kokkos::DefaultExecutionSpace>(                     \
+      int                                                                                N,             \
+      int                                                                                dim,           \
+      _function_type                                                                     f,             \
+      ::precice::mapping::RadialBasisParameters                                          rbf_params,    \
+      const Kokkos::View<int *, Kokkos::DefaultExecutionSpace>                          &inOffsets,     \
+      const Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> &inCoords,      \
+      const Kokkos::View<int *, Kokkos::DefaultExecutionSpace>                          &targetOffsets, \
+      const Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> &targetCoords,  \
+      const Kokkos::View<size_t *, Kokkos::DefaultExecutionSpace>                       &matrixOffsets, \
+      Kokkos::View<double *, Kokkos::DefaultExecutionSpace>                              matrices)
+
+PRECICE_INSTANTIATE(ThinPlateSplines);
+PRECICE_INSTANTIATE(Multiquadrics);
+PRECICE_INSTANTIATE(InverseMultiquadrics);
+PRECICE_INSTANTIATE(VolumeSplines);
+PRECICE_INSTANTIATE(Gaussian);
+PRECICE_INSTANTIATE(CompactThinPlateSplinesC2);
+PRECICE_INSTANTIATE(CompactPolynomialC0);
+PRECICE_INSTANTIATE(CompactPolynomialC2);
+PRECICE_INSTANTIATE(CompactPolynomialC4);
+PRECICE_INSTANTIATE(CompactPolynomialC6);
+PRECICE_INSTANTIATE(CompactPolynomialC8);
+#undef PRECICE_INSTANTIATE
+
+template <typename MemorySpace>
+void do_batched_lu(
+    int                                        N,
+    const Kokkos::View<size_t *, MemorySpace> &matrixOffsets,
+    Kokkos::View<double *, MemorySpace>        matrices)
+{
+  using ExecSpace  = typename MemorySpace::execution_space;
+  using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
+  using MemberType = typename TeamPolicy::member_type;
+
+  Kokkos::parallel_for("do_batched_lu", TeamPolicy(N, Kokkos::AUTO), KOKKOS_LAMBDA(const MemberType &team) {
+    const int i = team.league_rank();
+    size_t start = matrixOffsets(i);
+    size_t end = matrixOffsets(i + 1);
+    size_t n = static_cast<size_t>(Kokkos::sqrt(end - start));
+
+    Kokkos::View<double**, MemorySpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+              A(&matrices(start), n, n);
+
+   KokkosBatched::TeamLU<MemberType,KokkosBatched::Algo::LU::Blocked>::invoke(team,A); });
 }
 } // namespace kernel
 } // namespace precice::mapping

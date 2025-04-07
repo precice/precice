@@ -37,7 +37,7 @@ public:
   };
 
   struct GinkgoParameter {
-    std::string  executor            = "reference-executor";
+    std::string  executor            = "cpu"; // Default used for PUM
     std::string  solver              = "cg-solver";
     std::string  preconditioner      = "jacobi-preconditioner";
     double       residualNorm        = 1e-8;

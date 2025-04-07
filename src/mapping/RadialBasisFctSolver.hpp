@@ -38,7 +38,8 @@ public:
    */
   template <typename IndexContainer>
   RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
-                       const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial);
+                       const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis,
+                       Polynomial polynomial, bool computeSeparatePolynomialOnly = false);
 
   /// Maps the given input data
   Eigen::VectorXd solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const;
@@ -340,38 +341,41 @@ double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::evaluateRippaLOOCVerror(co
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
-                                                                    const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial)
+                                                                    const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis,
+                                                                    Polynomial polynomial, bool computeSeparatePolynomialOnly)
 {
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
   std::array<bool, 3> activeAxis({{false, false, false}});
   std::transform(deadAxis.begin(), deadAxis.end(), activeAxis.begin(), [](const auto ax) { return !ax; });
 
-  // First, assemble the interpolation matrix and check the invertability
-  bool decompositionSuccessful = false;
-  if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
-    _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).llt();
-    decompositionSuccessful = _decMatrixC.info() == Eigen::ComputationInfo::Success;
-  } else {
-    _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).colPivHouseholderQr();
-    decompositionSuccessful = _decMatrixC.isInvertible();
-  }
+  if (!computeSeparatePolynomialOnly) {
+    // First, assemble the interpolation matrix and check the invertability
+    bool decompositionSuccessful = false;
+    if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
+      _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).llt();
+      decompositionSuccessful = _decMatrixC.info() == Eigen::ComputationInfo::Success;
+    } else {
+      _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).colPivHouseholderQr();
+      decompositionSuccessful = _decMatrixC.isInvertible();
+    }
 
-  PRECICE_CHECK(decompositionSuccessful,
-                "The interpolation matrix of the RBF mapping from mesh \"{}\" to mesh \"{}\" is not invertable. "
-                "This means that the mapping problem is not well-posed. "
-                "Please check if your coupling meshes are correct (e.g. no vertices are duplicated) or reconfigure "
-                "your basis-function (e.g. reduce the support-radius).",
-                inputMesh.getName(), outputMesh.getName());
+    PRECICE_CHECK(decompositionSuccessful,
+                  "The interpolation matrix of the RBF mapping from mesh \"{}\" to mesh \"{}\" is not invertable. "
+                  "This means that the mapping problem is not well-posed. "
+                  "Please check if your coupling meshes are correct (e.g. no vertices are duplicated) or reconfigure "
+                  "your basis-function (e.g. reduce the support-radius).",
+                  inputMesh.getName(), outputMesh.getName());
 
-  // For polynomial on, the algorithm might fail in determining the size of the system
-  if (polynomial != Polynomial::ON && computeCrossValidation) {
-    // TODO: Disable synchronization
-    precice::profiling::Event e("map.rbf.computeLOOCV");
-    _inverseDiagonal = computeInverseDiagonal(_decMatrixC);
+    // For polynomial on, the algorithm might fail in determining the size of the system
+    if (polynomial != Polynomial::ON && computeCrossValidation) {
+      // TODO: Disable synchronization
+      precice::profiling::Event e("map.rbf.computeLOOCV");
+      _inverseDiagonal = computeInverseDiagonal(_decMatrixC);
+    }
+    // Second, assemble evaluation matrix
+    _matrixA = buildMatrixA(basisFunction, inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial);
   }
-  // Second, assemble evaluation matrix
-  _matrixA = buildMatrixA(basisFunction, inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial);
 
   // In case we deal with separated polynomials, we need dedicated matrices for the polynomial contribution
   if (polynomial == Polynomial::SEPARATE) {

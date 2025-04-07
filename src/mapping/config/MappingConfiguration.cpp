@@ -294,8 +294,18 @@ MappingConfiguration::MappingConfiguration(
   }
   {
     std::list<XMLTag> cpuExecutor{
-        XMLTag{*this, EXECUTOR_CPU, once, SUBTAG_EXECUTOR}.setDocumentation("The default (and currently only) executor using a CPU and a distributed memory parallelism via MPI.")};
+        XMLTag{*this, EXECUTOR_CPU, once, SUBTAG_EXECUTOR}.setDocumentation("The default executor using a CPU and a distributed memory parallelism via MPI.")};
+    std::list<XMLTag> deviceExecutors{
+        XMLTag{*this, EXECUTOR_CUDA, once, SUBTAG_EXECUTOR}.setDocumentation("Cuda (Nvidia) executor, which uses Kokkos-kernels, fully parallel"),
+        XMLTag{*this, EXECUTOR_HIP, once, SUBTAG_EXECUTOR}.setDocumentation("Hip (AMD/Nvidia) executor, which uses Kokkos-kernels, fully parallel.")};
+    std::list<XMLTag> ompExecutor{
+        XMLTag{*this, EXECUTOR_OMP, once, SUBTAG_EXECUTOR}.setDocumentation("OpenMP executor, which uses Kokkos-kernel, fully parallel.")};
+
+    addAttributes(deviceExecutors, {attrDeviceId});
+    addAttributes(ompExecutor, {attrNThreads});
     addSubtagsToParents(cpuExecutor, pumDirectTags);
+    addSubtagsToParents(deviceExecutors, pumDirectTags);
+    addSubtagsToParents(ompExecutor, pumDirectTags);
   }
   // The alias tag doesn't receive the subtag at all
 
@@ -749,7 +759,9 @@ void MappingConfiguration::finishRBFConfiguration()
       PRECICE_CHECK(false, "The global-iterative RBF solver on a CPU requires a preCICE build with PETSc enabled.");
 #endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
+      _ginkgoParameter          = GinkgoParameter();
+      _ginkgoParameter.executor = "cpu";
+      mapping.mapping           = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _ginkgoParameter);
     } else {
       PRECICE_UNREACHABLE("Unknown RBF solver.");
     }
@@ -778,14 +790,17 @@ void MappingConfiguration::finishRBFConfiguration()
     }
     if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
       _ginkgoParameter.solver = "qr-solver";
+      mapping.mapping         = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
       _ginkgoParameter.solver       = "cg-solver";
       _ginkgoParameter.residualNorm = _rbfConfig.solverRtol;
+      mapping.mapping               = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
+    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
+      PRECICE_CHECK(!(mapping.fromMesh->isJustInTime() || mapping.toMesh->isJustInTime()), "Executor \"{}\" is not implemented as just-in-time mapping.", _ginkgoParameter.executor);
+      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _ginkgoParameter);
     } else {
       PRECICE_UNREACHABLE("Unknown solver type.");
     }
-
-    mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
 #else
     PRECICE_CHECK(false, "The selected executor for the mapping from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif

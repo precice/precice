@@ -253,6 +253,9 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
   find_package(Kokkos 4.1 REQUIRED)
   message(STATUS "Found Kokkos version ${Kokkos_VERSION} at ${Kokkos_DIR}")
 
+  find_package(KokkosKernels 4.1 REQUIRED)
+  message(STATUS "Found KokkosKernels version ${KokkosKernels_VERSION} at ${KokkosKernels_DIR}")
+
   include(CMakeDependentOption)
   cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_CUDA" OFF)
   cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_HIP" OFF)
@@ -442,7 +445,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     src/mapping/device/Ginkgo.cpp
     )
 
-  target_link_libraries(preciceCore PRIVATE Ginkgo::ginkgo Kokkos::kokkos)
+  target_link_libraries(preciceCore PRIVATE Ginkgo::ginkgo KokkosKernels::kokkoskernels)
   target_compile_definitions(preciceCore PUBLIC EIGEN_NO_CUDA)
 
   # Disable compiler launcher since Kokkos ships its own nvcc wrapper

@@ -5,6 +5,7 @@
 
 #include "com/Communication.hpp"
 #include "io/ExportVTU.hpp"
+#include "mapping/BatchedRBFSolver.hpp"
 #include "mapping/impl/CreateClustering.hpp"
 #include "mapping/impl/MappingDataCache.hpp"
 #include "mapping/impl/SphericalVertexCluster.hpp"
@@ -45,13 +46,14 @@ public:
    * See also \ref mapping::impl::createClustering()
    */
   PartitionOfUnityMapping(
-      Mapping::Constraint     constraint,
-      int                     dimension,
-      RADIAL_BASIS_FUNCTION_T function,
-      Polynomial              polynomial,
-      unsigned int            verticesPerCluster,
-      double                  relativeOverlap,
-      bool                    projectToInput);
+      Mapping::Constraint                   constraint,
+      int                                   dimension,
+      RADIAL_BASIS_FUNCTION_T               function,
+      Polynomial                            polynomial,
+      unsigned int                          verticesPerCluster,
+      double                                relativeOverlap,
+      bool                                  projectToInput,
+      MappingConfiguration::GinkgoParameter ginkgoParameter = MappingConfiguration::GinkgoParameter());
 
   /**
    * Computes the clustering for the partition of unity method and fills the \p _clusters vector,
@@ -114,6 +116,11 @@ private:
   /// polynomial treatment of the RBF system
   Polynomial _polynomial;
 
+  const bool                                                 _useBatchedSolver;
+  std::unique_ptr<BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>> _batchedSolver;
+
+  MappingConfiguration::GinkgoParameter _ginkgoParameter;
+
   std::unique_ptr<mesh::Mesh> _centerMesh;
 
   /// @copydoc Mapping::mapConservative
@@ -134,21 +141,24 @@ private:
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
-    Mapping::Constraint     constraint,
-    int                     dimension,
-    RADIAL_BASIS_FUNCTION_T function,
-    Polynomial              polynomial,
-    unsigned int            verticesPerCluster,
-    double                  relativeOverlap,
-    bool                    projectToInput)
+    Mapping::Constraint                   constraint,
+    int                                   dimension,
+    RADIAL_BASIS_FUNCTION_T               function,
+    Polynomial                            polynomial,
+    unsigned int                          verticesPerCluster,
+    double                                relativeOverlap,
+    bool                                  projectToInput,
+    MappingConfiguration::GinkgoParameter ginkgoParameter)
     : Mapping(constraint, dimension, false, Mapping::InitialGuessRequirement::None),
-      _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial)
+      _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial), _useBatchedSolver(ginkgoParameter.executor != "cpu"), _ginkgoParameter(ginkgoParameter)
 {
   PRECICE_ASSERT(this->getDimensions() <= 3);
   PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.");
   PRECICE_ASSERT(_relativeOverlap < 1, "The relative overlap has to be smaller than one.");
   PRECICE_ASSERT(_verticesPerCluster > 0, "The number of vertices per cluster has to be greater zero.");
-
+#ifdef PRECICE_NO_GINKGO
+  PRECICE_ASSERT(_useBatchedSolver == false, "Not implemented");
+#endif
   if (isScaledConsistent()) {
     setInputRequirement(Mapping::MeshRequirement::FULL);
     setOutputRequirement(Mapping::MeshRequirement::FULL);
@@ -199,7 +209,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
     const VertexID                                  vertexID = meshVertices.size();
     mesh::Vertex                                    center(c.getCoords(), vertexID);
-    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _polynomial, inMesh, outMesh);
+    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _polynomial, inMesh, outMesh, _useBatchedSolver);
 
     // Consider only non-empty clusters (more of a safeguard here)
     if (!cluster.empty()) {
@@ -237,6 +247,12 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
   eWeights.stop();
 
+  if (_useBatchedSolver) {
+    precice::profiling::Event eBatched("map.pou.computeMapping.batchedSolver");
+    _batchedSolver = std::make_unique<BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>>(_basisFunction, inMesh,
+                                                                                 outMesh, _clusters,
+                                                                                 _polynomial, _ginkgoParameter);
+  }
   // Uncomment to add a VTK export of the cluster center distribution for visualization purposes
   // exportClusterCentersAsVTU(*_centerMesh);
 
@@ -313,8 +329,12 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const tim
   // 1. Assert that all output data values were reset, as we accumulate data in all clusters independently
   PRECICE_ASSERT(outData.isZero());
 
-  // 2. Iterate over all clusters and accumulate the result in the output data
-  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &cluster) { cluster.mapConservative(inData, outData); });
+  if (_useBatchedSolver) {
+    PRECICE_ASSERT(false, "Not implemented");
+  } else {
+    // 2. Iterate over all clusters and accumulate the result in the output data
+    std::for_each(_clusters.begin(), _clusters.end(), [&](auto &cluster) { cluster.mapConservative(inData, outData); });
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -328,8 +348,13 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time:
   // 1. Assert that all output data values were reset, as we accumulate data in all clusters independently
   PRECICE_ASSERT(outData.isZero());
 
-  // 2. Execute the actual mapping evaluation in all vertex clusters and accumulate the data
-  std::for_each(_clusters.begin(), _clusters.end(), [&](auto &clusters) { clusters.mapConsistent(inData, outData); });
+  if (_useBatchedSolver) {
+    PRECICE_ASSERT(false, "Not implemented");
+    PRECICE_ASSERT(_batchedSolver, "Not initialized");
+  } else {
+    // 2. Execute the actual mapping evaluation in all vertex clusters and accumulate the data
+    std::for_each(_clusters.begin(), _clusters.end(), [&](auto &clusters) { clusters.mapConsistent(inData, outData); });
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

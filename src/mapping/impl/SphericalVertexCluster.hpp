@@ -55,7 +55,8 @@ public:
                          RADIAL_BASIS_FUNCTION_T function,
                          Polynomial              polynomial,
                          mesh::PtrMesh           inputMesh,
-                         mesh::PtrMesh           outputMesh);
+                         mesh::PtrMesh           outputMesh,
+                         bool                    solveExternal);
 
   /// Evaluates a conservative mapping and agglomerates the result in the given output data
   void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) const;
@@ -77,6 +78,12 @@ public:
   Eigen::VectorXd interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs, const mesh::Mesh &inMesh) const;
   /// Number of input vertices this partition operates on
   unsigned int getNumberOfInputVertices() const;
+
+  unsigned int getNumberOfOutputVertices() const;
+
+  Eigen::MatrixXd getLocalPolynomialInputMatrix(mesh::PtrMesh mesh) const;
+
+  Eigen::MatrixXd getLocalPolynomialOutputMatrix(mesh::PtrMesh mesh) const;
 
   /// The center coordinate of this cluster
   std::array<double, 3> getCenterCoords() const;
@@ -129,6 +136,9 @@ private:
   /// The weighting function
   CompactPolynomialC2 _weightingFunction;
 
+  /// If the cluster is supposed to take care of solving the local RBF or if we are using a batched solver
+  bool _solveExternal;
+
   /// Boolean switch in order to indicate that a mapping was computed
   bool _hasComputedMapping = false;
 };
@@ -142,8 +152,9 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
     RADIAL_BASIS_FUNCTION_T function,
     Polynomial              polynomial,
     mesh::PtrMesh           inputMesh,
-    mesh::PtrMesh           outputMesh)
-    : _center(center), _radius(radius), _polynomial(polynomial), _function(function), _weightingFunction(radius)
+    mesh::PtrMesh           outputMesh,
+    bool                    solveExternal)
+    : _center(center), _radius(radius), _polynomial(polynomial), _function(function), _weightingFunction(radius), _solveExternal(solveExternal)
 {
   PRECICE_TRACE(_center.getCoords(), _radius);
   precice::profiling::Event eq("map.pou.computeMapping.queryVertices");
@@ -176,8 +187,9 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
   // Construct the solver. Here, the constructor of the RadialBasisFctSolver computes already the decompositions etc, such that we can mark the
   // mapping in this cluster as computed (mostly for debugging purpose)
   std::vector<bool>         deadAxis(inputMesh->getDimensions(), false);
-  precice::profiling::Event e("map.pou.computeMapping.rbfSolver");
-  _rbfSolver          = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{function, *inputMesh.get(), _inputIDs, *outputMesh.get(), _outputIDs, deadAxis, _polynomial};
+  std::string               eName = _solveExternal ? "polyNomialSolver" : "rbfSolver";
+  precice::profiling::Event e("map.pou.computeMapping." + eName);
+  _rbfSolver          = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{function, *inputMesh.get(), _inputIDs, *outputMesh.get(), _outputIDs, deadAxis, _polynomial, _solveExternal};
   _hasComputedMapping = true;
 }
 
@@ -205,6 +217,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
   PRECICE_ASSERT(!empty());
   PRECICE_ASSERT(_hasComputedMapping);
   PRECICE_ASSERT(_normalizedWeights.size() == static_cast<Eigen::Index>(_outputIDs.size()));
+  PRECICE_ASSERT(!_solveExternal, "Not implemented");
 
   // Define an alias for data dimension in order to avoid ambiguity
   const unsigned int nComponents = inData.dataDims;
@@ -299,7 +312,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
   PRECICE_ASSERT(!empty());
   PRECICE_ASSERT(_hasComputedMapping);
   PRECICE_ASSERT(_normalizedWeights.size() == static_cast<Eigen::Index>(_outputIDs.size()));
-
+  PRECICE_ASSERT(!_solveExternal, "Not implemented");
   // Define an alias for data dimension in order to avoid ambiguity
   const unsigned int nComponents = inData.dataDims;
   const auto        &localInData = inData.values;
@@ -344,6 +357,30 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 unsigned int SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::getNumberOfInputVertices() const
 {
   return _inputIDs.size();
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+Eigen::MatrixXd SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::getLocalPolynomialInputMatrix(mesh::PtrMesh mesh) const
+{
+  int             dim = mesh->getDimensions();
+  Eigen::MatrixXd res(_inputIDs.size(), dim);
+  fillPolynomialEntries(res, *mesh, _inputIDs, 0, {{true, true, true}});
+  return res;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+unsigned int SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::getNumberOfOutputVertices() const
+{
+  return _outputIDs.size();
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+Eigen::MatrixXd SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::getLocalPolynomialOutputMatrix(mesh::PtrMesh mesh) const
+{
+  int             dim = mesh->getDimensions();
+  Eigen::MatrixXd res(_outputIDs.size(), dim);
+  fillPolynomialEntries(res, *mesh, _outputIDs, 0, {{true, true, true}});
+  return res;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
