@@ -71,6 +71,8 @@ public:
 
   void evaluateConservativeCache(Eigen::MatrixXd &epsilon, const Eigen::MatrixXd &Au, Eigen::MatrixXd &result) const;
 
+  void solveConsistentPolynomial(Eigen::VectorXd &in, Eigen::VectorXd &out) const;
+
 private:
   mutable precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
 
@@ -439,6 +441,17 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative
     out -= static_cast<Eigen::VectorXd>(_qrMatrixQ.transpose().solve(-epsilon));
   }
   return out;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistentPolynomial(Eigen::VectorXd &in, Eigen::VectorXd &out) const
+{
+  // assumes a separate polynomial
+  PRECICE_ASSERT(_matrixQ.size() > 0);
+  PRECICE_ASSERT(_matrixV.size() > 0);
+  Eigen::VectorXd polynomialContribution = _qrMatrixQ.solve(in);
+  in -= (_matrixQ * polynomialContribution);
+  out = (_matrixV * polynomialContribution);
 }
 
 // @todo: change the signature to Eigen::MatrixXd and process all components at once, the solve function of eigen can handle that

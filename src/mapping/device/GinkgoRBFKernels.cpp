@@ -1,7 +1,12 @@
-#include "mapping/device/GinkgoRBFKernels.hpp"
 #include <KokkosBatched_LU_Decl.hpp>
 #include <KokkosBatched_LU_Team_Impl.hpp>
+// #include <KokkosBatched_Trsv_TeamVector_Internal.hpp>
+// #include <KokkosBatched_Trsv_TeamVector_Impl.hpp>
 #include <KokkosBatched_Util.hpp>
+
+#include <KokkosBatched_Trsv_Decl.hpp>
+#include "mapping/device/GinkgoRBFKernels.hpp"
+
 #include "mapping/impl/BasisFunctions.hpp"
 #include "math/math.hpp"
 
@@ -407,5 +412,56 @@ void do_batched_lu(
 
    KokkosBatched::TeamLU<MemberType,KokkosBatched::Algo::LU::Blocked>::invoke(team,A); });
 }
+
+template <typename MemorySpace>
+void do_batched_solve(
+    int                                        N,
+    const Kokkos::View<int *, MemorySpace>    &rhsOffsets,
+    Kokkos::View<double *, MemorySpace>        rhs,
+    const Kokkos::View<size_t *, MemorySpace> &matrixOffsets,
+    Kokkos::View<double *, MemorySpace>        matrices)
+{
+  using ExecSpace  = typename MemorySpace::execution_space;
+  using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
+  using MemberType = typename TeamPolicy::member_type;
+  Kokkos::parallel_for("do_batched_solve", TeamPolicy(N, Kokkos::AUTO), KOKKOS_LAMBDA(const MemberType &team) {
+    const int i = team.league_rank();
+
+    size_t start = matrixOffsets(i);
+
+    int bStart = rhsOffsets(i);
+    int bEnd   = rhsOffsets(i + 1);
+
+    auto n = bEnd - bStart;
+    // The lu inplace lu decomposition computed with Kokkosbatched
+    Kokkos::View<double **, MemorySpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        A(&matrices(start), n, n);
+
+    // The RHS
+    Kokkos::View<double *, MemorySpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        b(&rhs(bStart), n);
+
+    // Forward substitution: solve L * y = b
+    // TODO: Check again how we can use TeamVector instead
+    KokkosBatched::Trsv<
+        MemberType,
+        KokkosBatched::Uplo::Lower,
+        KokkosBatched::Trans::NoTranspose,
+        KokkosBatched::Diag::Unit,
+        KokkosBatched::Mode::Team,
+        KokkosBatched::Algo::Trsv::Blocked>::invoke(team, 1.0, A, b);
+
+    team.team_barrier(); // Make sure forward solve is complete
+
+    // Backward substitution: solve U * x = y
+    KokkosBatched::Trsv<
+    MemberType,
+    KokkosBatched::Uplo::Upper,
+    KokkosBatched::Trans::NoTranspose,
+    KokkosBatched::Diag::NonUnit,
+    KokkosBatched::Mode::Team,
+    KokkosBatched::Algo::Trsv::Blocked>::invoke(team, 1.0, A, b); });
+}
+
 } // namespace kernel
 } // namespace precice::mapping

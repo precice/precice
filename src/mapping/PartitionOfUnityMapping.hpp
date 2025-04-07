@@ -349,8 +349,9 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time:
   PRECICE_ASSERT(outData.isZero());
 
   if (_useBatchedSolver) {
-    PRECICE_ASSERT(false, "Not implemented");
     PRECICE_ASSERT(_batchedSolver, "Not initialized");
+    PRECICE_ASSERT(inData.dataDims == 1, "Not implemented");
+    _batchedSolver->solveConsistent(_clusters, inData.values, outData);
   } else {
     // 2. Execute the actual mapping evaluation in all vertex clusters and accumulate the data
     std::for_each(_clusters.begin(), _clusters.end(), [&](auto &clusters) { clusters.mapConsistent(inData, outData); });

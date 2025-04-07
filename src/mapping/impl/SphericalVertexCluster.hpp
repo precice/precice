@@ -91,6 +91,18 @@ public:
   /// Invalidates and erases data structures the cluster holds
   void clear();
 
+  // Given the local inData, handles the separate polynomial and adds it to global out
+  // adds the RBF solver data to the host mirror
+  // The pair is for globalInStart and globalOutStart
+  template <typename VIEW_T>
+  int preprocess(const Eigen::VectorXd &globalIn, Eigen::VectorXd &globalOut,
+                 Polynomial polynomial, const int globalStartIndices,
+                 VIEW_T inDataMirror) const;
+
+  template <typename VIEW_T>
+  int localToGlobal(Eigen::VectorXd &global,
+                    const int        globalStartIndices,
+                    VIEW_T           local) const;
   /// Returns, whether the current cluster is empty or not, where empty means that there
   /// are either no input vertices or output vertices.
   bool empty() const;
@@ -249,6 +261,45 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
       outData[dataIndex * nComponents + c] += result(i);
     }
   }
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+template <typename VIEW_T>
+int SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::localToGlobal(Eigen::VectorXd &global,
+                                                                   const int        startIndex,
+                                                                   VIEW_T           local) const
+{
+  for (unsigned int i = 0; i < _outputIDs.size(); ++i) {
+    const auto dataIndex = *(_outputIDs.nth(i));
+    PRECICE_ASSERT(dataIndex < global.size(), dataIndex, global.size());
+    PRECICE_ASSERT(dataIndex < global.size(), dataIndex, global.size());
+    PRECICE_ASSERT(_normalizedWeights[i] > 0);
+    global(dataIndex) += local(i + startIndex) * _normalizedWeights[i];
+  }
+  return static_cast<int>(_outputIDs.size());
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+template <typename VIEW_T>
+int SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::preprocess(const Eigen::VectorXd &globalIn, Eigen::VectorXd &globalOut,
+                                                                Polynomial polynomial, const int globalStartIndex,
+                                                                VIEW_T inDataMirror) const
+{
+  Eigen::VectorXd in(_inputIDs.size());
+  for (unsigned int i = 0; i < _inputIDs.size(); i++) {
+    const auto dataIndex = *(_inputIDs.nth(i));
+    PRECICE_ASSERT(dataIndex < globalIn.size(), dataIndex, globalIn.size());
+    in[i] = globalIn[dataIndex];
+  }
+
+  if (polynomial == Polynomial::SEPARATE) {
+    Eigen::VectorXd out;
+    _rbfSolver.solveConsistentPolynomial(in, out);
+    localToGlobal(globalOut, 0, out);
+  }
+
+  std::copy(in.begin(), in.end(), &inDataMirror(globalStartIndex));
+  return static_cast<int>(in.size());
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

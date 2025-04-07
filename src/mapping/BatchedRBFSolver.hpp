@@ -56,6 +56,9 @@ public:
 
   void clear();
 
+  void solveConsistent(const std::vector<SphericalVertexCluster<RBF_T>> &clusters,
+                       const Eigen::VectorXd &globalIn, Eigen::VectorXd &globalOut);
+
 private:
   mutable precice::logging::Logger _log{"mapping::BatchedRBFSolver"};
 
@@ -72,6 +75,12 @@ private:
   Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> _outMesh;
 
   Kokkos::View<double *, Kokkos::DefaultExecutionSpace> _kernelMatrices;
+
+  // Currently only scalar data
+  Kokkos::View<double *, Kokkos::DefaultExecutionSpace> _inData;
+  Kokkos::View<double *>::HostMirror                    _inDataMirror;
+  Kokkos::View<double *, Kokkos::DefaultExecutionSpace> _outData;
+  Kokkos::View<double *>::HostMirror                    _outDataMirror;
 
   Polynomial _polynomial;
   void       _solveRBFSystem(const std::shared_ptr<GinkgoVector> &rhs) const;
@@ -179,7 +188,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   std::size_t unrolledSize   = 0;
   auto        last_elem_view = Kokkos::subview(_kernelOffsets, nCluster);
   Kokkos::deep_copy(unrolledSize, last_elem_view);
-  _kernelMatrices = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("batched_kernels", unrolledSize);
+  _kernelMatrices = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("kernelMatrices", unrolledSize);
 
   kernel::do_batched_assembly(nCluster, dim, basisFunction, basisFunction.getFunctionParameters(),
                               _inOffsets, _inMesh, _inOffsets, _inMesh, _kernelOffsets, _kernelMatrices);
@@ -188,134 +197,43 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   PRECICE_DEBUG("Compute batched lu");
   kernel::do_batched_lu(nCluster, _kernelOffsets, _kernelMatrices);
 
-  // Maybe simply add a function to the cluster to give as the polynomial matrices
-  // maybe compute those matrices during the initialization (as we have the mesh then)
+  // Step 6: Allocate memory for data transfer
+  PRECICE_DEBUG("Allocate data containers for data transfer");
 
-  //   const std::size_t deadDimensions = std::count(activeAxis.begin(), activeAxis.end(), false);
-  //   const std::size_t dimensions     = 3;
-  //   const std::size_t polyparams     = polynomial == Polynomial::ON ? 1 + dimensions - deadDimensions : 0;
-
-  //   // Add linear polynom degrees if polynomial requires this
-  //   const auto inputSize  = inputIDs.size();
-  //   const auto outputSize = outputIDs.size();
-  //   const auto n          = inputSize + polyparams;
-
-  //   PRECICE_ASSERT((inputMesh.getDimensions() == 3) || activeAxis[2] == false);
-  //   PRECICE_ASSERT((inputSize >= 1 + polyparams) || polynomial != Polynomial::ON, inputSize);
-
-  //   const std::size_t inputMeshSize  = inputMesh.nVertices();
-  //   const std::size_t outputMeshSize = outputMesh.nVertices();
-  //   const std::size_t meshDim        = inputMesh.vertex(0).getDimensions();
-
-  //   _scalarOne         = gko::share(gko::initialize<GinkgoScalar>({1.0}, _deviceExecutor));
-  //   _scalarNegativeOne = gko::share(gko::initialize<GinkgoScalar>({-1.0}, _deviceExecutor));
-
-  //   // Now we fill the RBF system matrix on the GPU (or any other selected device)
-  //   precice::profiling::Event _allocCopyEvent{"map.rbf.ginkgo.memoryAllocAndCopy"};
-  //   _rbfCoefficients = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{n, 1}));
-  //   _allocCopyEvent.stop();
-  //   // Initial guess is required since uninitialized memory could lead to a never converging system
-  //   _rbfCoefficients->fill(0.0);
-
-  //   // We need to copy the input data into a CPU stored vector first and copy it to the GPU afterwards
-  //   // To allow for coalesced memory accesses on the GPU, we need to store them in transposed order IFF the backend is the GPU
-  //   // However, the CPU does not need that; in fact, it would make it slower
-  //   std::size_t inputVerticesM, inputVerticesN, outputVerticesM, outputVerticesN;
-
-  //   if ("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor) {
-  //     inputVerticesM  = meshDim;
-  //     inputVerticesN  = inputMeshSize;
-  //     outputVerticesM = meshDim;
-  //     outputVerticesN = outputMeshSize;
-  //   } else {
-  //     inputVerticesM  = inputMeshSize;
-  //     inputVerticesN  = meshDim;
-  //     outputVerticesM = outputMeshSize;
-  //     outputVerticesN = meshDim;
-  //   }
-
-  //   auto inputVertices  = gko::share(GinkgoMatrix::create(_hostExecutor, gko::dim<2>{inputVerticesM, inputVerticesN}));
-  //   auto outputVertices = gko::share(GinkgoMatrix::create(_hostExecutor, gko::dim<2>{outputVerticesM, outputVerticesN}));
-  //   for (std::size_t i = 0; i < inputMeshSize; ++i) {
-  //     for (std::size_t j = 0; j < meshDim; ++j) {
-  //       if ("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor) {
-  //         inputVertices->at(j, i) = inputMesh.vertex(i).coord(j);
-  //       } else {
-  //         inputVertices->at(i, j) = inputMesh.vertex(i).coord(j);
-  //       }
-  //     }
-  //   }
-  //   for (std::size_t i = 0; i < outputMeshSize; ++i) {
-  //     for (std::size_t j = 0; j < meshDim; ++j) {
-  //       if ("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor) {
-  //         outputVertices->at(j, i) = outputMesh.vertex(i).coord(j);
-  //       } else {
-  //         outputVertices->at(i, j) = outputMesh.vertex(i).coord(j);
-  //       }
-  //     }
-  //   }
-
-  //   _allocCopyEvent.start();
-
-  //   auto dInputVertices  = gko::clone(_deviceExecutor, inputVertices);
-  //   auto dOutputVertices = gko::clone(_deviceExecutor, outputVertices);
-  //   inputVertices->clear();
-  //   outputVertices->clear();
-
-  //   _deviceExecutor->synchronize();
-
-  //   _rbfSystemMatrix = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{n, n}));
-  //   _matrixA         = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{outputSize, n}));
-
-  //   _allocCopyEvent.stop();
-
-  //   // Launch RBF fill kernel on device
-  //   precice::profiling::Event _assemblyEvent{"map.rbf.ginkgo.assembleMatrices"};
-  //   precice::profiling::Event systemMatrixAssemblyEvent{"map.rbf.ginkgo.assembleSystemMatrix"};
-  //   kernel::create_rbf_system_matrix(_deviceExecutor, ginkgoParameter.enableUnifiedMemory, _rbfSystemMatrix, activeAxis, dInputVertices, dInputVertices, basisFunction,
-  //                                    basisFunction.getFunctionParameters(), Polynomial::ON == polynomial,
-  //                                    polyparams); // polynomial evaluates to true only if ON is set
-  //   _deviceExecutor->synchronize();
-  //   systemMatrixAssemblyEvent.stop();
-
-  //   precice::profiling::Event outputMatrixAssemblyEvent{"map.rbf.ginkgo.assembleOutputMatrix"};
-  //   kernel::create_rbf_system_matrix(_deviceExecutor, ginkgoParameter.enableUnifiedMemory, _matrixA, activeAxis, dInputVertices, dOutputVertices, basisFunction,
-  //                                    basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams);
-
-  //   // Wait for the kernels to finish
-  //   _deviceExecutor->synchronize();
-  //   outputMatrixAssemblyEvent.stop();
-  //   _assemblyEvent.stop();
-
-  //   dInputVertices->clear();
-  //   dOutputVertices->clear();
-
-  //   const std::size_t M = _rbfSystemMatrix->get_size()[0];
-  //   const std::size_t N = _rbfSystemMatrix->get_size()[1];
-  //   _decompMatrixQ_T    = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>(N, M)));
-  //   _decompMatrixR      = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>(N, N)));
-
-  //   if ("cuda-executor" == ginkgoParameter.executor) {
-  // #ifdef PRECICE_WITH_CUDA
-  //     // _rbfSystemMatrix will be overridden into Q
-  //     computeQRDecompositionCuda(_deviceExecutor, _rbfSystemMatrix.get(), _decompMatrixR.get());
-  // #endif
-  //   } else if ("hip-executor" == ginkgoParameter.executor) {
-  // #ifdef PRECICE_WITH_HIP
-  //     // _rbfSystemMatrix will be overridden into Q
-  //     computeQRDecompositionHip(_deviceExecutor, _rbfSystemMatrix.get(), _decompMatrixR.get());
-  // #endif
-  //   } else {
-  //     PRECICE_UNREACHABLE("Not implemented");
-  //   }
-  //   _rbfSystemMatrix->transpose(_decompMatrixQ_T);
-  //   _dQ_T_Rhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_decompMatrixQ_T->get_size()[0], 1}));
+  _inData        = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("inData", hostIn(nCluster));
+  _outData       = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("outData", hostOut(nCluster));
+  _inDataMirror  = Kokkos::create_mirror_view(_inData);
+  _outDataMirror = Kokkos::create_mirror_view(_outData);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const std::shared_ptr<GinkgoVector> &rhs) const
 {
   PRECICE_TRACE();
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const std::vector<SphericalVertexCluster<RBF_T>> &clusters,
+                                                                const Eigen::VectorXd &globalIn, Eigen::VectorXd &globalOut)
+{
+  // Step 1: Polynomial solver + prepare RHS for matrices
+  int globalIndex = 0;
+  for (std::size_t c = 0; c < clusters.size(); ++c) {
+    globalIndex += clusters[c].preprocess(globalIn, globalOut, _polynomial, globalIndex, _inDataMirror);
+  }
+
+  // Step 2: Copy over
+  Kokkos::deep_copy(_inData, _inDataMirror);
+
+  // Step 3: Launch kernel
+  kernel::do_batched_solve(clusters.size(), _inOffsets, _inData, _kernelOffsets, _kernelMatrices);
+
+  Kokkos::deep_copy(_outDataMirror, _outData);
+  Kokkos::fence();
+  globalIndex = 0;
+  for (std::size_t c = 0; c < clusters.size(); ++c) {
+    globalIndex += clusters[c].localToGlobal(globalOut, globalIndex, _outDataMirror);
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

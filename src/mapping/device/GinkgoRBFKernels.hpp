@@ -43,6 +43,14 @@ void do_batched_lu(
     const Kokkos::View<size_t *, MemorySpace> &matrixOffsets,
     Kokkos::View<double *, MemorySpace>        matrices);
 
+template <typename MemorySpace>
+void do_batched_solve(
+    int                                        N,
+    const Kokkos::View<int *, MemorySpace>    &rhsOffsets,
+    Kokkos::View<double *, MemorySpace>        rhs,
+    const Kokkos::View<size_t *, MemorySpace> &matrixOffsets,
+    Kokkos::View<double *, MemorySpace>        matrices);
+
 } // namespace kernel
 } // namespace mapping
 } // namespace precice
