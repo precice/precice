@@ -547,6 +547,7 @@ GENERATE_EXPORT_HEADER(preciceCore
   EXPORT_MACRO_NAME PRECICE_API
   INCLUDE_GUARD_NAME PRECICE_EXPORT
   )
+target_compile_definitions(preciceCore PRIVATE preciceCore_EXPORTS)
 
 # Add the export header to the public headers of the preCICE lib
 set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
