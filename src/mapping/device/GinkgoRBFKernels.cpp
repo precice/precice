@@ -4,7 +4,9 @@
 // #include <KokkosBatched_Trsv_TeamVector_Impl.hpp>
 #include <KokkosBatched_Util.hpp>
 
+// #include <KokkosBatched_Gemv_Decl.hpp>
 #include <KokkosBatched_Trsv_Decl.hpp>
+#include <KokkosBlas2_gemv.hpp>
 #include "mapping/device/GinkgoRBFKernels.hpp"
 
 #include "mapping/impl/BasisFunctions.hpp"
@@ -419,7 +421,11 @@ void do_batched_solve(
     const Kokkos::View<int *, MemorySpace>    &rhsOffsets,
     Kokkos::View<double *, MemorySpace>        rhs,
     const Kokkos::View<size_t *, MemorySpace> &matrixOffsets,
-    Kokkos::View<double *, MemorySpace>        matrices)
+    const Kokkos::View<double *, MemorySpace> &matrices,
+    const Kokkos::View<size_t *, MemorySpace> &evalOffsets,
+    const Kokkos::View<double *, MemorySpace> &evalMat,
+    const Kokkos::View<int *, MemorySpace>    &outOffsets,
+    Kokkos::View<double *, MemorySpace>        out)
 {
   using ExecSpace  = typename MemorySpace::execution_space;
   using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
@@ -443,6 +449,7 @@ void do_batched_solve(
 
     // Forward substitution: solve L * y = b
     // TODO: Check again how we can use TeamVector instead
+    // Seems to be available as Unblocked version only
     KokkosBatched::Trsv<
         MemberType,
         KokkosBatched::Uplo::Lower,
@@ -451,16 +458,33 @@ void do_batched_solve(
         KokkosBatched::Mode::Team,
         KokkosBatched::Algo::Trsv::Blocked>::invoke(team, 1.0, A, b);
 
-    team.team_barrier(); // Make sure forward solve is complete
+    team.team_barrier();
 
     // Backward substitution: solve U * x = y
     KokkosBatched::Trsv<
-    MemberType,
-    KokkosBatched::Uplo::Upper,
-    KokkosBatched::Trans::NoTranspose,
-    KokkosBatched::Diag::NonUnit,
-    KokkosBatched::Mode::Team,
-    KokkosBatched::Algo::Trsv::Blocked>::invoke(team, 1.0, A, b); });
+        MemberType,
+        KokkosBatched::Uplo::Upper,
+        KokkosBatched::Trans::NoTranspose,
+        KokkosBatched::Diag::NonUnit,
+        KokkosBatched::Mode::Team,
+        KokkosBatched::Algo::Trsv::Blocked>::invoke(team, 1.0, A, b);
+
+    team.team_barrier();
+
+    // Next we need the evaluation matrix
+    size_t startEval = evalOffsets(i);
+    auto   startOut  = outOffsets(i);
+    auto   m         = (outOffsets(i + 1) - startOut);
+
+    Kokkos::View<double **, MemorySpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        eval(&evalMat(startEval), m, n);
+
+    Kokkos::View<double *, MemorySpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+        result(&out(startOut), m);
+
+KokkosBlas::Experimental::Gemv<
+        KokkosBlas::Mode::Team,
+        KokkosBlas::Algo::Gemv::Blocked>::invoke(team,'N', 1.0, eval, b, 0.0, result); });
 }
 
 } // namespace kernel

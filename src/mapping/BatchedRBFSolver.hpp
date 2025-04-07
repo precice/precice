@@ -76,6 +76,8 @@ private:
 
   Kokkos::View<double *, Kokkos::DefaultExecutionSpace> _kernelMatrices;
 
+  Kokkos::View<double *, Kokkos::DefaultExecutionSpace> _evalMatrices;
+
   // Currently only scalar data
   Kokkos::View<double *, Kokkos::DefaultExecutionSpace> _inData;
   Kokkos::View<double *>::HostMirror                    _inDataMirror;
@@ -193,6 +195,15 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   kernel::do_batched_assembly(nCluster, dim, basisFunction, basisFunction.getFunctionParameters(),
                               _inOffsets, _inMesh, _inOffsets, _inMesh, _kernelOffsets, _kernelMatrices);
 
+  // The eval matrices ///////////////
+  std::size_t evalSize        = 0;
+  auto        last_elem_view2 = Kokkos::subview(_evaluationOffsets, nCluster);
+  Kokkos::deep_copy(evalSize, last_elem_view2);
+  _evalMatrices = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("evalMatrices", evalSize);
+
+  kernel::do_batched_assembly(nCluster, dim, basisFunction, basisFunction.getFunctionParameters(),
+                              _inOffsets, _inMesh, _outOffsets, _outMesh, _evaluationOffsets, _evalMatrices);
+
   // Step 5: Compute batched lu
   PRECICE_DEBUG("Compute batched lu");
   kernel::do_batched_lu(nCluster, _kernelOffsets, _kernelMatrices);
@@ -226,7 +237,9 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const std::vecto
   Kokkos::deep_copy(_inData, _inDataMirror);
 
   // Step 3: Launch kernel
-  kernel::do_batched_solve(clusters.size(), _inOffsets, _inData, _kernelOffsets, _kernelMatrices);
+  kernel::do_batched_solve(clusters.size(),
+                           _inOffsets, _inData, _kernelOffsets, _kernelMatrices,
+                           _evaluationOffsets, _evalMatrices, _outOffsets, _outData);
 
   Kokkos::deep_copy(_outDataMirror, _outData);
   Kokkos::fence();

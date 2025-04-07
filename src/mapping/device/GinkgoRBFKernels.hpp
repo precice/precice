@@ -49,7 +49,11 @@ void do_batched_solve(
     const Kokkos::View<int *, MemorySpace>    &rhsOffsets,
     Kokkos::View<double *, MemorySpace>        rhs,
     const Kokkos::View<size_t *, MemorySpace> &matrixOffsets,
-    Kokkos::View<double *, MemorySpace>        matrices);
+    const Kokkos::View<double *, MemorySpace> &matrices,
+    const Kokkos::View<size_t *, MemorySpace> &evalOffsets,
+    const Kokkos::View<double *, MemorySpace> &evalMat,
+    const Kokkos::View<int *, MemorySpace>    &outOffsets,
+    Kokkos::View<double *, MemorySpace>        out);
 
 } // namespace kernel
 } // namespace mapping
