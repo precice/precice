@@ -49,6 +49,7 @@ private:
   const std::string ATTR_EVERY_N_TIME_WINDOWS = "every-n-time-windows";
   const std::string ATTR_NEIGHBORS            = "neighbors";
   const std::string ATTR_EVERY_ITERATION      = "every-iteration";
+  const std::string ATTR_UPDATE_SERIES        = "update-series";
 
   std::list<ExportContext> _contexts;
 };
