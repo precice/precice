@@ -149,10 +149,6 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   auto hostInMesh  = Kokkos::create_mirror_view(_inMesh);
   auto hostOutMesh = Kokkos::create_mirror_view(_outMesh);
 
-  // fill to account for local dead axis
-  Kokkos::deep_copy(hostInMesh, 0.0);
-  Kokkos::deep_copy(hostOutMesh, 0.0);
-
   Eigen::Index inIndex  = 0;
   Eigen::Index outIndex = 0;
   for (std::size_t i = 0; i < nCluster; ++i) {
@@ -188,7 +184,10 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   kernel::do_batched_assembly(nCluster, dim, basisFunction, basisFunction.getFunctionParameters(),
                               _inOffsets, _inMesh, _inOffsets, _inMesh, _kernelOffsets, _kernelMatrices);
 
+  // Step 5: Compute batched lu
+  PRECICE_DEBUG("Compute batched lu");
   kernel::do_batched_lu(nCluster, _kernelOffsets, _kernelMatrices);
+
   // Maybe simply add a function to the cluster to give as the polynomial matrices
   // maybe compute those matrices during the initialization (as we have the mesh then)
 

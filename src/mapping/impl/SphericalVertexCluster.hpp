@@ -362,8 +362,7 @@ unsigned int SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::getNumberOfInputVe
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::MatrixXd SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::getLocalPolynomialInputMatrix(mesh::PtrMesh mesh) const
 {
-  int             dim = mesh->getDimensions();
-  Eigen::MatrixXd res(_inputIDs.size(), dim);
+  Eigen::MatrixXd res(_inputIDs.size(), 4);
   fillPolynomialEntries(res, *mesh, _inputIDs, 0, {{true, true, true}});
   return res;
 }
@@ -378,7 +377,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::MatrixXd SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::getLocalPolynomialOutputMatrix(mesh::PtrMesh mesh) const
 {
   int             dim = mesh->getDimensions();
-  Eigen::MatrixXd res(_outputIDs.size(), dim);
+  Eigen::MatrixXd res(_outputIDs.size(), 4);
   fillPolynomialEntries(res, *mesh, _outputIDs, 0, {{true, true, true}});
   return res;
 }
