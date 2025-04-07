@@ -21,4 +21,8 @@ jobs:
           export CXXFLAGS+=" -Wno-attributes"
           cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DPRECICE_BUILD_TOOLS=ON -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DPRECICE_FEATURE_PETSC_MAPPING=OFF -DPRECICE_FEATURE_PYTHON_ACTIONS=OFF -DPRECICE_BUILD_TOOLS=OFF -DPRECICE_BUILD_UNITY=OFF ..
           cmake --build . -j $(nproc)
-          
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: debugdump
+          path: build/
