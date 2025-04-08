@@ -161,8 +161,8 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
 
   Eigen::Index inIndex  = 0;
   Eigen::Index outIndex = 0;
-  for (std::size_t i = 0; i < nCluster; ++i) {
-    const Eigen::MatrixXd Q = clusters[i].getLocalPolynomialInputMatrix(inMesh);
+  for (const auto &c : clusters) {
+    const Eigen::MatrixXd Q = c.getLocalPolynomialInputMatrix(inMesh);
 
     for (int i = 0; i < Q.rows(); ++i, ++inIndex) {
       for (int d = 0; d < dim; ++d) {
@@ -170,7 +170,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
       }
     }
 
-    const Eigen::MatrixXd V = clusters[i].getLocalPolynomialOutputMatrix(outMesh);
+    const Eigen::MatrixXd V = c.getLocalPolynomialOutputMatrix(outMesh);
     PRECICE_ASSERT(Q.cols() == V.cols());
 
     for (int i = 0; i < V.rows(); ++i, ++outIndex) {
