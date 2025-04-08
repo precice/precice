@@ -547,7 +547,10 @@ GENERATE_EXPORT_HEADER(preciceCore
   EXPORT_MACRO_NAME PRECICE_API
   INCLUDE_GUARD_NAME PRECICE_EXPORT
   )
-target_compile_definitions(preciceCore PRIVATE preciceCore_EXPORTS)
+# Workaround for making exports work for the preciceCore object library when building preCICE as a shared library
+if (BUILD_SHARED_LIBS)
+  target_compile_definitions(preciceCore PRIVATE preciceCORE_EXPORTS)
+endif()
 
 # Add the export header to the public headers of the preCICE lib
 set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
