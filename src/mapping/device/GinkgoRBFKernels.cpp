@@ -482,9 +482,9 @@ void do_batched_solve(
     Kokkos::View<double *, MemorySpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
         result(&out(startOut), m);
 
-KokkosBlas::Experimental::Gemv<
+    KokkosBlas::Experimental::Gemv<
         KokkosBlas::Mode::Team,
-        KokkosBlas::Algo::Gemv::Blocked>::invoke(team,'N', 1.0, eval, b, 0.0, result); });
+        KokkosBlas::Algo::Gemv::Blocked>::invoke(team, 'N', 1.0, eval, b, 0.0, result); });
 }
 
 } // namespace kernel

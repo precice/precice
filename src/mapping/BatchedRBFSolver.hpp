@@ -17,15 +17,6 @@
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
-#ifdef PRECICE_WITH_HIP
-#include "mapping/device/HipQRSolver.hip.hpp"
-#endif
-#ifdef PRECICE_WITH_CUDA
-#include "mapping/device/CudaQRSolver.cuh"
-#endif
-#ifdef PRECICE_WITH_OPENMP
-#include <omp.h>
-#endif
 
 using precice::mapping::RadialBasisParameters;
 
@@ -85,7 +76,6 @@ private:
   Kokkos::View<double *>::HostMirror                    _outDataMirror;
 
   Polynomial _polynomial;
-  void       _solveRBFSystem(const std::shared_ptr<GinkgoVector> &rhs) const;
   // MappingConfiguration::GinkgoParameter _ginkgoParameter;
 };
 
@@ -100,7 +90,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
 {
   PRECICE_TRACE();
   PRECICE_CHECK(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && _polynomial == Polynomial::ON), "Not supported.");
-  PRECICE_CHECK(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), "Using a Cholesky decomposition.");
+  // PRECICE_CHECK(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), "Using a LU decomposition.");
   PRECICE_CHECK(!(inMesh->vertices().empty() || outMesh->vertices().empty()), "One of the meshes in the batched solvers is empty, which is invalid.");
   PRECICE_CHECK(inMesh->getDimensions() == outMesh->getDimensions(), "Incompatible dimensions passed to the batched solver.");
 
@@ -215,12 +205,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   _outData       = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("outData", hostOut(nCluster));
   _inDataMirror  = Kokkos::create_mirror_view(_inData);
   _outDataMirror = Kokkos::create_mirror_view(_outData);
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const std::shared_ptr<GinkgoVector> &rhs) const
-{
-  PRECICE_TRACE();
+  Kokkos::fence();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
