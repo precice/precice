@@ -387,7 +387,8 @@ void ParticipantState::exportIntermediate(IntermediateExport exp)
       PRECICE_DEBUG("Exporting mesh {} for timewindow {} to location \"{}\"", context.meshName, exp.timewindow, context.location);
       context.exporter->doExport(exp.timewindow, exp.time);
     }
-    if (exp.final) {
+
+    if (exp.final || (exp.complete && context.updateSeries)) {
       PRECICE_DEBUG("Exporting seried file of mesh {} to location \"{}\"", context.meshName, context.location);
       context.exporter->exportSeries();
     }
