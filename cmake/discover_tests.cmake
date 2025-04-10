@@ -54,7 +54,7 @@ function(add_test NAME RANKS)
   else()
     # --map-by=:OVERSUBSCRIBE works for OpenMPI(4+5) and MPICH, but not for Intel which doesn't need a flag
     set(_oversubscribe_FLAG "--map-by;:OVERSUBSCRIBE")
-    if(PRECICE_MPI_VERSION MATCHES "Intel")
+    if(PRECICE_MPI_VERSION MATCHES "Intel" OR PRECICE_MPI_VERSION MATCHES "Microsoft")
       set(_oversubscribe_FLAG "")
     endif()
 
