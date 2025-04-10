@@ -1,4 +1,4 @@
-name: Build and test Windows MinGW
+name: Build and Test Windows MinGW
 on:
   push:
     branches:
