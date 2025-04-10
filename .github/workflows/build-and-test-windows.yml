@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   msys2-ucrt64:
-    name: ${{ format('MinGW UCRT {}', matrix.TYPE)}}
+    name: ${{ format('MinGW UCRT {0}', matrix.TYPE) }}
     runs-on: windows-latest
     defaults:
       run:
