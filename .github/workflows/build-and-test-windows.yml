@@ -1,4 +1,4 @@
-name: Windows MinGW build
+name: Build and test Windows MinGW
 on:
   push:
     branches:
@@ -15,7 +15,7 @@ on:
       - 'tools/profiling/**'
       - 'CMakeLists.txt'
       - 'extras/bindings/**'
-      - '.github/workflows/build-and-test-mingw.yml'
+      - '.github/workflows/build-and-test-windows.yml'
   workflow_dispatch:
 
 concurrency:
