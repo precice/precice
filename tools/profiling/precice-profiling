@@ -865,7 +865,7 @@ def findFilesOfLatestRun(name, sizes):
 
     # Find oldest size of newest timestamps
     size, _ = max(timestamps, key=lambda p: p[1])
-    print(f"└ selected latest run of size {size}")
+    print(f"`-selected latest run of size {size}")
 
     return list(sizes[size].values())
 
