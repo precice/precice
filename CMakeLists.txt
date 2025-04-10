@@ -359,6 +359,11 @@ if(NOT Kokkos_VERSION OR NOT Kokkos_VERSION VERSION_LESS 4.4)
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
   )
+else()
+  set_target_properties(preciceCore PROPERTIES
+    CXX_VISIBILITY_PRESET default
+    VISIBILITY_INLINES_HIDDEN NO
+  )
 endif()
 
 # Setup release override options
@@ -489,14 +494,17 @@ add_library(precice)
 set_target_properties(precice PROPERTIES
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
-  CXX_VISIBILITY_PRESET default
-  VISIBILITY_INLINES_HIDDEN NO
   )
 
 if(NOT Kokkos_VERSION OR NOT Kokkos_VERSION VERSION_LESS 4.4)
   set_target_properties(precice PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
+   )
+else()
+  set_target_properties(precice PROPERTIES
+    CXX_VISIBILITY_PRESET default
+    VISIBILITY_INLINES_HIDDEN NO
    )
 endif()
 
@@ -547,6 +555,11 @@ GENERATE_EXPORT_HEADER(preciceCore
   EXPORT_MACRO_NAME PRECICE_API
   INCLUDE_GUARD_NAME PRECICE_EXPORT
   )
+
+# Workaround for making exports work for the preciceCore object library when building preCICE as a shared library
+if (BUILD_SHARED_LIBS)
+  target_compile_definitions(preciceCore PUBLIC preciceCore_EXPORTS)
+endif()
 
 # Add the export header to the public headers of the preCICE lib
 set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
