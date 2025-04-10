@@ -7,18 +7,46 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 4
+      CMAKE_BUILD_TYPE: Release
+      CMAKE_GENERATOR: Ninja
+      CTEST_OUTPUT_ON_FAILURE: True
     steps:
+      - name: Install MS-MPI
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest -Uri https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe -OutFile msmpisetup.exe
+          Start-Process -FilePath .\msmpisetup.exe -ArgumentList '-unattend' -Wait
+          Remove-Item msmpisetup.exe
+
+          # Add MS-MPI to PATH
+          echo "C:\Program Files\Microsoft MPI\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        shell: powershell
       - uses: actions/checkout@v3
       - uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
           update: true
-          install: git mingw-w64-ucrt-x86_64-gcc-libs mingw-w64-ucrt-x86_64-boost-libs mingw-w64-ucrt-x86_64-libxml2 mingw-w64-ucrt-x86_64-python mingw-w64-ucrt-x86_64-python-numpy mingw-w64-ucrt-x86_64-cc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-msmpi mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-boost mingw-w64-ucrt-x86_64-eigen3
-      - name: CI-Build
+          path-type: inherit
+          install: git mingw-w64-ucrt-x86_64-gcc-libs mingw-w64-ucrt-x86_64-boost-libs mingw-w64-ucrt-x86_64-libxml2 mingw-w64-ucrt-x86_64-python mingw-w64-ucrt-x86_64-python-numpy mingw-w64-ucrt-x86_64-cc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-msmpi mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-boost mingw-w64-ucrt-x86_64-eigen3 mingw-w64-ucrt-x86_64-crt mingw-w64-ucrt-x86_64-msmpi
+      - name: Make build directory
+        run: mkdir -p build
+      - name: Configure
+        working-directory: build
         run: |
-          mkdir build
-          cd build
-          export CXXFLAGS+=" -Wno-attributes"
-          cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DPRECICE_BUILD_TOOLS=ON -DBUILD_SHARED_LIBS=ON -DBUILD_TESTING=OFF -DPRECICE_FEATURE_PETSC_MAPPING=OFF -DPRECICE_FEATURE_PYTHON_ACTIONS=OFF -DPRECICE_BUILD_TOOLS=OFF -DPRECICE_BUILD_UNITY=OFF ..
-          cmake --build . -j $(nproc)
-          
+          cmake -DPRECICE_FEATURE_PETSC_MAPPING=OFF -DPRECICE_FEATURE_PYTHON_ACTIONS=OFF ..
+      - name: Build
+        working-directory: build
+        run: |
+          cmake --build .
+      - name: Test
+        working-directory: build
+        run: |
+          # Allow each test to run twice to iron out sporadic MPI failures
+          ctest -j --repeat until-pass:2
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: debugdump
+          path: build/
