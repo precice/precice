@@ -38,6 +38,7 @@ jobs:
       CMAKE_BUILD_TYPE: ${{ matrix.TYPE }}
       CMAKE_GENERATOR: Ninja
       CTEST_OUTPUT_ON_FAILURE: True
+      CXXFLAGS: -Wa,-mbig-obj
     steps:
       - name: Install MS-MPI
         run: |
