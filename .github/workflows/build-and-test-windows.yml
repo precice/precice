@@ -55,6 +55,8 @@ jobs:
           update: true
           path-type: inherit
           install: git mingw-w64-ucrt-x86_64-gcc-libs mingw-w64-ucrt-x86_64-boost-libs mingw-w64-ucrt-x86_64-libxml2 mingw-w64-ucrt-x86_64-python mingw-w64-ucrt-x86_64-python-numpy mingw-w64-ucrt-x86_64-cc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-msmpi mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-boost mingw-w64-ucrt-x86_64-eigen3 mingw-w64-ucrt-x86_64-crt mingw-w64-ucrt-x86_64-msmpi
+      - name: GCC
+        run: gcc --help=debug-output
       - uses: actions/checkout@v3
       - name: Make build directory
         run: mkdir -p build
