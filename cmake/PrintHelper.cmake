@@ -47,11 +47,18 @@ endfunction(print_section)
 function(print_configuration)
   cmake_parse_arguments(PARSE_ARGV 0 PRINT_CONFIG "" "" "ADDITIONAL")
   print_section("CONFIGURATION")
-  string(TOUPPER "${CMAKE_BUILD_TYPE}" _upper_build_type)
   print_variables( VARS
     "CMAKE_VERSION;CMake version"
     "PROJECT_VERSION;Library version to build"
-    "CMAKE_BUILD_TYPE;Build configuration"
+  )
+
+  if (CMAKE_CONFIGURATION_TYPES)
+    print_variables( VARS "CMAKE_CONFIGURATION_TYPES;Build configurations")
+  else()
+    print_variables( VARS "CMAKE_BUILD_TYPE;Build configuration")
+  endif()
+
+  print_variables( VARS
     "BUILD_SHARED_LIBS;Build shared libraries"
     "CMAKE_SYSTEM;Target system"
     "CMAKE_HOST_SYSTEM;Host system"
@@ -63,8 +70,18 @@ function(print_configuration)
     "CMAKE_CXX_COMPILER_ID;CXX compiler ID"
     "CMAKE_CXX_COMPILER_VERSION;CXX compiler version"
     "CMAKE_CXX_FLAGS;CXX compiler flags"
-    "CMAKE_CXX_FLAGS_${_upper_build_type};CXX ${CMAKE_BUILD_TYPE} compiler flags"
     )
+
+  if (CMAKE_CONFIGURATION_TYPES)
+    foreach(type IN LISTS CMAKE_CONFIGURATION_TYPES)
+      string(TOUPPER "${type}" _upper_build_type)
+      print_variables( VARS "CMAKE_CXX_FLAGS_${_upper_build_type};CXX ${type} compiler flags")
+    endforeach()
+  else()
+    string(TOUPPER "${CMAKE_BUILD_TYPE}" _upper_build_type)
+    print_variables( VARS "CMAKE_CXX_FLAGS_${_upper_build_type};CXX ${CMAKE_BUILD_TYPE} compiler flags")
+  endif()
+
   if(CMAKE_VERSION VERSION_LESS 3.29)
     print_variables(VARS "CMAKE_LINKER;CXX linker")
   else()

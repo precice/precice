@@ -45,8 +45,8 @@ endif()
 # Setup Options
 #
 
-if(NOT CMAKE_BUILD_TYPE)
-  message(WARNING "You did not specify a CMAKE_BUILD_TYPE.
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+  message(WARNING "You did not specify a CMAKE_BUILD_TYPE in a single configuration build.
 
   We will assume you asked for a Debug build.")
   set(CMAKE_BUILD_TYPE Debug CACHE STRING "The type of this build" FORCE)
