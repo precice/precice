@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(testSVDFactorization)
   singleValues(1) = 3.;
 
   // prepare preConditioner to be used to construct a SVD factorization class
-  auto prec(std::make_shared<impl::ConstantPreconditioner>(factors));
+  auto prec(std::make_shared<ConstantPreconditioner>(factors));
 
   // prepare matrix operation to be used in SVD update
   ParallelMatrixOperations matOperation;
