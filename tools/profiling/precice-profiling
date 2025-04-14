@@ -2,7 +2,7 @@
 
 # Import the fastest jsons library available
 try:
-    import ujson as json
+    import orjson as json
 except ImportError:
     try:
         import simplejson as json
