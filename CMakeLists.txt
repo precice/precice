@@ -618,7 +618,7 @@ IF (BUILD_TESTING)
       )
     # Add integration tests from tests/ sources to a single unity group
     get_target_property(_testprecice_sources testprecice SOURCES)
-    set(_skip_unity acceleration math com partition)
+    set(_skip_unity acceleration com partition)
     foreach(SOURCE_FILE IN LISTS _testprecice_sources)
       if(SOURCE_FILE MATCHES "^src/([a-z0-9]+)/tests?/")
         if(NOT ( CMAKE_MATCH_1 IN_LIST _skip_unity))
