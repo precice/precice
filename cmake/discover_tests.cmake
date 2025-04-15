@@ -46,11 +46,15 @@ function(add_test NAME RANKS)
     list(JOIN labels "\;" labels)
   endif()
 
+  list(APPEND test_env OMP_NUM_THREADS=2 OMP_PROC_BIND=false)
   if(RANKS STREQUAL "1")
     add_command(add_test
       "[=[precice.${NAME}]=]"
       ${_TEST_EXECUTABLE} "--run_test=${NAME}" "--log_level=message"
     )
+    if(PRECICE_MPI_VERSION MATCHES "Intel")
+      list(APPEND test_env I_MPI_FABRIC=shm)
+    endif()
   else()
     # --map-by=:OVERSUBSCRIBE works for OpenMPI(4+5) and MPICH, but not for Intel which doesn't need a flag
     set(_oversubscribe_FLAG "--map-by;:OVERSUBSCRIBE")
@@ -71,11 +75,10 @@ function(add_test NAME RANKS)
     )
   endif()
 
-
   add_command(set_tests_properties
     "[=[precice.${NAME}]=]"
     PROPERTIES
-    ENVIRONMENT "OMP_NUM_THREADS=2\;OMP_PROC_BIND=false"
+    ENVIRONMENT "${test_env}"
     TIMEOUT "30"
     WORKING_DIRECTORY "${test_dir}"
     LABELS "${labels}"
