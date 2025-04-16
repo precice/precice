@@ -1048,12 +1048,17 @@ void CouplingSchemeConfiguration::addDataToBeExchanged(
         from, meshName, to);
 
     const bool exchangeSubsteps = exchange.exchangeSubsteps;
+    // Additional flag for direct access with write data:
+    // For the  direct access is enabled
+    const auto &fromParticipant  = _participantConfig->getParticipant(from);
+    const bool  directAccessData = fromParticipant->isDirectAccessAllowed(exchange.mesh->getName()) &&
+                                  fromParticipant->isDataWrite(exchange.mesh->getName(), exchange.data->getName());
 
     if (from == accessor) {
-      scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps);
+      scheme.addDataToSend(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps, directAccessData);
     } else if (to == accessor) {
       checkSubstepExchangeWaveformDegree(exchange);
-      scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps);
+      scheme.addDataToReceive(exchange.data, exchange.mesh, requiresInitialization, exchangeSubsteps, directAccessData);
     } else {
       PRECICE_ASSERT(_config.type == VALUE_MULTI);
     }
