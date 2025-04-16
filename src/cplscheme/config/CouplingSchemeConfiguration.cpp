@@ -1097,11 +1097,18 @@ void CouplingSchemeConfiguration::addMultiDataToBeExchanged(
 }
 
 void CouplingSchemeConfiguration::checkIfDataIsExchanged(
-    DataID dataID) const
+    DataID dataID, std::string_view participant) const
 {
   const auto match = std::find_if(_config.exchanges.begin(),
                                   _config.exchanges.end(),
-                                  [dataID](const Config::Exchange &exchange) { return exchange.data->getID() == dataID; });
+                                  [dataID, participant](const Config::Exchange &exchange) {
+                                    // handle multi coupling
+                                    if (exchange.from != participant && exchange.to != participant) {
+                                      return false;
+                                    } else {
+                                      return exchange.data->getID() == dataID;
+                                    }
+                                  });
   if (match != _config.exchanges.end()) {
     return;
   }
@@ -1114,9 +1121,9 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
   }
 
   PRECICE_ERROR("You need to exchange every data that you use for convergence measures and/or the iteration acceleration. "
-                "Data \"{}\" is currently not exchanged over the respective mesh on which it is used for convergence measures and/or iteration acceleration. "
+                "Data \"{}\" is currently not exchanged over the respective mesh of participant \"{}\" on which it is used for convergence measures and/or iteration acceleration. "
                 "Please check the <exchange ... /> and <...-convergence-measure ... /> tags in the <coupling-scheme:... /> of your precice-config.xml.",
-                dataName);
+                dataName, participant);
 }
 
 void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(
@@ -1124,7 +1131,7 @@ void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(
     const std::string &first,
     const std::string &second) const
 {
-  checkIfDataIsExchanged(dataID);
+  checkIfDataIsExchanged(dataID, second);
   const auto match = std::find_if(_config.exchanges.begin(),
                                   _config.exchanges.end(),
                                   [dataID](const Config::Exchange &exchange) { return exchange.data->getID() == dataID; });
@@ -1158,7 +1165,7 @@ void CouplingSchemeConfiguration::addConvergenceMeasures(
 {
   for (auto &elem : convergenceMeasureDefinitions) {
     _meshConfig->addNeededMesh(participant, elem.meshName);
-    checkIfDataIsExchanged(elem.data->getID());
+    checkIfDataIsExchanged(elem.data->getID(), participant);
     scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure);
   }
 }
@@ -1188,7 +1195,7 @@ void CouplingSchemeConfiguration::setParallelAcceleration(
       _meshConfig->addNeededMesh(participant, neededMesh);
     }
     for (const DataID dataID : _accelerationConfig->getAcceleration()->getPrimaryDataIDs()) {
-      checkIfDataIsExchanged(dataID);
+      checkIfDataIsExchanged(dataID, participant);
     }
     scheme->setAcceleration(_accelerationConfig->getAcceleration());
 
