@@ -25,14 +25,28 @@ void fill_polynomial_matrix(std::shared_ptr<const gko::Executor> exec,
 void compute_offsets(const Kokkos::View<int *> src1, const Kokkos::View<int *> src2,
                      Kokkos::View<std::size_t *> dst, int N);
 
+// returns true, if successful
+bool compute_weights(const std::size_t                                                           nCenters,
+                     const std::size_t                                                           nWeights,
+                     const std::size_t                                                           nMeshVertices,
+                     const int                                                                   dim,
+                     Kokkos::View<int *, Kokkos::DefaultExecutionSpace>                          offsets,
+                     Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> centers,
+                     Kokkos::View<int *, Kokkos::DefaultExecutionSpace>                          globalIDs,
+                     Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> mesh,
+                     const CompactPolynomialC2                                                  &w,
+                     Kokkos::View<double *, Kokkos::DefaultExecutionSpace>                       normalizedWeights);
+
 template <typename EvalFunctionType, typename MemorySpace>
 void do_batched_assembly(int                                                              N,   // Number of local systems
                          int                                                              dim, // Dimension of points
                          EvalFunctionType                                                 f,
                          ::precice::mapping::RadialBasisParameters                        rbf_params,
                          const Kokkos::View<int *, MemorySpace>                          &inOffsets, // vertex offsets (length N+1)
-                         const Kokkos::View<double **, Kokkos::LayoutRight, MemorySpace> &inCoords,  // meshes
+                         const Kokkos::View<int *, MemorySpace>                          &globalInIDs,
+                         const Kokkos::View<double **, Kokkos::LayoutRight, MemorySpace> &inCoords, // meshes
                          const Kokkos::View<int *, MemorySpace>                          &targetOffsets,
+                         const Kokkos::View<int *, MemorySpace>                          &globalTargetIDs,
                          const Kokkos::View<double **, Kokkos::LayoutRight, MemorySpace> &targetCoords,
                          const Kokkos::View<size_t *, MemorySpace>                       &matrixOffsets,
                          Kokkos::View<double *, MemorySpace>                              matrices);
@@ -45,14 +59,18 @@ void do_batched_lu(
 
 template <typename MemorySpace>
 void do_batched_solve(
-    int                                        N,
+    std::size_t                                N,
+    std::size_t                                maxClusterSize,
     const Kokkos::View<int *, MemorySpace>    &rhsOffsets,
+    const Kokkos::View<int *, MemorySpace>    &globalRhsIDs,
     Kokkos::View<double *, MemorySpace>        rhs,
     const Kokkos::View<size_t *, MemorySpace> &matrixOffsets,
     const Kokkos::View<double *, MemorySpace> &matrices,
+    const Kokkos::View<double *, MemorySpace> &normalizedWeights,
     const Kokkos::View<size_t *, MemorySpace> &evalOffsets,
     const Kokkos::View<double *, MemorySpace> &evalMat,
     const Kokkos::View<int *, MemorySpace>    &outOffsets,
+    const Kokkos::View<int *, MemorySpace>    &globalOutIDs,
     Kokkos::View<double *, MemorySpace>        out);
 
 } // namespace kernel

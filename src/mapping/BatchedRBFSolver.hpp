@@ -38,17 +38,17 @@ public:
 
   /// Essentially an initialize of the solver: allocates device memory
   /// and computes the Cholesky decompositions
-  BatchedRBFSolver(RBF_T                                             basisFunction,
-                   mesh::PtrMesh                                     inMesh,
-                   mesh::PtrMesh                                     outMesh,
-                   const std::vector<SphericalVertexCluster<RBF_T>> &clusters,
-                   Polynomial                                        polynomial,
-                   MappingConfiguration::GinkgoParameter             ginkgoParameter);
+  BatchedRBFSolver(RBF_T                                 basisFunction,
+                   mesh::PtrMesh                         inMesh,
+                   mesh::PtrMesh                         outMesh,
+                   const std::vector<mesh::Vertex>      &centers,
+                   double                                clusterRadius,
+                   Polynomial                            polynomial,
+                   MappingConfiguration::GinkgoParameter ginkgoParameter);
 
   void clear();
 
-  void solveConsistent(const std::vector<SphericalVertexCluster<RBF_T>> &clusters,
-                       const Eigen::VectorXd &globalIn, Eigen::VectorXd &globalOut);
+  void solveConsistent(const time::Sample &globalIn, Eigen::VectorXd &globalOut);
 
 private:
   mutable precice::logging::Logger _log{"mapping::BatchedRBFSolver"};
@@ -57,6 +57,9 @@ private:
   // std::shared_ptr<gko::Executor>                     _hostExecutor = gko::ReferenceExecutor::create();
   Kokkos::View<int *, Kokkos::DefaultExecutionSpace> _inOffsets;
   Kokkos::View<int *, Kokkos::DefaultExecutionSpace> _outOffsets;
+
+  Kokkos::View<int *, Kokkos::DefaultExecutionSpace> _globalInIDs;
+  Kokkos::View<int *, Kokkos::DefaultExecutionSpace> _globalOutIDs;
 
   Kokkos::View<std::size_t *, Kokkos::DefaultExecutionSpace> _kernelOffsets;
   Kokkos::View<std::size_t *, Kokkos::DefaultExecutionSpace> _evaluationOffsets;
@@ -68,28 +71,34 @@ private:
   Kokkos::View<double *, Kokkos::DefaultExecutionSpace> _kernelMatrices;
 
   Kokkos::View<double *, Kokkos::DefaultExecutionSpace> _evalMatrices;
+  Kokkos::View<double *, Kokkos::DefaultExecutionSpace> _normalizedWeights;
 
   // Currently only scalar data
   Kokkos::View<double *, Kokkos::DefaultExecutionSpace> _inData;
-  Kokkos::View<double *>::HostMirror                    _inDataMirror;
+  // Kokkos::View<double *>::HostMirror                    _inDataMirror;
   Kokkos::View<double *, Kokkos::DefaultExecutionSpace> _outData;
-  Kokkos::View<double *>::HostMirror                    _outDataMirror;
+  // Kokkos::View<double *>::HostMirror                    _outDataMirror;
 
-  Polynomial _polynomial;
+  std::size_t       _maxInClusterSize;
+  std::size_t       _maxOutClusterSize;
+  Polynomial        _polynomial;
+  const std::size_t _nCluster;
   // MappingConfiguration::GinkgoParameter _ginkgoParameter;
 };
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T                                             basisFunction,
-                                                            mesh::PtrMesh                                     inMesh,
-                                                            mesh::PtrMesh                                     outMesh,
-                                                            const std::vector<SphericalVertexCluster<RBF_T>> &clusters,
-                                                            Polynomial                                        polynomial,
-                                                            MappingConfiguration::GinkgoParameter             ginkgoParameter)
-    : _polynomial(polynomial)
+BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T                                 basisFunction,
+                                                            mesh::PtrMesh                         inMesh,
+                                                            mesh::PtrMesh                         outMesh,
+                                                            const std::vector<mesh::Vertex>      &centers,
+                                                            double                                clusterRadius,
+                                                            Polynomial                            polynomial,
+                                                            MappingConfiguration::GinkgoParameter ginkgoParameter)
+    : _polynomial(polynomial), _nCluster(centers.size())
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && _polynomial == Polynomial::ON), "Not supported.");
+  PRECICE_CHECK(_polynomial != Polynomial::ON, "Not supported.");
+  // TODO: check the positive definiteness again later
   // PRECICE_CHECK(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), "Using a LU decomposition.");
   PRECICE_CHECK(!(inMesh->vertices().empty() || outMesh->vertices().empty()), "One of the meshes in the batched solvers is empty, which is invalid.");
   PRECICE_CHECK(inMesh->getDimensions() == outMesh->getDimensions(), "Incompatible dimensions passed to the batched solver.");
@@ -98,54 +107,98 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   // We have to initialize Kokkos and Ginkgo here, as the initialization call allocates memory
   // in the current setup, this will only initialize the device (and allocate memory) on the primary rank
   device::Ginkgo::initialize(ginkgoParameter.nThreads, ginkgoParameter.deviceId);
-  PRECICE_INFO("Using Batched solver on executor {}", ginkgoParameter.executor);
+  PRECICE_INFO("Using Batched solver on executor {} for {} PU-RBF clusters", ginkgoParameter.executor, centers.size());
   // _deviceExecutor = create_device_executor(ginkgoParameter.executor, ginkgoParameter.enableUnifiedMemory);
 #ifdef PRECICE_WITH_OPENMP
   if (ginkgoParameter.nThreads > 0 && ginkgoParameter.executor == "omp-executor")
     omp_set_num_threads(ginkgoParameter.nThreads);
 #endif
   eInit.stop();
-  precice::profiling::Event eOff1d("map.pou.gpu.compute1DOffsets");
-  // Step 1: compute offsets, which hold the range for each cluster
-  PRECICE_DEBUG("Computing mesh offsets");
-  const std::size_t nCluster = clusters.size();
 
-  // Initialize the view
-  _inOffsets  = Kokkos::View<int *>("inOffsets", nCluster + 1);
-  _outOffsets = Kokkos::View<int *>("outOffsets", nCluster + 1);
+// Assumption of the algorithm
+#ifndef NDEBUG
+  for (std::size_t i = 0; i < inMesh->nVertices(); ++i) {
+    PRECICE_ASSERT(inMesh->vertices()[i].getID() == i);
+  }
+  for (std::size_t i = 0; i < outMesh->nVertices(); ++i) {
+    PRECICE_ASSERT(outMesh->vertices()[i].getID() == i);
+  }
+#endif
+
+  precice::profiling::Event eNearestNeighbors("map.pou.gpu.queryVertices");
+
+  // Step 1:  Query n-nearest neighbors and compute offsets, which hold the range for each cluster
+
+  PRECICE_DEBUG("Computing cluster association on the GPU");
+
+  // Initialize the view for the GPU offsets
+  _inOffsets  = Kokkos::View<int *>("inOffsets", _nCluster + 1);
+  _outOffsets = Kokkos::View<int *>("outOffsets", _nCluster + 1);
 
   // we fill this view on the host side
   auto hostIn  = Kokkos::create_mirror_view(_inOffsets);
   auto hostOut = Kokkos::create_mirror_view(_outOffsets);
 
+  // for the global IDs, we use now a std::vector which we emplace
+  // we need at least contiguous memory here
+  // TODO: Check the performance of reallocations
+  std::vector<int> globalInIDs;
+  std::vector<int> globalOutIDs;
+
   // has to be a separate loop, as we first need to gather knowledge about
   // the shape for the meshes
-  hostIn(0)  = 0;
-  hostOut(0) = 0;
-  for (std::size_t i = 0; i < nCluster; ++i) {
-    hostIn(i + 1)  = hostIn(i) + clusters[i].getNumberOfInputVertices();
-    hostOut(i + 1) = hostOut(i) + clusters[i].getNumberOfOutputVertices();
+  hostIn(0)         = 0;
+  hostOut(0)        = 0;
+  _maxInClusterSize = _maxOutClusterSize = 0;
+  for (std::size_t i = 0; i < _nCluster; ++i) {
+    const auto &center = centers[i];
+
+    // First we handle the input side
+    auto inIDs        = inMesh->index().getVerticesInsideBox(center, clusterRadius);
+    _maxInClusterSize = std::max(_maxInClusterSize, inIDs.size());
+    hostIn(i + 1)     = hostIn(i) + inIDs.size();
+    std::copy(inIDs.begin(), inIDs.end(), std::back_inserter(globalInIDs));
+
+    // ... and the same for the output side
+    auto outIDs        = outMesh->index().getVerticesInsideBox(center, clusterRadius - math::NUMERICAL_ZERO_DIFFERENCE);
+    _maxOutClusterSize = std::max(_maxOutClusterSize, outIDs.size());
+    hostOut(i + 1)     = hostOut(i) + outIDs.size();
+    std::copy(outIDs.begin(), outIDs.end(), std::back_inserter(globalOutIDs));
   }
 
   // Copy offsets onto the device
   Kokkos::deep_copy(_inOffsets, hostIn);
   Kokkos::deep_copy(_outOffsets, hostOut);
 
+  // ... now that we have the sizes, we transfer the map onto the device
+  _globalInIDs  = Kokkos::View<int *>("globalInIDs", globalInIDs.size());
+  _globalOutIDs = Kokkos::View<int *>("globalOutIDs", globalOutIDs.size());
+
+  // Wrap in a view to perform deep copies further down
+  Kokkos::View<int *, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+      tmpIn(globalInIDs.data(), globalInIDs.size());
+  Kokkos::View<int *, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+      tmpOut(globalOutIDs.data(), globalOutIDs.size());
+
+  Kokkos::deep_copy(_globalInIDs, tmpIn);
+  Kokkos::deep_copy(_globalOutIDs, tmpOut);
+
   Kokkos::fence();
-  eOff1d.stop();
+  eNearestNeighbors.stop();
+
   precice::profiling::Event eOff2d("map.pou.gpu.compute2DOffsets");
 
   // Step 2: Compute the matrix offsets on the device
   PRECICE_DEBUG("Computing matrix offsets");
-  _kernelOffsets     = Kokkos::View<std::size_t *>("kernelOffsets", nCluster + 1);
-  _evaluationOffsets = Kokkos::View<std::size_t *>("evaluationOffsets", nCluster + 1);
+  _kernelOffsets     = Kokkos::View<std::size_t *>("kernelOffsets", _nCluster + 1);
+  _evaluationOffsets = Kokkos::View<std::size_t *>("evaluationOffsets", _nCluster + 1);
 
   Kokkos::deep_copy(_kernelOffsets, 0);
   Kokkos::deep_copy(_evaluationOffsets, 0);
 
   // We use a parallel scan for that
-  kernel::compute_offsets(_inOffsets, _inOffsets, _kernelOffsets, nCluster);
-  kernel::compute_offsets(_inOffsets, _outOffsets, _evaluationOffsets, nCluster);
+  kernel::compute_offsets(_inOffsets, _inOffsets, _kernelOffsets, _nCluster);
+  kernel::compute_offsets(_inOffsets, _outOffsets, _evaluationOffsets, _nCluster);
 
   Kokkos::fence();
   eOff2d.stop();
@@ -153,115 +206,118 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   // Step 3: Handle the mesh data structure and copy over to the device
   PRECICE_DEBUG("Computing mesh data on the device");
   const auto dim = inMesh->getDimensions();
-  _inMesh        = Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace>("inMesh", hostIn(nCluster), dim);
-  _outMesh       = Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace>("outMesh", hostOut(nCluster), dim);
+  _inMesh        = Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace>("inMesh", inMesh->nVertices(), dim);
+  _outMesh       = Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace>("outMesh", outMesh->nVertices(), dim);
 
   auto hostInMesh  = Kokkos::create_mirror_view(_inMesh);
   auto hostOutMesh = Kokkos::create_mirror_view(_outMesh);
 
-  Eigen::Index inIndex  = 0;
-  Eigen::Index outIndex = 0;
-  for (const auto &c : clusters) {
-    const Eigen::MatrixXd Q = c.getLocalPolynomialInputMatrix(inMesh);
-
-    for (int i = 0; i < Q.rows(); ++i, ++inIndex) {
-      for (int d = 0; d < dim; ++d) {
-        hostInMesh(inIndex, d) = Q(i, d + 1);
-      }
-    }
-
-    const Eigen::MatrixXd V = c.getLocalPolynomialOutputMatrix(outMesh);
-    PRECICE_ASSERT(Q.cols() == V.cols());
-
-    for (int i = 0; i < V.rows(); ++i, ++outIndex) {
-      for (int d = 0; d < dim; ++d) {
-        hostOutMesh(outIndex, d) = V(i, d + 1);
-      }
+  for (std::size_t i = 0; i < inMesh->nVertices(); ++i) {
+    const auto &v = inMesh->vertex(i);
+    for (int d = 0; d < dim; ++d) {
+      hostInMesh(i, d) = v.rawCoords()[d];
     }
   }
-
+  for (std::size_t i = 0; i < outMesh->nVertices(); ++i) {
+    const auto &v = outMesh->vertex(i);
+    for (int d = 0; d < dim; ++d) {
+      hostOutMesh(i, d) = v.rawCoords()[d];
+    }
+  }
   // Copy to device
   Kokkos::deep_copy(_inMesh, hostInMesh);
   Kokkos::deep_copy(_outMesh, hostOutMesh);
   Kokkos::fence();
   eMesh.stop();
+  {
+    precice::profiling::Event eWeights("map.pou.gpu.computeWeights");
+
+    // Step 1b: Compute the weights for each vertex
+    // we first need to transfer the center coordinates and the meshes onto the device
+    Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> centerMesh("centerMesh", _nCluster, dim);
+    auto                                                                        hostCenterMesh = Kokkos::create_mirror_view(centerMesh);
+    for (std::size_t i = 0; i < _nCluster; ++i) {
+      const auto &v = centers[i];
+      for (int d = 0; d < dim; ++d) {
+        hostCenterMesh(i, d) = v.rawCoords()[d];
+      }
+    }
+    Kokkos::deep_copy(centerMesh, hostCenterMesh);
+
+    _normalizedWeights = Kokkos::View<double *>("normalizedWeights", globalOutIDs.size());
+    CompactPolynomialC2 weightingFunction(clusterRadius);
+    bool                success = kernel::compute_weights(_nCluster, globalOutIDs.size(), outMesh->nVertices(), dim, _outOffsets, centerMesh, _globalOutIDs, _outMesh, weightingFunction, _normalizedWeights);
+    PRECICE_CHECK(success, "Clustering resulted in unassigned vertices for the output mesh \"{}\".", outMesh->getName());
+  }
+
   precice::profiling::Event eMatr("map.pou.gpu.assembleMatrices");
   // Step 4: Launch the parallel kernel to assemble the kernel matrices
   PRECICE_DEBUG("Assemble batched matrices");
   std::size_t unrolledSize   = 0;
-  auto        last_elem_view = Kokkos::subview(_kernelOffsets, nCluster);
+  auto        last_elem_view = Kokkos::subview(_kernelOffsets, _nCluster);
   Kokkos::deep_copy(unrolledSize, last_elem_view);
   _kernelMatrices = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("kernelMatrices", unrolledSize);
 
-  kernel::do_batched_assembly(nCluster, dim, basisFunction, basisFunction.getFunctionParameters(),
-                              _inOffsets, _inMesh, _inOffsets, _inMesh, _kernelOffsets, _kernelMatrices);
+  kernel::do_batched_assembly(_nCluster, dim, basisFunction, basisFunction.getFunctionParameters(),
+                              _inOffsets, _globalInIDs, _inMesh, _inOffsets, _globalInIDs, _inMesh, _kernelOffsets, _kernelMatrices);
 
   // The eval matrices ///////////////
   std::size_t evalSize        = 0;
-  auto        last_elem_view2 = Kokkos::subview(_evaluationOffsets, nCluster);
+  auto        last_elem_view2 = Kokkos::subview(_evaluationOffsets, _nCluster);
   Kokkos::deep_copy(evalSize, last_elem_view2);
   _evalMatrices = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("evalMatrices", evalSize);
 
-  kernel::do_batched_assembly(nCluster, dim, basisFunction, basisFunction.getFunctionParameters(),
-                              _inOffsets, _inMesh, _outOffsets, _outMesh, _evaluationOffsets, _evalMatrices);
+  kernel::do_batched_assembly(_nCluster, dim, basisFunction, basisFunction.getFunctionParameters(),
+                              _inOffsets, _globalInIDs, _inMesh, _outOffsets, _globalOutIDs, _outMesh, _evaluationOffsets, _evalMatrices);
 
   Kokkos::fence();
   eMatr.stop();
   precice::profiling::Event eLU("map.pou.gpu.compute.lu");
   // Step 5: Compute batched lu
   PRECICE_DEBUG("Compute batched lu");
-  kernel::do_batched_lu(nCluster, _kernelOffsets, _kernelMatrices);
+  kernel::do_batched_lu(_nCluster, _kernelOffsets, _kernelMatrices);
   Kokkos::fence();
   eLU.stop();
   precice::profiling::Event eAllo("map.pou.gpu.allocateData");
   // Step 6: Allocate memory for data transfer
   PRECICE_DEBUG("Allocate data containers for data transfer");
 
-  _inData        = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("inData", hostIn(nCluster));
-  _outData       = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("outData", hostOut(nCluster));
-  _inDataMirror  = Kokkos::create_mirror_view(_inData);
-  _outDataMirror = Kokkos::create_mirror_view(_outData);
+  _inData  = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("inData", inMesh->nVertices());
+  _outData = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("outData", outMesh->nVertices());
+  // _inDataMirror  = Kokkos::create_mirror_view(_inData);
+  // _outDataMirror = Kokkos::create_mirror_view(_outData);
   Kokkos::fence();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const std::vector<SphericalVertexCluster<RBF_T>> &clusters,
-                                                                const Eigen::VectorXd &globalIn, Eigen::VectorXd &globalOut)
+void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Sample &globalIn, Eigen::VectorXd &globalOut)
 {
-  precice::profiling::Event e("map.pou.gpu.preprocess");
-  // Step 1: Polynomial solver + prepare RHS for matrices
-  int globalIndex = 0;
-  for (std::size_t c = 0; c < clusters.size(); ++c) {
-    globalIndex += clusters[c].preprocess(globalIn, globalOut, _polynomial, globalIndex, _inDataMirror);
-  }
-  e.stop();
+  PRECICE_ASSERT(globalIn.dataDims == 1, "Not implemented.");
+  Kokkos::View<const double *, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+      inView(globalIn.values.data(), globalIn.values.size());
 
   // Step 2: Copy over
   precice::profiling::Event e1("map.pou.gpu.copyHostToDevice");
-  Kokkos::deep_copy(_inData, _inDataMirror);
+  Kokkos::deep_copy(_inData, inView);
 
   Kokkos::fence();
   e1.stop();
 
   // Step 3: Launch kernel
   precice::profiling::Event e2("map.pou.gpu.BatchedSolve");
-  kernel::do_batched_solve(clusters.size(),
-                           _inOffsets, _inData, _kernelOffsets, _kernelMatrices,
-                           _evaluationOffsets, _evalMatrices, _outOffsets, _outData);
+  kernel::do_batched_solve(_nCluster, std::max(_maxInClusterSize, _maxOutClusterSize),
+                           _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
+                           _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData);
 
   Kokkos::fence();
   e2.stop();
   precice::profiling::Event e3("map.pou.gpu.copyDeviceToHost");
+  Kokkos::View<double *, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+      outView(globalOut.data(), globalOut.size());
 
-  Kokkos::deep_copy(_outDataMirror, _outData);
+  Kokkos::deep_copy(outView, _outData);
   Kokkos::fence();
   e3.stop();
-  precice::profiling::Event e4("map.pou.gpu.postprocess");
-
-  globalIndex = 0;
-  for (std::size_t c = 0; c < clusters.size(); ++c) {
-    globalIndex += clusters[c].localToGlobal(globalOut, globalIndex, _outDataMirror);
-  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
