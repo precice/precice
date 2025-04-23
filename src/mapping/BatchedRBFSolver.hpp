@@ -68,6 +68,10 @@ private:
   Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> _inMesh;
   Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> _outMesh;
 
+  Kokkos::View<double *, Kokkos::DefaultExecutionSpace> _qrMatrix; // flat view of (nCluster x verticesPerCluster_i x (dim + 1) = nCluster x verticesPerCluster_i x polyParams)
+  Kokkos::View<double *, Kokkos::DefaultExecutionSpace> _qrTau;    // flat view of Householder tau (nCluster x (dim + 1) = nCluster x polyParams)
+  Kokkos::View<int *, Kokkos::DefaultExecutionSpace>    _qrP;      // flat view of Permutation and rank (nCluster x (dim + 2) = nCluster x (polyParams + rank))
+
   Kokkos::View<double *, Kokkos::DefaultExecutionSpace> _kernelMatrices;
 
   Kokkos::View<double *, Kokkos::DefaultExecutionSpace> _evalMatrices;
@@ -232,7 +236,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   {
     precice::profiling::Event eWeights("map.pou.gpu.computeWeights");
 
-    // Step 1b: Compute the weights for each vertex
+    // Step 4: Compute the weights for each vertex
     // we first need to transfer the center coordinates and the meshes onto the device
     Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> centerMesh("centerMesh", _nCluster, dim);
     auto                                                                        hostCenterMesh = Kokkos::create_mirror_view(centerMesh);
@@ -250,8 +254,15 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
     PRECICE_CHECK(success, "Clustering resulted in unassigned vertices for the output mesh \"{}\".", outMesh->getName());
   }
 
+  if (_polynomial == Polynomial::SEPARATE) {
+    precice::profiling::Event ePoly("map.pou.gpu.computePolynomials");
+    _qrMatrix = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("qrMatrix", globalInIDs.size() * (dim + 1)); // = nCluster x verticesPerCluster_i x polyParams
+    _qrTau    = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("qrTau", _nCluster * (dim + 1));             // = nCluster x polyParams
+    _qrP      = Kokkos::View<int *, Kokkos::DefaultExecutionSpace>("qrP", _nCluster * (dim + 2));                  //  = nCluster x (polyParams + rank)
+    kernel::do_batched_qr(_nCluster, dim, _maxInClusterSize, _inOffsets, _globalInIDs, _inMesh, _qrMatrix, _qrTau, _qrP);
+  }
   precice::profiling::Event eMatr("map.pou.gpu.assembleMatrices");
-  // Step 4: Launch the parallel kernel to assemble the kernel matrices
+  // Step 6: Launch the parallel kernel to assemble the kernel matrices
   PRECICE_DEBUG("Assemble batched matrices");
   std::size_t unrolledSize   = 0;
   auto        last_elem_view = Kokkos::subview(_kernelOffsets, _nCluster);
@@ -273,13 +284,13 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   Kokkos::fence();
   eMatr.stop();
   precice::profiling::Event eLU("map.pou.gpu.compute.lu");
-  // Step 5: Compute batched lu
+  // Step 7: Compute batched lu
   PRECICE_DEBUG("Compute batched lu");
   kernel::do_batched_lu(_nCluster, _kernelOffsets, _kernelMatrices);
   Kokkos::fence();
   eLU.stop();
   precice::profiling::Event eAllo("map.pou.gpu.allocateData");
-  // Step 6: Allocate memory for data transfer
+  // Step 8: Allocate memory for data transfer
   PRECICE_DEBUG("Allocate data containers for data transfer");
 
   _inData  = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("inData", inMesh->nVertices());

@@ -52,6 +52,17 @@ void do_batched_assembly(int                                                    
                          Kokkos::View<double *, MemorySpace>                              matrices);
 
 template <typename MemorySpace>
+void do_batched_qr(std::size_t                                               nCluster,
+                   int                                                       dim,
+                   int                                                       maxClusterSize,
+                   Kokkos::View<int *, MemorySpace>                          inOffsets,
+                   Kokkos::View<int *, MemorySpace>                          globalInIDs,
+                   Kokkos::View<double **, Kokkos::LayoutRight, MemorySpace> inMesh,
+                   Kokkos::View<double *, MemorySpace>                       qrMatrix,
+                   Kokkos::View<double *, MemorySpace>                       qrTau,
+                   Kokkos::View<int *, MemorySpace>                          qrP);
+
+template <typename MemorySpace>
 void do_batched_lu(
     int                                        N,
     const Kokkos::View<size_t *, MemorySpace> &matrixOffsets,

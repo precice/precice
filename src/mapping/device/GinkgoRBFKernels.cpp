@@ -5,8 +5,10 @@
 #include <KokkosBatched_SolveLU_Decl.hpp>
 #include <KokkosBatched_Util.hpp>
 // #include <KokkosBatched_Gemv_Decl.hpp>
+#include <KokkosBatched_QR_WithColumnPivoting_Decl.hpp>
 #include <KokkosBatched_Trsv_Decl.hpp>
 #include <KokkosBlas2_gemv.hpp>
+
 #include "mapping/device/GinkgoRBFKernels.hpp"
 
 #include "mapping/impl/BasisFunctions.hpp"
@@ -344,6 +346,81 @@ bool compute_weights(const std::size_t                                          
       });
 
   return true;
+}
+
+template <typename MemorySpace>
+void do_batched_qr(std::size_t                                               nCluster,
+                   int                                                       dim,
+                   int                                                       maxClusterSize,
+                   Kokkos::View<int *, MemorySpace>                          offsets,
+                   Kokkos::View<int *, MemorySpace>                          globalIDs,
+                   Kokkos::View<double **, Kokkos::LayoutRight, MemorySpace> mesh,
+                   Kokkos::View<double *, MemorySpace>                       qrMatrix,
+                   Kokkos::View<double *, MemorySpace>                       qrTau,
+                   Kokkos::View<int *, MemorySpace>                          qrP)
+{
+  using TeamPolicy  = Kokkos::TeamPolicy<MemorySpace>;
+  using MemberType  = typename TeamPolicy::member_type;
+  using ScratchView = Kokkos::View<double *, typename MemorySpace::scratch_memory_space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+
+  // First, we fill the entire matrix with ones such that we don't need to fill the 1 separately later
+  Kokkos::deep_copy(qrMatrix, 1.0);
+  Kokkos::fence();
+
+  // Required as workspace for the pivoted QR, see code comment
+  // workspace (norm and householder application, 2 * max(m,n) is needed)
+  auto scratchSize = ScratchView::shmem_size(2 * maxClusterSize);
+  Kokkos::parallel_for("do_batched_qr", TeamPolicy(nCluster, Kokkos::AUTO).set_scratch_size(
+                                            /* level = */ 0, Kokkos::PerTeam(scratchSize)),
+                       KOKKOS_LAMBDA(const MemberType &team) {
+                         // Step 1: define some pointers we need
+                         const int batch = team.league_rank();
+
+                         // For the batch
+                         const int  begin              = offsets(batch);
+                         const auto verticesPerCluster = offsets(batch + 1) - begin; // the local cluster size
+                         const int  matrixCols         = dim + 1;                    // our polyParams
+                         const int  matrixBegin        = begin * matrixCols;
+
+                         // Step 2: fill the polynomial matrix
+                         Kokkos::View<double **, MemorySpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+                             qr(&qrMatrix(matrixBegin), verticesPerCluster, matrixCols);
+
+                         Kokkos::parallel_for(
+                             Kokkos::TeamThreadRange(team, verticesPerCluster),
+                             [&](int i) {
+                               auto globalID = globalIDs(i + begin);
+                               // the 1 is already set in the last column
+                               for (int d = 0; d < dim; ++d) {
+                                 qr(i, d) = mesh(globalID, d);
+                               }
+                             });
+
+                         // Step 3: Compute the QR decomposition
+                         const int tauBegin = batch * matrixCols;
+                         // the 1 here is for the local rank and has nothing to do with the permutation itself
+                         const int PBegin = batch * (matrixCols + 1);
+
+                         Kokkos::View<double *, MemorySpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+                             tau(&qrTau(tauBegin), matrixCols);
+
+                         Kokkos::View<int *, MemorySpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
+                             P(&qrP(PBegin), matrixCols);
+
+                         // Essentially P.end() - 1 =  matrixCols + 1 - 1
+                         int &rank = qrP(PBegin + matrixCols);
+
+                         // The scratch memory (shared memory for the device)
+                         ScratchView work(team.team_scratch(0), 2 * verticesPerCluster);
+
+                         //  auto b   = Kokkos::subview(work, std::pair<int, int>(0, n));
+                         //  auto res = Kokkos::subview(work, std::pair<int, int>(n, n + m));
+                         KokkosBatched::TeamVectorQR_WithColumnPivoting<MemberType,
+                                                                        KokkosBatched::Algo::QR::Unblocked>::invoke(team, qr, tau,
+                                                                                                                    P, work,
+                                                                                                                    rank);
+                         // parallel_for
+                       });
 }
 
 void compute_offsets(const Kokkos::View<int *> src1, const Kokkos::View<int *> src2,
