@@ -422,6 +422,20 @@ void do_batched_qr(std::size_t                                               nCl
                                                                         KokkosBatched::Algo::QR::Unblocked>::invoke(team, qr, tau,
                                                                                                                     P, work,
                                                                                                                     rank);
+                         // We have to define our own criterion for the rank, as the one provided is not stable enough
+                         // |pivot|⩽threshold×|maxpivot|
+                         // A pivot will be considered nonzero if its absolute value is strictly greater than |pivot|⩽threshold×|maxpivot| where maxpivot is the biggest pivot.
+                         double threshold = 1e-6;
+                         if (team.team_rank() == 0) {
+                           const double maxp = Kokkos::abs(qr(0, 0)); // largest pivot
+                           int          r    = 0;
+                           for (int i = 0; i < matrixCols; ++i) {
+                             if (Kokkos::abs(qr(i, i)) > (threshold * maxp)) {
+                               ++r;
+                             }
+                           }
+                           rank = Kokkos::min(r, rank);
+                         }
                          // parallel_for
                        });
 }
@@ -504,11 +518,7 @@ void do_qr_solve(std::size_t                                               nClus
                          auto in_r = Kokkos::subview(in, std::pair<int, int>(0, rank));
                          auto R    = Kokkos::subview(qr, std::pair<int, int>(0, rank), std::pair<int, int>(0, rank));
 
-                         // Steo 4b: zero out the entries we don't need anymore
-                         Kokkos::parallel_for(
-                             Kokkos::TeamThreadRange(team, rank, inSize), [&](int i) { in(i) = 0; });
-
-                         // Step 4c: Solve triangular solve R z = y
+                         // Step 4b: Solve triangular solve R z = y
                          KokkosBatched::Trsv<
                              MemberType,
                              KokkosBatched::Uplo::Upper,
@@ -519,6 +529,12 @@ void do_qr_solve(std::size_t                                               nClus
                          team.team_barrier();
 
                          auto res = Kokkos::subview(in, std::pair<int, int>(0, matrixCols));
+
+                         // Steo 4c: zero out the entries which are not within the rank region
+                         Kokkos::parallel_for(
+                             Kokkos::TeamThreadRange(team, rank, matrixCols), [&](int i) { res(i) = 0; });
+
+                         team.team_barrier();
 
                          // Step 4d: Apply pivoting x = P z
                          KokkosBatched::TeamVectorApplyPivot<MemberType,
