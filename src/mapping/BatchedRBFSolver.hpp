@@ -87,6 +87,7 @@ private:
   std::size_t       _maxOutClusterSize;
   Polynomial        _polynomial;
   const std::size_t _nCluster;
+  const int         _dim; // Mesh dimension
   // MappingConfiguration::GinkgoParameter _ginkgoParameter;
 };
 
@@ -98,7 +99,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
                                                             double                                clusterRadius,
                                                             Polynomial                            polynomial,
                                                             MappingConfiguration::GinkgoParameter ginkgoParameter)
-    : _polynomial(polynomial), _nCluster(centers.size())
+    : _polynomial(polynomial), _nCluster(centers.size()), _dim(inMesh->getDimensions())
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_polynomial != Polynomial::ON, "Not supported.");
@@ -209,22 +210,22 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   precice::profiling::Event eMesh("map.pou.gpu.copyMeshes");
   // Step 3: Handle the mesh data structure and copy over to the device
   PRECICE_DEBUG("Computing mesh data on the device");
-  const auto dim = inMesh->getDimensions();
-  _inMesh        = Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace>("inMesh", inMesh->nVertices(), dim);
-  _outMesh       = Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace>("outMesh", outMesh->nVertices(), dim);
+
+  _inMesh  = Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace>("inMesh", inMesh->nVertices(), _dim);
+  _outMesh = Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace>("outMesh", outMesh->nVertices(), _dim);
 
   auto hostInMesh  = Kokkos::create_mirror_view(_inMesh);
   auto hostOutMesh = Kokkos::create_mirror_view(_outMesh);
 
   for (std::size_t i = 0; i < inMesh->nVertices(); ++i) {
     const auto &v = inMesh->vertex(i);
-    for (int d = 0; d < dim; ++d) {
+    for (int d = 0; d < _dim; ++d) {
       hostInMesh(i, d) = v.rawCoords()[d];
     }
   }
   for (std::size_t i = 0; i < outMesh->nVertices(); ++i) {
     const auto &v = outMesh->vertex(i);
-    for (int d = 0; d < dim; ++d) {
+    for (int d = 0; d < _dim; ++d) {
       hostOutMesh(i, d) = v.rawCoords()[d];
     }
   }
@@ -238,11 +239,11 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
 
     // Step 4: Compute the weights for each vertex
     // we first need to transfer the center coordinates and the meshes onto the device
-    Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> centerMesh("centerMesh", _nCluster, dim);
+    Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> centerMesh("centerMesh", _nCluster, _dim);
     auto                                                                        hostCenterMesh = Kokkos::create_mirror_view(centerMesh);
     for (std::size_t i = 0; i < _nCluster; ++i) {
       const auto &v = centers[i];
-      for (int d = 0; d < dim; ++d) {
+      for (int d = 0; d < _dim; ++d) {
         hostCenterMesh(i, d) = v.rawCoords()[d];
       }
     }
@@ -250,16 +251,16 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
 
     _normalizedWeights = Kokkos::View<double *>("normalizedWeights", globalOutIDs.size());
     CompactPolynomialC2 weightingFunction(clusterRadius);
-    bool                success = kernel::compute_weights(_nCluster, globalOutIDs.size(), outMesh->nVertices(), dim, _outOffsets, centerMesh, _globalOutIDs, _outMesh, weightingFunction, _normalizedWeights);
+    bool                success = kernel::compute_weights(_nCluster, globalOutIDs.size(), outMesh->nVertices(), _dim, _outOffsets, centerMesh, _globalOutIDs, _outMesh, weightingFunction, _normalizedWeights);
     PRECICE_CHECK(success, "Clustering resulted in unassigned vertices for the output mesh \"{}\".", outMesh->getName());
   }
 
   if (_polynomial == Polynomial::SEPARATE) {
     precice::profiling::Event ePoly("map.pou.gpu.computePolynomials");
-    _qrMatrix = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("qrMatrix", globalInIDs.size() * (dim + 1)); // = nCluster x verticesPerCluster_i x polyParams
-    _qrTau    = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("qrTau", _nCluster * (dim + 1));             // = nCluster x polyParams
-    _qrP      = Kokkos::View<int *, Kokkos::DefaultExecutionSpace>("qrP", _nCluster * (dim + 2));                  //  = nCluster x (polyParams + rank)
-    kernel::do_batched_qr(_nCluster, dim, _maxInClusterSize, _inOffsets, _globalInIDs, _inMesh, _qrMatrix, _qrTau, _qrP);
+    _qrMatrix = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("qrMatrix", globalInIDs.size() * (_dim + 1)); // = nCluster x verticesPerCluster_i x polyParams
+    _qrTau    = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("qrTau", _nCluster * (_dim + 1));             // = nCluster x polyParams
+    _qrP      = Kokkos::View<int *, Kokkos::DefaultExecutionSpace>("qrP", _nCluster * (_dim + 2));                  //  = nCluster x (polyParams + rank)
+    kernel::do_batched_qr(_nCluster, _dim, _maxInClusterSize, _inOffsets, _globalInIDs, _inMesh, _qrMatrix, _qrTau, _qrP);
   }
   precice::profiling::Event eMatr("map.pou.gpu.assembleMatrices");
   // Step 6: Launch the parallel kernel to assemble the kernel matrices
@@ -269,7 +270,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   Kokkos::deep_copy(unrolledSize, last_elem_view);
   _kernelMatrices = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("kernelMatrices", unrolledSize);
 
-  kernel::do_batched_assembly(_nCluster, dim, basisFunction, basisFunction.getFunctionParameters(),
+  kernel::do_batched_assembly(_nCluster, _dim, basisFunction, basisFunction.getFunctionParameters(),
                               _inOffsets, _globalInIDs, _inMesh, _inOffsets, _globalInIDs, _inMesh, _kernelOffsets, _kernelMatrices);
 
   // The eval matrices ///////////////
@@ -278,7 +279,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   Kokkos::deep_copy(evalSize, last_elem_view2);
   _evalMatrices = Kokkos::View<double *, Kokkos::DefaultExecutionSpace>("evalMatrices", evalSize);
 
-  kernel::do_batched_assembly(_nCluster, dim, basisFunction, basisFunction.getFunctionParameters(),
+  kernel::do_batched_assembly(_nCluster, _dim, basisFunction, basisFunction.getFunctionParameters(),
                               _inOffsets, _globalInIDs, _inMesh, _outOffsets, _globalOutIDs, _outMesh, _evaluationOffsets, _evalMatrices);
 
   Kokkos::fence();
