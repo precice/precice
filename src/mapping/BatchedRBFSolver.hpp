@@ -308,28 +308,39 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Samp
   Kokkos::View<const double *, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       inView(globalIn.values.data(), globalIn.values.size());
 
-  // Step 2: Copy over
+  // Step 1: Copy over
   precice::profiling::Event e1("map.pou.gpu.copyHostToDevice");
   Kokkos::deep_copy(_inData, inView);
+  // Reset output data
+  Kokkos::deep_copy(_outData, 0.0);
 
   Kokkos::fence();
   e1.stop();
 
+  // Step 2: solve polynomial as preprocessing step
+  if (_polynomial == Polynomial::SEPARATE) {
+    precice::profiling::Event e2("map.pou.gpu.BatchedPolynomialSolve");
+
+    kernel::do_qr_solve(_nCluster, _dim, _maxInClusterSize,
+                        _inOffsets, _globalInIDs, _inData, _inMesh, _qrMatrix, _qrTau, _qrP,
+                        _normalizedWeights, _outOffsets, _globalOutIDs, _outData, _outMesh);
+  }
+
   // Step 3: Launch kernel
-  precice::profiling::Event e2("map.pou.gpu.BatchedSolve");
+  precice::profiling::Event e3("map.pou.gpu.BatchedSolve");
   kernel::do_batched_solve(_nCluster, std::max(_maxInClusterSize, _maxOutClusterSize),
                            _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
                            _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData);
 
   Kokkos::fence();
-  e2.stop();
-  precice::profiling::Event e3("map.pou.gpu.copyDeviceToHost");
+  e3.stop();
+  precice::profiling::Event e4("map.pou.gpu.copyDeviceToHost");
   Kokkos::View<double *, Kokkos::HostSpace, Kokkos::MemoryTraits<Kokkos::Unmanaged>>
       outView(globalOut.data(), globalOut.size());
 
   Kokkos::deep_copy(outView, _outData);
   Kokkos::fence();
-  e3.stop();
+  e4.stop();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

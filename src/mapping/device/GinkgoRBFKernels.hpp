@@ -63,6 +63,23 @@ void do_batched_qr(std::size_t                                               nCl
                    Kokkos::View<int *, MemorySpace>                          qrP);
 
 template <typename MemorySpace>
+void do_qr_solve(std::size_t                                               nCluster,
+                 int                                                       dim,
+                 int                                                       maxInClusterSize,
+                 Kokkos::View<int *, MemorySpace>                          inOffsets,
+                 Kokkos::View<int *, MemorySpace>                          globalInIDs,
+                 Kokkos::View<double *, MemorySpace>                       inData,
+                 Kokkos::View<double **, Kokkos::LayoutRight, MemorySpace> inMesh,
+                 Kokkos::View<double *, MemorySpace>                       qrMatrix,
+                 Kokkos::View<double *, MemorySpace>                       qrTau,
+                 Kokkos::View<int *, MemorySpace>                          qrP,
+                 const Kokkos::View<double *, MemorySpace>                 weights,
+                 Kokkos::View<int *, MemorySpace>                          outOffsets,
+                 Kokkos::View<int *, MemorySpace>                          globalOutIDs,
+                 Kokkos::View<double *, MemorySpace>                       outData,
+                 Kokkos::View<double **, Kokkos::LayoutRight, MemorySpace> outMesh);
+
+template <typename MemorySpace>
 void do_batched_lu(
     int                                        N,
     const Kokkos::View<size_t *, MemorySpace> &matrixOffsets,
