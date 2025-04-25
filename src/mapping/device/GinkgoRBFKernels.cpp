@@ -781,10 +781,17 @@ KOKKOS_INLINE_FUNCTION void do_batched_solve(
   policy.set_scratch_size(
       /* level = */ 1, Kokkos::PerTeam(outBytes));
   Kokkos::parallel_for("do_batched_solve", policy, KOKKOS_LAMBDA(const MemberType &team) {
-    const int batch = team.league_rank();
+    // Required for correct capturing, as these variables are only conditionally used further down
+    (void) dim;
+    (void) qrMatrix;
+    (void) qrTau;
+    (void) qrP;
+    (void) inMesh;
+    (void) outMesh;
 
     // Step 1: Define some pointers
     // TODO: We could potentially remove the rhsOffsets here and use a sqrt instead
+    const int  batch    = team.league_rank();
     const int  inBegin  = rhsOffsets(batch);
     const auto inSize   = rhsOffsets(batch + 1) - inBegin;
     const int  outBegin = outOffsets(batch);
