@@ -770,7 +770,9 @@ void do_batched_solve(
   using ScratchMatrix = std::conditional_t<polynomial, ScratchView4d, ScratchView1d>;
 
   // Once for indata and once for outdata
-  auto       inBytes  = ScratchVector::shmem_size(maxInClusterSize);
+  // We need at least four entries for the polynomial, seems unlikely for maxInClusterSize to be lower
+  // but we should be certain
+  auto       inBytes  = ScratchVector::shmem_size(std::max(static_cast<std::size_t>(4), maxInClusterSize));
   auto       outBytes = ScratchVector::shmem_size(maxOutClusterSize);
   TeamPolicy policy(N, Kokkos::AUTO);
 
@@ -804,8 +806,8 @@ void do_batched_solve(
 
     // Step 2: Allocate shared memory for the team and fill it with the inData of this cluster
     // The scratch memory (shared memory for the device)
-    ScratchMatrix work(team.team_scratch(0), inSize);
-    auto          in = Kokkos::subview(work, Kokkos::ALL, 0);
+    ScratchMatrix work(team.team_scratch(0), Kokkos::max(4, inSize));
+    auto          in = Kokkos::subview(work, std::pair<int, int>(0, inSize), 0);
 
     Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, inSize), [&](int i) {
@@ -820,7 +822,7 @@ void do_batched_solve(
     if constexpr (polynomial) {
 
       // Step 3a: Backup the current in data, since we solve the QR in place
-      auto in_cp = Kokkos::subview(work, Kokkos::ALL, 1);
+      auto in_cp = Kokkos::subview(work, std::pair<int, int>(0, inSize), 1);
       Kokkos::parallel_for(
           Kokkos::TeamThreadRange(team, inSize), [&](int i) { in_cp(i) = in(i); });
       team.team_barrier();
@@ -858,7 +860,7 @@ void do_batched_solve(
       team.team_barrier();
 
       // Steo 3e: zero out the entries which are not within the rank region
-      auto poly = Kokkos::subview(in_cp, std::pair<int, int>(0, matrixCols));
+      auto poly = Kokkos::subview(work, std::pair<int, int>(0, matrixCols), 1);
       Kokkos::parallel_for(
           Kokkos::TeamThreadRange(team, rank, matrixCols), [&](int i) { poly(i) = 0; });
 
