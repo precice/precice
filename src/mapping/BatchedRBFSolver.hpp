@@ -317,20 +317,19 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Samp
   Kokkos::fence();
   e1.stop();
 
-  // Step 2: solve polynomial as preprocessing step
-  if (_polynomial == Polynomial::SEPARATE) {
-    precice::profiling::Event e2("map.pou.gpu.BatchedPolynomialSolve");
-
-    kernel::do_qr_solve(_nCluster, _dim, _maxInClusterSize,
-                        _inOffsets, _globalInIDs, _inData, _inMesh, _qrMatrix, _qrTau, _qrP,
-                        _normalizedWeights, _outOffsets, _globalOutIDs, _outData, _outMesh);
-  }
-
-  // Step 3: Launch kernel
+  // Step 2: Launch kernel
   precice::profiling::Event e3("map.pou.gpu.BatchedSolve");
-  kernel::do_batched_solve(_nCluster, std::max(_maxInClusterSize, _maxOutClusterSize),
-                           _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
-                           _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData);
+  if (_polynomial == Polynomial::SEPARATE) {
+    kernel::do_batched_solve<true>(_nCluster, _dim, _maxInClusterSize, _maxOutClusterSize,
+                                   _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
+                                   _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData,
+                                   _inMesh, _outMesh, _qrMatrix, _qrTau, _qrP);
+  } else {
+    kernel::do_batched_solve<false>(_nCluster, _dim, _maxInClusterSize, _maxOutClusterSize,
+                                    _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
+                                    _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData,
+                                    _inMesh, _outMesh, _qrMatrix, _qrTau, _qrP);
+  }
 
   Kokkos::fence();
   e3.stop();

@@ -85,21 +85,28 @@ void do_batched_lu(
     const Kokkos::View<size_t *, MemorySpace> &matrixOffsets,
     Kokkos::View<double *, MemorySpace>        matrices);
 
-template <typename MemorySpace>
+template <bool polynomial, typename MemorySpace>
 void do_batched_solve(
-    std::size_t                                N,
-    std::size_t                                maxClusterSize,
-    const Kokkos::View<int *, MemorySpace>    &rhsOffsets,
-    const Kokkos::View<int *, MemorySpace>    &globalRhsIDs,
-    Kokkos::View<double *, MemorySpace>        rhs,
-    const Kokkos::View<size_t *, MemorySpace> &matrixOffsets,
-    const Kokkos::View<double *, MemorySpace> &matrices,
-    const Kokkos::View<double *, MemorySpace> &normalizedWeights,
-    const Kokkos::View<size_t *, MemorySpace> &evalOffsets,
-    const Kokkos::View<double *, MemorySpace> &evalMat,
-    const Kokkos::View<int *, MemorySpace>    &outOffsets,
-    const Kokkos::View<int *, MemorySpace>    &globalOutIDs,
-    Kokkos::View<double *, MemorySpace>        out);
+    std::size_t                                                      N,
+    int                                                              dim,
+    std::size_t                                                      maxInClusterSize,
+    std::size_t                                                      maxOutClusterSize,
+    const Kokkos::View<int *, MemorySpace>                          &rhsOffsets,
+    const Kokkos::View<int *, MemorySpace>                          &globalRhsIDs,
+    Kokkos::View<double *, MemorySpace>                              rhs,
+    const Kokkos::View<size_t *, MemorySpace>                       &matrixOffsets,
+    const Kokkos::View<double *, MemorySpace>                       &matrices,
+    const Kokkos::View<double *, MemorySpace>                       &normalizedWeights,
+    const Kokkos::View<size_t *, MemorySpace>                       &evalOffsets,
+    const Kokkos::View<double *, MemorySpace>                       &evalMat,
+    const Kokkos::View<int *, MemorySpace>                          &outOffsets,
+    const Kokkos::View<int *, MemorySpace>                          &globalOutIDs,
+    Kokkos::View<double *, MemorySpace>                              out,
+    const Kokkos::View<double **, Kokkos::LayoutRight, MemorySpace> &inMesh,
+    const Kokkos::View<double **, Kokkos::LayoutRight, MemorySpace> &outMesh,
+    const Kokkos::View<double *, MemorySpace>                       &qrMatrix,
+    const Kokkos::View<double *, MemorySpace>                       &qrTau,
+    const Kokkos::View<int *, MemorySpace>                          &qrP);
 
 } // namespace kernel
 } // namespace mapping
