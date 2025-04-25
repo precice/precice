@@ -1,7 +1,4 @@
 #include <KokkosBatched_LU_Decl.hpp>
-// #include <KokkosBatched_LU_Team_Impl.hpp>
-// #include <KokkosBatched_Trsv_TeamVector_Internal.hpp>
-// #include <KokkosBatched_Trsv_TeamVector_Impl.hpp>
 #include <KokkosBatched_SolveLU_Decl.hpp>
 #include <KokkosBatched_Util.hpp>
 // #include <KokkosBatched_Gemv_Decl.hpp>
@@ -795,33 +792,13 @@ void do_batched_solve(
 
     team.team_barrier();
 
-    // Forward substitution: solve L * y = b
-    // TODO: Check again how we can use TeamVector instead
-    // Seems to be available as Unblocked version only
-
-    // There is also a convenience routine for LU
-    // KokkosBatched::SolveLU<MemberType,
-    //                        KokkosBatched::Trans::NoTranspose,
-    //                        KokkosBatched::Mode::Team,
-    //                        KokkosBatched::Algo::SolveLU::Blocked>(team, 1.0, A, b);
-    KokkosBatched::Trsv<
-        MemberType,
-        KokkosBatched::Uplo::Lower,
-        KokkosBatched::Trans::NoTranspose,
-        KokkosBatched::Diag::Unit,
-        KokkosBatched::Mode::Team,
-        KokkosBatched::Algo::Trsv::Blocked>::invoke(team, 1.0, A, b);
-
-    team.team_barrier();
-
-    // Backward substitution: solve U * x = y
-    KokkosBatched::Trsv<
-        MemberType,
-        KokkosBatched::Uplo::Upper,
-        KokkosBatched::Trans::NoTranspose,
-        KokkosBatched::Diag::NonUnit,
-        KokkosBatched::Mode::Team,
-        KokkosBatched::Algo::Trsv::Blocked>::invoke(team, 1.0, A, b);
+    // There is also a convenience routine for LU, which performs the
+    // Forward substitution: solve L * y = b and
+    // Backward substitution: solve U * x = y inplace
+    KokkosBatched::SolveLU<MemberType,
+                           KokkosBatched::Trans::NoTranspose,
+                           KokkosBatched::Mode::Team,
+                           KokkosBatched::Algo::SolveLU::Blocked>::invoke(team, A, b);
 
     team.team_barrier();
 
