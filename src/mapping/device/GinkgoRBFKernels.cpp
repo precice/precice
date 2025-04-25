@@ -727,7 +727,7 @@ void do_batched_lu(
 }
 
 template <bool polynomial, typename MemorySpace>
-KOKKOS_INLINE_FUNCTION void do_batched_solve(
+void do_batched_solve(
     std::size_t                                N,
     int                                        dim,
     std::size_t                                maxInClusterSize,
