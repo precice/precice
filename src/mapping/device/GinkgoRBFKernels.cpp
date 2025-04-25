@@ -602,6 +602,11 @@ void compute_offsets(const Kokkos::View<int *> src1, const Kokkos::View<int *> s
     } });
 }
 
+// TODO: Using Kokkos::LayoutRight for the Coords performs a bit better for the assembly,
+// but it might deteriorate performance related to the polynomials. Especially for the gemv
+// for the polynomial contributions etc
+// For the full GPU porting, the Layout can only be LayoutRight, as we don't access the coordinates
+// coalesced, but rather first pick what we need
 template <typename EvalFunctionType, typename MemorySpace>
 void do_batched_assembly(
     int                                                              N,   // Number of local systems
