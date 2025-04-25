@@ -22,12 +22,13 @@ void Ginkgo::initialize(int nThreads, int deviceId)
 {
   // We initialize Ginkgo internally through Kokkos
   if (!Kokkos::is_initialized() && !Kokkos::is_finalized()) {
-    const int defaultDeviceID = -1;
-    // don't use and initialize the GPU if we don't use it
-    if (deviceId == defaultDeviceID)
-      Kokkos::initialize(Kokkos::InitializationSettings().set_num_threads(nThreads).set_disable_warnings(true));
+    const int autoDeviceID = -1;
+    // Strategy to select a device automatically from the GPUs available for execution. Must be either "mpi_rank" for round-robin assignment based on the local MPI rank or "random".
+    // If kokkos was compiled with GPU as one backend, the GPU will always be initialized
+    if (deviceId == autoDeviceID)
+      Kokkos::initialize(Kokkos::InitializationSettings().set_num_threads(nThreads).set_map_device_id_by("mpi_rank").set_disable_warnings(true).set_print_configuration(false));
     else {
-      Kokkos::initialize(Kokkos::InitializationSettings().set_num_threads(nThreads).set_device_id(deviceId).set_disable_warnings(true));
+      Kokkos::initialize(Kokkos::InitializationSettings().set_num_threads(nThreads).set_device_id(deviceId).set_disable_warnings(true).set_print_configuration(false));
     }
     weInitialized = true;
   }

@@ -259,8 +259,8 @@ MappingConfiguration::MappingConfiguration(
   // Now we take care of the subtag executor. We repeat some of the subtags in order to add individual documentation
   XMLTag::Occurrence once = XMLTag::OCCUR_NOT_OR_ONCE;
   // TODO, make type an int
-  auto attrDeviceId = makeXMLAttribute(ATTR_DEVICE_ID, static_cast<int>(0))
-                          .setDocumentation("Specifies the ID of the GPU that should be used for the Ginkgo GPU backend.");
+  auto attrDeviceId = makeXMLAttribute(ATTR_DEVICE_ID, static_cast<std::string>("0"))
+                          .setDocumentation("Setting of the GPU device: Set \"auto\" to assign GPUs to each MPI rank in a round robin fashion or specify a number between 0 and the number of available GPUs-1 to assign all MPI ranks to one GPU device with the given ID.");
   auto attrNThreads = makeXMLAttribute(ATTR_N_THREADS, static_cast<int>(0))
                           .setDocumentation("Specifies the number of threads for the OpenMP executor that should be used for the Ginkgo OpenMP backend. If a value of \"0\" is set, preCICE doesn't set the number of threads and the default behavior of OpenMP applies.");
 
@@ -500,7 +500,20 @@ void MappingConfiguration::xmlTagCallback(
       _executorConfig->executor = ExecutorConfiguration::Executor::OpenMP;
     }
 
-    _executorConfig->deviceId = tag.getIntAttributeValue(ATTR_DEVICE_ID, -1);
+    auto did = tag.getStringAttributeValue(ATTR_DEVICE_ID, "0");
+    if (did == "auto") {
+      _executorConfig->deviceId = -1;
+    } else {
+      try {
+        _executorConfig->deviceId = std::stoi(did);
+        PRECICE_CHECK(_executorConfig->deviceId >= 0, "The argument provided to \"gpu-device-id\" in the precice configuration file is invalid (negative device id)");
+      } catch (const std::invalid_argument &e) {
+        throw precice::Error("The argument provided to \"gpu-device-id\" in the precice configuration file is invalid (not a valid input).");
+      } catch (const std::out_of_range &e) {
+        throw precice::Error("The argument provided to \"gpu-device-id\" in the precice configuration file is invalid (out of range).");
+      }
+    }
+
     _executorConfig->nThreads = tag.getIntAttributeValue(ATTR_N_THREADS, 0);
   }
 }
