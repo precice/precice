@@ -102,7 +102,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
     : _polynomial(polynomial), _nCluster(centers.size()), _dim(inMesh->getDimensions())
 {
   PRECICE_TRACE();
-  PRECICE_CHECK(_polynomial != Polynomial::ON, "Not supported.");
+  PRECICE_CHECK(_polynomial != Polynomial::ON, "Setting polynomial to \"on\" for the mapping between \"{}\" and \"{}\" is not supported", inMesh->getName(), outMesh->getName());
   // TODO: check the positive definiteness again later
   // PRECICE_CHECK(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), "Using a LU decomposition.");
   PRECICE_CHECK(!(inMesh->vertices().empty() || outMesh->vertices().empty()), "One of the meshes in the batched solvers is empty, which is invalid.");
@@ -111,16 +111,12 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   precice::profiling::Event eInit("map.pou.gpu.initializeKokko");
   // We have to initialize Kokkos and Ginkgo here, as the initialization call allocates memory
   // in the current setup, this will only initialize the device (and allocate memory) on the primary rank
+  // TODO: Document restriction: all mappings must use the same executor configuration within one participant
   device::Ginkgo::initialize(ginkgoParameter.nThreads, ginkgoParameter.deviceId);
-  PRECICE_INFO("Using Batched solver on executor {} for {} PU-RBF clusters", ginkgoParameter.executor, centers.size());
-  // _deviceExecutor = create_device_executor(ginkgoParameter.executor, ginkgoParameter.enableUnifiedMemory);
-#ifdef PRECICE_WITH_OPENMP
-  if (ginkgoParameter.nThreads > 0 && ginkgoParameter.executor == "omp-executor")
-    omp_set_num_threads(ginkgoParameter.nThreads);
-#endif
+  PRECICE_INFO("Using batched PU-RBF solver on executor \"{}\" for \"{}\" PU-RBF clusters.", ginkgoParameter.executor, centers.size());
   eInit.stop();
 
-// Assumption of the algorithm
+// General assumption of the algorithm
 #ifndef NDEBUG
   for (std::size_t i = 0; i < inMesh->nVertices(); ++i) {
     PRECICE_ASSERT(inMesh->vertices()[i].getID() == i);
