@@ -423,18 +423,19 @@ void do_batched_qr(std::size_t                                               nCl
                                                                                                                     P, work,
                                                                                                                     rank);
                          // We have to define our own criterion for the rank, as the one provided is not stable enough
-                         // |pivot|⩽threshold×|maxpivot|
                          // A pivot will be considered nonzero if its absolute value is strictly greater than |pivot|⩽threshold×|maxpivot| where maxpivot is the biggest pivot.
-                         double threshold = 1e-6;
+                         // We use 1e-6 as threshold, which is much stricter than the Kokkos internal criterion
+                         // The kokkos internal criterion can be found in KokkosBatched_QR_WithColumnPivoting_TeamVector_Internal.hpp
+                         // if diagonal value is smaller than threshold(10 * max_diag * ats::epsilon())
+                         // note that the pivoted algorithm aborts once the rank deficiency is detected, thus, values larger than rank just contain rubbish
+                         double threshold = 1e-5;
                          if (team.team_rank() == 0) {
                            const double maxp = Kokkos::abs(qr(0, 0)); // largest pivot
                            int          r    = 0;
-                           for (int i = 0; i < matrixCols; ++i) {
-                             if (Kokkos::abs(qr(i, i)) > (threshold * maxp)) {
-                               ++r;
-                             }
+                           for (int i = 0; i < rank; ++i) {
+                             r += static_cast<int>(Kokkos::abs(qr(i, i)) > (threshold * maxp));
                            }
-                           rank = Kokkos::min(r, rank);
+                           rank = r;
                          }
                          // parallel_for
                        });
