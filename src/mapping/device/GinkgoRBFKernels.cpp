@@ -814,14 +814,15 @@ KOKKOS_INLINE_FUNCTION void do_batched_solve(
       team.team_barrier();
 
       // Step 3b: Define pointers and matrices
-      const int matrixCols  = dim + 1;
-      const int matrixBegin = inSize * matrixCols;
-      const int tauBegin    = batch * matrixCols;
-      const int PBegin      = batch * (matrixCols + 1);
-      const int rank        = qrP(PBegin + matrixCols);
+      const int matrixCols = dim + 1;
+      const int qrBegin    = inBegin * matrixCols;
+      const int tauBegin   = batch * matrixCols;
+      const int PBegin     = batch * (matrixCols + 1);
+      const int rank       = qrP(PBegin + matrixCols);
 
-      BatchMatrix qr(&qrMatrix(matrixBegin), inSize, matrixCols);
+      BatchMatrix qr(&qrMatrix(qrBegin), inSize, matrixCols);
       BatchVector tau(&qrTau(tauBegin), matrixCols);
+      intVector   P(&qrP(PBegin), matrixCols);
 
       // Step 3c: Apply Q on the left of in, i.e., y = Q^T * in
       // tmp size might be insufficient: there was no size requirement specified for the workspace
@@ -852,7 +853,6 @@ KOKKOS_INLINE_FUNCTION void do_batched_solve(
       team.team_barrier();
 
       // Step 3f: Apply pivoting x = P z
-      intVector P(&qrP(PBegin), matrixCols);
       KokkosBatched::TeamVectorApplyPivot<MemberType,
                                           KokkosBatched::Side::Left,
                                           KokkosBatched::Direct::Backward>::invoke(team, P, poly);
