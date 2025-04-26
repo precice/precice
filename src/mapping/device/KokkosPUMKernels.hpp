@@ -5,10 +5,12 @@
 
 namespace precice::mapping::kernel {
 
-void compute_offsets(const Kokkos::View<int *> src1, const Kokkos::View<int *> src2,
-                     Kokkos::View<std::size_t *> dst, int N);
+template <typename MemorySpace>
+void compute_offsets(const Kokkos::View<int *, MemorySpace> src1, const Kokkos::View<int *, MemorySpace> src2,
+                     Kokkos::View<std::size_t *, MemorySpace> dst, int N);
 
 // returns true, if successful
+template <typename MemorySpace>
 bool compute_weights(const std::size_t                                                           nCenters,
                      const std::size_t                                                           nWeights,
                      const std::size_t                                                           nMeshVertices,
@@ -92,3 +94,5 @@ void do_batched_solve(
     const Kokkos::View<int *, MemorySpace>                          &qrP);
 
 } // namespace precice::mapping::kernel
+
+#include "mapping/device/KokkosPUMKernels_Impl.hpp"

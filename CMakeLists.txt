@@ -490,9 +490,6 @@ endif()
 
 # Specific to Kokkos kernels
 if (PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING)
-  target_sources(preciceCore PRIVATE
-    src/mapping/device/KokkosPUMKernels.cpp
-  )
   target_link_libraries(preciceCore PUBLIC KokkosKernels::kokkoskernels)
 else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_KOKKOS_KERNELS)

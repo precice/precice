@@ -1,5 +1,3 @@
-#include "mapping/device/KokkosPUMKernels.hpp"
-
 #include <KokkosBatched_LU_Decl.hpp>
 #include <KokkosBatched_SolveLU_Decl.hpp>
 #include <KokkosBatched_Util.hpp>
@@ -20,22 +18,22 @@ using precice::math::pow_int;
 
 namespace precice::mapping::kernel {
 
-bool compute_weights(const std::size_t                                                           nCenters,
-                     const std::size_t                                                           nWeights,
-                     const std::size_t                                                           nMeshVertices,
-                     const int                                                                   dim,
-                     Kokkos::View<int *, Kokkos::DefaultExecutionSpace>                          offsets,
-                     Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> centers,
-                     Kokkos::View<int *, Kokkos::DefaultExecutionSpace>                          globalIDs,
-                     Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> mesh,
-                     const CompactPolynomialC2                                                  &w,
-                     Kokkos::View<double *, Kokkos::DefaultExecutionSpace>                       normalizedWeights)
+template <typename MemorySpace>
+bool compute_weights(const std::size_t                                         nCenters,
+                     const std::size_t                                         nWeights,
+                     const std::size_t                                         nMeshVertices,
+                     const int                                                 dim,
+                     Kokkos::View<int *, MemorySpace>                          offsets,
+                     Kokkos::View<double **, Kokkos::LayoutRight, MemorySpace> centers,
+                     Kokkos::View<int *, MemorySpace>                          globalIDs,
+                     Kokkos::View<double **, Kokkos::LayoutRight, MemorySpace> mesh,
+                     const CompactPolynomialC2                                &w,
+                     Kokkos::View<double *, MemorySpace>                       normalizedWeights)
 {
-  using ExecSpace  = typename Kokkos::DefaultExecutionSpace;
-  using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
+  using TeamPolicy = Kokkos::TeamPolicy<MemorySpace>;
   using TeamMember = typename TeamPolicy::member_type;
 
-  Kokkos::View<double *, Kokkos::DefaultExecutionSpace> weightSum("weightSum", nMeshVertices);
+  Kokkos::View<double *, MemorySpace> weightSum("weightSum", nMeshVertices);
   Kokkos::deep_copy(weightSum, 0.0);
   Kokkos::fence();
 
@@ -85,7 +83,7 @@ bool compute_weights(const std::size_t                                          
   // Now scale back the sum
   Kokkos::parallel_for(
       "scale_weights",
-      Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>(0, nWeights),
+      Kokkos::RangePolicy<MemorySpace>(0, nWeights),
       KOKKOS_LAMBDA(const std::size_t i) {
         const int id = globalIDs(i);
         normalizedWeights(i) /= weightSum(id);
@@ -325,8 +323,9 @@ void do_qr_solve(std::size_t                                               nClus
                        });
 }
 
-void compute_offsets(const Kokkos::View<int *> src1, const Kokkos::View<int *> src2,
-                     Kokkos::View<std::size_t *> dst, int N)
+template <typename MemorySpace>
+void compute_offsets(const Kokkos::View<int *, MemorySpace> src1, const Kokkos::View<int *, MemorySpace> src2,
+                     Kokkos::View<std::size_t *, MemorySpace> dst, int N)
 {
   PRECICE_ASSERT(src1.extent(0) == src2.extent(0));
   PRECICE_ASSERT(src2.extent(0) == dst.extent(0));
@@ -427,34 +426,6 @@ void do_batched_assembly(
         });       // TeamThreadRange
   });
 }
-
-#define PRECICE_INSTANTIATE(_function_type)                                                               \
-  template void do_batched_assembly<_function_type, Kokkos::DefaultExecutionSpace>(                       \
-      int                                                                                N,               \
-      int                                                                                dim,             \
-      _function_type                                                                     f,               \
-      ::precice::mapping::RadialBasisParameters                                          rbf_params,      \
-      const Kokkos::View<int *, Kokkos::DefaultExecutionSpace>                          &inOffsets,       \
-      const Kokkos::View<int *, Kokkos::DefaultExecutionSpace>                          &globalInIDs,     \
-      const Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> &inCoords,        \
-      const Kokkos::View<int *, Kokkos::DefaultExecutionSpace>                          &targetOffsets,   \
-      const Kokkos::View<int *, Kokkos::DefaultExecutionSpace>                          &globalTargetIDs, \
-      const Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> &targetCoords,    \
-      const Kokkos::View<size_t *, Kokkos::DefaultExecutionSpace>                       &matrixOffsets,   \
-      Kokkos::View<double *, Kokkos::DefaultExecutionSpace>                              matrices)
-
-PRECICE_INSTANTIATE(ThinPlateSplines);
-PRECICE_INSTANTIATE(Multiquadrics);
-PRECICE_INSTANTIATE(InverseMultiquadrics);
-PRECICE_INSTANTIATE(VolumeSplines);
-PRECICE_INSTANTIATE(Gaussian);
-PRECICE_INSTANTIATE(CompactThinPlateSplinesC2);
-PRECICE_INSTANTIATE(CompactPolynomialC0);
-PRECICE_INSTANTIATE(CompactPolynomialC2);
-PRECICE_INSTANTIATE(CompactPolynomialC4);
-PRECICE_INSTANTIATE(CompactPolynomialC6);
-PRECICE_INSTANTIATE(CompactPolynomialC8);
-#undef PRECICE_INSTANTIATE
 
 template <typename MemorySpace>
 void do_batched_lu(
