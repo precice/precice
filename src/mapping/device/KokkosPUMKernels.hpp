@@ -11,16 +11,16 @@ void compute_offsets(const Kokkos::View<int *, MemorySpace> src1, const Kokkos::
 
 // returns true, if successful
 template <typename MemorySpace>
-bool compute_weights(const std::size_t                                                           nCenters,
-                     const std::size_t                                                           nWeights,
-                     const std::size_t                                                           nMeshVertices,
-                     const int                                                                   dim,
-                     Kokkos::View<int *, Kokkos::DefaultExecutionSpace>                          offsets,
-                     Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> centers,
-                     Kokkos::View<int *, Kokkos::DefaultExecutionSpace>                          globalIDs,
-                     Kokkos::View<double **, Kokkos::LayoutRight, Kokkos::DefaultExecutionSpace> mesh,
-                     const CompactPolynomialC2                                                  &w,
-                     Kokkos::View<double *, Kokkos::DefaultExecutionSpace>                       normalizedWeights);
+bool compute_weights(const std::size_t                                         nCenters,
+                     const std::size_t                                         nWeights,
+                     const std::size_t                                         nMeshVertices,
+                     const int                                                 dim,
+                     Kokkos::View<int *, MemorySpace>                          offsets,
+                     Kokkos::View<double **, Kokkos::LayoutRight, MemorySpace> centers,
+                     Kokkos::View<int *, MemorySpace>                          globalIDs,
+                     Kokkos::View<double **, Kokkos::LayoutRight, MemorySpace> mesh,
+                     const CompactPolynomialC2                                &w,
+                     Kokkos::View<double *, MemorySpace>                       normalizedWeights);
 
 template <typename EvalFunctionType, typename MemorySpace>
 void do_batched_assembly(int                                                              N,   // Number of local systems
