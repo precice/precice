@@ -9,7 +9,7 @@
 #include "mapping/RadialBasisFctSolver.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/device/Device.hpp"
-#include "mapping/device/GinkgoRBFKernels.hpp"
+#include "mapping/device/KokkosPUMKernels.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mapping/impl/SphericalVertexCluster.hpp"
 #include "mesh/Mesh.hpp"
