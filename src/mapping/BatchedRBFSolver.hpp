@@ -1,16 +1,14 @@
 #pragma once
 #ifndef PRECICE_NO_GINKGO
 
+#include <Kokkos_Core.hpp>
 #include <array>
 #include <cmath>
 #include <functional>
-// #include <ginkgo/extensions/kokkos.hpp>
-#include <Kokkos_Core.hpp>
 #include <numeric>
-#include "mapping/GinkgoDefinitions.hpp"
 #include "mapping/RadialBasisFctSolver.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
-#include "mapping/device/Ginkgo.hpp"
+#include "mapping/device/Device.hpp"
 #include "mapping/device/GinkgoRBFKernels.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mapping/impl/SphericalVertexCluster.hpp"
@@ -22,8 +20,6 @@ using precice::mapping::RadialBasisParameters;
 
 namespace precice {
 namespace mapping {
-
-// Runtime lookups as suggested by Ginkgo
 
 /**
  * This class assembles and solves an RBF system, given an input mesh and an output mesh with relevant vertex IDs.
@@ -112,7 +108,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   // We have to initialize Kokkos and Ginkgo here, as the initialization call allocates memory
   // in the current setup, this will only initialize the device (and allocate memory) on the primary rank
   // TODO: Document restriction: all mappings must use the same executor configuration within one participant
-  device::Ginkgo::initialize(ginkgoParameter.nThreads, ginkgoParameter.deviceId);
+  device::Device::initialize(ginkgoParameter.nThreads, ginkgoParameter.deviceId);
   PRECICE_INFO("Using batched PU-RBF solver on executor \"{}\" for \"{}\" PU-RBF clusters.", ginkgoParameter.executor, centers.size());
   eInit.stop();
 

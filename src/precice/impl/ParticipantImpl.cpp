@@ -34,7 +34,7 @@
 #include "mapping/Mapping.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
-#include "mapping/device/Ginkgo.hpp"
+#include "mapping/device/Device.hpp"
 #include "math/differences.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Data.hpp"
@@ -623,7 +623,7 @@ void ParticipantImpl::finalize()
   utils::Petsc::finalize();
 // This will lead to issues if we call finalize afterwards again
 #ifndef PRECICE_NO_GINKGO
-  device::Ginkgo::finalize();
+  device::Device::finalize();
 #endif
   profiling::EventRegistry::instance().finalize();
 

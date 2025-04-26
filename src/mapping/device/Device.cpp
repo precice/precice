@@ -1,4 +1,4 @@
-#include "Ginkgo.hpp"
+#include "Device.hpp"
 
 #include "logging/Logger.hpp"
 
@@ -7,20 +7,18 @@
 
 namespace precice::device {
 
-bool Ginkgo::weInitialized = false;
+bool Device::weInitialized = false;
 
-void Ginkgo::initialize(int *argc, char ***argv)
+void Device::initialize(int *argc, char ***argv)
 {
-  // We initialize Ginkgo internally through Kokkos
   if (!Kokkos::is_initialized() && !Kokkos::is_finalized()) {
     Kokkos::initialize(*argc, *argv);
     weInitialized = true;
   }
 }
 
-void Ginkgo::initialize(int nThreads, int deviceId)
+void Device::initialize(int nThreads, int deviceId)
 {
-  // We initialize Ginkgo internally through Kokkos
   if (!Kokkos::is_initialized() && !Kokkos::is_finalized()) {
     const int autoDeviceID = -1;
     // Strategy to select a device automatically from the GPUs available for execution. Must be either "mpi_rank" for round-robin assignment based on the local MPI rank or "random".
@@ -34,9 +32,8 @@ void Ginkgo::initialize(int nThreads, int deviceId)
   }
 }
 
-void Ginkgo::finalize()
+void Device::finalize()
 {
-  // we finalize internally through Kokkos as well
   if (weInitialized && Kokkos::is_initialized()) {
     Kokkos::finalize();
   }

@@ -20,7 +20,6 @@
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctSolver.hpp"
 #include "mapping/RadialGeoMultiscaleMapping.hpp"
-#include "mapping/device/Ginkgo.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"

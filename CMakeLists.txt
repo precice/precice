@@ -442,7 +442,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     # Next we configure the common kernels for the matrix assembly
     target_sources(preciceCore PRIVATE
     src/mapping/device/GinkgoRBFKernels.cpp
-    src/mapping/device/Ginkgo.cpp
+    src/mapping/device/Device.cpp
     )
 
   target_link_libraries(preciceCore PRIVATE Ginkgo::ginkgo KokkosKernels::kokkoskernels)
