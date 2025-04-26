@@ -18,13 +18,17 @@
 
 using precice::mapping::RadialBasisParameters;
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
+
 /**
- * This class assembles and solves an RBF system, given an input mesh and an output mesh with relevant vertex IDs.
- * It uses iterative solvers (CG, GMRES) and preconditioners ((Block-)Jacobi, Cholesky, Ilu) to solve the interpolation
- * systems. Furthermore, it optionally does that on Nvidia or AMD GPUs which provides significant speedup over (single-threaded)
- * CPU implementations.
+ * This class solves the PU-RBF interpolation in a batched manner, i.e.,
+ * clusters are computed in parallel. The parallelization can be handled
+ * through GPUs or OpenMP. It uses Kokkos-kernels dispatch the kernels on
+ * the selected execution backend. Only the mesh indexing is handled on the
+ * CPU through boost geometry, all other components are handled in parallel.
+ * The solver is compatible with the MPI-parallel layout of the PURBF class
+ * itself, which means in this case that the problem is solved purely local,
+ * but each rank can instantiate and launch its own solver.
  */
 template <typename RADIAL_BASIS_FUNCTION_T>
 class BatchedRBFSolver {
@@ -32,7 +36,7 @@ public:
   using RBF_T = RADIAL_BASIS_FUNCTION_T;
 
   /// Essentially an initialize of the solver: allocates device memory
-  /// and computes the Cholesky decompositions
+  /// and computes the LU decompositions etc
   BatchedRBFSolver(RBF_T                                 basisFunction,
                    mesh::PtrMesh                         inMesh,
                    mesh::PtrMesh                         outMesh,
@@ -40,8 +44,6 @@ public:
                    double                                clusterRadius,
                    Polynomial                            polynomial,
                    MappingConfiguration::GinkgoParameter ginkgoParameter);
-
-  void clear();
 
   void solveConsistent(const time::Sample &globalIn, Eigen::VectorXd &globalOut);
 
@@ -332,13 +334,26 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Samp
   Kokkos::fence();
   e4.stop();
 }
+} // namespace precice::mapping
+
+#else
+
+/// Stub class in case we compile without the feature
+#include "mapping/config/MappingConfiguration.hpp"
+namespace precice::mapping {
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::clear()
-{
-}
+class BatchedRBFSolver {
+public:
+  BatchedRBFSolver(RADIAL_BASIS_FUNCTION_T,
+                   mesh::PtrMesh,
+                   mesh::PtrMesh,
+                   const std::vector<mesh::Vertex> &,
+                   double,
+                   Polynomial,
+                   MappingConfiguration::GinkgoParameter) {}
 
-} // namespace mapping
-} // namespace precice
-
+  void solveConsistent(const time::Sample &, Eigen::VectorXd &) {}
+};
+} // namespace precice::mapping
 #endif // PRECICE_NO_KOKKOS_KERNELS
