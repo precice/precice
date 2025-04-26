@@ -154,7 +154,7 @@ void TestContext::initialize(const Participants &participants)
   initializeIntraComm();
   initializeEvents();
   initializePetsc();
-  initializeGinkgo();
+  initializeKokkos();
 }
 
 void TestContext::initializeMPI(const TestContext::Participants &participants)
