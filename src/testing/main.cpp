@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
   }
   // Required for Kokkos, which doesn't allow to initialize multiple times, i.e.,
   // finalize and initialize can really only be called once
-#ifndef PRECICE_NO_GINKGO
+#if !defined(PRECICE_NO_GINKGO) || !defined(PRECICE_NO_KOKKOS_KERNELS)
   precice::device::Device::finalize();
 #endif
   utils::IntraComm::getCommunication() = nullptr;

@@ -1,5 +1,5 @@
 #pragma once
-#ifndef PRECICE_NO_GINKGO
+#ifndef PRECICE_NO_KOKKOS_KERNELS
 
 #include <Kokkos_Core.hpp>
 #include <array>
@@ -20,7 +20,6 @@ using precice::mapping::RadialBasisParameters;
 
 namespace precice {
 namespace mapping {
-
 /**
  * This class assembles and solves an RBF system, given an input mesh and an output mesh with relevant vertex IDs.
  * It uses iterative solvers (CG, GMRES) and preconditioners ((Block-)Jacobi, Cholesky, Ilu) to solve the interpolation
@@ -342,4 +341,4 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::clear()
 } // namespace mapping
 } // namespace precice
 
-#endif // PRECICE_NO_GINKGO
+#endif // PRECICE_NO_KOKKOS_KERNELS

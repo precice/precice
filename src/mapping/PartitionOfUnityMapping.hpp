@@ -158,7 +158,7 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
   PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.");
   PRECICE_ASSERT(_relativeOverlap < 1, "The relative overlap has to be smaller than one.");
   PRECICE_ASSERT(_verticesPerCluster > 0, "The number of vertices per cluster has to be greater zero.");
-#ifdef PRECICE_NO_GINKGO
+#ifdef PRECICE_NO_KOKKOS_KERNELS
   PRECICE_ASSERT(_useBatchedSolver == false, "Not implemented");
 #endif
   if (isScaledConsistent()) {

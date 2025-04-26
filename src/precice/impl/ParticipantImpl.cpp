@@ -622,7 +622,7 @@ void ParticipantImpl::finalize()
   // Finalize PETSc and Events first
   utils::Petsc::finalize();
 // This will lead to issues if we call finalize afterwards again
-#ifndef PRECICE_NO_GINKGO
+#if !defined(PRECICE_NO_GINKGO) || !defined(PRECICE_NO_KOKKOS_KERNELS)
   device::Device::finalize();
 #endif
   profiling::EventRegistry::instance().finalize();

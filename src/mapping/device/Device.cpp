@@ -2,7 +2,7 @@
 
 #include "logging/Logger.hpp"
 
-#ifndef PRECICE_NO_GINKGO
+#if !defined(PRECICE_NO_GINKGO) || !defined(PRECICE_NO_KOKKOS_KERNELS)
 #include <Kokkos_Core.hpp>
 
 namespace precice::device {

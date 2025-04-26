@@ -779,43 +779,51 @@ void MappingConfiguration::finishRBFConfiguration()
     }
     // 2. any other executor is configured via Ginkgo
   } else {
-#ifndef PRECICE_NO_GINKGO
     _ginkgoParameter                   = GinkgoParameter();
     _ginkgoParameter.usePreconditioner = false;
     _ginkgoParameter.deviceId          = _executorConfig->deviceId;
     if (_executorConfig->executor == ExecutorConfiguration::Executor::CUDA) {
       _ginkgoParameter.executor = "cuda-executor";
 #ifndef PRECICE_WITH_CUDA
-      PRECICE_CHECK(false, "The cuda-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with Cuda enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+      PRECICE_CHECK(false, "The cuda-executor (configured for the mapping from mesh {} to mesh {}) requires a Kokkos and preCICE build with Cuda enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
     } else if (_executorConfig->executor == ExecutorConfiguration::Executor::HIP) {
       _ginkgoParameter.executor = "hip-executor";
 #ifndef PRECICE_WITH_HIP
-      PRECICE_CHECK(false, "The hip-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with HIP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+      PRECICE_CHECK(false, "The hip-executor (configured for the mapping from mesh {} to mesh {}) requires a Kokkos and preCICE build with HIP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
     } else if (_executorConfig->executor == ExecutorConfiguration::Executor::OpenMP) {
       _ginkgoParameter.executor = "omp-executor";
       _ginkgoParameter.nThreads = _executorConfig->nThreads;
 #ifndef PRECICE_WITH_OPENMP
-      PRECICE_CHECK(false, "The omp-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with OpenMP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+      PRECICE_CHECK(false, "The omp-executor (configured for the mapping from mesh {} to mesh {}) requires a Kokkos and preCICE build with OpenMP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
     }
     if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
+#ifndef PRECICE_NO_GINKGO
       _ginkgoParameter.solver = "qr-solver";
       mapping.mapping         = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
+#else
+      PRECICE_CHECK(false, "The selected direct solver for the global RBF mapping on executor {} from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", _ginkgoParameter.executor, mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
+#ifndef PRECICE_NO_GINKGO
       _ginkgoParameter.solver       = "cg-solver";
       _ginkgoParameter.residualNorm = _rbfConfig.solverRtol;
       mapping.mapping               = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
+#else
+      PRECICE_CHECK(false, "The selected iterative solver for the global RBF mapping on executor {} from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", _ginkgoParameter.executor, mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
+#ifndef PRECICE_NO_KOKKOS_KERNELS
       PRECICE_CHECK(!(mapping.fromMesh->isJustInTime() || mapping.toMesh->isJustInTime()), "Executor \"{}\" is not implemented as just-in-time mapping.", _ginkgoParameter.executor);
       mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _ginkgoParameter);
+#else
+      PRECICE_CHECK(false, "The selected pu-rbf solver using executor \"{}\" for the mapping from mesh {} to mesh {} requires a preCICE build with Kokkos-kernels enabled.", _ginkgoParameter.executor, mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
     } else {
       PRECICE_UNREACHABLE("Unknown solver type.");
     }
-#else
-    PRECICE_CHECK(false, "The selected executor for the mapping from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
-#endif
   }
 }
 

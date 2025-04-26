@@ -240,7 +240,7 @@ void TestContext::initializePetsc()
 void TestContext::initializeKokkos()
 {
   if (!invalid && _setup.ginkgo) {
-#ifndef PRECICE_NO_GINKGO
+#if !defined(PRECICE_NO_GINKGO) || !defined(PRECICE_NO_KOKKOS_KERNELS)
     int    argc = 0;
     char **argv;
     precice::device::Device::initialize(&argc, &argv);
