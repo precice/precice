@@ -100,8 +100,9 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_polynomial != Polynomial::ON, "Setting polynomial to \"on\" for the mapping between \"{}\" and \"{}\" is not supported", inMesh->getName(), outMesh->getName());
-  // TODO: check the positive definiteness again later
-  // PRECICE_CHECK(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), "Using a LU decomposition.");
+  // The LU decomposition uses no pivoting, which leads to divisions by zero if the diagonal contains zero entries, which is the case for our basis functions
+  PRECICE_CHECK(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), "batched solver is only available for positive definite basis functions, i.e., compact-polynomial functions and Gaussian.");
+
   PRECICE_CHECK(!(inMesh->vertices().empty() || outMesh->vertices().empty()), "One of the meshes in the batched solvers is empty, which is invalid.");
   PRECICE_CHECK(inMesh->getDimensions() == outMesh->getDimensions(), "Incompatible dimensions passed to the batched solver.");
 
