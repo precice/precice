@@ -18,6 +18,12 @@ using precice::math::pow_int;
 
 namespace precice::mapping::kernel {
 
+// For within the kernels
+template <typename MemorySpace = ExecutionSpace>
+using BatchMatrix = Kokkos::View<double **, MemorySpace, UnmanagedMemory>;
+template <typename T = double *, typename MemorySpace = ExecutionSpace>
+using BatchVector = Kokkos::View<T, MemorySpace, UnmanagedMemory>;
+
 template <typename MemorySpace>
 bool compute_weights(const int                     nCenters,
                      const offset_1d_type          nWeights,

@@ -35,11 +35,4 @@ using VectorOffsetView = Kokkos::View<offset_1d_type *, MemorySpace>;
 // Offsets for the flat views for 2D data (essentially for double ***, where the last * is for the batches)
 template <typename MemorySpace = ExecutionSpace>
 using MatrixOffsetView = Kokkos::View<offset_2d_type *, MemorySpace>;
-
-// For within the kernels
-template <typename MemorySpace = ExecutionSpace>
-using BatchMatrix = Kokkos::View<double **, MemorySpace, UnmanagedMemory>;
-template <typename T = double *, typename MemorySpace = ExecutionSpace>
-using BatchVector = Kokkos::View<T, MemorySpace, UnmanagedMemory>;
-
 } // namespace precice::mapping
