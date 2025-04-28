@@ -153,15 +153,25 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
     const auto &center = centers[i];
 
     // First we handle the input side
-    auto inIDs        = inMesh->index().getVerticesInsideBox(center, clusterRadius);
-    _maxInClusterSize = std::max(_maxInClusterSize, static_cast<int>(inIDs.size()));
-    hostIn(i + 1)     = hostIn(i) + inIDs.size();
+    auto inIDs          = inMesh->index().getVerticesInsideBox(center, clusterRadius);
+    _maxInClusterSize   = std::max(_maxInClusterSize, static_cast<int>(inIDs.size()));
+    std::uint64_t tmpIn = hostIn(i) + inIDs.size();
+    if constexpr (std::numeric_limits<offset_2d_type>::digits < std::numeric_limits<std::uint64_t>::digits) {
+      PRECICE_CHECK(tmpIn < std::numeric_limits<offset_2d_type>::max(),
+                    "The selected integer precision for the matrix offsets (\"offset_2d_type\") overflow. You might want to change the precision specified in \"device/KokkosTypes.hpp\"");
+    }
+    hostIn(i + 1) = static_cast<offset_2d_type>(tmpIn);
     std::copy(inIDs.begin(), inIDs.end(), std::back_inserter(globalInIDs));
 
     // ... and the same for the output side
-    auto outIDs        = outMesh->index().getVerticesInsideBox(center, clusterRadius - math::NUMERICAL_ZERO_DIFFERENCE);
-    _maxOutClusterSize = std::max(_maxOutClusterSize, static_cast<int>(outIDs.size()));
-    hostOut(i + 1)     = hostOut(i) + outIDs.size();
+    auto outIDs          = outMesh->index().getVerticesInsideBox(center, clusterRadius - math::NUMERICAL_ZERO_DIFFERENCE);
+    _maxOutClusterSize   = std::max(_maxOutClusterSize, static_cast<int>(outIDs.size()));
+    std::uint64_t tmpOut = hostOut(i) + outIDs.size();
+    if constexpr (std::numeric_limits<offset_2d_type>::digits < std::numeric_limits<std::uint64_t>::digits) {
+      PRECICE_CHECK(tmpOut < std::numeric_limits<offset_2d_type>::max(),
+                    "The selected integer precision for the matrix offsets (\"offset_2d_type\") overflow. You might want to change the precision specified in \"device/KokkosTypes.hpp\"");
+    }
+    hostOut(i + 1) = static_cast<offset_2d_type>(tmpOut);
     std::copy(outIDs.begin(), outIDs.end(), std::back_inserter(globalOutIDs));
   }
 
