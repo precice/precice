@@ -1,5 +1,4 @@
 #include <KokkosBatched_LU_Decl.hpp>
-#include <KokkosBatched_SolveLU_Decl.hpp>
 #include <KokkosBatched_Util.hpp>
 
 #include <KokkosBatched_ApplyPivot_Decl.hpp>
@@ -608,17 +607,30 @@ void do_batched_solve(
 
     // Step 4: Solve the LU decomposition
     // The lu inplace lu decomposition computed with KokkosBatched
+    // There is also a convenience routine for the LU solve, but it
+    // uses Trsm under the hood, which is quite a bit slower
     auto                     matStart = matrixOffsets(batch);
     BatchMatrix<MemorySpace> A(&matrices(matStart), inSize, inSize);
 
-    // Convenience routine for LU, which performs the
     // Forward substitution: solve L * y = b and
-    // Backward substitution: solve U * x = y inplace
-    KokkosBatched::SolveLU<MemberType,
-                           KokkosBatched::Trans::NoTranspose,
-                           KokkosBatched::Mode::Team,
-                           KokkosBatched::Algo::SolveLU::Blocked>::invoke(team, A, in);
+    KokkosBatched::Trsv<
+        MemberType,
+        KokkosBatched::Uplo::Lower,
+        KokkosBatched::Trans::NoTranspose,
+        KokkosBatched::Diag::Unit,
+        KokkosBatched::Mode::Team,
+        KokkosBatched::Algo::Trsv::Blocked>::invoke(team, 1.0, A, in);
 
+    team.team_barrier();
+
+    // Backward substitution: solve U * x = y
+    KokkosBatched::Trsv<
+        MemberType,
+        KokkosBatched::Uplo::Upper,
+        KokkosBatched::Trans::NoTranspose,
+        KokkosBatched::Diag::NonUnit,
+        KokkosBatched::Mode::Team,
+        KokkosBatched::Algo::Trsv::Blocked>::invoke(team, 1.0, A, in);
     team.team_barrier();
 
     // Step 5: Allocate and zero out a local result vector (more of a safety feature)
