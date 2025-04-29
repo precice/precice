@@ -6,11 +6,13 @@
 namespace precice::mapping {
 
 // Alias definitions
-using offset_1d_type = std::uint32_t;
-using offset_2d_type = std::uint32_t;
 
 using ExecutionSpace  = Kokkos::DefaultExecutionSpace;
 using UnmanagedMemory = Kokkos::MemoryTraits<Kokkos::Unmanaged>;
+
+using offset_1d_type = ExecutionSpace::size_type;
+using offset_2d_type = ExecutionSpace::size_type;
+
 
 // For the meshes, we keep the last index contiguous in memory, PUM has anyway random access
 // in the global vectors
