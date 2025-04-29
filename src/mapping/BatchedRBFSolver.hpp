@@ -276,7 +276,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   _kernelMatrices = VectorView<>("kernelMatrices", unrolledSize);
 
   kernel::do_input_assembly(_nCluster, _dim, basisFunction, _maxInClusterSize,
-                             _inOffsets, _globalInIDs, _inMesh,  _kernelOffsets, _kernelMatrices);
+                            _inOffsets, _globalInIDs, _inMesh, _kernelOffsets, _kernelMatrices);
 
   // The eval matrices ///////////////
   offset_2d_type evalSize        = 0;

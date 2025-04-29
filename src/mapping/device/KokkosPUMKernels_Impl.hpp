@@ -124,7 +124,7 @@ void do_batched_qr(int                           nCluster,
   // this configuration gave about 20ms on the A100
   // const int VL = TeamPolicy::vector_length_max();
   auto scratchSize = ScratchView::shmem_size(2 * maxClusterSize);
-  Kokkos::parallel_for("do_batched_qr", TeamPolicy(nCluster, 4 , 8).set_scratch_size(
+  Kokkos::parallel_for("do_batched_qr", TeamPolicy(nCluster, 4, 8).set_scratch_size(
                                             /* level = */ 0, Kokkos::PerTeam(scratchSize)),
                        KOKKOS_LAMBDA(const MemberType &team) {
                          // Step 1: define some pointers we need
@@ -352,15 +352,15 @@ void compute_offsets(const VectorOffsetView<MemorySpace> src1, const VectorOffse
 
 template <typename EvalFunctionType, typename MemorySpace>
 void do_input_assembly(
-    int                                       nCluster, // Number of local systems
-    int                                       dim,      // Dimension of points
-    EvalFunctionType                          f,
-    int                                       maxInClusterSize,
-    const VectorOffsetView<MemorySpace>      &inOffsets, // vertex offsets (length N+1)
-    const GlobalIDView<MemorySpace>          &globalInIDs,
-    const MeshView<MemorySpace>              &inCoords, // meshes
-    const MatrixOffsetView<MemorySpace>      &matrixOffsets,
-    VectorView<MemorySpace>                   matrices) // 1D view of batched matrices
+    int                                  nCluster, // Number of local systems
+    int                                  dim,      // Dimension of points
+    EvalFunctionType                     f,
+    int                                  maxInClusterSize,
+    const VectorOffsetView<MemorySpace> &inOffsets, // vertex offsets (length N+1)
+    const GlobalIDView<MemorySpace>     &globalInIDs,
+    const MeshView<MemorySpace>         &inCoords, // meshes
+    const MatrixOffsetView<MemorySpace> &matrixOffsets,
+    VectorView<MemorySpace>              matrices) // 1D view of batched matrices
 {
   using ExecSpace  = typename MemorySpace::execution_space;
   using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
@@ -370,38 +370,35 @@ void do_input_assembly(
   using ScratchView1d = Kokkos::View<double *, ScratchSpace, UnmanagedMemory>;
   using ScratchMatrix = Kokkos::View<double **, Kokkos::LayoutRight, ScratchSpace, UnmanagedMemory>;
 
-
-  auto       inBytes  = ScratchView1d::shmem_size(maxInClusterSize);
+  auto inBytes = ScratchView1d::shmem_size(maxInClusterSize);
   // We could also select her manually 64 for the average of 50 for example
   TeamPolicy policy(nCluster, Kokkos::AUTO);
   // We put the solution and the in data values into shared memory
   policy.set_scratch_size(/* level = */ 0, Kokkos::PerTeam(dim * inBytes));
   const auto rbf_params = f.getFunctionParameters();
 
-
   // We launch one team per local system
-  Kokkos::parallel_for("do_input_assembly", policy,  KOKKOS_LAMBDA(const TeamMember &team) {
+  Kokkos::parallel_for("do_input_assembly", policy, KOKKOS_LAMBDA(const TeamMember &team) {
     const int batch = team.league_rank();
     // Ranges
-    const auto inBegin     = inOffsets(batch);
-    const auto inEnd       = inOffsets(batch + 1);
-    const int n = inEnd - inBegin;
+    const auto inBegin = inOffsets(batch);
+    const auto inEnd   = inOffsets(batch + 1);
+    const int  n       = inEnd - inBegin;
 
     ScratchMatrix mesh(team.team_scratch(0), n, dim);
 
     Kokkos::parallel_for(
-      Kokkos::TeamThreadRange(team, n), [&](int i) {
-        auto globalID = globalInIDs(i + inBegin);
-        for(int d = 0; d < dim; ++d) {
-          mesh(i, d) = inCoords(globalID, d);
-        }
-      });
+        Kokkos::TeamThreadRange(team, n), [&](int i) {
+          auto globalID = globalInIDs(i + inBegin);
+          for (int d = 0; d < dim; ++d) {
+            mesh(i, d) = inCoords(globalID, d);
+          }
+        });
 
-      // The matrix offset
-      const auto matrixBegin = matrixOffsets(batch);
+    // The matrix offset
+    const auto matrixBegin = matrixOffsets(batch);
 
-      team.team_barrier();
-
+    team.team_barrier();
 
     // Create an unmanaged 2D subview pointing into matrices
     // This constructor: View(pointer, layout)
@@ -409,24 +406,24 @@ void do_input_assembly(
 
     // Now fill localMatrix(r,c). We'll do a standard 2D nested parallel loop
     Kokkos::parallel_for(
-      Kokkos::TeamThreadMDRange(team, n, n),
-      [=](int r, int c) {
-                // global indices in the original support/target arrays
-                // 1) Compute Euclidean distance
-                double dist = 0;
-                for (int d = 0; d < dim; ++d) {
-                  double diff = mesh(r, d) - mesh(c, d);
-                  dist += diff * diff;
-                }
-                dist = Kokkos::sqrt(dist);
+        Kokkos::TeamThreadMDRange(team, n, n),
+        [=](int r, int c) {
+          // global indices in the original support/target arrays
+          // 1) Compute Euclidean distance
+          double dist = 0;
+          for (int d = 0; d < dim; ++d) {
+            double diff = mesh(r, d) - mesh(c, d);
+            dist += diff * diff;
+          }
+          dist = Kokkos::sqrt(dist);
 
-                // 2) Evaluate your RBF or similar function
-                double val = f(dist, rbf_params);
+          // 2) Evaluate your RBF or similar function
+          double val = f(dist, rbf_params);
 
-                // 3) Store into localMatrix (2D)
-                localMatrix(c, r) = val;
-            });       // TeamThreadRange
-          });
+          // 3) Store into localMatrix (2D)
+          localMatrix(c, r) = val;
+        }); // TeamThreadRange
+  });
 }
 // TODO: Using Kokkos::LayoutRight for the Coords performs a bit better for the assembly,
 // but it might deteriorate performance related to the polynomials. Especially for the gemv
@@ -475,30 +472,29 @@ void do_batched_assembly(
 
     // Now fill localMatrix(r,c). We'll do a standard 2D nested parallel loop
     Kokkos::parallel_for(
-             Kokkos::TeamThreadMDRange(team, nrows, ncols),
-             [=](int r, int c) {
+        Kokkos::TeamThreadMDRange(team, nrows, ncols),
+        [=](int r, int c) {
+          // global indices in the original support/target arrays
+          offset_1d_type targetIdx = targetBegin + r;
+          offset_1d_type inIdx     = inBegin + c;
 
-                // global indices in the original support/target arrays
-                offset_1d_type targetIdx = targetBegin + r;
-                offset_1d_type inIdx     = inBegin + c;
+          auto globalIn     = globalInIDs(inIdx);
+          auto globalTarget = globalTargetIDs(targetIdx);
+          // 1) Compute Euclidean distance
+          double dist = 0;
+          for (int d = 0; d < dim; ++d) {
+            double diff = inCoords(globalIn, d) - targetCoords(globalTarget, d);
+            dist += diff * diff;
+          }
+          dist = Kokkos::sqrt(dist);
 
-                auto globalIn     = globalInIDs(inIdx);
-                auto globalTarget = globalTargetIDs(targetIdx);
-                // 1) Compute Euclidean distance
-                double dist = 0;
-                for (int d = 0; d < dim; ++d) {
-                  double diff = inCoords(globalIn, d) - targetCoords(globalTarget, d);
-                  dist += diff * diff;
-                }
-                dist = Kokkos::sqrt(dist);
+          // 2) Evaluate your RBF or similar function
+          double val = f(dist, rbf_params);
 
-                // 2) Evaluate your RBF or similar function
-                double val = f(dist, rbf_params);
-
-                // 3) Store into localMatrix (2D)
-                localMatrix(r, c) = val;
-              }); // ThreadVectorRange
-     });
+          // 3) Store into localMatrix (2D)
+          localMatrix(r, c) = val;
+        }); // ThreadVectorRange
+  });
 }
 
 template <typename MemorySpace>
@@ -632,34 +628,33 @@ void do_batched_solve(
       // tmp size might be insufficient: there was no size requirement specified for the workspace
       auto tmp = Kokkos::subview(work, Kokkos::ALL, 2);
       if (team.team_rank() == 0) {
-         KokkosBatched::ApplyQ<MemberType,
-                          KokkosBatched::Side::Left,
-                          KokkosBatched::Trans::Transpose,
-                          KokkosBatched::Mode::Serial,
-                          KokkosBatched::Algo::ApplyQ::Unblocked>::invoke(team, qr, tau, in_cp, tmp);
+        KokkosBatched::ApplyQ<MemberType,
+                              KokkosBatched::Side::Left,
+                              KokkosBatched::Trans::Transpose,
+                              KokkosBatched::Mode::Serial,
+                              KokkosBatched::Algo::ApplyQ::Unblocked>::invoke(team, qr, tau, in_cp, tmp);
 
-      // Step 3d: Solve triangular solve R z = y
-      auto in_r = Kokkos::subview(in_cp, std::pair<int, int>(0, rank));
-      auto R    = Kokkos::subview(qr, std::pair<int, int>(0, rank), std::pair<int, int>(0, rank));
+        // Step 3d: Solve triangular solve R z = y
+        auto in_r = Kokkos::subview(in_cp, std::pair<int, int>(0, rank));
+        auto R    = Kokkos::subview(qr, std::pair<int, int>(0, rank), std::pair<int, int>(0, rank));
 
-      KokkosBatched::Trsv<
-          MemberType,
-          KokkosBatched::Uplo::Upper,
-          KokkosBatched::Trans::NoTranspose,
-          KokkosBatched::Diag::NonUnit,
-          KokkosBatched::Mode::Serial,
-          KokkosBatched::Algo::Trsv::Unblocked>::invoke(team, 1.0, R, in_r);
+        KokkosBatched::Trsv<
+            MemberType,
+            KokkosBatched::Uplo::Upper,
+            KokkosBatched::Trans::NoTranspose,
+            KokkosBatched::Diag::NonUnit,
+            KokkosBatched::Mode::Serial,
+            KokkosBatched::Algo::Trsv::Unblocked>::invoke(team, 1.0, R, in_r);
+      }
 
-        }
-
-        team.team_barrier();
+      team.team_barrier();
 
       // Step 3e: Apply pivoting x = P z
       // There are also convenience routines for the pivoting, but we let every thread just
       // apply the pivoting on its own, as it is more compact and doesn't hurt anyhow
-       for (int r = 0; r < rank; ++r) {
-          qrCoeffs[P(r)] = in_cp(r);
-        }
+      for (int r = 0; r < rank; ++r) {
+        qrCoeffs[P(r)] = in_cp(r);
+      }
 
       // Step 3f: Subtract polynomial portion from the input data: in -= Q * p
       // threading over inSize
