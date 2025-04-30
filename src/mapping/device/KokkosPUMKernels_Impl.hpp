@@ -43,10 +43,10 @@ inline int nearestPowerOfTwo(int n)
 // avgWork is in our case simply the average cluster size, as it determines
 // the local matrix sizes
 template <typename ExecSpace, typename FunctorType, typename Policy>
-auto findTeamSize(int avgWork, const FunctorType &functor, Policy &policy)
+auto findTeamSize(int avgWork, const FunctorType &functor, const Policy &policy)
 {
   // If using OpenMP, Kokkos::AUTO works best
-  if constexpr (std::is_same_v<ExecSpace, Kokkos::HostSpace>) {
+  if constexpr (std::is_same_v<ExecSpace, Kokkos::HostSpace::execution_space>) {
     return Kokkos::AUTO;
   } else {
     // Compute the closest power of two for the work we have
@@ -68,6 +68,7 @@ auto findTeamSize(int avgWork, const FunctorType &functor, Policy &policy)
 } // namespace impl
 
 // For within the kernels
+// The batch matrix has a default layout, which is consistent across kernels
 template <typename MemorySpace = ExecutionSpace>
 using BatchMatrix = Kokkos::View<double **, MemorySpace, UnmanagedMemory>;
 template <typename T = double *, typename MemorySpace = ExecutionSpace>
@@ -151,6 +152,7 @@ bool compute_weights(const int                     nCenters,
 template <typename MemorySpace>
 void do_batched_qr(int                           nCluster,
                    int                           dim,
+                   int                           avgClusterSize,
                    int                           maxClusterSize,
                    VectorOffsetView<MemorySpace> offsets,
                    GlobalIDView<MemorySpace>     globalIDs,
@@ -167,75 +169,88 @@ void do_batched_qr(int                           nCluster,
   Kokkos::deep_copy(qrMatrix, 1.0);
   Kokkos::fence();
 
+  auto kernel = KOKKOS_LAMBDA(const MemberType &team)
+  {
+    // Step 1: define some pointers we need
+    const int batch = team.league_rank();
+
+    // For the batch
+    const auto           begin              = offsets(batch);
+    const int            verticesPerCluster = offsets(batch + 1) - begin; // the local cluster size
+    const int            matrixCols         = dim + 1;                    // our polyParams
+    const offset_1d_type matrixBegin        = begin * matrixCols;
+
+    // Step 2: fill the polynomial matrix
+    BatchMatrix<MemorySpace> qr(&qrMatrix(matrixBegin), verticesPerCluster, matrixCols);
+
+    Kokkos::parallel_for(
+        Kokkos::TeamThreadRange(team, verticesPerCluster),
+        [&](int i) {
+          auto globalID = globalIDs(i + begin);
+          // the 1 is already set in the last column
+          for (int d = 0; d < dim; ++d) {
+            qr(i, d) = mesh(globalID, d);
+          }
+        });
+
+    // Step 3: Compute the QR decomposition
+    const offset_1d_type tauBegin = batch * matrixCols;
+    // the 1 here is for the local rank and has nothing to do with the permutation itself
+    const offset_1d_type PBegin = batch * (matrixCols + 1);
+
+    BatchVector<double *, MemorySpace> tau(&qrTau(tauBegin), matrixCols);
+    BatchVector<int *, MemorySpace>    P(&qrP(PBegin), matrixCols);
+
+    // Essentially P.end() - 1 =  matrixCols + 1 - 1
+    int &rank = qrP(PBegin + matrixCols);
+
+    // The scratch memory (shared memory for the device)
+    ScratchView work(team.team_scratch(0), 2 * verticesPerCluster);
+
+    //  auto b   = Kokkos::subview(work, std::pair<int, int>(0, n));
+    //  auto res = Kokkos::subview(work, std::pair<int, int>(n, n + m));
+    // A Serial QR_WithColumnPivoting would probably be better suited here, but this is as of now not available
+    // The workload to put a Team on the whole matrix is most likely not a good balance
+    KokkosBatched::TeamVectorQR_WithColumnPivoting<MemberType,
+                                                   KokkosBatched::Algo::QR::Unblocked>::invoke(team, qr, tau,
+                                                                                               P, work,
+                                                                                               rank);
+    // We have to define our own criterion for the rank, as the one provided is not stable enough
+    // A pivot will be considered nonzero if its absolute value is strictly greater than |pivot|⩽threshold×|maxpivot| where maxpivot is the biggest pivot.
+    // We use 1e-6 as threshold, which is much stricter than the Kokkos internal criterion
+    // The kokkos internal criterion can be found in KokkosBatched_QR_WithColumnPivoting_TeamVector_Internal.hpp
+    // if diagonal value is smaller than threshold(10 * max_diag * ats::epsilon())
+    // note that the pivoted algorithm aborts once the rank deficiency is detected, thus, values larger than rank just contain rubbish
+    double threshold = 1e-5;
+    if (team.team_rank() == 0) {
+      const double maxp = Kokkos::abs(qr(0, 0)); // largest pivot
+      int          r    = 0;
+      for (int i = 0; i < rank; ++i) {
+        r += static_cast<int>(Kokkos::abs(qr(i, i)) > (threshold * maxp));
+      }
+      rank = r;
+    }
+    // parallel_for
+  };
+
   // Required as workspace for the pivoted QR, see code comment
   // workspace (norm and householder application, 2 * max(m,n) is needed)
 
   // This configuration gave by far the best performance, using Kokkos::AUTO results in 70ms, whereas
   // this configuration gave about 20ms on the A100
-  // const int VL = TeamPolicy::vector_length_max();
   auto scratchSize = ScratchView::shmem_size(2 * maxClusterSize);
-  Kokkos::parallel_for("do_batched_qr", TeamPolicy(nCluster, 4, 8).set_scratch_size(
-                                            /* level = */ 0, Kokkos::PerTeam(scratchSize)),
-                       KOKKOS_LAMBDA(const MemberType &team) {
-                         // Step 1: define some pointers we need
-                         const int batch = team.league_rank();
-
-                         // For the batch
-                         const auto           begin              = offsets(batch);
-                         const int            verticesPerCluster = offsets(batch + 1) - begin; // the local cluster size
-                         const int            matrixCols         = dim + 1;                    // our polyParams
-                         const offset_1d_type matrixBegin        = begin * matrixCols;
-
-                         // Step 2: fill the polynomial matrix
-                         BatchMatrix<MemorySpace> qr(&qrMatrix(matrixBegin), verticesPerCluster, matrixCols);
-
-                         Kokkos::parallel_for(
-                             Kokkos::TeamThreadRange(team, verticesPerCluster),
-                             [&](int i) {
-                               auto globalID = globalIDs(i + begin);
-                               // the 1 is already set in the last column
-                               for (int d = 0; d < dim; ++d) {
-                                 qr(i, d) = mesh(globalID, d);
-                               }
-                             });
-
-                         // Step 3: Compute the QR decomposition
-                         const offset_1d_type tauBegin = batch * matrixCols;
-                         // the 1 here is for the local rank and has nothing to do with the permutation itself
-                         const offset_1d_type PBegin = batch * (matrixCols + 1);
-
-                         BatchVector<double *, MemorySpace> tau(&qrTau(tauBegin), matrixCols);
-                         BatchVector<int *, MemorySpace>    P(&qrP(PBegin), matrixCols);
-
-                         // Essentially P.end() - 1 =  matrixCols + 1 - 1
-                         int &rank = qrP(PBegin + matrixCols);
-
-                         // The scratch memory (shared memory for the device)
-                         ScratchView work(team.team_scratch(0), 2 * verticesPerCluster);
-
-                         //  auto b   = Kokkos::subview(work, std::pair<int, int>(0, n));
-                         //  auto res = Kokkos::subview(work, std::pair<int, int>(n, n + m));
-                         KokkosBatched::TeamVectorQR_WithColumnPivoting<MemberType,
-                                                                        KokkosBatched::Algo::QR::Unblocked>::invoke(team, qr, tau,
-                                                                                                                    P, work,
-                                                                                                                    rank);
-                         // We have to define our own criterion for the rank, as the one provided is not stable enough
-                         // A pivot will be considered nonzero if its absolute value is strictly greater than |pivot|⩽threshold×|maxpivot| where maxpivot is the biggest pivot.
-                         // We use 1e-6 as threshold, which is much stricter than the Kokkos internal criterion
-                         // The kokkos internal criterion can be found in KokkosBatched_QR_WithColumnPivoting_TeamVector_Internal.hpp
-                         // if diagonal value is smaller than threshold(10 * max_diag * ats::epsilon())
-                         // note that the pivoted algorithm aborts once the rank deficiency is detected, thus, values larger than rank just contain rubbish
-                         double threshold = 1e-5;
-                         if (team.team_rank() == 0) {
-                           const double maxp = Kokkos::abs(qr(0, 0)); // largest pivot
-                           int          r    = 0;
-                           for (int i = 0; i < rank; ++i) {
-                             r += static_cast<int>(Kokkos::abs(qr(i, i)) > (threshold * maxp));
-                           }
-                           rank = r;
-                         }
-                         // parallel_for
-                       });
+  // Rather than selecting the clustersize, we the time size is here more proportional to 4, since it is the maximum rank.
+  auto teamSize = impl::findTeamSize<typename MemorySpace::execution_space>(4, kernel, TeamPolicy(nCluster, Kokkos::AUTO).set_scratch_size(0, Kokkos::PerTeam(scratchSize)));
+  // const int VL = TeamPolicy::vector_length_max();
+  // The inner loop uses vector parallelism, so we should try to configure accordingly
+  std::unique_ptr<TeamPolicy> policy;
+  if constexpr (std::is_same_v<decltype(teamSize), Kokkos::AUTO_t>) {
+    policy = std::make_unique<TeamPolicy>(nCluster, Kokkos::AUTO);
+  } else {
+    policy = std::make_unique<TeamPolicy>(nCluster, 4, teamSize / 4);
+  }
+  policy->set_scratch_size(/* level = */ 0, Kokkos::PerTeam(scratchSize));
+  Kokkos::parallel_for("do_batched_qr", *policy, kernel);
 }
 
 template <typename MemorySpace>
@@ -269,8 +284,9 @@ template <typename EvalFunctionType, typename MemorySpace>
 void do_input_assembly(
     int                                  nCluster, // Number of local systems
     int                                  dim,      // Dimension of points
-    EvalFunctionType                     f,
+    int                                  avgClusterSize,
     int                                  maxInClusterSize,
+    EvalFunctionType                     f,
     const VectorOffsetView<MemorySpace> &inOffsets, // vertex offsets (length N+1)
     const GlobalIDView<MemorySpace>     &globalInIDs,
     const MeshView<MemorySpace>         &inCoords, // meshes
@@ -279,21 +295,15 @@ void do_input_assembly(
 {
   using ExecSpace  = typename MemorySpace::execution_space;
   using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
-  using TeamMember = typename TeamPolicy::member_type;
+  using MemberType = typename TeamPolicy::member_type;
 
   using ScratchSpace  = typename MemorySpace::scratch_memory_space;
   using ScratchView1d = Kokkos::View<double *, ScratchSpace, UnmanagedMemory>;
   using ScratchMatrix = Kokkos::View<double **, Kokkos::LayoutRight, ScratchSpace, UnmanagedMemory>;
 
-  auto inBytes = ScratchView1d::shmem_size(maxInClusterSize);
-  // We could also select her manually 64 for the average of 50 for example
-  TeamPolicy policy(nCluster, Kokkos::AUTO);
-  // We put the solution and the in data values into shared memory
-  policy.set_scratch_size(/* level = */ 0, Kokkos::PerTeam(dim * inBytes));
   const auto rbf_params = f.getFunctionParameters();
-
-  // We launch one team per local system
-  Kokkos::parallel_for("do_input_assembly", policy, KOKKOS_LAMBDA(const TeamMember &team) {
+  auto       kernel     = KOKKOS_LAMBDA(const MemberType &team)
+  {
     const int batch = team.league_rank();
     // Ranges
     const auto inBegin = inOffsets(batch);
@@ -338,8 +348,16 @@ void do_input_assembly(
           // 3) Store into localMatrix (2D)
           localMatrix(c, r) = val;
         }); // TeamThreadRange
-  });
+  };
+
+  // We put the solution and the in data values into shared memory
+  auto inBytes = ScratchView1d::shmem_size(maxInClusterSize);
+
+  // We could also select here manually 64 for the average of 50 for example
+  auto teamSize = impl::findTeamSize<ExecSpace>(avgClusterSize, kernel, TeamPolicy(nCluster, Kokkos::AUTO).set_scratch_size(/* level = */ 0, Kokkos::PerTeam(dim * inBytes)));
+  Kokkos::parallel_for("do_input_assembly", TeamPolicy(nCluster, teamSize).set_scratch_size(/* level = */ 0, Kokkos::PerTeam(dim * inBytes)), kernel);
 }
+
 // TODO: Using Kokkos::LayoutRight for the Coords performs a bit better for the assembly,
 // but it might deteriorate performance related to the polynomials. Especially for the gemv
 // for the polynomial contributions etc
@@ -347,25 +365,26 @@ void do_input_assembly(
 // coalesced, but rather first pick what we need
 template <typename EvalFunctionType, typename MemorySpace>
 void do_batched_assembly(
-    int                                       nCluster, // Number of local systems
-    int                                       dim,      // Dimension of points
-    EvalFunctionType                          f,
-    ::precice::mapping::RadialBasisParameters rbf_params,
-    const VectorOffsetView<MemorySpace>      &inOffsets, // vertex offsets (length N+1)
-    const GlobalIDView<MemorySpace>          &globalInIDs,
-    const MeshView<MemorySpace>              &inCoords, // meshes
-    const VectorOffsetView<MemorySpace>      &targetOffsets,
-    const GlobalIDView<MemorySpace>          &globalTargetIDs,
-    const MeshView<MemorySpace>              &targetCoords,
-    const MatrixOffsetView<MemorySpace>      &matrixOffsets,
-    VectorView<MemorySpace>                   matrices) // 1D view of batched matrices
+    int                                  nCluster, // Number of local systems
+    int                                  dim,      // Dimension of points
+    int                                  avgClusterSize,
+    EvalFunctionType                     f,
+    const VectorOffsetView<MemorySpace> &inOffsets, // vertex offsets (length N+1)
+    const GlobalIDView<MemorySpace>     &globalInIDs,
+    const MeshView<MemorySpace>         &inCoords, // meshes
+    const VectorOffsetView<MemorySpace> &targetOffsets,
+    const GlobalIDView<MemorySpace>     &globalTargetIDs,
+    const MeshView<MemorySpace>         &targetCoords,
+    const MatrixOffsetView<MemorySpace> &matrixOffsets,
+    VectorView<MemorySpace>              matrices) // 1D view of batched matrices
 {
   using ExecSpace  = typename MemorySpace::execution_space;
   using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
-  using TeamMember = typename TeamPolicy::member_type;
+  using MemberType = typename TeamPolicy::member_type;
 
-  // We launch one team per local system
-  Kokkos::parallel_for("do_batched_assembly", TeamPolicy(nCluster, Kokkos::AUTO), KOKKOS_LAMBDA(const TeamMember &team) {
+  const auto rbf_params = f.getFunctionParameters();
+  auto       kernel     = KOKKOS_LAMBDA(const MemberType &team)
+  {
     const int batch = team.league_rank();
     // Ranges
     const auto inBegin     = inOffsets(batch);
@@ -409,12 +428,16 @@ void do_batched_assembly(
           // 3) Store into localMatrix (2D)
           localMatrix(r, c) = val;
         }); // ThreadVectorRange
-  });
+  };
+
+  auto teamSize = impl::findTeamSize<ExecSpace>(avgClusterSize, kernel, TeamPolicy(nCluster, Kokkos::AUTO));
+  Kokkos::parallel_for("do_batched_assembly", TeamPolicy(nCluster, teamSize), kernel);
 }
 
 template <typename MemorySpace>
 void do_batched_lu(
     int                                  nCluster,
+    int                                  avgClusterSize,
     const MatrixOffsetView<MemorySpace> &matrixOffsets,
     VectorView<MemorySpace>              matrices)
 {
@@ -422,8 +445,8 @@ void do_batched_lu(
   using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
   using MemberType = typename TeamPolicy::member_type;
 
-  // Using Kokkos::AUTO resulted in the best performance here
-  Kokkos::parallel_for("do_batched_lu", TeamPolicy(nCluster, Kokkos::AUTO), KOKKOS_LAMBDA(const MemberType &team) {
+  auto kernel = KOKKOS_LAMBDA(const MemberType &team)
+  {
     const int i     = team.league_rank();
     auto      start = matrixOffsets(i);
     auto      end   = matrixOffsets(i + 1);
@@ -433,16 +456,20 @@ void do_batched_lu(
 
     KokkosBatched::TeamLU<MemberType, KokkosBatched::Algo::LU::Blocked>::invoke(team, A);
     // Parallel end
-  });
+  };
+
+  // Using Kokkos::AUTO resulted in the best performance for all cases
+  // auto teamSize = impl::findTeamSize<ExecSpace>(avgClusterSize, kernel, TeamPolicy(nCluster, Kokkos::AUTO));
+  Kokkos::parallel_for("do_batched_lu", TeamPolicy(nCluster, Kokkos::AUTO), kernel);
 }
 
 template <bool polynomial, typename MemorySpace>
 void do_batched_solve(
     int                                  nCluster,
     int                                  dim,
+    int                                  avgInClusterSize,
     int                                  maxInClusterSize,
     int                                  maxOutClusterSize,
-    int                                  avgClusterSize,
     const VectorOffsetView<MemorySpace> &rhsOffsets,
     const GlobalIDView<MemorySpace>     &globalRhsIDs,
     VectorView<MemorySpace>              rhs,
@@ -660,23 +687,26 @@ void do_batched_solve(
   // We put the solution and the in data values into shared memory
   // TODO: Avoid the duplicate memory definitions here, currently needed as we
   // cannot change the Kokkos::AUTO to the actual recommendataion later
-  TeamPolicy tmpPol(nCluster, Kokkos::AUTO)
-      .set_scratch_size(
-          /* level = */ 0, Kokkos::PerTeam(inBytes))
-      .set_scratch_size(
-          /* level = */ 1, Kokkos::PerTeam(outBytes));
+  auto tmpPol = TeamPolicy(nCluster, Kokkos::AUTO)
+                    .set_scratch_size(
+                        /* level = */ 0, Kokkos::PerTeam(inBytes))
+                    .set_scratch_size(
+                        /* level = */ 1, Kokkos::PerTeam(outBytes));
 
-  auto teamSize = impl::findTeamSize<ExecSpace>(avgClusterSize, kernel, tmpPol);
+  auto teamSize = impl::findTeamSize<ExecSpace>(avgInClusterSize, kernel, tmpPol);
 
-  TeamPolicy policy(nCluster, teamSize)
-      .set_scratch_size(
-          /* level = */ 0, Kokkos::PerTeam(inBytes))
-      .set_scratch_size(
-          /* level = */ 1, Kokkos::PerTeam(outBytes));
+  auto policy = TeamPolicy(nCluster, teamSize)
+                    .set_scratch_size(
+                        /* level = */ 0, Kokkos::PerTeam(inBytes))
+                    .set_scratch_size(
+                        /* level = */ 1, Kokkos::PerTeam(outBytes));
 
   Kokkos::parallel_for("do_batched_solve", policy, kernel);
 }
 
+// Currently not used at all, solves the QR decomposition used for the polynomial
+// but cannot be applied standalone, as we subtract the polynomial part on a per-cluster
+// basis from the inData. Still useful for development purposes
 template <typename MemorySpace>
 void do_qr_solve(int                           nCluster,
                  int                           dim,

@@ -282,13 +282,14 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
     PRECICE_CHECK(success, "Clustering resulted in unassigned vertices for the output mesh \"{}\".", outMesh->getName());
   }
 
+  PRECICE_ASSERT(_avgClusterSize > 0);
   if (_polynomial == Polynomial::SEPARATE) {
     PRECICE_DEBUG("Computing polynomial QR");
     precice::profiling::Event ePoly("map.pou.gpu.computePolynomials");
     _qrMatrix = VectorView<>("qrMatrix", globalInIDs.size() * (_dim + 1)); // = nCluster x verticesPerCluster_i x polyParams
     _qrTau    = VectorView<>("qrTau", _nCluster * (_dim + 1));             // = nCluster x polyParams
     _qrP      = PivotView<>("qrP", _nCluster * (_dim + 2));                //  = nCluster x (polyParams + rank)
-    kernel::do_batched_qr(_nCluster, _dim, _maxInClusterSize, _inOffsets, _globalInIDs, _inMesh, _qrMatrix, _qrTau, _qrP);
+    kernel::do_batched_qr(_nCluster, _dim, _avgClusterSize, _maxInClusterSize, _inOffsets, _globalInIDs, _inMesh, _qrMatrix, _qrTau, _qrP);
   }
   precice::profiling::Event eMatr("map.pou.gpu.assembleMatrices");
   // Step 6: Launch the parallel kernel to assemble the kernel matrices
@@ -298,7 +299,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   Kokkos::deep_copy(unrolledSize, last_elem_view);
   _kernelMatrices = VectorView<>("kernelMatrices", unrolledSize);
 
-  kernel::do_input_assembly(_nCluster, _dim, basisFunction, _maxInClusterSize,
+  kernel::do_input_assembly(_nCluster, _dim, _avgClusterSize, _maxInClusterSize, basisFunction,
                             _inOffsets, _globalInIDs, _inMesh, _kernelOffsets, _kernelMatrices);
 
   // The eval matrices ///////////////
@@ -307,7 +308,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   Kokkos::deep_copy(evalSize, last_elem_view2);
   _evalMatrices = VectorView<>("evalMatrices", evalSize);
 
-  kernel::do_batched_assembly(_nCluster, _dim, basisFunction, basisFunction.getFunctionParameters(),
+  kernel::do_batched_assembly(_nCluster, _dim, _avgClusterSize, basisFunction,
                               _inOffsets, _globalInIDs, _inMesh, _outOffsets, _globalOutIDs, _outMesh, _evaluationOffsets, _evalMatrices);
 
   Kokkos::fence();
@@ -315,7 +316,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   precice::profiling::Event eLU("map.pou.gpu.compute.lu");
   // Step 7: Compute batched lu
   PRECICE_DEBUG("Compute batched lu");
-  kernel::do_batched_lu(_nCluster, _kernelOffsets, _kernelMatrices);
+  kernel::do_batched_lu(_nCluster, _avgClusterSize, _kernelOffsets, _kernelMatrices);
   Kokkos::fence();
   eLU.stop();
   precice::profiling::Event eAllo("map.pou.gpu.allocateData");
@@ -346,12 +347,12 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Samp
   // Step 2: Launch kernel
   precice::profiling::Event e3("map.pou.gpu.BatchedSolve");
   if (_polynomial == Polynomial::SEPARATE) {
-    kernel::do_batched_solve<true>(_nCluster, _dim, _maxInClusterSize, _maxOutClusterSize, _avgClusterSize,
+    kernel::do_batched_solve<true>(_nCluster, _dim, _avgClusterSize, _maxInClusterSize, _maxOutClusterSize,
                                    _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
                                    _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData,
                                    _inMesh, _outMesh, _qrMatrix, _qrTau, _qrP);
   } else {
-    kernel::do_batched_solve<false>(_nCluster, _dim, _maxInClusterSize, _maxOutClusterSize, _avgClusterSize,
+    kernel::do_batched_solve<false>(_nCluster, _dim, _avgClusterSize, _maxInClusterSize, _maxOutClusterSize,
                                     _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
                                     _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData,
                                     _inMesh, _outMesh, _qrMatrix, _qrTau, _qrP);

@@ -9,7 +9,7 @@ template <typename MemorySpace>
 void compute_offsets(const VectorOffsetView<MemorySpace> src1, const VectorOffsetView<MemorySpace> src2,
                      MatrixOffsetView<MemorySpace> dst, int nCluster);
 
-// returns true, if successful
+// returns true, if successful, currently not tuned as it is not performance critical
 template <typename MemorySpace>
 bool compute_weights(const int                     nCluster,
                      const offset_1d_type          nWeights,
@@ -22,23 +22,38 @@ bool compute_weights(const int                     nCluster,
                      const CompactPolynomialC2    &w,
                      VectorView<MemorySpace>       normalizedWeights);
 
+// the input assembly
 template <typename EvalFunctionType, typename MemorySpace>
-void do_batched_assembly(int                                       nCluster, // Number of local systems
-                         int                                       dim,      // Dimension of points
-                         EvalFunctionType                          f,
-                         ::precice::mapping::RadialBasisParameters rbf_params,
-                         const VectorOffsetView<MemorySpace>      &inOffsets, // vertex offsets (length N+1)
-                         const GlobalIDView<MemorySpace>          &globalInIDs,
-                         const MeshView<MemorySpace>              &inCoords, // meshes
-                         const VectorOffsetView<MemorySpace>      &targetOffsets,
-                         const GlobalIDView<MemorySpace>          &globalTargetIDs,
-                         const MeshView<MemorySpace>              &targetCoords,
-                         const MatrixOffsetView<MemorySpace>      &matrixOffsets,
-                         VectorView<MemorySpace>                   matrices);
+void do_input_assembly(
+    int                                  nCluster, // Number of local systems
+    int                                  dim,      // Dimension of points
+    int                                  avgClusterSize,
+    int                                  maxInClusterSize,
+    EvalFunctionType                     f,
+    const VectorOffsetView<MemorySpace> &inOffsets, // vertex offsets (length N+1)
+    const GlobalIDView<MemorySpace>     &globalInIDs,
+    const MeshView<MemorySpace>         &inCoords, // meshes
+    const MatrixOffsetView<MemorySpace> &matrixOffsets,
+    VectorView<MemorySpace>              matrices);
+
+template <typename EvalFunctionType, typename MemorySpace>
+void do_batched_assembly(int                                  nCluster, // Number of local systems
+                         int                                  dim,      // Dimension of points
+                         int                                  avgClusterSize,
+                         EvalFunctionType                     f,
+                         const VectorOffsetView<MemorySpace> &inOffsets, // vertex offsets (length N+1)
+                         const GlobalIDView<MemorySpace>     &globalInIDs,
+                         const MeshView<MemorySpace>         &inCoords, // meshes
+                         const VectorOffsetView<MemorySpace> &targetOffsets,
+                         const GlobalIDView<MemorySpace>     &globalTargetIDs,
+                         const MeshView<MemorySpace>         &targetCoords,
+                         const MatrixOffsetView<MemorySpace> &matrixOffsets,
+                         VectorView<MemorySpace>              matrices);
 
 template <typename MemorySpace>
 void do_batched_qr(int                           nCluster,
                    int                           dim,
+                   int                           avgClusterSize,
                    int                           maxClusterSize,
                    VectorOffsetView<MemorySpace> inOffsets,
                    GlobalIDView<MemorySpace>     globalInIDs,
@@ -47,6 +62,7 @@ void do_batched_qr(int                           nCluster,
                    VectorView<MemorySpace>       qrTau,
                    PivotView<MemorySpace>        qrP);
 
+// currently unused
 template <typename MemorySpace>
 void do_qr_solve(int                           nCluster,
                  int                           dim,
@@ -67,6 +83,7 @@ void do_qr_solve(int                           nCluster,
 template <typename MemorySpace>
 void do_batched_lu(
     int                                  nCluster,
+    int                                  avgClusterSize,
     const MatrixOffsetView<MemorySpace> &matrixOffsets,
     VectorView<MemorySpace>              matrices);
 
@@ -74,9 +91,9 @@ template <bool polynomial, typename MemorySpace>
 void do_batched_solve(
     int                                  nCluster,
     int                                  dim,
+    int                                  avgInClusterSize,
     int                                  maxInClusterSize,
     int                                  maxOutClusterSize,
-    int                                  avgClusterSize,
     const VectorOffsetView<MemorySpace> &rhsOffsets,
     const GlobalIDView<MemorySpace>     &globalRhsIDs,
     VectorView<MemorySpace>              rhs,
