@@ -609,9 +609,11 @@ void do_batched_solve(
     if constexpr (polynomial) {
 
       // Step 3a: Backup the current in data, since we solve the QR in place
-      auto in_cp = Kokkos::subview(work, std::pair<int, int>(0, inSize), 1);
+      // In principle, we need a vector here (just as in), but the ApplyQ routine expects a Rank2 matrix,
+      // so we have to stick to this particular syntax (keeping it rank 2 with one column)
+      auto in_cp = Kokkos::subview(work, std::pair<int, int>(0, inSize), std::pair<int, int>(1, 2));
       Kokkos::parallel_for(
-          Kokkos::TeamThreadRange(team, inSize), [&](int i) { in_cp(i) = in(i); });
+          Kokkos::TeamThreadRange(team, inSize), [&](int i) { in_cp(i, 0) = in(i); });
       team.team_barrier();
 
       // Step 3b: Define pointers and matrices
@@ -626,9 +628,11 @@ void do_batched_solve(
       BatchVector<int *, MemorySpace>    P(&qrP(PBegin), matrixCols);
 
       // Step 3c: Apply Q on the left of in, i.e., y = Q^T * in
-      // tmp size might be insufficient: there was no size requirement specified for the workspace
-      auto tmp = Kokkos::subview(work, Kokkos::ALL, 2);
       if (team.team_rank() == 0) {
+
+        // tmp size might be insufficient: there was no size requirement specified for the workspace
+        // however, it needs to be contiguous
+        auto tmp = Kokkos::subview(work, Kokkos::ALL, 2);
         KokkosBatched::ApplyQ<MemberType,
                               KokkosBatched::Side::Left,
                               KokkosBatched::Trans::Transpose,
@@ -636,7 +640,7 @@ void do_batched_solve(
                               KokkosBatched::Algo::ApplyQ::Unblocked>::invoke(team, qr, tau, in_cp, tmp);
 
         // Step 3d: Solve triangular solve R z = y
-        auto in_r = Kokkos::subview(in_cp, std::pair<int, int>(0, rank));
+        auto in_r = Kokkos::subview(in_cp, std::pair<int, int>(0, rank), 0);
         auto R    = Kokkos::subview(qr, std::pair<int, int>(0, rank), std::pair<int, int>(0, rank));
 
         KokkosBatched::Trsv<
@@ -654,7 +658,7 @@ void do_batched_solve(
       // There are also convenience routines for the pivoting, but we let every thread just
       // apply the pivoting on its own, as it is more compact and doesn't hurt anyhow
       for (int r = 0; r < rank; ++r) {
-        qrCoeffs[P(r)] = in_cp(r);
+        qrCoeffs[P(r)] = in_cp(r, 0);
       }
 
       // Step 3f: Subtract polynomial portion from the input data: in -= Q * p
