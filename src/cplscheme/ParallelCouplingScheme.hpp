@@ -67,11 +67,15 @@ private:
   /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
   void exchangeInitialData() final override;
 
+  void exchangeDirectAccessData() final override;
+
   void exchangeFirstData() final override;
 
   void exchangeSecondData() final override;
 
   DataMap &getAccelerationData() final override;
+
+  bool _directAccessDataWasSent = false;
 };
 
 } // namespace cplscheme

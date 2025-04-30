@@ -210,6 +210,11 @@ public:
   /// @copydoc cplscheme::CouplingScheme::implicitDataToReceive()
   ImplicitData implicitDataToReceive() const final override;
 
+  void exchangeDirectAccessData() final override
+  {
+    // PRECICE_ASSERT(false);
+  }
+
 private:
   mutable logging::Logger _log{"cplscheme::CompositionalCouplingScheme"};
 

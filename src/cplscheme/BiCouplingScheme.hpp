@@ -44,14 +44,16 @@ public:
       const mesh::PtrData &data,
       mesh::PtrMesh        mesh,
       bool                 requiresInitialization,
-      bool                 exchangeSubsteps);
+      bool                 exchangeSubsteps,
+      bool                 directAccessData);
 
   /// Adds data to be received on data exchange.
   void addDataToReceive(
       const mesh::PtrData &data,
       mesh::PtrMesh        mesh,
       bool                 requiresInitialization,
-      bool                 exchangeSubsteps);
+      bool                 exchangeSubsteps,
+      bool                 directAccessData);
 
   void determineInitialDataExchange() override;
 
@@ -108,5 +110,4 @@ private:
   /// Second participant name.
   std::string _secondParticipant = "unknown";
 };
-
 } // namespace precice::cplscheme

@@ -1094,6 +1094,20 @@ public:
       ::precice::span<VertexID> ids,
       ::precice::span<double>   coordinates) const;
 
+  /**
+   * @brief allows to reset a mesh access region previously defined by \ref setMeshAccessRegion()
+   *
+   * @experimental
+   *
+   * This functionality is the api-access counterpart to \ref resetMesh to deal with access regions
+   * varying over time. It reset the bounding box defined through \ref setMeshAccessRegion(). After
+   * calling this function, a new access region needs to be defined using \ref setMeshAccessRegion().
+   * Within this new access region, vertices and their IDs can be queried (using
+   * \ref getMeshVertexIDsAndCoordinates()) or a just-in-time mapping can be used.
+   *
+   * @param[in] meshName Name of the mesh the access region was defined on.
+   */
+  void resetMeshAccessRegion(::precice::string_view meshName);
   ///@}
 
   /** @name Experimental: Gradient Data

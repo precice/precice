@@ -393,6 +393,11 @@ PRECICE_API void precicec_getMeshVertexIDsAndCoordinates(
     int        *ids,
     double     *coordinates);
 
+/**
+ * @brief See precice::Participant::resetMeshAccessRegion().
+ */
+PRECICE_API void precicec_resetMeshAccessRegion(const char *meshName);
+
 ///@}
 
 /** @name Experimental Gradient Data

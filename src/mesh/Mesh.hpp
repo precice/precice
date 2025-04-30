@@ -311,6 +311,12 @@ public:
    */
   const BoundingBox &getBoundingBox() const;
 
+  /// @brief Reset the bounding box defined in the mesh to an empty bounding box
+  void resetBoundingBox()
+  {
+    _boundingBox = BoundingBox(_dimensions);
+  }
+
   void expandBoundingBox(const BoundingBox &bounding_box);
 
   bool operator==(const Mesh &other) const;
