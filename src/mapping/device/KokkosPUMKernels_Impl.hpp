@@ -17,6 +17,56 @@ using precice::math::pow_int;
 
 namespace precice::mapping::kernel {
 
+namespace impl {
+// Helper to compute the closest power of 2^x for the given n
+// used only below to determine a reasonable team size
+inline int nearestPowerOfTwo(int n)
+{
+  if (n < 1)
+    return 1;
+  // find highest power-of-two <= n
+  int pow2 = 1;
+  while (pow2 <= n) {
+    pow2 = pow2 * 2;
+  }
+  // now that we have the value larger, we look for the pow2 below n
+  int lower = pow2 / 2;
+  // decide whether n is closer to lower or upper (pow2)
+  if (n - lower < pow2 - n) {
+    return lower;
+  } else {
+    return pow2;
+  }
+}
+
+// Try to find a good team size based on the cluster size
+// avgWork is in our case simply the average cluster size, as it determines
+// the local matrix sizes
+template <typename ExecSpace, typename FunctorType, typename Policy>
+auto findTeamSize(int avgWork, const FunctorType &functor, Policy &policy)
+{
+  // If using OpenMP, Kokkos::AUTO works best
+  if constexpr (std::is_same_v<ExecSpace, Kokkos::HostSpace>) {
+    return Kokkos::AUTO;
+  } else {
+    // Compute the closest power of two for the work we have
+    int teamSize = nearestPowerOfTwo(avgWork);
+    // Ensure minimum of one warp for the GPU to avoid partial-warp inefficiency
+    int warpSize = Kokkos::TeamPolicy<ExecSpace>::vector_length_max();
+    if (teamSize < warpSize) {
+      teamSize = warpSize;
+    }
+    // Query Kokkos for the max recommended team size for this functor
+    // (takes also memory constraints into account)
+    int maxRecommended = policy.team_size_recommended(functor, Kokkos::ParallelForTag());
+    if (teamSize > maxRecommended) {
+      teamSize = maxRecommended;
+    }
+    return teamSize;
+  }
+}
+} // namespace impl
+
 // For within the kernels
 template <typename MemorySpace = ExecutionSpace>
 using BatchMatrix = Kokkos::View<double **, MemorySpace, UnmanagedMemory>;
@@ -557,25 +607,10 @@ void do_batched_solve(
   using ScratchVector = Kokkos::View<double *, ScratchSpace, UnmanagedMemory>;
   using ScratchMatrix = std::conditional_t<polynomial, ScratchView4d, ScratchView1d>;
 
-  // Once for indata and once for outdata
-  // We need at least four entries for the polynomial, seems unlikely for maxInClusterSize to be lower
-  // but we should be certain
-  auto       inBytes  = ScratchVector::shmem_size(std::max(4, maxInClusterSize));
-  auto       outBytes = ScratchVector::shmem_size(maxOutClusterSize);
-  TeamPolicy policy(nCluster, Kokkos::AUTO);
-
-  // We put the solution and the in data values into shared memory
-  if (polynomial) {
-    policy.set_scratch_size(
-        /* level = */ 0, Kokkos::PerTeam(4 * inBytes));
-  } else {
-    policy.set_scratch_size(
-        /* level = */ 0, Kokkos::PerTeam(inBytes));
-  }
-  // Put the out vector into level 1
-  policy.set_scratch_size(
-      /* level = */ 1, Kokkos::PerTeam(outBytes));
-  Kokkos::parallel_for("do_batched_solve", policy, KOKKOS_LAMBDA(const MemberType &team) {
+  // We define the lambda here such that we can query the recommended team size from Kokkos
+  // Launch policy is then handled below
+  auto kernel = KOKKOS_LAMBDA(const MemberType &team)
+  {
     // Required for correct capturing, as these variables are only conditionally used further down
     (void) dim;
     (void) qrMatrix;
@@ -746,6 +781,34 @@ void do_batched_solve(
           Kokkos::atomic_add(&out(globalID), sum * w);
         }); // TeamThreadRange
     // End Team parallel loop
-  });
+  };
+
+  // We allocate one vector for indata and once for outdata
+  // We need at least four entries for the polynomial, seems unlikely for maxInClusterSize to be lower
+  // but we should be certain
+  auto inBytes  = ScratchVector::shmem_size(std::max(4, maxInClusterSize));
+  auto outBytes = ScratchVector::shmem_size(maxOutClusterSize);
+  if (polynomial) { // and additional storage if we have the polynomial
+    inBytes = 4 * inBytes;
+  }
+
+  // We put the solution and the in data values into shared memory
+  // TODO: Avoid the duplicate memory definitions here, currently needed as we
+  // cannot change the Kokkos::AUTO to the actual recommendataion later
+  TeamPolicy tmpPol(nCluster, Kokkos::AUTO)
+      .set_scratch_size(
+          /* level = */ 0, Kokkos::PerTeam(inBytes))
+      .set_scratch_size(
+          /* level = */ 1, Kokkos::PerTeam(outBytes));
+
+  auto teamSize = impl::findTeamSize<ExecSpace>(avgClusterSize, kernel, tmpPol);
+
+  TeamPolicy policy(nCluster, teamSize)
+      .set_scratch_size(
+          /* level = */ 0, Kokkos::PerTeam(inBytes))
+      .set_scratch_size(
+          /* level = */ 1, Kokkos::PerTeam(outBytes));
+
+  Kokkos::parallel_for("do_batched_solve", policy, kernel);
 }
 } // namespace precice::mapping::kernel
