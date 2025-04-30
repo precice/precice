@@ -146,8 +146,11 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
 
   // has to be a separate loop, as we first need to gather knowledge about
   // the shape for the meshes
-  hostIn(0)         = 0;
-  hostOut(0)        = 0;
+  hostIn(0)  = 0;
+  hostOut(0) = 0;
+  // To detect overflows
+  std::uint64_t inCheck  = 0;
+  std::uint64_t outCheck = 0;
   _maxInClusterSize = _maxOutClusterSize = 0;
   for (int i = 0; i < _nCluster; ++i) {
     const auto &center = centers[i];
@@ -156,9 +159,16 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
     auto inIDs          = inMesh->index().getVerticesInsideBox(center, clusterRadius);
     _maxInClusterSize   = std::max(_maxInClusterSize, static_cast<int>(inIDs.size()));
     std::uint64_t tmpIn = hostIn(i) + inIDs.size();
+
+    // Check overflows
+    if constexpr (std::numeric_limits<offset_1d_type>::digits < std::numeric_limits<std::uint64_t>::digits) {
+      PRECICE_CHECK(tmpIn < std::numeric_limits<offset_1d_type>::max(),
+                    "The selected integer precision for the (input) vector offsets (\"offset_1d_type\") overflow. You might want to change the precision specified in \"device/KokkosTypes.hpp\"");
+    }
     if constexpr (std::numeric_limits<offset_2d_type>::digits < std::numeric_limits<std::uint64_t>::digits) {
-      PRECICE_CHECK(tmpIn < std::numeric_limits<offset_2d_type>::max(),
-                    "The selected integer precision for the matrix offsets (\"offset_2d_type\") overflow. You might want to change the precision specified in \"device/KokkosTypes.hpp\"");
+      inCheck += tmpIn * tmpIn;
+      PRECICE_CHECK(inCheck < std::numeric_limits<offset_2d_type>::max(),
+                    "The selected integer precision for the (input) matrix offsets (\"offset_2d_type\") overflow. You might want to change the precision specified in \"device/KokkosTypes.hpp\"");
     }
     hostIn(i + 1) = static_cast<offset_2d_type>(tmpIn);
     std::copy(inIDs.begin(), inIDs.end(), std::back_inserter(globalInIDs));
@@ -167,9 +177,16 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
     auto outIDs          = outMesh->index().getVerticesInsideBox(center, clusterRadius - math::NUMERICAL_ZERO_DIFFERENCE);
     _maxOutClusterSize   = std::max(_maxOutClusterSize, static_cast<int>(outIDs.size()));
     std::uint64_t tmpOut = hostOut(i) + outIDs.size();
+
+    // Check overflows
+    if constexpr (std::numeric_limits<offset_1d_type>::digits < std::numeric_limits<std::uint64_t>::digits) {
+      PRECICE_CHECK(tmpOut < std::numeric_limits<offset_1d_type>::max(),
+                    "The selected integer precision for the (output) vector offsets (\"offset_1d_type\") overflow. You might want to change the precision specified in \"device/KokkosTypes.hpp\"");
+    }
     if constexpr (std::numeric_limits<offset_2d_type>::digits < std::numeric_limits<std::uint64_t>::digits) {
-      PRECICE_CHECK(tmpOut < std::numeric_limits<offset_2d_type>::max(),
-                    "The selected integer precision for the matrix offsets (\"offset_2d_type\") overflow. You might want to change the precision specified in \"device/KokkosTypes.hpp\"");
+      outCheck += tmpIn * tmpOut;
+      PRECICE_CHECK(outCheck < std::numeric_limits<offset_2d_type>::max(),
+                    "The selected integer precision for the (output) matrix offsets (\"offset_2d_type\") overflow. You might want to change the precision specified in \"device/KokkosTypes.hpp\"");
     }
     hostOut(i + 1) = static_cast<offset_2d_type>(tmpOut);
     std::copy(outIDs.begin(), outIDs.end(), std::back_inserter(globalOutIDs));
