@@ -166,11 +166,11 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
                     "The selected integer precision for the (input) vector offsets (\"offset_1d_type\") overflow. You might want to change the precision specified in \"device/KokkosTypes.hpp\"");
     }
     if constexpr (std::numeric_limits<offset_2d_type>::digits < std::numeric_limits<std::uint64_t>::digits) {
-      inCheck += tmpIn * tmpIn;
+      inCheck += static_cast<std::uint64_t>(inIDs.size() * inIDs.size());
       PRECICE_CHECK(inCheck < std::numeric_limits<offset_2d_type>::max(),
                     "The selected integer precision for the (input) matrix offsets (\"offset_2d_type\") overflow. You might want to change the precision specified in \"device/KokkosTypes.hpp\"");
     }
-    hostIn(i + 1) = static_cast<offset_2d_type>(tmpIn);
+    hostIn(i + 1) = static_cast<offset_1d_type>(tmpIn);
     std::copy(inIDs.begin(), inIDs.end(), std::back_inserter(globalInIDs));
 
     // ... and the same for the output side
@@ -184,11 +184,11 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
                     "The selected integer precision for the (output) vector offsets (\"offset_1d_type\") overflow. You might want to change the precision specified in \"device/KokkosTypes.hpp\"");
     }
     if constexpr (std::numeric_limits<offset_2d_type>::digits < std::numeric_limits<std::uint64_t>::digits) {
-      outCheck += tmpIn * tmpOut;
+      outCheck += static_cast<std::uint64_t>(outIDs.size() * inIDs.size()); // is in x out
       PRECICE_CHECK(outCheck < std::numeric_limits<offset_2d_type>::max(),
                     "The selected integer precision for the (output) matrix offsets (\"offset_2d_type\") overflow. You might want to change the precision specified in \"device/KokkosTypes.hpp\"");
     }
-    hostOut(i + 1) = static_cast<offset_2d_type>(tmpOut);
+    hostOut(i + 1) = static_cast<offset_1d_type>(tmpOut);
     std::copy(outIDs.begin(), outIDs.end(), std::back_inserter(globalOutIDs));
   }
 
