@@ -527,6 +527,7 @@ void do_batched_solve(
     int                                  dim,
     int                                  maxInClusterSize,
     int                                  maxOutClusterSize,
+    int                                  avgClusterSize,
     const VectorOffsetView<MemorySpace> &rhsOffsets,
     const GlobalIDView<MemorySpace>     &globalRhsIDs,
     VectorView<MemorySpace>              rhs,

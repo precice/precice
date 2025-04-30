@@ -85,6 +85,7 @@ private:
   Polynomial _polynomial;
   const int  _nCluster;
   const int  _dim; // Mesh dimension
+  int        _avgClusterSize{};
   // MappingConfiguration::GinkgoParameter _ginkgoParameter;
 };
 
@@ -192,6 +193,9 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
     std::copy(outIDs.begin(), outIDs.end(), std::back_inserter(globalOutIDs));
   }
 
+  _avgClusterSize = hostIn(_nCluster /* = hostIn.extent(0) - 1 */) / _nCluster;
+  PRECICE_INFO("Average cluster size used to find a good team size of the kernel execution: {}", _avgClusterSize);
+
   // Copy offsets onto the device
   Kokkos::deep_copy(_inOffsets, hostIn);
   Kokkos::deep_copy(_outOffsets, hostOut);
@@ -256,6 +260,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   Kokkos::fence();
   eMesh.stop();
   {
+    PRECICE_DEBUG("Computing PU-RBF weights");
     precice::profiling::Event eWeights("map.pou.gpu.computeWeights");
 
     // Step 4: Compute the weights for each vertex
@@ -278,6 +283,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   }
 
   if (_polynomial == Polynomial::SEPARATE) {
+    PRECICE_DEBUG("Computing polynomial QR");
     precice::profiling::Event ePoly("map.pou.gpu.computePolynomials");
     _qrMatrix = VectorView<>("qrMatrix", globalInIDs.size() * (_dim + 1)); // = nCluster x verticesPerCluster_i x polyParams
     _qrTau    = VectorView<>("qrTau", _nCluster * (_dim + 1));             // = nCluster x polyParams
@@ -318,8 +324,6 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
 
   _inData  = VectorView<>("inData", inMesh->nVertices());
   _outData = VectorView<>("outData", outMesh->nVertices());
-  // _inDataMirror  = Kokkos::create_mirror_view(_inData);
-  // _outDataMirror = Kokkos::create_mirror_view(_outData);
   Kokkos::fence();
 }
 
@@ -342,12 +346,12 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Samp
   // Step 2: Launch kernel
   precice::profiling::Event e3("map.pou.gpu.BatchedSolve");
   if (_polynomial == Polynomial::SEPARATE) {
-    kernel::do_batched_solve<true>(_nCluster, _dim, _maxInClusterSize, _maxOutClusterSize,
+    kernel::do_batched_solve<true>(_nCluster, _dim, _maxInClusterSize, _maxOutClusterSize, _avgClusterSize,
                                    _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
                                    _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData,
                                    _inMesh, _outMesh, _qrMatrix, _qrTau, _qrP);
   } else {
-    kernel::do_batched_solve<false>(_nCluster, _dim, _maxInClusterSize, _maxOutClusterSize,
+    kernel::do_batched_solve<false>(_nCluster, _dim, _maxInClusterSize, _maxOutClusterSize, _avgClusterSize,
                                     _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
                                     _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData,
                                     _inMesh, _outMesh, _qrMatrix, _qrTau, _qrP);
