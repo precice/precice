@@ -549,9 +549,10 @@ void do_batched_solve(
   using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
   using MemberType = typename TeamPolicy::member_type;
 
-  using ScratchSpace  = typename MemorySpace::scratch_memory_space;
-  using ScratchView1d = Kokkos::View<double *[1], ScratchSpace, UnmanagedMemory>;
-  using ScratchView4d = Kokkos::View<double *[4], ScratchSpace, UnmanagedMemory>;
+  using ScratchSpace = typename MemorySpace::scratch_memory_space;
+  // Layout is important for how we use these matrices: we need to ensure that cols are contiguous in memory
+  using ScratchView1d = Kokkos::View<double *[1], Kokkos::LayoutLeft, ScratchSpace, UnmanagedMemory>;
+  using ScratchView4d = Kokkos::View<double *[4], Kokkos::LayoutLeft, ScratchSpace, UnmanagedMemory>;
   using ScratchVector = Kokkos::View<double *, ScratchSpace, UnmanagedMemory>;
   using ScratchMatrix = std::conditional_t<polynomial, ScratchView4d, ScratchView1d>;
 
