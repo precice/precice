@@ -53,7 +53,8 @@ public:
       unsigned int                          verticesPerCluster,
       double                                relativeOverlap,
       bool                                  projectToInput,
-      MappingConfiguration::GinkgoParameter ginkgoParameter = MappingConfiguration::GinkgoParameter());
+      MappingConfiguration::GinkgoParameter ginkgoParameter          = MappingConfiguration::GinkgoParameter(),
+      bool                                  computeEvaluationOffline = false);
 
   /**
    * Computes the clustering for the partition of unity method and fills the \p _clusters vector,
@@ -139,6 +140,9 @@ private:
   /// export the center vertices of all clusters as a mesh with some additional data on it such as vertex count
   /// only enabled in debug builds and mainly for debugging purpose
   void exportClusterCentersAsVTU(mesh::Mesh &centers);
+
+  // Currently only valid for the Batched RBF solver, maybe move it to dedicated config struct
+  const bool _computeEvaluationOffline;
 };
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -150,9 +154,12 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
     unsigned int                          verticesPerCluster,
     double                                relativeOverlap,
     bool                                  projectToInput,
-    MappingConfiguration::GinkgoParameter ginkgoParameter)
+    MappingConfiguration::GinkgoParameter ginkgoParameter,
+    bool                                  computeEvaluationOffline)
     : Mapping(constraint, dimension, false, Mapping::InitialGuessRequirement::None),
-      _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial), _useBatchedSolver(ginkgoParameter.executor != "cpu"), _ginkgoParameter(ginkgoParameter)
+      _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap),
+      _projectToInput(projectToInput), _polynomial(polynomial), _useBatchedSolver(ginkgoParameter.executor != "cpu"),
+      _ginkgoParameter(ginkgoParameter), _computeEvaluationOffline(computeEvaluationOffline)
 {
   PRECICE_ASSERT(this->getDimensions() <= 3);
   PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.");
@@ -205,7 +212,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     precice::profiling::Event eBatched("map.pou.computeMapping.batchedSolver");
     _batchedSolver = std::make_unique<BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>>(_basisFunction, inMesh, outMesh,
                                                                                  centerCandidates, _clusterRadius,
-                                                                                 _polynomial, _ginkgoParameter);
+                                                                                 _polynomial, _computeEvaluationOffline, _ginkgoParameter);
 
     // For the batched solver, we don't register the _centerMesh as such
     PRECICE_ASSERT(!_centerMesh, "The centerMesh is only utilized for the CPU variant");

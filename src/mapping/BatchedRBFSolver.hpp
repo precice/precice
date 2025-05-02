@@ -44,12 +44,17 @@ public:
                    const std::vector<mesh::Vertex>      &centers,
                    double                                clusterRadius,
                    Polynomial                            polynomial,
+                   bool                                  computeEvaluationOffline,
                    MappingConfiguration::GinkgoParameter ginkgoParameter);
 
   void solveConsistent(const time::Sample &globalIn, Eigen::VectorXd &globalOut);
 
 private:
   mutable precice::logging::Logger _log{"mapping::BatchedRBFSolver"};
+
+  // Helper to dispatch the actual kernel. Needed to help with the template parameters
+  template <typename... Args>
+  void _dispatch_solve_kernel(bool polynomial, bool evaluation_op_available, Args &&...args);
 
   // Linear offsets for each cluster, i.e., all cluster sizes
   VectorOffsetView<> _inOffsets;
@@ -80,12 +85,15 @@ private:
   VectorView<> _outData;
   // Kokkos::View<double *>::HostMirror                    _outDataMirror;
 
-  int        _maxInClusterSize;
-  int        _maxOutClusterSize;
+  int _maxInClusterSize;
+  int _maxOutClusterSize;
+
+  RBF_T      _basisFunction;
   Polynomial _polynomial;
   const int  _nCluster;
   const int  _dim; // Mesh dimension
   int        _avgClusterSize{};
+  const bool _computeEvaluationOffline;
   // MappingConfiguration::GinkgoParameter _ginkgoParameter;
 };
 
@@ -96,8 +104,9 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
                                                             const std::vector<mesh::Vertex>      &centers,
                                                             double                                clusterRadius,
                                                             Polynomial                            polynomial,
+                                                            bool                                  computeEvaluationOffline,
                                                             MappingConfiguration::GinkgoParameter ginkgoParameter)
-    : _polynomial(polynomial), _nCluster(static_cast<int>(centers.size())), _dim(inMesh->getDimensions())
+    : _basisFunction(basisFunction), _polynomial(polynomial), _nCluster(static_cast<int>(centers.size())), _dim(inMesh->getDimensions()), _computeEvaluationOffline(computeEvaluationOffline)
 {
   PRECICE_TRACE();
   PRECICE_CHECK(_polynomial != Polynomial::ON, "Setting polynomial to \"on\" for the mapping between \"{}\" and \"{}\" is not supported", inMesh->getName(), outMesh->getName());
@@ -184,10 +193,12 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
       PRECICE_CHECK(tmpOut < std::numeric_limits<offset_1d_type>::max(),
                     "The selected integer precision for the (output) vector offsets (\"offset_1d_type\") overflow. You might want to change the precision specified in \"device/KokkosTypes.hpp\"");
     }
-    if constexpr (std::numeric_limits<offset_2d_type>::digits < std::numeric_limits<std::uint64_t>::digits) {
-      outCheck += static_cast<std::uint64_t>(outIDs.size() * inIDs.size()); // is in x out
-      PRECICE_CHECK(outCheck < std::numeric_limits<offset_2d_type>::max(),
-                    "The selected integer precision for the (output) matrix offsets (\"offset_2d_type\") overflow. You might want to change the precision specified in \"device/KokkosTypes.hpp\"");
+    if (_computeEvaluationOffline) {
+      if constexpr (std::numeric_limits<offset_2d_type>::digits < std::numeric_limits<std::uint64_t>::digits) {
+        outCheck += static_cast<std::uint64_t>(outIDs.size() * inIDs.size()); // is in x out
+        PRECICE_CHECK(outCheck < std::numeric_limits<offset_2d_type>::max(),
+                      "The selected integer precision for the (output) matrix offsets (\"offset_2d_type\") overflow. You might want to change the precision specified in \"device/KokkosTypes.hpp\"");
+      }
     }
     hostOut(i + 1) = static_cast<offset_1d_type>(tmpOut);
     std::copy(outIDs.begin(), outIDs.end(), std::back_inserter(globalOutIDs));
@@ -220,16 +231,16 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
 
   // Step 2: Compute the matrix offsets on the device
   PRECICE_DEBUG("Computing matrix offsets");
-  _kernelOffsets     = MatrixOffsetView<>("kernelOffsets", _nCluster + 1);
-  _evaluationOffsets = MatrixOffsetView<>("evaluationOffsets", _nCluster + 1);
-
-  Kokkos::deep_copy(_kernelOffsets, 0);
-  Kokkos::deep_copy(_evaluationOffsets, 0);
-
   // We use a parallel scan for that
+  _kernelOffsets = MatrixOffsetView<>("kernelOffsets", _nCluster + 1);
+  Kokkos::deep_copy(_kernelOffsets, 0);
   kernel::compute_offsets(_inOffsets, _inOffsets, _kernelOffsets, _nCluster);
-  kernel::compute_offsets(_inOffsets, _outOffsets, _evaluationOffsets, _nCluster);
 
+  if (_computeEvaluationOffline) {
+    _evaluationOffsets = MatrixOffsetView<>("evaluationOffsets", _nCluster + 1);
+    Kokkos::deep_copy(_evaluationOffsets, 0);
+    kernel::compute_offsets(_inOffsets, _outOffsets, _evaluationOffsets, _nCluster);
+  }
   Kokkos::fence();
   eOff2d.stop();
   precice::profiling::Event eMesh("map.pou.gpu.copyMeshes");
@@ -294,6 +305,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   precice::profiling::Event eMatr("map.pou.gpu.assembleMatrices");
   // Step 6: Launch the parallel kernel to assemble the kernel matrices
   PRECICE_DEBUG("Assemble batched matrices");
+  // The kernel matrices /////////////
   offset_2d_type unrolledSize   = 0;
   auto           last_elem_view = Kokkos::subview(_kernelOffsets, _nCluster);
   Kokkos::deep_copy(unrolledSize, last_elem_view);
@@ -302,15 +314,16 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   kernel::do_input_assembly(_nCluster, _dim, _avgClusterSize, _maxInClusterSize, basisFunction,
                             _inOffsets, _globalInIDs, _inMesh, _kernelOffsets, _kernelMatrices);
 
-  // The eval matrices ///////////////
-  offset_2d_type evalSize        = 0;
-  auto           last_elem_view2 = Kokkos::subview(_evaluationOffsets, _nCluster);
-  Kokkos::deep_copy(evalSize, last_elem_view2);
-  _evalMatrices = VectorView<>("evalMatrices", evalSize);
+  if (_computeEvaluationOffline) {
+    // The eval matrices ///////////////
+    offset_2d_type evalSize        = 0;
+    auto           last_elem_view2 = Kokkos::subview(_evaluationOffsets, _nCluster);
+    Kokkos::deep_copy(evalSize, last_elem_view2);
+    _evalMatrices = VectorView<>("evalMatrices", evalSize);
 
-  kernel::do_batched_assembly(_nCluster, _dim, _avgClusterSize, basisFunction,
-                              _inOffsets, _globalInIDs, _inMesh, _outOffsets, _globalOutIDs, _outMesh, _evaluationOffsets, _evalMatrices);
-
+    kernel::do_batched_assembly(_nCluster, _dim, _avgClusterSize, basisFunction,
+                                _inOffsets, _globalInIDs, _inMesh, _outOffsets, _globalOutIDs, _outMesh, _evaluationOffsets, _evalMatrices);
+  }
   Kokkos::fence();
   eMatr.stop();
   precice::profiling::Event eLU("map.pou.gpu.compute.lu");
@@ -346,17 +359,11 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Samp
 
   // Step 2: Launch kernel
   precice::profiling::Event e3("map.pou.gpu.BatchedSolve");
-  if (_polynomial == Polynomial::SEPARATE) {
-    kernel::do_batched_solve<true>(_nCluster, _dim, _avgClusterSize, _maxInClusterSize, _maxOutClusterSize,
-                                   _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
-                                   _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData,
-                                   _inMesh, _outMesh, _qrMatrix, _qrTau, _qrP);
-  } else {
-    kernel::do_batched_solve<false>(_nCluster, _dim, _avgClusterSize, _maxInClusterSize, _maxOutClusterSize,
-                                    _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
-                                    _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData,
-                                    _inMesh, _outMesh, _qrMatrix, _qrTau, _qrP);
-  }
+  _dispatch_solve_kernel(_polynomial == Polynomial::SEPARATE, _computeEvaluationOffline,
+                         _nCluster, _dim, _avgClusterSize, _maxInClusterSize, _maxOutClusterSize, _basisFunction,
+                         _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
+                         _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData,
+                         _inMesh, _outMesh, _qrMatrix, _qrTau, _qrP);
 
   Kokkos::fence();
   e3.stop();
@@ -367,6 +374,25 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Samp
   Kokkos::deep_copy(outView, _outData);
   Kokkos::fence();
   e4.stop();
+}
+
+// Forwarding dispatcher for the actual implementation to help with the template parameters:
+template <typename RADIAL_BASIS_FUNCTION_T>
+template <typename... Args>
+void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::_dispatch_solve_kernel(bool polynomial, bool evaluation_op_available,
+                                                                       Args &&...args)
+{
+  if (polynomial) {
+    if (evaluation_op_available)
+      kernel::do_batched_solve<true, true>(std::forward<Args>(args)...);
+    else
+      kernel::do_batched_solve<true, false>(std::forward<Args>(args)...);
+  } else {
+    if (evaluation_op_available)
+      kernel::do_batched_solve<false, true>(std::forward<Args>(args)...);
+    else
+      kernel::do_batched_solve<false, false>(std::forward<Args>(args)...);
+  }
 }
 } // namespace precice::mapping
 

@@ -2047,19 +2047,25 @@ BOOST_AUTO_TEST_CASE(TestSingleClusterPartitionOfUnity)
 
 #ifndef PRECICE_NO_KOKKOS_KERNELS
 
-#define PERFORM_REFERENCE_TEST(EXECUTOR, type, function, dim)                                                                        \
-  {                                                                                                                                  \
-    MappingConfiguration::GinkgoParameter gpm;                                                                                       \
-    gpm.executor                                      = EXECUTOR;                                                                    \
-    gpm.deviceId                                      = 0;                                                                           \
-    gpm.nThreads                                      = 2;                                                                           \
-    int                                    components = 1;                                                                           \
-    mapping::PartitionOfUnityMapping<type> test(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false, gpm);          \
-    mapping::PartitionOfUnityMapping<type> ref(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false);                \
-    performReferenceTesting(test, ref, dim, components);                                                                             \
-    mapping::PartitionOfUnityMapping<type> testPoly(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false, gpm); \
-    mapping::PartitionOfUnityMapping<type> refPoly(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false);       \
-    performReferenceTesting(testPoly, refPoly, dim, components);                                                                     \
+#define PERFORM_REFERENCE_TEST(EXECUTOR, type, function, dim)                                                                                 \
+  {                                                                                                                                           \
+    MappingConfiguration::GinkgoParameter gpm;                                                                                                \
+    gpm.executor                                      = EXECUTOR;                                                                             \
+    gpm.deviceId                                      = 0;                                                                                    \
+    gpm.nThreads                                      = 2;                                                                                    \
+    int                                    components = 1;                                                                                    \
+    mapping::PartitionOfUnityMapping<type> testOff(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false, gpm, true);          \
+    mapping::PartitionOfUnityMapping<type> testOn(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false, gpm, false);          \
+    mapping::PartitionOfUnityMapping<type> ref(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false);                         \
+    performReferenceTesting(testOff, ref, dim, components);                                                                                   \
+    ref.clear();                                                                                                                              \
+    performReferenceTesting(testOn, ref, dim, components);                                                                                    \
+    mapping::PartitionOfUnityMapping<type> testPolyOff(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false, gpm, true); \
+    mapping::PartitionOfUnityMapping<type> testPolyOn(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false, gpm, false); \
+    mapping::PartitionOfUnityMapping<type> refPoly(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false);                \
+    performReferenceTesting(testPolyOff, refPoly, dim, components);                                                                           \
+    refPoly.clear();                                                                                                                          \
+    performReferenceTesting(testPolyOn, refPoly, dim, components);                                                                            \
   }
 
 #define TEST_CPU_REFERENCE_FOR_SPD_RBFS(EXECUTOR)                        \

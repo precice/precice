@@ -87,13 +87,14 @@ void do_batched_lu(
     const MatrixOffsetView<MemorySpace> &matrixOffsets,
     VectorView<MemorySpace>              matrices);
 
-template <bool polynomial, typename MemorySpace>
+template <bool polynomial, bool evaluation_op_available, typename EvalFunctionType, typename MemorySpace>
 void do_batched_solve(
     int                                  nCluster,
     int                                  dim,
     int                                  avgInClusterSize,
     int                                  maxInClusterSize,
     int                                  maxOutClusterSize,
+    EvalFunctionType                     f,
     const VectorOffsetView<MemorySpace> &rhsOffsets,
     const GlobalIDView<MemorySpace>     &globalRhsIDs,
     VectorView<MemorySpace>              rhs,
