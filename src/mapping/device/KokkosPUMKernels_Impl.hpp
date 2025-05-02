@@ -584,7 +584,7 @@ void do_batched_solve(
 
       // Step 3e: Copy the result over into memory for each thread
       for (int r = 0; r < rank; ++r) {
-         qrCoeffs[r] = in_cp(r,0);
+        qrCoeffs[r] = in_cp(r, 0);
       }
 
       // Step 3f: Apply pivoting x = P z
@@ -593,7 +593,7 @@ void do_batched_solve(
       // using an Array The below is the equivalent of the following (but qrCoeffs would need to be a view):
       // KokkosBatched::TeamVectorApplyPivot<MemberType, Side::Left, Direct::Backward>::invoke(team, P, qrCoeffs);
       for (int i = (matrixCols - 1); i >= 0; --i) {
-          Kokkos::kokkos_swap(qrCoeffs[i], qrCoeffs[i+P(i)]);
+        Kokkos::kokkos_swap(qrCoeffs[i], qrCoeffs[i + P(i)]);
       }
 
       // Step 3g: Subtract polynomial portion from the input data: in -= Q * p
