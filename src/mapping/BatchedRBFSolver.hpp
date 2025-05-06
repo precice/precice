@@ -121,7 +121,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   // in the current setup, this will only initialize the device (and allocate memory) on the primary rank
   // TODO: Document restriction: all mappings must use the same executor configuration within one participant
   device::Device::initialize(ginkgoParameter.nThreads, ginkgoParameter.deviceId);
-  PRECICE_INFO("Using batched PU-RBF solver on executor \"{}\" for \"{}\" PU-RBF clusters.", ginkgoParameter.executor, centers.size());
+  PRECICE_INFO("Using batched PU-RBF solver on executor \"{}\" for \"{}\" PU-RBF clusters in execution mode {}.", ginkgoParameter.executor, centers.size(), _computeEvaluationOffline ? "\"minimal-compute\" (evaluation offline)" : "\"minimal-memory\" (evaluation online)");
   eInit.stop();
 
 // General assumption of the algorithm

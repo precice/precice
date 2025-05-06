@@ -68,7 +68,7 @@ auto findTeamSize(int avgWork, const FunctorType &functor, const Policy &policy)
 
 // small helper function to make the compiler handle variables in lambdas which are only conditionally used
 template <typename... Args>
-KOKKOS_INLINE_FUNCTION constexpr void capture_conditional_variables(const Args&...) {}
+KOKKOS_INLINE_FUNCTION constexpr void capture_conditional_variables(const Args &...) {}
 } // namespace impl
 
 // For within the kernels

@@ -15,7 +15,7 @@
     vertices-per-cluster="10"
     relative-overlap="0.4">
     <basis-function:thin-plate-splines />
-    <executor:hip gpu-device-id="0" />
+    <executor:hip gpu-device-id="0" execution-mode="minimal-memory" />
   </mapping:rbf-pum-direct>
 
   <mapping:rbf-pum-direct
@@ -39,7 +39,7 @@
     vertices-per-cluster="10"
     relative-overlap="0.4">
     <basis-function:compact-polynomial-c0 support-radius="0.3" />
-    <executor:hip gpu-device-id="auto" />
+    <executor:hip gpu-device-id="auto" execution-mode="minimal-compute" />
   </mapping:rbf-pum-direct>
 
   <mapping:rbf-pum-direct

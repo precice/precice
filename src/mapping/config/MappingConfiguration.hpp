@@ -208,8 +208,10 @@ private:
   const std::string EXECUTOR_HIP    = "hip";
   const std::string EXECUTOR_OMP    = "openmp";
 
-  const std::string ATTR_DEVICE_ID = "gpu-device-id";
-  const std::string ATTR_N_THREADS = "n-threads";
+  const std::string ATTR_DEVICE_ID      = "gpu-device-id";
+  const std::string ATTR_N_THREADS      = "n-threads";
+  const std::string ATTR_EXECUTION_MODE = "execution-mode";
+
   // const std::string ATTR_ENABLE_UNIFIED_MEMORY = "enable-unified-memory";
   // const std::string ATTR_SOLVER                = "solver";
   // const std::string ATTR_USE_PRECONDITIONER    = "use-preconditioner";
@@ -241,6 +243,7 @@ private:
     Executor executor = Executor::CPU;
     int      deviceId{};
     int      nThreads{};
+    bool     computeEvaluationOffline = true;
   };
 
   std::unique_ptr<ExecutorConfiguration> _executorConfig;

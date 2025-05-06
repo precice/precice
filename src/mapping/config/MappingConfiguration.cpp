@@ -300,8 +300,13 @@ MappingConfiguration::MappingConfiguration(
     std::list<XMLTag> ompExecutor{
         XMLTag{*this, EXECUTOR_OMP, once, SUBTAG_EXECUTOR}.setDocumentation("OpenMP executor, which uses Kokkos-kernel, fully parallel.")};
 
-    addAttributes(deviceExecutors, {attrDeviceId});
-    addAttributes(ompExecutor, {attrNThreads});
+    auto attrExecutionMode = makeXMLAttribute(ATTR_EXECUTION_MODE, "minimal-memory")
+                                 .setDocumentation("Toggle to switch between a minimal-memory vs a minimal-compute algorithm. For option \"minimal-memory\", the RBF evaluation is recomputed for each data mapping on-the-fly, which saves approximately half the memory consumption (if meshes have a similar resolution), but may (!) be slower (depends heavily on the hardware). "
+                                                   "For the option \"minimal-compute\", the RBF evaluation is precomputed, which may be faster, but consumes more memory.")
+                                 .setOptions({"minimal-memory", "minimal-compute"});
+
+    addAttributes(deviceExecutors, {attrDeviceId, attrExecutionMode});
+    addAttributes(ompExecutor, {attrNThreads, attrExecutionMode});
     addSubtagsToParents(cpuExecutor, pumDirectTags);
     addSubtagsToParents(deviceExecutors, pumDirectTags);
     addSubtagsToParents(ompExecutor, pumDirectTags);
@@ -514,6 +519,14 @@ void MappingConfiguration::xmlTagCallback(
     }
 
     _executorConfig->nThreads = tag.getIntAttributeValue(ATTR_N_THREADS, 0);
+    auto mode                 = tag.getStringAttributeValue(ATTR_EXECUTION_MODE, "minimal-compute");
+    if (mode == "minimal-memory")
+      _executorConfig->computeEvaluationOffline = false;
+    else if (mode == "minimal-compute")
+      _executorConfig->computeEvaluationOffline = true;
+    else {
+      PRECICE_UNREACHABLE("Unknown execution mode");
+    }
   }
 }
 
@@ -817,7 +830,7 @@ void MappingConfiguration::finishRBFConfiguration()
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
 #ifndef PRECICE_NO_KOKKOS_KERNELS
       PRECICE_CHECK(!(mapping.fromMesh->isJustInTime() || mapping.toMesh->isJustInTime()), "Executor \"{}\" is not implemented as just-in-time mapping.", _ginkgoParameter.executor);
-      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _ginkgoParameter);
+      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _ginkgoParameter, _executorConfig->computeEvaluationOffline);
 #else
       PRECICE_CHECK(false, "The selected pu-rbf solver using executor \"{}\" for the mapping from mesh {} to mesh {} requires a preCICE build with Kokkos-kernels enabled.", _ginkgoParameter.executor, mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif

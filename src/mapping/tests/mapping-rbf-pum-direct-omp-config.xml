@@ -15,7 +15,7 @@
     vertices-per-cluster="10"
     relative-overlap="0.4">
     <basis-function:thin-plate-splines />
-    <executor:openmp n-threads="1" />
+    <executor:openmp n-threads="1" execution-mode="minimal-memory" />
   </mapping:rbf-pum-direct>
 
   <mapping:rbf-pum-direct
@@ -51,6 +51,6 @@
     vertices-per-cluster="10"
     relative-overlap="0.4">
     <basis-function:compact-polynomial-c2 support-radius="0.3" />
-    <executor:openmp n-threads="4" />
+    <executor:openmp n-threads="4" execution-mode="minimal-compute" />
   </mapping:rbf-pum-direct>
 </configuration>
