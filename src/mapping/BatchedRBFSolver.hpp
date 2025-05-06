@@ -434,6 +434,7 @@ public:
                    const std::vector<mesh::Vertex> &,
                    double,
                    Polynomial,
+                   bool,
                    MappingConfiguration::GinkgoParameter) {}
 
   void solveConsistent(const time::Sample &, Eigen::VectorXd &) {}
