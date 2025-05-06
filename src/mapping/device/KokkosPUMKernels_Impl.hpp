@@ -65,6 +65,10 @@ auto findTeamSize(int avgWork, const FunctorType &functor, const Policy &policy)
     return teamSize;
   }
 }
+
+// small helper function to make the compiler handle variables in lambdas which are only conditionally used
+template <typename... Args>
+KOKKOS_INLINE_FUNCTION constexpr void capture_conditional_variables(const Args&...) {}
 } // namespace impl
 
 // For within the kernels
@@ -516,7 +520,7 @@ void do_batched_solve(
   auto kernel = KOKKOS_LAMBDA(const MemberType &team)
   {
     // Required for correct capturing (mostly by device compilers), as these variables are only conditionally used further down
-    (void) (dim, qrMatrix, qrTau, qrP, inMesh, outMesh, evalOffsets, evalMat, globalOutIDs, f, rbf_params, normalizedWeights, out);
+    impl::capture_conditional_variables(dim, qrMatrix, qrTau, qrP, inMesh, outMesh, evalOffsets, evalMat, globalOutIDs, f, rbf_params, normalizedWeights, out);
 
     // Step 1: Define some pointers
     // TODO: We could potentially remove the rhsOffsets here and use a sqrt instead
