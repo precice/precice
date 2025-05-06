@@ -344,36 +344,59 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
 template <typename RADIAL_BASIS_FUNCTION_T>
 void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Sample &globalIn, Eigen::VectorXd &globalOut)
 {
-  PRECICE_ASSERT(globalIn.dataDims == 1, "Not implemented.");
-  Kokkos::View<const double *, Kokkos::HostSpace, UnmanagedMemory>
-      inView(globalIn.values.data(), globalIn.values.size());
+  auto solve_component =
+      [&](const double *inPtr, Eigen::Index inSize, double *outPtr, Eigen::Index outSize) {
+        // Step 1: Wrap memory into an unmanaged view
+        Kokkos::View<const double *, Kokkos::HostSpace, UnmanagedMemory>
+            inView(inPtr, inSize);
 
-  // Step 1: Copy over
-  precice::profiling::Event e1("map.pou.gpu.copyHostToDevice");
-  Kokkos::deep_copy(_inData, inView);
-  // Reset output data
-  Kokkos::deep_copy(_outData, 0.0);
+        // Step 2: Copy over
+        precice::profiling::Event e1("map.pou.gpu.copyHostToDevice");
+        Kokkos::deep_copy(_inData, inView);
+        Kokkos::deep_copy(_outData, 0.0); // Reset output data
 
-  Kokkos::fence();
-  e1.stop();
+        Kokkos::fence();
+        e1.stop();
 
-  // Step 2: Launch kernel
-  precice::profiling::Event e3("map.pou.gpu.BatchedSolve");
-  _dispatch_solve_kernel(_polynomial == Polynomial::SEPARATE, _computeEvaluationOffline,
-                         _nCluster, _dim, _avgClusterSize, _maxInClusterSize, _maxOutClusterSize, _basisFunction,
-                         _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
-                         _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData,
-                         _inMesh, _outMesh, _qrMatrix, _qrTau, _qrP);
+        // Step 3: Launch the kernel
+        precice::profiling::Event e2("map.pou.gpu.BatchedSolve");
+        _dispatch_solve_kernel(_polynomial == Polynomial::SEPARATE, _computeEvaluationOffline,
+                               _nCluster, _dim, _avgClusterSize, _maxInClusterSize, _maxOutClusterSize, _basisFunction,
+                               _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
+                               _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData,
+                               _inMesh, _outMesh, _qrMatrix, _qrTau, _qrP);
 
-  Kokkos::fence();
-  e3.stop();
-  precice::profiling::Event e4("map.pou.gpu.copyDeviceToHost");
-  Kokkos::View<double *, Kokkos::HostSpace, UnmanagedMemory>
-      outView(globalOut.data(), globalOut.size());
+        Kokkos::fence();
+        e2.stop();
 
-  Kokkos::deep_copy(outView, _outData);
-  Kokkos::fence();
-  e4.stop();
+        // Step 4: Copy back
+        precice::profiling::Event e3("map.pou.gpu.copyDeviceToHost");
+        Kokkos::View<double *, Kokkos::HostSpace, UnmanagedMemory>
+            outView(outPtr, outSize);
+        Kokkos::deep_copy(outView, _outData);
+        Kokkos::fence();
+        e3.stop();
+      };
+
+  const int nComponents = globalIn.dataDims;
+
+  // If we have just one component, we can directly copy the data over and solve
+  if (nComponents == 1) {
+    solve_component(globalIn.values.data(), globalIn.values.size(), globalOut.data(), globalOut.size());
+  } else {
+    // Otherwise, we map the data to a component-wise matrix
+    Eigen::Map<const Eigen::MatrixXd> inMatrix(globalIn.values.data(), nComponents, globalIn.values.size() / nComponents);
+    Eigen::Map<Eigen::MatrixXd>       outMatrix(globalOut.data(), nComponents, globalOut.size() / nComponents);
+
+    // ... and solve component-wise. This requires each component to be contiguous in memory
+    Eigen::VectorXd tmpIn(inMatrix.cols());
+    Eigen::VectorXd tmpOut(outMatrix.cols());
+    for (int c = 0; c < nComponents; ++c) {
+      tmpIn = inMatrix.row(c);
+      solve_component(tmpIn.data(), tmpIn.size(), tmpOut.data(), tmpOut.size());
+      outMatrix.row(c) = tmpOut;
+    }
+  }
 }
 
 // Forwarding dispatcher for the actual implementation to help with the template parameters:

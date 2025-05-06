@@ -1868,6 +1868,8 @@ void performReferenceTesting(Mapping &testMapping, Mapping &referenceMapping, in
   BOOST_TEST(testMapping.hasComputedMapping() == true);
   BOOST_TEST(testOutData->values() == refOutData->values(), boost::test_tools::per_element());
   // The remaining parts should already be covered by the other 3D/2D tests
+  testMapping.clear();
+  referenceMapping.clear();
 }
 
 PRECICE_TEST_SETUP(1_rank)
@@ -2050,22 +2052,25 @@ BOOST_AUTO_TEST_CASE(TestSingleClusterPartitionOfUnity)
 #define PERFORM_REFERENCE_TEST(EXECUTOR, type, function, dim)                                                                                 \
   {                                                                                                                                           \
     MappingConfiguration::GinkgoParameter gpm;                                                                                                \
-    gpm.executor                                      = EXECUTOR;                                                                             \
-    gpm.deviceId                                      = 0;                                                                                    \
-    gpm.nThreads                                      = 2;                                                                                    \
-    int                                    components = 1;                                                                                    \
+    gpm.executor                                  = EXECUTOR;                                                                                 \
+    gpm.deviceId                                  = 0;                                                                                        \
+    gpm.nThreads                                  = 2;                                                                                        \
+    int                                    scalar = 1;                                                                                        \
+    int                                    vector = dim;                                                                                      \
     mapping::PartitionOfUnityMapping<type> testOff(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false, gpm, true);          \
     mapping::PartitionOfUnityMapping<type> testOn(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false, gpm, false);          \
     mapping::PartitionOfUnityMapping<type> ref(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false);                         \
-    performReferenceTesting(testOff, ref, dim, components);                                                                                   \
-    ref.clear();                                                                                                                              \
-    performReferenceTesting(testOn, ref, dim, components);                                                                                    \
+    performReferenceTesting(testOff, ref, dim, scalar);                                                                                       \
+    performReferenceTesting(testOn, ref, dim, scalar);                                                                                        \
+    performReferenceTesting(testOff, ref, dim, vector);                                                                                       \
+    performReferenceTesting(testOn, ref, dim, vector);                                                                                        \
     mapping::PartitionOfUnityMapping<type> testPolyOff(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false, gpm, true); \
     mapping::PartitionOfUnityMapping<type> testPolyOn(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false, gpm, false); \
     mapping::PartitionOfUnityMapping<type> refPoly(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false);                \
-    performReferenceTesting(testPolyOff, refPoly, dim, components);                                                                           \
-    refPoly.clear();                                                                                                                          \
-    performReferenceTesting(testPolyOn, refPoly, dim, components);                                                                            \
+    performReferenceTesting(testPolyOff, refPoly, dim, scalar);                                                                               \
+    performReferenceTesting(testPolyOn, refPoly, dim, scalar);                                                                                \
+    performReferenceTesting(testPolyOff, refPoly, dim, vector);                                                                               \
+    performReferenceTesting(testPolyOn, refPoly, dim, vector);                                                                                \
   }
 
 #define TEST_CPU_REFERENCE_FOR_SPD_RBFS(EXECUTOR)                        \
