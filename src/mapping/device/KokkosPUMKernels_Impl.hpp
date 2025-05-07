@@ -617,7 +617,7 @@ void do_batched_solve(
     // We have to declare it here outsie the "if" to be able to use it further down then.
     // The memory here might point to null (or rather the end of "work"), in case polynomial = false
     // and the evaluation_op is available but then it also remains unused
-    ScratchMesh localInMesh(&work(inSize, 1), inSize, dim);
+    ScratchMesh localInMesh(&work(0, 1), inSize, dim);
 
     if constexpr (!evaluation_op_available || polynomial) {
       Kokkos::parallel_for(
