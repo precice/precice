@@ -338,7 +338,7 @@ PRECICE_API void precicec_readData(
  * See @see precice::Participant::writeAndMapData() and the just-in-time mapping doxygen section for more information.
  *
  * @param[in] meshName Name of the mesh to write and map the data to. Typically a received mesh
- * @param[in] dataName Name of the data to field on this mesh.
+ * @param[in] dataName Name of the data to write on this mesh.
  * @param[in] size Number of vertices to write
  * @param[in] coordinates Pointer to the coordinates where we write the data. Needs to have \p size x \ref precicec_getMeshDimensions( \p meshName ) entries
  * @param[in] values Pointer to the data values we want to pass to preCICE. Needs  to have \p size x \ref precicec_getDataDimensions( \p meshName , \p dataName ) entries
@@ -356,9 +356,9 @@ PRECICE_API void precicec_writeAndMapData(
  * @brief Reads data using just-in-time data mapping.
  * See @see precice::Participant::mapAndReadData() and the just-in-time mapping doxygen section for more information.
  *
- * @param[in] meshName Name of the mesh to write and map the data to. Typically a received mesh
- * @param[in] dataName Name of the data to field on this mesh.
- * @param[in] size Number of vertices to write
+ * @param[in] meshName Name of the mesh to read and map the data from. Typically a received mesh
+ * @param[in] dataName Name of the data to read on this mesh.
+ * @param[in] size Number of vertices to read
  * @param [in] coordinates Pointer to the coordinates where we read the data. Needs to have \p size x \ref precicec_getMeshDimensions( \p meshName ) entries
  * @param[in] relativeReadTime Same as in @see precice::Participant::readData()
  * @param[in/out] values Pointer to the values to be filled by preCICE. Needs to have \p size x \ref precicec_getDataDimensions( \p meshName , \p dataName ) entries
