@@ -812,9 +812,17 @@ def detectFiles(files):
 
     def searchDir(directory):
         assert os.path.isdir(directory)
+        import re
         import glob
 
-        return glob.glob(os.path.join(directory, "*-*-*.json"))
+        nameMatcher = r".+-\d+-\d+.json"
+        return [
+            candidate
+            for candidate in glob.glob(
+                os.path.join(directory, "**/*.json"), recursive=True
+            )
+            if re.fullmatch(nameMatcher, os.path.basename(candidate))
+        ]
 
     resolved = []
     for path in files:
@@ -824,9 +832,8 @@ def detectFiles(files):
         if os.path.isdir(path):
             candidates = [
                 ".",
-                "precice-profiling",
-                "../precice-profiling",
-                "../../precice-profiling",
+                "..",
+                "../..",
             ]
             found = False
             for candidate in candidates:
