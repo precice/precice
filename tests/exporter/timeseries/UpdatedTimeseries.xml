@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="S" />
+  <data:vector name="V" />
+
+  <mesh name="A" dimensions="3">
+    <use-data name="S" />
+    <use-data name="V" />
+  </mesh>
+
+  <mesh name="B" dimensions="3">
+    <use-data name="S" />
+    <use-data name="V" />
+  </mesh>
+
+  <participant name="ExporterOne">
+    <provide-mesh name="A" />
+    <write-data name="S" mesh="A" />
+    <write-data name="V" mesh="A" />
+    <export:vtu directory="timeseries-ut" update-series="true" />
+  </participant>
+
+  <participant name="ExporterTwo">
+    <receive-mesh name="A" from="ExporterOne" />
+    <provide-mesh name="B" />
+    <read-data name="S" mesh="B" />
+    <read-data name="V" mesh="B" />
+    <mapping:nearest-neighbor direction="read" from="A" to="B" constraint="consistent" />
+    <export:vtu directory="timeseries-ut" update-series="true" />
+  </participant>
+
+  <m2n:sockets acceptor="ExporterOne" connector="ExporterTwo" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="ExporterOne" second="ExporterTwo" />
+    <max-time-windows value="5" />
+    <time-window-size value="1.0" />
+    <exchange data="S" mesh="A" from="ExporterOne" to="ExporterTwo" />
+    <exchange data="V" mesh="A" from="ExporterOne" to="ExporterTwo" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

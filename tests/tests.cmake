@@ -4,6 +4,8 @@
 target_sources(testprecice
     PRIVATE
     tests/exporter/timeseries/ExportTimeseries.cpp
+    tests/exporter/timeseries/FinalTimeseries.cpp
+    tests/exporter/timeseries/UpdatedTimeseries.cpp
     tests/fundamental/DifferentConfigs.cpp
     tests/fundamental/initial-data/InterleavedCreation.cpp
     tests/fundamental/initial-data/InterleavedCreationWithGradients.cpp
