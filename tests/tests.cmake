@@ -3,6 +3,7 @@
 #
 target_sources(testprecice
     PRIVATE
+    tests/exporter/timeseries/ExportTimeseries.cpp
     tests/fundamental/DifferentConfigs.cpp
     tests/fundamental/initial-data/InterleavedCreation.cpp
     tests/fundamental/initial-data/InterleavedCreationWithGradients.cpp
@@ -13,7 +14,6 @@ target_sources(testprecice
     tests/geometric-multiscale/AxialGeoMultiscale.cpp
     tests/geometric-multiscale/RadialGeoMultiscale.cpp
     tests/parallel/CouplingOnLine.cpp
-    tests/parallel/ExportTimeseries.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
     tests/parallel/GlobalRBFPartitioningPETSc.cpp
     tests/parallel/LocalRBFPartitioning.cpp
