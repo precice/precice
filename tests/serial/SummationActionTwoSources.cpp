@@ -7,9 +7,10 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
+PRECICE_TEST_SETUP("SolverTarget"_on(1_rank), "SolverSourceOne"_on(1_rank), "SolverSourceTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
 {
-  PRECICE_TEST("SolverTarget"_on(1_rank), "SolverSourceOne"_on(1_rank), "SolverSourceTwo"_on(1_rank));
+  PRECICE_TEST();
 
   using Eigen::Vector3d;
 
@@ -57,7 +58,6 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
       BOOST_TEST(valueD == expectedValueD);
 
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
     }
 
     interface.finalize();
@@ -96,7 +96,6 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
       interface.writeData(meshName, dataAID, {&idD, 1}, {&valueD, 1});
 
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
     }
     interface.finalize();
   } else {
@@ -135,7 +134,6 @@ BOOST_AUTO_TEST_CASE(SummationActionTwoSources)
       interface.writeData(meshName, dataAID, {&idD, 1}, {&valueD, 1});
 
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
     }
 
     interface.finalize();

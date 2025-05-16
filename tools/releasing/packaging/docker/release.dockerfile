@@ -1,6 +1,6 @@
 # Dockerfile to build a ubuntu image containing the installed Debian package of a release
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 # Add the precice user
 RUN useradd -m -s /bin/bash precice
 # Fix the installation of tzdata for Ubuntu

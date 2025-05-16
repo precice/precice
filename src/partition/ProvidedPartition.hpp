@@ -5,8 +5,7 @@
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace partition {
+namespace precice::partition {
 
 /**
  * @brief A partition that is provided by the participant.
@@ -19,7 +18,7 @@ class ProvidedPartition : public Partition {
 public:
   ProvidedPartition(mesh::PtrMesh mesh);
 
-  virtual ~ProvidedPartition() {}
+  ~ProvidedPartition() override = default;
 
   /// The mesh is gathered and sent to another participant (if required)
   void communicate() override;
@@ -35,5 +34,4 @@ private:
   logging::Logger _log{"partition::ProvidedPartition"};
 };
 
-} // namespace partition
-} // namespace precice
+} // namespace precice::partition

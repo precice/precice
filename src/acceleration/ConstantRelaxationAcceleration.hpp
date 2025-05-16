@@ -7,8 +7,7 @@
 #include "acceleration/Acceleration.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 class ConstantRelaxationAcceleration : public Acceleration {
 public:
@@ -16,24 +15,16 @@ public:
       double           relaxation,
       std::vector<int> dataIDs);
 
-  virtual std::vector<int> getPrimaryDataIDs() const override
+  std::vector<int> getPrimaryDataIDs() const final override
   {
     return _dataIDs;
   }
 
-  virtual void initialize(const DataMap &cplData) override;
+  void initialize(const DataMap &cplData) override;
 
-  virtual void performAcceleration(DataMap &cplData) override;
+  void performAcceleration(DataMap &cplData, double windowStart, double windowEnd) override;
 
-  virtual void iterationsConverged(const DataMap &cplData) override
-  {
-    // function not needed in ConstantRelaxationAcceleration
-  }
-
-protected:
-  /// @copydoc acceleration::Acceleration::concatenateCouplingData
-  void concatenateCouplingData(
-      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const override final
+  void iterationsConverged(const DataMap &cplData, double windowStart) override
   {
     // function not needed in ConstantRelaxationAcceleration
   }
@@ -45,5 +36,4 @@ private:
 
   std::vector<int> _dataIDs;
 };
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration

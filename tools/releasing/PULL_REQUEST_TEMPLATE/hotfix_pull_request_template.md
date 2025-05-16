@@ -11,7 +11,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Make sure you have the latest `main` branch locally.
 * [ ] Create branch `hotfix-vX.Y.Z` from `main`. If needed, `git rebase main`.
 * [ ] Commit fixes to the hotfix branch
-* [ ] Check code base w.r.t code formatting (run [`precice/tools/formatting/check-format`](https://github.com/precice/precice/blob/develop/tools/formatting/check-format)) and reformat if required (run [`precice/tools/formatting/format-all`](https://github.com/precice/precice/blob/develop/tools/formatting/format-all))
+* [ ] Check code base w.r.t code formatting (run `pre-commit run -va`)
 * [ ] Update the list of operating systems for the package generation in `.github/workflows/release.yml`
 * [ ] Run `tools/releasing/bumpversion.sh MAJOR.MINOR.PATCH` to bump the version
 * [ ] Look over the updated `CHANGELOG.md` of the hotfix branch (all)

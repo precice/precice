@@ -9,8 +9,9 @@ Event::Event(std::string_view eventName, Options options)
     : _fundamental(options.fundamental), _synchronize(options.synchronized)
 {
   auto &er   = EventRegistry::instance();
-  auto  name = std::string(EventRegistry::instance().prefix).append(eventName);
-  _eid       = er.nameToID(name);
+  auto  name = std::string(eventName);
+  PRECICE_ASSERT(eventName.find('/') == std::string_view::npos);
+  _eid = er.nameToID(name);
   if (_synchronize && er.parallel()) {
     _sid = er.nameToID(name + ".sync");
   }
@@ -68,24 +69,6 @@ void Event::addData(std::string_view key, int value)
     auto did = er.nameToID(key);
     er.put(DataEntry{_eid, timestamp, did, value});
   }
-}
-
-// -----------------------------------------------------------------------
-
-ScopedEventPrefix::ScopedEventPrefix(std::string_view name)
-{
-  previousName = EventRegistry::instance().prefix;
-  EventRegistry::instance().prefix += name;
-}
-
-ScopedEventPrefix::~ScopedEventPrefix()
-{
-  pop();
-}
-
-void ScopedEventPrefix::pop()
-{
-  EventRegistry::instance().prefix = previousName;
 }
 
 } // namespace precice::profiling

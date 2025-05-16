@@ -19,15 +19,15 @@ using namespace precice::mesh;
 BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(AxialGeoMultiscaleMapping)
 
+PRECICE_TEST_SETUP(1_rank);
 BOOST_AUTO_TEST_CASE(ConsistentSpreadX)
 {
+  PRECICE_TEST();
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, coupled along the x-axis.
       Then, the data is mapped from the single vertex of the 1D mesh to defined vertices on the circular inlet of the 3D mesh (hence, "spread").
       The defined vertices are at certain distances from the center, which enables to predict the expected behavior for Hagen-Poiseuille flow.
       Finally, this expected behavior is tested.
   */
-
-  PRECICE_TEST(1_rank);
   constexpr int dimensions = 3;
   using testing::equals;
 
@@ -81,15 +81,15 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadX)
   BOOST_TEST(outValues(8) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank);
 BOOST_AUTO_TEST_CASE(ConsistentSpreadZ)
 {
+  PRECICE_TEST();
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, coupled along the z-axis.
       Then, the data is mapped from the single vertex of the 1D mesh to defined vertices on the circular inlet of the 3D mesh (hence, "spread").
       The defined vertices are at certain distances from the center, which enables to predict the expected behavior for Hagen-Poiseuille flow.
       Finally, this expected behavior is tested.
   */
-
-  PRECICE_TEST(1_rank);
   constexpr int dimensions = 3;
   using testing::equals;
 
@@ -141,15 +141,15 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadZ)
   BOOST_TEST(outValues(8) == 1.5 * inSample.values(2));
 }
 
+PRECICE_TEST_SETUP(1_rank);
 BOOST_AUTO_TEST_CASE(ConsistentCollectX)
 {
+  PRECICE_TEST();
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, coupled along the x-axis.
       Then, the data is mapped from multiple defined vertices on the circular inlet of the 3D mesh to the single vertex of the 1D mesh (hence, "collect").
       The defined vertices are at certain distances from the center, which enables to predict the expected behavior for Hagen-Poiseuille flow.
       Finally, this expected behavior is tested.
   */
-
-  PRECICE_TEST(1_rank);
   constexpr int dimensions = 3;
   using testing::equals;
 
@@ -191,15 +191,15 @@ BOOST_AUTO_TEST_CASE(ConsistentCollectX)
   BOOST_TEST(outValues(2) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank);
 BOOST_AUTO_TEST_CASE(ConsistentCollectZ)
 {
+  PRECICE_TEST();
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, coupled along the z-axis.
       Then, the data is mapped from multiple defined vertices on the circular inlet of the 3D mesh to the single vertex of the 1D mesh (hence, "collect").
       The defined vertices are at certain distances from the center, which enables to predict the expected behavior for Hagen-Poiseuille flow.
       Finally, this expected behavior is tested.
   */
-
-  PRECICE_TEST(1_rank);
   constexpr int dimensions = 3;
   using testing::equals;
 

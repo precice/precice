@@ -1,21 +1,19 @@
 #pragma once
 
-#include <string>
 #include "logging/LogConfiguration.hpp"
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace config {
+namespace precice::logging {
 
 /// Configures the log config file to use
 class LogConfiguration : public xml::XMLTag::Listener {
 public:
   LogConfiguration(xml::XMLTag &parent);
 
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag);
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag) override;
 
-  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag);
+  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag) override;
 
 private:
   precice::logging::Logger _log{"logging::config::LogConfiguration"};
@@ -23,5 +21,4 @@ private:
   precice::logging::LoggingConfiguration _logconfig;
 };
 
-} // namespace config
-} // namespace precice
+} // namespace precice::logging

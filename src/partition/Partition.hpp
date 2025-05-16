@@ -9,8 +9,7 @@
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace partition {
+namespace precice::partition {
 
 /**
  * @brief Abstract base class for partitions.
@@ -33,7 +32,7 @@ public:
 
   Partition &operator=(Partition &&) = delete;
 
-  virtual ~Partition() {}
+  virtual ~Partition() = default;
 
   /// Intersections between bounding boxes around each rank are computed
   virtual void compareBoundingBoxes() = 0;
@@ -73,5 +72,4 @@ private:
   logging::Logger _log{"partition::Partition"};
 };
 
-} // namespace partition
-} // namespace precice
+} // namespace precice::partition

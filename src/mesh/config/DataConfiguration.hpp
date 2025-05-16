@@ -8,8 +8,7 @@
 #include "utils/ManageUniqueIDs.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 /// Performs and provides configuration for Data objects from XML files.
 class DataConfiguration : public xml::XMLTag::Listener {
@@ -20,7 +19,7 @@ public:
     int            waveformDegree;
 
     ConfiguredData(
-        const std::string &  name,
+        const std::string   &name,
         const Data::typeName typeName,
         int                  waveformDegree)
         : name(name), typeName(typeName), waveformDegree(waveformDegree) {}
@@ -32,13 +31,13 @@ public:
 
   ConfiguredData getRecentlyConfiguredData() const;
 
-  virtual void xmlTagCallback(
+  void xmlTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+      xml::XMLTag                     &callingTag) override;
 
-  virtual void xmlEndTagCallback(
+  void xmlEndTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+      xml::XMLTag                     &callingTag) override;
 
   /**
    * @brief Adds data manually.
@@ -47,7 +46,7 @@ public:
    * @param[in] dataDimensions Dimensionality (1: scalar, 2,3: vector) of data.
    * @param[in] waveformDegree Degree of waveform associated with this data.
    */
-  void addData(const std::string &  name,
+  void addData(const std::string   &name,
                const Data::typeName typeName,
                int                  waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE);
 
@@ -65,5 +64,4 @@ private:
   int _indexLastConfigured = -1;
 };
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

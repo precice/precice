@@ -33,14 +33,11 @@ class Configuration;
 } // namespace precice
 
 // Forward declaration to friend the boost test struct
-namespace Integration {
-namespace Serial {
-namespace Whitebox {
+
+namespace Integration::Serial::Whitebox {
 struct TestConfigurationPeano;
 struct TestConfigurationComsol;
-} // namespace Whitebox
-} // namespace Serial
-} // namespace Integration
+} // namespace Integration::Serial::Whitebox
 
 namespace precice {
 namespace cplscheme {
@@ -229,6 +226,21 @@ public:
       double                          relativeReadTime,
       ::precice::span<double>         values) const;
 
+  /// @copydoc Participant::mapAndReadData
+  void mapAndReadData(
+      std::string_view              meshName,
+      std::string_view              dataName,
+      ::precice::span<const double> coordinates,
+      double                        relativeReadTime,
+      ::precice::span<double>       values) const;
+
+  /// @copydoc Participant::writeAndMapData
+  void writeAndMapData(
+      std::string_view              meshName,
+      std::string_view              dataName,
+      ::precice::span<const double> coordinates,
+      ::precice::span<const double> values);
+
   /// @copydoc Participant::writeData
   void writeData(
       std::string_view                meshName,
@@ -258,6 +270,18 @@ public:
       std::string_view          meshName,
       ::precice::span<VertexID> ids,
       ::precice::span<double>   coordinates) const;
+
+  ///@}
+
+  /** @name User profiling
+   */
+  ///@{
+
+  /// @copydoc Participant::startProfilingSection()
+  void startProfilingSection(std::string_view eventName);
+
+  /// @copydoc Participant::stopLastProfilingSection()
+  void stopLastProfilingSection();
 
   ///@}
 
@@ -322,6 +346,9 @@ private:
   /// Are experimental API calls allowed?
   bool _allowsExperimental = false;
 
+  /// Are experimental remeshing API calls allowed?
+  bool _allowsRemeshing = false;
+
   /// Are participants waiting for each other in finalize?
   bool _waitInFinalize = false;
 
@@ -336,6 +363,9 @@ private:
 
   /// Counts the amount of samples mapped in read mappings executed in the latest advance
   int _executedReadMappings = 0;
+
+  /// The hash of the configuration file used to configure this participant
+  std::string _configHash;
 
   /**
    * @brief Configures the coupling interface from the given xml file.
@@ -411,7 +441,7 @@ private:
    * @param isAtWindowEnd set true, if function is called at end of window to also trim the time sample storage
    * @param isTimeWindowComplete set true, if function is called at end of converged window to trim and move the sample storage.
    */
-  void resetWrittenData(); //bool isAtWindowEnd, bool isTimeWindowComplete);
+  void resetWrittenData(); // bool isAtWindowEnd, bool isTimeWindowComplete);
 
   /// Determines participant accessing this interface from the configuration.
   impl::PtrParticipant determineAccessingParticipant(
@@ -450,12 +480,47 @@ private:
   /// Discards send (currently write) data of a participant after a given time when another iteration is required
   void trimSendDataAfter(double time);
 
+  /// How many ranks have changed each used mesh
+  using MeshChanges = std::vector<int>;
+
+  /** Allreduce of the amount of changed meshes on each rank.
+   * @return a vector of the size of meshcontexts which contain the amount of ranks that changed each mesh
+   */
+  MeshChanges getTotalMeshChanges() const;
+
+  /// Clears stample of changed meshes to make them consistent after the reinitialization.
+  void clearStamplesOfChangedMeshes(MeshChanges totalMeshChanges);
+
+  /** Exchanges request to remesh with all connecting participants.
+   *
+   * @param[in] requestReinit does this participant request to remesh?
+   *
+   * @return does any participant request to remesh?
+   */
+  bool reinitHandshake(bool requestReinit) const;
+
+  /// Reinitializes preCICE
+  void reinitialize();
+
+  /// Connect participants including repartitioning
+  void setupCommunication();
+
+  /// Setup mesh watcher such as WatchPoints
+  void setupWatcher();
+
+  /// Returns if a user has to define an access region for direct
+  /// mesh access and just-in-time mapping or not
+  /// Right now, that's required in parallel runs on received meshes
+  bool requiresUserDefinedAccessRegion(std::string_view meshName) const;
+
   /// To allow white box tests.
   friend struct Integration::Serial::Whitebox::TestConfigurationPeano;
   friend struct Integration::Serial::Whitebox::TestConfigurationComsol;
 
   std::unique_ptr<profiling::Event> _solverInitEvent;
   std::unique_ptr<profiling::Event> _solverAdvanceEvent;
+
+  std::vector<profiling::Event> _userEvents;
 };
 
 } // namespace impl

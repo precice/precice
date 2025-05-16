@@ -31,9 +31,57 @@ namespace precice::testing {
 
 using Par = utils::Parallel;
 
+// TestSetup
+
+void TestSetup::handleOption(testing::Require requirement)
+{
+  using testing::Require;
+  switch (requirement) {
+  case Require::PETSc:
+    petsc  = true;
+    events = true;
+    break;
+  case Require::Events:
+    events = true;
+    break;
+  case Require::Ginkgo:
+    ginkgo = true;
+    events = true;
+    break;
+  default:
+    std::terminate();
+  }
+}
+
+void TestSetup::handleOption(ParticipantState participant)
+{
+  participants.emplace_back(participant);
+}
+
+void TestSetup::handleOption(Ranks ranks)
+{
+  participants.emplace_back("Unnamed"_on(ranks));
+}
+
+int TestSetup::totalRanks() const
+{
+  return std::accumulate(participants.begin(), participants.end(), 0, [](int i, const ParticipantState &ps) { return i + ps.size; });
+}
+
+// TestContext
+
+TestContext::TestContext(TestSetup setup)
+    : _setup(setup)
+{
+  for (const auto &p : setup.participants) {
+    _names.emplace(p.name);
+  }
+  initialize(setup.participants);
+}
+
 TestContext::~TestContext() noexcept
 {
-  if (!invalid && _petsc) {
+  if (!invalid && _setup.petsc) {
     precice::utils::Petsc::finalize();
   }
   if (!invalid) {
@@ -70,7 +118,7 @@ bool TestContext::hasSize(int size) const
 
 bool TestContext::isNamed(const std::string &name) const
 {
-  if (std::find(_names.begin(), _names.end(), name) == _names.end()) {
+  if (_names.count(name) == 0) {
     throw std::runtime_error("The requested name \"" + name + "\" does not exist!");
   }
   return this->name == name;
@@ -87,36 +135,6 @@ bool TestContext::isRank(Rank rank) const
 bool TestContext::isPrimary() const
 {
   return isRank(0);
-}
-
-void TestContext::handleOption(Participants &, testing::Require requirement)
-{
-  using testing::Require;
-  switch (requirement) {
-  case Require::PETSc:
-    _petsc  = true;
-    _events = true;
-    break;
-  case Require::Events:
-    _events = true;
-    break;
-  case Require::Ginkgo:
-    _ginkgo = true;
-    _events = true;
-    break;
-  default:
-    std::terminate();
-  }
-}
-
-void TestContext::handleOption(Participants &participants, ParticipantState participant)
-{
-  if (_simple) {
-    std::terminate();
-  }
-  // @TODO add check if name already registered
-  _names.push_back(participant.name);
-  participants.emplace_back(std::move(participant));
 }
 
 void TestContext::setContextFrom(const ParticipantState &p)
@@ -203,7 +221,7 @@ void TestContext::initializeEvents()
   // Always initialize the events
   auto &er = precice::profiling::EventRegistry::instance();
   er.initialize(name, rank, size);
-  if (_events) { // Enable them if they are requested
+  if (_setup.events) { // Enable them if they are requested
     er.setMode(precice::profiling::Mode::All);
     er.setDirectory("./precice-profiling");
   } else {
@@ -214,54 +232,55 @@ void TestContext::initializeEvents()
 
 void TestContext::initializePetsc()
 {
-  if (!invalid && _petsc) {
+  if (!invalid && _setup.petsc) {
     precice::utils::Petsc::initialize(_contextComm->comm);
   }
 }
 
 void TestContext::initializeGinkgo()
 {
-  if (!invalid && _ginkgo) {
+  if (!invalid && _setup.ginkgo) {
+#ifndef PRECICE_NO_GINKGO
     int    argc = 0;
     char **argv;
-#ifndef PRECICE_NO_GINKGO
     precice::device::Ginkgo::initialize(&argc, &argv);
 #endif
   }
 }
 
-m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
+m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const std::string &connector, const ConnectionOptions &options) const
 {
   auto participantCom = com::PtrCommunication(new com::SocketCommunication());
 
   m2n::DistributedComFactory::SharedPointer distrFactory;
   switch (options.type) {
   case ConnectionType::GatherScatter:
-    distrFactory.reset(new m2n::GatherScatterComFactory(participantCom));
+    distrFactory = std::make_shared<m2n::GatherScatterComFactory>(participantCom);
     break;
   case ConnectionType::PointToPoint:
-    distrFactory.reset(new m2n::PointToPointComFactory(com::PtrCommunicationFactory(new com::SocketCommunicationFactory())));
+    distrFactory = std::make_shared<m2n::PointToPointComFactory>(com::PtrCommunicationFactory(new com::SocketCommunicationFactory()));
     break;
   default:
     throw std::runtime_error{"ConnectionType unknown"};
   };
-  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyPrimaryCom, options.useTwoLevelInit));
+  auto m2n = std::make_shared<m2n::M2N>(participantCom, distrFactory, options.useOnlyPrimaryCom, options.useTwoLevelInit);
 
-  if (std::find(_names.begin(), _names.end(), acceptor) == _names.end()) {
+  if (_names.count(acceptor) == 0) {
     throw std::runtime_error{
         "Acceptor \"" + acceptor + "\" not defined in this context."};
   }
-  if (std::find(_names.begin(), _names.end(), requestor) == _names.end()) {
+  if (_names.count(connector) == 0) {
     throw std::runtime_error{
-        "Requestor \"" + requestor + "\" not defined in this context."};
+        "Connector \"" + connector + "\" not defined in this context."};
   }
 
+  std::string configHash = "NOPE";
   if (isNamed(acceptor)) {
-    m2n->acceptPrimaryRankConnection(acceptor, requestor);
-  } else if (isNamed(requestor)) {
-    m2n->requestPrimaryRankConnection(acceptor, requestor);
+    m2n->acceptPrimaryRankConnection(acceptor, connector, configHash);
+  } else if (isNamed(connector)) {
+    m2n->requestPrimaryRankConnection(acceptor, connector, configHash);
   } else {
-    throw std::runtime_error{"You try to connect " + acceptor + " and " + requestor + ", but this context is named " + name};
+    throw std::runtime_error{"You try to connect " + acceptor + " and " + connector + ", but this context is named " + name};
   }
   return m2n;
 }
@@ -280,13 +299,13 @@ std::string TestContext::describe() const
   }
   os << " and runs on rank " << rank << " out of " << size << '.';
 
-  if (_initIntraComm || _events || _petsc) {
+  if (_initIntraComm || _setup.events || _setup.petsc) {
     os << " Initialized: {";
     if (_initIntraComm)
       os << " IntraComm Communication ";
-    if (_events)
+    if (_setup.events)
       os << " Events";
-    if (_petsc)
+    if (_setup.petsc)
       os << " PETSc";
     os << '}';
   }

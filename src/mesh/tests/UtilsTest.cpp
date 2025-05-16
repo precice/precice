@@ -5,8 +5,10 @@ BOOST_AUTO_TEST_SUITE(MeshTests)
 
 BOOST_AUTO_TEST_SUITE(UtilsTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(LocateInvalidId)
 {
+  PRECICE_TEST();
   using namespace precice;
   using namespace precice::mesh;
   mesh::Mesh mesh("2D Testmesh", 2, testing::nextMeshID());

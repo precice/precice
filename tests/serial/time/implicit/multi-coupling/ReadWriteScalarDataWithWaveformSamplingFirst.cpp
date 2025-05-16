@@ -17,9 +17,10 @@ BOOST_AUTO_TEST_SUITE(MultiCoupling)
  *
  * Provides a dt argument to the read function. A first order waveform is used.
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank), "SolverThree"_on(1_rank));
+  PRECICE_TEST();
 
   Participant precice(context.name, context.config(), 0, 1);
 
@@ -44,22 +45,22 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
     writeDataName    = "DataOne";
     writeFunction    = dataOneFunction;
     auto dataTwoName = "DataTwo";
-    readDataPairs.push_back(std::make_pair(dataTwoName, dataTwoFunction));
+    readDataPairs.emplace_back(dataTwoName, dataTwoFunction);
     auto dataThreeName = "DataThree";
-    readDataPairs.push_back(std::make_pair(dataThreeName, dataThreeFunction));
+    readDataPairs.emplace_back(dataThreeName, dataThreeFunction);
   } else if (context.isNamed("SolverTwo")) {
     meshName         = "MeshTwo";
     writeDataName    = "DataTwo";
     writeFunction    = dataTwoFunction;
     auto dataOneName = "DataOne";
-    readDataPairs.push_back(std::make_pair(dataOneName, dataOneFunction));
+    readDataPairs.emplace_back(dataOneName, dataOneFunction);
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
     meshName         = "MeshThree";
     writeDataName    = "DataThree";
     writeFunction    = dataThreeFunction;
     auto dataOneName = "DataOne";
-    readDataPairs.push_back(std::make_pair(dataOneName, dataOneFunction));
+    readDataPairs.emplace_back(dataOneName, dataOneFunction);
   }
 
   double   writeData = 0;
@@ -69,7 +70,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
 
   int    nWindows        = 5; // perform 5 windows.
   int    timestep        = 0;
-  int    timewindow      = 0;
   double windowStartTime = 0;
   int    windowStartStep = 0;
   int    nSamples        = 4;
@@ -131,7 +131,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
       time     = windowStartTime;
     }
     if (precice.isTimeWindowComplete()) {
-      timewindow++;
       iterations = 0;
     }
   }

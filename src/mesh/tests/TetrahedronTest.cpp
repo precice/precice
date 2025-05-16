@@ -13,9 +13,10 @@ using namespace precice::mesh;
 BOOST_AUTO_TEST_SUITE(MeshTests)
 BOOST_AUTO_TEST_SUITE(TetrahedronTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(BasicTetra)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector3d;
   Vector3d coords1(0.0, 0.0, 0.0);
   Vector3d coords2(1.0, 0.0, 0.0);
@@ -52,13 +53,13 @@ BOOST_AUTO_TEST_CASE(BasicTetra)
   BOOST_TEST(tetra.getVolume() == expectedVolume);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(WeirdTetra)
 {
-
+  PRECICE_TEST();
   // Same as above, but with a vertex whose projection
   // on the opposing tetra is out ouf the tetrahedron.
   // Also, we give it a negative z-coordinate
-  PRECICE_TEST(1_rank);
   using Eigen::Vector3d;
   Vector3d coords1(0.0, 0.0, 0.0);
   Vector3d coords2(1.0, 0.0, 0.0);
@@ -95,9 +96,10 @@ BOOST_AUTO_TEST_CASE(WeirdTetra)
   BOOST_TEST(tetra.getVolume() == expectedVolume);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TetrahedronEquality)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector3d;
   Vector3d coords1(0.0, 0.0, 0.0);
   Vector3d coords2(1.0, 0.0, 0.0);
@@ -120,9 +122,10 @@ BOOST_AUTO_TEST_CASE(TetrahedronEquality)
   BOOST_TEST(tetra2 != tetra3);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TetrahedronWKTPrint)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Vertex v1(Eigen::Vector3d(0., 0., 0.), 0);
   Vertex v2(Eigen::Vector3d(1., 0., 0.), 1);
   Vertex v3(Eigen::Vector3d(0., 1., 0.), 2);

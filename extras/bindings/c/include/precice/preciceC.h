@@ -34,7 +34,7 @@ PRECICE_API void precicec_createParticipant_withCommunicator(
     const char *configFileName,
     int         solverProcessIndex,
     int         solverProcessSize,
-    void *      communicator);
+    void       *communicator);
 
 /**
  * @brief Creates the coupling interface and configures it.
@@ -125,6 +125,9 @@ PRECICE_API double precicec_getMaxTimeStepSize();
 /// @copydoc precice::Participant::requiresMeshConnectivityFor()
 PRECICE_API int precicec_requiresMeshConnectivityFor(const char *meshName);
 
+/// @copydoc precice::Participant::resetMesh()
+PRECICE_API void precicec_resetMesh(const char *meshName);
+
 /**
  * @brief Creates a mesh vertex
  *
@@ -133,7 +136,7 @@ PRECICE_API int precicec_requiresMeshConnectivityFor(const char *meshName);
  * @returns the id of the created vertex
  */
 PRECICE_API int precicec_setMeshVertex(
-    const char *  meshName,
+    const char   *meshName,
     const double *coordinates);
 
 /**
@@ -156,10 +159,10 @@ PRECICE_API int precicec_getMeshVertexSize(const char *meshName);
  * @param[out] ids The ids of the created vertices
  */
 PRECICE_API void precicec_setMeshVertices(
-    const char *  meshName,
+    const char   *meshName,
     int           size,
     const double *coordinates,
-    int *         ids);
+    int          *ids);
 
 /**
  * @brief Sets mesh edge from vertex IDs
@@ -187,7 +190,7 @@ PRECICE_API void precicec_setMeshEdge(
 PRECICE_API void precicec_setMeshEdges(
     const char *meshName,
     int         size,
-    const int * ids);
+    const int  *ids);
 
 /**
  * @brief Sets a triangle from vertex IDs. Creates missing edges.
@@ -210,7 +213,7 @@ PRECICE_API void precicec_setMeshTriangle(
 PRECICE_API void precicec_setMeshTriangles(
     const char *meshName,
     int         size,
-    const int * ids);
+    const int  *ids);
 
 /**
  * @brief Sets surface mesh quadrangle from vertex IDs.
@@ -240,7 +243,7 @@ PRECICE_API void precicec_setMeshQuad(
 PRECICE_API void precicec_setMeshQuads(
     const char *meshName,
     int         size,
-    const int * ids);
+    const int  *ids);
 
 /**
  * @brief Sets mesh tetrahedron from vertex IDs.
@@ -270,7 +273,7 @@ PRECICE_API void precicec_setMeshTetrahedron(
 PRECICE_API void precicec_setMeshTetrahedra(
     const char *meshName,
     int         size,
-    const int * ids);
+    const int  *ids);
 
 ///@}
 
@@ -295,10 +298,10 @@ PRECICE_API int precicec_requiresInitialData();
  * @see Participant::writeData
  */
 PRECICE_API void precicec_writeData(
-    const char *  meshName,
-    const char *  dataName,
+    const char   *meshName,
+    const char   *dataName,
     int           size,
-    const int *   valueIndices,
+    const int    *valueIndices,
     const double *values);
 
 /**
@@ -321,10 +324,54 @@ PRECICE_API void precicec_readData(
     const char *meshName,
     const char *dataName,
     int         size,
-    const int * valueIndices,
+    const int  *valueIndices,
     double      relativeReadTime,
-    double *    values);
+    double     *values);
 
+///@}
+
+///@name Just-in-time mapping
+///@{
+
+/**
+ * @brief Writes data using just-in-time data mapping
+ * See @see precice::Participant::writeAndMapData() and the just-in-time mapping doxygen section for more information.
+ *
+ * @param[in] meshName Name of the mesh to write and map the data to. Typically a received mesh
+ * @param[in] dataName Name of the data to field on this mesh.
+ * @param[in] size Number of vertices to write
+ * @param[in] coordinates Pointer to the coordinates where we write the data. Needs to have \p size x \ref precicec_getMeshDimensions( \p meshName ) entries
+ * @param[in] values Pointer to the data values we want to pass to preCICE. Needs  to have \p size x \ref precicec_getDataDimensions( \p meshName , \p dataName ) entries
+ *
+ * @copydoc precice::Participant::writeAndMapData()
+ */
+PRECICE_API void precicec_writeAndMapData(
+    const char   *meshName,
+    const char   *dataName,
+    int           size,
+    const double *coordinates,
+    const double *values);
+
+/**
+ * @brief Reads data using just-in-time data mapping.
+ * See @see precice::Participant::mapAndReadData() and the just-in-time mapping doxygen section for more information.
+ *
+ * @param[in] meshName Name of the mesh to write and map the data to. Typically a received mesh
+ * @param[in] dataName Name of the data to field on this mesh.
+ * @param[in] size Number of vertices to write
+ * @param [in] coordinates Pointer to the coordinates where we read the data. Needs to have \p size x \ref precicec_getMeshDimensions( \p meshName ) entries
+ * @param[in] relativeReadTime Same as in @see precice::Participant::readData()
+ * @param[in/out] values Pointer to the values to be filled by preCICE. Needs to have \p size x \ref precicec_getDataDimensions( \p meshName , \p dataName ) entries
+ *
+ * @copydoc precice::Participant::mapAndReadData()
+ */
+PRECICE_API void precicec_mapAndReadData(
+    const char   *meshName,
+    const char   *dataName,
+    int           size,
+    const double *coordinates,
+    double        relativeReadTime,
+    double       *values);
 ///@}
 
 ///@name Direct mesh access
@@ -334,7 +381,7 @@ PRECICE_API void precicec_readData(
  * @brief See precice::Participant::setMeshAccessRegion().
  */
 PRECICE_API void precicec_setMeshAccessRegion(
-    const char *  meshName,
+    const char   *meshName,
     const double *boundingBox);
 
 /**
@@ -343,8 +390,8 @@ PRECICE_API void precicec_setMeshAccessRegion(
 PRECICE_API void precicec_getMeshVertexIDsAndCoordinates(
     const char *meshName,
     const int   size,
-    int *       ids,
-    double *    coordinates);
+    int        *ids,
+    double     *coordinates);
 
 ///@}
 
@@ -359,11 +406,22 @@ PRECICE_API int precicec_requiresGradientDataFor(const char *meshName,
 
 /// @copydoc precice::Participant::writeGradientData
 PRECICE_API void precicec_writeGradientData(
-    const char *  meshName,
-    const char *  dataName,
+    const char   *meshName,
+    const char   *dataName,
     int           size,
-    const int *   valueIndices,
+    const int    *valueIndices,
     const double *gradients);
+
+///@}
+
+/// @name User-defined profiling
+///@{
+
+/// @copydoc precice::Participant::startProfilingSection()
+PRECICE_API void precicec_startProfilingSection(const char *sectionName);
+
+/// @copydoc precice::Participant::stopLastProfilingSection()
+PRECICE_API void precicec_stopLastProfilingSection();
 
 ///@}
 

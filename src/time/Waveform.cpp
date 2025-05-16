@@ -23,7 +23,7 @@ const time::Storage &Waveform::timeStepsStorage() const
   return _timeStepsStorage;
 }
 
-Eigen::VectorXd Waveform::sample(double time) const
+SampleResult Waveform::sample(double time) const
 {
   return _timeStepsStorage.sample(time);
 }

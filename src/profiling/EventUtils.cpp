@@ -24,6 +24,9 @@
 
 namespace precice::profiling {
 
+/// The version of the Events file. Increase on changes
+constexpr int file_version{1};
+
 using sys_clk  = std::chrono::system_clock;
 using stdy_clk = std::chrono::steady_clock;
 
@@ -63,9 +66,12 @@ void EventRegistry::initialize(std::string_view applicationName, int rank, int s
   this->_initTime        = initTime;
   this->_initClock       = initClock;
 
-  _writeQueue.clear();
   _firstwrite = true;
-  _globalId   = std::nullopt;
+  _writeQueue.clear();
+  _nameDict.clear();
+
+  _globalId = nameToID("_GLOBAL");
+  _writeQueue.emplace_back(StartEntry{_globalId.value(), _initClock});
 
   _initialized = true;
   _finalized   = false;
@@ -129,8 +135,6 @@ void EventRegistry::startBackend()
   PRECICE_DEBUG("Starting backend with events-file: \"{}\"", filename);
   _output.open(filename);
   PRECICE_CHECK(_output, "Unable to open the events-file: \"{}\"", filename);
-  _globalId = nameToID("_GLOBAL");
-  _writeQueue.emplace_back(StartEntry{_globalId.value(), _initClock});
 
   // write header
   fmt::print(_output,
@@ -141,7 +145,8 @@ void EventRegistry::startBackend()
   "size": "{}",
   "unix_us": "{}",
   "tinit": "{}",
-  "mode": "{}"
+  "mode": "{}",
+  "file_version": {}
   }},
   "events":[
   )",
@@ -150,7 +155,8 @@ void EventRegistry::startBackend()
              _size,
              std::chrono::duration_cast<std::chrono::microseconds>(_initTime.time_since_epoch()).count(),
              timepoint_to_string(_initTime),
-             toString(_mode));
+             toString(_mode),
+             ::precice::profiling::file_version);
   _output.flush();
   _isBackendRunning = true;
 }
@@ -210,7 +216,7 @@ void EventRegistry::putCritical(PendingEntry pe)
 
 namespace {
 struct EventWriter {
-  std::ostream &           out;
+  std::ostream            &out;
   Event::Clock::time_point initClock;
   std::string              prefix;
 

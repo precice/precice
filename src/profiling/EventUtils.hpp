@@ -82,10 +82,10 @@ public:
   ~EventRegistry();
 
   /// Deleted copy and move SMFs for singleton pattern
-  EventRegistry(EventRegistry const &) = delete;
-  EventRegistry(EventRegistry &&)      = delete;
+  EventRegistry(EventRegistry const &)            = delete;
+  EventRegistry(EventRegistry &&)                 = delete;
   EventRegistry &operator=(EventRegistry const &) = delete;
-  EventRegistry &operator=(EventRegistry &&) = delete;
+  EventRegistry &operator=(EventRegistry &&)      = delete;
 
   /// Returns the only instance (singleton) of the EventRegistry class
   static EventRegistry &instance();
@@ -138,9 +138,6 @@ public:
   }
 
   int nameToID(std::string_view name);
-
-  /// Currently active prefix. Changing that applies only to newly created events.
-  std::string prefix;
 
 private:
   /// The name of the current participant

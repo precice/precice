@@ -42,8 +42,11 @@ def get_cmake_file_paths(root):
     sources = os.path.join(root, "src", "sources.cmake")
     utests = os.path.join(root, "src", "tests.cmake")
     itests = os.path.join(root, "tests", "tests.cmake")
-    cmakepaths = collections.namedtuple("CMakePaths", "sources utests itests")
-    return cmakepaths(sources, utests, itests)
+    benchmarks = os.path.join(root, "benchmarks", "sources.cmake")
+    cmakepaths = collections.namedtuple(
+        "CMakePaths", "sources utests itests benchmarks"
+    )
+    return cmakepaths(sources, utests, itests, benchmarks)
 
 
 def is_precice_root(root):
@@ -54,6 +57,7 @@ def is_precice_root(root):
 def get_file_lists(root):
     src_dir = os.path.join(root, "src")
     tests_dir = os.path.join(root, "tests")
+    bench_dir = os.path.join(root, "benchmarks")
 
     # Find interface headers
     public = glob.glob(os.path.join(src_dir, "precice", "*.hpp"))
@@ -88,7 +92,22 @@ def get_file_lists(root):
         ]
         itests += files
 
-    return sorted(sources), sorted(public), sorted(utests), sorted(itests)
+    benchmarks = []
+    for dir, _, filenames in os.walk(bench_dir):
+        files = [
+            os.path.relpath(os.path.join(dir, name), root)
+            for name in filenames
+            if file_extension(name) in exts
+        ]
+        benchmarks += files
+
+    return (
+        sorted(sources),
+        sorted(public),
+        sorted(utests),
+        sorted(itests),
+        sorted(benchmarks),
+    )
 
 
 def itest_path_to_suite(path):
@@ -98,10 +117,6 @@ def itest_path_to_suite(path):
     dir = pathlib.PurePath(path).parts[1]
     parts = map(lambda s: s.capitalize(), dir.split("-"))
     return "".join(parts)
-
-
-def test_suites_from_files(itests):
-    return sorted(set(map(itest_path_to_suite, itests)))
 
 
 SOURCES_BASE = """#
@@ -136,9 +151,15 @@ target_sources(testprecice
     PRIVATE
     {}
     )
+"""
+BENCHMARKS_BASE = """#
+# This file lists all benchmarks that will be compiles into precice-bench
+#
 
-# Contains the list of integration test suites
-set(PRECICE_TEST_SUITES {})
+target_sources(precice-bench
+    PRIVATE
+    {}
+    )
 """
 
 
@@ -151,9 +172,11 @@ def generate_unit_tests(utests):
 
 
 def generate_integration_tests(itests):
-    return ITESTS_BASE.format(
-        "\n    ".join(itests), " ".join(test_suites_from_files(itests))
-    )
+    return ITESTS_BASE.format("\n    ".join(itests))
+
+
+def generate_benchmark_sources(sources):
+    return BENCHMARKS_BASE.format("\n    ".join(sources))
 
 
 def main():
@@ -161,10 +184,10 @@ def main():
     if not is_precice_root(root):
         print("Current dir {} is not the root of the precice repository!".format(root))
         return 1
-    sources, public, utests, itests = get_file_lists(root)
+    sources, public, utests, itests, benchmarks = get_file_lists(root)
     print(
-        "Detected files:\n  sources: {}\n  public headers: {}\n  unit tests: {}\n  integration tests: {}".format(
-            len(sources), len(public), len(utests), len(itests)
+        "Detected files:\n  sources: {}\n  public headers: {}\n  unit tests: {}\n  integration tests: {}\n  benchmarks: {}".format(
+            len(sources), len(public), len(utests), len(itests), len(benchmarks)
         )
     )
 
@@ -196,6 +219,7 @@ def main():
     sources_content = generate_lib_sources(sources, public)
     utests_content = generate_unit_tests(utests)
     itests_content = generate_integration_tests(itests)
+    benchmarks_content = generate_benchmark_sources(benchmarks)
 
     print("Writing Files")
     print(" {}".format(files.sources))
@@ -209,6 +233,10 @@ def main():
     print(" {}".format(files.itests))
     with open(files.itests, "w") as f:
         f.write(itests_content)
+
+    print(" {}".format(files.benchmarks))
+    with open(files.benchmarks, "w") as f:
+        f.write(benchmarks_content)
 
     print("done")
     return 0

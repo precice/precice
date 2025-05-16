@@ -7,15 +7,12 @@
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 class TXTWriter;
 class TXTReader;
-} // namespace io
-} // namespace precice
+} // namespace precice::io
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 class Acceleration {
 public:
@@ -24,6 +21,7 @@ public:
   static const int QR1FILTER_ABS = 2;
   static const int QR2FILTER     = 3;
   static const int PODFILTER     = 4;
+  static const int QR3FILTER     = 5;
 
   /// Map from data ID to data values.
   using DataMap = std::map<int, cplscheme::PtrCouplingData>;
@@ -34,42 +32,19 @@ public:
 
   virtual void initialize(const DataMap &cpldata) = 0;
 
-  virtual void performAcceleration(DataMap &cpldata) = 0;
+  virtual void performAcceleration(DataMap &cpldata, double windowStart, double windowEnd) = 0;
 
-  virtual void iterationsConverged(const DataMap &cpldata) = 0;
+  virtual void iterationsConverged(const DataMap &cpldata, double windowStart) = 0;
 
   virtual void exportState(io::TXTWriter &writer) {}
 
   virtual void importState(io::TXTReader &reader) {}
-
-  /// Gives the number of QN columns that where filtered out (i.e. deleted) in this time window
-  virtual int getDeletedColumns() const
-  {
-    return 0;
-  }
-
-  /// Gives the number of QN columns that went out of scope in this time window
-  virtual int getDroppedColumns() const
-  {
-    return 0;
-  }
-
-  /// Gives the number of current QN columns (LS = least squares)
-  virtual int getLSSystemCols() const
-  {
-    return 0;
-  }
 
 protected:
   /// Checks if all dataIDs are contained in cplData
   void checkDataIDs(const DataMap &cplData) const;
 
   /// performs a relaxation given a relaxation factor omega
-  static void applyRelaxation(double omega, DataMap &cplData);
-
-  /// @brief Concatenates the data and old data in cplData into two long vectors
-  virtual void concatenateCouplingData(
-      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const = 0;
+  static void applyRelaxation(double omega, DataMap &cplData, double windowStart);
 };
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration

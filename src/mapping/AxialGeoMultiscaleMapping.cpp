@@ -49,7 +49,7 @@ void AxialGeoMultiscaleMapping::computeMapping()
                      "Unknown multiscale axis type.");
 
       // compute distances between 1D vertex and 3D vertices
-      mesh::Vertex &   v0                           = input()->vertex(0);
+      mesh::Vertex    &v0                           = input()->vertex(0);
       size_t const     outSize                      = output()->nVertices();
       constexpr double distance_to_radius_threshold = 1.05;
 
@@ -97,7 +97,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
 
   const int              inDataDimensions = inData.dataDims;
   const Eigen::VectorXd &inputValues      = inData.values;
-  Eigen::VectorXd &      outputValues     = outData;
+  Eigen::VectorXd       &outputValues     = outData;
   // TODO: check if this needs to change when access to mesh dimension is possible
   const int outDataDimensions = outData.size() / output()->nVertices();
 

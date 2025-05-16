@@ -10,8 +10,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "utils/Helpers.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 class CouplingData;
 struct ExchangeData;
 
@@ -26,22 +25,22 @@ struct ExchangeData;
 class MultiCouplingScheme : public BaseCouplingScheme {
 public:
   /**
- * @brief Constructor.
- *
- * @param[in] maxTime Simulation time limit, or UNDEFINED_MAX_TIME.
- * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIME_WINDOWS.
- * @param[in] timeWindowSize Simulation time window size.
- * @param[in] localParticipant Name of participant using this coupling scheme.
- * @param[in] m2ns M2N communications to all other participants of coupling scheme.
- * @param[in] maxIterations maximum number of coupling sub-iterations allowed.
- */
+   * @brief Constructor.
+   *
+   * @param[in] maxTime Simulation time limit, or UNDEFINED_MAX_TIME.
+   * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIME_WINDOWS.
+   * @param[in] timeWindowSize Simulation time window size.
+   * @param[in] localParticipant Name of participant using this coupling scheme.
+   * @param[in] m2ns M2N communications to all other participants of coupling scheme.
+   * @param[in] maxIterations maximum number of coupling sub-iterations allowed.
+   */
   MultiCouplingScheme(
       double                             maxTime,
       int                                maxTimeWindows,
       double                             timeWindowSize,
-      const std::string &                localParticipant,
+      const std::string                 &localParticipant,
       std::map<std::string, m2n::PtrM2N> m2ns,
-      const std::string &                controller,
+      const std::string                 &controller,
       int                                minIterations,
       int                                maxIterations);
 
@@ -51,7 +50,7 @@ public:
       mesh::PtrMesh        mesh,
       bool                 requiresInitialization,
       bool                 exchangeSubsteps,
-      const std::string &  to);
+      const std::string   &to);
 
   /// Adds data to be received on data exchange.
   void addDataToReceive(
@@ -59,13 +58,13 @@ public:
       mesh::PtrMesh        mesh,
       bool                 requiresInitialization,
       bool                 exchangeSubsteps,
-      const std::string &  from);
+      const std::string   &from);
 
   void determineInitialDataExchange() override;
 
-  std::vector<std::string> getCouplingPartners() const override final;
+  std::vector<std::string> getCouplingPartners() const final override;
 
-  bool hasAnySendData() override final;
+  bool hasAnySendData() final override;
 
 private:
   /**
@@ -83,19 +82,29 @@ private:
    */
   std::map<std::string, DataMap> _sendDataVector;
 
+  /// Coupling partners to receive initial data from
+  std::set<std::string> _receiveInitialFrom;
+
+  /// Coupling partners to send initial data to
+  std::set<std::string> _sendInitialTo;
+
   logging::Logger _log{"cplscheme::MultiCouplingScheme"};
 
-  void exchangeFirstData() override final;
+  void exchangeFirstData() final override;
 
-  void exchangeSecondData() override final;
+  void exchangeSecondData() final override;
 
-  DataMap &getAccelerationData() override final;
+  bool sendsInitializedDataTo(const std::string &to) const;
+
+  bool receivesInitializedDataFrom(const std::string &from) const;
+
+  DataMap &getAccelerationData() final override;
 
   /// @copydoc cplscheme::BaseCouplingScheme::initializeReceiveDataStorage()
-  void initializeReceiveDataStorage() override final;
+  void initializeReceiveDataStorage() final override;
 
   /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
-  void exchangeInitialData() override final;
+  void exchangeInitialData() final override;
 
   /// name of the controller participant
   std::string _controller;
@@ -104,5 +113,4 @@ private:
   bool _isController;
 };
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

@@ -9,12 +9,12 @@ Only the release manager should update this post (even tickboxes, due to race co
 ## Pre-PR steps
 
 * [ ] Look over [PRs](https://github.com/precice/precice/pulls?q=is%3Apr+no%3Amilestone+is%3Aclosed) and [Issues](https://github.com/precice/precice/issues?q=is%3Aissue+no%3Amilestone+is%3Aclosed) without an assigned version. (all)
-* [ ] Look over entries in [`docs/changelog`](https://github.com/precice/precice/blob/develop/docs/changelog)) (all)
+* [ ] Look over entries in [`docs/changelog`](https://github.com/precice/precice/blob/develop/docs/changelog) (all)
    * Add missing entries, if necessary
    * Fix wording and tense
 * [ ] Make sure you have the latest `develop` and `main` branches locally.
 * [ ] Merge `main` to `develop` ( This should result in no commits )
-* [ ] Check code base w.r.t code formatting (run [`precice/tools/formatting/check-format`](https://github.com/precice/precice/blob/develop/tools/formatting/check-format)) and reformat if required (run [`precice/tools/formatting/format-all`](https://github.com/precice/precice/blob/develop/tools/formatting/format-all))
+* [ ] Check code base w.r.t code formatting (run `pre-commit run -va`)
 * [ ] Update the list of operating systems for the package generation in `.github/workflows/release.yml`
 * [ ] Create branch `release-vX.Y.Z` from develop. If needed, `git rebase develop`.
 * [ ] Run `tools/releasing/bumpversion.sh MAJOR.MINOR.PATCH` to bump the version
@@ -51,7 +51,7 @@ Only the release manager should update this post (even tickboxes, due to race co
       * `_data/sidebars/docs_sidebar.yml`
 * [ ] Approve the PR with at least two reviews (all)
 * [ ] Merge PR to `main` ( use `git merge --no-ff release-vX.Y.Z` )
-* [ ] Tag release on `main` `vX.Y.Z` and verify by running `git describe --tags`
+* [ ] Create an annotated tag on `main` using `git tag -a vX.Y.Z -m "preCICE version vX.Y.Z"` and verify by running `git describe --tags`
 * [ ] Merge back to `develop` and verify by running `git describe --tags`
 * [ ] Triple check that you haven't messed anything up. (You can always discard local changes)
 * [ ] Push `main` and push the `vX.Y.Z` tag

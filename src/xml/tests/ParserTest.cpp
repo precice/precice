@@ -61,9 +61,10 @@ struct CallbackHostAttr : public XMLTag::Listener {
   }
 };
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(AttributeTypeTest)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/xmlparser_test.xml");
 
   CallbackHostAttr cb;
@@ -102,7 +103,8 @@ BOOST_AUTO_TEST_CASE(AttributeTypeTest)
 
   rootTag.addSubtag(testcaseTag);
 
-  configure(rootTag, ConfigurationContext{}, filename);
+  auto hash = configure(rootTag, ConfigurationContext{}, filename);
+  BOOST_TEST(hash == "60a732f93a3a52eea0b33582a0ce0e92");
 
   BOOST_TEST(cb.boolValue == true);
   BOOST_TEST(cb.doubleValue == 3.1);
@@ -122,9 +124,10 @@ BOOST_AUTO_TEST_CASE(AttributeTypeTest)
   BOOST_TEST(cb.eigenValue3(2) == 1.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(OccurenceTest)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/xmlparser_occtest.xml");
 
   CallbackHostAttr cb;
@@ -149,12 +152,14 @@ BOOST_AUTO_TEST_CASE(OccurenceTest)
 
   rootTag.addSubtag(testcaseTag);
 
-  configure(rootTag, ConfigurationContext{}, filename);
+  auto hash = configure(rootTag, ConfigurationContext{}, filename);
+  BOOST_TEST(hash == "b2b2b03b807f5d0d86d77fdb2f07b42f");
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(NamespaceTest)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/xmlparser_nstest.xml");
 
   CallbackHostAttr cb;
@@ -171,33 +176,36 @@ BOOST_AUTO_TEST_CASE(NamespaceTest)
 
   rootTag.addSubtag(testcaseTag);
 
-  configure(rootTag, ConfigurationContext{}, filename);
+  auto hash = configure(rootTag, ConfigurationContext{}, filename);
+  BOOST_TEST(hash == "758805e1fc385a73b929cc75ade90c8c");
 }
 
 struct ContextListener : public XMLTag::Listener {
   ConfigurationContext startContext;
   ConfigurationContext endContext;
 
-  void xmlTagCallback(const ConfigurationContext &context, XMLTag &callingTag)
+  void xmlTagCallback(const ConfigurationContext &context, XMLTag &callingTag) override
   {
     startContext = context;
   }
 
-  void xmlEndTagCallback(const ConfigurationContext &context, XMLTag &callingTag)
+  void xmlEndTagCallback(const ConfigurationContext &context, XMLTag &callingTag) override
   {
     endContext = context;
   }
 };
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Context)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string filename(getPathToSources() + "/xml/tests/config_xmltest_context.xml");
 
   ContextListener      cl;
   XMLTag               rootTag(cl, "configuration", XMLTag::OCCUR_ONCE);
   ConfigurationContext ccontext{"test", 12, 32};
-  configure(rootTag, ccontext, filename);
+  auto                 hash = configure(rootTag, ccontext, filename);
+  BOOST_TEST(hash == "c63ea663514b5150ae9415d7adbb84cb");
   BOOST_TEST(cl.startContext.name == "test");
   BOOST_TEST(cl.startContext.rank == 12);
   BOOST_TEST(cl.startContext.size == 32);
@@ -206,9 +214,10 @@ BOOST_AUTO_TEST_CASE(Context)
   BOOST_TEST(cl.endContext.size == 32);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Decode)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   BOOST_TEST(decodeXML("Less than &lt; test") == "Less than < test");
   BOOST_TEST(decodeXML("Greater than &gt; test") == "Greater than > test");

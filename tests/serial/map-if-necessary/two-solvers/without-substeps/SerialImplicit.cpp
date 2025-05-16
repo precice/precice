@@ -12,9 +12,10 @@ BOOST_AUTO_TEST_SUITE(MapIfNecessary)
 BOOST_AUTO_TEST_SUITE(TwoSolvers)
 BOOST_AUTO_TEST_SUITE(WithoutSubsteps)
 
+PRECICE_TEST_SETUP("One"_on(1_rank), "Two"_on(1_rank))
 BOOST_AUTO_TEST_CASE(SerialImplicit)
 {
-  PRECICE_TEST("One"_on(1_rank), "Two"_on(1_rank));
+  PRECICE_TEST();
 
   // 1: new end only (iterating)
   // 2: new end

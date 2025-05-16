@@ -3,10 +3,10 @@
 
 #include <Eigen/Core>
 #include <algorithm>
-#include <math.h>
+#include <cmath>
+#include <cstdlib>
 #include <memory>
 #include <ostream>
-#include <stdlib.h>
 #include <string>
 #include <vector>
 #include "acceleration/impl/ParallelMatrixOperations.hpp"
@@ -44,9 +44,10 @@ void validate_result_equals_reference(
   }
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ParVectorOperations)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   int              n_global = 10;
   int              n_local;
   double           a = 0;
@@ -149,9 +150,10 @@ BOOST_AUTO_TEST_CASE(ParVectorOperations)
   BOOST_TEST(testing::equals(dotproduct, 7.069617899295469));
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   int              n_global = 10, m_global = 5;
   int              n_local;
@@ -324,9 +326,10 @@ BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOp)
 }
 
 // Test for the matrix operation when secondary data exists. The multiplicator matrices from the previous test are cut down in columns or rows to match new shapes.
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ParallelMatrixMatrixOpWithSecondaryData)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   int              n_global = 10, n_global_primary = 8, m_global = 5;
   int              n_local, n_local_primary;

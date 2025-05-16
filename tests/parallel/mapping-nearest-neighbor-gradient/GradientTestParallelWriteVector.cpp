@@ -28,10 +28,10 @@ BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(MappingNearestNeighborGradient)
 
 // Bidirectional test : Read: Vector & NNG - Write: Scalar & NN
+PRECICE_TEST_SETUP("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks))
 BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
 {
-
-  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  PRECICE_TEST();
 
   if (context.isNamed("SolverOne")) {
     Participant interface(context.name, context.config(), context.rank, context.size);
@@ -76,9 +76,9 @@ BOOST_AUTO_TEST_CASE(GradientTestParallelWriteVector)
       interface.initialize();
       auto                dataName = "Data2";
       std::vector<double> values   = {1.0, 2.0, 3.0,
-                                    -1.0, -1.0, -1.0,
-                                    4.0, 5.0, 6.0,
-                                    0.0, 0.0, 0.0};
+                                      -1.0, -1.0, -1.0,
+                                      4.0, 5.0, 6.0,
+                                      0.0, 0.0, 0.0};
 
       interface.writeData(meshName, dataName, vertexIDs, values);
 

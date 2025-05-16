@@ -12,9 +12,10 @@ BOOST_AUTO_TEST_SUITE(InitializeData)
 /**
  * @brief The second solver initializes the data of the first. Use read mapping for data.
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ReadMapping)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   testDataInitialization(context, context.config());
 }

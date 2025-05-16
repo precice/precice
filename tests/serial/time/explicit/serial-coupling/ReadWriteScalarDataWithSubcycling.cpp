@@ -19,9 +19,10 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
  *
  * Ensures that each time step provides its own data.
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   Participant precice(context.name, context.config(), 0, 1);
 
@@ -74,7 +75,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
   double expectedDts[] = {4.0 / 7.0, 4.0 / 7.0, 4.0 / 7.0, 2.0 / 7.0}; // If solver uses timestep size of 4/7, fourth step will be restricted to 2/7 via preCICE steering to fit into the window.
 
   while (precice.isCouplingOngoing()) {
-    double readTime;
     double preciceDt = precice.getMaxTimeStepSize();
     double currentDt = solverDt > preciceDt ? preciceDt : solverDt; // determine actual time step size; must fit into remaining time in window
 

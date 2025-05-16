@@ -80,7 +80,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
 
   void runThreeSolverCoupling(
       PtrCouplingScheme          cplScheme,
-      const std::string &        participantName,
+      const std::string         &participantName,
       mesh::PtrMeshConfiguration meshConfig)
   {
     BOOST_TEST(meshConfig->meshes().size() == 1);
@@ -91,8 +91,11 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     double computedTime      = 0.0;
     int    computedTimesteps = 0;
 
+    time::Sample ssample{1, Eigen::VectorXd::Zero(mesh->nVertices())};
+    time::Sample vsample{3, Eigen::VectorXd::Zero(mesh->nVertices() * 3)};
+
     if (participantName == std::string("Participant0")) {
-      mesh->data(0)->setSampleAtTime(0, time::Sample{1, mesh->data(0)->values()});
+      mesh->data("Data0")->setSampleAtTime(0, ssample);
       cplScheme->initialize();
       BOOST_TEST(not cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
@@ -104,7 +107,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
         double stepSize = cplScheme->getNextTimeStepMaxSize();
-        mesh->data(0)->setSampleAtTime(computedTime + stepSize, time::Sample{1, mesh->data(0)->values()});
+        mesh->data("Data0")->setSampleAtTime(computedTime + stepSize, ssample);
         BOOST_TEST(cplScheme->getTime() == computedTime);
         cplScheme->addComputedTime(stepSize);
         BOOST_TEST(cplScheme->getTime() == computedTime + stepSize); // ensure that time is correctly updated, even if iterating. See https://github.com/precice/precice/pull/1792.
@@ -129,8 +132,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(not cplScheme->isCouplingOngoing());
       BOOST_TEST(cplScheme->getNextTimeStepMaxSize() == 0.0);
     } else if (participantName == std::string("Participant1")) {
-      auto ddims = mesh->data(1)->getDimensions();
-      mesh->data(1)->setSampleAtTime(0, time::Sample{ddims, mesh->data(1)->values()});
+      mesh->data("Data1")->setSampleAtTime(0, vsample);
       cplScheme->initialize();
       BOOST_TEST(cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
@@ -142,7 +144,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
         double stepSize = cplScheme->getNextTimeStepMaxSize();
-        mesh->data(1)->setSampleAtTime(computedTime + stepSize, time::Sample{ddims, mesh->data(1)->values()});
+        mesh->data("Data1")->setSampleAtTime(computedTime + stepSize, vsample);
         BOOST_TEST(cplScheme->getTime() == computedTime);
         cplScheme->addComputedTime(stepSize);
         BOOST_TEST(cplScheme->getTime() == computedTime + stepSize); // ensure that time is correctly updated, even if iterating. See https://github.com/precice/precice/pull/1792.
@@ -167,9 +169,8 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
       BOOST_TEST(not cplScheme->isCouplingOngoing());
       BOOST_TEST(cplScheme->getNextTimeStepMaxSize() == 0.0);
     } else {
-      auto ddims = mesh->data(2)->getDimensions();
       BOOST_TEST(participantName == std::string("Participant2"), participantName);
-      mesh->data(2)->setSampleAtTime(0, time::Sample{ddims, mesh->data(2)->values()});
+      mesh->data("Data2")->setSampleAtTime(0, vsample);
       cplScheme->initialize();
       BOOST_TEST(cplScheme->hasDataBeenReceived());
       BOOST_TEST(not cplScheme->isTimeWindowComplete());
@@ -181,7 +182,7 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
           cplScheme->markActionFulfilled(CouplingScheme::Action::WriteCheckpoint);
         }
         double stepSize = cplScheme->getNextTimeStepMaxSize();
-        mesh->data(2)->setSampleAtTime(cplScheme->getNextTimeStepMaxSize(), time::Sample{ddims, mesh->data(2)->values()});
+        mesh->data("Data2")->setSampleAtTime(cplScheme->getNextTimeStepMaxSize(), vsample);
         BOOST_TEST(cplScheme->getTime() == computedTime);
         cplScheme->addComputedTime(stepSize);
         BOOST_TEST(cplScheme->getTime() == computedTime + stepSize); // ensure that time is correctly updated, even if iterating. See https://github.com/precice/precice/pull/1792.
@@ -218,10 +219,10 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
     BOOST_TEST(not communication->isConnected());
     useOnlyPrimaryCom(communication) = true;
     if (participant0 == localParticipant) {
-      communication->requestPrimaryRankConnection(participant1, participant0);
+      communication->requestPrimaryRankConnection(participant1, participant0, "");
     } else {
       BOOST_TEST(participant1 == localParticipant);
-      communication->acceptPrimaryRankConnection(participant1, participant0);
+      communication->acceptPrimaryRankConnection(participant1, participant0, "");
     }
   }
 };
@@ -229,9 +230,10 @@ struct CompositionalCouplingSchemeFixture : m2n::WhiteboxAccessor {
 BOOST_AUTO_TEST_SUITE(DummySchemeCompositionTests)
 
 // Test two explicit dummy coupling schemes
+PRECICE_TEST_SETUP(1_rank, Require::Events)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
 {
-  PRECICE_TEST(1_rank, Require::Events);
+  PRECICE_TEST();
   int                         numberIterations = 1;
   int                         maxTimeWindows   = 10;
   PtrCouplingScheme           scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
@@ -256,9 +258,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit2)
 }
 
 // Test three explicit dummy coupling schemes
+PRECICE_TEST_SETUP(1_rank, Require::Events)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
 {
-  PRECICE_TEST(1_rank, Require::Events);
+  PRECICE_TEST();
   int               numberIterations = 1;
   int               maxTimeWindows   = 10;
   PtrCouplingScheme scheme1(
@@ -289,9 +292,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit3)
 }
 
 // Test E, I(2)
+PRECICE_TEST_SETUP(1_rank, Require::Events)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
 {
-  PRECICE_TEST(1_rank, Require::Events);
+  PRECICE_TEST();
   int               numberIterations = 1;
   int               maxTimeWindows   = 10;
   PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
@@ -332,9 +336,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit2)
 }
 
 // Test I(2), E
+PRECICE_TEST_SETUP(1_rank, Require::Events)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
 {
-  PRECICE_TEST(1_rank, Require::Events);
+  PRECICE_TEST();
   int               numberIterations = 2;
   int               maxTimeWindows   = 10;
   PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
@@ -367,9 +372,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit2Explicit1)
 }
 
 // Test E, I(3)
+PRECICE_TEST_SETUP(1_rank, Require::Events)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
 {
-  PRECICE_TEST(1_rank, Require::Events);
+  PRECICE_TEST();
   int               numberIterations = 1;
   int               maxTimeWindows   = 10;
   PtrCouplingScheme scheme1(
@@ -404,9 +410,10 @@ BOOST_AUTO_TEST_CASE(testDummySchemeCompositionExplicit1Implicit3)
 }
 
 // Test I(3), E
+PRECICE_TEST_SETUP(1_rank, Require::Events)
 BOOST_AUTO_TEST_CASE(testDummySchemeCompositionImplicit3Explicit1)
 {
-  PRECICE_TEST(1_rank, Require::Events);
+  PRECICE_TEST();
   int               numberIterations = 3;
   int               maxTimeWindows   = 10;
   PtrCouplingScheme scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows));
@@ -443,27 +450,30 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_FIXTURE_TEST_SUITE(CompositionalCouplingSchemeTests, CompositionalCouplingSchemeFixture)
 
 /// Test that runs on 3 processors.
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), "Participant2"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testExplicitSchemeComposition1)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), "Participant2"_on(1_rank), Require::Events);
+  PRECICE_TEST();
 
   std::string configPath(_pathToTests + "multi-solver-coupling-1.xml");
   setupAndRunThreeSolverCoupling(configPath, context);
 }
 
 /// Test that runs on 3 processors.
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), "Participant2"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testImplicitExplicitSchemeComposition)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), "Participant2"_on(1_rank), Require::Events);
+  PRECICE_TEST();
 
   std::string configPath(_pathToTests + "multi-solver-coupling-3.xml");
   setupAndRunThreeSolverCoupling(configPath, context);
 }
 
 /// Test that runs on 3 processors.
+PRECICE_TEST_SETUP("Participant0"_on(1_rank), "Participant1"_on(1_rank), "Participant2"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(testExplicitImplicitSchemeComposition)
 {
-  PRECICE_TEST("Participant0"_on(1_rank), "Participant1"_on(1_rank), "Participant2"_on(1_rank), Require::Events);
+  PRECICE_TEST();
 
   std::string configPath(_pathToTests + "multi-solver-coupling-4.xml");
   setupAndRunThreeSolverCoupling(configPath, context);

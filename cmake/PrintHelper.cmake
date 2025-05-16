@@ -48,19 +48,53 @@ function(print_configuration)
   cmake_parse_arguments(PARSE_ARGV 0 PRINT_CONFIG "" "" "ADDITIONAL")
   print_section("CONFIGURATION")
   print_variables( VARS
+    "CMAKE_VERSION;CMake version"
     "PROJECT_VERSION;Library version to build"
-    "CMAKE_BUILD_TYPE;Build configuration"
+  )
+
+  if (CMAKE_CONFIGURATION_TYPES)
+    print_variables( VARS "CMAKE_CONFIGURATION_TYPES;Build configurations")
+  else()
+    print_variables( VARS "CMAKE_BUILD_TYPE;Build configuration")
+  endif()
+
+  print_variables( VARS
     "BUILD_SHARED_LIBS;Build shared libraries"
     "CMAKE_SYSTEM;Target system"
     "CMAKE_HOST_SYSTEM;Host system"
-    "CMAKE_CXX_LIBRARY_ARCHITECTURE;Library architecture"
-    "CMAKE_CXX_COMPILER;CXX compiler"
-    "CMAKE_CXX_FLAGS;CXX compiler flags"
-    "CMAKE_LINKER;CXX linker"
     "CMAKE_INSTALL_PREFIX;Install prefix"
     "PROJECT_SOURCE_DIR;Source directory"
     "PROJECT_BINARY_DIR;Binary directory"
+    "CMAKE_CXX_LIBRARY_ARCHITECTURE;Library architecture"
+    "CMAKE_CXX_COMPILER;CXX compiler"
+    "CMAKE_CXX_COMPILER_ID;CXX compiler ID"
+    "CMAKE_CXX_COMPILER_VERSION;CXX compiler version"
+    "CMAKE_CXX_FLAGS;CXX compiler flags"
     )
+
+  if (CMAKE_CONFIGURATION_TYPES)
+    foreach(type IN LISTS CMAKE_CONFIGURATION_TYPES)
+      string(TOUPPER "${type}" _upper_build_type)
+      print_variables( VARS "CMAKE_CXX_FLAGS_${_upper_build_type};CXX ${type} compiler flags")
+    endforeach()
+  else()
+    string(TOUPPER "${CMAKE_BUILD_TYPE}" _upper_build_type)
+    print_variables( VARS "CMAKE_CXX_FLAGS_${_upper_build_type};CXX ${CMAKE_BUILD_TYPE} compiler flags")
+  endif()
+
+  if(CMAKE_VERSION VERSION_LESS 3.29)
+    print_variables(VARS "CMAKE_LINKER;CXX linker")
+  else()
+    print_variables(VARS
+    "CMAKE_CXX_COMPILER_LINKER;CXX linker"
+    "CMAKE_CXX_COMPILER_LINKER_ID;CXX linker ID"
+    "CMAKE_CXX_COMPILER_LINKER_VERSION;CXX linker version"
+    )
+  endif()
+  print_variables(VARS
+    "CMAKE_SHARED_LINKER_FLAGS;Shared linker flags"
+    "CMAKE_EXE_LINKER_FLAGS;Executable linker flags"
+  )
   if(PRINT_CONFIG_ADDITIONAL)
     print_variables(VARS ${PRINT_CONFIG_ADDITIONAL})
   endif()

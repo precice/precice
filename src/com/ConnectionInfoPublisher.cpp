@@ -1,9 +1,5 @@
 #include <algorithm>
 #include <boost/algorithm/string/trim.hpp>
-#include <boost/uuid/name_generator.hpp>
-#include <boost/uuid/string_generator.hpp>
-#include <boost/uuid/uuid_io.hpp>
-
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -13,33 +9,17 @@
 #include "com/ConnectionInfoPublisher.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/impl/Types.hpp"
+#include "utils/Hash.hpp"
 #include "utils/assertion.hpp"
 
 namespace fs = std::filesystem;
 namespace precice::com {
 
-namespace {
-
-std::string preciceFancyHash(std::string_view s)
-try {
-  boost::uuids::string_generator ns_gen;
-  auto                           ns = ns_gen("af7ce8f2-a9ee-46cb-38ee-71c318aa3580"); // md5 hash of precice.org as namespace
-
-  boost::uuids::name_generator gen{ns};
-  return boost::uuids::to_string(gen(s.data(), s.size()));
-
-} catch (const std::runtime_error &e) {
-  PRECICE_UNREACHABLE("preCICE hashing failed", e.what());
-  return "";
-}
-} // namespace
-
 std::string impl::hashedFilePath(std::string_view acceptorName, std::string_view requesterName, std::string_view tag, Rank rank)
 {
   constexpr int     firstLevelLen = 2;
   std::string const s             = std::string(acceptorName).append(tag).append(requesterName).append(std::to_string(rank));
-  std::string       hash          = preciceFancyHash(s);
-  hash.erase(std::remove(hash.begin(), hash.end(), '-'), hash.end());
+  std::string       hash          = utils::preciceHash(s);
 
   auto p = fs::path(hash.substr(0, firstLevelLen)) / hash.substr(firstLevelLen);
 
@@ -82,6 +62,14 @@ std::string ConnectionInfoReader::read() const
   PRECICE_DEBUG("Found connection file \"{}\"", path);
 
   std::ifstream ifs(path);
+
+  if (!ifs) {
+    PRECICE_DEBUG("Opening connection file \"{}\" failed. Retrying", path);
+    std::this_thread::sleep_for(waitdelay);
+    ifs.clear();
+    ifs.open(path);
+  }
+
   PRECICE_CHECK(ifs,
                 "Unable to establish connection as the connection file \"{}\" couldn't be opened.",
                 path);
@@ -135,7 +123,15 @@ void ConnectionInfoWriter::write(std::string_view info) const
   PRECICE_DEBUG("Writing temporary connection file \"{}\"", tmp.generic_string());
   fs::create_directories(tmp.parent_path());
   {
-    std::ofstream ofs(tmp.string());
+    std::ofstream ofs(tmp);
+
+    if (!ofs) {
+      PRECICE_DEBUG("Opening temporary connection file \"{}\" failed. Retrying", tmp.generic_string());
+      std::this_thread::sleep_for(std::chrono::milliseconds{1});
+      ofs.clear();
+      ofs.open(tmp);
+    }
+
     PRECICE_CHECK(ofs, "Unable to establish connection as the temporary connection file \"{}\" couldn't be opened.", tmp.generic_string());
     fmt::print(ofs,
                "{}\nAcceptor: {}, Requester: {}, Tag: {}, Rank: {}",

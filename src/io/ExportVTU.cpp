@@ -28,7 +28,7 @@ ExportVTU::ExportVTU(
     int               rank,
     int               size)
 
-    : ExportXML(participantName, location, mesh, kind, frequency, rank, size){};
+    : ExportXML(participantName, location, mesh, kind, frequency, rank, size) {};
 
 std::string ExportVTU::getVTKFormat() const
 {
@@ -63,7 +63,7 @@ void ExportVTU::writeParallelCells(std::ostream &out) const
 }
 
 void ExportVTU::exportConnectivity(
-    std::ostream &    outFile,
+    std::ostream     &outFile,
     const mesh::Mesh &mesh) const
 {
   outFile << "         <Cells>\n";

@@ -7,9 +7,10 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
+PRECICE_TEST_SETUP("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(LocalRBFPartitioning)
 {
-  PRECICE_TEST("SolverOne"_on(3_ranks), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   if (context.name == "SolverOne") {
     precice::Participant interface(context.name, context.config(), context.rank, context.size);

@@ -70,8 +70,8 @@ public:
   double untilTime(double t) const;
 
   /** Returns the time difference until the end of the overall time.
-    * This returns infinity if there is no maximum time defined.
-    */
+   * This returns infinity if there is no maximum time defined.
+   */
   double untilEnd() const;
 
   /// Returns the window progress as a double

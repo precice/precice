@@ -37,9 +37,10 @@ BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MappingNearestNeighborGradient)
 
 // Read : NN & Vector - Write : NNG & Vector (Parallel Coupling Scheme)
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
+  PRECICE_TEST();
 
   using Eigen::Vector2d;
   using Eigen::Vector3d;
@@ -97,7 +98,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     cplInterface.writeData(meshName, dataBID, {&vid, 1}, valueDataB);
     cplInterface.writeGradientData(meshName, dataBID, {&vid, 1}, gradient);
 
-    //tell preCICE that data has been written and call initialize
+    // tell preCICE that data has been written and call initialize
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
 

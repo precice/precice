@@ -10,11 +10,11 @@
 #include <utility>
 #include <vector>
 #include "logging/Logger.hpp"
+#include "utils/String.hpp"
 #include "utils/assertion.hpp"
 #include "xml/ValueParser.hpp"
 
-namespace precice {
-namespace xml {
+namespace precice::xml {
 
 template <typename ATTRIBUTE_T>
 class XMLAttribute {
@@ -24,10 +24,16 @@ public:
   XMLAttribute() = delete;
 
   explicit XMLAttribute(std::string name)
-      : _name(std::move(name)){};
+      : _name(std::move(name))
+  {
+    PRECICE_ASSERT(utils::isKebabStyle(_name), _name);
+  };
 
   XMLAttribute(std::string name, ATTRIBUTE_T defaultValue)
-      : _name(std::move(name)), _hasDefaultValue(true), _defaultValue(std::move(defaultValue)){};
+      : _name(std::move(name)), _hasDefaultValue(true), _defaultValue(std::move(defaultValue))
+  {
+    PRECICE_ASSERT(utils::isKebabStyle(_name), _name);
+  };
 
   XMLAttribute(const XMLAttribute<ATTRIBUTE_T> &other) = default;
 
@@ -193,7 +199,7 @@ template <typename VALUE_T>
 typename std::enable_if<
     std::is_same<VALUE_T, ATTRIBUTE_T>::value && not std::is_same<VALUE_T, Eigen::VectorXd>::value, void>::type
 XMLAttribute<ATTRIBUTE_T>::set(
-    ATTRIBUTE_T &  toSet,
+    ATTRIBUTE_T   &toSet,
     const VALUE_T &setter)
 {
   toSet = setter;
@@ -204,7 +210,7 @@ template <typename VALUE_T>
 typename std::enable_if<
     std::is_same<VALUE_T, ATTRIBUTE_T>::value && std::is_same<VALUE_T, Eigen::VectorXd>::value, void>::type
 XMLAttribute<ATTRIBUTE_T>::set(
-    ATTRIBUTE_T &  toSet,
+    ATTRIBUTE_T   &toSet,
     const VALUE_T &setter)
 {
   toSet = setter;
@@ -233,5 +239,4 @@ XMLAttribute<T> makeXMLAttribute(std::string name, T defaultValue)
   return XMLAttribute<T>(std::move(name), std::move(defaultValue));
 }
 
-} // namespace xml
-} // namespace precice
+} // namespace precice::xml

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -10,8 +11,7 @@
 #include "precice/impl/Types.hpp"
 #include "utils/Parallel.hpp"
 
-namespace precice {
-namespace testing {
+namespace precice::testing {
 
 /** Represents a count of MPI Ranks
  * @see TestContext()
@@ -45,7 +45,7 @@ inline constexpr Ranks operator""_rank(unsigned long long value)
 /// Represents a ParticipantState in a test
 struct ParticipantState {
   /// the name of the participant
-  std::string name;
+  std::string_view name;
 
   /// the amount of ranks this participant runs on
   int size = 1;
@@ -54,8 +54,8 @@ struct ParticipantState {
   bool initIntraComm = false;
 
   /// Constructs a serial participant with a given name
-  explicit ParticipantState(std::string n)
-      : name(std::move(n)){};
+  constexpr explicit ParticipantState(std::string_view n)
+      : name(std::move(n)) {};
 
   /** Injects the amount of ranks this participant should run on.
    *
@@ -65,7 +65,7 @@ struct ParticipantState {
    *
    * @returns A reference to the ParticipantState allowing for chaining.
    */
-  ParticipantState &operator()(Ranks rsize)
+  constexpr ParticipantState &operator()(Ranks rsize)
   {
     size = rsize.value;
     return *this;
@@ -75,7 +75,7 @@ struct ParticipantState {
    *
    * @returns A reference to the ParticipantState allowing for chaining.
    */
-  ParticipantState &setupIntraComm()
+  constexpr ParticipantState &setupIntraComm()
   {
     initIntraComm = true;
     return *this;
@@ -83,7 +83,7 @@ struct ParticipantState {
 };
 
 /// User-defined literal allowing to create a serial ParticipantState from a given string.
-inline ParticipantState operator""_on(const char *name, std::size_t)
+inline constexpr ParticipantState operator""_on(const char *name, std::size_t)
 {
   return ParticipantState{name};
 }
@@ -103,6 +103,45 @@ enum class Require {
   Events,
   /// Ginkgo initialization
   Ginkgo,
+};
+
+/// Contains the setup description of a test including participants and requirements
+struct TestSetup {
+
+  /** Create a context representing an unnamed Participant running on a given count of Ranks and some requirements
+   *
+   * @note You need to construct a Participant if you require initializing
+   * an intra-participant connection `"Serial"_on(3_ranks).setupIntraComm()`
+   *
+   * @see Require
+   */
+  template <class... T>
+  TestSetup(T... args)
+  {
+    (handleOption(args), ...);
+  }
+
+  /// @{
+  /// @name Option Handling
+  void handleOption(ParticipantState participants);
+  void handleOption(Ranks ranks);
+  void handleOption(testing::Require requirement);
+  /// @}
+
+  /// total amount of ranks required by this setup
+  int totalRanks() const;
+
+  /// whether to initialize PETSc
+  bool petsc = false;
+
+  /// whether to initialize events
+  bool events = false;
+
+  /// whether to initialize Ginkgo (the device)
+  bool ginkgo = false;
+
+  /// All known participants
+  std::vector<ParticipantState> participants;
 };
 
 /** A type of distributed connection
@@ -140,7 +179,7 @@ struct ConnectionOptions {
 
 /** Type representing the context of a test.
  *
- * @note Do not use this type directly. Use @ref PRECICE_TEST() instead.
+ * @note Do not use this type directly. Use @ref PRECICE_TEST() and @ref PRECICE_TEST_SETUP() instead.
  *
  * This type is responsible for
  * 1. making sure that there are enough ranks to run the test on.
@@ -167,61 +206,16 @@ public:
   /// whether this context is valid or not
   bool invalid = false;
 
-  /// @{
-  /// @name Construction
-
-  /// Create a context representing an unnamed serial Participant
-  TestContext() = default;
-
-  /** Create a context representing an unnamed Participant running on a given count of Ranks
+  /** Creates a context for a rank in the given TestSetup
    *
-   * @note You need to construct a Participant if you require initializing
-   * an intra-participant connection `"Serial"_on(3_ranks).setupIntraComm()`
+   * Unneeded ranks are marked as invalid.
+   * Provides a TestContext named `context` which can be used in the test.
    *
    * @attention This call synchronizes all ranks
    *
+   * @see @ref PRECICE_TEST()
    */
-  template <class... T>
-  TestContext(Ranks ranks)
-      : _simple(true)
-  {
-    Participants participants{"Serial"_on(ranks)};
-    initialize(participants);
-  }
-
-  /** Create a context representing an unnamed Participant running on a given count of Ranks and some requirements
-   *
-   * @note You need to construct a Participant if you require initializing
-   * an intra-participant connection `"Serial"_on(3_ranks).setupIntraComm()`
-   *
-   * @attention This call synchronizes all ranks
-   *
-   * @see Require
-   */
-  template <class... T>
-  TestContext(Ranks ranks, T... args)
-      : _simple(true)
-  {
-    Participants participants{"Serial"_on(ranks)};
-    handleOptions(participants, args...);
-    initialize(participants);
-  }
-
-  /** Create a context representing one or more participants
-   *
-   * @attention This call synchronizes all ranks
-   *
-   * @see Require
-   */
-  template <class... T>
-  TestContext(T... args)
-  {
-    Participants participants;
-    handleOptions(participants, args...);
-    initialize(participants);
-  }
-
-  /// @}
+  TestContext(TestSetup setup);
 
   /** Cleans-up all initialized parts and synchronizes all ranks
    * @attention This call synchronizes all ranks
@@ -268,58 +262,29 @@ public:
 
   /** Creates a M2N and establishes a primary connection between participants
    * @param[in] acceptor the accepting participant
-   * @param[in] requestor the requesting participant
+   * @param[in] connector the requesting participant
    * @param[in] options a set of options concerning the created connection
    *
-   * @note This function throws if the acceptor or requestor are unknown!
+   * @note This function throws if the acceptor or connector are unknown!
    *
    * @see ConnectionOptions
    */
-  m2n::PtrM2N connectPrimaryRanks(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options = ConnectionOptions{}) const;
+  m2n::PtrM2N connectPrimaryRanks(const std::string &acceptor, const std::string &connector, const ConnectionOptions &options = ConnectionOptions{}) const;
 
   /// Provides a user- and log-friendly description of the current context
   std::string describe() const;
 
 private:
-  /// whether to initialize PETSc
-  bool _petsc = false;
+  TestSetup _setup;
 
-  /// whether to initialize events
-  bool _events = false;
-
-  /// whether to initialize Ginkgo (the device)
-  bool _ginkgo = false;
-
-  /// whether this Context was created with a Ranks constructor
-  bool _simple = false;
-
-  /// whether to initialize an intra-participant connection
+  /// whether this context needs to initialize the intracomm
   bool _initIntraComm = false;
 
   /// the MPI communicator of the context
   utils::Parallel::CommStatePtr _contextComm;
 
   /// contains the name of every known Participant
-  std::vector<std::string> _names;
-
-  /// @{
-  /// @name Option Handling
-  void handleOption(Participants &participants, ParticipantState participant);
-  void handleOption(Participants &participants, testing::Require requirement);
-
-  template <class LastOption>
-  void handleOptions(Participants &participants, LastOption &last)
-  {
-    handleOption(participants, last);
-  }
-
-  template <class NextOption, class... Rest>
-  void handleOptions(Participants &participants, NextOption &next, Rest &... rest)
-  {
-    handleOption(participants, next);
-    handleOptions(participants, rest...);
-  }
-  /// @}
+  std::set<std::string> _names;
 
   /** set the context from a Participants and the current com
    * Both uniquely identify a context.
@@ -352,5 +317,4 @@ private:
   /// @}
 };
 
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing

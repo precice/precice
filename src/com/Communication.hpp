@@ -12,8 +12,7 @@
 #include "precice/impl/Types.hpp"
 #include "precice/span.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 
 /**
  * @brief Interface for all interprocess communication classes.
@@ -55,9 +54,7 @@ public:
   Communication &operator=(Communication &&) = delete;
 
   /// Destructor, empty.
-  virtual ~Communication()
-  {
-  }
+  virtual ~Communication() = default;
 
   /// @name Connection Setup
   /// @{
@@ -99,7 +96,7 @@ public:
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
    * @param[in] tag Tag for establishing this connection
-   * @param[in] acceptorRank Rank of the accpeting process, usually the calling one.
+   * @param[in] acceptorRank Rank of the accepting process, usually the calling one.
    */
   virtual void acceptConnection(std::string const &acceptorName,
                                 std::string const &requesterName,
@@ -163,9 +160,9 @@ public:
    * @param[in] acceptorRanks Set of ranks that accept a connection
    * @param[in] requesterRank Rank that requests the connection, usually the caller's rank
    */
-  virtual void requestConnectionAsClient(std::string const &  acceptorName,
-                                         std::string const &  requesterName,
-                                         std::string const &  tag,
+  virtual void requestConnectionAsClient(std::string const   &acceptorName,
+                                         std::string const   &requesterName,
+                                         std::string const   &tag,
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) = 0;
 
@@ -389,12 +386,11 @@ inline constexpr auto asVector = Communication::AsVectorTag<T>{};
  * rank "size" connects right to rank "0"
  */
 void connectCircularComm(
-    std::string const & participantName,
-    std::string const & tag,
+    std::string const  &participantName,
+    std::string const  &tag,
     int                 rank,
     int                 size,
     com::Communication &left,
     com::Communication &right);
 
-} // namespace com
-} // namespace precice
+} // namespace precice::com

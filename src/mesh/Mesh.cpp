@@ -27,10 +27,12 @@ namespace precice::mesh {
 Mesh::Mesh(
     std::string name,
     int         dimensions,
-    MeshID      id)
+    MeshID      id,
+    bool        isJustInTime)
     : _name(std::move(name)),
       _dimensions(dimensions),
       _id(id),
+      _isJustInTime(isJustInTime),
       _boundingBox(dimensions),
       _index(*this)
 {
@@ -100,7 +102,7 @@ int Mesh::getDimensions() const
   return _dimensions;
 }
 
-Vertex &Mesh::createVertex(const Eigen::VectorXd &coords)
+Vertex &Mesh::createVertex(const Eigen::Ref<const Eigen::VectorXd> &coords)
 {
   PRECICE_ASSERT(coords.size() == _dimensions, coords.size(), _dimensions);
   auto nextID = _vertices.size();
@@ -161,7 +163,7 @@ PtrData &Mesh::createData(
                   "Please rename or remove one of the use-data tags with name \"{}\".",
                   name, _name, name);
   }
-  //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
+  // #rows = dimensions of current mesh #columns = dimensions of corresponding data set
   PtrData data(new Data(name, id, dimension, _dimensions, waveformDegree));
   _data.push_back(data);
   return _data.back();
@@ -261,6 +263,7 @@ void Mesh::clear()
   _tetrahedra.clear();
   _index.clear();
 
+  clearDataStamples();
   for (mesh::PtrData &data : _data) {
     data->values().resize(0);
   }
@@ -276,9 +279,16 @@ void Mesh::clearPartitioning()
   _globalNumberOfVertices = 0;
 }
 
+void Mesh::clearDataStamples()
+{
+  for (mesh::PtrData &data : _data) {
+    data->timeStepsStorage().clear();
+  }
+}
+
 bool Mesh::isPartitionEmpty(Rank rank) const
 {
-  // Without offset data, we assume non-empty partititions
+  // Without offset data, we assume non-empty partitions
   if (_vertexOffsets.empty()) {
     return false;
   }

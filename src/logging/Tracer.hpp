@@ -1,8 +1,9 @@
 #pragma once
-#include "Logger.hpp"
 
-namespace precice {
-namespace logging {
+#include "logging/Logger.hpp"
+
+namespace precice::logging {
+
 class Logger;
 struct LogLocation;
 
@@ -17,5 +18,4 @@ private:
   LogLocation _loc;
 };
 
-} // namespace logging
-} // namespace precice
+} // namespace precice::logging

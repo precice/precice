@@ -24,9 +24,10 @@ BOOST_AUTO_TEST_SUITE(CommunicationTests)
 
 BOOST_AUTO_TEST_SUITE(MeshTests)
 
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(VertexEdgeMesh)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("A", "B");
 
   for (int dim = 2; dim <= 3; dim++) {
@@ -34,9 +35,9 @@ BOOST_AUTO_TEST_CASE(VertexEdgeMesh)
     mesh::Vertex &v0 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 0));
     mesh::Vertex &v1 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
     mesh::Vertex &v2 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
-    mesh::Edge &  e0 = sendMesh.createEdge(v0, v1);
-    mesh::Edge &  e1 = sendMesh.createEdge(v1, v2);
-    mesh::Edge &  e2 = sendMesh.createEdge(v2, v0);
+    mesh::Edge   &e0 = sendMesh.createEdge(v0, v1);
+    mesh::Edge   &e1 = sendMesh.createEdge(v1, v2);
+    mesh::Edge   &e2 = sendMesh.createEdge(v2, v0);
 
     auto &comm = *m2n->getPrimaryRankCommunication();
 
@@ -59,19 +60,20 @@ BOOST_AUTO_TEST_CASE(VertexEdgeMesh)
   }
 }
 
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(VertexEdgeTriangleMesh)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("A", "B");
 
   int             dim = 3;
   mesh::Mesh      sendMesh("Sent Mesh", dim, testing::nextMeshID());
-  mesh::Vertex &  v0 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 0));
-  mesh::Vertex &  v1 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
-  mesh::Vertex &  v2 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
-  mesh::Edge &    e0 = sendMesh.createEdge(v0, v1);
-  mesh::Edge &    e1 = sendMesh.createEdge(v1, v2);
-  mesh::Edge &    e2 = sendMesh.createEdge(v2, v0);
+  mesh::Vertex   &v0 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 0));
+  mesh::Vertex   &v1 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
+  mesh::Vertex   &v2 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
+  mesh::Edge     &e0 = sendMesh.createEdge(v0, v1);
+  mesh::Edge     &e1 = sendMesh.createEdge(v1, v2);
+  mesh::Edge     &e2 = sendMesh.createEdge(v2, v0);
   mesh::Triangle &t0 = sendMesh.createTriangle(e0, e1, e2);
 
   // Create mesh communicator
@@ -97,18 +99,19 @@ BOOST_AUTO_TEST_CASE(VertexEdgeTriangleMesh)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(BroadcastVertexEdgeTriangleMesh)
 {
-  PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
 
   int             dim = 3;
   mesh::Mesh      sendMesh("Sent Mesh", dim, testing::nextMeshID());
-  mesh::Vertex &  v0 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 0));
-  mesh::Vertex &  v1 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
-  mesh::Vertex &  v2 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
-  mesh::Edge &    e0 = sendMesh.createEdge(v0, v1);
-  mesh::Edge &    e1 = sendMesh.createEdge(v1, v2);
-  mesh::Edge &    e2 = sendMesh.createEdge(v2, v0);
+  mesh::Vertex   &v0 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 0));
+  mesh::Vertex   &v1 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
+  mesh::Vertex   &v2 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
+  mesh::Edge     &e0 = sendMesh.createEdge(v0, v1);
+  mesh::Edge     &e1 = sendMesh.createEdge(v1, v2);
+  mesh::Edge     &e2 = sendMesh.createEdge(v2, v0);
   mesh::Triangle &t0 = sendMesh.createTriangle(e0, e1, e2);
 
   // Create mesh communicator
@@ -133,9 +136,10 @@ BOOST_AUTO_TEST_CASE(BroadcastVertexEdgeTriangleMesh)
   }
 }
 
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(1_rank), Require::Events)
 BOOST_AUTO_TEST_CASE(OneTetraCommunication)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), Require::Events);
+  PRECICE_TEST();
   auto m2n = context.connectPrimaryRanks("A", "B");
 
   int           dim = 3;
@@ -165,9 +169,10 @@ BOOST_AUTO_TEST_CASE(OneTetraCommunication)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm(), Require::Events)
 BOOST_AUTO_TEST_CASE(BroadcastTetra)
 {
-  PRECICE_TEST(""_on(2_ranks).setupIntraComm(), Require::Events);
+  PRECICE_TEST();
 
   int           dim = 3;
   mesh::Mesh    sendMesh("Sent Mesh", dim, testing::nextMeshID());

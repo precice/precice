@@ -16,9 +16,10 @@ using namespace precice::mesh;
 BOOST_AUTO_TEST_SUITE(MeshTests)
 BOOST_AUTO_TEST_SUITE(TriangleTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DirectionalEdges)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector3d;
   Vector3d coords1(0.0, 0.0, 0.0);
   Vector3d coords2(1.0, 0.0, 0.0);
@@ -57,9 +58,10 @@ BOOST_AUTO_TEST_CASE(DirectionalEdges)
   BOOST_TEST(triangle.getArea() == expectedArea);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SecondFlipped)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector3d;
   Vector3d coords1(0.0, 0.0, 0.0);
   Vector3d coords2(1.0, 0.0, 0.0);
@@ -97,9 +99,10 @@ BOOST_AUTO_TEST_CASE(SecondFlipped)
   BOOST_TEST(triangle.getArea() == expectedArea);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ReversedFirstFlipped)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector3d;
   Vector3d coords1(0.0, 0.0, 0.0);
   Vector3d coords2(1.0, 0.0, 0.0);
@@ -138,9 +141,10 @@ BOOST_AUTO_TEST_CASE(ReversedFirstFlipped)
   BOOST_TEST(triangle.getArea() == expectedArea);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ReversedLastFlipped)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector3d;
   Vector3d coords1(0.0, 0.0, 0.0);
   Vector3d coords2(1.0, 0.0, 0.0);
@@ -179,9 +183,10 @@ BOOST_AUTO_TEST_CASE(ReversedLastFlipped)
   BOOST_TEST(triangle.getArea() == expectedArea);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(RangeAccess)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector3d;
   Vector3d coords1(0.0, 0.0, 0.0);
   Vector3d coords2(1.0, 0.0, 0.0);
@@ -239,9 +244,10 @@ BOOST_AUTO_TEST_CASE(RangeAccess)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TriangleEquality)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using Eigen::Vector3d;
   Vector3d coords1(0.0, 0.0, 0.0);
   Vector3d coords2(1.0, 0.0, 0.0);
@@ -275,9 +281,10 @@ BOOST_AUTO_TEST_CASE(TriangleEquality)
   BOOST_TEST(triangle4 == triangle3);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TriangleWKTPrint)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Vertex            v1(Eigen::Vector3d(0., 0., 0.), 0);
   Vertex            v2(Eigen::Vector3d(0., 1., 0.), 0);
   Vertex            v3(Eigen::Vector3d(1., 0., 0.), 0);

@@ -8,8 +8,7 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /// Struct that contains weight and index of a vertex
 struct WeightedElement {
@@ -35,6 +34,9 @@ public:
   /// Calculate projection to a tetrahedron
   Polation(const Eigen::VectorXd &location, const mesh::Tetrahedron &element);
 
+  /// Amount of weighted elements
+  std::size_t nElements() const;
+
   /// Get the weights and indices of the calculated interpolation
   const std::vector<WeightedElement> &getWeightedElements() const;
 
@@ -55,5 +57,4 @@ std::ostream &operator<<(std::ostream &os, const WeightedElement &w);
 /// Make the Polation class printable
 std::ostream &operator<<(std::ostream &os, const Polation &p);
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

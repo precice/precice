@@ -11,9 +11,10 @@ BOOST_AUTO_TEST_SUITE(Configuration)
 
 using namespace precice;
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(VTKEvery10)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using xml::XMLTag;
   XMLTag                  tag = xml::getRootTag();
   io::ExportConfiguration config(tag);
@@ -24,9 +25,10 @@ BOOST_AUTO_TEST_CASE(VTKEvery10)
   BOOST_TEST(econtext.everyNTimeWindows == 10);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(VTKLocation)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using xml::XMLTag;
   XMLTag                  tag = xml::getRootTag();
   io::ExportConfiguration config(tag);

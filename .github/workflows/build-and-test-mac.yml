@@ -46,7 +46,7 @@ jobs:
     - name: Install pip packages
       run: pip3 install numpy polars
     - name: Install preCICE dependencies
-      run: brew install cmake eigen libxml2 boost petsc openmpi pkg-config ninja
+      run: brew install --overwrite eigen libxml2 boost petsc openmpi ninja
     - name: Generate build directory
       run: mkdir -p build
     - name: Configure
@@ -81,8 +81,10 @@ jobs:
     - name: Tests
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
+        OMPI_MCA_btl: self,vader
+        OMPI_MCA_pml: ob1
       working-directory: build
-      run: ctest
+      run: ctest -j
     - uses: actions/upload-artifact@v4
       if: failure()
       with:

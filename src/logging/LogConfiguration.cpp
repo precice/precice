@@ -1,25 +1,26 @@
-#include "LogConfiguration.hpp"
+#include "logging/LogConfiguration.hpp"
+#include "utils/assertion.hpp"
+
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <string>
+#include <utility>
+
 #include <boost/core/null_deleter.hpp>
 #include <boost/log/attributes/mutable_constant.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/sinks/sink.hpp>
+#include <boost/log/sinks/sync_frontend.hpp>
+#include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/trivial.hpp>
-#include <boost/log/utility/setup/console.hpp>
+#include <boost/log/utility/setup/filter_parser.hpp>
+#include <boost/log/utility/setup/formatter_parser.hpp>
 #include <boost/program_options.hpp>
-#include <deque>
-#include <filesystem>
-#include <fstream>
-#include <iostream>
-#include <iterator>
-#include <map>
-#include <sstream>
-#include <string>
-#include <utility>
-#include "utils/String.hpp"
-#include "utils/assertion.hpp"
 
 namespace precice::logging {
 
@@ -47,10 +48,10 @@ public:
 
     return expr::stream
            << expr::if_(severity == boost::log::trivial::severity_level::error)
-                  [expr::stream << "\033[31m" //red
+                  [expr::stream << "\033[31m" // red
                                 << "ERROR: "]
            << expr::if_(severity == boost::log::trivial::severity_level::warning)
-                  [expr::stream << "\033[36m" //cyan
+                  [expr::stream << "\033[36m" // cyan
                                 << "WARNING: "]
            << "\033[0m";
   }

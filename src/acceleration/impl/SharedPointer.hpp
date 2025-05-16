@@ -2,14 +2,10 @@
 
 #include <memory>
 
-namespace precice {
-namespace acceleration {
-namespace impl {
+namespace precice::acceleration::impl {
 class ParallelMatrixOperations;
 class Preconditioner;
 
 using PtrParMatrixOps   = std::shared_ptr<ParallelMatrixOperations>;
 using PtrPreconditioner = std::shared_ptr<Preconditioner>;
-} // namespace impl
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration::impl

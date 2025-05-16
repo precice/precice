@@ -14,9 +14,10 @@ BOOST_AUTO_TEST_SUITE(InitializeData)
  * @brief Test simple coupled simulation with iterations, data initialization and without acceleration
  *
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(Implicit)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   Participant couplingInterface(context.name, context.config(), 0, 1);
 

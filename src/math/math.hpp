@@ -4,8 +4,7 @@
 #include "math/differences.hpp"
 #include "math/la.hpp"
 
-namespace precice {
-namespace math {
+namespace precice::math {
 
 /// Return the sign, one of {-1, 0, 1}
 inline int sign(double number)
@@ -31,5 +30,4 @@ inline constexpr T pow_int(const T x)
     return ((iexp % 2 == 1) ? x * pow_int<iexp / 2>(x * x) : pow_int<iexp / 2>(x * x));
 }
 
-} // namespace math
-} // namespace precice
+} // namespace precice::math

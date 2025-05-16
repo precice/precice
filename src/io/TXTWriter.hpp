@@ -5,8 +5,7 @@
 #include <string>
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 /**
  * @brief File writer for matrix in Matlab V7 ASCII format.
@@ -18,10 +17,10 @@ public:
    */
   explicit TXTWriter(const std::string &filename);
 
-  ///Writes (appends) the matrix to the file.
+  /// Writes (appends) the matrix to the file.
   void write(const Eigen::MatrixXd &matrix);
 
-  ///Flush the buffer to file
+  /// Flush the buffer to file
   void flush();
 
 private:
@@ -31,5 +30,4 @@ private:
   std::ofstream _file;
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

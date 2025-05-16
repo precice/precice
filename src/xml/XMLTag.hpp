@@ -11,11 +11,9 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace xml {
+namespace precice::xml {
 class ConfigParser;
 }
-} // namespace precice
 
 namespace precice::xml {
 
@@ -88,7 +86,7 @@ public:
    * @param[in] xmlNamespace Defines a prefix/namespace for the tag. Tags with equal namespace or treated as group.
    */
   XMLTag(
-      Listener &  listener,
+      Listener   &listener,
       std::string name,
       Occurrence  occurrence,
       std::string xmlNamespace = "");
@@ -258,8 +256,8 @@ struct NoPListener : public XMLTag::Listener {
 XMLTag getRootTag();
 
 /// Configures the given configuration from file configurationFilename.
-void configure(
-    XMLTag &                                  tag,
+std::string configure(
+    XMLTag                                   &tag,
     const precice::xml::ConfigurationContext &context,
     std::string_view                          configurationFilename);
 

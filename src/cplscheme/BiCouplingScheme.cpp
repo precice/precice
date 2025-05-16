@@ -24,7 +24,7 @@ BiCouplingScheme::BiCouplingScheme(
     double                        timeWindowSize,
     std::string                   firstParticipant,
     std::string                   secondParticipant,
-    const std::string &           localParticipant,
+    const std::string            &localParticipant,
     m2n::PtrM2N                   m2n,
     int                           minIterations,
     int                           maxIterations,

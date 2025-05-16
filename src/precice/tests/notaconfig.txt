@@ -1,0 +1,2 @@
+This is a text file.
+It doesn't contain a preCICE-configuration.

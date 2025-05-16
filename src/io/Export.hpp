@@ -4,14 +4,11 @@
 #include <string_view>
 #include <vector>
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Mesh;
 }
-} // namespace precice
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 /// Abstract base class of all classes exporting container data structures.
 class Export {
@@ -37,12 +34,12 @@ public:
         _kind(kind),
         _frequency(frequency),
         _rank(rank),
-        _size(size){};
+        _size(size) {};
 
-  Export(const Export &) = delete;
-  Export(Export &&)      = delete;
+  Export(const Export &)            = delete;
+  Export(Export &&)                 = delete;
   Export &operator=(const Export &) = delete;
-  Export &operator=(Export &&) = delete;
+  Export &operator=(Export &&)      = delete;
 
   /**
    * @brief Export the mesh and writes files.
@@ -84,5 +81,4 @@ protected:
   void recordExport(std::string filename, double time);
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

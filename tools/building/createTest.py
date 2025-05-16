@@ -126,7 +126,7 @@ def testarg(arg):
 
 
 PRECICE_TEST_BODY = """{
-  PRECICE_TEST(TODO);
+  PRECICE_TEST();
 
   // Implement your test here.
   BOOST_TEST(false);
@@ -161,6 +161,7 @@ def generateTestSource(name, suite, filepath):
     lines += ["#include " + inc for inc in includes if inc[0] == "<"]
     lines += space
     lines += ["BOOST_AUTO_TEST_SUITE({})".format(s) for s in suites]
+    lines += ["PRECICE_TEST_SETUP(TODO)"]
     lines += ["BOOST_AUTO_TEST_CASE({})".format(name), PRECICE_TEST_BODY]
     lines += ["BOOST_AUTO_TEST_SUITE_END() // " + s for s in reversed(suites)]
     lines += space

@@ -43,7 +43,7 @@ ExportCSV::ExportCSV(
     int               frequency,
     int               rank,
     int               size)
-    : Export(participantName, location, mesh, kind, frequency, rank, size){};
+    : Export(participantName, location, mesh, kind, frequency, rank, size) {};
 
 void ExportCSV::doExport(int index, double time)
 {
@@ -57,11 +57,11 @@ void ExportCSV::doExport(int index, double time)
   // Construct filename
   std::string filename;
   if (isParallel()) {
-    // Participant-Mesh-r2.it2
-    filename = fmt::format("{}-{}.{}_{}.csv", _participantName, _mesh->getName(), _rank, formatIndex(index));
+    // Mesh-Participant.r2.it2
+    filename = fmt::format("{}-{}.{}_{}.csv", _mesh->getName(), _participantName, _rank, formatIndex(index));
   } else {
-    // Participant-Mesh.it2
-    filename = fmt::format("{}-{}.{}.csv", _participantName, _mesh->getName(), formatIndex(index));
+    // Mesh-Participant.it2
+    filename = fmt::format("{}-{}.{}.csv", _mesh->getName(), _participantName, formatIndex(index));
   }
 
   namespace fs = std::filesystem;
@@ -82,9 +82,11 @@ void ExportCSV::doExport(int index, double time)
   }
   outFile << ";Rank";
   for (const auto &data : _mesh->data()) {
+    if (data->timeStepsStorage().empty()) {
+      continue;
+    }
     auto dataName = data->getName();
     auto dim      = data->getDimensions();
-    PRECICE_ASSERT(static_cast<std::size_t>(data->values().size()) == _mesh->nVertices() * dim);
     outFile << ';' << dataName;
     if (dim == 2) {
       outFile << "X;" << dataName << 'Y';
@@ -97,8 +99,11 @@ void ExportCSV::doExport(int index, double time)
   // Prepare writing data
   std::vector<StridedAccess> dataColumns;
   for (const auto &data : _mesh->data()) {
-    auto    dim    = data->getDimensions();
-    double *values = data->values().data();
+    if (data->timeStepsStorage().empty()) {
+      continue;
+    }
+    auto          dim    = data->getDimensions();
+    double const *values = data->timeStepsStorage().last().sample.values.data();
     for (int i = 0; i < dim; ++i) {
       dataColumns.push_back({std::next(values, i), dim});
     }

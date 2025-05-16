@@ -16,9 +16,10 @@ using namespace precice;
 using namespace precice::acceleration;
 using namespace precice::acceleration::impl;
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testSVDFactorization)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int                      m                   = 2; // size of a*
   int                      n                   = 3; // size of b*
   double                   eps                 = 1.2e-3;
@@ -42,7 +43,7 @@ BOOST_AUTO_TEST_CASE(testSVDFactorization)
   singleValues(1) = 3.;
 
   // prepare preConditioner to be used to construct a SVD factorization class
-  auto prec(std::make_shared<impl::ConstantPreconditioner>(factors));
+  auto prec(std::make_shared<ConstantPreconditioner>(factors));
 
   // prepare matrix operation to be used in SVD update
   ParallelMatrixOperations matOperation;

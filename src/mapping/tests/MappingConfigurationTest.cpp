@@ -17,9 +17,10 @@ using namespace precice::mapping;
 BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(Configuration)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Configuration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-config.xml");
@@ -45,9 +46,10 @@ BOOST_AUTO_TEST_CASE(Configuration)
   BOOST_TEST(mappingConfig.mappings().at(2).direction == MappingConfiguration::WRITE);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(RBFDirectConfiguration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-direct-config.xml");
@@ -81,9 +83,10 @@ BOOST_AUTO_TEST_CASE(RBFDirectConfiguration)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(RBFPUMConfiguration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-pum-direct-config.xml");
@@ -119,9 +122,10 @@ BOOST_AUTO_TEST_CASE(RBFPUMConfiguration)
 
 #ifndef PRECICE_NO_PETSC
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(RBFIterativeConfiguration)
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-iterative-config.xml");
@@ -156,9 +160,10 @@ BOOST_AUTO_TEST_CASE(RBFIterativeConfiguration)
 }
 #endif
 
+PRECICE_TEST_SETUP(1_rank, Require::PETSc)
 BOOST_AUTO_TEST_CASE(RBFAliasConfiguration)
 {
-  PRECICE_TEST(1_rank, Require::PETSc);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-alias-config.xml");
@@ -206,9 +211,10 @@ BOOST_AUTO_TEST_CASE(RBFAliasConfiguration)
 // This test mostly runs the configuration path, but it does not test the actual
 // setting in the Ginkgo solver class (being a cuda executor), since the mapping
 // configuration does not expose this information
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(RBFGinkgoCudaConfiguration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-cuda-config.xml");
@@ -247,9 +253,10 @@ BOOST_AUTO_TEST_CASE(RBFGinkgoCudaConfiguration)
 // This test mostly runs the configuration path, but it does not test the actual
 // setting in the Ginkgo solver class (being a hip executor), since the mapping
 // configuration does not expose this information
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(RBFGinkgoHipConfiguration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-hip-config.xml");
@@ -288,9 +295,10 @@ BOOST_AUTO_TEST_CASE(RBFGinkgoHipConfiguration)
 // This test mostly runs the configuration path, but it does not test the actual
 // setting in the Ginkgo solver class (being an OpenMP executor), since the mapping
 // configuration does not expose this information
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(RBFGinkgoOMPConfiguration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
   std::string file(pathToTests + "mapping-rbf-omp-config.xml");

@@ -8,17 +8,14 @@
 #include "logging/Logger.hpp"
 #include "mesh/SharedPointer.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Mesh;
 class Edge;
 class Triangle;
 class Tetrahedron;
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 /// Common class to generate the VTK XML-based formats.
 class ExportXML : public Export {
@@ -38,19 +35,19 @@ public:
 
   static void writeVertex(
       const Eigen::VectorXd &position,
-      std::ostream &         outFile);
+      std::ostream          &outFile);
 
   static void writeLine(
       const mesh::Edge &edge,
-      std::ostream &    outFile);
+      std::ostream     &outFile);
 
   static void writeTriangle(
       const mesh::Triangle &triangle,
-      std::ostream &        outFile);
+      std::ostream         &outFile);
 
   static void writeTetrahedron(
       const mesh::Tetrahedron &tetra,
-      std::ostream &           outFile);
+      std::ostream            &outFile);
 
 private:
   mutable logging::Logger _log{"io::ExportXML"};
@@ -87,15 +84,15 @@ private:
   void writeSubFile(int index, double time);
 
   void exportPoints(
-      std::ostream &    outFile,
+      std::ostream     &outFile,
       const mesh::Mesh &mesh) const;
 
   virtual void exportConnectivity(
-      std::ostream &    outFile,
+      std::ostream     &outFile,
       const mesh::Mesh &mesh) const = 0;
 
   void exportData(
-      std::ostream &    outFile,
+      std::ostream     &outFile,
       const mesh::Mesh &mesh) const;
 
   void exportGradient(const mesh::PtrData data, const int dataDim, std::ostream &outFile) const;
@@ -104,5 +101,4 @@ private:
   std::string serialPieceFilename(int index) const;
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

@@ -18,7 +18,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-//#include "utils/NumericalCompare.hpp"
+// #include "utils/NumericalCompare.hpp"
 
 using precice::cplscheme::PtrCouplingData;
 
@@ -32,17 +32,11 @@ IQNILSAcceleration::IQNILSAcceleration(
     int                     filter,
     double                  singularityLimit,
     std::vector<int>        dataIDs,
-    impl::PtrPreconditioner preconditioner)
+    impl::PtrPreconditioner preconditioner,
+    bool                    reducedTimeGrid)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
-                         filter, singularityLimit, std::move(dataIDs), std::move(preconditioner))
+                         filter, singularityLimit, std::move(dataIDs), std::move(preconditioner), reducedTimeGrid)
 {
-}
-
-void IQNILSAcceleration::initialize(
-    const DataMap &cplData)
-{
-  // do common QN acceleration initialization
-  BaseQNAcceleration::initialize(cplData);
 }
 
 void IQNILSAcceleration::updateDifferenceMatrices(

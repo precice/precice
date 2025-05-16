@@ -5,11 +5,8 @@
 #include "math/differences.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace math {
-
 /// Provides computational geometry operations.
-namespace geometry {
+namespace precice::math::geometry {
 
 enum ResultConstants {
   NO_INTERSECTION,
@@ -35,7 +32,7 @@ bool lineIntersection(
     const Eigen::Ref<const Eigen::Vector2d> &b,
     const Eigen::Ref<const Eigen::Vector2d> &c,
     const Eigen::Ref<const Eigen::Vector2d> &d,
-    Eigen::Ref<Eigen::Vector2d> &            intersectionPoint);
+    Eigen::Ref<Eigen::Vector2d>             &intersectionPoint);
 
 /**
  * @brief Determines the intersection point of a segment with a plane in 3D.
@@ -54,7 +51,7 @@ ResultConstants segmentPlaneIntersection(
     const Eigen::Vector3d &planeNormal,
     const Eigen::Vector3d &firstPointSegment,
     const Eigen::Vector3d &secondPointSegment,
-    Eigen::Vector3d &      intersectionPoint);
+    Eigen::Vector3d       &intersectionPoint);
 
 /**
  * @brief Determines, if a point lies on the line segment defined by a, b
@@ -228,6 +225,4 @@ struct ConvexityResult {
 
 ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords);
 
-} // namespace geometry
-} // namespace math
-} // namespace precice
+} // namespace precice::math::geometry

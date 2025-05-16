@@ -7,7 +7,7 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-void runTestAccessReceivedMesh(const TestContext &       context,
+void runTestAccessReceivedMesh(const TestContext        &context,
                                const std::vector<double> boundingBoxSecondaryRank,
                                const std::vector<double> writeDataSecondaryRank,
                                const std::vector<double> expectedPositionSecondaryRank,

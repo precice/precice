@@ -69,7 +69,9 @@ PROGRAM main
 
     WRITE (*,*) 'readData: ', readData
 
+    CALL precicef_start_profiling_section('Solve')
     writeData = readData + 1
+    CALL precicef_stop_last_profiling_section()
 
     CALL precicef_write_data(meshName, writeDataName, numberOfVertices, vertexIDs, writeData)
 

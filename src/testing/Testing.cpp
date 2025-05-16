@@ -1,10 +1,12 @@
 #include <algorithm>
 #include <boost/test/framework.hpp>
 #include <boost/test/tree/test_unit.hpp>
+#include <precice/Exceptions.hpp>
 
 #include <cstdlib>
 #include <filesystem>
 #include <limits>
+#include <regex>
 #include <string>
 
 #include "logging/LogMacros.hpp"
@@ -60,6 +62,27 @@ std::string getFullTestName()
   return boost::unit_test::framework::current_test_case().full_name();
 }
 
+TestSetup getTestSetup()
+{
+  if (auto setup = getTestSetupFor(boost::unit_test::framework::current_test_case());
+      setup) {
+    return *setup;
+  }
+  throw std::runtime_error{"Use PRECICE_TEST_SETUP(...) to define the setup directly before the BOOST_[AUTO_]TEST_CASE."};
+}
+
+std::optional<TestSetup> getTestSetupFor(const boost::unit_test::test_unit &tu)
+{
+  const auto &list = tu.p_decorators.get();
+  for (const auto &iter : list) {
+    auto ptr = dynamic_cast<precice::testing::precice_testsetup_fixture *>(iter.get());
+    if (ptr) {
+      return ptr->testSetup;
+    }
+  }
+  return std::nullopt;
+}
+
 int nextMeshID()
 {
   static utils::ManageUniqueIDs manager;
@@ -109,6 +132,26 @@ boost::test_tools::predicate_result equals(double a, double b, double tolerance)
     return res;
   }
   return true;
+}
+
+void expectFile(std::string_view name)
+{
+  BOOST_TEST(std::filesystem::is_regular_file(name), "File " << name << " is not a regular file or doesn't exist.");
+}
+
+ErrorPredicate errorContains(std::string_view substring)
+{
+  return [substring](const ::precice::Error &e) -> bool {
+    std::string msg(e.what());
+    return msg.find(substring) != std::string::npos;
+  };
+}
+
+ErrorPredicate errorMatches(std::string pattern)
+{
+  return [regex = std::regex(pattern)](const ::precice::Error &e) -> bool {
+    return std::regex_search(e.what(), regex);
+  };
 }
 
 } // namespace precice::testing

@@ -96,7 +96,7 @@ mesh::PtrMesh getDistributedMesh(const TestContext &context,
   return distributedMesh;
 }
 
-Eigen::VectorXd getDistributedData(const TestContext &      context,
+Eigen::VectorXd getDistributedData(const TestContext       &context,
                                    MeshSpecification const &meshSpec)
 {
   Eigen::VectorXd d;
@@ -116,8 +116,8 @@ Eigen::VectorXd getDistributedData(const TestContext &      context,
   return d;
 }
 
-void testDistributed(const TestContext &    context,
-                     Mapping &              mapping,
+void testDistributed(const TestContext     &context,
+                     Mapping               &mapping,
                      MeshSpecification      inMeshSpec,
                      MeshSpecification      outMeshSpec,
                      ReferenceSpecification referenceSpec,
@@ -155,9 +155,10 @@ void testDistributed(const TestContext &    context,
 constexpr int meshDims2D{2};
 
 /// Test with a homogeneous distribution of mesh among ranks
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   Multiquadrics fct(5.0);
 
   std::vector<VertexSpecification> inVertexList{
@@ -207,9 +208,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1)
   testDistributed(context, mapping_off, in, out, ref);
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   Multiquadrics fct(5.0);
 
   std::vector<VertexSpecification> inVertexList{// Consistent mapping: The inMesh is communicated
@@ -258,9 +260,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1Vector)
 }
 
 /// Using a more heterogeneous distributon of vertices and owner
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   Multiquadrics fct(5.0);
 
   std::vector<VertexSpecification> inVertexList{// Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
@@ -309,9 +312,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2)
 }
 
 /// Test with a very heterogeneous distributed and non-continuous ownership
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   Multiquadrics fct(5.0);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
@@ -377,9 +381,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3)
 }
 
 /// Test with a very heterogeneous distributed and non-continuous ownership
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   Multiquadrics fct(5.0);
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
@@ -445,9 +450,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3Vector)
 }
 
 /// Some ranks are empty, does not converge
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   ThinPlateSplines fct;
 
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
@@ -494,14 +500,14 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
       meshDims2D,
       "outMesh"};
   ReferenceSpecification                                        ref{{1, {5}},
-                             {1, {3}},
-                             {1, {2.5}},
-                             {1, {4}},
-                             {1, {1.1}},
-                             {2, {5}},
-                             {2, {6}},
-                             {2, {7}},
-                             {2, {8}}};
+                                                                    {1, {3}},
+                                                                    {1, {2.5}},
+                                                                    {1, {4}},
+                                                                    {1, {1.1}},
+                                                                    {2, {5}},
+                                                                    {2, {6}},
+                                                                    {2, {7}},
+                                                                    {2, {8}}};
   RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
   RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
@@ -511,9 +517,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV4)
 }
 
 // same as 2DV4, but all ranks have vertices
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   ThinPlateSplines fct;
 
   std::vector<int>                 globalIndexOffsets = {0, 0, 0, 0};
@@ -572,14 +579,14 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
       meshDims2D,
       "outMesh"};
   ReferenceSpecification                                        ref{{1, {5}},
-                             {1, {3}},
-                             {1, {2.5}},
-                             {1, {4}},
-                             {1, {1.1}},
-                             {2, {5}},
-                             {2, {6}},
-                             {2, {7}},
-                             {2, {8}}};
+                                                                    {1, {3}},
+                                                                    {1, {2.5}},
+                                                                    {1, {4}},
+                                                                    {1, {1.1}},
+                                                                    {2, {5}},
+                                                                    {2, {6}},
+                                                                    {2, {7}},
+                                                                    {2, {8}}};
   RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
   RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
@@ -589,10 +596,11 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV5)
 }
 
 /// same as 2DV4, but strictly linear input values, converges and gives correct results
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
                      *boost::unit_test::tolerance(1e-7))
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   ThinPlateSplines fct;
   std::vector<int> globalIndexOffsets = {0, 0, 0, 0};
 
@@ -638,14 +646,14 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
       meshDims2D,
       "outMesh"};
   ReferenceSpecification                                        ref{{1, {5}},
-                             {1, {3}},
-                             {1, {2}},
-                             {1, {4}},
-                             {1, {1}},
-                             {2, {5}},
-                             {2, {6}},
-                             {2, {7}},
-                             {2, {8}}};
+                                                                    {1, {3}},
+                                                                    {1, {2}},
+                                                                    {1, {4}},
+                                                                    {1, {1}},
+                                                                    {2, {5}},
+                                                                    {2, {6}},
+                                                                    {2, {7}},
+                                                                    {2, {8}}};
   RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_on(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::ON);
   testDistributed(context, mapping_on, in, out, ref, globalIndexOffsets.at(context.rank));
   RadialBasisFctMapping<RadialBasisFctSolver<ThinPlateSplines>> mapping_sep(Mapping::CONSISTENT, 2, fct, {{false, false, false}}, Polynomial::SEPARATE);
@@ -655,9 +663,10 @@ BOOST_AUTO_TEST_CASE(DistributedConsistent2DV6,
 }
 
 /// Test with a homogeneous distribution of mesh among ranks
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   Multiquadrics fct(5.0);
 
   std::vector<VertexSpecification> inVertexList{// Conservative mapping: The inMesh is local
@@ -730,9 +739,10 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1)
 }
 
 /// Test with a homogeneous distribution of mesh among ranks
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   Multiquadrics                    fct(5.0);
   std::vector<VertexSpecification> inVertexList{// Conservative mapping: The inMesh is local
                                                 {0, -1, {0, 0}, {1, 4}},
@@ -803,9 +813,10 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV1Vector)
 }
 
 /// Using a more heterogeneous distribution of vertices and owner
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm())
+  PRECICE_TEST();
   Multiquadrics fct(5.0);
 
   std::vector<int> globalIndexOffsets = {0, 0, 4, 6};
@@ -880,9 +891,10 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV2)
 }
 
 /// Using meshes of different sizes, inMesh is smaller then outMesh
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   Multiquadrics    fct(2.0);
   std::vector<int> globalIndexOffsets = {0, 0, 3, 5};
 
@@ -955,10 +967,11 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV3)
 }
 
 /// Using meshes of different sizes, outMesh is smaller then inMesh
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
                      *boost::unit_test::tolerance(1e-6))
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   ThinPlateSplines fct;
   std::vector<int> globalIndexOffsets = {0, 2, 4, 6};
 
@@ -1023,9 +1036,10 @@ BOOST_AUTO_TEST_CASE(DistributedConservative2DV4,
 }
 
 /// Tests a non-contigous owner distributed at the outMesh
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   Multiquadrics                    fct(5.0);
   std::vector<VertexSpecification> inVertexList{// Conservative mapping: The inMesh is local
                                                 {0, -1, {0, 0}, {1}},
@@ -1097,9 +1111,10 @@ BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5)
 }
 
 /// Tests a non-contigous owner distributed at the outMesh
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(testDistributedConservative2DV5Vector)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm());
+  PRECICE_TEST();
   Multiquadrics fct(5.0);
 
   std::vector<VertexSpecification> inVertexList{// Conservative mapping: The inMesh is local
@@ -1196,7 +1211,7 @@ void testTagging(const TestContext &context,
 
   for (const auto &v : inMesh->vertices()) {
     auto pos   = std::find_if(shouldTagFirstRound.vertices.begin(), shouldTagFirstRound.vertices.end(),
-                            [meshDimension, &v](const VertexSpecification &spec) {
+                              [meshDimension, &v](const VertexSpecification &spec) {
                               return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
                             });
     bool found = pos != shouldTagFirstRound.vertices.end();
@@ -1210,12 +1225,12 @@ void testTagging(const TestContext &context,
 
   for (const auto &v : inMesh->vertices()) {
     auto posFirst    = std::find_if(shouldTagFirstRound.vertices.begin(), shouldTagFirstRound.vertices.end(),
-                                 [meshDimension, &v](const VertexSpecification &spec) {
+                                    [meshDimension, &v](const VertexSpecification &spec) {
                                    return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
                                  });
     bool foundFirst  = posFirst != shouldTagFirstRound.vertices.end();
     auto posSecond   = std::find_if(shouldTagSecondRound.vertices.begin(), shouldTagSecondRound.vertices.end(),
-                                  [meshDimension, &v](const VertexSpecification &spec) {
+                                    [meshDimension, &v](const VertexSpecification &spec) {
                                     return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
                                   });
     bool foundSecond = posSecond != shouldTagSecondRound.vertices.end();
@@ -1228,9 +1243,10 @@ void testTagging(const TestContext &context,
   }
 }
 
+PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(testTagFirstRound)
 {
-  PRECICE_TEST(""_on(4_ranks).setupIntraComm())
+  PRECICE_TEST();
   //    *
   //    + <-- owned
   //* * x * *
@@ -1302,87 +1318,98 @@ BOOST_AUTO_TEST_SUITE(Serial)
     perform3DTestConservativeMapping(conservativeMap3D);                                                                                                           \
   }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   ThinPlateSplines fct;
   doLocalCode(ThinPlateSplines, fct, Polynomial::ON);
   doLocalCode(ThinPlateSplines, fct, Polynomial::SEPARATE);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MapMultiquadrics)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Multiquadrics fct(1e-3);
   doLocalCode(Multiquadrics, fct, Polynomial::ON);
   doLocalCode(Multiquadrics, fct, Polynomial::SEPARATE);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   InverseMultiquadrics fct(1e-3);
   doLocalCode(InverseMultiquadrics, fct, Polynomial::SEPARATE);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MapVolumeSplines)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   VolumeSplines fct;
   doLocalCode(VolumeSplines, fct, Polynomial::ON);
   doLocalCode(VolumeSplines, fct, Polynomial::SEPARATE);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MapGaussian)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   Gaussian fct(1.0);
   doLocalCode(Gaussian, fct, Polynomial::SEPARATE);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   double                    supportRadius = 1.2;
   CompactThinPlateSplinesC2 fct(supportRadius);
   doLocalCode(CompactThinPlateSplinesC2, fct, Polynomial::SEPARATE);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MapCompactPolynomialC0)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   double              supportRadius = 1.2;
   CompactPolynomialC0 fct(supportRadius);
   doLocalCode(CompactPolynomialC0, fct, Polynomial::SEPARATE);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MapCompactPolynomialC2)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   double              supportRadius = 1.2;
   CompactPolynomialC2 fct(supportRadius);
   doLocalCode(CompactPolynomialC2, fct, Polynomial::SEPARATE);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MapCompactPolynomialC4)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   double              supportRadius = 1.2;
   CompactPolynomialC4 fct(supportRadius);
   doLocalCode(CompactPolynomialC4, fct, Polynomial::SEPARATE);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MapCompactPolynomialC6)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   double              supportRadius = 1.2;
   CompactPolynomialC6 fct(supportRadius);
   doLocalCode(CompactPolynomialC6, fct, Polynomial::SEPARATE);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MapCompactPolynomialC8)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   double              supportRadius = 1.2;
   CompactPolynomialC8 fct(supportRadius);
   doLocalCode(CompactPolynomialC8, fct, Polynomial::SEPARATE);
@@ -1525,33 +1552,37 @@ void testDeadAxis3d(Polynomial polynomial, Mapping::Constraint constraint)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DeadAxis2Consistent)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testDeadAxis2d(Polynomial::ON, Mapping::CONSISTENT);
   testDeadAxis2d(Polynomial::OFF, Mapping::CONSISTENT);
   testDeadAxis2d(Polynomial::SEPARATE, Mapping::CONSISTENT);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DeadAxis3DConsistent)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testDeadAxis3d(Polynomial::ON, Mapping::CONSISTENT);
   testDeadAxis3d(Polynomial::OFF, Mapping::CONSISTENT);
   testDeadAxis3d(Polynomial::SEPARATE, Mapping::CONSISTENT);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DeadAxis2Conservative)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testDeadAxis2d(Polynomial::ON, Mapping::CONSERVATIVE);
   testDeadAxis2d(Polynomial::OFF, Mapping::CONSERVATIVE);
   testDeadAxis2d(Polynomial::SEPARATE, Mapping::CONSERVATIVE);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DeadAxis3DConervative)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testDeadAxis3d(Polynomial::ON, Mapping::CONSERVATIVE);
   testDeadAxis3d(Polynomial::OFF, Mapping::CONSERVATIVE);
   testDeadAxis3d(Polynomial::SEPARATE, Mapping::CONSERVATIVE);
@@ -1561,8 +1592,10 @@ BOOST_AUTO_TEST_SUITE_END() // Serial
 
 BOOST_AUTO_TEST_SUITE(Helper)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(inverseTriangularMatrix)
 {
+  PRECICE_TEST();
   // Define the size of the matrix
   const int inSize = 112;
 

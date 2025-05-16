@@ -28,7 +28,7 @@ ExportXML::ExportXML(
     int               frequency,
     int               rank,
     int               size)
-    : Export(participantName, location, mesh, kind, frequency, rank, size){};
+    : Export(participantName, location, mesh, kind, frequency, rank, size) {};
 
 void ExportXML::doExport(int index, double time)
 {
@@ -61,7 +61,7 @@ void ExportXML::exportSeries() const
     return;
 
   auto ext = isParallel() ? getParallelExtension() : getPieceExtension();
-  writeSeriesFile(fmt::format("{}-{}.{}.series", _participantName, _mesh->getName(), ext));
+  writeSeriesFile(fmt::format("{}-{}.{}.series", _mesh->getName(), _participantName, ext));
 }
 
 void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
@@ -70,6 +70,9 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
   _scalarDataNames.clear();
   const bool isThreeDim = (mesh.getDimensions() == 3);
   for (const mesh::PtrData &data : mesh.data()) {
+    if (data->timeStepsStorage().empty()) {
+      continue;
+    }
     int        dataDimensions = data->getDimensions();
     const bool hasGradient    = data->hasGradient();
     PRECICE_ASSERT(dataDimensions >= 1);
@@ -95,13 +98,13 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
 std::string ExportXML::parallelPieceFilenameFor(int index, int rank) const
 {
   PRECICE_ASSERT(isParallel());
-  return fmt::format("{}-{}.{}_{}.{}", _participantName, _mesh->getName(), formatIndex(index), rank, getPieceExtension());
+  return fmt::format("{}-{}.{}_{}.{}", _mesh->getName(), _participantName, formatIndex(index), rank, getPieceExtension());
 }
 
 std::string ExportXML::serialPieceFilename(int index) const
 {
   PRECICE_ASSERT(!isParallel());
-  return fmt::format("{}-{}.{}.{}", _participantName, _mesh->getName(), formatIndex(index), getPieceExtension());
+  return fmt::format("{}-{}.{}.{}", _mesh->getName(), _participantName, formatIndex(index), getPieceExtension());
 }
 
 void ExportXML::writeParallelFile(int index, double time)
@@ -109,8 +112,8 @@ void ExportXML::writeParallelFile(int index, double time)
   PRECICE_ASSERT(isParallel());
 
   // Construct filename
-  // Participant-Mesh.it_2.pvtu
-  auto filename = fmt::format("{}-{}.{}.{}", _participantName, _mesh->getName(), formatIndex(index), getParallelExtension());
+  // Mesh-Participant.it_2.pvtu
+  auto filename = fmt::format("{}-{}.{}.{}", _mesh->getName(), _participantName, formatIndex(index), getParallelExtension());
   recordExport(filename, time);
 
   namespace fs = std::filesystem;
@@ -190,7 +193,7 @@ void ExportXML::writeSubFile(int index, double time)
 
 void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std::ostream &outFile) const
 {
-  const auto &             gradients      = data->gradients();
+  const auto              &gradients      = data->timeStepsStorage().last().sample.gradients;
   const int                dataDimensions = data->getDimensions();
   std::vector<std::string> suffices;
   if (dataDimensions == 1) {
@@ -223,7 +226,7 @@ void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std
 }
 
 void ExportXML::exportData(
-    std::ostream &    outFile,
+    std::ostream     &outFile,
     const mesh::Mesh &mesh) const
 {
   outFile << "         <PointData Scalars=\"Rank ";
@@ -246,11 +249,14 @@ void ExportXML::exportData(
   outFile << "\n            </DataArray>\n";
 
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
-    Eigen::VectorXd &values         = data->values();
-    int              dataDimensions = data->getDimensions();
-    std::string      dataName(data->getName());
-    int              numberOfComponents = (dataDimensions == 2) ? 3 : dataDimensions;
-    const bool       hasGradient        = data->hasGradient();
+    if (data->timeStepsStorage().empty()) {
+      continue;
+    }
+    const Eigen::VectorXd &values         = data->timeStepsStorage().last().sample.values;
+    int                    dataDimensions = data->getDimensions();
+    std::string            dataName(data->getName());
+    int                    numberOfComponents = (dataDimensions == 2) ? 3 : dataDimensions;
+    const bool             hasGradient        = data->hasGradient();
     outFile << "            <DataArray type=\"Float64\" Name=\"" << dataName << "\" NumberOfComponents=\"" << numberOfComponents;
     outFile << "\" format=\"ascii\">\n";
     outFile << "               ";
@@ -285,7 +291,7 @@ void ExportXML::exportData(
 
 void ExportXML::writeVertex(
     const Eigen::VectorXd &position,
-    std::ostream &         outFile)
+    std::ostream          &outFile)
 {
   outFile << "               ";
   for (int i = 0; i < position.size(); i++) {
@@ -299,7 +305,7 @@ void ExportXML::writeVertex(
 
 void ExportXML::writeTriangle(
     const mesh::Triangle &triangle,
-    std::ostream &        outFile)
+    std::ostream         &outFile)
 {
   outFile << triangle.vertex(0).getID() << "  ";
   outFile << triangle.vertex(1).getID() << "  ";
@@ -308,7 +314,7 @@ void ExportXML::writeTriangle(
 
 void ExportXML::writeTetrahedron(
     const mesh::Tetrahedron &tetra,
-    std::ostream &           outFile)
+    std::ostream            &outFile)
 {
   outFile << tetra.vertex(0).getID() << "  ";
   outFile << tetra.vertex(1).getID() << "  ";
@@ -318,14 +324,14 @@ void ExportXML::writeTetrahedron(
 
 void ExportXML::writeLine(
     const mesh::Edge &edge,
-    std::ostream &    outFile)
+    std::ostream     &outFile)
 {
   outFile << edge.vertex(0).getID() << "  ";
   outFile << edge.vertex(1).getID() << "  ";
 }
 
 void ExportXML::exportPoints(
-    std::ostream &    outFile,
+    std::ostream     &outFile,
     const mesh::Mesh &mesh) const
 {
   outFile << "         <Points> \n";

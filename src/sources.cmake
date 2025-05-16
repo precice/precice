@@ -206,6 +206,7 @@ target_sources(preciceCore
     src/mapping/config/MappingConfigurationTypes.hpp
     src/mapping/impl/BasisFunctions.hpp
     src/mapping/impl/CreateClustering.hpp
+    src/mapping/impl/MappingDataCache.hpp
     src/mapping/impl/SphericalVertexCluster.hpp
     src/math/Bspline.cpp
     src/math/Bspline.hpp
@@ -290,11 +291,14 @@ target_sources(preciceCore
     src/query/Index.hpp
     src/query/impl/RTreeAdapter.hpp
     src/time/Sample.hpp
+    src/time/SampleResult.hpp
     src/time/Stample.hpp
     src/time/Storage.cpp
     src/time/Storage.hpp
     src/time/Time.cpp
     src/time/Time.hpp
+    src/time/TimeGrids.cpp
+    src/time/TimeGrids.hpp
     src/time/Waveform.cpp
     src/time/Waveform.hpp
     src/utils/ArgumentFormatter.hpp
@@ -304,6 +308,8 @@ target_sources(preciceCore
     src/utils/EigenHelperFunctions.cpp
     src/utils/EigenHelperFunctions.hpp
     src/utils/EigenIO.hpp
+    src/utils/Hash.cpp
+    src/utils/Hash.hpp
     src/utils/Helpers.cpp
     src/utils/Helpers.hpp
     src/utils/IntraComm.cpp

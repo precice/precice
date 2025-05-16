@@ -9,12 +9,19 @@
 // by another participant (see above). In addition to the direct mesh access
 // and data writing in one direction, an additional mapping (NN) is defined
 // in the other direction.
+// We also test that getMeshVertexSize and getMeshVertexIDsAndCoordinates
+// correctly filter out one vertex (-0.5, -0.5) which is not in the access
+// region, but is used for mapping.
+// Since the user has no opportunity to get the "filtered" vertex (unless
+// the bounding box is enlarged), the read data value on the SolverTwo
+// participant is zero ( last entry in l115 {15, 16, 0}).
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
+PRECICE_TEST_SETUP("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks))
 BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 {
-  PRECICE_TEST("SolverOne"_on(2_ranks), "SolverTwo"_on(2_ranks));
+  PRECICE_TEST();
 
   if (context.isNamed("SolverOne")) {
     // Set up Participant
@@ -27,7 +34,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     BOOST_TEST(interface.getMeshDimensions(ownMeshName) == 2);
     BOOST_TEST(interface.getMeshDimensions(otherMeshName) == 2);
 
-    std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0}) : std::vector<double>({0.0, 4.0, 0.0, 5.0, 0.0, 6.0});
+    std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.0, -0.5, -0.5}) : std::vector<double>({0.0, 4.0, 0.0, 5.0, 0.0, 6.0});
 
     std::vector<int> ownIDs(positions.size() / dim, -1);
     interface.setMeshVertices(ownMeshName, positions, ownIDs);
@@ -46,10 +53,11 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     // Allocate a vector containing the vertices
     std::vector<double> solverTwoMesh(otherMeshSize * dim);
     std::vector<int>    otherIDs(otherMeshSize, -1);
+    // Here, we don't receive vertex -0.5,-0.5, it's filtered out
     interface.getMeshVertexIDsAndCoordinates(otherMeshName, otherIDs, solverTwoMesh);
     // Expected data = positions of the other participant's mesh
     const std::vector<double> expectedData = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.5}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
-    BOOST_TEST(solverTwoMesh == expectedData);
+    BOOST_TEST(solverTwoMesh == expectedData, boost::test_tools::per_element());
 
     // Some dummy writeData
     std::vector<double> writeData;
@@ -67,10 +75,9 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
 
       // Expected data according to the writeData
       // Values are summed up
-      std::vector<double> expectedData = context.isPrimary() ? std::vector<double>({0, 1, 0}) : std::vector<double>({1, 2, 2});
+      std::vector<double> expectedData = context.isPrimary() ? std::vector<double>({0, 1, 0, 2}) : std::vector<double>({1, 2, 2});
       BOOST_TEST(precice::testing::equals(expectedData, readData));
     }
-
   } else {
     // Query IDs
     auto meshName      = "MeshTwo";
@@ -80,7 +87,7 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
     precice::Participant interface(context.name, context.config(), context.rank, context.size);
     const int            dim = interface.getMeshDimensions(meshName);
     BOOST_TEST(context.isNamed("SolverTwo"));
-    std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
+    std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, -0.5, -0.5}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
     std::vector<int>    ids(positions.size() / dim, -1);
 
     // Define the mesh
@@ -104,8 +111,8 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshAndMapping)
       interface.readData(meshName, readDataName, ids, dt, readData);
       // Expected data according to the writeData
       // Values are summed up
-      std::vector<double> expectedData = context.isPrimary() ? std::vector<double>({15, 16}) : std::vector<double>({22, 6, 7});
-      BOOST_TEST(precice::testing::equals(expectedData, readData));
+      std::vector<double> expectedData = context.isPrimary() ? std::vector<double>({15, 16, 0}) : std::vector<double>({22, 6, 7});
+      BOOST_TEST(expectedData == readData, boost::test_tools::per_element());
     }
   }
 }

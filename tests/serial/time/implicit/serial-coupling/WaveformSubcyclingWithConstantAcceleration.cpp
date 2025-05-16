@@ -1,6 +1,6 @@
 #ifndef PRECICE_NO_MPI
 
-#include <math.h>
+#include <cmath>
 #include <precice/precice.hpp>
 #include <vector>
 #include "testing/Testing.hpp"
@@ -16,15 +16,12 @@ BOOST_AUTO_TEST_SUITE(SerialCoupling)
 /**
  * @brief Simple test to ensure that underrelaxation is applied to every  timestep.
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(WaveformSubcyclingWithConstantAcceleration)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   Participant precice(context.name, context.config(), 0, 1);
-
-  MeshID meshID;
-  DataID writeDataID;
-  DataID readDataID;
 
   typedef double (*DataFunction)(double);
 
@@ -60,7 +57,6 @@ BOOST_AUTO_TEST_CASE(WaveformSubcyclingWithConstantAcceleration)
   vertexID = precice.setMeshVertex(meshName, v0);
 
   int    nSubsteps          = 7; // perform subcycling on solvers. 4 steps happen in each window.
-  int    nWindows           = 5; // perform 5 windows.
   int    timestep           = 0;
   double time               = 0;
   int    timestepCheckpoint = timestep;

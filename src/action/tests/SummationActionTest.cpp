@@ -23,9 +23,10 @@ using namespace precice;
 BOOST_AUTO_TEST_SUITE(ActionTests)
 BOOST_AUTO_TEST_SUITE(Summation)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SummationOneDimensional)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   PtrMesh          mesh(new Mesh("Mesh", 3, testing::nextMeshID()));
   int              dimensions  = 1;
@@ -73,9 +74,10 @@ BOOST_AUTO_TEST_CASE(SummationOneDimensional)
   BOOST_TEST(targetValues(2) == 11.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   int              dimensions = 3;
   PtrMesh          mesh(new Mesh("Mesh", dimensions, testing::nextMeshID()));
@@ -142,9 +144,10 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensional)
   BOOST_TEST(targetValues(8) == 19.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(SummationThreeDimensionalSubcycling)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   using namespace mesh;
   int              dimensions = 3;
   PtrMesh          mesh(new Mesh("Mesh", dimensions, testing::nextMeshID()));
@@ -215,15 +218,15 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensionalSubcycling)
 
   // Load and check data from 0.5
 
-  auto &loadedStample1 = sourceData1->stamples().front();
+  auto loadedStample1 = sourceData1->stamples().front();
   BOOST_TEST(loadedStample1.timestamp == 0.5);
   sourceData1->values() = loadedStample1.sample.values;
 
-  auto &loadedStample2 = sourceData2->stamples().front();
+  auto loadedStample2 = sourceData2->stamples().front();
   BOOST_TEST(loadedStample2.timestamp == 0.5);
   sourceData2->values() = loadedStample2.sample.values;
 
-  auto &loadedStample3 = targetData->stamples().front();
+  auto loadedStample3 = targetData->stamples().front();
   BOOST_TEST(loadedStample3.timestamp == 0.5);
   targetData->values() = loadedStample3.sample.values;
 
@@ -264,9 +267,10 @@ BOOST_AUTO_TEST_CASE(SummationThreeDimensionalSubcycling)
   BOOST_TEST(targetValues(8) == 1009.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Configuration)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   std::string                 filename = testing::getPathToSources() + "/action/tests/SummationActionTest-testConfiguration-1.xml";
   xml::XMLTag                 tag      = xml::getRootTag();
   mesh::PtrDataConfiguration  dataConfig(new mesh::DataConfiguration(tag));

@@ -44,13 +44,13 @@ void BarycentricBaseMapping::mapConservative(const time::Sample &inData, Eigen::
                  _interpolations.size(), input()->nVertices());
   const int              dimensions = inData.dataDims;
   const Eigen::VectorXd &inValues   = inData.values;
-  Eigen::VectorXd &      outValues  = outData;
+  Eigen::VectorXd       &outValues  = outData;
 
   // For each input vertex, distribute the conserved data among the relevant output vertices
   // Do it for all dimensions (i.e. components if data is a vector)
   for (size_t i = 0; i < input()->nVertices(); i++) {
     const size_t inOffset = i * dimensions;
-    const auto & elems    = _interpolations[i].getWeightedElements();
+    const auto  &elems    = _interpolations[i].getWeightedElements();
     for (const auto &elem : elems) {
       size_t outOffset = static_cast<size_t>(elem.vertexID) * dimensions;
       for (int dim = 0; dim < dimensions; dim++) {
@@ -72,7 +72,7 @@ void BarycentricBaseMapping::mapConsistent(const time::Sample &inData, Eigen::Ve
 
   const int              dimensions = inData.dataDims;
   const Eigen::VectorXd &inValues   = inData.values;
-  Eigen::VectorXd &      outValues  = outData;
+  Eigen::VectorXd       &outValues  = outData;
 
   // For each output vertex, compute the linear combination of input vertices
   // Do it for all dimensions (i.e. components if data is a vector)

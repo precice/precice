@@ -16,6 +16,7 @@
 #include "mesh/BoundingBox.hpp"
 #include "mesh/Filter.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/Utils.hpp"
 #include "mesh/Vertex.hpp"
 #include "partition/Partition.hpp"
 #include "precice/impl/Types.hpp"
@@ -85,6 +86,8 @@ void ReceivedPartition::communicate()
     PRECICE_ASSERT(globalNumberOfVertices >= 0);
     _mesh->setGlobalNumberOfVertices(globalNumberOfVertices);
   }
+
+  PRECICE_ASSERT(_mesh->getGlobalNumberOfVertices() >= 0);
 }
 
 void ReceivedPartition::compute()
@@ -98,22 +101,19 @@ void ReceivedPartition::compute()
     if (_allowDirectAccess) {
       // Prepare the bounding boxes
       prepareBoundingBox();
-      // Filter out vertices not laying in the bounding box
-      mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
+
       // To discuss: maybe check this somewhere in the ParticipantImpl, as we have now a similar check for the parallel case
       PRECICE_CHECK(!_bb.empty(), "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setMeshAccessRegion with valid data?", _mesh->getName());
-      unsigned int nFilteredVertices = 0;
-      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { if(!_bb.contains(v))
-              ++nFilteredVertices;
-          return _bb.contains(v); });
+
+      // In serial mode, we keep the vertices, but filter them in the API functions
+      const auto   nVerticesInBox    = mesh::countVerticesInBoundingBox(_mesh, _bb);
+      unsigned int nFilteredVertices = nVerticesInBox - _mesh->nVertices();
 
       PRECICE_WARN_IF(nFilteredVertices > 0,
                       "{} vertices on mesh \"{}\" have been filtered out due to the defined bounding box in \"setMeshAccessRegion\" "
-                      "in serial mode. Associated data values of the filtered vertices will be filled with zero values in order to provide valid data for other participants when reading data.",
+                      "in serial mode. For direct-mesh access via \"getMeshVertexCoordinatesAndIDs()\", these vertices are not accessible. "
+                      "Their data values will internally be filled with zero values in order to provide valid data for other participants when reading data.",
                       nFilteredVertices, _mesh->getName());
-
-      _mesh->clear();
-      _mesh->addMesh(filteredMesh);
     }
 
     mesh::Mesh::VertexDistribution vertexDistribution;
@@ -133,7 +133,7 @@ void ReceivedPartition::compute()
   // check to prevent false configuration
   if (not utils::IntraComm::isSecondary()) {
     PRECICE_CHECK(hasAnyMapping() || _allowDirectAccess,
-                  "The received mesh {} needs a mapping, either from it, to it, or both. Maybe you don't want to receive this mesh at all?",
+                  "The received mesh {} needs a mapping (either from it, to it, or both) or API access enabled (api-access=\"true\"). Maybe you don't want to receive this mesh at all?",
                   _mesh->getName());
   }
 
@@ -209,7 +209,6 @@ void ReceivedPartition::compute()
       PRECICE_DEBUG("Send partition feedback to primary rank");
       utils::IntraComm::getCommunication()->sendRange(vertexIDs, 0);
     } else { // Primary
-
       mesh::Mesh::VertexDistribution vertexDistribution;
       int                            numberOfVertices = _mesh->nVertices();
       std::vector<VertexID>          vertexIDs(numberOfVertices, -1);
@@ -261,6 +260,11 @@ void ReceivedPartition::compute()
     utils::IntraComm::getCommunication()->broadcast(vertexOffsets);
     PRECICE_ASSERT(_mesh->getVertexOffsets().empty());
     _mesh->setVertexOffsets(std::move(vertexOffsets));
+  }
+
+  PRECICE_ASSERT(!_mesh->getVertexOffsets().empty());
+  if (!m2n().usesTwoLevelInitialization() && utils::IntraComm::isPrimary()) {
+    PRECICE_ASSERT(!_mesh->getVertexDistribution().empty());
   }
 }
 
@@ -485,7 +489,10 @@ void ReceivedPartition::prepareBoundingBox()
   // Reset the BoundingBox
   _bb = mesh::BoundingBox{_dimensions};
 
-  // Create BB around all "other" meshes
+  // Create BB around all "other" meshes, where others are local meshes in parallel runs
+  // For just-in-time mapping, we enter the loops here for the (just-in-time) mapping we hold,
+  // however, any bounding box operation will be NOP because bounding boxes around local
+  // meshes are empty
   for (mapping::PtrMapping &fromMapping : _fromMappings) {
     auto other_bb = fromMapping->getOutputMesh()->getBoundingBox();
     _bb.expandBy(other_bb);
@@ -504,11 +511,22 @@ void ReceivedPartition::prepareBoundingBox()
     auto &other_bb = _mesh->getBoundingBox();
     _bb.expandBy(other_bb);
 
+    // In case we have an just-in-time mapping associated to this direct access
+    // we need to extend the bounding box for accuracy reasons
+    // the behavior is then comparable to a conventional mapping
+    if (std::any_of(_fromMappings.begin(), _fromMappings.end(), [](auto m) { return m->isJustInTimeMapping(); }) ||
+        std::any_of(_toMappings.begin(), _toMappings.end(), [](auto m) { return m->isJustInTimeMapping(); })) {
+      // The (preliminary) repartitioning is based on the _bb
+      // we extend the _bb here and later on enable the (just-in-time) mappings
+      // to apply any kind of tagging to account for the halo layer added here
+      _bb.scaleBy(_safetyFactor);
+    }
     // The safety factor is for mapping based partitionings applied, as usual.
     // For the direct access, however, we don't apply any safety factor scaling.
     // If the user defines a safety factor and the partitioning is entirely based
     // on the defined access region (setMeshAccessRegion), we raise a warning
     // to inform the user
+    // hasAnyMapping is true for just-in-time mappinges
     const float defaultSafetyFactor = 0.5;
     PRECICE_WARN_IF(
         utils::IntraComm::isPrimary() && !hasAnyMapping() && (_safetyFactor != defaultSafetyFactor),
@@ -898,10 +916,21 @@ bool ReceivedPartition::hasAnyMapping() const
 
 void ReceivedPartition::tagMeshFirstRound()
 {
-  // We want to have every vertex within the box if we access the mesh directly
+  // We want to have every vertex within user-definded bounding box if we access the mesh directly
   if (_allowDirectAccess) {
-    _mesh->tagAll();
-    return;
+    // _mesh->getBoundingBox is based on the bounding box of the mesh, which is
+    // - set via the API function (setMeshAccessRegion)
+    // - potentially enlarged with another bounding box if there is another mapping defined
+    // i.e. we have a local mesh involved with a bounding box used to enlarge the original one
+    // concluding: it might be that the boundingBox is not (purely) the one asked for by the user
+    // but using mesh-tagAll() would tag the safety margin. Of course, this only applied for combinations of direct access plus mapping, for pure
+    // direct accesses, there is no safety factor
+    auto userDefinedBB = _mesh->getBoundingBox();
+    for (auto &vertex : _mesh->vertices()) {
+      if (userDefinedBB.contains(vertex)) {
+        vertex.tag();
+      }
+    }
   }
 
   for (const mapping::PtrMapping &fromMapping : _fromMappings) {
@@ -914,11 +943,6 @@ void ReceivedPartition::tagMeshFirstRound()
 
 void ReceivedPartition::tagMeshSecondRound()
 {
-  // We have already tagged every node in this case in the first round
-  if (_allowDirectAccess) {
-    return;
-  }
-
   for (const mapping::PtrMapping &fromMapping : _fromMappings) {
     fromMapping->tagMeshSecondRound();
   }
