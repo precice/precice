@@ -53,12 +53,15 @@ if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
 endif()
 
+if (DEFINED BUILD_SHARED_LIBS AND NOT BUILD_SHARED_LIBS)
+  message(WARNING "You disabled BUILD_SHARED_LIBS, but preCICE unconditionally builds as shared library.")
+endif()
+
 option(PRECICE_FEATURE_MPI_COMMUNICATION "Enables MPI-based communication and running coupling tests." ON)
 option(PRECICE_FEATURE_PETSC_MAPPING "Enable use of the PETSc linear algebra library for global-iterative RBF data mappings." ON)
 option(PRECICE_FEATURE_PYTHON_ACTIONS "Enable Python support for preCICE actions." ON)
 option(PRECICE_CONFIGURE_PACKAGE_GENERATION "Configure package generation." ON)
 option(PRECICE_FEATURE_GINKGO_MAPPING "Enable use of Ginkgo for accelerated data mapping." OFF)
-option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
 option(BUILD_TESTING "Build tests" ON)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
 option(PRECICE_BINDINGS_C "Enable the native C bindings" ON)
@@ -494,7 +497,7 @@ target_include_directories(preciceCore PUBLIC
   )
 
 # Add precice as an empty target
-add_library(precice)
+add_library(precice SHARED)
 set_target_properties(precice PROPERTIES
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
@@ -561,9 +564,7 @@ GENERATE_EXPORT_HEADER(preciceCore
   )
 
 # Workaround for making exports work for the preciceCore object library when building preCICE as a shared library
-if (BUILD_SHARED_LIBS)
-  target_compile_definitions(preciceCore PUBLIC preciceCore_EXPORTS)
-endif()
+target_compile_definitions(preciceCore PUBLIC preciceCore_EXPORTS)
 
 # Add the export header to the public headers of the preCICE lib
 set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
