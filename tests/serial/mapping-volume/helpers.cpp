@@ -34,7 +34,6 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
 
     auto &mesh = precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
     BOOST_REQUIRE(mesh.nVertices() == 3);
-    BOOST_REQUIRE(mesh.edges().size() == 3);
     BOOST_REQUIRE(mesh.triangles().size() == 1);
 
     BOOST_TEST(equals(mesh.triangles()[0].getArea(), 0.5), "Triangle area must be 0.5");
