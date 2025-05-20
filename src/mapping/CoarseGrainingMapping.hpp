@@ -7,6 +7,11 @@
 
 namespace precice::mapping {
 
+// Forward declaration
+namespace impl {
+class LucyKernelFunction;
+}
+
 /// Mapping using nearest neighboring vertices and (eventually) their local gradient values.
 /// Base class for Nearest Neighbor Mapping and Nearest Neighbor Gradient
 class CoarseGrainingMapping : public Mapping {
@@ -47,5 +52,7 @@ private:
 
   /// @copydoc Mapping::mapConsistent
   void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) override;
+
+  std::unique_ptr<impl::LucyKernelFunction> _lucyFunction;
 };
 } // namespace precice::mapping

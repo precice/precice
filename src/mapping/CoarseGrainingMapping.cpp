@@ -3,6 +3,7 @@
 #include <boost/container/flat_set.hpp>
 #include "logging/LogMacros.hpp"
 #include "mapping/Mapping.hpp"
+#include "mapping/RadialBasisFctSolver.hpp"
 #include "math/math.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
@@ -14,8 +15,14 @@ namespace precice::mapping {
 
 namespace impl {
 class LucyKernelFunction {
+public:
   LucyKernelFunction(short grainDim, double functionRadius)
       : _grainDim(grainDim), _c(functionRadius) {}
+
+  double getFunctionRadius() const
+  {
+    return _c;
+  }
 
   double evaluate(double r) const
   {
@@ -64,6 +71,7 @@ CoarseGrainingMapping::CoarseGrainingMapping(
     : Mapping(constraint, meshDim, /*requiresGradientData*/ false, Mapping::InitialGuessRequirement::None)
 {
   PRECICE_CHECK(functionRadius > 0, "Function radius must be greater zero.");
+  _lucyFunction = std::make_unique<impl::LucyKernelFunction>(static_cast<short>(grainDim), functionRadius);
 }
 
 void CoarseGrainingMapping::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
@@ -73,6 +81,19 @@ void CoarseGrainingMapping::mapConsistentAt(const Eigen::Ref<const Eigen::Matrix
 
 void CoarseGrainingMapping::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> target)
 {
+  precice::profiling::Event e("map.cg.mapConservativeAt.From" + input()->getName());
+  auto                     &index = output()->index();
+  for (Eigen::Index i = 0; i < coordinates.cols(); ++i) {
+    mesh::Vertex src{coordinates.col(i), -1};
+    auto         dest = index.getVerticesInsideBox(src, _lucyFunction->getFunctionRadius());
+
+    for (const auto &d : dest) {
+      const auto &dst   = output()->vertex(d).rawCoords();
+      auto        dist  = computeSquaredDifference(dst, src.rawCoords());
+      auto        coeff = _lucyFunction->evaluate(dist);
+      target.col(d) += coeff * source.col(i);
+    }
+  }
 }
 
 void CoarseGrainingMapping::computeMapping()
