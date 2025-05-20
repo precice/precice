@@ -856,16 +856,18 @@ void ParticipantImpl::setMeshEdge(
   PRECICE_TRACE(meshName, first, second);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &mesh = context.mesh;
-    using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
-    PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
-    Event         e{fmt::format("setMeshEdge.{}", meshName), profiling::Fundamental};
-    mesh::Vertex &v0 = mesh->vertex(first);
-    mesh::Vertex &v1 = mesh->vertex(second);
-    mesh->createEdge(v0, v1);
+  if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
+    return;
   }
+
+  mesh::PtrMesh &mesh = context.mesh;
+  using impl::errorInvalidVertexID;
+  PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
+  PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
+  Event         e{fmt::format("setMeshEdge.{}", meshName), profiling::Fundamental};
+  mesh::Vertex &v0 = mesh->vertex(first);
+  mesh::Vertex &v1 = mesh->vertex(second);
+  mesh->createEdge(v0, v1);
 }
 
 void ParticipantImpl::setMeshEdges(
@@ -910,27 +912,27 @@ void ParticipantImpl::setMeshTriangle(
     VertexID         second,
     VertexID         third)
 {
-  PRECICE_TRACE(meshName, first,
-                second, third);
-
+  PRECICE_TRACE(meshName, first, second, third);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &mesh = context.mesh;
-    using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
-    PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
-    PRECICE_CHECK(mesh->isValidVertexID(third), errorInvalidVertexID(third));
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(first, second, third)),
-                  "setMeshTriangle() was called with repeated Vertex IDs ({}, {}, {}).",
-                  first, second, third);
-
-    mesh::Vertex &A = mesh->vertex(first);
-    mesh::Vertex &B = mesh->vertex(second);
-    mesh::Vertex &C = mesh->vertex(third);
-
-    mesh->createTriangle(A, B, C);
+  if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
+    return;
   }
+
+  mesh::PtrMesh &mesh = context.mesh;
+  using impl::errorInvalidVertexID;
+  PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
+  PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
+  PRECICE_CHECK(mesh->isValidVertexID(third), errorInvalidVertexID(third));
+  PRECICE_CHECK(utils::unique_elements(utils::make_array(first, second, third)),
+                "setMeshTriangle() was called with repeated Vertex IDs ({}, {}, {}).",
+                first, second, third);
+
+  mesh::Vertex &A = mesh->vertex(first);
+  mesh::Vertex &B = mesh->vertex(second);
+  mesh::Vertex &C = mesh->vertex(third);
+
+  mesh->createTriangle(A, B, C);
 }
 
 void ParticipantImpl::setMeshTriangles(
@@ -983,46 +985,48 @@ void ParticipantImpl::setMeshQuad(
                 second, third, fourth);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
-  PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshQuad is only possible for 3D meshes."
-                                                    " Please set the mesh dimension to 3 in the preCICE configuration file.");
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    PRECICE_ASSERT(context.mesh);
-    mesh::Mesh &mesh = *(context.mesh);
-    using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh.isValidVertexID(first), errorInvalidVertexID(first));
-    PRECICE_CHECK(mesh.isValidVertexID(second), errorInvalidVertexID(second));
-    PRECICE_CHECK(mesh.isValidVertexID(third), errorInvalidVertexID(third));
-    PRECICE_CHECK(mesh.isValidVertexID(fourth), errorInvalidVertexID(fourth));
+  PRECICE_CHECK(context.mesh->getDimensions() == 3,
+                "setMeshQuad is only possible for 3D meshes. Please set the mesh dimension to 3 in the preCICE configuration file.");
+  if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
+    return;
+  }
 
-    auto vertexIDs = utils::make_array(first, second, third, fourth);
-    PRECICE_CHECK(utils::unique_elements(vertexIDs), "The four vertex ID's are not unique. Please check that the vertices that form the quad are correct.");
+  PRECICE_ASSERT(context.mesh);
+  mesh::Mesh &mesh = *(context.mesh);
+  using impl::errorInvalidVertexID;
+  PRECICE_CHECK(mesh.isValidVertexID(first), errorInvalidVertexID(first));
+  PRECICE_CHECK(mesh.isValidVertexID(second), errorInvalidVertexID(second));
+  PRECICE_CHECK(mesh.isValidVertexID(third), errorInvalidVertexID(third));
+  PRECICE_CHECK(mesh.isValidVertexID(fourth), errorInvalidVertexID(fourth));
 
-    auto coords = mesh::coordsFor(mesh, vertexIDs);
-    PRECICE_CHECK(utils::unique_elements(coords),
-                  "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle."
-                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface is composed of quads.");
+  auto vertexIDs = utils::make_array(first, second, third, fourth);
+  PRECICE_CHECK(utils::unique_elements(vertexIDs), "The four vertex ID's are not unique. Please check that the vertices that form the quad are correct.");
 
-    auto convexity = math::geometry::isConvexQuad(coords);
-    PRECICE_CHECK(convexity.convex, "The given quad is not convex. "
-                                    "Please check that the adapter send the four correct vertices or that the interface is composed of quads.");
-    auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
+  auto coords = mesh::coordsFor(mesh, vertexIDs);
+  PRECICE_CHECK(utils::unique_elements(coords),
+                "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle."
+                "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface is composed of quads.");
 
-    Event e{fmt::format("setMeshQuad.{}", meshName), profiling::Fundamental};
+  auto convexity = math::geometry::isConvexQuad(coords);
+  PRECICE_CHECK(convexity.convex, "The given quad is not convex. "
+                                  "Please check that the adapter send the four correct vertices or that the interface is composed of quads.");
+  auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
 
-    // Vertices are now in the order: V0-V1-V2-V3-V0.
-    // Use the shortest diagonal to split the quad into 2 triangles.
-    // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
-    double distance02 = (reordered[0]->getCoords() - reordered[2]->getCoords()).norm();
-    double distance13 = (reordered[1]->getCoords() - reordered[3]->getCoords()).norm();
+  Event e{fmt::format("setMeshQuad.{}", meshName), profiling::Fundamental};
 
-    // The new edge, e[4], is the shortest diagonal of the quad
-    if (distance02 <= distance13) {
-      mesh.createTriangle(*reordered[0], *reordered[2], *reordered[1]);
-      mesh.createTriangle(*reordered[0], *reordered[2], *reordered[3]);
-    } else {
-      mesh.createTriangle(*reordered[1], *reordered[3], *reordered[0]);
-      mesh.createTriangle(*reordered[1], *reordered[3], *reordered[2]);
-    }
+  // Vertices are now in the order: V0-V1-V2-V3-V0.
+  // Use the shortest diagonal to split the quad into 2 triangles.
+  // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
+  double distance02 = (reordered[0]->getCoords() - reordered[2]->getCoords()).norm();
+  double distance13 = (reordered[1]->getCoords() - reordered[3]->getCoords()).norm();
+
+  // The new edge, e[4], is the shortest diagonal of the quad
+  if (distance02 <= distance13) {
+    mesh.createTriangle(*reordered[0], *reordered[2], *reordered[1]);
+    mesh.createTriangle(*reordered[0], *reordered[2], *reordered[3]);
+  } else {
+    mesh.createTriangle(*reordered[1], *reordered[3], *reordered[0]);
+    mesh.createTriangle(*reordered[1], *reordered[3], *reordered[2]);
   }
 }
 
@@ -1103,22 +1107,24 @@ void ParticipantImpl::setMeshTetrahedron(
   MeshContext &context = _accessor->usedMeshContext(meshName);
   PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes."
                                                     " Please set the mesh dimension to 3 in the preCICE configuration file.");
+  if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
+    return;
+  }
+
   Event e{fmt::format("setMeshTetrahedron.{}", meshName), profiling::Fundamental};
 
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &mesh = context.mesh;
-    using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
-    PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
-    PRECICE_CHECK(mesh->isValidVertexID(third), errorInvalidVertexID(third));
-    PRECICE_CHECK(mesh->isValidVertexID(fourth), errorInvalidVertexID(fourth));
-    mesh::Vertex &A = mesh->vertex(first);
-    mesh::Vertex &B = mesh->vertex(second);
-    mesh::Vertex &C = mesh->vertex(third);
-    mesh::Vertex &D = mesh->vertex(fourth);
+  mesh::PtrMesh &mesh = context.mesh;
+  using impl::errorInvalidVertexID;
+  PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
+  PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
+  PRECICE_CHECK(mesh->isValidVertexID(third), errorInvalidVertexID(third));
+  PRECICE_CHECK(mesh->isValidVertexID(fourth), errorInvalidVertexID(fourth));
+  mesh::Vertex &A = mesh->vertex(first);
+  mesh::Vertex &B = mesh->vertex(second);
+  mesh::Vertex &C = mesh->vertex(third);
+  mesh::Vertex &D = mesh->vertex(fourth);
 
-    mesh->createTetrahedron(A, B, C, D);
-  }
+  mesh->createTetrahedron(A, B, C, D);
 }
 
 void ParticipantImpl::setMeshTetrahedra(
@@ -1128,6 +1134,8 @@ void ParticipantImpl::setMeshTetrahedra(
   PRECICE_TRACE(meshName, vertices.size());
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
+  PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes."
+                                                    " Please set the mesh dimension to 3 in the preCICE configuration file.");
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
     return;
   }
