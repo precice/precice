@@ -368,6 +368,7 @@ MappingConfiguration::MappingConfiguration(
   parent.addSubtags(rbfDirectTags);
   parent.addSubtags(pumDirectTags);
   parent.addSubtags(rbfAliasTag);
+  parent.addSubtags(coarseGrainingTags);
   parent.addSubtags(geoMultiscaleTags);
 }
 
@@ -593,10 +594,10 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
                 toMeshName);
 
   PRECICE_CHECK((!toMesh->isJustInTime() && !fromMesh->isJustInTime()) ||
-                    ((toMesh->isJustInTime() || fromMesh->isJustInTime()) && (type == TYPE_NEAREST_NEIGHBOR || type == TYPE_RBF_PUM_DIRECT || type == TYPE_RBF_ALIAS)),
+                    ((toMesh->isJustInTime() || fromMesh->isJustInTime()) && (type == TYPE_NEAREST_NEIGHBOR || type == TYPE_RBF_PUM_DIRECT || type == TYPE_RBF_ALIAS || type == TYPE_COARSE_GRAINING)),
                 "A just-in-time mapping was configured from mesh \"{}\" to mesh \"{}\" using \"mapping:{}\", which is currently not implemented. "
-                "Available mapping types are \"mapping:{}\", \"mapping:{}\" and \"mapping:{}\".",
-                fromMesh->getName(), toMesh->getName(), type, TYPE_NEAREST_NEIGHBOR, TYPE_RBF_ALIAS, TYPE_RBF_PUM_DIRECT);
+                "Available mapping types are \"mapping:{}\", \"mapping:{}\", \"mapping:{}\" and  \"mapping:{}\".",
+                fromMesh->getName(), toMesh->getName(), type, TYPE_NEAREST_NEIGHBOR, TYPE_RBF_ALIAS, TYPE_RBF_PUM_DIRECT, TYPE_COARSE_GRAINING);
 
   // Check for compatible mesh dimensions
   PRECICE_CHECK(fromMesh->getDimensions() == toMesh->getDimensions(),
