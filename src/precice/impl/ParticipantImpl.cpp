@@ -331,9 +331,9 @@ void ParticipantImpl::setupCommunication()
   PRECICE_DEBUG("Preprocessing provided meshes");
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
     if (meshContext->provideMesh) {
-      auto &mesh = *(meshContext->mesh);
+      auto &mesh = *meshContext->mesh;
       Event e("preprocess." + mesh.getName());
-      meshContext->mesh->preprocess();
+      mesh.preprocess();
     }
   }
 
@@ -860,14 +860,14 @@ void ParticipantImpl::setMeshEdge(
     return;
   }
 
-  mesh::PtrMesh &mesh = context.mesh;
+  mesh::Mesh &mesh = *context.mesh;
   using impl::errorInvalidVertexID;
-  PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
-  PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
+  PRECICE_CHECK(mesh.isValidVertexID(first), errorInvalidVertexID(first));
+  PRECICE_CHECK(mesh.isValidVertexID(second), errorInvalidVertexID(second));
   Event         e{fmt::format("setMeshEdge.{}", meshName), profiling::Fundamental};
-  mesh::Vertex &v0 = mesh->vertex(first);
-  mesh::Vertex &v1 = mesh->vertex(second);
-  mesh->createEdge(v0, v1);
+  mesh::Vertex &v0 = mesh.vertex(first);
+  mesh::Vertex &v1 = mesh.vertex(second);
+  mesh.createEdge(v0, v1);
 }
 
 void ParticipantImpl::setMeshEdges(
@@ -881,7 +881,7 @@ void ParticipantImpl::setMeshEdges(
     return;
   }
 
-  mesh::PtrMesh &mesh = context.mesh;
+  mesh::Mesh &mesh = *context.mesh;
   PRECICE_CHECK(vertices.size() % 2 == 0,
                 "Cannot interpret passed vertex IDs attempting to set edges of mesh \"{}\" . "
                 "You passed {} vertex indices, but we expected an even number.",
@@ -889,7 +889,7 @@ void ParticipantImpl::setMeshEdges(
   {
     auto end           = vertices.end();
     auto [first, last] = utils::find_first_range(vertices.begin(), end, [&mesh](VertexID vid) {
-      return !mesh->isValidVertexID(vid);
+      return !mesh.isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
@@ -902,7 +902,7 @@ void ParticipantImpl::setMeshEdges(
   for (unsigned long i = 0; i < vertices.size() / 2; ++i) {
     auto aid = vertices[2 * i];
     auto bid = vertices[2 * i + 1];
-    mesh->createEdge(mesh->vertex(aid), mesh->vertex(bid));
+    mesh.createEdge(mesh.vertex(aid), mesh.vertex(bid));
   }
 }
 
@@ -919,20 +919,20 @@ void ParticipantImpl::setMeshTriangle(
     return;
   }
 
-  mesh::PtrMesh &mesh = context.mesh;
+  mesh::Mesh &mesh = *context.mesh;
   using impl::errorInvalidVertexID;
-  PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
-  PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
-  PRECICE_CHECK(mesh->isValidVertexID(third), errorInvalidVertexID(third));
+  PRECICE_CHECK(mesh.isValidVertexID(first), errorInvalidVertexID(first));
+  PRECICE_CHECK(mesh.isValidVertexID(second), errorInvalidVertexID(second));
+  PRECICE_CHECK(mesh.isValidVertexID(third), errorInvalidVertexID(third));
   PRECICE_CHECK(utils::unique_elements(utils::make_array(first, second, third)),
                 "setMeshTriangle() was called with repeated Vertex IDs ({}, {}, {}).",
                 first, second, third);
 
-  mesh::Vertex &A = mesh->vertex(first);
-  mesh::Vertex &B = mesh->vertex(second);
-  mesh::Vertex &C = mesh->vertex(third);
+  mesh::Vertex &A = mesh.vertex(first);
+  mesh::Vertex &B = mesh.vertex(second);
+  mesh::Vertex &C = mesh.vertex(third);
 
-  mesh->createTriangle(A, B, C);
+  mesh.createTriangle(A, B, C);
 }
 
 void ParticipantImpl::setMeshTriangles(
@@ -946,7 +946,7 @@ void ParticipantImpl::setMeshTriangles(
     return;
   }
 
-  mesh::PtrMesh &mesh = context.mesh;
+  mesh::Mesh &mesh = *context.mesh;
   PRECICE_CHECK(vertices.size() % 3 == 0,
                 "Cannot interpret passed vertex IDs attempting to set triangles of mesh \"{}\" . "
                 "You passed {} vertex indices, which isn't dividable by 3.",
@@ -954,7 +954,7 @@ void ParticipantImpl::setMeshTriangles(
   {
     auto end           = vertices.end();
     auto [first, last] = utils::find_first_range(vertices.begin(), end, [&mesh](VertexID vid) {
-      return !mesh->isValidVertexID(vid);
+      return !mesh.isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
@@ -968,9 +968,9 @@ void ParticipantImpl::setMeshTriangles(
     auto aid = vertices[3 * i];
     auto bid = vertices[3 * i + 1];
     auto cid = vertices[3 * i + 2];
-    mesh->createTriangle(mesh->vertex(aid),
-                         mesh->vertex(bid),
-                         mesh->vertex(cid));
+    mesh.createTriangle(mesh.vertex(aid),
+                        mesh.vertex(bid),
+                        mesh.vertex(cid));
   }
 }
 
@@ -992,7 +992,7 @@ void ParticipantImpl::setMeshQuad(
   }
 
   PRECICE_ASSERT(context.mesh);
-  mesh::Mesh &mesh = *(context.mesh);
+  mesh::Mesh &mesh = *context.mesh;
   using impl::errorInvalidVertexID;
   PRECICE_CHECK(mesh.isValidVertexID(first), errorInvalidVertexID(first));
   PRECICE_CHECK(mesh.isValidVertexID(second), errorInvalidVertexID(second));
@@ -1041,7 +1041,7 @@ void ParticipantImpl::setMeshQuads(
     return;
   }
 
-  mesh::Mesh &mesh = *(context.mesh);
+  mesh::Mesh &mesh = *context.mesh;
   PRECICE_CHECK(vertices.size() % 4 == 0,
                 "Cannot interpret passed vertex IDs attempting to set quads of mesh \"{}\" . "
                 "You passed {} vertex indices, which isn't dividable by 4.",
@@ -1113,18 +1113,18 @@ void ParticipantImpl::setMeshTetrahedron(
 
   Event e{fmt::format("setMeshTetrahedron.{}", meshName), profiling::Fundamental};
 
-  mesh::PtrMesh &mesh = context.mesh;
+  mesh::Mesh &mesh = *context.mesh;
   using impl::errorInvalidVertexID;
-  PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
-  PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
-  PRECICE_CHECK(mesh->isValidVertexID(third), errorInvalidVertexID(third));
-  PRECICE_CHECK(mesh->isValidVertexID(fourth), errorInvalidVertexID(fourth));
-  mesh::Vertex &A = mesh->vertex(first);
-  mesh::Vertex &B = mesh->vertex(second);
-  mesh::Vertex &C = mesh->vertex(third);
-  mesh::Vertex &D = mesh->vertex(fourth);
+  PRECICE_CHECK(mesh.isValidVertexID(first), errorInvalidVertexID(first));
+  PRECICE_CHECK(mesh.isValidVertexID(second), errorInvalidVertexID(second));
+  PRECICE_CHECK(mesh.isValidVertexID(third), errorInvalidVertexID(third));
+  PRECICE_CHECK(mesh.isValidVertexID(fourth), errorInvalidVertexID(fourth));
+  mesh::Vertex &A = mesh.vertex(first);
+  mesh::Vertex &B = mesh.vertex(second);
+  mesh::Vertex &C = mesh.vertex(third);
+  mesh::Vertex &D = mesh.vertex(fourth);
 
-  mesh->createTetrahedron(A, B, C, D);
+  mesh.createTetrahedron(A, B, C, D);
 }
 
 void ParticipantImpl::setMeshTetrahedra(
@@ -1140,7 +1140,7 @@ void ParticipantImpl::setMeshTetrahedra(
     return;
   }
 
-  mesh::PtrMesh &mesh = context.mesh;
+  mesh::Mesh &mesh = *context.mesh;
   PRECICE_CHECK(vertices.size() % 4 == 0,
                 "Cannot interpret passed vertex IDs attempting to set quads of mesh \"{}\" . "
                 "You passed {} vertex indices, which isn't dividable by 4.",
@@ -1148,7 +1148,7 @@ void ParticipantImpl::setMeshTetrahedra(
   {
     auto end           = vertices.end();
     auto [first, last] = utils::find_first_range(vertices.begin(), end, [&mesh](VertexID vid) {
-      return !mesh->isValidVertexID(vid);
+      return !mesh.isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
@@ -1163,10 +1163,10 @@ void ParticipantImpl::setMeshTetrahedra(
     auto bid = vertices[4 * i + 1];
     auto cid = vertices[4 * i + 2];
     auto did = vertices[4 * i + 3];
-    mesh->createTetrahedron(mesh->vertex(aid),
-                            mesh->vertex(bid),
-                            mesh->vertex(cid),
-                            mesh->vertex(did));
+    mesh.createTetrahedron(mesh.vertex(aid),
+                           mesh.vertex(bid),
+                           mesh.vertex(cid),
+                           mesh.vertex(did));
   }
 }
 
@@ -1444,8 +1444,8 @@ void ParticipantImpl::setMeshAccessRegion(
   MeshContext &context = _accessor->meshContext(meshName);
 
   PRECICE_CHECK(!context.userDefinedAccessRegion, "A mesh access region was already defined for mesh \"{}\". setMeshAccessRegion may only be called once per mesh.", context.mesh->getName());
-  mesh::PtrMesh mesh(context.mesh);
-  int           dim = mesh->getDimensions();
+  mesh::Mesh &mesh = *context.mesh;
+  int         dim  = mesh.getDimensions();
   PRECICE_CHECK(boundingBox.size() == static_cast<unsigned long>(dim) * 2,
                 "Incorrect amount of bounding box components attempting to set the bounding box of {}D mesh \"{}\" . "
                 "You passed {} limits, but we expected {} ({}x2).",
@@ -1464,7 +1464,7 @@ void ParticipantImpl::setMeshAccessRegion(
   // Create a bounding box
   context.userDefinedAccessRegion = std::make_shared<mesh::BoundingBox>(bounds);
   // Expand the mesh associated bounding box
-  mesh->expandBoundingBox(*context.userDefinedAccessRegion.get());
+  mesh.expandBoundingBox(*context.userDefinedAccessRegion.get());
 }
 
 void ParticipantImpl::getMeshVertexIDsAndCoordinates(
@@ -1505,8 +1505,8 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
   auto       filteredVertices = context.filterVerticesToLocalAccessRegion(requiresBB);
   const auto meshSize         = filteredVertices.size();
 
-  const mesh::PtrMesh mesh(context.mesh);
-  const auto          meshDims = mesh->getDimensions();
+  const mesh::Mesh &mesh     = *(context.mesh);
+  const auto        meshDims = mesh.getDimensions();
   PRECICE_CHECK(ids.size() == meshSize,
                 "Output size is incorrect attempting to get vertex ids of {}D mesh \"{}\". "
                 "You passed {} vertex indices, but we expected {}. "
@@ -1519,14 +1519,14 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
                 "Use getMeshVertexSize(\"{}\") and getMeshDimensions(\"{}\") to receive the required amount components",
                 meshDims, meshName, coordinates.size(), expectedCoordinatesSize, meshSize, meshDims, meshName, meshName);
 
-  PRECICE_ASSERT(ids.size() <= mesh->nVertices(), "The queried size exceeds the number of available points.");
+  PRECICE_ASSERT(ids.size() <= mesh.nVertices(), "The queried size exceeds the number of available points.");
 
   Eigen::Map<Eigen::MatrixXd> posMatrix{
-      coordinates.data(), mesh->getDimensions(), static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
+      coordinates.data(), mesh.getDimensions(), static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
 
   for (unsigned long i = 0; i < ids.size(); i++) {
     auto localID = filteredVertices[i].get().getID();
-    PRECICE_ASSERT(mesh->isValidVertexID(localID), i, localID);
+    PRECICE_ASSERT(mesh.isValidVertexID(localID), i, localID);
     ids[i]           = localID;
     posMatrix.col(i) = filteredVertices[i].get().getCoords();
   }
