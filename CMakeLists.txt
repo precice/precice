@@ -54,7 +54,7 @@ if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (DEFINED BUILD_SHARED_LIBS AND NOT BUILD_SHARED_LIBS)
-  message(WARNING "You disabled BUILD_SHARED_LIBS, but preCICE unconditionally builds as shared library.")
+  message(WARNING "You disabled BUILD_SHARED_LIBS. Note that 3.2.0 was the last release to honor this option. Newer preCICE releases always build as a shared library.")
 endif()
 
 option(PRECICE_FEATURE_MPI_COMMUNICATION "Enables MPI-based communication and running coupling tests." ON)
