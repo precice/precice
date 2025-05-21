@@ -90,7 +90,7 @@ void CoarseGrainingMapping::mapConservativeAt(const Eigen::Ref<const Eigen::Matr
     for (const auto &d : dest) {
       const auto &dst   = output()->vertex(d).rawCoords();
       auto        dist  = computeSquaredDifference(dst, src.rawCoords());
-      auto        coeff = _lucyFunction->evaluate(dist);
+      auto        coeff = _lucyFunction->evaluate(std::sqrt(dist));
       target.col(d) += coeff * source.col(i);
     }
   }
