@@ -209,12 +209,19 @@ void ParticipantImpl::configure(
 
   PRECICE_TRACE();
 
-  _meshLock.clear();
+  PRECICE_CHECK(config.getParticipantConfiguration()->nParticipants() > 1,
+                "In the preCICE configuration, only one participant is defined. "
+                "One participant makes no coupled simulation. "
+                "Please add at least another one.");
 
   _allowsExperimental = config.allowsExperimental();
   _allowsRemeshing    = config.allowsRemeshing();
   _waitInFinalize     = config.waitInFinalize();
   _accessor           = determineAccessingParticipant(config);
+  _participants       = config.getParticipantConfiguration()->getParticipants();
+  _m2ns               = config.getBoundM2NsFor(_accessorName);
+  config.configurePartitionsFor(_accessorName);
+  _couplingScheme = config.getCouplingSchemeConfiguration()->getCouplingScheme(_accessorName);
 
   PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useIntraComm(),
                  "A parallel participant needs an intra-participant communication");
@@ -225,21 +232,9 @@ void ParticipantImpl::configure(
 
   utils::IntraComm::configure(_accessorProcessRank, _accessorCommunicatorSize);
 
-  _participants = config.getParticipantConfiguration()->getParticipants();
-  _m2ns         = config.getBoundM2NsFor(_accessorName);
-
-  PRECICE_CHECK(_participants.size() > 1,
-                "In the preCICE configuration, only one participant is defined. "
-                "One participant makes no coupled simulation. "
-                "Please add at least another one.");
-  config.configurePartitionsFor(_accessorName);
-
-  cplscheme::PtrCouplingSchemeConfiguration cplSchemeConfig =
-      config.getCouplingSchemeConfiguration();
-  _couplingScheme = cplSchemeConfig->getCouplingScheme(_accessorName);
-
   // Register all MeshIds to the lock, but unlock them straight away as
   // writing is allowed after configuration.
+  _meshLock.clear();
   for (const MeshContext *meshContext : _accessor->usedMeshContexts()) {
     _meshLock.add(meshContext->mesh->getName(), false);
   }

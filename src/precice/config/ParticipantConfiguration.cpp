@@ -341,6 +341,11 @@ void ParticipantConfiguration::xmlEndTagCallback(
   }
 }
 
+std::size_t ParticipantConfiguration::nParticipants() const
+{
+  return _participants.size();
+}
+
 const std::vector<impl::PtrParticipant> &
 ParticipantConfiguration::getParticipants() const
 {
