@@ -347,7 +347,7 @@ ParticipantConfiguration::getParticipants() const
   return _participants;
 }
 
-const impl::PtrParticipant ParticipantConfiguration::getParticipant(const std::string &participantName) const
+const impl::PtrParticipant ParticipantConfiguration::getParticipant(std::string_view participantName) const
 {
   auto participant = std::find_if(_participants.begin(), _participants.end(), [&participantName](const auto &p) { return p->getName() == participantName; });
   PRECICE_ASSERT(participant != _participants.end(), "Did not find participant \"{}\"", participantName);

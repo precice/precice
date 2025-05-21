@@ -52,7 +52,7 @@ public:
   const std::vector<impl::PtrParticipant> &getParticipants() const;
 
   /// Returns a participant with the given name
-  const impl::PtrParticipant getParticipant(const std::string &participantName) const;
+  const impl::PtrParticipant getParticipant(std::string_view participantName) const;
 
   std::set<std::string> knownParticipants() const;
 
