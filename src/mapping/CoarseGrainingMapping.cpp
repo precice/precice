@@ -42,8 +42,8 @@ public:
       res    = factor * ((1 + ratio) * math::pow_int<3>(1 - ratio));
       break;
     case 2:
-      factor = 10. * (1. / (pi * math::pow_int<2>(_c)));
-      res    = factor * (math::pow_int<3>(1 - ratio));
+      factor = 5. * (1. / (pi * math::pow_int<2>(_c)));
+      res    = factor * ((1 + 3 * ratio) * math::pow_int<3>(1 - ratio));
       break;
     case 3:
       factor = 105. * (1. / (16 * pi * math::pow_int<3>(_c)));
