@@ -394,10 +394,6 @@ private:
   /// @param[in] timing when the exports are requested
   void handleExports(ExportTiming timing);
 
-  /// Determines participants providing meshes to other participants.
-  void configurePartitions(
-      const m2n::M2NConfiguration::SharedPointer &m2nConfig);
-
   /// Communicate bounding boxes and look for overlaps
   void compareBoundingBoxes();
 

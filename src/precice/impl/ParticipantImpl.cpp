@@ -233,7 +233,7 @@ void ParticipantImpl::configure(
                 "In the preCICE configuration, only one participant is defined. "
                 "One participant makes no coupled simulation. "
                 "Please add at least another one.");
-  configurePartitions(config.getM2NConfiguration());
+  config.configurePartitionsFor(_accessorName);
 
   cplscheme::PtrCouplingSchemeConfiguration cplSchemeConfig =
       config.getCouplingSchemeConfiguration();
@@ -1529,56 +1529,6 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
     PRECICE_ASSERT(mesh.isValidVertexID(localID), i, localID);
     ids[i]           = localID;
     posMatrix.col(i) = filteredVertices[i].get().getCoords();
-  }
-}
-
-void ParticipantImpl::configurePartitions(
-    const m2n::M2NConfiguration::SharedPointer &m2nConfig)
-{
-  PRECICE_TRACE();
-  for (MeshContext *context : _accessor->usedMeshContexts()) {
-
-    if (context->provideMesh) { // Accessor provides mesh
-      PRECICE_CHECK(context->receiveMeshFrom.empty(),
-                    "Participant \"{}\" cannot provide and receive mesh {}!",
-                    _accessorName, context->mesh->getName());
-
-      context->partition = partition::PtrPartition(new partition::ProvidedPartition(context->mesh));
-
-      for (auto &receiver : _participants) {
-        for (auto &receiverContext : receiver->usedMeshContexts()) {
-          if (receiverContext->receiveMeshFrom == _accessorName && receiverContext->mesh->getName() == context->mesh->getName()) {
-            // meshRequirement has to be copied from "from" to provide", since
-            // mapping are only defined at "provide"
-            if (receiverContext->meshRequirement > context->meshRequirement) {
-              context->meshRequirement = receiverContext->meshRequirement;
-            }
-
-            m2n::PtrM2N m2n = m2nConfig->getM2N(receiver->getName(), _accessorName);
-            m2n->createDistributedCommunication(context->mesh);
-            context->partition->addM2N(m2n);
-          }
-        }
-      }
-
-    } else { // Accessor receives mesh
-      std::string receiver(_accessorName);
-      std::string provider(context->receiveMeshFrom);
-
-      PRECICE_DEBUG("Receiving mesh from {}", provider);
-
-      context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor, context->allowDirectAccess));
-
-      m2n::PtrM2N m2n = m2nConfig->getM2N(receiver, provider);
-      m2n->createDistributedCommunication(context->mesh);
-      context->partition->addM2N(m2n);
-      for (const MappingContext &mappingContext : context->fromMappingContexts) {
-        context->partition->addFromMapping(mappingContext.mapping);
-      }
-      for (const MappingContext &mappingContext : context->toMappingContexts) {
-        context->partition->addToMapping(mappingContext.mapping);
-      }
-    }
   }
 }
 

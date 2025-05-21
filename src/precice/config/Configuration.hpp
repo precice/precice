@@ -116,6 +116,8 @@ public:
 
   std::map<std::string, m2n::BoundM2N> getBoundM2NsFor(std::string_view participant) const;
 
+  void configurePartitionsFor(std::string_view participantName);
+
 private:
   logging::Logger _log{"config::Configuration"};
 
