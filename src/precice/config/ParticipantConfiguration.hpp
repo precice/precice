@@ -48,6 +48,8 @@ public:
       const xml::ConfigurationContext &context,
       xml::XMLTag                     &callingTag) override;
 
+  std::size_t nParticipants() const;
+
   /// Returns all configured participants.
   const std::vector<impl::PtrParticipant> &getParticipants() const;
 
