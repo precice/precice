@@ -215,7 +215,6 @@ void ParticipantImpl::configure(
   _allowsRemeshing    = config.allowsRemeshing();
   _waitInFinalize     = config.waitInFinalize();
   _accessor           = determineAccessingParticipant(config);
-  _accessor->setMeshIdManager(config.getMeshConfiguration()->extractMeshIdManager());
 
   PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useIntraComm(),
                  "A parallel participant needs an intra-participant communication");
