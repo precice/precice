@@ -227,7 +227,7 @@ void ParticipantImpl::configure(
   utils::IntraComm::configure(_accessorProcessRank, _accessorCommunicatorSize);
 
   _participants = config.getParticipantConfiguration()->getParticipants();
-  configureM2Ns(config.getM2NConfiguration());
+  _m2ns         = config.getBoundM2NsFor(_accessorName);
 
   PRECICE_CHECK(_participants.size() > 1,
                 "In the preCICE configuration, only one participant is defined. "
@@ -1529,44 +1529,6 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
     PRECICE_ASSERT(mesh.isValidVertexID(localID), i, localID);
     ids[i]           = localID;
     posMatrix.col(i) = filteredVertices[i].get().getCoords();
-  }
-}
-
-void ParticipantImpl::configureM2Ns(
-    const m2n::M2NConfiguration::SharedPointer &config)
-{
-  PRECICE_TRACE();
-  for (const auto &m2nConf : config->m2ns()) {
-    if (m2nConf.acceptor != _accessorName && m2nConf.connector != _accessorName) {
-      continue;
-    }
-
-    std::string comPartner("");
-    bool        isRequesting;
-    if (m2nConf.acceptor == _accessorName) {
-      comPartner   = m2nConf.connector;
-      isRequesting = true;
-    } else {
-      comPartner   = m2nConf.acceptor;
-      isRequesting = false;
-    }
-
-    PRECICE_ASSERT(!comPartner.empty());
-    for (const impl::PtrParticipant &participant : _participants) {
-      if (participant->getName() == comPartner) {
-        PRECICE_ASSERT(not utils::contained(comPartner, _m2ns), comPartner);
-        PRECICE_ASSERT(m2nConf.m2n);
-
-        _m2ns[comPartner] = [&] {
-          m2n::BoundM2N bound;
-          bound.m2n          = m2nConf.m2n;
-          bound.localName    = _accessorName;
-          bound.remoteName   = comPartner;
-          bound.isRequesting = isRequesting;
-          return bound;
-        }();
-      }
-    }
   }
 }
 

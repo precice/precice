@@ -124,4 +124,43 @@ Configuration::getParticipantConfiguration() const
   return _participantConfiguration;
 }
 
+std::map<std::string, m2n::BoundM2N> Configuration::getBoundM2NsFor(std::string_view participantName) const
+{
+  std::map<std::string, m2n::BoundM2N> result;
+
+  for (const auto &m2nConf : _m2nConfiguration->m2ns()) {
+    if (m2nConf.acceptor != participantName && m2nConf.connector != participantName) {
+      continue;
+    }
+
+    std::string comPartner("");
+    bool        isRequesting;
+    if (m2nConf.acceptor == participantName) {
+      comPartner   = m2nConf.connector;
+      isRequesting = true;
+    } else {
+      comPartner   = m2nConf.acceptor;
+      isRequesting = false;
+    }
+
+    PRECICE_ASSERT(!comPartner.empty());
+    for (const impl::PtrParticipant &participant : _participantConfiguration->getParticipants()) {
+      if (participant->getName() == comPartner) {
+        PRECICE_ASSERT(not utils::contained(comPartner, result), comPartner);
+        PRECICE_ASSERT(m2nConf.m2n);
+
+        result[comPartner] = [&] {
+          m2n::BoundM2N bound;
+          bound.m2n          = m2nConf.m2n;
+          bound.localName    = participantName;
+          bound.remoteName   = comPartner;
+          bound.isRequesting = isRequesting;
+          return bound;
+        }();
+      }
+    }
+  }
+  return result;
+}
+
 } // namespace precice::config

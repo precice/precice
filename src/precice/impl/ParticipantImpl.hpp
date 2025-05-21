@@ -385,8 +385,6 @@ private:
    */
   void configure(const config::Configuration &configuration);
 
-  void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
-
   enum struct ExportTiming : bool {
     Advance = false,
     Initial = true
