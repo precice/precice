@@ -924,21 +924,12 @@ void ParticipantImpl::setMeshTriangle(
     PRECICE_CHECK(utils::unique_elements(utils::make_array(first, second, third)),
                   "setMeshTriangle() was called with repeated Vertex IDs ({}, {}, {}).",
                   first, second, third);
-    mesh::Vertex *vertices[3];
-    vertices[0] = &mesh->vertex(first);
-    vertices[1] = &mesh->vertex(second);
-    vertices[2] = &mesh->vertex(third);
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
-                                                           vertices[1]->getCoords(), vertices[2]->getCoords())),
-                  "setMeshTriangle() was called with vertices located at identical coordinates (IDs: {}, {}, {}).",
-                  first, second, third);
-    Event       e{fmt::format("setMeshTriangle.{}", meshName), profiling::Fundamental};
-    mesh::Edge *edges[3];
-    edges[0] = &mesh->createEdge(*vertices[0], *vertices[1]);
-    edges[1] = &mesh->createEdge(*vertices[1], *vertices[2]);
-    edges[2] = &mesh->createEdge(*vertices[2], *vertices[0]);
 
-    mesh->createTriangle(*edges[0], *edges[1], *edges[2]);
+    mesh::Vertex &A = mesh->vertex(first);
+    mesh::Vertex &B = mesh->vertex(second);
+    mesh::Vertex &C = mesh->vertex(third);
+
+    mesh->createTriangle(A, B, C);
   }
 }
 
