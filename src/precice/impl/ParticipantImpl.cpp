@@ -1757,16 +1757,13 @@ void ParticipantImpl::resetWrittenData()
 PtrParticipant ParticipantImpl::determineAccessingParticipant(
     const config::Configuration &config)
 {
-  const auto &partConfig = config.getParticipantConfiguration();
-  for (const PtrParticipant &participant : partConfig->getParticipants()) {
-    if (participant->getName() == _accessorName) {
-      return participant;
-    }
-  }
-  PRECICE_ERROR("This participant's name, which was specified in the constructor of the preCICE interface as \"{}\", "
+  const auto &partConfig = *config.getParticipantConfiguration();
+  PRECICE_CHECK(partConfig.hasParticipant(_accessorName),
+                "This participant's name, which was specified in the constructor of the preCICE interface as \"{}\", "
                 "is not defined in the preCICE configuration. "
                 "Please double-check the correct spelling.",
                 _accessorName);
+  return partConfig.getParticipant(_accessorName);
 }
 
 void ParticipantImpl::initializeIntraCommunication()
