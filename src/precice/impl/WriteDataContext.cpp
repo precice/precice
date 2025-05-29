@@ -43,7 +43,11 @@ void WriteDataContext::writeAndMapValues(::precice::span<const double> coordinat
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(mappingCache);
-  PRECICE_ASSERT(justInTimeMapping);
+  PRECICE_CHECK(justInTimeMapping,
+                "This participant attempted to write data to mesh \"{}\", "
+                "but there is no write mapping configured for that mesh. "
+                "Perhaps you forgot to define a <mapping:... direction=\"write\" />.",
+                getMeshName(), getDataName());
   PRECICE_ASSERT((coordinates.size() / getSpatialDimensions()) * getDataDimensions() == values.size());
   PRECICE_ASSERT(_writeDataBuffer.values.data());
 
