@@ -8,6 +8,7 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Fundamental)
 BOOST_AUTO_TEST_SUITE(JustInTime)
+BOOST_AUTO_TEST_SUITE(Read)
 
 PRECICE_TEST_SETUP("Provider"_on(1_rank), "Receiver"_on(1_rank))
 BOOST_AUTO_TEST_CASE(NotConfigured)
@@ -37,13 +38,14 @@ BOOST_AUTO_TEST_CASE(NotConfigured)
     std::vector<double> readAt = {0.25, 0.0, 0.75, 0.0};
     std::vector<double> readData(2, 0.0);
     auto                dt = p.getMaxTimeStepSize();
-    BOOST_CHECK_EXCEPTION(p.mapAndReadData("M", "D", readAt, dt, readData), precice::Error, ::precice::testing::errorContains("not configured"));
+    BOOST_CHECK_EXCEPTION(p.mapAndReadData("M", "D", readAt, dt, readData), precice::Error, ::precice::testing::errorContains("no matching just-in-time mapping"));
 
     p.advance(dt);
     BOOST_REQUIRE(!p.isCouplingOngoing());
   }
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

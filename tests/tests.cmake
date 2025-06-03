@@ -9,7 +9,7 @@ target_sources(testprecice
     tests/fundamental/DifferentConfigs.cpp
     tests/fundamental/initial-data/InterleavedCreation.cpp
     tests/fundamental/initial-data/InterleavedCreationWithGradients.cpp
-    tests/fundamental/just-in-time/NotConfigured.cpp
+    tests/fundamental/just-in-time/Read/NotConfigured.cpp
     tests/fundamental/profiling/InvalidName.cpp
     tests/fundamental/profiling/NotAllStopped.cpp
     tests/fundamental/profiling/NotStoppedAtFinalize.cpp
