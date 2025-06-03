@@ -1348,6 +1348,13 @@ void ParticipantImpl::writeAndMapData(
                 "Please define an access region using \"setMeshAccessRegion()\" before calling \"writeAndMapData()\".",
                 meshName);
 
+  WriteDataContext &dataContext = _accessor->writeDataContext(meshName, dataName);
+  PRECICE_CHECK(dataContext.hasJustInTimeMapping(),
+                "The function \"writeAndMapData\" was called on mesh \"{0}\", but no matching just-in-time mapping was configured. "
+                "Please define a mapping in write direction to the mesh \{0}\" and omit the \"from\" attribute from the definition. "
+                "Example \"<mapping:nearest-neighbor direction=\"write\" to=\"{0}\" constraint=\"conservative\" />",
+                meshName);
+
   // Inconsistent sizes will be handled below
   if (coordinates.empty() && values.empty()) {
     return;
@@ -1356,11 +1363,10 @@ void ParticipantImpl::writeAndMapData(
   Event e{fmt::format("writeAndMapData.{}_{}", meshName, dataName), profiling::Fundamental};
 
   // Note that meshName refers here typically to a remote mesh
-  WriteDataContext &dataContext = _accessor->writeDataContext(meshName, dataName);
-  const auto        dataDims    = dataContext.getDataDimensions();
-  const auto        dim         = dataContext.getSpatialDimensions();
-  const auto        nVertices   = (coordinates.size() / dim);
-  MeshContext      &context     = _accessor->meshContext(meshName);
+  const auto   dataDims  = dataContext.getDataDimensions();
+  const auto   dim       = dataContext.getSpatialDimensions();
+  const auto   nVertices = (coordinates.size() / dim);
+  MeshContext &context   = _accessor->meshContext(meshName);
 
   // Check that the vertex is actually within the defined access region
   context.checkVerticesInsideAccessRegion(coordinates, dim, "writeAndMapData");
