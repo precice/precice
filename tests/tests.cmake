@@ -10,6 +10,8 @@ target_sources(testprecice
     tests/fundamental/initial-data/InterleavedCreation.cpp
     tests/fundamental/initial-data/InterleavedCreationWithGradients.cpp
     tests/fundamental/just-in-time/Both/NoneConfigured.cpp
+    tests/fundamental/just-in-time/Both/ReadNotConfigured.cpp
+    tests/fundamental/just-in-time/Both/WriteNotConfigured.cpp
     tests/fundamental/just-in-time/Read/NotConfigured.cpp
     tests/fundamental/just-in-time/Write/NotConfigured.cpp
     tests/fundamental/profiling/InvalidName.cpp
