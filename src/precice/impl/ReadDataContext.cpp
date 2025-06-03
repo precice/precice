@@ -44,7 +44,7 @@ void ReadDataContext::mapAndReadValues(::precice::span<const double> coordinates
 {
   PRECICE_TRACE(getMeshName(), getDataName(), coordinates.size(), values.size(), readTime);
   PRECICE_ASSERT(mappingCache);
-  PRECICE_ASSERT(justInTimeMapping);
+  PRECICE_ASSERT(hasJustInTimeMapping());
 
   // First, check if we have the current readTime already in our MappingDataCache
   if (!mappingCache->hasDataAtTimeStamp(readTime)) {
