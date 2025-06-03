@@ -12,7 +12,9 @@ target_sources(testprecice
     tests/fundamental/just-in-time/Both/NoneConfigured.cpp
     tests/fundamental/just-in-time/Both/ReadNotConfigured.cpp
     tests/fundamental/just-in-time/Both/WriteNotConfigured.cpp
+    tests/fundamental/just-in-time/Read/BeforeInitialize.cpp
     tests/fundamental/just-in-time/Read/NotConfigured.cpp
+    tests/fundamental/just-in-time/Write/BeforeInitialize.cpp
     tests/fundamental/just-in-time/Write/NotConfigured.cpp
     tests/fundamental/profiling/InvalidName.cpp
     tests/fundamental/profiling/NotAllStopped.cpp
