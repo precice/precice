@@ -1287,6 +1287,13 @@ void ParticipantImpl::mapAndReadData(
                                                                  "How should the provided data values be read? Please make sure the mesh \"{1}\" is non-empty within the access region.",
                 dataName, meshName);
 
+  ReadDataContext &dataContext = _accessor->readDataContext(meshName, dataName);
+  PRECICE_CHECK(dataContext.hasJustInTimeMapping(),
+                "The function \"mapAndReadData\" was called on mesh \"{0}\", but no matching just-in-time mapping was configured. "
+                "Please define a mapping in read direction from the mesh \{0}\" and omit the \"to\" attribute from the definition. "
+                "Example \"<mapping:nearest-neighbor direction=\"read\" from=\"{0}\" constraint=\"consistent\" />",
+                meshName);
+
   // Inconsistent sizes will be handled below
   if (coordinates.empty() && values.empty()) {
     return;
@@ -1295,11 +1302,10 @@ void ParticipantImpl::mapAndReadData(
   Event e{fmt::format("mapAndReadData.{}_{}", meshName, dataName), profiling::Fundamental};
 
   // Note that meshName refers to a remote mesh
-  ReadDataContext &dataContext = _accessor->readDataContext(meshName, dataName);
-  const auto       dataDims    = dataContext.getDataDimensions();
-  const auto       dim         = dataContext.getSpatialDimensions();
-  const auto       nVertices   = (coordinates.size() / dim);
-  MeshContext     &context     = _accessor->meshContext(meshName);
+  const auto   dataDims  = dataContext.getDataDimensions();
+  const auto   dim       = dataContext.getSpatialDimensions();
+  const auto   nVertices = (coordinates.size() / dim);
+  MeshContext &context   = _accessor->meshContext(meshName);
 
   // Check that the vertex is actually within the defined access region
   context.checkVerticesInsideAccessRegion(coordinates, dim, "mapAndReadData");
