@@ -206,6 +206,7 @@ private:
   const std::string EXECUTOR_CPU    = "cpu";
   const std::string EXECUTOR_CUDA   = "cuda";
   const std::string EXECUTOR_HIP    = "hip";
+  const std::string EXECUTOR_SYCL   = "sycl";
   const std::string EXECUTOR_OMP    = "openmp";
 
   const std::string ATTR_DEVICE_ID      = "gpu-device-id";

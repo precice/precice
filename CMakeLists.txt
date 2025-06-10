@@ -319,6 +319,7 @@ if(PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING)
   # The kokkos config will be the same as above in case we enable both features
   cmake_dependent_option(PRECICE_WITH_CUDA "Enable Kokkos Cuda support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_CUDA" OFF)
   cmake_dependent_option(PRECICE_WITH_HIP "Enable Kokkos HIP support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_HIP" OFF)
+  cmake_dependent_option(PRECICE_WITH_SYCL "Enable Kokkos SYCL support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_SYCL" OFF)
   cmake_dependent_option(PRECICE_WITH_OPENMP "Enable Kokkos OpenMP support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_OPENMP" OFF)
 
   if(PRECICE_WITH_HIP)
@@ -476,6 +477,11 @@ if(PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING OR PRECICE_FEATURE_GINKGO_MAPPING)
   if(PRECICE_WITH_HIP)
     target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_HIP)
     message(STATUS "Enabled HIP support for preCICE via Kokkos.")
+  endif()
+
+  if(PRECICE_WITH_SYCL)
+      target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_SYCL)
+    message(STATUS "Enabled SYCL support for preCICE via Kokkos.")
   endif()
 
   if(PRECICE_WITH_OPENMP)
