@@ -296,7 +296,8 @@ MappingConfiguration::MappingConfiguration(
         XMLTag{*this, EXECUTOR_CPU, once, SUBTAG_EXECUTOR}.setDocumentation("The default executor using a CPU and a distributed memory parallelism via MPI.")};
     std::list<XMLTag> deviceExecutors{
         XMLTag{*this, EXECUTOR_CUDA, once, SUBTAG_EXECUTOR}.setDocumentation("Cuda (Nvidia) executor, which uses Kokkos-kernels, fully parallel"),
-        XMLTag{*this, EXECUTOR_HIP, once, SUBTAG_EXECUTOR}.setDocumentation("Hip (AMD/Nvidia) executor, which uses Kokkos-kernels, fully parallel.")};
+        XMLTag{*this, EXECUTOR_HIP, once, SUBTAG_EXECUTOR}.setDocumentation("Hip (AMD/Nvidia) executor, which uses Kokkos-kernels, fully parallel."),
+        XMLTag{*this, EXECUTOR_SYCL, once, SUBTAG_EXECUTOR}.setDocumentation("SYCL (e.g. Intel) executor, which uses Kokkos-kernels, fully parallel.")};
     std::list<XMLTag> ompExecutor{
         XMLTag{*this, EXECUTOR_OMP, once, SUBTAG_EXECUTOR}.setDocumentation("OpenMP executor, which uses Kokkos-kernel, fully parallel.")};
 
@@ -500,6 +501,8 @@ void MappingConfiguration::xmlTagCallback(
       _executorConfig->executor = ExecutorConfiguration::Executor::CUDA;
     } else if (tag.getName() == EXECUTOR_HIP) {
       _executorConfig->executor = ExecutorConfiguration::Executor::HIP;
+    } else if (tag.getName() == EXECUTOR_SYCL) {
+      _executorConfig->executor = ExecutorConfiguration::Executor::SYCL;
     } else if (tag.getName() == EXECUTOR_OMP) {
       _executorConfig->executor = ExecutorConfiguration::Executor::OpenMP;
     }
@@ -804,6 +807,11 @@ void MappingConfiguration::finishRBFConfiguration()
       _ginkgoParameter.executor = "hip-executor";
 #ifndef PRECICE_WITH_HIP
       PRECICE_CHECK(false, "The hip-executor (configured for the mapping from mesh {} to mesh {}) requires a Kokkos and preCICE build with HIP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
+    } else if (_executorConfig->executor == ExecutorConfiguration::Executor::SYCL) {
+      _ginkgoParameter.executor = "sycl-executor";
+#ifndef PRECICE_WITH_SYCL
+      PRECICE_CHECK(false, "The sycl-executor (configured for the mapping from mesh {} to mesh {}) requires a Kokkos and preCICE build with SYCL enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
     } else if (_executorConfig->executor == ExecutorConfiguration::Executor::OpenMP) {
       _ginkgoParameter.executor = "omp-executor";

@@ -238,6 +238,7 @@ private:
       CPU,
       CUDA,
       HIP,
+      SYCL,
       OpenMP
     };
 
