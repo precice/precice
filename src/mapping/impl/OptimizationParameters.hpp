@@ -49,6 +49,7 @@ struct OptimizationParameters {
   };
 
   // we use the default parameters for acqui_ucb
+  // https://resibots.eu/limbo/api.html#acquisition-functions-acqui
   struct acqui_ucb {
     BO_PARAM(double, alpha, 1.5);
   };
@@ -56,7 +57,7 @@ struct OptimizationParameters {
     BO_PARAM(double, delta, 0.2);
   };
   struct acqui_ei {
-    BO_PARAM(double, jitter, 0.02);
+    BO_PARAM(double, jitter, 0.02); // ξ = jitter = 0.02
   };
 };
 
@@ -91,12 +92,15 @@ struct LOOCVEvaluator {
 
   double transformFromValues(double val) const
   {
-    if (true || lower_val == upper_val && lower_val != 0) {
+    return val / std::abs(upper_val);
+    /*
+    if ((lower_val == upper_val) && (lower_val != 0)) {
       return val / std::abs(upper_val);
     } else {
       std::cout << "transform: " << (val - lower_val) / (upper_val - lower_val) << std::endl;
       return (val - lower_val) / (upper_val - lower_val);
     }
+    */
   }
 
   double transformFromUnitToReal(double in) const
@@ -114,10 +118,12 @@ struct LOOCVEvaluator {
   // the function to be optimized
   Eigen::VectorXd operator()(const Eigen::VectorXd &x) const
   {
-    using RES_T                                = double;
-    const Eigen::Index                       n = invalues.size();
+    using RES_T = double;
+
+    const Eigen::Index n = invalues.size();
+    double x_eval = upper_bound == -1 ? x(0) : transformFromUnitToReal(x(0));
+
     std::unique_ptr<RADIAL_BASIS_FUNCTION_T> kernel;
-    double                                   x_eval = upper_bound == -1 ? x(0) : transformFromUnitToReal(x(0));
     if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
       kernel = std::make_unique<RADIAL_BASIS_FUNCTION_T>(x_eval);
     } else {

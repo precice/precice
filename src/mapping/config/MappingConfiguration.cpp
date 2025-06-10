@@ -227,6 +227,9 @@ MappingConfiguration::MappingConfiguration(
   // auto attrMaxIterations = makeXMLAttribute(ATTR_MAX_ITERATIONS, 1e6)
   //                              .setDocumentation("Maximum number of iterations of the solver");
 
+  auto attrAutotuneShape = makeXMLAttribute(ATTR_AUTOTUNE_SHAPE, false)
+                            .setDocumentation("Ignore radius and shape parameters and approximate an optimum during each coupling iteration.");
+
   auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER, 50)
                                 .setDocumentation("Average number of vertices per cluster (partition) applied in the rbf partition of unity method.");
   auto relativeOverlap = makeXMLAttribute(ATTR_RELATIVE_OVERLAP, 0.15)
@@ -307,7 +310,7 @@ MappingConfiguration::MappingConfiguration(
   auto attrSupportRadius = XMLAttribute<double>(ATTR_SUPPORT_RADIUS)
                                .setDocumentation("Support radius of each RBF basis function (global choice).");
 
-  addAttributes(supportRadiusRBF, {attrSupportRadius});
+  addAttributes(supportRadiusRBF, {attrSupportRadius, attrAutotuneShape}); // TODO: attrAutotuneShape
   addSubtagsToParents(supportRadiusRBF, rbfIterativeTags);
   addSubtagsToParents(supportRadiusRBF, rbfDirectTags);
   addSubtagsToParents(supportRadiusRBF, pumDirectTags);
@@ -321,7 +324,7 @@ MappingConfiguration::MappingConfiguration(
   auto attrShapeParam = XMLAttribute<double>(ATTR_SHAPE_PARAM)
                             .setDocumentation("Specific shape parameter for RBF basis function.");
 
-  addAttributes(shapeParameterRBF, {attrShapeParam});
+  addAttributes(shapeParameterRBF, {attrShapeParam, attrAutotuneShape}); // TODO: attrAutotuneShape
   addSubtagsToParents(shapeParameterRBF, rbfIterativeTags);
   addSubtagsToParents(shapeParameterRBF, rbfDirectTags);
   addSubtagsToParents(shapeParameterRBF, pumDirectTags);
@@ -441,6 +444,8 @@ void MappingConfiguration::xmlTagCallback(
     std::string basisFctName   = tag.getName();
     double      supportRadius  = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS, 0.);
     double      shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM, 0.);
+
+    _rbfConfig.autotuneShape = tag.getBooleanAttributeValue(ATTR_AUTOTUNE_SHAPE, false); // TODO: autotuneShape, TODO: Error Checking
 
     _rbfConfig.basisFunction        = parseBasisFunctions(basisFctName);
     _rbfConfig.basisFunctionDefined = true;

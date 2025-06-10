@@ -67,6 +67,8 @@ public:
 private:
   mutable precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
 
+  bool _autotuneShape; // TODO: add documentation
+
   double evaluateRippaLOOCVerror(const Eigen::VectorXd &lambda) const;
   /// Decomposition of the interpolation matrix
   mutable DecompositionType _decMatrixC;
@@ -345,6 +347,8 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   std::array<bool, 3> activeAxis({{false, false, false}});
   std::transform(deadAxis.begin(), deadAxis.end(), activeAxis.begin(), [](const auto ax) { return !ax; });
 
+  //_autotuneShape = autotuneShape;
+
   // First, assemble the interpolation matrix and check the invertability
   bool decompositionSuccessful = false;
   if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
@@ -455,7 +459,9 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   using acqui_opt_t = limbo::opt::Cmaes<precice::OptimizationParameters>;
   limbo::bayes_opt::BOptimizer<precice::OptimizationParameters, limbo::initfun<init_t>, limbo::acquifun<acqui_t>, limbo::acquiopt<acqui_opt_t>, limbo::stopcrit<stop_t>> boptimizer;
 
-  LOOCVEvaluator<RADIAL_BASIS_FUNCTION_T> eval(inputData, _distanceMatrix, clusterRadius);
+  double rad = std::max(0.01, clusterRadius);
+
+  LOOCVEvaluator<RADIAL_BASIS_FUNCTION_T> eval(inputData, _distanceMatrix, rad);
   boptimizer.optimize(eval);
   std::cout << "Best sample: " << eval.transformFromUnitToReal(boptimizer.best_sample()(0)) << " - Best observation: " << boptimizer.best_observation()(0) << std::endl;
 

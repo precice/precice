@@ -1,6 +1,6 @@
 #pragma once
 #include <Eigen/Core>
-
+#include <libcmaes/cmaes.h>
 #include <limbo/tools/macros.hpp>
 
 namespace limbo {
@@ -21,11 +21,10 @@ namespace init {
 */
 template <typename Params>
 struct InitSampling {
-  template <typename StateFunction, typename AggregatorFunction, typename Opt>
+  template <typename StateFunction, typename AggregatorFunction, typename Opt> // hier: StateFunction = LOOCVEvaluator
   void operator()(const StateFunction &seval, const AggregatorFunction &, Opt &opt) const
   {
     Eigen::VectorXd sample = Eigen::VectorXd::Constant(StateFunction::dim_in(), seval.lower_bound);
-
     std::vector<double> initSamples;
     std::vector<double> initObservations;
 
