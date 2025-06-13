@@ -80,6 +80,7 @@ using BatchVector = Kokkos::View<T, MemorySpace, UnmanagedMemory>;
 
 template <typename MemorySpace>
 bool compute_weights(const int                     nCenters,
+                     const int                     avgOutClusterSize,
                      const offset_1d_type          nWeights,
                      const int                     nMeshVertices,
                      const int                     dim,
@@ -100,7 +101,8 @@ bool compute_weights(const int                     nCenters,
   const auto rbf_params = w.getFunctionParameters();
 
   // We launch one team per local system
-  Kokkos::parallel_for("compute_weights", TeamPolicy(nCenters, Kokkos::AUTO), KOKKOS_LAMBDA(const TeamMember &team) {
+  auto kernel = KOKKOS_LAMBDA(const TeamMember &team)
+  {
     const int  batch = team.league_rank();
     const auto begin = offsets(batch);
     const auto end   = offsets(batch + 1);
@@ -122,7 +124,10 @@ bool compute_weights(const int                     nCenters,
 
           Kokkos::atomic_add(&weightSum(globalID), res);
         }); // TeamThreadRange
-  });
+  };
+
+  auto teamSize = impl::findTeamSize<typename MemorySpace::execution_space>(avgOutClusterSize, kernel, TeamPolicy(nCenters, Kokkos::AUTO));
+  Kokkos::parallel_for("compute_weights", TeamPolicy(nCenters, teamSize), kernel);
 
   // Check for output mesh vertices which are unassigned
   // This check is a pure sanity check

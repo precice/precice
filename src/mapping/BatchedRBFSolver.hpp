@@ -288,8 +288,10 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
 
     _normalizedWeights = VectorView<>("normalizedWeights", globalOutIDs.size());
     CompactPolynomialC2 weightingFunction(clusterRadius);
-    bool                success = kernel::compute_weights(_nCluster, globalOutIDs.size(), outMesh->nVertices(), _dim, _outOffsets,
-                                                          centerMesh, _globalOutIDs, _outMesh, weightingFunction, _normalizedWeights);
+    // Computing the weights parallelizes over the number of output mesh vertices
+    int  avgOutClusterSize = hostOut(_nCluster /* = hostOut.extent(0) - 1 */) / _nCluster;
+    bool success           = kernel::compute_weights(_nCluster, avgOutClusterSize, globalOutIDs.size(), outMesh->nVertices(), _dim, _outOffsets,
+                                                     centerMesh, _globalOutIDs, _outMesh, weightingFunction, _normalizedWeights);
     PRECICE_CHECK(success, "Clustering resulted in unassigned vertices for the output mesh \"{}\".", outMesh->getName());
   }
 

@@ -12,6 +12,7 @@ void compute_offsets(const VectorOffsetView<MemorySpace> src1, const VectorOffse
 // returns true, if successful, currently not tuned as it is not performance critical
 template <typename MemorySpace>
 bool compute_weights(const int                     nCluster,
+                     const int                     avgOutClusterSize,
                      const offset_1d_type          nWeights,
                      const int                     nMeshVertices,
                      const int                     dim,
