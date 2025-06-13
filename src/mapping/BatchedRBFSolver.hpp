@@ -116,7 +116,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   PRECICE_CHECK(!(inMesh->vertices().empty() || outMesh->vertices().empty()), "One of the meshes in the batched solvers is empty, which is invalid.");
   PRECICE_CHECK(inMesh->getDimensions() == outMesh->getDimensions(), "Incompatible dimensions passed to the batched solver.");
 
-  precice::profiling::Event eInit("map.pou.gpu.initializeKokko");
+  precice::profiling::Event eInit("solver.initializeKokkos");
   // We have to initialize Kokkos and Ginkgo here, as the initialization call allocates memory
   // in the current setup, this will only initialize the device (and allocate memory) on the primary rank
   // TODO: Document restriction: all mappings must use the same executor configuration within one participant
@@ -134,7 +134,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   }
 #endif
 
-  precice::profiling::Event eNearestNeighbors("map.pou.gpu.queryVertices");
+  precice::profiling::Event eNearestNeighbors("solver.queryVertices");
 
   // Step 1:  Query n-nearest neighbors and compute offsets, which hold the range for each cluster
 
@@ -227,7 +227,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   Kokkos::fence();
   eNearestNeighbors.stop();
 
-  precice::profiling::Event eOff2d("map.pou.gpu.compute2DOffsets");
+  precice::profiling::Event eOff2d("solver.kernel.compute2DOffsets");
 
   // Step 2: Compute the matrix offsets on the device
   PRECICE_DEBUG("Computing matrix offsets");
@@ -243,7 +243,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   }
   Kokkos::fence();
   eOff2d.stop();
-  precice::profiling::Event eMesh("map.pou.gpu.copyMeshes");
+  precice::profiling::Event eMesh("solver.copyMeshes");
   // Step 3: Handle the mesh data structure and copy over to the device
   PRECICE_DEBUG("Computing mesh data on the device");
 
@@ -272,7 +272,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   eMesh.stop();
   {
     PRECICE_DEBUG("Computing PU-RBF weights");
-    precice::profiling::Event eWeights("map.pou.gpu.computeWeights");
+    precice::profiling::Event eWeights("solver.kernel.computeWeights");
 
     // Step 4: Compute the weights for each vertex
     // we first need to transfer the center coordinates and the meshes onto the device
@@ -296,13 +296,13 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   PRECICE_ASSERT(_avgClusterSize > 0);
   if (_polynomial == Polynomial::SEPARATE) {
     PRECICE_DEBUG("Computing polynomial QR");
-    precice::profiling::Event ePoly("map.pou.gpu.computePolynomials");
+    precice::profiling::Event ePoly("solver.kernel.computePolynomialQR");
     _qrMatrix = VectorView<>("qrMatrix", globalInIDs.size() * (_dim + 1)); // = nCluster x verticesPerCluster_i x polyParams
     _qrTau    = VectorView<>("qrTau", _nCluster * (_dim + 1));             // = nCluster x polyParams
     _qrP      = PivotView<>("qrP", _nCluster * (_dim + 2));                //  = nCluster x (polyParams + rank)
     kernel::do_batched_qr(_nCluster, _dim, _avgClusterSize, _maxInClusterSize, _inOffsets, _globalInIDs, _inMesh, _qrMatrix, _qrTau, _qrP);
   }
-  precice::profiling::Event eMatr("map.pou.gpu.assembleMatrices");
+  precice::profiling::Event eMatr("solver.kernel.assembleInputMatrices");
   // Step 6: Launch the parallel kernel to assemble the kernel matrices
   PRECICE_DEBUG("Assemble batched matrices");
   // The kernel matrices /////////////
@@ -314,25 +314,28 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   kernel::do_input_assembly(_nCluster, _dim, _avgClusterSize, _maxInClusterSize, basisFunction,
                             _inOffsets, _globalInIDs, _inMesh, _kernelOffsets, _kernelMatrices);
 
+  Kokkos::fence();
+  eMatr.stop();
+
   if (_computeEvaluationOffline) {
     // The eval matrices ///////////////
-    offset_2d_type evalSize        = 0;
-    auto           last_elem_view2 = Kokkos::subview(_evaluationOffsets, _nCluster);
+    precice::profiling::Event eMatrOut("solver.kernel.assembleOutputMatrices");
+    offset_2d_type            evalSize        = 0;
+    auto                      last_elem_view2 = Kokkos::subview(_evaluationOffsets, _nCluster);
     Kokkos::deep_copy(evalSize, last_elem_view2);
     _evalMatrices = VectorView<>("evalMatrices", evalSize);
 
     kernel::do_batched_assembly(_nCluster, _dim, _avgClusterSize, basisFunction,
                                 _inOffsets, _globalInIDs, _inMesh, _outOffsets, _globalOutIDs, _outMesh, _evaluationOffsets, _evalMatrices);
   }
-  Kokkos::fence();
-  eMatr.stop();
-  precice::profiling::Event eLU("map.pou.gpu.compute.lu");
+
+  precice::profiling::Event eLU("solver.kernel.lu");
   // Step 7: Compute batched lu
   PRECICE_DEBUG("Compute batched lu");
   kernel::do_batched_lu(_nCluster, _avgClusterSize, _kernelOffsets, _kernelMatrices);
   Kokkos::fence();
   eLU.stop();
-  precice::profiling::Event eAllo("map.pou.gpu.allocateData");
+  precice::profiling::Event eAllo("solver.allocateData");
   // Step 8: Allocate memory for data transfer
   PRECICE_DEBUG("Allocate data containers for data transfer");
 
@@ -351,7 +354,7 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Samp
             inView(inPtr, inSize);
 
         // Step 2: Copy over
-        precice::profiling::Event e1("map.pou.gpu.copyHostToDevice");
+        precice::profiling::Event e1("solver.copyHostToDevice");
         Kokkos::deep_copy(_inData, inView);
         Kokkos::deep_copy(_outData, 0.0); // Reset output data
 
@@ -359,7 +362,7 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Samp
         e1.stop();
 
         // Step 3: Launch the kernel
-        precice::profiling::Event e2("map.pou.gpu.BatchedSolve");
+        precice::profiling::Event e2("solver.kernel.batchedSolve");
         _dispatch_solve_kernel(_polynomial == Polynomial::SEPARATE, _computeEvaluationOffline,
                                _nCluster, _dim, _avgClusterSize, _maxInClusterSize, _maxOutClusterSize, _basisFunction,
                                _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
@@ -370,7 +373,7 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Samp
         e2.stop();
 
         // Step 4: Copy back
-        precice::profiling::Event e3("map.pou.gpu.copyDeviceToHost");
+        precice::profiling::Event e3("solver.copyDeviceToHost");
         Kokkos::View<double *, Kokkos::HostSpace, UnmanagedMemory>
             outView(outPtr, outSize);
         Kokkos::deep_copy(outView, _outData);
