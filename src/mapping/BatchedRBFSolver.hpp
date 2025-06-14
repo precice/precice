@@ -122,6 +122,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   // TODO: Document restriction: all mappings must use the same executor configuration within one participant
   device::Device::initialize(ginkgoParameter.nThreads, ginkgoParameter.deviceId);
   PRECICE_INFO("Using batched PU-RBF solver on executor \"{}\" for \"{}\" PU-RBF clusters in execution mode {}.", ginkgoParameter.executor, centers.size(), _computeEvaluationOffline ? "\"minimal-compute\" (evaluation offline)" : "\"minimal-memory\" (evaluation online)");
+  Kokkos::fence();
   eInit.stop();
 
 // General assumption of the algorithm
@@ -293,6 +294,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
     bool success           = kernel::compute_weights(_nCluster, avgOutClusterSize, globalOutIDs.size(), outMesh->nVertices(), _dim, _outOffsets,
                                                      centerMesh, _globalOutIDs, _outMesh, weightingFunction, _normalizedWeights);
     PRECICE_CHECK(success, "Clustering resulted in unassigned vertices for the output mesh \"{}\".", outMesh->getName());
+    Kokkos::fence();
   }
 
   PRECICE_ASSERT(_avgClusterSize > 0);
@@ -303,6 +305,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
     _qrTau    = VectorView<>("qrTau", _nCluster * (_dim + 1));             // = nCluster x polyParams
     _qrP      = PivotView<>("qrP", _nCluster * (_dim + 2));                //  = nCluster x (polyParams + rank)
     kernel::do_batched_qr(_nCluster, _dim, _avgClusterSize, _maxInClusterSize, _inOffsets, _globalInIDs, _inMesh, _qrMatrix, _qrTau, _qrP);
+    Kokkos::fence();
   }
   precice::profiling::Event eMatr("solver.kernel.assembleInputMatrices");
   // Step 6: Launch the parallel kernel to assemble the kernel matrices
@@ -329,6 +332,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
 
     kernel::do_batched_assembly(_nCluster, _dim, _avgClusterSize, basisFunction,
                                 _inOffsets, _globalInIDs, _inMesh, _outOffsets, _globalOutIDs, _outMesh, _evaluationOffsets, _evalMatrices);
+    Kokkos::fence();
   }
 
   precice::profiling::Event eLU("solver.kernel.lu");
