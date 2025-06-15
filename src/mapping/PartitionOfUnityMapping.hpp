@@ -52,6 +52,16 @@ public:
       double                  relativeOverlap,
       bool                    projectToInput);
 
+  PartitionOfUnityMapping(
+      Mapping::Constraint     constraint,
+      int                     dimension,
+      RADIAL_BASIS_FUNCTION_T function,
+      Polynomial              polynomial,
+      unsigned int            verticesPerCluster,
+      double                  relativeOverlap,
+      bool                    projectToInput,
+      MappingConfiguration::RBFOptional rbfOptional);
+
   /**
    * Computes the clustering for the partition of unity method and fills the \p _clusters vector,
    * which allows to travers through all vertex cluster computed. Each vertex cluster in the vector
@@ -102,6 +112,8 @@ private:
   /// polynomial treatment of the RBF system
   Polynomial _polynomial;
 
+  MappingConfiguration::RBFOptional _rbfOptional; // TODO: temporary?
+
   /// @copydoc Mapping::mapConservative
   virtual void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
@@ -123,7 +135,21 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
     double                  relativeOverlap,
     bool                    projectToInput)
     : Mapping(constraint, dimension, false, Mapping::InitialGuessRequirement::None),
-      _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial)
+      _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial), _rbfOptional({})
+{ }
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
+    Mapping::Constraint     constraint,
+    int                     dimension,
+    RADIAL_BASIS_FUNCTION_T function,
+    Polynomial              polynomial,
+    unsigned int            verticesPerCluster,
+    double                  relativeOverlap,
+    bool                    projectToInput,
+    MappingConfiguration::RBFOptional rbfOptional)
+    : Mapping(constraint, dimension, false, Mapping::InitialGuessRequirement::None),
+      _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial), _rbfOptional(rbfOptional)
 {
   PRECICE_ASSERT(this->getDimensions() <= 3);
   PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.");
@@ -180,7 +206,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
     const VertexID                                  vertexID = meshVertices.size();
     mesh::Vertex                                    center(c.getCoords(), vertexID);
-    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _polynomial, inMesh, outMesh);
+    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _polynomial, inMesh, outMesh, _rbfOptional);
 
     // Consider only non-empty clusters (more of a safeguard here)
     if (!cluster.empty()) {

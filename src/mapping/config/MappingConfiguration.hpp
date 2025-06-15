@@ -95,8 +95,14 @@ public:
     BasisFunction       basisFunction{};
     double              supportRadius{};
     double              shapeParameter{};
-    bool                autotuneShape = false;
     bool                basisFunctionDefined = false;
+  };
+
+  struct RBFOptional {
+    bool autotuneShape = false;
+
+    std::string executor = "executor"; // TODO: required for compilation but meaningless
+    std::string solver   = "solver";   // TODO: required for compilation but meaningless
   };
 
   struct GeoMultiscaleConfiguration {
@@ -231,6 +237,7 @@ private:
   // as we can only instantiate the RBF classes when we know the RBF
   // which is configured in the subtag
   RBFConfiguration _rbfConfig;
+  RBFOptional _rbfOptional;
 
   struct ExecutorConfiguration {
     enum struct Executor {

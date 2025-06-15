@@ -57,7 +57,8 @@ public:
                          RADIAL_BASIS_FUNCTION_T function,
                          Polynomial              polynomial,
                          mesh::PtrMesh           inputMesh,
-                         mesh::PtrMesh           outputMesh);
+                         mesh::PtrMesh           outputMesh,
+                         MappingConfiguration::RBFOptional rbfOptional);
 
   /// Evaluates a conservative mapping and agglomerates the result in the given output data
   void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) const;
@@ -131,7 +132,8 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
     RADIAL_BASIS_FUNCTION_T function,
     Polynomial              polynomial,
     mesh::PtrMesh           inputMesh,
-    mesh::PtrMesh           outputMesh)
+    mesh::PtrMesh           outputMesh,
+    MappingConfiguration::RBFOptional rbfOptional)
     : _center(center), _radius(radius), _polynomial(polynomial), _weightingFunction(radius)
 {
   PRECICE_TRACE(_center.getCoords(), _radius);
@@ -166,7 +168,7 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
   // mapping in this cluster as computed (mostly for debugging purpose)
   std::vector<bool>         deadAxis(inputMesh->getDimensions(), false);
   precice::profiling::Event e("map.pou.computeMapping.rbfSolver");
-  _rbfSolver = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{function, *inputMesh.get(), _inputIDs, *outputMesh.get(), _outputIDs, deadAxis, _polynomial};
+  _rbfSolver = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>{function, *inputMesh.get(), _inputIDs, *outputMesh.get(), _outputIDs, deadAxis, _polynomial, rbfOptional};
   _rbfSolver.setClusterRadius(_radius);
   _hasComputedMapping = true;
 }

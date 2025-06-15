@@ -83,7 +83,7 @@ struct InitSampling {
     std::transform(initSamples.begin(), initSamples.end(), initSamples.begin(), [&seval](double sample) {
       return seval.transformFromRealToUnit(sample);
     });
-    for (int i = 0; i < initSamples.size(); ++i) {
+    for (size_t i = 0; i < initSamples.size(); ++i) {
       opt.add_new_sample(limbo::tools::make_vector(initSamples[i]), limbo::tools::make_vector(initObservations[i]));
     }
   }

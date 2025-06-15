@@ -9,6 +9,7 @@
 #include <type_traits>
 #include "mapping/MathHelper.hpp"
 #include "mapping/config/MappingConfigurationTypes.hpp"
+#include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mapping/impl/OptimizationParameters.hpp"
 #include "mesh/Mesh.hpp"
@@ -40,7 +41,11 @@ public:
    */
   template <typename IndexContainer>
   RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
-                       const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial);
+                       const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::RBFOptional rbfConfig);
+
+  template <typename IndexContainer>
+  RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
+                       const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial); // TODO: refactor and adapt for PUM
 
   /// Maps the given input data
   Eigen::VectorXd solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const;
@@ -91,7 +96,8 @@ private:
   Eigen::MatrixXd _distanceMatrix;
 
   // TODO: Won't work with global RBF, as we set the minimum in the SphericalVertexCLuster as the (half) cluster radius or similar
-  double clusterRadius = {};
+  double clusterRadius = std::numeric_limits<double>::quiet_NaN();
+  double _meshResolution;
 
   bool computeCrossValidation = false;
 };
@@ -337,25 +343,62 @@ double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::evaluateRippaLOOCVerror(co
   return loocv;
 }
 
+// TODO: move
+inline double estimateMeshResolution(const mesh::Mesh &inputMesh, const std::array<bool, 3> &activeAxis) {
+  constexpr int sampleSize = 5;
+  const size_t i0 = inputMesh.vertices().size() / 2;
+  const mesh::Vertex x0 = inputMesh.vertices().at(i0);
+  const std::vector<int> matches = inputMesh.index().getClosestVertices(x0.getCoords(), sampleSize);
+  double h = 0;
+  for (int i = 0; i < sampleSize; i++) {
+    const mesh::Vertex xi = inputMesh.vertices().at(matches.at(i));
+    h += std::sqrt(computeSquaredDifference(xi.rawCoords(), x0.rawCoords(), activeAxis));
+  }
+  return h / sampleSize;
+}
+
+// TODO: move
+inline double getMinBoundSize(const mesh::PtrMesh inputMesh) {
+  inputMesh->computeBoundingBox(); // TODO: necessary?
+  const mesh::BoundingBox &boundingBox = inputMesh->getBoundingBox();
+  const int dimensions = inputMesh->getDimensions();
+  double minLength = std::numeric_limits<double>::max();
+  for (int axis = 0; axis < dimensions; axis++) {
+    minLength = std::min(minLength, boundingBox.getEdgeLength(axis));
+  }
+  return minLength / 2;
+}
+
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                                                                     const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial)
+                                                                      : RadialBasisFctSolver(basisFunction, inputMesh, inputIDs, outputMesh, outputIDs, deadAxis, polynomial, {})
+{ }
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+template <typename IndexContainer>
+RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
+                                                                    const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::RBFOptional rbfConfig)
 {
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
   std::array<bool, 3> activeAxis({{false, false, false}});
   std::transform(deadAxis.begin(), deadAxis.end(), activeAxis.begin(), [](const auto ax) { return !ax; });
 
-  //_autotuneShape = autotuneShape;
+  _autotuneShape = rbfConfig.autotuneShape;
+  _meshResolution = estimateMeshResolution(inputMesh, activeAxis);
 
   // First, assemble the interpolation matrix and check the invertability
   bool decompositionSuccessful = false;
   if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
-    // _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).llt();
-    _distanceMatrix = buildMatrixCLU(precice::mapping::VolumeSplines(), inputMesh, inputIDs, activeAxis, polynomial);
-    // decompositionSuccessful = _decMatrixC.info() == Eigen::ComputationInfo::Success;
-  } else {
+    if (_autotuneShape) {
+      _distanceMatrix = buildMatrixCLU(VolumeSplines(), inputMesh, inputIDs, activeAxis, polynomial);
+    } else {
+      _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).llt();
+      decompositionSuccessful = _decMatrixC.info() == Eigen::ComputationInfo::Success;
+    }
+  } else { // TODO: Auto tuning not supported
     _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).colPivHouseholderQr();
     decompositionSuccessful = _decMatrixC.isInvertible();
   }
@@ -374,7 +417,11 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
     _inverseDiagonal = computeInverseDiagonal(_decMatrixC);
   }
   // Second, assemble evaluation matrix
-  _matrixA = buildMatrixA(precice::mapping::VolumeSplines(), inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial);
+  if (_autotuneShape) {
+    _matrixA = buildMatrixA(VolumeSplines(), inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial); // TODO: necessary?
+  } else {
+    _matrixA = buildMatrixA(basisFunction, inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial);
+  }
 
   // In case we deal with separated polynomials, we need dedicated matrices for the polynomial contribution
   if (polynomial == Polynomial::SEPARATE) {
@@ -450,27 +497,37 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
     polynomialContribution = _qrMatrixQ.solve(inputData);
     inputData -= (_matrixQ * polynomialContribution);
   }
-  using stop_t = boost::fusion::vector<limbo::stop::MaxIterations<precice::OptimizationParameters>, limbo::stop::MaxPredictedValue<precice::OptimizationParameters>>;
-  // using stop_t = boost::fusion::vector<limbo::stop::MaxIterations<precice::OptimizationParameters>>;
-  using init_t  = limbo::init::InitSampling<precice::OptimizationParameters>;
-  using acqui_t = limbo::acqui::EI<precice::OptimizationParameters, limbo::model::GP<precice::OptimizationParameters>>;
-  // using acqui_t = limbo::acqui::GP_UCB<precice::OptimizationParameters, limbo::model::GP<precice::OptimizationParameters>>;
-  // using acqui_t = limbo::acqui::UCB<precice::OptimizationParameters, limbo::model::GP<precice::OptimizationParameters>>;
-  using acqui_opt_t = limbo::opt::Cmaes<precice::OptimizationParameters>;
-  limbo::bayes_opt::BOptimizer<precice::OptimizationParameters, limbo::initfun<init_t>, limbo::acquifun<acqui_t>, limbo::acquiopt<acqui_opt_t>, limbo::stopcrit<stop_t>> boptimizer;
 
-  double rad = std::max(0.01, clusterRadius);
+  if (_autotuneShape) {
+    // using stop_t  = boost::fusion::vector<limbo::stop::MaxIterations<OptimizationParameters>>;
+    // using acqui_t = limbo::acqui::GP_UCB<OptimizationParameters, limbo::model::GP<OptimizationParameters>>;
+    // using acqui_t = limbo::acqui::UCB<OptimizationParameters, limbo::model::GP<OptimizationParameters>>;
 
-  LOOCVEvaluator<RADIAL_BASIS_FUNCTION_T> eval(inputData, _distanceMatrix, rad);
-  boptimizer.optimize(eval);
-  std::cout << "Best sample: " << eval.transformFromUnitToReal(boptimizer.best_sample()(0)) << " - Best observation: " << boptimizer.best_observation()(0) << std::endl;
+    using stop_t = boost::fusion::vector<limbo::stop::MaxIterations<OptimizationParameters>, limbo::stop::MaxPredictedValue<OptimizationParameters>>;
+    using init_t = limbo::init::InitSampling<OptimizationParameters>;
+    using acqui_t = limbo::acqui::EI<OptimizationParameters, limbo::model::GP<OptimizationParameters>>;
+    using acqui_opt_t = limbo::opt::Cmaes<OptimizationParameters>;
 
-  std::unique_ptr<RADIAL_BASIS_FUNCTION_T> kernel;
-  if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
-    kernel      = std::make_unique<RADIAL_BASIS_FUNCTION_T>(eval.transformFromUnitToReal(boptimizer.best_sample()(0)));
-    _decMatrixC = _distanceMatrix.unaryExpr([&kernel](double x) { return kernel->evaluate(x); }).llt();
-  } else {
-    PRECICE_ASSERT(false, "Not supported.");
+    limbo::bayes_opt::BOptimizer<OptimizationParameters, limbo::initfun<init_t>, limbo::acquifun<acqui_t>, limbo::acquiopt<acqui_opt_t>, limbo::stopcrit<stop_t>> boptimizer;
+
+    double lowerBound = _meshResolution;
+
+    std::cout << "_meshResolution=" << _meshResolution << "\n";
+    std::cout << "clusterRadius=" << clusterRadius << "\n";
+
+    LOOCVEvaluator<RADIAL_BASIS_FUNCTION_T> eval(inputData, _distanceMatrix, lowerBound);
+    boptimizer.optimize(eval);
+    std::cout << "Best sample: " << eval.transformFromUnitToReal(boptimizer.best_sample()(0)) << " - Best observation: " << boptimizer.best_observation()(0) << std::endl;
+
+    std::unique_ptr<RADIAL_BASIS_FUNCTION_T> kernel;
+    if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
+      double rbfParameter = eval.transformFromUnitToReal(boptimizer.best_sample()(0));
+      kernel      = std::make_unique<RADIAL_BASIS_FUNCTION_T>(rbfParameter);
+      _decMatrixC = _distanceMatrix.unaryExpr([&kernel](double x) { return kernel->evaluate(x); }).llt();
+      _matrixA    = _matrixA.unaryExpr([&kernel](double x) { return kernel->evaluate(x); });
+    } else {
+      PRECICE_ASSERT(false, "Not supported.");
+    }
   }
 
   // Integrated polynomial (and separated)
@@ -482,7 +539,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
     PRECICE_INFO("Cross validation error (LOOCV): {}", evaluateRippaLOOCVerror(p));
   }
   PRECICE_ASSERT(p.size() == _matrixA.cols());
-  _matrixA            = _matrixA.unaryExpr([&kernel](double x) { return kernel->evaluate(x); });
+
   Eigen::VectorXd out = _matrixA * p;
 
   // Add the polynomial part again for separated polynomial

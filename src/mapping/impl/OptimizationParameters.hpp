@@ -65,7 +65,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 struct LOOCVEvaluator {
 
   LOOCVEvaluator(const Eigen::VectorXd &in, const Eigen::MatrixXd &distance, double r)
-      : invalues(in), distanceMatrix(distance), lower_bound(r * 0.5) {}
+      : lower_bound(r * 0.5), invalues(in), distanceMatrix(distance) {}
 
   // number of input dimension (x.size())
   BO_PARAM(size_t, dim_in, 1);
