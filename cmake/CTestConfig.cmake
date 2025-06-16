@@ -164,9 +164,9 @@ else()
     APPEND PROPERTY TEST_INCLUDE_FILES "${ctest_tests_file}"
   )
 
-  # Custom command that generates the tests list after the testprecice binary is build
+  # Custom command to generate the tests list using the testprecice binary
   add_custom_command(
-    TARGET testprecice POST_BUILD
+    OUTPUT "${ctest_tests_file}"
     COMMAND "${CMAKE_COMMAND}"
     -D "TEST_EXECUTABLE=$<TARGET_FILE:testprecice>"
     -D "TEST_FILE=${ctest_tests_file}"
@@ -178,10 +178,14 @@ else()
     -D "MPIEXEC_PREFLAGS=${MPIEXEC_PREFLAGS}"
     -D "MPIEXEC_POSTFLAGS=${MPIEXEC_POSTFLAGS}"
     -P "${preCICE_SOURCE_DIR}/cmake/discover_tests.cmake"
+    DEPENDS testprecice
     COMMENT "Generating list of tests"
-    BYPRODUCTS "${preCICE_BINARY_DIR}/tests.txt"
     VERBATIM)
 
+  # Custom target that forces the test list to be updated
+  add_custom_target(test-list ALL
+    DEPENDS "${ctest_tests_file}"
+  )
 endif()
 
 # Add solverdummy tests
