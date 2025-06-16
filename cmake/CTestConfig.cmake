@@ -183,7 +183,7 @@ else()
     VERBATIM)
 
   # Custom target that forces the test list to be updated
-  add_custom_target(test-list ALL
+  add_custom_target(precice-test-list ALL
     DEPENDS "${ctest_tests_file}"
   )
 endif()
