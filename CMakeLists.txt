@@ -753,7 +753,7 @@ mark_as_advanced(PRECICE_PACKAGING_DIR)
 find_program(GZIP_EXE gzip DOC "The gzip executable")
 if(GZIP_EXE)
   # Process manpages for binaries
-  file(COPY docs/man/man1/precice-tools.1 DESTINATION packaging/man1)
+  file(COPY docs/man/man1/precice-tools.1 docs/man/man1/precice-version.1 docs/man/man1/precice-config-validate.1 docs/man/man1/precice-config-doc.1 DESTINATION packaging/man1)
   file(GLOB PRECICE_MAN_PAGES "${PRECICE_PACKAGING_DIR}/man1/*.1")
   foreach(manpage ${PRECICE_MAN_PAGES})
     message(STATUS "Compressing manpage: ${manpage}")
