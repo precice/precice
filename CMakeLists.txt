@@ -571,20 +571,27 @@ set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/export.h)
 
 #
-# Configuration of Target precice-tools
+# Configuration of precice tools
 #
 if (PRECICE_BUILD_TOOLS)
-  add_executable(precice-tools "src/drivers/main.cpp")
-  target_link_libraries(precice-tools
-   PRIVATE
-   precice
-   )
-  set_target_properties(precice-tools PROPERTIES
-    # precice is a C++17 project
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED Yes
-    CXX_EXTENSIONS No
-    )
+  macro(precice_add_tool TARGET MAIN)
+    add_executable(${TARGET} ${MAIN})
+    target_link_libraries(${TARGET}
+      PRIVATE
+      precice
+      )
+    set_target_properties(${TARGET} PROPERTIES
+      # precice is a C++17 project
+      CXX_STANDARD 17
+      CXX_STANDARD_REQUIRED Yes
+      CXX_EXTENSIONS No
+      )
+  endmacro()
+
+  precice_add_tool(precice-tools "src/drivers/main.cpp")
+  precice_add_tool(precice-config-doc "src/drivers/doc.cpp")
+  precice_add_tool(precice-config-validate "src/drivers/validate.cpp")
+  precice_add_tool(precice-version "src/drivers/version.cpp")
 endif()
 
 #
@@ -693,7 +700,7 @@ install(TARGETS precice
   )
 
 if(PRECICE_BUILD_TOOLS)
-  install(TARGETS precice-tools
+  install(TARGETS precice-tools precice-version precice-config-validate precice-config-doc
     EXPORT preciceTargets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
