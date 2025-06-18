@@ -18,9 +18,18 @@ using precice::math::pow_int;
 namespace precice::mapping::kernel {
 
 namespace impl {
-// Helper to compute the closest power of 2^x for the given n
+
+// Enum to use when computing the team size
+enum class Pow2Mode {
+  Smaller,
+  Larger,
+  Closest
+};
+
+// Helper to compute the power of 2^x for the given n and the above,
+// i.e., either the flooring, ceiling, or the closest one
 // used only below to determine a reasonable team size
-inline int nearestPowerOfTwo(int n)
+inline int powerOfTwo(int n, const Pow2Mode mode)
 {
   if (n < 1)
     return 1;
@@ -31,11 +40,19 @@ inline int nearestPowerOfTwo(int n)
   }
   // now that we have the value larger, we look for the pow2 below n
   int lower = pow2 / 2;
-  // decide whether n is closer to lower or upper (pow2)
-  if (n - lower < pow2 - n) {
+
+  if (mode == Pow2Mode::Larger) {
+    return pow2;
+  } else if (mode == Pow2Mode::Smaller) {
     return lower;
   } else {
-    return pow2;
+    // (mode == Pow2Mode::Closest)
+    // decide whether n is closer to lower or upper (pow2)
+    if (n - lower < pow2 - n) {
+      return lower;
+    } else {
+      return pow2;
+    }
   }
 }
 
@@ -43,14 +60,14 @@ inline int nearestPowerOfTwo(int n)
 // avgWork is in our case simply the average cluster size, as it determines
 // the local matrix sizes
 template <typename ExecSpace, typename FunctorType, typename Policy>
-auto findTeamSize(int avgWork, const FunctorType &functor, const Policy &policy)
+auto findTeamSize(int avgWork, const Pow2Mode mode, const FunctorType &functor, const Policy &policy)
 {
   // If using OpenMP, Kokkos::AUTO works best
   if constexpr (std::is_same_v<ExecSpace, Kokkos::HostSpace::execution_space>) {
     return Kokkos::AUTO;
   } else {
-    // Compute the closest power of two for the work we have
-    int teamSize = nearestPowerOfTwo(avgWork);
+    // Compute the power of two according to the configuration
+    int teamSize = powerOfTwo(avgWork, mode);
     // Ensure minimum of one warp for the GPU to avoid partial-warp inefficiency
     int warpSize = Kokkos::TeamPolicy<ExecSpace>::vector_length_max();
     if (teamSize < warpSize) {
@@ -126,8 +143,8 @@ bool compute_weights(const int                     nCenters,
         }); // TeamThreadRange
   };
 
-  auto teamSize = impl::findTeamSize<typename MemorySpace::execution_space>(avgOutClusterSize, kernel, TeamPolicy(nCenters, Kokkos::AUTO));
-  Kokkos::parallel_for("compute_weights", TeamPolicy(nCenters, teamSize), kernel);
+  // auto teamSize = impl::findTeamSize<typename MemorySpace::execution_space>(avgOutClusterSize, impl::Pow2Mode::Larger, kernel, TeamPolicy(nCenters, Kokkos::AUTO));
+  Kokkos::parallel_for("compute_weights", TeamPolicy(nCenters, Kokkos::AUTO), kernel);
 
   // Check for output mesh vertices which are unassigned
   // This check is a pure sanity check
@@ -157,7 +174,6 @@ bool compute_weights(const int                     nCenters,
   return true;
 }
 
-// TODO: Check if we can specify something meaningful in the launch policy
 template <typename MemorySpace>
 void do_batched_qr(int                           nCluster,
                    int                           dim,
@@ -245,11 +261,8 @@ void do_batched_qr(int                           nCluster,
   // Required as workspace for the pivoted QR, see code comment
   // workspace (norm and householder application, 2 * max(m,n) is needed)
 
-  // This configuration gave by far the best performance, using Kokkos::AUTO results in 70ms, whereas
-  // this configuration gave about 20ms on the A100
   auto scratchSize = ScratchView::shmem_size(2 * maxClusterSize);
-  // Rather than selecting the clustersize, we the time size is here more proportional to 4, since it is the maximum rank.
-  auto teamSize = impl::findTeamSize<typename MemorySpace::execution_space>(4, kernel, TeamPolicy(nCluster, Kokkos::AUTO).set_scratch_size(0, Kokkos::PerTeam(scratchSize)));
+  auto teamSize    = impl::findTeamSize<typename MemorySpace::execution_space>(avgClusterSize, impl::Pow2Mode::Smaller, kernel, TeamPolicy(nCluster, Kokkos::AUTO).set_scratch_size(0, Kokkos::PerTeam(scratchSize)));
   // const int VL = TeamPolicy::vector_length_max();
   // The inner loop uses vector parallelism, so we should try to configure accordingly
   std::unique_ptr<TeamPolicy> policy;
@@ -362,8 +375,7 @@ void do_input_assembly(
   // We put the solution and the in data values into shared memory
   auto inBytes = ScratchView1d::shmem_size(maxInClusterSize);
 
-  // We could also select here manually 64 for the average of 50 for example
-  auto teamSize = impl::findTeamSize<ExecSpace>(avgClusterSize, kernel, TeamPolicy(nCluster, Kokkos::AUTO).set_scratch_size(/* level = */ 0, Kokkos::PerTeam(dim * inBytes)));
+  auto teamSize = impl::findTeamSize<ExecSpace>(avgClusterSize, impl::Pow2Mode::Larger, kernel, TeamPolicy(nCluster, Kokkos::AUTO).set_scratch_size(/* level = */ 0, Kokkos::PerTeam(dim * inBytes)));
   Kokkos::parallel_for("do_input_assembly", TeamPolicy(nCluster, teamSize).set_scratch_size(/* level = */ 0, Kokkos::PerTeam(dim * inBytes)), kernel);
 }
 
@@ -439,7 +451,7 @@ void do_batched_assembly(
         }); // ThreadVectorRange
   };
 
-  auto teamSize = impl::findTeamSize<ExecSpace>(avgClusterSize, kernel, TeamPolicy(nCluster, Kokkos::AUTO));
+  auto teamSize = impl::findTeamSize<ExecSpace>(avgClusterSize, impl::Pow2Mode::Larger, kernel, TeamPolicy(nCluster, Kokkos::AUTO));
   Kokkos::parallel_for("do_batched_assembly", TeamPolicy(nCluster, teamSize), kernel);
 }
 
@@ -468,8 +480,8 @@ void do_batched_lu(
   };
 
   // Using Kokkos::AUTO resulted in the best performance for all cases
-  // auto teamSize = impl::findTeamSize<ExecSpace>(avgClusterSize, kernel, TeamPolicy(nCluster, Kokkos::AUTO));
-  Kokkos::parallel_for("do_batched_lu", TeamPolicy(nCluster, Kokkos::AUTO), kernel);
+  auto teamSize = impl::findTeamSize<ExecSpace>(avgClusterSize, impl::Pow2Mode::Larger, kernel, TeamPolicy(nCluster, Kokkos::AUTO));
+  Kokkos::parallel_for("do_batched_lu", TeamPolicy(nCluster, teamSize), kernel);
 }
 
 /// polynomial: bool whether to evaluate the polynomial or not
@@ -786,7 +798,7 @@ void do_batched_solve(
                     .set_scratch_size(
                         /* level = */ 1, Kokkos::PerTeam(outBytes));
 
-  auto teamSize = impl::findTeamSize<ExecSpace>(avgInClusterSize, kernel, tmpPol);
+  auto teamSize = impl::findTeamSize<ExecSpace>(avgInClusterSize, impl::Pow2Mode::Smaller, kernel, tmpPol);
 
   auto policy = TeamPolicy(nCluster, teamSize)
                     .set_scratch_size(
