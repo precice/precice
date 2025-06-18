@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://precice.org/schema/profiling/rank/v1.json",
+  "title": "preCICE rank profiling file",
+  "description": "Schema for performance profiling output of a single rank, emitted my preCICE",
+  "type": "object",
+  "properties": {
+    "meta": {
+      "type": "object",
+      "title": "Metadata",
+      "description": "Metadata about the file context",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the participant"
+        },
+        "rank": {
+          "type": "string",
+          "description": "Rank of the participant"
+        },
+        "size": {
+          "type": "string",
+          "description": "Size of the participant"
+        },
+        "unix_us": {
+          "type": "string",
+          "description": "Unix timestamp in microseconds"
+        },
+        "tinit": {
+          "type": "string",
+          "description": "Initialization timestamp in ISO format"
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "none",
+            "fundamental",
+            "all"
+          ],
+          "description": "Profiling mode"
+        },
+        "file_version": {
+          "type": "integer",
+          "description": "Version of the trace file format"
+        }
+      },
+      "required": [
+        "name",
+        "rank",
+        "size",
+        "unix_us",
+        "tinit",
+        "mode",
+        "file_version"
+      ],
+      "additionalProperties": false
+    },
+    "events": {
+      "type": "array",
+      "title": "Records",
+      "description": "Array of profiling records",
+      "items": {
+        "type": "object",
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "et": {
+                "const": "n"
+              },
+              "eid": {
+                "type": "integer"
+              },
+              "en": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "et",
+              "en",
+              "eid"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "et": {
+                "const": "b"
+              },
+              "eid": {
+                "type": "integer"
+              },
+              "ts": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "et",
+              "eid",
+              "ts"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "et": {
+                "const": "e"
+              },
+              "eid": {
+                "type": "integer"
+              },
+              "ts": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "et",
+              "eid",
+              "ts"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "et": {
+                "const": "d"
+              },
+              "eid": {
+                "type": "integer"
+              },
+              "ts": {
+                "type": "integer"
+              },
+              "dn": {
+                "type": "integer"
+              },
+              "dv": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "et",
+              "eid",
+              "ts",
+              "dn",
+              "dv"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "meta",
+    "events"
+  ],
+  "additionalProperties": false
+}
