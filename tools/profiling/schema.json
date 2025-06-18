@@ -40,7 +40,7 @@
           "description": "Profiling mode"
         },
         "file_version": {
-          "type": "integer",
+          "const": 1,
           "description": "Version of the trace file format"
         }
       },
