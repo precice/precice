@@ -21,6 +21,7 @@ namespace init {
 */
 template <typename Params>
 struct InitSampling {
+
   template <typename StateFunction, typename AggregatorFunction, typename Opt> // hier: StateFunction = LOOCVEvaluator
   void operator()(const StateFunction &seval, const AggregatorFunction &, Opt &opt) const
   {
@@ -30,6 +31,9 @@ struct InitSampling {
 
     double value         = seval(sample)(0); // Initial evaluation
     double currentSample = seval.lower_bound;
+
+    std::cout << "init sampling\n";
+    std::cout << "initial: (" << value << "," << currentSample << ")\n";
 
     // Add the initial sample if it is not NaN
     if (!std::isnan(value)) {
@@ -43,10 +47,14 @@ struct InitSampling {
       sample = Eigen::VectorXd::Constant(StateFunction::dim_in(), currentSample);
       value  = seval(sample)(0);
 
+      std::cout << "sample: (" << value << "," << currentSample << ")\n";
+
       if (std::isnan(value)) {
         // Start bisection when a NaN is encountered
         double lower = initSamples.back(); // Last valid sample
         double upper = currentSample;
+
+        std::cout << " > bisection: [" << lower << "," << upper << "]\n";
 
         for (int i = 0; i < 2; ++i) { // Perform at most 2 iterations
           currentSample = (lower + upper) / 2.0;
@@ -76,6 +84,8 @@ struct InitSampling {
     auto min = *std::min_element(initObservations.begin(), initObservations.end());
     seval.setValues(min, max);
 
+    std::cout << "set LOOCVEvaluator interval: [" << min << "," << max << "]\n";
+
     std::transform(initObservations.begin(), initObservations.end(), initObservations.begin(), [&seval](double sample) {
       return seval.transformFromValues(sample);
     });
@@ -87,6 +97,7 @@ struct InitSampling {
       opt.add_new_sample(limbo::tools::make_vector(initSamples[i]), limbo::tools::make_vector(initObservations[i]));
     }
   }
+
 };
 } // namespace init
 } // namespace limbo

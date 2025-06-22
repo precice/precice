@@ -335,7 +335,7 @@ MappingConfiguration::MappingConfiguration(
       XMLTag{*this, RBF_GAUSSIAN, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Gaussian basis function accepting a support radius or a shape parameter.")};
   attrShapeParam.setDefaultValue(std::numeric_limits<double>::quiet_NaN());
   attrSupportRadius.setDefaultValue(std::numeric_limits<double>::quiet_NaN());
-  addAttributes(GaussRBF, {attrShapeParam, attrSupportRadius});
+  addAttributes(GaussRBF, {attrShapeParam, attrSupportRadius, attrAutotuneShape}); // TODO: attrAutotuneShape
   addSubtagsToParents(GaussRBF, rbfIterativeTags);
   addSubtagsToParents(GaussRBF, rbfDirectTags);
   addSubtagsToParents(GaussRBF, pumDirectTags);
@@ -445,14 +445,14 @@ void MappingConfiguration::xmlTagCallback(
     double      supportRadius  = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS, 0.);
     double      shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM, 0.);
 
-    _rbfConfig.autotuneShape = tag.getBooleanAttributeValue(ATTR_AUTOTUNE_SHAPE, false); // TODO: autotuneShape, TODO: Error Checking
+    _rbfOptional.autotuneShape = tag.getBooleanAttributeValue(ATTR_AUTOTUNE_SHAPE, false); // TODO: autotuneShape, TODO: Error Checking
 
     _rbfConfig.basisFunction        = parseBasisFunctions(basisFctName);
     _rbfConfig.basisFunctionDefined = true;
     // The Gaussian RBF is always treated as a shape-parameter RBF. Hence, we have to convert the support radius, if necessary
     if (_rbfConfig.basisFunction == BasisFunction::Gaussian) {
       const bool exactlyOneSet = (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) ||
-                                 (std::isfinite(shapeParameter) && !std::isfinite(supportRadius));
+                                 (std::isfinite(shapeParameter) && !std::isfinite(supportRadius)); // TODO: autotuneShape, add exception
       PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
 
       if (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) {
@@ -690,7 +690,7 @@ void MappingConfiguration::finishRBFConfiguration()
   // 1. the CPU executor
   if (_executorConfig->executor == ExecutorConfiguration::Executor::CPU) {
     if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::Eigen>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial);
+      mapping.mapping = getRBFMapping<RBFBackend::Eigen>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _rbfOptional);
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
 #ifndef PRECICE_NO_PETSC
       // for petsc initialization
@@ -701,7 +701,7 @@ void MappingConfiguration::finishRBFConfiguration()
       PRECICE_CHECK(false, "The global-iterative RBF solver on a CPU requires a preCICE build with PETSc enabled.");
 #endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
+      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _rbfOptional);
     } else {
       PRECICE_UNREACHABLE("Unknown RBF solver.");
     }

@@ -208,6 +208,8 @@ target_sources(preciceCore
     src/mapping/impl/CreateClustering.hpp
     src/mapping/impl/InitSampling.hpp
     src/mapping/impl/OptimizationParameters.hpp
+    src/mapping/impl/RBFMatrixOperations.hpp
+    src/mapping/impl/RBFParameterTuner.hpp
     src/mapping/impl/SphericalVertexCluster.hpp
     src/math/Bspline.cpp
     src/math/Bspline.hpp

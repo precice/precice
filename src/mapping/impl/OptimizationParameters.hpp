@@ -1,4 +1,7 @@
 #pragma once
+
+#include "RBFMatrixOperations.hpp"
+
 #include <limbo/bayes_opt/boptimizer.hpp>
 #include <limbo/init/grid_sampling.hpp>
 #include <limbo/limbo.hpp>
@@ -61,7 +64,7 @@ struct OptimizationParameters {
   };
 };
 
-template <typename RADIAL_BASIS_FUNCTION_T>
+template <typename RBF_T>
 struct LOOCVEvaluator {
 
   LOOCVEvaluator(const Eigen::VectorXd &in, const Eigen::MatrixXd &distance, double r)
@@ -118,23 +121,23 @@ struct LOOCVEvaluator {
   // the function to be optimized
   Eigen::VectorXd operator()(const Eigen::VectorXd &x) const
   {
+
+    PRECICE_ASSERT(RBF_T::isStrictlyPositiveDefinite(), "Not supported.");
+
     using RES_T = double;
 
     const Eigen::Index n = invalues.size();
-    double x_eval = upper_bound == -1 ? x(0) : transformFromUnitToReal(x(0));
+    double param = upper_bound == -1 ? x(0) : transformFromUnitToReal(x(0));
 
-    std::unique_ptr<RADIAL_BASIS_FUNCTION_T> kernel;
-    if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
-      kernel = std::make_unique<RADIAL_BASIS_FUNCTION_T>(x_eval);
-    } else {
-      PRECICE_ASSERT(false, "Not supported.");
+    Eigen::LLT<Eigen::Matrix<RES_T, -1, -1>> dec;
+    if constexpr (RBF_T::isStrictlyPositiveDefinite()) { // to make compiler happy
+      RBF_T kernel(param);
+      dec = mapping::applyKernelToDistanceMatrix(distanceMatrix, n, kernel).llt(); // TODO: add RES_T
     }
-
-    Eigen::LLT<Eigen::Matrix<RES_T, -1, -1>> dec = distanceMatrix.unaryExpr([&kernel](double x) { return static_cast<RES_T>(kernel->evaluate(x)); }).llt();
 
     // TODO: find a better value for failure
     if (dec.info() != Eigen::ComputationInfo::Success) {
-      std::cout << std::fixed << std::setprecision(10) << "Parameter: " << x_eval << "  diverged." << std::endl;
+      std::cout << std::fixed << std::setprecision(10) << "Parameter: " << param << "  diverged." << std::endl;
       return limbo::tools::make_vector(std::numeric_limits<double>::quiet_NaN());
     }
 
@@ -144,7 +147,7 @@ struct LOOCVEvaluator {
     double                       loocv  = std::sqrt(static_cast<double>((lambda.array() / (L_inv.array().square().colwise().sum()).transpose().array()).array().square().sum()) / n);
     // Eigen::Vector<RES_T, -1> inv_diag = L_inv.array().square().colwise().sum().inverse();
     // double                   loocv = (((-0.5 * (lambda.array().square().array().colwise() * inv_diag.array())).array().colwise() - 0.5 * inv_diag.array().log().array()) - 0.5 * std::log(2 * M_PI)).colwise().sum().sum();
-    std::cout << std::fixed << std::setprecision(10) << "Parameter: " << x_eval << "  with error: " << transformFromValues(-loocv) << std::endl;
+    std::cout << std::fixed << std::setprecision(10) << "Parameter: " << param << "  with error: " << transformFromValues(-loocv) << std::endl;
     return limbo::tools::make_vector(transformFromValues(-loocv));
   }
 };
