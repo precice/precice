@@ -121,7 +121,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   // in the current setup, this will only initialize the device (and allocate memory) on the primary rank
   // TODO: Document restriction: all mappings must use the same executor configuration within one participant
   device::Device::initialize(ginkgoParameter.nThreads, ginkgoParameter.deviceId);
-  PRECICE_INFO("Using batched PU-RBF solver on executor \"{}\" for \"{}\" PU-RBF clusters in execution mode {}.", ginkgoParameter.executor, centers.size(), _computeEvaluationOffline ? "\"minimal-compute\" (evaluation offline)" : "\"minimal-memory\" (evaluation online)");
+  PRECICE_DEBUG("Using batched PU-RBF solver on executor \"{}\" for \"{}\" PU-RBF clusters in execution mode {}.", ginkgoParameter.executor, centers.size(), _computeEvaluationOffline ? "\"minimal-compute\" (evaluation offline)" : "\"minimal-memory\" (evaluation online)");
   Kokkos::fence();
   eInit.stop();
 
@@ -206,7 +206,7 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
   }
 
   _avgClusterSize = hostIn(_nCluster /* = hostIn.extent(0) - 1 */) / _nCluster;
-  PRECICE_INFO("Average cluster size used to find a good team size of the kernel execution: {}", _avgClusterSize);
+  PRECICE_DEBUG("Average cluster size used to find a good team size of the kernel execution: {}", _avgClusterSize);
 
   // Copy offsets onto the device
   Kokkos::deep_copy(_inOffsets, hostIn);
