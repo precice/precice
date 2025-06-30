@@ -929,6 +929,13 @@ def mergeCommand(files, outfile, align):
 
 
 if __name__ == "__main__":
+    print(
+        "This script is deprecated, will no longer receive upgrades, and will be removed in preCICE release 4.\n"
+        "Please migrate to the precice-cli (pipx install precice-cli) or the new profiling scripts repository (pipx install precice-profiling).\n"
+        "More information at https://precice.org/tooling-overview.html",
+        file=sys.stderr,
+    )
+
     parser = argparse.ArgumentParser(description="", epilog="")
     subparsers = parser.add_subparsers(
         title="commands",
