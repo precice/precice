@@ -103,6 +103,8 @@ std::string toString(Mode m)
     return "off";
   case (Mode::Fundamental):
     return "fundamental";
+  case (Mode::API):
+    return "api";
   case (Mode::All):
     return "all";
   }
