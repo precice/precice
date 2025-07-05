@@ -115,7 +115,7 @@ std::vector<VertexID> getNeighborsWithinSphere(const Vertices &vertices, VertexI
     if (neighborID >= 0 && neighborID < static_cast<int>(vertices.size())) {
       auto &neighborVertex = vertices[neighborID];
       auto &center         = vertices[centerID];
-      if (!neighborVertex.isTagged() && (computeSquaredDifference(center.rawCoords(), neighborVertex.rawCoords()) < math::pow_int<2>(radius))) {
+      if (!neighborVertex.isTagged() && (utils::computeSquaredDifference(center.rawCoords(), neighborVertex.rawCoords()) < math::pow_int<2>(radius))) {
         result.emplace_back(neighborID);
       }
     }
@@ -262,7 +262,7 @@ inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMe
     // compute the distance of each point to the center
     std::vector<double> squaredRadius(kNearestVertexIDs.size());
     std::transform(kNearestVertexIDs.begin(), kNearestVertexIDs.end(), squaredRadius.begin(), [&inMesh, s](auto i) {
-      return computeSquaredDifference(inMesh->vertex(i).rawCoords(), inMesh->vertex(s).rawCoords());
+      return utils::computeSquaredDifference(inMesh->vertex(i).rawCoords(), inMesh->vertex(s).rawCoords());
     });
     // Store the maximum distance
     auto maxRadius = std::max_element(squaredRadius.begin(), squaredRadius.end());

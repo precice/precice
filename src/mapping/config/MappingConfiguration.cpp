@@ -456,7 +456,7 @@ void MappingConfiguration::xmlTagCallback(
       PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
 
       if (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) {
-        shapeParameter = std::sqrt(-std::log(Gaussian::cutoffThreshold)) / supportRadius;
+        shapeParameter = Gaussian::transformRadiusToShape(supportRadius);
       }
     }
 

@@ -1,181 +1,163 @@
 #pragma once
 
-#include "mapping/impl/BasisFunctions.hpp"
-#include "mapping/impl/OptimizationParameters.hpp"
-#include "mapping/impl/InitSampling.hpp"
-#include "mapping/impl/RBFMatrixOperations.hpp"
 #include <limbo/limbo.hpp>
+#include <mapping/RadialBasisFctSolver.hpp>
+#include "mapping/impl/BasisFunctions.hpp"
+#include "mapping/impl/InitSampling.hpp"
+#include "mapping/impl/OptimizationParameters.hpp"
 
 namespace precice {
 namespace mapping {
 
+// Forward declaration of function found in <mapping/RadialBasisFctSolver.hpp>
+// TODO: move to different file?
+template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
+Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
+                               std::array<bool, 3> activeAxis, Polynomial polynomial);
 
+struct Sample {
+  double pos;
+  double error;
+};
 
+template <typename RBF_T>
 class RBFParameterTuner {
+
+protected:
+  Eigen::MatrixXd _distanceMatrix;
+  Eigen::MatrixXd _kernelMatrix;
+  Eigen::Index _inSize;
+  bool _isInitialized;
+
+  static constexpr bool rbfSupportsRadius()
+  {
+    return RBF_T::hasCompactSupport() || std::is_same_v<RBF_T, ThinPlateSplines>; // TODO: necessary? better criterion?
+  }
+
+  static constexpr bool rbfUsesShapeParameter()
+  {
+    return std::is_same_v<RBF_T, Gaussian>; // TODO: necessary? better criterion?
+  }
 
 public:
   virtual ~RBFParameterTuner() = default;
-  struct Sample {
-    double pos;
-    double error;
-  };
 
-  virtual double optimize(const Eigen::VectorXd &inputData) { return 0; }
+  RBFParameterTuner()
+    : _distanceMatrix(Eigen::MatrixXd(0, 0)), _kernelMatrix(Eigen::MatrixXd(0, 0)), _inSize(0), _isInitialized(false)
+  { }
 
-protected:
-  double estimateMeshResolution(const mesh::Mesh &inputMesh) {
-    constexpr int sampleSize = 5;
-    const size_t i0 = inputMesh.vertices().size() / 2;
-    const mesh::Vertex x0 = inputMesh.vertices().at(i0);
-    const std::vector<int> matches = inputMesh.index().getClosestVertices(x0.getCoords(), sampleSize);
-    double h = 0;
-    for (int i = 0; i < sampleSize; i++) {
-      const mesh::Vertex xi = inputMesh.vertices().at(matches.at(i));
-      h += std::sqrt(computeSquaredDifference(xi.rawCoords(), x0.rawCoords()));
-    }
-    return h / sampleSize;
+  virtual double optimize(const Eigen::VectorXd &inputData)
+  {
+    return 0;
   }
 
-};
-
-template<typename RBF_T>
-class RBFParameterTunerSimple : public RBFParameterTuner {
-
-
-  double _lowerBound; // = this->estimateMeshResolution(inputMesh);
-  double _upperBound;
-  int _n;
-  double _optimizedResult;
-  Eigen::MatrixXd _distanceMatrix;
-  std::vector<Sample> _samples;
-
-
-  Eigen::LLT<Eigen::MatrixXd> computeLLT(double sampleRadius)
+  const Eigen::MatrixXd &getDistanceMatrix() const
   {
-    if constexpr (RBF_T::isStrictlyPositiveDefinite()) { // to make compiler happy (always true)
-      RBF_T kernel(sampleRadius);
-      return applyKernelToDistanceMatrix(_distanceMatrix, _n, kernel).llt();
+    return _distanceMatrix;
+  }
+
+  Eigen::LLT<Eigen::MatrixXd> buildKernelLLT(double sampleRadius)
+  {
+    if constexpr (rbfSupportsRadius() && RBF_T::isStrictlyPositiveDefinite()) {
+      double parameter = sampleRadius;
+      if constexpr (rbfUsesShapeParameter()) {
+        parameter = RBF_T::transformRadiusToShape(sampleRadius);
+      }
+      RBF_T kernel(parameter);
+      // Check if kernel matrix was already initialized.
+      if (_kernelMatrix.size() != _distanceMatrix.size()) {
+        _kernelMatrix = _distanceMatrix;
+      }
+      // Apply kernel only to non-polynomial part of _distanceMatrix. The rest should remain unchanged.
+      _kernelMatrix.block(0, 0, _inSize, _inSize) = _distanceMatrix.block(0, 0, _inSize, _inSize).unaryExpr([&kernel] (double x) {
+        return kernel.evaluate(x);
+      });
+      return _kernelMatrix.llt();
     }
     return Eigen::LLT<Eigen::MatrixXd>();
   }
 
-public:
-  RBFParameterTunerSimple()
-      : _lowerBound(0), _upperBound(std::numeric_limits<double>::infinity()), _n(-1), _optimizedResult(0), _distanceMatrix(Eigen::MatrixXd(0, 0))
+  Eigen::MatrixXd applyKernelToMatrix(const Eigen::MatrixXd &matrix, double sampleRadius)
   {
-    PRECICE_ASSERT(RBF_T::isStrictlyPositiveDefinite()); //TODO: implementation for semidefinite kernels
-    // PRECICE_ASSERT(RBF_T::supportsRadiusInitialization());
-    if (std::is_same_v<RBF_T, Gaussian>) { /* ... */
+    if constexpr (rbfSupportsRadius()) {
+      double parameter = sampleRadius;
+      if constexpr (rbfUsesShapeParameter()) {
+        parameter = RBF_T::transformRadiusToShape(sampleRadius);
+      }
+      RBF_T kernel(parameter);
+      return matrix.unaryExpr([&kernel] (double x) { return kernel.evaluate(x); });
+    } else {
+      PRECICE_ASSERT(false, "Selected RBF does not support a radius.");
+      return matrix.unaryExpr([&] (double x) { return x; });
     }
   }
 
+protected:
+  static double estimateMeshResolution(const mesh::Mesh &inputMesh)
+  {
+    constexpr int sampleSize = 5;
+
+    const size_t           i0      = inputMesh.vertices().size() / 2;
+    const mesh::Vertex     x0      = inputMesh.vertices().at(i0);
+    const std::vector<int> matches = inputMesh.index().getClosestVertices(x0.getCoords(), sampleSize);
+
+    double h = 0;
+    for (int i = 0; i < sampleSize; i++) {
+      const mesh::Vertex xi = inputMesh.vertices().at(matches.at(i));
+      h += std::sqrt(utils::computeSquaredDifference(xi.rawCoords(), x0.rawCoords()));
+    }
+    return h / sampleSize;
+  }
+};
+
+template<typename RBF_T>
+class RBFParameterTunerSimple : public RBFParameterTuner<RBF_T> {
+
+  double _lowerBound;
+  std::vector<Sample> _samples;
+
+  mutable logging::Logger _log{"mapping::RBFParameterTuner"};
+
+public:
+  RBFParameterTunerSimple()
+      : _lowerBound(std::numeric_limits<double>::quiet_NaN())
+  {
+    PRECICE_ASSERT(RBF_T::isStrictlyPositiveDefinite(), "Non SPD RBFs are currently not supported by this optimizer");
+    PRECICE_ASSERT(this->rbfSupportsRadius(), "RBF is not supported by this optimizer, as it does not accept a support-radius."
+                                              "Currently supported: Compactly supported RBFs, Thin Plate Splines and Gaussians.");
+  }
 
   template <typename IndexContainer>
   void initialize(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool,3> &activeAxis)
   {
-    _n = inputIDs.size();
-    _lowerBound = this->estimateMeshResolution(inputMesh);
-    _distanceMatrix = buildMatrixCLU(VolumeSplines(), inputMesh, inputIDs, activeAxis, polynomial);
-    fmt::println("init: _n={}", _n);
+    _lowerBound   = this->estimateMeshResolution(inputMesh);
+    this->_inSize = inputIDs.size();
+    this->_distanceMatrix = buildMatrixCLU(VolumeSplines(), inputMesh, inputIDs, activeAxis, polynomial);
+    this->_isInitialized  = true;
   }
 
-  double optimize(const Eigen::VectorXd &inputData)
+  double golden_section_search(Sample lowerSample, Sample upperSample, const Eigen::VectorXd &inputData)
   {
-    // PRECICE_ASSERT(isInitialized());
-
-    // Find optimization interval
-
-    double factor = 10;
-
-    fmt::println("\nInitial sampling:\n");
-
-    while (_samples.size() < 2) {
-      double sampleRadius = _lowerBound;
-
-      fmt::println("Start sampling with factor={} and rad={}", factor, sampleRadius);
-
-      while (true) { // TODO: add max number of iterations
-
-        Eigen::LLT<Eigen::MatrixXd> llt = computeLLT(sampleRadius);
-        if (llt.info() != Eigen::ComputationInfo::Success) {
-          fmt::println(" > Cholesky unsuccessful");
-          break;
-        }
-
-        double condition = approximateConditionNumber(llt);        // evaluate cond at sampleRadius
-        double error     = computeRippaLOOCVerror(llt, inputData); // evaluate error metric at sampleRadius
-
-        fmt::println(" > rad={}, err={}, cond={}", sampleRadius, error, condition);
-
-        if (condition > 1e8 || std::isnan(error) || std::isinf(error)) { // invalid sample
-          break;
-        }
-        _samples.push_back({sampleRadius, error});
-        sampleRadius *= factor;
-      }
-      factor = std::sqrt(factor);
-    }
-    _upperBound = _samples[_samples.size() - 1].pos;
-
-    fmt::print("Resulting samples: [ ");
-    for (auto &sample : _samples) {
-      fmt::print("({},{}) ", sample.pos, sample.error);
-    }
-    fmt::println("]");
-
-    // Reduce initial samples to a search interval
-
-    size_t minIdx = 0;
-    for (size_t i = 0; i < _samples.size() - 1; i++) {
-      if (_samples[i].error < _samples[minIdx].error) {
-        minIdx = i;
-      }
-    }
-
-    Sample lowerSample;
-    Sample upperSample;
-
-    if (minIdx == 0) {
-      lowerSample = _samples[minIdx];
-      upperSample = _samples[minIdx + 1];
-    } else if (minIdx == _samples.size() - 1) {
-      lowerSample = _samples[minIdx - 1];
-      upperSample = _samples[minIdx];
-    } else {
-      if (_samples[minIdx - 1].error < _samples[minIdx + 1].error) {
-        lowerSample = _samples[minIdx - 1];
-        upperSample = _samples[minIdx];
-      } else {
-        lowerSample = _samples[minIdx];
-        upperSample = _samples[minIdx + 1];
-      }
-    }
-
-    fmt::println("Search interval: [{}, {}]", lowerSample.pos, upperSample.pos);
-
-    // Optimize using bisection
-    // TODO: interval transformation?
-
-    int maxOptimizationIterations = 10;
-    double tolerance = 1e-10; // TODO: relative tolerance?
-    constexpr double phi = (1.0 + std::sqrt(5)) / 2.0;
+    constexpr int    MAX_ITERATIONS = 10;
+    constexpr double TOLERANCE = 1e-10;
+    constexpr double PHI = (1.0 + std::sqrt(5)) / 2.0;
 
     Sample sample1;
     Sample sample2;
 
-    sample1.pos = upperSample.pos + (lowerSample.pos - upperSample.pos) / phi;
-    sample2.pos = lowerSample.pos + (upperSample.pos - lowerSample.pos) / phi;
+    sample1.pos = upperSample.pos + (lowerSample.pos - upperSample.pos) / PHI;
+    sample2.pos = lowerSample.pos + (upperSample.pos - lowerSample.pos) / PHI;
 
-    Eigen::LLT<Eigen::MatrixXd> llt = computeLLT(sample1.pos);
-    sample1.error = computeRippaLOOCVerror(llt, inputData); // quiet NaN if llt unsuccessful
-    llt = computeLLT(sample2.pos);
-    sample2.error = computeRippaLOOCVerror(llt, inputData);
+    Eigen::LLT<Eigen::MatrixXd> llt = this->buildKernelLLT(sample1.pos);
+    sample1.error = utils::computeRippaLOOCVerror(llt, inputData); // quiet NaN if llt unsuccessful
+    llt = this->buildKernelLLT(sample2.pos);
+    sample2.error = utils::computeRippaLOOCVerror(llt, inputData);
 
     fmt::println("Start golden-section search:");
 
-    for (int i = 0; i < maxOptimizationIterations && std::abs(upperSample.error - lowerSample.error) < tolerance; i++) {
+    for (int i = 0; i < MAX_ITERATIONS && std::abs(upperSample.error - lowerSample.error) > TOLERANCE; i++) {
 
-      fmt::println("i={}: [ ({},{}) ({},{}) ({},{}) ({},{})], i={}, eps={}",
+      fmt::println("i={}: [ ({},{}) ({},{}) ({},{}) ({},{})], eps={}",
         i,
         lowerSample.pos, lowerSample.error,
         sample1.pos, sample1.error,
@@ -185,35 +167,82 @@ public:
 
       if (sample1.error < sample2.error) {
         upperSample = sample2;
-        llt = computeLLT(sample2.pos);
-        sample2.pos = lowerSample.pos + (upperSample.pos - lowerSample.pos) / phi;
-        sample2.error = computeRippaLOOCVerror(llt, inputData);
+        sample2.pos = lowerSample.pos + (upperSample.pos - lowerSample.pos) / PHI;
+        llt = this->buildKernelLLT(sample2.pos);
+        sample2.error = utils::computeRippaLOOCVerror(llt, inputData);
       } else {
         lowerSample = sample1;
-        llt = computeLLT(sample1.pos);
-        sample1.pos = upperSample.pos + (lowerSample.pos - upperSample.pos) / phi;
-        sample1.error = computeRippaLOOCVerror(llt, inputData);
+        sample1.pos = upperSample.pos + (lowerSample.pos - upperSample.pos) / PHI;
+        llt = this->buildKernelLLT(sample1.pos);
+        sample1.error = utils::computeRippaLOOCVerror(llt, inputData);
       }
 
-      PRECICE_ASSERT(!std::isnan(sample1.error) && !std::isnan(sample2.error), "Optimization encountered NaN"); // TODO: handle
+      PRECICE_ASSERT(!std::isnan(sample1.error) && !std::isnan(sample2.error), "Optimization encountered NaN");
 
     }
-
-    _optimizedResult = (lowerSample.pos + upperSample.pos) / 2;
-    fmt::println("Optimization result: {}", _optimizedResult);
-    return _optimizedResult;
+    return (lowerSample.pos + upperSample.pos) / 2;
   }
 
-  Eigen::MatrixXd getInterpolationMatrix()
+  double optimize(const Eigen::VectorXd &inputData) override
   {
-    RBF_T kernel(_optimizedResult);
-    return applyKernelToDistanceMatrix(_distanceMatrix, _n, kernel);
+    PRECICE_ASSERT(this->_isInitialized);
+
+    double increaseSize = 10;
+    double sampleRadius = _lowerBound;
+    double errorChange = 1e100;
+
+    constexpr double MIN_INCREASE_SIZE      = 1.3;
+    constexpr double MAX_NUMBER_OF_SAMPLES  = 10;
+    constexpr double ERROR_CHANGE_TOLERANCE = 1e-10;
+
+    // collect samples with exponential growth and decrease growth rate until the support radius is "good enough"
+    while (errorChange > ERROR_CHANGE_TOLERANCE && increaseSize > MIN_INCREASE_SIZE && _samples.size() <= MAX_NUMBER_OF_SAMPLES) {
+
+      // exponential increase of support-radius sampling position until failure
+      while (errorChange > ERROR_CHANGE_TOLERANCE) {
+
+        Eigen::LLT<Eigen::MatrixXd> llt = this->buildKernelLLT(sampleRadius);
+        if (llt.info() != Eigen::ComputationInfo::Success) {
+          PRECICE_INFO("RBF tuner sample: rad={}, matrix decomposition failed", sampleRadius);
+          PRECICE_CHECK(_samples.size() > 0, "Parameter tuning failed in first iteration using support-radius={}", sampleRadius);
+          sampleRadius = _samples.at(_samples.size() - 1).pos;
+          break;
+        }
+
+        double rcond = utils::approximateReciprocalConditionNumber(llt);
+        double error = utils::computeRippaLOOCVerror(llt, inputData);
+
+        PRECICE_INFO("RBF tuner sample: rad={}, err={}, 1/cond={}", sampleRadius, error, rcond);
+
+        if (rcond < 1e-13 || std::isnan(error)) {
+          PRECICE_CHECK(_samples.size() > 0, "Parameter tuning failed in first iteration using support-radius={}", sampleRadius);
+          sampleRadius = _samples.at(_samples.size() - 1).pos;
+          break;
+        }
+        errorChange = _samples.size() == 0 ? 1 : std::abs(_samples.at(_samples.size() - 1).error - error);
+        PRECICE_INFO("RBF tuner sample: errorChange={}", errorChange); // TODO: not yet useful.
+
+        _samples.push_back({sampleRadius, error});
+        sampleRadius *= increaseSize;
+      }
+      increaseSize = std::sqrt(increaseSize);
+      sampleRadius *= increaseSize;
+    }
+
+    size_t minIdx = 0;
+    for (size_t i = 0; i < _samples.size(); i++) {
+      if (_samples[i].error < _samples[minIdx].error) {
+        minIdx = i;
+      }
+    }
+    PRECICE_INFO("RBF optimization result: {}", _samples[minIdx].pos);
+    return _samples[minIdx].pos;
   }
 };
 
 
 template<typename RBF_T>
-class RBFParameterTunerBO : public RBFParameterTuner {
+class RBFParameterTunerBO : public RBFParameterTuner<RBF_T> {
 
 public:
   using stop_t = boost::fusion::vector<limbo::stop::MaxIterations<OptimizationParameters>, limbo::stop::MaxPredictedValue<OptimizationParameters>>;
@@ -262,7 +291,7 @@ public:
     // PRECICE_ASSERT(isInitialized());
     _n = inputIDs.size();
     _lowerBound = this->estimateMeshResolution(inputMesh);
-    _distanceMatrix = buildMatrixCLU(VolumeSplines(), inputMesh, inputIDs, activeAxis, polynomial);
+    _distanceMatrix = RadialBasisFctSolver<RBF_T>::buildMatrixCLU(VolumeSplines(), inputMesh, inputIDs, activeAxis, polynomial);
   }
 
   double optimize(const Eigen::VectorXd &inputData) {

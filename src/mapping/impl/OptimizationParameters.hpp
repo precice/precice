@@ -6,6 +6,7 @@
 #include <limbo/init/grid_sampling.hpp>
 #include <limbo/limbo.hpp>
 #include <limbo/stop/max_predicted_value.hpp>
+#include <mapping/RadialBasisFctSolver.hpp>
 #include <mapping/impl/InitSampling.hpp>
 namespace precice {
 struct OptimizationParameters {
@@ -63,6 +64,12 @@ struct OptimizationParameters {
     BO_PARAM(double, jitter, 0.02); // ξ = jitter = 0.02
   };
 };
+
+namespace mapping { // TODO:
+  template <typename RADIAL_BASIS_FUNCTION_T>
+  class RadialBasisFctSolver;
+}
+
 
 template <typename RBF_T>
 struct LOOCVEvaluator {
@@ -132,7 +139,7 @@ struct LOOCVEvaluator {
     Eigen::LLT<Eigen::Matrix<RES_T, -1, -1>> dec;
     if constexpr (RBF_T::isStrictlyPositiveDefinite()) { // to make compiler happy
       RBF_T kernel(param);
-      dec = mapping::applyKernelToDistanceMatrix(distanceMatrix, n, kernel).llt(); // TODO: add RES_T
+      dec = mapping::RadialBasisFctSolver<RBF_T>::applyKernelToDistanceMatrix(distanceMatrix, n, kernel).llt(); // TODO: add RES_T
     }
 
     // TODO: find a better value for failure

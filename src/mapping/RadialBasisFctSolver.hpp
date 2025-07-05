@@ -15,7 +15,6 @@
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 #include "impl/RBFParameterTuner.hpp"
-#include "impl/RBFMatrixOperations.hpp"
 
 namespace precice {
 namespace mapping {
@@ -103,6 +102,138 @@ private:
   bool computeCrossValidation = false;
 };
 
+// ------- Non-Member Functions ---------
+
+/// given the active axis, computes sets the axis with the lowest spatial expansion to dead
+template <typename IndexContainer>
+constexpr void reduceActiveAxis(const mesh::Mesh &mesh, const IndexContainer &IDs, std::array<bool, 3> &axis)
+{
+  // make a pair of the axis and the difference
+  std::array<std::pair<int, double>, 3> differences;
+
+  // Compute the difference magnitude per direction
+  for (std::size_t d = 0; d < axis.size(); ++d) {
+    // Ignore dead axis here, i.e., apply the max value such that they are sorted on the last position(s)
+    if (axis[d] == false) {
+      differences[d] = std::make_pair<int, double>(d, std::numeric_limits<double>::max());
+    } else {
+      auto res = std::minmax_element(IDs.begin(), IDs.end(), [&](const auto &a, const auto &b) { return mesh.vertex(a).coord(d) < mesh.vertex(b).coord(d); });
+      // Check if we are above or below the threshold
+      differences[d] = std::make_pair<int, double>(d, std::abs(mesh.vertex(*res.second).coord(d) - mesh.vertex(*res.first).coord(d)));
+    }
+  }
+
+  std::sort(differences.begin(), differences.end(), [](const auto &d1, const auto &d2) { return d1.second < d2.second; });
+  // Disable the axis having the smallest expansion
+  axis[differences[0].first] = false;
+}
+
+// Fill in the polynomial entries
+template <typename IndexContainer>
+inline void fillPolynomialEntries(Eigen::MatrixXd &matrix, const mesh::Mesh &mesh, const IndexContainer &IDs, Eigen::Index startIndex, std::array<bool, 3> activeAxis)
+{
+  // Loop over all vertices in the mesh
+  for (const auto &i : IDs | boost::adaptors::indexed()) {
+
+    // 1. the constant contribution
+    matrix(i.index(), startIndex) = 1.0;
+
+    // 2. the linear contribution
+    const auto & u = mesh.vertex(i.value()).rawCoords();
+    unsigned int k = 0;
+    // Loop over all three space dimension and ignore dead axis
+    for (unsigned int d = 0; d < activeAxis.size(); ++d) {
+      if (activeAxis[d]) {
+        PRECICE_ASSERT(matrix.rows() > i.index(), matrix.rows(), i.index());
+        PRECICE_ASSERT(matrix.cols() > startIndex + 1 + k, matrix.cols(), startIndex + 1 + k);
+        matrix(i.index(), startIndex + 1 + k) = u[d];
+        ++k;
+      }
+    }
+  }
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
+Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
+                               std::array<bool, 3> activeAxis, Polynomial polynomial)
+{
+  // Treat the 2D case as 3D case with dead axis
+  const unsigned int deadDimensions = std::count(activeAxis.begin(), activeAxis.end(), false);
+  const unsigned int dimensions     = 3;
+  const unsigned int polyparams     = polynomial == Polynomial::ON ? 1 + dimensions - deadDimensions : 0;
+
+  // Add linear polynom degrees if polynomial requires this
+  const auto inputSize = inputIDs.size();
+  const auto n         = inputSize + polyparams;
+
+  PRECICE_ASSERT((inputMesh.getDimensions() == 3) || activeAxis[2] == false);
+  PRECICE_ASSERT((inputSize >= 1 + polyparams) || polynomial != Polynomial::ON, inputSize);
+
+  Eigen::MatrixXd matrixCLU(n, n);
+
+  // Required to fill the poly -> poly entries in the matrix, which remain otherwise untouched
+  if (polynomial == Polynomial::ON) {
+    matrixCLU.setZero();
+  }
+
+  // Compute RBF matrix entries
+  auto         i_iter  = inputIDs.begin();
+  Eigen::Index i_index = 0;
+  for (; i_iter != inputIDs.end(); ++i_iter, ++i_index) {
+    const auto &u       = inputMesh.vertex(*i_iter).rawCoords();
+    auto        j_iter  = i_iter;
+    auto        j_index = i_index;
+    for (; j_iter != inputIDs.end(); ++j_iter, ++j_index) {
+      const auto &v                 = inputMesh.vertex(*j_iter).rawCoords();
+      double      squaredDifference = utils::computeSquaredDifference(u, v, activeAxis);
+      matrixCLU(i_index, j_index)   = basisFunction.evaluate(std::sqrt(squaredDifference));
+    }
+  }
+
+  // Add potentially the polynomial contribution in the matrix
+  if (polynomial == Polynomial::ON) {
+    fillPolynomialEntries(matrixCLU, inputMesh, inputIDs, inputSize, activeAxis);
+  }
+  matrixCLU.triangularView<Eigen::Lower>() = matrixCLU.transpose();
+  return matrixCLU;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
+inline Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
+                             const mesh::Mesh &outputMesh, const IndexContainer outputIDs, std::array<bool, 3> activeAxis, Polynomial polynomial)
+{
+  // Treat the 2D case as 3D case with dead axis
+  const unsigned int deadDimensions = std::count(activeAxis.begin(), activeAxis.end(), false);
+  const unsigned int dimensions     = 3;
+  const unsigned int polyparams     = polynomial == Polynomial::ON ? 1 + dimensions - deadDimensions : 0;
+
+  const auto inputSize  = inputIDs.size();
+  const auto outputSize = outputIDs.size();
+  const auto n          = inputSize + polyparams;
+
+  PRECICE_ASSERT((inputMesh.getDimensions() == 3) || activeAxis[2] == false);
+  PRECICE_ASSERT((inputSize >= 1 + polyparams) || polynomial != Polynomial::ON, inputSize);
+
+  Eigen::MatrixXd matrixA(outputSize, n);
+
+  // Compute RBF values for matrix A
+  for (const auto &i : outputIDs | boost::adaptors::indexed()) {
+    const auto &u = outputMesh.vertex(i.value()).rawCoords();
+    for (const auto &j : inputIDs | boost::adaptors::indexed()) {
+      const auto &v                 = inputMesh.vertex(j.value()).rawCoords();
+      double      squaredDifference = utils::computeSquaredDifference(u, v, activeAxis);
+      matrixA(i.index(), j.index()) = basisFunction.evaluate(std::sqrt(squaredDifference));
+    }
+  }
+
+  // Add potentially the polynomial contribution in the matrix
+  if (polynomial == Polynomial::ON) {
+    fillPolynomialEntries(matrixA, outputMesh, outputIDs, inputSize, activeAxis);
+  }
+  return matrixA;
+}
+
+// ------- Member Functions ---------
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::evaluateRippaLOOCVerror(const Eigen::VectorXd &lambda) const
@@ -146,7 +277,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 
   _autotuneShape = rbfConfig.autotuneShape;
 
-  fmt::println("\nAUTOTUNE SHAPE: {}", _autotuneShape);
+  fmt::println("\nAUTOTUNE SHAPE: {}", _autotuneShape); // TODO:
 
   // First, assemble the interpolation matrix and check the invertability
   bool decompositionSuccessful = false;
@@ -173,7 +304,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   if (polynomial != Polynomial::ON && computeCrossValidation) {
     // TODO: Disable synchronization
     precice::profiling::Event e("map.rbf.computeLOOCV");
-    _inverseDiagonal = computeInverseDiagonal(_decMatrixC);
+    _inverseDiagonal = utils::computeInverseDiagonal(_decMatrixC);
   }
   // Second, assemble evaluation matrix
   if (_autotuneShape) {
@@ -220,9 +351,10 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   if (!_autotuneShape) {
     // Compute the condition number
     profiling::Event e("map.rbf.condition");
-    double cond = approximateConditionNumber(_decMatrixC);
-    fmt::print("\nCONDITION <= {}\n", cond);
-    e.addData("condition", static_cast<int>(cond));
+    double rcond = utils::approximateReciprocalConditionNumber(_decMatrixC);
+    PRECICE_DEBUG("reciprocal condition number >= {}", rcond);
+    e.addData("100-log-rcond", static_cast<int>(100 * std::log10(rcond)));
+    e.addData("llt-success", static_cast<int>(decompositionSuccessful));
   }
 }
 
@@ -265,17 +397,10 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   }
 
   if (_autotuneShape) {
-    //std::cout << "_meshResolution=" << _meshResolution << "\n";
-    //std::cout << "clusterRadius=" << clusterRadius << "\n";
-
-    // if (_tuner.parameterError() > )
-    fmt::println("start");
-    double optRadius = _tuner.optimize(inputData);
-
     if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
-      RADIAL_BASIS_FUNCTION_T kernel(optRadius);
-      _decMatrixC = _tuner.getInterpolationMatrix().llt();
-      _matrixA    = _matrixA.unaryExpr([&kernel] (double x) { return kernel.evaluate(x); });
+      double optRadius = _tuner.optimize(inputData); //TODO: Optimization every iteration is not ideal.
+      _decMatrixC = _tuner.buildKernelLLT(optRadius);
+      _matrixA    = _tuner.applyKernelToMatrix(_matrixA, optRadius); // TODO: incorrect after second iteration
     } else {
       PRECICE_ASSERT(false, "Not supported.");
     }

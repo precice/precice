@@ -274,7 +274,7 @@ double SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::computeWeight(const mesh
 {
   // Assume that the local interpolant and the weighting function are the same
   // TODO: We don't need to reduce the dead coordinates here as the values should reduce anyway
-  auto res = computeSquaredDifference(_center.rawCoords(), v.rawCoords(), {{true, true, true}});
+  auto res = utils::computeSquaredDifference(_center.rawCoords(), v.rawCoords(), {{true, true, true}});
   return _weightingFunction.evaluate(std::sqrt(res));
 }
 

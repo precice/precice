@@ -9,7 +9,7 @@
 #include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mesh/Mesh.hpp"
 #include "profiling/Event.hpp"
-
+/*
 namespace precice {
 namespace mapping {
 
@@ -238,7 +238,7 @@ inline Eigen::MatrixXd applyKernelToDistanceMatrix(const Eigen::MatrixXd &distan
   return matrixC;
 }
 
-inline double approximateConditionNumber(const Eigen::LLT<Eigen::MatrixXd> &choleskyDec)
+inline double approximateReciprocalConditionNumber(const Eigen::LLT<Eigen::MatrixXd> &choleskyDec)
 {
   const Eigen::Index n = choleskyDec.matrixL().rows();
 
@@ -248,15 +248,15 @@ inline double approximateConditionNumber(const Eigen::LLT<Eigen::MatrixXd> &chol
   for (Eigen::Index i = 0; i < n; i++) {
     const double lii = choleskyDec.matrixL()(i, i);
     min_l = std::min(lii, min_l);
-    max_l = std::max(lii, min_l);
+    max_l = std::max(lii, max_l);
   }
-  double condition = max_l * max_l / (min_l * min_l);
-  if (condition < 0) condition = std::numeric_limits<double>::max();
+  double rcond = min_l * min_l / (max_l * max_l);
 
-  return condition;
+  if (rcond < 0 || std::isnan(rcond)) rcond = 0;
+  return rcond;
 }
 
-inline double approximateConditionNumber(const Eigen::ColPivHouseholderQR<Eigen::MatrixXd> &qrDec)
+inline double approximateReciprocalConditionNumber(const Eigen::ColPivHouseholderQR<Eigen::MatrixXd> &qrDec)
 {
   const Eigen::Index n = qrDec.matrixR().rows();
 
@@ -266,12 +266,12 @@ inline double approximateConditionNumber(const Eigen::ColPivHouseholderQR<Eigen:
   for (Eigen::Index i = 0; i < n; i++) {
     const double rii = qrDec.matrixR()(i, i);
     min_r = std::min(rii, min_r);
-    max_r = std::max(rii, min_r);
+    max_r = std::max(rii, max_r);
   }
-  double condition = max_r / min_r; // TODO: correct?
-  if (condition < 0) condition = std::numeric_limits<double>::max();
+  double rcond =  min_r / max_r;
+  if (rcond < 0 || std::isnan(rcond)) rcond = 0;
 
-  return condition;
+  return rcond;
 }
 
 inline double computeRippaLOOCVerror(const Eigen::LLT<Eigen::MatrixXd> &decLLT, const Eigen::VectorXd &inputData)
@@ -289,3 +289,4 @@ inline double computeRippaLOOCVerror(const Eigen::LLT<Eigen::MatrixXd> &decLLT, 
 
 }
 }
+*/

@@ -295,6 +295,11 @@ public:
     return _params;
   };
 
+  static constexpr double transformRadiusToShape(const double radius)
+  {
+    return std::sqrt(-std::log(cutoffThreshold)) / radius;
+  }
+
 public:
   /// Below that value the function is supposed to be zero. Defines the support radius if not explicitly given
   static constexpr double cutoffThreshold = 1e-9;
