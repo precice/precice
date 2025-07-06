@@ -1,13 +1,10 @@
 #pragma once
 
-#include "RBFMatrixOperations.hpp"
-
 #include <limbo/bayes_opt/boptimizer.hpp>
 #include <limbo/init/grid_sampling.hpp>
 #include <limbo/limbo.hpp>
 #include <limbo/stop/max_predicted_value.hpp>
-#include <mapping/RadialBasisFctSolver.hpp>
-#include <mapping/impl/InitSampling.hpp>
+
 namespace precice {
 struct OptimizationParameters {
   struct bayes_opt_boptimizer : public limbo::defaults::bayes_opt_boptimizer {
@@ -63,100 +60,6 @@ struct OptimizationParameters {
   struct acqui_ei {
     BO_PARAM(double, jitter, 0.02); // ξ = jitter = 0.02
   };
-};
-
-namespace mapping { // TODO:
-  template <typename RADIAL_BASIS_FUNCTION_T>
-  class RadialBasisFctSolver;
-}
-
-
-template <typename RBF_T>
-struct LOOCVEvaluator {
-
-  LOOCVEvaluator(const Eigen::VectorXd &in, const Eigen::MatrixXd &distance, double r)
-      : lower_bound(r * 0.5), invalues(in), distanceMatrix(distance) {}
-
-  // number of input dimension (x.size())
-  BO_PARAM(size_t, dim_in, 1);
-  // number of dimensions of the result (res.size())
-  BO_PARAM(size_t, dim_out, 1);
-
-  const double          lower_bound;
-  mutable double        upper_bound = -1;
-  const Eigen::VectorXd invalues;
-  const Eigen::MatrixXd distanceMatrix;
-  mutable double        lower_val = 1;
-  mutable double        upper_val = 1;
-
-  void setValues(double lower, double upper) const
-  {
-    lower_val = lower;
-    upper_val = upper;
-  }
-
-  void setUpperLimit(double limit) const
-  {
-    upper_bound = limit;
-  }
-
-  double transformFromValues(double val) const
-  {
-    return val / std::abs(upper_val);
-    /*
-    if ((lower_val == upper_val) && (lower_val != 0)) {
-      return val / std::abs(upper_val);
-    } else {
-      std::cout << "transform: " << (val - lower_val) / (upper_val - lower_val) << std::endl;
-      return (val - lower_val) / (upper_val - lower_val);
-    }
-    */
-  }
-
-  double transformFromUnitToReal(double in) const
-  {
-    PRECICE_ASSERT(upper_bound > 0);
-    return lower_bound + (upper_bound - lower_bound) * in;
-  }
-
-  double transformFromRealToUnit(double real) const
-  {
-    PRECICE_ASSERT(upper_bound > lower_bound);
-    return (real - lower_bound) / (upper_bound - lower_bound);
-  }
-
-  // the function to be optimized
-  Eigen::VectorXd operator()(const Eigen::VectorXd &x) const
-  {
-
-    PRECICE_ASSERT(RBF_T::isStrictlyPositiveDefinite(), "Not supported.");
-
-    using RES_T = double;
-
-    const Eigen::Index n = invalues.size();
-    double param = upper_bound == -1 ? x(0) : transformFromUnitToReal(x(0));
-
-    Eigen::LLT<Eigen::Matrix<RES_T, -1, -1>> dec;
-    if constexpr (RBF_T::isStrictlyPositiveDefinite()) { // to make compiler happy
-      RBF_T kernel(param);
-      dec = mapping::RadialBasisFctSolver<RBF_T>::applyKernelToDistanceMatrix(distanceMatrix, n, kernel).llt(); // TODO: add RES_T
-    }
-
-    // TODO: find a better value for failure
-    if (dec.info() != Eigen::ComputationInfo::Success) {
-      std::cout << std::fixed << std::setprecision(10) << "Parameter: " << param << "  diverged." << std::endl;
-      return limbo::tools::make_vector(std::numeric_limits<double>::quiet_NaN());
-    }
-
-    Eigen::Matrix<RES_T, -1, -1> L_inv  = utils::invertLowerTriangularBlockwise<RES_T>(dec.matrixL());
-    Eigen::Vector<RES_T, -1>     incopy = invalues.unaryExpr([](double x) { return static_cast<RES_T>(x); });
-    Eigen::Vector<RES_T, -1>     lambda = dec.solve(incopy);
-    double                       loocv  = std::sqrt(static_cast<double>((lambda.array() / (L_inv.array().square().colwise().sum()).transpose().array()).array().square().sum()) / n);
-    // Eigen::Vector<RES_T, -1> inv_diag = L_inv.array().square().colwise().sum().inverse();
-    // double                   loocv = (((-0.5 * (lambda.array().square().array().colwise() * inv_diag.array())).array().colwise() - 0.5 * inv_diag.array().log().array()) - 0.5 * std::log(2 * M_PI)).colwise().sum().sum();
-    std::cout << std::fixed << std::setprecision(10) << "Parameter: " << param << "  with error: " << transformFromValues(-loocv) << std::endl;
-    return limbo::tools::make_vector(transformFromValues(-loocv));
-  }
 };
 
 } // namespace precice
