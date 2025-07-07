@@ -14,7 +14,8 @@
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
-#include "impl/RBFParameterTuner.hpp"
+#include "impl/SimpleRBFParameterTuner.hpp"
+#include "impl/BayesOptRBFParameterTuner.hpp"
 
 namespace precice {
 namespace mapping {
@@ -92,9 +93,10 @@ private:
   Eigen::MatrixXd _matrixV;
 
   /// Evaluation matrix (output x input)
+  Eigen::MatrixXd _matrixADistances;
   mutable Eigen::MatrixXd _matrixA;
 
-  mutable RBFParameterTunerSimple<RADIAL_BASIS_FUNCTION_T> _tuner;
+  mutable RBFParameterTunerBO<RADIAL_BASIS_FUNCTION_T> _tuner;
 
   // TODO: Won't work with global RBF, as we set the minimum in the SphericalVertexCLuster as the (half) cluster radius or similar
   double clusterRadius = std::numeric_limits<double>::quiet_NaN();
@@ -277,7 +279,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 
   _autotuneShape = rbfConfig.autotuneShape;
 
-  fmt::println("\nAUTOTUNE SHAPE: {}", _autotuneShape); // TODO:
+  PRECICE_INFO("\nAUTOTUNE SHAPE: {}\n", _autotuneShape); // TODO:
 
   // First, assemble the interpolation matrix and check the invertability
   bool decompositionSuccessful = false;
@@ -308,7 +310,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   }
   // Second, assemble evaluation matrix
   if (_autotuneShape) {
-    _matrixA = buildMatrixA(VolumeSplines(), inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial); // TODO: necessary?
+    _matrixA = buildMatrixA(VolumeSplines(), inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial);
   } else {
     _matrixA = buildMatrixA(basisFunction, inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial);
   }
@@ -396,11 +398,12 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
     inputData -= (_matrixQ * polynomialContribution);
   }
 
+  PRECICE_INFO("\nTUNE SHAPE: {}\n", _autotuneShape);
   if (_autotuneShape) {
     if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
       double optRadius = _tuner.optimize(inputData); //TODO: Optimization every iteration is not ideal.
       _decMatrixC = _tuner.buildKernelLLT(optRadius);
-      _matrixA    = _tuner.applyKernelToMatrix(_matrixA, optRadius); // TODO: incorrect after second iteration
+      _matrixA    = _tuner.applyKernelToMatrix(_matrixA, optRadius); // TODO: avoid temporary allocations
     } else {
       PRECICE_ASSERT(false, "Not supported.");
     }

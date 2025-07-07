@@ -150,34 +150,39 @@ inline Eigen::VectorXd computeInverseDiagonal(const Eigen::ColPivHouseholderQR<E
 
 /**
  * @brief Computes the Leave-One-Out Cross Validation error from a Cholesky decomposition.
- * @param decLLT Cholesky decomposition.
+ * @param choleskyDec Cholesky decomposition.
  * @param inputData Right hand side data of the linear system.
  * @return LOOCV error for a valid Cholesky decomposition and NaN otherwise.
+ *
+ * Implementation of LOOCV according to Rippa(1999), DOI: 10.1023/a:1018975909870
  */
-inline double computeRippaLOOCVerror(const Eigen::LLT<Eigen::MatrixXd> &decLLT, const Eigen::VectorXd &inputData)
+inline double computeRippaLOOCVerror(const Eigen::LLT<Eigen::MatrixXd> &choleskyDec, const Eigen::VectorXd &inputData)
 {
-  // Implementation of LOOCV according to Rippa(1999), DOI: 10.1023/a:1018975909870
-  if (decLLT.info() != Eigen::ComputationInfo::Success) {
+  if (choleskyDec.info() != Eigen::ComputationInfo::Success) {
     return std::numeric_limits<double>::quiet_NaN();
   }
   const Eigen::Index    n      = inputData.size();
-  const Eigen::VectorXd lambda = decLLT.solve(inputData);
+  const Eigen::VectorXd lambda = choleskyDec.solve(inputData);
 
-  const double loocv = std::sqrt((lambda.array() / computeInverseDiagonal(decLLT).array()).array().square().sum() / n);
+  const double loocv = std::sqrt((lambda.array() / computeInverseDiagonal(choleskyDec).array()).array().square().sum() / n);
 
   return loocv;
 }
 
 /**
- * @brief Computes an approximation such that 1/cond(LL^T) >= returned result.
+ * @brief Computes an approximation such that 1/cond(LL^T) > returned result.
  *
  * Implementation based on the diagonal entries of the Cholesky decomposition matrix.
- * See also: "A Survey of Condition Number Estimation for Triangular Matrices" https://doi.org/10.1137/1029112
+ * See also: "A Survey of Condition Number Estimation for Triangular Matrices" DOI: 10.1137/1029112
  *
- * @return >= 1/cond(LL^T)
+ * @return approx < 1/cond(LL^T) and 0 if the decomposition is invalid.
  */
 inline double approximateReciprocalConditionNumber(const Eigen::LLT<Eigen::MatrixXd> &choleskyDec)
 {
+  if (choleskyDec.info() != Eigen::ComputationInfo::Success) {
+    return 0;
+  }
+
   const Eigen::Index n = choleskyDec.matrixL().rows();
 
   double max_l = std::numeric_limits<double>::min();
