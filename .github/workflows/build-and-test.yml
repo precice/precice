@@ -171,7 +171,7 @@ jobs:
       - name: Compile
         working-directory: build
         run: |
-          make -j $(nproc)
+          cmake --build .
       - name: Adjust user rights
         run: chown -R $PRECICE_USER build
       - name: Tests
