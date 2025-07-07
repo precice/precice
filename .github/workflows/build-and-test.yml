@@ -26,6 +26,11 @@ concurrency:
   group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{github.event_name == 'pull_request'}}
 
+env:
+  CTEST_OUTPUT_ON_FAILURE: True
+  CMAKE_EXPORT_COMPILE_COMMANDS: True
+  CMAKE_GENERATOR: Ninja
+
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
@@ -144,7 +149,7 @@ jobs:
         run: |
           . ../venv/bin/activate # There is always a venv present
           cmake --version
-          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DPRECICE_FEATURE_GINKGO_MAPPING=${{ env.Ginkgo }} -DPRECICE_FEATURE_LIBBACKTRACE_STACKTRACES=ON -DPRECICE_BUILD_BENCHMARKS=ON  -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DPRECICE_FEATURE_GINKGO_MAPPING=${{ env.Ginkgo }} -DPRECICE_FEATURE_LIBBACKTRACE_STACKTRACES=ON -DPRECICE_BUILD_BENCHMARKS=ON  -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" ..
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -171,8 +176,6 @@ jobs:
         run: chown -R $PRECICE_USER build
       - name: Tests
         env:
-          CTEST_OUTPUT_ON_FAILURE: 1
-          BOOST_TEST_LOG_LEVEL: all
           OMPI_MCA_btl: self,vader
           OMPI_MCA_pml: ob1
           FI_PROVIDER: ${{ matrix.IMAGE == 'Intel' && 'tcp' || 'sockets' }} # use sockets on fedora and tcp on intel
@@ -245,7 +248,7 @@ jobs:
         PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
       run: |
         cmake --version
-        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -G Ninja ..
+        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} ..
     - uses: actions/upload-artifact@v4
       if: failure()
       with:
@@ -267,7 +270,6 @@ jobs:
         cmake --build .
     - name: Tests
       env:
-        CTEST_OUTPUT_ON_FAILURE: 1
         OMPI_MCA_btl: self,vader
         OMPI_MCA_pml: ob1
       working-directory: build
@@ -293,8 +295,6 @@ jobs:
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 4
       CMAKE_BUILD_TYPE: ${{ matrix.TYPE }}
-      CMAKE_GENERATOR: Ninja
-      CTEST_OUTPUT_ON_FAILURE: True
       CXXFLAGS: -Wa,-mbig-obj
     steps:
       - name: Install MS-MPI
