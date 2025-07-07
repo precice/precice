@@ -35,8 +35,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout preCICE
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       - name: Setup python
         uses: actions/setup-python@v5
         with:
@@ -226,8 +225,7 @@ jobs:
             CXX: 'clang++'
             TYPE: Release
     steps:
-    - name: Check out preCICE
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
     - name: Setup python
       uses: actions/setup-python@v5
       with:
@@ -313,7 +311,7 @@ jobs:
           update: true
           path-type: inherit
           install: git mingw-w64-ucrt-x86_64-gcc-libs mingw-w64-ucrt-x86_64-boost-libs mingw-w64-ucrt-x86_64-libxml2 mingw-w64-ucrt-x86_64-python mingw-w64-ucrt-x86_64-python-numpy mingw-w64-ucrt-x86_64-cc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-msmpi mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-boost mingw-w64-ucrt-x86_64-eigen3 mingw-w64-ucrt-x86_64-crt mingw-w64-ucrt-x86_64-msmpi
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Make build directory
         run: mkdir -p build
       - name: Configure
