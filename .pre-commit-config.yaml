@@ -41,6 +41,11 @@ repos:
     - id: codespell
       name: check spelling
       exclude: "^thirdparty"
+- repo: https://github.com/python-jsonschema/check-jsonschema
+  rev: 0.33.2
+  hooks:
+    - id: check-github-workflows
+      args: ["--verbose"]
 - repo: local
   hooks:
   - id: update-cmake-sources
