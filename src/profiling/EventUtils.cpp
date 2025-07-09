@@ -133,32 +133,21 @@ void EventRegistry::startBackend()
       std::filesystem::create_directories(_directory);
     }
   }
-  auto filename = fmt::format("{}/{}-{}-{}.json", _directory, _applicationName, _rank, _size);
+  auto filename = fmt::format("{}/{}-{}-{}.txt", _directory, _applicationName, _rank, _size);
   PRECICE_DEBUG("Starting backend with events-file: \"{}\"", filename);
   _output.open(filename);
   PRECICE_CHECK(_output, "Unable to open the events-file: \"{}\"", filename);
 
   // write header
-  fmt::print(_output,
-             R"({{
-  "meta":{{
-  "name": "{}",
-  "rank": "{}",
-  "size": "{}",
-  "unix_us": "{}",
-  "tinit": "{}",
-  "mode": "{}",
-  "file_version": {}
-  }},
-  "events":[
-  )",
-             _applicationName,
-             _rank,
-             _size,
-             std::chrono::duration_cast<std::chrono::microseconds>(_initTime.time_since_epoch()).count(),
-             timepoint_to_string(_initTime),
-             toString(_mode),
-             ::precice::profiling::file_version);
+  fmt::println(_output,
+               R"({{"name":"{}","rank":{},"size":{},"unix_us":"{}","tinit":"{}","mode":"{}","file_version":{}}})",
+               _applicationName,
+               _rank,
+               _size,
+               std::chrono::duration_cast<std::chrono::microseconds>(_initTime.time_since_epoch()).count(),
+               timepoint_to_string(_initTime),
+               toString(_mode),
+               ::precice::profiling::file_version);
   _output.flush();
   _isBackendRunning = true;
 }
@@ -173,7 +162,6 @@ void EventRegistry::stopBackend()
   put(StopEntry{*_globalId, now});
   // flush the queue
   flush();
-  _output << "]}";
   _output.close();
   _nameDict.clear();
 
@@ -230,29 +218,29 @@ struct EventWriter {
   void operator()(const StartEntry &se)
   {
     fmt::print(out,
-               R"({}{{"et":"{}","eid":{},"ts":{}}})",
-               prefix, se.type, se.eid, sinceInit(se.clock));
+               "B{}:{}\n",
+               se.eid, sinceInit(se.clock));
   }
 
   void operator()(const StopEntry &se)
   {
     fmt::print(out,
-               R"({}{{"et":"{}","eid":{},"ts":{}}})",
-               prefix, se.type, se.eid, sinceInit(se.clock));
+               "E{}:{}\n",
+               se.eid, sinceInit(se.clock));
   }
 
   void operator()(const DataEntry &de)
   {
     fmt::print(out,
-               R"({}{{"et":"{}","eid":{},"ts":{},"dn":{},"dv":"{}"}})",
-               prefix, de.type, de.eid, sinceInit(de.clock), de.did, de.dvalue);
+               "D{}:{}:{}:{}\n",
+               de.eid, sinceInit(de.clock), de.did, de.dvalue);
   }
 
   void operator()(const NameEntry &ne)
   {
     fmt::print(out,
-               R"({}{{"et":"n","en":"{}","eid":{}}})",
-               prefix, ne.name, ne.id);
+               "N{}:{}\n",
+               ne.id, ne.name);
   }
 };
 } // namespace
