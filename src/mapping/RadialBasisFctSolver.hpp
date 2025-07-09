@@ -93,10 +93,9 @@ private:
   Eigen::MatrixXd _matrixV;
 
   /// Evaluation matrix (output x input)
-  Eigen::MatrixXd _matrixADistances;
-  mutable Eigen::MatrixXd _matrixA;
+  Eigen::MatrixXd _matrixA;
 
-  mutable RBFParameterTunerBO<RADIAL_BASIS_FUNCTION_T> _tuner;
+  mutable RBFParameterTunerSimple<RADIAL_BASIS_FUNCTION_T> _tuner;
 
   // TODO: Won't work with global RBF, as we set the minimum in the SphericalVertexCLuster as the (half) cluster radius or similar
   double clusterRadius = std::numeric_limits<double>::quiet_NaN();
@@ -279,8 +278,6 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 
   _autotuneShape = rbfConfig.autotuneShape;
 
-  PRECICE_INFO("\nAUTOTUNE SHAPE: {}\n", _autotuneShape); // TODO:
-
   // First, assemble the interpolation matrix and check the invertability
   bool decompositionSuccessful = false;
   if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
@@ -354,7 +351,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
     // Compute the condition number
     profiling::Event e("map.rbf.condition");
     double rcond = utils::approximateReciprocalConditionNumber(_decMatrixC);
-    PRECICE_DEBUG("reciprocal condition number >= {}", rcond);
+    PRECICE_DEBUG("reciprocal condition number < {}", rcond);
     e.addData("100-log-rcond", static_cast<int>(100 * std::log10(rcond)));
     e.addData("llt-success", static_cast<int>(decompositionSuccessful));
   }
@@ -398,12 +395,12 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
     inputData -= (_matrixQ * polynomialContribution);
   }
 
-  PRECICE_INFO("\nTUNE SHAPE: {}\n", _autotuneShape);
+  double optimizedRadius = 0;
+
   if (_autotuneShape) {
     if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
-      double optRadius = _tuner.optimize(inputData); //TODO: Optimization every iteration is not ideal.
-      _decMatrixC = _tuner.buildKernelLLT(optRadius);
-      _matrixA    = _tuner.applyKernelToMatrix(_matrixA, optRadius); // TODO: avoid temporary allocations
+      optimizedRadius = _tuner.optimize(inputData); //TODO: Optimization in every iteration is not ideal.
+      _decMatrixC = _tuner.buildKernelLLT(optimizedRadius);
     } else {
       PRECICE_ASSERT(false, "Not supported.");
     }
@@ -419,7 +416,18 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   }
   PRECICE_ASSERT(p.size() == _matrixA.cols());
 
-  Eigen::VectorXd out = _matrixA * p;
+  Eigen::VectorXd out;
+  if (_autotuneShape) {
+    const int outSize = _matrixA.rows();
+    const int inSize = inputData.size();
+    const int polyParams = _matrixA.cols() - inSize;
+
+    out = _tuner.applyKernelToMatrix(_matrixA.block(0, 0, outSize, inSize), optimizedRadius) * p.segment(0, inSize);
+    out += _matrixA.block(0, inSize, outSize, polyParams) * p.segment(inSize, polyParams);
+  } else {
+    out = _matrixA * p;
+  }
+
 
   // Add the polynomial part again for separated polynomial
   if (polynomial == Polynomial::SEPARATE) {

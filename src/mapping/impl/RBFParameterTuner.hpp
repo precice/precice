@@ -3,6 +3,7 @@
 #include <mapping/MathHelper.hpp>
 #include <mapping/RadialBasisFctSolver.hpp>
 #include <mapping/impl/BasisFunctions.hpp>
+#include <functional>
 
 namespace precice {
 namespace mapping {
@@ -36,7 +37,7 @@ protected:
 
   static constexpr bool rbfSupportsRadius()
   {
-    return RBF_T::hasCompactSupport() || std::is_same_v<RBF_T, ThinPlateSplines>; // TODO: necessary? better criterion?
+    return RBF_T::hasCompactSupport(); // TODO: necessary? better criterion?
   }
 
   static constexpr bool rbfUsesShapeParameter()
@@ -53,7 +54,9 @@ public:
 
   const Eigen::MatrixXd      &getDistanceMatrix() const;
   Eigen::LLT<Eigen::MatrixXd> buildKernelLLT(double sampleRadius) const;
-  Eigen::MatrixXd             applyKernelToMatrix(const Eigen::MatrixXd &matrix, double sampleRadius) const;
+
+  using UnaryExprType = Eigen::CwiseUnaryOp<std::function<double(double)>, const Eigen::Ref<Eigen::MatrixXd>>;
+  auto applyKernelToMatrix(const Eigen::Ref<const Eigen::MatrixXd> &matrixExpr, double sampleRadius) const;
 
   static double estimateMeshResolution(const mesh::Mesh &inputMesh);
   static double getMinBoundSize(const mesh::Mesh &inputMesh);
@@ -104,19 +107,22 @@ Eigen::LLT<Eigen::MatrixXd> RBFParameterTuner<RBF_T>::buildKernelLLT(double samp
 }
 
 template <typename RBF_T>
-Eigen::MatrixXd RBFParameterTuner<RBF_T>::applyKernelToMatrix(const Eigen::MatrixXd &matrix, double sampleRadius) const
+auto RBFParameterTuner<RBF_T>::applyKernelToMatrix(const Eigen::Ref<const Eigen::MatrixXd> &matrixExpr, double sampleRadius) const
 {
+  std::function<double(double)> expr;
+
   if constexpr (rbfSupportsRadius()) {
     double parameter = sampleRadius;
     if constexpr (rbfUsesShapeParameter()) {
       parameter = RBF_T::transformRadiusToShape(sampleRadius);
     }
     RBF_T kernel(parameter);
-    return matrix.unaryExpr([&kernel](double x) { return kernel.evaluate(x); });
+    expr = [&kernel](double x) { return kernel.evaluate(x); };
   } else {
     PRECICE_ASSERT(false, "Selected RBF does not support a radius.");
-    return matrix.unaryExpr([&](double x) { return x; });
+    expr = [&](double x) { return x; };
   }
+  return matrixExpr.unaryExpr(expr);
 }
 
 template <typename RBF_T>
