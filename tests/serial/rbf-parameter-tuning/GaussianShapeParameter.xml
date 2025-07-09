@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
-  <data:vector name="DataOne" />
+  <data:scalar name="DataOne" />
 
   <mesh name="MeshOne" dimensions="3">
     <use-data name="DataOne" />
@@ -24,7 +24,7 @@
             to="MeshTwo"
             constraint="consistent"
             polynomial="off">
-      <basis-function:compact-polynomial-c4 support-radius="1" autotune-shape="true"/>
+      <basis-function:gaussian support-radius="1" autotune-shape="true"/>
     </mapping:rbf-global-direct>
     <read-data name="DataOne" mesh="MeshTwo" />
   </participant>

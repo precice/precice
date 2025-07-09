@@ -128,7 +128,7 @@ auto RBFParameterTuner<RBF_T>::applyKernelToMatrix(const Eigen::Ref<const Eigen:
 template <typename RBF_T>
 double RBFParameterTuner<RBF_T>::estimateMeshResolution(const mesh::Mesh &inputMesh)
 {
-  constexpr int sampleSize = 5;
+  constexpr int sampleSize = 3;
 
   const size_t       i0 = inputMesh.vertices().size() / 2;
   const mesh::Vertex x0 = inputMesh.vertices().at(i0);
