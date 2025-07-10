@@ -110,20 +110,6 @@ private:
 
 // ------- Non-Member Functions ---------
 
-/// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
-inline double computeSquaredDifference(
-    const std::array<double, 3> &u,
-    std::array<double, 3>        v,
-    const std::array<bool, 3>   &activeAxis = {{true, true, true}})
-{
-  // Subtract the values and multiply out dead dimensions
-  for (unsigned int d = 0; d < v.size(); ++d) {
-    v[d] = (u[d] - v[d]) * static_cast<int>(activeAxis[d]);
-  }
-  // @todo: this can be replaced by std::hypot when moving to C++17
-  return std::accumulate(v.begin(), v.end(), static_cast<double>(0.), [](auto &res, auto &val) { return res + val * val; });
-}
-
 /// given the active axis, computes sets the axis with the lowest spatial expansion to dead
 template <typename IndexContainer>
 constexpr void reduceActiveAxis(const mesh::Mesh &mesh, const IndexContainer &IDs, std::array<bool, 3> &axis)
@@ -488,7 +474,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::interpolateAt(con
   const auto &out = v.rawCoords();
   for (const auto &j : inputIDs | boost::adaptors::indexed()) {
     const auto &in                = inMesh.vertex(j.value()).rawCoords();
-    double      squaredDifference = computeSquaredDifference(out, in);
+    double      squaredDifference = utils::computeSquaredDifference(out, in);
     double      eval              = basisFunction.evaluate(std::sqrt(squaredDifference));
 
     result += eval * coeffs.row(j.index()).transpose();
@@ -527,7 +513,7 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const me
   const auto &out = v.rawCoords();
   for (const auto &j : inputIDs | boost::adaptors::indexed()) {
     const auto &in                = inMesh.vertex(j.value()).rawCoords();
-    double      squaredDifference = computeSquaredDifference(out, in);
+    double      squaredDifference = utils::computeSquaredDifference(out, in);
     double      eval              = basisFunction.evaluate(std::sqrt(squaredDifference));
 
     Au.row(j.index()) += eval * load.transpose();

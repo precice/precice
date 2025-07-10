@@ -3,10 +3,10 @@
 #include <functional>
 #include <mapping/MathHelper.hpp>
 #include <mapping/RadialBasisFctSolver.hpp>
+#include <mapping/config/MappingConfigurationTypes.hpp>
 #include <mapping/impl/BasisFunctions.hpp>
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 // Forward declaration of function found in <mapping/RadialBasisFctSolver.hpp>
 template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
@@ -158,5 +158,4 @@ double RBFParameterTuner<RBF_T>::getMinBoundSize(const mesh::Mesh &inputMesh)
   return minLength / 2;
 };
 
-} // namespace mapping
-} // namespace precice
+}

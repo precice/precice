@@ -2,8 +2,7 @@
 
 #include "mapping/impl/RBFParameterTuner.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 template <typename RBF_T>
 class RBFParameterTunerSimple : public RBFParameterTuner<RBF_T> {
@@ -162,5 +161,4 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &
   return std::isnan(centerSample.error) ? lowerBound : centerSample;
 }
 
-} // namespace mapping
-} // namespace precice
+}

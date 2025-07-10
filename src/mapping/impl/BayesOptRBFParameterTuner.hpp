@@ -6,8 +6,7 @@
 #include <limbo/limbo.hpp>
 #include <limbo/tools/macros.hpp>
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 struct OptimizationParameters {
 
@@ -278,6 +277,10 @@ Eigen::VectorXd RBFParameterTunerBO<RBF_T>::operator()(const Eigen::VectorXd &x)
 {
   PRECICE_ASSERT(_inputData.size() > 0, "Input data not initialized.");
 
+  if (_maxError < 1e-15) {
+    return limbo::tools::make_vector(0.0);
+  }
+
   double sampleRadius = isTransformationConfigured() ? backtransformPos(x(0)) : x(0);
 
   const Eigen::LLT<Eigen::MatrixXd> llt = this->buildKernelLLT(sampleRadius);
@@ -295,5 +298,4 @@ Eigen::VectorXd RBFParameterTunerBO<RBF_T>::operator()(const Eigen::VectorXd &x)
   return limbo::tools::make_vector(error);
 }
 
-} // namespace mapping
-} // namespace precice
+}
