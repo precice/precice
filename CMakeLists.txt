@@ -216,8 +216,10 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt)
 
 # limbo
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/limbo)
+# optional optimizer packages for limbo
+find_package(libcmaes)
+find_package(libnlopt)
 
-find_package(libcmaes REQUIRED)
 #
 # Find Configurable Dependencies
 #
@@ -397,7 +399,12 @@ if(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES)
   target_link_libraries(preciceCore PRIVATE internal::libbacktrace)
 endif()
 
-target_compile_definitions(preciceCore PUBLIC USE_LIBCMAES)
+if(libcmaes_FOUND)
+  target_compile_definitions(preciceCore PUBLIC USE_LIBCMAES)
+elseif (libnlopt_FOUND)
+  target_compile_definitions(preciceCore PUBLIC USE_NLOPT)
+endif()
+
 # Force Intel compiler to honor nan and infinite and use value-preserving floating point mode
 target_compile_options(preciceCore PUBLIC $<$<CXX_COMPILER_ID:IntelLLVM>:-fhonor-infinities -fhonor-nans -fp-model=precise>)
 
@@ -412,7 +419,11 @@ target_link_libraries(preciceCore PUBLIC LibXml2::LibXml2)
 target_link_libraries(preciceCore PUBLIC fmtlib-static)
 
 # Setup limbo
-target_link_libraries(preciceCore PUBLIC cmaes)
+if(libcmaes_FOUND)
+  target_link_libraries(preciceCore PUBLIC cmaes)
+elseif (libnlopt_FOUND)
+  target_link_libraries(preciceCore PUBLIC nlopt)
+endif()
 
 # Setup limbo
 target_link_libraries(preciceCore PUBLIC limbo)

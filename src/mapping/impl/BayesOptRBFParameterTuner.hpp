@@ -14,10 +14,10 @@ struct OptimizationParameters {
   struct bayes_opt_boptimizer : public limbo::defaults::bayes_opt_boptimizer { };
 
   // depending on which internal optimizer we use, we need to import different parameters
-#ifdef USE_NLOPT
-  struct opt_nloptnograd : public limbo::defaults::opt_nloptnograd { };
-#elif defined(USE_LIBCMAES)
+#ifdef USE_LIBCMAES
   struct opt_cmaes : public limbo::defaults::opt_cmaes { };
+#elif defined(USE_NLOPT)
+  struct opt_nloptnograd : public limbo::defaults::opt_nloptnograd { };
 #else
   struct opt_gridsearch {
     BO_PARAM(int, bins, 20);
@@ -36,10 +36,6 @@ struct OptimizationParameters {
   };
 
   struct kernel_maternfivehalves : public limbo::defaults::kernel_maternfivehalves { };
-
-  // struct init_initsampling {
-  //   BO_PARAM(int, bins, 10);
-  // };
 
   // maximizing -(error / max error)
   // TODO: dependent on mesh width and kernel, requires knowledge of real interpolation error
@@ -78,11 +74,18 @@ public:
   using stop_t     = boost::fusion::vector<limbo::stop::MaxIterations<OptimizationParameters>, limbo::stop::MaxPredictedValue<OptimizationParameters>>;
   using init_t     = InitSampling;
   using acqui_t    = limbo::acqui::EI<OptimizationParameters, limbo::model::GP<OptimizationParameters>>;
-  using acquiOpt_t = limbo::opt::Cmaes<OptimizationParameters>;
+
+#ifdef USE_LIBCMAES
+  using acquiopt_t = limbo::opt::Cmaes<OptimizationParameters>;
+#elif defined(USE_NLOPT)
+  using acquiopt_t = limbo::opt::NLOptNoGrad<OptimizationParameters, nlopt::GN_DIRECT_L_RAND>;
+#else
+  using acquiopt_t = limbo::opt::GridSearch<OptimizationParameters>;
+#endif
 
   using ConfiguredBOptimizer = limbo::bayes_opt::BOptimizer<OptimizationParameters,
                                                             limbo::initfun<init_t>, limbo::acquifun<acqui_t>,
-                                                            limbo::acquiopt<acquiOpt_t>, limbo::stopcrit<stop_t>>;
+                                                            limbo::acquiopt<acquiopt_t>, limbo::stopcrit<stop_t>>;
 
   BO_PARAM(size_t, dim_in, 1);
   BO_PARAM(size_t, dim_out, 1);

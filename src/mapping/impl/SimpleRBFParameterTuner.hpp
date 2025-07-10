@@ -51,9 +51,9 @@ double RBFParameterTunerSimple<RBF_T>::optimize(const Eigen::VectorXd &inputData
 {
   PRECICE_ASSERT(this->_isInitialized);
 
-  constexpr double POS_TOLERANCE          = 1.5;
-  constexpr int    MAX_SUCCESSFUL_SAMPLES = 10;
-  constexpr int    MAX_BISEC_ITERATIONS   = 6;
+  constexpr double POS_TOLERANCE        = 1.5;
+  constexpr int    MAX_BISEC_ITERATIONS = 6;
+  //constexpr int MAX_SUCCESSFUL_SAMPLES = 10;
 
   Sample bestSample = optimizeBisection(inputData, POS_TOLERANCE, MAX_BISEC_ITERATIONS);
   PRECICE_INFO("Best sample: rad={:.4e}, err={:.4e}", bestSample.pos, bestSample.error);
