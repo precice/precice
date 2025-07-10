@@ -15,6 +15,10 @@
 #include "profiling/Event.hpp"
 #include "utils/assertion.hpp"
 
+#ifdef PRECICE_COMPRESSION
+#include <lzma.h>
+#endif
+
 namespace precice::profiling {
 
 /// The Mode of the Event utility
@@ -160,8 +164,9 @@ private:
   /// The amount of parallel instances of the current program
   int _size = 1;
 
-  /// Indicator for the first record to be written
-  bool _firstwrite = true;
+  lzma_stream _strm;
+
+  std::vector<char> _buf = std::vector<char>(2 * 64);
 
   /// The id of the global event
   std::optional<int> _globalId;
