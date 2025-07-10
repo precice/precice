@@ -22,8 +22,7 @@
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 /**
  * @brief Container and creator for meshes.
@@ -67,7 +66,8 @@ public:
   Mesh(
       std::string name,
       int         dimensions,
-      MeshID      id);
+      MeshID      id,
+      bool        isJustInTime = false);
 
   /// Mutable access to a vertex by VertexID
   Vertex &vertex(VertexID id);
@@ -233,6 +233,9 @@ public:
   /// Clears the partitioning information
   void clearPartitioning();
 
+  /// Clears all data stamples
+  void clearDataStamples();
+
   void setVertexDistribution(VertexDistribution vd)
   {
     PRECICE_ASSERT(std::all_of(vd.begin(), vd.end(), [](const auto &p) { return std::is_sorted(p.second.begin(), p.second.end()); }));
@@ -326,6 +329,11 @@ public:
     return _index;
   }
 
+  bool isJustInTime() const
+  {
+    return _isJustInTime;
+  }
+
   /**
    * Removes all duplicates and generates implicit primitives.
    *
@@ -390,6 +398,9 @@ private:
    */
   CommunicationMap _communicationMap;
 
+  /// for just-in-time mapping, we need an artificial mesh, which we can use
+  bool _isJustInTime = false;
+
   BoundingBox _boundingBox;
 
   query::Index _index;
@@ -406,5 +417,4 @@ private:
 
 std::ostream &operator<<(std::ostream &os, const Mesh &q);
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

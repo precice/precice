@@ -17,7 +17,6 @@ void runTestThreeSolvers(std::string const &config, std::vector<int> expectedCal
   int callsOfAdvance = 0;
 
   double v0[] = {0, 0};
-  double v1[] = {1, 1};
 
   if (context.isNamed("SolverOne")) {
     precice::Participant precice(context.name, config, 0, 1);

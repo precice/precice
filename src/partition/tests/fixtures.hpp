@@ -1,7 +1,6 @@
 #include "partition/ReceivedPartition.hpp"
 
-namespace precice {
-namespace partition {
+namespace precice::partition {
 
 /*
  * @brief A fixture that is used to access private functions of the receivedPartition class.
@@ -23,5 +22,4 @@ struct ReceivedPartitionFixture {
   }
 };
 
-} // namespace partition
-} // namespace precice
+} // namespace precice::partition

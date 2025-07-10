@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteVector)
     cplInterface.writeData(meshName, dataBID, {&vid, 1}, valueDataB);
     cplInterface.writeGradientData(meshName, dataBID, {&vid, 1}, gradient);
 
-    //tell preCICE that data has been written and call initialize
+    // tell preCICE that data has been written and call initialize
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
 

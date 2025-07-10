@@ -1,4 +1,4 @@
-//#ifndef PRECICE_NO_MPI
+// #ifndef PRECICE_NO_MPI
 
 #include <Eigen/Core>
 #include <cmath>
@@ -68,7 +68,7 @@ double IntraComm::l2norm(const Eigen::VectorXd &vec)
 {
   PRECICE_TRACE();
 
-  if (not _isPrimaryRank && not _isSecondaryRank) { //old case
+  if (not _isPrimaryRank && not _isSecondaryRank) { // old case
     return vec.norm();
   }
 
@@ -103,7 +103,7 @@ double IntraComm::dot(const Eigen::VectorXd &vec1, const Eigen::VectorXd &vec2)
 {
   PRECICE_TRACE();
 
-  if (not _isPrimaryRank && not _isSecondaryRank) { //old case
+  if (not _isPrimaryRank && not _isSecondaryRank) { // old case
     return vec1.dot(vec2);
   }
 

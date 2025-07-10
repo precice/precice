@@ -240,46 +240,47 @@ void TestContext::initializePetsc()
 void TestContext::initializeGinkgo()
 {
   if (!invalid && _setup.ginkgo) {
+#ifndef PRECICE_NO_GINKGO
     int    argc = 0;
     char **argv;
-#ifndef PRECICE_NO_GINKGO
     precice::device::Ginkgo::initialize(&argc, &argv);
 #endif
   }
 }
 
-m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options) const
+m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const std::string &connector, const ConnectionOptions &options) const
 {
   auto participantCom = com::PtrCommunication(new com::SocketCommunication());
 
   m2n::DistributedComFactory::SharedPointer distrFactory;
   switch (options.type) {
   case ConnectionType::GatherScatter:
-    distrFactory.reset(new m2n::GatherScatterComFactory(participantCom));
+    distrFactory = std::make_shared<m2n::GatherScatterComFactory>(participantCom);
     break;
   case ConnectionType::PointToPoint:
-    distrFactory.reset(new m2n::PointToPointComFactory(com::PtrCommunicationFactory(new com::SocketCommunicationFactory())));
+    distrFactory = std::make_shared<m2n::PointToPointComFactory>(com::PtrCommunicationFactory(new com::SocketCommunicationFactory()));
     break;
   default:
     throw std::runtime_error{"ConnectionType unknown"};
   };
-  auto m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory, options.useOnlyPrimaryCom, options.useTwoLevelInit));
+  auto m2n = std::make_shared<m2n::M2N>(participantCom, distrFactory, options.useOnlyPrimaryCom, options.useTwoLevelInit);
 
   if (_names.count(acceptor) == 0) {
     throw std::runtime_error{
         "Acceptor \"" + acceptor + "\" not defined in this context."};
   }
-  if (_names.count(requestor) == 0) {
+  if (_names.count(connector) == 0) {
     throw std::runtime_error{
-        "Requestor \"" + requestor + "\" not defined in this context."};
+        "Connector \"" + connector + "\" not defined in this context."};
   }
 
+  std::string configHash = "NOPE";
   if (isNamed(acceptor)) {
-    m2n->acceptPrimaryRankConnection(acceptor, requestor);
-  } else if (isNamed(requestor)) {
-    m2n->requestPrimaryRankConnection(acceptor, requestor);
+    m2n->acceptPrimaryRankConnection(acceptor, connector, configHash);
+  } else if (isNamed(connector)) {
+    m2n->requestPrimaryRankConnection(acceptor, connector, configHash);
   } else {
-    throw std::runtime_error{"You try to connect " + acceptor + " and " + requestor + ", but this context is named " + name};
+    throw std::runtime_error{"You try to connect " + acceptor + " and " + connector + ", but this context is named " + name};
   }
   return m2n;
 }

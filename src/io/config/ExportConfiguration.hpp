@@ -6,8 +6,7 @@
 #include "logging/Logger.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 /**
  * @brief Configuration class for exports.
@@ -24,10 +23,10 @@ public:
     return _contexts;
   }
 
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
   /// Callback from automatic configuration. Not utilitzed here.
-  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) {}
+  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override {}
 
   void resetExports()
   {
@@ -50,9 +49,9 @@ private:
   const std::string ATTR_EVERY_N_TIME_WINDOWS = "every-n-time-windows";
   const std::string ATTR_NEIGHBORS            = "neighbors";
   const std::string ATTR_EVERY_ITERATION      = "every-iteration";
+  const std::string ATTR_UPDATE_SERIES        = "update-series";
 
   std::list<ExportContext> _contexts;
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

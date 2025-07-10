@@ -24,22 +24,17 @@
 #include "utils/IntraComm.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 struct MeshContext;
 struct MappingContext;
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl
 
 // Forward declaration to friend the boost test struct
-namespace Integration {
-namespace Serial {
-namespace Whitebox {
+
+namespace Integration::Serial::Whitebox {
 struct TestConfigurationPeano;
 struct TestConfigurationComsol;
-} // namespace Whitebox
-} // namespace Serial
-} // namespace Integration
+} // namespace Integration::Serial::Whitebox
 
 namespace precice {
 namespace utils {
@@ -68,7 +63,7 @@ struct MeshDataKey {
 
 /// Deduction guide for two identical parameter types
 template <class T>
-MeshDataKey(T, T)->MeshDataKey<T>;
+MeshDataKey(T, T) -> MeshDataKey<T>;
 
 /// Holds coupling state of one participating solver in coupled simulation.
 class ParticipantState {
@@ -117,12 +112,6 @@ public:
   /// Sets weather the participant was configured with a primary tag
   void setUsePrimaryRank(bool useIntraComm);
 
-  /// Sets the manager responsible for providing unique IDs to meshes.
-  void setMeshIdManager(std::unique_ptr<utils::ManageUniqueIDs> &&idm)
-  {
-    _meshIdManager = std::move(idm);
-  }
-
   /// Adds a configured \ref Action to the participant
   void addAction(action::PtrAction &&action);
 
@@ -133,8 +122,8 @@ public:
   void provideMesh(const mesh::PtrMesh &mesh);
 
   /// Adds a mesh to be received by the participant.
-  void receiveMesh(const mesh::PtrMesh &                         mesh,
-                   const std::string &                           fromParticipant,
+  void receiveMesh(const mesh::PtrMesh                          &mesh,
+                   const std::string                            &fromParticipant,
                    double                                        safetyFactor,
                    partition::ReceivedPartition::GeometricFilter geoFilter,
                    const bool                                    allowDirectAccess);
@@ -256,6 +245,15 @@ public:
   bool isDirectAccessAllowed(std::string_view mesh) const;
   /// @}
 
+  /// Initializes the MappingDataCache in the DataContext after having computed the mappings
+  void initializeMappingDataCache(std::string_view mappingType);
+
+  /// Configures the mesh context with connectivity requirements and adds it to the mappingcontext
+  void configureInputMeshContext(std::string_view fromMesh, impl::MappingContext &mappingContext, mapping::Mapping::MeshRequirement requirement);
+
+  /// Configures the mesh context with connectivity requirements and adds it to the mappingcontext
+  void configureOutputMeshContext(std::string_view toMesh, impl::MappingContext &mappingContext, mapping::Mapping::MeshRequirement requirement);
+
   /// @name Exporting interface
   /// @{
   /// Exports the initial state of meshes
@@ -357,12 +355,10 @@ private:
 
   bool _useIntraComm = false;
 
-  std::unique_ptr<utils::ManageUniqueIDs> _meshIdManager;
-
   template <typename ELEMENT_T>
   bool isDataValid(
       const std::vector<ELEMENT_T> &data,
-      const ELEMENT_T &             newElement) const;
+      const ELEMENT_T              &newElement) const;
 
   void checkDuplicatedUse(std::string_view mesh);
 
@@ -378,7 +374,7 @@ private:
 template <typename ELEMENT_T>
 bool ParticipantState::isDataValid(
     const std::vector<ELEMENT_T> &data,
-    const ELEMENT_T &             newElement) const
+    const ELEMENT_T              &newElement) const
 {
   for (size_t i = 0; i < data.size(); i++) {
     if (data[i].name == newElement.name) {

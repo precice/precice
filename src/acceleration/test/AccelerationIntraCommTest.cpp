@@ -21,6 +21,7 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "testing/Meshes.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -74,76 +75,60 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
   PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
   PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
 
+  const double windowStart = 0;
+  const double windowEnd   = 1;
+
+  data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
+  data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
+
   if (context.isPrimary()) { // Primary
     /**
      * processor with 4 vertices
      */
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
-    // init displacements
-    Eigen::VectorXd insert(4);
-    insert << 1.0, 1.0, 1.0, 1.0;
-    utils::append(displacements->values(), insert);
-    // init forces
-    insert << 0.2, 0.2, 0.2, 0.2;
-    utils::append(forces->values(), insert);
+    // init displacements & forces
+    dpcd->emplaceSampleAtTime(windowStart, {1.0, 1.0, 1.0, 1.0});
+    dpcd->emplaceSampleAtTime(windowEnd, {1.0, 1.0, 1.0, 1.0});
 
-    dpcd->setSampleAtTime(0, dpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
-
-    fpcd->setSampleAtTime(0, fpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
-
-    data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
-    data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
+    fpcd->emplaceSampleAtTime(windowStart, {0.2, 0.2, 0.2, 0.2});
+    fpcd->emplaceSampleAtTime(windowEnd, {0.2, 0.2, 0.2, 0.2});
 
     dpcd->storeIteration();
     fpcd->storeIteration();
 
     pp.initialize(data);
 
-    insert << 1.0, 2.0, 3.0, 4.0;
-    displacements->values() = insert;
-    insert << 0.1, 0.1, 0.1, 0.1;
-    forces->values() = insert;
-
-    dpcd->setSampleAtTime(1, dpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    dpcd->emplaceSampleAtTime(windowEnd, {1.0, 2.0, 3.0, 4.0});
+    fpcd->emplaceSampleAtTime(windowEnd, {0.1, 0.1, 0.1, 0.1});
 
   } else if (context.isRank(1)) { // SecondaryRank1
 
     /**
      * processor with 4 vertices
      */
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
-    // init displacements
-    Eigen::VectorXd insert(4);
-    insert << 1.0, 1.0, 1.0, 1.0;
-    utils::append(displacements->values(), insert);
-    // init forces
-    insert << 0.2, 0.2, 0.2, 0.2;
-    utils::append(forces->values(), insert);
+    // init displacements & forces
+    dpcd->emplaceSampleAtTime(windowStart, {1.0, 1.0, 1.0, 1.0});
+    dpcd->emplaceSampleAtTime(windowEnd, {1.0, 1.0, 1.0, 1.0});
 
-    dpcd->setSampleAtTime(0, dpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
-
-    fpcd->setSampleAtTime(0, fpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
-
-    data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
-    data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
+    fpcd->emplaceSampleAtTime(windowStart, {0.2, 0.2, 0.2, 0.2});
+    fpcd->emplaceSampleAtTime(windowEnd, {0.2, 0.2, 0.2, 0.2});
 
     dpcd->storeIteration();
     fpcd->storeIteration();
 
     pp.initialize(data);
 
-    insert << 5.0, 6.0, 7.0, 8.0;
-    displacements->values() = insert;
-    insert << 0.1, 0.1, 0.1, 0.1;
-    forces->values() = insert;
-
-    dpcd->setSampleAtTime(1, dpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    dpcd->emplaceSampleAtTime(windowEnd, {5.0, 6.0, 7.0, 8.0});
+    fpcd->emplaceSampleAtTime(windowEnd, {0.1, 0.1, 0.1, 0.1});
 
   } else if (context.isRank(2)) { // Secondary rank 2
 
@@ -152,12 +137,12 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
      */
 
     // init displacements
-    dpcd->setSampleAtTime(0, dpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    dpcd->emplaceSampleAtTime(windowStart);
+    dpcd->emplaceSampleAtTime(windowEnd);
 
     // init forces
-    fpcd->setSampleAtTime(0, fpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    fpcd->emplaceSampleAtTime(windowStart);
+    fpcd->emplaceSampleAtTime(windowEnd);
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -167,28 +152,23 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
 
     pp.initialize(data);
 
-    dpcd->setSampleAtTime(1, dpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    dpcd->emplaceSampleAtTime(windowEnd);
+    fpcd->emplaceSampleAtTime(windowEnd);
 
   } else if (context.isRank(3)) { // Secondary rank 3
 
     /**
      * processor with 2 vertices
      */
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
 
-    // init displacements
-    Eigen::VectorXd insert(2);
-    insert << 1.0, 1.0;
-    utils::append(displacements->values(), insert);
-    // init forces
-    insert << 0.2, 0.2;
-    utils::append(forces->values(), insert);
+    // init displacements & forces
+    dpcd->emplaceSampleAtTime(windowStart, {1.0, 1.0});
+    dpcd->emplaceSampleAtTime(windowEnd, {1.0, 1.0});
 
-    dpcd->setSampleAtTime(0, dpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
-
-    fpcd->setSampleAtTime(0, fpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    fpcd->emplaceSampleAtTime(windowStart, {0.2, 0.2});
+    fpcd->emplaceSampleAtTime(windowEnd, {0.2, 0.2});
 
     data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
     data.insert(std::pair<int, PtrCouplingData>(1, fpcd));
@@ -198,28 +178,23 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
 
     pp.initialize(data);
 
-    insert << 1.0, 2.0;
-    displacements->values() = insert;
-    insert << 0.1, 0.1;
-    forces->values() = insert;
-
-    dpcd->setSampleAtTime(1, dpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    dpcd->emplaceSampleAtTime(windowEnd, {1.0, 2.0});
+    fpcd->emplaceSampleAtTime(windowEnd, {0.1, 0.1});
   }
 
-  pp.performAcceleration(data);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   Eigen::VectorXd newdvalues;
   if (context.isPrimary()) { // Primary
 
-    BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00), data.at(0)->values()(0));
-    BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.02), data.at(0)->values()(2));
-    BOOST_TEST(testing::equals(data.at(0)->values()(3), 1.03), data.at(0)->values()(3));
-    BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.199), data.at(1)->values()(0));
-    BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.199), data.at(1)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.199), data.at(1)->values()(2));
-    BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.199), data.at(1)->values()(3));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.00), dpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 1.01), dpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 1.02), dpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 1.03), dpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(3));
 
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
@@ -228,14 +203,14 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
 
   } else if (context.isRank(1)) { // SecondaryRank1
 
-    BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.04), data.at(0)->values()(0));
-    BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.05), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.06), data.at(0)->values()(2));
-    BOOST_TEST(testing::equals(data.at(0)->values()(3), 1.07), data.at(0)->values()(3));
-    BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.199), data.at(1)->values()(0));
-    BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.199), data.at(1)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.199), data.at(1)->values()(2));
-    BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.199), data.at(1)->values()(3));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.04), dpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 1.05), dpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 1.06), dpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 1.07), dpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(3));
 
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
@@ -246,46 +221,45 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
     // empty proc
   } else if (context.isRank(3)) { // Secondary rank 3
 
-    BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00), data.at(0)->values()(0));
-    BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.199), data.at(1)->values()(0));
-    BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.199), data.at(1)->values()(1));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.00), dpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 1.01), dpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(1));
 
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
   }
 
-  data.begin()->second->values() = newdvalues;
-  dpcd->setSampleAtTime(1, dpcd->sample());
-  fpcd->setSampleAtTime(1, fpcd->sample());
+  dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues));
+  fpcd->setSampleAtTime(windowEnd, fpcd->sample());
 
-  pp.performAcceleration(data);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   if (context.isPrimary()) { // Primary
-    BOOST_TEST(testing::equals(data.at(0)->values()(0), -1.51483105223442748866e+00), data.at(0)->values()(0));
-    BOOST_TEST(testing::equals(data.at(0)->values()(1), -2.35405379763935940218e-01), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.04402029270655560822e+00), data.at(0)->values()(2));
-    BOOST_TEST(testing::equals(data.at(0)->values()(3), 2.32344596517704804484e+00), data.at(0)->values()(3));
-    BOOST_TEST(testing::equals(data.at(1)->values()(0), 7.23368584254212854123e-02), data.at(1)->values()(0));
-    BOOST_TEST(testing::equals(data.at(1)->values()(1), 7.23368584254212854123e-02), data.at(1)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->values()(2), 7.23368584254212854123e-02), data.at(1)->values()(2));
-    BOOST_TEST(testing::equals(data.at(1)->values()(3), 7.23368584254212854123e-02), data.at(1)->values()(3));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), -1.51483105223442748866e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), -2.35405379763935940218e-01), dpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 1.04402029270655560822e+00), dpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 2.32344596517704804484e+00), dpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(3));
   } else if (context.isRank(1)) { // SecondaryRank1
-    BOOST_TEST(testing::equals(data.at(0)->values()(0), 3.60287163764754048145e+00), data.at(0)->values()(0));
-    BOOST_TEST(testing::equals(data.at(0)->values()(1), 4.88229731011803202989e+00), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(0)->values()(2), 6.16172298258852357833e+00), data.at(0)->values()(2));
-    BOOST_TEST(testing::equals(data.at(0)->values()(3), 7.44114865505901601495e+00), data.at(0)->values()(3));
-    BOOST_TEST(testing::equals(data.at(1)->values()(0), 7.23368584254212854123e-02), data.at(1)->values()(0));
-    BOOST_TEST(testing::equals(data.at(1)->values()(1), 7.23368584254212854123e-02), data.at(1)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->values()(2), 7.23368584254212854123e-02), data.at(1)->values()(2));
-    BOOST_TEST(testing::equals(data.at(1)->values()(3), 7.23368584254212854123e-02), data.at(1)->values()(3));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 3.60287163764754048145e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 4.88229731011803202989e+00), dpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 6.16172298258852357833e+00), dpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 7.44114865505901601495e+00), dpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(3));
   } else if (context.isRank(2)) { // Secondary rank 2
     // empty proc
   } else if (context.isRank(3)) { // Secondary rank 3
-    BOOST_TEST(testing::equals(data.at(0)->values()(0), -1.51483105223442748866e+00), data.at(0)->values()(0));
-    BOOST_TEST(testing::equals(data.at(0)->values()(1), -2.35405379763935940218e-01), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->values()(0), 7.23368584254212854123e-02), data.at(1)->values()(0));
-    BOOST_TEST(testing::equals(data.at(1)->values()(1), 7.23368584254212854123e-02), data.at(1)->values()(1));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), -1.51483105223442748866e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), -2.35405379763935940218e-01), dpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(1));
   }
 }
 
@@ -332,25 +306,25 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 
   DataMap data;
 
+  const double windowStart = 0;
+  const double windowEnd   = 1;
+
   if (context.isPrimary()) { // Primary
 
     /**
      * processor with 4 vertices
      */
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
-    // init displacements
-    Eigen::VectorXd insert(4);
-    insert << 1.0, 1.0, 1.0, 1.0;
-    utils::append(displacements->values(), insert);
-    // init forces
-    insert << 0.2, 0.2, 0.2, 0.2;
-    utils::append(forces->values(), insert);
-
-    //Need to store 2 values in the waveform iteration
-    dpcd->setSampleAtTime(0, dpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
-    fpcd->setSampleAtTime(0, fpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    // init displacements & forces
+    // Need to store 2 values in the waveform iteration
+    dpcd->emplaceSampleAtTime(windowStart, {1.0, 1.0, 1.0, 1.0});
+    dpcd->emplaceSampleAtTime(windowEnd, {1.0, 1.0, 1.0, 1.0});
+    fpcd->emplaceSampleAtTime(windowStart, {0.2, 0.2, 0.2, 0.2});
+    fpcd->emplaceSampleAtTime(windowEnd, {0.2, 0.2, 0.2, 0.2});
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -360,53 +334,43 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 
     pp.initialize(data);
 
-    // update displacement
-    insert << 1.0, 2.0, 3.0, 4.0;
-    dpcd->values() = insert;
-
-    // update forces
-    insert << 0.1, 0.1, 0.1, 0.1;
-    fpcd->values() = insert;
-
-    // Only the newest value is updated
-    dpcd->setSampleAtTime(1, dpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    // update displacement & forces
+    dpcd->emplaceSampleAtTime(windowEnd, {1.0, 2.0, 3.0, 4.0});
+    fpcd->emplaceSampleAtTime(windowEnd, {0.1, 0.1, 0.1, 0.1});
 
     // check for correct initial data
-    BOOST_TEST(testing::equals(data.at(0)->previousIteration()(0), 1.0), data.at(0)->previousIteration()(0));
-    BOOST_TEST(testing::equals(data.at(0)->previousIteration()(1), 1.0), data.at(0)->previousIteration()(1));
-    BOOST_TEST(testing::equals(data.at(0)->previousIteration()(2), 1.0), data.at(0)->previousIteration()(2));
-    BOOST_TEST(testing::equals(data.at(0)->previousIteration()(3), 1.0), data.at(0)->previousIteration()(3));
-    BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.0), data.at(0)->values()(0));
-    BOOST_TEST(testing::equals(data.at(0)->values()(1), 2.0), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(0)->values()(2), 3.0), data.at(0)->values()(2));
-    BOOST_TEST(testing::equals(data.at(0)->values()(3), 4.0), data.at(0)->values()(3));
-    BOOST_TEST(testing::equals(data.at(1)->previousIteration()(0), 0.2), data.at(1)->previousIteration()(0));
-    BOOST_TEST(testing::equals(data.at(1)->previousIteration()(1), 0.2), data.at(1)->previousIteration()(1));
-    BOOST_TEST(testing::equals(data.at(1)->previousIteration()(2), 0.2), data.at(1)->previousIteration()(2));
-    BOOST_TEST(testing::equals(data.at(1)->previousIteration()(3), 0.2), data.at(1)->previousIteration()(3));
-    BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.1), data.at(1)->values()(0));
-    BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.1), data.at(1)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.1), data.at(1)->values()(2));
-    BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.1), data.at(1)->values()(3));
+
+    BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(0), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(1), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(2), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(3), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(3));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.0), dpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 2.0), dpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 3.0), dpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 4.0), dpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(0), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(1), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(2), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(3), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(3));
   } else if (context.isRank(1)) { // SecondaryRank1
 
     /**
      * processor with 4 vertices
      */
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{2, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{3, 0, 0});
 
-    // init displacements
-    Eigen::VectorXd insert(4);
-    insert << 1.0, 1.0, 1.0, 1.0;
-    utils::append(displacements->values(), insert);
-    // init forces
-    insert << 0.2, 0.2, 0.2, 0.2;
-    utils::append(forces->values(), insert);
-
-    dpcd->setSampleAtTime(0, dpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
-    fpcd->setSampleAtTime(0, fpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    // init displacements & forces
+    dpcd->emplaceSampleAtTime(windowStart, {1.0, 1.0, 1.0, 1.0});
+    dpcd->emplaceSampleAtTime(windowEnd, {1.0, 1.0, 1.0, 1.0});
+    fpcd->emplaceSampleAtTime(windowStart, {0.2, 0.2, 0.2, 0.2});
+    fpcd->emplaceSampleAtTime(windowEnd, {0.2, 0.2, 0.2, 0.2});
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -416,33 +380,27 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 
     pp.initialize(data);
 
-    // update displacements
-    insert << 5.0, 6.0, 7.0, 8.0;
-    dpcd->values() = insert;
-    // update forces
-    insert << 0.1, 0.1, 0.1, 0.1;
-    fpcd->values() = insert;
-
-    dpcd->setSampleAtTime(1, dpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    // update displacements & forces
+    dpcd->emplaceSampleAtTime(windowEnd, {5.0, 6.0, 7.0, 8.0});
+    fpcd->emplaceSampleAtTime(windowEnd, {0.1, 0.1, 0.1, 0.1});
 
     // check for correct initial data
-    BOOST_TEST(testing::equals(data.at(0)->previousIteration()(0), 1.0), data.at(0)->previousIteration()(0));
-    BOOST_TEST(testing::equals(data.at(0)->previousIteration()(1), 1.0), data.at(0)->previousIteration()(1));
-    BOOST_TEST(testing::equals(data.at(0)->previousIteration()(2), 1.0), data.at(0)->previousIteration()(2));
-    BOOST_TEST(testing::equals(data.at(0)->previousIteration()(3), 1.0), data.at(0)->previousIteration()(3));
-    BOOST_TEST(testing::equals(data.at(0)->values()(0), 5.0), data.at(0)->values()(0));
-    BOOST_TEST(testing::equals(data.at(0)->values()(1), 6.0), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(0)->values()(2), 7.0), data.at(0)->values()(2));
-    BOOST_TEST(testing::equals(data.at(0)->values()(3), 8.0), data.at(0)->values()(3));
-    BOOST_TEST(testing::equals(data.at(1)->previousIteration()(0), 0.2), data.at(1)->previousIteration()(0));
-    BOOST_TEST(testing::equals(data.at(1)->previousIteration()(1), 0.2), data.at(1)->previousIteration()(1));
-    BOOST_TEST(testing::equals(data.at(1)->previousIteration()(2), 0.2), data.at(1)->previousIteration()(2));
-    BOOST_TEST(testing::equals(data.at(1)->previousIteration()(3), 0.2), data.at(1)->previousIteration()(3));
-    BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.1), data.at(1)->values()(0));
-    BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.1), data.at(1)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.1), data.at(1)->values()(2));
-    BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.1), data.at(1)->values()(3));
+    BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(0), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(1), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(2), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(3), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(3));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 5.0), dpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 6.0), dpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 7.0), dpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 8.0), dpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(0), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(1), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(2), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(3), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(3));
   } else if (context.isRank(2)) { // Secondary rank 2
 
     /**
@@ -450,12 +408,12 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
      */
 
     // init displacements
-    dpcd->setSampleAtTime(0, dpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    dpcd->emplaceSampleAtTime(windowStart, {});
+    dpcd->emplaceSampleAtTime(windowEnd, {});
 
     // init forces
-    fpcd->setSampleAtTime(0, fpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    fpcd->emplaceSampleAtTime(windowStart, {});
+    fpcd->emplaceSampleAtTime(windowEnd, {});
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -472,19 +430,14 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
     /**
      * processor with 2 vertices
      */
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
 
-    // init displacements
-    Eigen::VectorXd insert(2);
-    insert << 1.0, 1.0;
-    utils::append(displacements->values(), insert);
-    // init forces
-    insert << 0.2, 0.2;
-    utils::append(forces->values(), insert);
-
-    dpcd->setSampleAtTime(0, dpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
-    fpcd->setSampleAtTime(0, fpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    // init displacements & forces
+    dpcd->emplaceSampleAtTime(windowStart, {1.0, 1.0});
+    dpcd->emplaceSampleAtTime(windowEnd, {1.0, 1.0});
+    fpcd->emplaceSampleAtTime(windowStart, {0.2, 0.2});
+    fpcd->emplaceSampleAtTime(windowEnd, {0.2, 0.2});
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -494,53 +447,46 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
 
     pp.initialize(data);
 
-    // update displacements
-    insert << 1.0, 2.0;
-    displacements->values() = insert;
-
-    // update forces
-    insert << 0.1, 0.1;
-    forces->values() = insert;
-
-    dpcd->setSampleAtTime(1, dpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    // update displacements & forces
+    dpcd->emplaceSampleAtTime(windowEnd, {1.0, 2.0});
+    fpcd->emplaceSampleAtTime(windowEnd, {0.1, 0.1});
 
     // check for correct initial data
-    BOOST_TEST(testing::equals(data.at(0)->previousIteration()(0), 1.0), data.at(0)->previousIteration()(0));
-    BOOST_TEST(testing::equals(data.at(0)->previousIteration()(1), 1.0), data.at(0)->previousIteration()(1));
-    BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.0), data.at(0)->values()(0));
-    BOOST_TEST(testing::equals(data.at(0)->values()(1), 2.0), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->previousIteration()(0), 0.2), data.at(1)->previousIteration()(0));
-    BOOST_TEST(testing::equals(data.at(1)->previousIteration()(1), 0.2), data.at(1)->previousIteration()(1));
-    BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.1), data.at(1)->values()(0));
-    BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.1), data.at(1)->values()(1));
+    BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(0), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(1), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.0), dpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 2.0), dpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(0), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(1), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(1));
   }
 
-  pp.performAcceleration(data);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   Eigen::VectorXd newdvalues;
   if (context.isPrimary()) { // Primary
-    BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00000000000000000000e+00), data.at(0)->values()(0));
-    BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01000000000000000888e+00), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.02000000000000001776e+00), data.at(0)->values()(2));
-    BOOST_TEST(testing::equals(data.at(0)->values()(3), 1.03000000000000002665e+00), data.at(0)->values()(3));
-    BOOST_TEST(testing::equals(data.at(1)->values()(0), 1.99000000000000010214e-01), data.at(1)->values()(0));
-    BOOST_TEST(testing::equals(data.at(1)->values()(1), 1.99000000000000010214e-01), data.at(1)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->values()(2), 1.99000000000000010214e-01), data.at(1)->values()(2));
-    BOOST_TEST(testing::equals(data.at(1)->values()(3), 1.99000000000000010214e-01), data.at(1)->values()(3));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.00000000000000000000e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 1.01000000000000000888e+00), dpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 1.02000000000000001776e+00), dpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 1.03000000000000002665e+00), dpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(3));
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
   } else if (context.isRank(1)) { // SecondaryRank1
-    BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.04000000000000003553e+00), data.at(0)->values()(0));
-    BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.05000000000000004441e+00), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.06000000000000005329e+00), data.at(0)->values()(2));
-    BOOST_TEST(testing::equals(data.at(0)->values()(3), 1.07000000000000006217e+00), data.at(0)->values()(3));
-    BOOST_TEST(testing::equals(data.at(1)->values()(0), 1.99000000000000010214e-01), data.at(1)->values()(0));
-    BOOST_TEST(testing::equals(data.at(1)->values()(1), 1.99000000000000010214e-01), data.at(1)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->values()(2), 1.99000000000000010214e-01), data.at(1)->values()(2));
-    BOOST_TEST(testing::equals(data.at(1)->values()(3), 1.99000000000000010214e-01), data.at(1)->values()(3));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.04000000000000003553e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 1.05000000000000004441e+00), dpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 1.06000000000000005329e+00), dpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 1.07000000000000006217e+00), dpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(3));
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
@@ -548,46 +494,44 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
   } else if (context.isRank(2)) { // Secondary rank 2
     // empty proc
   } else if (context.isRank(3)) { // Secondary rank 3
-    BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00000000000000000000e+00), data.at(0)->values()(0));
-    BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01000000000000000888e+00), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->values()(0), 1.99000000000000010214e-01), data.at(1)->values()(0));
-    BOOST_TEST(testing::equals(data.at(1)->values()(1), 1.99000000000000010214e-01), data.at(1)->values()(1));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.00000000000000000000e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 1.01000000000000000888e+00), dpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(1));
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
   }
 
-  data.begin()->second->values() = newdvalues;
+  dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues));
+  fpcd->setSampleAtTime(windowEnd, fpcd->sample());
 
-  dpcd->setSampleAtTime(1, dpcd->sample());
-  fpcd->setSampleAtTime(1, fpcd->sample());
-
-  pp.performAcceleration(data);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   if (context.isPrimary()) { // Primary
-    BOOST_TEST(testing::equals(data.at(0)->values()(0), -1.51483105223442748866e+00), data.at(0)->values()(0));
-    BOOST_TEST(testing::equals(data.at(0)->values()(1), -2.35405379763935940218e-01), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.04402029270655738458e+00), data.at(0)->values()(2));
-    BOOST_TEST(testing::equals(data.at(0)->values()(3), 2.32344596517704893301e+00), data.at(0)->values()(3));
-    BOOST_TEST(testing::equals(data.at(1)->values()(0), 7.23368584254213131679e-02), data.at(1)->values()(0));
-    BOOST_TEST(testing::equals(data.at(1)->values()(1), 7.23368584254213131679e-02), data.at(1)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->values()(2), 7.23368584254213131679e-02), data.at(1)->values()(2));
-    BOOST_TEST(testing::equals(data.at(1)->values()(3), 7.23368584254213131679e-02), data.at(1)->values()(3));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), -1.51483105223442748866e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), -2.35405379763935940218e-01), dpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 1.04402029270655738458e+00), dpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 2.32344596517704893301e+00), dpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(3));
   } else if (context.isRank(1)) { // SecondaryRank1
-    BOOST_TEST(testing::equals(data.at(0)->values()(0), 3.60287163764754048145e+00), data.at(0)->values()(0));
-    BOOST_TEST(testing::equals(data.at(0)->values()(1), 4.88229731011803202989e+00), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(0)->values()(2), 6.16172298258852446651e+00), data.at(0)->values()(2));
-    BOOST_TEST(testing::equals(data.at(0)->values()(3), 7.44114865505901601495e+00), data.at(0)->values()(3));
-    BOOST_TEST(testing::equals(data.at(1)->values()(0), 7.23368584254213131679e-02), data.at(1)->values()(0));
-    BOOST_TEST(testing::equals(data.at(1)->values()(1), 7.23368584254213131679e-02), data.at(1)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->values()(2), 7.23368584254213131679e-02), data.at(1)->values()(2));
-    BOOST_TEST(testing::equals(data.at(1)->values()(3), 7.23368584254213131679e-02), data.at(1)->values()(3));
+    BOOST_TEST(testing::equals(dpcd->values()(0), 3.60287163764754048145e+00), dpcd->values()(0));
+    BOOST_TEST(testing::equals(dpcd->values()(1), 4.88229731011803202989e+00), dpcd->values()(1));
+    BOOST_TEST(testing::equals(dpcd->values()(2), 6.16172298258852446651e+00), dpcd->values()(2));
+    BOOST_TEST(testing::equals(dpcd->values()(3), 7.44114865505901601495e+00), dpcd->values()(3));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(3));
   } else if (context.isRank(2)) { // Secondary rank 2
     // empty proc
   } else if (context.isRank(3)) { // Secondary rank 3
-    BOOST_TEST(testing::equals(data.at(0)->values()(0), -1.51483105223442748866e+00), data.at(0)->values()(0));
-    BOOST_TEST(testing::equals(data.at(0)->values()(1), -2.35405379763935940218e-01), data.at(0)->values()(1));
-    BOOST_TEST(testing::equals(data.at(1)->values()(0), 7.23368584254213131679e-02), data.at(1)->values()(0));
-    BOOST_TEST(testing::equals(data.at(1)->values()(1), 7.23368584254213131679e-02), data.at(1)->values()(1));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), -1.51483105223442748866e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), -2.35405379763935940218e-01), dpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(1));
   }
 }
 
@@ -613,7 +557,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
   std::vector<int> dataIDs;
   dataIDs.push_back(4);
   dataIDs.push_back(5);
-  PtrPreconditioner _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(-1));
+  PtrPreconditioner _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(-1, true));
   std::vector<int>  vertexOffsets{0, 11, 22, 22};
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("dummyMesh", 2, testing::nextMeshID()));
@@ -634,6 +578,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
   PtrCouplingData dpcd;
   PtrCouplingData fpcd;
 
+  const double windowStart = 0;
+  const double windowEnd   = 1;
+
   if (context.isPrimary()) { // Primary
     /**
      * processor with no vertices
@@ -642,15 +589,15 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     displacements->values().resize(0);
     forces->values().resize(0);
 
-    // init displacements
+    // init displacements & forces
     dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
-    dpcd->setSampleAtTime(0, dpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    dpcd->emplaceSampleAtTime(windowStart, {});
+    dpcd->emplaceSampleAtTime(windowEnd, {});
 
     // init forces
     fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
-    fpcd->setSampleAtTime(0, fpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    fpcd->emplaceSampleAtTime(windowStart, {});
+    fpcd->emplaceSampleAtTime(windowEnd, {});
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -661,22 +608,18 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     pp.initialize(data);
   } else if (context.isRank(1)) { // SecondaryRank1
     /**
-     * processor with 4 vertices
+     * processor with 11 vertices
      */
+    testing::addDummyVertices(11, *dummyMesh);
 
-    // init displacements
-    displacements->values().resize(22);
-    forces->values().resize(22);
-    displacements->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    forces->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-
+    // init displacements & forces
     dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
-    dpcd->setSampleAtTime(0, dpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    dpcd->emplaceSampleAtTime(windowStart, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+    dpcd->emplaceSampleAtTime(windowEnd, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 
     fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
-    fpcd->setSampleAtTime(0, fpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    fpcd->emplaceSampleAtTime(windowStart, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+    fpcd->emplaceSampleAtTime(windowEnd, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -686,28 +629,23 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 
     pp.initialize(data);
 
-    forces->values() << -0.01765744149520443, -0.000534499502588083, 0.05397520666020422, 0.0005546984205735067, 0.05213823386543703, 0.0007618478879228568, -0.01944857239806249, -0.0009206665792022876, -0.02459872346309381, -0.001296931976456198, 0.04688718434761113, 0.001346643628716769, -0.01063536095060684, -0.01905148710330257, 0.02514593936525903, -0.01643393169986981, -0.02189723835016068, -0.000912218689367709, 0.04985117008772211, 0.0009615805506705544, 0.05534647415570375, 0.0004068469082890895;
-    fpcd->setSampleAtTime(1, fpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    fpcd->emplaceSampleAtTime(windowEnd, {-0.01765744149520443, -0.000534499502588083, 0.05397520666020422, 0.0005546984205735067, 0.05213823386543703, 0.0007618478879228568, -0.01944857239806249, -0.0009206665792022876, -0.02459872346309381, -0.001296931976456198, 0.04688718434761113, 0.001346643628716769, -0.01063536095060684, -0.01905148710330257, 0.02514593936525903, -0.01643393169986981, -0.02189723835016068, -0.000912218689367709, 0.04985117008772211, 0.0009615805506705544, 0.05534647415570375, 0.0004068469082890895});
+    dpcd->setSampleAtTime(windowEnd, dpcd->sample());
 
   } else if (context.isRank(2)) { // Secondary rank 2
     /**
-     * processor with 4 vertices
+     * processor with 11 vertices
      */
+    testing::addDummyVertices(11, *dummyMesh);
 
-    // init displacements
-    displacements->values().resize(22);
-    forces->values().resize(22);
-    displacements->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-    forces->values() << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
-
+    // init displacements & forces
     dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
-    dpcd->setSampleAtTime(0, dpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    dpcd->emplaceSampleAtTime(windowStart, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+    dpcd->emplaceSampleAtTime(windowEnd, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 
     fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
-    fpcd->setSampleAtTime(0, fpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    fpcd->emplaceSampleAtTime(windowStart, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
+    fpcd->emplaceSampleAtTime(windowEnd, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -717,9 +655,8 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 
     pp.initialize(data);
 
-    forces->values() << -0.01465589151503364, -0.0002670111835650672, 0.05711438689366102, 0.0002383730129847531, -0.01536098575916998, -0.000285287812066552, 0.05638274807579218, 0.000283961973555227, -0.006856432131857973, -0.006815594391460808, 0.02901925611525407, -0.02907380915674757, 0.05800715138289463, 9.667376010126116e-05, -0.01376443700165205, -9.547563271960956e-05, 0.05768190311116184, 0.0001311583226994801, -0.01408147387131287, -0.0001216961377915992, -0.0163823504288376, -0.0003874626690545313;
-    fpcd->setSampleAtTime(1, fpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    fpcd->emplaceSampleAtTime(windowEnd, {-0.01465589151503364, -0.0002670111835650672, 0.05711438689366102, 0.0002383730129847531, -0.01536098575916998, -0.000285287812066552, 0.05638274807579218, 0.000283961973555227, -0.006856432131857973, -0.006815594391460808, 0.02901925611525407, -0.02907380915674757, 0.05800715138289463, 9.667376010126116e-05, -0.01376443700165205, -9.547563271960956e-05, 0.05768190311116184, 0.0001311583226994801, -0.01408147387131287, -0.0001216961377915992, -0.0163823504288376, -0.0003874626690545313});
+    dpcd->setSampleAtTime(windowEnd, dpcd->sample());
 
   } else if (context.isRank(3)) { // Secondary rank 3
     /**
@@ -730,13 +667,13 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     forces->values().resize(0);
 
     dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
-    dpcd->setSampleAtTime(0, dpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    dpcd->setSampleAtTime(windowStart, dpcd->sample());
+    dpcd->setSampleAtTime(windowEnd, dpcd->sample());
 
     fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
 
-    fpcd->setSampleAtTime(0, fpcd->sample());
-    fpcd->setSampleAtTime(1, fpcd->sample());
+    fpcd->setSampleAtTime(windowStart, fpcd->sample());
+    fpcd->setSampleAtTime(windowEnd, fpcd->sample());
 
     dpcd->storeIteration();
     fpcd->storeIteration();
@@ -747,11 +684,11 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     pp.initialize(data);
   }
 
-  pp.performAcceleration(data);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
-    pair.second->setSampleAtTime(1, pair.second->sample());
+    pair.second->setSampleAtTime(windowEnd, pair.second->sample());
   }
 
   // underrelaxation, first iteration
@@ -781,11 +718,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 
     // update cplData
     fpcd->storeIteration();
-    displacements->values() << 1.790053057185293e-06, -2.44566429072041e-08, 1.889281703254964e-06, -1.972492834475447e-07, 1.681634609242917e-06, -2.373356532433882e-07, 1.585003447958184e-06, -5.301850772916681e-08, 1.274187257620066e-06, -2.137488936999111e-07, 1.362955262700412e-06, -2.762153471191986e-07, 1.249747540920782e-06, -3.196338173465977e-07, 1.333501893726392e-06, -3.161541101487353e-07, 1.394538527892028e-06, -1.166536323805688e-07, 1.488382850875808e-06, -2.605379508545059e-07, 2.056077021837937e-06, -1.341692715765341e-07;
-    forces->values() << -0.01765744187144705, -0.000534499502451157, 0.05397520721069472, 0.0005546984181272257, 0.05213823442800309, 0.000761847881060882, -0.01944857277019029, -0.0009206665773591249, -0.02459872381892192, -0.001296931982922439, 0.04688718490326162, 0.001346643636856003, -0.01063536111298416, -0.01905148734069537, 0.02514593966043068, -0.01643393192020026, -0.02189723869781963, -0.0009122186870252733, 0.04985117065739809, 0.0009615805515004192, 0.05534647470527156, 0.0004068469091761907;
 
-    fpcd->setSampleAtTime(1, fpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    fpcd->emplaceSampleAtTime(windowEnd, {-0.01765744187144705, -0.000534499502451157, 0.05397520721069472, 0.0005546984181272257, 0.05213823442800309, 0.000761847881060882, -0.01944857277019029, -0.0009206665773591249, -0.02459872381892192, -0.001296931982922439, 0.04688718490326162, 0.001346643636856003, -0.01063536111298416, -0.01905148734069537, 0.02514593966043068, -0.01643393192020026, -0.02189723869781963, -0.0009122186870252733, 0.04985117065739809, 0.0009615805515004192, 0.05534647470527156, 0.0004068469091761907});
+    dpcd->emplaceSampleAtTime(windowEnd, {1.790053057185293e-06, -2.44566429072041e-08, 1.889281703254964e-06, -1.972492834475447e-07, 1.681634609242917e-06, -2.373356532433882e-07, 1.585003447958184e-06, -5.301850772916681e-08, 1.274187257620066e-06, -2.137488936999111e-07, 1.362955262700412e-06, -2.762153471191986e-07, 1.249747540920782e-06, -3.196338173465977e-07, 1.333501893726392e-06, -3.161541101487353e-07, 1.394538527892028e-06, -1.166536323805688e-07, 1.488382850875808e-06, -2.605379508545059e-07, 2.056077021837937e-06, -1.341692715765341e-07});
 
   } else if (context.isRank(2)) { // Secondary rank 2
 
@@ -810,27 +745,25 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
 
     // update cplData
     fpcd->storeIteration();
-    displacements->values() << 1.848184969639987e-06, -1.983566187932991e-07, 1.952383060128974e-06, 1.050101286643166e-07, 2.020975712018586e-06, -9.297459906882382e-08, 2.123910878481957e-06, -3.349554682884977e-08, 0, 0, 0, 0, 7.715047421278781e-07, 2.958323850532032e-07, 6.5137785527863e-07, -3.40165313149562e-07, 1.498023570500414e-06, 2.492038233690158e-07, 1.395223018993416e-06, -3.150663149441921e-07, 1.954718171910318e-06, -3.415637300374603e-08;
-    forces->values() << -0.0146558918972568, -0.000267011181975166, 0.05711438744699839, 0.0002383730136872111, -0.0153609861368436, -0.0002852878106683293, 0.05638274862725741, 0.0002839619744993407, -0.00685643232676097, -0.006815594586569211, 0.02901925639144463, -0.02907380943293575, 0.05800715193585099, 9.667375963025685e-05, -0.01376443739049903, -9.547563172575954e-05, 0.05768190366530584, 0.0001311583223016465, -0.01408147425699792, -0.0001216961368213471, -0.01638235080508845, -0.0003874626694560972;
 
-    fpcd->setSampleAtTime(1, fpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    fpcd->emplaceSampleAtTime(windowEnd, {-0.0146558918972568, -0.000267011181975166, 0.05711438744699839, 0.0002383730136872111, -0.0153609861368436, -0.0002852878106683293, 0.05638274862725741, 0.0002839619744993407, -0.00685643232676097, -0.006815594586569211, 0.02901925639144463, -0.02907380943293575, 0.05800715193585099, 9.667375963025685e-05, -0.01376443739049903, -9.547563172575954e-05, 0.05768190366530584, 0.0001311583223016465, -0.01408147425699792, -0.0001216961368213471, -0.01638235080508845, -0.0003874626694560972});
+    dpcd->emplaceSampleAtTime(windowEnd, {1.848184969639987e-06, -1.983566187932991e-07, 1.952383060128974e-06, 1.050101286643166e-07, 2.020975712018586e-06, -9.297459906882382e-08, 2.123910878481957e-06, -3.349554682884977e-08, 0, 0, 0, 0, 7.715047421278781e-07, 2.958323850532032e-07, 6.5137785527863e-07, -3.40165313149562e-07, 1.498023570500414e-06, 2.492038233690158e-07, 1.395223018993416e-06, -3.150663149441921e-07, 1.954718171910318e-06, -3.415637300374603e-08});
 
   } else if (context.isRank(3)) { // Secondary rank 3
     // Dummy Secondary rank to be able to reuse the 4 proc Intra-participant communication Fixture
   }
 
   // QN- Update, 2. iteration
-  pp.performAcceleration(data);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
-    pair.second->setSampleAtTime(1, pair.second->sample());
+    pair.second->setSampleAtTime(windowEnd, pair.second->sample());
   }
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
-    pair.second->setSampleAtTime(1, pair.second->sample());
+    pair.second->setSampleAtTime(windowEnd, pair.second->sample());
   }
 
   if (context.isPrimary()) { // Primary
@@ -859,11 +792,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     // update cplData
     dpcd->storeIteration();
     fpcd->storeIteration();
-    displacements->values() << 1.790034504773721e-05, -2.446591076368466e-07, 1.889267115021718e-05, -1.972643201602028e-06, 1.681613350812527e-05, -2.373460013995369e-06, 1.584978895355817e-05, -5.302446869164338e-07, 1.274157692078479e-05, -2.137546278211264e-06, 1.362926508984742e-05, -2.762211725309514e-06, 1.249719424608544e-05, -3.19640295598053e-06, 1.333474052315949e-05, -3.16159193819195e-06, 1.394510078525391e-05, -1.166587691625877e-06, 1.488356439901566e-05, -2.605456452904905e-06, 2.056070000286195e-05, -1.341920935569228e-06;
-    forces->values() << -0.01845221261910751, -0.000473660279052688, 0.05115217408647257, 0.0004997712466226923, 0.04953299847638116, 0.0006834967349236343, -0.02003343430934222, -0.000812620519068711, -0.02461452082338934, -0.00115320030035888, 0.04486850176987132, 0.00121794049154945, -0.01080003301957858, -0.01839753254507924, 0.02398381340216066, -0.01606849579606463, -0.02220297183992202, -0.0008082032560853196, 0.04750952330271016, 0.0008672013640382038, 0.05236940113731539, 0.0003710183715860552;
 
-    fpcd->setSampleAtTime(1, fpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    fpcd->emplaceSampleAtTime(windowEnd, {-0.01845221261910751, -0.000473660279052688, 0.05115217408647257, 0.0004997712466226923, 0.04953299847638116, 0.0006834967349236343, -0.02003343430934222, -0.000812620519068711, -0.02461452082338934, -0.00115320030035888, 0.04486850176987132, 0.00121794049154945, -0.01080003301957858, -0.01839753254507924, 0.02398381340216066, -0.01606849579606463, -0.02220297183992202, -0.0008082032560853196, 0.04750952330271016, 0.0008672013640382038, 0.05236940113731539, 0.0003710183715860552});
+    dpcd->emplaceSampleAtTime(windowEnd, {1.790034504773721e-05, -2.446591076368466e-07, 1.889267115021718e-05, -1.972643201602028e-06, 1.681613350812527e-05, -2.373460013995369e-06, 1.584978895355817e-05, -5.302446869164338e-07, 1.274157692078479e-05, -2.137546278211264e-06, 1.362926508984742e-05, -2.762211725309514e-06, 1.249719424608544e-05, -3.19640295598053e-06, 1.333474052315949e-05, -3.16159193819195e-06, 1.394510078525391e-05, -1.166587691625877e-06, 1.488356439901566e-05, -2.605456452904905e-06, 2.056070000286195e-05, -1.341920935569228e-06});
 
   } else if (context.isRank(2)) { // Secondary rank 2
 
@@ -889,22 +820,20 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     // update cplData
     dpcd->storeIteration();
     fpcd->storeIteration();
-    displacements->values() << 1.848182952307335e-05, -1.983938722952872e-06, 1.952389995095743e-05, 1.049689886611777e-06, 2.020972044646931e-05, -9.30012125294331e-07, 2.123911759834233e-05, -3.352823479948144e-07, 0, 0, 0, 0, 7.715124780435689e-06, 2.958056858428718e-06, 6.513639301665504e-06, -3.401886529062288e-06, 1.498034283416962e-05, 2.491634858078641e-06, 1.39521486945152e-05, -3.151050708450101e-06, 1.954707223943552e-05, -3.417246252999375e-07;
-    forces->values() << -0.01568208277628194, -0.0002595395446636614, 0.0540328986967421, 0.0002362571305830931, -0.01637736854863682, -0.0002699645831085989, 0.05331751790879287, 0.0002707054191427001, -0.007277539612331946, -0.007235194100552225, 0.02757151633202504, -0.02762772092892902, 0.05505877464319012, 0.0001052840945529276, -0.01465499974491537, -0.0001017767294585529, 0.05464614037258596, 0.0001424559420056945, -0.01506072500921042, -0.0001315030046882618, -0.0173164149989076, -0.0003474184175392483;
 
-    fpcd->setSampleAtTime(1, fpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    fpcd->emplaceSampleAtTime(windowEnd, {-0.01568208277628194, -0.0002595395446636614, 0.0540328986967421, 0.0002362571305830931, -0.01637736854863682, -0.0002699645831085989, 0.05331751790879287, 0.0002707054191427001, -0.007277539612331946, -0.007235194100552225, 0.02757151633202504, -0.02762772092892902, 0.05505877464319012, 0.0001052840945529276, -0.01465499974491537, -0.0001017767294585529, 0.05464614037258596, 0.0001424559420056945, -0.01506072500921042, -0.0001315030046882618, -0.0173164149989076, -0.0003474184175392483});
+    dpcd->emplaceSampleAtTime(windowEnd, {1.848182952307335e-05, -1.983938722952872e-06, 1.952389995095743e-05, 1.049689886611777e-06, 2.020972044646931e-05, -9.30012125294331e-07, 2.123911759834233e-05, -3.352823479948144e-07, 0, 0, 0, 0, 7.715124780435689e-06, 2.958056858428718e-06, 6.513639301665504e-06, -3.401886529062288e-06, 1.498034283416962e-05, 2.491634858078641e-06, 1.39521486945152e-05, -3.151050708450101e-06, 1.954707223943552e-05, -3.417246252999375e-07});
 
   } else if (context.isRank(3)) { // Secondary rank 3
     // Dummy Secondary rank to be able to reuse the 4 proc Intra-participant communication Fixture
   }
 
   // QN- Update, 3. iteration
-  pp.performAcceleration(data);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
-    pair.second->setSampleAtTime(1, pair.second->sample());
+    pair.second->setSampleAtTime(windowEnd, pair.second->sample());
   }
 
   if (context.isPrimary()) { // Primary
@@ -933,11 +862,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     // update cplData
     dpcd->storeIteration();
     fpcd->storeIteration();
-    displacements->values() << 1.659080663925766e-05, -2.839283676791931e-07, 1.756292801739508e-05, -1.881726812992964e-06, 1.564798101471437e-05, -2.265931706775091e-06, 1.470124517392331e-05, -5.705378156142171e-07, 1.186047603634431e-05, -2.115667271562722e-06, 1.273027556448604e-05, -2.674541973319838e-06, 1.165645170777486e-05, -3.135385366949176e-06, 1.247728214631633e-05, -3.082564251671268e-06, 1.295443089215965e-05, -1.185450561958201e-06, 1.387356342346108e-05, -2.500933334689963e-06, 1.911143938064833e-05, -1.289577439500651e-06;
-    forces->values() << -0.08018882094302014, 0.004252226533647444, -0.1681454949889014, -0.00376664315520894, -0.1528473285523723, -0.005402482563102148, -0.06546415562528343, 0.007580544006107058, -0.02584070375141325, 0.01001310706105286, -0.1119519940946071, -0.008779400784032571, -0.02359260557541131, 0.03241153400001811, -0.06629773012631451, 0.01232457880930212, -0.04595115217779744, 0.007271575191182346, -0.1343966169086029, -0.006463593204557456, -0.1788931815052193, -0.00241194798896828;
 
-    fpcd->setSampleAtTime(1, fpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    fpcd->emplaceSampleAtTime(windowEnd, {-0.08018882094302014, 0.004252226533647444, -0.1681454949889014, -0.00376664315520894, -0.1528473285523723, -0.005402482563102148, -0.06546415562528343, 0.007580544006107058, -0.02584070375141325, 0.01001310706105286, -0.1119519940946071, -0.008779400784032571, -0.02359260557541131, 0.03241153400001811, -0.06629773012631451, 0.01232457880930212, -0.04595115217779744, 0.007271575191182346, -0.1343966169086029, -0.006463593204557456, -0.1788931815052193, -0.00241194798896828});
+    dpcd->emplaceSampleAtTime(windowEnd, {1.659080663925766e-05, -2.839283676791931e-07, 1.756292801739508e-05, -1.881726812992964e-06, 1.564798101471437e-05, -2.265931706775091e-06, 1.470124517392331e-05, -5.705378156142171e-07, 1.186047603634431e-05, -2.115667271562722e-06, 1.273027556448604e-05, -2.674541973319838e-06, 1.165645170777486e-05, -3.135385366949176e-06, 1.247728214631633e-05, -3.082564251671268e-06, 1.295443089215965e-05, -1.185450561958201e-06, 1.387356342346108e-05, -2.500933334689963e-06, 1.911143938064833e-05, -1.289577439500651e-06});
 
   } else if (context.isRank(2)) { // Secondary rank 2
 
@@ -963,22 +890,20 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     // update cplData
     dpcd->storeIteration();
     fpcd->storeIteration();
-    displacements->values() << 1.716650969972045e-05, -1.856138836171773e-06, 1.818701485070425e-05, 9.439657883607802e-07, 1.874709534954619e-05, -8.85448704675396e-07, 1.975527973304359e-05, -3.501096287428596e-07, 0, 0, 0, 0, 7.228951427433641e-06, 2.745909101918556e-06, 6.052367643912141e-06, -3.179587143921995e-06, 1.398276918926419e-05, 2.29762824040882e-06, 1.297587398676e-05, -2.941551341709183e-06, 1.811863361465251e-05, -3.546317448342288e-07;
-    forces->values() << -0.09539527385890252, 0.0003208855941258066, -0.1853399184726223, 7.203155656644242e-05, -0.09532865072058605, 0.0009202649288056726, -0.1847925968312873, -0.0007589246108979722, -0.03998875591551594, -0.03982927597079221, -0.08489044889406808, 0.08470593806523596, -0.1739740974580442, 0.0007742373134568178, -0.08383286811708256, -0.0005911288917162662, -0.1811747642897668, 0.001020161732709184, -0.09112767929864005, -0.0008931566039992005, -0.08987332323372975, 0.002763113283891189;
 
-    fpcd->setSampleAtTime(1, fpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    fpcd->emplaceSampleAtTime(windowEnd, {-0.09539527385890252, 0.0003208855941258066, -0.1853399184726223, 7.203155656644242e-05, -0.09532865072058605, 0.0009202649288056726, -0.1847925968312873, -0.0007589246108979722, -0.03998875591551594, -0.03982927597079221, -0.08489044889406808, 0.08470593806523596, -0.1739740974580442, 0.0007742373134568178, -0.08383286811708256, -0.0005911288917162662, -0.1811747642897668, 0.001020161732709184, -0.09112767929864005, -0.0008931566039992005, -0.08987332323372975, 0.002763113283891189});
+    dpcd->emplaceSampleAtTime(windowEnd, {1.716650969972045e-05, -1.856138836171773e-06, 1.818701485070425e-05, 9.439657883607802e-07, 1.874709534954619e-05, -8.85448704675396e-07, 1.975527973304359e-05, -3.501096287428596e-07, 0, 0, 0, 0, 7.228951427433641e-06, 2.745909101918556e-06, 6.052367643912141e-06, -3.179587143921995e-06, 1.398276918926419e-05, 2.29762824040882e-06, 1.297587398676e-05, -2.941551341709183e-06, 1.811863361465251e-05, -3.546317448342288e-07});
 
   } else if (context.isRank(3)) { // Secondary rank 3
     // Dummy Secondary rank to be able to reuse the 4 proc Intra-participant communication Fixture
   }
 
   // QN- Update, 4. iteration
-  pp.performAcceleration(data);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
-    pair.second->setSampleAtTime(1, pair.second->sample());
+    pair.second->setSampleAtTime(windowEnd, pair.second->sample());
   }
 
   if (context.isPrimary()) { // Primary
@@ -1007,11 +932,9 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     // update cplData
     dpcd->storeIteration();
     fpcd->storeIteration();
-    displacements->values() << 1.506845042291629e-05, -3.295713481574521e-07, 1.601708402767785e-05, -1.776032790440438e-06, 1.428998106709373e-05, -2.140925300298825e-06, 1.336604025915203e-05, -6.173668108734595e-07, 1.083614857997936e-05, -2.09020895349816e-06, 1.168515223592441e-05, -2.572621503366579e-06, 1.067901778881212e-05, -3.064421860106172e-06, 1.14804152344671e-05, -2.990689693425248e-06, 1.180274523671064e-05, -1.207361572630013e-06, 1.26994053163659e-05, -2.379420351559266e-06, 1.742665917249236e-05, -1.228726437307901e-06;
-    forces->values() << -0.07712271523301416, 0.004018032584755363, -0.1572746631951394, -0.003554957358717858, -0.1428154301136939, -0.005100471254411636, -0.06320679903752099, 0.00716455247252809, -0.02577587645775314, 0.009459639059138256, -0.1041793821597049, -0.008283348947413409, -0.02295652849878388, 0.02989440569403293, -0.06182269085435656, 0.01091909076145766, -0.04476922496853244, 0.00687112729333933, -0.1253800696382085, -0.006099818450316078, -0.1674291774005812, -0.002273881806091619;
 
-    fpcd->setSampleAtTime(1, fpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    fpcd->emplaceSampleAtTime(windowEnd, {-0.07712271523301416, 0.004018032584755363, -0.1572746631951394, -0.003554957358717858, -0.1428154301136939, -0.005100471254411636, -0.06320679903752099, 0.00716455247252809, -0.02577587645775314, 0.009459639059138256, -0.1041793821597049, -0.008283348947413409, -0.02295652849878388, 0.02989440569403293, -0.06182269085435656, 0.01091909076145766, -0.04476922496853244, 0.00687112729333933, -0.1253800696382085, -0.006099818450316078, -0.1674291774005812, -0.002273881806091619});
+    dpcd->emplaceSampleAtTime(windowEnd, {1.506845042291629e-05, -3.295713481574521e-07, 1.601708402767785e-05, -1.776032790440438e-06, 1.428998106709373e-05, -2.140925300298825e-06, 1.336604025915203e-05, -6.173668108734595e-07, 1.083614857997936e-05, -2.09020895349816e-06, 1.168515223592441e-05, -2.572621503366579e-06, 1.067901778881212e-05, -3.064421860106172e-06, 1.14804152344671e-05, -2.990689693425248e-06, 1.180274523671064e-05, -1.207361572630013e-06, 1.26994053163659e-05, -2.379420351559266e-06, 1.742665917249236e-05, -1.228726437307901e-06});
 
   } else if (context.isRank(2)) { // Secondary rank 2
 
@@ -1037,22 +960,20 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
     // update cplData
     dpcd->storeIteration();
     fpcd->storeIteration();
-    displacements->values() << 1.563743909676446e-05, -1.707572586404205e-06, 1.663287551913161e-05, 8.210579991784308e-07, 1.704678071734513e-05, -8.336427145015805e-07, 1.803030552728031e-05, -3.673472962716038e-07, 0, 0, 0, 0, 6.663771864888832e-06, 2.499283366425937e-06, 5.516134032932667e-06, -2.921164340377279e-06, 1.282308279788757e-05, 2.07209067754735e-06, 1.184094543159743e-05, -2.698009821996337e-06, 1.645805878055576e-05, -3.696322259193852e-07;
-    forces->values() << -0.09143825207871489, 0.0002922798859936043, -0.1734744585823354, 8.018501629471556e-05, -0.09140909287296797, 0.0008614262538692869, -0.1729893406976169, -0.0007078492982043917, -0.03836482525057584, -0.03821118279703851, -0.07931609050916776, 0.07913795276507131, -0.1626218046186428, 0.0007411076261039719, -0.08039872451576649, -0.0005667402343291361, -0.1694857588798654, 0.0009766586358261331, -0.0873517838382746, -0.0008552683303008771, -0.08627064033821233, 0.002609015553424872;
 
-    fpcd->setSampleAtTime(1, fpcd->sample());
-    dpcd->setSampleAtTime(1, dpcd->sample());
+    fpcd->emplaceSampleAtTime(windowEnd, {-0.09143825207871489, 0.0002922798859936043, -0.1734744585823354, 8.018501629471556e-05, -0.09140909287296797, 0.0008614262538692869, -0.1729893406976169, -0.0007078492982043917, -0.03836482525057584, -0.03821118279703851, -0.07931609050916776, 0.07913795276507131, -0.1626218046186428, 0.0007411076261039719, -0.08039872451576649, -0.0005667402343291361, -0.1694857588798654, 0.0009766586358261331, -0.0873517838382746, -0.0008552683303008771, -0.08627064033821233, 0.002609015553424872});
+    dpcd->emplaceSampleAtTime(windowEnd, {1.563743909676446e-05, -1.707572586404205e-06, 1.663287551913161e-05, 8.210579991784308e-07, 1.704678071734513e-05, -8.336427145015805e-07, 1.803030552728031e-05, -3.673472962716038e-07, 0, 0, 0, 0, 6.663771864888832e-06, 2.499283366425937e-06, 5.516134032932667e-06, -2.921164340377279e-06, 1.282308279788757e-05, 2.07209067754735e-06, 1.184094543159743e-05, -2.698009821996337e-06, 1.645805878055576e-05, -3.696322259193852e-07});
 
   } else if (context.isRank(3)) { // Secondary rank 3
     // Dummy Secondary rank to be able to reuse the 4 proc Intra-participant communication Fixture
   }
 
   // QN- Update, 5. iteratidataon
-  pp.performAcceleration(data);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
   // necessary because acceleration does not directly work on storage, but on CouplingData::values. See and https://github.com/precice/precice/issues/1645 current implementation in BaseCouplingScheme::doImplicitStep()
   for (auto &pair : data) {
-    pair.second->setSampleAtTime(1, pair.second->sample());
+    pair.second->setSampleAtTime(windowEnd, pair.second->sample());
   }
 
   if (context.isPrimary()) { // Primary
@@ -1148,6 +1069,15 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
+  if (context.isPrimary()) { // 2 vertices
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+    dummyMesh->createVertex(Eigen::Vector3d{1, 0, 0});
+  } else if (context.isRank(1)) { // 1 vertex
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+  } else if (context.isRank(2)) { // no vertices
+  } else {                        // 1 vertex
+    dummyMesh->createVertex(Eigen::Vector3d{0, 0, 0});
+  }
 
   IQNILSAcceleration acc(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                          timeWindowsReused, filter, singularityLimit, dataIDs, prec, !exchangeSubsteps);
@@ -1155,6 +1085,9 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
 
   DataMap data;
+
+  const double windowStart = 0;
+  const double windowEnd   = 1;
 
   Eigen::VectorXd insert;
   // init displacements
@@ -1175,8 +1108,8 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   data.insert(std::pair<int, PtrCouplingData>(0, dpcd));
 
   // Need at least two samples to get a valid waveform
-  dpcd->setSampleAtTime(0, dpcd->sample());
-  dpcd->setSampleAtTime(1, dpcd->sample());
+  dpcd->setSampleAtTime(windowStart, dpcd->sample());
+  dpcd->setSampleAtTime(windowEnd, dpcd->sample());
   dpcd->storeIteration();
 
   acc.initialize(data);
@@ -1194,10 +1127,10 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   displacements->values() = insert;
 
   // Need to update the samples
-  dpcd->setSampleAtTime(0, dpcd->sample());
-  dpcd->setSampleAtTime(1, dpcd->sample());
+  dpcd->setSampleAtTime(windowStart, dpcd->sample());
+  dpcd->setSampleAtTime(windowEnd, dpcd->sample());
 
-  acc.performAcceleration(data);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   Eigen::VectorXd newdvalues1;
   if (context.isPrimary()) {
@@ -1210,10 +1143,9 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
     utils::append(newdvalues1, 1.0);
   }
 
-  data.begin()->second->values() = newdvalues1;
-  dpcd->setSampleAtTime(1, dpcd->sample());
+  dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues1));
 
-  acc.performAcceleration(data);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   Eigen::VectorXd newdvalues2;
   if (context.isPrimary()) {
@@ -1226,10 +1158,9 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
     utils::append(newdvalues2, 1.0);
   }
 
-  data.begin()->second->values() = newdvalues2;
-  dpcd->setSampleAtTime(1, dpcd->sample());
+  dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues2));
 
-  acc.iterationsConverged(data);
+  acc.iterationsConverged(data, windowStart);
 
   BOOST_TEST(acc.getLSSystemCols() == 2);
   BOOST_TEST(acc.getDeletedColumns() == 0);
@@ -1246,10 +1177,9 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
     utils::append(newdvalues3, 1.0);
   }
 
-  data.begin()->second->values() = newdvalues3;
-  dpcd->setSampleAtTime(1, dpcd->sample());
+  dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues3));
 
-  acc.performAcceleration(data);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   Eigen::VectorXd newdvalues4;
   if (context.isPrimary()) {
@@ -1262,10 +1192,9 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
     utils::append(newdvalues4, 5.0);
   }
 
-  data.begin()->second->values() = newdvalues4;
-  dpcd->setSampleAtTime(1, dpcd->sample());
+  dpcd->setSampleAtTime(windowEnd, time::Sample(dpcd->getDimensions(), newdvalues4));
 
-  acc.iterationsConverged(data);
+  acc.iterationsConverged(data, windowStart);
 
   BOOST_TEST(acc.getLSSystemCols() == 1);
   BOOST_TEST(acc.getDeletedColumns() == 1);

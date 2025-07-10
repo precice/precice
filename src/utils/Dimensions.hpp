@@ -2,8 +2,7 @@
 
 #include <Eigen/Core>
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 const Eigen::VectorXd &delinearize(
     int toDelinearize,
@@ -39,5 +38,4 @@ struct IndexMaps<3> {
   static const int CUBOID_EDGE_VERTICES[12][2];
 };
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

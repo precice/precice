@@ -14,7 +14,7 @@ SummationAction::SummationAction(
     Timing                  timing,
     const std::vector<int> &sourceDataIDs,
     int                     targetDataID,
-    const mesh::PtrMesh &   mesh)
+    const mesh::PtrMesh    &mesh)
     : Action(timing, mesh, mapping::Mapping::MeshRequirement::VERTEX), _targetData(mesh->data(targetDataID))
 {
 

@@ -16,8 +16,7 @@
 #include "utils/networking.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace config {
+namespace precice::config {
 
 /**
  * @brief Performs XML configuration of a participant.
@@ -25,7 +24,7 @@ namespace config {
 class ParticipantConfiguration : public xml::XMLTag::Listener {
 public:
   ParticipantConfiguration(
-      xml::XMLTag &              parent,
+      xml::XMLTag               &parent,
       mesh::PtrMeshConfiguration meshConfiguration);
 
   void setExperimental(bool experimental);
@@ -36,24 +35,26 @@ public:
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback(
+  void xmlTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+      xml::XMLTag                     &callingTag) override;
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback(
+  void xmlEndTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+      xml::XMLTag                     &callingTag) override;
+
+  std::size_t nParticipants() const;
 
   /// Returns all configured participants.
   const std::vector<impl::PtrParticipant> &getParticipants() const;
 
   /// Returns a participant with the given name
-  const impl::PtrParticipant getParticipant(const std::string &participantName) const;
+  const impl::PtrParticipant getParticipant(std::string_view participantName) const;
 
   std::set<std::string> knownParticipants() const;
 
@@ -96,6 +97,7 @@ private:
   const std::string ATTR_SAFETY_FACTOR      = "safety-factor";
   const std::string ATTR_GEOMETRIC_FILTER   = "geometric-filter";
   const std::string ATTR_DIRECT_ACCESS      = "direct-access";
+  const std::string ATTR_API_ACCESS         = "api-access";
   const std::string ATTR_PROVIDE            = "provide";
   const std::string ATTR_MESH               = "mesh";
   const std::string ATTR_COORDINATE         = "coordinate";
@@ -137,7 +139,7 @@ private:
 
   const mesh::PtrData &getData(
       const mesh::PtrMesh &mesh,
-      const std::string &  nameData) const;
+      const std::string   &nameData) const;
 
   mapping::PtrMapping getMapping(const std::string &mappingName);
 
@@ -148,13 +150,12 @@ private:
 
   void finishParticipantConfiguration(
       const xml::ConfigurationContext &context,
-      const impl::PtrParticipant &     participant);
+      const impl::PtrParticipant      &participant);
 
   /// Check whether a mapping to the same mesh and with similar data fields already exists
   void checkIllDefinedMappings(
       const mapping::MappingConfiguration::ConfiguredMapping &mapping,
-      const impl::PtrParticipant &                            participant);
+      const impl::PtrParticipant                             &participant);
 };
 
-} // namespace config
-} // namespace precice
+} // namespace precice::config

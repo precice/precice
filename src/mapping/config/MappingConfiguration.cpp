@@ -105,7 +105,7 @@ using rbf_variant_t = std::variant<CompactPolynomialC0, CompactPolynomialC2, Com
 // The actual instantiation of the mapping class, which is called by the visitor \ref getRBFMapping
 template <RBFBackend T, typename RADIAL_BASIS_FUNCTION_T, typename... Args>
 PtrMapping instantiateRBFMapping(mapping::Mapping::Constraint &constraint, int dimension, RADIAL_BASIS_FUNCTION_T function,
-                                 Args &&... args)
+                                 Args &&...args)
 {
   return PtrMapping(new typename BackendSelector<T, RADIAL_BASIS_FUNCTION_T>::type(constraint, dimension, function, std::forward<Args>(args)...));
 }
@@ -113,51 +113,56 @@ PtrMapping instantiateRBFMapping(mapping::Mapping::Constraint &constraint, int d
 // Constructs the RBF function based on the functionType
 rbf_variant_t constructRBF(BasisFunction functionType, double supportRadius, double shapeParameter)
 {
-  switch (functionType) {
-  case BasisFunction::WendlandC0: {
-    return mapping::CompactPolynomialC0(supportRadius);
-  }
-  case BasisFunction::WendlandC2: {
-    return mapping::CompactPolynomialC2(supportRadius);
-  }
-  case BasisFunction::WendlandC4: {
-    return mapping::CompactPolynomialC4(supportRadius);
-  }
-  case BasisFunction::WendlandC6: {
-    return mapping::CompactPolynomialC6(supportRadius);
-  }
-  case BasisFunction::WendlandC8: {
-    return mapping::CompactPolynomialC8(supportRadius);
-  }
-  case BasisFunction::CompactThinPlateSplinesC2: {
-    return mapping::CompactThinPlateSplinesC2(supportRadius);
-  }
-  case BasisFunction::ThinPlateSplines: {
-    return mapping::ThinPlateSplines();
-  }
-  case BasisFunction::VolumeSplines: {
-    return mapping::VolumeSplines();
-  }
-  case BasisFunction::Multiquadrics: {
-    return mapping::Multiquadrics(shapeParameter);
-  }
-  case BasisFunction::InverseMultiquadrics: {
-    return mapping::InverseMultiquadrics(shapeParameter);
-  }
-  case BasisFunction::Gaussian: {
-    return mapping::Gaussian(shapeParameter);
-  }
-  default:
-    PRECICE_UNREACHABLE("No instantiation was found for the selected basis function.");
+  try {
+    switch (functionType) {
+    case BasisFunction::WendlandC0: {
+      return mapping::CompactPolynomialC0(supportRadius);
+    }
+    case BasisFunction::WendlandC2: {
+      return mapping::CompactPolynomialC2(supportRadius);
+    }
+    case BasisFunction::WendlandC4: {
+      return mapping::CompactPolynomialC4(supportRadius);
+    }
+    case BasisFunction::WendlandC6: {
+      return mapping::CompactPolynomialC6(supportRadius);
+    }
+    case BasisFunction::WendlandC8: {
+      return mapping::CompactPolynomialC8(supportRadius);
+    }
+    case BasisFunction::CompactThinPlateSplinesC2: {
+      return mapping::CompactThinPlateSplinesC2(supportRadius);
+    }
+    case BasisFunction::ThinPlateSplines: {
+      return mapping::ThinPlateSplines();
+    }
+    case BasisFunction::VolumeSplines: {
+      return mapping::VolumeSplines();
+    }
+    case BasisFunction::Multiquadrics: {
+      return mapping::Multiquadrics(shapeParameter);
+    }
+    case BasisFunction::InverseMultiquadrics: {
+      return mapping::InverseMultiquadrics(shapeParameter);
+    }
+    case BasisFunction::Gaussian: {
+      return mapping::Gaussian(shapeParameter);
+    }
+    default:
+      PRECICE_UNREACHABLE("No instantiation was found for the selected basis function.");
+    }
+  } catch (std::invalid_argument &e) {
+    logging::Logger _log{"MappingConfiguration"};
+    PRECICE_ERROR(e.what());
   }
 }
 
 // The actual instantion helper, which avoids enumerating all mapping implementations (more will come) with all RBF kernels
 // The first three arguments of the constructor are prescribed: constraint, dimension and the RBF function object, all other
-// constructor arguments are just forwareded. The first argument (BasisFunction) indicates then the actual instantiation to return.
+// constructor arguments are just forwarded. The first argument (BasisFunction) indicates then the actual instantiation to return.
 template <RBFBackend T, typename... Args>
 PtrMapping getRBFMapping(BasisFunction functionType, mapping::Mapping::Constraint &constraint, int dimension, double supportRadius, double shapeParameter,
-                         Args &&... args)
+                         Args &&...args)
 {
   // First, construct the RBF function
   auto functionVariant = constructRBF(functionType, supportRadius, shapeParameter);
@@ -167,7 +172,7 @@ PtrMapping getRBFMapping(BasisFunction functionType, mapping::Mapping::Constrain
 } // namespace
 
 MappingConfiguration::MappingConfiguration(
-    xml::XMLTag &              parent,
+    xml::XMLTag               &parent,
     mesh::PtrMeshConfiguration meshConfiguration)
     : _meshConfig(std::move(meshConfiguration))
 {
@@ -199,11 +204,11 @@ MappingConfiguration::MappingConfiguration(
                            .setDocumentation("Write mappings map written data prior to communication, thus in the same participant who writes the data. "
                                              "Read mappings map received data after communication, thus in the same participant who reads the data.");
 
-  auto attrFromMesh = XMLAttribute<std::string>(ATTR_FROM)
-                          .setDocumentation("The mesh to map the data from.");
+  auto attrFromMesh = XMLAttribute<std::string>(ATTR_FROM, "")
+                          .setDocumentation("The mesh to map the data from. The default name is an empty mesh name, which is only valid for a just-in-time mapping (using the API functions \"writeAndMapData\" or \"mapAndReadData\").");
 
-  auto attrToMesh = XMLAttribute<std::string>(ATTR_TO)
-                        .setDocumentation("The mesh to map the data to.");
+  auto attrToMesh = XMLAttribute<std::string>(ATTR_TO, "")
+                        .setDocumentation("The mesh to map the data to. The default name is an empty mesh name, which is only valid for a just-in-time mapping (using the API functions \"writeAndMapData\" or \"mapAndReadData\").");
 
   auto attrConstraint = XMLAttribute<std::string>(ATTR_CONSTRAINT)
                             .setDocumentation("Use conservative to conserve the nodal sum of the data over the interface (needed e.g. for force mapping).  Use consistent for normalized quantities such as temperature or pressure. Use scaled-consistent-surface or scaled-consistent-volume for normalized quantities where conservation of integral values (surface or volume) is needed (e.g. velocities when the mass flow rate needs to be conserved). Mesh connectivity is required to use scaled-consistent.")
@@ -368,7 +373,7 @@ void MappingConfiguration::setExperimental(
 
 void MappingConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getNamespace() == TAG) {
@@ -378,6 +383,21 @@ void MappingConfiguration::xmlTagCallback(
     std::string toMesh     = tag.getStringAttributeValue(ATTR_TO);
     std::string type       = tag.getName();
     std::string constraint = tag.getStringAttributeValue(ATTR_CONSTRAINT);
+
+    // Check that either of the two is provided
+    PRECICE_CHECK(!toMesh.empty() || !fromMesh.empty(), "Neither a \"to\" nor a \"from\" mesh was defined in a preCICE mapping. Most data mappings require a \"to\" and a \"from\" mesh. "
+                                                        "For just-in-time mapping, at least one of both attributes has to be specified.");
+
+    // Restrict to read-consistent and write-conservative for just-in-time mapping
+
+    // The from mesh cannot be empty due to the check above
+    PRECICE_CHECK(!toMesh.empty() || (toMesh.empty() && dir == DIRECTION_READ && constraint == CONSTRAINT_CONSISTENT),
+                  "The mapping from mesh \"{0}\" has no \"to\" mesh, which configures a just-in-time mapping for the mesh \"{0}\". For just-in-time mapping, only read-consistent (direction = \"read\" and no \"to\" mesh) and write-conservative (direction = \"write\" and no \"from\" mesh) are implemented.", fromMesh);
+    PRECICE_CHECK(!fromMesh.empty() || (fromMesh.empty() && dir == DIRECTION_WRITE && constraint == CONSTRAINT_CONSERVATIVE),
+                  "The mapping to mesh \"{0}\" has no \"from\" mesh, which configures a just-in-time mapping for the mesh \"{0}\". For just-in-time mapping, only read-consistent (direction = \"read\" and no \"to\" mesh) and write-conservative (direction = \"write\" and no \"from\" mesh) are implemented.", toMesh);
+
+    PRECICE_INFO_IF(toMesh.empty(), "Using just-in-time mapping from mesh \"{}\"", fromMesh);
+    PRECICE_INFO_IF(fromMesh.empty(), "Using just-in-time mapping to mesh \"{}\"", toMesh);
 
     // optional tags
     // We set here default values, but their actual value doesn't really matter.
@@ -531,21 +551,44 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     const std::string &toMeshName,
     const std::string &geoMultiscaleType,
     const std::string &geoMultiscaleAxis,
-    const double &     multiscaleRadius) const
+    const double      &multiscaleRadius) const
 {
   PRECICE_TRACE(direction, type);
 
   ConfiguredMapping configuredMapping;
   mesh::PtrMesh     fromMesh(_meshConfig->getMesh(fromMeshName));
   mesh::PtrMesh     toMesh(_meshConfig->getMesh(toMeshName));
-  PRECICE_CHECK(fromMesh.get() != nullptr,
+
+  // Handle for just-in-time mapping, we copy over the dimension and leave everything else
+  if (!fromMesh && fromMeshName.empty()) {
+    PRECICE_CHECK(toMesh,
+                  "Mesh \"{0}\" was not found while creating a mapping. "
+                  "Please correct the to=\"{0}\" attribute.",
+                  toMeshName);
+    fromMesh = mesh::MeshConfiguration::getJustInTimeMappingMesh(toMesh->getDimensions());
+  }
+  if (!toMesh && toMeshName.empty()) {
+    PRECICE_CHECK(fromMesh,
+                  "Mesh \"{0}\" was not found while creating a mapping. "
+                  "Please correct the from=\"{0}\" attribute.",
+                  fromMeshName);
+    toMesh = mesh::MeshConfiguration::getJustInTimeMappingMesh(fromMesh->getDimensions());
+  }
+
+  PRECICE_CHECK(fromMesh,
                 "Mesh \"{0}\" was not found while creating a mapping. "
                 "Please correct the from=\"{0}\" attribute.",
                 fromMeshName);
-  PRECICE_CHECK(toMesh.get() != nullptr,
+  PRECICE_CHECK(toMesh,
                 "Mesh \"{0}\" was not found while creating a mapping. "
                 "Please correct the to=\"{0}\" attribute.",
                 toMeshName);
+
+  PRECICE_CHECK((!toMesh->isJustInTime() && !fromMesh->isJustInTime()) ||
+                    ((toMesh->isJustInTime() || fromMesh->isJustInTime()) && (type == TYPE_NEAREST_NEIGHBOR || type == TYPE_RBF_PUM_DIRECT || type == TYPE_RBF_ALIAS)),
+                "A just-in-time mapping was configured from mesh \"{}\" to mesh \"{}\" using \"mapping:{}\", which is currently not implemented. "
+                "Available mapping types are \"mapping:{}\", \"mapping:{}\" and \"mapping:{}\".",
+                fromMesh->getName(), toMesh->getName(), type, TYPE_NEAREST_NEIGHBOR, TYPE_RBF_ALIAS, TYPE_RBF_PUM_DIRECT);
 
   // Check for compatible mesh dimensions
   PRECICE_CHECK(fromMesh->getDimensions() == toMesh->getDimensions(),
@@ -664,6 +707,15 @@ void MappingConfiguration::checkDuplicates(const ConfiguredMapping &mapping)
                   "Please remove one of the duplicated meshes. ",
                   mapping.fromMesh->getName(), mapping.toMesh->getName());
   }
+  for (const ConfiguredMapping &configuredMapping : _mappings) {
+    bool sameToMesh  = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
+    bool isWrite     = mapping.direction == mapping::MappingConfiguration::WRITE && configuredMapping.direction == mapping::MappingConfiguration::WRITE;
+    bool sameMapping = sameToMesh && isWrite && (mapping.fromMesh->isJustInTime() || configuredMapping.fromMesh->isJustInTime());
+    PRECICE_CHECK(!sameMapping,
+                  "There cannot be two mappings to mesh \"{}\". "
+                  "Here, we have a mixture of just-in-time mapping and a conventional mapping. ",
+                  mapping.toMesh->getName());
+  }
 }
 
 void MappingConfiguration::xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag)
@@ -685,6 +737,7 @@ void MappingConfiguration::finishRBFConfiguration()
 {
   PRECICE_ASSERT(_executorConfig);
   ConfiguredMapping &mapping = _mappings.back();
+
   // Instantiate the RBF mapping classes
   // We first categorize according to the executor
   // 1. the CPU executor

@@ -23,9 +23,9 @@ MultiCouplingScheme::MultiCouplingScheme(
     double                             maxTime,
     int                                maxTimeWindows,
     double                             timeWindowSize,
-    const std::string &                localParticipant,
+    const std::string                 &localParticipant,
     std::map<std::string, m2n::PtrM2N> m2ns,
-    const std::string &                controller,
+    const std::string                 &controller,
     int                                minIterations,
     int                                maxIterations)
     : BaseCouplingScheme(maxTime, maxTimeWindows, timeWindowSize, localParticipant, minIterations, maxIterations, Implicit, constants::TimesteppingMethod::FIXED_TIME_WINDOW_SIZE),
@@ -80,6 +80,7 @@ void MultiCouplingScheme::initializeReceiveDataStorage()
 void MultiCouplingScheme::exchangeInitialData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
+  PRECICE_ASSERT(math::equals(getTime(), getWindowStartTime()), getTime(), getWindowStartTime());
 
   if (_isController) {
     for (auto &[from, data] : _receiveDataVector) {
@@ -126,6 +127,7 @@ bool MultiCouplingScheme::receivesInitializedDataFrom(const std::string &from) c
 void MultiCouplingScheme::exchangeFirstData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
+  PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
   // @todo implement MultiCouplingScheme for explicit coupling
 
   PRECICE_DEBUG("Computed full length of iteration");
@@ -145,6 +147,7 @@ void MultiCouplingScheme::exchangeFirstData()
 void MultiCouplingScheme::exchangeSecondData()
 {
   PRECICE_ASSERT(isImplicitCouplingScheme(), "MultiCouplingScheme is always Implicit.");
+  PRECICE_ASSERT(math::equals(getTime(), getWindowEndTime()), getTime(), getWindowEndTime());
   // @todo implement MultiCouplingScheme for explicit coupling
 
   if (not _isController) {
@@ -175,7 +178,7 @@ void MultiCouplingScheme::addDataToSend(
     mesh::PtrMesh        mesh,
     bool                 requiresInitialization,
     bool                 exchangeSubsteps,
-    const std::string &  to)
+    const std::string   &to)
 {
   PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps, CouplingData::Direction::Send);
   PRECICE_DEBUG("Configuring send data to {}", to);
@@ -190,7 +193,7 @@ void MultiCouplingScheme::addDataToReceive(
     mesh::PtrMesh        mesh,
     bool                 requiresInitialization,
     bool                 exchangeSubsteps,
-    const std::string &  from)
+    const std::string   &from)
 {
   PtrCouplingData ptrCplData = addCouplingData(data, std::move(mesh), requiresInitialization, exchangeSubsteps, CouplingData::Direction::Receive);
   PRECICE_DEBUG("Configuring receive data from {}", from);

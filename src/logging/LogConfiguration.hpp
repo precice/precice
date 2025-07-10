@@ -3,8 +3,7 @@
 #include <string>
 #include <vector>
 
-namespace precice {
-namespace logging {
+namespace precice::logging {
 
 /// Holds the configuration for one logging backend (sink) and takes care of default values.
 struct BackendConfiguration {
@@ -63,5 +62,4 @@ struct GlobalLoggingConfig {
 /// Returns the global logging configuration
 GlobalLoggingConfig &getGlobalLoggingConfig();
 
-} // namespace logging
-} // namespace precice
+} // namespace precice::logging

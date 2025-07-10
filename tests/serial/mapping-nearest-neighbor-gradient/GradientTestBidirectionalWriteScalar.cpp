@@ -32,7 +32,7 @@
 using namespace precice;
 using precice::testing::TestContext;
 
-//std::string pathToTests = testing::getPathToSources() + "/tests/serial/mapping-nearest-neighbor-gradient/";
+// std::string pathToTests = testing::getPathToSources() + "/tests/serial/mapping-nearest-neighbor-gradient/";
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(GradientTestBidirectionalWriteScalar)
     cplInterface.writeData(meshName, dataBID, {&vid, 1}, {&valueDataB, 1});
     cplInterface.writeGradientData(meshName, dataBID, {&vid, 1}, valueGradDataB);
 
-    //tell preCICE that data has been written and call initialize
+    // tell preCICE that data has been written and call initialize
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
 

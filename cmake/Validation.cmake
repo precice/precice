@@ -2,7 +2,7 @@
 # preCICE Validation of Libraries
 #
 # This file contains macros which validate some libraries by trying to compile
-# a minimalisitic exectutable.
+# a minimalisitic executable.
 # They report their activity as STATUS messages.
 # A failing validation is reported as a FATAL_ERROR.
 #
@@ -78,10 +78,10 @@ macro(precice_validate_numpy)
 endmacro()
 
 # Validation for LibXML2
-# We check for the header libxml/SAX.h as we use it in preCICE
+# We check for the header libxml/SAX2.h as we use it in preCICE
 macro(precice_validate_libxml2)
   precice_validate_lib(
-    "#include <libxml/SAX.h>\nint main() { return 0; } "
+    "#include <libxml/SAX2.h>\nint main() { return 0; } "
   NAME LibXml2
   LINK_LIBRARIES LibXml2::LibXml2
   )

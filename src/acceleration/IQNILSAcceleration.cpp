@@ -18,7 +18,7 @@
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
-//#include "utils/NumericalCompare.hpp"
+// #include "utils/NumericalCompare.hpp"
 
 using precice::cplscheme::PtrCouplingData;
 

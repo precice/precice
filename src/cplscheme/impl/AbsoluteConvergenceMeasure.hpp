@@ -7,18 +7,13 @@
 #include "ConvergenceMeasure.hpp"
 #include "logging/Logger.hpp"
 #include "utils/IntraComm.hpp"
+#include "utils/assertion.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace tests {
+namespace precice::cplscheme::tests {
 class AbsoluteConvergenceMeasureTest;
 }
-} // namespace cplscheme
-} // namespace precice
 
-namespace precice {
-namespace cplscheme {
-namespace impl {
+namespace precice::cplscheme::impl {
 
 /**
  * @brief Measures the convergence from an old data set to a new one.
@@ -34,28 +29,29 @@ class AbsoluteConvergenceMeasure : public ConvergenceMeasure {
 public:
   explicit AbsoluteConvergenceMeasure(double convergenceLimit);
 
-  virtual ~AbsoluteConvergenceMeasure(){};
+  ~AbsoluteConvergenceMeasure() override = default;
 
-  virtual void newMeasurementSeries()
+  void newMeasurementSeries() override
   {
     _isConvergence = false;
   }
 
-  virtual void measure(
+  void measure(
       const Eigen::VectorXd &oldValues,
-      const Eigen::VectorXd &newValues)
+      const Eigen::VectorXd &newValues) override
   {
+    PRECICE_ASSERT(oldValues.size() == newValues.size());
     _normDiff      = utils::IntraComm::l2norm(newValues - oldValues);
     _isConvergence = _normDiff <= _convergenceLimit;
   }
 
-  virtual bool isConvergence() const
+  bool isConvergence() const override
   {
     return _isConvergence;
   }
 
   /// Adds current convergence information to output stream.
-  virtual std::string printState(const std::string &dataName)
+  std::string printState(const std::string &dataName) override
   {
     std::ostringstream os;
     os << "absolute convergence measure: ";
@@ -70,12 +66,12 @@ public:
     return os.str();
   }
 
-  virtual double getNormResidual()
+  double getNormResidual() override
   {
     return _normDiff;
   }
 
-  virtual std::string getAbbreviation() const
+  std::string getAbbreviation() const override
   {
     return "Abs";
   }
@@ -89,6 +85,4 @@ private:
 
   bool _isConvergence = false;
 };
-} // namespace impl
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme::impl

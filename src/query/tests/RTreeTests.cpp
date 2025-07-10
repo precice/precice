@@ -28,11 +28,11 @@ namespace {
 PtrMesh fullMesh()
 {
   PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
-  auto &  mesh = *ptr;
-  auto &  v1   = mesh.createVertex(Eigen::Vector3d(0, 2, 0));
-  auto &  v2   = mesh.createVertex(Eigen::Vector3d(2, 1, 0));
-  auto &  v3   = mesh.createVertex(Eigen::Vector3d(3, 0, 0));
-  auto &  v4   = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
+  auto   &mesh = *ptr;
+  auto   &v1   = mesh.createVertex(Eigen::Vector3d(0, 2, 0));
+  auto   &v2   = mesh.createVertex(Eigen::Vector3d(2, 1, 0));
+  auto   &v3   = mesh.createVertex(Eigen::Vector3d(3, 0, 0));
+  auto   &v4   = mesh.createVertex(Eigen::Vector3d(1, 0, 0));
   // Quad Borders
   auto &e1 = mesh.createEdge(v1, v2);
   auto &e2 = mesh.createEdge(v2, v3);
@@ -123,24 +123,24 @@ BOOST_AUTO_TEST_CASE(Query3DFullVertex)
   PtrMesh      mesh(new precice::mesh::Mesh("MyMesh", 3, precice::testing::nextMeshID()));
   const double z1  = 0.1;
   const double z2  = -0.1;
-  auto &       v00 = mesh->createVertex(Eigen::Vector3d(0, 0, 0));
-  auto &       v01 = mesh->createVertex(Eigen::Vector3d(0, 1, 0));
-  auto &       v10 = mesh->createVertex(Eigen::Vector3d(1, 0, z1));
-  auto &       v11 = mesh->createVertex(Eigen::Vector3d(1, 1, z1));
-  auto &       v20 = mesh->createVertex(Eigen::Vector3d(2, 0, z2));
-  auto &       v21 = mesh->createVertex(Eigen::Vector3d(2, 1, z2));
-  auto &       v30 = mesh->createVertex(Eigen::Vector3d(3, 0, z2));
-  auto &       v31 = mesh->createVertex(Eigen::Vector3d(3, 1, z2));
-  auto &       ell = mesh->createEdge(v00, v01);
-  auto &       elt = mesh->createEdge(v01, v11);
-  auto &       elr = mesh->createEdge(v11, v10);
-  auto &       elb = mesh->createEdge(v10, v00);
-  auto &       eld = mesh->createEdge(v00, v11);
-  auto &       erl = elr;
-  auto &       ert = mesh->createEdge(v11, v21);
-  auto &       err = mesh->createEdge(v21, v20);
-  auto &       erb = mesh->createEdge(v20, v10);
-  auto &       erd = mesh->createEdge(v10, v21);
+  auto        &v00 = mesh->createVertex(Eigen::Vector3d(0, 0, 0));
+  auto        &v01 = mesh->createVertex(Eigen::Vector3d(0, 1, 0));
+  auto        &v10 = mesh->createVertex(Eigen::Vector3d(1, 0, z1));
+  auto        &v11 = mesh->createVertex(Eigen::Vector3d(1, 1, z1));
+  auto        &v20 = mesh->createVertex(Eigen::Vector3d(2, 0, z2));
+  auto        &v21 = mesh->createVertex(Eigen::Vector3d(2, 1, z2));
+  auto        &v30 = mesh->createVertex(Eigen::Vector3d(3, 0, z2));
+  auto        &v31 = mesh->createVertex(Eigen::Vector3d(3, 1, z2));
+  auto        &ell = mesh->createEdge(v00, v01);
+  auto        &elt = mesh->createEdge(v01, v11);
+  auto        &elr = mesh->createEdge(v11, v10);
+  auto        &elb = mesh->createEdge(v10, v00);
+  auto        &eld = mesh->createEdge(v00, v11);
+  auto        &erl = elr;
+  auto        &ert = mesh->createEdge(v11, v21);
+  auto        &err = mesh->createEdge(v21, v20);
+  auto        &erb = mesh->createEdge(v20, v10);
+  auto        &erd = mesh->createEdge(v10, v21);
   mesh->createTriangle(ell, elt, eld);
   mesh->createTriangle(eld, elb, elr);
   mesh->createTriangle(erl, ert, erd);
@@ -299,7 +299,7 @@ BOOST_AUTO_TEST_CASE(Query3DEdge)
   auto match = results.front().index;
 
   BOOST_TEST(match < mesh->edges().size());
-  auto &          edge = mesh->edges().at(match);
+  auto           &edge = mesh->edges().at(match);
   Eigen::Vector3d p1(1, 1, 0);
   Eigen::Vector3d p2(1, 1, 1);
   BOOST_TEST((edge.vertex(0).getCoords() == p1 || edge.vertex(0).getCoords() == p2));
@@ -317,22 +317,22 @@ BOOST_AUTO_TEST_CASE(Query3DFullEdge)
   PtrMesh      mesh(new precice::mesh::Mesh("MyMesh", 3, precice::testing::nextMeshID()));
   const double z1  = 0.1;
   const double z2  = -0.1;
-  auto &       v00 = mesh->createVertex(Eigen::Vector3d(0, 0, 0));
-  auto &       v01 = mesh->createVertex(Eigen::Vector3d(0, 1, 0));
-  auto &       v10 = mesh->createVertex(Eigen::Vector3d(1, 0, z1));
-  auto &       v11 = mesh->createVertex(Eigen::Vector3d(1, 1, z1));
-  auto &       v20 = mesh->createVertex(Eigen::Vector3d(2, 0, z2));
-  auto &       v21 = mesh->createVertex(Eigen::Vector3d(2, 1, z2));
-  auto &       ell = mesh->createEdge(v00, v01);
-  auto &       elt = mesh->createEdge(v01, v11);
-  auto &       elr = mesh->createEdge(v11, v10);
-  auto &       elb = mesh->createEdge(v10, v00);
-  auto &       eld = mesh->createEdge(v00, v11);
-  auto &       erl = elr;
-  auto &       ert = mesh->createEdge(v11, v21);
-  auto &       err = mesh->createEdge(v21, v20);
-  auto &       erb = mesh->createEdge(v20, v10);
-  auto &       erd = mesh->createEdge(v10, v21);
+  auto        &v00 = mesh->createVertex(Eigen::Vector3d(0, 0, 0));
+  auto        &v01 = mesh->createVertex(Eigen::Vector3d(0, 1, 0));
+  auto        &v10 = mesh->createVertex(Eigen::Vector3d(1, 0, z1));
+  auto        &v11 = mesh->createVertex(Eigen::Vector3d(1, 1, z1));
+  auto        &v20 = mesh->createVertex(Eigen::Vector3d(2, 0, z2));
+  auto        &v21 = mesh->createVertex(Eigen::Vector3d(2, 1, z2));
+  auto        &ell = mesh->createEdge(v00, v01);
+  auto        &elt = mesh->createEdge(v01, v11);
+  auto        &elr = mesh->createEdge(v11, v10);
+  auto        &elb = mesh->createEdge(v10, v00);
+  auto        &eld = mesh->createEdge(v00, v11);
+  auto        &erl = elr;
+  auto        &ert = mesh->createEdge(v11, v21);
+  auto        &err = mesh->createEdge(v21, v20);
+  auto        &erb = mesh->createEdge(v20, v10);
+  auto        &erd = mesh->createEdge(v10, v21);
   mesh->createTriangle(ell, elt, eld);
   mesh->createTriangle(eld, elb, elr);
   mesh->createTriangle(erl, ert, erd);
@@ -364,26 +364,26 @@ BOOST_AUTO_TEST_CASE(Query3DFullTriangle)
   PtrMesh      mesh(new precice::mesh::Mesh("MyMesh", 3, precice::testing::nextMeshID()));
   const double z1  = 0.1;
   const double z2  = -0.1;
-  auto &       v00 = mesh->createVertex(Eigen::Vector3d(0, 0, 0));
-  auto &       v01 = mesh->createVertex(Eigen::Vector3d(0, 1, 0));
-  auto &       v10 = mesh->createVertex(Eigen::Vector3d(1, 0, z1));
-  auto &       v11 = mesh->createVertex(Eigen::Vector3d(1, 1, z1));
-  auto &       v20 = mesh->createVertex(Eigen::Vector3d(2, 0, z2));
-  auto &       v21 = mesh->createVertex(Eigen::Vector3d(2, 1, z2));
-  auto &       ell = mesh->createEdge(v00, v01);
-  auto &       elt = mesh->createEdge(v01, v11);
-  auto &       elr = mesh->createEdge(v11, v10);
-  auto &       elb = mesh->createEdge(v10, v00);
-  auto &       eld = mesh->createEdge(v00, v11);
-  auto &       erl = elr;
-  auto &       ert = mesh->createEdge(v11, v21);
-  auto &       err = mesh->createEdge(v21, v20);
-  auto &       erb = mesh->createEdge(v20, v10);
-  auto &       erd = mesh->createEdge(v10, v21);
-  auto &       tlt = mesh->createTriangle(ell, elt, eld);
-  auto &       tlb = mesh->createTriangle(eld, elb, elr);
-  auto &       trt = mesh->createTriangle(erl, ert, erd);
-  auto &       trb = mesh->createTriangle(erd, erb, err);
+  auto        &v00 = mesh->createVertex(Eigen::Vector3d(0, 0, 0));
+  auto        &v01 = mesh->createVertex(Eigen::Vector3d(0, 1, 0));
+  auto        &v10 = mesh->createVertex(Eigen::Vector3d(1, 0, z1));
+  auto        &v11 = mesh->createVertex(Eigen::Vector3d(1, 1, z1));
+  auto        &v20 = mesh->createVertex(Eigen::Vector3d(2, 0, z2));
+  auto        &v21 = mesh->createVertex(Eigen::Vector3d(2, 1, z2));
+  auto        &ell = mesh->createEdge(v00, v01);
+  auto        &elt = mesh->createEdge(v01, v11);
+  auto        &elr = mesh->createEdge(v11, v10);
+  auto        &elb = mesh->createEdge(v10, v00);
+  auto        &eld = mesh->createEdge(v00, v11);
+  auto        &erl = elr;
+  auto        &ert = mesh->createEdge(v11, v21);
+  auto        &err = mesh->createEdge(v21, v20);
+  auto        &erb = mesh->createEdge(v20, v10);
+  auto        &erd = mesh->createEdge(v10, v21);
+  auto        &tlt = mesh->createTriangle(ell, elt, eld);
+  auto        &tlb = mesh->createTriangle(eld, elb, elr);
+  auto        &trt = mesh->createTriangle(erl, ert, erd);
+  mesh->createTriangle(erd, erb, err);
 
   Index indexTree(mesh);
 
@@ -484,7 +484,7 @@ BOOST_AUTO_TEST_CASE(CubeBoundingBoxIndex)
 {
   PRECICE_TEST();
   PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
-  auto &  mesh = *ptr;
+  auto   &mesh = *ptr;
   Index   indexTree(ptr);
 
   Eigen::Vector3d  location(0.5, 0.5, 0.5);
@@ -516,7 +516,7 @@ BOOST_AUTO_TEST_CASE(TetraIndexing)
   Check that only 1st and 2nd are found by getEnclosingTetrahedra
   */
   PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
-  auto &  mesh = *ptr;
+  auto   &mesh = *ptr;
   Index   indexTree(ptr);
 
   Eigen::Vector3d  location(0.2, 0.2, 0.2);
@@ -557,14 +557,14 @@ BOOST_AUTO_TEST_CASE(TetraWorksOnBoundary)
  Check that the AABB safety factor is high enough. Do all the corners of a tetra fit inside its AABB?
   */
   PtrMesh ptr(new Mesh("MyMesh", 3, testing::nextMeshID()));
-  auto &  mesh = *ptr;
+  auto   &mesh = *ptr;
   Index   indexTree(ptr);
 
   std::vector<Eigen::Vector3d> locations;
-  locations.push_back(Eigen::Vector3d(0, 0, 0));
-  locations.push_back(Eigen::Vector3d(1, 0, 0));
-  locations.push_back(Eigen::Vector3d(0, 1, 0));
-  locations.push_back(Eigen::Vector3d(0, 0, 1));
+  locations.emplace_back(0, 0, 0);
+  locations.emplace_back(1, 0, 0);
+  locations.emplace_back(0, 1, 0);
+  locations.emplace_back(0, 0, 1);
 
   // Set containing tetra
   auto &v00 = mesh.createVertex(Eigen::Vector3d(0, 0, 0));

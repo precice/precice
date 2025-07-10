@@ -4,9 +4,11 @@
 #include "DistributedCommunication.hpp"
 #include "M2N.hpp"
 #include "com/Communication.hpp"
+#include "logging/LogConfiguration.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
+#include "precice/impl/versions.hpp"
 #include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
@@ -38,9 +40,40 @@ bool M2N::isConnected()
   return _isPrimaryRankConnected;
 }
 
+namespace {
+std::string makeLocalInfo(std::string_view configHash)
+{
+  std::string info = PRECICE_VERSION;
+  info += ";";
+  info += configHash;
+  return info;
+}
+
+} // namespace
+
+void M2N::checkRemoteInfo(std::string_view localParticipant,
+                          std::string_view remoteParticipant,
+                          std::string_view localConfigHash,
+                          std::string_view remoteInfo)
+{
+  auto sep = remoteInfo.find(";");
+  PRECICE_CHECK(sep != std::string::npos, "The received information string from participant {} is damaged. \"{}\"");
+
+  auto remoteVersion = remoteInfo.substr(0, sep);
+  PRECICE_CHECK(remoteVersion == PRECICE_VERSION,
+                "This participant {} uses preCICE version {} but the requester participant {} uses preCICE version {}. Mixing preCICE versions can lead to undefined behavior and is, thus, forbidden.",
+                localParticipant, PRECICE_VERSION, remoteParticipant, remoteVersion);
+
+  auto remoteConfigHash = remoteInfo.substr(sep + 1);
+  PRECICE_CHECK(remoteConfigHash == localConfigHash,
+                "This participant {} uses a different configuration file than the remote participant {}. Hashes differ {} != {}.",
+                localParticipant, remoteParticipant, localConfigHash, remoteConfigHash);
+}
+
 void M2N::acceptPrimaryRankConnection(
     const std::string &acceptorName,
-    const std::string &requesterName)
+    const std::string &requesterName,
+    std::string_view   configHash)
 {
   PRECICE_TRACE(acceptorName, requesterName);
 
@@ -51,6 +84,16 @@ void M2N::acceptPrimaryRankConnection(
     PRECICE_ASSERT(_interComm);
     _interComm->acceptConnection(acceptorName, requesterName, "PRIMARYCOM", utils::IntraComm::getRank());
     _isPrimaryRankConnected = _interComm->isConnected();
+
+    std::string localInfo = makeLocalInfo(configHash);
+    _interComm->send(localInfo, 0);
+    std::string remoteInfo;
+    _interComm->receive(remoteInfo, 0);
+
+    checkRemoteInfo(acceptorName,
+                    requesterName,
+                    configHash,
+                    remoteInfo);
   }
 
   utils::IntraComm::broadcast(_isPrimaryRankConnected);
@@ -58,7 +101,8 @@ void M2N::acceptPrimaryRankConnection(
 
 void M2N::requestPrimaryRankConnection(
     const std::string &acceptorName,
-    const std::string &requesterName)
+    const std::string &requesterName,
+    std::string_view   configHash)
 {
   PRECICE_TRACE(acceptorName, requesterName);
 
@@ -69,6 +113,17 @@ void M2N::requestPrimaryRankConnection(
     PRECICE_DEBUG("Request primary connection");
     _interComm->requestConnection(acceptorName, requesterName, "PRIMARYCOM", 0, 1);
     _isPrimaryRankConnected = _interComm->isConnected();
+
+    // check that local and remote have the same precice version
+    std::string remoteInfo;
+    _interComm->receive(remoteInfo, 0);
+    std::string localInfo = makeLocalInfo(configHash);
+    _interComm->send(localInfo, 0);
+
+    checkRemoteInfo(requesterName,
+                    acceptorName,
+                    configHash,
+                    remoteInfo);
   }
 
   utils::IntraComm::broadcast(_isPrimaryRankConnected);
@@ -276,7 +331,7 @@ void M2N::broadcastSendMesh(mesh::Mesh &mesh)
 }
 
 void M2N::scatterAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap,
-                                     mesh::Mesh &                     mesh)
+                                     mesh::Mesh                      &mesh)
 {
   PRECICE_ASSERT(utils::IntraComm::isParallel(),
                  "This method can only be used for parallel participants");

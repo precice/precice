@@ -11,8 +11,7 @@
 #include "logging/Logger.hpp"
 #include "precice/impl/Types.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 /**
  * @brief Provides connection methods based on MPI ports (part of MPI 2.0).
  *
@@ -32,51 +31,51 @@ namespace com {
  * The latter, in contrast, is only called from m2n::PointToPointCommunication, due to that the p2p class was also heavily modified. But this connection method is the most important, because it does the m2n heavy lifiting.
  *
  * If we agree, that acceptConnection / requestConnection just does 1:1 connection, we can rewrite and simplify the code.
-**/
+ **/
 class MPISinglePortsCommunication : public MPICommunication {
 public:
   explicit MPISinglePortsCommunication(std::string addressDirectory = ".");
 
-  virtual ~MPISinglePortsCommunication();
+  ~MPISinglePortsCommunication() override;
 
-  virtual size_t getRemoteCommunicatorSize() override;
+  size_t getRemoteCommunicatorSize() override;
 
-  virtual void acceptConnection(std::string const &acceptorName,
+  void acceptConnection(std::string const &acceptorName,
+                        std::string const &requesterName,
+                        std::string const &tag,
+                        int                acceptorRank,
+                        int                rankOffset = 0) override;
+
+  void acceptConnectionAsServer(std::string const &acceptorName,
                                 std::string const &requesterName,
                                 std::string const &tag,
                                 int                acceptorRank,
-                                int                rankOffset = 0) override;
+                                int                requesterCommunicatorSize) override;
 
-  virtual void acceptConnectionAsServer(std::string const &acceptorName,
-                                        std::string const &requesterName,
-                                        std::string const &tag,
-                                        int                acceptorRank,
-                                        int                requesterCommunicatorSize) override;
+  void requestConnection(std::string const &acceptorName,
+                         std::string const &requesterName,
+                         std::string const &tag,
+                         int                requesterRank,
+                         int                requesterCommunicatorSize) override;
 
-  virtual void requestConnection(std::string const &acceptorName,
-                                 std::string const &requesterName,
-                                 std::string const &tag,
-                                 int                requesterRank,
-                                 int                requesterCommunicatorSize) override;
+  void requestConnectionAsClient(std::string const   &acceptorName,
+                                 std::string const   &requesterName,
+                                 std::string const   &tag,
+                                 std::set<int> const &acceptorRanks,
+                                 int                  requesterRank) override;
 
-  virtual void requestConnectionAsClient(std::string const &  acceptorName,
-                                         std::string const &  requesterName,
-                                         std::string const &  tag,
-                                         std::set<int> const &acceptorRanks,
-                                         int                  requesterRank) override;
+  void prepareEstablishment(std::string const &acceptorName,
+                            std::string const &requesterName) override;
 
-  virtual void prepareEstablishment(std::string const &acceptorName,
-                                    std::string const &requesterName) override;
+  void cleanupEstablishment(std::string const &acceptorName,
+                            std::string const &requesterName) override;
 
-  virtual void cleanupEstablishment(std::string const &acceptorName,
-                                    std::string const &requesterName) override;
-
-  virtual void closeConnection() override;
+  void closeConnection() override;
 
 private:
-  virtual MPI_Comm &communicator(Rank rank) override;
+  MPI_Comm &communicator(Rank rank) override;
 
-  virtual Rank rank(int rank) override;
+  Rank rank(int rank) override;
 
   logging::Logger _log{"com::MPISinglePortsCommunication"};
 
@@ -111,7 +110,6 @@ private:
 
   bool _isAcceptor = false;
 };
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

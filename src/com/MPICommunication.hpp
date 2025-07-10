@@ -10,8 +10,7 @@
 #include "logging/Logger.hpp"
 #include "precice/impl/Types.hpp"
 
-namespace precice {
-namespace com {
+namespace precice::com {
 /**
  * @brief Provides implementation for basic MPI point-to-point communication.
  *
@@ -23,104 +22,102 @@ public:
   MPICommunication();
 
   /// Destructor, empty.
-  virtual ~MPICommunication()
-  {
-  }
+  ~MPICommunication() override = default;
 
   /**
    * @brief Sends a std::string to process with given rank.
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void send(std::string const &itemToSend, Rank rankReceiver) override;
+  void send(std::string const &itemToSend, Rank rankReceiver) override;
 
   /// Sends an array of integer values.
-  virtual void send(precice::span<const int> itemsToSend, Rank rankReceiver) override;
+  void send(precice::span<const int> itemsToSend, Rank rankReceiver) override;
 
   /// Asynchronously sends an array of integer values.
-  virtual PtrRequest aSend(precice::span<const int> itemsToSend, Rank rankReceiver) override;
+  PtrRequest aSend(precice::span<const int> itemsToSend, Rank rankReceiver) override;
 
   /// Sends an array of double values.
-  virtual void send(precice::span<const double> itemsToSend, Rank rankReceiver) override;
+  void send(precice::span<const double> itemsToSend, Rank rankReceiver) override;
 
   /// Asynchronously sends an array of double values.
-  virtual PtrRequest aSend(precice::span<const double> itemsToSend, Rank rankReceiver) override;
+  PtrRequest aSend(precice::span<const double> itemsToSend, Rank rankReceiver) override;
 
   /**
    * @brief Sends a double to process with given rank.
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void send(double itemToSend, Rank rankReceiver) override;
+  void send(double itemToSend, Rank rankReceiver) override;
 
   /// Asynchronously sends a double to process with given rank.
-  virtual PtrRequest aSend(const double &itemToSend, Rank rankReceiver) override;
+  PtrRequest aSend(const double &itemToSend, Rank rankReceiver) override;
 
   /**
    * @brief Sends an int to process with given rank.
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void send(int itemToSend, Rank rankReceiver) override;
+  void send(int itemToSend, Rank rankReceiver) override;
 
   /// Asynchronously sends an int to process with given rank.
-  virtual PtrRequest aSend(const int &itemToSend, Rank rankReceiver) override;
+  PtrRequest aSend(const int &itemToSend, Rank rankReceiver) override;
 
   /**
    * @brief Sends a bool to process with given rank.
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void send(bool itemToSend, Rank rankReceiver) override;
+  void send(bool itemToSend, Rank rankReceiver) override;
 
   /// Asynchronously sends a bool to process with given rank.
-  virtual PtrRequest aSend(const bool &itemToSend, Rank rankReceiver) override;
+  PtrRequest aSend(const bool &itemToSend, Rank rankReceiver) override;
 
   /**
    * @brief Receives a std::string from process with given rank.
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void receive(std::string &itemToReceive, Rank rankSender) override;
+  void receive(std::string &itemToReceive, Rank rankSender) override;
 
   /// Receives an array of integer values.
-  virtual void receive(precice::span<int> itemsToReceive, Rank rankSender) override;
+  void receive(precice::span<int> itemsToReceive, Rank rankSender) override;
 
   /// Receives an array of double values.
-  virtual void receive(precice::span<double> itemsToReceive, Rank rankSender) override;
+  void receive(precice::span<double> itemsToReceive, Rank rankSender) override;
 
   /// Asynchronously receives an array of double values.
-  virtual PtrRequest aReceive(precice::span<double> itemsToReceive, int rankSender) override;
+  PtrRequest aReceive(precice::span<double> itemsToReceive, int rankSender) override;
 
   /**
    * @brief Receives a double from process with given rank.
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void receive(double &itemToReceive, Rank rankSender) override;
+  void receive(double &itemToReceive, Rank rankSender) override;
 
   /// Asynchronously receives a double from process with given rank.
-  virtual PtrRequest aReceive(double &itemToReceive, Rank rankSender) override;
+  PtrRequest aReceive(double &itemToReceive, Rank rankSender) override;
 
   /**
    * @brief Receives an int from process with given rank.
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void receive(int &itemToReceive, Rank rankSender) override;
+  void receive(int &itemToReceive, Rank rankSender) override;
 
   /// Asynchronously receives an int from process with given rank.
-  virtual PtrRequest aReceive(int &itemToReceive, Rank rankSender) override;
+  PtrRequest aReceive(int &itemToReceive, Rank rankSender) override;
 
   /**
    * @brief Receives a bool from process with given rank.
    *
    * Default MPI point-to-point communication is used.
    */
-  virtual void receive(bool &itemToReceive, Rank rankSender) override;
+  void receive(bool &itemToReceive, Rank rankSender) override;
 
   /// Asynchronously receives a bool from process with given rank.
-  virtual PtrRequest aReceive(bool &itemToReceive, Rank rankSender) override;
+  PtrRequest aReceive(bool &itemToReceive, Rank rankSender) override;
 
 protected:
   /// Returns the communicator.
@@ -131,7 +128,6 @@ protected:
 private:
   logging::Logger _log{"com::MPICommunication"};
 };
-} // namespace com
-} // namespace precice
+} // namespace precice::com
 
 #endif // not PRECICE_NO_MPI

@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.22.1)
-project(preCICE VERSION 3.1.2 LANGUAGES CXX)
+project(preCICE VERSION 3.2.0 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -45,12 +45,16 @@ endif()
 # Setup Options
 #
 
-if(NOT CMAKE_BUILD_TYPE)
-  message(WARNING "You did not specify a CMAKE_BUILD_TYPE.
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+  message(WARNING "You did not specify a CMAKE_BUILD_TYPE in a single configuration build.
 
   We will assume you asked for a Debug build.")
   set(CMAKE_BUILD_TYPE Debug CACHE STRING "The type of this build" FORCE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
+endif()
+
+if (DEFINED BUILD_SHARED_LIBS AND NOT BUILD_SHARED_LIBS)
+  message(WARNING "You disabled BUILD_SHARED_LIBS. Note that 3.2.0 was the last release to honor this option. Newer preCICE releases always build as a shared library.")
 endif()
 
 option(PRECICE_FEATURE_MPI_COMMUNICATION "Enables MPI-based communication and running coupling tests." ON)
@@ -58,7 +62,6 @@ option(PRECICE_FEATURE_PETSC_MAPPING "Enable use of the PETSc linear algebra lib
 option(PRECICE_FEATURE_PYTHON_ACTIONS "Enable Python support for preCICE actions." ON)
 option(PRECICE_CONFIGURE_PACKAGE_GENERATION "Configure package generation." ON)
 option(PRECICE_FEATURE_GINKGO_MAPPING "Enable use of Ginkgo for accelerated data mapping." OFF)
-option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
 option(BUILD_TESTING "Build tests" ON)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
 option(PRECICE_BINDINGS_C "Enable the native C bindings" ON)
@@ -66,6 +69,7 @@ option(PRECICE_BINDINGS_FORTRAN "Enable the native Fortran bindings" ON)
 option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
 option(PRECICE_BUILD_UNITY "Use unity builds in preCICE" ON)
 option(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES "Enable libbacktrace for stacktrace generation." OFF)
+option(PRECICE_BUILD_BENCHMARKS "Build the preCICE-internal benchmarks" OFF)
 
 option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization for all targets." OFF)
 
@@ -153,7 +157,7 @@ add_feature_info(PRECICE_BUILD_TOOLS PRECICE_BUILD_TOOLS
   "Build the \"precice-tools\" executable
 
    preCICE offers in addition to the core library a variety of tools in order to check configuration
-   files or generate xml references. The tools are copmiled into an executable called \"precice-tools\".
+   files or generate xml references. The tools are compiled into an executable called \"precice-tools\".
 
    This feature can be enabled/disabled by setting the PRECICE_BUILD_TOOLS CMake option.
   ")
@@ -310,6 +314,7 @@ endif()
     endif()
 
     find_package(hipsolver REQUIRED)
+    find_package(hipblas REQUIRED)
   endif()
 
   if(PRECICE_WITH_OPENMP)
@@ -373,6 +378,11 @@ if(NOT Kokkos_VERSION OR NOT Kokkos_VERSION VERSION_LESS 4.4)
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
   )
+else()
+  set_target_properties(preciceCore PROPERTIES
+    CXX_VISIBILITY_PRESET default
+    VISIBILITY_INLINES_HIDDEN NO
+  )
 endif()
 
 # Setup release override options
@@ -403,6 +413,10 @@ target_link_libraries(preciceCore PUBLIC
 if(UNIX OR APPLE OR MINGW)
   target_compile_definitions(preciceCore PUBLIC _GNU_SOURCE)
   target_link_libraries(preciceCore PUBLIC ${CMAKE_DL_LIBS})
+endif()
+if(WIN32 OR CYGWIN)
+  # Required for SocketsCommunication
+  target_link_libraries(preciceCore PUBLIC ws2_32)
 endif()
 if(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES)
   target_compile_definitions(preciceCore PRIVATE BOOST_STACKTRACE_USE_BACKTRACE)
@@ -471,8 +485,9 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_CUDA)
     # Required to make nvcc happy
     target_compile_definitions(preciceCore PRIVATE BOOST_PP_VARIADICS=1)
+    target_compile_definitions(preciceCore PRIVATE BOOST_ASIO_USE_TS_EXECUTOR_AS_DEFAULT=1)
     target_sources(preciceCore PRIVATE ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cuh ${PROJECT_SOURCE_DIR}/src/mapping/device/CudaQRSolver.cu)
-    target_link_libraries(preciceCore PRIVATE cusolver)
+    target_link_libraries(preciceCore PRIVATE cusolver cublas)
     message(STATUS "Enabled CUDA support for preCICE via the Ginkgo library.")
   endif()
 
@@ -480,7 +495,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     target_compile_definitions(preciceCore PUBLIC PRECICE_WITH_HIP)
     set(_hiplist ${PROJECT_SOURCE_DIR}/src/mapping/device/HipQRSolver.hip.cpp)
     target_sources(preciceCore PRIVATE ${_hiplist})
-    target_link_libraries(preciceCore PRIVATE hip::device Ginkgo::ginkgo roc::hipsolver)
+    target_link_libraries(preciceCore PRIVATE hip::device Ginkgo::ginkgo roc::hipsolver roc::hipblas)
 
     message(STATUS "Enabled HIP support for preCICE via the Ginkgo library.")
   endif()
@@ -514,18 +529,21 @@ target_include_directories(preciceCore PUBLIC
   )
 
 # Add precice as an empty target
-add_library(precice)
+add_library(precice SHARED)
 set_target_properties(precice PROPERTIES
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
-  CXX_VISIBILITY_PRESET default
-  VISIBILITY_INLINES_HIDDEN NO
   )
 
 if(NOT Kokkos_VERSION OR NOT Kokkos_VERSION VERSION_LESS 4.4)
   set_target_properties(precice PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
+   )
+else()
+  set_target_properties(precice PROPERTIES
+    CXX_VISIBILITY_PRESET default
+    VISIBILITY_INLINES_HIDDEN NO
    )
 endif()
 
@@ -577,25 +595,35 @@ GENERATE_EXPORT_HEADER(preciceCore
   INCLUDE_GUARD_NAME PRECICE_EXPORT
   )
 
+# Workaround for making exports work for the preciceCore object library when building preCICE as a shared library
+target_compile_definitions(preciceCore PUBLIC preciceCore_EXPORTS)
+
 # Add the export header to the public headers of the preCICE lib
 set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/export.h)
 
 #
-# Configuration of Target precice-tools
+# Configuration of precice tools
 #
 if (PRECICE_BUILD_TOOLS)
-  add_executable(precice-tools "src/drivers/main.cpp")
-  target_link_libraries(precice-tools
-   PRIVATE
-   precice
-   )
-  set_target_properties(precice-tools PROPERTIES
-    # precice is a C++17 project
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED Yes
-    CXX_EXTENSIONS No
-    )
+  macro(precice_add_tool TARGET MAIN)
+    add_executable(${TARGET} ${MAIN})
+    target_link_libraries(${TARGET}
+      PRIVATE
+      precice
+      )
+    set_target_properties(${TARGET} PROPERTIES
+      # precice is a C++17 project
+      CXX_STANDARD 17
+      CXX_STANDARD_REQUIRED Yes
+      CXX_EXTENSIONS No
+      )
+  endmacro()
+
+  precice_add_tool(precice-tools "src/drivers/main.cpp")
+  precice_add_tool(precice-config-doc "src/drivers/doc.cpp")
+  precice_add_tool(precice-config-validate "src/drivers/validate.cpp")
+  precice_add_tool(precice-version "src/drivers/version.cpp")
 endif()
 
 #
@@ -611,6 +639,7 @@ IF (BUILD_TESTING)
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
+    ENABLE_EXPORTS Yes
     )
   target_include_directories(testprecice PRIVATE
     ${preCICE_SOURCE_DIR}/src
@@ -630,7 +659,16 @@ IF (BUILD_TESTING)
     # Add integration tests from tests/ sources to a single unity group
     get_target_property(_testprecice_sources testprecice SOURCES)
     foreach(SOURCE_FILE IN LISTS _testprecice_sources)
-      if(SOURCE_FILE MATCHES "^tests/")
+      if(SOURCE_FILE MATCHES "^src/([a-z0-9]+)/tests?/")
+        set(group "${CMAKE_MATCH_1}")
+        # The SocketCommunication includes boost/asio.hpp which clashes with the precice::query namespace.
+        # We exclude that one test for the sake of simplicity
+        if(NOT SOURCE_FILE MATCHES "SocketCommunicationTest.cpp$")
+          set_source_files_properties(${SOURCE_FILE} PROPERTIES UNITY_GROUP "${group}")
+        endif()
+      elseif(SOURCE_FILE MATCHES "^src/testing/")
+        set_source_files_properties(${SOURCE_FILE} PROPERTIES UNITY_GROUP "testing")
+      elseif(SOURCE_FILE MATCHES "^tests/")
         set_source_files_properties(${SOURCE_FILE} PROPERTIES UNITY_GROUP "integration")
       endif()
     endforeach()
@@ -651,6 +689,32 @@ if (PRECICE_BINDINGS_FORTRAN)
   # include((${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran/CMakeLists.txt)
   add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/extras/bindings/fortran)
 endif()
+
+# Build benchmarks if enabled
+if(PRECICE_BUILD_BENCHMARKS)
+  find_package(benchmark REQUIRED)
+
+  add_executable(precice-bench)
+  include(${CMAKE_CURRENT_LIST_DIR}/benchmarks/sources.cmake)
+
+  target_link_libraries(precice-bench
+    PRIVATE
+    preciceCore
+    benchmark::benchmark
+    )
+  set_target_properties(precice-bench PROPERTIES
+    # precice is a C++17 project
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED Yes
+    CXX_EXTENSIONS No
+    )
+  target_include_directories(precice-bench PRIVATE
+    ${preCICE_SOURCE_DIR}/src
+    ${preCICE_SOURCE_DIR}/benchmark
+    )
+endif()
+
+
 #
 # Install Targets for precice
 #
@@ -668,7 +732,7 @@ install(TARGETS precice
   )
 
 if(PRECICE_BUILD_TOOLS)
-  install(TARGETS precice-tools
+  install(TARGETS precice-tools precice-version precice-config-validate precice-config-doc
     EXPORT preciceTargets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
@@ -721,7 +785,7 @@ mark_as_advanced(PRECICE_PACKAGING_DIR)
 find_program(GZIP_EXE gzip DOC "The gzip executable")
 if(GZIP_EXE)
   # Process manpages for binaries
-  file(COPY docs/man/man1/precice-tools.1 DESTINATION packaging/man1)
+  file(COPY docs/man/man1/precice-tools.1 docs/man/man1/precice-version.1 docs/man/man1/precice-config-validate.1 docs/man/man1/precice-config-doc.1 DESTINATION packaging/man1)
   file(GLOB PRECICE_MAN_PAGES "${PRECICE_PACKAGING_DIR}/man1/*.1")
   foreach(manpage ${PRECICE_MAN_PAGES})
     message(STATUS "Compressing manpage: ${manpage}")

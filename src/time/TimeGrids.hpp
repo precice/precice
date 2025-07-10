@@ -10,8 +10,7 @@
 #include "logging/Logger.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace time {
+namespace precice::time {
 
 /**
  * @brief Interface for storing the time grids in the Quasi-Newton and Aitken methods.
@@ -33,7 +32,7 @@ public:
    */
   TimeGrids(const DataMap &cplData, std::vector<int> dataIDs, bool reduced);
 
-  Eigen::VectorXd getTimeGrid(int dataID) const;
+  Eigen::VectorXd getTimeGridAfter(int dataID, double time) const;
 
   //  Linearly transforms the time grid from the old time window [t_{N-1}, t_N] to the new time window [t_N, t_{N+1}]
   // This is done to allow the QN methods to sample from the new time window while keeping the structure and vector dimensions inside the QN method
@@ -47,5 +46,4 @@ private:
   std::map<int, Eigen::VectorXd> _timeGrids;
 };
 
-} // namespace time
-} // namespace precice
+} // namespace precice::time

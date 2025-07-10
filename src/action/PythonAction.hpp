@@ -22,9 +22,9 @@ public:
       int                  targetDataID,
       int                  sourceDataID);
 
-  virtual ~PythonAction();
+  ~PythonAction() override;
 
-  virtual void performAction() final override;
+  void performAction() final override;
 
 private:
   logging::Logger _log{"action::PythonAction"};

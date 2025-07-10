@@ -2,15 +2,11 @@
 
 #include <string>
 
-namespace precice {
-namespace cplscheme {
-namespace constants {
+namespace precice::cplscheme::constants {
 
 enum TimesteppingMethod {
   FIXED_TIME_WINDOW_SIZE,
   FIRST_PARTICIPANT_SETS_TIME_WINDOW_SIZE
 };
 
-} // namespace constants
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme::constants

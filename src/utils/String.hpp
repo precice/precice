@@ -4,10 +4,10 @@
 #include <array>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 /// Utility class to build a string from C functions with output pointers and static maximum length
 template <int MAX>
@@ -104,5 +104,6 @@ std::vector<StringMatch> computeMatches(std::string_view given, const Container 
   return entries;
 }
 
-} // namespace utils
-} // namespace precice
+bool isKebabStyle(std::string_view sv);
+
+} // namespace precice::utils

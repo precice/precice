@@ -13,8 +13,7 @@
 #include "mesh/Vertex.hpp"
 #include "precice/impl/Types.hpp"
 
-namespace precice {
-namespace query {
+namespace precice::query {
 
 /// Type used for the IDs of matching entities
 using MatchID = int;
@@ -31,7 +30,7 @@ struct MatchType {
   MatchID index{NO_MATCH};
   MatchType() = default;
   explicit MatchType(MatchID i)
-      : index(i){};
+      : index(i) {};
 };
 
 /// Match tags for each primitive type
@@ -48,10 +47,10 @@ struct ProjectionMatch {
   ProjectionMatch(mapping::Polation &&p)
       : polation(std::move(p)) {}
 
-  ProjectionMatch(const ProjectionMatch &other) = default;
-  ProjectionMatch(ProjectionMatch &&other)      = default;
+  ProjectionMatch(const ProjectionMatch &other)            = default;
+  ProjectionMatch(ProjectionMatch &&other)                 = default;
   ProjectionMatch &operator=(const ProjectionMatch &other) = default;
-  ProjectionMatch &operator=(ProjectionMatch &&other) = default;
+  ProjectionMatch &operator=(ProjectionMatch &&other)      = default;
 
   mapping::Polation polation;
 
@@ -132,5 +131,4 @@ private:
   ProjectionMatch findTriangleProjection(const Eigen::VectorXd &location, int n, ProjectionMatch closestVertex);
 };
 
-} // namespace query
-} // namespace precice
+} // namespace precice::query

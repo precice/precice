@@ -1,15 +1,15 @@
+#include <boost/log/attributes/clock.hpp>
 #include <boost/log/attributes/constant.hpp>
 #include <boost/log/attributes/function.hpp>
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/attributes/timer.hpp>
 #include <boost/log/sources/severity_feature.hpp>
 #include <boost/log/trivial.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
 #include <utility>
-#include <utils/assertion.hpp>
 
 #include "logging/LogConfiguration.hpp"
 #include "logging/Logger.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice::logging {
 
@@ -84,7 +84,7 @@ boost::log::record precice_feature<BaseT>::open_record_unlocked(ArgsT const &arg
 struct precice_log : public boost::mpl::quote1<precice_feature> {
 };
 
-/// The boost logger that combines required featrues
+/// The boost logger that combines required features
 template <class BaseLogger>
 using BoostLogger = boost::log::sources::basic_composite_logger<
     char,

@@ -10,7 +10,8 @@ Event::Event(std::string_view eventName, Options options)
 {
   auto &er   = EventRegistry::instance();
   auto  name = std::string(eventName);
-  _eid       = er.nameToID(name);
+  PRECICE_ASSERT(eventName.find('/') == std::string_view::npos);
+  _eid = er.nameToID(name);
   if (_synchronize && er.parallel()) {
     _sid = er.nameToID(name + ".sync");
   }

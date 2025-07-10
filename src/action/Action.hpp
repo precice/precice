@@ -21,7 +21,7 @@ public:
 
   Action(
       Timing                            timing,
-      const mesh::PtrMesh &             mesh,
+      const mesh::PtrMesh              &mesh,
       mapping::Mapping::MeshRequirement requirement)
       : _timing(timing),
         _mesh(mesh),

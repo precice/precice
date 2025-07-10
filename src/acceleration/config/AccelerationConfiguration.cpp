@@ -48,11 +48,12 @@ AccelerationConfiguration::AccelerationConfiguration(
       ATTR_SINGULARITYLIMIT("limit"),
       ATTR_TYPE("type"),
       ATTR_BUILDJACOBIAN("always-build-jacobian"),
-      ATTR_REDUCEDTIMEGRIDQN("reducedTimeGrid"),
+      ATTR_REDUCEDTIMEGRIDQN("reduced-time-grid"),
       ATTR_IMVJCHUNKSIZE("chunk-size"),
       ATTR_RSLS_REUSED_TIME_WINDOWS("reused-time-windows-at-restart"),
       ATTR_RSSVD_TRUNCATIONEPS("truncation-threshold"),
       ATTR_PRECOND_NONCONST_TIME_WINDOWS("freeze-after"),
+      ATTR_PRECOND_UPDATE_ON_THRESHOLD("update-on-threshold"),
       VALUE_CONSTANT("constant"),
       VALUE_AITKEN("aitken"),
       VALUE_IQNILS("IQN-ILS"),
@@ -60,6 +61,7 @@ AccelerationConfiguration::AccelerationConfiguration(
       VALUE_QR1FILTER("QR1"),
       VALUE_QR1_ABSFILTER("QR1-absolute"),
       VALUE_QR2FILTER("QR2"),
+      VALUE_QR3FILTER("QR3"),
       VALUE_CONSTANT_PRECONDITIONER("constant"),
       VALUE_VALUE_PRECONDITIONER("value"),
       VALUE_RESIDUAL_PRECONDITIONER("residual"),
@@ -140,7 +142,7 @@ PtrAcceleration AccelerationConfiguration::getAcceleration()
 
 void AccelerationConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    callingTag)
+    xml::XMLTag                     &callingTag)
 {
   PRECICE_TRACE(callingTag.getFullName());
 
@@ -204,6 +206,8 @@ void AccelerationConfiguration::xmlTagCallback(
       _config.filter = Acceleration::QR1FILTER_ABS;
     } else if (f == VALUE_QR2FILTER) {
       _config.filter = Acceleration::QR2FILTER;
+    } else if (f == VALUE_QR3FILTER) {
+      _config.filter = Acceleration::QR3FILTER;
     } else {
       PRECICE_ASSERT(false);
     }
@@ -211,7 +215,8 @@ void AccelerationConfiguration::xmlTagCallback(
   } else if (callingTag.getName() == TAG_PRECONDITIONER) {
     _userDefinitions.definedPreconditionerType = true;
     _config.preconditionerType                 = callingTag.getStringAttributeValue(ATTR_TYPE);
-    _config.precond_nbNonConstTWindows         = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIME_WINDOWS);
+    _config.preconditionerUpdateOnThreshold    = callingTag.getBooleanAttributeValue(ATTR_PRECOND_UPDATE_ON_THRESHOLD);
+    _config.preconditionerNbNonConstTWindows   = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIME_WINDOWS);
   } else if (callingTag.getName() == TAG_IMVJRESTART) {
     _userDefinitions.defineRestartType = true;
 #ifndef PRECICE_NO_MPI
@@ -243,24 +248,24 @@ void AccelerationConfiguration::xmlTagCallback(
 
 void AccelerationConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    callingTag)
+    xml::XMLTag                     &callingTag)
 {
   PRECICE_TRACE(callingTag.getName());
   if (callingTag.getNamespace() == TAG) {
 
-    //create preconditioner
+    // create preconditioner
     if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_AITKEN) {
       if (_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER) {
         _preconditioner = PtrPreconditioner(new ConstantPreconditioner(_config.scalingFactorsInOrder()));
       } else if (_config.preconditionerType == VALUE_VALUE_PRECONDITIONER) {
-        _preconditioner = PtrPreconditioner(new ValuePreconditioner(_config.precond_nbNonConstTWindows));
+        _preconditioner = PtrPreconditioner(new ValuePreconditioner(_config.preconditionerNbNonConstTWindows));
       } else if (_config.preconditionerType == VALUE_RESIDUAL_PRECONDITIONER) {
-        _preconditioner = PtrPreconditioner(new ResidualPreconditioner(_config.precond_nbNonConstTWindows));
+        _preconditioner = PtrPreconditioner(new ResidualPreconditioner(_config.preconditionerNbNonConstTWindows));
       } else if (_config.preconditionerType == VALUE_RESIDUAL_SUM_PRECONDITIONER) {
-        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_config.precond_nbNonConstTWindows));
+        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_config.preconditionerNbNonConstTWindows, _config.preconditionerUpdateOnThreshold));
       } else {
         // no preconditioner defined
-        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_defaultValuesIQNILS.precond_nbNonConstTWindows));
+        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_defaultValuesIQNILS.preconditionerNbNonConstTWindows, _defaultValuesIQNILS.preconditionerUpdateOnThreshold));
       }
     }
 
@@ -306,19 +311,19 @@ void AccelerationConfiguration::xmlEndTagCallback(
       // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time windows is limited by the chunksize
       // it is separated from the other acceleration methods, since SVD-restart might be chosen as default here
       if (_config.imvjRestartType == IQNIMVJAcceleration::RS_SVD)
-        if (_config.precond_nbNonConstTWindows > _config.imvjChunkSize)
-          _config.precond_nbNonConstTWindows = _config.imvjChunkSize;
+        if (_config.preconditionerNbNonConstTWindows > _config.imvjChunkSize)
+          _config.preconditionerNbNonConstTWindows = _config.imvjChunkSize;
       if (_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER) {
         _preconditioner = PtrPreconditioner(new ConstantPreconditioner(_config.scalingFactorsInOrder()));
       } else if (_config.preconditionerType == VALUE_VALUE_PRECONDITIONER) {
-        _preconditioner = PtrPreconditioner(new ValuePreconditioner(_config.precond_nbNonConstTWindows));
+        _preconditioner = PtrPreconditioner(new ValuePreconditioner(_config.preconditionerNbNonConstTWindows));
       } else if (_config.preconditionerType == VALUE_RESIDUAL_PRECONDITIONER) {
-        _preconditioner = PtrPreconditioner(new ResidualPreconditioner(_config.precond_nbNonConstTWindows));
+        _preconditioner = PtrPreconditioner(new ResidualPreconditioner(_config.preconditionerNbNonConstTWindows));
       } else if (_config.preconditionerType == VALUE_RESIDUAL_SUM_PRECONDITIONER) {
-        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_config.precond_nbNonConstTWindows));
+        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_config.preconditionerNbNonConstTWindows, _config.preconditionerUpdateOnThreshold));
       } else {
         // no preconditioner defined
-        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_defaultValuesIQNILS.precond_nbNonConstTWindows));
+        _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_defaultValuesIQNILS.preconditionerNbNonConstTWindows, _defaultValuesIQNIMVJ.preconditionerUpdateOnThreshold));
       }
 
       _acceleration = PtrAcceleration(
@@ -389,7 +394,8 @@ void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
   auto attrFilterName = XMLAttribute<std::string>(ATTR_TYPE)
                             .setOptions({VALUE_QR1FILTER,
                                          VALUE_QR1_ABSFILTER,
-                                         VALUE_QR2FILTER})
+                                         VALUE_QR2FILTER,
+                                         VALUE_QR3FILTER})
                             .setDocumentation("Type of the filter.");
   tagFilter.addAttribute(attrFilterName);
   tag.addSubtag(tagFilter);
@@ -492,6 +498,11 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                                    VALUE_RESIDUAL_SUM_PRECONDITIONER})
                                       .setDocumentation("The type of the preconditioner.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
+    auto attrpreconditionerUpdateOnThreshold = XMLAttribute<bool>(ATTR_PRECOND_UPDATE_ON_THRESHOLD, true)
+                                                   .setDocumentation("To update the preconditioner weights after the first time window:"
+                                                                     "- `true`: The preconditioner weights are only updated if the weights will change by more than one order of magnitude.\n"
+                                                                     "- `false`: The preconditioner weights are updated after every iteration.");
+    tagPreconditioner.addAttribute(attrpreconditionerUpdateOnThreshold);
     auto nonconstTWindows = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
                                 .setDocumentation(
                                     "After the given number of time windows, the preconditioner weights "
@@ -565,6 +576,11 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                                    VALUE_RESIDUAL_SUM_PRECONDITIONER})
                                       .setDocumentation("Type of the preconditioner.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
+    auto attrpreconditionerUpdateOnThreshold = XMLAttribute<bool>(ATTR_PRECOND_UPDATE_ON_THRESHOLD, true)
+                                                   .setDocumentation("To update the preconditioner weights after the first time window:"
+                                                                     "- `true`:  The preconditioner weights are only updated if the weights will change by more than one order of magnitude.\n"
+                                                                     "- `false`: The preconditioner weights are updated after every iteration.");
+    tagPreconditioner.addAttribute(attrpreconditionerUpdateOnThreshold);
     auto nonconstTWindows = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
                                 .setDocumentation("After the given number of time windows, the preconditioner weights are frozen and the preconditioner acts like a constant preconditioner.");
     tagPreconditioner.addAttribute(nonconstTWindows);

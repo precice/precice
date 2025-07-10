@@ -152,7 +152,7 @@ void Storage::trimAfter(double time)
   _bspline.reset();
 }
 
-Sample Storage::getSampleAtOrAfter(double before) const
+const Sample &Storage::getSampleAtOrAfter(double before) const
 {
   PRECICE_TRACE(before);
   if (nTimes() == 1) {
@@ -195,7 +195,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
   return std::make_pair(times, values);
 }
 
-Eigen::VectorXd Storage::sample(double time) const
+SampleResult Storage::sample(double time) const
 {
   PRECICE_ASSERT(this->nTimes() != 0, "There are no samples available");
   const int usedDegree = computeUsedDegree(_degree, nTimes());
@@ -206,13 +206,17 @@ Eigen::VectorXd Storage::sample(double time) const
 
   PRECICE_ASSERT(usedDegree >= 1);
 
-  //Return the sample corresponding to time if it exists
-  const int i = findTimeId(time);
-  if (i > -1) {                              // _stampleStorage contains sample at given time
-    return _stampleStorage[i].sample.values; // don't use getTimesAndValues, because this would iterate over the complete _stampleStorage.
+  // Find existing samples
+  for (const auto &stample : _stampleStorage) {
+    if (math::equals(stample.timestamp, time)) {
+      return stample.sample.values;
+    }
+    if (math::greater(stample.timestamp, time)) {
+      break;
+    }
   }
 
-  //Create a new bspline if _bspline does not already contain a spline
+  // Create a new bspline if _bspline does not already contain a spline
   if (!_bspline.has_value()) {
     auto [times, values] = getTimesAndValues();
     _bspline.emplace(times, values, usedDegree);
@@ -238,26 +242,10 @@ int Storage::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples
   return std::min(requestedDegree, numberOfAvailableSamples - 1);
 }
 
-time::Sample Storage::getSampleAtBeginning()
+const Sample &Storage::getSampleAtEnd() const
 {
-  return _stampleStorage.front().sample;
-}
-
-time::Sample Storage::getSampleAtEnd()
-{
+  PRECICE_ASSERT(!_stampleStorage.empty());
   return _stampleStorage.back().sample;
-}
-
-int Storage::findTimeId(double time) const
-{
-  int i = 0;
-  while (math::smallerEquals(_stampleStorage[i].timestamp, time)) {
-    if (math::equals(_stampleStorage[i].timestamp, time)) {
-      return i;
-    }
-    i++;
-  }
-  return -1; // time not found in times
 }
 
 } // namespace precice::time

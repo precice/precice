@@ -80,8 +80,8 @@ void ParticipantState::provideMesh(const mesh::PtrMesh &mesh)
   _usedMeshContexts.push_back(context);
 }
 
-void ParticipantState::receiveMesh(const mesh::PtrMesh &                         mesh,
-                                   const std::string &                           fromParticipant,
+void ParticipantState::receiveMesh(const mesh::PtrMesh                          &mesh,
+                                   const std::string                            &fromParticipant,
                                    double                                        safetyFactor,
                                    partition::ReceivedPartition::GeometricFilter geoFilter,
                                    const bool                                    allowDirectAccess)
@@ -150,7 +150,7 @@ ReadDataContext &ParticipantState::readDataContext(std::string_view mesh, std::s
 mesh::PtrMesh ParticipantState::findMesh(std::string_view data) const
 {
   for (const auto &meshContext : _meshContexts) {
-    const auto &             mesh = meshContext.second->mesh->getName();
+    const auto              &mesh = meshContext.second->mesh->getName();
     MeshDataKey<std::string> key{mesh, std::string{data}};
     const auto               it = _readDataContexts.find(key);
     if (it != _readDataContexts.end()) {
@@ -359,6 +359,19 @@ void ParticipantState::exportInitial()
 
     PRECICE_DEBUG("Exporting initial mesh {} to location \"{}\"", context.meshName, context.location);
     context.exporter->doExport(0, 0.0);
+
+    if (context.updateSeries) {
+      PRECICE_DEBUG("Exporting series file of mesh {} to location \"{}\"", context.meshName, context.location);
+      context.exporter->exportSeries();
+    }
+  }
+
+  for (const PtrWatchPoint &watchPoint : watchPoints()) {
+    watchPoint->exportPointData(0.0);
+  }
+
+  for (const PtrWatchIntegral &watchIntegral : watchIntegrals()) {
+    watchIntegral->exportIntegralData(0.0);
   }
 }
 
@@ -379,8 +392,9 @@ void ParticipantState::exportIntermediate(IntermediateExport exp)
       PRECICE_DEBUG("Exporting mesh {} for timewindow {} to location \"{}\"", context.meshName, exp.timewindow, context.location);
       context.exporter->doExport(exp.timewindow, exp.time);
     }
-    if (exp.final) {
-      PRECICE_DEBUG("Exporting seried file of mesh {} to location \"{}\"", context.meshName, context.location);
+
+    if (exp.final || (exp.complete && context.updateSeries)) {
+      PRECICE_DEBUG("Exporting series file of mesh {} to location \"{}\"", context.meshName, context.location);
       context.exporter->exportSeries();
     }
   }
@@ -454,12 +468,37 @@ std::string ParticipantState::hintForMeshData(std::string_view mesh, std::string
   }
 
   // Was the data typoed?
-  auto matches = utils::computeMatches(mesh, localData);
+  auto matches = utils::computeMatches(data, localData);
   if (matches.front().distance < 3) {
     return " Did you mean data \"" + matches.front().name + "\"?";
   }
 
   return fmt::format(" Available data are: {}", fmt::join(localData, ", "));
+}
+
+void ParticipantState::initializeMappingDataCache(std::string_view mappingType)
+{
+  if (mappingType == "write") {
+    for (auto &context : writeDataContexts()) {
+      context.initializeMappingDataCache();
+    }
+  } else {
+    for (auto &context : readDataContexts()) {
+      context.initializeMappingDataCache();
+    }
+  }
+}
+
+void ParticipantState::configureInputMeshContext(std::string_view fromMesh, impl::MappingContext &mappingContext, mapping::Mapping::MeshRequirement requirement)
+{
+  meshContext(fromMesh).meshRequirement = std::max(meshContext(fromMesh).meshRequirement, requirement);
+  meshContext(fromMesh).fromMappingContexts.push_back(mappingContext);
+}
+
+void ParticipantState::configureOutputMeshContext(std::string_view toMesh, impl::MappingContext &mappingContext, mapping::Mapping::MeshRequirement requirement)
+{
+  meshContext(toMesh).toMappingContexts.push_back(mappingContext);
+  meshContext(toMesh).meshRequirement = std::max(meshContext(toMesh).meshRequirement, requirement);
 }
 
 } // namespace precice::impl

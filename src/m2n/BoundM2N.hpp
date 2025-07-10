@@ -1,11 +1,12 @@
 #pragma once
 
 #include <string>
+#include <string_view>
+
 #include "logging/Logger.hpp"
 #include "m2n/SharedPointer.hpp"
 
-namespace precice {
-namespace m2n {
+namespace precice::m2n {
 
 /// An M2N between participants with a configured direction
 class BoundM2N {
@@ -14,7 +15,7 @@ public:
   void prepareEstablishment();
 
   /// Connect the Primary Ranks of the M2N
-  void connectPrimaryRanks();
+  void connectPrimaryRanks(std::string_view configHash);
 
   /// Connect the Secondary ranks of the M2N
   void connectSecondaryRanks();
@@ -42,5 +43,4 @@ private:
   void waitForSecondaryRanks();
 };
 
-} // namespace m2n
-} // namespace precice
+} // namespace precice::m2n

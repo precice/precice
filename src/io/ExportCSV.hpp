@@ -4,8 +4,7 @@
 #include "io/Export.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 class ExportCSV : public Export {
 public:
@@ -26,5 +25,4 @@ private:
   mutable logging::Logger _log{"io::ExportCSV"};
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

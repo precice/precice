@@ -3,7 +3,7 @@
 #include <exception>
 #include <fstream>
 #include <iterator>
-#include <libxml/SAX.h>
+#include <libxml/SAX2.h>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -12,6 +12,7 @@
 
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
+#include "utils/Hash.hpp"
 #include "utils/String.hpp"
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLTag.hpp"
@@ -41,10 +42,10 @@ std::string decodeXML(std::string_view xml)
 // ------------------------- Callback functions for libxml2  -------------------------
 
 void OnStartElementNs(
-    void *          ctx,
-    const xmlChar * localname,
-    const xmlChar * prefix,
-    const xmlChar * URI,
+    void           *ctx,
+    const xmlChar  *localname,
+    const xmlChar  *prefix,
+    const xmlChar  *URI,
     int             nb_namespaces,
     const xmlChar **namespaces,
     int             nb_attributes,
@@ -72,7 +73,7 @@ void OnStartElementNs(
 }
 
 void OnEndElementNs(
-    void *         ctx,
+    void          *ctx,
     const xmlChar *localname,
     const xmlChar *prefix,
     const xmlChar *URI)
@@ -159,6 +160,11 @@ void ConfigParser::MessageProxy(int level, std::string_view mess)
   }
 }
 
+std::string ConfigParser::hash() const
+{
+  return _hash;
+}
+
 int ConfigParser::readXmlFile(std::string const &filePath)
 {
   xmlSAXHandler SAXHandler;
@@ -177,6 +183,10 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   PRECICE_CHECK(ifs, "XML parser was unable to open configuration file \"{}\"", filePath);
 
   std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
+
+  PRECICE_CHECK(!content.empty(), "The configuration file \"{}\" is empty.", filePath);
+
+  _hash = utils::preciceHash(content);
 
   xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
                                                   content.c_str(), content.size(), nullptr);

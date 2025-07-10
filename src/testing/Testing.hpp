@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <boost/test/unit_test.hpp>
+#include <functional>
 #include <string>
 #include <type_traits>
 
@@ -46,13 +47,13 @@ using precice::testing::operator""_dataID;
 /// struct giving access to the impl of a befriended class or struct
 struct WhiteboxAccessor {
   /** Returns the impl of the obj by reference.
-     *
-     * Returns a reference to the object pointed to by the _impl of a class.
-     * This class needs to be friend of T.
-     *
-     * @param[in] obj The object to fetch the impl from.
-     * @returns a lvalue reference to the impl object.
-     */
+   *
+   * Returns a reference to the object pointed to by the _impl of a class.
+   * This class needs to be friend of T.
+   *
+   * @param[in] obj The object to fetch the impl from.
+   * @returns a lvalue reference to the impl object.
+   */
   template <typename T>
   static auto impl(T &obj) -> typename std::add_lvalue_reference<decltype(*(obj._impl))>::type
   {
@@ -134,7 +135,7 @@ public:
 
 private:
   // decorator::base interface
-  void                                  apply(boost::unit_test::test_unit &tu) override{};
+  void                                  apply(boost::unit_test::test_unit &tu) override {};
   boost::unit_test::decorator::base_ptr clone() const override
   {
     return boost::unit_test::decorator::base_ptr(new precice_testsetup_fixture(*this));
@@ -166,6 +167,14 @@ void expectFiles(Args... args)
 {
   (expectFile(args), ...);
 }
+
+using ErrorPredicate = std::function<bool(::precice::Error)>;
+
+/// Checks if the message of a given precice::Error contains a substring
+ErrorPredicate errorContains(std::string_view substring);
+
+/// Checks if the message of a given precice::Error matches a regex
+ErrorPredicate errorMatches(std::string regex);
 
 } // namespace precice::testing
 

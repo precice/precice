@@ -83,6 +83,11 @@ const std::vector<WeightedElement> &Polation::getWeightedElements() const
   return _weightedElements;
 }
 
+std::size_t Polation::nElements() const
+{
+  return _weightedElements.size();
+}
+
 bool Polation::isInterpolation() const
 {
   return std::all_of(_weightedElements.begin(), _weightedElements.end(), [](const mapping::WeightedElement &elem) { return precice::math::greaterEquals(elem.weight, 0.0); });

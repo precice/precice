@@ -38,7 +38,7 @@
 namespace precice::config {
 
 ParticipantConfiguration::ParticipantConfiguration(
-    xml::XMLTag &              parent,
+    xml::XMLTag               &parent,
     mesh::PtrMeshConfiguration meshConfiguration)
     : _meshConfig(std::move(meshConfiguration))
 {
@@ -141,11 +141,18 @@ ParticipantConfiguration::ParticipantConfiguration(
                       .setDocumentation("The name of the participant to receive the mesh from. "
                                         "This participant needs to provide the mesh using `<provide-mesh />`.");
 
+  auto attrEnableAccess = makeXMLAttribute(ATTR_API_ACCESS, false)
+                              .setDocumentation(
+                                  "Enables access to the data on this received mesh via the preCICE API functions without having to map it to a provided mesh. "
+                                  "This is required for direct access or just-in-time mappings. "
+                                  "A received mesh needs to be decomposed in preCICE using a region of interest, which cannot be inferred, if there are no mappings to or from a provided mesh. "
+                                  "In such cases the API function `setMeshAccessRegion()` must be used to define the region of interest. "
+                                  "See the user documentation for more information.");
+  tagReceiveMesh.addAttribute(attrEnableAccess);
+  // @todo: remove with the next breaking release
   auto attrDirectAccess = makeXMLAttribute(ATTR_DIRECT_ACCESS, false)
                               .setDocumentation(
-                                  "Controls direct access to a received mesh without having to map it to a provided mesh. "
-                                  "A received mesh needs to be decomposed in preCICE using a region of interest, which cannot be inferred, if there are no mappings to or from a provided mesh. "
-                                  "In such cases the API function `setMeshAccessRegion()` must be used to define the region of interest.");
+                                  "Deprecated: use \"api-access\" instead.");
   tagReceiveMesh.addAttribute(attrDirectAccess);
 
   auto attrGeoFilter = XMLAttribute<std::string>(ATTR_GEOMETRIC_FILTER)
@@ -156,7 +163,8 @@ ParticipantConfiguration::ParticipantConfiguration(
                                "`on-primary-rank` is beneficial for a huge mesh and a low number of processors, but is incompatible with two-level initialization. "
                                "`on-secondary-ranks` performs better for a very high number of processors. "
                                "Both result in the same distribution if the safety-factor is sufficiently large. "
-                               "`no-filter` may be useful for very asymmetric cases and for debugging.")
+                               "`no-filter` may be useful for very asymmetric cases and for debugging. "
+                               "If a mapping based on RBFs (rbf-pum,global-rbf) is used, the filter has no influence and is always `no-filter`.")
                            .setOptions({VALUE_NO_FILTER, VALUE_FILTER_ON_PRIMARY_RANK, VALUE_FILTER_ON_SECONDARY_RANKS})
                            .setDefaultValue(VALUE_FILTER_ON_SECONDARY_RANKS);
   tagReceiveMesh.addAttribute(attrGeoFilter);
@@ -240,11 +248,11 @@ void ParticipantConfiguration::setRemeshing(
 
 void ParticipantConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
-    const std::string &  name = tag.getStringAttributeValue(ATTR_NAME);
+    const std::string   &name = tag.getStringAttributeValue(ATTR_NAME);
     impl::PtrParticipant p(new impl::ParticipantState(name, _meshConfig));
     _participants.push_back(p);
   } else if (tag.getName() == TAG_PROVIDE_MESH) {
@@ -260,12 +268,13 @@ void ParticipantConfiguration::xmlTagCallback(
     std::string                                   from              = tag.getStringAttributeValue(ATTR_FROM);
     double                                        safetyFactor      = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
     partition::ReceivedPartition::GeometricFilter geoFilter         = getGeoFilter(tag.getStringAttributeValue(ATTR_GEOMETRIC_FILTER));
-    const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
+    const bool                                    allowDirectAccess = tag.getBooleanAttributeValue(ATTR_API_ACCESS) || tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS);
+    PRECICE_WARN_IF(tag.getBooleanAttributeValue(ATTR_DIRECT_ACCESS), "The 'direct-access' flag (<receive-mesh direct-access=\"...\" />) is deprecated and will be removed in preCICE v4. Use 'api-access' instead (<receive-mesh api-access=\"...\" />).");
 
     // Start with defining the mesh
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     PRECICE_CHECK(mesh,
-                  R"(Participant "{}" attempts to provide an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
+                  R"(Participant "{}" attempts to receive an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), name, name);
 
     // Then check the attributes
@@ -325,11 +334,16 @@ void ParticipantConfiguration::xmlTagCallback(
 
 void ParticipantConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   if (tag.getName() == TAG) {
     finishParticipantConfiguration(context, _participants.back());
   }
+}
+
+std::size_t ParticipantConfiguration::nParticipants() const
+{
+  return _participants.size();
 }
 
 const std::vector<impl::PtrParticipant> &
@@ -338,7 +352,7 @@ ParticipantConfiguration::getParticipants() const
   return _participants;
 }
 
-const impl::PtrParticipant ParticipantConfiguration::getParticipant(const std::string &participantName) const
+const impl::PtrParticipant ParticipantConfiguration::getParticipant(std::string_view participantName) const
 {
   auto participant = std::find_if(_participants.begin(), _participants.end(), [&participantName](const auto &p) { return p->getName() == participantName; });
   PRECICE_ASSERT(participant != _participants.end(), "Did not find participant \"{}\"", participantName);
@@ -386,7 +400,7 @@ partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFi
 
 const mesh::PtrData &ParticipantConfiguration::getData(
     const mesh::PtrMesh &mesh,
-    const std::string &  nameData) const
+    const std::string   &nameData) const
 {
   PRECICE_CHECK(mesh->hasDataName(nameData),
                 "Participant \"{}\" asks for data \"{}\" from mesh \"{}\", but this mesh does not use such data. "
@@ -397,11 +411,13 @@ const mesh::PtrData &ParticipantConfiguration::getData(
 
 void ParticipantConfiguration::finishParticipantConfiguration(
     const xml::ConfigurationContext &context,
-    const impl::PtrParticipant &     participant)
+    const impl::PtrParticipant      &participant)
 {
   PRECICE_TRACE(participant->getName());
 
   // Set input/output meshes for data mappings and mesh requirements
+  // This for loop transforms the MappingConfiguration::ConfiguredMappings
+  // into a MappingContext
   using ConfMapping = mapping::MappingConfiguration::ConfiguredMapping;
   for (const ConfMapping &confMapping : _mappingConfig->mappings()) {
 
@@ -410,9 +426,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     auto fromMesh = confMapping.fromMesh->getName();
     auto toMesh   = confMapping.toMesh->getName();
 
+    // sanity checks
     if (confMapping.direction == mapping::MappingConfiguration::Direction::READ) {
       // A read mapping maps from received to provided
-      PRECICE_CHECK(participant->isMeshReceived(fromMesh) || participant->isMeshProvided(toMesh),
+      PRECICE_CHECK(participant->isMeshReceived(fromMesh) || confMapping.toMesh->isJustInTime() || participant->isMeshProvided(toMesh),
                     "A read mapping of participant \"{}\" needs to map from a received to a provided mesh, but in this case they are swapped. "
                     "Did you intent to map from mesh \"{}\" to mesh \"{}\", or use a write mapping instead?",
                     participant->getName(), confMapping.toMesh->getName(), confMapping.fromMesh->getName());
@@ -420,17 +437,19 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                     "Participant \"{}\" has a read mapping from mesh \"{}\", without receiving it. "
                     "Please add a receive-mesh tag with name=\"{}\"",
                     participant->getName(), fromMesh, fromMesh);
-      PRECICE_CHECK(participant->isMeshProvided(toMesh),
+      // The just-in-time mesh cannot be on the "from" mesh, as only the combinations read-consistent and write-conservative are allowed
+      PRECICE_CHECK(confMapping.toMesh->isJustInTime() || participant->isMeshProvided(toMesh),
                     "Participant \"{}\" has a read mapping to mesh \"{}\", without providing it. "
                     "Please add a provide-mesh tag with name=\"{}\"",
                     participant->getName(), toMesh, toMesh);
     } else {
       // A write mapping maps from provided to received
-      PRECICE_CHECK(participant->isMeshProvided(fromMesh) || participant->isMeshReceived(toMesh),
+      PRECICE_CHECK(confMapping.fromMesh->isJustInTime() || participant->isMeshProvided(fromMesh) || participant->isMeshReceived(toMesh),
                     "A write mapping of participant \"{}\" needs to map from a provided to a received mesh, but in this case they are swapped. "
                     "Did you intent to map from mesh \"{}\" to mesh \"{}\", or use a read mapping instead?",
                     participant->getName(), confMapping.toMesh->getName(), confMapping.fromMesh->getName());
-      PRECICE_CHECK(participant->isMeshProvided(fromMesh),
+      // The just-in-time mesh cannot be on the "to" mesh, as only the combinations read-consistent and write-conservative are allowed
+      PRECICE_CHECK(confMapping.fromMesh->isJustInTime() || participant->isMeshProvided(fromMesh),
                     "Participant \"{}\" has a write mapping from mesh \"{}\", without providing it. "
                     "Please add a provided-mesh tag with name=\"{}\"",
                     participant->getName(), fromMesh, fromMesh);
@@ -452,31 +471,42 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       }
     }
 
-    const auto &       fromMeshID      = confMapping.fromMesh->getID();
-    const auto &       toMeshID        = confMapping.toMesh->getID();
-    impl::MeshContext &fromMeshContext = participant->meshContext(fromMesh);
-    impl::MeshContext &toMeshContext   = participant->meshContext(toMesh);
+    PRECICE_CHECK(!confMapping.mapping->isScaledConsistent() || !(confMapping.fromMesh->isJustInTime() || confMapping.toMesh->isJustInTime()),
+                  "The just-in-time mapping from mesh \"{}\" to mesh \"{}\" was configured with a scaled-consistent constraint. A scaled-consistent constraint is not implemented for just-in-time mappings in preCICE.", confMapping.fromMesh->getName(), confMapping.toMesh->getName());
 
-    // @TODO: is this still correct?
+    // We disable the geometric filter for any kernel method, as the default safety factor is not reliable enough to provide a robust
+    // safety margin such that the mapping is still correct.
     if (confMapping.requiresBasisFunction) {
-      fromMeshContext.geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
-      toMeshContext.geoFilter   = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+      if (!confMapping.fromMesh->isJustInTime()) {
+        participant->meshContext(fromMesh).geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+      }
+      if (!confMapping.toMesh->isJustInTime()) {
+        participant->meshContext(toMesh).geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+      }
     }
 
+    // Now we create the mappingContext, which will be stored permanently
     precice::impl::MappingContext mappingContext;
-    mappingContext.fromMeshID = fromMeshID;
-    mappingContext.toMeshID   = toMeshID;
+    // Copy over data from MappingConfiguration
+    // 1. the mesh data
+    mappingContext.fromMeshID = confMapping.fromMesh->getID();
+    mappingContext.toMeshID   = confMapping.toMesh->getID();
 
+    // Upon creation, the mapping should be empty
     mapping::PtrMapping &map = mappingContext.mapping;
     PRECICE_ASSERT(map.get() == nullptr);
+    // 2. ... and the mappings
     map                                   = confMapping.mapping;
     mappingContext.configuredWithAliasTag = confMapping.configuredWithAliasTag;
 
-    const mesh::PtrMesh &input  = fromMeshContext.mesh;
-    const mesh::PtrMesh &output = toMeshContext.mesh;
+    // Set input and output meshes in the Mapping from the mesh contexts
+    const mesh::PtrMesh &input  = confMapping.fromMesh->isJustInTime() ? confMapping.fromMesh : participant->meshContext(fromMesh).mesh;
+    const mesh::PtrMesh &output = confMapping.toMesh->isJustInTime() ? confMapping.toMesh : participant->meshContext(toMesh).mesh;
     PRECICE_DEBUG("Configure mapping for input={}, output={}", input->getName(), output->getName());
     map->setMeshes(input, output);
 
+    // just-in-time mappings go for now into the participant's mapping context
+    // Add the mapping context to the participant, separated by direction
     if (confMapping.direction == mapping::MappingConfiguration::WRITE) {
       participant->addWriteMappingContext(mappingContext);
     } else {
@@ -484,34 +514,47 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       participant->addReadMappingContext(mappingContext);
     }
 
-    fromMeshContext.meshRequirement = std::max(
-        fromMeshContext.meshRequirement, map->getInputRequirement());
-    toMeshContext.meshRequirement = std::max(
-        toMeshContext.meshRequirement, map->getOutputRequirement());
-
-    fromMeshContext.fromMappingContexts.push_back(mappingContext);
-    toMeshContext.toMappingContexts.push_back(mappingContext);
+    // configure the involved mesh context with connectivity requirements stemming from the mapping
+    // Add the mapping context to the mesh context, only required to later on forward them to the Partition
+    if (!input->isJustInTime()) {
+      participant->configureInputMeshContext(fromMesh, mappingContext, map->getInputRequirement());
+    }
+    if (!output->isJustInTime()) {
+      participant->configureOutputMeshContext(toMesh, mappingContext, map->getOutputRequirement());
+    }
   }
+  // clear the data structure we just transformed and don't need anymore
   _mappingConfig->resetMappings();
 
-  // Iterate over all write mappings
+  // Now we have the MappingContexts and need to add information on the associated Data we want to map
+  //
+  // First in write direction:
+  // for all writeMappingContexts ...
   for (impl::MappingContext &mappingContext : participant->writeMappingContexts()) {
     // Check, whether we can find a corresponding write data context
     bool dataFound = false;
     for (auto &dataContext : participant->writeDataContexts()) {
-      // First we look for the "from" mesh ID
+      // First we look for the "from" mesh ID from the "data perspective"
       const int fromMeshID = dataContext.getMeshID();
+      // and compare it against the "from" mesh ID from the "mapping perspective"
       if (mappingContext.fromMeshID == fromMeshID) {
-        // Second we look for the "to" mesh ID
+        // If these two are the same, we have a match of data and mapping contexts on the 'from' side
+        //
+        // the data context carries now the information about the associated name of the data itself
+        // Hence, we look if the "to" mesh (ID) stored in the mappingContext exists on the participant...
         impl::MeshContext &meshContext = participant->meshContext(mappingContext.mapping->getOutputMesh()->getName());
-        // If this is true, we actually found a proper configuration
-        // If it is false, we look for another "from" mesh ID, because we might have multiple read and write mappings
+        // .. and if the mesh 'uses' the data to be mapped
+        // If this is true, we actually found a proper configuration and add the mapping
+        // If it is false, we look for another "from" mesh ID in the data context, because we might have multiple read and write mappings from the same 'from' mesh
         if (meshContext.mesh->hasDataName(dataContext.getDataName())) {
           // Check, if the fromMesh is a provided mesh
           PRECICE_CHECK(participant->isMeshProvided(dataContext.getMeshName()),
                         "Participant \"{}\" has to provide mesh \"{}\" to be able to write data to it. "
                         "Please add a provide-mesh node with name=\"{}\".",
                         participant->getName(), dataContext.getMeshName(), dataContext.getMeshName());
+          // here, the mappingContext receives its to and from data pointer
+          // we append the mappingContext into the dataContext by copying it over, which is fine, since the context
+          // structures operate only on shared object pointers
           dataContext.appendMappingConfiguration(mappingContext, meshContext);
           // Enable gradient data if required
           if (mappingContext.mapping->requiresGradientData() == true) {
@@ -519,6 +562,17 @@ void ParticipantConfiguration::finishParticipantConfiguration(
           }
           dataFound = true;
         }
+      } else if (mappingContext.mapping->getInputMesh()->isJustInTime()) {
+        const int toMeshID = dataContext.getMeshID();
+        // We compare here the to mesh instead of the from mesh
+        if (mappingContext.toMeshID == toMeshID) {
+          impl::MeshContext &meshContext = participant->meshContext(mappingContext.mapping->getOutputMesh()->getName());
+          dataContext.addJustInTimeMapping(mappingContext, meshContext);
+          if (mappingContext.mapping->requiresGradientData() == true) {
+            mappingContext.requireGradientData(dataContext.getDataName());
+          }
+        }
+        dataFound = true;
       }
     }
     PRECICE_CHECK(dataFound,
@@ -553,6 +607,18 @@ void ParticipantConfiguration::finishParticipantConfiguration(
           }
           dataFound = true;
         }
+      } else if (mappingContext.mapping->getOutputMesh()->isJustInTime()) {
+        const int fromMeshID = dataContext.getMeshID();
+        // We compare here the from mesh instead of the to mesh
+        if (mappingContext.fromMeshID == fromMeshID) {
+          impl::MeshContext &meshContext = participant->meshContext(mappingContext.mapping->getInputMesh()->getName());
+
+          dataContext.addJustInTimeMapping(mappingContext, meshContext);
+          if (mappingContext.mapping->requiresGradientData() == true) {
+            mappingContext.requireGradientData(dataContext.getDataName());
+          }
+        }
+        dataFound = true;
       }
     }
     PRECICE_CHECK(dataFound,
@@ -572,6 +638,11 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   }
   for (action::PtrAction &action : _actionConfig->extractActions()) {
     _participants.back()->addAction(std::move(action));
+  }
+
+  // Check for unsupported remeshing options
+  for (auto &context : participant->writeDataContexts()) {
+    PRECICE_CHECK(participant->meshContext(context.getMeshName()).provideMesh || !(participant->isDirectAccessAllowed(context.getMeshName()) && _remeshing), "Writing data via API access (configuration <write-data ... mesh=\"{}\") is not (yet) supported with remeshing", context.getMeshName());
   }
 
   // Add export contexts
@@ -700,14 +771,14 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
 void ParticipantConfiguration::checkIllDefinedMappings(
     const mapping::MappingConfiguration::ConfiguredMapping &mapping,
-    const impl::PtrParticipant &                            participant)
+    const impl::PtrParticipant                             &participant)
 {
   PRECICE_TRACE();
   using ConfMapping = mapping::MappingConfiguration::ConfiguredMapping;
 
   for (const ConfMapping &configuredMapping : _mappingConfig->mappings()) {
-    bool sameToMesh   = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
-    bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
+    bool sameToMesh   = (mapping.toMesh->getName() == configuredMapping.toMesh->getName()) && !mapping.toMesh->isJustInTime();
+    bool sameFromMesh = (mapping.fromMesh->getName() == configuredMapping.fromMesh->getName()) && !mapping.fromMesh->isJustInTime();
     if (sameToMesh && sameFromMesh) {
       // It's really the same mapping, not a duplicated one. Those are already checked for in MappingConfiguration.
       return;

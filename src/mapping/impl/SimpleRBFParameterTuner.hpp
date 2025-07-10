@@ -29,16 +29,16 @@ public:
 template <typename RBF_T>
 RBFParameterTunerSimple<RBF_T>::RBFParameterTunerSimple()
     : _lowerBound(std::numeric_limits<double>::quiet_NaN())
-{
-  PRECICE_ASSERT(RBF_T::isStrictlyPositiveDefinite(), "Non SPD RBFs are currently not supported by this optimizer");
-  PRECICE_ASSERT(this->rbfSupportsRadius(), "RBF is not supported by this optimizer, as it does not accept a support-radius."
-                                            "Currently supported: Compactly supported RBFs, Thin Plate Splines and Gaussians.");
-}
+{}
 
 template <typename RBF_T>
 template <typename IndexContainer>
 void RBFParameterTunerSimple<RBF_T>::initialize(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool, 3> &activeAxis)
 {
+  PRECICE_ASSERT(RBF_T::isStrictlyPositiveDefinite(), "Non SPD RBFs are currently not supported by this optimizer");
+  PRECICE_ASSERT(this->rbfSupportsRadius(), "RBF is not supported by this optimizer, as it does not accept a support-radius."
+                                            "Currently supported: Compactly supported RBFs, Thin Plate Splines and Gaussians.");
+
   _lowerBound           = this->estimateMeshResolution(inputMesh);
   this->_inSize         = inputIDs.size();
   this->_distanceMatrix = buildMatrixCLU(VolumeSplines(), inputMesh, inputIDs, activeAxis, polynomial);

@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)
     }
 
     // reset output value and remap
-    //assign(values) = 0.0;
+    // assign(values) = 0.0;
     values = Eigen::VectorXd::Constant(values.size(), 0.0);
 
     mapping.map(inSample, values);
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
     BOOST_TEST(outValues(2) == valueVertex2);
 
     // Redo mapping, results should be
-    //assign(outData->values()) = 0.0;
+    // assign(outData->values()) = 0.0;
     outValues = Eigen::VectorXd::Constant(outValues.size(), 0.0);
 
     mapping.map(inSample, outValues);
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
     outMesh->createVertex(Eigen::Vector2d(1.5, 1.5));
     outMesh->createVertex(Eigen::Vector2d(0.5, 0.5));
 
-    //assign(outData->values()) = 0.0;
+    // assign(outData->values()) = 0.0;
     Eigen::VectorXd outValues = Eigen::VectorXd::Zero(3);
     outValues                 = Eigen::VectorXd::Constant(outValues.size(), 0.0);
 
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental2D)
     BOOST_TEST(outValues(2) == (valueVertex1 + valueVertex2) * 0.5);
 
     // Reset output data to zero and redo the mapping
-    //assign(outData->values()) = 0.0;
+    // assign(outData->values()) = 0.0;
     outValues = Eigen::VectorXd::Constant(outValues.size(), 0.0);
 
     mapping.map(inSample, outValues);
@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(AxisAlignedTriangles)
   using namespace precice::mesh;
   constexpr int dimensions = 3;
 
-  // Create mesh to map from with Triangles ABD and BDC
+  // Create mesh to map from with Triangles A-B-D and B-D-C
   PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
   Vertex &inVA = inMesh->createVertex(Eigen::Vector3d{0, 0, 0});
   Vertex &inVB = inMesh->createVertex(Eigen::Vector3d{0, 1, 0});
@@ -465,22 +465,22 @@ BOOST_AUTO_TEST_CASE(Query_3D_FullMesh)
   // PtrData      inData = inMesh->createData("InData", 1, 0_dataID);
   const double z1  = 0.1;
   const double z2  = -0.1;
-  auto &       v00 = inMesh->createVertex(Eigen::Vector3d(0, 0, 0));
-  auto &       v01 = inMesh->createVertex(Eigen::Vector3d(0, 1, 0));
-  auto &       v10 = inMesh->createVertex(Eigen::Vector3d(1, 0, z1));
-  auto &       v11 = inMesh->createVertex(Eigen::Vector3d(1, 1, z1));
-  auto &       v20 = inMesh->createVertex(Eigen::Vector3d(2, 0, z2));
-  auto &       v21 = inMesh->createVertex(Eigen::Vector3d(2, 1, z2));
-  auto &       ell = inMesh->createEdge(v00, v01);
-  auto &       elt = inMesh->createEdge(v01, v11);
-  auto &       elr = inMesh->createEdge(v11, v10);
-  auto &       elb = inMesh->createEdge(v10, v00);
-  auto &       eld = inMesh->createEdge(v00, v11);
-  auto &       erl = elr;
-  auto &       ert = inMesh->createEdge(v11, v21);
-  auto &       err = inMesh->createEdge(v21, v20);
-  auto &       erb = inMesh->createEdge(v20, v10);
-  auto &       erd = inMesh->createEdge(v10, v21);
+  auto        &v00 = inMesh->createVertex(Eigen::Vector3d(0, 0, 0));
+  auto        &v01 = inMesh->createVertex(Eigen::Vector3d(0, 1, 0));
+  auto        &v10 = inMesh->createVertex(Eigen::Vector3d(1, 0, z1));
+  auto        &v11 = inMesh->createVertex(Eigen::Vector3d(1, 1, z1));
+  auto        &v20 = inMesh->createVertex(Eigen::Vector3d(2, 0, z2));
+  auto        &v21 = inMesh->createVertex(Eigen::Vector3d(2, 1, z2));
+  auto        &ell = inMesh->createEdge(v00, v01);
+  auto        &elt = inMesh->createEdge(v01, v11);
+  auto        &elr = inMesh->createEdge(v11, v10);
+  auto        &elb = inMesh->createEdge(v10, v00);
+  auto        &eld = inMesh->createEdge(v00, v11);
+  auto        &erl = elr;
+  auto        &ert = inMesh->createEdge(v11, v21);
+  auto        &err = inMesh->createEdge(v21, v20);
+  auto        &erb = inMesh->createEdge(v20, v10);
+  auto        &erd = inMesh->createEdge(v10, v21);
   inMesh->createTriangle(ell, elt, eld);
   inMesh->createTriangle(eld, elb, elr);
   inMesh->createTriangle(erl, ert, erd);
@@ -519,22 +519,22 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
   PtrMesh      inMesh(new mesh::Mesh("InMesh", 3, testing::nextMeshID()));
   const double z1  = 0.1;
   const double z2  = -0.1;
-  auto &       v00 = inMesh->createVertex(Eigen::Vector3d(0, 0, 0));
-  auto &       v01 = inMesh->createVertex(Eigen::Vector3d(0, 1, 0));
-  auto &       v10 = inMesh->createVertex(Eigen::Vector3d(1, 0, z1));
-  auto &       v11 = inMesh->createVertex(Eigen::Vector3d(1, 1, z1));
-  auto &       v20 = inMesh->createVertex(Eigen::Vector3d(2, 0, z2));
-  auto &       v21 = inMesh->createVertex(Eigen::Vector3d(2, 1, z2));
-  auto &       ell = inMesh->createEdge(v00, v01);
-  auto &       elt = inMesh->createEdge(v01, v11);
-  auto &       elr = inMesh->createEdge(v11, v10);
-  auto &       elb = inMesh->createEdge(v10, v00);
-  auto &       eld = inMesh->createEdge(v00, v11);
-  auto &       erl = elr;
-  auto &       ert = inMesh->createEdge(v11, v21);
-  auto &       err = inMesh->createEdge(v21, v20);
-  auto &       erb = inMesh->createEdge(v20, v10);
-  auto &       erd = inMesh->createEdge(v10, v21);
+  auto        &v00 = inMesh->createVertex(Eigen::Vector3d(0, 0, 0));
+  auto        &v01 = inMesh->createVertex(Eigen::Vector3d(0, 1, 0));
+  auto        &v10 = inMesh->createVertex(Eigen::Vector3d(1, 0, z1));
+  auto        &v11 = inMesh->createVertex(Eigen::Vector3d(1, 1, z1));
+  auto        &v20 = inMesh->createVertex(Eigen::Vector3d(2, 0, z2));
+  auto        &v21 = inMesh->createVertex(Eigen::Vector3d(2, 1, z2));
+  auto        &ell = inMesh->createEdge(v00, v01);
+  auto        &elt = inMesh->createEdge(v01, v11);
+  auto        &elr = inMesh->createEdge(v11, v10);
+  auto        &elb = inMesh->createEdge(v10, v00);
+  auto        &eld = inMesh->createEdge(v00, v11);
+  auto        &erl = elr;
+  auto        &ert = inMesh->createEdge(v11, v21);
+  auto        &err = inMesh->createEdge(v21, v20);
+  auto        &erb = inMesh->createEdge(v20, v10);
+  auto        &erd = inMesh->createEdge(v10, v21);
   inMesh->createTriangle(ell, elt, eld);
   inMesh->createTriangle(eld, elb, elr);
   inMesh->createTriangle(erl, ert, erd);
@@ -543,12 +543,12 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
   Eigen::VectorXd inValues = Eigen::VectorXd::Constant(6, 1.0);
 
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  auto &  outV1 = outMesh->createVertex(Eigen::Vector3d{0.7, 0.5, 0.0});
-  auto &  outV2 = outMesh->createVertex(Eigen::Vector3d{0.5, 0.0, 0.05});
-  auto &  outV3 = outMesh->createVertex(Eigen::Vector3d{0.5, 0.0, 0.0});
-  auto &  outE1 = outMesh->createEdge(outV1, outV2);
-  auto &  outE2 = outMesh->createEdge(outV2, outV3);
-  auto &  outE3 = outMesh->createEdge(outV1, outV3);
+  auto   &outV1 = outMesh->createVertex(Eigen::Vector3d{0.7, 0.5, 0.0});
+  auto   &outV2 = outMesh->createVertex(Eigen::Vector3d{0.5, 0.0, 0.05});
+  auto   &outV3 = outMesh->createVertex(Eigen::Vector3d{0.5, 0.0, 0.0});
+  auto   &outE1 = outMesh->createEdge(outV1, outV2);
+  auto   &outE2 = outMesh->createEdge(outV2, outV3);
+  auto   &outE3 = outMesh->createEdge(outV1, outV3);
   outMesh->createTriangle(outE1, outE2, outE3);
   Eigen::VectorXd outValues = Eigen::VectorXd::Constant(3, 0.0);
 
@@ -573,17 +573,6 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentQuery3DFullMesh)
 
 namespace {
 using namespace precice::mesh;
-const Eigen::VectorXd &runNPMapping(mapping::Mapping::Constraint constraint, PtrMesh &inMesh, PtrData &inData, PtrMesh &outMesh, PtrData &outData)
-{
-  BOOST_REQUIRE(inMesh->getDimensions() == outMesh->getDimensions());
-  precice::mapping::NearestProjectionMapping mapping(constraint, inMesh->getDimensions());
-  mapping.setMeshes(inMesh, outMesh);
-  BOOST_REQUIRE(mapping.hasComputedMapping() == false);
-  mapping.computeMapping();
-  BOOST_REQUIRE(mapping.hasComputedMapping() == true);
-  mapping.map(inData->getID(), outData->getID());
-  return outData->values();
-}
 const Eigen::VectorXd &runNPMapping(mapping::Mapping::Constraint constraint, PtrMesh &inMesh, Eigen::VectorXd *inData, PtrMesh &outMesh, Eigen::VectorXd *outData)
 {
   BOOST_REQUIRE(inMesh->getDimensions() == outMesh->getDimensions());
@@ -635,7 +624,7 @@ BOOST_AUTO_TEST_CASE(AvoidClosestTriangle)
 
   const auto &values = runNPMapping(mapping::Mapping::CONSISTENT, inMesh, &inValues, outMesh, &outValues);
 
-  // Interpolatin triangle is further than NN => fall back on NN
+  // Interpolating triangle is further than NN => fall back on NN
   BOOST_TEST(values(0) == 0.0);
 }
 

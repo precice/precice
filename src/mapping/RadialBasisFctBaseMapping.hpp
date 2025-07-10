@@ -5,8 +5,7 @@
 #include "mesh/Filter.hpp"
 #include "precice/impl/Types.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /**
  * @brief Mapping with radial basis functions.
@@ -37,19 +36,19 @@ public:
       std::array<bool, 3>            deadAxis,
       InitialGuessRequirement        mappingType);
 
-  virtual ~RadialBasisFctBaseMapping() = default;
+  ~RadialBasisFctBaseMapping() override = default;
 
   // Methods, which need to be implemented in a derived class
 
   /// Computes the mapping coefficients from the in- and output mesh.
-  virtual void computeMapping() = 0;
+  void computeMapping() override = 0;
 
   /// Removes a computed mapping.
-  virtual void clear() = 0;
+  void clear() override = 0;
 
-  virtual void tagMeshFirstRound() final;
+  void tagMeshFirstRound() final override;
 
-  virtual void tagMeshSecondRound() final;
+  void tagMeshSecondRound() final override;
 
 protected:
   /// Radial basis function type used in interpolation.
@@ -59,12 +58,12 @@ protected:
   std::vector<bool> _deadAxis;
 
   /**
- * @brief Computes the number of polynomial degrees of freedom based on the problem dimension and the dead axis
- *
- * @note This function does not take the handling of the polynomial (ON, OFF, SEPARATE) into account.
- *
- * @return int the polynomial degrees of freedom of the RBF system
- */
+   * @brief Computes the number of polynomial degrees of freedom based on the problem dimension and the dead axis
+   *
+   * @note This function does not take the handling of the polynomial (ON, OFF, SEPARATE) into account.
+   *
+   * @return int the polynomial degrees of freedom of the RBF system
+   */
   int getPolynomialParameters() const;
 
 private:
@@ -113,7 +112,7 @@ int RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::getPolynomialParameters(
   PRECICE_ASSERT(_deadAxis.size() > 0);
   // Count the dead axis
   const int deadDimensions = std::count(_deadAxis.begin(), _deadAxis.end(), true);
-  //Formula for the polynomial parameters
+  // Formula for the polynomial parameters
   return 1 + getDimensions() - deadDimensions;
 }
 
@@ -138,13 +137,18 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
     return; // Ranks not at the interface should never hold interface vertices
 
   // Tags all vertices that are inside otherMesh's bounding box, enlarged by the support radius
-
   if (_basisFunction.hasCompactSupport()) {
     auto bb = otherMesh->getBoundingBox();
     bb.expandBy(_basisFunction.getSupportRadius());
 
-    auto vertices = filterMesh->index().getVerticesInsideBox(bb);
-    std::for_each(vertices.begin(), vertices.end(), [&filterMesh](size_t v) { filterMesh->vertex(v).tag(); });
+    // We don't make use of the index tree here, because constructing the index tree on the
+    // (unfiltered) mesh is expensive
+    auto &vertices = filterMesh->vertices();
+    std::for_each(vertices.begin(), vertices.end(), [&bb](auto &v) {
+      if (bb.contains(v)) {
+        v.tag();
+      }
+    });
   } else {
     filterMesh->tagAll();
   }
@@ -184,5 +188,4 @@ void RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
   auto vertices = mesh->index().getVerticesInsideBox(bb);
   std::for_each(vertices.begin(), vertices.end(), [&mesh](size_t v) { mesh->vertex(v).tag(); });
 }
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

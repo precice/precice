@@ -11,15 +11,13 @@
 /// Generic test function that is called from the tests for
 /// MPIPortsCommunication, MPIDirectCommunication and SocketCommunication
 
-namespace precice {
-namespace testing {
-namespace com {
+namespace precice::testing::com {
 
 namespace primaryprimary {
 
 ///
 /// Tests for primary connections
-/// Acceptor and Requestor are different participants
+/// Acceptor and Connector are different participants
 ///
 
 template <typename T>
@@ -434,7 +432,7 @@ namespace intracomm {
 
 ///
 /// Tests for intra-participant communication Connections
-/// Acceptor and Requestor are the same participant
+/// Acceptor and Connector are the same participant
 ///
 
 template <typename T>
@@ -940,6 +938,4 @@ void TestSendReceiveFourProcessesServerClientV2(TestContext const &context)
 
 } // namespace serverclient
 
-} // namespace com
-} // namespace testing
-} // namespace precice
+} // namespace precice::testing::com

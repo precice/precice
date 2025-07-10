@@ -164,9 +164,9 @@ else()
     APPEND PROPERTY TEST_INCLUDE_FILES "${ctest_tests_file}"
   )
 
-  # Custom command that generates the tests list after the testprecice binary is build
+  # Custom command to generate the tests list using the testprecice binary
   add_custom_command(
-    TARGET testprecice POST_BUILD
+    OUTPUT "${ctest_tests_file}"
     COMMAND "${CMAKE_COMMAND}"
     -D "TEST_EXECUTABLE=$<TARGET_FILE:testprecice>"
     -D "TEST_FILE=${ctest_tests_file}"
@@ -178,14 +178,17 @@ else()
     -D "MPIEXEC_PREFLAGS=${MPIEXEC_PREFLAGS}"
     -D "MPIEXEC_POSTFLAGS=${MPIEXEC_POSTFLAGS}"
     -P "${preCICE_SOURCE_DIR}/cmake/discover_tests.cmake"
+    DEPENDS testprecice
     COMMENT "Generating list of tests"
-    BYPRODUCTS "${preCICE_BINARY_DIR}/tests.txt"
     VERBATIM)
 
+  # Custom target that forces the test list to be updated
+  add_custom_target(precice-test-list ALL
+    DEPENDS "${ctest_tests_file}"
+  )
 endif()
 
 # Add solverdummy tests
-
 add_precice_test_build_solverdummy(cpp)
 add_precice_test_build_solverdummy(c)
 add_precice_test_build_solverdummy(fortran)
@@ -218,60 +221,122 @@ if(PRECICE_BUILD_TOOLS)
     endif()
   endfunction()
 
+  # precice-tools
 
   add_tools_test(
-    NAME noarg
+    NAME legacy.noarg
     COMMAND precice-tools
     WILL_FAIL)
 
   add_tools_test(
-    NAME invalidcmd
+    NAME legacy.invalidcmd
     COMMAND precice-tools invalidcommand
     WILL_FAIL)
 
   add_tools_test(
-    NAME version
+    NAME legacy.version
     COMMAND precice-tools version
     MATCH "${CMAKE_PROJECT_VERSION}"
     )
 
   add_tools_test(
-    NAME versionopt
+    NAME legacy.versionopt
     COMMAND precice-tools --version
     MATCH "${CMAKE_PROJECT_VERSION}"
     )
 
   add_tools_test(
-    NAME markdown
+    NAME legacy.markdown
     COMMAND precice-tools md
     MATCH "# precice-configuration"
     )
 
   add_tools_test(
-    NAME xml
+    NAME legacy.xml
     COMMAND precice-tools xml
     MATCH "<!-- TAG precice-configuration"
     )
 
   add_tools_test(
-    NAME dtd
+    NAME legacy.dtd
     COMMAND precice-tools dtd
     MATCH "<!ELEMENT precice-configuration"
     )
 
   add_tools_test(
-    NAME check.file
+    NAME legacy.check.file
     COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml
     )
 
   add_tools_test(
-    NAME check.file+name
+    NAME legacy.check.file+name
     COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
     )
 
   add_tools_test(
-    NAME check.file+name+size
+    NAME legacy.check.file+name+size
     COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
+    )
+
+  # precice-version
+
+  add_tools_test(
+    NAME version
+    COMMAND precice-version
+    MATCH "${CMAKE_PROJECT_VERSION}"
+    )
+
+  # precice-config-doc
+
+  add_tools_test(
+    NAME config-doc.noarg
+    COMMAND precice-config-doc
+    WILL_FAIL)
+
+  add_tools_test(
+    NAME config-doc.markdown
+    COMMAND precice-config-doc md
+    MATCH "# precice-configuration"
+    )
+
+  add_tools_test(
+    NAME config-doc.xml
+    COMMAND precice-config-doc xml
+    MATCH "<!-- TAG precice-configuration"
+    )
+
+  add_tools_test(
+    NAME config-doc.dtd
+    COMMAND precice-config-doc dtd
+    MATCH "<!ELEMENT precice-configuration"
+    )
+
+  # precice-config-validate
+
+  add_tools_test(
+    NAME config-validate.noarg
+    COMMAND precice-config-validate
+    WILL_FAIL)
+
+  add_tools_test(
+    NAME config-validate.missingfile
+    COMMAND precice-config-validate ${PROJECT_SOURCE_DIR}/definitely/missing/file.xml
+    MATCH ERROR:
+    )
+
+  add_tools_test(
+    NAME config-validate.file
+    COMMAND precice-config-validate ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml
+    )
+
+  add_tools_test(
+    NAME config-validate.file+name
+    COMMAND precice-config-validate ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
+    )
+
+  add_tools_test(
+    NAME config-validate.file+name+size
+    COMMAND precice-config-validate ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
     )
 endif()
 

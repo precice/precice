@@ -10,8 +10,7 @@
 #include "acceleration/impl/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace acceleration {
+namespace precice::acceleration {
 
 class AitkenAcceleration : public Acceleration {
 public:
@@ -20,26 +19,28 @@ public:
       std::vector<int>        dataIDs,
       impl::PtrPreconditioner preconditioner);
 
-  virtual ~AitkenAcceleration() {}
+  ~AitkenAcceleration() override = default;
 
-  virtual std::vector<int> getPrimaryDataIDs() const override final
+  std::vector<int> getPrimaryDataIDs() const final override
   {
     return _primaryDataIDs;
   }
 
-  virtual void initialize(
-      const DataMap &cpldata) override final;
+  void initialize(
+      const DataMap &cpldata) final override;
 
-  virtual void performAcceleration(
-      DataMap &cpldata) override final;
+  void performAcceleration(
+      DataMap &cpldata,
+      double   windowStart,
+      double   windowEnd) final override;
 
-  virtual void iterationsConverged(
-      const DataMap &cpldata) override final;
+  void iterationsConverged(
+      const DataMap &cpldata, double windowStart) final override;
 
 private:
   /// @brief Concatenates the data and old data in cplData into two long vectors
   void concatenateCouplingData(
-      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues) const;
+      const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues, double windowStart, double windowEnd) const;
 
   logging::Logger _log{"acceleration::AitkenAcceleration"};
 
@@ -58,5 +59,4 @@ private:
   /// Preconditioner for data vector if multiple data sets are used.
   impl::PtrPreconditioner _preconditioner;
 };
-} // namespace acceleration
-} // namespace precice
+} // namespace precice::acceleration

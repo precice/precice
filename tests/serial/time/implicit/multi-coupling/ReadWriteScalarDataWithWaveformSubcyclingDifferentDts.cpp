@@ -47,16 +47,16 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
     writeDataName    = "DataOne";
     writeFunction    = dataOneFunction;
     auto dataTwoName = "DataTwo";
-    readDataPairs.push_back(std::make_pair(dataTwoName, dataTwoFunction));
+    readDataPairs.emplace_back(dataTwoName, dataTwoFunction);
     auto dataThreeName = "DataThree";
-    readDataPairs.push_back(std::make_pair(dataThreeName, dataThreeFunction));
+    readDataPairs.emplace_back(dataThreeName, dataThreeFunction);
     nSubsteps = 4;
   } else if (context.isNamed("SolverTwo")) {
     meshName         = "MeshTwo";
     writeDataName    = "DataTwo";
     writeFunction    = dataTwoFunction;
     auto dataOneName = "DataOne";
-    readDataPairs.push_back(std::make_pair(dataOneName, dataOneFunction));
+    readDataPairs.emplace_back(dataOneName, dataOneFunction);
     nSubsteps = 3;
   } else {
     BOOST_TEST(context.isNamed("SolverThree"));
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
     writeDataName    = "DataThree";
     writeFunction    = dataThreeFunction;
     auto dataOneName = "DataOne";
-    readDataPairs.push_back(std::make_pair(dataOneName, dataOneFunction));
+    readDataPairs.emplace_back(dataOneName, dataOneFunction);
     nSubsteps = 2;
   }
 
@@ -75,10 +75,8 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
 
   int    nWindows        = 5; // perform 5 windows.
   int    timestep        = 0;
-  int    timewindow      = 0;
   double windowStartTime = 0;
   int    windowStartStep = 0;
-  int    nSamples        = 4;
   int    iterations      = 0;
   double time            = 0;
 
@@ -144,7 +142,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
       time     = windowStartTime;
     }
     if (precice.isTimeWindowComplete()) {
-      timewindow++;
       iterations = 0;
     }
   }

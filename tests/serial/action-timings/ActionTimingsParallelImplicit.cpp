@@ -61,7 +61,6 @@ BOOST_AUTO_TEST_CASE(ActionTimingsParallelImplicit)
   BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);
   BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
   action::RecorderAction::reset();
-  int iteration = 0;
 
   while (interface.isCouplingOngoing()) {
     interface.readData(meshName, readDataName, {&vertexID, 1}, dt, readData);
@@ -69,11 +68,9 @@ BOOST_AUTO_TEST_CASE(ActionTimingsParallelImplicit)
     if (interface.requiresWritingCheckpoint()) {
     }
     interface.advance(dt);
-    double dt = interface.getMaxTimeStepSize();
     if (interface.requiresReadingCheckpoint()) {
     }
     if (interface.isTimeWindowComplete()) {
-      iteration++;
     }
 
     BOOST_TEST(action::RecorderAction::records.size() == 2);

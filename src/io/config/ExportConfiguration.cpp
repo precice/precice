@@ -41,23 +41,28 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
   auto attrEveryIteration = makeXMLAttribute(ATTR_EVERY_ITERATION, false)
                                 .setDocumentation("Exports in every coupling (sub)iteration. For debug purposes.");
 
+  auto attrUpdateSeries = makeXMLAttribute(ATTR_UPDATE_SERIES, false)
+                              .setDocumentation("Update the series file after every export instead of at the end of the simulation.");
+
   for (XMLTag &tag : tags) {
     tag.addAttribute(attrLocation);
     tag.addAttribute(attrEveryNTimeWindows);
     tag.addAttribute(attrEveryIteration);
+    tag.addAttribute(attrUpdateSeries);
     parent.addSubtag(tag);
   }
 }
 
 void ExportConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   if (tag.getNamespace() == TAG) {
     ExportContext econtext;
     econtext.location          = tag.getStringAttributeValue(ATTR_LOCATION);
     econtext.everyNTimeWindows = tag.getIntAttributeValue(ATTR_EVERY_N_TIME_WINDOWS);
     econtext.everyIteration    = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
+    econtext.updateSeries      = tag.getBooleanAttributeValue(ATTR_UPDATE_SERIES);
     econtext.type              = tag.getName();
     _contexts.push_back(econtext);
   }

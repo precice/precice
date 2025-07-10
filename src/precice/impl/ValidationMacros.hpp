@@ -54,6 +54,19 @@
                 "Mesh modification is only allowed before calling initialize().",     \
                 name);
 
+/** Implementation of PRECICE_REQUIRE_DATA_READ or PRECICE_REQUIRE_DATA_WRITE
+ *
+ * @attention Do not use this macro directly!
+ */
+#define PRECICE_VALIDATE_MESH_DATA_ACCESS_IMPL(name)                                                           \
+  PRECICE_VALIDATE_MESH_NAME_IMPL(name)                                                                        \
+  PRECICE_CHECK(_accessor->isMeshProvided(name) || _accessor->isDirectAccessAllowed(name),                     \
+                "This participant does not provide Mesh \"{0}\" nor does it enable direct access to it. "      \
+                "To provide the mesh add a provide-mesh tag as follows <provide-mesh name=\"{0}\" />. "        \
+                "To enable direct access to the mesh please add a receive-mesh tag as follows "                \
+                "<receive-mesh name=\"{0}\" from=\"...\" api-access=\"true\" />, or modify an existing one. ", \
+                name);
+
 /** Validates a given meshID
  * This macros creates the "id" in a local scope and provides it to the called implementation.
  */
@@ -133,17 +146,19 @@
 /** Validates a given dataID and checks for read access
  * This macros creates the "id" in a local scope and provides it to the called implementation.
  */
-#define PRECICE_REQUIRE_DATA_READ(mesh, data)  \
-  do {                                         \
-    PRECICE_REQUIRE_DATA_READ_IMPL(mesh, data) \
+#define PRECICE_REQUIRE_DATA_READ(mesh, data)    \
+  do {                                           \
+    PRECICE_VALIDATE_MESH_DATA_ACCESS_IMPL(mesh) \
+    PRECICE_REQUIRE_DATA_READ_IMPL(mesh, data)   \
   } while (false)
 
 /** Validates a given dataID and checks for write access
  * This macros creates the "id" in a local scope and provides it to the called implementation.
  */
-#define PRECICE_REQUIRE_DATA_WRITE(mesh, data)  \
-  do {                                          \
-    PRECICE_REQUIRE_DATA_WRITE_IMPL(mesh, data) \
+#define PRECICE_REQUIRE_DATA_WRITE(mesh, data)   \
+  do {                                           \
+    PRECICE_VALIDATE_MESH_DATA_ACCESS_IMPL(mesh) \
+    PRECICE_REQUIRE_DATA_WRITE_IMPL(mesh, data)  \
   } while (false)
 
 //

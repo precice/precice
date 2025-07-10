@@ -64,7 +64,7 @@ namespace limbo {
         {
             char date[30];
             time_t date_time;
-            time(&date_time);
+            std::time(&date_time);
             strftime(date, 30, "%Y-%m-%d_%H_%M_%S", localtime(&date_time));
             return std::string(date);
         }

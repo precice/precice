@@ -35,8 +35,8 @@
     <max-time-windows value="10" />
     <time-window-size value="1.0" />
     <max-iterations value="2" />
-    <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" substeps="true" />
-    <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" substeps="true" />
+    <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" />
+    <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" />
     <relative-convergence-measure data="DataBA" mesh="MeshA" limit="1e-4" />
   </coupling-scheme:parallel-implicit>
 </precice-configuration>

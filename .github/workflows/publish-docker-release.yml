@@ -12,7 +12,6 @@ name: Publish Docker release
 # This workflow uses the official ubuntu docker images.
 on:
   workflow_dispatch:
-    workflow_dispatch:
     inputs:
       version:
         description: 'Version without the v prefix'

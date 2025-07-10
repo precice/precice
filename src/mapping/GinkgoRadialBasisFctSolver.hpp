@@ -282,8 +282,8 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
     _matrixV->fill(0.0);
 
     precice::profiling::Event _assemblyEvent{"map.rbf.ginkgo.assembleMatrices"};
-    kernel::fill_polynomial_matrix(_deviceExecutor, _matrixQ, dInputVertices, separatePolyParams);
-    kernel::fill_polynomial_matrix(_deviceExecutor, _matrixV, dOutputVertices, separatePolyParams);
+    kernel::fill_polynomial_matrix(_deviceExecutor, _ginkgoParameter.enableUnifiedMemory, _matrixQ, dInputVertices, separatePolyParams);
+    kernel::fill_polynomial_matrix(_deviceExecutor, _ginkgoParameter.enableUnifiedMemory, _matrixV, dOutputVertices, separatePolyParams);
     _assemblyEvent.stop();
 
     _deviceExecutor->synchronize();
@@ -315,14 +315,14 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   // Launch RBF fill kernel on device
   precice::profiling::Event _assemblyEvent{"map.rbf.ginkgo.assembleMatrices"};
   precice::profiling::Event systemMatrixAssemblyEvent{"map.rbf.ginkgo.assembleSystemMatrix"};
-  kernel::create_rbf_system_matrix(_deviceExecutor, _rbfSystemMatrix, activeAxis, dInputVertices, dInputVertices, basisFunction,
+  kernel::create_rbf_system_matrix(_deviceExecutor, _ginkgoParameter.enableUnifiedMemory, _rbfSystemMatrix, activeAxis, dInputVertices, dInputVertices, basisFunction,
                                    basisFunction.getFunctionParameters(), Polynomial::ON == polynomial,
                                    polyparams); // polynomial evaluates to true only if ON is set
   _deviceExecutor->synchronize();
   systemMatrixAssemblyEvent.stop();
 
   precice::profiling::Event outputMatrixAssemblyEvent{"map.rbf.ginkgo.assembleOutputMatrix"};
-  kernel::create_rbf_system_matrix(_deviceExecutor, _matrixA, activeAxis, dInputVertices, dOutputVertices, basisFunction,
+  kernel::create_rbf_system_matrix(_deviceExecutor, _ginkgoParameter.enableUnifiedMemory, _matrixA, activeAxis, dInputVertices, dOutputVertices, basisFunction,
                                    basisFunction.getFunctionParameters(), Polynomial::ON == polynomial, polyparams);
 
   // Wait for the kernels to finish
@@ -415,11 +415,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
       PRECICE_UNREACHABLE("Not implemented");
     }
     _rbfSystemMatrix->transpose(_decompMatrixQ_T);
-
     _dQ_T_Rhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_decompMatrixQ_T->get_size()[0], 1}));
-
-    auto triangularSolverFactory = triangular::build().on(_deviceExecutor);
-    _triangularSolver            = gko::share(triangularSolverFactory->generate(_decompMatrixR));
   } else {
     PRECICE_UNREACHABLE("Unknown solver type");
   }
@@ -489,8 +485,18 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
   }
 
   if (GinkgoSolverType::QR == _solverType) {
-    _decompMatrixQ_T->apply(dRhs, _dQ_T_Rhs);
-    _triangularSolver->apply(_dQ_T_Rhs, _rbfCoefficients);
+    // Upper Trs U x = b
+    if ("cuda-executor" == _ginkgoParameter.executor) {
+#ifdef PRECICE_WITH_CUDA
+      solvewithQRDecompositionCuda(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dRhs.get());
+#endif
+    } else if ("hip-executor" == _ginkgoParameter.executor) {
+#ifdef PRECICE_WITH_HIP
+      solvewithQRDecompositionHip(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dRhs.get());
+#endif
+    } else {
+      PRECICE_UNREACHABLE("Not implemented");
+    }
   } else {
     _solveRBFSystem(dRhs);
   }
@@ -543,8 +549,17 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
   _matrixA->transpose()->apply(dRhs, dAu);
 
   if (GinkgoSolverType::QR == _solverType) {
-    _decompMatrixQ_T->apply(dAu, _dQ_T_Rhs);
-    _triangularSolver->apply(_dQ_T_Rhs, _rbfCoefficients);
+    if ("cuda-executor" == _ginkgoParameter.executor) {
+#ifdef PRECICE_WITH_CUDA
+      solvewithQRDecompositionCuda(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dAu.get());
+#endif
+    } else if ("hip-executor" == _ginkgoParameter.executor) {
+#ifdef PRECICE_WITH_HIP
+      solvewithQRDecompositionHip(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dAu.get());
+#endif
+    } else {
+      PRECICE_UNREACHABLE("Not implemented");
+    }
   } else {
     _solveRBFSystem(dAu);
   }

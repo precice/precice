@@ -74,11 +74,11 @@ public:
 
   Event(std::string_view eventName, Options options);
 
-  Event(Event &&) = default;
+  Event(Event &&)            = default;
   Event &operator=(Event &&) = default;
 
   // Copies would lead to duplicate entries
-  Event(const Event &other) = delete;
+  Event(const Event &other)       = delete;
   Event &operator=(const Event &) = delete;
 
   /// Stops the event if it's running and report its times to the EventRegistry

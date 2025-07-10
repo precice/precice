@@ -77,6 +77,7 @@ target_sources(testprecice
     src/precice/tests/ParallelTests.cpp
     src/precice/tests/SpanTests.cpp
     src/precice/tests/ToolingTests.cpp
+    src/precice/tests/UserInputTests.cpp
     src/precice/tests/VersioningTests.cpp
     src/precice/tests/WatchIntegralTest.cpp
     src/precice/tests/WatchPointTest.cpp
@@ -85,6 +86,7 @@ target_sources(testprecice
     src/testing/DataContextFixture.cpp
     src/testing/DataContextFixture.hpp
     src/testing/GlobalFixtures.cpp
+    src/testing/Meshes.hpp
     src/testing/ParallelCouplingSchemeFixture.cpp
     src/testing/ParallelCouplingSchemeFixture.hpp
     src/testing/QuickTest.hpp
@@ -104,6 +106,7 @@ target_sources(testprecice
     src/utils/tests/AlgorithmTest.cpp
     src/utils/tests/DimensionsTest.cpp
     src/utils/tests/EigenHelperFunctionsTest.cpp
+    src/utils/tests/HashTest.cpp
     src/utils/tests/IntraCommTest.cpp
     src/utils/tests/ManageUniqueIDsTest.cpp
     src/utils/tests/MultiLockTest.cpp
