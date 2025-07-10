@@ -1,9 +1,9 @@
 #pragma once
 
+#include <functional>
 #include <mapping/MathHelper.hpp>
 #include <mapping/RadialBasisFctSolver.hpp>
 #include <mapping/impl/BasisFunctions.hpp>
-#include <functional>
 
 namespace precice {
 namespace mapping {
@@ -18,11 +18,11 @@ struct Sample {
 
   Sample(double pos, double error)
       : pos(pos), error(error)
-  { }
+  {}
 
   Sample()
       : pos(std::numeric_limits<double>::quiet_NaN()), error(std::numeric_limits<double>::quiet_NaN())
-  { }
+  {}
 };
 
 template <typename RBF_T>
@@ -62,14 +62,14 @@ public:
   static double getMinBoundSize(const mesh::Mesh &inputMesh);
 };
 
-
 template <typename RBF_T>
 RBFParameterTuner<RBF_T>::RBFParameterTuner()
     : _kernelMatrix(Eigen::MatrixXd(0, 0)),
       _distanceMatrix(Eigen::MatrixXd(0, 0)),
       _inSize(0),
       _isInitialized(false)
-{ }
+{
+}
 
 template <typename RBF_T>
 double RBFParameterTuner<RBF_T>::optimize(const Eigen::VectorXd &inputData)

@@ -22,7 +22,6 @@ public:
 
   Sample optimizeIterativeIncrease(const Eigen::VectorXd &inputData, double posTolerance, size_t maxSuccessfulSamples);
   Sample optimizeBisection(const Eigen::VectorXd &inputData, double posTolerance, int maxIterations);
-
 };
 
 // Implementation:
@@ -53,7 +52,7 @@ double RBFParameterTunerSimple<RBF_T>::optimize(const Eigen::VectorXd &inputData
 
   constexpr double POS_TOLERANCE        = 1.5;
   constexpr int    MAX_BISEC_ITERATIONS = 6;
-  //constexpr int MAX_SUCCESSFUL_SAMPLES = 10;
+  // constexpr int MAX_SUCCESSFUL_SAMPLES = 10;
 
   Sample bestSample = optimizeBisection(inputData, POS_TOLERANCE, MAX_BISEC_ITERATIONS);
   PRECICE_INFO("Best sample: rad={:.4e}, err={:.4e}", bestSample.pos, bestSample.error);
@@ -108,14 +107,15 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeIterativeIncrease(const Eigen::Ve
   return _samples[minIdx];
 }
 
-
 template <typename RBF_T>
 Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &inputData, double posTolerance, int maxIterations)
 {
   PRECICE_ASSERT(this->_isInitialized);
 
   constexpr double increaseSize = 10;
-  double sampleRadius = _lowerBound;
+  double           sampleRadius = _lowerBound;
+
+  PRECICE_INFO("Start optimization with lower bound = {:.4e}", _lowerBound);
 
   Sample lowerBound = {sampleRadius, std::numeric_limits<double>::quiet_NaN()};
   Sample upperBound = {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()};
@@ -136,14 +136,14 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &
     PRECICE_INFO("RBF tuner sample: rad={:.4e}, err={:.4e}, 1/cond={:.4e}", sampleRadius, error, rcond);
 
     if (rcond < 1e-13 || std::isnan(error)) {
-      PRECICE_CHECK(sampleRadius == _lowerBound, "Parameter tuning failed in first iteration using support-radius={}", sampleRadius);
+      PRECICE_CHECK(sampleRadius != _lowerBound, "Parameter tuning failed in first iteration using support-radius={}", sampleRadius);
       break;
     }
     lowerBound = {sampleRadius, error};
   }
   upperBound = {sampleRadius, std::numeric_limits<double>::quiet_NaN()};
 
-  int i = 0;
+  int    i = 0;
   Sample centerSample;
 
   while ((std::isnan(upperBound.error) || upperBound.pos > posTolerance * lowerBound.pos) && i < maxIterations) {

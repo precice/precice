@@ -11,13 +11,13 @@ namespace mapping {
 
 struct OptimizationParameters {
 
-  struct bayes_opt_boptimizer : public limbo::defaults::bayes_opt_boptimizer { };
+  struct bayes_opt_boptimizer : public limbo::defaults::bayes_opt_boptimizer {};
 
   // depending on which internal optimizer we use, we need to import different parameters
 #ifdef USE_LIBCMAES
-  struct opt_cmaes : public limbo::defaults::opt_cmaes { };
+  struct opt_cmaes : public limbo::defaults::opt_cmaes {};
 #elif defined(USE_NLOPT)
-  struct opt_nloptnograd : public limbo::defaults::opt_nloptnograd { };
+  struct opt_nloptnograd : public limbo::defaults::opt_nloptnograd {};
 #else
   struct opt_gridsearch {
     BO_PARAM(int, bins, 20);
@@ -35,7 +35,7 @@ struct OptimizationParameters {
     BO_PARAM(double, noise, 1e-10);
   };
 
-  struct kernel_maternfivehalves : public limbo::defaults::kernel_maternfivehalves { };
+  struct kernel_maternfivehalves : public limbo::defaults::kernel_maternfivehalves {};
 
   // maximizing -(error / max error)
   // TODO: dependent on mesh width and kernel, requires knowledge of real interpolation error
@@ -71,9 +71,9 @@ template <typename RBF_T>
 class RBFParameterTunerBO : public RBFParameterTuner<RBF_T> {
 
 public:
-  using stop_t     = boost::fusion::vector<limbo::stop::MaxIterations<OptimizationParameters>, limbo::stop::MaxPredictedValue<OptimizationParameters>>;
-  using init_t     = InitSampling;
-  using acqui_t    = limbo::acqui::EI<OptimizationParameters, limbo::model::GP<OptimizationParameters>>;
+  using stop_t  = boost::fusion::vector<limbo::stop::MaxIterations<OptimizationParameters>, limbo::stop::MaxPredictedValue<OptimizationParameters>>;
+  using init_t  = InitSampling;
+  using acqui_t = limbo::acqui::EI<OptimizationParameters, limbo::model::GP<OptimizationParameters>>;
 
 #ifdef USE_LIBCMAES
   using acquiopt_t = limbo::opt::Cmaes<OptimizationParameters>;
@@ -112,6 +112,7 @@ public:
   // Functions used by the limbo optimizer and InitSampling class
 
   Eigen::VectorXd operator()(const Eigen::VectorXd &x) const;
+
   double getLowerBound() const;
   double getLastRCond() const;
 
@@ -165,14 +166,13 @@ void InitSampling::operator()(StateFunction &stateFn, const AggregatorFunction &
   }
 };
 
-
 template <typename RBF_T>
 RBFParameterTunerBO<RBF_T>::RBFParameterTunerBO()
     : _lowerBound(std::numeric_limits<double>::infinity()),
       _upperBound(-std::numeric_limits<double>::infinity()),
       _maxError(-std::numeric_limits<double>::infinity()),
       _lastRCond(std::numeric_limits<double>::quiet_NaN())
-{ }
+{}
 
 template <typename RBF_T>
 void RBFParameterTunerBO<RBF_T>::configureIntervalTransformation(const std::vector<Sample> &samples) const
@@ -283,7 +283,7 @@ Eigen::VectorXd RBFParameterTunerBO<RBF_T>::operator()(const Eigen::VectorXd &x)
   }
 
   double error = utils::computeRippaLOOCVerror(llt, _inputData);
-  error = isTransformationConfigured() ? transformError(error) : error;
+  error        = isTransformationConfigured() ? transformError(error) : error;
 
   if (isTransformationConfigured()) {
     PRECICE_INFO("State function evaluation: f({:.4e})={:.4e}, [rad={:.4e}, err={:.4e}]", x(0), error, sampleRadius, backtransformError(error));

@@ -64,17 +64,10 @@ public:
   // Returns the size of the input data
   Eigen::Index getOutputSize() const;
 
-  void setClusterRadius(double r)
-  {
-    this->clusterRadius = r;
-  }
-  // BO_PARAM(std::size_t, dim_in, 1);
-  // number of dimensions of the result (res.size())
-  // BO_PARAM(std::size_t, dim_out, 1);
 private:
   mutable precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
 
-  bool _autotuneShape; // TODO: add documentation
+  bool _autotuneShape;
 
   double evaluateRippaLOOCVerror(const Eigen::VectorXd &lambda) const;
   /// Decomposition of the interpolation matrix
@@ -96,9 +89,6 @@ private:
   Eigen::MatrixXd _matrixA;
 
   mutable RBFParameterTunerSimple<RADIAL_BASIS_FUNCTION_T> _tuner;
-
-  // TODO: Won't work with global RBF, as we set the minimum in the SphericalVertexCLuster as the (half) cluster radius or similar
-  double clusterRadius = std::numeric_limits<double>::quiet_NaN();
 
   bool computeCrossValidation = false;
 };

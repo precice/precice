@@ -217,8 +217,18 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt)
 # limbo
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/limbo)
 # optional optimizer packages for limbo
-find_package(libcmaes)
-find_package(libnlopt)
+find_package(libcmaes QUIET)
+if(libcmaes_FOUND)
+  message(STATUS "Found libcmaes for limbo.")
+else()
+  message(STATUS "libcmaes (CMA-ES optimizer) for limbo not found.")
+  find_package(libnlopt QUIET)
+  if(libnlopt_FOUND)
+    message(STATUS "Found NLopt for limbo.")
+  else()
+    message(STATUS "NLopt (non linear optimizer) for limbo not found, using default grid search.")
+  endif()
+endif()
 
 #
 # Find Configurable Dependencies
