@@ -6,9 +6,11 @@
 #include <fstream>
 #include <iomanip>
 #include <iterator>
+#include <lzma.h>
 #include <memory>
 #include <optional>
 #include <ratio>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <sys/types.h>
@@ -66,7 +68,6 @@ void EventRegistry::initialize(std::string_view applicationName, int rank, int s
   this->_initTime        = initTime;
   this->_initClock       = initClock;
 
-  _firstwrite = true;
   _writeQueue.clear();
   _nameDict.clear();
 
@@ -148,6 +149,15 @@ void EventRegistry::startBackend()
                timepoint_to_string(_initTime),
                toString(_mode),
                ::precice::profiling::file_version);
+
+  _strm = LZMA_STREAM_INIT;
+  lzma_options_lzma options;
+  lzma_lzma_preset(&options, 0);
+  options.mode = LZMA_MODE_FAST;
+  if (lzma_alone_encoder(&_strm, &options) != LZMA_OK) {
+    throw std::runtime_error("Failed to init LZMA encoder");
+  }
+
   _output.flush();
   _isBackendRunning = true;
 }
@@ -162,6 +172,21 @@ void EventRegistry::stopBackend()
   put(StopEntry{*_globalId, now});
   // flush the queue
   flush();
+
+  lzma_ret ret;
+  do {
+    _strm.next_out  = reinterpret_cast<uint8_t *>(_buf.data());
+    _strm.avail_out = _buf.size();
+
+    ret = lzma_code(&_strm, LZMA_FINISH);
+    if (ret != LZMA_OK && ret != LZMA_STREAM_END) {
+      throw std::runtime_error("Finalization failed");
+    }
+    _output.write(_buf.data(), _buf.size() - _strm.avail_out);
+  } while (ret != LZMA_STREAM_END);
+
+  lzma_end(&_strm);
+
   _output.close();
   _nameDict.clear();
 
@@ -208,7 +233,6 @@ namespace {
 struct EventWriter {
   std::ostream            &out;
   Event::Clock::time_point initClock;
-  std::string              prefix;
 
   auto sinceInit(Event::Clock::time_point tp)
   {
@@ -252,17 +276,21 @@ try {
   }
   PRECICE_ASSERT(_output, "Filestream doesn't exist.");
 
-  auto first = _writeQueue.begin();
-  // Don't prefix the first write with a comma
-  if (_firstwrite) {
-    PRECICE_ASSERT(!_writeQueue.empty() && !_writeQueue.front().valueless_by_exception());
-    std::visit(EventWriter{_output, _initClock, ""}, _writeQueue.front());
-    ++first;
-    _firstwrite = false;
-  }
+  std::ostringstream oss{};
+  EventWriter        ew{oss, _initClock};
+  std::for_each(_writeQueue.begin(), _writeQueue.end(), [&ew](const auto &pe) { std::visit(ew, pe); });
+  auto str = oss.str();
 
-  EventWriter ew{_output, _initClock, ","};
-  std::for_each(first, _writeQueue.end(), [&ew](const auto &pe) { std::visit(ew, pe); });
+  _strm.next_in  = reinterpret_cast<uint8_t *>(str.data());
+  _strm.avail_in = str.size();
+
+  while (_strm.avail_in > 0) {
+    _strm.next_out  = reinterpret_cast<uint8_t *>(_buf.data());
+    _strm.avail_out = _buf.size();
+    lzma_ret ret    = lzma_code(&_strm, LZMA_RUN);
+    PRECICE_ASSERT(ret == LZMA_OK, "Compression failed");
+    _output.write(_buf.data(), _buf.size() - _strm.avail_out);
+  }
 
   _output.flush();
   _writeQueue.clear();
