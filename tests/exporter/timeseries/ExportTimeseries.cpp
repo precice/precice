@@ -6,7 +6,8 @@
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(Integration)
-BOOST_AUTO_TEST_SUITE(Parallel)
+BOOST_AUTO_TEST_SUITE(Exporter)
+BOOST_AUTO_TEST_SUITE(Timeseries)
 PRECICE_TEST_SETUP("ExporterOne"_on(1_rank), "ExporterTwo"_on(2_ranks))
 BOOST_AUTO_TEST_CASE(ExportTimeseries)
 {
@@ -67,7 +68,8 @@ BOOST_AUTO_TEST_CASE(ExportTimeseries)
   interface.finalize();
 }
 
+BOOST_AUTO_TEST_SUITE_END() // Timeseries
+BOOST_AUTO_TEST_SUITE_END() // Exporter
 BOOST_AUTO_TEST_SUITE_END() // Integration
-BOOST_AUTO_TEST_SUITE_END() // Parallel
 
 #endif // PRECICE_NO_MPI

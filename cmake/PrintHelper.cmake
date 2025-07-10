@@ -59,7 +59,6 @@ function(print_configuration)
   endif()
 
   print_variables( VARS
-    "BUILD_SHARED_LIBS;Build shared libraries"
     "CMAKE_SYSTEM;Target system"
     "CMAKE_HOST_SYSTEM;Host system"
     "CMAKE_INSTALL_PREFIX;Install prefix"

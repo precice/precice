@@ -29,10 +29,10 @@ repos:
       name: format python
       exclude: "^thirdparty"
 # Custom repo for the preCICE configuration formatter
-- repo: https://github.com/precice/precice-pre-commit-hooks
-  rev: 'v3.3'
+- repo: https://github.com/precice/config-format
+  rev: 'v1.1.0'
   hooks:
-  - id: format-precice-config
+  - id: precice-config-format
     name: format preCICE configs
     exclude: "^src/precice/tests/emptyconfig.xml"
 - repo: https://github.com/codespell-project/codespell
@@ -41,6 +41,11 @@ repos:
     - id: codespell
       name: check spelling
       exclude: "^thirdparty"
+- repo: https://github.com/python-jsonschema/check-jsonschema
+  rev: 0.33.2
+  hooks:
+    - id: check-github-workflows
+      args: ["--verbose"]
 - repo: local
   hooks:
   - id: update-cmake-sources

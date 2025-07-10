@@ -112,12 +112,6 @@ public:
   /// Sets weather the participant was configured with a primary tag
   void setUsePrimaryRank(bool useIntraComm);
 
-  /// Sets the manager responsible for providing unique IDs to meshes.
-  void setMeshIdManager(std::unique_ptr<utils::ManageUniqueIDs> &&idm)
-  {
-    _meshIdManager = std::move(idm);
-  }
-
   /// Adds a configured \ref Action to the participant
   void addAction(action::PtrAction &&action);
 
@@ -360,8 +354,6 @@ private:
   DataMap<ReadDataContext> _readDataContexts;
 
   bool _useIntraComm = false;
-
-  std::unique_ptr<utils::ManageUniqueIDs> _meshIdManager;
 
   template <typename ELEMENT_T>
   bool isDataValid(

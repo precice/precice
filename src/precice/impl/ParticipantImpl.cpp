@@ -209,13 +209,19 @@ void ParticipantImpl::configure(
 
   PRECICE_TRACE();
 
-  _meshLock.clear();
+  PRECICE_CHECK(config.getParticipantConfiguration()->nParticipants() > 1,
+                "In the preCICE configuration, only one participant is defined. "
+                "One participant makes no coupled simulation. "
+                "Please add at least another one.");
 
   _allowsExperimental = config.allowsExperimental();
   _allowsRemeshing    = config.allowsRemeshing();
   _waitInFinalize     = config.waitInFinalize();
   _accessor           = determineAccessingParticipant(config);
-  _accessor->setMeshIdManager(config.getMeshConfiguration()->extractMeshIdManager());
+  _participants       = config.getParticipantConfiguration()->getParticipants();
+  _m2ns               = config.getBoundM2NsFor(_accessorName);
+  config.configurePartitionsFor(_accessorName);
+  _couplingScheme = config.getCouplingSchemeConfiguration()->getCouplingScheme(_accessorName);
 
   PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useIntraComm(),
                  "A parallel participant needs an intra-participant communication");
@@ -226,21 +232,9 @@ void ParticipantImpl::configure(
 
   utils::IntraComm::configure(_accessorProcessRank, _accessorCommunicatorSize);
 
-  _participants = config.getParticipantConfiguration()->getParticipants();
-  configureM2Ns(config.getM2NConfiguration());
-
-  PRECICE_CHECK(_participants.size() > 1,
-                "In the preCICE configuration, only one participant is defined. "
-                "One participant makes no coupled simulation. "
-                "Please add at least another one.");
-  configurePartitions(config.getM2NConfiguration());
-
-  cplscheme::PtrCouplingSchemeConfiguration cplSchemeConfig =
-      config.getCouplingSchemeConfiguration();
-  _couplingScheme = cplSchemeConfig->getCouplingScheme(_accessorName);
-
   // Register all MeshIds to the lock, but unlock them straight away as
   // writing is allowed after configuration.
+  _meshLock.clear();
   for (const MeshContext *meshContext : _accessor->usedMeshContexts()) {
     _meshLock.add(meshContext->mesh->getName(), false);
   }
@@ -331,9 +325,9 @@ void ParticipantImpl::setupCommunication()
   PRECICE_DEBUG("Preprocessing provided meshes");
   for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
     if (meshContext->provideMesh) {
-      auto &mesh = *(meshContext->mesh);
+      auto &mesh = *meshContext->mesh;
       Event e("preprocess." + mesh.getName());
-      meshContext->mesh->preprocess();
+      mesh.preprocess();
     }
   }
 
@@ -856,16 +850,18 @@ void ParticipantImpl::setMeshEdge(
   PRECICE_TRACE(meshName, first, second);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &mesh = context.mesh;
-    using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
-    PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
-    Event         e{fmt::format("setMeshEdge.{}", meshName), profiling::Fundamental};
-    mesh::Vertex &v0 = mesh->vertex(first);
-    mesh::Vertex &v1 = mesh->vertex(second);
-    mesh->createEdge(v0, v1);
+  if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
+    return;
   }
+
+  mesh::Mesh &mesh = *context.mesh;
+  using impl::errorInvalidVertexID;
+  PRECICE_CHECK(mesh.isValidVertexID(first), errorInvalidVertexID(first));
+  PRECICE_CHECK(mesh.isValidVertexID(second), errorInvalidVertexID(second));
+  Event         e{fmt::format("setMeshEdge.{}", meshName), profiling::Fundamental};
+  mesh::Vertex &v0 = mesh.vertex(first);
+  mesh::Vertex &v1 = mesh.vertex(second);
+  mesh.createEdge(v0, v1);
 }
 
 void ParticipantImpl::setMeshEdges(
@@ -879,7 +875,7 @@ void ParticipantImpl::setMeshEdges(
     return;
   }
 
-  mesh::PtrMesh &mesh = context.mesh;
+  mesh::Mesh &mesh = *context.mesh;
   PRECICE_CHECK(vertices.size() % 2 == 0,
                 "Cannot interpret passed vertex IDs attempting to set edges of mesh \"{}\" . "
                 "You passed {} vertex indices, but we expected an even number.",
@@ -887,7 +883,7 @@ void ParticipantImpl::setMeshEdges(
   {
     auto end           = vertices.end();
     auto [first, last] = utils::find_first_range(vertices.begin(), end, [&mesh](VertexID vid) {
-      return !mesh->isValidVertexID(vid);
+      return !mesh.isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
@@ -900,7 +896,7 @@ void ParticipantImpl::setMeshEdges(
   for (unsigned long i = 0; i < vertices.size() / 2; ++i) {
     auto aid = vertices[2 * i];
     auto bid = vertices[2 * i + 1];
-    mesh->createEdge(mesh->vertex(aid), mesh->vertex(bid));
+    mesh.createEdge(mesh.vertex(aid), mesh.vertex(bid));
   }
 }
 
@@ -910,36 +906,27 @@ void ParticipantImpl::setMeshTriangle(
     VertexID         second,
     VertexID         third)
 {
-  PRECICE_TRACE(meshName, first,
-                second, third);
-
+  PRECICE_TRACE(meshName, first, second, third);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &mesh = context.mesh;
-    using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
-    PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
-    PRECICE_CHECK(mesh->isValidVertexID(third), errorInvalidVertexID(third));
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(first, second, third)),
-                  "setMeshTriangle() was called with repeated Vertex IDs ({}, {}, {}).",
-                  first, second, third);
-    mesh::Vertex *vertices[3];
-    vertices[0] = &mesh->vertex(first);
-    vertices[1] = &mesh->vertex(second);
-    vertices[2] = &mesh->vertex(third);
-    PRECICE_CHECK(utils::unique_elements(utils::make_array(vertices[0]->getCoords(),
-                                                           vertices[1]->getCoords(), vertices[2]->getCoords())),
-                  "setMeshTriangle() was called with vertices located at identical coordinates (IDs: {}, {}, {}).",
-                  first, second, third);
-    Event       e{fmt::format("setMeshTriangle.{}", meshName), profiling::Fundamental};
-    mesh::Edge *edges[3];
-    edges[0] = &mesh->createEdge(*vertices[0], *vertices[1]);
-    edges[1] = &mesh->createEdge(*vertices[1], *vertices[2]);
-    edges[2] = &mesh->createEdge(*vertices[2], *vertices[0]);
-
-    mesh->createTriangle(*edges[0], *edges[1], *edges[2]);
+  if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
+    return;
   }
+
+  mesh::Mesh &mesh = *context.mesh;
+  using impl::errorInvalidVertexID;
+  PRECICE_CHECK(mesh.isValidVertexID(first), errorInvalidVertexID(first));
+  PRECICE_CHECK(mesh.isValidVertexID(second), errorInvalidVertexID(second));
+  PRECICE_CHECK(mesh.isValidVertexID(third), errorInvalidVertexID(third));
+  PRECICE_CHECK(utils::unique_elements(utils::make_array(first, second, third)),
+                "setMeshTriangle() was called with repeated Vertex IDs ({}, {}, {}).",
+                first, second, third);
+
+  mesh::Vertex &A = mesh.vertex(first);
+  mesh::Vertex &B = mesh.vertex(second);
+  mesh::Vertex &C = mesh.vertex(third);
+
+  mesh.createTriangle(A, B, C);
 }
 
 void ParticipantImpl::setMeshTriangles(
@@ -953,7 +940,7 @@ void ParticipantImpl::setMeshTriangles(
     return;
   }
 
-  mesh::PtrMesh &mesh = context.mesh;
+  mesh::Mesh &mesh = *context.mesh;
   PRECICE_CHECK(vertices.size() % 3 == 0,
                 "Cannot interpret passed vertex IDs attempting to set triangles of mesh \"{}\" . "
                 "You passed {} vertex indices, which isn't dividable by 3.",
@@ -961,7 +948,7 @@ void ParticipantImpl::setMeshTriangles(
   {
     auto end           = vertices.end();
     auto [first, last] = utils::find_first_range(vertices.begin(), end, [&mesh](VertexID vid) {
-      return !mesh->isValidVertexID(vid);
+      return !mesh.isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
@@ -975,9 +962,9 @@ void ParticipantImpl::setMeshTriangles(
     auto aid = vertices[3 * i];
     auto bid = vertices[3 * i + 1];
     auto cid = vertices[3 * i + 2];
-    mesh->createTriangle(mesh->vertex(aid),
-                         mesh->vertex(bid),
-                         mesh->vertex(cid));
+    mesh.createTriangle(mesh.vertex(aid),
+                        mesh.vertex(bid),
+                        mesh.vertex(cid));
   }
 }
 
@@ -992,46 +979,48 @@ void ParticipantImpl::setMeshQuad(
                 second, third, fourth);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
-  PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshQuad is only possible for 3D meshes."
-                                                    " Please set the mesh dimension to 3 in the preCICE configuration file.");
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    PRECICE_ASSERT(context.mesh);
-    mesh::Mesh &mesh = *(context.mesh);
-    using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh.isValidVertexID(first), errorInvalidVertexID(first));
-    PRECICE_CHECK(mesh.isValidVertexID(second), errorInvalidVertexID(second));
-    PRECICE_CHECK(mesh.isValidVertexID(third), errorInvalidVertexID(third));
-    PRECICE_CHECK(mesh.isValidVertexID(fourth), errorInvalidVertexID(fourth));
+  PRECICE_CHECK(context.mesh->getDimensions() == 3,
+                "setMeshQuad is only possible for 3D meshes. Please set the mesh dimension to 3 in the preCICE configuration file.");
+  if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
+    return;
+  }
 
-    auto vertexIDs = utils::make_array(first, second, third, fourth);
-    PRECICE_CHECK(utils::unique_elements(vertexIDs), "The four vertex ID's are not unique. Please check that the vertices that form the quad are correct.");
+  PRECICE_ASSERT(context.mesh);
+  mesh::Mesh &mesh = *context.mesh;
+  using impl::errorInvalidVertexID;
+  PRECICE_CHECK(mesh.isValidVertexID(first), errorInvalidVertexID(first));
+  PRECICE_CHECK(mesh.isValidVertexID(second), errorInvalidVertexID(second));
+  PRECICE_CHECK(mesh.isValidVertexID(third), errorInvalidVertexID(third));
+  PRECICE_CHECK(mesh.isValidVertexID(fourth), errorInvalidVertexID(fourth));
 
-    auto coords = mesh::coordsFor(mesh, vertexIDs);
-    PRECICE_CHECK(utils::unique_elements(coords),
-                  "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle."
-                  "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface is composed of quads.");
+  auto vertexIDs = utils::make_array(first, second, third, fourth);
+  PRECICE_CHECK(utils::unique_elements(vertexIDs), "The four vertex ID's are not unique. Please check that the vertices that form the quad are correct.");
 
-    auto convexity = math::geometry::isConvexQuad(coords);
-    PRECICE_CHECK(convexity.convex, "The given quad is not convex. "
-                                    "Please check that the adapter send the four correct vertices or that the interface is composed of quads.");
-    auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
+  auto coords = mesh::coordsFor(mesh, vertexIDs);
+  PRECICE_CHECK(utils::unique_elements(coords),
+                "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle."
+                "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface is composed of quads.");
 
-    Event e{fmt::format("setMeshQuad.{}", meshName), profiling::Fundamental};
+  auto convexity = math::geometry::isConvexQuad(coords);
+  PRECICE_CHECK(convexity.convex, "The given quad is not convex. "
+                                  "Please check that the adapter send the four correct vertices or that the interface is composed of quads.");
+  auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
 
-    // Vertices are now in the order: V0-V1-V2-V3-V0.
-    // Use the shortest diagonal to split the quad into 2 triangles.
-    // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
-    double distance02 = (reordered[0]->getCoords() - reordered[2]->getCoords()).norm();
-    double distance13 = (reordered[1]->getCoords() - reordered[3]->getCoords()).norm();
+  Event e{fmt::format("setMeshQuad.{}", meshName), profiling::Fundamental};
 
-    // The new edge, e[4], is the shortest diagonal of the quad
-    if (distance02 <= distance13) {
-      mesh.createTriangle(*reordered[0], *reordered[2], *reordered[1]);
-      mesh.createTriangle(*reordered[0], *reordered[2], *reordered[3]);
-    } else {
-      mesh.createTriangle(*reordered[1], *reordered[3], *reordered[0]);
-      mesh.createTriangle(*reordered[1], *reordered[3], *reordered[2]);
-    }
+  // Vertices are now in the order: V0-V1-V2-V3-V0.
+  // Use the shortest diagonal to split the quad into 2 triangles.
+  // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
+  double distance02 = (reordered[0]->getCoords() - reordered[2]->getCoords()).norm();
+  double distance13 = (reordered[1]->getCoords() - reordered[3]->getCoords()).norm();
+
+  // The new edge, e[4], is the shortest diagonal of the quad
+  if (distance02 <= distance13) {
+    mesh.createTriangle(*reordered[0], *reordered[2], *reordered[1]);
+    mesh.createTriangle(*reordered[0], *reordered[2], *reordered[3]);
+  } else {
+    mesh.createTriangle(*reordered[1], *reordered[3], *reordered[0]);
+    mesh.createTriangle(*reordered[1], *reordered[3], *reordered[2]);
   }
 }
 
@@ -1046,7 +1035,7 @@ void ParticipantImpl::setMeshQuads(
     return;
   }
 
-  mesh::Mesh &mesh = *(context.mesh);
+  mesh::Mesh &mesh = *context.mesh;
   PRECICE_CHECK(vertices.size() % 4 == 0,
                 "Cannot interpret passed vertex IDs attempting to set quads of mesh \"{}\" . "
                 "You passed {} vertex indices, which isn't dividable by 4.",
@@ -1112,22 +1101,24 @@ void ParticipantImpl::setMeshTetrahedron(
   MeshContext &context = _accessor->usedMeshContext(meshName);
   PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes."
                                                     " Please set the mesh dimension to 3 in the preCICE configuration file.");
+  if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
+    return;
+  }
+
   Event e{fmt::format("setMeshTetrahedron.{}", meshName), profiling::Fundamental};
 
-  if (context.meshRequirement == mapping::Mapping::MeshRequirement::FULL) {
-    mesh::PtrMesh &mesh = context.mesh;
-    using impl::errorInvalidVertexID;
-    PRECICE_CHECK(mesh->isValidVertexID(first), errorInvalidVertexID(first));
-    PRECICE_CHECK(mesh->isValidVertexID(second), errorInvalidVertexID(second));
-    PRECICE_CHECK(mesh->isValidVertexID(third), errorInvalidVertexID(third));
-    PRECICE_CHECK(mesh->isValidVertexID(fourth), errorInvalidVertexID(fourth));
-    mesh::Vertex &A = mesh->vertex(first);
-    mesh::Vertex &B = mesh->vertex(second);
-    mesh::Vertex &C = mesh->vertex(third);
-    mesh::Vertex &D = mesh->vertex(fourth);
+  mesh::Mesh &mesh = *context.mesh;
+  using impl::errorInvalidVertexID;
+  PRECICE_CHECK(mesh.isValidVertexID(first), errorInvalidVertexID(first));
+  PRECICE_CHECK(mesh.isValidVertexID(second), errorInvalidVertexID(second));
+  PRECICE_CHECK(mesh.isValidVertexID(third), errorInvalidVertexID(third));
+  PRECICE_CHECK(mesh.isValidVertexID(fourth), errorInvalidVertexID(fourth));
+  mesh::Vertex &A = mesh.vertex(first);
+  mesh::Vertex &B = mesh.vertex(second);
+  mesh::Vertex &C = mesh.vertex(third);
+  mesh::Vertex &D = mesh.vertex(fourth);
 
-    mesh->createTetrahedron(A, B, C, D);
-  }
+  mesh.createTetrahedron(A, B, C, D);
 }
 
 void ParticipantImpl::setMeshTetrahedra(
@@ -1137,11 +1128,13 @@ void ParticipantImpl::setMeshTetrahedra(
   PRECICE_TRACE(meshName, vertices.size());
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
+  PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes."
+                                                    " Please set the mesh dimension to 3 in the preCICE configuration file.");
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
     return;
   }
 
-  mesh::PtrMesh &mesh = context.mesh;
+  mesh::Mesh &mesh = *context.mesh;
   PRECICE_CHECK(vertices.size() % 4 == 0,
                 "Cannot interpret passed vertex IDs attempting to set quads of mesh \"{}\" . "
                 "You passed {} vertex indices, which isn't dividable by 4.",
@@ -1149,7 +1142,7 @@ void ParticipantImpl::setMeshTetrahedra(
   {
     auto end           = vertices.end();
     auto [first, last] = utils::find_first_range(vertices.begin(), end, [&mesh](VertexID vid) {
-      return !mesh->isValidVertexID(vid);
+      return !mesh.isValidVertexID(vid);
     });
     PRECICE_CHECK(first == end,
                   impl::errorInvalidVertexIDRange,
@@ -1164,10 +1157,10 @@ void ParticipantImpl::setMeshTetrahedra(
     auto bid = vertices[4 * i + 1];
     auto cid = vertices[4 * i + 2];
     auto did = vertices[4 * i + 3];
-    mesh->createTetrahedron(mesh->vertex(aid),
-                            mesh->vertex(bid),
-                            mesh->vertex(cid),
-                            mesh->vertex(did));
+    mesh.createTetrahedron(mesh.vertex(aid),
+                           mesh.vertex(bid),
+                           mesh.vertex(cid),
+                           mesh.vertex(did));
   }
 }
 
@@ -1294,6 +1287,13 @@ void ParticipantImpl::mapAndReadData(
                                                                  "How should the provided data values be read? Please make sure the mesh \"{1}\" is non-empty within the access region.",
                 dataName, meshName);
 
+  ReadDataContext &dataContext = _accessor->readDataContext(meshName, dataName);
+  PRECICE_CHECK(dataContext.hasJustInTimeMapping(),
+                "The function \"mapAndReadData\" was called on mesh \"{0}\", but no matching just-in-time mapping was configured. "
+                "Please define a mapping in read direction from the mesh \{0}\" and omit the \"to\" attribute from the definition. "
+                "Example \"<mapping:nearest-neighbor direction=\"read\" from=\"{0}\" constraint=\"consistent\" />",
+                meshName);
+
   // Inconsistent sizes will be handled below
   if (coordinates.empty() && values.empty()) {
     return;
@@ -1302,11 +1302,10 @@ void ParticipantImpl::mapAndReadData(
   Event e{fmt::format("mapAndReadData.{}_{}", meshName, dataName), profiling::Fundamental};
 
   // Note that meshName refers to a remote mesh
-  ReadDataContext &dataContext = _accessor->readDataContext(meshName, dataName);
-  const auto       dataDims    = dataContext.getDataDimensions();
-  const auto       dim         = dataContext.getSpatialDimensions();
-  const auto       nVertices   = (coordinates.size() / dim);
-  MeshContext     &context     = _accessor->meshContext(meshName);
+  const auto   dataDims  = dataContext.getDataDimensions();
+  const auto   dim       = dataContext.getSpatialDimensions();
+  const auto   nVertices = (coordinates.size() / dim);
+  MeshContext &context   = _accessor->meshContext(meshName);
 
   // Check that the vertex is actually within the defined access region
   context.checkVerticesInsideAccessRegion(coordinates, dim, "mapAndReadData");
@@ -1331,7 +1330,8 @@ void ParticipantImpl::writeAndMapData(
   PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshName, dataName, coordinates.size());
   PRECICE_CHECK(_state != State::Finalized, "writeAndMapData(...) cannot be called after finalize().");
-  PRECICE_CHECK(_state == State::Constructed || (_state == State::Initialized && isCouplingOngoing()), "Calling writeAndMapData(...) is forbidden if coupling is not ongoing, because the data you are trying to write will not be used anymore. You can fix this by always calling writeAndMapData(...) before the advance(...) call in your simulation loop or by using Participant::isCouplingOngoing() to implement a safeguard.");
+  PRECICE_CHECK(_state != State::Constructed, "writeAndMapData(...) cannot be called before initialize(), because the mesh to map onto hasn't been received yet.");
+  PRECICE_CHECK(_state == State::Initialized && isCouplingOngoing(), "Calling writeAndMapData(...) is forbidden if coupling is not ongoing, because the data you are trying to write will not be used anymore. You can fix this by always calling writeAndMapData(...) before the advance(...) call in your simulation loop or by using Participant::isCouplingOngoing() to implement a safeguard.");
   PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
 
   PRECICE_VALIDATE_DATA(coordinates.begin(), coordinates.size());
@@ -1349,6 +1349,13 @@ void ParticipantImpl::writeAndMapData(
                 "Please define an access region using \"setMeshAccessRegion()\" before calling \"writeAndMapData()\".",
                 meshName);
 
+  WriteDataContext &dataContext = _accessor->writeDataContext(meshName, dataName);
+  PRECICE_CHECK(dataContext.hasJustInTimeMapping(),
+                "The function \"writeAndMapData\" was called on mesh \"{0}\", but no matching just-in-time mapping was configured. "
+                "Please define a mapping in write direction to the mesh \{0}\" and omit the \"from\" attribute from the definition. "
+                "Example \"<mapping:nearest-neighbor direction=\"write\" to=\"{0}\" constraint=\"conservative\" />",
+                meshName);
+
   // Inconsistent sizes will be handled below
   if (coordinates.empty() && values.empty()) {
     return;
@@ -1357,11 +1364,10 @@ void ParticipantImpl::writeAndMapData(
   Event e{fmt::format("writeAndMapData.{}_{}", meshName, dataName), profiling::Fundamental};
 
   // Note that meshName refers here typically to a remote mesh
-  WriteDataContext &dataContext = _accessor->writeDataContext(meshName, dataName);
-  const auto        dataDims    = dataContext.getDataDimensions();
-  const auto        dim         = dataContext.getSpatialDimensions();
-  const auto        nVertices   = (coordinates.size() / dim);
-  MeshContext      &context     = _accessor->meshContext(meshName);
+  const auto   dataDims  = dataContext.getDataDimensions();
+  const auto   dim       = dataContext.getSpatialDimensions();
+  const auto   nVertices = (coordinates.size() / dim);
+  MeshContext &context   = _accessor->meshContext(meshName);
 
   // Check that the vertex is actually within the defined access region
   context.checkVerticesInsideAccessRegion(coordinates, dim, "writeAndMapData");
@@ -1445,8 +1451,8 @@ void ParticipantImpl::setMeshAccessRegion(
   MeshContext &context = _accessor->meshContext(meshName);
 
   PRECICE_CHECK(!context.userDefinedAccessRegion, "A mesh access region was already defined for mesh \"{}\". setMeshAccessRegion may only be called once per mesh.", context.mesh->getName());
-  mesh::PtrMesh mesh(context.mesh);
-  int           dim = mesh->getDimensions();
+  mesh::Mesh &mesh = *context.mesh;
+  int         dim  = mesh.getDimensions();
   PRECICE_CHECK(boundingBox.size() == static_cast<unsigned long>(dim) * 2,
                 "Incorrect amount of bounding box components attempting to set the bounding box of {}D mesh \"{}\" . "
                 "You passed {} limits, but we expected {} ({}x2).",
@@ -1465,7 +1471,7 @@ void ParticipantImpl::setMeshAccessRegion(
   // Create a bounding box
   context.userDefinedAccessRegion = std::make_shared<mesh::BoundingBox>(bounds);
   // Expand the mesh associated bounding box
-  mesh->expandBoundingBox(*context.userDefinedAccessRegion.get());
+  mesh.expandBoundingBox(*context.userDefinedAccessRegion.get());
 }
 
 void ParticipantImpl::getMeshVertexIDsAndCoordinates(
@@ -1506,8 +1512,8 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
   auto       filteredVertices = context.filterVerticesToLocalAccessRegion(requiresBB);
   const auto meshSize         = filteredVertices.size();
 
-  const mesh::PtrMesh mesh(context.mesh);
-  const auto          meshDims = mesh->getDimensions();
+  const mesh::Mesh &mesh     = *(context.mesh);
+  const auto        meshDims = mesh.getDimensions();
   PRECICE_CHECK(ids.size() == meshSize,
                 "Output size is incorrect attempting to get vertex ids of {}D mesh \"{}\". "
                 "You passed {} vertex indices, but we expected {}. "
@@ -1520,104 +1526,16 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
                 "Use getMeshVertexSize(\"{}\") and getMeshDimensions(\"{}\") to receive the required amount components",
                 meshDims, meshName, coordinates.size(), expectedCoordinatesSize, meshSize, meshDims, meshName, meshName);
 
-  PRECICE_ASSERT(ids.size() <= mesh->nVertices(), "The queried size exceeds the number of available points.");
+  PRECICE_ASSERT(ids.size() <= mesh.nVertices(), "The queried size exceeds the number of available points.");
 
   Eigen::Map<Eigen::MatrixXd> posMatrix{
-      coordinates.data(), mesh->getDimensions(), static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
+      coordinates.data(), mesh.getDimensions(), static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
 
   for (unsigned long i = 0; i < ids.size(); i++) {
     auto localID = filteredVertices[i].get().getID();
-    PRECICE_ASSERT(mesh->isValidVertexID(localID), i, localID);
+    PRECICE_ASSERT(mesh.isValidVertexID(localID), i, localID);
     ids[i]           = localID;
     posMatrix.col(i) = filteredVertices[i].get().getCoords();
-  }
-}
-
-void ParticipantImpl::configureM2Ns(
-    const m2n::M2NConfiguration::SharedPointer &config)
-{
-  PRECICE_TRACE();
-  for (const auto &m2nConf : config->m2ns()) {
-    if (m2nConf.acceptor != _accessorName && m2nConf.connector != _accessorName) {
-      continue;
-    }
-
-    std::string comPartner("");
-    bool        isRequesting;
-    if (m2nConf.acceptor == _accessorName) {
-      comPartner   = m2nConf.connector;
-      isRequesting = true;
-    } else {
-      comPartner   = m2nConf.acceptor;
-      isRequesting = false;
-    }
-
-    PRECICE_ASSERT(!comPartner.empty());
-    for (const impl::PtrParticipant &participant : _participants) {
-      if (participant->getName() == comPartner) {
-        PRECICE_ASSERT(not utils::contained(comPartner, _m2ns), comPartner);
-        PRECICE_ASSERT(m2nConf.m2n);
-
-        _m2ns[comPartner] = [&] {
-          m2n::BoundM2N bound;
-          bound.m2n          = m2nConf.m2n;
-          bound.localName    = _accessorName;
-          bound.remoteName   = comPartner;
-          bound.isRequesting = isRequesting;
-          return bound;
-        }();
-      }
-    }
-  }
-}
-
-void ParticipantImpl::configurePartitions(
-    const m2n::M2NConfiguration::SharedPointer &m2nConfig)
-{
-  PRECICE_TRACE();
-  for (MeshContext *context : _accessor->usedMeshContexts()) {
-
-    if (context->provideMesh) { // Accessor provides mesh
-      PRECICE_CHECK(context->receiveMeshFrom.empty(),
-                    "Participant \"{}\" cannot provide and receive mesh {}!",
-                    _accessorName, context->mesh->getName());
-
-      context->partition = partition::PtrPartition(new partition::ProvidedPartition(context->mesh));
-
-      for (auto &receiver : _participants) {
-        for (auto &receiverContext : receiver->usedMeshContexts()) {
-          if (receiverContext->receiveMeshFrom == _accessorName && receiverContext->mesh->getName() == context->mesh->getName()) {
-            // meshRequirement has to be copied from "from" to provide", since
-            // mapping are only defined at "provide"
-            if (receiverContext->meshRequirement > context->meshRequirement) {
-              context->meshRequirement = receiverContext->meshRequirement;
-            }
-
-            m2n::PtrM2N m2n = m2nConfig->getM2N(receiver->getName(), _accessorName);
-            m2n->createDistributedCommunication(context->mesh);
-            context->partition->addM2N(m2n);
-          }
-        }
-      }
-
-    } else { // Accessor receives mesh
-      std::string receiver(_accessorName);
-      std::string provider(context->receiveMeshFrom);
-
-      PRECICE_DEBUG("Receiving mesh from {}", provider);
-
-      context->partition = partition::PtrPartition(new partition::ReceivedPartition(context->mesh, context->geoFilter, context->safetyFactor, context->allowDirectAccess));
-
-      m2n::PtrM2N m2n = m2nConfig->getM2N(receiver, provider);
-      m2n->createDistributedCommunication(context->mesh);
-      context->partition->addM2N(m2n);
-      for (const MappingContext &mappingContext : context->fromMappingContexts) {
-        context->partition->addFromMapping(mappingContext.mapping);
-      }
-      for (const MappingContext &mappingContext : context->toMappingContexts) {
-        context->partition->addToMapping(mappingContext.mapping);
-      }
-    }
   }
 }
 
@@ -1846,16 +1764,13 @@ void ParticipantImpl::resetWrittenData()
 PtrParticipant ParticipantImpl::determineAccessingParticipant(
     const config::Configuration &config)
 {
-  const auto &partConfig = config.getParticipantConfiguration();
-  for (const PtrParticipant &participant : partConfig->getParticipants()) {
-    if (participant->getName() == _accessorName) {
-      return participant;
-    }
-  }
-  PRECICE_ERROR("This participant's name, which was specified in the constructor of the preCICE interface as \"{}\", "
+  const auto &partConfig = *config.getParticipantConfiguration();
+  PRECICE_CHECK(partConfig.hasParticipant(_accessorName),
+                "This participant's name, which was specified in the constructor of the preCICE interface as \"{}\", "
                 "is not defined in the preCICE configuration. "
                 "Please double-check the correct spelling.",
                 _accessorName);
+  return partConfig.getParticipant(_accessorName);
 }
 
 void ParticipantImpl::initializeIntraCommunication()

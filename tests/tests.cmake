@@ -3,9 +3,19 @@
 #
 target_sources(testprecice
     PRIVATE
+    tests/exporter/timeseries/ExportTimeseries.cpp
+    tests/exporter/timeseries/FinalTimeseries.cpp
+    tests/exporter/timeseries/UpdatedTimeseries.cpp
     tests/fundamental/DifferentConfigs.cpp
     tests/fundamental/initial-data/InterleavedCreation.cpp
     tests/fundamental/initial-data/InterleavedCreationWithGradients.cpp
+    tests/fundamental/just-in-time/Both/NoneConfigured.cpp
+    tests/fundamental/just-in-time/Both/ReadNotConfigured.cpp
+    tests/fundamental/just-in-time/Both/WriteNotConfigured.cpp
+    tests/fundamental/just-in-time/Read/BeforeInitialize.cpp
+    tests/fundamental/just-in-time/Read/NotConfigured.cpp
+    tests/fundamental/just-in-time/Write/BeforeInitialize.cpp
+    tests/fundamental/just-in-time/Write/NotConfigured.cpp
     tests/fundamental/profiling/InvalidName.cpp
     tests/fundamental/profiling/NotAllStopped.cpp
     tests/fundamental/profiling/NotStoppedAtFinalize.cpp
@@ -13,7 +23,6 @@ target_sources(testprecice
     tests/geometric-multiscale/AxialGeoMultiscale.cpp
     tests/geometric-multiscale/RadialGeoMultiscale.cpp
     tests/parallel/CouplingOnLine.cpp
-    tests/parallel/ExportTimeseries.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
     tests/parallel/GlobalRBFPartitioningPETSc.cpp
     tests/parallel/LocalRBFPartitioning.cpp

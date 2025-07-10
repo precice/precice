@@ -385,8 +385,6 @@ private:
    */
   void configure(const config::Configuration &configuration);
 
-  void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
-
   enum struct ExportTiming : bool {
     Advance = false,
     Initial = true
@@ -395,10 +393,6 @@ private:
   /// Exports meshes with data and watch point data.
   /// @param[in] timing when the exports are requested
   void handleExports(ExportTiming timing);
-
-  /// Determines participants providing meshes to other participants.
-  void configurePartitions(
-      const m2n::M2NConfiguration::SharedPointer &m2nConfig);
 
   /// Communicate bounding boxes and look for overlaps
   void compareBoundingBoxes();

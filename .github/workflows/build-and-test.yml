@@ -26,9 +26,34 @@ concurrency:
   group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{github.event_name == 'pull_request'}}
 
+env:
+  CTEST_OUTPUT_ON_FAILURE: True
+  CMAKE_EXPORT_COMPILE_COMMANDS: True
+  CMAKE_GENERATOR: Ninja
+
 jobs:
-  build:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+         python-version: '3.x'
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Run checks
+        run: pre-commit run -a -v
+      - name: Git status
+        if: always()
+        run: git status
+      - name: Full diff
+        if: always()
+        run: git diff
+
+  linux:
     name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }}
+    needs: pre-commit
     runs-on: ubuntu-latest
     container:
       image: 'precice/ci-${{ matrix.IMAGE }}:latest'
@@ -123,7 +148,7 @@ jobs:
         run: |
           . ../venv/bin/activate # There is always a venv present
           cmake --version
-          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DPRECICE_FEATURE_GINKGO_MAPPING=${{ env.Ginkgo }} -DPRECICE_FEATURE_LIBBACKTRACE_STACKTRACES=ON -DPRECICE_BUILD_BENCHMARKS=ON  -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DPRECICE_FEATURE_GINKGO_MAPPING=${{ env.Ginkgo }} -DPRECICE_FEATURE_LIBBACKTRACE_STACKTRACES=ON -DPRECICE_BUILD_BENCHMARKS=ON  -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" ..
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -145,13 +170,11 @@ jobs:
       - name: Compile
         working-directory: build
         run: |
-          make -j $(nproc)
+          cmake --build .
       - name: Adjust user rights
         run: chown -R $PRECICE_USER build
       - name: Tests
         env:
-          CTEST_OUTPUT_ON_FAILURE: 1
-          BOOST_TEST_LOG_LEVEL: all
           OMPI_MCA_btl: self,vader
           OMPI_MCA_pml: ob1
           FI_PROVIDER: ${{ matrix.IMAGE == 'Intel' && 'tcp' || 'sockets' }} # use sockets on fedora and tcp on intel
@@ -186,3 +209,128 @@ jobs:
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} TestOutput
           path: build/TestOutput/
+
+  macos:
+    name: ${{ format('macos {0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }}
+    needs: pre-commit
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - CONFIG: MPIPETSc
+            CXX: 'clang++'
+            TYPE: Debug
+          - CONFIG: MPIPETSc
+            CXX: 'clang++'
+            TYPE: Release
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup python
+      uses: actions/setup-python@v5
+      with:
+       python-version: '3.10'
+       check-latest: true
+    - name: Install pip packages
+      run: pip3 install numpy polars
+    - name: Install preCICE dependencies
+      run: brew install --overwrite --quiet eigen libxml2 boost petsc openmpi ninja
+    - name: Generate build directory
+      run: mkdir -p build
+    - name: Configure
+      working-directory: build
+      env:
+        CXX: ${{ matrix.CXX }}
+        CXXFLAGS: "-Wall"
+        MPI: ${{ contains(matrix.CONFIG, 'MPI') }}
+        PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
+      run: |
+        cmake --version
+        cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} ..
+    - uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeCache
+        path: build/CMakeCache.txt
+    - uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeLogs
+        path: 'build/CMakeFiles/*.log'
+    - uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CompileCommands
+        path: build/compile_commands.json
+    - name: Enable compiler annotations
+      uses: electronjoe/gcc-problem-matcher@v1
+    - name: Compile
+      working-directory: build
+      run: |
+        cmake --build .
+    - name: Tests
+      env:
+        OMPI_MCA_btl: self,vader
+        OMPI_MCA_pml: ob1
+      working-directory: build
+      run: ctest -j
+    - uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} TestOutput
+        path: build/TestOutput/
+
+
+  windows:
+    needs: pre-commit
+    name: ${{ format('windows MinGW UCRT {0}', matrix.TYPE) }}
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    strategy:
+      fail-fast: false
+      matrix:
+        TYPE: [Release, Debug]
+    env:
+      CMAKE_BUILD_PARALLEL_LEVEL: 4
+      CMAKE_BUILD_TYPE: ${{ matrix.TYPE }}
+      CXXFLAGS: -Wa,-mbig-obj
+    steps:
+      - name: Install MS-MPI
+        run: |
+          $ProgressPreference = 'SilentlyContinue'
+          Invoke-WebRequest -Uri https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe -OutFile msmpisetup.exe
+          Start-Process -FilePath .\msmpisetup.exe -ArgumentList '-unattend' -Wait
+          Remove-Item msmpisetup.exe
+
+          # Add MS-MPI to PATH
+          echo "C:\Program Files\Microsoft MPI\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        shell: powershell
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          path-type: inherit
+          install: git mingw-w64-ucrt-x86_64-gcc-libs mingw-w64-ucrt-x86_64-boost-libs mingw-w64-ucrt-x86_64-libxml2 mingw-w64-ucrt-x86_64-python mingw-w64-ucrt-x86_64-python-numpy mingw-w64-ucrt-x86_64-cc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-msmpi mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-boost mingw-w64-ucrt-x86_64-eigen3 mingw-w64-ucrt-x86_64-crt mingw-w64-ucrt-x86_64-msmpi
+      - uses: actions/checkout@v4
+      - name: Make build directory
+        run: mkdir -p build
+      - name: Configure
+        working-directory: build
+        run: |
+          cmake -DPRECICE_FEATURE_PETSC_MAPPING=OFF -DPRECICE_FEATURE_PYTHON_ACTIONS=OFF -DCMAKE_CXX_FLAGS_DEBUG=-g1 ..
+      - name: Build
+        working-directory: build
+        run: |
+          cmake --build .
+      - name: Test
+        working-directory: build
+        run: |
+          # Allow each test to run twice to iron out sporadic MPI failures
+          ctest -j --repeat until-pass:2
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: debugdump
+          path: build/

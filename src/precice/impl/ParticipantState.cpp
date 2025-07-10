@@ -359,6 +359,11 @@ void ParticipantState::exportInitial()
 
     PRECICE_DEBUG("Exporting initial mesh {} to location \"{}\"", context.meshName, context.location);
     context.exporter->doExport(0, 0.0);
+
+    if (context.updateSeries) {
+      PRECICE_DEBUG("Exporting series file of mesh {} to location \"{}\"", context.meshName, context.location);
+      context.exporter->exportSeries();
+    }
   }
 
   for (const PtrWatchPoint &watchPoint : watchPoints()) {
@@ -387,8 +392,9 @@ void ParticipantState::exportIntermediate(IntermediateExport exp)
       PRECICE_DEBUG("Exporting mesh {} for timewindow {} to location \"{}\"", context.meshName, exp.timewindow, context.location);
       context.exporter->doExport(exp.timewindow, exp.time);
     }
-    if (exp.final) {
-      PRECICE_DEBUG("Exporting seried file of mesh {} to location \"{}\"", context.meshName, context.location);
+
+    if (exp.final || (exp.complete && context.updateSeries)) {
+      PRECICE_DEBUG("Exporting series file of mesh {} to location \"{}\"", context.meshName, context.location);
       context.exporter->exportSeries();
     }
   }

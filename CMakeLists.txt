@@ -53,12 +53,15 @@ if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
 endif()
 
+if (DEFINED BUILD_SHARED_LIBS AND NOT BUILD_SHARED_LIBS)
+  message(WARNING "You disabled BUILD_SHARED_LIBS. Note that 3.2.0 was the last release to honor this option. Newer preCICE releases always build as a shared library.")
+endif()
+
 option(PRECICE_FEATURE_MPI_COMMUNICATION "Enables MPI-based communication and running coupling tests." ON)
 option(PRECICE_FEATURE_PETSC_MAPPING "Enable use of the PETSc linear algebra library for global-iterative RBF data mappings." ON)
 option(PRECICE_FEATURE_PYTHON_ACTIONS "Enable Python support for preCICE actions." ON)
 option(PRECICE_CONFIGURE_PACKAGE_GENERATION "Configure package generation." ON)
 option(PRECICE_FEATURE_GINKGO_MAPPING "Enable use of Ginkgo for accelerated data mapping." OFF)
-option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
 option(BUILD_TESTING "Build tests" ON)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
 option(PRECICE_BINDINGS_C "Enable the native C bindings" ON)
@@ -494,7 +497,7 @@ target_include_directories(preciceCore PUBLIC
   )
 
 # Add precice as an empty target
-add_library(precice)
+add_library(precice SHARED)
 set_target_properties(precice PROPERTIES
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
@@ -561,29 +564,34 @@ GENERATE_EXPORT_HEADER(preciceCore
   )
 
 # Workaround for making exports work for the preciceCore object library when building preCICE as a shared library
-if (BUILD_SHARED_LIBS)
-  target_compile_definitions(preciceCore PUBLIC preciceCore_EXPORTS)
-endif()
+target_compile_definitions(preciceCore PUBLIC preciceCore_EXPORTS)
 
 # Add the export header to the public headers of the preCICE lib
 set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/export.h)
 
 #
-# Configuration of Target precice-tools
+# Configuration of precice tools
 #
 if (PRECICE_BUILD_TOOLS)
-  add_executable(precice-tools "src/drivers/main.cpp")
-  target_link_libraries(precice-tools
-   PRIVATE
-   precice
-   )
-  set_target_properties(precice-tools PROPERTIES
-    # precice is a C++17 project
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED Yes
-    CXX_EXTENSIONS No
-    )
+  macro(precice_add_tool TARGET MAIN)
+    add_executable(${TARGET} ${MAIN})
+    target_link_libraries(${TARGET}
+      PRIVATE
+      precice
+      )
+    set_target_properties(${TARGET} PROPERTIES
+      # precice is a C++17 project
+      CXX_STANDARD 17
+      CXX_STANDARD_REQUIRED Yes
+      CXX_EXTENSIONS No
+      )
+  endmacro()
+
+  precice_add_tool(precice-tools "src/drivers/main.cpp")
+  precice_add_tool(precice-config-doc "src/drivers/doc.cpp")
+  precice_add_tool(precice-config-validate "src/drivers/validate.cpp")
+  precice_add_tool(precice-version "src/drivers/version.cpp")
 endif()
 
 #
@@ -692,7 +700,7 @@ install(TARGETS precice
   )
 
 if(PRECICE_BUILD_TOOLS)
-  install(TARGETS precice-tools
+  install(TARGETS precice-tools precice-version precice-config-validate precice-config-doc
     EXPORT preciceTargets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
@@ -745,7 +753,7 @@ mark_as_advanced(PRECICE_PACKAGING_DIR)
 find_program(GZIP_EXE gzip DOC "The gzip executable")
 if(GZIP_EXE)
   # Process manpages for binaries
-  file(COPY docs/man/man1/precice-tools.1 DESTINATION packaging/man1)
+  file(COPY docs/man/man1/precice-tools.1 docs/man/man1/precice-version.1 docs/man/man1/precice-config-validate.1 docs/man/man1/precice-config-doc.1 DESTINATION packaging/man1)
   file(GLOB PRECICE_MAN_PAGES "${PRECICE_PACKAGING_DIR}/man1/*.1")
   foreach(manpage ${PRECICE_MAN_PAGES})
     message(STATUS "Compressing manpage: ${manpage}")
