@@ -230,9 +230,12 @@ void EventRegistry::putCritical(PendingEntry pe)
 }
 
 namespace {
+template <class OIter>
 struct EventWriter {
-  std::ostream            &out;
+  OIter                    out;
   Event::Clock::time_point initClock;
+
+  EventWriter(OIter iter, Event::Clock::time_point tp) : out(iter), initClock(tp) {}
 
   auto sinceInit(Event::Clock::time_point tp)
   {
@@ -241,30 +244,30 @@ struct EventWriter {
 
   void operator()(const StartEntry &se)
   {
-    fmt::print(out,
-               "B{}:{}\n",
-               se.eid, sinceInit(se.clock));
+    fmt::format_to(out,
+                   "B{}:{}\n",
+                   se.eid, sinceInit(se.clock));
   }
 
   void operator()(const StopEntry &se)
   {
-    fmt::print(out,
-               "E{}:{}\n",
-               se.eid, sinceInit(se.clock));
+    fmt::format_to(out,
+                   "E{}:{}\n",
+                   se.eid, sinceInit(se.clock));
   }
 
   void operator()(const DataEntry &de)
   {
-    fmt::print(out,
-               "D{}:{}:{}:{}\n",
-               de.eid, sinceInit(de.clock), de.did, de.dvalue);
+    fmt::format_to(out,
+                   "D{}:{}:{}:{}\n",
+                   de.eid, sinceInit(de.clock), de.did, de.dvalue);
   }
 
   void operator()(const NameEntry &ne)
   {
-    fmt::print(out,
-               "N{}:{}\n",
-               ne.id, ne.name);
+    fmt::format_to(out,
+                   "N{}:{}\n",
+                   ne.id, ne.name);
   }
 };
 } // namespace
@@ -276,13 +279,12 @@ try {
   }
   PRECICE_ASSERT(_output, "Filestream doesn't exist.");
 
-  std::ostringstream oss{};
-  EventWriter        ew{oss, _initClock};
+  _inbuf.clear();
+  EventWriter ew{std::back_inserter(_inbuf), _initClock};
   std::for_each(_writeQueue.begin(), _writeQueue.end(), [&ew](const auto &pe) { std::visit(ew, pe); });
-  auto str = oss.str();
 
-  _strm.next_in  = reinterpret_cast<uint8_t *>(str.data());
-  _strm.avail_in = str.size();
+  _strm.next_in  = reinterpret_cast<uint8_t *>(_inbuf.data());
+  _strm.avail_in = _inbuf.size();
 
   while (_strm.avail_in > 0) {
     _strm.next_out  = reinterpret_cast<uint8_t *>(_buf.data());

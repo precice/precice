@@ -166,7 +166,8 @@ private:
 
   lzma_stream _strm;
 
-  std::vector<char> _buf = std::vector<char>(2 * 64);
+  std::vector<char> _buf = std::vector<char>(4 * 64);
+  std::vector<char> _inbuf;
 
   /// The id of the global event
   std::optional<int> _globalId;
