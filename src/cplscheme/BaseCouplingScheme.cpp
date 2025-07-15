@@ -584,7 +584,7 @@ void BaseCouplingScheme::requireAction(
 std::string BaseCouplingScheme::printCouplingState() const
 {
   std::ostringstream os;
-  if (isCouplingOngoing()) {
+  if (isCouplingOngoing() && isImplicitCouplingScheme()) {
     os << "iteration: " << _iterations; //_iterations;
     if ((_maxIterations != UNDEFINED_MAX_ITERATIONS) && (_maxIterations != INFINITE_MAX_ITERATIONS)) {
       os << " of " << _maxIterations;
