@@ -622,8 +622,28 @@ std::string BaseCouplingScheme::printBasicState(
     if (hasTimeWindowSize() || (_maxTime != UNDEFINED_MAX_TIME)) {
       os << ", max-dt " << getNextTimeStepMaxSize();
     }
-    os << ", time-window-complete: ";
-    _isTimeWindowComplete ? os << "yes" : os << "no";
+    os << ", time-window ";
+    if (isExplicitCouplingScheme()) {
+      if (math::equals(_time.time(), 0.0)) {
+        os << "initial";
+      } else {
+        isTimeWindowComplete() ? os << "completed" : os << "subcycling";
+      }
+    } else {
+      if (_iterations == 1) {
+        if (math::equals(_time.time(), 0.0)) {
+          os << "initial";
+        } else {
+          os << "converged";
+        }
+      } else {
+        if (math::equals(_time.windowProgress(), 0.0)) {
+          os << "iterating";
+        } else {
+          os << "subcylcing";
+        }
+      }
+    }
   } else {
     os << "Reached end at: final time-window: " << (timeWindows - 1) << ", final time: " << time;
   }
