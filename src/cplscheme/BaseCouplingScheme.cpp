@@ -622,8 +622,6 @@ std::string BaseCouplingScheme::printBasicState(
     if (hasTimeWindowSize() || (_maxTime != UNDEFINED_MAX_TIME)) {
       os << ", max-dt " << getNextTimeStepMaxSize();
     }
-    os << ", ongoing: ";
-    isCouplingOngoing() ? os << "yes" : os << "no";
     os << ", time-window-complete: ";
     _isTimeWindowComplete ? os << "yes" : os << "no";
   } else {
