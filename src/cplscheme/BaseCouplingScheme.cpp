@@ -585,7 +585,7 @@ std::string BaseCouplingScheme::printCouplingState() const
 {
   std::ostringstream os;
   if (isCouplingOngoing() && isImplicitCouplingScheme()) {
-    os << "iteration: " << _iterations; //_iterations;
+    os << "it " << _iterations; //_iterations;
     if ((_maxIterations != UNDEFINED_MAX_ITERATIONS) && (_maxIterations != INFINITE_MAX_ITERATIONS)) {
       os << " of " << _maxIterations;
     }
@@ -608,19 +608,19 @@ std::string BaseCouplingScheme::printBasicState(
 {
   std::ostringstream os;
   if (isCouplingOngoing()) {
-    os << "time-window: " << timeWindows;
+    os << "time-window " << timeWindows;
     if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
       os << " of " << _maxTimeWindows;
     }
-    os << ", time: " << time;
+    os << ", t " << time;
     if (_maxTime != UNDEFINED_MAX_TIME) {
       os << " of " << _maxTime;
     }
     if (hasTimeWindowSize()) {
-      os << ", time-window-size: " << _timeWindowSize;
+      os << ", Dt " << _timeWindowSize;
     }
     if (hasTimeWindowSize() || (_maxTime != UNDEFINED_MAX_TIME)) {
-      os << ", max-time-step-size: " << getNextTimeStepMaxSize();
+      os << ", max-dt " << getNextTimeStepMaxSize();
     }
     os << ", ongoing: ";
     isCouplingOngoing() ? os << "yes" : os << "no";
