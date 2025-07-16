@@ -559,6 +559,23 @@ target_include_directories(precice PUBLIC
 
 target_link_libraries(precice PRIVATE preciceCore)
 
+# Mocked interface
+
+add_library(preciceMocked SHARED)
+set_target_properties(preciceMocked PROPERTIES
+  VERSION ${preCICE_VERSION}
+  SOVERSION ${preCICE_SOVERSION}
+  )
+target_sources(preciceMocked PRIVATE extras/mock/Participant.cpp)
+set_property(TARGET preciceMocked APPEND PROPERTY PUBLIC_HEADER
+    ${PROJECT_BINARY_DIR}/src/precice/export.h)
+
+target_include_directories(preciceMocked PUBLIC
+  $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
+  $<BUILD_INTERFACE:${preCICE_BINARY_DIR}/src>
+  $<INSTALL_INTERFACE:include>
+  )
+
 # Sources Configuration
 include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 
