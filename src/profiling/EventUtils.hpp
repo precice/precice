@@ -20,6 +20,7 @@ namespace precice::profiling {
 /// The Mode of the Event utility
 enum struct Mode {
   All,
+  API,
   Fundamental,
   Off
 };
@@ -28,11 +29,6 @@ enum struct EventClass : bool {
   Normal      = false,
   Fundamental = true
 };
-
-inline EventClass toEventClass(bool isFundamental)
-{
-  return static_cast<EventClass>(isFundamental);
-}
 
 /// An event that has been recorded and it waiting to be written to file
 struct TimedEntry {
@@ -126,9 +122,19 @@ public:
   void flush();
 
   /// Should an event of this class be forwarded to the registry?
-  inline bool accepting(EventClass ec) const
+  inline bool accepting(Group g) const
   {
-    return _mode == Mode::All || (ec == EventClass::Fundamental && _mode == Mode::Fundamental);
+    switch (_mode) {
+    case Mode::Off:
+      return false;
+    case Mode::All:
+      return true;
+    case Mode::Fundamental:
+      return g == Group::Fundamental;
+    case Mode::API:
+      return (g == Group::Fundamental) || (g == Group::API);
+    }
+    PRECICE_UNREACHABLE("Unknown mode");
   }
 
   /// Is the solver running in parallel?
