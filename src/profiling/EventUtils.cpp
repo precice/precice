@@ -6,7 +6,6 @@
 #include <fstream>
 #include <iomanip>
 #include <iterator>
-#include <lzma.h>
 #include <memory>
 #include <optional>
 #include <ratio>
@@ -24,10 +23,14 @@
 #include "utils/assertion.hpp"
 #include "utils/fmt.hpp"
 
+#ifdef PRECICE_COMPRESSION
+#include <lzma.h>
+#endif
+
 namespace precice::profiling {
 
 /// The version of the Events file. Increase on changes
-constexpr int file_version{1};
+constexpr int file_version{2};
 
 using sys_clk  = std::chrono::system_clock;
 using stdy_clk = std::chrono::steady_clock;
@@ -139,17 +142,8 @@ void EventRegistry::startBackend()
   _output.open(filename);
   PRECICE_CHECK(_output, "Unable to open the events-file: \"{}\"", filename);
 
-  // write header
-  fmt::println(_output,
-               R"({{"name":"{}","rank":{},"size":{},"unix_us":"{}","tinit":"{}","mode":"{}","file_version":{}}})",
-               _applicationName,
-               _rank,
-               _size,
-               std::chrono::duration_cast<std::chrono::microseconds>(_initTime.time_since_epoch()).count(),
-               timepoint_to_string(_initTime),
-               toString(_mode),
-               ::precice::profiling::file_version);
-
+  using std::literals::operator""sv;
+#ifdef PRECICE_COMPRESSION
   _strm = LZMA_STREAM_INIT;
   lzma_options_lzma options;
   lzma_lzma_preset(&options, 0);
@@ -157,6 +151,22 @@ void EventRegistry::startBackend()
   if (lzma_alone_encoder(&_strm, &options) != LZMA_OK) {
     throw std::runtime_error("Failed to init LZMA encoder");
   }
+  auto compression = "true"sv;
+#else
+  auto compression = "false"sv;
+#endif
+
+  // write header
+  fmt::println(_output,
+               R"({{"name":"{}","rank":{},"size":{},"unix_us":"{}","tinit":"{}","mode":"{}","compression":{},"file_version":{}}})",
+               _applicationName,
+               _rank,
+               _size,
+               std::chrono::duration_cast<std::chrono::microseconds>(_initTime.time_since_epoch()).count(),
+               timepoint_to_string(_initTime),
+               toString(_mode),
+               compression,
+               ::precice::profiling::file_version);
 
   _output.flush();
   _isBackendRunning = true;
@@ -173,6 +183,7 @@ void EventRegistry::stopBackend()
   // flush the queue
   flush();
 
+#ifdef PRECICE_COMPRESSION
   lzma_ret ret;
   do {
     _strm.next_out  = reinterpret_cast<uint8_t *>(_buf.data());
@@ -186,6 +197,7 @@ void EventRegistry::stopBackend()
   } while (ret != LZMA_STREAM_END);
 
   lzma_end(&_strm);
+#endif
 
   _output.close();
   _nameDict.clear();
@@ -283,6 +295,7 @@ try {
   EventWriter ew{std::back_inserter(_inbuf), _initClock};
   std::for_each(_writeQueue.begin(), _writeQueue.end(), [&ew](const auto &pe) { std::visit(ew, pe); });
 
+#ifdef PRECICE_COMPRESSION
   _strm.next_in  = reinterpret_cast<uint8_t *>(_inbuf.data());
   _strm.avail_in = _inbuf.size();
 
@@ -293,6 +306,9 @@ try {
     PRECICE_ASSERT(ret == LZMA_OK, "Compression failed");
     _output.write(_buf.data(), _buf.size() - _strm.avail_out);
   }
+#else
+  _output.write(_inbuf.data(), _inbuf.size());
+#endif
 
   _output.flush();
   _writeQueue.clear();

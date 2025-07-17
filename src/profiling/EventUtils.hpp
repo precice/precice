@@ -164,9 +164,12 @@ private:
   /// The amount of parallel instances of the current program
   int _size = 1;
 
-  lzma_stream _strm;
-
+#ifdef PRECICE_COMPRESSION
+  lzma_stream       _strm;
   std::vector<char> _buf = std::vector<char>(4 * 64);
+#endif
+
+  /// Buffer for the text to be written to file
   std::vector<char> _inbuf;
 
   /// The id of the global event
