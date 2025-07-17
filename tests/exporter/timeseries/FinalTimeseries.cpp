@@ -81,7 +81,9 @@ BOOST_AUTO_TEST_CASE(FinalTimeseries)
   BOOST_TEST(time == 5);
   BOOST_TEST(interface.getMaxTimeStepSize() == 0);
   interface.finalize();
-  BOOST_TEST(std::filesystem::exists(series));
+  if (context.isPrimary()) {
+    BOOST_TEST(std::filesystem::exists(series));
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Timeseries
