@@ -746,14 +746,14 @@ int ParticipantImpl::getMeshVertexSize(
   PRECICE_ASSERT(context.mesh.get() != nullptr);
 
   // Returns true if we have api access configured and we run in parallel and have a received mesh
-  if ((context.userDefinedAccessRegion || requiresUserDefinedAccessRegion(meshName)) && _accessor->isDirectAccessAllowed(meshName)) {
+  if ((!context.userDefinedAccessRegions.empty() || requiresUserDefinedAccessRegion(meshName)) && _accessor->isDirectAccessAllowed(meshName)) {
     // filter nVertices to the actual number of vertices queried by the user
-    PRECICE_CHECK(context.userDefinedAccessRegion, "The function getMeshVertexSize was called on the received mesh \"{0}\", "
-                                                   "but no access region was defined although this is necessary for parallel runs. "
-                                                   "Please define an access region using \"setMeshAccessRegion()\" before calling \"getMeshVertexSize()\".",
+    PRECICE_CHECK(!context.userDefinedAccessRegions.empty(), "The function getMeshVertexSize was called on the received mesh \"{0}\", "
+                                                             "but no access region was defined although this is necessary for parallel runs. "
+                                                             "Please define an access region using \"setMeshAccessRegion()\" before calling \"getMeshVertexSize()\".",
                   meshName);
 
-    auto result = mesh::countVerticesInBoundingBox(context.mesh, *context.userDefinedAccessRegion);
+    auto result = mesh::countVerticesInBoundingBox(context.mesh, context.userDefinedAccessRegions);
 
     PRECICE_DEBUG("Filtered {} of {} vertices out on mesh {} due to the local access region. Mesh size in the access region: {}", context.mesh->nVertices() - result, context.mesh->nVertices(), meshName, result);
     return result;
@@ -1277,7 +1277,7 @@ void ParticipantImpl::mapAndReadData(
                 meshName);
   // If an access region is required, we have to check its existence
   bool requiresBB = requiresUserDefinedAccessRegion(meshName);
-  PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->meshContext(meshName).userDefinedAccessRegion),
+  PRECICE_CHECK(!requiresBB || (requiresBB && !_accessor->meshContext(meshName).userDefinedAccessRegions.empty()),
                 "The function \"mapAndReadData\" was called on mesh \"{0}\", "
                 "but no access region was defined although this is necessary for parallel runs. "
                 "Please define an access region using \"setMeshAccessRegion()\" before calling \"mapAndReadData()\".",
@@ -1336,7 +1336,7 @@ void ParticipantImpl::writeAndMapData(
                 meshName);
   // If an access region is required, we have to check its existence
   bool requiresBB = requiresUserDefinedAccessRegion(meshName);
-  PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->meshContext(meshName).userDefinedAccessRegion),
+  PRECICE_CHECK(!requiresBB || (requiresBB && !_accessor->meshContext(meshName).userDefinedAccessRegions.empty()),
                 "The function \"writeAndMapData\" was called on mesh \"{0}\", "
                 "but no access region was defined although this is necessary for parallel runs. "
                 "Please define an access region using \"setMeshAccessRegion()\" before calling \"writeAndMapData()\".",
@@ -1437,7 +1437,7 @@ void ParticipantImpl::setMeshAccessRegion(
   // Get the related mesh
   MeshContext &context = _accessor->meshContext(meshName);
 
-  PRECICE_CHECK(!context.userDefinedAccessRegion, "A mesh access region was already defined for mesh \"{}\". setMeshAccessRegion may only be called once per mesh.", context.mesh->getName());
+  // PRECICE_CHECK(!context.userDefinedAccessRegion, "A mesh access region was already defined for mesh \"{}\". setMeshAccessRegion may only be called once per mesh.", context.mesh->getName());
   mesh::Mesh &mesh = *context.mesh;
   int         dim  = mesh.getDimensions();
   PRECICE_CHECK(boundingBox.size() == static_cast<unsigned long>(dim) * 2,
@@ -1456,7 +1456,7 @@ void ParticipantImpl::setMeshAccessRegion(
     bounds[2 * d + 1] = boundingBox[2 * d + 1];
   }
   // Create a bounding box
-  context.userDefinedAccessRegion = std::make_shared<mesh::BoundingBox>(bounds);
+  context.userDefinedAccessRegions.emplace_back(mesh::BoundingBox{bounds});
   // Expand the mesh associated bounding box
   mesh.expandBoundingBox(*context.userDefinedAccessRegion.get());
 }
@@ -1475,7 +1475,7 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
                 meshName);
   // If an access region is required, we have to check its existence
   bool requiresBB = requiresUserDefinedAccessRegion(meshName);
-  PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->meshContext(meshName).userDefinedAccessRegion),
+  PRECICE_CHECK(!requiresBB || (requiresBB && !_accessor->meshContext(meshName).userDefinedAccessRegions.empty()),
                 "The function \"getMeshVertexIDsAndCoordinates\" was called on mesh \"{0}\", "
                 "but no access region was defined although this is necessary for parallel runs. "
                 "Please define an access region using \"setMeshAccessRegion()\" before calling \"getMeshVertexIDsAndCoordinates()\".",

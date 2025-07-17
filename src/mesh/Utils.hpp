@@ -154,6 +154,6 @@ std::optional<std::size_t> locateInvalidVertexID(const Mesh &mesh, const Contain
 }
 
 /// Given a Mesh and a bounding box, counts all vertices within the bounding box
-std::size_t countVerticesInBoundingBox(mesh::PtrMesh mesh, const mesh::BoundingBox &bb);
+std::size_t countVerticesInBoundingBox(mesh::PtrMesh mesh, const std::vector<mesh::BoundingBox> &bbs);
 
 } // namespace precice::mesh

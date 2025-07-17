@@ -69,9 +69,15 @@ Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const Eigen::VectorXd &inpu
   return integral;
 }
 
-std::size_t countVerticesInBoundingBox(mesh::PtrMesh mesh, const mesh::BoundingBox &bb)
+std::size_t countVerticesInBoundingBox(mesh::PtrMesh mesh, const std::vector<mesh::BoundingBox> &bbs)
 {
-  return std::count_if(mesh->vertices().cbegin(), mesh->vertices().cend(), [&bb](const auto &v) { return bb.contains(v); });
+  return std::count_if(mesh->vertices().cbegin(),
+                       mesh->vertices().cend(),
+                       [&bbs](const mesh::Vertex &v) {
+                         return std::any_of(bbs.cbegin(),
+                                            bbs.cend(),
+                                            [&v](const auto &bb) { return bb.contains(v); });
+                       });
 }
 
 } // namespace precice::mesh
