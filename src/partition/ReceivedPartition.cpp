@@ -495,21 +495,20 @@ void ReceivedPartition::prepareBoundingBox()
   // meshes are empty
   for (mapping::PtrMapping &fromMapping : _fromMappings) {
     auto other_bb = fromMapping->getOutputMesh()->getBoundingBox();
+    other_bb.scaleBy(_safetyFactor);
     _bb.expandBy(other_bb);
-    _bb.scaleBy(_safetyFactor);
     _boundingBoxPrepared = true;
   }
   for (mapping::PtrMapping &toMapping : _toMappings) {
     auto other_bb = toMapping->getInputMesh()->getBoundingBox();
+    other_bb.scaleBy(_safetyFactor);
     _bb.expandBy(other_bb);
-    _bb.scaleBy(_safetyFactor);
     _boundingBoxPrepared = true;
   }
 
   // Expand by user-defined bounding box in case a direct access is desired
   if (_allowDirectAccess) {
-    auto &other_bb = _mesh->getBoundingBox();
-    _bb.expandBy(other_bb);
+    auto other_bb = _mesh->getBoundingBox();
 
     // In case we have an just-in-time mapping associated to this direct access
     // we need to extend the bounding box for accuracy reasons
@@ -519,8 +518,9 @@ void ReceivedPartition::prepareBoundingBox()
       // The (preliminary) repartitioning is based on the _bb
       // we extend the _bb here and later on enable the (just-in-time) mappings
       // to apply any kind of tagging to account for the halo layer added here
-      _bb.scaleBy(_safetyFactor);
+      other_bb.scaleBy(_safetyFactor);
     }
+    _bb.expandBy(other_bb);
     // The safety factor is for mapping based partitionings applied, as usual.
     // For the direct access, however, we don't apply any safety factor scaling.
     // If the user defines a safety factor and the partitioning is entirely based
