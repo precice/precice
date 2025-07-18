@@ -301,6 +301,7 @@ void ReceivedPartition::filterByBoundingBox()
   if (_geometricFilter == ON_PRIMARY_RANK) { // filter on primary rank and communicate reduced mesh then
 
     PRECICE_ASSERT(not m2n().usesTwoLevelInitialization());
+    PRECICE_CHECK(_accessCollection.empty(), "The received mesh \"{}\", cannot be filtered on the primary rank with direct mesh access. Use \"filter-on-secondary-rank\" instead.");
     PRECICE_INFO("Pre-filter mesh {} by bounding box on primary rank", _mesh->getName());
     Event e("partition.preFilterMesh." + _mesh->getName(), profiling::Synchronize);
 
@@ -361,7 +362,10 @@ void ReceivedPartition::filterByBoundingBox()
       Event e("partition.filterMeshBB." + _mesh->getName(), profiling::Synchronize);
 
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
-      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
+
+      mesh::filterMesh(filteredMesh, *_mesh, [&](const auto &v) { return _bb.contains(v) || std::any_of(
+                                                                                                _accessCollection.begin(), _accessCollection.end(),
+                                                                                                [&](const auto &box) { return box.contains(v); }); });
 
       PRECICE_DEBUG("Bounding box filter, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
                     _mesh->nVertices(), filteredMesh.nVertices(),
