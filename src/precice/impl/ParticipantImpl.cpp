@@ -1427,7 +1427,7 @@ void ParticipantImpl::setMeshAccessRegion(
   PRECICE_TRACE(meshName, boundingBox.size());
   PRECICE_REQUIRE_MESH_USE(meshName);
   PRECICE_CHECK(_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName),
-                "This participant attempteded to set an access region (via \"setMeshAccessRegion\") on mesh \"{0}\", "
+                "This participant attempted to set an access region (via \"setMeshAccessRegion\") on mesh \"{0}\", "
                 "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
                 "setMeshAccessRegion(...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
                 meshName);
@@ -1458,7 +1458,7 @@ void ParticipantImpl::setMeshAccessRegion(
   // Create a bounding box
   context.userDefinedAccessRegions.emplace_back(mesh::BoundingBox{bounds});
   // Expand the mesh associated bounding box
-  mesh.expandBoundingBox(*context.userDefinedAccessRegion.get());
+  mesh.appendToAccessRegions(context.userDefinedAccessRegions.back());
 }
 
 void ParticipantImpl::getMeshVertexIDsAndCoordinates(

@@ -103,10 +103,10 @@ void ReceivedPartition::compute()
       prepareBoundingBox();
 
       // To discuss: maybe check this somewhere in the ParticipantImpl, as we have now a similar check for the parallel case
-      PRECICE_CHECK(!_bb.empty(), "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setMeshAccessRegion with valid data?", _mesh->getName());
+      PRECICE_CHECK(std::any_of(_accessCollection.begin(), _accessCollection.end(), [](const auto &bb) { return !bb.empty(); }), "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setMeshAccessRegion with valid data?", _mesh->getName());
 
       // In serial mode, we keep the vertices, but filter them in the API functions
-      const auto   nVerticesInBox    = mesh::countVerticesInBoundingBox(_mesh, _bb);
+      const auto   nVerticesInBox    = mesh::countVerticesInBoundingBox(_mesh, _accessCollection);
       unsigned int nFilteredVertices = nVerticesInBox - _mesh->nVertices();
 
       PRECICE_WARN_IF(nFilteredVertices > 0,
@@ -508,8 +508,7 @@ void ReceivedPartition::prepareBoundingBox()
 
   // Expand by user-defined bounding box in case a direct access is desired
   if (_allowDirectAccess) {
-    auto &other_bb = _mesh->getBoundingBox();
-    _bb.expandBy(other_bb);
+    _accessCollection = _mesh->getAccessRegions();
 
     // In case we have an just-in-time mapping associated to this direct access
     // we need to extend the bounding box for accuracy reasons
@@ -519,7 +518,7 @@ void ReceivedPartition::prepareBoundingBox()
       // The (preliminary) repartitioning is based on the _bb
       // we extend the _bb here and later on enable the (just-in-time) mappings
       // to apply any kind of tagging to account for the halo layer added here
-      _bb.scaleBy(_safetyFactor);
+      std::for_each(_accessCollection.begin(), _accessCollection.end(), [&](auto &bb) { bb.scaleBy(_safetyFactor); });
     }
     // The safety factor is for mapping based partitionings applied, as usual.
     // For the direct access, however, we don't apply any safety factor scaling.
@@ -775,9 +774,7 @@ void ReceivedPartition::createOwnerInformation()
         PRECICE_ASSERT(ownerVec.size() == static_cast<std::size_t>(numberOfVertices));
         setOwnerInformation(ownerVec);
       }
-    }
-
-    else if (utils::IntraComm::isPrimary()) {
+    } else if (utils::IntraComm::isPrimary()) {
       // To temporary store which vertices already have an owner
       std::vector<VertexID> globalOwnerVec(_mesh->getGlobalNumberOfVertices(), 0);
       // The same per rank
@@ -925,9 +922,13 @@ void ReceivedPartition::tagMeshFirstRound()
     // concluding: it might be that the boundingBox is not (purely) the one asked for by the user
     // but using mesh-tagAll() would tag the safety margin. Of course, this only applied for combinations of direct access plus mapping, for pure
     // direct accesses, there is no safety factor
-    auto userDefinedBB = _mesh->getBoundingBox();
+
     for (auto &vertex : _mesh->vertices()) {
-      if (userDefinedBB.contains(vertex)) {
+      if (
+          std::any_of(_accessCollection.begin(), _accessCollection.end(),
+                      [&](const auto &box) {
+                        return box.contains(vertex);
+                      })) {
         vertex.tag();
       }
     }

@@ -73,7 +73,7 @@ std::size_t countVerticesInBoundingBox(mesh::PtrMesh mesh, const std::vector<mes
 {
   return std::count_if(mesh->vertices().cbegin(),
                        mesh->vertices().cend(),
-                       [&bbs](const mesh::Vertex &v) {
+                       [&bbs](const auto &v) {
                          return std::any_of(bbs.cbegin(),
                                             bbs.cend(),
                                             [&v](const auto &bb) { return bb.contains(v); });
