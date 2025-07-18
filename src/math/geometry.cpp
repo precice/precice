@@ -147,28 +147,31 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
     the convexity of the quad. These new coordinates are stored in 'coords'.
   */
   PRECICE_ASSERT(std::all_of(coords.cbegin(), coords.cend(),
-                             [](const auto &v) { return v.size() == 3; }),
-                 "This only works in 3D.");
+                             [](const auto &v) { return v.size() == 2 || v.size() == 3; }),
+                 "This only works in 2D or 3D.");
 
-  Eigen::Vector3d coordOrigin; // Origin point for the transformation of points onto the new plane
-  coordOrigin = coords[0];
+  // Check that quad is planar and project to a new plane
+  if (coords[0].size() == 3) {
 
-  // Normal of the plane of first three points in the list of vertices
-  Eigen::Vector3d e_1          = coords[1] - coordOrigin;
-  Eigen::Vector3d e_2          = coords[2] - coordOrigin;
-  Eigen::Vector3d normalVector = e_1.cross(e_2);
+    Eigen::Vector3d coordOrigin; // Origin point for the transformation of points onto the new plane
+    coordOrigin = coords[0];
 
-  PRECICE_CHECK(math::equals(normalVector.dot(coords[3] - coordOrigin), 0.0),
-                "Non-planar quads are not supported. The vertex coordinates are: {}.", coords);
+    // Normal of the plane of first three points in the list of vertices
+    Eigen::Vector3d e_1          = coords[1] - coordOrigin;
+    Eigen::Vector3d e_2          = coords[2] - coordOrigin;
+    Eigen::Vector3d normalVector = e_1.cross(e_2);
 
-  // Transform Coordinates - coord[0] is the origin
-  for (int i = 0; i < 4; i++) {
-    Eigen::Vector3d coordinateDifference = coords[i] - coordOrigin;
-    coords[i][0]                         = e_1.dot(coordinateDifference);
-    coords[i][1]                         = e_2.dot(coordinateDifference);
-    coords[i][2]                         = normalVector.dot(coordinateDifference);
+    PRECICE_CHECK(math::equals(normalVector.dot(coords[3] - coordOrigin), 0.0),
+                  "Non-planar quads are not supported. The vertex coordinates are: {}.", coords);
+
+    // Transform Coordinates - coord[0] is the origin
+    for (int i = 0; i < 4; i++) {
+      Eigen::Vector3d coordinateDifference = coords[i] - coordOrigin;
+      coords[i][0]                         = e_1.dot(coordinateDifference);
+      coords[i][1]                         = e_2.dot(coordinateDifference);
+      coords[i][2]                         = normalVector.dot(coordinateDifference);
+    }
   }
-
   /*
   For the convex hull algorithm, the most left hand point regarding the x coordinate is chosen as the starting point.
   The algorithm moves in an anti-clockwise position, finding the most right hand coordinate from the
@@ -217,5 +220,4 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
 
   return result;
 }
-
 } // namespace precice::math::geometry
