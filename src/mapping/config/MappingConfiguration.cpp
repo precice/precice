@@ -329,7 +329,7 @@ MappingConfiguration::MappingConfiguration(
   auto attrShapeParam = XMLAttribute<double>(ATTR_SHAPE_PARAM)
                             .setDocumentation("Specific shape parameter for RBF basis function.");
 
-  addAttributes(shapeParameterRBF, {attrShapeParam, attrAutotuneShape}); // TODO: attrAutotuneShape
+  addAttributes(shapeParameterRBF, {attrShapeParam}); // TODO: add attrAutotuneShape?
   addSubtagsToParents(shapeParameterRBF, rbfIterativeTags);
   addSubtagsToParents(shapeParameterRBF, rbfDirectTags);
   addSubtagsToParents(shapeParameterRBF, pumDirectTags);

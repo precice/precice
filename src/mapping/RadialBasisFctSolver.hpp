@@ -105,7 +105,7 @@ private:
   bool                computeCrossValidation = false;
   std::array<bool, 3> _localActiveAxis;
 
-  mutable RBFParameterTunerSimple<RADIAL_BASIS_FUNCTION_T> _tuner;
+  mutable RBFParameterTunerBO<RADIAL_BASIS_FUNCTION_T> _tuner;
 };
 
 // ------- Non-Member Functions ---------
@@ -406,7 +406,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   if (_autotuneShape) {
     if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
       optimizedRadius = _tuner.optimize(inputData); //TODO: Optimization in every iteration is not ideal.
-      _decMatrixC = _tuner.buildKernelLLT(optimizedRadius);
+      _decMatrixC = _tuner.buildKernelDecomposition(optimizedRadius);
     } else {
       PRECICE_ASSERT(false, "Not supported.");
     }

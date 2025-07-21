@@ -45,6 +45,8 @@ protected:
     return std::is_same_v<RBF_T, Gaussian>; // TODO: necessary? better criterion?
   }
 
+  using DecompositionType = std::conditional_t<RBF_T::isStrictlyPositiveDefinite(), Eigen::LLT<Eigen::MatrixXd>, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>;
+
 public:
   virtual ~RBFParameterTuner() = default;
 
@@ -52,8 +54,8 @@ public:
 
   virtual double optimize(const Eigen::VectorXd &inputData);
 
-  const Eigen::MatrixXd      &getDistanceMatrix() const;
-  Eigen::LLT<Eigen::MatrixXd> buildKernelLLT(double sampleRadius) const;
+  const Eigen::MatrixXd &getDistanceMatrix() const;
+  DecompositionType      buildKernelDecomposition(double sampleRadius) const;
 
   using UnaryExprType = Eigen::CwiseUnaryOp<std::function<double(double)>, const Eigen::Ref<Eigen::MatrixXd>>;
   auto applyKernelToMatrix(const Eigen::Ref<const Eigen::MatrixXd> &matrixExpr, double sampleRadius) const;
@@ -85,9 +87,9 @@ const Eigen::MatrixXd &RBFParameterTuner<RBF_T>::getDistanceMatrix() const
 }
 
 template <typename RBF_T>
-Eigen::LLT<Eigen::MatrixXd> RBFParameterTuner<RBF_T>::buildKernelLLT(double sampleRadius) const
+typename RBFParameterTuner<RBF_T>::DecompositionType RBFParameterTuner<RBF_T>::buildKernelDecomposition(double sampleRadius) const
 {
-  if constexpr (rbfSupportsRadius() && RBF_T::isStrictlyPositiveDefinite()) { // TODO: support non-SPD kernels
+  if constexpr (rbfSupportsRadius()) { // TODO: support non-SPD kernels
     double parameter = sampleRadius;
     if constexpr (rbfUsesShapeParameter()) {
       parameter = RBF_T::transformRadiusToShape(sampleRadius);
@@ -101,9 +103,14 @@ Eigen::LLT<Eigen::MatrixXd> RBFParameterTuner<RBF_T>::buildKernelLLT(double samp
     _kernelMatrix.block(0, 0, _inSize, _inSize) = _distanceMatrix.block(0, 0, _inSize, _inSize).unaryExpr([&kernel](double x) {
       return kernel.evaluate(x);
     });
-    return _kernelMatrix.llt(); // TODO: use inplace decomposition?
+    if constexpr (RBF_T::isStrictlyPositiveDefinite()) { // TODO: use inplace decomposition?
+      return _kernelMatrix.llt();
+    } else {
+      return _kernelMatrix.colPivHouseholderQr();
+    }
+
   }
-  return Eigen::LLT<Eigen::MatrixXd>();
+  return DecompositionType();
 }
 
 template <typename RBF_T>

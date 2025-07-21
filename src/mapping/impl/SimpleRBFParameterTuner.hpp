@@ -7,6 +7,8 @@ namespace precice::mapping {
 template <typename RBF_T>
 class RBFParameterTunerSimple : public RBFParameterTuner<RBF_T> {
 
+  using DecompositionType = typename RBFParameterTuner<RBF_T>::DecompositionType;
+
   double              _lowerBound;
   std::vector<Sample> _samples;
 
@@ -71,16 +73,16 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeIterativeIncrease(const Eigen::Ve
     // exponential increase of support-radius sampling position until failure
     while (true) {
 
-      Eigen::LLT<Eigen::MatrixXd> llt = this->buildKernelLLT(sampleRadius);
-      if (llt.info() != Eigen::ComputationInfo::Success) {
+      DecompositionType dec = this->buildKernelDecomposition(sampleRadius);
+      if (dec.info() != Eigen::ComputationInfo::Success) {
         PRECICE_INFO("RBF tuner sample: rad={:.4e}, matrix decomposition failed", sampleRadius);
         PRECICE_CHECK(!_samples.empty(), "Parameter tuning failed in first iteration using support-radius={}", sampleRadius);
         sampleRadius = _samples.at(_samples.size() - 1).pos;
         break;
       }
 
-      const double rcond = utils::approximateReciprocalConditionNumber(llt);
-      const double error = utils::computeRippaLOOCVerror(llt, inputData);
+      const double rcond = utils::approximateReciprocalConditionNumber(dec);
+      const double error = utils::computeRippaLOOCVerror(dec, inputData);
 
       PRECICE_INFO("RBF tuner sample: rad={:.4e}, err={:.4e}, 1/cond={:.4e}", sampleRadius, error, rcond);
 
@@ -123,14 +125,14 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &
   while (true) {
     sampleRadius *= increaseSize;
 
-    Eigen::LLT<Eigen::MatrixXd> llt = this->buildKernelLLT(sampleRadius);
-    if (llt.info() != Eigen::ComputationInfo::Success) {
+    DecompositionType dec = this->buildKernelDecomposition(sampleRadius);
+    if (dec.info() != Eigen::ComputationInfo::Success) {
       PRECICE_INFO("RBF tuner sample: rad={:.4e}, matrix decomposition failed", sampleRadius);
       break;
     }
 
-    double rcond = utils::approximateReciprocalConditionNumber(llt);
-    double error = utils::computeRippaLOOCVerror(llt, inputData);
+    double rcond = utils::approximateReciprocalConditionNumber(dec);
+    double error = utils::computeRippaLOOCVerror(dec, inputData);
 
     PRECICE_INFO("RBF tuner sample: rad={:.4e}, err={:.4e}, 1/cond={:.4e}", sampleRadius, error, rcond);
 
@@ -147,7 +149,7 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &
 
   while ((std::isnan(upperBound.error) || upperBound.pos > posTolerance * lowerBound.pos) && i < maxIterations) {
     centerSample.pos   = (lowerBound.pos + upperBound.pos) / 2;
-    centerSample.error = utils::computeRippaLOOCVerror(this->buildKernelLLT(centerSample.pos), inputData);
+    centerSample.error = utils::computeRippaLOOCVerror(this->buildKernelDecomposition(centerSample.pos), inputData);
 
     PRECICE_INFO("Current interval: [{:.4e}, {:.4e}], Sample: rad={:.4e}, err={:.4e}", lowerBound.pos, upperBound.pos, centerSample.pos, centerSample.error);
 

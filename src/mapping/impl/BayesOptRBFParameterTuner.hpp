@@ -69,6 +69,8 @@ struct InitSampling {
 template <typename RBF_T>
 class RBFParameterTunerBO : public RBFParameterTuner<RBF_T> {
 
+  using DecompositionType = typename RBFParameterTuner<RBF_T>::DecompositionType;
+
 public:
   using stop_t  = boost::fusion::vector<limbo::stop::MaxIterations<OptimizationParameters>, limbo::stop::MaxPredictedValue<OptimizationParameters>>;
   using init_t  = InitSampling;
@@ -283,12 +285,12 @@ Eigen::VectorXd RBFParameterTunerBO<RBF_T>::operator()(const Eigen::VectorXd &x)
 
   double sampleRadius = isTransformationConfigured() ? backtransformPos(x(0)) : x(0);
 
-  const Eigen::LLT<Eigen::MatrixXd> llt = this->buildKernelLLT(sampleRadius);
+  const DecompositionType dec = this->buildKernelDecomposition(sampleRadius);
   if (!isTransformationConfigured()) {
-    _lastRCond = utils::approximateReciprocalConditionNumber(llt);
+    _lastRCond = utils::approximateReciprocalConditionNumber(dec);
   }
 
-  double error = utils::computeRippaLOOCVerror(llt, _inputData);
+  double error = utils::computeRippaLOOCVerror(dec, _inputData);
   error        = isTransformationConfigured() ? transformError(error) : error;
 
   if (isTransformationConfigured()) {

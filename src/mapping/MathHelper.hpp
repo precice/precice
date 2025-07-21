@@ -156,8 +156,13 @@ inline Eigen::VectorXd computeInverseDiagonal(const Eigen::ColPivHouseholderQR<E
  *
  * Implementation of LOOCV according to Rippa(1999), DOI: 10.1023/a:1018975909870
  */
-inline double computeRippaLOOCVerror(const Eigen::LLT<Eigen::MatrixXd> &choleskyDec, const Eigen::VectorXd &inputData)
+template<typename DecompositionType>
+double computeRippaLOOCVerror(const DecompositionType &choleskyDec, const Eigen::VectorXd &inputData)
 {
+  static_assert(std::is_same_v<DecompositionType, Eigen::LLT<Eigen::MatrixXd>> || std::is_same_v<DecompositionType, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>,
+    "computeRippaLOOCVerror() only allows DecompositionType to be Eigen::LLT<Eigen::MatrixXd>> or Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>"
+  );
+
   if (choleskyDec.info() != Eigen::ComputationInfo::Success) {
     return std::numeric_limits<double>::quiet_NaN();
   }
@@ -182,7 +187,6 @@ inline double approximateReciprocalConditionNumber(const Eigen::LLT<Eigen::Matri
   if (choleskyDec.info() != Eigen::ComputationInfo::Success) {
     return 0;
   }
-
   const Eigen::Index n = choleskyDec.matrixL().rows();
 
   double max_l = std::numeric_limits<double>::min();
@@ -194,8 +198,8 @@ inline double approximateReciprocalConditionNumber(const Eigen::LLT<Eigen::Matri
     max_l = std::max(lii, max_l);
   }
   double rcond = min_l * min_l / (max_l * max_l);
-
   if (rcond < 0 || std::isnan(rcond)) rcond = 0;
+
   return rcond;
 }
 
@@ -209,6 +213,9 @@ inline double approximateReciprocalConditionNumber(const Eigen::LLT<Eigen::Matri
  */
 inline double approximateReciprocalConditionNumber(const Eigen::ColPivHouseholderQR<Eigen::MatrixXd> &qrDec)
 {
+  if (qrDec.info() != Eigen::ComputationInfo::Success) {
+    return 0;
+  }
   const Eigen::Index n = qrDec.matrixR().rows();
 
   double max_r = std::numeric_limits<double>::min();
