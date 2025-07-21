@@ -16,4 +16,6 @@ void runTestAccessReceivedMesh(const TestContext        &context,
 
 void runTestMultipleBoundingBoxes2D(const TestContext &context);
 
+void runTestMultipleBoundingBoxes3D(const TestContext &context);
+
 #endif

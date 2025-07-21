@@ -87,6 +87,152 @@ void runTestMultipleBoundingBoxes2D(const TestContext &context)
   }
 }
 
+void runTestMultipleBoundingBoxes3D(const TestContext &context)
+{
+  if (context.isNamed("SolverOne")) {
+    // Set up Participant
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    constexpr int        dim           = 3;
+    auto                 otherMeshName = "MeshTwo";
+    auto                 writeDataName = "Velocities";
+    auto                 readDataName  = "Forces";
+    BOOST_TEST(interface.getMeshDimensions(otherMeshName) == 3);
+
+    std::array<double, dim * 2> boundingBox = context.isPrimary() ? std::array<double, dim * 2>{0., 2.5, 0., 2.5, 0., 2.5} // 27
+                                                                  : std::array<double, dim * 2>{10., 12., 0., 1., 0., 1.}; // 0
+    interface.setMeshAccessRegion(otherMeshName, boundingBox);
+    boundingBox = context.isPrimary() ? std::array<double, dim * 2>{1.5, 7.5, 0, 2.5, 0., 2.5} : std::array<double, dim * 2>{7.5, 10, 2.5, 5.0, 2.5, 5.0};
+    interface.setMeshAccessRegion(otherMeshName, boundingBox);
+
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
+    // Get the size of the filtered mesh within the bounding box
+    // (provided by the coupling participant)
+    const int otherMeshSize = interface.getMeshVertexSize(otherMeshName);
+    if (context.isPrimary()) {
+      BOOST_TEST(otherMeshSize == 72);
+    } else {
+      BOOST_TEST(otherMeshSize == 8);
+    }
+    // Allocate a vector containing the vertices
+    std::vector<double> solverTwoMesh(otherMeshSize * dim);
+    std::vector<int>    otherIDs(otherMeshSize, -1);
+    // Here, we don't receive vertex -0.5,-0.5, it's filtered out
+    interface.getMeshVertexIDsAndCoordinates(otherMeshName, otherIDs, solverTwoMesh);
+    // Expected data = positions of the other participant's mesh
+    std::vector<double> expectedData;
+    if (context.isPrimary()) {
+      expectedData = std::vector<double>{
+          /* z = 0 (y = 0‥5, x = 0‥5) */
+          0, 0, 0, 1, 0, 0,
+          2, 0, 0, 3, 0, 0,
+          4, 0, 0, 0, 1, 0,
+          1, 1, 0, 2, 1, 0,
+          3, 1, 0, 4, 1, 0,
+          0, 2, 0, 1, 2, 0,
+          /* z = 1 */
+          2, 2, 0, 3, 2, 0,
+          4, 2, 0, 0, 0, 1,
+          1, 0, 1, 2, 0, 1,
+          3, 0, 1, 4, 0, 1,
+          0, 1, 1, 1, 1, 1,
+          2, 1, 1, 3, 1, 1,
+          /* z = 2 */
+          4, 1, 1, 0, 2, 1,
+          1, 2, 1, 2, 2, 1,
+          3, 2, 1, 4, 2, 1,
+          0, 0, 2, 1, 0, 2,
+          2, 0, 2, 3, 0, 2,
+          4, 0, 2, 0, 1, 2,
+          /* z = 3 */
+          1, 1, 2, 2, 1, 2,
+          3, 1, 2, 4, 1, 2,
+          0, 2, 2, 1, 2, 2,
+          2, 2, 2, 3, 2, 2,
+          4, 2, 2, 5, 0, 0,
+          6, 0, 0, 7, 0, 0,
+          /* z = 4 */
+          5, 1, 0, 6, 1, 0,
+          7, 1, 0, 5, 2, 0,
+          6, 2, 0, 7, 2, 0,
+          5, 0, 1, 6, 0, 1,
+          7, 0, 1, 5, 1, 1,
+          6, 1, 1, 7, 1, 1,
+          /* z = 5 */
+          5, 2, 1, 6, 2, 1,
+          7, 2, 1, 5, 0, 2,
+          6, 0, 2, 7, 0, 2,
+          5, 1, 2, 6, 1, 2,
+          7, 1, 2, 5, 2, 2,
+          6, 2, 2, 7, 2, 2};
+    } else {
+      expectedData = std::vector<double>{
+          8, 3, 3, 9, 3, 3, 8, 4, 3, 9, 4, 3, 8, 3, 4, 9, 3, 4, 8, 4, 4, 9, 4, 4};
+    }
+    BOOST_TEST(solverTwoMesh == expectedData, boost::test_tools::per_element());
+
+    // Some dummy writeData
+    std::vector<double> writeData;
+    for (int i = 0; i < otherMeshSize; ++i)
+      writeData.emplace_back(i + 5 + (100 * context.isPrimary()));
+
+    while (interface.isCouplingOngoing()) {
+      // Write data
+      interface.writeData(otherMeshName, writeDataName, otherIDs, writeData);
+      interface.advance(dt);
+      dt = interface.getMaxTimeStepSize();
+      // reading data is not requires
+    }
+  } else {
+    // Query IDs
+    auto meshName      = "MeshTwo";
+    auto readDataName  = "Velocities";
+    auto writeDataName = "Forces";
+
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    const int            dim = interface.getMeshDimensions(meshName);
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    std::vector<double> positions;
+
+    if (context.isPrimary()) {
+      const int nodesPerEdge = 5;
+      for (int z = 0; z < nodesPerEdge; ++z)
+        for (int y = 0; y < nodesPerEdge; ++y)
+          for (int x = 0; x < nodesPerEdge; ++x) {
+            positions.push_back({static_cast<double>(x)});
+            positions.push_back({static_cast<double>(y)});
+            positions.push_back({static_cast<double>(z)});
+          }
+    } else {
+      const int nodesPerEdge = 5;
+      for (int z = 0; z < nodesPerEdge; ++z)
+        for (int y = 0; y < nodesPerEdge; ++y)
+          for (int x = 5; x < nodesPerEdge + 5; ++x) { // shifted by 5
+            positions.push_back({static_cast<double>(x)});
+            positions.push_back({static_cast<double>(y)});
+            positions.push_back({static_cast<double>(z)});
+          }
+    }
+    std::vector<int> ids(positions.size() / dim, -1);
+    // Define the mesh
+    interface.setMeshVertices(meshName, positions, ids);
+    // Allocate data to read
+    std::vector<double> readData(ids.size(), -1);
+
+    // Initialize
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
+
+    while (interface.isCouplingOngoing()) {
+
+      interface.advance(dt);
+      dt = interface.getMaxTimeStepSize();
+
+      interface.readData(meshName, readDataName, ids, dt, readData);
+    }
+  }
+}
+
 // StartIndex is here the first index to be used for writing on the secondary rank
 void runTestAccessReceivedMesh(const TestContext        &context,
                                const std::vector<double> boundingBoxSecondaryRank,

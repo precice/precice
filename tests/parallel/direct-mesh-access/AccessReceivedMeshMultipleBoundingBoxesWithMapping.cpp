@@ -6,6 +6,17 @@
 #include <vector>
 #include "helpers.hpp"
 
+// Test case for a direct mesh access on one participant to a mesh defined
+// by another participant. In addition to the direct mesh access
+// and data writing in one direction, an additional mapping (NN) is defined
+// in the other direction.
+// We also test that getMeshVertexSize and getMeshVertexIDsAndCoordinates
+// correctly filter out one vertex (-0.5, -0.5) which is not in the access
+// region, but is used for mapping.
+// Since the user has no opportunity to get the "filtered" vertex (unless
+// the bounding box is enlarged), the read data value on the SolverTwo
+// participant is zero ( last entry in l115 {15, 16, 0}).
+// The access region is set via two bounding boxes
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(DirectMeshAccess)
@@ -30,7 +41,10 @@ BOOST_AUTO_TEST_CASE(AccessReceivedMeshMultipleBoundingBoxesWithMapping)
     std::vector<int> ownIDs(positions.size() / dim, -1);
     interface.setMeshVertices(ownMeshName, positions, ownIDs);
 
-    std::array<double, dim * 2> boundingBox = context.isPrimary() ? std::array<double, dim * 2>{0.0, 1.0, 0.0, 3.5} : std::array<double, dim * 2>{0.0, 1.0, 3.5, 5.0};
+    std::array<double, dim * 2> boundingBox = context.isPrimary() ? std::array<double, dim * 2>{0.0, 1.0, 0.0, 1.5} : std::array<double, dim * 2>{0.0, 1.0, 3.5, 4.0};
+    // Define region of interest, where we could obtain direct write access
+    interface.setMeshAccessRegion(otherMeshName, boundingBox);
+    boundingBox = context.isPrimary() ? std::array<double, dim * 2>{0.0, 1.0, 1.4, 3.5} : std::array<double, dim * 2>{0.0, 1.0, 4.0, 5.0};
     // Define region of interest, where we could obtain direct write access
     interface.setMeshAccessRegion(otherMeshName, boundingBox);
     // interface.setMeshAccessRegion(otherMeshName, boundingBox);

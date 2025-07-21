@@ -34,7 +34,9 @@ target_sources(testprecice
     tests/parallel/direct-mesh-access/AccessReceivedMeshEmptyPartition.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshEmptyPartitionTwoLevelInit.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshMultipleBBTwoLevel.cpp
+    tests/parallel/direct-mesh-access/AccessReceivedMeshMultipleBBTwoLevel3D.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshMultipleBoundingBoxes.cpp
+    tests/parallel/direct-mesh-access/AccessReceivedMeshMultipleBoundingBoxes3D.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshMultipleBoundingBoxesWithMapping.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshNoOverlap.cpp
     tests/parallel/direct-mesh-access/AccessReceivedMeshNoOverlapTwoLevelInit.cpp
