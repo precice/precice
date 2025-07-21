@@ -103,7 +103,7 @@ void ReceivedPartition::compute()
       prepareBoundingBox();
 
       // To discuss: maybe check this somewhere in the ParticipantImpl, as we have now a similar check for the parallel case
-      PRECICE_CHECK(std::any_of(_accessCollection.begin(), _accessCollection.end(), [](const auto &bb) { return !bb.empty(); }), "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setMeshAccessRegion with valid data?", _mesh->getName());
+      PRECICE_CHECK(std::any_of(_accessCollection.begin(), _accessCollection.end(), [](const auto &bb) { return !bb.empty(); }) || !_bb.empty(), "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setMeshAccessRegion with valid data?", _mesh->getName());
 
       // In serial mode, we keep the vertices, but filter them in the API functions
       const auto   nVerticesInBox    = mesh::countVerticesInBoundingBox(_mesh, _accessCollection);
