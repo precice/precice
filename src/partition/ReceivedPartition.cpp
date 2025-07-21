@@ -435,8 +435,12 @@ void ReceivedPartition::compareBoundingBoxes()
 
     // connected ranks for primary rank
     std::vector<Rank> connectedRanks;
+
+    mesh::BoundingBox bbUnity(_bb.getDimension());
+    bbUnity.expandBy(_bb);
+    std::for_each(_accessCollection.cbegin(), _accessCollection.cend(), [&bbUnity](const auto &in) { bbUnity.expandBy(in); });
     for (auto &remoteBB : remoteBBMap) {
-      if (_bb.overlapping(remoteBB.second)) {
+      if (bbUnity.overlapping(remoteBB.second)) {
         connectedRanks.push_back(remoteBB.first); // connected remote ranks for this rank
       }
     }
@@ -468,8 +472,12 @@ void ReceivedPartition::compareBoundingBoxes()
     PRECICE_ASSERT(utils::IntraComm::isSecondary());
 
     std::vector<Rank> connectedRanks;
+    mesh::BoundingBox bbUnity(_bb.getDimension());
+    bbUnity.expandBy(_bb);
+    std::for_each(_accessCollection.cbegin(), _accessCollection.cend(), [&bbUnity](const auto &in) { bbUnity.expandBy(in); });
+
     for (const auto &remoteBB : remoteBBMap) {
-      if (_bb.overlapping(remoteBB.second)) {
+      if (bbUnity.overlapping(remoteBB.second)) {
         connectedRanks.push_back(remoteBB.first);
       }
     }
@@ -595,10 +603,14 @@ void ReceivedPartition::createOwnerInformation()
     // receive list of possible shared vertices from neighboring ranks
     mesh::Mesh::CommunicationMap sharedVerticesReceiveMap;
 
+    // follow the naive approach for multiple boxes: merge bounding boxes together and do the comm initialization via a unity of all
+    mesh::BoundingBox bbUnity(_bb.getDimension());
+    bbUnity.expandBy(_bb);
+    std::for_each(_accessCollection.cbegin(), _accessCollection.cend(), [&bbUnity](const auto &in) { bbUnity.expandBy(in); });
     if (utils::IntraComm::isPrimary()) {
 
       // Insert bounding box of primary ranks
-      localBBMap.at(0) = _bb;
+      localBBMap.at(0) = bbUnity;
 
       // primary rank receives local bb from each secondary rank
       for (int secondaryRank = 1; secondaryRank < utils::IntraComm::getSize(); secondaryRank++) {
@@ -609,7 +621,7 @@ void ReceivedPartition::createOwnerInformation()
       com::broadcastSendBoundingBoxMap(*utils::IntraComm::getCommunication(), localBBMap);
     } else if (utils::IntraComm::isSecondary()) {
       // secondary ranks send local bb to primary rank
-      com::sendBoundingBox(*utils::IntraComm::getCommunication(), 0, _bb);
+      com::sendBoundingBox(*utils::IntraComm::getCommunication(), 0, bbUnity);
       // secondary ranks receive localBBMap from primary rank
       com::broadcastReceiveBoundingBoxMap(*utils::IntraComm::getCommunication(), localBBMap);
     }
@@ -619,7 +631,7 @@ void ReceivedPartition::createOwnerInformation()
     localBBMap.erase(utils::IntraComm::getRank());
     // find and store local connected ranks
     for (const auto &localBB : localBBMap) {
-      if (_bb.overlapping(localBB.second)) {
+      if (bbUnity.overlapping(localBB.second)) { // TODO: Could we use the collection here instead?
         localConnectedBBMap.emplace(localBB.first, localBB.second);
       }
     }

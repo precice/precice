@@ -6,6 +6,87 @@
 #include "precice/precice.hpp"
 #include "testing/Testing.hpp"
 
+void runTestMultipleBoundingBoxes2D(const TestContext &context)
+{
+  if (context.isNamed("SolverOne")) {
+    // Set up Participant
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    constexpr int        dim           = 2;
+    auto                 otherMeshName = "MeshTwo";
+    auto                 writeDataName = "Velocities";
+    BOOST_TEST(interface.getMeshDimensions(otherMeshName) == 2);
+
+    std::array<double, dim * 2> boundingBox = context.isPrimary() ? std::array<double, dim * 2>{0.0, 1.0, 0.0, 2.1} : std::array<double, dim * 2>{0.0, 1.0, 3.5, 4.5};
+    // Define region of interest, where we could obtain direct write access
+    interface.setMeshAccessRegion(otherMeshName, boundingBox);
+
+    // Second bounding box
+    boundingBox = context.isPrimary() ? std::array<double, dim * 2>{0.0, 1.0, 1.9, 3.5} : std::array<double, dim * 2>{0.0, 1.0, 4.5, 5.5};
+    // Define region of interest, where we could obtain direct write access
+    interface.setMeshAccessRegion(otherMeshName, boundingBox);
+
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
+    // Get the size of the filtered mesh within the bounding box
+    // (provided by the coupling participant)
+    const int otherMeshSize = interface.getMeshVertexSize(otherMeshName);
+    BOOST_TEST(otherMeshSize == 3);
+
+    // Allocate a vector containing the vertices
+    std::vector<double> solverTwoMesh(otherMeshSize * dim);
+    std::vector<int>    otherIDs(otherMeshSize, -1);
+    // Here, we don't receive vertex -0.5,-0.5, it's filtered out
+    interface.getMeshVertexIDsAndCoordinates(otherMeshName, otherIDs, solverTwoMesh);
+    // Expected data = positions of the other participant's mesh
+    const std::vector<double> expectedData = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, 0.0, 3.5}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
+    BOOST_TEST(solverTwoMesh == expectedData, boost::test_tools::per_element());
+
+    // Some dummy writeData
+    std::vector<double> writeData;
+    for (int i = 0; i < otherMeshSize; ++i)
+      writeData.emplace_back(i + 5 + (10 * context.isPrimary()));
+
+    while (interface.isCouplingOngoing()) {
+      // Write data
+      interface.writeData(otherMeshName, writeDataName, otherIDs, writeData);
+      interface.advance(dt);
+      dt = interface.getMaxTimeStepSize();
+      // reading data is not requires
+    }
+  } else {
+    // Query IDs
+    auto meshName     = "MeshTwo";
+    auto readDataName = "Velocities";
+
+    precice::Participant interface(context.name, context.config(), context.rank, context.size);
+    const int            dim = interface.getMeshDimensions(meshName);
+    BOOST_TEST(context.isNamed("SolverTwo"));
+    std::vector<double> positions = context.isPrimary() ? std::vector<double>({0.0, 1.0, 0.0, 2.0, -0.5, -0.5}) : std::vector<double>({0.0, 3.5, 0.0, 4.0, 0.0, 5.0});
+    std::vector<int>    ids(positions.size() / dim, -1);
+
+    // Define the mesh
+    interface.setMeshVertices(meshName, positions, ids);
+    // Allocate data to read
+    std::vector<double> readData(ids.size(), -1);
+
+    // Initialize
+    interface.initialize();
+    double dt = interface.getMaxTimeStepSize();
+
+    while (interface.isCouplingOngoing()) {
+
+      interface.advance(dt);
+      dt = interface.getMaxTimeStepSize();
+
+      interface.readData(meshName, readDataName, ids, dt, readData);
+      // Expected data according to the writeData
+      // Values are summed up
+      std::vector<double> expectedData = context.isPrimary() ? std::vector<double>({15, 16, 0}) : std::vector<double>({22, 6, 7});
+      BOOST_TEST(expectedData == readData, boost::test_tools::per_element());
+    }
+  }
+}
+
 // StartIndex is here the first index to be used for writing on the secondary rank
 void runTestAccessReceivedMesh(const TestContext        &context,
                                const std::vector<double> boundingBoxSecondaryRank,

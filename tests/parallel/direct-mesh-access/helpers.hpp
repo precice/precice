@@ -14,4 +14,6 @@ void runTestAccessReceivedMesh(const TestContext        &context,
                                const std::vector<double> expectedReadDataSecondaryRank,
                                const size_t              startIndex);
 
+void runTestMultipleBoundingBoxes2D(const TestContext &context);
+
 #endif
