@@ -1,8 +1,12 @@
 #pragma once
 
 #include "mapping/impl/RBFParameterTuner.hpp"
+#ifdef USE_LIBCMAES
+  #include <libcmaes/cmaes.h>
+#elif defined(USE_NLOPT)
+  #include <nlopt.hpp>
+#endif
 
-#include <libcmaes/cmaes.h>
 #include <limbo/limbo.hpp>
 #include <limbo/tools/macros.hpp>
 
@@ -270,7 +274,7 @@ double RBFParameterTunerBO<RBF_T>::optimize(const Eigen::VectorXd &inputData)
 template <typename RBF_T>
 double RBFParameterTunerBO<RBF_T>::getLastRCond() const
 {
-  PRECICE_ASSERT(!std::isnan(_lastRCond), "No error has ben evaluated.");
+  PRECICE_ASSERT(!std::isnan(_lastRCond), "No error has been evaluated.");
   return _lastRCond;
 }
 
@@ -279,7 +283,7 @@ Eigen::VectorXd RBFParameterTunerBO<RBF_T>::operator()(const Eigen::VectorXd &x)
 {
   PRECICE_ASSERT(_inputData.size() > 0, "Input data not initialized.");
 
-  if (_maxError < 1e-15) {
+  if (_maxError < 1e-15 && isTransformationConfigured()) {
     return limbo::tools::make_vector(0.0);
   }
 
