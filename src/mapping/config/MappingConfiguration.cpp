@@ -232,9 +232,6 @@ MappingConfiguration::MappingConfiguration(
   // auto attrMaxIterations = makeXMLAttribute(ATTR_MAX_ITERATIONS, 1e6)
   //                              .setDocumentation("Maximum number of iterations of the solver");
 
-  auto attrAutotuneShape = makeXMLAttribute(ATTR_AUTOTUNE_SHAPE, false)
-                            .setDocumentation("Ignore radius and shape parameters and approximate an optimum during each coupling iteration.");
-
   auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER, 50)
                                 .setDocumentation("Average number of vertices per cluster (partition) applied in the rbf partition of unity method.");
   auto relativeOverlap = makeXMLAttribute(ATTR_RELATIVE_OVERLAP, 0.15)
@@ -312,10 +309,10 @@ MappingConfiguration::MappingConfiguration(
       XMLTag{*this, RBF_CPOLYNOMIAL_C8, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C8 function"),
       XMLTag{*this, RBF_CTPS_C2, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Compact thin-plate-spline C2")};
 
-  auto attrSupportRadius = XMLAttribute<double>(ATTR_SUPPORT_RADIUS)
+  auto attrSupportRadius = XMLAttribute<std::string>(ATTR_SUPPORT_RADIUS)
                                .setDocumentation("Support radius of each RBF basis function (global choice).");
 
-  addAttributes(supportRadiusRBF, {attrSupportRadius, attrAutotuneShape}); // TODO: attrAutotuneShape
+  addAttributes(supportRadiusRBF, {attrSupportRadius});
   addSubtagsToParents(supportRadiusRBF, rbfIterativeTags);
   addSubtagsToParents(supportRadiusRBF, rbfDirectTags);
   addSubtagsToParents(supportRadiusRBF, pumDirectTags);
@@ -329,7 +326,7 @@ MappingConfiguration::MappingConfiguration(
   auto attrShapeParam = XMLAttribute<double>(ATTR_SHAPE_PARAM)
                             .setDocumentation("Specific shape parameter for RBF basis function.");
 
-  addAttributes(shapeParameterRBF, {attrShapeParam}); // TODO: add attrAutotuneShape?
+  addAttributes(shapeParameterRBF, {attrShapeParam});
   addSubtagsToParents(shapeParameterRBF, rbfIterativeTags);
   addSubtagsToParents(shapeParameterRBF, rbfDirectTags);
   addSubtagsToParents(shapeParameterRBF, pumDirectTags);
@@ -339,8 +336,8 @@ MappingConfiguration::MappingConfiguration(
   std::list<XMLTag> GaussRBF{
       XMLTag{*this, RBF_GAUSSIAN, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Gaussian basis function accepting a support radius or a shape parameter.")};
   attrShapeParam.setDefaultValue(std::numeric_limits<double>::quiet_NaN());
-  attrSupportRadius.setDefaultValue(std::numeric_limits<double>::quiet_NaN());
-  addAttributes(GaussRBF, {attrShapeParam, attrSupportRadius, attrAutotuneShape}); // TODO: attrAutotuneShape
+  attrSupportRadius.setDefaultValue("NaN");
+  addAttributes(GaussRBF, {attrShapeParam, attrSupportRadius});
   addSubtagsToParents(GaussRBF, rbfIterativeTags);
   addSubtagsToParents(GaussRBF, rbfDirectTags);
   addSubtagsToParents(GaussRBF, pumDirectTags);
@@ -462,17 +459,29 @@ void MappingConfiguration::xmlTagCallback(
                   _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
 
     std::string basisFctName   = tag.getName();
-    double      supportRadius  = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS, 0.);
-    double      shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM, 0.);
+    std::string supportRadiusTag  = tag.getStringAttributeValue(ATTR_SUPPORT_RADIUS, "NaN");
 
-    _rbfOptional.autotuneShape = tag.getBooleanAttributeValue(ATTR_AUTOTUNE_SHAPE, false); // TODO: autotuneShape, TODO: Error Checking
+    double shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM, 0.);
+    double supportRadius  = std::numeric_limits<double>::quiet_NaN();
+
+    _rbfOptional.autotuneShape = supportRadiusTag == "auto";
+
+    if (!_rbfOptional.autotuneShape) {
+      try {
+        supportRadius = std::stod(supportRadiusTag);
+      } catch (const std::invalid_argument&) {
+        PRECICE_ERROR("\"support-radius\" must either be a positive floating-point value or \"auto\"");
+      }
+    } else {
+      supportRadius = 1.0;
+    }
 
     _rbfConfig.basisFunction        = parseBasisFunctions(basisFctName);
     _rbfConfig.basisFunctionDefined = true;
     // The Gaussian RBF is always treated as a shape-parameter RBF. Hence, we have to convert the support radius, if necessary
     if (_rbfConfig.basisFunction == BasisFunction::Gaussian) {
       const bool exactlyOneSet = (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) ||
-                                 (std::isfinite(shapeParameter) && !std::isfinite(supportRadius)); // TODO: autotuneShape, add exception
+                                 (std::isfinite(shapeParameter) && !std::isfinite(supportRadius));
       PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
 
       if (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) {

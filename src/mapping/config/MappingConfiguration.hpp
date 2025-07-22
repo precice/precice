@@ -166,7 +166,6 @@ private:
   const std::string POLYNOMIAL_SEPARATE = "separate";
   const std::string POLYNOMIAL_ON       = "on";
   const std::string POLYNOMIAL_OFF      = "off";
-  const std::string ATTR_AUTOTUNE_SHAPE = "autotune-shape";
 
   // For iterative RBFs
   const std::string ATTR_SOLVER_RTOL = "solver-rtol";
