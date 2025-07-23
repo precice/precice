@@ -111,9 +111,8 @@ typename RBFParameterTuner<RBF_T>::DecompositionType RBFParameterTuner<RBF_T>::b
     } else {
       return _kernelMatrix.colPivHouseholderQr();
     }
-
   }
-  return DecompositionType();
+  PRECICE_UNREACHABLE("RBF does not support a radius-initialization and was still used to instantiate an optimizer.");
 }
 
 template <typename RBF_T>

@@ -284,16 +284,20 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 
   // First, assemble the interpolation matrix and check the invertability
   bool decompositionSuccessful = false;
-  if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
-    if (_autotuneShape) {
-      _tuner = std::make_unique<RBFParameterTunerSimple<RADIAL_BASIS_FUNCTION_T>>(inputMesh, inputIDs, polynomial, activeAxis);
+  if (_autotuneShape) {
+    if (rbfConfig.optimizationType == MappingConfiguration::AutotuningParams::Type::BAYES_OPTIMIZATION) {
+      _tuner = std::make_unique<RBFParameterTunerBO<RADIAL_BASIS_FUNCTION_T>>(inputMesh, inputIDs, polynomial, activeAxis);
     } else {
-      _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).llt();
-      decompositionSuccessful = _decMatrixC.info() == Eigen::ComputationInfo::Success;
+      _tuner = std::make_unique<RBFParameterTunerSimple<RADIAL_BASIS_FUNCTION_T>>(inputMesh, inputIDs, polynomial, activeAxis);
     }
   } else {
-    _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).colPivHouseholderQr();
-    decompositionSuccessful = _decMatrixC.isInvertible();
+    if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
+      _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).llt();
+      decompositionSuccessful = _decMatrixC.info() == Eigen::ComputationInfo::Success;
+    } else {
+      _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).colPivHouseholderQr();
+      decompositionSuccessful = _decMatrixC.isInvertible();
+    }
   }
 
   PRECICE_CHECK(_autotuneShape || decompositionSuccessful,
