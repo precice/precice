@@ -153,42 +153,52 @@ endfunction(add_precice_test_run_solverdummies)
 enable_testing()
 
 # Autodiscovery of CTest
-if(NOT PRECICE_FEATURE_MPI_COMMUNICATION)
-  message(STATUS "Unit and integrationtests require MPI to be enabled.")
-else()
 
-  # This file is automatically loaded by CTEST and needs to exist to prevent strange errors
-  set(ctest_tests_file "${preCICE_BINARY_DIR}/ctest_tests.cmake")
-  if(NOT EXISTS "${ctest_tests_file}")
-    file(WRITE "${ctest_tests_file}" "")
-  endif()
-  set_property(DIRECTORY
-    APPEND PROPERTY TEST_INCLUDE_FILES "${ctest_tests_file}"
-  )
+# This file is automatically loaded by CTEST and needs to exist to prevent strange errors
+set(ctest_tests_file "${preCICE_BINARY_DIR}/ctest_tests.cmake")
+if(NOT EXISTS "${ctest_tests_file}")
+  file(WRITE "${ctest_tests_file}" "")
+endif()
+set_property(DIRECTORY
+  APPEND PROPERTY TEST_INCLUDE_FILES "${ctest_tests_file}"
+)
 
   # Custom command to generate the tests list using the testprecice binary
+if(PRECICE_FEATURE_MPI_COMMUNICATION)
   add_custom_command(
     OUTPUT "${ctest_tests_file}"
-    COMMAND "${CMAKE_COMMAND}"
-    -D "TEST_EXECUTABLE=$<TARGET_FILE:testprecice>"
-    -D "TEST_FILE=${ctest_tests_file}"
-    -D "TEST_DIR=${PRECICE_TEST_DIR}"
-    -D "PRECICE_MPI_VERSION=${PRECICE_MPI_VERSION}"
-    -D "MPIEXEC_EXECUTABLE=${MPIEXEC_EXECUTABLE}"
-    -D "MPIEXEC_NUMPROC_FLAG=${MPIEXEC_NUMPROC_FLAG}"
-    -D "PRECICE_CTEST_MPI_FLAGS=${PRECICE_CTEST_MPI_FLAGS}"
-    -D "MPIEXEC_PREFLAGS=${MPIEXEC_PREFLAGS}"
-    -D "MPIEXEC_POSTFLAGS=${MPIEXEC_POSTFLAGS}"
-    -P "${preCICE_SOURCE_DIR}/cmake/discover_tests.cmake"
+    COMMAND "${Python3_EXECUTABLE}"
+    "${preCICE_SOURCE_DIR}/cmake/discover_tests.py"
+    "--executable=$<TARGET_FILE:testprecice>"
+    "--output=${ctest_tests_file}"
+    "--run-dir=${PRECICE_TEST_DIR}"
+    "--mpi"
+    "--mpi-version=${PRECICE_MPI_VERSION}"
+    "--mpi-exec=${MPIEXEC_EXECUTABLE}"
+    "--mpi-np=${MPIEXEC_NUMPROC_FLAG}"
+    "--mpi-extra=${PRECICE_CTEST_MPI_FLAGS}"
+    "--mpi-pre=${MPIEXEC_PREFLAGS}"
+    "--mpi-post=${MPIEXEC_POSTFLAGS}"
     DEPENDS testprecice
     COMMENT "Generating list of tests"
     VERBATIM)
-
-  # Custom target that forces the test list to be updated
-  add_custom_target(precice-test-list ALL
-    DEPENDS "${ctest_tests_file}"
-  )
+else()
+  add_custom_command(
+    OUTPUT "${ctest_tests_file}"
+    COMMAND "${Python3_EXECUTABLE}"
+    "${preCICE_SOURCE_DIR}/cmake/discover_tests.py"
+    "--executable=$<TARGET_FILE:testprecice>"
+    "--output=${ctest_tests_file}"
+    "--run-dir=${PRECICE_TEST_DIR}"
+    DEPENDS testprecice
+    COMMENT "Generating list of tests"
+    VERBATIM)
 endif()
+
+# Custom target that forces the test list to be updated
+add_custom_target(precice-test-list ALL
+  DEPENDS "${ctest_tests_file}"
+)
 
 # Add solverdummy tests
 add_precice_test_build_solverdummy(cpp)
