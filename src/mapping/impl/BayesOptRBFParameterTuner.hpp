@@ -96,7 +96,7 @@ public:
   BO_PARAM(size_t, dim_out, 1);
 
 private:
-  double _lowerBound;
+
 
   // mutable variables because of const reference used by ConfiguredBOptimizer::optimize()
   mutable double _upperBound;
@@ -108,10 +108,9 @@ private:
   mutable logging::Logger _log{"mapping::RBFParameterTuner"};
 
 public:
-  RBFParameterTunerBO();
-
   template <typename IndexContainer>
-  void   initialize(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool, 3> &activeAxis);
+  RBFParameterTunerBO(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool, 3> &activeAxis);
+
   double optimize(const Eigen::VectorXd &inputData) override;
 
   // Functions used by the limbo optimizer and InitSampling class
@@ -171,13 +170,16 @@ void InitSampling::operator()(StateFunction &stateFn, const AggregatorFunction &
   }
 };
 
-template <typename RBF_T>
-RBFParameterTunerBO<RBF_T>::RBFParameterTunerBO()
-    : _lowerBound(std::numeric_limits<double>::infinity()),
+template <typename RBF_T> template <typename IndexContainer>
+RBFParameterTunerBO<RBF_T>::RBFParameterTunerBO(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool, 3> &activeAxis)
+    : RBFParameterTuner<RBF_T>(inputMesh, inputIDs, polynomial, activeAxis),
       _upperBound(-std::numeric_limits<double>::infinity()),
       _maxError(-std::numeric_limits<double>::infinity()),
       _lastRCond(std::numeric_limits<double>::quiet_NaN())
-{}
+{
+  PRECICE_ASSERT(this->rbfSupportsRadius(), "RBF is not supported by this optimizer, as it does not accept a support-radius."
+                                            "Currently supported: Compactly supported RBFs and Gaussians.");
+}
 
 template <typename RBF_T>
 void RBFParameterTunerBO<RBF_T>::configureIntervalTransformation(const std::vector<Sample> &samples) const
@@ -199,14 +201,14 @@ double RBFParameterTunerBO<RBF_T>::transformPos(double pos) const
 {
   PRECICE_ASSERT(isTransformationConfigured(), "Interval not configured.");
   PRECICE_ASSERT(pos != 0, "Sample radius was 0 during transformation");
-  return std::log10(pos / _lowerBound) / std::log10(_upperBound / _lowerBound);
+  return std::log10(pos / this->_lowerBound) / std::log10(_upperBound / this->_lowerBound);
 }
 
 template <typename RBF_T>
 double RBFParameterTunerBO<RBF_T>::backtransformPos(double pos) const
 {
   PRECICE_ASSERT(isTransformationConfigured(), "Interval not configured.");
-  return std::pow(10.0, pos * std::log10(_upperBound / _lowerBound) + std::log10(_lowerBound));
+  return std::pow(10.0, pos * std::log10(_upperBound / this->_lowerBound) + std::log10(this->_lowerBound));
 }
 
 template <typename RBF_T>
@@ -238,21 +240,7 @@ template <typename RBF_T>
 double RBFParameterTunerBO<RBF_T>::getLowerBound() const
 {
   PRECICE_ASSERT(this->_isInitialized);
-  return _lowerBound;
-}
-
-template <typename RBF_T>
-template <typename IndexContainer>
-void RBFParameterTunerBO<RBF_T>::initialize(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool, 3> &activeAxis)
-{
-  PRECICE_ASSERT(RBF_T::isStrictlyPositiveDefinite(), "Non SPD RBFs are currently not supported by this optimizer");
-  PRECICE_ASSERT(this->rbfSupportsRadius(), "RBF is not supported by this optimizer, as it does not accept a support-radius."
-                                            "Currently supported: Compactly supported RBFs, Thin Plate Splines and Gaussians.");
-
-  _lowerBound           = this->estimateMeshResolution(inputMesh);
-  this->_inSize         = inputIDs.size();
-  this->_distanceMatrix = buildMatrixCLU(VolumeSplines(), inputMesh, inputIDs, activeAxis, polynomial);
-  this->_isInitialized  = true;
+  return this->_lowerBound;
 }
 
 template <typename RBF_T>

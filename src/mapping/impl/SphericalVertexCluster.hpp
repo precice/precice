@@ -56,7 +56,7 @@ public:
                          Polynomial              polynomial,
                          mesh::PtrMesh           inputMesh,
                          mesh::PtrMesh           outputMesh,
-                         MappingConfiguration::RBFOptional rbfOptional);
+                         MappingConfiguration::AutotuningParams rbfOptional);
 
   /// Evaluates a conservative mapping and agglomerates the result in the given output data
   void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) const;
@@ -144,7 +144,7 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
     Polynomial              polynomial,
     mesh::PtrMesh           inputMesh,
     mesh::PtrMesh           outputMesh,
-    MappingConfiguration::RBFOptional rbfOptional)
+    MappingConfiguration::AutotuningParams rbfOptional)
     : _center(center), _radius(radius), _polynomial(polynomial), _function(function), _weightingFunction(radius)
 {
   PRECICE_TRACE(_center.getCoords(), _radius);

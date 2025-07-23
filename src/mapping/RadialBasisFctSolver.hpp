@@ -42,7 +42,7 @@ public:
    */
   template <typename IndexContainer>
   RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
-                       const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::RBFOptional rbfConfig);
+                       const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::AutotuningParams rbfConfig);
 
   template <typename IndexContainer>
   RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
@@ -105,7 +105,7 @@ private:
   bool                computeCrossValidation = false;
   std::array<bool, 3> _localActiveAxis;
 
-  mutable RBFParameterTunerBO<RADIAL_BASIS_FUNCTION_T> _tuner;
+  mutable std::unique_ptr<RBFParameterTuner<RADIAL_BASIS_FUNCTION_T>> _tuner;
 };
 
 // ------- Non-Member Functions ---------
@@ -273,7 +273,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
-                                                                    const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::RBFOptional rbfConfig)
+                                                                    const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::AutotuningParams rbfConfig)
 {
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
@@ -286,7 +286,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   bool decompositionSuccessful = false;
   if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
     if (_autotuneShape) {
-      _tuner.initialize(inputMesh, inputIDs, polynomial, activeAxis);
+      _tuner = std::make_unique<RBFParameterTunerSimple<RADIAL_BASIS_FUNCTION_T>>(inputMesh, inputIDs, polynomial, activeAxis);
     } else {
       _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).llt();
       decompositionSuccessful = _decMatrixC.info() == Eigen::ComputationInfo::Success;
@@ -405,8 +405,8 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
 
   if (_autotuneShape) {
     if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
-      optimizedRadius = _tuner.optimize(inputData); //TODO: Optimization in every iteration is not ideal.
-      _decMatrixC = _tuner.buildKernelDecomposition(optimizedRadius);
+      optimizedRadius = _tuner->optimize(inputData); //TODO: Optimization in every iteration is not ideal.
+      _decMatrixC = _tuner->buildKernelDecomposition(optimizedRadius);
     } else {
       PRECICE_ASSERT(false, "Not supported.");
     }
@@ -429,7 +429,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
     const int polyParams = _matrixA.cols() - inSize;
 
     // not yet necessary: integrated polynomial is only supported for SPD functions
-    out = _tuner.applyKernelToMatrix(_matrixA.block(0, 0, outSize, inSize), optimizedRadius) * p.segment(0, inSize);
+    out = _tuner->applyKernelToMatrix(_matrixA.block(0, 0, outSize, inSize), optimizedRadius) * p.segment(0, inSize);
     out += _matrixA.block(0, inSize, outSize, polyParams) * p.segment(inSize, polyParams);
   } else {
     out = _matrixA * p;

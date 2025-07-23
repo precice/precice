@@ -34,6 +34,7 @@ protected:
 
   Eigen::Index _inSize;
   bool         _isInitialized;
+  double       _lowerBound;
 
   static constexpr bool rbfSupportsRadius()
   {
@@ -50,7 +51,8 @@ protected:
 public:
   virtual ~RBFParameterTuner() = default;
 
-  RBFParameterTuner();
+  template <typename IndexContainer>
+  RBFParameterTuner(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool, 3> &activeAxis);
 
   virtual double optimize(const Eigen::VectorXd &inputData);
 
@@ -64,13 +66,14 @@ public:
   static double getMinBoundSize(const mesh::Mesh &inputMesh);
 };
 
-template <typename RBF_T>
-RBFParameterTuner<RBF_T>::RBFParameterTuner()
-    : _kernelMatrix(Eigen::MatrixXd(0, 0)),
-      _distanceMatrix(Eigen::MatrixXd(0, 0)),
-      _inSize(0),
-      _isInitialized(false)
+template <typename RBF_T> template <typename IndexContainer>
+RBFParameterTuner<RBF_T>::RBFParameterTuner(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool, 3> &activeAxis)
+    : _kernelMatrix(Eigen::MatrixXd(0, 0))
 {
+  _lowerBound     = estimateMeshResolution(inputMesh);
+  _inSize         = inputIDs.size();
+  _distanceMatrix = buildMatrixCLU(VolumeSplines(), inputMesh, inputIDs, activeAxis, polynomial);
+  _isInitialized  = true;
 }
 
 template <typename RBF_T>
@@ -89,7 +92,7 @@ const Eigen::MatrixXd &RBFParameterTuner<RBF_T>::getDistanceMatrix() const
 template <typename RBF_T>
 typename RBFParameterTuner<RBF_T>::DecompositionType RBFParameterTuner<RBF_T>::buildKernelDecomposition(double sampleRadius) const
 {
-  if constexpr (rbfSupportsRadius()) { // TODO: support non-SPD kernels
+  if constexpr (rbfSupportsRadius()) {
     double parameter = sampleRadius;
     if constexpr (rbfUsesShapeParameter()) {
       parameter = RBF_T::transformRadiusToShape(sampleRadius);

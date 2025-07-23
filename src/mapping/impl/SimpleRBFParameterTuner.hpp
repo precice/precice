@@ -9,16 +9,14 @@ class RBFParameterTunerSimple : public RBFParameterTuner<RBF_T> {
 
   using DecompositionType = typename RBFParameterTuner<RBF_T>::DecompositionType;
 
-  double              _lowerBound;
   std::vector<Sample> _samples;
 
   mutable logging::Logger _log{"mapping::RBFParameterTuner"};
 
 public:
-  RBFParameterTunerSimple();
-
   template <typename IndexContainer>
-  void   initialize(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool, 3> &activeAxis);
+  RBFParameterTunerSimple(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool, 3> &activeAxis);
+
   double optimize(const Eigen::VectorXd &inputData) override;
 
   Sample optimizeIterativeIncrease(const Eigen::VectorXd &inputData, double posTolerance, size_t maxSuccessfulSamples);
@@ -27,23 +25,12 @@ public:
 
 // Implementation:
 
-template <typename RBF_T>
-RBFParameterTunerSimple<RBF_T>::RBFParameterTunerSimple()
-    : _lowerBound(std::numeric_limits<double>::quiet_NaN())
-{}
-
-template <typename RBF_T>
-template <typename IndexContainer>
-void RBFParameterTunerSimple<RBF_T>::initialize(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool, 3> &activeAxis)
+template <typename RBF_T> template <typename IndexContainer>
+RBFParameterTunerSimple<RBF_T>::RBFParameterTunerSimple(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool, 3> &activeAxis)
+    : RBFParameterTuner<RBF_T>(inputMesh, inputIDs, polynomial, activeAxis)
 {
-  PRECICE_ASSERT(RBF_T::isStrictlyPositiveDefinite(), "Non SPD RBFs are currently not supported by this optimizer");
   PRECICE_ASSERT(this->rbfSupportsRadius(), "RBF is not supported by this optimizer, as it does not accept a support-radius."
-                                            "Currently supported: Compactly supported RBFs, Thin Plate Splines and Gaussians.");
-
-  _lowerBound           = this->estimateMeshResolution(inputMesh);
-  this->_inSize         = inputIDs.size();
-  this->_distanceMatrix = buildMatrixCLU(VolumeSplines(), inputMesh, inputIDs, activeAxis, polynomial);
-  this->_isInitialized  = true;
+                                            "Currently supported: Compactly supported RBFs and Gaussians.");
 }
 
 template <typename RBF_T>
@@ -65,7 +52,7 @@ template <typename RBF_T>
 Sample RBFParameterTunerSimple<RBF_T>::optimizeIterativeIncrease(const Eigen::VectorXd &inputData, double posTolerance, size_t maxSuccessfulSamples)
 {
   double increaseSize = 10;
-  double sampleRadius = _lowerBound;
+  double sampleRadius = this->_lowerBound;
 
   // collect samples with exponential growth and decrease growth rate until the support radius is "good enough"
   while (increaseSize > posTolerance && _samples.size() <= maxSuccessfulSamples) {
@@ -114,9 +101,9 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &
   PRECICE_ASSERT(this->_isInitialized);
 
   constexpr double increaseSize = 10;
-  double           sampleRadius = _lowerBound;
+  double           sampleRadius = this->_lowerBound;
 
-  PRECICE_INFO("Start optimization with lower bound = {:.4e}", _lowerBound);
+  PRECICE_INFO("Start optimization with lower bound = {:.4e}", this->_lowerBound);
 
   Sample lowerBound = {sampleRadius, std::numeric_limits<double>::quiet_NaN()};
   Sample upperBound = {std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()};
@@ -137,7 +124,7 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &
     PRECICE_INFO("RBF tuner sample: rad={:.4e}, err={:.4e}, 1/cond={:.4e}", sampleRadius, error, rcond);
 
     if (rcond < 1e-13 || std::isnan(error)) {
-      PRECICE_CHECK(sampleRadius != _lowerBound, "Parameter tuning failed in first iteration using support-radius={}", sampleRadius);
+      PRECICE_CHECK(sampleRadius != this->_lowerBound, "Parameter tuning failed in first iteration using support-radius={}", sampleRadius);
       break;
     }
     lowerBound = {sampleRadius, error};

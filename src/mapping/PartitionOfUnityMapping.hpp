@@ -61,7 +61,7 @@ public:
         unsigned int            verticesPerCluster,
         double                  relativeOverlap,
         bool                    projectToInput,
-        MappingConfiguration::RBFOptional rbfOptional);
+        MappingConfiguration::AutotuningParams rbfOptional);
 
   /**
    * Computes the clustering for the partition of unity method and fills the \p _clusters vector,
@@ -126,7 +126,7 @@ private:
 
   std::unique_ptr<mesh::Mesh> _centerMesh;
 
-  MappingConfiguration::RBFOptional _rbfOptional;
+  MappingConfiguration::AutotuningParams _rbfOptional;
 
   /// @copydoc Mapping::mapConservative
   void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) override;
@@ -165,7 +165,7 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
     unsigned int            verticesPerCluster,
     double                  relativeOverlap,
     bool                    projectToInput,
-    MappingConfiguration::RBFOptional rbfOptional)
+    MappingConfiguration::AutotuningParams rbfOptional)
     : Mapping(constraint, dimension, false, Mapping::InitialGuessRequirement::None),
       _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial), _rbfOptional(rbfOptional)
 {

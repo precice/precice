@@ -98,11 +98,13 @@ public:
     bool                basisFunctionDefined = false;
   };
 
-  struct RBFOptional {
-    bool autotuneShape = false;
+  struct AutotuningParams {
+    enum class Type {
+      BISECTION, BAYES_OPTIMIZATION
+    };
 
-    std::string executor = "executor"; // TODO: required for compilation but meaningless
-    std::string solver   = "solver";   // TODO: required for compilation but meaningless
+    Type optimizationType = Type::BISECTION; // not yet used
+    bool autotuneShape    = false;
   };
 
   struct GeoMultiscaleConfiguration {
@@ -236,7 +238,7 @@ private:
   // as we can only instantiate the RBF classes when we know the RBF
   // which is configured in the subtag
   RBFConfiguration _rbfConfig;
-  RBFOptional _rbfOptional;
+  AutotuningParams _rbfOptional;
 
   struct ExecutorConfiguration {
     enum struct Executor {

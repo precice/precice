@@ -75,7 +75,7 @@ struct BackendSelector {
 // Specialization for the RBF Eigen backend
 template <typename RBF>
 struct BackendSelector<RBFBackend::Eigen, RBF> {
-  typedef mapping::RadialBasisFctMapping<RadialBasisFctSolver<RBF>, MappingConfiguration::RBFOptional> type;
+  typedef mapping::RadialBasisFctMapping<RadialBasisFctSolver<RBF>, MappingConfiguration::AutotuningParams> type;
 };
 
 // Specialization for the PETSc RBF backend
