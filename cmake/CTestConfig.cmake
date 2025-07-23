@@ -129,7 +129,9 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
   message(STATUS "Test ${PAT_FULL_NAME}")
   add_test(NAME ${PAT_FULL_NAME}
     COMMAND ${CMAKE_COMMAND}
+    -D Python3_EXECUTABLE=${Python3_EXECUTABLE}
     -D WRAPPER=${PRECICE_TEST_WRAPPER_SCRIPT}
+    -D CHECKER=${preCICE_SOURCE_DIR}/tools/profiling/validate-rank-files
     -D DUMMY_A=${PAT_BIN_DIR_A}/solverdummy
     -D DUMMY_B=${PAT_BIN_DIR_B}/solverdummy
     -D DUMMY_RUN_DIR=${PAT_RUN_DIR}

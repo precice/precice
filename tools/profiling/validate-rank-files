@@ -1,0 +1,70 @@
+#!python3
+
+import json
+import argparse
+import pathlib
+import lzma
+
+
+def check_entry_format(line):
+    assert len(line) >= 4
+    assert line[0] in "NBED"
+
+
+def check_file(file: pathlib.Path):
+    print()
+    print(f"Checking file {path.resolve()}")
+
+    assert path.exists(), f"File {path} doesn't exist"
+
+    with path.open("rb") as file:
+        header = file.readline()
+        meta = json.loads(header)
+
+        for key in [
+            "name",
+            "rank",
+            "size",
+            "unix_us",
+            "tinit",
+            "mode",
+            "compression",
+            "file_version",
+        ]:
+            assert key in meta, f"Key {key} not in metadata"
+
+        compressed = bool(meta["compression"])
+
+        known = set()
+
+        def register_or_check(entry):
+            found = line[1:].split(":")[0]
+            if line[0] == "N":
+                assert found not in known
+                known.add(found)
+            else:
+                assert found in known
+
+        counter = 0
+        if compressed:
+            print(f"File is compressed")
+            with lzma.LZMAFile(file) as lines:
+                for line in map(lambda b: b.decode().rstrip(), lines):
+                    counter += 1
+                    check_entry_format(line)
+                    register_or_check(line)
+        else:
+            print(f"File is not compressed")
+            for line in map(lambda b: b.decode().rstrip(), file):
+                counter += 1
+                check_entry_format(line)
+                register_or_check(line)
+
+        print(f"Records {counter}")
+        print(f"Names {len(known)}")
+
+    print("All good")
+
+
+for path in pathlib.Path(".").rglob("**/*-*-*.txt"):
+    check_file(path)
