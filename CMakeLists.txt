@@ -402,7 +402,6 @@ endif()
 # Setup Boost
 target_compile_definitions(preciceCore PUBLIC BOOST_ALL_DYN_LINK BOOST_ASIO_ENABLE_OLD_SERVICES BOOST_GEOMETRY_DISABLE_DEPRECATED_03_WARNING)
 target_link_libraries(preciceCore PUBLIC
-  lzma
   Boost::boost
   Boost::log
   Boost::log_setup
