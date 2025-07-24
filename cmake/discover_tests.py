@@ -71,6 +71,7 @@ for name, ranks in get_tests():
     dir.mkdir(parents=True, exist_ok=True)
 
     labels = get_labels(name)
+    labels.append(f"size{ranks}")
 
     testname = f"[=[precice.{name}]=]"
 
