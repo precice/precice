@@ -340,6 +340,57 @@ if(PRECICE_BUILD_TOOLS)
     NAME config-validate.file+name+size
     COMMAND precice-config-validate ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
     )
+
+  # Simple configuration tests
+
+  function(precice_test_config_valid path)
+    set(name "precice.config.${path}.valid")
+    set(solver "")
+    set(ranks "")
+
+    if (ARGC GREATER 1)
+      set(solver "${ARGV1}")
+      set(name "${name}:${solver}")
+    endif()
+
+    if (ARGC GREATER 2)
+      set(ranks "${ARGV2}")
+      set(name "${name}@${ranks}")
+    endif()
+    add_test(NAME ${name}
+      COMMAND precice-config-validate "${PROJECT_SOURCE_DIR}/tests/config/${path}" ${name} ${ranks}
+      )
+    set_tests_properties(${name}
+      PROPERTIES
+      TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+      LABELS "tools;bin;config;valid")
+  endfunction()
+
+  function(precice_test_config_invalid path expression)
+    set(name "precice.config.${path}.invalid")
+    set(solver "")
+    set(ranks "")
+
+    if (ARGC GREATER 2)
+      set(solver "${ARGV2}")
+      set(name "${name}:${solver}")
+    endif()
+
+    if (ARGC GREATER 3)
+      set(ranks "${ARGV3}")
+      set(name "${name}@${ranks}")
+    endif()
+    add_test(NAME ${name}
+      COMMAND precice-config-validate "${PROJECT_SOURCE_DIR}/tests/config/${path}" ${name} ${ranks}
+      )
+    set_tests_properties(${name}
+      PROPERTIES
+      TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+      PASS_REGULAR_EXPRESSION "${expression}"
+      LABELS "tools;bin;config;invalid")
+  endfunction()
+
+  include(${PROJECT_SOURCE_DIR}/tests/config/tests.cmake)
 endif()
 
 # Add a separate target to test only the base
