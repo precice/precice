@@ -40,8 +40,10 @@ BOOST_AUTO_TEST_CASE(FinalTimeseries)
   double time = 0.0;
   interface.initialize();
   double dt = interface.getMaxTimeStepSize();
-  BOOST_TEST(std::filesystem::exists(dir));
-  BOOST_TEST(!std::filesystem::exists(series));
+  if (context.isPrimary()) {
+    BOOST_TEST(std::filesystem::exists(dir));
+    BOOST_TEST(!std::filesystem::exists(series));
+  }
 
   if (context.isNamed("ExporterOne")) {
     auto sdataName = "S";
@@ -50,7 +52,9 @@ BOOST_AUTO_TEST_CASE(FinalTimeseries)
     std::vector<double> sdata(6);
     std::vector<double> vdata(6 * 3, 0);
     while (interface.isCouplingOngoing()) {
-      BOOST_TEST(!std::filesystem::exists(series));
+      if (context.isPrimary()) {
+        BOOST_TEST(!std::filesystem::exists(series));
+      }
 
       for (int x = 0; x < 6; ++x) {
         const double pi  = 3.1415;
