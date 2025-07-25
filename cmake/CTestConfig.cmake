@@ -358,7 +358,7 @@ if(PRECICE_BUILD_TOOLS)
       set(name "${name}@${ranks}")
     endif()
     add_test(NAME ${name}
-      COMMAND precice-config-validate "${PROJECT_SOURCE_DIR}/tests/config/${path}" ${name} ${ranks}
+      COMMAND precice-config-validate "${PROJECT_SOURCE_DIR}/tests/config/${path}" ${solver} ${ranks}
       )
     set_tests_properties(${name}
       PROPERTIES
@@ -381,7 +381,7 @@ if(PRECICE_BUILD_TOOLS)
       set(name "${name}@${ranks}")
     endif()
     add_test(NAME ${name}
-      COMMAND precice-config-validate "${PROJECT_SOURCE_DIR}/tests/config/${path}" ${name} ${ranks}
+      COMMAND precice-config-validate "${PROJECT_SOURCE_DIR}/tests/config/${path}" ${solver} ${ranks}
       )
     set_tests_properties(${name}
       PROPERTIES
