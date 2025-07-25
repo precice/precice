@@ -330,6 +330,11 @@ void ParticipantConfiguration::xmlTagCallback(
     config.isScalingOn = tag.getBooleanAttributeValue(ATTR_SCALE_WITH_CONN);
     _watchIntegralConfigs.push_back(config);
   } else if (tag.getNamespace() == TAG_INTRA_COMM) {
+    if (auto participant = _participants.back()->getName();
+        context.size == 1 && participant == context.name) {
+      PRECICE_INFO("Ignoring user-defined intra-comm for participant {} as it is running in serial.", participant);
+      return;
+    }
     com::CommunicationConfiguration comConfig;
     utils::IntraComm::getCommunication() = comConfig.createCommunication(tag);
     _isIntraCommDefined                  = true;
