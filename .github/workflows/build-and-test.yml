@@ -40,16 +40,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
          python-version: '3.x'
-      - name: Install pre-commit
-        run: pip install pre-commit
-      - name: Run checks
-        run: pre-commit run -a -v
-      - name: Git status
-        if: always()
-        run: git status
-      - name: Full diff
-        if: always()
-        run: git diff
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
 
   linux:
     name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }}
