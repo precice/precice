@@ -8,7 +8,6 @@
 
 #include "action/Action.hpp"
 #include "action/config/ActionConfiguration.hpp"
-#include "com/MPIDirectCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
 #include "io/ExportCSV.hpp"
@@ -34,6 +33,12 @@
 #include "utils/networking.hpp"
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
+
+#ifdef PRECICE_NO_MPI
+#include "com/SocketCommunication.hpp"
+#else
+#include "com/MPIDirectCommunication.hpp"
+#endif
 
 namespace precice::config {
 
@@ -759,12 +764,15 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   // create default primary communication if needed
   if (context.size > 1 && not _isIntraCommDefined && participant->getName() == context.name) {
 #ifdef PRECICE_NO_MPI
-    PRECICE_ERROR("Implicit intra-participant communications for parallel participants are only available if preCICE was built with MPI. "
-                  "Either explicitly define an intra-participant communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
+    auto lo = utils::networking::loopbackInterfaceName();
+    PRECICE_INFO("Implicit intra-participant communications for parallel participants using preCICE without MPI defaults to a sockets intracomm using the default loopback device {}. "
+                 "Define your own <intra-comm:sockets ... /> to modify these defaults.",
+                 lo);
+    utils::IntraComm::getCommunication() = std::make_shared<com::SocketCommunication>(0, false, lo, ".");
 #else
     utils::IntraComm::getCommunication() = std::make_shared<com::MPIDirectCommunication>();
-    participant->setUsePrimaryRank(true);
 #endif
+    participant->setUsePrimaryRank(true);
   }
   _isIntraCommDefined = false; // to not mess up with previous participant
 }

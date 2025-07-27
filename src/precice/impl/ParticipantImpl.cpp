@@ -795,7 +795,7 @@ VertexID ParticipantImpl::setMeshVertex(
   auto        &mesh    = *context.mesh;
   PRECICE_CHECK(position.size() == static_cast<unsigned long>(mesh.getDimensions()),
                 "Cannot set vertex for mesh \"{}\". Expected {} position components but found {}.", meshName, mesh.getDimensions(), position.size());
-  Event e{fmt::format("setMeshVertex.{}", meshName), profiling::Fundamental};
+  Event e{fmt::format("setMeshVertex.{}", meshName), profiling::API};
   auto  index = mesh.createVertex(Eigen::Map<const Eigen::VectorXd>{position.data(), mesh.getDimensions()}).getID();
   mesh.allocateDataValues();
 
@@ -826,7 +826,7 @@ void ParticipantImpl::setMeshVertices(
                 "You passed {} vertex indices and {} position components, but we expected {} position components ({} x {}).",
                 meshDims, meshName, ids.size(), positions.size(), expectedPositionSize, ids.size(), meshDims);
 
-  Event                                   e{fmt::format("setMeshVertices.{}", meshName), profiling::Fundamental};
+  Event                                   e{fmt::format("setMeshVertices.{}", meshName), profiling::API};
   const Eigen::Map<const Eigen::MatrixXd> posMatrix{
       positions.data(), mesh.getDimensions(), static_cast<EIGEN_DEFAULT_DENSE_INDEX_TYPE>(ids.size())};
   for (unsigned long i = 0; i < ids.size(); ++i) {
@@ -858,7 +858,7 @@ void ParticipantImpl::setMeshEdge(
   using impl::errorInvalidVertexID;
   PRECICE_CHECK(mesh.isValidVertexID(first), errorInvalidVertexID(first));
   PRECICE_CHECK(mesh.isValidVertexID(second), errorInvalidVertexID(second));
-  Event         e{fmt::format("setMeshEdge.{}", meshName), profiling::Fundamental};
+  Event         e{fmt::format("setMeshEdge.{}", meshName), profiling::API};
   mesh::Vertex &v0 = mesh.vertex(first);
   mesh::Vertex &v1 = mesh.vertex(second);
   mesh.createEdge(v0, v1);
@@ -891,7 +891,7 @@ void ParticipantImpl::setMeshEdges(
                   std::distance(vertices.begin(), last));
   }
 
-  Event e{fmt::format("setMeshEdges.{}", meshName), profiling::Fundamental};
+  Event e{fmt::format("setMeshEdges.{}", meshName), profiling::API};
 
   for (unsigned long i = 0; i < vertices.size() / 2; ++i) {
     auto aid = vertices[2 * i];
@@ -956,7 +956,7 @@ void ParticipantImpl::setMeshTriangles(
                   std::distance(vertices.begin(), last));
   }
 
-  Event e{fmt::format("setMeshTriangles.{}", meshName), profiling::Fundamental};
+  Event e{fmt::format("setMeshTriangles.{}", meshName), profiling::API};
 
   for (unsigned long i = 0; i < vertices.size() / 3; ++i) {
     auto aid = vertices[3 * i];
@@ -1006,7 +1006,7 @@ void ParticipantImpl::setMeshQuad(
                                   "Please check that the adapter send the four correct vertices or that the interface is composed of quads.");
   auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
 
-  Event e{fmt::format("setMeshQuad.{}", meshName), profiling::Fundamental};
+  Event e{fmt::format("setMeshQuad.{}", meshName), profiling::API};
 
   // Vertices are now in the order: V0-V1-V2-V3-V0.
   // Use the shortest diagonal to split the quad into 2 triangles.
@@ -1072,7 +1072,7 @@ void ParticipantImpl::setMeshQuads(
                   i);
     auto reordered = utils::reorder_array(convexity.vertexOrder, mesh::vertexPtrsFor(mesh, vertexIDs));
 
-    Event e{fmt::format("setMeshQuads.{}", meshName), profiling::Fundamental};
+    Event e{fmt::format("setMeshQuads.{}", meshName), profiling::API};
 
     // Use the shortest diagonal to split the quad into 2 triangles.
     // Vertices are now in V0-V1-V2-V3-V0 order. The new edge, e[4] is either 0-2 or 1-3
@@ -1105,7 +1105,7 @@ void ParticipantImpl::setMeshTetrahedron(
     return;
   }
 
-  Event e{fmt::format("setMeshTetrahedron.{}", meshName), profiling::Fundamental};
+  Event e{fmt::format("setMeshTetrahedron.{}", meshName), profiling::API};
 
   mesh::Mesh &mesh = *context.mesh;
   using impl::errorInvalidVertexID;
@@ -1150,7 +1150,7 @@ void ParticipantImpl::setMeshTetrahedra(
                   std::distance(vertices.begin(), last));
   }
 
-  Event e{fmt::format("setMeshTetrahedra.{}", meshName), profiling::Fundamental};
+  Event e{fmt::format("setMeshTetrahedra.{}", meshName), profiling::API};
 
   for (unsigned long i = 0; i < vertices.size() / 4; ++i) {
     auto aid = vertices[4 * i];
@@ -1197,7 +1197,7 @@ void ParticipantImpl::writeData(
                   "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
                   dataName, meshName, *index);
   }
-  Event e{fmt::format("writeData.{}_{}", meshName, dataName), profiling::Fundamental};
+  Event e{fmt::format("writeData.{}_{}", meshName, dataName), profiling::API};
   context.writeValuesIntoDataBuffer(vertices, values);
 }
 
@@ -1246,7 +1246,7 @@ void ParticipantImpl::readData(
                   dataName, meshName, *index);
   }
 
-  Event e{fmt::format("readData.{}_{}", meshName, dataName), profiling::Fundamental};
+  Event e{fmt::format("readData.{}_{}", meshName, dataName), profiling::API};
 
   double readTime = _couplingScheme->getTime() + relativeReadTime;
   context.readValues(vertices, readTime, values);
@@ -1299,7 +1299,7 @@ void ParticipantImpl::mapAndReadData(
     return;
   }
 
-  Event e{fmt::format("mapAndReadData.{}_{}", meshName, dataName), profiling::Fundamental};
+  Event e{fmt::format("mapAndReadData.{}_{}", meshName, dataName), profiling::API};
 
   // Note that meshName refers to a remote mesh
   const auto   dataDims  = dataContext.getDataDimensions();
@@ -1361,7 +1361,7 @@ void ParticipantImpl::writeAndMapData(
     return;
   }
 
-  Event e{fmt::format("writeAndMapData.{}_{}", meshName, dataName), profiling::Fundamental};
+  Event e{fmt::format("writeAndMapData.{}_{}", meshName, dataName), profiling::API};
 
   // Note that meshName refers here typically to a remote mesh
   const auto   dataDims  = dataContext.getDataDimensions();
@@ -1428,7 +1428,7 @@ void ParticipantImpl::writeGradientData(
 
   PRECICE_VALIDATE_DATA(gradients.data(), gradients.size());
 
-  Event e{fmt::format("writeGradientData.{}_{}", meshName, dataName), profiling::Fundamental};
+  Event e{fmt::format("writeGradientData.{}_{}", meshName, dataName), profiling::API};
 
   context.writeGradientsIntoDataBuffer(vertices, gradients);
 }
@@ -1505,7 +1505,7 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
     return;
   }
 
-  Event e{fmt::format("getMeshVertexIDsAndCoordinates.{}", meshName), profiling::Fundamental};
+  Event e{fmt::format("getMeshVertexIDsAndCoordinates.{}", meshName), profiling::API};
 
   const MeshContext &context = _accessor->meshContext(meshName);
 

@@ -60,6 +60,7 @@ endif()
 option(PRECICE_FEATURE_MPI_COMMUNICATION "Enables MPI-based communication and running coupling tests." ON)
 option(PRECICE_FEATURE_PETSC_MAPPING "Enable use of the PETSc linear algebra library for global-iterative RBF data mappings." ON)
 option(PRECICE_FEATURE_PYTHON_ACTIONS "Enable Python support for preCICE actions." ON)
+option(PRECICE_FEATURE_PROFILING_COMPRESSION "Enable profiling compression with LZMA." OFF)
 option(PRECICE_CONFIGURE_PACKAGE_GENERATION "Configure package generation." ON)
 option(PRECICE_FEATURE_GINKGO_MAPPING "Enable use of Ginkgo for accelerated data mapping." OFF)
 option(BUILD_TESTING "Build tests" ON)
@@ -168,6 +169,15 @@ add_feature_info(PRECICE_BUILD_TOOLS PRECICE_BUILD_TOOLS
    This feature enables the support for libbacktrace in boost.stacktrace.
 
    This feature can be enabled/disabled by setting the PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES CMake option.
+  ")
+  add_feature_info(PRECICE_FEATURE_PROFILING_COMPRESSION PRECICE_FEATURE_PROFILING_COMPRESSION
+  "Enables LZAM compression of profiling data.
+
+   preCICE profiling information can be useful, but in some cases the size of the rank files can become too large.
+   This feature enables LZMA compression of the records with the fastest preset to reduce the output sizes.
+   Not that this feature introduces some profiling overhead when flushing the buffered records to file.
+
+   This feature can be enabled/disabled by setting the PRECICE_FEATURE_PROFILING_COMPRESSION CMake option.
   ")
 
 
@@ -348,6 +358,12 @@ if (PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES)
   add_subdirectory(thirdparty/libbacktrace)
 endif()
 
+# LZMA
+if (PRECICE_FEATURE_PROFILING_COMPRESSION)
+  find_package(LibLZMA REQUIRED)
+  message(STATUS "Found LZMA ${LIBLZMA_VERSION_STRING}")
+endif()
+
 #
 # Setup miscellaneous features
 #
@@ -519,6 +535,12 @@ if (PRECICE_FEATURE_PYTHON_ACTIONS)
   target_compile_definitions(preciceCore PUBLIC NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
 else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_PYTHON)
+endif()
+
+# Setup profiling compression
+if (PRECICE_FEATURE_PROFILING_COMPRESSION)
+  target_link_libraries(preciceCore PUBLIC LibLZMA::LibLZMA)
+  target_compile_definitions(preciceCore PUBLIC PRECICE_COMPRESSION)
 endif()
 
 # Includes configuration for the core
