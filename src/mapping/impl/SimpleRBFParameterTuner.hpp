@@ -42,8 +42,8 @@ double RBFParameterTunerSimple<RBF_T>::optimize(const Eigen::VectorXd &inputData
 {
   PRECICE_ASSERT(this->_isInitialized);
 
-  constexpr double POS_TOLERANCE        = 1.5; // Factor by which the radius is allowed to change before stoping
-  constexpr double ERR_TOLERANCE        = 0.5; // Factor by which the error is allowed to change before stoping
+  constexpr double POS_TOLERANCE        = 1.5; // Factor by which the radius is allowed to change before stopping
+  constexpr double ERR_TOLERANCE        = 0.5; // Factor by which the error is allowed to change before stopping
   constexpr int    MAX_BISEC_ITERATIONS = 6;   // Number of iterations during the "bisection" step. After finding initial samples
   // constexpr int MAX_SUCCESSFUL_SAMPLES = 10;
 
