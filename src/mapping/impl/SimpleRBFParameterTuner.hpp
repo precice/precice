@@ -20,7 +20,10 @@ public:
   double optimize(const Eigen::VectorXd &inputData) override;
 
   Sample optimizeIterativeIncrease(const Eigen::VectorXd &inputData, double posTolerance, size_t maxSuccessfulSamples);
-  Sample optimizeBisection(const Eigen::VectorXd &inputData, double posTolerance, int maxIterations);
+  Sample optimizeBisection(const Eigen::VectorXd &inputData, double posTolerance, double errorTolerance, int maxIterations);
+
+private:
+  static bool shouldContinue(const Sample &lowerBound, const Sample &upperBound, double posTolerance, double errorTolerance);
 };
 
 // Implementation:
@@ -38,11 +41,12 @@ double RBFParameterTunerSimple<RBF_T>::optimize(const Eigen::VectorXd &inputData
 {
   PRECICE_ASSERT(this->_isInitialized);
 
-  constexpr double POS_TOLERANCE        = 1.5;
-  constexpr int    MAX_BISEC_ITERATIONS = 6;
+  constexpr double POS_TOLERANCE        = 1.5; // Factor by which the radius is allowed to change before stoping
+  constexpr double ERR_TOLERANCE        = 0.5; // Factor by which the error is allowed to change before stoping
+  constexpr int    MAX_BISEC_ITERATIONS = 6;   // Number of iterations during the "bisection" step. After finding initial samples
   // constexpr int MAX_SUCCESSFUL_SAMPLES = 10;
 
-  Sample bestSample = optimizeBisection(inputData, POS_TOLERANCE, MAX_BISEC_ITERATIONS);
+  Sample bestSample = optimizeBisection(inputData, POS_TOLERANCE, ERR_TOLERANCE, MAX_BISEC_ITERATIONS);
   PRECICE_INFO("Best sample: rad={:.4e}, err={:.4e}", bestSample.pos, bestSample.error);
 
   return bestSample.pos;
@@ -96,7 +100,16 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeIterativeIncrease(const Eigen::Ve
 }
 
 template <typename RBF_T>
-Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &inputData, double posTolerance, int maxIterations)
+bool RBFParameterTunerSimple<RBF_T>::shouldContinue(const Sample& lowerBound, const Sample& upperBound, double posTolerance, double errorTolerance)
+{
+  bool shouldContinue = std::isnan(upperBound.error);
+  shouldContinue |= upperBound.pos > posTolerance * lowerBound.pos;
+  shouldContinue |= std::abs(upperBound.error - lowerBound.error) < errorTolerance * std::min(upperBound.error, lowerBound.error);
+  return shouldContinue;
+}
+
+template <typename RBF_T>
+Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &inputData, double posTolerance, double errorTolerance, int maxIterations)
 {
   PRECICE_ASSERT(this->_isInitialized);
 
@@ -134,7 +147,7 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &
   int    i = 0;
   Sample centerSample;
 
-  while ((std::isnan(upperBound.error) || upperBound.pos > posTolerance * lowerBound.pos) && i < maxIterations) {
+  while (shouldContinue(lowerBound, upperBound, posTolerance, errorTolerance) && i < maxIterations) {
     centerSample.pos   = (lowerBound.pos + upperBound.pos) / 2;
     centerSample.error = utils::computeRippaLOOCVerror(this->buildKernelDecomposition(centerSample.pos), inputData);
 
