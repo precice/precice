@@ -40,16 +40,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
          python-version: '3.x'
-      - name: Install pre-commit
-        run: pip install pre-commit
-      - name: Run checks
-        run: pre-commit run -a -v
-      - name: Git status
-        if: always()
-        run: git status
-      - name: Full diff
-        if: always()
-        run: git diff
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
 
   linux:
     name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }}
@@ -76,7 +68,7 @@ jobs:
             TYPE: Debug
             COVFLAGS: '--coverage'
           - IMAGE: 'ubuntu-2204'
-            CONFIG: MPIPETSc
+            CONFIG: MPIPETScLZMA
             CXX: 'g++'
             TYPE: Debug
             COVFLAGS: '--coverage'
@@ -145,10 +137,11 @@ jobs:
           MPI: ${{ contains(matrix.CONFIG, 'MPI') }}
           PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
           Ginkgo: ${{ contains(matrix.CONFIG, 'Ginkgo') }}
+          COMPRESS: ${{ contains(matrix.CONFIG, 'LZMA') }}
         run: |
           . ../venv/bin/activate # There is always a venv present
           cmake --version
-          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DPRECICE_FEATURE_GINKGO_MAPPING=${{ env.Ginkgo }} -DPRECICE_FEATURE_LIBBACKTRACE_STACKTRACES=ON -DPRECICE_BUILD_BENCHMARKS=ON  -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" ..
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DPRECICE_FEATURE_GINKGO_MAPPING=${{ env.Ginkgo }} -DPRECICE_FEATURE_PROFILING_COMPRESSION=${{ env.COMPRESS }} -DPRECICE_FEATURE_LIBBACKTRACE_STACKTRACES=ON -DPRECICE_BUILD_BENCHMARKS=ON  -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" ..
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

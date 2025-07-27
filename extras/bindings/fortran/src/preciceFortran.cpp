@@ -506,15 +506,15 @@ try {
 
 void precicef_get_mesh_vertex_ids_and_coordinates_(
     const char *meshName,
-    const int   size,
+    const int  *size,
     int        *ids,
     double     *coordinates,
     int         meshNameLength)
 try {
   PRECICE_CHECK(impl != nullptr, errormsg);
   auto sv              = precice::impl::strippedStringView(meshName, meshNameLength);
-  auto coordinatesSize = static_cast<unsigned long>(impl->getMeshDimensions(sv) * size);
-  impl->getMeshVertexIDsAndCoordinates(sv, {ids, static_cast<unsigned long>(size)}, {coordinates, coordinatesSize});
+  auto coordinatesSize = static_cast<unsigned long>(impl->getMeshDimensions(sv) * *size);
+  impl->getMeshVertexIDsAndCoordinates(sv, {ids, static_cast<unsigned long>(*size)}, {coordinates, coordinatesSize});
 } catch (::precice::Error &e) {
   std::abort();
 }

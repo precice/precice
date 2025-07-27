@@ -38,6 +38,7 @@ int main(int argc, char **argv)
   try {
     precice::tooling::checkConfiguration(file, participant, size);
   } catch (const ::precice::Error &) {
+    return 2;
   }
   return 0;
 }
