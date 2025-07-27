@@ -28,7 +28,8 @@ private:
 
 // Implementation:
 
-template <typename RBF_T> template <typename IndexContainer>
+template <typename RBF_T>
+template <typename IndexContainer>
 RBFParameterTunerSimple<RBF_T>::RBFParameterTunerSimple(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool, 3> &activeAxis)
     : RBFParameterTuner<RBF_T>(inputMesh, inputIDs, polynomial, activeAxis)
 {
@@ -100,7 +101,7 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeIterativeIncrease(const Eigen::Ve
 }
 
 template <typename RBF_T>
-bool RBFParameterTunerSimple<RBF_T>::shouldContinue(const Sample& lowerBound, const Sample& upperBound, double posTolerance, double errorTolerance)
+bool RBFParameterTunerSimple<RBF_T>::shouldContinue(const Sample &lowerBound, const Sample &upperBound, double posTolerance, double errorTolerance)
 {
   bool shouldContinue = std::isnan(upperBound.error);
   shouldContinue |= upperBound.pos > posTolerance * lowerBound.pos;
@@ -163,4 +164,4 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &
   return std::isnan(centerSample.error) ? lowerBound : centerSample;
 }
 
-}
+} // namespace precice::mapping

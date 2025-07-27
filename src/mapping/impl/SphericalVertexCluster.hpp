@@ -50,12 +50,12 @@ public:
    * @param[in] outputMesh mesh where we evaluate the interpolants, i.e., the output mesh consistent
    *                      mappings and the input mesh for conservative mappings
    */
-  SphericalVertexCluster(mesh::Vertex            center,
-                         double                  radius,
-                         RADIAL_BASIS_FUNCTION_T function,
-                         Polynomial              polynomial,
-                         mesh::PtrMesh           inputMesh,
-                         mesh::PtrMesh           outputMesh,
+  SphericalVertexCluster(mesh::Vertex                           center,
+                         double                                 radius,
+                         RADIAL_BASIS_FUNCTION_T                function,
+                         Polynomial                             polynomial,
+                         mesh::PtrMesh                          inputMesh,
+                         mesh::PtrMesh                          outputMesh,
                          MappingConfiguration::AutotuningParams rbfOptional);
 
   /// Evaluates a conservative mapping and agglomerates the result in the given output data
@@ -138,12 +138,12 @@ private:
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
-    mesh::Vertex            center,
-    double                  radius,
-    RADIAL_BASIS_FUNCTION_T function,
-    Polynomial              polynomial,
-    mesh::PtrMesh           inputMesh,
-    mesh::PtrMesh           outputMesh,
+    mesh::Vertex                           center,
+    double                                 radius,
+    RADIAL_BASIS_FUNCTION_T                function,
+    Polynomial                             polynomial,
+    mesh::PtrMesh                          inputMesh,
+    mesh::PtrMesh                          outputMesh,
     MappingConfiguration::AutotuningParams rbfOptional)
     : _center(center), _radius(radius), _polynomial(polynomial), _function(function), _weightingFunction(radius)
 {

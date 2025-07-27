@@ -12,9 +12,9 @@ PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(GaussianShapeParameter)
 {
   /**
- * @brief Tests the Gaussian rbf mapping using the support radius option
- *
- */
+   * @brief Tests the Gaussian rbf mapping using the support radius option
+   *
+   */
   PRECICE_TEST();
   testRBFTuning(context.config(), context);
 }

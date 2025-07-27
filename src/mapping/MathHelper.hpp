@@ -156,12 +156,11 @@ inline Eigen::VectorXd computeInverseDiagonal(const Eigen::ColPivHouseholderQR<E
  *
  * Implementation of LOOCV according to Rippa(1999), DOI: 10.1023/a:1018975909870
  */
-template<typename DecompositionType>
+template <typename DecompositionType>
 double computeRippaLOOCVerror(const DecompositionType &choleskyDec, const Eigen::VectorXd &inputData)
 {
   static_assert(std::is_same_v<DecompositionType, Eigen::LLT<Eigen::MatrixXd>> || std::is_same_v<DecompositionType, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>,
-    "computeRippaLOOCVerror() only allows DecompositionType to be Eigen::LLT<Eigen::MatrixXd>> or Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>"
-  );
+                "computeRippaLOOCVerror() only allows DecompositionType to be Eigen::LLT<Eigen::MatrixXd>> or Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>");
 
   if (choleskyDec.info() != Eigen::ComputationInfo::Success) {
     return std::numeric_limits<double>::quiet_NaN();
@@ -194,11 +193,12 @@ inline double approximateReciprocalConditionNumber(const Eigen::LLT<Eigen::Matri
 
   for (Eigen::Index i = 0; i < n; i++) {
     const double lii = choleskyDec.matrixL()(i, i);
-    min_l = std::min(lii, min_l);
-    max_l = std::max(lii, max_l);
+    min_l            = std::min(lii, min_l);
+    max_l            = std::max(lii, max_l);
   }
   double rcond = min_l * min_l / (max_l * max_l);
-  if (rcond < 0 || std::isnan(rcond)) rcond = 0;
+  if (rcond < 0 || std::isnan(rcond))
+    rcond = 0;
 
   return rcond;
 }
@@ -223,11 +223,12 @@ inline double approximateReciprocalConditionNumber(const Eigen::ColPivHouseholde
 
   for (Eigen::Index i = 0; i < n; i++) {
     const double rii = qrDec.matrixR()(i, i);
-    min_r = std::min(rii, min_r);
-    max_r = std::max(rii, max_r);
+    min_r            = std::min(rii, min_r);
+    max_r            = std::max(rii, max_r);
   }
-  double rcond =  min_r / max_r;
-  if (rcond < 0 || std::isnan(rcond)) rcond = 0;
+  double rcond = min_r / max_r;
+  if (rcond < 0 || std::isnan(rcond))
+    rcond = 0;
 
   return rcond;
 }

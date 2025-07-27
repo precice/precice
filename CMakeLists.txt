@@ -228,22 +228,6 @@ precice_validate_libxml2()
 # libfmt
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt)
 
-# limbo
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/limbo)
-# optional optimizer packages for limbo
-find_package(libcmaes QUIET)
-if(libcmaes_FOUND)
-  message(STATUS "Found libcmaes for limbo.")
-else()
-  message(STATUS "libcmaes (CMA-ES optimizer) for limbo not found.")
-  find_package(NLopt QUIET)
-  if(NLopt_FOUND)
-    message(STATUS "Found NLopt for limbo.")
-  else()
-    message(STATUS "NLopt (non-linear optimizer) for limbo not found, using default grid search.")
-  endif()
-endif()
-
 #
 # Find Configurable Dependencies
 #
@@ -439,12 +423,6 @@ if(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES)
   target_link_libraries(preciceCore PRIVATE internal::libbacktrace)
 endif()
 
-if(libcmaes_FOUND)
-  target_compile_definitions(preciceCore PUBLIC USE_LIBCMAES)
-elseif (NLopt_FOUND)
-  target_compile_definitions(preciceCore PUBLIC USE_NLOPT)
-endif()
-
 # Force Intel compiler to honor nan and infinite and use value-preserving floating point mode
 target_compile_options(preciceCore PUBLIC $<$<CXX_COMPILER_ID:IntelLLVM>:-fhonor-infinities -fhonor-nans -fp-model=precise>)
 
@@ -457,16 +435,6 @@ target_link_libraries(preciceCore PUBLIC LibXml2::LibXml2)
 
 # Setup FMT
 target_link_libraries(preciceCore PUBLIC fmtlib-static)
-
-# Setup limbo
-if(libcmaes_FOUND)
-  target_link_libraries(preciceCore PUBLIC cmaes)
-elseif (NLopt_FOUND)
-  target_link_libraries(preciceCore PUBLIC nlopt)
-endif()
-
-# Setup limbo
-target_link_libraries(preciceCore PUBLIC limbo)
 
 # Setup MPI
 if (PRECICE_FEATURE_MPI_COMMUNICATION)

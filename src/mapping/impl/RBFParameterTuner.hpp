@@ -18,11 +18,13 @@ struct Sample {
 
   Sample(double pos, double error)
       : pos(pos), error(error)
-  {}
+  {
+  }
 
   Sample()
       : pos(std::numeric_limits<double>::quiet_NaN()), error(std::numeric_limits<double>::quiet_NaN())
-  {}
+  {
+  }
 };
 
 template <typename RBF_T>
@@ -66,7 +68,8 @@ public:
   static double getMinBoundSize(const mesh::Mesh &inputMesh);
 };
 
-template <typename RBF_T> template <typename IndexContainer>
+template <typename RBF_T>
+template <typename IndexContainer>
 RBFParameterTuner<RBF_T>::RBFParameterTuner(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool, 3> &activeAxis)
     : _kernelMatrix(Eigen::MatrixXd(0, 0))
 {
@@ -167,4 +170,4 @@ double RBFParameterTuner<RBF_T>::getMinBoundSize(const mesh::Mesh &inputMesh)
   return minLength / 2;
 };
 
-}
+} // namespace precice::mapping

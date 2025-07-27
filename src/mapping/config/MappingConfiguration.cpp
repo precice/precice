@@ -458,8 +458,8 @@ void MappingConfiguration::xmlTagCallback(
                                                             "from mesh \"{}\" to mesh \"{}\".",
                   _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
 
-    std::string basisFctName   = tag.getName();
-    std::string supportRadiusTag  = tag.getStringAttributeValue(ATTR_SUPPORT_RADIUS, "NaN");
+    std::string basisFctName     = tag.getName();
+    std::string supportRadiusTag = tag.getStringAttributeValue(ATTR_SUPPORT_RADIUS, "NaN");
 
     double shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM, 0.);
     double supportRadius  = std::numeric_limits<double>::quiet_NaN();
@@ -469,7 +469,7 @@ void MappingConfiguration::xmlTagCallback(
     if (!_rbfOptional.autotuneShape) {
       try {
         supportRadius = std::stod(supportRadiusTag);
-      } catch (const std::invalid_argument&) {
+      } catch (const std::invalid_argument &) {
         PRECICE_ERROR("\"support-radius\" must either be a positive floating-point value or \"auto\"");
       }
     } else {

@@ -174,8 +174,10 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::clear()
   this->_hasComputedMapping = false;
 }
 
-template<typename T, typename U = int> constexpr bool defines_solver_and_executor = false;
-template<typename T> constexpr bool defines_solver_and_executor<T, decltype(T::executor, T::solver, 0)> = true; // SFINAE specialization
+template <typename T, typename U = int>
+constexpr bool defines_solver_and_executor = false;
+template <typename T>
+constexpr bool defines_solver_and_executor<T, decltype(T::executor, T::solver, 0)> = true; // SFINAE specialization
 
 template <typename SOLVER_T, typename... Args>
 std::string RadialBasisFctMapping<SOLVER_T, Args...>::getName() const
@@ -183,7 +185,7 @@ std::string RadialBasisFctMapping<SOLVER_T, Args...>::getName() const
   if constexpr (0 < std::tuple_size_v<std::tuple<Args...>>) {
     auto param = std::get<0>(optionalArgs);
     if constexpr (defines_solver_and_executor<decltype(param)>) {
-      std::string exec  = param.executor;
+      std::string exec = param.executor;
       if (param.solver == "qr-solver") {
         return "global-direct RBF (" + exec + ")";
       } else {

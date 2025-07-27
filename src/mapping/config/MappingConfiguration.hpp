@@ -100,7 +100,8 @@ public:
 
   struct AutotuningParams {
     enum class Type {
-      BISECTION, BAYES_OPTIMIZATION
+      BISECTION,
+      BAYES_OPTIMIZATION
     };
 
     Type optimizationType = Type::BISECTION; // not yet used

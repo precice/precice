@@ -54,14 +54,14 @@ public:
       bool                    projectToInput);
 
   PartitionOfUnityMapping(
-        Mapping::Constraint     constraint,
-        int                     dimension,
-        RADIAL_BASIS_FUNCTION_T function,
-        Polynomial              polynomial,
-        unsigned int            verticesPerCluster,
-        double                  relativeOverlap,
-        bool                    projectToInput,
-        MappingConfiguration::AutotuningParams rbfOptional);
+      Mapping::Constraint                    constraint,
+      int                                    dimension,
+      RADIAL_BASIS_FUNCTION_T                function,
+      Polynomial                             polynomial,
+      unsigned int                           verticesPerCluster,
+      double                                 relativeOverlap,
+      bool                                   projectToInput,
+      MappingConfiguration::AutotuningParams rbfOptional);
 
   /**
    * Computes the clustering for the partition of unity method and fills the \p _clusters vector,
@@ -154,17 +154,18 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
     double                  relativeOverlap,
     bool                    projectToInput)
     : PartitionOfUnityMapping(constraint, dimension, function, polynomial, verticesPerCluster, relativeOverlap, projectToInput, {})
-{ }
+{
+}
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
-    Mapping::Constraint     constraint,
-    int                     dimension,
-    RADIAL_BASIS_FUNCTION_T function,
-    Polynomial              polynomial,
-    unsigned int            verticesPerCluster,
-    double                  relativeOverlap,
-    bool                    projectToInput,
+    Mapping::Constraint                    constraint,
+    int                                    dimension,
+    RADIAL_BASIS_FUNCTION_T                function,
+    Polynomial                             polynomial,
+    unsigned int                           verticesPerCluster,
+    double                                 relativeOverlap,
+    bool                                   projectToInput,
     MappingConfiguration::AutotuningParams rbfOptional)
     : Mapping(constraint, dimension, false, Mapping::InitialGuessRequirement::None),
       _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial), _rbfOptional(rbfOptional)
