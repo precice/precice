@@ -597,7 +597,7 @@ std::string BaseCouplingScheme::printCouplingState() const
     if (_minIterations != UNDEFINED_MIN_ITERATIONS) {
       fmt::format_to(out, " (min {})", _minIterations);
     }
-    fmt::format_to(out, ",");
+    fmt::format_to(out, ", ");
   }
 
   fmt::format_to(out, "time-windows {}", _timeWindows);
