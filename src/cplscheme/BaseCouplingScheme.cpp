@@ -584,7 +584,12 @@ void BaseCouplingScheme::requireAction(
 std::string BaseCouplingScheme::printCouplingState() const
 {
   std::ostringstream os;
-  if (isCouplingOngoing() && isImplicitCouplingScheme()) {
+  if (!isCouplingOngoing()) {
+    os << "Reached end at: final time-window: " << (_timeWindows - 1) << ", final time: " << getTime();
+    return os.str();
+  }
+
+  if (isImplicitCouplingScheme()) {
     os << "it " << _iterations; //_iterations;
     if ((_maxIterations != UNDEFINED_MAX_ITERATIONS) && (_maxIterations != INFINITE_MAX_ITERATIONS)) {
       os << " of " << _maxIterations;
@@ -594,67 +599,26 @@ std::string BaseCouplingScheme::printCouplingState() const
     }
     os << ", ";
   }
-  os << printBasicState(_timeWindows, getTime());
-  std::string actionsState = printActionsState();
-  if (!actionsState.empty()) {
-    os << ", " << actionsState;
-  }
-  return os.str();
-}
 
-std::string BaseCouplingScheme::printBasicState(
-    int    timeWindows,
-    double time) const
-{
-  std::ostringstream os;
-  if (isCouplingOngoing()) {
-    os << "time-window " << timeWindows;
-    if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
-      os << " of " << _maxTimeWindows;
-    }
-    os << ", t " << time;
-    if (_maxTime != UNDEFINED_MAX_TIME) {
-      os << " of " << _maxTime;
-    }
-    if (hasTimeWindowSize()) {
-      os << ", Dt " << _timeWindowSize;
-    }
-    if (hasTimeWindowSize() || (_maxTime != UNDEFINED_MAX_TIME)) {
-      os << ", max-dt " << getNextTimeStepMaxSize();
-    }
-    os << ", time-window ";
-    if (isExplicitCouplingScheme()) {
-      if (math::equals(_time.time(), 0.0)) {
-        os << "initial";
-      } else {
-        isTimeWindowComplete() ? os << "completed" : os << "subcycling";
-      }
-    } else {
-      if (_iterations == 1) {
-        if (math::equals(_time.time(), 0.0)) {
-          os << "initial";
-        } else {
-          os << "converged";
-        }
-      } else {
-        if (math::equals(_time.windowProgress(), 0.0)) {
-          os << "iterating";
-        } else {
-          os << "subcylcing";
-        }
-      }
-    }
-  } else {
-    os << "Reached end at: final time-window: " << (timeWindows - 1) << ", final time: " << time;
+  os << "time-window " << _timeWindows;
+  if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
+    os << " of " << _maxTimeWindows;
   }
-  return os.str();
-}
-
-std::string BaseCouplingScheme::printActionsState() const
-{
-  std::ostringstream os;
-  for (auto action : _requiredActions) {
-    os << toString(action) << ' ';
+  os << ", t " << getTime();
+  if (_maxTime != UNDEFINED_MAX_TIME) {
+    os << " of " << _maxTime;
+  }
+  if (hasTimeWindowSize()) {
+    os << ", Dt " << _timeWindowSize;
+  }
+  if (hasTimeWindowSize() || (_maxTime != UNDEFINED_MAX_TIME)) {
+    os << ", max-dt " << getNextTimeStepMaxSize();
+  }
+  if (!_requiredActions.empty()) {
+    os << ", ";
+    for (auto action : _requiredActions) {
+      os << toString(action) << ' ';
+    }
   }
   return os.str();
 }
