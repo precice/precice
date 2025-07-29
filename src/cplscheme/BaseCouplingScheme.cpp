@@ -583,44 +583,44 @@ void BaseCouplingScheme::requireAction(
 
 std::string BaseCouplingScheme::printCouplingState() const
 {
-  std::ostringstream os;
   if (!isCouplingOngoing()) {
-    os << "Reached end at: final time-window: " << (_timeWindows - 1) << ", final time: " << getTime();
-    return os.str();
+    return fmt::format("Reached end at: final time-window: {}, final time: {}", (_timeWindows - 1), getTime());
   }
+  std::string str;
+  auto        out = std::back_inserter(str);
 
   if (isImplicitCouplingScheme()) {
-    os << "it " << _iterations; //_iterations;
+    fmt::format_to(out, "it {}", _iterations);
     if ((_maxIterations != UNDEFINED_MAX_ITERATIONS) && (_maxIterations != INFINITE_MAX_ITERATIONS)) {
-      os << " of " << _maxIterations;
+      fmt::format_to(out, " of {}", _maxIterations);
     }
     if (_minIterations != UNDEFINED_MIN_ITERATIONS) {
-      os << " (min " << _minIterations << ")";
+      fmt::format_to(out, " (min {})", _minIterations);
     }
-    os << ", ";
+    fmt::format_to(out, ",");
   }
 
-  os << "time-window " << _timeWindows;
+  fmt::format_to(out, "time-windows {}", _timeWindows);
   if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
-    os << " of " << _maxTimeWindows;
+    fmt::format_to(out, " of {}", _maxTimeWindows);
   }
-  os << ", t " << getTime();
+  fmt::format_to(out, ", t {}", getTime());
   if (_maxTime != UNDEFINED_MAX_TIME) {
-    os << " of " << _maxTime;
+    fmt::format_to(out, " of {}", _maxTime);
   }
   if (hasTimeWindowSize()) {
-    os << ", Dt " << _timeWindowSize;
+    fmt::format_to(out, ", Dt {}", _timeWindowSize);
   }
   if (hasTimeWindowSize() || (_maxTime != UNDEFINED_MAX_TIME)) {
-    os << ", max-dt " << getNextTimeStepMaxSize();
+    fmt::format_to(out, ", max-dt {}", getNextTimeStepMaxSize());
   }
   if (!_requiredActions.empty()) {
-    os << ", ";
+    fmt::format_to(out, ", ");
     for (auto action : _requiredActions) {
-      os << toString(action) << ' ';
+      fmt::format_to(out, "{} ", toString(action));
     }
   }
-  return os.str();
+  return str;
 }
 
 void BaseCouplingScheme::checkCompletenessRequiredActions()
