@@ -600,7 +600,7 @@ std::string BaseCouplingScheme::printCouplingState() const
     fmt::format_to(out, ", ");
   }
 
-  fmt::format_to(out, "time-windows {}", _timeWindows);
+  fmt::format_to(out, "time-window {}", _timeWindows);
   if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
     fmt::format_to(out, " of {}", _maxTimeWindows);
   }
@@ -609,10 +609,7 @@ std::string BaseCouplingScheme::printCouplingState() const
     fmt::format_to(out, " of {}", _maxTime);
   }
   if (hasTimeWindowSize()) {
-    fmt::format_to(out, ", Dt {}", _timeWindowSize);
-  }
-  if (hasTimeWindowSize() || (_maxTime != UNDEFINED_MAX_TIME)) {
-    fmt::format_to(out, ", max-dt {}", getNextTimeStepMaxSize());
+    fmt::format_to(out, ", Dt {}, max-dt {}", _timeWindowSize, getNextTimeStepMaxSize());
   }
   if (!_requiredActions.empty()) {
     fmt::format_to(out, ", ");
