@@ -1,9 +1,9 @@
 #pragma once
 
-#include "mapping/impl/RBFParameterTuner.hpp"
-#include <mesh/Mesh.hpp>
 #include <mapping/MathHelper.hpp>
 #include <mapping/config/MappingConfigurationTypes.hpp>
+#include <mesh/Mesh.hpp>
+#include "mapping/impl/RBFParameterTuner.hpp"
 
 namespace precice::mapping {
 

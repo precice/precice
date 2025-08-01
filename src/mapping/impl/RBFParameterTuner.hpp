@@ -1,11 +1,11 @@
 #pragma once
 
 #include <functional>
-#include <mesh/Mesh.hpp>
 #include <mapping/MathHelper.hpp>
 #include <mapping/RadialBasisFctSolver.hpp>
 #include <mapping/config/MappingConfigurationTypes.hpp>
 #include <mapping/impl/BasisFunctions.hpp>
+#include <mesh/Mesh.hpp>
 
 namespace precice::mapping {
 
