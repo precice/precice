@@ -590,23 +590,27 @@ std::string BaseCouplingScheme::printCouplingState() const
   auto        out = std::back_inserter(str);
 
   if (isImplicitCouplingScheme()) {
-    fmt::format_to(out, "it {}", _iterations);
-    if ((_maxIterations != UNDEFINED_MAX_ITERATIONS) && (_maxIterations != INFINITE_MAX_ITERATIONS)) {
-      fmt::format_to(out, " of {}", _maxIterations);
+    auto hasMax = (_maxIterations != UNDEFINED_MAX_ITERATIONS) && (_maxIterations != INFINITE_MAX_ITERATIONS);
+    auto hasMin = _minIterations != UNDEFINED_MIN_ITERATIONS;
+
+    if (hasMax && hasMin) {
+      fmt::format_to(out, "it {} (min: {}, max: {}), ", _iterations, _minIterations, _maxIterations);
+    } else if (hasMax) {
+      fmt::format_to(out, "it {} (max: {}), ", _iterations, _maxIterations);
+    } else if (hasMin) {
+      fmt::format_to(out, "it {} (min: {}), ", _iterations, _minIterations);
+    } else {
+      fmt::format_to(out, "it {}, ", _iterations);
     }
-    if (_minIterations != UNDEFINED_MIN_ITERATIONS) {
-      fmt::format_to(out, " (min {})", _minIterations);
-    }
-    fmt::format_to(out, ", ");
   }
 
   fmt::format_to(out, "time-window {}", _timeWindows);
   if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
-    fmt::format_to(out, " of {}", _maxTimeWindows);
+    fmt::format_to(out, " (max: {})", _maxTimeWindows);
   }
   fmt::format_to(out, ", t {}", getTime());
   if (_maxTime != UNDEFINED_MAX_TIME) {
-    fmt::format_to(out, " of {}", _maxTime);
+    fmt::format_to(out, " (max: {})", _maxTime);
   }
   if (hasTimeWindowSize()) {
     fmt::format_to(out, ", Dt {}, max-dt {}", _timeWindowSize, getNextTimeStepMaxSize());
