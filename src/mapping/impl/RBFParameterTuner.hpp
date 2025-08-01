@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <mesh/Mesh.hpp>
 #include <mapping/MathHelper.hpp>
 #include <mapping/RadialBasisFctSolver.hpp>
 #include <mapping/config/MappingConfigurationTypes.hpp>
@@ -29,6 +30,8 @@ struct Sample {
 
 template <typename RBF_T>
 class RBFParameterTuner {
+
+  mutable logging::Logger _log{"mapping::RBFParameterTuner"};
 
 protected:
   mutable Eigen::MatrixXd _kernelMatrix;

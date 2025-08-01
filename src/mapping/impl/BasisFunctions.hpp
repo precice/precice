@@ -287,7 +287,7 @@ public:
     return _params;
   };
 
-  static constexpr double transformRadiusToShape(const double radius)
+  static double transformRadiusToShape(const double radius)
   {
     return std::sqrt(-std::log(cutoffThreshold)) / radius;
   }

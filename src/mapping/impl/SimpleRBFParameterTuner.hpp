@@ -1,6 +1,9 @@
 #pragma once
 
 #include "mapping/impl/RBFParameterTuner.hpp"
+#include <mesh/Mesh.hpp>
+#include <mapping/MathHelper.hpp>
+#include <mapping/config/MappingConfigurationTypes.hpp>
 
 namespace precice::mapping {
 
@@ -11,7 +14,7 @@ class RBFParameterTunerSimple : public RBFParameterTuner<RBF_T> {
 
   std::vector<Sample> _samples;
 
-  mutable logging::Logger _log{"mapping::RBFParameterTuner"};
+  mutable logging::Logger _log{"mapping::SimpleRBFParameterTuner"};
 
 public:
   template <typename IndexContainer>
