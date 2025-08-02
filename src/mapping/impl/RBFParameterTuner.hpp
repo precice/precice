@@ -132,10 +132,10 @@ auto RBFParameterTuner<RBF_T>::applyKernelToMatrix(const Eigen::Ref<const Eigen:
       parameter = RBF_T::transformRadiusToShape(sampleRadius);
     }
     RBF_T kernel(parameter);
-    expr = [&kernel](double x) { return kernel.evaluate(x); };
+    expr = [kernel](double x) { return kernel.evaluate(x); };
   } else {
     PRECICE_ASSERT(false, "Selected RBF does not support a radius.");
-    expr = [&](double x) { return x; };
+    expr = [](double x) { return x; };
   }
   return matrixExpr.unaryExpr(expr);
 }
