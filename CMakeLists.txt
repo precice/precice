@@ -841,9 +841,6 @@ if (BUILD_TESTING)
 
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 
-  # Add precice-profiling tests
-  add_subdirectory(tools/profiling)
-
   #
   # Add test_install
   #
