@@ -7,23 +7,23 @@
 
 namespace precice::mapping {
 
-template <typename RBF_T>
-class RBFParameterTunerSimple : public RBFParameterTuner<RBF_T> {
+template <typename Solver>
+class RBFParameterTunerSimple : public RBFParameterTuner<Solver> {
 
-  using DecompositionType = typename RBFParameterTuner<RBF_T>::DecompositionType;
+  //using DecompositionType = typename RBFParameterTuner<Solver>::DecompositionType;
 
   std::vector<Sample> _samples;
 
   mutable logging::Logger _log{"mapping::SimpleRBFParameterTuner"};
 
 public:
-  template <typename IndexContainer>
-  RBFParameterTunerSimple(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool, 3> &activeAxis);
+  ~RBFParameterTunerSimple() override = default; //TODO was wenn weg?
+  RBFParameterTunerSimple(const mesh::Mesh &inputMesh);
 
-  double optimize(const Eigen::VectorXd &inputData) override;
+  double optimize(const Solver &solver, const Eigen::VectorXd &inputData) override;
 
-  Sample optimizeIterativeIncrease(const Eigen::VectorXd &inputData, double posTolerance, size_t maxSuccessfulSamples);
-  Sample optimizeBisection(const Eigen::VectorXd &inputData, double posTolerance, double errorTolerance, int maxIterations);
+  //Sample optimizeIterativeIncrease(Solver &solver, const Eigen::VectorXd &inputData, double posTolerance, size_t maxSuccessfulSamples);
+  Sample optimizeBisection(const Solver &solver, const Eigen::VectorXd &inputData, double posTolerance, double errorTolerance, int maxIterations);
 
 private:
   static bool shouldContinue(const Sample &lowerBound, const Sample &upperBound, double posTolerance, double errorTolerance);
@@ -31,33 +31,33 @@ private:
 
 // Implementation:
 
-template <typename RBF_T>
-template <typename IndexContainer>
-RBFParameterTunerSimple<RBF_T>::RBFParameterTunerSimple(const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, const Polynomial &polynomial, const std::array<bool, 3> &activeAxis)
-    : RBFParameterTuner<RBF_T>(inputMesh, inputIDs, polynomial, activeAxis)
+template <typename Solver>
+RBFParameterTunerSimple<Solver>::RBFParameterTunerSimple(const mesh::Mesh &inputMesh)
+    : RBFParameterTuner<Solver>(inputMesh)
 {
-  PRECICE_ASSERT(this->rbfSupportsRadius(), "RBF is not supported by this optimizer, as it does not accept a support-radius."
-                                            "Currently supported: Compactly supported RBFs and Gaussians.");
+  // TODO move up
+  //PRECICE_ASSERT(this->rbfSupportsRadius(), "RBF is not supported by this optimizer, as it does not accept a support-radius."
+  //                                          "Currently supported: Compactly supported RBFs and Gaussians.");
 }
 
-template <typename RBF_T>
-double RBFParameterTunerSimple<RBF_T>::optimize(const Eigen::VectorXd &inputData)
+template <typename Solver>
+double RBFParameterTunerSimple<Solver>::optimize(const Solver &solver, const Eigen::VectorXd &inputData)
 {
-  PRECICE_ASSERT(this->_isInitialized);
 
   constexpr double POS_TOLERANCE        = 1.5; // Factor by which the radius is allowed to change before stopping
   constexpr double ERR_TOLERANCE        = 0.5; // Factor by which the error is allowed to change before stopping
   constexpr int    MAX_BISEC_ITERATIONS = 6;   // Number of iterations during the "bisection" step. After finding initial samples
   // constexpr int MAX_SUCCESSFUL_SAMPLES = 10;
 
-  Sample bestSample = optimizeBisection(inputData, POS_TOLERANCE, ERR_TOLERANCE, MAX_BISEC_ITERATIONS);
+  Sample bestSample = optimizeBisection(solver, inputData, POS_TOLERANCE, ERR_TOLERANCE, MAX_BISEC_ITERATIONS);
   PRECICE_INFO("Best sample: rad={:.4e}, err={:.4e}", bestSample.pos, bestSample.error);
 
   return bestSample.pos;
 }
 
+/*
 template <typename RBF_T>
-Sample RBFParameterTunerSimple<RBF_T>::optimizeIterativeIncrease(const Eigen::VectorXd &inputData, double posTolerance, size_t maxSuccessfulSamples)
+Sample RBFParameterTunerSimple<RBF_T>::optimizeIterativeIncrease(Solver &solver, const Eigen::VectorXd &inputData, double posTolerance, size_t maxSuccessfulSamples)
 {
   double increaseSize = 10;
   double sampleRadius = this->_lowerBound;
@@ -102,6 +102,7 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeIterativeIncrease(const Eigen::Ve
   }
   return _samples[minIdx];
 }
+*/
 
 template <typename RBF_T>
 bool RBFParameterTunerSimple<RBF_T>::shouldContinue(const Sample &lowerBound, const Sample &upperBound, double posTolerance, double errorTolerance)
@@ -112,10 +113,10 @@ bool RBFParameterTunerSimple<RBF_T>::shouldContinue(const Sample &lowerBound, co
   return shouldContinue;
 }
 
-template <typename RBF_T>
-Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &inputData, double posTolerance, double errorTolerance, int maxIterations)
+template <typename Solver>
+Sample RBFParameterTunerSimple<Solver>::optimizeBisection(const Solver &solver, const Eigen::VectorXd &inputData, double posTolerance, double errorTolerance, int maxIterations)
 {
-  PRECICE_ASSERT(this->_isInitialized);
+  //PRECICE_ASSERT(this->_isInitialized);
 
   constexpr double increaseSize = 10;
   double           sampleRadius = this->_lowerBound;
@@ -129,6 +130,8 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &
   while (true) {
     sampleRadius *= increaseSize;
 
+    auto [error, rcond] = solver.computeErrorEstimate(inputData, sampleRadius);
+    /*
     DecompositionType dec = this->buildKernelDecomposition(sampleRadius);
     if (dec.info() != Eigen::ComputationInfo::Success) {
       PRECICE_INFO("RBF tuner sample: rad={:.4e}, matrix decomposition failed", sampleRadius);
@@ -137,6 +140,7 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &
 
     double rcond = utils::approximateReciprocalConditionNumber(dec);
     double error = utils::computeRippaLOOCVerror(dec, inputData);
+    */
 
     PRECICE_INFO("RBF tuner sample: rad={:.4e}, err={:.4e}, 1/cond={:.4e}", sampleRadius, error, rcond);
 
@@ -153,7 +157,9 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &
 
   while (shouldContinue(lowerBound, upperBound, posTolerance, errorTolerance) && i < maxIterations) {
     centerSample.pos   = (lowerBound.pos + upperBound.pos) / 2;
-    centerSample.error = utils::computeRippaLOOCVerror(this->buildKernelDecomposition(centerSample.pos), inputData);
+    //centerSample.error = utils::computeRippaLOOCVerror(this->buildKernelDecomposition(centerSample.pos), inputData);
+
+    centerSample.error = std::get<0>(solver.computeErrorEstimate(inputData, sampleRadius));
 
     PRECICE_INFO("Current interval: [{:.4e}, {:.4e}], Sample: rad={:.4e}, err={:.4e}", lowerBound.pos, upperBound.pos, centerSample.pos, centerSample.error);
 
@@ -164,7 +170,7 @@ Sample RBFParameterTunerSimple<RBF_T>::optimizeBisection(const Eigen::VectorXd &
     }
     i++;
   }
-  return std::isnan(centerSample.error) ? lowerBound : centerSample;
+  return std::isnan(centerSample.error) ? lowerBound : centerSample; // TODO: ?
 }
 
 } // namespace precice::mapping

@@ -40,12 +40,12 @@ public:
    * consistent mappings and the input mesh for conservative mappings
    */
   template <typename IndexContainer>
-  RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
-                       const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::AutotuningParams rbfConfig);
+  RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::PtrMesh &inputMesh, const IndexContainer &inputIDs,
+                       const mesh::PtrMesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::AutotuningParams rbfConfig);
 
   template <typename IndexContainer>
-  RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
-                       const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial); // TODO: refactor and adapt for PUM
+  RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::PtrMesh &inputMesh, const IndexContainer &inputIDs,
+                       const mesh::PtrMesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial); // TODO: refactor and adapt for PUM
 
   /// Maps the given input data
   Eigen::VectorXd solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const;
@@ -77,6 +77,9 @@ public:
 
   void evaluateConservativeCache(Eigen::MatrixXd &epsilon, const Eigen::MatrixXd &Au, Eigen::MatrixXd &result) const;
 
+  std::tuple<double, double> computeErrorEstimate(const Eigen::VectorXd &inputData, double parameter) const;
+  DecompositionType buildKernelDecomposition(double parameter) const;
+
 private:
   mutable precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
 
@@ -101,10 +104,18 @@ private:
   /// Evaluation matrix (output x input)
   Eigen::MatrixXd _matrixA;
 
+  Eigen::MatrixXd _distanceMatrix;
+  mutable Eigen::MatrixXd _kernelMatrix;
+  Eigen::Index _inSize;
+
   bool                computeCrossValidation = false;
   std::array<bool, 3> _localActiveAxis;
 
-  mutable std::unique_ptr<RBFParameterTuner<RADIAL_BASIS_FUNCTION_T>> _tuner;
+  mutable std::unique_ptr<RBFParameterTuner<RadialBasisFctSolver>> _tuner;
+
+  std::array<bool, 3> _activeAxis;
+  mesh::PtrMesh _inputMesh;
+  Eigen::Vector<VertexID, Eigen::Dynamic> _inputIDs;
 };
 
 // ------- Non-Member Functions ---------
@@ -158,8 +169,31 @@ inline void fillPolynomialEntries(Eigen::MatrixXd &matrix, const mesh::Mesh &mes
   }
 }
 
+
 template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
-Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
+inline void fillKernelEntries(Eigen::MatrixXd &matrixCLU, RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
+                               std::array<bool, 3> activeAxis)
+{
+  // Compute RBF matrix entries
+
+    auto         i_iter  = inputIDs.begin();
+    Eigen::Index i_index = 0;
+    for (; i_iter != inputIDs.end(); ++i_iter, ++i_index) {
+      const auto &u       = inputMesh.vertex(*i_iter).rawCoords();
+      auto        j_iter  = i_iter;
+      auto        j_index = i_index;
+      for (; j_iter != inputIDs.end(); ++j_iter, ++j_index) {
+        const auto  &v                 = inputMesh.vertex(*j_iter).rawCoords();
+        const double squaredDifference = utils::computeSquaredDifference(u, v, activeAxis);
+        matrixCLU(i_index, j_index)    = basisFunction.evaluate(std::sqrt(squaredDifference));
+      }
+    }
+  matrixCLU.triangularView<Eigen::Lower>() = matrixCLU.transpose();
+}
+
+
+template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
+inline Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                                std::array<bool, 3> activeAxis, Polynomial polynomial)
 {
   // Treat the 2D case as 3D case with dead axis
@@ -181,25 +215,13 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
     matrixCLU.setZero();
   }
 
-  // Compute RBF matrix entries
-  auto         i_iter  = inputIDs.begin();
-  Eigen::Index i_index = 0;
-  for (; i_iter != inputIDs.end(); ++i_iter, ++i_index) {
-    const auto &u       = inputMesh.vertex(*i_iter).rawCoords();
-    auto        j_iter  = i_iter;
-    auto        j_index = i_index;
-    for (; j_iter != inputIDs.end(); ++j_iter, ++j_index) {
-      const auto &v                 = inputMesh.vertex(*j_iter).rawCoords();
-      double      squaredDifference = utils::computeSquaredDifference(u, v, activeAxis);
-      matrixCLU(i_index, j_index)   = basisFunction.evaluate(std::sqrt(squaredDifference));
-    }
-  }
+  fillKernelEntries(matrixCLU, basisFunction, inputMesh, inputIDs, activeAxis);
 
   // Add potentially the polynomial contribution in the matrix
   if (polynomial == Polynomial::ON) {
     fillPolynomialEntries(matrixCLU, inputMesh, inputIDs, inputSize, activeAxis);
   }
-  matrixCLU.triangularView<Eigen::Lower>() = matrixCLU.transpose();
+
   return matrixCLU;
 }
 
@@ -264,34 +286,41 @@ double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::evaluateRippaLOOCVerror(co
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
-RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
-                                                                    const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial)
+RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::PtrMesh &inputMesh, const IndexContainer &inputIDs,
+                                                                    const mesh::PtrMesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial)
     : RadialBasisFctSolver(basisFunction, inputMesh, inputIDs, outputMesh, outputIDs, deadAxis, polynomial, {})
 {
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
-RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
-                                                                    const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::AutotuningParams rbfConfig)
+RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::PtrMesh &inputMesh, const IndexContainer &inputIDs,
+                                                                    const mesh::PtrMesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::AutotuningParams rbfConfig)
+                                                                      : _activeAxis({false, false, false}), _inputMesh(inputMesh)
 {
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
-  std::array<bool, 3> activeAxis({{false, false, false}});
-  std::transform(deadAxis.begin(), deadAxis.end(), activeAxis.begin(), [](const auto ax) { return !ax; });
+  std::transform(deadAxis.begin(), deadAxis.end(), _activeAxis.begin(), [](const auto ax) { return !ax; });
 
   _autotuneShape = rbfConfig.autotuneShape;
+  _inSize = inputIDs.size();
+
+  _inputIDs.resize(_inSize); // TODO: maybe introduce std::variant for IndexContainer
+  for (const auto &i : inputIDs | boost::adaptors::indexed()) {
+    _inputIDs(i.index()) = i.value();
+  }
 
   // First, assemble the interpolation matrix and check the invertability
   bool decompositionSuccessful = false;
   if (_autotuneShape) {
-    _tuner = std::make_unique<RBFParameterTunerSimple<RADIAL_BASIS_FUNCTION_T>>(inputMesh, inputIDs, polynomial, activeAxis);
+    _tuner = std::make_unique<RBFParameterTunerSimple<RadialBasisFctSolver>>(*inputMesh.get());
+    _distanceMatrix = buildMatrixCLU(VolumeSplines(), *inputMesh.get(), inputIDs, _activeAxis, polynomial); // TODO: doppelt
   } else {
     if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
-      _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).llt();
+      _decMatrixC             = buildMatrixCLU(basisFunction, *inputMesh.get(), inputIDs, _activeAxis, polynomial).llt();
       decompositionSuccessful = _decMatrixC.info() == Eigen::ComputationInfo::Success;
     } else {
-      _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).colPivHouseholderQr();
+      _decMatrixC             = buildMatrixCLU(basisFunction, *inputMesh.get(), inputIDs, _activeAxis, polynomial).colPivHouseholderQr();
       decompositionSuccessful = _decMatrixC.isInvertible();
     }
   }
@@ -301,7 +330,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
                 "This means that the mapping problem is not well-posed. "
                 "Please check if your coupling meshes are correct (e.g. no vertices are duplicated) or reconfigure "
                 "your basis-function (e.g. reduce the support-radius).",
-                inputMesh.getName(), outputMesh.getName());
+                inputMesh->getName(), outputMesh->getName());
 
   // For polynomial on, the algorithm might fail in determining the size of the system
   if (polynomial != Polynomial::ON && computeCrossValidation) {
@@ -311,22 +340,22 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   }
   // Second, assemble evaluation matrix
   if (_autotuneShape) {
-    _matrixA = buildMatrixA(VolumeSplines(), inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial);
+    _matrixA = buildMatrixA(VolumeSplines(), *inputMesh.get(), inputIDs, *outputMesh.get(), outputIDs, _activeAxis, polynomial);
   } else {
-    _matrixA = buildMatrixA(basisFunction, inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial);
+    _matrixA = buildMatrixA(basisFunction, *inputMesh.get(), inputIDs, *outputMesh.get(), outputIDs, _activeAxis, polynomial);
   }
 
   // In case we deal with separated polynomials, we need dedicated matrices for the polynomial contribution
   if (polynomial == Polynomial::SEPARATE) {
 
     // 4 = 1 + dimensions(3) = maximum number of polynomial parameters
-    _localActiveAxis        = activeAxis;
+    _localActiveAxis        = _activeAxis;
     unsigned int polyParams = getNumberOfPolynomials();
 
     do {
       // First, build matrix Q and check for the condition number
       _matrixQ.resize(inputIDs.size(), polyParams);
-      fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, _localActiveAxis);
+      fillPolynomialEntries(_matrixQ, *inputMesh.get(), inputIDs, 0, _localActiveAxis);
 
       // Compute the condition number
       Eigen::JacobiSVD<Eigen::MatrixXd> svd(_matrixQ);
@@ -337,7 +366,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 
       // Disable one axis
       if (conditionNumber > 1e5) {
-        reduceActiveAxis(inputMesh, inputIDs, _localActiveAxis);
+        reduceActiveAxis(*inputMesh.get(), inputIDs, _localActiveAxis);
         polyParams = getNumberOfPolynomials();
       } else {
         break;
@@ -346,7 +375,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 
     // allocate and fill matrix V for the outputMesh
     _matrixV.resize(outputIDs.size(), polyParams);
-    fillPolynomialEntries(_matrixV, outputMesh, outputIDs, 0, _localActiveAxis);
+    fillPolynomialEntries(_matrixV, *outputMesh.get(), outputIDs, 0, _localActiveAxis);
 
     // 3. compute decomposition
     _qrMatrixQ = _matrixQ.colPivHouseholderQr();
@@ -389,6 +418,25 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative
   return out;
 }
 
+template <typename RADIAL_BASIS_FUNCTION_T>
+inline auto applyKernelToMatrix(const Eigen::Ref<const Eigen::MatrixXd> &matrixExpr, double sampleRadius)
+{
+  std::function<double(double)> expr;
+  if constexpr (RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) { // supports radius
+    double parameter = sampleRadius;
+    if constexpr (std::is_same_v<RADIAL_BASIS_FUNCTION_T, Gaussian>) { // uses shape parameter
+      parameter = RADIAL_BASIS_FUNCTION_T::transformRadiusToShape(sampleRadius);
+    }
+    RADIAL_BASIS_FUNCTION_T kernel(parameter);
+    expr = [kernel](double x) { return kernel.evaluate(x); };
+  } else {
+    PRECICE_ASSERT(false, "Selected RBF does not support a radius.");
+    expr = [](double x) { return x; };
+  }
+  return matrixExpr.unaryExpr(expr);
+}
+
+
 // @todo: change the signature to Eigen::MatrixXd and process all components at once, the solve function of eigen can handle that
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const
@@ -405,8 +453,8 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
 
   if (_autotuneShape) {
     if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
-      optimizedRadius = _tuner->optimize(inputData); // TODO: Optimization in every iteration is not ideal.
-      _decMatrixC     = _tuner->buildKernelDecomposition(optimizedRadius);
+      optimizedRadius = _tuner->optimize(*this, inputData); // TODO: Optimization in every iteration is not ideal.
+      //_decMatrixC     = _tuner->buildKernelDecomposition(optimizedRadius); // TODO:
     } else {
       PRECICE_ASSERT(false, "Not supported.");
     }
@@ -429,7 +477,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
     const int polyParams = _matrixA.cols() - inSize;
 
     // not yet necessary: integrated polynomial is only supported for SPD functions
-    out = _tuner->applyKernelToMatrix(_matrixA.block(0, 0, outSize, inSize), optimizedRadius) * p.segment(0, inSize);
+    out = applyKernelToMatrix<RADIAL_BASIS_FUNCTION_T>(_matrixA.block(0, 0, outSize, inSize), optimizedRadius) * p.segment(0, inSize);
     out += _matrixA.block(0, inSize, outSize, polyParams) * p.segment(inSize, polyParams);
   } else {
     out = _matrixA * p;
@@ -441,6 +489,46 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   }
   return out;
 }
+
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+typename RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::DecompositionType RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::buildKernelDecomposition(double parameter) const
+{
+  if constexpr (RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) { // supports radius
+    if constexpr (std::is_same_v<RADIAL_BASIS_FUNCTION_T, Gaussian>) { // uses shape parameter
+      parameter = RADIAL_BASIS_FUNCTION_T::transformRadiusToShape(parameter);
+    }
+    RADIAL_BASIS_FUNCTION_T kernel(parameter);
+    // Check if kernel matrix was already initialized.
+
+    fillKernelEntries(_kernelMatrix, kernel, *_inputMesh.get(), _inputIDs, _activeAxis);
+
+    if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) { // TODO: use inplace decomposition?
+      Eigen::LLT<Eigen::MatrixXd> llt(_kernelMatrix); // Eigen::LLT<Eigen::Ref<Eigen::MatrixXd>>
+      return llt;
+    } else {
+      Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr(_kernelMatrix); // Eigen::ColPivHouseholderQR<Eigen::Ref<Eigen::MatrixXd>>
+      return qr;
+    }
+  }
+  PRECICE_UNREACHABLE("RBF does not support a radius-initialization and was still used to instantiate an optimizer.");
+}
+
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+std::tuple<double, double> RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeErrorEstimate(const Eigen::VectorXd &inputData, double parameter) const
+{
+  _decMatrixC = buildKernelDecomposition(parameter);
+
+  if (_decMatrixC.info() != Eigen::ComputationInfo::Success) {
+    return { std::numeric_limits<double>::infinity(), 0 };
+  }
+  double error = utils::computeRippaLOOCVerror(_decMatrixC, inputData);
+  double rcond = utils::approximateReciprocalConditionNumber(_decMatrixC);
+
+  return { error, rcond };
+}
+
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeCacheData(Eigen::MatrixXd &inputData, Polynomial polynomial, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffsOut) const

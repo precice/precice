@@ -125,41 +125,41 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::computeMapping()
 
   } else { // Parallel Primary rank or Serial
 
-    mesh::Mesh globalInMesh(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
-    mesh::Mesh globalOutMesh(outMesh->getName(), outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
+    mesh::PtrMesh globalInMesh = std::make_shared<mesh::Mesh>(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
+    mesh::PtrMesh globalOutMesh = std::make_shared<mesh::Mesh>(outMesh->getName(), outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
 
     if (utils::IntraComm::isPrimary()) {
       {
         // Input mesh may have overlaps
         mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
         mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });
-        globalInMesh.addMesh(filteredInMesh);
-        globalOutMesh.addMesh(*outMesh);
+        globalInMesh->addMesh(filteredInMesh);
+        globalOutMesh->addMesh(*outMesh);
       }
 
       // Receive mesh
       for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
         mesh::Mesh secondaryInMesh(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
         com::receiveMesh(*utils::IntraComm::getCommunication(), secondaryRank, secondaryInMesh);
-        globalInMesh.addMesh(secondaryInMesh);
+        globalInMesh->addMesh(secondaryInMesh);
 
         mesh::Mesh secondaryOutMesh(outMesh->getName(), outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
         com::receiveMesh(*utils::IntraComm::getCommunication(), secondaryRank, secondaryOutMesh);
-        globalOutMesh.addMesh(secondaryOutMesh);
+        globalOutMesh->addMesh(secondaryOutMesh);
       }
 
     } else { // Serial
-      globalInMesh.addMesh(*inMesh);
-      globalOutMesh.addMesh(*outMesh);
+      globalInMesh->addMesh(*inMesh);
+      globalOutMesh->addMesh(*outMesh);
     }
 
     // Forwarding the tuples here requires some template magic I don't want to implement
     if constexpr (0 < std::tuple_size_v<std::tuple<Args...>>) {
-      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.nVertices()),
-                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.nVertices()), this->_deadAxis, _polynomial, std::get<0>(optionalArgs));
+      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh->nVertices()),
+                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh->nVertices()), this->_deadAxis, _polynomial, std::get<0>(optionalArgs));
     } else {
-      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.nVertices()),
-                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.nVertices()), this->_deadAxis, _polynomial);
+      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh->nVertices()),
+                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh->nVertices()), this->_deadAxis, _polynomial);
     }
   }
   this->_hasComputedMapping = true;
