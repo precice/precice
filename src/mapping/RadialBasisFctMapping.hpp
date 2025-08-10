@@ -125,7 +125,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::computeMapping()
 
   } else { // Parallel Primary rank or Serial
 
-    mesh::PtrMesh globalInMesh = std::make_shared<mesh::Mesh>(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
+    mesh::PtrMesh globalInMesh  = std::make_shared<mesh::Mesh>(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
     mesh::PtrMesh globalOutMesh = std::make_shared<mesh::Mesh>(outMesh->getName(), outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
 
     if (utils::IntraComm::isPrimary()) {

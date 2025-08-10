@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <numeric>
 
 namespace precice::utils {
 /**

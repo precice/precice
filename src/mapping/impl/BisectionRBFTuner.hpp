@@ -8,14 +8,14 @@
 namespace precice::mapping {
 
 template <typename Solver>
-class RBFParameterTunerSimple : public RBFParameterTuner<Solver> {
+class BisectionRBFTuner : public RBFParameterTuner<Solver> {
 
-  mutable logging::Logger _log{"mapping::SimpleRBFParameterTuner"};
+  mutable logging::Logger _log{"mapping::BisectionRBFTuner"};
 
   std::vector<Sample> _samples;
 
 public:
-  explicit RBFParameterTunerSimple(const mesh::Mesh &inputMesh);
+  explicit BisectionRBFTuner(const mesh::Mesh &inputMesh);
 
   double optimize(const Solver &solver, const Eigen::VectorXd &inputData) override;
   Sample optimizeBisection(const Solver &solver, const Eigen::VectorXd &inputData, double posTolerance, double errorTolerance, int maxIterations);
@@ -25,13 +25,13 @@ private:
 };
 
 template <typename Solver>
-RBFParameterTunerSimple<Solver>::RBFParameterTunerSimple(const mesh::Mesh &inputMesh)
+BisectionRBFTuner<Solver>::BisectionRBFTuner(const mesh::Mesh &inputMesh)
     : RBFParameterTuner<Solver>(inputMesh)
 {
 }
 
 template <typename Solver>
-double RBFParameterTunerSimple<Solver>::optimize(const Solver &solver, const Eigen::VectorXd &inputData)
+double BisectionRBFTuner<Solver>::optimize(const Solver &solver, const Eigen::VectorXd &inputData)
 {
   constexpr double POS_TOLERANCE        = 1.5; // Factor by which the radius is allowed to change before stopping
   constexpr double ERR_TOLERANCE        = 0.5; // Factor by which the error is allowed to change before stopping
@@ -44,7 +44,7 @@ double RBFParameterTunerSimple<Solver>::optimize(const Solver &solver, const Eig
 }
 
 template <typename RBF_T>
-bool RBFParameterTunerSimple<RBF_T>::shouldContinue(const Sample &lowerBound, const Sample &upperBound, double posTolerance, double errorTolerance)
+bool BisectionRBFTuner<RBF_T>::shouldContinue(const Sample &lowerBound, const Sample &upperBound, double posTolerance, double errorTolerance)
 {
   bool shouldContinue = std::isnan(upperBound.error);
   shouldContinue |= upperBound.pos > posTolerance * lowerBound.pos;
@@ -53,7 +53,7 @@ bool RBFParameterTunerSimple<RBF_T>::shouldContinue(const Sample &lowerBound, co
 }
 
 template <typename Solver>
-Sample RBFParameterTunerSimple<Solver>::optimizeBisection(const Solver &solver, const Eigen::VectorXd &inputData, double posTolerance, double errorTolerance, int maxIterations)
+Sample BisectionRBFTuner<Solver>::optimizeBisection(const Solver &solver, const Eigen::VectorXd &inputData, double posTolerance, double errorTolerance, int maxIterations)
 {
   constexpr double increaseSize = 10;
   double           sampleRadius = this->_lowerBound;

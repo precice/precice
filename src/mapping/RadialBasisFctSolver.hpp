@@ -4,8 +4,9 @@
 #include <Eigen/QR>
 #include <Eigen/SVD>
 #include <boost/range/adaptor/indexed.hpp>
+#include <functional>
 #include <type_traits>
-#include "impl/SimpleRBFParameterTuner.hpp"
+#include "impl/BisectionRBFTuner.hpp"
 #include "mapping/MathHelper.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/config/MappingConfigurationTypes.hpp"
@@ -189,7 +190,7 @@ inline void fillKernelEntries(Eigen::MatrixXd &matrixCLU, RADIAL_BASIS_FUNCTION_
 
 template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
 inline Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::PtrMesh &inputMesh, const IndexContainer &inputIDs,
-                                      std::array<bool, 3> activeAxis, Polynomial polynomial)
+                                      std::array<bool, 3> activeAxis, Polynomial polynomial, bool skipKernelEntries = false)
 {
   // Treat the 2D case as 3D case with dead axis
   const unsigned int deadDimensions = std::count(activeAxis.begin(), activeAxis.end(), false);
@@ -210,7 +211,9 @@ inline Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, con
     matrixCLU.setZero();
   }
 
-  fillKernelEntries(matrixCLU, basisFunction, inputMesh, inputIDs, activeAxis);
+  if (!skipKernelEntries) {
+    fillKernelEntries(matrixCLU, basisFunction, inputMesh, inputIDs, activeAxis);
+  }
 
   // Add potentially the polynomial contribution in the matrix
   if (polynomial == Polynomial::ON) {
@@ -308,8 +311,8 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   // First, assemble the interpolation matrix and check the invertability
   bool decompositionSuccessful = false;
   if (_autotuneShape && RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::isAvailable()) {
-    _tuner        = std::make_unique<RBFParameterTunerSimple<RadialBasisFctSolver>>(*inputMesh.get());
-    _kernelMatrix = buildMatrixCLU(VolumeSplines(), inputMesh, inputIDs, _activeAxis, polynomial); // TODO: do not initialize kernel entries here
+    _tuner        = std::make_unique<BisectionRBFTuner<RadialBasisFctSolver>>(*inputMesh.get());
+    _kernelMatrix = buildMatrixCLU(VolumeSplines(), inputMesh, inputIDs, _activeAxis, polynomial, true);
   } else {
     if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
       _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, _activeAxis, polynomial).llt();
@@ -379,7 +382,8 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   if (!_autotuneShape) {
     // Compute the condition number
     profiling::Event e("map.rbf.condition");
-    double           rcond = utils::approximateReciprocalConditionNumber(_decMatrixC);
+
+    double rcond = utils::approximateReciprocalConditionNumber(_decMatrixC);
     PRECICE_DEBUG("reciprocal condition number < {}", rcond);
     e.addData("100-log-rcond", static_cast<int>(100 * std::log10(rcond)));
     e.addData("llt-success", static_cast<int>(decompositionSuccessful));
