@@ -1,17 +1,10 @@
 #pragma once
 
-#include <functional>
 #include <mapping/MathHelper.hpp>
-#include <mapping/RadialBasisFctSolver.hpp>
-#include <mapping/config/MappingConfigurationTypes.hpp>
 #include <mapping/impl/BasisFunctions.hpp>
 #include <mesh/Mesh.hpp>
 
 namespace precice::mapping {
-
-// Forward declaration of function found in <mapping/RadialBasisFctSolver.hpp>
-// template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
-// Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs, std::array<bool, 3> activeAxis, Polynomial polynomial);
 
 struct Sample {
   double pos;
@@ -36,42 +29,32 @@ class RBFParameterTuner {
   using RBF_T = typename Solver::BASIS_FUNCTION_T; // TODO: better?
 
 protected:
-
   Eigen::Index _inSize;
   double       _lowerBound;
-
-  /*
-  static constexpr bool rbfSupportsRadius()
-  {
-    return RBF_T::hasCompactSupport(); // TODO: necessary? better criterion?
-  }
-
-  static constexpr bool rbfUsesShapeParameter()
-  {
-    return std::is_same_v<RBF_T, Gaussian>; // TODO: necessary? better criterion?
-  }
-  */
-
-  //using DecompositionType = std::conditional_t<RBF_T::isStrictlyPositiveDefinite(), Eigen::LLT<Eigen::MatrixXd>, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>;
+  double       _upperBound;
+  bool         _lastSampleWasOptimum;
 
 public:
   virtual ~RBFParameterTuner() = default;
+  explicit RBFParameterTuner(const mesh::Mesh &inputMesh);
 
-  RBFParameterTuner(const mesh::Mesh &inputMesh);
   virtual double optimize(const Solver &solver, const Eigen::VectorXd &inputData);
-
-  //DecompositionType buildKernelDecomposition(double sampleRadius) const;
-
-  //auto applyKernelToMatrix(const Eigen::Ref<const Eigen::MatrixXd> &matrixExpr, double sampleRadius) const;
-
-  static double estimateMeshResolution(const mesh::Mesh &inputMesh);
+  static double  estimateMeshResolution(const mesh::Mesh &inputMesh);
+  bool           lastSampleWasOptimum() const;
 };
 
 template <typename Solver>
 RBFParameterTuner<Solver>::RBFParameterTuner(const mesh::Mesh &inputMesh)
 {
+  constexpr bool radiusRBF = RadiusInitialization<typename Solver::BASIS_FUNCTION_T>::isAvailable();
+  PRECICE_ASSERT(radiusRBF, "RBF is not supported by this optimizer, as it does not accept a support-radius."
+                            "Currently supported: Compactly supported RBFs and Gaussians.");
+
   _lowerBound = estimateMeshResolution(inputMesh);
-  _inSize     = inputMesh.nVertices(); //TODO conversion?
+  _inSize     = inputMesh.nVertices();
+  _upperBound = std::numeric_limits<double>::quiet_NaN();
+
+  _lastSampleWasOptimum = false;
 }
 
 template <typename Solver>
@@ -80,42 +63,6 @@ double RBFParameterTuner<Solver>::optimize(const Solver &solver, const Eigen::Ve
   PRECICE_ASSERT(false, "Not implemented.");
   return std::numeric_limits<double>::quiet_NaN();
 }
-
-/*
-template <typename RBF_T>
-const Eigen::MatrixXd &RBFParameterTuner<RBF_T>::getDistanceMatrix() const
-{
-  return _distanceMatrix;
-}
-
-
-template <typename Solver>
-typename RBFParameterTuner<Solver>::DecompositionType RBFParameterTuner<Solver>::buildKernelDecomposition(double sampleRadius) const
-{
-  if constexpr (rbfSupportsRadius()) {
-    double parameter = sampleRadius;
-    if constexpr (rbfUsesShapeParameter()) {
-      parameter = RBF_T::transformRadiusToShape(sampleRadius);
-    }
-    RBF_T kernel(parameter);
-    // Check if kernel matrix was already initialized.
-    if (_kernelMatrix.size() != _distanceMatrix.size()) {
-      _kernelMatrix = _distanceMatrix;
-    }
-    // Apply kernel only to non-polynomial part of _distanceMatrix. The rest should remain unchanged.
-    _kernelMatrix.block(0, 0, _inSize, _inSize) = _distanceMatrix.block(0, 0, _inSize, _inSize).unaryExpr([&kernel](double x) {
-      return kernel.evaluate(x);
-    });
-    if constexpr (RBF_T::isStrictlyPositiveDefinite()) { // TODO: use inplace decomposition?
-      return _kernelMatrix.llt();
-    } else {
-      return _kernelMatrix.colPivHouseholderQr();
-    }
-  }
-  PRECICE_UNREACHABLE("RBF does not support a radius-initialization and was still used to instantiate an optimizer.");
-}
-*/
-
 
 template <typename Solver>
 double RBFParameterTuner<Solver>::estimateMeshResolution(const mesh::Mesh &inputMesh)
@@ -133,6 +80,12 @@ double RBFParameterTuner<Solver>::estimateMeshResolution(const mesh::Mesh &input
     h += std::sqrt(utils::computeSquaredDifference(xi.rawCoords(), x0.rawCoords()));
   }
   return h / sampleSize;
+}
+
+template <typename Solver>
+bool RBFParameterTuner<Solver>::lastSampleWasOptimum() const
+{
+  return _lastSampleWasOptimum;
 }
 
 } // namespace precice::mapping

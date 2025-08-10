@@ -622,6 +622,19 @@ private:
   RadialBasisParameters _params;
 };
 
+template <typename RADIAL_BASIS_FUNCTION_T>
+struct RadiusInitialization {
+  static constexpr bool isAvailable()
+  {
+    return RADIAL_BASIS_FUNCTION_T::hasCompactSupport() || std::is_same_v<RADIAL_BASIS_FUNCTION_T, Gaussian>;
+  }
+
+  static constexpr bool requiresConversion()
+  {
+    return std::is_same_v<RADIAL_BASIS_FUNCTION_T, Gaussian>;
+  }
+};
+
 #undef PRECICE_FMA
 #undef PRECICE_LOG
 #undef PRECICE_MEMORY_SPACE
