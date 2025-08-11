@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <numeric>
+#include <utils/assertion.hpp>
 
 namespace precice::utils {
 /**
