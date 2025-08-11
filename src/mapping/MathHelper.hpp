@@ -175,62 +175,47 @@ double computeRippaLOOCVerror(const DecompositionType &choleskyDec, const Eigen:
 }
 
 /**
- * @brief Computes an approximation such that 1/cond(LL^T) > returned result.
+ * @brief Computes an approximation such that 1/cond(A) > returned result.
  *
- * Implementation based on the diagonal entries of the Cholesky decomposition matrix.
+ * Implementation based on the diagonal entries of the Cholesky or QR (R-matrix) decomposition matrices.
  * See also: "A Survey of Condition Number Estimation for Triangular Matrices" DOI: 10.1137/1029112
  *
- * @return approx < 1/cond(LL^T) and 0 if the decomposition is invalid.
+ * @return approx < 1/cond(A) and 0 if the decomposition is invalid.
  */
-inline double approximateReciprocalConditionNumber(const Eigen::LLT<Eigen::MatrixXd> &choleskyDec)
+template <typename DecompositionType>
+double approximateReciprocalConditionNumber(const DecompositionType &dec)
 {
-  if (choleskyDec.info() != Eigen::ComputationInfo::Success) {
+  if (dec.info() != Eigen::ComputationInfo::Success) {
     return 0;
   }
-  const Eigen::Index n = choleskyDec.matrixL().rows();
+  double max_d = std::numeric_limits<double>::min();
+  double min_d = std::numeric_limits<double>::max();
+  double rcond = 0;
 
-  double max_l = std::numeric_limits<double>::min();
-  double min_l = std::numeric_limits<double>::max();
+  if constexpr (std::is_same_v<DecompositionType, Eigen::LLT<Eigen::MatrixXd>> || std::is_same_v<DecompositionType, Eigen::LLT<Eigen::Ref<Eigen::MatrixXd>>>) {
+    const Eigen::Index n = dec.matrixL().rows();
 
-  for (Eigen::Index i = 0; i < n; i++) {
-    const double lii = choleskyDec.matrixL()(i, i);
-    min_l            = std::min(lii, min_l);
-    max_l            = std::max(lii, max_l);
+    for (Eigen::Index i = 0; i < n; i++) {
+      const double dii = dec.matrixL()(i, i);
+      min_d            = std::min(dii, min_d);
+      max_d            = std::max(dii, max_d);
+    }
+    rcond = min_d * min_d / (max_d * max_d);
+  } else if constexpr (std::is_same_v<DecompositionType, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>> || std::is_same_v<DecompositionType, Eigen::ColPivHouseholderQR<Eigen::Ref<Eigen::MatrixXd>>>) {
+    const Eigen::Index n = dec.matrixR().rows();
+
+    for (Eigen::Index i = 0; i < n; i++) {
+      const double rii = dec.matrixR()(i, i);
+      min_d            = std::min(rii, max_d);
+      max_d            = std::max(rii, max_d);
+    }
+    rcond = min_d / max_d;
+  } else {
+    PRECICE_ASSERT("Unsupported decomposition type.");
   }
-  double rcond = min_l * min_l / (max_l * max_l);
+
   if (rcond < 0 || std::isnan(rcond))
     rcond = 0;
-
-  return rcond;
-}
-
-/**
- * @brief Computes an approximation such that 1/cond(QR) >= returned result.
- *
- * Implementation based on the diagonal entries of the triangular R matrix of the QR decomposition.
- * See also: "A Survey of Condition Number Estimation for Triangular Matrices" https://doi.org/10.1137/1029112
- *
- * @return >= 1/cond(QR)
- */
-inline double approximateReciprocalConditionNumber(const Eigen::ColPivHouseholderQR<Eigen::MatrixXd> &qrDec)
-{
-  if (qrDec.info() != Eigen::ComputationInfo::Success) {
-    return 0;
-  }
-  const Eigen::Index n = qrDec.matrixR().rows();
-
-  double max_r = std::numeric_limits<double>::min();
-  double min_r = std::numeric_limits<double>::max();
-
-  for (Eigen::Index i = 0; i < n; i++) {
-    const double rii = qrDec.matrixR()(i, i);
-    min_r            = std::min(rii, min_r);
-    max_r            = std::max(rii, max_r);
-  }
-  double rcond = min_r / max_r;
-  if (rcond < 0 || std::isnan(rcond))
-    rcond = 0;
-
   return rcond;
 }
 

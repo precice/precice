@@ -18,9 +18,9 @@ public:
   explicit BisectionRBFTuner(const mesh::Mesh &inputMesh);
 
   double optimize(const Solver &solver, const Eigen::VectorXd &inputData) override;
-  Sample optimizeBisection(const Solver &solver, const Eigen::VectorXd &inputData, double posTolerance, double errorTolerance, int maxIterations);
 
 private:
+  Sample      optimizeBisection(const Solver &solver, const Eigen::VectorXd &inputData, double posTolerance, double errorTolerance, int maxIterations);
   static bool shouldContinue(const Sample &lowerBound, const Sample &upperBound, double posTolerance, double errorTolerance);
 };
 
