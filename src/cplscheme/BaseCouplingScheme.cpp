@@ -516,6 +516,11 @@ double BaseCouplingScheme::getTimeWindowStart() const
   return _time.windowStart();
 }
 
+double BaseCouplingScheme::getTimeWindowProgress() const
+{
+  return _time.windowProgress();
+}
+
 int BaseCouplingScheme::getTimeWindows() const
 {
   return _timeWindows;

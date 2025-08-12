@@ -420,6 +420,7 @@ target_sources(testprecice
     tests/serial/time/explicit/serial-coupling/DoNothingWithSmallStepsNoSubsteps.cpp
     tests/serial/time/explicit/serial-coupling/DoNothingWithSmallStepsSubsteps.cpp
     tests/serial/time/explicit/serial-coupling/DoNothingWithSubcycling.cpp
+    tests/serial/time/explicit/serial-coupling/FirstParticipantTimeBug.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipant.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipantInitData.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp

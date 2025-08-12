@@ -114,6 +114,8 @@ public:
 
   double getTimeWindowStart() const final override;
 
+  double getTimeWindowProgress() const;
+
   /**
    * @brief getter for _timeWindows
    * @returns the number of currently computed time windows of the coupling scheme.
