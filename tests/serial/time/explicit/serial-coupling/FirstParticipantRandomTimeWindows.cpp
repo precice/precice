@@ -41,6 +41,8 @@ BOOST_AUTO_TEST_CASE(FirstParticipantRandomTimeWindows)
     double dt = context.isNamed("SolverOne") ? dist(gen) : precice.getMaxTimeStepSize();
 
     if (context.isNamed("SolverTwo")) {
+      precice.readData(meshName, "Data-One", {&vertexID, 1}, 0.0, value);
+      precice.readData(meshName, "Data-One", {&vertexID, 1}, dt / 2, value);
       precice.readData(meshName, "Data-One", {&vertexID, 1}, dt, value);
     } else {
       precice.writeData(meshName, "Data-One", {&vertexID, 1}, value);
