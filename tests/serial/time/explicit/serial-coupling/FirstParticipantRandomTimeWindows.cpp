@@ -41,7 +41,6 @@ BOOST_AUTO_TEST_CASE(FirstParticipantRandomTimeWindows)
     double dt = context.isNamed("SolverOne") ? dist(gen) : precice.getMaxTimeStepSize();
 
     if (context.isNamed("SolverTwo")) {
-      // Bug #2160, read fails in tw=7 t=60.06
       precice.readData(meshName, "Data-One", {&vertexID, 1}, dt, value);
     } else {
       precice.writeData(meshName, "Data-One", {&vertexID, 1}, value);
