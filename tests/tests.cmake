@@ -7,6 +7,7 @@ target_sources(testprecice
     tests/exporter/timeseries/FinalTimeseries.cpp
     tests/exporter/timeseries/UpdatedTimeseries.cpp
     tests/fundamental/DifferentConfigs.cpp
+    tests/fundamental/first-participant/InfiniteAdvance.cpp
     tests/fundamental/initial-data/InterleavedCreation.cpp
     tests/fundamental/initial-data/InterleavedCreationWithGradients.cpp
     tests/fundamental/just-in-time/Both/NoneConfigured.cpp

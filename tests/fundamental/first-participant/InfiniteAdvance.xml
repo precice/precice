@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:vector name="Data-One" />
+  <data:vector name="Data-Two" />
+
+  <mesh name="SolverOne-Mesh" dimensions="3">
+    <use-data name="Data-One" />
+  </mesh>
+
+  <mesh name="SolverTwo-Mesh" dimensions="3">
+    <use-data name="Data-One" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <provide-mesh name="SolverOne-Mesh" />
+    <write-data name="Data-One" mesh="SolverOne-Mesh" />
+  </participant>
+
+  <participant name="SolverTwo">
+    <receive-mesh name="SolverOne-Mesh" from="SolverOne" />
+    <provide-mesh name="SolverTwo-Mesh" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="SolverOne-Mesh"
+      to="SolverTwo-Mesh"
+      constraint="consistent" />
+    <read-data name="Data-One" mesh="SolverTwo-Mesh" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="1000" />
+    <time-window-size method="first-participant" />
+    <exchange data="Data-One" mesh="SolverOne-Mesh" from="SolverOne" to="SolverTwo" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

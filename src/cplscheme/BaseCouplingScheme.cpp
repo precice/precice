@@ -457,6 +457,13 @@ bool BaseCouplingScheme::addComputedTime(
   PRECICE_TRACE(timeToAdd, getTime());
   PRECICE_ASSERT(isCouplingOngoing(), "Invalid call of addComputedTime() after simulation end.");
 
+  if (!hasTimeWindowSize()) {
+    PRECICE_CHECK(timeToAdd < std::numeric_limits<double>::max(),
+                  "advance() was called with the max value of double which is not allowed. "
+                  "As this participant prescribes the time-window size using <time-window-size method=\"first-participant\" />, directly using getMaxTimeStepSize() is not permitted. "
+                  "Make sure to pass your own desired time-step size or use the recommended limiting \"dt = min(solver_dt, getMaxTimeStepSize())\".");
+  }
+
   // Check validness
   bool valid = math::greaterEquals(getNextTimeStepMaxSize(), timeToAdd);
   PRECICE_CHECK(valid,
