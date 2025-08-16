@@ -172,6 +172,7 @@ template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
 inline void fillKernelEntries(Eigen::MatrixXd &matrixCLU, RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::PtrMesh &inputMesh, const IndexContainer &inputIDs,
                               std::array<bool, 3> activeAxis)
 {
+  const size_t n = inputIDs.size();
   // Compute RBF matrix entries
   auto         i_iter  = inputIDs.begin();
   Eigen::Index i_index = 0;
@@ -185,7 +186,7 @@ inline void fillKernelEntries(Eigen::MatrixXd &matrixCLU, RADIAL_BASIS_FUNCTION_
       matrixCLU(i_index, j_index)    = basisFunction.evaluate(std::sqrt(squaredDifference));
     }
   }
-  matrixCLU.triangularView<Eigen::Lower>() = matrixCLU.transpose();
+  matrixCLU.block(0, 0, n, n).triangularView<Eigen::Lower>() = matrixCLU.block(0, 0, n, n).transpose();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
@@ -218,8 +219,9 @@ inline Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, con
   // Add potentially the polynomial contribution in the matrix
   if (polynomial == Polynomial::ON) {
     fillPolynomialEntries(matrixCLU, inputMesh, inputIDs, inputSize, activeAxis);
+    matrixCLU.block(inputSize, 0, polyparams, n - polyparams)                                             = matrixCLU.transpose().block(inputSize, 0, polyparams, n - polyparams);
+    matrixCLU.block(inputSize, inputSize, polyparams, polyparams).template triangularView<Eigen::Lower>() = matrixCLU.block(inputSize, inputSize, polyparams, polyparams).transpose();
   }
-
   return matrixCLU;
 }
 
