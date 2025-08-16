@@ -30,17 +30,20 @@ class RBFParameterTuner {
 
 protected:
   Eigen::Index _inSize;
-  double       _lowerBound;
-  double       _upperBound;
-  bool         _lastSampleWasOptimum;
+
+  double _lowerBound;
+  double _upperBound;
+  bool   _lastSampleWasOptimum;
+
+  static double  estimateMeshResolution(const mesh::Mesh &inputMesh);
 
 public:
   virtual ~RBFParameterTuner() = default;
   explicit RBFParameterTuner(const mesh::Mesh &inputMesh);
 
-  virtual double optimize(const Solver &solver, const Eigen::VectorXd &inputData);
-  static double  estimateMeshResolution(const mesh::Mesh &inputMesh);
-  bool           lastSampleWasOptimum() const;
+  virtual std::tuple<double, double> optimize(const Solver &solver, const Eigen::VectorXd &inputData);
+
+  bool lastSampleWasOptimum() const;
 };
 
 template <typename Solver>
@@ -58,10 +61,11 @@ RBFParameterTuner<Solver>::RBFParameterTuner(const mesh::Mesh &inputMesh)
 }
 
 template <typename Solver>
-double RBFParameterTuner<Solver>::optimize(const Solver &solver, const Eigen::VectorXd &inputData)
+std::tuple<double, double> RBFParameterTuner<Solver>::optimize(const Solver &solver, const Eigen::VectorXd &inputData)
 {
   PRECICE_ASSERT(false, "Not implemented.");
-  return std::numeric_limits<double>::quiet_NaN();
+  constexpr double nan =  std::numeric_limits<double>::quiet_NaN();
+  return {nan, nan};
 }
 
 template <typename Solver>
@@ -87,5 +91,6 @@ bool RBFParameterTuner<Solver>::lastSampleWasOptimum() const
 {
   return _lastSampleWasOptimum;
 }
+
 
 } // namespace precice::mapping

@@ -17,7 +17,7 @@ class BisectionRBFTuner : public RBFParameterTuner<Solver> {
 public:
   explicit BisectionRBFTuner(const mesh::Mesh &inputMesh);
 
-  double optimize(const Solver &solver, const Eigen::VectorXd &inputData) override;
+  std::tuple<double, double> optimize(const Solver &solver, const Eigen::VectorXd &inputData) override;
 
 private:
   Sample      optimizeBisection(const Solver &solver, const Eigen::VectorXd &inputData, double posTolerance, double errorTolerance, int maxIterations);
@@ -31,16 +31,16 @@ BisectionRBFTuner<Solver>::BisectionRBFTuner(const mesh::Mesh &inputMesh)
 }
 
 template <typename Solver>
-double BisectionRBFTuner<Solver>::optimize(const Solver &solver, const Eigen::VectorXd &inputData)
+std::tuple<double, double> BisectionRBFTuner<Solver>::optimize(const Solver &solver, const Eigen::VectorXd &inputData)
 {
   constexpr double POS_TOLERANCE        = 1.5; // Factor by which the radius is allowed to change before stopping
   constexpr double ERR_TOLERANCE        = 0.5; // Factor by which the error is allowed to change before stopping
   constexpr int    MAX_BISEC_ITERATIONS = 6;   // Number of iterations during the "bisection" step. After finding initial samples
 
-  Sample bestSample = optimizeBisection(solver, inputData, POS_TOLERANCE, ERR_TOLERANCE, MAX_BISEC_ITERATIONS);
+  const Sample bestSample = optimizeBisection(solver, inputData, POS_TOLERANCE, ERR_TOLERANCE, MAX_BISEC_ITERATIONS);
   PRECICE_INFO("Best sample: rad={:.4e}, err={:.4e}", bestSample.pos, bestSample.error);
 
-  return bestSample.pos;
+  return {bestSample.pos, bestSample.error};
 }
 
 template <typename RBF_T>
@@ -94,10 +94,10 @@ Sample BisectionRBFTuner<Solver>::optimizeBisection(const Solver &solver, const 
     }
     i++;
   }
-  const Sample optimum        = std::isnan(centerSample.error) ? lowerBound : centerSample;
-  this->_lastSampleWasOptimum = centerSample.pos == optimum.pos;
+  const Sample bestSample     = std::isnan(centerSample.error) ? lowerBound : centerSample;
+  this->_lastSampleWasOptimum = centerSample.pos == bestSample.pos;
 
-  return optimum;
+  return bestSample;
 }
 
 } // namespace precice::mapping

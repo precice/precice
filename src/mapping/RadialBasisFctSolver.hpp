@@ -6,6 +6,7 @@
 #include <boost/range/adaptor/indexed.hpp>
 #include <functional>
 #include <type_traits>
+#include "impl/BasisFunctions.hpp"
 #include "impl/BisectionRBFTuner.hpp"
 #include "mapping/MathHelper.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
@@ -423,10 +424,10 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 inline auto applyKernelToMatrix(const Eigen::Ref<const Eigen::MatrixXd> &matrixExpr, double sampleRadius)
 {
   std::function<double(double)> expr;
-  if constexpr (RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) { // supports radius
+  if constexpr (RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::isAvailable()) {
     double parameter = sampleRadius;
-    if constexpr (std::is_same_v<RADIAL_BASIS_FUNCTION_T, Gaussian>) { // uses shape parameter
-      parameter = RADIAL_BASIS_FUNCTION_T::transformRadiusToShape(sampleRadius);
+    if constexpr (RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::requiresConversion()) {
+      parameter = RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::transformRadiusToShape(sampleRadius);
     }
     RADIAL_BASIS_FUNCTION_T kernel(parameter);
     expr = [kernel](double x) { return kernel.evaluate(x); };
@@ -453,10 +454,12 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
 
   if (_autotuneShape) {
     if constexpr (RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::isAvailable()) {
-      optimizedRadius = _tuner->optimize(*this, inputData); // TODO: Optimization in every iteration is not ideal.
+      auto [radius, error] = _tuner->optimize(*this, inputData); // TODO: Optimization in every iteration is not ideal.
+      optimizedRadius = radius;
       if (!_tuner->lastSampleWasOptimum()) {
         _decMatrixC = buildKernelDecomposition(optimizedRadius);
       }
+      PRECICE_INFO("Using: radius={}, LOOCV={}", optimizedRadius, error);
     } else {
       PRECICE_ASSERT(false, "Not supported.");
     }
@@ -497,7 +500,7 @@ typename RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::DecompositionType Radial
 {
   if constexpr (RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::isAvailable()) {
     if constexpr (RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::requiresConversion()) {
-      parameter = RADIAL_BASIS_FUNCTION_T::transformRadiusToShape(parameter);
+      parameter = RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::transformRadiusToShape(parameter);
     }
     RADIAL_BASIS_FUNCTION_T kernel(parameter);
     fillKernelEntries(_kernelMatrix, kernel, _inputMesh, _inputIDs, _activeAxis);
