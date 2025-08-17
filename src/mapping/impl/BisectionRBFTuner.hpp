@@ -46,7 +46,7 @@ std::tuple<double, double> BisectionRBFTuner<Solver>::optimize(const Solver &sol
 template <typename RBF_T>
 bool BisectionRBFTuner<RBF_T>::shouldContinue(const Sample &lowerBound, const Sample &upperBound, double posTolerance, double errorTolerance)
 {
-  bool shouldContinue = std::isnan(upperBound.error);
+  bool shouldContinue = std::isinf(upperBound.error);
   shouldContinue |= upperBound.pos > posTolerance * lowerBound.pos;
   shouldContinue |= std::abs(upperBound.error - lowerBound.error) < errorTolerance * std::min(upperBound.error, lowerBound.error);
   return shouldContinue;
@@ -63,7 +63,7 @@ Sample BisectionRBFTuner<Solver>::optimizeBisection(const Solver &solver, const 
   Sample lowerBound = {sampleRadius, std::numeric_limits<double>::quiet_NaN()};
 
   // collect samples with exponential growth and decrease growth rate until the support radius is "good enough"
-  while (true) {
+  while (std::isnan(this->_upperBound)) {
     sampleRadius *= increaseSize;
 
     auto [error, rcond] = solver.computeErrorEstimate(inputData, sampleRadius);
@@ -72,11 +72,12 @@ Sample BisectionRBFTuner<Solver>::optimizeBisection(const Solver &solver, const 
 
     if (rcond < 1e-13 || std::isinf(error)) {
       PRECICE_CHECK(sampleRadius != this->_lowerBound, "Parameter tuning failed in first iteration using support-radius={}", sampleRadius);
+      this->_upperBound = sampleRadius;
       break;
     }
     lowerBound = {sampleRadius, error};
   }
-  Sample upperBound = {sampleRadius, std::numeric_limits<double>::infinity()};
+  Sample upperBound = {this->_upperBound, std::numeric_limits<double>::infinity()};
 
   int    i = 0;
   Sample centerSample;
@@ -94,7 +95,7 @@ Sample BisectionRBFTuner<Solver>::optimizeBisection(const Solver &solver, const 
     }
     i++;
   }
-  const Sample bestSample     = std::isnan(centerSample.error) ? lowerBound : centerSample;
+  const Sample bestSample     = std::isinf(centerSample.error) ? lowerBound : centerSample;
   this->_lastSampleWasOptimum = centerSample.pos == bestSample.pos;
 
   return bestSample;

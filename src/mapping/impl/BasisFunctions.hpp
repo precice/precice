@@ -649,7 +649,6 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename T>
 constexpr bool RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::definesCutoffThreshold<T, std::void_t<decltype(T::cutoffThreshold)>> = true; // SFINAE specialization
 
-
 #undef PRECICE_FMA
 #undef PRECICE_LOG
 #undef PRECICE_MEMORY_SPACE

@@ -455,7 +455,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   if (_autotuneShape) {
     if constexpr (RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::isAvailable()) {
       auto [radius, error] = _tuner->optimize(*this, inputData); // TODO: Optimization in every iteration is not ideal.
-      optimizedRadius = radius;
+      optimizedRadius      = radius;
       if (!_tuner->lastSampleWasOptimum()) {
         _decMatrixC = buildKernelDecomposition(optimizedRadius);
       }

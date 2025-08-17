@@ -62,7 +62,7 @@ std::array<double, N * 3> evaluateFunction(const std::array<Eigen::Vector3d, N> 
 {
   std::array<double, N * 3> values;
 
-  for (size_t i = 0; i < N * 3 ; i += 3) {
+  for (size_t i = 0; i < N * 3; i += 3) {
     values[i + 0] = 0.1 * mesh[i / 3].array().sum() + 0;
     values[i + 1] = 0.1 * mesh[i / 3].array().sum() + 1;
     values[i + 2] = 0.1 * mesh[i / 3].array().sum() + 2;
@@ -108,7 +108,9 @@ void testRBFTuning(const std::string configFile, const TestContext &context)
       double dt = interfaceB.getMaxTimeStepSize();
 
       std::array<double, n * dim> values;
-      for (size_t i = 0; i < values.size(); i++) { values[i] = 0; }
+      for (size_t i = 0; i < values.size(); i++) {
+        values[i] = 0;
+      }
       interfaceB.readData(meshBID, dataAID, idsB, dt, values);
       interfaceB.advance(dt);
 
