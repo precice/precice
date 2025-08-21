@@ -645,22 +645,15 @@ std::string BaseCouplingScheme::printActionsState() const
 void BaseCouplingScheme::checkCompletenessRequiredActions()
 {
   PRECICE_TRACE();
-  std::vector<Action> missing;
-  std::set_difference(_requiredActions.begin(), _requiredActions.end(),
-                      _fulfilledActions.begin(), _fulfilledActions.end(),
-                      std::back_inserter(missing));
-  if (not missing.empty()) {
-    std::ostringstream stream;
-    for (auto action : missing) {
-      if (not stream.str().empty()) {
-        stream << ", ";
-      }
-      stream << toString(action);
-    }
-    PRECICE_ERROR("The required actions {} are not fulfilled. "
-                  "Did you forget to call \"requiresReadingCheckpoint()\" or \"requiresWritingCheckpoint()\"?",
-                  stream.str());
-  }
+  PRECICE_CHECK(_requiredActions.count(CouplingScheme::Action::InitializeData) == 0 || _fulfilledActions.count(CouplingScheme::Action::InitializeData) == 1,
+                "Data was not initialized. Did you forget to call \"requiresWritingData()\"?");
+
+  PRECICE_CHECK(_requiredActions.count(CouplingScheme::Action::ReadCheckpoint) == 0 || _fulfilledActions.count(CouplingScheme::Action::ReadCheckpoint) == 1,
+                "The iteration checkpoint wasn't read. Did you forget to call \"requiresReadingCheckpoint()\"?");
+
+  PRECICE_CHECK(_requiredActions.count(CouplingScheme::Action::WriteCheckpoint) == 0 || _fulfilledActions.count(CouplingScheme::Action::WriteCheckpoint) == 1,
+                "The iteration checkpoint wasn't written. Did you forget to call \"requiresWritingCheckpoint()\"?");
+
   _requiredActions.clear();
   _fulfilledActions.clear();
 }
