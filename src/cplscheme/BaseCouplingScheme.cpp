@@ -615,12 +615,6 @@ std::string BaseCouplingScheme::printCouplingState() const
   if (hasTimeWindowSize()) {
     fmt::format_to(out, ", Dt {}, max-dt {}", _timeWindowSize, getNextTimeStepMaxSize());
   }
-  if (!_requiredActions.empty()) {
-    fmt::format_to(out, ", ");
-    for (auto action : _requiredActions) {
-      fmt::format_to(out, "{} ", toString(action));
-    }
-  }
   return str;
 }
 
