@@ -269,7 +269,6 @@ void BaseCouplingScheme::setNextTimeWindowSize(double timeWindowSize)
 void BaseCouplingScheme::finalize()
 {
   PRECICE_TRACE();
-  checkCompletenessRequiredActions();
   PRECICE_ASSERT(_isInitialized, "Called finalize() before initialize().");
 }
 
