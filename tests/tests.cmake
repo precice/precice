@@ -245,6 +245,10 @@ target_sources(testprecice
     tests/serial/explicit/TestExplicitSockets.cpp
     tests/serial/explicit/helpers.cpp
     tests/serial/explicit/helpers.hpp
+    tests/serial/implicit/Basic.cpp
+    tests/serial/implicit/NoInit.cpp
+    tests/serial/implicit/NoRead.cpp
+    tests/serial/implicit/NoWrite.cpp
     tests/serial/initialize-data/Explicit.cpp
     tests/serial/initialize-data/Implicit.cpp
     tests/serial/initialize-data/ImplicitBoth.cpp
