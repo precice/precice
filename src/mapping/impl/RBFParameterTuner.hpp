@@ -41,7 +41,8 @@ public:
   virtual ~RBFParameterTuner() = default;
   explicit RBFParameterTuner(const mesh::Mesh &inputMesh);
 
-  virtual std::tuple<double, double> optimize(const Solver &solver, const Eigen::VectorXd &inputData);
+  template <typename IndexContainer>
+  std::tuple<double, double> optimize(const Solver &solver, const IndexContainer &inputIds, const Eigen::VectorXd &inputData);
 
   bool lastSampleWasOptimum() const;
 };
@@ -58,14 +59,6 @@ RBFParameterTuner<Solver>::RBFParameterTuner(const mesh::Mesh &inputMesh)
   _upperBound = std::numeric_limits<double>::quiet_NaN();
 
   _lastSampleWasOptimum = false;
-}
-
-template <typename Solver>
-std::tuple<double, double> RBFParameterTuner<Solver>::optimize(const Solver &solver, const Eigen::VectorXd &inputData)
-{
-  PRECICE_ASSERT(false, "Not implemented.");
-  constexpr double nan = std::numeric_limits<double>::quiet_NaN();
-  return {nan, nan};
 }
 
 template <typename Solver>

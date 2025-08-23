@@ -269,7 +269,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
       }
 
       Eigen::VectorXd out;
-      out = _rbfSolver->solveConservative(in, _polynomial);
+      out = _rbfSolver->solveConservative(in, boost::irange<Eigen::Index>(0, in.size()), _polynomial);
 
       // Copy mapped data to output data values
       for (int i = 0; i < this->output()->getGlobalNumberOfVertices(); i++) {
@@ -390,7 +390,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
         in[i] = inputValues[i * valueDim + dim];
       }
 
-      out = _rbfSolver->solveConsistent(in, _polynomial);
+      out = _rbfSolver->solveConsistent(in, boost::irange<Eigen::Index>(0, in.size()), _polynomial);
 
       // Copy mapped data to output data values
       for (int i = 0; i < out.size(); i++) {

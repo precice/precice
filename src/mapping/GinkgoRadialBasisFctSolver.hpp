@@ -70,10 +70,12 @@ public:
                              MappingConfiguration::GinkgoParameter ginkgoParameter);
 
   /// Maps the given input data
-  Eigen::VectorXd solveConsistent(const Eigen::VectorXd &inputData, Polynomial polynomial);
+  template <typename IndexContainer>
+  Eigen::VectorXd solveConsistent(const Eigen::VectorXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial);
 
   /// Maps the given input data
-  Eigen::VectorXd solveConservative(const Eigen::VectorXd &inputData, Polynomial polynomial);
+  template <typename IndexContainer>
+  Eigen::VectorXd solveConservative(const Eigen::VectorXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial);
 
   void clear();
 
@@ -455,7 +457,8 @@ void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const 
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const Eigen::VectorXd &rhsValues, Polynomial polynomial)
+template <typename IndexContainer>
+Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const Eigen::VectorXd &rhsValues, const IndexContainer &inputIDs, Polynomial polynomial)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(rhsValues.cols() == 1);
@@ -528,7 +531,8 @@ Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const Eigen::VectorXd &rhsValues, Polynomial polynomial)
+template <typename IndexContainer>
+Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const Eigen::VectorXd &rhsValues, const IndexContainer &inputIDs, Polynomial polynomial)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(rhsValues.cols() == 1);

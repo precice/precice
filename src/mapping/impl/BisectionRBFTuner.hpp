@@ -17,10 +17,12 @@ class BisectionRBFTuner : public RBFParameterTuner<Solver> {
 public:
   explicit BisectionRBFTuner(const mesh::Mesh &inputMesh);
 
-  std::tuple<double, double> optimize(const Solver &solver, const Eigen::VectorXd &inputData) override;
+  template <typename IndexContainer>
+  std::tuple<double, double> optimize(const Solver &solver, const IndexContainer &inputIds, const Eigen::VectorXd &inputData);
 
 private:
-  Sample      optimizeBisection(const Solver &solver, const Eigen::VectorXd &inputData, double posTolerance, double errorTolerance, int maxIterations);
+  template <typename IndexContainer>
+  Sample      optimizeBisection(const Solver &solver, const Eigen::VectorXd &inputData, const IndexContainer &inputIds, double posTolerance, double errorTolerance, int maxIterations);
   static bool shouldContinue(const Sample &lowerBound, const Sample &upperBound, double posTolerance, double errorTolerance);
 };
 
@@ -31,20 +33,21 @@ BisectionRBFTuner<Solver>::BisectionRBFTuner(const mesh::Mesh &inputMesh)
 }
 
 template <typename Solver>
-std::tuple<double, double> BisectionRBFTuner<Solver>::optimize(const Solver &solver, const Eigen::VectorXd &inputData)
+template <typename IndexContainer>
+std::tuple<double, double> BisectionRBFTuner<Solver>::optimize(const Solver &solver, const IndexContainer &inputIds, const Eigen::VectorXd &inputData)
 {
   constexpr double POS_TOLERANCE        = 1.5; // Factor by which the radius is allowed to change before stopping
   constexpr double ERR_TOLERANCE        = 0.5; // Factor by which the error is allowed to change before stopping
   constexpr int    MAX_BISEC_ITERATIONS = 6;   // Number of iterations during the "bisection" step. After finding initial samples
 
-  const Sample bestSample = optimizeBisection(solver, inputData, POS_TOLERANCE, ERR_TOLERANCE, MAX_BISEC_ITERATIONS);
+  const Sample bestSample = optimizeBisection(solver, inputData, inputIds, POS_TOLERANCE, ERR_TOLERANCE, MAX_BISEC_ITERATIONS);
   PRECICE_INFO("Best sample: rad={:.4e}, err={:.4e}", bestSample.pos, bestSample.error);
 
   return {bestSample.pos, bestSample.error};
 }
 
-template <typename RBF_T>
-bool BisectionRBFTuner<RBF_T>::shouldContinue(const Sample &lowerBound, const Sample &upperBound, double posTolerance, double errorTolerance)
+template <typename Solver>
+bool BisectionRBFTuner<Solver>::shouldContinue(const Sample &lowerBound, const Sample &upperBound, double posTolerance, double errorTolerance)
 {
   bool shouldContinue = std::isinf(upperBound.error);
   shouldContinue |= upperBound.pos > posTolerance * lowerBound.pos;
@@ -53,7 +56,8 @@ bool BisectionRBFTuner<RBF_T>::shouldContinue(const Sample &lowerBound, const Sa
 }
 
 template <typename Solver>
-Sample BisectionRBFTuner<Solver>::optimizeBisection(const Solver &solver, const Eigen::VectorXd &inputData, double posTolerance, double errorTolerance, int maxIterations)
+template <typename IndexContainer>
+Sample BisectionRBFTuner<Solver>::optimizeBisection(const Solver &solver, const Eigen::VectorXd &inputData, const IndexContainer &inputIds, double posTolerance, double errorTolerance, int maxIterations)
 {
   constexpr double increaseSize = 10;
   double           sampleRadius = this->_lowerBound;
@@ -66,7 +70,7 @@ Sample BisectionRBFTuner<Solver>::optimizeBisection(const Solver &solver, const 
   while (std::isnan(this->_upperBound)) {
     sampleRadius *= increaseSize;
 
-    auto [error, rcond] = solver.computeErrorEstimate(inputData, sampleRadius);
+    auto [error, rcond] = solver.computeErrorEstimate(inputData, inputIds, sampleRadius);
 
     PRECICE_INFO("RBF tuner sample: rad={:.4e}, err={:.4e}, 1/cond={:.4e}", sampleRadius, error, rcond);
 
@@ -84,7 +88,7 @@ Sample BisectionRBFTuner<Solver>::optimizeBisection(const Solver &solver, const 
 
   while (shouldContinue(lowerBound, upperBound, posTolerance, errorTolerance) && i < maxIterations) {
     centerSample.pos   = (lowerBound.pos + upperBound.pos) / 2;
-    centerSample.error = std::get<0>(solver.computeErrorEstimate(inputData, centerSample.pos));
+    centerSample.error = std::get<0>(solver.computeErrorEstimate(inputData, inputIds, centerSample.pos));
 
     PRECICE_INFO("Current interval: [{:.4e}, {:.4e}], Sample: rad={:.4e}, err={:.4e}", lowerBound.pos, upperBound.pos, centerSample.pos, centerSample.error);
 

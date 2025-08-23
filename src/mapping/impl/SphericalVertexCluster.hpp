@@ -228,7 +228,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
     }
 
     // Step 2: solve the system using a conservative constraint
-    auto result = _rbfSolver.solveConservative(in, _polynomial);
+    auto result = _rbfSolver.solveConservative(in, _inputIDs, _polynomial);
     PRECICE_ASSERT(result.size() == static_cast<Eigen::Index>(_inputIDs.size()));
 
     // Step 3: now accumulate the result into our global output data
@@ -319,7 +319,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
     }
 
     // Step 2: solve the system using a consistent constraint
-    auto result = _rbfSolver.solveConsistent(in, _polynomial);
+    auto result = _rbfSolver.solveConsistent(in, _inputIDs, _polynomial);
     PRECICE_ASSERT(static_cast<Eigen::Index>(_outputIDs.size()) == result.size());
 
     // Step 3: now accumulate the result into our global output data
