@@ -381,10 +381,10 @@ void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
   XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
   tagFilter.setDocumentation("Type of filtering technique that is used to "
                              "maintain good conditioning in the least-squares system. Possible filters:\n"
-                             " - `QR1-filter`: update QR-dec with (relative) test \\\\(R(i,i) < \\epsilon *\\lVert R\\rVert_F\\\\)\n"
-                             " - `QR1_absolute-filter`: update QR-dec with (absolute) test \\\\(R(i, i) < \\epsilon\\\\)\n"
-                             " - `QR2-filter`: en-block QR-dec with test \\\\(\\lVert v_\\text{orth} \\rVert_2 < \\epsilon * \\lVert v \\rVert_2\\\\)\n\n"
-                             " - `QR3-filter`: update QR-dec only when the pre-scaling weights have changed or there is one or more columns are to be removed with test \\\\(\\lVert v_\\text{orth} \\rVert_2 < \\epsilon * \\lVert v \\rVert_2\\\\)\n"
+                             " - `QR1`: update QR-dec with (relative) test \\\\(R(i,i) < \\epsilon *\\lVert R\\rVert_F\\\\)\n"
+                             " - `QR1-absolute`: update QR-dec with (absolute) test \\\\(R(i, i) < \\epsilon\\\\)\n"
+                             " - `QR2`: en-block QR-dec with test \\\\(\\lVert v_\\text{orth} \\rVert_2 < \\epsilon * \\lVert v \\rVert_2\\\\)\n\n"
+                             " - `QR3`: update QR-dec only when the pre-scaling weights have changed or there is one or more columns are to be removed with test \\\\(\\lVert v_\\text{orth} \\rVert_2 < \\epsilon * \\lVert v \\rVert_2\\\\)\n"
                              "Please note that a QR1 is based on Given's rotations whereas QR2 uses "
                              "modified Gram-Schmidt. This can give different results even when no columns "
                              "are filtered out.");
