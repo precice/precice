@@ -388,7 +388,7 @@ void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
                              "Please note that a QR1 is based on Given's rotations whereas QR2 uses "
                              "modified Gram-Schmidt. This can give different results even when no columns "
                              "are filtered out.");
-  XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT, 1e-2);
+  XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT, 1e-16);
   attrSingularityLimit.setDocumentation("Limit eps of the filter.");
   tagFilter.addAttribute(attrSingularityLimit);
   auto attrFilterName = XMLAttribute<std::string>(ATTR_TYPE)
