@@ -583,62 +583,39 @@ void BaseCouplingScheme::requireAction(
 
 std::string BaseCouplingScheme::printCouplingState() const
 {
-  std::ostringstream os;
-  if (isCouplingOngoing()) {
-    os << "iteration: " << _iterations; //_iterations;
-    if ((_maxIterations != UNDEFINED_MAX_ITERATIONS) && (_maxIterations != INFINITE_MAX_ITERATIONS)) {
-      os << " of " << _maxIterations;
-    }
-    if (_minIterations != UNDEFINED_MIN_ITERATIONS) {
-      os << " (min " << _minIterations << ")";
-    }
-    os << ", ";
+  if (!isCouplingOngoing()) {
+    return fmt::format("Reached end at: final time-window: {}, final time: {}", (_timeWindows - 1), getTime());
   }
-  os << printBasicState(_timeWindows, getTime());
-  std::string actionsState = printActionsState();
-  if (!actionsState.empty()) {
-    os << ", " << actionsState;
-  }
-  return os.str();
-}
+  std::string str;
+  auto        out = std::back_inserter(str);
 
-std::string BaseCouplingScheme::printBasicState(
-    int    timeWindows,
-    double time) const
-{
-  std::ostringstream os;
-  if (isCouplingOngoing()) {
-    os << "time-window: " << timeWindows;
-    if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
-      os << " of " << _maxTimeWindows;
-    }
-    os << ", time: " << time;
-    if (_maxTime != UNDEFINED_MAX_TIME) {
-      os << " of " << _maxTime;
-    }
-    if (hasTimeWindowSize()) {
-      os << ", time-window-size: " << _timeWindowSize;
-    }
-    if (hasTimeWindowSize() || (_maxTime != UNDEFINED_MAX_TIME)) {
-      os << ", max-time-step-size: " << getNextTimeStepMaxSize();
-    }
-    os << ", ongoing: ";
-    isCouplingOngoing() ? os << "yes" : os << "no";
-    os << ", time-window-complete: ";
-    _isTimeWindowComplete ? os << "yes" : os << "no";
-  } else {
-    os << "Reached end at: final time-window: " << (timeWindows - 1) << ", final time: " << time;
-  }
-  return os.str();
-}
+  if (isImplicitCouplingScheme()) {
+    auto hasMax = (_maxIterations != UNDEFINED_MAX_ITERATIONS) && (_maxIterations != INFINITE_MAX_ITERATIONS);
+    auto hasMin = _minIterations != UNDEFINED_MIN_ITERATIONS;
 
-std::string BaseCouplingScheme::printActionsState() const
-{
-  std::ostringstream os;
-  for (auto action : _requiredActions) {
-    os << toString(action) << ' ';
+    if (hasMax && hasMin) {
+      fmt::format_to(out, "it {} (min: {}, max: {}), ", _iterations, _minIterations, _maxIterations);
+    } else if (hasMax) {
+      fmt::format_to(out, "it {} (max: {}), ", _iterations, _maxIterations);
+    } else if (hasMin) {
+      fmt::format_to(out, "it {} (min: {}), ", _iterations, _minIterations);
+    } else {
+      fmt::format_to(out, "it {}, ", _iterations);
+    }
   }
-  return os.str();
+
+  fmt::format_to(out, "time-window {}", _timeWindows);
+  if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
+    fmt::format_to(out, " (max: {})", _maxTimeWindows);
+  }
+  fmt::format_to(out, ", t {}", getTime());
+  if (_maxTime != UNDEFINED_MAX_TIME) {
+    fmt::format_to(out, " (max: {})", _maxTime);
+  }
+  if (hasTimeWindowSize()) {
+    fmt::format_to(out, ", Dt {}, max-dt {}", _timeWindowSize, getNextTimeStepMaxSize());
+  }
+  return str;
 }
 
 void BaseCouplingScheme::checkCompletenessRequiredActions()

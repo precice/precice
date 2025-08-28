@@ -557,22 +557,6 @@ private:
   void advanceTXTWriters();
 
   /**
-   * @brief Prints the coupling state
-   *
-   * @param timeWindows current number of completed time windows
-   * @param time current time
-   */
-  std::string printBasicState(
-      int    timeWindows,
-      double time) const;
-
-  /**
-   * @brief Prints the action state
-   * @returns a string representing the required actions.
-   */
-  std::string printActionsState() const;
-
-  /**
    * @brief Measure whether coupling scheme has converged or not
    * @return Whether coupling scheme has converged
    */
