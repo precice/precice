@@ -428,19 +428,11 @@ void CompositionalCouplingScheme::requireAction(
 
 std::string CompositionalCouplingScheme::printCouplingState() const
 {
-  // TODO is a redesign necessary?
-  std::string              state;
-  std::vector<std::string> partners;
+  std::vector<std::string> states;
   for (const auto scheme : allSchemes()) {
-    if (not state.empty()) {
-      state += "\n";
-    }
-    partners = scheme->getCouplingPartners();
-    state += partners[0];
-    state += ": ";
-    state += scheme->printCouplingState();
+    states.push_back(fmt::format("partner: {}, {}", fmt::join(scheme->getCouplingPartners(), " & "), scheme->printCouplingState()));
   }
-  return state;
+  return fmt::format("{}", fmt::join(states, "; "));
 }
 
 void CompositionalCouplingScheme::updateActiveSchemes()
