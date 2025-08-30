@@ -6,35 +6,128 @@
 #include "mesh/Utils.hpp"
 #include "precice/impl/ParticipantImpl.hpp"
 #include "precice/precice.hpp"
+#include <boost/proto/proto_fwd.hpp>
+#include <iomanip>
+
+
+std::tuple<std::array<int, 12>, std::array<Eigen::Vector3d, 12>> generateMeshOne(Participant &interface, const std::string &meshOneID)
+{
+  constexpr int    N = 12;
+  constexpr double z = 0.3;
+
+  std::array mesh = {
+    Eigen::Vector3d{0.0, 0.0, z},
+    Eigen::Vector3d{1.0, 0.0, z},
+    Eigen::Vector3d{1.0, 1.0, z},
+    Eigen::Vector3d{0.0, 1.0, z},
+    Eigen::Vector3d{2.0, 0.0, z},
+    Eigen::Vector3d{3.0, 0.0, z},
+    Eigen::Vector3d{3.0, 1.0, z},
+    Eigen::Vector3d{2.0, 1.0, z},
+    Eigen::Vector3d{4.0, 0.0, z},
+    Eigen::Vector3d{5.0, 0.0, z},
+    Eigen::Vector3d{5.0, 1.0, z},
+    Eigen::Vector3d{4.0, 1.0, z},
+  };
+
+  std::array<int, N> ids;
+  for (size_t i = 0; i < N; i++) {
+    ids[i] = interface.setMeshVertex(meshOneID, mesh[i]);
+  }
+  return {ids, mesh};
+}
+
+std::tuple<std::array<int, 3>, std::array<Eigen::Vector3d, 3>> generateMeshTwo(Participant &interface, const std::string &meshTwoID)
+{
+  constexpr int    N = 3;
+  constexpr double z = 0.3;
+
+  std::array mesh = {
+    Eigen::Vector3d{0.0, 0.0, z}, // Maps to vertex A
+    Eigen::Vector3d{0.5, 0.5, z}, // Maps on the left side of the domain
+    Eigen::Vector3d{3.5, 0.5, z}, // Maps more in the middle of the domain
+  };
+
+  std::array<int, N> ids;
+  for (int i = 0; i < N; i++) {
+    ids[i] = interface.setMeshVertex(meshTwoID, mesh[i]);
+  }
+  return {ids, mesh};
+}
+
+template <size_t N>
+std::array<double, N * 3> evaluateFunction(const std::array<Eigen::Vector3d, N> &mesh)
+{
+  std::array<double, N * 3> values;
+
+  for (size_t i = 0; i < N * 3; i += 3) {
+    values[i + 0] = 0.1 * mesh[i / 3].array().sum() + 0;
+    values[i + 1] = 0.1 * mesh[i / 3].array().sum() + 1;
+    values[i + 2] = 0.1 * mesh[i / 3].array().sum() + 2;
+  }
+  return values;
+}
+
+
+void testRBFMappingVectorial(const std::string configFile, const TestContext &context, bool mappingIsConservative)
+{
+  constexpr size_t dim  = 3;
+  constexpr size_t nOut = 3;
+  constexpr size_t nIn  = 12;
+
+  auto meshOneID = "MeshOne";
+  auto dataOneID = "DataOne";
+  auto meshTwoID = "MeshTwo";
+
+  if (context.isNamed("SolverOne")) {
+    Participant interfaceA("SolverOne", configFile, 0, 1);
+
+    auto [idsOne, meshOne] = generateMeshOne(interfaceA, meshOneID);
+    interfaceA.initialize();
+
+    while (interfaceA.isCouplingOngoing()) {
+      double maxDt = interfaceA.getMaxTimeStepSize();
+      std::array<double, nIn * dim> inputValues = evaluateFunction(meshOne);
+      interfaceA.writeData(meshOneID, dataOneID, idsOne, inputValues);
+      interfaceA.advance(maxDt);
+    }
+    interfaceA.finalize();
+
+  } else {
+    Participant interfaceB("SolverTwo", configFile, 0, 1);
+
+    auto [idsTwo, meshTwo] = generateMeshTwo(interfaceB, meshTwoID);
+    interfaceB.initialize();
+
+    std::array<double, nOut * dim> expectedValues;
+    if (mappingIsConservative) {
+      expectedValues = {-0.6, -0.6, -0.6, 0.853333, 4.85333, 8.85333, 3.70667, 11.7067, 19.7067};
+    } else {
+      expectedValues = evaluateFunction(meshTwo);
+    }
+
+    double maxDt = interfaceB.getMaxTimeStepSize();
+
+    Eigen::Vector<double, nOut * dim> values = Eigen::Vector<double, nOut * dim>::Zero();
+    interfaceB.readData(meshTwoID, dataOneID, idsTwo, maxDt, values);
+    interfaceB.advance(maxDt);
+
+    for (size_t i = 0; i < values.size(); i++) {
+      BOOST_TEST(values[i] == expectedValues[i], boost::test_tools::tolerance(1e-5));
+    }
+    interfaceB.finalize();
+  }
+}
+
 
 void testRBFMapping(const std::string configFile, const TestContext &context)
 {
   using Eigen::Vector3d;
 
-  const double z = 0.3;
-
-  // MeshOne
-  Vector3d coordOneA{0.0, 0.0, z};
-  Vector3d coordOneB{1.0, 0.0, z};
-  Vector3d coordOneC{1.0, 1.0, z};
-  Vector3d coordOneD{0.0, 1.0, z};
-  Vector3d coordOneE{2.0, 0.0, z};
-  Vector3d coordOneF{3.0, 0.0, z};
-  Vector3d coordOneG{3.0, 1.0, z};
-  Vector3d coordOneH{2.0, 1.0, z};
-  Vector3d coordOneI{4.0, 0.0, z};
-  Vector3d coordOneJ{5.0, 0.0, z};
-  Vector3d coordOneK{5.0, 1.0, z};
-  Vector3d coordOneL{4.0, 1.0, z};
-
   std::vector<double> values;
   const unsigned int  nCoords = 12;
   for (unsigned int i = 0; i < nCoords; ++i)
     values.emplace_back(std::pow(i + 1, 2));
-  // MeshTwo
-  Vector3d coordTwoA{0.0, 0.0, z}; // Maps to vertex A
-  Vector3d coordTwoB{0.5, 0.5, z}; // Maps on the left side of the domain
-  Vector3d coordTwoC{3.5, 0.5, z}; // Maps more in the middle of the domain
 
   double expectedValTwoA = 1.0000000014191541;
   double expectedValTwoB = 7.30892688709867;
@@ -46,19 +139,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     auto meshOneID = "MeshOne";
 
     // Setup mesh one.
-    std::vector<int> ids;
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneA));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneB));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneC));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneD));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneE));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneF));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneG));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneH));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneI));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneJ));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneK));
-    ids.emplace_back(interface.setMeshVertex(meshOneID, coordOneL));
+    auto [ids, _] = generateMeshOne(interface, meshOneID);
 
     // Initialize, thus sending the mesh.
     interface.initialize();
@@ -81,9 +162,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
-    int idA = interface.setMeshVertex(meshTwoID, coordTwoA);
-    int idB = interface.setMeshVertex(meshTwoID, coordTwoB);
-    int idC = interface.setMeshVertex(meshTwoID, coordTwoC);
+    auto [ids, _] = generateMeshOne(interface, meshTwoID);
 
     // Initialize, thus receive the data and map.
     interface.initialize();
@@ -95,7 +174,6 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     BOOST_TEST(!interface.requiresGradientDataFor(meshTwoID, dataAID));
 
     double values[3];
-    int    ids[] = {idA, idB, idC};
     interface.readData(meshTwoID, dataAID, ids, maxDt, values);
 
     // Due to Eigen 3.3.7 (Ubunu 2004) giving slightly different results

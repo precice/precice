@@ -248,28 +248,10 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
 
     const int valueDim = inData.dataDims;
 
-    // Construct Eigen vectors
-    Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
-    Eigen::VectorXd             outputValues((this->output()->getGlobalNumberOfVertices()) * valueDim);
+    // copy of input data to Eigen matrix format, rows == outputSize
+    Eigen::MatrixXd in = Eigen::Map<Eigen::RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>(globalInValues.data(), _rbfSolver->getOutputSize(), valueDim, Eigen::OuterStride(valueDim));
 
-    Eigen::VectorXd in;                     // rows == outputSize
-    in.resize(_rbfSolver->getOutputSize()); // rows == outputSize
-
-    outputValues.setZero();
-
-    for (int dim = 0; dim < valueDim; dim++) {
-      for (int i = 0; i < in.size(); i++) { // Fill input data values
-        in[i] = inputValues(i * valueDim + dim);
-      }
-
-      Eigen::VectorXd out;
-      out = _rbfSolver->solveConservative(in, _polynomial);
-
-      // Copy mapped data to output data values
-      for (int i = 0; i < this->output()->getGlobalNumberOfVertices(); i++) {
-        outputValues[i * valueDim + dim] = out[i];
-      }
-    }
+    Eigen::VectorXd outputValues = _rbfSolver->solveConservative(in, _polynomial);
 
     // Data scattering to secondary ranks
     if (utils::IntraComm::isPrimary()) {
@@ -363,35 +345,12 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
       outValuesSize.push_back(outData.size());
     }
 
-    Eigen::VectorXd in;
+    // copy of input data to Eigen matrix format
+    Eigen::MatrixXd in = Eigen::Map<Eigen::RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>(globalInValues.data(), _rbfSolver->getInputSize(), valueDim, Eigen::OuterStride(valueDim));
 
-    in.resize(_rbfSolver->getInputSize()); // rows == n
-    in.setZero();
+    Eigen::VectorXd outputValues = _rbfSolver->solveConsistent(in, _polynomial);
 
-    // Construct Eigen vectors
-    Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
-
-    Eigen::VectorXd outputValues;
-    outputValues.resize((_rbfSolver->getOutputSize()) * valueDim);
-
-    Eigen::VectorXd out;
-    outputValues.setZero();
-
-    // For every data dimension, perform mapping
-    for (int dim = 0; dim < valueDim; dim++) {
-      // Fill input from input data values (last polyparams entries remain zero)
-      for (int i = 0; i < this->input()->getGlobalNumberOfVertices(); i++) {
-        in[i] = inputValues[i * valueDim + dim];
-      }
-
-      out = _rbfSolver->solveConsistent(in, _polynomial);
-
-      // Copy mapped data to output data values
-      for (int i = 0; i < out.size(); i++) {
-        outputValues[i * valueDim + dim] = out[i];
-      }
-    }
-
+    // Copy mapped data to output data values
     outData = Eigen::Map<Eigen::VectorXd>(outputValues.data(), outValuesSize.at(0));
 
     // Data scattering to secondary ranks
