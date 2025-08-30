@@ -41,12 +41,12 @@ public:
                        const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial);
 
   /// Maps the given input data
-  Eigen::VectorXd solveConsistent(Eigen::MatrixXd &inputData, Polynomial polynomial) const;
+  Eigen::MatrixXd solveConsistent(Eigen::MatrixXd &inputData, Polynomial polynomial) const;
 
   void computeCacheData(Eigen::MatrixXd &inputData, Polynomial polynomial, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffsOut) const;
 
   /// Maps the given input data
-  Eigen::VectorXd solveConservative(const Eigen::MatrixXd &inputData, Polynomial polynomial) const;
+  Eigen::MatrixXd solveConservative(const Eigen::MatrixXd &inputData, Polynomial polynomial) const;
 
   // Clear all stored matrices
   void clear();
