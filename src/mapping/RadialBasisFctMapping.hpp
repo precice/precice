@@ -251,7 +251,9 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
     // copy of input data to Eigen matrix format, rows == outputSize
     Eigen::MatrixXd in = Eigen::Map<Eigen::RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>(globalInValues.data(), _rbfSolver->getOutputSize(), valueDim, Eigen::OuterStride(valueDim));
 
-    Eigen::VectorXd outputValues = _rbfSolver->solveConservative(in, _polynomial);
+    Eigen::RowMatrixXd out = _rbfSolver->solveConservative(in, _polynomial); // copy to row major format
+
+    Eigen::Map<Eigen::VectorXd> outputValues(out.data(), out.size());
 
     // Data scattering to secondary ranks
     if (utils::IntraComm::isPrimary()) {
@@ -347,18 +349,17 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
 
     // copy of input data to Eigen matrix format
     Eigen::MatrixXd in = Eigen::Map<Eigen::RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>(globalInValues.data(), _rbfSolver->getInputSize(), valueDim, Eigen::OuterStride(valueDim));
-
-    Eigen::VectorXd outputValues = _rbfSolver->solveConsistent(in, _polynomial);
+    Eigen::RowMatrixXd out = _rbfSolver->solveConsistent(in, _polynomial); // copy to row major format
 
     // Copy mapped data to output data values
-    outData = Eigen::Map<Eigen::VectorXd>(outputValues.data(), outValuesSize.at(0));
+    outData = Eigen::Map<Eigen::VectorXd>(out.data(), outValuesSize.at(0));
 
     // Data scattering to secondary ranks
     int beginPoint = outValuesSize.at(0);
 
     if (utils::IntraComm::isPrimary()) {
       for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
-        precice::span<const double> toSend{outputValues.data() + beginPoint, static_cast<size_t>(outValuesSize.at(rank))};
+        precice::span<const double> toSend{out.data() + beginPoint, static_cast<size_t>(outValuesSize.at(rank))};
         utils::IntraComm::getCommunication()->sendRange(toSend, rank);
         beginPoint += outValuesSize.at(rank);
       }
