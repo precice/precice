@@ -205,7 +205,7 @@ if(POLICY CMP0167)
 endif()
 
 find_package(Boost 1.74.0 REQUIRED CONFIG
-  COMPONENTS log log_setup program_options system thread unit_test_framework
+  COMPONENTS log log_setup program_options thread unit_test_framework
   )
 mark_as_advanced(Boost_INCLUDE_DIR Boost_LOG_LIBRARY_RELEASE Boost_LOG_SETUP_LIBRARY_RELEASE Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE Boost_SYSTEM_LIBRARY_RELEASE Boost_THREAD_LIBRARY_RELEASE Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE)
 mark_as_advanced(Boost_INCLUDE_DIR Boost_LOG_LIBRARY_DEBUG Boost_LOG_SETUP_LIBRARY_DEBUG Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG Boost_SYSTEM_LIBRARY_DEBUG Boost_THREAD_LIBRARY_DEBUG Boost_UNIT_TEST_FRAMEWORK_LIBRARY_DEBUG)
@@ -406,7 +406,6 @@ target_link_libraries(preciceCore PUBLIC
   Boost::log
   Boost::log_setup
   Boost::program_options
-  Boost::system
   Boost::thread
   Boost::unit_test_framework
   )
