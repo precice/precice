@@ -103,9 +103,12 @@ public:
       BISECTION,
       BAYES_OPTIMIZATION
     };
+    static constexpr int OPTIMIZE_ONLY_ONCE = 0;
+    static constexpr int UNINITIALIZED      = -1;
 
-    Type optimizationType = Type::BISECTION; // not yet used
-    bool autotuneShape    = false;
+    Type optimizationType  = Type::BISECTION; // not yet used
+    bool autotuneShape     = false;
+    int  iterationInterval = UNINITIALIZED;
   };
 
   struct GeoMultiscaleConfiguration {
@@ -227,6 +230,8 @@ private:
   // const std::string ATTR_JACOBI_BLOCK_SIZE     = "jacobi-block-size";
   // const std::string ATTR_MAX_ITERATIONS        = "max-iterations";
 
+  const std::string ATTR_TUNER_INTERVAL = "tuner-optimization-interval";
+
   // mapping constraint
   Mapping::Constraint constraintValue{};
 
@@ -239,7 +244,7 @@ private:
   // as we can only instantiate the RBF classes when we know the RBF
   // which is configured in the subtag
   RBFConfiguration _rbfConfig;
-  AutotuningParams _rbfOptional;
+  AutotuningParams _autotunerConfig;
 
   struct ExecutorConfiguration {
     enum struct Executor {

@@ -232,6 +232,9 @@ MappingConfiguration::MappingConfiguration(
   // auto attrMaxIterations = makeXMLAttribute(ATTR_MAX_ITERATIONS, 1e6)
   //                              .setDocumentation("Maximum number of iterations of the solver");
 
+  auto attrTunerInterval = makeXMLAttribute(ATTR_TUNER_INTERVAL, "")
+                               .setDocumentation("Support radius optimization every N solver calls");
+
   auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER, 50)
                                 .setDocumentation("Average number of vertices per cluster (partition) applied in the rbf partition of unity method.");
   auto relativeOverlap = makeXMLAttribute(ATTR_RELATIVE_OVERLAP, 0.15)
@@ -312,7 +315,7 @@ MappingConfiguration::MappingConfiguration(
   auto attrSupportRadius = XMLAttribute<std::string>(ATTR_SUPPORT_RADIUS)
                                .setDocumentation("Support radius of each RBF basis function (global choice).");
 
-  addAttributes(supportRadiusRBF, {attrSupportRadius});
+  addAttributes(supportRadiusRBF, {attrSupportRadius, attrTunerInterval});
   addSubtagsToParents(supportRadiusRBF, rbfIterativeTags);
   addSubtagsToParents(supportRadiusRBF, rbfDirectTags);
   addSubtagsToParents(supportRadiusRBF, pumDirectTags);
@@ -337,7 +340,7 @@ MappingConfiguration::MappingConfiguration(
       XMLTag{*this, RBF_GAUSSIAN, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Gaussian basis function accepting a support radius or a shape parameter.")};
   attrShapeParam.setDefaultValue(std::numeric_limits<double>::quiet_NaN());
   attrSupportRadius.setDefaultValue("NaN");
-  addAttributes(GaussRBF, {attrShapeParam, attrSupportRadius});
+  addAttributes(GaussRBF, {attrShapeParam, attrSupportRadius, attrTunerInterval});
   addSubtagsToParents(GaussRBF, rbfIterativeTags);
   addSubtagsToParents(GaussRBF, rbfDirectTags);
   addSubtagsToParents(GaussRBF, pumDirectTags);
@@ -460,17 +463,37 @@ void MappingConfiguration::xmlTagCallback(
 
     std::string basisFctName     = tag.getName();
     std::string supportRadiusTag = tag.getStringAttributeValue(ATTR_SUPPORT_RADIUS, "NaN");
+    std::string tunerIntervalTag = tag.getStringAttributeValue(ATTR_TUNER_INTERVAL, "");
 
     double shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM, 0.);
     double supportRadius  = std::numeric_limits<double>::quiet_NaN();
 
-    _rbfOptional.autotuneShape = supportRadiusTag == "auto";
+    _autotunerConfig.autotuneShape     = supportRadiusTag == "auto";
+    _autotunerConfig.iterationInterval = tunerIntervalTag == "once" ? AutotuningParams::OPTIMIZE_ONLY_ONCE : AutotuningParams::UNINITIALIZED;
 
-    if (!_rbfOptional.autotuneShape) {
+    PRECICE_WARN_IF(!_autotunerConfig.autotuneShape && !tunerIntervalTag.empty(), "The \"{}\" tag will be ignored. Set \"{}\" to \"auto\" for it to take effect.",
+                    ATTR_SUPPORT_RADIUS, ATTR_TUNER_INTERVAL);
+
+    // Check validity and parse the optimization interval
+    if (_autotunerConfig.autotuneShape && _autotunerConfig.iterationInterval == AutotuningParams::UNINITIALIZED) {
+      if (supportRadiusTag.empty()) {
+        _autotunerConfig.iterationInterval = 1;
+      } else {
+        try {
+          _autotunerConfig.iterationInterval = std::stoi(tunerIntervalTag);
+        } catch (const std::invalid_argument &) {
+          _autotunerConfig.iterationInterval = AutotuningParams::UNINITIALIZED;
+        }
+      }
+      PRECICE_CHECK(_autotunerConfig.iterationInterval > 0, "\"{}\" must be a positive integer or \"once\"", ATTR_TUNER_INTERVAL);
+    }
+
+    // Parse support radius if it should not be tuned. Otherwise, set it to some finite value to mark it as "set".
+    if (!_autotunerConfig.autotuneShape) {
       try {
         supportRadius = std::stod(supportRadiusTag);
       } catch (const std::invalid_argument &) {
-        PRECICE_ERROR("\"support-radius\" must either be a positive floating-point value or \"auto\"");
+        PRECICE_ERROR("\"{}\" must either be a positive floating-point value or \"auto\"", ATTR_SUPPORT_RADIUS);
       }
     } else {
       supportRadius = 1.0;
@@ -482,7 +505,8 @@ void MappingConfiguration::xmlTagCallback(
     if (_rbfConfig.basisFunction == BasisFunction::Gaussian) {
       const bool exactlyOneSet = (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) ||
                                  (std::isfinite(shapeParameter) && !std::isfinite(supportRadius));
-      PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"shape-parameter\" or a \"support-radius\".");
+      PRECICE_CHECK(exactlyOneSet, "The specified parameters for the Gaussian RBF mapping are invalid. Please specify either a \"{}\" or a \"{}\".",
+                    ATTR_SUPPORT_RADIUS, ATTR_SHAPE_PARAM);
 
       if (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) {
         shapeParameter = RadiusInitialization<Gaussian>::transformRadiusToShape(supportRadius);
@@ -752,7 +776,7 @@ void MappingConfiguration::finishRBFConfiguration()
   // 1. the CPU executor
   if (_executorConfig->executor == ExecutorConfiguration::Executor::CPU) {
     if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::Eigen>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _rbfOptional);
+      mapping.mapping = getRBFMapping<RBFBackend::Eigen>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _autotunerConfig);
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
 #ifndef PRECICE_NO_PETSC
       // for petsc initialization
@@ -763,7 +787,7 @@ void MappingConfiguration::finishRBFConfiguration()
       PRECICE_CHECK(false, "The global-iterative RBF solver on a CPU requires a preCICE build with PETSc enabled.");
 #endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _rbfOptional);
+      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _autotunerConfig);
     } else {
       PRECICE_UNREACHABLE("Unknown RBF solver.");
     }

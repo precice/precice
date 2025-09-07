@@ -62,9 +62,18 @@ Sample BisectionRBFTuner<Solver>::optimizeBisection(const Solver &solver, const 
   constexpr double increaseSize = 10;
   double           sampleRadius = this->_lowerBound;
 
-  PRECICE_INFO("Start optimization with lower bound = {:.4e}", this->_lowerBound);
+  this->_lastSampleWasOptimum = false;
 
-  Sample lowerBound = {sampleRadius, std::numeric_limits<double>::quiet_NaN()};
+  PRECICE_INFO("Start optimization with lower bound = {:.4e}, upper bound = {:.4e}", this->_lowerBound, this->_upperBound);
+
+  auto [error, rcond] = solver.computeErrorEstimate(inputData, inputIds, sampleRadius);
+  Sample lowerBound   = {sampleRadius, sampleRadius};
+
+  // Error is numerically insignificant
+  if (error < 1e-15) {
+    this->_lastSampleWasOptimum = true;
+    return lowerBound;
+  }
 
   // collect samples with exponential growth and decrease growth rate until the support radius is "good enough"
   while (std::isnan(this->_upperBound)) {
@@ -74,7 +83,7 @@ Sample BisectionRBFTuner<Solver>::optimizeBisection(const Solver &solver, const 
 
     PRECICE_INFO("RBF tuner sample: rad={:.4e}, err={:.4e}, 1/cond={:.4e}", sampleRadius, error, rcond);
 
-    if (rcond < 1e-13 || std::isinf(error)) {
+    if (rcond < 1e-12 || std::isinf(error)) {
       PRECICE_CHECK(sampleRadius != this->_lowerBound, "Parameter tuning failed in first iteration using support-radius={}", sampleRadius);
       this->_upperBound = sampleRadius;
       break;
@@ -90,7 +99,8 @@ Sample BisectionRBFTuner<Solver>::optimizeBisection(const Solver &solver, const 
     centerSample.pos   = (lowerBound.pos + upperBound.pos) / 2;
     centerSample.error = std::get<0>(solver.computeErrorEstimate(inputData, inputIds, centerSample.pos));
 
-    PRECICE_INFO("Current interval: [{:.4e}, {:.4e}], Sample: rad={:.4e}, err={:.4e}", lowerBound.pos, upperBound.pos, centerSample.pos, centerSample.error);
+    PRECICE_INFO("Current interval: [({:.2e},{:.2e}), ({:.2e},{:.2e})], Sample: rad={:.2e}, err={:.2e}",
+                 lowerBound.pos, lowerBound.error, upperBound.pos, upperBound.error, centerSample.pos, centerSample.error);
 
     if (lowerBound.error < upperBound.error || std::isinf(centerSample.error)) {
       upperBound = centerSample;

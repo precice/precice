@@ -16,7 +16,7 @@ struct Sample {
   }
 
   Sample()
-      : pos(std::numeric_limits<double>::quiet_NaN()), error(std::numeric_limits<double>::quiet_NaN())
+      : pos(std::numeric_limits<double>::quiet_NaN()), error(std::numeric_limits<double>::infinity())
   {
   }
 };

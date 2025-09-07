@@ -24,7 +24,7 @@
       to="MeshTwo"
       constraint="consistent"
       polynomial="off">
-      <basis-function:gaussian support-radius="auto" />
+      <basis-function:gaussian support-radius="auto" tuner-optimization-interval="1" />
     </mapping:rbf-global-direct>
     <read-data name="DataOne" mesh="MeshTwo" />
   </participant>
