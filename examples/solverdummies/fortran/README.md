@@ -7,6 +7,8 @@ You can use the provided `CMakeLists.txt` to build with CMake.
 1. run `cmake .` in this folder
 2. run `make`
 
+**Alternatively, you can directly include the precice module into your source code, for more information refer to the README.md in https://github.com/precice/fortran-module**
+
 # Run
 
 You can test the dummy solver by coupling two instances with each other. Open two terminals and run
