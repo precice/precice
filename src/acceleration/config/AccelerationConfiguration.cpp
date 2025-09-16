@@ -380,14 +380,13 @@ void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
 
   XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
   tagFilter.setDocumentation("Type of filtering technique that is used to "
-                             "maintain good conditioning in the least-squares system. Possible filters:\n"
-                             " - `QR1`: update QR-dec with (relative) test \\\\(R(i,i) < \\epsilon *\\lVert R\\rVert_F\\\\)\n"
-                             " - `QR1-absolute`: update QR-dec with (absolute) test \\\\(R(i, i) < \\epsilon\\\\)\n"
-                             " - `QR2`: en-block QR-dec with test \\\\(\\lVert v_\\text{orth} \\rVert_2 < \\epsilon * \\lVert v \\rVert_2\\\\)\n\n"
-                             " - `QR3`: update QR-dec only when the pre-scaling weights have changed or there is one or more columns are to be removed with test \\\\(\\lVert v_\\text{orth} \\rVert_2 < \\epsilon * \\lVert v \\rVert_2\\\\)\n"
-                             "Please note that a QR1 is based on Given's rotations whereas QR2 uses "
-                             "modified Gram-Schmidt. This can give different results even when no columns "
-                             "are filtered out.");
+                             "maintain good conditioning in the least-squares system. Possible filters:\n\n"
+                             "- `QR1`: update QR-dec with (relative) test \\\\(R(i,i) < \\epsilon *\\lVert R\\rVert_F\\\\)\n"
+                             "- `QR1-absolute`: update QR-dec with (absolute) test \\\\(R(i, i) < \\epsilon\\\\)\n"
+                             "- `QR2`: en-block QR-dec with test \\\\(\\lVert v_\\text{orth} \\rVert_2 < \\epsilon * \\lVert v \\rVert_2\\\\)\n\n"
+                             "- `QR3`: update QR-dec only when the pre-scaling weights have changed or there is one or more columns are to be removed with test \\\\(\\lVert v_\\text{orth} \\rVert_2 < \\epsilon * \\lVert v \\rVert_2\\\\)\n\n"
+                             "Please note that a QR1 is based on Given's rotations whereas QR2 uses modified Gram-Schmidt. "
+                             "This can give different results even when no columns are filtered out.");
   XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT, 1e-16);
   attrSingularityLimit.setDocumentation("Limit eps of the filter.");
   tagFilter.addAttribute(attrSingularityLimit);
@@ -437,12 +436,11 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tag.addSubtag(tagData);
 
     XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
-    tagPreconditioner.setDocumentation("To improve the numerical stability of multiple data vectors a preconditioner"
-                                       " can be applied. A constant preconditioner scales every acceleration data by a constant value, which you can define as"
-                                       " an attribute of data. "
-                                       " A value preconditioner scales every acceleration data by the norm of the data in the previous time window."
-                                       " A residual preconditioner scales every acceleration data by the current residual."
-                                       " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.");
+    tagPreconditioner.setDocumentation("To improve the numerical stability of multiple data vectors a preconditioner can be applied. "
+                                       "A constant preconditioner scales every acceleration data by a constant value, which you can define as an attribute of data. "
+                                       "A value preconditioner scales every acceleration data by the norm of the data in the previous time window. "
+                                       "A residual preconditioner scales every acceleration data by the current residual. "
+                                       "A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.");
     auto attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
                                       .setOptions({VALUE_CONSTANT_PRECONDITIONER,
                                                    VALUE_VALUE_PRECONDITIONER,
@@ -485,13 +483,12 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     addCommonIQNSubtags(tag);
 
     XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
-    tagPreconditioner.setDocumentation("To improve the performance of a parallel or a multi coupling schemes a preconditioner"
-                                       " can be applied. "
+    tagPreconditioner.setDocumentation("To improve the performance of a parallel or a multi coupling schemes a preconditioner can be applied.\n\n"
                                        "- A constant preconditioner scales every acceleration data by a constant value, which you can define as an attribute of data. \n "
                                        "- A value preconditioner scales every acceleration data by the norm of the data in the previous time window.\n"
                                        "- A residual preconditioner scales every acceleration data by the current residual.\n"
-                                       "- A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.\n"
-                                       " If this tag is not provided, the residual-sum preconditioner is employed.");
+                                       "- A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.\n\n"
+                                       "If this tag is not provided, the residual-sum preconditioner is employed.");
     auto attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
                                       .setOptions({VALUE_CONSTANT_PRECONDITIONER,
                                                    VALUE_VALUE_PRECONDITIONER,
@@ -564,12 +561,12 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
 
     XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
     tagPreconditioner.setDocumentation(
-        "To improve the performance of a parallel or a multi coupling schemes a preconditioner can be applied."
+        "To improve the performance of a parallel or a multi coupling schemes a preconditioner can be applied.\n\n"
         "- A constant preconditioner scales every acceleration data by a constant value, which you can define as an attribute of data.\n"
         "- A value preconditioner scales every acceleration data by the norm of the data in the previous time window.\n"
         "- A residual preconditioner scales every acceleration data by the current residual.\n"
-        "- A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.\n"
-        " If this tag is not provided, the residual-sum preconditioner is employed.");
+        "- A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.\n\n"
+        "If this tag is not provided, the residual-sum preconditioner is employed.");
     auto attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
                                       .setOptions({VALUE_CONSTANT_PRECONDITIONER,
                                                    VALUE_VALUE_PRECONDITIONER,
