@@ -35,7 +35,7 @@ void checkConfiguration(const std::string &filename, const std::string &particip
     logging::BackendConfiguration config;
 
     // Console output
-    config.format = "precice-tools: %ColorizedSeverity%%Message%";
+    config.format = "%ColorizedSeverity%%Message%";
     config.filter = "%Severity% >= info";
     config.type   = "stream";
     config.output = "stdout";
