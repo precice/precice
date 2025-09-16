@@ -976,11 +976,11 @@ void CouplingSchemeConfiguration::checkIterationLimits() const
 {
   if (_config.convergenceMeasureDefinitions.empty()) {
     PRECICE_CHECK(_config.maxIterations != -1,
-                  "Not defining convergence measures without providing a maximum iteration limit is forbidden."
+                  "Not defining convergence measures without providing a maximum iteration limit is forbidden. "
                   "Please define a convergence measure or set a maximum iteration limit using <max-iterations value=\"...\" />.");
 
     PRECICE_INFO("No convergence measures were defined for an implicit coupling scheme. "
-                 "It will always iterate the maximum amount iterations, which is {}."
+                 "It will always iterate the maximum amount iterations, which is {}. "
                  "You may want to add a convergence measure in your <coupling-scheme:.../> in your configuration.",
                  _config.maxIterations);
   }
@@ -1203,7 +1203,7 @@ void CouplingSchemeConfiguration::setParallelAcceleration(
         dynamic_cast<acceleration::AitkenAcceleration *>(_accelerationConfig->getAcceleration().get()) != nullptr,
         "You configured participant \"{}\" in a parallel-implicit coupling scheme with \"Aitken\" "
         "acceleration, which is known to perform bad in parallel coupling schemes. "
-        "See https://precice.org/configuration-acceleration.html#dynamic-aitken-under-relaxation for details."
+        "See https://precice.org/configuration-acceleration.html#dynamic-aitken-under-relaxation for details. "
         "Consider switching to a serial-implicit coupling scheme or changing the acceleration method.",
         participant);
   }

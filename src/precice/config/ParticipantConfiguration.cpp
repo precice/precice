@@ -670,7 +670,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         if (context.size > 1) {
           // Only display the warning message if this participant configuration is the current one.
           if (context.name == participant->getName()) {
-            PRECICE_ERROR("You attempted to use the legacy VTK exporter with the parallel participant {}, which isn't supported."
+            PRECICE_ERROR("You attempted to use the legacy VTK exporter with the parallel participant {}, which isn't supported. "
                           "Migrate to another exporter, such as the VTU exporter by specifying \"<export:vtu ... />\"  instead of \"<export:vtk ... />\".",
                           participant->getName());
           }

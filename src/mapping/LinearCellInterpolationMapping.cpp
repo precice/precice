@@ -96,7 +96,7 @@ void LinearCellInterpolationMapping::computeMapping()
       // We have the connectivity, but some fallbacks occurred
       PRECICE_INFO(
           "Linear Cell Interpolation is used, but some points from {} don't lie in the domain defined by the {}. "
-          "These points have been projected on the domain boundary. This could come from non-matching discrete geometries or erroneous connectivity information."
+          "These points have been projected on the domain boundary. This could come from non-matching discrete geometries or erroneous connectivity information. "
           "If distances seem too large, please check your mesh. "
           "The fallback statistics are: {} ",
           searchSpace->getName(), getDimensions() == 2 ? "triangles" : "tetrahedra",
