@@ -5,6 +5,7 @@
 [![Release](https://img.shields.io/github/release/precice/precice.svg)](https://github.com/precice/precice/releases/latest)
 [![Cite](https://img.shields.io/badge/cite-literature_guide-d45815)](https://precice.org/fundamentals-literature-guide.html)
 [![Software Heritage](https://archive.softwareheritage.org/badge/origin/https://github.com/precice/precice/)](https://archive.softwareheritage.org/browse/origin/?origin_url=https://github.com/precice/precice)
+[![HiRSE Code Promo Badge](https://img.shields.io/badge/Promo-8db427?label=HiRSE&labelColor=005aa0&link=https%3A%2F%2Fgo.fzj.de%2FCodePromo)](https://go.fzj.de/CodePromo) 
 
 **Project Quality**  
 [![xSDK Policy Compatibility](https://img.shields.io/badge/xSDK-member-brightgreen)](https://github.com/xsdk-project/xsdk-policy-compatibility/blob/master/precice-policy-compatibility.md)
