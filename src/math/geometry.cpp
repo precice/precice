@@ -172,6 +172,21 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
       coords[i][2]                         = normalVector.dot(coordinateDifference);
     }
   }
+  if (coords[0].size() == 2) {
+    Eigen::Vector2d coordOrigin; // Origin point for the transformation of points onto the new plane
+    coordOrigin = coords[0];
+
+    Eigen::Vector2d e_1 = coords[1] - coordOrigin;
+    Eigen::Vector2d e_2 = coords[2] - coordOrigin;
+
+    // Transform Coordinates - coord[0] is the origin
+    for (int i = 0; i < 4; i++) {
+      Eigen::Vector2d coordinateDifference = coords[i] - coordOrigin;
+      coords[i][0]                         = e_1.dot(coordinateDifference);
+      coords[i][1]                         = e_2.dot(coordinateDifference);
+    }
+  }
+
   /*
   For the convex hull algorithm, the most left hand point regarding the x coordinate is chosen as the starting point.
   The algorithm moves in an anti-clockwise position, finding the most right hand coordinate from the
@@ -188,8 +203,9 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
 
   // Found starting point. Add this as the first vertex in the convex hull.
   // current is the origin point => hull[0]
-  int             validVertexIDCounter = 0;             // Counts number of times a valid vertex is found. Must be 4 for a valid quad.
-  int             currentVertex        = idLowestPoint; // current valid vertex
+  int validVertexIDCounter = 0;             // Counts number of times a valid vertex is found. Must be 4 for a valid quad.
+  int currentVertex        = idLowestPoint; // current valid vertex
+
   ConvexityResult result{};
   do {
     // Add current point to result
