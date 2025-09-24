@@ -216,8 +216,12 @@ if(TPL_ENABLE_EIGEN3)
   # Use EIGEN3_ROOT to set the directory
   xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
 endif()
-find_package(Eigen3 3.4.0 REQUIRED)
-message(STATUS "Found Eigen ${EIGEN3_VERSION}")
+# Try to find version 5 first and fallback to version 3.4 otherwise
+find_package(Eigen3 5 NO_MODULE QUIET)
+if(NOT Eigen3_FOUND)
+  find_package(Eigen3 3.4 REQUIRED NO_MODULE)
+endif()
+message(STATUS "Found Eigen ${Eigen3_VERSION}")
 precice_validate_eigen()
 
 # LibXML2
