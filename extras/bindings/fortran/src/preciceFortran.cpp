@@ -72,7 +72,7 @@ try {
   // However, the Fortran standard guarantees interoperability of the int type,
   // so that is what is passed. Do the conversion in case int is not identical
   // to MPI_Fint.
-  MPI_Fint f_communicator = (MPI_Fint) *communicator;
+  MPI_Fint f_communicator = static_cast<MPI_Fint>(*communicator);
   auto     c_communicator = MPI_Comm_f2c(f_communicator);
   impl                    = std::make_unique<precice::Participant>(
       precice::impl::strippedStringView(participantName, participantNameLength),
