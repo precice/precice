@@ -356,6 +356,7 @@ target_sources(testprecice
     tests/serial/mapping-volume/OneTriangleConservativeWrite.cpp
     tests/serial/mapping-volume/OneTriangleRead.cpp
     tests/serial/mapping-volume/OneTriangleWrite.cpp
+    tests/serial/mapping-volume/QuadRead2D.cpp
     tests/serial/mapping-volume/helpers.cpp
     tests/serial/mapping-volume/helpers.hpp
     tests/serial/mesh-requirements/NearestNeighborA.cpp
