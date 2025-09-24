@@ -138,6 +138,8 @@ ParticipantImpl::ParticipantImpl(
                   _accessorCommunicatorSize, currentSize);
   }
   e3.stop();
+#else
+  PRECICE_WARN_IF(communicator.has_value(), "preCICE was configured without MPI but you passed an MPI communicator. preCICE ignores the communicator and continues.");
 #endif
 
   Event e1("configure", profiling::Fundamental);
