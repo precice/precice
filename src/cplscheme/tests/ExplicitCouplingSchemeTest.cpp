@@ -340,8 +340,8 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
     receiveDataIndex = 0;
   }
   cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Explicit);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true, false);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true, false);
   cplScheme.determineInitialDataExchange();
   runSimpleExplicitCoupling(cplScheme, context.name, meshConfig);
 }
@@ -715,8 +715,8 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
     receiveDataIndex = 0;
   }
   cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Explicit);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true, false);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true, false);
   cplScheme.determineInitialDataExchange();
   runExplicitCouplingWithSubcycling(cplScheme, context.name, meshConfig);
 }

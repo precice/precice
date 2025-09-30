@@ -225,13 +225,13 @@ void BaseCouplingScheme::initializeWithZeroInitialData(const DataMap &receiveDat
   }
 }
 
-PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool communicateSubsteps, CouplingData::Direction direction)
+PtrCouplingData BaseCouplingScheme::addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool directAccessData, bool communicateSubsteps, CouplingData::Direction direction)
 {
   const DataID id = data->getID();
 
   // new data
   if (_allData.count(id) == 0) {
-    auto ptr = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, communicateSubsteps, direction);
+    auto ptr = std::make_shared<CouplingData>(data, std::move(mesh), requiresInitialization, directAccessData, communicateSubsteps, direction);
     _allData.emplace(id, ptr);
     return ptr;
   }

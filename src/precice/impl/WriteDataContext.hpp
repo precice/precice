@@ -84,7 +84,7 @@ public:
    */
   void writeGradientsIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> gradients);
 
-  void resizeBufferTo(int size);
+  void resizeBufferTo(int size, bool invalidateBufferedData = false);
 
   /**
    * @brief Store data from _writeDataBuffer in persistent storage

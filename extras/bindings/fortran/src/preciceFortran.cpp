@@ -556,6 +556,17 @@ try {
   std::abort();
 }
 
+void precicef_reset_mesh_access_region_(
+    const char *meshName,
+    int         meshNameLength)
+try {
+  PRECICE_CHECK(impl != nullptr, errormsg);
+  auto sv = precice::impl::strippedStringView(meshName, meshNameLength);
+  impl->resetMeshAccessRegion(sv);
+} catch (::precice::Error &e) {
+  std::abort();
+}
+
 void precicef_start_profiling_section_(
     const char *sectionName,
     int         sectionNameLength)

@@ -512,8 +512,8 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   const int                       minIterations = 1;
   const int                       maxIterations = 100;
   cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, minIterations, maxIterations);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, false, true);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, false, true);
   cplScheme.determineInitialDataExchange();
 
   double                                 convergenceLimit1 = sqrt(3.0); // when diff_vector = (1.0, 1.0, 1.0)
@@ -609,8 +609,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronized)
   const int                       minIterations = 1;
   const int                       maxIterations = 3;
   cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, minIterations, maxIterations);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, false, true);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, false, true);
   cplScheme.determineInitialDataExchange();
 
   // Expected iterations per implicit timesptep
@@ -664,8 +664,8 @@ BOOST_AUTO_TEST_CASE(testMinIterConvergenceMeasureSynchronizedWithSubcycling)
   const int                       minIterations = 1;
   const int                       maxIterations = 3;
   cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, minIterations, maxIterations);
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, true);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, true);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, false, false, true);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, false, false, true);
   cplScheme.determineInitialDataExchange();
 
   runCouplingWithSubcycling(
@@ -722,9 +722,9 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
   cplscheme::SerialCouplingScheme cplScheme(maxTime, maxTimeWindows, timeWindowSize, nameParticipant0, nameParticipant1, context.name, m2n, constants::FIXED_TIME_WINDOW_SIZE, BaseCouplingScheme::Implicit, minIterations, maxIterations);
   using Fixture = testing::SerialCouplingSchemeFixture;
 
-  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization, true);
+  cplScheme.addDataToSend(mesh->data(sendDataIndex), mesh, dataRequiresInitialization, false, true);
   CouplingData *sendCouplingData = Fixture::getSendData(cplScheme, sendDataIndex);
-  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, not dataRequiresInitialization, true);
+  cplScheme.addDataToReceive(mesh->data(receiveDataIndex), mesh, not dataRequiresInitialization, false, true);
   CouplingData *receiveCouplingData = Fixture::getReceiveData(cplScheme, receiveDataIndex);
   cplScheme.determineInitialDataExchange();
 

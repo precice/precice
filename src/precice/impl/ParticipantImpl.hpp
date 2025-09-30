@@ -143,6 +143,9 @@ public:
   /// @copydoc Participant::resetMesh
   void resetMesh(std::string_view meshName);
 
+  /// @copydoc Participant::resetMeshAccessRegion
+  void resetMeshAccessRegion(std::string_view meshName);
+
   /// @copydoc Participant::requiresMeshConnectivityFor
   bool requiresMeshConnectivityFor(std::string_view meshName) const;
 
@@ -460,13 +463,13 @@ private:
   void closeCommunicationChannels(CloseChannels cc);
 
   /// Completes everything data-related between adding time to and advancing the coupling scheme
-  void handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo);
+  void handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo, bool performedReinit);
 
   /// Completes everything data-related after advancing the coupling scheme
   void handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isTimeWindowComplete, double timeSteppedTo, double timeAfterAdvance, const cplscheme::ImplicitData &receivedData);
 
   /// Creates a Stample at the given time for each write Data and zeros the buffers
-  void samplizeWriteData(double time);
+  void samplizeWriteData(double time, bool performedReinit = false);
 
   /// Discards data before the given time for all meshes and data known by this participant
   void trimOldDataBefore(double time);

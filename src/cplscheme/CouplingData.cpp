@@ -12,9 +12,11 @@ CouplingData::CouplingData(
     mesh::PtrData data,
     mesh::PtrMesh mesh,
     bool          requiresInitialization,
+    bool          isDirectAccessWrittenData,
     bool          exchangeSubsteps,
     Direction     direction)
     : requiresInitialization(requiresInitialization),
+      isDirectAccessWrittenData(isDirectAccessWrittenData),
       _mesh(std::move(mesh)),
       _data(std::move(data)),
       _previousTimeStepsStorage(),

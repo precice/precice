@@ -302,8 +302,26 @@ void ParticipantImpl::reinitialize()
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_allowsRemeshing);
+
+  PRECICE_DEBUG("Handling direct-access data before reinitialization");
+  PRECICE_ASSERT(_couplingScheme->isTimeWindowComplete());
+  // In case we have data written via direct access, we need to first exchange these data samples
+  // Step 1: store data for those data contexts
+  for (auto &context : _accessor->writeDataContexts()) {
+    if (_accessor->isDirectAccessAllowed(context.getMeshName())) {
+      context.completeJustInTimeMapping();
+      context.storeBufferedData(_couplingScheme->getTime());
+      context.resetBufferedData();
+    }
+  }
+
+  // Step 2: exchange the data
+  PRECICE_DEBUG("Exchanging direct access data");
+  _couplingScheme->exchangeDirectAccessData();
+
   PRECICE_INFO("Reinitializing Participant");
   Event e("reinitialize", profiling::Fundamental);
+
   closeCommunicationChannels(CloseChannels::Distributed);
 
   for (const auto &context : _accessor->usedMeshContexts()) {
@@ -428,8 +446,8 @@ void ParticipantImpl::advance(
 #endif
 
   // Update the coupling scheme time state. Necessary to get correct remainder.
-  const bool isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
-
+  const bool isAtWindowEnd   = _couplingScheme->addComputedTime(computedTimeStepSize);
+  bool       performedReinit = false;
   if (_allowsRemeshing) {
     if (isAtWindowEnd) {
       auto totalMeshChanges = getTotalMeshChanges();
@@ -438,6 +456,7 @@ void ParticipantImpl::advance(
       int sumOfChanges = std::accumulate(totalMeshChanges.begin(), totalMeshChanges.end(), 0);
       if (reinitHandshake(sumOfChanges)) {
         reinitialize();
+        performedReinit = true;
       }
     } else {
       PRECICE_CHECK(_meshLock.checkAll(), "The time window needs to end after remeshing.");
@@ -447,7 +466,7 @@ void ParticipantImpl::advance(
   const double timeSteppedTo = _couplingScheme->getTime();
   const auto   dataToReceive = _couplingScheme->implicitDataToReceive();
 
-  handleDataBeforeAdvance(isAtWindowEnd, timeSteppedTo);
+  handleDataBeforeAdvance(isAtWindowEnd, timeSteppedTo, performedReinit);
 
   advanceCouplingScheme();
 
@@ -468,7 +487,7 @@ void ParticipantImpl::advance(
   _solverAdvanceEvent->start();
 }
 
-void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo)
+void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo, bool performedReinit)
 {
   // We only have to care about write data, in case substeps are enabled
   // OR we are at the end of a timewindow, otherwise, we simply erase
@@ -481,7 +500,7 @@ void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double 
     // mapWrittenData, we then take samples from the storage and execute
     // the mapping using waveform samples on the (for write mappings) "to"
     // side.
-    samplizeWriteData(timeSteppedTo);
+    samplizeWriteData(timeSteppedTo, performedReinit);
   }
 
   resetWrittenData();
@@ -545,7 +564,7 @@ void ParticipantImpl::handleDataAfterAdvance(bool reachedTimeWindowEnd, bool isT
   handleExports(ExportTiming::Advance);
 }
 
-void ParticipantImpl::samplizeWriteData(double time)
+void ParticipantImpl::samplizeWriteData(double time, bool performedReinit)
 {
   // store buffered write data in sample storage and reset the buffer
   for (auto &context : _accessor->writeDataContexts()) {
@@ -564,9 +583,10 @@ void ParticipantImpl::samplizeWriteData(double time)
     // values. Here, we now need to finalize the just-in-time mappings,
     // before we can add it to the waveform buffer.
     // For now, this only applies to just-in-time write mappings
-
-    context.completeJustInTimeMapping();
-    context.storeBufferedData(time);
+    if (!(performedReinit && _accessor->isDirectAccessAllowed(context.getMeshName()))) {
+      context.completeJustInTimeMapping();
+      context.storeBufferedData(time);
+    }
   }
 }
 
@@ -789,6 +809,25 @@ void ParticipantImpl::resetMesh(
   PRECICE_DEBUG("Clear mesh positions for mesh \"{}\"", context.mesh->getName());
   _meshLock.unlock(meshName);
   context.mesh->clear();
+}
+
+void ParticipantImpl::resetMeshAccessRegion(std::string_view meshName)
+{
+  PRECICE_EXPERIMENTAL_API();
+  PRECICE_CHECK(_allowsRemeshing, "Cannot reset access region. This feature needs to be enabled in the precice configuration file using <precice-configuration experimental=\"1\" allow-remeshing=\"1\">.");
+  PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before resetMeshAccessRegion().");
+
+  PRECICE_CHECK(_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName),
+                "This participant attempteded to reset the mesh access region (via \"resetMeshAccessRegion\") on mesh \"{0}\", "
+                "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
+                "resetMeshAccessRegion({0}) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
+                meshName);
+
+  MeshContext &context = _accessor->meshContext(meshName);
+  PRECICE_WARN_IF(!context.userDefinedAccessRegion, "This participant called \"resetMeshAccessRegion({0})\", but a mesh access region on mesh \"{0}\" was not defined.", meshName);
+  context.userDefinedAccessRegion.reset();
+  context.mesh->resetBoundingBox();
+  _meshLock.unlock(meshName);
 }
 
 VertexID ParticipantImpl::setMeshVertex(
@@ -1449,7 +1488,6 @@ void ParticipantImpl::setMeshAccessRegion(
                 "setMeshAccessRegion(...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
                 meshName);
   PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().");
-  PRECICE_CHECK(_state != State::Initialized, "setMeshAccessRegion() needs to be called before initialize().");
 
   // Get the related mesh
   MeshContext &context = _accessor->meshContext(meshName);
@@ -1607,10 +1645,11 @@ void ParticipantImpl::computePartitions()
 
     meshContext->mesh->allocateDataValues();
 
+    // Should be relevant for direct mesh access only
     const auto requiredSize = meshContext->mesh->nVertices();
     for (auto &context : _accessor->writeDataContexts()) {
       if (context.getMeshName() == meshContext->mesh->getName()) {
-        context.resizeBufferTo(requiredSize);
+        context.resizeBufferTo(requiredSize, !meshContext->provideMesh);
       }
     }
   }

@@ -149,6 +149,8 @@ public:
    */
   virtual void secondExchange() = 0;
 
+  virtual void exchangeDirectAccessData() = 0;
+
   ///@}
 
   /// Finalizes the coupling and disconnects communication.

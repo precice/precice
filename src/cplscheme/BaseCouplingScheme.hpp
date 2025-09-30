@@ -258,6 +258,9 @@ protected:
    */
   void receiveData(const m2n::PtrM2N &m2n, const DataMap &receiveData);
 
+  template <typename UnaryPredicate>
+  DataMap filterDataMap(const DataMap &inputMap, UnaryPredicate pred) const;
+
   /**
    * @brief Like receiveData, but temporarily sets window time to end of window.
    *
@@ -290,7 +293,7 @@ protected:
    *
    * @return PtrCouplingData pointer to CouplingData owned by the CouplingScheme
    */
-  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool exchangeSubsteps, CouplingData::Direction direction);
+  PtrCouplingData addCouplingData(const mesh::PtrData &data, mesh::PtrMesh mesh, bool requiresInitialization, bool directAccessData, bool exchangeSubsteps, CouplingData::Direction direction);
 
   /**
    * @brief Function to determine whether coupling scheme is an explicit coupling scheme
@@ -530,6 +533,11 @@ private:
   /// Exchanges the second set of data
   virtual void exchangeSecondData() = 0;
 
+  void exchangeDirectAccessData() override
+  {
+    PRECICE_ASSERT(false, "Not implemented.");
+  }
+
   /**
    * @brief interface to provide accelerated data, depending on coupling scheme being used
    * @return data being accelerated
@@ -574,5 +582,18 @@ private:
    */
   bool anyDataRequiresInitialization(DataMap &dataMap) const;
 };
+
+// template needs header implementation
+template <typename UnaryPredicate>
+inline DataMap BaseCouplingScheme::filterDataMap(const DataMap &inputMap, UnaryPredicate pred) const
+{
+  DataMap result;
+  std::copy_if(inputMap.begin(), inputMap.end(),
+               std::inserter(result, result.end()),
+               [&](auto const &pair) {
+                 return pred(pair.second);
+               });
+  return result;
+}
 } // namespace cplscheme
 } // namespace precice

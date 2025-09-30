@@ -18,6 +18,7 @@ public:
       mesh::PtrData data,
       mesh::PtrMesh mesh,
       bool          requiresInitialization,
+      bool          isDirectAccessWrittenData,
       bool          exchangeSubsteps,
       Direction     direction);
 
@@ -118,6 +119,8 @@ public:
 
   ///  True, if the data values of this CouplingData require to be initialized by this participant.
   const bool requiresInitialization;
+
+  const bool isDirectAccessWrittenData;
 
   /// move to next window and initialize data via extrapolation
   void moveToNextWindow();

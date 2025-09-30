@@ -638,6 +638,20 @@ PRECICE_API void precicef_get_mesh_vertex_ids_and_coordinates_(
     double     *coordinates,
     int         meshNameLength);
 
+/**
+ * Fortran syntax:
+ * precicef_reset_mesh_access_region_(
+ *   CHARACTER        meshName(*),
+ *   INTEGER          meshNameLength)
+ *
+ * IN:  mesh, meshNameLength
+ * OUT: -
+ *
+ * @copydoc precice::Participant::resetMeshAccessRegion()
+ */
+PRECICE_API void precicef_reset_mesh_access_region_(
+    const char *meshName,
+    int         meshNameLength);
 ///@}
 
 /** @name Experimental Gradient Data
