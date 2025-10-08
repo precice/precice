@@ -413,6 +413,8 @@ void ReceivedPartition::compareBoundingBoxes()
     remoteBBMap.emplace(remoteRank, initialBB);
   }
 
+  Event e0("partition.receiveBBsSetAndBroadcast." + _mesh->getName(), profiling::Synchronize);
+
   // receive and broadcast remote bounding box map
   if (utils::IntraComm::isPrimary()) {
     com::receiveBoundingBoxMap(*m2n().getPrimaryRankCommunication(), 0, remoteBBMap);
@@ -422,8 +424,12 @@ void ReceivedPartition::compareBoundingBoxes()
     com::broadcastReceiveBoundingBoxMap(*utils::IntraComm::getCommunication(), remoteBBMap);
   }
 
+  e0.stop();
+
   // prepare local bounding box
   prepareBoundingBox();
+
+  Event e1("partition.compareBBs." + _mesh->getName(), profiling::Synchronize);
 
   if (utils::IntraComm::isPrimary()) {               // Primary
     mesh::Mesh::CommunicationMap connectionMap;      // local ranks -> {remote ranks}
@@ -475,6 +481,8 @@ void ReceivedPartition::compareBoundingBoxes()
     // send connected ranks to primary rank
     utils::IntraComm::getCommunication()->sendRange(connectedRanks, 0);
   }
+
+  e1.stop();
 }
 
 void ReceivedPartition::prepareBoundingBox()

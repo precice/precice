@@ -183,6 +183,8 @@ void M2N::acceptSecondaryRanksPreConnection(
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not _useOnlyPrimaryCom);
+  Event e("m2n.acceptSecondaryRanksPreConnection", profiling::Synchronize);
+
   _areSecondaryRanksConnected = true;
   for (const auto &pair : _distComs) {
     pair.second->acceptPreConnection(acceptorName, requesterName);
@@ -197,6 +199,8 @@ void M2N::requestSecondaryRanksPreConnection(
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not _useOnlyPrimaryCom);
+  Event e("m2n.requestSecondaryRanksPreConnection", profiling::Synchronize);
+
   _areSecondaryRanksConnected = true;
   for (const auto &pair : _distComs) {
     pair.second->requestPreConnection(acceptorName, requesterName);
@@ -208,6 +212,8 @@ void M2N::requestSecondaryRanksPreConnection(
 void M2N::completeSecondaryRanksConnection()
 {
   PRECICE_ASSERT(not _useOnlyPrimaryCom);
+  Event e("m2n.completeSecondaryRanksConnection", profiling::Synchronize);
+
   for (const auto &pair : _distComs) {
     pair.second->completeSecondaryRanksConnection();
   }

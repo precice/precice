@@ -266,6 +266,8 @@ void ProvidedPartition::compareBoundingBoxes()
     PRECICE_ASSERT(utils::IntraComm::getRank() == 0);
     PRECICE_ASSERT(utils::IntraComm::getSize() > 1);
 
+    Event e0("partition.gatherBB." + _mesh->getName(), profiling::Synchronize);
+
     // to store the collection of bounding boxes
     mesh::Mesh::BoundingBoxMap bbm;
     mesh::BoundingBox          bb(_mesh->getDimensions());
@@ -279,9 +281,15 @@ void ProvidedPartition::compareBoundingBoxes()
       com::receiveBoundingBox(*utils::IntraComm::getCommunication(), secondaryRank, bbm.at(secondaryRank));
     }
 
+    e0.stop();
+
+    Event e1("partition.sendBBsSets." + _mesh->getName(), profiling::Synchronize);
+
     // primary rank sends number of ranks and bbm to the other primary rank
     _m2ns[0]->getPrimaryRankCommunication()->send(utils::IntraComm::getSize(), 0);
     com::sendBoundingBoxMap(*_m2ns[0]->getPrimaryRankCommunication(), 0, bbm);
+
+    e1.stop();
   }
 
   // size of the feedbackmap
