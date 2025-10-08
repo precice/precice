@@ -8,6 +8,7 @@
 #include "precice/impl/Types.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
+#include "profiling/Event.hpp"
 
 namespace precice::m2n {
 
@@ -55,6 +56,7 @@ void BoundM2N::preConnectSecondaryRanks()
     return;
 
   PRECICE_WARN("Two-level initialization is still in beta testing. Several edge cases are known to fail. Please report problems nevertheless.");
+  Event e("bound-m2n.preConnectSecondaryRanks");
 
   if (isRequesting) {
     PRECICE_DEBUG("Awaiting preliminary secondary connections from {}", remoteName);

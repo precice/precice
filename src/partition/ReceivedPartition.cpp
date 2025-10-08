@@ -383,17 +383,23 @@ void ReceivedPartition::compareBoundingBoxes()
 {
   PRECICE_TRACE();
 
+  Event e0("partition.compareBoundingBoxes.clearing");
+
   _mesh->clear();
   _mesh->clearPartitioning();
   _boundingBoxPrepared = false;
   _remoteMinGlobalVertexIDs.clear();
   _remoteMaxGlobalVertexIDs.clear();
 
+  e0.stop();
+
   // @todo handle coupling mode (i.e. serial participant)
   // @todo treatment of multiple m2ns
   PRECICE_ASSERT(_m2ns.size() == 1);
   if (not m2n().usesTwoLevelInitialization())
     return;
+
+  Event e1("partition.compareBoundingBoxes.rankNumberCommunication");
 
   // receive and broadcast number of remote ranks
   int numberOfRemoteRanks = -1;
@@ -405,6 +411,9 @@ void ReceivedPartition::compareBoundingBoxes()
     utils::IntraComm::getCommunication()->broadcast(numberOfRemoteRanks, 0);
   }
 
+  e1.stop();
+  Event e2("partition.compareBoundingBoxes.initBBMap");
+
   // define and initialize remote bounding box map
   mesh::Mesh::BoundingBoxMap remoteBBMap;
   mesh::BoundingBox          initialBB(_mesh->getDimensions());
@@ -413,7 +422,8 @@ void ReceivedPartition::compareBoundingBoxes()
     remoteBBMap.emplace(remoteRank, initialBB);
   }
 
-  Event e0("partition.receiveBBsSetAndBroadcast." + _mesh->getName(), profiling::Synchronize);
+  e2.stop();
+  Event e3("partition.compareBoundingBoxes.receiveBBMapAndBroadcast." + _mesh->getName(), profiling::Synchronize);
 
   // receive and broadcast remote bounding box map
   if (utils::IntraComm::isPrimary()) {
@@ -424,17 +434,20 @@ void ReceivedPartition::compareBoundingBoxes()
     com::broadcastReceiveBoundingBoxMap(*utils::IntraComm::getCommunication(), remoteBBMap);
   }
 
-  e0.stop();
+  e3.stop();
+  Event e4("partition.compareBoundingBoxes.prepareBoundingBox." + _mesh->getName());
 
   // prepare local bounding box
   prepareBoundingBox();
 
-  Event e1("partition.compareBBs." + _mesh->getName(), profiling::Synchronize);
+  e4.stop();
+  Event e5("partition.compareBoundingBoxes.compare." + _mesh->getName(), profiling::Synchronize);
 
   if (utils::IntraComm::isPrimary()) {               // Primary
     mesh::Mesh::CommunicationMap connectionMap;      // local ranks -> {remote ranks}
     std::vector<Rank>            connectedRanksList; // local ranks with any connection
 
+    Event e6("partition.compareBoundingBoxes.primary.overlappingBBs." + _mesh->getName());
     // connected ranks for primary rank
     std::vector<Rank> connectedRanks;
     for (auto &remoteBB : remoteBBMap) {
@@ -442,12 +455,19 @@ void ReceivedPartition::compareBoundingBoxes()
         connectedRanks.push_back(remoteBB.first); // connected remote ranks for this rank
       }
     }
+
+    e6.stop();
+    Event e7("partition.compareBoundingBoxes.primary.connectedRanks." + _mesh->getName());
+
     PRECICE_ASSERT(_mesh->getConnectedRanks().empty());
     _mesh->setConnectedRanks(connectedRanks);
     if (not connectedRanks.empty()) {
       connectionMap.emplace(0, std::move(connectedRanks));
       connectedRanksList.push_back(0);
     }
+
+    e7.stop();
+    Event e8("partition.compareBoundingBoxes.primary.secondaryConnectedRanks." + _mesh->getName());
 
     // receive connected ranks from secondary ranks and add them to the connection map
     for (int rank : utils::IntraComm::allSecondaryRanks()) {
@@ -458,6 +478,9 @@ void ReceivedPartition::compareBoundingBoxes()
       }
     }
 
+    e8.stop();
+    Event e9("partition.compareBoundingBoxes.primary.sendConnectionMap." + _mesh->getName());
+
     // send connectionMap to other primary rank
     m2n().getPrimaryRankCommunication()->sendRange(connectedRanksList, 0);
     PRECICE_CHECK(not connectionMap.empty(),
@@ -466,6 +489,8 @@ void ReceivedPartition::compareBoundingBoxes()
                   "If you deal with very different mesh resolutions, consider increasing the safety-factor in the <receive-mesh /> tag.",
                   _mesh->getName());
     com::sendConnectionMap(*m2n().getPrimaryRankCommunication(), 0, connectionMap);
+
+    e9.stop();
   } else {
     PRECICE_ASSERT(utils::IntraComm::isSecondary());
 
@@ -482,7 +507,7 @@ void ReceivedPartition::compareBoundingBoxes()
     utils::IntraComm::getCommunication()->sendRange(connectedRanks, 0);
   }
 
-  e1.stop();
+  e5.stop();
 }
 
 void ReceivedPartition::prepareBoundingBox()

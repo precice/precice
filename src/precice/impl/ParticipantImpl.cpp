@@ -354,6 +354,8 @@ void ParticipantImpl::setupCommunication()
   PRECICE_INFO("Primary ranks are connected");
 
   Event e3("repartitioning");
+
+  Event e5("compareBoundingBoxesInitial");
   // clears the mappings as well (see clearMappings)
   compareBoundingBoxes();
 
@@ -362,8 +364,12 @@ void ParticipantImpl::setupCommunication()
     auto &bm2n = m2nPair.second;
     bm2n.preConnectSecondaryRanks();
   }
+  e5.stop();
 
+  Event e6("computePartitions");
   computePartitions();
+  e6.stop();
+
   e3.stop();
 
   PRECICE_INFO("Setting up secondary communication to coupling partner/s");
@@ -378,6 +384,7 @@ void ParticipantImpl::setupCommunication()
   for (auto &m2nPair : _m2ns) {
     m2nPair.second.cleanupEstablishment();
   }
+  e4.stop();
 }
 
 void ParticipantImpl::setupWatcher()
@@ -1569,6 +1576,8 @@ void ParticipantImpl::computePartitions()
   // Originally, this was done in one loop. This however gave deadlock if two meshes needed to be communicated cross-wise.
   // Both loops need a different sorting
 
+  Event e1("computePartitions.1");
+
   auto &contexts = _accessor->usedMeshContexts();
 
   std::sort(contexts.begin(), contexts.end(),
@@ -1591,6 +1600,9 @@ void ParticipantImpl::computePartitions()
     }
   }
 
+  e1.stop();
+  Event e2("computePartitions.resort");
+
   if (resort) {
     // pull provided meshes up front, to have them ready for the decomposition of the received meshes (for the mappings)
     std::stable_partition(contexts.begin(), contexts.end(),
@@ -1598,6 +1610,9 @@ void ParticipantImpl::computePartitions()
                             return meshContext->provideMesh;
                           });
   }
+
+  e2.stop();
+  Event e3("computePartitions.2");
 
   for (MeshContext *meshContext : contexts) {
     meshContext->partition->compute();
@@ -1614,6 +1629,8 @@ void ParticipantImpl::computePartitions()
       }
     }
   }
+
+  e3.stop();
 }
 
 void ParticipantImpl::computeMappings(std::vector<MappingContext> &contexts, const std::string &mappingType)
