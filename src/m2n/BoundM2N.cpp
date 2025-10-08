@@ -10,6 +10,8 @@
 #include "utils/assertion.hpp"
 #include "profiling/Event.hpp"
 
+using precice::profiling::Event;
+
 namespace precice::m2n {
 
 void BoundM2N::prepareEstablishment()
