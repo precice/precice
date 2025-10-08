@@ -15,7 +15,7 @@ Data::Data(
     int         dimensions,
     int         spatialDimensions,
     int         waveformDegree)
-    : _waveform(waveformDegree),
+    : _storage(waveformDegree),
       _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
@@ -47,17 +47,17 @@ const time::Sample &Data::sample() const
 
 time::SampleResult Data::sampleAtTime(double time) const
 {
-  return _waveform.sample(time);
+  return _storage.sample(time);
 }
 
 int Data::getWaveformDegree() const
 {
-  return _waveform.timeStepsStorage().getInterpolationDegree();
+  return _storage.getInterpolationDegree();
 }
 
 time::Storage &Data::timeStepsStorage()
 {
-  return _waveform.timeStepsStorage();
+  return _storage;
 }
 
 void Data::moveToNextWindow()
@@ -73,7 +73,7 @@ void Data::setSampleAtTime(double time, const time::Sample &sample)
 {
   PRECICE_ASSERT(sample.dataDims == getDimensions(), "Sample has incorrect data dimension");
   setGlobalSample(sample); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage, see https://github.com/precice/precice/issues/1645
-  _waveform.timeStepsStorage().setSampleAtTime(time, sample);
+  _storage.setSampleAtTime(time, sample);
 }
 
 void Data::setGlobalSample(const time::Sample &sample)
@@ -119,7 +119,7 @@ bool Data::hasGradient() const
 
 bool Data::hasSamples() const
 {
-  return !_waveform.stamples().empty();
+  return !_storage.empty();
 }
 
 void Data::requireDataGradient()

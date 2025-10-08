@@ -299,8 +299,6 @@ target_sources(preciceCore
     src/time/Time.hpp
     src/time/TimeGrids.cpp
     src/time/TimeGrids.hpp
-    src/time/Waveform.cpp
-    src/time/Waveform.hpp
     src/utils/ArgumentFormatter.hpp
     src/utils/Dimensions.cpp
     src/utils/Dimensions.hpp

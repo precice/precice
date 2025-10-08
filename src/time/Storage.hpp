@@ -13,7 +13,7 @@ namespace precice::time {
 class Storage {
 public:
   /**
-   * @brief Stores data samples in time and provides corresponding convenience functions.
+   * @brief Stores data samples in time and provides sampling of the Waveform
    *
    * The Storage must be initialized before it can be used. Then values can be stored in the Storage. It is only allowed to store samples with increasing times. Overwriting existing samples or writing samples with a time smaller then the maximum stored time is forbidden.
    * The Storage is considered complete, when a sample for the end of the current window is provided. Then one can only sample from the storage. To add further samples one needs to trim the storage or move to the next time window first.
@@ -21,6 +21,8 @@ public:
    * This Storage is used in the context of Waveform relaxation where samples in time are provided.
    */
   Storage();
+
+  Storage(int interpolationDegree);
 
   /**
    * @brief Copy assignment operator to assign Storage to this Storage

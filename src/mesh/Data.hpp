@@ -11,7 +11,6 @@
 #include "time/Sample.hpp"
 #include "time/Storage.hpp"
 #include "time/Time.hpp"
-#include "time/Waveform.hpp"
 
 namespace precice::mesh {
 class Mesh;
@@ -83,7 +82,7 @@ public:
    */
   int getWaveformDegree() const;
 
-  /// Returns a reference to the _timeStepsStorage of _waveform.
+  /// Returns a reference to the _timeStepsStorage of _storage.
   time::Storage &timeStepsStorage();
 
   void moveToNextWindow();
@@ -91,7 +90,7 @@ public:
   /// Returns a the stamples from _timeStepsStorage.
   auto stamples() const
   {
-    return _waveform.stamples();
+    return _storage.stamples();
   }
 
   /// Add sample at given time to _timeStepsStorage.
@@ -140,8 +139,8 @@ public:
 private:
   logging::Logger _log{"mesh::Data"};
 
-  /// Waveform wrapping this Data.
-  time::Waveform _waveform;
+  /// Sample storage of this Data.
+  time::Storage _storage;
 
   /// Name of the data set.
   std::string _name;

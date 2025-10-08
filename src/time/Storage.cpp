@@ -14,6 +14,8 @@ Storage::Storage()
 {
 }
 
+Storage::Storage(int interpolationDegree) : _degree(interpolationDegree) {}
+
 Storage &Storage::operator=(const Storage &other)
 {
   this->clear();
