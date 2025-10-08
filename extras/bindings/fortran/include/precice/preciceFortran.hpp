@@ -40,6 +40,31 @@ PRECICE_API void precicef_create_(
     int         participantNameLength,
     int         configFileNameLength);
 
+/**
+ * Fortran syntax:
+ * precicef_create_with_communicator_(
+ *   CHARACTER participantName(*),
+ *   CHARACTER configFileName(*),
+ *   INTEGER   solverProcessIndex,
+ *   INTEGER   solverProcessSize,
+ *   INTEGER   communicator )
+ *
+ * IN:  participantName, configFileName, solverProcessIndex, solverProcessSize,
+ *      communicator
+ * OUT: -
+ *
+ * @copydoc precice::Participant::Participant()
+ *
+ */
+PRECICE_API void precicef_create_with_communicator_(
+    const char *participantName,
+    const char *configFileName,
+    const int  *solverProcessIndex,
+    const int  *solverProcessSize,
+    const int  *communicator,
+    int         participantNameLength,
+    int         configFileNameLength);
+
 ///@}
 
 /// @name Steering Methods
@@ -351,7 +376,7 @@ PRECICE_API void precicef_set_triangle_(
  * @copydoc precice::Participant::setMeshTriangles()
  *
  */
-PRECICE_API void precicef_set_mesh_edges_(
+PRECICE_API void precicef_set_mesh_triangles_(
     const char *meshName,
     const int  *size,
     const int  *ids,
@@ -608,7 +633,7 @@ PRECICE_API void precicef_set_mesh_access_region_(
  */
 PRECICE_API void precicef_get_mesh_vertex_ids_and_coordinates_(
     const char *meshName,
-    const int   size,
+    const int  *size,
     int        *ids,
     double     *coordinates,
     int         meshNameLength);

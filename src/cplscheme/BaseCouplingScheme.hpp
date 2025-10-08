@@ -114,6 +114,8 @@ public:
 
   double getTimeWindowStart() const final override;
 
+  double getTimeWindowProgress() const;
+
   /**
    * @brief getter for _timeWindows
    * @returns the number of currently computed time windows of the coupling scheme.
@@ -553,22 +555,6 @@ private:
    * @brief Advance txt writers for iterations and convergence tracking
    */
   void advanceTXTWriters();
-
-  /**
-   * @brief Prints the coupling state
-   *
-   * @param timeWindows current number of completed time windows
-   * @param time current time
-   */
-  std::string printBasicState(
-      int    timeWindows,
-      double time) const;
-
-  /**
-   * @brief Prints the action state
-   * @returns a string representing the required actions.
-   */
-  std::string printActionsState() const;
 
   /**
    * @brief Measure whether coupling scheme has converged or not

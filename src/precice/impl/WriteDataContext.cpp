@@ -42,8 +42,8 @@ void WriteDataContext::completeJustInTimeMapping()
 void WriteDataContext::writeAndMapValues(::precice::span<const double> coordinates, ::precice::span<const double> values)
 {
   PRECICE_TRACE();
+  PRECICE_ASSERT(hasJustInTimeMapping());
   PRECICE_ASSERT(mappingCache);
-  PRECICE_ASSERT(justInTimeMapping);
   PRECICE_ASSERT((coordinates.size() / getSpatialDimensions()) * getDataDimensions() == values.size());
   PRECICE_ASSERT(_writeDataBuffer.values.data());
 

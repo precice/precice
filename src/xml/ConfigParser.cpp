@@ -3,7 +3,7 @@
 #include <exception>
 #include <fstream>
 #include <iterator>
-#include <libxml/SAX.h>
+#include <libxml/SAX2.h>
 #include <memory>
 #include <sstream>
 #include <string>

@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.22.1)
-project(preCICE VERSION 3.2.0 LANGUAGES CXX)
+project(preCICE VERSION 3.3.0 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -45,20 +45,24 @@ endif()
 # Setup Options
 #
 
-if(NOT CMAKE_BUILD_TYPE)
-  message(WARNING "You did not specify a CMAKE_BUILD_TYPE.
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+  message(WARNING "You did not specify a CMAKE_BUILD_TYPE in a single configuration build.
 
   We will assume you asked for a Debug build.")
   set(CMAKE_BUILD_TYPE Debug CACHE STRING "The type of this build" FORCE)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS Debug Release RelWithDebInfo MinSizeRel)
 endif()
 
+if (DEFINED BUILD_SHARED_LIBS AND NOT BUILD_SHARED_LIBS)
+  message(WARNING "You disabled BUILD_SHARED_LIBS. Note that 3.2.0 was the last release to honor this option. Newer preCICE releases always build as a shared library.")
+endif()
+
 option(PRECICE_FEATURE_MPI_COMMUNICATION "Enables MPI-based communication and running coupling tests." ON)
 option(PRECICE_FEATURE_PETSC_MAPPING "Enable use of the PETSc linear algebra library for global-iterative RBF data mappings." ON)
 option(PRECICE_FEATURE_PYTHON_ACTIONS "Enable Python support for preCICE actions." ON)
+option(PRECICE_FEATURE_PROFILING_COMPRESSION "Enable profiling compression with LZMA." OFF)
 option(PRECICE_CONFIGURE_PACKAGE_GENERATION "Configure package generation." ON)
 option(PRECICE_FEATURE_GINKGO_MAPPING "Enable use of Ginkgo for accelerated data mapping." OFF)
-option(BUILD_SHARED_LIBS "Build shared instead of static libraries" ON)
 option(BUILD_TESTING "Build tests" ON)
 option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
 option(PRECICE_BINDINGS_C "Enable the native C bindings" ON)
@@ -166,6 +170,15 @@ add_feature_info(PRECICE_BUILD_TOOLS PRECICE_BUILD_TOOLS
 
    This feature can be enabled/disabled by setting the PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES CMake option.
   ")
+  add_feature_info(PRECICE_FEATURE_PROFILING_COMPRESSION PRECICE_FEATURE_PROFILING_COMPRESSION
+  "Enables LZAM compression of profiling data.
+
+   preCICE profiling information can be useful, but in some cases the size of the rank files can become too large.
+   This feature enables LZMA compression of the records with the fastest preset to reduce the output sizes.
+   Not that this feature introduces some profiling overhead when flushing the buffered records to file.
+
+   This feature can be enabled/disabled by setting the PRECICE_FEATURE_PROFILING_COMPRESSION CMake option.
+  ")
 
 
 feature_summary(WHAT ENABLED_FEATURES  DESCRIPTION "=== ENABLED FEATURES ===" QUIET_ON_EMPTY)
@@ -192,7 +205,7 @@ if(POLICY CMP0167)
 endif()
 
 find_package(Boost 1.74.0 REQUIRED CONFIG
-  COMPONENTS log log_setup program_options system thread unit_test_framework
+  COMPONENTS log log_setup program_options thread unit_test_framework
   )
 mark_as_advanced(Boost_INCLUDE_DIR Boost_LOG_LIBRARY_RELEASE Boost_LOG_SETUP_LIBRARY_RELEASE Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE Boost_SYSTEM_LIBRARY_RELEASE Boost_THREAD_LIBRARY_RELEASE Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE)
 mark_as_advanced(Boost_INCLUDE_DIR Boost_LOG_LIBRARY_DEBUG Boost_LOG_SETUP_LIBRARY_DEBUG Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG Boost_SYSTEM_LIBRARY_DEBUG Boost_THREAD_LIBRARY_DEBUG Boost_UNIT_TEST_FRAMEWORK_LIBRARY_DEBUG)
@@ -203,8 +216,12 @@ if(TPL_ENABLE_EIGEN3)
   # Use EIGEN3_ROOT to set the directory
   xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
 endif()
-find_package(Eigen3 3.4.0 REQUIRED)
-message(STATUS "Found Eigen ${EIGEN3_VERSION}")
+# Try to find version 5 first and fallback to version 3.4 otherwise
+find_package(Eigen3 5 NO_MODULE QUIET)
+if(NOT Eigen3_FOUND)
+  find_package(Eigen3 3.4 REQUIRED NO_MODULE)
+endif()
+message(STATUS "Found Eigen ${Eigen3_VERSION}")
 precice_validate_eigen()
 
 # LibXML2
@@ -329,6 +346,12 @@ if (PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES)
   add_subdirectory(thirdparty/libbacktrace)
 endif()
 
+# LZMA
+if (PRECICE_FEATURE_PROFILING_COMPRESSION)
+  find_package(LibLZMA REQUIRED)
+  message(STATUS "Found LZMA ${LIBLZMA_VERSION_STRING}")
+endif()
+
 #
 # Setup miscellaneous features
 #
@@ -359,6 +382,11 @@ if(NOT Kokkos_VERSION OR NOT Kokkos_VERSION VERSION_LESS 4.4)
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
   )
+else()
+  set_target_properties(preciceCore PROPERTIES
+    CXX_VISIBILITY_PRESET default
+    VISIBILITY_INLINES_HIDDEN NO
+  )
 endif()
 
 # Setup release override options
@@ -382,13 +410,16 @@ target_link_libraries(preciceCore PUBLIC
   Boost::log
   Boost::log_setup
   Boost::program_options
-  Boost::system
   Boost::thread
   Boost::unit_test_framework
   )
 if(UNIX OR APPLE OR MINGW)
   target_compile_definitions(preciceCore PUBLIC _GNU_SOURCE)
   target_link_libraries(preciceCore PUBLIC ${CMAKE_DL_LIBS})
+endif()
+if(WIN32 OR CYGWIN)
+  # Required for SocketsCommunication
+  target_link_libraries(preciceCore PUBLIC ws2_32)
 endif()
 if(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES)
   target_compile_definitions(preciceCore PRIVATE BOOST_STACKTRACE_USE_BACKTRACE)
@@ -477,6 +508,12 @@ else()
   target_compile_definitions(preciceCore PUBLIC PRECICE_NO_PYTHON)
 endif()
 
+# Setup profiling compression
+if (PRECICE_FEATURE_PROFILING_COMPRESSION)
+  target_link_libraries(preciceCore PUBLIC LibLZMA::LibLZMA)
+  target_compile_definitions(preciceCore PUBLIC PRECICE_COMPRESSION)
+endif()
+
 # Includes configuration for the core
 target_include_directories(preciceCore PUBLIC
   $<BUILD_INTERFACE:${preCICE_SOURCE_DIR}/src>
@@ -485,18 +522,21 @@ target_include_directories(preciceCore PUBLIC
   )
 
 # Add precice as an empty target
-add_library(precice)
+add_library(precice SHARED)
 set_target_properties(precice PROPERTIES
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
-  CXX_VISIBILITY_PRESET default
-  VISIBILITY_INLINES_HIDDEN NO
   )
 
 if(NOT Kokkos_VERSION OR NOT Kokkos_VERSION VERSION_LESS 4.4)
   set_target_properties(precice PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
+   )
+else()
+  set_target_properties(precice PROPERTIES
+    CXX_VISIBILITY_PRESET default
+    VISIBILITY_INLINES_HIDDEN NO
    )
 endif()
 
@@ -548,25 +588,35 @@ GENERATE_EXPORT_HEADER(preciceCore
   INCLUDE_GUARD_NAME PRECICE_EXPORT
   )
 
+# Workaround for making exports work for the preciceCore object library when building preCICE as a shared library
+target_compile_definitions(preciceCore PUBLIC preciceCore_EXPORTS)
+
 # Add the export header to the public headers of the preCICE lib
 set_property(TARGET precice APPEND PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/export.h)
 
 #
-# Configuration of Target precice-tools
+# Configuration of precice tools
 #
 if (PRECICE_BUILD_TOOLS)
-  add_executable(precice-tools "src/drivers/main.cpp")
-  target_link_libraries(precice-tools
-   PRIVATE
-   precice
-   )
-  set_target_properties(precice-tools PROPERTIES
-    # precice is a C++17 project
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED Yes
-    CXX_EXTENSIONS No
-    )
+  macro(precice_add_tool TARGET MAIN)
+    add_executable(${TARGET} ${MAIN})
+    target_link_libraries(${TARGET}
+      PRIVATE
+      precice
+      )
+    set_target_properties(${TARGET} PROPERTIES
+      # precice is a C++17 project
+      CXX_STANDARD 17
+      CXX_STANDARD_REQUIRED Yes
+      CXX_EXTENSIONS No
+      )
+  endmacro()
+
+  precice_add_tool(precice-tools "src/drivers/main.cpp")
+  precice_add_tool(precice-config-doc "src/drivers/doc.cpp")
+  precice_add_tool(precice-config-validate "src/drivers/validate.cpp")
+  precice_add_tool(precice-version "src/drivers/version.cpp")
 endif()
 
 #
@@ -602,7 +652,16 @@ IF (BUILD_TESTING)
     # Add integration tests from tests/ sources to a single unity group
     get_target_property(_testprecice_sources testprecice SOURCES)
     foreach(SOURCE_FILE IN LISTS _testprecice_sources)
-      if(SOURCE_FILE MATCHES "^tests/")
+      if(SOURCE_FILE MATCHES "^src/([a-z0-9]+)/tests?/")
+        set(group "${CMAKE_MATCH_1}")
+        # The SocketCommunication includes boost/asio.hpp which clashes with the precice::query namespace.
+        # We exclude that one test for the sake of simplicity
+        if(NOT SOURCE_FILE MATCHES "SocketCommunicationTest.cpp$")
+          set_source_files_properties(${SOURCE_FILE} PROPERTIES UNITY_GROUP "${group}")
+        endif()
+      elseif(SOURCE_FILE MATCHES "^src/testing/")
+        set_source_files_properties(${SOURCE_FILE} PROPERTIES UNITY_GROUP "testing")
+      elseif(SOURCE_FILE MATCHES "^tests/")
         set_source_files_properties(${SOURCE_FILE} PROPERTIES UNITY_GROUP "integration")
       endif()
     endforeach()
@@ -666,7 +725,7 @@ install(TARGETS precice
   )
 
 if(PRECICE_BUILD_TOOLS)
-  install(TARGETS precice-tools
+  install(TARGETS precice-tools precice-version precice-config-validate precice-config-doc
     EXPORT preciceTargets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     )
@@ -719,7 +778,7 @@ mark_as_advanced(PRECICE_PACKAGING_DIR)
 find_program(GZIP_EXE gzip DOC "The gzip executable")
 if(GZIP_EXE)
   # Process manpages for binaries
-  file(COPY docs/man/man1/precice-tools.1 DESTINATION packaging/man1)
+  file(COPY docs/man/man1/precice-tools.1 docs/man/man1/precice-version.1 docs/man/man1/precice-config-validate.1 docs/man/man1/precice-config-doc.1 DESTINATION packaging/man1)
   file(GLOB PRECICE_MAN_PAGES "${PRECICE_PACKAGING_DIR}/man1/*.1")
   foreach(manpage ${PRECICE_MAN_PAGES})
     message(STATUS "Compressing manpage: ${manpage}")
@@ -784,9 +843,6 @@ if (BUILD_TESTING)
   print_section("TESTS")
 
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
-
-  # Add precice-profiling tests
-  add_subdirectory(tools/profiling)
 
   #
   # Add test_install

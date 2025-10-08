@@ -20,6 +20,8 @@ profiling::Mode fromString(std::string_view mode)
     return profiling::Mode::Off;
   } else if (mode == MODE_FUNDAMENTAL) {
     return profiling::Mode::Fundamental;
+  } else if (mode == MODE_API) {
+    return profiling::Mode::API;
   } else if (mode == MODE_ALL) {
     return profiling::Mode::All;
   } else {
@@ -36,15 +38,16 @@ ProfilingConfiguration::ProfilingConfiguration(xml::XMLTag &parent)
   tag.setDocumentation("Allows configuring the profiling functionality of preCICE.");
 
   auto attrMode = makeXMLAttribute<std::string>("mode", DEFAULT_MODE)
-                      .setOptions({MODE_ALL, MODE_FUNDAMENTAL, MODE_OFF})
+                      .setOptions({MODE_ALL, MODE_API, MODE_FUNDAMENTAL, MODE_OFF})
                       .setDocumentation("Operational modes of the profiling. "
-                                        "\"fundamental\" will only write fundamental events. "
+                                        "\"fundamental\" will only write fundamental steering events. "
+                                        "\"api\" will write events of the complete API. "
                                         "\"all\" writes all events.");
   tag.addAttribute(attrMode);
 
   auto attrFlush = makeXMLAttribute<int>("flush-every", DEFAULT_SYNC_EVERY)
                        .setDocumentation("Set the amount of event records that should be kept in memory before flushing them to file. "
-                                         "One event consists out of multiple records."
+                                         "One event consists out of multiple records. "
                                          "0 keeps all records in memory and writes them at the end of the program, useful for slower network filesystems. "
                                          "1 writes records directly to the file, useful to get profiling data despite program crashes. "
                                          "Settings greater than 1 keep records in memory and write them to file in blocks, which is recommended.");

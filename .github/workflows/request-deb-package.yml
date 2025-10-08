@@ -12,7 +12,6 @@ name: Request Deb Package
 # This workflow uses the official ubuntu docker images.
 on:
   workflow_dispatch:
-    workflow_dispatch:
     inputs:
       release:
         description: 'Release tag'
@@ -36,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     container: '${{ github.event.inputs.distro }}:${{ github.event.inputs.version }}'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.inputs.release }}
       - name: Generate build directory

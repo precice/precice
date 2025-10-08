@@ -21,6 +21,7 @@
 
 using namespace precice;
 using namespace precice::acceleration;
+using namespace precice::acceleration::impl;
 
 using precice::testing::makeCouplingData;
 
@@ -59,8 +60,8 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   dataIDs.push_back(1);
   std::vector<double> factors;
   factors.resize(2, 1.0);
-  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
-  auto                    dummyMesh = testing::makeDummy2DMesh(4);
+  PtrPreconditioner prec(new ConstantPreconditioner(factors));
+  auto              dummyMesh = testing::makeDummy2DMesh(4);
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                          timeWindowsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
@@ -151,7 +152,7 @@ void testVIQNPP(bool exchangeSubsteps)
   dataIDs.push_back(1);
   std::vector<double> factors;
   factors.resize(2, 1.0);
-  acceleration::impl::PtrPreconditioner prec(new acceleration::impl::ConstantPreconditioner(factors));
+  PtrPreconditioner prec(new ConstantPreconditioner(factors));
 
   std::map<int, double> scalings;
   scalings.insert(std::make_pair(0, 1.0));
@@ -305,8 +306,8 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithoutSubsteps)
   const double        windowStart = 0;
   const double        windowEnd   = 1;
 
-  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
-  AitkenAcceleration      acc(relaxation, dataIDs, prec);
+  PtrPreconditioner  prec(new ConstantPreconditioner(factors));
+  AitkenAcceleration acc(relaxation, dataIDs, prec);
 
   mesh::PtrData displacements = std::make_shared<mesh::Data>("dvalues", -1, 1);
   mesh::PtrData forces        = std::make_shared<mesh::Data>("fvalues", -1, 1);
@@ -368,8 +369,8 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
   double       windowEnd   = 1;
   const double dt          = 1;
 
-  impl::PtrPreconditioner prec(new impl::ResidualPreconditioner(-1));
-  AitkenAcceleration      acc(relaxation, dataIDs, prec);
+  PtrPreconditioner  prec(new ResidualPreconditioner(-1));
+  AitkenAcceleration acc(relaxation, dataIDs, prec);
 
   mesh::PtrData data1 = std::make_shared<mesh::Data>("dvalues", -1, 1);
   mesh::PtrData data2 = std::make_shared<mesh::Data>("fvalues", -1, 1);

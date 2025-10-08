@@ -276,7 +276,7 @@ private:
       const std::string   &accessor) const;
 
   void checkIfDataIsExchanged(
-      DataID dataID) const;
+      DataID dataID, std::string_view participant) const;
 
   void checkSerialImplicitAccelerationData(
       DataID dataID, const std::string &first, const std::string &second) const;

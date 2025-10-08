@@ -78,12 +78,12 @@ ActionConfiguration::ActionConfiguration(
   }
   {
     XMLTag tag(*this, NAME_PYTHON, occ, TAG);
-    tag.setDocumentation("Calls Python script to execute action."
-                         " See preCICE file \"src/action/PythonAction.py\" for an example.");
+    tag.setDocumentation("Calls Python script to execute action. "
+                         "See preCICE file \"src/action/PythonAction.py\" for an example.");
 
     XMLTag tagModulePath(*this, TAG_MODULE_PATH, XMLTag::OCCUR_NOT_OR_ONCE);
-    tagModulePath.setDocumentation("Directory path to Python module, i.e. script file."
-                                   " If it doesn't occur, the current path is used");
+    tagModulePath.setDocumentation("Directory path to Python module, i.e. script file. "
+                                   "If it doesn't occur, the current path is used");
     tagModulePath.addAttribute(makeXMLAttribute(ATTR_NAME, "").setDocumentation("The path to the directory of the module."));
     tag.addSubtag(tagModulePath);
 
@@ -95,14 +95,14 @@ ActionConfiguration::ActionConfiguration(
     tag.addSubtag(tagModule);
 
     XMLTag tagOptionalSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_NOT_OR_ONCE);
-    tagOptionalSourceData.setDocumentation("Source data to be read is handed to the Python module."
-                                           " Can be omitted, if only a target data is needed.");
+    tagOptionalSourceData.setDocumentation("Source data to be read is handed to the Python module. "
+                                           "Can be omitted, if only a target data is needed.");
     tagOptionalSourceData.addAttribute(attrName);
     tag.addSubtag(tagOptionalSourceData);
 
     XMLTag tagOptionalTargetData(*this, TAG_TARGET_DATA, XMLTag::OCCUR_NOT_OR_ONCE);
-    tagOptionalTargetData.setDocumentation("Target data to be read and written to is handed to the Python module."
-                                           " Can be omitted, if only source data is needed.");
+    tagOptionalTargetData.setDocumentation("Target data to be read and written to is handed to the Python module. "
+                                           "Can be omitted, if only source data is needed.");
     tagOptionalTargetData.addAttribute(attrName);
     tag.addSubtag(tagOptionalTargetData);
 
