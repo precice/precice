@@ -11,10 +11,10 @@ BOOST_AUTO_TEST_SUITE(StorageTests)
 
 // create storage and test for correct initial values.
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(testInitialize)
+BOOST_AUTO_TEST_CASE(Initialize)
 {
   PRECICE_TEST();
-  auto storage = Storage();
+  auto storage = Storage(1);
   int  nValues = 3;
   BOOST_TEST(storage.nTimes() == 0);
   storage.setSampleAtTime(0, time::Sample{1, Eigen::VectorXd::Ones(nValues)});
@@ -28,13 +28,14 @@ BOOST_AUTO_TEST_CASE(testInitialize)
 }
 
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(testInitialization)
+BOOST_AUTO_TEST_CASE(Initialization)
 {
   PRECICE_TEST();
   const int       interpolationDegree = 0;
   const int       valuesSize          = 1;
   Eigen::VectorXd value(valuesSize);
   Storage         storage(interpolationDegree);
+  BOOST_TEST(storage.nTimes() == 0);
   value(0) = 0.0;
   storage.setSampleAtTime(0, time::Sample{1, value});
 
@@ -45,7 +46,7 @@ BOOST_AUTO_TEST_CASE(testInitialization)
 }
 
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(testInitializationVector)
+BOOST_AUTO_TEST_CASE(InitializationVector)
 {
   PRECICE_TEST();
 
@@ -66,7 +67,7 @@ BOOST_AUTO_TEST_CASE(testInitializationVector)
 
 // create storage and trim it.
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(testClear)
+BOOST_AUTO_TEST_CASE(Clear)
 {
   PRECICE_TEST();
   auto storage = Storage();
@@ -88,7 +89,7 @@ BOOST_AUTO_TEST_CASE(testClear)
 
 // create storage, add some values and then move to next window.
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(testMove)
+BOOST_AUTO_TEST_CASE(Move)
 {
   PRECICE_TEST();
   auto storage = Storage();
@@ -121,7 +122,7 @@ BOOST_AUTO_TEST_CASE(testMove)
 
 // get times and values
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(testGetTimesAndValues)
+BOOST_AUTO_TEST_CASE(GetTimesAndValues)
 {
   PRECICE_TEST();
   auto storage = Storage();
@@ -145,8 +146,9 @@ BOOST_AUTO_TEST_CASE(testGetTimesAndValues)
 }
 
 BOOST_AUTO_TEST_SUITE(ExtrapolationTests)
+
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(testExtrapolateDataZerothOrder)
+BOOST_AUTO_TEST_CASE(ExtrapolateDataZerothOrder)
 {
   PRECICE_TEST();
 
@@ -197,7 +199,7 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(InterpolationTests)
 
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(testInterpolateDataZerothDegree)
+BOOST_AUTO_TEST_CASE(InterpolateDataZerothDegree)
 {
   PRECICE_TEST();
 
@@ -241,7 +243,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataZerothDegree)
 }
 
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegree)
+BOOST_AUTO_TEST_CASE(InterpolateDataFirstDegree)
 {
   PRECICE_TEST();
 
@@ -286,7 +288,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegree)
 
 // Remove or modify this feature? Creating a second degree interpolant by using data from previous windows is difficult, because this would require several pieces of data during initialization. What would be useful: Generating a second degree interpolant from multiple samples in a single window (if available). This would go into the least-squares direction
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(testInterpolateDataSecondDegree)
+BOOST_AUTO_TEST_CASE(InterpolateDataSecondDegree)
 {
   PRECICE_TEST();
 
@@ -355,7 +357,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataSecondDegree)
 }
 
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegreeVector)
+BOOST_AUTO_TEST_CASE(InterpolateDataFirstDegreeVector)
 {
   PRECICE_TEST();
 
@@ -409,7 +411,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateDataFirstDegreeVector)
 }
 
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataZerothDegree)
+BOOST_AUTO_TEST_CASE(PiecewiseInterpolateDataZerothDegree)
 {
   PRECICE_TEST();
 
@@ -478,7 +480,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataZerothDegree)
 }
 
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstDegree)
+BOOST_AUTO_TEST_CASE(PiecewiseInterpolateDataFirstDegree)
 {
   PRECICE_TEST();
 
@@ -545,7 +547,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataFirstDegree)
 }
 
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataSecondDegree)
+BOOST_AUTO_TEST_CASE(PiecewiseInterpolateDataSecondDegree)
 {
   PRECICE_TEST();
 
@@ -571,7 +573,7 @@ BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataSecondDegree)
 }
 
 PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(testPiecewiseInterpolateDataThirdDegree)
+BOOST_AUTO_TEST_CASE(PiecewiseInterpolateDataThirdDegree)
 {
   PRECICE_TEST();
 
