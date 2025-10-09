@@ -48,7 +48,7 @@ jobs:
           cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DPRECICE_FEATURE_PETSC_MAPPING=ON -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON ..
       - name: Compile
         working-directory: build
-        run: make -j $(nproc)
+        run: make -j "$(nproc)"
       - name: Create packages
         working-directory: build
         run: cpack
