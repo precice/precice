@@ -165,7 +165,7 @@ jobs:
         run: |
           cmake --build .
       - name: Adjust user rights
-        run: chown -R $PRECICE_USER build
+        run: chown -R "$PRECICE_USER" build
       - name: Tests
         env:
           OMPI_MCA_btl: self,vader
@@ -173,7 +173,7 @@ jobs:
           FI_PROVIDER: ${{ matrix.IMAGE == 'Intel' && 'tcp' || 'sockets' }} # use sockets on fedora and tcp on intel
           PSM3_HAL: loopback # required for fedora
         working-directory: build
-        run: su -c ". ../venv/bin/activate && ctest -j" $PRECICE_USER
+        run: su -c ". ../venv/bin/activate && ctest -j" "$PRECICE_USER"
       - name: Coverage Report
         working-directory: build
         if: ${{ matrix.COVFLAGS }}
@@ -196,7 +196,7 @@ jobs:
         if: ${{ contains(matrix.IMAGE, 'ubuntu') }}
         run: |
           cpack
-          lintian -i --suppress-tags control-file-has-bad-permissions *.deb
+          lintian -i --suppress-tags control-file-has-bad-permissions ./*.deb
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

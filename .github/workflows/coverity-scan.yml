@@ -38,8 +38,8 @@ jobs:
         run: |
           tar czvf precice.tgz cov-int
           curl \
-            --form token=$TOKEN \
-            --form email=$EMAIL \
+            --form token="$TOKEN" \
+            --form email="$EMAIL" \
             --form file=@precice.tgz \
             --form version="develop" \
             --form description="Nightly Coverity Scan of preCICE" \
