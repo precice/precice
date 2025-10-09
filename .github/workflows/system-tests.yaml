@@ -79,37 +79,37 @@ jobs:
           echo "Reference: [\`${{ steps.ref-python-bindings.outputs.shorthash }}\`](https://github.com/precice/python-bindings/commit/${{ steps.ref-python-bindings.outputs.shorthash }})"
           echo "Description:"
           echo "\`\`\`"
-          echo "${{ steps.ref-python-bindings.outputs.description }}"
+          echo '${{ steps.ref-python-bindings.outputs.description }}'
           echo "\`\`\`"
           echo "### CalculiX adapter"
           echo "Reference: [\`${{ steps.ref-calculix-adapter.outputs.shorthash }}\`](https://github.com/precice/calculix-adapter/commit/${{ steps.ref-calculix-adapter.outputs.shorthash }})"
           echo "Description:"
           echo "\`\`\`"
-          echo "${{ steps.ref-calculix-adapter.outputs.description }}"
+          echo '${{ steps.ref-calculix-adapter.outputs.description }}'
           echo "\`\`\`"
           echo "### FEniCS adapter"
           echo "Reference: [\`${{ steps.ref-fenics-adapter.outputs.shorthash }}\`](https://github.com/precice/fenics-adapter/commit/${{ steps.ref-fenics-adapter.outputs.shorthash }})"
           echo "Description:"
           echo "\`\`\`"
-          echo "${{ steps.ref-fenics-adapter.outputs.description }}"
+          echo '${{ steps.ref-fenics-adapter.outputs.description }}'
           echo "\`\`\`"
           echo "### OpenFOAM adapter"
           echo "Reference: [\`${{ steps.ref-openfoam-adapter.outputs.shorthash }}\`](https://github.com/precice/openfoam-adapter/commit/${{ steps.ref-openfoam-adapter.outputs.shorthash }})"
           echo "Description:"
           echo "\`\`\`"
-          echo "${{ steps.ref-openfoam-adapter.outputs.description }}"
+          echo '${{ steps.ref-openfoam-adapter.outputs.description }}'
           echo "\`\`\`"
           echo "### SU2 adapter"
           echo "Reference: [\`${{ steps.ref-su2-adapter.outputs.shorthash }}\`](https://github.com/precice/su2-adapter/commit/${{ steps.ref-su2-adapter.outputs.shorthash }})"
           echo "Description:"
           echo "\`\`\`"
-          echo "${{ steps.ref-su2-adapter.outputs.description }}"
+          echo '${{ steps.ref-su2-adapter.outputs.description }}'
           echo "\`\`\`"
           echo "### Tutorials"
           echo "Reference: [\`${{ steps.ref-tutorials.outputs.shorthash }}\`](https://github.com/precice/tutorials/commit/${{ steps.ref-tutorials.outputs.shorthash }})"
           echo "Description:"
           echo "\`\`\`"
-          echo "${{ steps.ref-tutorials.outputs.description }}"
+          echo '${{ steps.ref-tutorials.outputs.description }}'
           echo "\`\`\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
