@@ -82,18 +82,18 @@ public:
    */
   int getWaveformDegree() const;
 
-  /// Returns a reference to the _timeStepsStorage of _storage.
-  time::Waveform &timeStepsStorage();
+  /// Returns a reference to the waveform
+  time::Waveform &waveform();
 
   void moveToNextWindow();
 
-  /// Returns a the stamples from _timeStepsStorage.
+  /// Returns a the stamples from the waveform
   auto stamples() const
   {
     return _waveform.stamples();
   }
 
-  /// Add sample at given time to _timeStepsStorage.
+  /// Add sample at given time to the waveform
   void setSampleAtTime(double time, const time::Sample &sample);
 
   /// Set _sample

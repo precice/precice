@@ -263,7 +263,7 @@ void runCouplingWithSubcycling(
     int    subcyclingStep       = 0;
 
     // Clear data for iteration.
-    mesh->data(0)->timeStepsStorage().trim();
+    mesh->data(0)->waveform().trim();
 
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
@@ -278,7 +278,7 @@ void runCouplingWithSubcycling(
       // timestep.
       if (cplScheme.isTimeWindowComplete()) {
         // Advance participant time and timestep
-        mesh->data(0)->timeStepsStorage().trim();
+        mesh->data(0)->waveform().trim();
         computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
@@ -353,7 +353,7 @@ void runCouplingWithSubcycling(
     int    subcyclingStep        = 0;
 
     // Clear data for iteration.
-    mesh->data(1)->timeStepsStorage().trim();
+    mesh->data(1)->waveform().trim();
 
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
@@ -371,7 +371,7 @@ void runCouplingWithSubcycling(
       // globally converged and if subcycling steps have filled one global
       // time step.
       if (cplScheme.isTimeWindowComplete()) {
-        mesh->data(1)->timeStepsStorage().trim();
+        mesh->data(1)->waveform().trim();
         // Advance participant time and time step
         computedTime += maxTimeStepSize;
         computedTimesteps++;

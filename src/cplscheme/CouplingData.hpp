@@ -43,7 +43,7 @@ public:
   const time::Sample &sample() const;
 
   /// Returns a reference to the time step storage of the data.
-  time::Waveform &timeStepsStorage();
+  time::Waveform &waveform();
 
   /// returns previous data interpolated to the relativeDt time
   time::SampleResult getPreviousValuesAtTime(double relativeDt);
@@ -51,21 +51,21 @@ public:
   Eigen::MatrixXd getPreviousGradientsAtTime(double relativeDt);
 
   /// Returns a const reference to the time step storage of the data.
-  const time::Waveform &timeStepsStorage() const;
+  const time::Waveform &waveform() const;
 
-  /// Returns the stamples in _timeStepsStorage.
+  /// Returns the stamples in the Waveform
   auto stamples() const
   {
-    return timeStepsStorage().stamples();
+    return waveform().stamples();
   }
 
-  /// Add sample at given time to _timeStepsStorage.
+  /// Add sample at given time to the Waveform
   void setSampleAtTime(double time, time::Sample sample);
 
   /// Set _data::_sample
   void setGlobalSample(const time::Sample &sample); // @todo try to remove this function
 
-  /// Add sample with zero values at given time to _timeStepsStorage.
+  /// Add sample with zero values at given time to the Waveform
   void initializeWithZeroAtTime(double time);
 
   /// Creates an empty sample at given time

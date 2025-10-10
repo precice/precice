@@ -122,9 +122,9 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
       const auto &stamples = data->stamples();
       PRECICE_ASSERT(!stamples.empty());
 
-      int nTimeSteps = data->timeStepsStorage().nTimes();
+      int nTimeSteps = data->waveform().nTimes();
       PRECICE_ASSERT(nTimeSteps > 0);
-      const auto timesAscending = data->timeStepsStorage().getTimes();
+      const auto timesAscending = data->waveform().getTimes();
       sendTimes(m2n, timesAscending);
 
       const auto serialized = com::serialize::SerializedStamples::serialize(*data);
@@ -136,7 +136,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
         m2n->send(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * serialized.nTimeSteps());
       }
     } else {
-      const auto &sample = data->timeStepsStorage().getSampleAtEnd();
+      const auto &sample = data->waveform().getSampleAtEnd();
       if (data->hasGradient()) {
         // Data is only received on ranks with size>0, which is checked in the derived class implementation
         m2n->send(sample.values, data->getMeshID(), data->getDimensions());

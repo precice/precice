@@ -125,7 +125,7 @@ void AitkenAcceleration::concatenateCouplingData(
   for (auto id : dataIDs) {
     Eigen::Index size = cplData.at(id)->getSize();
 
-    auto valuesSample    = cplData.at(id)->timeStepsStorage().sample(windowEnd);
+    auto valuesSample    = cplData.at(id)->waveform().sample(windowEnd);
     auto oldValuesSample = cplData.at(id)->getPreviousValuesAtTime(windowEnd);
 
     PRECICE_ASSERT(valuesSample.values().size() == size, valuesSample.values().size(), size);

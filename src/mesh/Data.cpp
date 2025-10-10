@@ -55,7 +55,7 @@ int Data::getWaveformDegree() const
   return _waveform.getInterpolationDegree();
 }
 
-time::Waveform &Data::timeStepsStorage()
+time::Waveform &Data::waveform()
 {
   return _waveform;
 }
@@ -63,7 +63,7 @@ time::Waveform &Data::timeStepsStorage()
 void Data::moveToNextWindow()
 {
   if (stamples().size() > 1) { // Needed to avoid CompositionalCouplingScheme callong moveToNextWindow on same Data multiple times. Could be simplified by replacing Waveform::move() with clearBefore(double time). See https://github.com/precice/precice/issues/1821.
-    timeStepsStorage().move();
+    waveform().move();
     PRECICE_ASSERT(stamples().size() == 1);
     setGlobalSample(stamples().back().sample); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsWaveform, see https://github.com/precice/precice/issues/1645
   }
