@@ -9,8 +9,8 @@
 #include "logging/Logger.hpp"
 #include "precice/impl/Types.hpp"
 #include "time/Sample.hpp"
-#include "time/Storage.hpp"
 #include "time/Time.hpp"
+#include "time/Waveform.hpp"
 
 namespace precice::mesh {
 class Mesh;

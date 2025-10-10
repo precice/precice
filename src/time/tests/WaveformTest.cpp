@@ -1,13 +1,13 @@
 #include <Eigen/Core>
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "time/Storage.hpp"
+#include "time/Waveform.hpp"
 
 using namespace precice;
 using namespace precice::time;
 
 BOOST_AUTO_TEST_SUITE(TimeTests)
-BOOST_AUTO_TEST_SUITE(StorageTests)
+BOOST_AUTO_TEST_SUITE(WaveformTests)
 
 // create storage and test for correct initial values.
 PRECICE_TEST_SETUP(1_rank)

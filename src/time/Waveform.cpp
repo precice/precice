@@ -3,8 +3,8 @@
 #include "cplscheme/CouplingScheme.hpp"
 #include "math/Bspline.hpp"
 #include "math/differences.hpp"
-#include "time/Storage.hpp"
 #include "time/Time.hpp"
+#include "time/Waveform.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::time {

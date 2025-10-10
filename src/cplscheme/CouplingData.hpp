@@ -4,7 +4,7 @@
 #include <vector>
 #include "cplscheme/CouplingScheme.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "time/Storage.hpp"
+#include "time/Waveform.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::cplscheme {
