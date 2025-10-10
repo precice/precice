@@ -43,7 +43,7 @@ public:
   const time::Sample &sample() const;
 
   /// Returns a reference to the time step storage of the data.
-  time::Storage &timeStepsStorage();
+  time::Waveform &timeStepsStorage();
 
   /// returns previous data interpolated to the relativeDt time
   time::SampleResult getPreviousValuesAtTime(double relativeDt);
@@ -51,7 +51,7 @@ public:
   Eigen::MatrixXd getPreviousGradientsAtTime(double relativeDt);
 
   /// Returns a const reference to the time step storage of the data.
-  const time::Storage &timeStepsStorage() const;
+  const time::Waveform &timeStepsStorage() const;
 
   /// Returns the stamples in _timeStepsStorage.
   auto stamples() const
@@ -134,7 +134,7 @@ private:
   mesh::PtrData _data;
 
   /// Sample values of previous iteration (end of time window).
-  time::Storage _previousTimeStepsStorage;
+  time::Waveform _previousTimeStepsStorage;
 
   /// If true, all substeps will be sent / received for this coupling data
   bool _exchangeSubsteps;

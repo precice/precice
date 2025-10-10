@@ -83,14 +83,14 @@ public:
   int getWaveformDegree() const;
 
   /// Returns a reference to the _timeStepsStorage of _storage.
-  time::Storage &timeStepsStorage();
+  time::Waveform &timeStepsStorage();
 
   void moveToNextWindow();
 
   /// Returns a the stamples from _timeStepsStorage.
   auto stamples() const
   {
-    return _storage.stamples();
+    return _waveform.stamples();
   }
 
   /// Add sample at given time to _timeStepsStorage.
@@ -140,7 +140,7 @@ private:
   logging::Logger _log{"mesh::Data"};
 
   /// Sample storage of this Data.
-  time::Storage _storage;
+  time::Waveform _waveform;
 
   /// Name of the data set.
   std::string _name;

@@ -15,7 +15,7 @@ Data::Data(
     int         dimensions,
     int         spatialDimensions,
     int         waveformDegree)
-    : _storage(waveformDegree),
+    : _waveform(waveformDegree),
       _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
@@ -47,33 +47,33 @@ const time::Sample &Data::sample() const
 
 time::SampleResult Data::sampleAtTime(double time) const
 {
-  return _storage.sample(time);
+  return _waveform.sample(time);
 }
 
 int Data::getWaveformDegree() const
 {
-  return _storage.getInterpolationDegree();
+  return _waveform.getInterpolationDegree();
 }
 
-time::Storage &Data::timeStepsStorage()
+time::Waveform &Data::timeStepsStorage()
 {
-  return _storage;
+  return _waveform;
 }
 
 void Data::moveToNextWindow()
 {
-  if (stamples().size() > 1) { // Needed to avoid CompositionalCouplingScheme callong moveToNextWindow on same Data multiple times. Could be simplified by replacing Storage::move() with clearBefore(double time). See https://github.com/precice/precice/issues/1821.
+  if (stamples().size() > 1) { // Needed to avoid CompositionalCouplingScheme callong moveToNextWindow on same Data multiple times. Could be simplified by replacing Waveform::move() with clearBefore(double time). See https://github.com/precice/precice/issues/1821.
     timeStepsStorage().move();
     PRECICE_ASSERT(stamples().size() == 1);
-    setGlobalSample(stamples().back().sample); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage, see https://github.com/precice/precice/issues/1645
+    setGlobalSample(stamples().back().sample); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsWaveform, see https://github.com/precice/precice/issues/1645
   }
 }
 
 void Data::setSampleAtTime(double time, const time::Sample &sample)
 {
   PRECICE_ASSERT(sample.dataDims == getDimensions(), "Sample has incorrect data dimension");
-  setGlobalSample(sample); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage, see https://github.com/precice/precice/issues/1645
-  _storage.setSampleAtTime(time, sample);
+  setGlobalSample(sample); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsWaveform, see https://github.com/precice/precice/issues/1645
+  _waveform.setSampleAtTime(time, sample);
 }
 
 void Data::setGlobalSample(const time::Sample &sample)
@@ -119,7 +119,7 @@ bool Data::hasGradient() const
 
 bool Data::hasSamples() const
 {
-  return !_storage.empty();
+  return !_waveform.empty();
 }
 
 void Data::requireDataGradient()

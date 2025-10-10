@@ -74,13 +74,13 @@ const time::Sample &CouplingData::sample() const
   return _data->sample();
 }
 
-time::Storage &CouplingData::timeStepsStorage()
+time::Waveform &CouplingData::timeStepsStorage()
 {
   PRECICE_ASSERT(_data != nullptr);
   return _data->timeStepsStorage();
 }
 
-const time::Storage &CouplingData::timeStepsStorage() const
+const time::Waveform &CouplingData::timeStepsStorage() const
 {
   PRECICE_ASSERT(_data != nullptr);
   return _data->timeStepsStorage();

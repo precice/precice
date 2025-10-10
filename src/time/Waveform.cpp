@@ -9,14 +9,14 @@
 
 namespace precice::time {
 
-Storage::Storage()
+Waveform::Waveform()
     : _stampleStorage{}, _degree(0)
 {
 }
 
-Storage::Storage(int interpolationDegree) : _degree(interpolationDegree) {}
+Waveform::Waveform(int interpolationDegree) : _degree(interpolationDegree) {}
 
-Storage &Storage::operator=(const Storage &other)
+Waveform &Waveform::operator=(const Waveform &other)
 {
   this->clear();
   this->_degree = other.getInterpolationDegree();
@@ -26,7 +26,7 @@ Storage &Storage::operator=(const Storage &other)
   return *this;
 }
 
-void Storage::setSampleAtTime(double time, const Sample &sample)
+void Waveform::setSampleAtTime(double time, const Sample &sample)
 {
   // The spline has to be recomputed, since the underlying data has changed
   _bspline.reset();
@@ -51,14 +51,14 @@ void Storage::setSampleAtTime(double time, const Sample &sample)
   }
 }
 
-void Storage::setAllSamples(const Sample &sample)
+void Waveform::setAllSamples(const Sample &sample)
 {
   for (auto &stample : _stampleStorage) {
     stample.sample = sample;
   }
 }
 
-void Storage::setInterpolationDegree(int interpolationDegree)
+void Waveform::setInterpolationDegree(int interpolationDegree)
 {
   PRECICE_ASSERT(interpolationDegree >= Time::MIN_WAVEFORM_DEGREE);
   _degree = interpolationDegree;
@@ -67,12 +67,12 @@ void Storage::setInterpolationDegree(int interpolationDegree)
   _bspline.reset();
 }
 
-int Storage::getInterpolationDegree() const
+int Waveform::getInterpolationDegree() const
 {
   return _degree;
 }
 
-double Storage::maxStoredTime() const
+double Waveform::maxStoredTime() const
 {
   if (_stampleStorage.size() == 0) {
     return -1; // invalid return
@@ -81,20 +81,20 @@ double Storage::maxStoredTime() const
   }
 }
 
-int Storage::nTimes() const
+int Waveform::nTimes() const
 {
   return _stampleStorage.size();
 }
 
-int Storage::nDofs() const
+int Waveform::nDofs() const
 {
   PRECICE_ASSERT(_stampleStorage.size() > 0);
   return _stampleStorage[0].sample.values.size();
 }
 
-void Storage::move()
+void Waveform::move()
 {
-  PRECICE_ASSERT(nTimes() >= 2, "Calling Storage::move() is only allowed, if there is a sample at the beginning and at the end. This ensures that this function is only called at the end of the window.", getTimes());
+  PRECICE_ASSERT(nTimes() >= 2, "Calling Waveform::move() is only allowed, if there is a sample at the beginning and at the end. This ensures that this function is only called at the end of the window.", getTimes());
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
   const double nextWindowStart = _stampleStorage.back().timestamp;
   _stampleStorage.erase(_stampleStorage.begin(), --_stampleStorage.end());
@@ -104,7 +104,7 @@ void Storage::move()
   _bspline.reset();
 }
 
-void Storage::trim()
+void Waveform::trim()
 {
   PRECICE_ASSERT(!_stampleStorage.empty(), "Storage does not contain any data!");
   const double thisWindowStart = _stampleStorage.front().timestamp;
@@ -116,7 +116,7 @@ void Storage::trim()
   _bspline.reset();
 }
 
-void Storage::clear()
+void Waveform::clear()
 {
   _stampleStorage.clear();
   PRECICE_ASSERT(_stampleStorage.size() == 0);
@@ -125,7 +125,7 @@ void Storage::clear()
   _bspline.reset();
 }
 
-void Storage::clearExceptLast()
+void Waveform::clearExceptLast()
 {
   if (_stampleStorage.empty()) {
     return;
@@ -136,7 +136,7 @@ void Storage::clearExceptLast()
   _bspline.reset();
 }
 
-void Storage::trimBefore(double time)
+void Waveform::trimBefore(double time)
 {
   auto beforeTime = [time](const auto &s) { return math::smaller(s.timestamp, time); };
   _stampleStorage.erase(std::remove_if(_stampleStorage.begin(), _stampleStorage.end(), beforeTime), _stampleStorage.end());
@@ -145,7 +145,7 @@ void Storage::trimBefore(double time)
   _bspline.reset();
 }
 
-void Storage::trimAfter(double time)
+void Waveform::trimAfter(double time)
 {
   auto afterTime = [time](const auto &s) { return math::greater(s.timestamp, time); };
   _stampleStorage.erase(std::remove_if(_stampleStorage.begin(), _stampleStorage.end(), afterTime), _stampleStorage.end());
@@ -154,7 +154,7 @@ void Storage::trimAfter(double time)
   _bspline.reset();
 }
 
-const Sample &Storage::getSampleAtOrAfter(double before) const
+const Sample &Waveform::getSampleAtOrAfter(double before) const
 {
   PRECICE_TRACE(before);
   if (nTimes() == 1) {
@@ -166,7 +166,7 @@ const Sample &Storage::getSampleAtOrAfter(double before) const
   }
 }
 
-Eigen::VectorXd Storage::getTimes() const
+Eigen::VectorXd Waveform::getTimes() const
 {
   auto times = Eigen::VectorXd(nTimes());
   for (int i = 0; i < times.size(); i++) {
@@ -175,18 +175,18 @@ Eigen::VectorXd Storage::getTimes() const
   return times;
 }
 
-bool Storage::empty() const
+bool Waveform::empty() const
 {
   return _stampleStorage.empty();
 }
 
-const time::Stample &Storage::last() const
+const time::Stample &Waveform::last() const
 {
   PRECICE_ASSERT(!_stampleStorage.empty());
   return _stampleStorage[_stampleStorage.size() - 1];
 }
 
-std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
+std::pair<Eigen::VectorXd, Eigen::MatrixXd> Waveform::getTimesAndValues() const
 {
   auto times  = Eigen::VectorXd(nTimes());
   auto values = Eigen::MatrixXd(nDofs(), nTimes());
@@ -197,7 +197,7 @@ std::pair<Eigen::VectorXd, Eigen::MatrixXd> Storage::getTimesAndValues() const
   return std::make_pair(times, values);
 }
 
-SampleResult Storage::sample(double time) const
+SampleResult Waveform::sample(double time) const
 {
   PRECICE_ASSERT(this->nTimes() != 0, "There are no samples available");
   const int usedDegree = computeUsedDegree(_degree, nTimes());
@@ -227,7 +227,7 @@ SampleResult Storage::sample(double time) const
   return _bspline.value().interpolateAt(time);
 }
 
-Eigen::MatrixXd Storage::sampleGradients(double time) const
+Eigen::MatrixXd Waveform::sampleGradients(double time) const
 {
   const int usedDegree = computeUsedDegree(_degree, nTimes());
 
@@ -239,12 +239,12 @@ Eigen::MatrixXd Storage::sampleGradients(double time) const
   return this->getSampleAtOrAfter(time).gradients;
 }
 
-int Storage::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const
+int Waveform::computeUsedDegree(int requestedDegree, int numberOfAvailableSamples) const
 {
   return std::min(requestedDegree, numberOfAvailableSamples - 1);
 }
 
-const Sample &Storage::getSampleAtEnd() const
+const Sample &Waveform::getSampleAtEnd() const
 {
   PRECICE_ASSERT(!_stampleStorage.empty());
   return _stampleStorage.back().sample;

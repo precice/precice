@@ -10,7 +10,7 @@
 
 namespace precice::time {
 
-class Storage {
+class Waveform {
 public:
   /**
    * @brief Stores data samples in time and provides sampling of the Waveform
@@ -20,17 +20,11 @@ public:
    *
    * This Storage is used in the context of Waveform relaxation where samples in time are provided.
    */
-  Storage();
+  Waveform();
 
-  Storage(int interpolationDegree);
+  Waveform(int interpolationDegree);
 
-  /**
-   * @brief Copy assignment operator to assign Storage to this Storage
-   *
-   * @param other Storage
-   * @return Storage&
-   */
-  Storage &operator=(const Storage &other);
+  Waveform &operator=(const Waveform &other);
 
   /**
    * @brief Store Sample at a specific time.
