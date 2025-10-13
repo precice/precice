@@ -55,7 +55,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Switch to `develop` and merge `main` back into it: `git merge --no-ff -m "Merge release back"`
 * [ ] Verify the tag on develop: `git describe --tags develop`. It should start with `vX.Y.Z-1-` (i.e. tag plus the merge commit).
 * [ ] Triple check that you haven't messed anything up. You can always discard local changes using `git reset --hard upstream BRANCH` or by cloning the precice repository again and start from scratch.
-* [ ] Push `main` and the `vX.Y.Z` tag: `git push upstream main`, `git push upstream v3.2.0`
+* [ ] Push `main` and the `vX.Y.Z` tag: `git push upstream main`, `git push upstream v3.3.0`
 * [ ] Push `develop`: `git push upstream develop`
 * [ ] Wait for the release pipeline
   * [ ] [To create a new draft release on GitHub](https://github.com/precice/precice/releases)
@@ -86,7 +86,6 @@ Tests covered by the system tests: see `release_test` in [`tests.yaml`](https://
 | | | [quickstart](https://github.com/precice/tutorials/tree/master/quickstart) fluid-openfoam - solid-cpp |
 | | | [perpendicular-flap](https://github.com/precice/tutorials/tree/master/perpendicular-flap) fluid-openfoam - solid-dune |
 | | | [perpendicular-flap](https://github.com/precice/tutorials/tree/master/perpendicular-flap) fluid-nutils - solid-calculix |
-| | | [multiple-perpendicular-flaps](https://github.com/precice/tutorials/tree/master/multiple-perpendicular-flaps) fluid-openfoam - solid-(left+right)-dealii |
 | | | [flow-over-heated-plate](https://github.com/precice/tutorials/tree/master/flow-over-heated-plate) fluid-openfoam - solid-openfoam parallel |
 | | | [flow-over-heated-plate](https://github.com/precice/tutorials/tree/master/flow-over-heated-plate) fluid-openfoam - solid-fenics parallel |
 | | | [flow-over-heated-plate](https://github.com/precice/tutorials/tree/master/flow-over-heated-plate) fluid-openfoam - solid-nutils |

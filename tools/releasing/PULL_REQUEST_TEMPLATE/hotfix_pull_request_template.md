@@ -13,7 +13,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Commit fixes to the hotfix branch
 * [ ] Check code base w.r.t code formatting (run `pre-commit run -va`)
 * [ ] Update the list of operating systems for the package generation in `.github/workflows/release.yml`
-* [ ] Run `tools/releasing/bumpversion.sh MAJOR.MINOR.PATCH` to bump the version
+* [ ] Bump the version: `tools/releasing/bumpversion.sh MAJOR.MINOR.PATCH`
 * [ ] Look over the updated `CHANGELOG.md` of the hotfix branch (all)
    * Check for merged lines
    * Add things, if necessary
@@ -24,8 +24,8 @@ Only the release manager should update this post (even tickboxes, due to race co
    * [ ] `CHANGELOG`
    * [ ] `CMakeLists.txt`
    * [ ] `tools/releasing/packaging/debian/changelog`
-* [ ] Commit the version bump
-* [ ] Push the hotfix branch to the precice repository
+* [ ] Commit the version bump: `git commit -m "Bump version to X.Y.Z"`
+* [ ] Push the hotfix branch to the precice repository: `git push -u upstream hotfix-vX.Y.Z`
 * Prepare independent hotfixes
    * [ ] [Python bindings](https://github.com/precice/python-bindings/blob/develop/docs/hotfixGuide.md)
    * [ ] (if necessary!) [MATLAB bindings](https://github.com/precice/matlab-bindings/blob/develop/docs/hotfixGuide.md)
@@ -35,7 +35,8 @@ Only the release manager should update this post (even tickboxes, due to race co
 ## Step by step guide
 
 * [ ] Open PR from `hotfix-vX.Y.Z` to `main` (use [this template](https://github.com/precice/precice/blob/develop/tools/releasing/PULL_REQUEST_TEMPLATE/hotfix_pull_request_template.md))
-* [ ] Do regression tests using the hotfix branch (specific revision) _list below :arrow_down:_ (all)
+* [ ] Trigger the system tests using the `trigger-system-tests` label ([`release_test` suite](https://github.com/precice/tutorials/blob/develop/tools/tests/tests.yaml)). After any force-push, remove and add the label again.
+* [ ] Do any additional regression tests using the hotfix branch (specific revision) _list below :arrow_down:_ (all)
 * [ ] Fix potential problems on the hotfix branch (all)
 * [ ] Reorder the commits for the version bump to be the latest. `git rebase -i main`
 * [ ] Draft release notes
@@ -44,9 +45,9 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Merge PR to `main` ( use `git merge --no-ff hotfix-vX.Y.Z` )
 * [ ] Tag hotfix on `main` `vX.Y.Z` and verify by running `git describe --tags`
 * [ ] Merge `main` back to `develop` and verify by running `git describe --tags`
-* [ ] Triple check that you haven't messed anything up. (You can always discard local changes)
-* [ ] Push `main` and push the `vX.Y.Z` tag
-* [ ] Push `develop`
+* [ ] Triple check that you haven't messed anything up. You can always discard local changes using `git reset --hard upstream BRANCH` or by cloning the precice repository again and start from scratch.
+* [ ] Push `main` and the `vX.Y.Z` tag: `git push upstream main`, `git push upstream v3.3.1`
+* [ ] Push `develop`: `git push upstream develop`
 * [ ] Wait for the release pipeline
   * [ ] [To create a new draft hotfix on GitHub](https://github.com/precice/precice/releases)
   * [ ] To automatically generate packages for the latest Debian and the two latest Ubuntu LTS versions.
