@@ -151,19 +151,18 @@ Tests covered by the system tests: see `release_test` in [`tests.yaml`](https://
 * [ ] Write on [Matrix](https://matrix.to/#/#precice_lobby:gitter.im?web-instance[element.io]=app.gitter.im)
 * [ ] CFD Online:
      * [ ] [News](https://www.cfd-online.com/Forum/news.cgi/form/0)
-     * [ ] Forum (choose a central topic)
+     * [ ] [Forum](https://www.cfd-online.com/Forums/main/261393-precice-releases.html)
 * [ ] NADigest
 * [ ] [NAFEMS](https://www.nafems.org/mynafems/submitnews/) (needs account, appears in [Upcoming Industry Events](https://www.nafems.org/events/industry-events/))
 * [ ] Post on [Bluesky](https://bsky.app/profile/precice.org)
 * [ ] Post on [Mastodon](https://fosstodon.org/@precice)
 * [ ] Post in LinkedIn. Relevant places:
-    * [ ] [preCICE group](https://www.linkedin.com/groups/9073912/)
+    * [ ] [preCICE company](https://www.linkedin.com/company/precice)
     * [ ] [OpenFOAM group](https://www.linkedin.com/groups/1920608/)
     * [ ] [HPC group](https://www.linkedin.com/groups/87791/)
     * [ ] Personal
-* [ ] reddit [r/cfd](https://www.reddit.com/r/CFD/)
-* [ ] Submit a short article to the [Quartl](https://www.in.tum.de/en/i05/further-activities/quartl/)
 
+See the [advertising a workshop](https://precice.org/precice-workshop-organizing.html#advertising) section for additional ideas.
 
 ### Misc
 
