@@ -117,6 +117,30 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
   PRECICE_ASSERT(inDataDimensions == outDataDimensions);
 
   PRECICE_DEBUG("Map consistent");
+
+  // ---------- NEW: scalar (pressure) handling ----------
+  if (inDataDimensions == 1 && outDataDimensions == 1) {
+    if (_type == MultiscaleType::SPREAD) {
+      // 1D -> 3D: replicate the single input pressure to every output vertex
+      PRECICE_ASSERT(input()->nVertices() == 1, "Pressure SPREAD expects one input vertex.");
+      const double p = inputValues(0);
+      for (size_t i = 0; i < output()->nVertices(); ++i) {
+        outputValues(static_cast<Eigen::Index>(i)) = p;
+      }
+    } else {
+      PRECICE_ASSERT(_type == MultiscaleType::COLLECT);
+      // 3D -> 1D: average all input pressures into the single output vertex
+      PRECICE_ASSERT(output()->nVertices() == 1, "Pressure COLLECT expects one output vertex.");
+      double sum = 0.0;
+      for (size_t i = 0; i < input()->nVertices(); ++i) {
+        sum += inputValues(static_cast<Eigen::Index>(i));
+      }
+      outputValues(0) = sum / static_cast<double>(input()->nVertices());
+    }
+    return; // scalar path done
+  }
+  // ---------- END scalar handling ----------
+
   if (_type == MultiscaleType::SPREAD) {
     /*
       3D vertices are assigned a value based on distance from the 1D vertex.
