@@ -127,7 +127,6 @@ Tests covered by the system tests: see `release_test` in [`tests.yaml`](https://
 
 ### (only if breaking changes) Open PRs or issues `develop -> main` for all adapters
 
-- [ ] [athlet-adapter](https://github.com/precice/athlet-adapter/compare/master...develop)
 - [ ] [calculix-adapter](https://github.com/precice/calculix-adapter/compare/master...develop)
 - [ ] [code_aster-adapter](https://github.com/precice/code_aster-adapter/compare/master...develop)
 - [ ] [comsol-adapter](https://github.com/precice/comsol-adapter/compare/master...develop)
@@ -143,7 +142,6 @@ Tests covered by the system tests: see `release_test` in [`tests.yaml`](https://
 
 - [ ] [aste](https://github.com/precice/aste/compare/master...develop)
 - [ ] [elastictube1d](https://github.com/precice/elastictube1d/compare/master...develop)
-- [ ] [run.precice](https://github.com/precice/run.precice-frontend/compare/master...develop)
 - [ ] [tutorials](https://github.com/precice/tutorials/compare/master...develop)
 
 ### Marketing
