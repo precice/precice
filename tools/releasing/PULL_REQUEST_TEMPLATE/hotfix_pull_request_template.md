@@ -38,7 +38,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Do regression tests using the hotfix branch (specific revision) _list below :arrow_down:_ (all)
 * [ ] Fix potential problems on the hotfix branch (all)
 * [ ] Reorder the commits for the version bump to be the latest. `git rebase -i main`
-* [ ] Draft message to mailing list
+* [ ] Draft release notes
 * [ ] Write a draft "blog post" on [Discourse](https://precice.discourse.group/)
 * [ ] Approve the PR with at least two reviews (all)
 * [ ] Merge PR to `main` ( use `git merge --no-ff hotfix-vX.Y.Z` )

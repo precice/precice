@@ -43,7 +43,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Do any additional regression tests using the release branch (specific revision) _list below :arrow_down:_ (all)
 * [ ] Fix potential problems in develop (all)
 * [ ] Rebase the release branch on develop to pull in fixes
-* [ ] Draft message to mailing list
+* [ ] Draft release notes
 * [ ] Write a draft "blog post" on [Discourse](https://precice.discourse.group/)
 * [ ] Update documentation (all)
    * [ ] Update [XML configuration reference](https://github.com/precice/precice.github.io/blob/master/_includes/xmlreference.md)
