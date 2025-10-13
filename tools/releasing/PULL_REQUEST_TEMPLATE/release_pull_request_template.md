@@ -124,6 +124,7 @@ Tests covered by the system tests: see `release_test` in [`tests.yaml`](https://
 - [ ] [MATLAB bindings](https://github.com/precice/matlab-bindings/blob/develop/docs/ReleaseGuide.md)
 - [ ] [python bindings](https://github.com/precice/python-bindings/blob/develop/docs/ReleaseGuide.md)
 - [ ] [Julia bindings](https://github.com/precice/PreCICE.jl)
+- [ ] [Rust bindings](https://github.com/precice/rust-bindings)
 
 ### (only if breaking changes) Open PRs or issues `develop -> main` for all adapters
 
@@ -148,7 +149,6 @@ Tests covered by the system tests: see `release_test` in [`tests.yaml`](https://
 
 * [ ] Finalize post on [Discourse](https://precice.discourse.group/)
 * [ ] Write on [Matrix](https://matrix.to/#/#precice_lobby:gitter.im?web-instance[element.io]=app.gitter.im)
-* [ ] Send announcement to the [mailing list](https://mailman.informatik.uni-stuttgart.de/mailman/listinfo/precice)
 * [ ] CFD Online:
      * [ ] [News](https://www.cfd-online.com/Forum/news.cgi/form/0)
      * [ ] Forum (choose a central topic)
