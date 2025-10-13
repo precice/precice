@@ -126,16 +126,29 @@ Tests covered by the system tests: see `release_test` in [`tests.yaml`](https://
 
 ### (only if breaking changes) Open PRs or issues `develop -> main` for all adapters
 
+In the context of the [distribution](https://precice.org/installation-distribution.html):
+
 - [ ] [calculix-adapter](https://github.com/precice/calculix-adapter/compare/master...develop)
 - [ ] [code_aster-adapter](https://github.com/precice/code_aster-adapter/compare/master...develop)
-- [ ] [comsol-adapter](https://github.com/precice/comsol-adapter/compare/master...develop)
 - [ ] [dealii-adapter](https://github.com/precice/dealii-adapter/compare/master...develop)
+- [ ] [dumux-adapter](https://github.com/precice/dumux-adapter/compare/main...develop)
+- [ ] [dune-adapter](https://github.com/precice/dune-adapter)
 - [ ] [fenics-adapter](https://github.com/precice/fenics-adapter/compare/master...develop)
-- [ ] [fluent-adapter](https://github.com/precice/fluent-adapter/compare/master...develop)
-- [ ] lsdyna-adapter?
-- [ ] mbdyn-adapter?
+- [ ] [fenicsx-adapter](https://github.com/precice/fenicsx-adapter/compare/main...develop)
 - [ ] [openfoam-adapter](https://github.com/precice/openfoam-adapter/compare/master...develop)
 - [ ] [su2-adapter](https://github.com/precice/su2-adapter/compare/master...develop)
+
+Further adapters (involve the community or decide if they will be ported at all):
+
+- [ ] [comsol-adapter](https://github.com/precice/comsol-adapter/compare/master...develop)
+- [ ] [elmer-adapter](https://github.com/precice/elmer-adapter)
+- [ ] [febio-adapter](https://github.com/precice/febio-adapter)
+- [ ] [foam-extend-adapter](https://github.com/precice/foam-extend-adapter)
+- [ ] [fluent-adapter](https://github.com/precice/fluent-adapter/compare/master...develop)
+- [ ] [openfast-adapter](https://github.com/precice/openfast-adapter)
+- [ ] [openfoam-org-adapter](https://github.com/precice/openfoam-org-adapter)
+- [ ] [lsdyna-adapter](https://github.com/precice/lsdyna-adapter)
+- [ ] [mbdyn-adapter](https://github.com/precice/mbdyn-adapter)
 
 ### (only if breaking changes) Open PRs or issues `develop -> main` for all other tools
 
