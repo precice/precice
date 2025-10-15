@@ -11,6 +11,9 @@ on:
       branch:
         type: string
         default: develop
+    secrets:
+      DOCKERHUB_TOKEN:
+        required: true
   schedule:
     - cron: '0 3 * * *'
 
@@ -35,4 +38,4 @@ jobs:
           file: "./tools/releasing/packaging/docker/nightly.dockerfile"
           tags: ${{ env.docker_username }}/precice:nightly
           build-args: |
-            BRANCH=${{ github.event.inputs.branch || 'develop' }}
+            BRANCH=${{ inputs.branch || 'develop' }}

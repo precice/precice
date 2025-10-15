@@ -21,6 +21,10 @@ on:
         description: 'Override precice/precice:latest'
         required: true
         type: boolean
+    secrets:
+      DOCKERHUB_TOKEN:
+        required: true
+
   workflow_dispatch:
     inputs:
       version:
@@ -36,7 +40,7 @@ on:
 
 jobs:
   package:
-    name: 'Release docker precice/precice:${{ github.event.inputs.version }}'
+    name: 'Release docker precice/precice for ${{ inputs.version }}'
     runs-on: ubuntu-latest
     env:
         docker_username: precice
@@ -44,8 +48,8 @@ jobs:
       - name: Check and clean version
         id: version
         run: |
-          echo "${{ github.event.inputs.version }}" | grep -Pq '^v?\d+\.\d+\.\d+$'
-          version="${{ github.event.inputs.version }}"
+          echo "${{ inputs.version }}" | grep -Pq '^v?\d+\.\d+\.\d+$'
+          version="${{ inputs.version }}"
           echo "version=${version#v}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
@@ -64,7 +68,7 @@ jobs:
           build-args: |
             version=${{ steps.version.outputs.version }}
       - name: Build and push latest tag
-        if: ${{ github.event.inputs.latest == 'true' }}
+        if: ${{ inputs.latest == 'true' }}
         uses: docker/build-push-action@v6
         with:
           push: true
