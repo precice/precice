@@ -173,7 +173,7 @@ jobs:
           FI_PROVIDER: ${{ matrix.IMAGE == 'Intel' && 'tcp' || 'sockets' }} # use sockets on fedora and tcp on intel
           PSM3_HAL: loopback # required for fedora
         working-directory: build
-        run: su -c ". ../venv/bin/activate && ctest -j" "$PRECICE_USER"
+        run: su -c ". ../venv/bin/activate && ctest -j --output-junit ctest-junit.xml" "$PRECICE_USER"
       - name: Coverage Report
         working-directory: build
         if: ${{ matrix.COVFLAGS }}
@@ -202,6 +202,11 @@ jobs:
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} TestOutput
           path: build/TestOutput/
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v5
+        if: success() || failure()
+        with:
+          report_paths: 'build/ctest-junit.xml'
 
   macos:
     name: ${{ format('macos {0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }}
