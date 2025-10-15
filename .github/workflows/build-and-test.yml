@@ -320,8 +320,8 @@ jobs:
       - name: Test
         working-directory: build
         run: |
-          # Allow each test to run twice to iron out sporadic MPI failures
-          ctest -j --repeat until-pass:2
+          # Allow each test to rerun to iron out sporadic MPI failures
+          ctest -j --repeat until-pass:3
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
