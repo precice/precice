@@ -14,11 +14,14 @@ jobs:
   release-draft:
     name: 'Draft release'
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
     steps:
-        - name: "Create draft release"
-          uses: softprops/action-gh-release@v2
-          with:
-            draft: True
+      - name: Create draft release
+        run: gh release create "${{ github.ref_name}}" --draft --verify-tag -R precice/precice
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   package-deb:
     needs: release-draft
