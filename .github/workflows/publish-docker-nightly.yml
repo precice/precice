@@ -2,6 +2,15 @@ name: Publish nightly docker release
 # Builds the precice/precice:nightly image
 on:
   workflow_dispatch:
+    inputs:
+      branch:
+        type: string
+        default: develop
+  workflow_call:
+    inputs:
+      branch:
+        type: string
+        default: develop
   schedule:
     - cron: '0 3 * * *'
 
@@ -25,3 +34,5 @@ jobs:
           push: true
           file: "./tools/releasing/packaging/docker/nightly.dockerfile"
           tags: ${{ env.docker_username }}/precice:nightly
+          build-args: |
+            BRANCH=${{ github.event.inputs.branch || 'develop' }}
