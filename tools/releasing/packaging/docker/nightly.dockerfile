@@ -9,8 +9,9 @@ RUN apt-get update && \
     echo $TZ > /etc/timezone && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
     apt-get -yy install git build-essential lsb-release cmake libeigen3-dev libxml2-dev libboost-all-dev python3-dev python3-numpy petsc-dev && \
     rm -rf /var/lib/apt/lists/*
+ARG BRANCH
 # We do not use --depth=1 as we need the history for git describe in the version
-RUN git clone --branch=develop https://github.com/precice/precice.git /root/precice && \
+RUN git clone --branch=${BRANCH} https://github.com/precice/precice.git /root/precice && \
     cd /root/precice && \
     cmake --preset=debian-package && \
     cd build && \
