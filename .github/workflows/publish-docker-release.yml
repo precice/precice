@@ -11,10 +11,20 @@ name: Publish Docker release
 #
 # This workflow uses the official ubuntu docker images.
 on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version with or without the v prefix'
+        required: true
+        type: string
+      latest:
+        description: 'Override precice/precice:latest'
+        required: true
+        type: boolean
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version without the v prefix'
+        description: 'Version with or without the v prefix'
         default: "2.1.0"
         required: true
         type: string
@@ -31,8 +41,13 @@ jobs:
     env:
         docker_username: precice
     steps:
-      - name: Check version
-        run: echo "${{ github.event.inputs.version }}" | grep -Pq '^\d+\.\d+\.\d+$'
+      - name: Check and clean version
+        id: version
+        run: |
+          echo "${{ github.event.inputs.version }}" | grep -Pq '^v?\d+\.\d+\.\d+$'
+          version="${{ github.event.inputs.version }}"
+          echo "version=${version#v}" >> "$GITHUB_OUTPUT"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
@@ -45,9 +60,9 @@ jobs:
         with:
           push: true
           file: "./tools/releasing/packaging/docker/release.dockerfile"
-          tags: ${{ env.docker_username }}/precice:${{ github.event.inputs.version }}
+          tags: ${{ env.docker_username }}/precice:${{ steps.version.outputs.version }}
           build-args: |
-            version=${{ github.event.inputs.version }}
+            version=${{ steps.version.outputs.version }}
       - name: Build and push latest tag
         if: ${{ github.event.inputs.latest == 'true' }}
         uses: docker/build-push-action@v6
@@ -56,4 +71,4 @@ jobs:
           file: "./tools/releasing/packaging/docker/release.dockerfile"
           tags: ${{ env.docker_username }}/precice:latest
           build-args: |
-            version=${{ github.event.inputs.version }}
+            version=${{ steps.version.outputs.version }}
