@@ -271,13 +271,17 @@ jobs:
         OMPI_MCA_btl: self,vader
         OMPI_MCA_pml: ob1
       working-directory: build
-      run: ctest -j
+      run: ctest -j --output-junit ctest-junit.xml
     - uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} TestOutput
         path: build/TestOutput/
-
+    - name: Publish Test Report
+      uses: mikepenz/action-junit-report@v5
+      if: success() || failure()
+      with:
+        report_paths: 'build/ctest-junit.xml'
 
   windows:
     needs: pre-commit
@@ -326,9 +330,14 @@ jobs:
         working-directory: build
         run: |
           # Allow each test to run twice to iron out sporadic MPI failures
-          ctest -j --repeat until-pass:2
+          ctest -j --repeat until-pass:2 --output-junit ctest-junit.xml
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: debugdump
           path: build/
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v5
+        if: success() || failure()
+        with:
+          report_paths: 'build/ctest-junit.xml'
