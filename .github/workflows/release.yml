@@ -68,3 +68,11 @@ jobs:
       version: ${{ github.ref_name }}
       latest: true
     secrets: inherit
+
+  docker-nightly:
+    name: "Release Nightly"
+    needs: release-draft
+    uses: ./.github/workflows/publish-docker-nightly.yml
+    with:
+      branch: ${{ github.ref_name }}
+    secrets: inherit
