@@ -13,9 +13,11 @@ jobs:
     with:
       version: ${{ github.event.inputs.version }}
       latest: true
+    secrets: inherit
 
   docker-nightly:
     name: "Release Nightly"
     uses: ./.github/workflows/publish-docker-nightly.yml
     with:
       branch: ${{ github.event.inputs.version }}
+    secrets: inherit

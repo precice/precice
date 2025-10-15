@@ -11,6 +11,9 @@ on:
       branch:
         type: string
         default: develop
+    secrets:
+      DOCKERHUB_TOKEN:
+        required: true
   schedule:
     - cron: '0 3 * * *'
 

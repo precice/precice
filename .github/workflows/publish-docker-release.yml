@@ -21,6 +21,10 @@ on:
         description: 'Override precice/precice:latest'
         required: true
         type: boolean
+    secrets:
+      DOCKERHUB_TOKEN:
+        required: true
+
   workflow_dispatch:
     inputs:
       version:
