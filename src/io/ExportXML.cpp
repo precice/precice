@@ -70,7 +70,7 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
   _scalarDataNames.clear();
   const bool isThreeDim = (mesh.getDimensions() == 3);
   for (const mesh::PtrData &data : mesh.data()) {
-    if (data->timeStepsStorage().empty()) {
+    if (data->waveform().empty()) {
       continue;
     }
     int        dataDimensions = data->getDimensions();
@@ -193,7 +193,7 @@ void ExportXML::writeSubFile(int index, double time)
 
 void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std::ostream &outFile) const
 {
-  const auto              &gradients      = data->timeStepsStorage().last().sample.gradients;
+  const auto              &gradients      = data->waveform().last().sample.gradients;
   const int                dataDimensions = data->getDimensions();
   std::vector<std::string> suffices;
   if (dataDimensions == 1) {
@@ -249,10 +249,10 @@ void ExportXML::exportData(
   outFile << "\n            </DataArray>\n";
 
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
-    if (data->timeStepsStorage().empty()) {
+    if (data->waveform().empty()) {
       continue;
     }
-    const Eigen::VectorXd &values         = data->timeStepsStorage().last().sample.values;
+    const Eigen::VectorXd &values         = data->waveform().last().sample.values;
     int                    dataDimensions = data->getDimensions();
     std::string            dataName(data->getName());
     int                    numberOfComponents = (dataDimensions == 2) ? 3 : dataDimensions;

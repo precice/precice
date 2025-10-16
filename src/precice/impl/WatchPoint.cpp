@@ -132,7 +132,7 @@ void WatchPoint::getValue(
 {
   int             dim = _mesh->getDimensions();
   Eigen::VectorXd temp(dim);
-  const auto      sample = data->timeStepsStorage().sample(time);
+  const auto      sample = data->waveform().sample(time);
   for (const auto &elem : _interpolation->getWeightedElements()) {
     int offset = elem.vertexID * dim;
     for (int i = 0; i < dim; i++) {
@@ -148,7 +148,7 @@ void WatchPoint::getValue(
     mesh::PtrData &data,
     double         time)
 {
-  const auto sample = data->timeStepsStorage().sample(time);
+  const auto sample = data->waveform().sample(time);
   for (const auto &elem : _interpolation->getWeightedElements()) {
     value += elem.weight * sample(elem.vertexID);
   }

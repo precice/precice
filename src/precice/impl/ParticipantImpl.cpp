@@ -574,7 +574,7 @@ void ParticipantImpl::trimOldDataBefore(double time)
 {
   for (auto &context : _accessor->usedMeshContexts()) {
     for (const auto &name : context->mesh->availableData()) {
-      context->mesh->data(name)->timeStepsStorage().trimBefore(time);
+      context->mesh->data(name)->waveform().trimBefore(time);
     }
   }
 }

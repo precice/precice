@@ -73,9 +73,9 @@ void ReadDataContext::clearToDataFor(const cplscheme::ImplicitData &from)
     auto id = context.fromData->getID();
     if (from.contains(id)) {
       if (from.toKeep(id)) {
-        context.toData->timeStepsStorage().clearExceptLast();
+        context.toData->waveform().clearExceptLast();
       } else {
-        context.toData->timeStepsStorage().clear();
+        context.toData->waveform().clear();
       }
     }
   }
@@ -87,7 +87,7 @@ void ReadDataContext::trimToDataAfterFor(const cplscheme::ImplicitData &from, do
   PRECICE_ASSERT(hasMapping());
   for (auto &context : _mappingContexts) {
     if (from.contains(context.fromData->getID())) {
-      context.toData->timeStepsStorage().trimAfter(t);
+      context.toData->waveform().trimAfter(t);
     }
   }
 }
