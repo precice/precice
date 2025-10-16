@@ -1,4 +1,5 @@
 #pragma once
+#undef PRECICE_NO_GINKGO
 #ifndef PRECICE_NO_GINKGO
 
 #include <array>
@@ -70,10 +71,10 @@ public:
                              MappingConfiguration::GinkgoParameter ginkgoParameter);
 
   /// Maps the given input data
-  Eigen::VectorXd solveConsistent(const Eigen::VectorXd &inputData, Polynomial polynomial);
+  Eigen::MatrixXd solveConsistent(const Eigen::MatrixXd &inputData, Polynomial polynomial);
 
   /// Maps the given input data
-  Eigen::VectorXd solveConservative(const Eigen::VectorXd &inputData, Polynomial polynomial);
+  Eigen::MatrixXd solveConservative(const Eigen::MatrixXd &inputData, Polynomial polynomial);
 
   void clear();
 
@@ -455,177 +456,180 @@ void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const 
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const Eigen::VectorXd &rhsValues, Polynomial polynomial)
+Eigen::MatrixXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const Eigen::MatrixXd &rhsValues, Polynomial polynomial)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(rhsValues.cols() == 1);
-  // Copy rhs vector onto GPU by creating a Ginkgo Vector
-  auto rhs = gko::share(GinkgoVector::create(_hostExecutor, gko::dim<2>{static_cast<unsigned long>(rhsValues.rows()), 1}));
 
-  for (Eigen::Index i = 0; i < rhsValues.rows(); ++i) {
-    rhs->at(i, 0) = rhsValues(i, 0);
-  }
+  Eigen::MatrixXd outmatrix(getOutputSize(), rhsValues.cols());
 
-  precice::profiling::Event _allocCopyEvent{"map.rbf.ginkgo.memoryAllocAndCopy"};
-  auto                      dRhs = gko::share(gko::clone(_deviceExecutor, rhs));
-  rhs->clear();
-  _allocCopyEvent.stop();
+  for (int col = 0; col < rhsValues.cols(); col++) {
+    // Copy rhs vector onto GPU by creating a Ginkgo Vector
+    auto rhs = gko::share(GinkgoVector::create(_hostExecutor, gko::dim<2>{static_cast<unsigned long>(rhsValues.rows()), 1}));
 
-  if (polynomial == Polynomial::SEPARATE) {
-    _allocCopyEvent.start();
-    _polynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ_TQ->get_size()[1], 1}));
-    _allocCopyEvent.stop();
-    _polynomialContribution->fill(0.0);
-
-    _matrixQ_T->apply(dRhs, _polynomialRhs);
-    _polynomialSolver->apply(_polynomialRhs, _polynomialContribution);
-
-    _matrixQ->apply(_polynomialContribution, _subPolynomialContribution);
-    dRhs->sub_scaled(_scalarOne, _subPolynomialContribution);
-  }
-
-  if (GinkgoSolverType::QR == _solverType) {
-    // Upper Trs U x = b
-    if ("cuda-executor" == _ginkgoParameter.executor) {
-#ifdef PRECICE_WITH_CUDA
-      solvewithQRDecompositionCuda(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dRhs.get());
-#endif
-    } else if ("hip-executor" == _ginkgoParameter.executor) {
-#ifdef PRECICE_WITH_HIP
-      solvewithQRDecompositionHip(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dRhs.get());
-#endif
-    } else {
-      PRECICE_UNREACHABLE("Not implemented");
+    for (Eigen::Index i = 0; i < rhsValues.rows(); ++i) {
+      rhs->at(i, 0) = rhsValues(i, col);
     }
-  } else {
-    _solveRBFSystem(dRhs);
+
+    precice::profiling::Event _allocCopyEvent{"map.rbf.ginkgo.memoryAllocAndCopy"};
+    auto                      dRhs = gko::share(gko::clone(_deviceExecutor, rhs));
+    rhs->clear();
+    _allocCopyEvent.stop();
+
+    if (polynomial == Polynomial::SEPARATE) {
+      _allocCopyEvent.start();
+      _polynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ_TQ->get_size()[1], 1}));
+      _allocCopyEvent.stop();
+      _polynomialContribution->fill(0.0);
+
+      _matrixQ_T->apply(dRhs, _polynomialRhs);
+      _polynomialSolver->apply(_polynomialRhs, _polynomialContribution);
+
+      _matrixQ->apply(_polynomialContribution, _subPolynomialContribution);
+      dRhs->sub_scaled(_scalarOne, _subPolynomialContribution);
+    }
+
+    if (GinkgoSolverType::QR == _solverType) {
+      // Upper Trs U x = b
+      if ("cuda-executor" == _ginkgoParameter.executor) {
+  #ifdef PRECICE_WITH_CUDA
+        solvewithQRDecompositionCuda(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dRhs.get());
+  #endif
+      } else if ("hip-executor" == _ginkgoParameter.executor) {
+  #ifdef PRECICE_WITH_HIP
+        solvewithQRDecompositionHip(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dRhs.get());
+  #endif
+      } else {
+        PRECICE_UNREACHABLE("Not implemented");
+      }
+    } else {
+      _solveRBFSystem(dRhs);
+    }
+
+    dRhs->clear();
+
+    _allocCopyEvent.start();
+    auto dOutput = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixA->get_size()[0], _rbfCoefficients->get_size()[1]}));
+    _allocCopyEvent.stop();
+
+    _matrixA->apply(_rbfCoefficients, dOutput);
+
+    if (polynomial == Polynomial::SEPARATE) {
+      _matrixV->apply(_polynomialContribution, _addPolynomialContribution);
+      dOutput->add_scaled(_scalarOne, _addPolynomialContribution);
+    }
+
+    _allocCopyEvent.start();
+    auto output = gko::clone(_hostExecutor, dOutput);
+    _allocCopyEvent.stop();
+
+    for (Eigen::Index i = 0; i < outmatrix.rows(); ++i) {
+      outmatrix(i, col) = output->at(i, 0);
+    }
   }
 
-  dRhs->clear();
-
-  _allocCopyEvent.start();
-  auto dOutput = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixA->get_size()[0], _rbfCoefficients->get_size()[1]}));
-  _allocCopyEvent.stop();
-
-  _matrixA->apply(_rbfCoefficients, dOutput);
-
-  if (polynomial == Polynomial::SEPARATE) {
-    _matrixV->apply(_polynomialContribution, _addPolynomialContribution);
-    dOutput->add_scaled(_scalarOne, _addPolynomialContribution);
-  }
-
-  _allocCopyEvent.start();
-  auto output = gko::clone(_hostExecutor, dOutput);
-  _allocCopyEvent.stop();
-
-  Eigen::VectorXd result(output->get_size()[0], 1);
-
-  for (Eigen::Index i = 0; i < result.rows(); ++i) {
-    result(i, 0) = output->at(i, 0);
-  }
-
-  return result;
+  return outmatrix;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::VectorXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const Eigen::VectorXd &rhsValues, Polynomial polynomial)
+Eigen::MatrixXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const Eigen::MatrixXd &rhsValues, Polynomial polynomial)
 {
   PRECICE_TRACE();
-  PRECICE_ASSERT(rhsValues.cols() == 1);
   // Copy rhs vector onto GPU by creating a Ginkgo Vector
-  auto rhs = gko::share(GinkgoVector::create(_hostExecutor, gko::dim<2>{static_cast<unsigned long>(rhsValues.rows()), 1}));
+  Eigen::MatrixXd outmatrix(getOutputSize(), rhsValues.cols());
 
-  for (Eigen::Index i = 0; i < rhsValues.rows(); ++i) {
-    rhs->at(i, 0) = rhsValues(i, 0);
-  }
+  for (int col = 0; col < rhsValues.cols(); col++) {
+    auto rhs = gko::share(GinkgoVector::create(_hostExecutor, gko::dim<2>{static_cast<unsigned long>(rhsValues.rows()), 1}));
 
-  precice::profiling::Event _allocCopyEvent{"map.rbf.ginkgo.memoryAllocAndCopy"};
-  auto                      dRhs = gko::share(gko::clone(_deviceExecutor, rhs));
-  rhs->clear();
-  _allocCopyEvent.stop();
+    for (Eigen::Index i = 0; i < rhsValues.rows(); ++i) {
+      rhs->at(i, 0) = rhsValues(i, 0);
+    }
 
-  auto dAu = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixA->get_size()[1], dRhs->get_size()[1]}));
+    precice::profiling::Event _allocCopyEvent{"map.rbf.ginkgo.memoryAllocAndCopy"};
+    auto                      dRhs = gko::share(gko::clone(_deviceExecutor, rhs));
+    rhs->clear();
+    _allocCopyEvent.stop();
 
-  _matrixA->transpose()->apply(dRhs, dAu);
+    auto dAu = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixA->get_size()[1], dRhs->get_size()[1]}));
 
-  if (GinkgoSolverType::QR == _solverType) {
-    if ("cuda-executor" == _ginkgoParameter.executor) {
+    _matrixA->transpose()->apply(dRhs, dAu);
+
+    if (GinkgoSolverType::QR == _solverType) {
+      if ("cuda-executor" == _ginkgoParameter.executor) {
 #ifdef PRECICE_WITH_CUDA
-      solvewithQRDecompositionCuda(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dAu.get());
+        solvewithQRDecompositionCuda(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dAu.get());
 #endif
-    } else if ("hip-executor" == _ginkgoParameter.executor) {
+      } else if ("hip-executor" == _ginkgoParameter.executor) {
 #ifdef PRECICE_WITH_HIP
-      solvewithQRDecompositionHip(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dAu.get());
+        solvewithQRDecompositionHip(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dAu.get());
 #endif
+      } else {
+        PRECICE_UNREACHABLE("Not implemented");
+      }
     } else {
-      PRECICE_UNREACHABLE("Not implemented");
-    }
-  } else {
-    _solveRBFSystem(dAu);
-  }
-
-  auto dOutput = gko::clone(_deviceExecutor, _rbfCoefficients);
-
-  if (polynomial == Polynomial::SEPARATE) {
-    auto dEpsilon = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixV->get_size()[1], dRhs->get_size()[1]}));
-    _matrixV->transpose()->apply(dRhs, dEpsilon);
-
-    auto dTmp = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ->get_size()[1], _rbfCoefficients->get_size()[1]}));
-    _matrixQ->transpose()->apply(dOutput, dTmp);
-
-    // epsilon -= tmp
-    dEpsilon->sub_scaled(_scalarOne, dTmp);
-
-    // Since this class is constructed for consistent mapping per default, we have to delete unused memory and initialize conservative variables
-    if (nullptr == _matrixQQ_T) {
-      _matrixQ_TQ->clear();
-      _deviceExecutor->synchronize();
-      _matrixQQ_T = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{_matrixQ->get_size()[0], _matrixQ_T->get_size()[1]}));
-
-      _matrixQ->apply(_matrixQ_T, _matrixQQ_T);
-
-      auto polynomialSolverFactory = cg::build()
-                                         .with_criteria(gko::stop::Iteration::build()
-                                                            .with_max_iters(static_cast<std::size_t>(40))
-                                                            .on(_deviceExecutor),
-                                                        gko::stop::ResidualNorm<>::build()
-                                                            .with_reduction_factor(1e-6)
-                                                            .with_baseline(gko::stop::mode::initial_resnorm)
-                                                            .on(_deviceExecutor))
-                                         .on(_deviceExecutor);
-
-      _polynomialSolver = polynomialSolverFactory->generate(_matrixQQ_T);
-
-      _polynomialRhs->clear();
-      _deviceExecutor->synchronize();
+      _solveRBFSystem(dAu);
     }
 
-    _polynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQQ_T->get_size()[1], 1}));
-    _polynomialContribution->fill(0.0);
+    auto dOutput = gko::clone(_deviceExecutor, _rbfCoefficients);
 
-    dEpsilon->scale(_scalarNegativeOne);
+    if (polynomial == Polynomial::SEPARATE) {
+      auto dEpsilon = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixV->get_size()[1], dRhs->get_size()[1]}));
+      _matrixV->transpose()->apply(dRhs, dEpsilon);
 
-    _polynomialRhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ->get_size()[0], dEpsilon->get_size()[1]}));
+      auto dTmp = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ->get_size()[1], _rbfCoefficients->get_size()[1]}));
+      _matrixQ->transpose()->apply(dOutput, dTmp);
 
-    _matrixQ->apply(dEpsilon, _polynomialRhs);
+      // epsilon -= tmp
+      dEpsilon->sub_scaled(_scalarOne, dTmp);
 
-    _polynomialSolver->apply(_polynomialRhs, _polynomialContribution);
+      // Since this class is constructed for consistent mapping per default, we have to delete unused memory and initialize conservative variables
+      if (nullptr == _matrixQQ_T) {
+        _matrixQ_TQ->clear();
+        _deviceExecutor->synchronize();
+        _matrixQQ_T = gko::share(GinkgoMatrix::create(_deviceExecutor, gko::dim<2>{_matrixQ->get_size()[0], _matrixQ_T->get_size()[1]}));
 
-    // out -= poly
-    dOutput->sub_scaled(_scalarOne, _polynomialContribution);
+        _matrixQ->apply(_matrixQ_T, _matrixQQ_T);
+
+        auto polynomialSolverFactory = cg::build()
+                                           .with_criteria(gko::stop::Iteration::build()
+                                                              .with_max_iters(static_cast<std::size_t>(40))
+                                                              .on(_deviceExecutor),
+                                                          gko::stop::ResidualNorm<>::build()
+                                                              .with_reduction_factor(1e-6)
+                                                              .with_baseline(gko::stop::mode::initial_resnorm)
+                                                              .on(_deviceExecutor))
+                                           .on(_deviceExecutor);
+
+        _polynomialSolver = polynomialSolverFactory->generate(_matrixQQ_T);
+
+        _polynomialRhs->clear();
+        _deviceExecutor->synchronize();
+      }
+
+      _polynomialContribution = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQQ_T->get_size()[1], 1}));
+      _polynomialContribution->fill(0.0);
+
+      dEpsilon->scale(_scalarNegativeOne);
+
+      _polynomialRhs = gko::share(GinkgoVector::create(_deviceExecutor, gko::dim<2>{_matrixQ->get_size()[0], dEpsilon->get_size()[1]}));
+
+      _matrixQ->apply(dEpsilon, _polynomialRhs);
+
+      _polynomialSolver->apply(_polynomialRhs, _polynomialContribution);
+
+      // out -= poly
+      dOutput->sub_scaled(_scalarOne, _polynomialContribution);
+    }
+
+    _allocCopyEvent.start();
+    auto output = gko::clone(_hostExecutor, dOutput);
+    _allocCopyEvent.stop();
+
+    for (Eigen::Index i = 0; i < output->get_size()[0]; ++i) {
+      outmatrix(i, col) = output->at(i, 0);
+    }
   }
 
-  _allocCopyEvent.start();
-  auto output = gko::clone(_hostExecutor, dOutput);
-  _allocCopyEvent.stop();
-
-  Eigen::VectorXd result(output->get_size()[0], 1);
-
-  for (Eigen::Index i = 0; i < result.rows(); ++i) {
-    result(i, 0) = output->at(i, 0);
-  }
-
-  return result;
+  return outmatrix;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
