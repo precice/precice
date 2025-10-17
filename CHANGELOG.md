@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 3.3.0
+
+- Added CMake option `PRECICE_FEATURE_PROFILING_COMPRESSION` to optionally enable LZMA compression of the textual records of the profiling files. (https://github.com/precice/precice/pull/2328)
+- Added a clear error message when calling `advance(getMaxTimeStepSize())` on the participant that is supposed to provide the time-window size due to `<time-window-size method="first-participant"/>`. (https://github.com/precice/precice/pull/2347)
+- Added all coupling partners of `coupling-scheme:multi` to info statement in compositional coupling schemes. (https://github.com/precice/precice/pull/2353)
+- Added detailed CMake, compiler and linker information to the CMake configuration log. (https://github.com/precice/precice/pull/2282)
+- Added executables `precice-version`, `precice-config-validate`, and `precice-config-doc`. (https://github.com/precice/precice/pull/2312)
+- Added function to create a participant from Fortran with a custom communicator. (https://github.com/precice/precice/pull/2363)
+- Added implicit socket-based intra-comms for parallel participants in case preCICE is compiled without MPI. (https://github.com/precice/precice/pull/2336)
+- Added missing libraries for compilation on Windows. (https://github.com/precice/precice/pull/2280)
+- Added one retry in case opening of connection info files fails during communication buildup. (https://github.com/precice/precice/pull/2276)
+- Added option `<export:X update-series="true"/>` to enable keeping the series files of exporters updated after each time window instead of generating them at the end of the simulation. (https://github.com/precice/precice/pull/2272)
+- Added support for using `setMeshQuad` and `setMeshQuads` with 2D meshes. (https://github.com/precice/precice/pull/2364)
+- Added support for version `5.0.0` of Eigen. (https://github.com/precice/precice/pull/2366)
+- Added warning when an MPI communicator is passed to the Participant constructor, but preCICE was build without MPI. (https://github.com/precice/precice/pull/2365)
+- Changed Eigen detection to only using the CMake configuration files provided by the Eigen installation. (https://github.com/precice/precice/pull/2366)
+- Changed default profiling `mode="fundamental"` to only include steering methods. Use the new `mode="api"` to profile all API methods. (https://github.com/precice/precice/pull/2320)
+- Changed output of coupling scheme state in advance to be more compact. (https://github.com/precice/precice/pull/2325)
+- Changed profiling output format to a text based format, which is more space efficient than the JSON format. (https://github.com/precice/precice/pull/2328)
+- Deprecated the `precice-profiling` script in favor of the `precice-profiling` python package or the `precice-cli`. (https://github.com/precice/precice/pull/2317)
+- Deprecated the executable `precice-tools` in favor of `precice-version`, `precice-config-validate`, and `precice-config-doc`. (https://github.com/precice/precice/pull/2312)
+- Fixed Kokkos deallocation when solver initializes Kokkos instead of preCICE. (https://github.com/precice/precice/pull/2263)
+- Fixed QR3 filter of acceleration not falling back to QR2 for non-constant pre-scaling coefficients. (https://github.com/precice/precice/pull/2370)
+- Fixed `precice-profiling merge` mistakenly detecting non-precice json files such as solver or adapter configuration files. (https://github.com/precice/precice/pull/2298)
+- Fixed `setMeshTriangle` still creating edges instead of relying on the mesh preprocessing to generate required edges. (https://github.com/precice/precice/pull/2302)
+- Fixed `~Participant()` calling `std::abort()`, when coupling scheme expects a requirement. (https://github.com/precice/precice/pull/2352)
+- Fixed a bug in the Fortran bindings signature of `precicef_get_mesh_vertex_ids_and_coordinates_`. (https://github.com/precice/precice/pull/2316)
+- Fixed compatibility with boost.asio `1.89.0`. (https://github.com/precice/precice/pull/2351 and https://github.com/precice/precice/pull/2354)
+- Fixed coupling state info statement of compositional coupling schemes using newlines. (https://github.com/precice/precice/pull/2353)
+- Fixed error in configuration for a convergence measure of a multi coupling scheme using data that was exchanged, but not with the controller. (https://github.com/precice/precice/pull/2287)
+- Fixed incorrect declaration for Fortran `precicef_set_mesh_triangles_`. (https://github.com/precice/precice/pull/2293)
+- Fixed rounding errors computing time-window size to send to the second participant using `<time-window-size method="first-participant" />`. (https://github.com/precice/precice/pull/2344)
+- Fixed the use of the deprecated libxml2 header `libxml/SAX.h`, which leads to compile errors for libxml2 `2.14.0` and newer. (https://github.com/precice/precice/pull/2306)
+- Fixed user-defined `<intra-comm... />` leading to error when running participant in serial. (https://github.com/precice/precice/pull/2337)
+- Improved checks when using incorrectly configured JIT mappings. (https://github.com/precice/precice/pull/2309)
+- Improved error messages when requirement functions haven't been called when expected, namely `requiresInitialData()`, `requiresWritingCheckpoint()`, and `requiresReadingCheckpoint()`. (https://github.com/precice/precice/pull/2350)
+- Migrated `precice-profiling merge` to the sqlite intermediate output. (https://github.com/precice/precice/pull/2343)
+- Moved the generation of the test list to a separate target `precice-test-list`. Use `make testprecice precice-test-list` if you only want to run the tests. (https://github.com/precice/precice/pull/2310)
+- Removed all commands from `precice-profiling` except `merge`. (https://github.com/precice/precice/pull/2343)
+- Removed support for configuring preCICE as static library, which has been broken since version 3.0.0. (https://github.com/precice/precice/pull/2300)
+
 ## 3.2.0
 
 - Added initial data for time=0 in watch integrals and watch points. (https://github.com/precice/precice/pull/2181)
