@@ -349,10 +349,14 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
 
     // copy of input data to Eigen matrix format
     Eigen::MatrixXd in = Eigen::Map<Eigen::RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>(globalInValues.data(), _rbfSolver->getInputSize(), valueDim, Eigen::OuterStride(valueDim));
-    Eigen::RowMatrixXd out = _rbfSolver->solveConsistent(in, _polynomial); // copy to row major format
+    Eigen::MatrixXd out = _rbfSolver->solveConsistent(in, _polynomial); // copy to row major format
 
     // Copy mapped data to output data values
-    outData = Eigen::Map<Eigen::VectorXd>(out.data(), outValuesSize.at(0));
+    for (int i = 0; i < out.rows(); i++) {
+      for (int j = 0; j < out.cols(); j++) {
+        outData(i * out.cols() + j) = out(i, j);
+      }
+    }
 
     // Data scattering to secondary ranks
     int beginPoint = outValuesSize.at(0);
