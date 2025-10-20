@@ -1,5 +1,5 @@
 #pragma once
-#undef PRECICE_NO_GINKGO
+
 #ifndef PRECICE_NO_GINKGO
 
 #include <array>
