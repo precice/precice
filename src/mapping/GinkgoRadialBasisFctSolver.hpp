@@ -535,13 +535,13 @@ Eigen::MatrixXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
 {
   PRECICE_TRACE();
   // Copy rhs vector onto GPU by creating a Ginkgo Vector
-  Eigen::MatrixXd outmatrix(getOutputSize(), rhsValues.cols());
+  Eigen::MatrixXd outmatrix(getInputSize(), rhsValues.cols());
 
   for (int col = 0; col < rhsValues.cols(); col++) {
     auto rhs = gko::share(GinkgoVector::create(_hostExecutor, gko::dim<2>{static_cast<unsigned long>(rhsValues.rows()), 1}));
 
     for (Eigen::Index i = 0; i < rhsValues.rows(); ++i) {
-      rhs->at(i, 0) = rhsValues(i, 0);
+      rhs->at(i, 0) = rhsValues(i, col);
     }
 
     precice::profiling::Event _allocCopyEvent{"map.rbf.ginkgo.memoryAllocAndCopy"};
@@ -624,7 +624,7 @@ Eigen::MatrixXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConser
     auto output = gko::clone(_hostExecutor, dOutput);
     _allocCopyEvent.stop();
 
-    for (Eigen::Index i = 0; i < output->get_size()[0]; ++i) {
+    for (Eigen::Index i = 0; i < outmatrix.rows(); ++i) {
       outmatrix(i, col) = output->at(i, 0);
     }
   }
