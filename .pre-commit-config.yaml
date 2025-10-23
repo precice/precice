@@ -34,18 +34,17 @@ repos:
   hooks:
   - id: precice-config-format
     name: format preCICE configs
-    exclude: "^src/precice/tests/emptyconfig.xml"
+    exclude: "^(src/precice/tests/emptyconfig.xml|tests/config/empty.xml)"
 - repo: https://github.com/codespell-project/codespell
   rev: v2.4.1
   hooks:
     - id: codespell
       name: check spelling
       exclude: "^thirdparty"
-- repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: 0.33.2
+- repo: https://github.com/rhysd/actionlint
+  rev: v1.7.7
   hooks:
-    - id: check-github-workflows
-      args: ["--verbose"]
+    - id: actionlint
 - repo: local
   hooks:
   - id: update-cmake-sources

@@ -122,9 +122,9 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
       const auto &stamples = data->stamples();
       PRECICE_ASSERT(!stamples.empty());
 
-      int nTimeSteps = data->timeStepsStorage().nTimes();
+      int nTimeSteps = data->waveform().nTimes();
       PRECICE_ASSERT(nTimeSteps > 0);
-      const auto timesAscending = data->timeStepsStorage().getTimes();
+      const auto timesAscending = data->waveform().getTimes();
       sendTimes(m2n, timesAscending);
 
       const auto serialized = com::serialize::SerializedStamples::serialize(*data);
@@ -136,7 +136,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
         m2n->send(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * serialized.nTimeSteps());
       }
     } else {
-      const auto &sample = data->timeStepsStorage().getSampleAtEnd();
+      const auto &sample = data->waveform().getSampleAtEnd();
       if (data->hasGradient()) {
         // Data is only received on ranks with size>0, which is checked in the derived class implementation
         m2n->send(sample.values, data->getMeshID(), data->getDimensions());
@@ -269,7 +269,6 @@ void BaseCouplingScheme::setNextTimeWindowSize(double timeWindowSize)
 void BaseCouplingScheme::finalize()
 {
   PRECICE_TRACE();
-  checkCompletenessRequiredActions();
   PRECICE_ASSERT(_isInitialized, "Called finalize() before initialize().");
 }
 
@@ -457,6 +456,13 @@ bool BaseCouplingScheme::addComputedTime(
   PRECICE_TRACE(timeToAdd, getTime());
   PRECICE_ASSERT(isCouplingOngoing(), "Invalid call of addComputedTime() after simulation end.");
 
+  if (!hasTimeWindowSize()) {
+    PRECICE_CHECK(timeToAdd < std::numeric_limits<double>::max(),
+                  "advance() was called with the max value of double which is not allowed. "
+                  "As this participant prescribes the time-window size using <time-window-size method=\"first-participant\" />, directly using getMaxTimeStepSize() is not permitted. "
+                  "Make sure to pass your own desired time-step size or use the recommended limiting \"dt = min(solver_dt, getMaxTimeStepSize())\".");
+  }
+
   // Check validness
   bool valid = math::greaterEquals(getNextTimeStepMaxSize(), timeToAdd);
   PRECICE_CHECK(valid,
@@ -516,6 +522,11 @@ double BaseCouplingScheme::getTimeWindowStart() const
   return _time.windowStart();
 }
 
+double BaseCouplingScheme::getTimeWindowProgress() const
+{
+  return _time.windowProgress();
+}
+
 int BaseCouplingScheme::getTimeWindows() const
 {
   return _timeWindows;
@@ -572,83 +583,53 @@ void BaseCouplingScheme::requireAction(
 
 std::string BaseCouplingScheme::printCouplingState() const
 {
-  std::ostringstream os;
-  if (isCouplingOngoing()) {
-    os << "iteration: " << _iterations; //_iterations;
-    if ((_maxIterations != UNDEFINED_MAX_ITERATIONS) && (_maxIterations != INFINITE_MAX_ITERATIONS)) {
-      os << " of " << _maxIterations;
-    }
-    if (_minIterations != UNDEFINED_MIN_ITERATIONS) {
-      os << " (min " << _minIterations << ")";
-    }
-    os << ", ";
+  if (!isCouplingOngoing()) {
+    return fmt::format("Reached end at: final time-window: {}, final time: {}", (_timeWindows - 1), getTime());
   }
-  os << printBasicState(_timeWindows, getTime());
-  std::string actionsState = printActionsState();
-  if (!actionsState.empty()) {
-    os << ", " << actionsState;
-  }
-  return os.str();
-}
+  std::string str;
+  auto        out = std::back_inserter(str);
 
-std::string BaseCouplingScheme::printBasicState(
-    int    timeWindows,
-    double time) const
-{
-  std::ostringstream os;
-  if (isCouplingOngoing()) {
-    os << "time-window: " << timeWindows;
-    if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
-      os << " of " << _maxTimeWindows;
-    }
-    os << ", time: " << time;
-    if (_maxTime != UNDEFINED_MAX_TIME) {
-      os << " of " << _maxTime;
-    }
-    if (hasTimeWindowSize()) {
-      os << ", time-window-size: " << _timeWindowSize;
-    }
-    if (hasTimeWindowSize() || (_maxTime != UNDEFINED_MAX_TIME)) {
-      os << ", max-time-step-size: " << getNextTimeStepMaxSize();
-    }
-    os << ", ongoing: ";
-    isCouplingOngoing() ? os << "yes" : os << "no";
-    os << ", time-window-complete: ";
-    _isTimeWindowComplete ? os << "yes" : os << "no";
-  } else {
-    os << "Reached end at: final time-window: " << (timeWindows - 1) << ", final time: " << time;
-  }
-  return os.str();
-}
+  if (isImplicitCouplingScheme()) {
+    auto hasMax = (_maxIterations != UNDEFINED_MAX_ITERATIONS) && (_maxIterations != INFINITE_MAX_ITERATIONS);
+    auto hasMin = _minIterations != UNDEFINED_MIN_ITERATIONS;
 
-std::string BaseCouplingScheme::printActionsState() const
-{
-  std::ostringstream os;
-  for (auto action : _requiredActions) {
-    os << toString(action) << ' ';
+    if (hasMax && hasMin) {
+      fmt::format_to(out, "it {} (min: {}, max: {}), ", _iterations, _minIterations, _maxIterations);
+    } else if (hasMax) {
+      fmt::format_to(out, "it {} (max: {}), ", _iterations, _maxIterations);
+    } else if (hasMin) {
+      fmt::format_to(out, "it {} (min: {}), ", _iterations, _minIterations);
+    } else {
+      fmt::format_to(out, "it {}, ", _iterations);
+    }
   }
-  return os.str();
+
+  fmt::format_to(out, "time-window {}", _timeWindows);
+  if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
+    fmt::format_to(out, " (max: {})", _maxTimeWindows);
+  }
+  fmt::format_to(out, ", t {}", getTime());
+  if (_maxTime != UNDEFINED_MAX_TIME) {
+    fmt::format_to(out, " (max: {})", _maxTime);
+  }
+  if (hasTimeWindowSize()) {
+    fmt::format_to(out, ", Dt {}, max-dt {}", _timeWindowSize, getNextTimeStepMaxSize());
+  }
+  return str;
 }
 
 void BaseCouplingScheme::checkCompletenessRequiredActions()
 {
   PRECICE_TRACE();
-  std::vector<Action> missing;
-  std::set_difference(_requiredActions.begin(), _requiredActions.end(),
-                      _fulfilledActions.begin(), _fulfilledActions.end(),
-                      std::back_inserter(missing));
-  if (not missing.empty()) {
-    std::ostringstream stream;
-    for (auto action : missing) {
-      if (not stream.str().empty()) {
-        stream << ", ";
-      }
-      stream << toString(action);
-    }
-    PRECICE_ERROR("The required actions {} are not fulfilled. "
-                  "Did you forget to call \"requiresReadingCheckpoint()\" or \"requiresWritingCheckpoint()\"?",
-                  stream.str());
-  }
+  PRECICE_CHECK(_requiredActions.count(CouplingScheme::Action::InitializeData) == 0 || _fulfilledActions.count(CouplingScheme::Action::InitializeData) == 1,
+                "Data was not initialized. Did you forget to call \"requiresWritingData()\"?");
+
+  PRECICE_CHECK(_requiredActions.count(CouplingScheme::Action::ReadCheckpoint) == 0 || _fulfilledActions.count(CouplingScheme::Action::ReadCheckpoint) == 1,
+                "The iteration checkpoint wasn't read. Did you forget to call \"requiresReadingCheckpoint()\"?");
+
+  PRECICE_CHECK(_requiredActions.count(CouplingScheme::Action::WriteCheckpoint) == 0 || _fulfilledActions.count(CouplingScheme::Action::WriteCheckpoint) == 1,
+                "The iteration checkpoint wasn't written. Did you forget to call \"requiresWritingCheckpoint()\"?");
+
   _requiredActions.clear();
   _fulfilledActions.clear();
 }
