@@ -229,6 +229,7 @@ void ReceivedPartition::compute()
   // (7) Compute vertex offsets
   PRECICE_DEBUG("Compute vertex offsets");
   if (utils::IntraComm::isSecondary()) {
+    Event e7("partition.computeVertexOffsets." + _mesh->getName(), profiling::Synchronize);
 
     // send number of vertices
     PRECICE_DEBUG("Send number of vertices: {}", _mesh->nVertices());
