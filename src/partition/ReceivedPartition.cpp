@@ -158,7 +158,7 @@ void ReceivedPartition::compute()
 
   // (5) Filter mesh according to tag
   PRECICE_INFO("Filter mesh {} by mappings", _mesh->getName());
-  Event      e5("partition.filterMeshMappings" + _mesh->getName(), profiling::Synchronize);
+  Event      e5("partition.filterMeshMappings." + _mesh->getName(), profiling::Synchronize);
   mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
   mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return v.isTagged(); });
   PRECICE_DEBUG("Mapping filter, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
