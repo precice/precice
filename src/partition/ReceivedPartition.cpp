@@ -601,6 +601,7 @@ void ReceivedPartition::createOwnerInformation()
     5- for the remaining vertices: check if we have less vertices -> own it!
     */
 
+    Event e1("partition.createOwnerInformation." + _mesh->getName() + ".1");
     // #1: receive local bb map from primary rank
     // Define and initialize localBBMap to save local bbs
 
@@ -644,6 +645,9 @@ void ReceivedPartition::createOwnerInformation()
       com::broadcastReceiveBoundingBoxMap(*utils::IntraComm::getCommunication(), localBBMap);
     }
 
+    e1.stop();
+    Event e2("partition.createOwnerInformation." + _mesh->getName() + ".2");
+
     // #2: filter bb map to keep the connected ranks
     // remove the own bb from the map since we compare the own bb only with other ranks bb.
     localBBMap.erase(utils::IntraComm::getRank());
@@ -661,6 +665,9 @@ void ReceivedPartition::createOwnerInformation()
     // See also test Integration/Parallel/TestBoundingBoxInitializationEmpty
     for (auto &neighborRank : localConnectedBBMap)
       sharedVerticesSendMap[neighborRank.first] = std::vector<VertexID>();
+
+    e2.stop();
+    Event e3("partition.createOwnerInformation." + _mesh->getName() + ".3");
 
     // #3: check vertices and keep only those that fit into the current rank's bb
     const int numberOfVertices = _mesh->nVertices();
@@ -690,6 +697,9 @@ void ReceivedPartition::createOwnerInformation()
         tags[i] = 0;
       }
     }
+
+    e3.stop();
+    Event e4("partition.createOwnerInformation." + _mesh->getName() + ".4");
 
     // #4: Exchange number of already owned vertices with the neighbors
 
@@ -747,6 +757,9 @@ void ReceivedPartition::createOwnerInformation()
       rqst->wait();
     }
 
+    e4.stop();
+    Event e5("partition.createOwnerInformation." + _mesh->getName() + ".5");
+
     // #5: Second round assignment according to the number of owned vertices
     // In case that a vertex can be shared between two ranks, the rank with lower
     // vertex count will own the vertex.
@@ -775,6 +788,8 @@ void ReceivedPartition::createOwnerInformation()
     setOwnerInformation(tags);
     PRECICE_DEBUG("{} of {} vertices of mesh {} have been filtered out on rank {} since they have no influence on the mapping.",
                   std::count(tags.begin(), tags.end(), 0), tags.size(), _mesh->getName(), utils::IntraComm::getRank());
+
+    e5.stop();
     // end of two-level initialization section
   } else {
     if (utils::IntraComm::isSecondary()) {
