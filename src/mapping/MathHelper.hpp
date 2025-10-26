@@ -74,7 +74,8 @@ inline Eigen::Matrix<T, -1, -1> invertLowerTriangularBlockwise(const Eigen::Matr
  * @brief For C = LL^T, compute the diagonal entries of the inverse kernel matrix.
  * @param decMatrixC Cholesky decomposition of the kernel matrix.
  */
-inline Eigen::VectorXd computeInverseDiagonal(const Eigen::LLT<Eigen::MatrixXd> &decMatrixC)
+template <typename MatrixType>
+inline Eigen::VectorXd computeInverseDiagonal(const Eigen::LLT<MatrixType> &decMatrixC)
 {
   // 1. Compute the diagonal entries of the inverse kernel matrix:
   // We already have the Cholesky decomposition. So instead of solving for the
@@ -111,7 +112,8 @@ inline Eigen::VectorXd computeInverseDiagonal(const Eigen::LLT<Eigen::MatrixXd> 
  * @brief For C = QR, compute the diagonal entries of the inverse kernel matrix.
  * @param decMatrixC QR decomposition of the kernel matrix.
  */
-inline Eigen::VectorXd computeInverseDiagonal(const Eigen::ColPivHouseholderQR<Eigen::MatrixXd> &decMatrixC)
+template <typename MatrixType>
+inline Eigen::VectorXd computeInverseDiagonal(const Eigen::ColPivHouseholderQR<MatrixType> &decMatrixC)
 {
   // 1. Compute the diagonal entries of the inverse kernel matrix:
   // We could use
@@ -161,8 +163,12 @@ inline Eigen::VectorXd computeInverseDiagonal(const Eigen::ColPivHouseholderQR<E
 template <typename DecompositionType>
 double computeRippaLOOCVerror(const DecompositionType &choleskyDec, const Eigen::VectorXd &inputData)
 {
-  static_assert(std::is_same_v<DecompositionType, Eigen::LLT<Eigen::MatrixXd>> || std::is_same_v<DecompositionType, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>,
-                "computeRippaLOOCVerror() only allows DecompositionType to be Eigen::LLT<Eigen::MatrixXd>> or Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>");
+  constexpr bool isQRDecompositionType = std::is_same_v<DecompositionType, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>
+    || std::is_same_v<DecompositionType, Eigen::ColPivHouseholderQR<Eigen::Ref<Eigen::MatrixXd>>>;
+  constexpr bool isLLTDecompositionType = std::is_same_v<DecompositionType, Eigen::LLT<Eigen::MatrixXd>>
+    || std::is_same_v<DecompositionType, Eigen::LLT<Eigen::Ref<Eigen::MatrixXd>>>;
+
+  static_assert(isQRDecompositionType || isLLTDecompositionType);
 
   if (choleskyDec.info() != Eigen::ComputationInfo::Success) {
     return std::numeric_limits<double>::quiet_NaN();
