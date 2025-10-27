@@ -234,6 +234,7 @@ void ProvidedPartition::compute()
   PRECICE_TRACE();
   for (const auto &m2n : _m2ns) {
     if (m2n->usesTwoLevelInitialization()) {
+	    Event e("computeProvidedPartition.twoLevelInitialization");
       // @todo this will probably not work for more than one m2n
       PRECICE_ASSERT(_m2ns.size() <= 1);
       // receive communication map from all remote connected ranks

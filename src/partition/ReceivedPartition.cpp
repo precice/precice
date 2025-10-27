@@ -288,6 +288,7 @@ auto errorMeshFilteredOut(const std::string &meshName, const int rank)
 void ReceivedPartition::filterByBoundingBox()
 {
   PRECICE_TRACE(static_cast<int>(_geometricFilter));
+  Event e("partition.filterByBoundingBox." + _mesh->getName(), profiling::Synchronize);
 
   if (m2n().usesTwoLevelInitialization()) {
     std::string msg = "The received mesh " + _mesh->getName() +
@@ -514,6 +515,7 @@ void ReceivedPartition::compareBoundingBoxes()
 void ReceivedPartition::prepareBoundingBox()
 {
   PRECICE_TRACE(_safetyFactor);
+  Event e("partition.prepareBoundingBox." + _mesh->getName());
 
   if (_boundingBoxPrepared)
     return;
@@ -965,6 +967,8 @@ bool ReceivedPartition::hasAnyMapping() const
 
 void ReceivedPartition::tagMeshFirstRound()
 {
+  Event e("partition.tagMeshFirstRound." + _mesh->getName(), profiling::Synchronize);
+
   // We want to have every vertex within user-definded bounding box if we access the mesh directly
   if (_allowDirectAccess) {
     // _mesh->getBoundingBox is based on the bounding box of the mesh, which is
@@ -992,6 +996,8 @@ void ReceivedPartition::tagMeshFirstRound()
 
 void ReceivedPartition::tagMeshSecondRound()
 {
+  Event e("partition.tagMeshSecondRound." + _mesh->getName(), profiling::Synchronize);
+
   for (const mapping::PtrMapping &fromMapping : _fromMappings) {
     fromMapping->tagMeshSecondRound();
   }
