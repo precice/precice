@@ -192,17 +192,17 @@ private:
   const std::string ATTR_SUPPORT_RADIUS = "support-radius";
 
   // Attributes for geometric multiscale
-  const std::string ATTR_GEOMETRIC_MULTISCALE_TYPE            = "multiscale-type";
-  const std::string ATTR_GEOMETRIC_MULTISCALE_AXIS            = "multiscale-axis";
-  const std::string ATTR_GEOMETRIC_MULTISCALE_RADIUS          = "multiscale-radius";
-  const std::string ATTR_GEOMETRIC_MULTISCALE_SPREAD_PROFILE  = "spread-profile";
-  const std::string GEOMETRIC_MULTISCALE_TYPE_SPREAD          = "spread";
-  const std::string GEOMETRIC_MULTISCALE_TYPE_COLLECT         = "collect";
-  const std::string GEOMETRIC_MULTISCALE_AXIS_X               = "x";
-  const std::string GEOMETRIC_MULTISCALE_AXIS_Y               = "y";
-  const std::string GEOMETRIC_MULTISCALE_AXIS_Z               = "z";
-  const std::string GEOMETRIC_MULTISCALE_SPREAD_PARABOLIC     = "parabolic";
-  const std::string GEOMETRIC_MULTISCALE_SPREAD_UNIFORM       = "uniform";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_TYPE           = "multiscale-type";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_AXIS           = "multiscale-axis";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_RADIUS         = "multiscale-radius";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_SPREAD_PROFILE = "spread-profile";
+  const std::string GEOMETRIC_MULTISCALE_TYPE_SPREAD         = "spread";
+  const std::string GEOMETRIC_MULTISCALE_TYPE_COLLECT        = "collect";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_X              = "x";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_Y              = "y";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_Z              = "z";
+  const std::string GEOMETRIC_MULTISCALE_SPREAD_PARABOLIC    = "parabolic";
+  const std::string GEOMETRIC_MULTISCALE_SPREAD_UNIFORM      = "uniform";
 
   // For iterative RBFs using Ginkgo
   const std::string SUBTAG_EXECUTOR = "executor";

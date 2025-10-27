@@ -248,9 +248,9 @@ MappingConfiguration::MappingConfiguration(
   auto attrGeoMultiscaleRadius = XMLAttribute<double>(ATTR_GEOMETRIC_MULTISCALE_RADIUS)
                                      .setDocumentation("Radius of the circular interface between the 1D and 3D participant.");
   auto attrSpreadProfile = XMLAttribute<std::string>(ATTR_GEOMETRIC_MULTISCALE_SPREAD_PROFILE)
-                              .setDocumentation("Velocity radial profile when spreading from 1D to 3D: 'uniform' (turbulent-like) or 'parabolic' (laminar).")
-                              .setOptions({GEOMETRIC_MULTISCALE_SPREAD_UNIFORM, GEOMETRIC_MULTISCALE_SPREAD_PARABOLIC})
-                              .setDefaultValue(GEOMETRIC_MULTISCALE_SPREAD_PARABOLIC);
+                               .setDocumentation("Velocity radial profile when spreading from 1D to 3D: 'uniform' (turbulent-like) or 'parabolic' (laminar).")
+                               .setOptions({GEOMETRIC_MULTISCALE_SPREAD_UNIFORM, GEOMETRIC_MULTISCALE_SPREAD_PARABOLIC})
+                               .setDefaultValue(GEOMETRIC_MULTISCALE_SPREAD_PARABOLIC);
 
   // Add the relevant attributes to the relevant tags
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
