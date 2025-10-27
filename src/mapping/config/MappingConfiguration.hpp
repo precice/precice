@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "logging/Logger.hpp"
+#include "mapping/CoarseGrainingMapping.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfigurationTypes.hpp"
@@ -134,6 +135,7 @@ private:
   const std::string TYPE_RBF_GLOBAL_ITERATIVE        = "rbf-global-iterative";
   const std::string TYPE_RBF_PUM_DIRECT              = "rbf-pum-direct";
   const std::string TYPE_RBF_ALIAS                   = "rbf";
+  const std::string TYPE_COARSE_GRAINING             = "coarse-graining";
   const std::string TYPE_AXIAL_GEOMETRIC_MULTISCALE  = "axial-geometric-multiscale";
   const std::string TYPE_RADIAL_GEOMETRIC_MULTISCALE = "radial-geometric-multiscale";
 
@@ -162,6 +164,10 @@ private:
 
   // For iterative RBFs
   const std::string ATTR_SOLVER_RTOL = "solver-rtol";
+
+  // For coarse graining
+  const std::string ATTR_GRAIN_DIMENSION = "grain-dim";
+  const std::string ATTR_FUNCTION_RADIUS = "function-radius";
 
   // For the future
   // const std::string ATTR_PARALLELISM           = "parallelism";
@@ -261,6 +267,8 @@ private:
       const std::string &type,
       const std::string &fromMeshName,
       const std::string &toMeshName,
+      const int          grainDimension,
+      const double       cgRange,
       const std::string &geoMultiscaleType,
       const std::string &geoMultiscaleAxis,
       const double      &multiscaleRadius) const;

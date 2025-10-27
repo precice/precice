@@ -194,6 +194,9 @@ MappingConfiguration::MappingConfiguration(
       XMLTag{*this, TYPE_RBF_PUM_DIRECT, occ, TAG}.setDocumentation("Radial-basis-function mapping using a partition of unity method, which supports a distributed parallelism.")};
   std::list<XMLTag> rbfAliasTag{
       XMLTag{*this, TYPE_RBF_ALIAS, occ, TAG}.setDocumentation("Alias tag, which auto-selects a radial-basis-function mapping depending on the simulation parameter,")};
+  std::list<XMLTag> coarseGrainingTags{
+      XMLTag{*this, TYPE_COARSE_GRAINING, occ, TAG}.setDocumentation("Coarse graining specifically designed for particle-mesh coupling to write data from the particles to the mesh. The mapping transforms an extensive quantity (e.g., volume, force) into an intensive quantity (e.g., porosity, force-density). "
+                                                                     " Currently implemented as just-in-time mapping. Although the constraint does not really fit here (the input is conservative, the output not), we classify it as \"conservative\" for the configuration.")};
   std::list<XMLTag> geoMultiscaleTags{
       XMLTag{*this, TYPE_AXIAL_GEOMETRIC_MULTISCALE, occ, TAG}.setDocumentation("Axial geometric multiscale mapping between one 1D and multiple 3D vertices."),
       XMLTag{*this, TYPE_RADIAL_GEOMETRIC_MULTISCALE, occ, TAG}.setDocumentation("Radial geometric multiscale mapping between multiple 1D and multiple 3D vertices, distributed along a principle axis.")};
@@ -226,6 +229,11 @@ MappingConfiguration::MappingConfiguration(
                                .setDocumentation("Toggles use a local (per cluster) polynomial")
                                .setOptions({POLYNOMIAL_OFF, POLYNOMIAL_SEPARATE});
 
+  auto attrGrainDimension = makeXMLAttribute<int>(ATTR_GRAIN_DIMENSION, 0)
+                                .setDocumentation("Dimension to use in the coarse-graining function.");
+  auto attrFunctionRadius = makeXMLAttribute<double>(ATTR_FUNCTION_RADIUS, 0.)
+                                .setDocumentation("Radius or range of the coarsening function (Lucy function).");
+
   auto attrSolverRtol = makeXMLAttribute(ATTR_SOLVER_RTOL, 1e-9)
                             .setDocumentation("Solver relative tolerance for convergence");
   // TODO: Discuss whether we wanto to introduce this attribute
@@ -254,6 +262,7 @@ MappingConfiguration::MappingConfiguration(
   addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol});
   addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, verticesPerCluster, relativeOverlap, projectToInput});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
+  addAttributes(coarseGrainingTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGrainDimension, attrFunctionRadius});
   addAttributes(geoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius});
 
   // Now we take care of the subtag executor. We repeat some of the subtags in order to add individual documentation
@@ -359,6 +368,7 @@ MappingConfiguration::MappingConfiguration(
   parent.addSubtags(rbfDirectTags);
   parent.addSubtags(pumDirectTags);
   parent.addSubtags(rbfAliasTag);
+  parent.addSubtags(coarseGrainingTags);
   parent.addSubtags(geoMultiscaleTags);
 }
 
@@ -399,11 +409,13 @@ void MappingConfiguration::xmlTagCallback(
     // optional tags
     // We set here default values, but their actual value doesn't really matter.
     // It's just for the mapping methods, which do not use these attributes at all.
-    bool        xDead         = tag.getBooleanAttributeValue(ATTR_X_DEAD, false);
-    bool        yDead         = tag.getBooleanAttributeValue(ATTR_Y_DEAD, false);
-    bool        zDead         = tag.getBooleanAttributeValue(ATTR_Z_DEAD, false);
-    double      solverRtol    = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL, 1e-9);
-    std::string strPolynomial = tag.getStringAttributeValue(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
+    bool        xDead          = tag.getBooleanAttributeValue(ATTR_X_DEAD, false);
+    bool        yDead          = tag.getBooleanAttributeValue(ATTR_Y_DEAD, false);
+    bool        zDead          = tag.getBooleanAttributeValue(ATTR_Z_DEAD, false);
+    int         grainDimension = tag.getIntAttributeValue(ATTR_GRAIN_DIMENSION, 0);
+    double      functionRadius = tag.getDoubleAttributeValue(ATTR_FUNCTION_RADIUS, 0.);
+    double      solverRtol     = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL, 1e-9);
+    std::string strPolynomial  = tag.getStringAttributeValue(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
 
     // geometric multiscale related tags
     std::string geoMultiscaleType = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_TYPE, "");
@@ -440,7 +452,7 @@ void MappingConfiguration::xmlTagCallback(
       PRECICE_UNREACHABLE("Unknown mapping constraint \"{}\".", constraint);
     }
 
-    ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh, geoMultiscaleType, geoMultiscaleAxis, multiscaleRadius);
+    ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh, grainDimension, functionRadius, geoMultiscaleType, geoMultiscaleAxis, multiscaleRadius);
 
     _rbfConfig = configureRBFMapping(type, strPolynomial, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
@@ -544,6 +556,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     const std::string &type,
     const std::string &fromMeshName,
     const std::string &toMeshName,
+    const int          grainDimension,
+    const double       functionRadius,
     const std::string &geoMultiscaleType,
     const std::string &geoMultiscaleAxis,
     const double      &multiscaleRadius) const
@@ -580,10 +594,10 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
                 toMeshName);
 
   PRECICE_CHECK((!toMesh->isJustInTime() && !fromMesh->isJustInTime()) ||
-                    ((toMesh->isJustInTime() || fromMesh->isJustInTime()) && (type == TYPE_NEAREST_NEIGHBOR || type == TYPE_RBF_PUM_DIRECT || type == TYPE_RBF_ALIAS)),
+                    ((toMesh->isJustInTime() || fromMesh->isJustInTime()) && (type == TYPE_NEAREST_NEIGHBOR || type == TYPE_RBF_PUM_DIRECT || type == TYPE_RBF_ALIAS || type == TYPE_COARSE_GRAINING)),
                 "A just-in-time mapping was configured from mesh \"{}\" to mesh \"{}\" using \"mapping:{}\", which is currently not implemented. "
-                "Available mapping types are \"mapping:{}\", \"mapping:{}\" and \"mapping:{}\".",
-                fromMesh->getName(), toMesh->getName(), type, TYPE_NEAREST_NEIGHBOR, TYPE_RBF_ALIAS, TYPE_RBF_PUM_DIRECT);
+                "Available mapping types are \"mapping:{}\", \"mapping:{}\", \"mapping:{}\" and  \"mapping:{}\".",
+                fromMesh->getName(), toMesh->getName(), type, TYPE_NEAREST_NEIGHBOR, TYPE_RBF_ALIAS, TYPE_RBF_PUM_DIRECT, TYPE_COARSE_GRAINING);
 
   // Check for compatible mesh dimensions
   PRECICE_CHECK(fromMesh->getDimensions() == toMesh->getDimensions(),
@@ -610,6 +624,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     configuredMapping.mapping = PtrMapping(new NearestProjectionMapping(constraintValue, fromMesh->getDimensions()));
   } else if (type == TYPE_LINEAR_CELL_INTERPOLATION) {
     configuredMapping.mapping = PtrMapping(new LinearCellInterpolationMapping(constraintValue, fromMesh->getDimensions()));
+  } else if (type == TYPE_COARSE_GRAINING) {
+    configuredMapping.mapping = PtrMapping(new CoarseGrainingMapping(constraintValue, fromMesh->getDimensions(), grainDimension, functionRadius));
   } else if (type == TYPE_NEAREST_NEIGHBOR_GRADIENT) {
 
     // NNG is not applicable with the conservative constraint
