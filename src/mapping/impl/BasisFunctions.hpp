@@ -60,6 +60,11 @@ struct CompactSupportBase {
   {
     return true;
   }
+
+  static constexpr double requiresRadiusToShapeConversion()
+  {
+    return false;
+  }
 };
 
 /// Base class for RBF without compact support
@@ -286,6 +291,16 @@ public:
   {
     return _params;
   };
+
+  static constexpr double requiresRadiusToShapeConversion()
+  {
+    return true;
+  }
+
+  static double transformRadiusToShape(const double radius)
+  {
+      return std::sqrt(-std::log(cutoffThreshold)) / radius;
+  }
 
 public:
   /// Below that value the function is supposed to be zero. Defines the support radius if not explicitly given
@@ -617,37 +632,6 @@ private:
   RadialBasisParameters _params;
 };
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-struct RadiusInitialization {
-
-private:
-  template <typename T, typename U = void>
-  static constexpr bool definesCutoffThreshold = false;
-
-public:
-  static constexpr bool requiresConversion()
-  {
-    return definesCutoffThreshold<RADIAL_BASIS_FUNCTION_T>;
-  }
-
-  static constexpr bool isAvailable()
-  {
-    return RADIAL_BASIS_FUNCTION_T::hasCompactSupport() || definesCutoffThreshold<RADIAL_BASIS_FUNCTION_T>;
-  }
-
-  static double transformRadiusToShape(const double radius)
-  {
-    if constexpr (requiresConversion()) {
-      return std::sqrt(-std::log(RADIAL_BASIS_FUNCTION_T::cutoffThreshold)) / radius;
-    } else {
-      return radius;
-    }
-  }
-};
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-template <typename T>
-constexpr bool RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::definesCutoffThreshold<T, std::void_t<decltype(T::cutoffThreshold)>> = true; // SFINAE specialization
 
 #undef PRECICE_FMA
 #undef PRECICE_LOG

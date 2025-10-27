@@ -509,7 +509,7 @@ void MappingConfiguration::xmlTagCallback(
                     ATTR_SUPPORT_RADIUS, ATTR_SHAPE_PARAM);
 
       if (std::isfinite(supportRadius) && !std::isfinite(shapeParameter)) {
-        shapeParameter = RadiusInitialization<Gaussian>::transformRadiusToShape(supportRadius);
+        shapeParameter = Gaussian::transformRadiusToShape(supportRadius);
       }
     }
 

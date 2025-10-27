@@ -330,7 +330,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   fillMatrixCLU(_decMatrixCoefficients, basisFunction, inputMesh, inputIDs, _activeAxis, polynomial);
   _decMatrixC.compute(_decMatrixCoefficients);
 
-  if (_tuningConfig.autotuneShape && RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::isAvailable()) {
+  if (_tuningConfig.autotuneShape && RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) {
     _tuner = std::make_unique<BisectionRBFTuner<RadialBasisFctSolver>>(*inputMesh.get());
   } else {
     fillMatrixCLU(_decMatrixCoefficients, basisFunction, inputMesh, inputIDs, _activeAxis, polynomial);
@@ -435,19 +435,14 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative
 template <typename RADIAL_BASIS_FUNCTION_T>
 inline auto applyKernelToMatrix(const Eigen::Ref<const Eigen::MatrixXd> &matrixExpr, double sampleRadius)
 {
-  std::function<double(double)> expr;
-  if constexpr (RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::isAvailable()) {
-    double parameter = sampleRadius;
-    if constexpr (RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::requiresConversion()) {
-      parameter = RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::transformRadiusToShape(sampleRadius);
-    }
-    RADIAL_BASIS_FUNCTION_T kernel(parameter);
-    expr = [kernel](double x) { return kernel.evaluate(x); };
-  } else {
-    PRECICE_ASSERT(false, "Selected RBF does not support a radius.");
-    expr = [](double x) { return x; };
+  static_assert(RADIAL_BASIS_FUNCTION_T::hasCompactSupport(), "Selected RBF does not support a radius.");
+
+  double parameter = sampleRadius;
+  if constexpr (RADIAL_BASIS_FUNCTION_T::requiresRadiusToShapeConversion()) {
+    parameter = RADIAL_BASIS_FUNCTION_T::transformRadiusToShape(sampleRadius);
   }
-  return matrixExpr.unaryExpr(expr);
+  RADIAL_BASIS_FUNCTION_T kernel(parameter);
+  return matrixExpr.unaryExpr([kernel](double x) { return kernel.evaluate(x); });
 }
 
 // @todo: change the signature to Eigen::MatrixXd and process all components at once, the solve function of eigen can handle that
@@ -464,12 +459,12 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   }
 
   if (_tuningConfig.autotuneShape) {
+    if constexpr (RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) {
     // @todo: Data dimension not considered
     const bool optimizeThisIteration = _lastTuningError < 1e-15 || (_tuningConfig.iterationInterval == _iterSinceOptimization);
 
-    // @todo: Add error criterion.
-    if (optimizeThisIteration) {
-      if constexpr (RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::isAvailable()) {
+      // @todo: Add error criterion.
+      if (optimizeThisIteration) {
         auto [radius, error] = _tuner->optimize(*this, inputIDs, inputData);
         _optimizedRadius     = radius;
         _lastTuningError     = error;
@@ -477,13 +472,14 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
           rebuildKernelDecomposition(inputIDs, _optimizedRadius);
         }
         PRECICE_INFO("Using: radius={}, LOOCV={}", _optimizedRadius, error);
+        _iterSinceOptimization = 1;
       } else {
-        PRECICE_ASSERT(false, "Not supported.");
+        PRECICE_INFO("Using radius={} again", _optimizedRadius);
+        _iterSinceOptimization++;
       }
-      _iterSinceOptimization = 1;
     } else {
-      PRECICE_INFO("Using radius={} again", _optimizedRadius);
-      _iterSinceOptimization++;
+      // Should not happen, since an error will already be thrown in the configuration.
+      PRECICE_ERROR("Parameter optimization is not available for RBFs without a \"support-radius\" configuration.");
     }
   }
 
@@ -499,13 +495,18 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
 
   Eigen::VectorXd out;
   if (_tuningConfig.autotuneShape) {
-    const int outSize    = _matrixA.rows();
-    const int inSize     = inputData.size();
-    const int polyParams = _matrixA.cols() - inSize;
+    if constexpr (RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) {
+      const int outSize    = _matrixA.rows();
+      const int inSize     = inputData.size();
+      const int polyParams = _matrixA.cols() - inSize;
 
-    // not yet necessary: integrated polynomial is only supported for SPD functions
-    out = applyKernelToMatrix<RADIAL_BASIS_FUNCTION_T>(_matrixA.block(0, 0, outSize, inSize), _optimizedRadius) * p.segment(0, inSize);
-    out += _matrixA.block(0, inSize, outSize, polyParams) * p.segment(inSize, polyParams);
+      // not yet necessary: integrated polynomial is only supported for SPD functions
+      out = applyKernelToMatrix<RADIAL_BASIS_FUNCTION_T>(_matrixA.block(0, 0, outSize, inSize), _optimizedRadius) * p.segment(0, inSize);
+      out += _matrixA.block(0, inSize, outSize, polyParams) * p.segment(inSize, polyParams);
+    } else {
+      // Should not happen, since an error will already be thrown in the configuration.
+      PRECICE_ERROR("Parameter optimization is not available for RBFs without a \"support-radius\" configuration.");
+    }
   } else {
     out = _matrixA * p;
   }
@@ -521,16 +522,14 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexConatiner>
 void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::rebuildKernelDecomposition(const IndexConatiner &inputIds, double parameter) const
 {
-  if constexpr (RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::isAvailable()) {
-    if constexpr (RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::requiresConversion()) {
-      parameter = RadiusInitialization<RADIAL_BASIS_FUNCTION_T>::transformRadiusToShape(parameter);
-    }
-    RADIAL_BASIS_FUNCTION_T kernel(parameter);
-    fillMatrixCLU(_decMatrixCoefficients, kernel, _inputMesh, inputIds, _activeAxis, _polynomial);
-    _decMatrixC.compute(_decMatrixCoefficients);
-    return;
+  static_assert(RADIAL_BASIS_FUNCTION_T::hasCompactSupport(), "RBF does not support a radius-initialization and was still used to instantiate an optimizer.");
+
+  if constexpr (RADIAL_BASIS_FUNCTION_T::requiresRadiusToShapeConversion()) {
+    parameter = RADIAL_BASIS_FUNCTION_T::transformRadiusToShape(parameter);
   }
-  PRECICE_UNREACHABLE("RBF does not support a radius-initialization and was still used to instantiate an optimizer.");
+  RADIAL_BASIS_FUNCTION_T kernel(parameter);
+  fillMatrixCLU(_decMatrixCoefficients, kernel, _inputMesh, inputIds, _activeAxis, _polynomial);
+  _decMatrixC.compute(_decMatrixCoefficients);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

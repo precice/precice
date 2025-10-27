@@ -50,7 +50,7 @@ public:
 template <typename Solver>
 RBFParameterTuner<Solver>::RBFParameterTuner(const mesh::Mesh &inputMesh)
 {
-  constexpr bool radiusRBF = RadiusInitialization<typename Solver::BASIS_FUNCTION_T>::isAvailable();
+  constexpr bool radiusRBF = Solver::BASIS_FUNCTION_T::hasCompactSupport();
   PRECICE_ASSERT(radiusRBF, "RBF is not supported by this optimizer, as it does not accept a support-radius."
                             "Currently supported: Compactly supported RBFs and Gaussians.");
 
