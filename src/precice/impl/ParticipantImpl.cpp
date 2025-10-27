@@ -1615,19 +1615,19 @@ void ParticipantImpl::computePartitions()
   Event e3("computePartitions.2");
 
   for (MeshContext *meshContext : contexts) {
-	Event e4("computeMeshContext." + meshContext->mesh->getName());
-	Event e5("computePartition");
+	  Event e4("computeMeshContext." + meshContext->mesh->getName());
+	  Event e5("computePartition");
 
     meshContext->partition->compute();
 
-	e5.stop();
-	Event e6("computeBoundingBox");
+	  e5.stop();
+	  Event e6("computeBoundingBox");
 
     if (not meshContext->provideMesh) { // received mesh can only compute their bounding boxes here
       meshContext->mesh->computeBoundingBox();
     }
 
-	e6.stop();
+	  e6.stop();
 
     meshContext->mesh->allocateDataValues();
 
@@ -1637,6 +1637,8 @@ void ParticipantImpl::computePartitions()
         context.resizeBufferTo(requiredSize);
       }
     }
+
+    e4.stop();
   }
 
   e3.stop();
