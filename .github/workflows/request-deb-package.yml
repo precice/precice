@@ -91,7 +91,7 @@ jobs:
       contents: write
     steps:
       - name: Download package
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           artifact-ids: ${{ needs.package.outputs.artifact-id }}
           path: build
