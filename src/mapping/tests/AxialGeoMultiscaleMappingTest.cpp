@@ -243,3 +243,93 @@ BOOST_AUTO_TEST_CASE(ConsistentCollectZ)
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
+
+PRECICE_TEST_SETUP(1_rank);
+BOOST_AUTO_TEST_CASE(ConsistentSpreadXScalar)
+{
+  PRECICE_TEST();
+  // 1D -> 3D, scalar data: the same value is copied to all output vertices, along X axis
+  constexpr int dimensions = 3;
+  using testing::equals;
+
+  // Create mesh to map from
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
+  inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point a (1D)
+  inMesh->allocateDataValues();
+
+  // Create mesh to map to
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point A (3D): center, equal to incoming mesh node
+  outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0)); // Point B (3D): distance of 1.0 = r to center
+  outMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // Point C (3D): distance of 0.5 = r/2 to center
+  outMesh->allocateDataValues();
+
+  double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::MultiscaleType::SPREAD, mapping::AxialGeoMultiscaleMapping::MultiscaleAxis::X, radius);
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  // Create data to map
+  Eigen::VectorXd inValues(1);
+  inValues << 42.0;
+  const time::Sample inSample{1, inValues};
+  Eigen::VectorXd    outValues(3);
+  outValues = Eigen::VectorXd::Zero(3);
+
+  // Map data
+  mapping.computeMapping();
+  mapping.map(inSample, outValues);
+
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // All outputs equal to the scalar input
+  BOOST_TEST(outValues(0) == 42.0);
+  BOOST_TEST(outValues(1) == 42.0);
+  BOOST_TEST(outValues(2) == 42.0);
+}
+
+PRECICE_TEST_SETUP(1_rank);
+BOOST_AUTO_TEST_CASE(ConsistentCollectZScalar)
+{
+  PRECICE_TEST();
+  // 3D -> 1D, scalar data: average over input vertices to the single output vertex, along Z axis
+  constexpr int dimensions = 3;
+  using testing::equals;
+
+  // Create mesh to map from
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
+  inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point a (3D): center
+  inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)); // Point b (3D): distance of 1.0 = r to center
+  inMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // Point c (3D): distance of 0.5 = r/2 to center
+  inMesh->allocateDataValues();
+
+  // Create mesh to map to
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point A (1D): equal to center of incoming mesh
+  outMesh->allocateDataValues();
+
+  double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::MultiscaleType::COLLECT, mapping::AxialGeoMultiscaleMapping::MultiscaleAxis::Z, radius);
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  // Create data to map
+  Eigen::VectorXd inValues(3);
+  inValues << 3.0, 7.0, 5.0;
+  const time::Sample inSample{1, inValues};
+  Eigen::VectorXd    outValues(1);
+  outValues = Eigen::VectorXd::Zero(1);
+
+  // Map data
+  mapping.computeMapping();
+  mapping.map(inSample, outValues);
+
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // All outputs equal to the scalar input
+  BOOST_TEST(outValues(0) == (3.0 + 7.0 + 5.0) / 3.0);
+}
