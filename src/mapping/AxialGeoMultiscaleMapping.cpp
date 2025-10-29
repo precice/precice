@@ -129,8 +129,6 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
 
     for (size_t i = 0; i < outSize; i++) {
       PRECICE_ASSERT(static_cast<size_t>((i * outDataDimensions) + effectiveCoordinate) < static_cast<size_t>(outputValues.size()), ((i * outDataDimensions) + effectiveCoordinate), outputValues.size());
-
-      // NEW: select profile
       if (_profile == SpreadProfile::PARABOLIC) {
         // When adding support for 2D, remember that this should be 1.5 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
         outputValues((i * outDataDimensions) + effectiveCoordinate) = 2 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
@@ -144,7 +142,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
     PRECICE_ASSERT(_type == MultiscaleType::COLLECT);
     /*
       1D vertex is assigned the averaged value over all 3D vertices at the outlet,
-      but only of the effectiveCoordinate component of the velocity vector.
+      but only of the effectiveCoordinate component of the vector.
     */
     PRECICE_ASSERT(output()->nVertices() == 1);
     outputValues(effectiveCoordinate) = 0;

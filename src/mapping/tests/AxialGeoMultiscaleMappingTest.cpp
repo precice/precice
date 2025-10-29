@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadX)
 }
 
 PRECICE_TEST_SETUP(1_rank);
-BOOST_AUTO_TEST_CASE(ConsistentSpreadZ)
+BOOST_AUTO_TEST_CASE(ConsistentSpreadParabolicZ)
 {
   PRECICE_TEST();
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, coupled along the z-axis.
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadZ)
   double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
   // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::MultiscaleType::SPREAD, mapping::AxialGeoMultiscaleMapping::MultiscaleAxis::Z, radius);
+  precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::MultiscaleType::SPREAD, mapping::AxialGeoMultiscaleMapping::MultiscaleAxis::Z, radius, mapping::AxialGeoMultiscaleMapping::SpreadProfile::PARABOLIC);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
@@ -139,6 +139,66 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadZ)
   BOOST_TEST(outValues(6) == 0.0);
   BOOST_TEST(outValues(7) == 0.0);
   BOOST_TEST(outValues(8) == 1.5 * inSample.values(2));
+}
+
+PRECICE_TEST_SETUP(1_rank);
+BOOST_AUTO_TEST_CASE(ConsistentSpreadUniformZ)
+{
+  PRECICE_TEST();
+  /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, coupled along the z-axis.
+      Then, the data is mapped from the single vertex of the 1D mesh to defined vertices on the circular inlet of the 3D mesh (hence, "spread").
+      The values are spread following a uniform spread, it is, all vertices from the 3D mesh receive the same values.
+      Finally, this expected behavior is tested.
+  */
+  constexpr int dimensions = 3;
+  using testing::equals;
+
+  // Create mesh to map from
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
+  inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point a (1D)
+  inMesh->allocateDataValues();
+
+  // Create mesh to map to
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point A (3D): center, equal to incoming mesh node
+  outMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)); // Point B (3D): distance of 1.0 = r to center
+  outMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // Point C (3D): distance of 0.5 = r/2 to center
+  outMesh->allocateDataValues();
+
+  double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::MultiscaleType::SPREAD, mapping::AxialGeoMultiscaleMapping::MultiscaleAxis::Z, radius, mapping::AxialGeoMultiscaleMapping::SpreadProfile::UNIFORM);
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  // Create data to map
+  Eigen::VectorXd inValues(3);
+  inValues << 0.0, 0.0, 4.0;
+  const time::Sample inSample{3, inValues};
+  Eigen::VectorXd    outValues(9);
+  outValues = Eigen::VectorXd::Zero(9);
+
+  // Map data
+  mapping.computeMapping();
+  mapping.map(inSample, outValues);
+
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // Point A (3D): Check if z axis data is 4.0
+  BOOST_TEST(outValues(0) == 0.0);
+  BOOST_TEST(outValues(1) == 0.0);
+  BOOST_TEST(outValues(2) == 4.0);
+
+  // Point B (3D): Check if z axis data is 4.0
+  BOOST_TEST(outValues(3) == 0.0);
+  BOOST_TEST(outValues(4) == 0.0);
+  BOOST_TEST(outValues(5) == 4.0);
+
+  // Point C (3D): Check if z axis data is 4.0
+  BOOST_TEST(outValues(6) == 0.0);
+  BOOST_TEST(outValues(7) == 0.0);
+  BOOST_TEST(outValues(8) == 4.0);
 }
 
 PRECICE_TEST_SETUP(1_rank);
