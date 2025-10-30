@@ -160,7 +160,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
-    auto [ids, _] = generateMeshOne(interface, meshTwoID);
+    auto [ids, _] = generateMeshTwo(interface, meshTwoID);
 
     // Initialize, thus receive the data and map.
     interface.initialize();
