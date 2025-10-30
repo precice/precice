@@ -357,7 +357,6 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
     // copy mapped data at correct position to output data values
     outData = Eigen::Map<Eigen::VectorXd>(out.data(), outValuesSize.at(0));
 
-
     // Data scattering to secondary ranks
     int beginPoint = outValuesSize.at(0);
 
