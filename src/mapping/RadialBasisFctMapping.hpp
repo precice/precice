@@ -254,7 +254,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
     Eigen::MatrixXd in  = Eigen::Map<RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>(globalInValues.data(), _rbfSolver->getOutputSize(), valueDim, Eigen::OuterStride(valueDim));
     RowMatrixXd     out = _rbfSolver->solveConservative(in, _polynomial); // copy to row major format
 
-    Eigen::Map<Eigen::VectorXd> outputValues(out.data(), out.size());
+    Eigen::Map<Eigen::VectorXd> outputValues(out.data(), (this->output()->getGlobalNumberOfVertices()) * valueDim);
 
     // Data scattering to secondary ranks
     if (utils::IntraComm::isPrimary()) {
@@ -351,15 +351,12 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
     // copy of input data to Eigen matrix format
     using RowMatrixXd = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
-    Eigen::MatrixXd in  = Eigen::Map<RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>(globalInValues.data(), _rbfSolver->getInputSize(), valueDim, Eigen::OuterStride(valueDim));
-    Eigen::MatrixXd out = _rbfSolver->solveConsistent(in, _polynomial); // copy to row major format
+    Eigen::MatrixXd in = Eigen::Map<RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>(globalInValues.data(), _rbfSolver->getInputSize(), valueDim, Eigen::OuterStride(valueDim));
+    // copy col-major to row-major format
+    RowMatrixXd out = _rbfSolver->solveConsistent(in, _polynomial);
+    // copy mapped data at correct position to output data values
+    outData = Eigen::Map<Eigen::VectorXd>(out.data(), outValuesSize.at(0));
 
-    // Copy mapped data to output data values
-    for (int i = 0; i < out.rows(); i++) {
-      for (int j = 0; j < out.cols(); j++) {
-        outData(i * out.cols() + j) = out(i, j);
-      }
-    }
 
     // Data scattering to secondary ranks
     int beginPoint = outValuesSize.at(0);
