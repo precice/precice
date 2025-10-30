@@ -248,10 +248,11 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
 
     const int valueDim = inData.dataDims;
 
-    // copy of input data to Eigen matrix format, rows == outputSize
-    Eigen::MatrixXd in = Eigen::Map<Eigen::RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>(globalInValues.data(), _rbfSolver->getOutputSize(), valueDim, Eigen::OuterStride(valueDim));
+    using RowMatrixXd = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
-    Eigen::RowMatrixXd out = _rbfSolver->solveConservative(in, _polynomial); // copy to row major format
+    // copy of input data to Eigen matrix format, rows == outputSize
+    Eigen::MatrixXd in  = Eigen::Map<RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>(globalInValues.data(), _rbfSolver->getOutputSize(), valueDim, Eigen::OuterStride(valueDim));
+    RowMatrixXd     out = _rbfSolver->solveConservative(in, _polynomial); // copy to row major format
 
     Eigen::Map<Eigen::VectorXd> outputValues(out.data(), out.size());
 
@@ -348,7 +349,9 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
     }
 
     // copy of input data to Eigen matrix format
-    Eigen::MatrixXd in = Eigen::Map<Eigen::RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>(globalInValues.data(), _rbfSolver->getInputSize(), valueDim, Eigen::OuterStride(valueDim));
+    using RowMatrixXd = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
+    Eigen::MatrixXd in  = Eigen::Map<RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>(globalInValues.data(), _rbfSolver->getInputSize(), valueDim, Eigen::OuterStride(valueDim));
     Eigen::MatrixXd out = _rbfSolver->solveConsistent(in, _polynomial); // copy to row major format
 
     // Copy mapped data to output data values

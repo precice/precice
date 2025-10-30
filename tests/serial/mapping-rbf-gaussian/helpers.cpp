@@ -3,12 +3,11 @@
 #include "helpers.hpp"
 #include "testing/Testing.hpp"
 
+#include <boost/proto/proto_fwd.hpp>
+#include <iomanip>
 #include "mesh/Utils.hpp"
 #include "precice/impl/ParticipantImpl.hpp"
 #include "precice/precice.hpp"
-#include <boost/proto/proto_fwd.hpp>
-#include <iomanip>
-
 
 std::tuple<std::array<int, 12>, std::array<Eigen::Vector3d, 12>> generateMeshOne(Participant &interface, const std::string &meshOneID)
 {
@@ -16,18 +15,18 @@ std::tuple<std::array<int, 12>, std::array<Eigen::Vector3d, 12>> generateMeshOne
   constexpr double z = 0.3;
 
   std::array mesh = {
-    Eigen::Vector3d{0.0, 0.0, z},
-    Eigen::Vector3d{1.0, 0.0, z},
-    Eigen::Vector3d{1.0, 1.0, z},
-    Eigen::Vector3d{0.0, 1.0, z},
-    Eigen::Vector3d{2.0, 0.0, z},
-    Eigen::Vector3d{3.0, 0.0, z},
-    Eigen::Vector3d{3.0, 1.0, z},
-    Eigen::Vector3d{2.0, 1.0, z},
-    Eigen::Vector3d{4.0, 0.0, z},
-    Eigen::Vector3d{5.0, 0.0, z},
-    Eigen::Vector3d{5.0, 1.0, z},
-    Eigen::Vector3d{4.0, 1.0, z},
+      Eigen::Vector3d{0.0, 0.0, z},
+      Eigen::Vector3d{1.0, 0.0, z},
+      Eigen::Vector3d{1.0, 1.0, z},
+      Eigen::Vector3d{0.0, 1.0, z},
+      Eigen::Vector3d{2.0, 0.0, z},
+      Eigen::Vector3d{3.0, 0.0, z},
+      Eigen::Vector3d{3.0, 1.0, z},
+      Eigen::Vector3d{2.0, 1.0, z},
+      Eigen::Vector3d{4.0, 0.0, z},
+      Eigen::Vector3d{5.0, 0.0, z},
+      Eigen::Vector3d{5.0, 1.0, z},
+      Eigen::Vector3d{4.0, 1.0, z},
   };
 
   std::array<int, N> ids;
@@ -43,9 +42,9 @@ std::tuple<std::array<int, 3>, std::array<Eigen::Vector3d, 3>> generateMeshTwo(P
   constexpr double z = 0.3;
 
   std::array mesh = {
-    Eigen::Vector3d{0.0, 0.0, z}, // Maps to vertex A
-    Eigen::Vector3d{0.5, 0.5, z}, // Maps on the left side of the domain
-    Eigen::Vector3d{3.5, 0.5, z}, // Maps more in the middle of the domain
+      Eigen::Vector3d{0.0, 0.0, z}, // Maps to vertex A
+      Eigen::Vector3d{0.5, 0.5, z}, // Maps on the left side of the domain
+      Eigen::Vector3d{3.5, 0.5, z}, // Maps more in the middle of the domain
   };
 
   std::array<int, N> ids;
@@ -68,12 +67,11 @@ std::array<double, N * 3> evaluateFunction(const std::array<Eigen::Vector3d, N> 
   return values;
 }
 
-
 void testRBFMappingVectorial(const std::string configFile, const TestContext &context, bool mappingIsConservative)
 {
-  constexpr size_t dim  = 3;
-  constexpr size_t nOut = 3;
-  constexpr size_t nIn  = 12;
+  constexpr size_t dim    = 3;
+  constexpr size_t numOut = 3;
+  constexpr size_t numIn  = 12;
 
   auto meshOneID = "MeshOne";
   auto dataOneID = "DataOne";
@@ -87,7 +85,8 @@ void testRBFMappingVectorial(const std::string configFile, const TestContext &co
 
     while (interfaceA.isCouplingOngoing()) {
       double maxDt = interfaceA.getMaxTimeStepSize();
-      std::array<double, nIn * dim> inputValues = evaluateFunction(meshOne);
+
+      std::array<double, numIn * dim> inputValues = evaluateFunction(meshOne);
       interfaceA.writeData(meshOneID, dataOneID, idsOne, inputValues);
       interfaceA.advance(maxDt);
     }
@@ -99,7 +98,7 @@ void testRBFMappingVectorial(const std::string configFile, const TestContext &co
     auto [idsTwo, meshTwo] = generateMeshTwo(interfaceB, meshTwoID);
     interfaceB.initialize();
 
-    std::array<double, nOut * dim> expectedValues;
+    std::array<double, numOut * dim> expectedValues;
     if (mappingIsConservative) {
       expectedValues = {-0.6, -0.6, -0.6, 0.853333, 4.85333, 8.85333, 3.70667, 11.7067, 19.7067};
     } else {
@@ -108,7 +107,7 @@ void testRBFMappingVectorial(const std::string configFile, const TestContext &co
 
     double maxDt = interfaceB.getMaxTimeStepSize();
 
-    Eigen::Vector<double, nOut * dim> values = Eigen::Vector<double, nOut * dim>::Zero();
+    Eigen::Vector<double, numOut * dim> values = Eigen::Vector<double, numOut * dim>::Zero();
     interfaceB.readData(meshTwoID, dataOneID, idsTwo, maxDt, values);
     interfaceB.advance(maxDt);
 
@@ -118,7 +117,6 @@ void testRBFMappingVectorial(const std::string configFile, const TestContext &co
     interfaceB.finalize();
   }
 }
-
 
 void testRBFMapping(const std::string configFile, const TestContext &context)
 {

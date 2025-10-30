@@ -491,13 +491,13 @@ Eigen::MatrixXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
     if (GinkgoSolverType::QR == _solverType) {
       // Upper Trs U x = b
       if ("cuda-executor" == _ginkgoParameter.executor) {
-  #ifdef PRECICE_WITH_CUDA
+#ifdef PRECICE_WITH_CUDA
         solvewithQRDecompositionCuda(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dRhs.get());
-  #endif
+#endif
       } else if ("hip-executor" == _ginkgoParameter.executor) {
-  #ifdef PRECICE_WITH_HIP
+#ifdef PRECICE_WITH_HIP
         solvewithQRDecompositionHip(_deviceExecutor, _decompMatrixR.get(), _rbfCoefficients.get(), _dQ_T_Rhs.get(), _decompMatrixQ_T.get(), dRhs.get());
-  #endif
+#endif
       } else {
         PRECICE_UNREACHABLE("Not implemented");
       }

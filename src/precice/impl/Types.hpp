@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Eigen/Dense>
 #include "precice/Types.hpp"
 
 namespace precice {
@@ -38,7 +37,3 @@ using MeshID = int;
 using Rank = int;
 
 } // namespace precice
-
-namespace Eigen {
-  using RowMatrixXd = Matrix<double, Dynamic, Dynamic, RowMajor>;
-}

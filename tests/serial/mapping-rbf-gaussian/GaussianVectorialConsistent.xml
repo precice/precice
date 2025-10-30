@@ -26,7 +26,6 @@
       constraint="consistent"
       z-dead="true">
       <basis-function:gaussian support-radius="100" />
-      <executor:cuda gpu-device-id="0"/>
     </mapping:rbf-global-direct>
     <read-data name="DataOne" mesh="MeshTwo" />
   </participant>
