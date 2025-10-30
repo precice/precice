@@ -319,7 +319,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
 
   // Step 2: solve the system using a consistent constraint
   auto result = _rbfSolver.solveConsistent(in, _polynomial);
-  PRECICE_ASSERT(static_cast<Eigen::Index>(_outputIDs.size()) == result.size());
+  PRECICE_ASSERT(static_cast<Eigen::Index>(_outputIDs.size() * nComponents) == result.size());
 
   // Step 3: now accumulate the result into our global output data
   for (unsigned int c = 0; c < nComponents; ++c) {
