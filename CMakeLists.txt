@@ -556,7 +556,7 @@ set_target_properties(preciceMocked PROPERTIES
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
   )
-target_sources(preciceMocked PRIVATE extras/mock/Participant.cpp)
+target_sources(preciceMocked PRIVATE extras/mock/preciceMocked.cpp)
 set_property(TARGET preciceMocked APPEND PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/export.h)
 
