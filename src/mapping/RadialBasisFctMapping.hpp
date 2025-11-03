@@ -249,11 +249,13 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
     const int valueDim = inData.dataDims;
 
     using RowMatrixXd = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+    using MapToMatrix = Eigen::Map<RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>;
 
     // copy of input data to Eigen matrix format, rows == outputSize
-    Eigen::MatrixXd in  = Eigen::Map<RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>(globalInValues.data(), _rbfSolver->getOutputSize(), valueDim, Eigen::OuterStride(valueDim));
-    RowMatrixXd     out = _rbfSolver->solveConservative(in, _polynomial); // copy to row major format
+    Eigen::MatrixXd in = MapToMatrix(globalInValues.data(), _rbfSolver->getOutputSize(), valueDim, Eigen::OuterStride(valueDim));
 
+    // copy all output values without polynomial entries from col-major to row-major format
+    RowMatrixXd out = _rbfSolver->solveConservative(in, _polynomial).block(0, 0, this->output()->getGlobalNumberOfVertices(), valueDim);
     Eigen::Map<Eigen::VectorXd> outputValues(out.data(), (this->output()->getGlobalNumberOfVertices()) * valueDim);
 
     // Data scattering to secondary ranks
@@ -350,10 +352,15 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
 
     // copy of input data to Eigen matrix format
     using RowMatrixXd = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+    using MapToMatrix = Eigen::Map<RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>;
 
-    Eigen::MatrixXd in = Eigen::Map<RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>(globalInValues.data(), _rbfSolver->getInputSize(), valueDim, Eigen::OuterStride(valueDim));
-    // copy col-major to row-major format
+    // input matrix with polynomial entries that remain zero
+    Eigen::MatrixXd in = Eigen::MatrixXd::Zero(_rbfSolver->getInputSize(), valueDim);
+    in.block(0, 0, this->input()->getGlobalNumberOfVertices(), valueDim) = MapToMatrix(globalInValues.data(), this->input()->getGlobalNumberOfVertices(), valueDim, Eigen::OuterStride(valueDim));
+
+    // copy all output values from col-major to row-major format
     RowMatrixXd out = _rbfSolver->solveConsistent(in, _polynomial);
+
     // copy mapped data at correct position to output data values
     outData = Eigen::Map<Eigen::VectorXd>(out.data(), outValuesSize.at(0));
 
