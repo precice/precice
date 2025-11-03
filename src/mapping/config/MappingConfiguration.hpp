@@ -99,14 +99,9 @@ public:
   };
 
   struct AutotuningParams {
-    enum class Type {
-      BISECTION,
-      BAYES_OPTIMIZATION
-    };
     static constexpr int OPTIMIZE_ONLY_ONCE = 0;
     static constexpr int UNINITIALIZED      = -1;
 
-    Type optimizationType  = Type::BISECTION; // not yet used
     bool autotuneShape     = false;
     int  iterationInterval = UNINITIALIZED;
   };

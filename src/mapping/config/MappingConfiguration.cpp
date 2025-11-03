@@ -232,9 +232,6 @@ MappingConfiguration::MappingConfiguration(
   // auto attrMaxIterations = makeXMLAttribute(ATTR_MAX_ITERATIONS, 1e6)
   //                              .setDocumentation("Maximum number of iterations of the solver");
 
-  auto attrTunerInterval = makeXMLAttribute(ATTR_TUNER_INTERVAL, "")
-                               .setDocumentation("Support radius optimization every N solver calls");
-
   auto verticesPerCluster = XMLAttribute<int>(ATTR_VERTICES_PER_CLUSTER, 50)
                                 .setDocumentation("Average number of vertices per cluster (partition) applied in the rbf partition of unity method.");
   auto relativeOverlap = makeXMLAttribute(ATTR_RELATIVE_OVERLAP, 0.15)
@@ -312,8 +309,11 @@ MappingConfiguration::MappingConfiguration(
       XMLTag{*this, RBF_CPOLYNOMIAL_C8, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Wendland C8 function"),
       XMLTag{*this, RBF_CTPS_C2, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Compact thin-plate-spline C2")};
 
+  auto attrTunerInterval = makeXMLAttribute(ATTR_TUNER_INTERVAL, "")
+                             .setDocumentation("Support radius optimization every N solver calls");
+
   auto attrSupportRadius = XMLAttribute<std::string>(ATTR_SUPPORT_RADIUS)
-                               .setDocumentation("Support radius of each RBF basis function (global choice).");
+                               .setDocumentation("Support radius of each RBF basis function (global choice), or \"auto\" if preCICE should automatically try to determine a fitting support radius.");
 
   addAttributes(supportRadiusRBF, {attrSupportRadius, attrTunerInterval});
   addSubtagsToParents(supportRadiusRBF, rbfIterativeTags);
@@ -339,7 +339,7 @@ MappingConfiguration::MappingConfiguration(
   std::list<XMLTag> GaussRBF{
       XMLTag{*this, RBF_GAUSSIAN, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Gaussian basis function accepting a support radius or a shape parameter.")};
   attrShapeParam.setDefaultValue(std::numeric_limits<double>::quiet_NaN());
-  attrSupportRadius.setDefaultValue("NaN");
+  attrSupportRadius.setDefaultValue(""); //TODO REPLACED "NaN"
   addAttributes(GaussRBF, {attrShapeParam, attrSupportRadius, attrTunerInterval});
   addSubtagsToParents(GaussRBF, rbfIterativeTags);
   addSubtagsToParents(GaussRBF, rbfDirectTags);
@@ -462,7 +462,7 @@ void MappingConfiguration::xmlTagCallback(
                   _mappings.back().fromMesh->getName(), _mappings.back().toMesh->getName());
 
     std::string basisFctName     = tag.getName();
-    std::string supportRadiusTag = tag.getStringAttributeValue(ATTR_SUPPORT_RADIUS, "NaN");
+    std::string supportRadiusTag = tag.getStringAttributeValue(ATTR_SUPPORT_RADIUS, "");
     std::string tunerIntervalTag = tag.getStringAttributeValue(ATTR_TUNER_INTERVAL, "");
 
     double shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM, 0.);
@@ -476,11 +476,11 @@ void MappingConfiguration::xmlTagCallback(
 
     // Check validity and parse the optimization interval
     if (_autotunerConfig.autotuneShape && _autotunerConfig.iterationInterval == AutotuningParams::UNINITIALIZED) {
-      if (supportRadiusTag.empty()) {
+      if (tunerIntervalTag.empty()) {
         _autotunerConfig.iterationInterval = 1;
       } else {
         try {
-          _autotunerConfig.iterationInterval = std::stoi(tunerIntervalTag);
+          xml::readValueSpecific(tunerIntervalTag, _autotunerConfig.iterationInterval);
         } catch (const std::invalid_argument &) {
           _autotunerConfig.iterationInterval = AutotuningParams::UNINITIALIZED;
         }
@@ -490,13 +490,15 @@ void MappingConfiguration::xmlTagCallback(
 
     // Parse support radius if it should not be tuned. Otherwise, set it to some finite value to mark it as "set".
     if (!_autotunerConfig.autotuneShape) {
-      try {
-        supportRadius = std::stod(supportRadiusTag);
-      } catch (const std::invalid_argument &) {
-        PRECICE_ERROR("\"{}\" must either be a positive floating-point value or \"auto\"", ATTR_SUPPORT_RADIUS);
+      if (!supportRadiusTag.empty()) {
+        try {
+          xml::readValueSpecific(supportRadiusTag, supportRadius);
+        } catch (const std::invalid_argument &) {
+          PRECICE_ERROR("\"{}\" must either be a positive floating-point value or \"auto\"", ATTR_SUPPORT_RADIUS);
+        }
       }
     } else {
-      supportRadius = 1.0;
+      supportRadius = 0.0;
     }
 
     _rbfConfig.basisFunction        = parseBasisFunctions(basisFctName);
