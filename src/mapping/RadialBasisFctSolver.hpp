@@ -198,8 +198,11 @@ inline void fillKernelEntries(Eigen::MatrixXd &matrixCLU, RADIAL_BASIS_FUNCTION_
   matrixCLU.block(0, 0, n, n).triangularView<Eigen::Lower>() = matrixCLU.block(0, 0, n, n).transpose();
 }
 
-inline Eigen::MatrixXd allocateMatrixCLU(const mesh::PtrMesh &inputMesh, std::array<bool, 3> activeAxis, Polynomial polynomial)
+inline Eigen::MatrixXd allocateMatrixCLU(const mesh::PtrMesh &inputMesh, std::vector<bool> &deadAxis, Polynomial polynomial)
 {
+  std::array<bool, 3> activeAxis = {false, false, false};
+  std::transform(deadAxis.begin(), deadAxis.end(), activeAxis.begin(), [](const auto ax) { return !ax; });
+
   // Treat the 2D case as 3D case with dead axis
   const unsigned int deadDimensions = std::count(activeAxis.begin(), activeAxis.end(), false);
   const unsigned int dimensions     = 3;
@@ -217,7 +220,7 @@ inline Eigen::MatrixXd allocateMatrixCLU(const mesh::PtrMesh &inputMesh, std::ar
 
 template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
 void fillMatrixCLU(Eigen::MatrixXd &matrixCLU, RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::PtrMesh &inputMesh, const IndexContainer &inputIDs,
-                                      std::array<bool, 3> activeAxis, Polynomial polynomial, bool skipKernelEntries = false)
+                                      std::array<bool, 3> activeAxis, Polynomial polynomial, bool skipKernelEntries = false) //TODO skip still necessary?
 {
   // Required to fill the poly -> poly entries in the matrix, which remain otherwise untouched
   if (polynomial == Polynomial::ON) {
@@ -317,7 +320,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, mesh::PtrMesh inputMesh, const IndexContainer &inputIDs,
                                                                     mesh::PtrMesh outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::AutotuningParams tuningConfig)
-    : _decMatrixCoefficients(allocateMatrixCLU(inputMesh, _activeAxis, polynomial)), _decMatrixC(_decMatrixCoefficients), _polynomial(polynomial), _activeAxis({false, false, false}), _inputMesh(inputMesh)
+    : _decMatrixCoefficients(allocateMatrixCLU(inputMesh, deadAxis, polynomial)), _decMatrixC(_decMatrixCoefficients), _polynomial(polynomial), _activeAxis({false, false, false}), _inputMesh(inputMesh)
 {
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
@@ -326,7 +329,6 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   _tuningConfig = tuningConfig;
 
   // First, assemble the interpolation matrix and check the invertability
-  bool decompositionSuccessful = false;
   fillMatrixCLU(_decMatrixCoefficients, basisFunction, inputMesh, inputIDs, _activeAxis, polynomial);
   _decMatrixC.compute(_decMatrixCoefficients);
 
@@ -337,7 +339,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
     _decMatrixC.compute(_decMatrixCoefficients);
   }
 
-  PRECICE_CHECK(_tuningConfig.autotuneShape || decompositionSuccessful,
+  PRECICE_CHECK(_tuningConfig.autotuneShape || _decMatrixC.info() == Eigen::ComputationInfo::Success,
                 "The interpolation matrix of the RBF mapping from mesh \"{}\" to mesh \"{}\" is not invertable. "
                 "This means that the mapping problem is not well-posed. "
                 "Please check if your coupling meshes are correct (e.g. no vertices are duplicated) or reconfigure "
@@ -400,7 +402,6 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
     double rcond = utils::approximateReciprocalConditionNumber(_decMatrixC);
     PRECICE_DEBUG("reciprocal condition number < {}", rcond);
     e.addData("100-log-rcond", static_cast<int>(100 * std::log10(rcond)));
-    e.addData("llt-success", static_cast<int>(decompositionSuccessful));
   }
 }
 
