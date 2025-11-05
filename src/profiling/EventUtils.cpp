@@ -124,25 +124,24 @@ void EventRegistry::startBackend()
   }
 
   PRECICE_ASSERT(!_isBackendRunning);
-
-  // Create the directory if necessary
-  bool isLocal = _directory.empty() || _directory == ".";
-  if (!isLocal) {
-    auto exists = std::filesystem::exists(_directory);
-    PRECICE_CHECK(
-        !(exists && !std::filesystem::is_directory(_directory)),
-        "The destination folder \"{}\" exists but isn't a directory. Please remove the directory \"precice-run\" and try again.",
-        _directory);
-    if (!exists) {
-      std::filesystem::create_directories(_directory);
-    }
-  }
-  auto filename = fmt::format("{}/{}-{}-{}.txt", _directory, _applicationName, _rank, _size);
-  PRECICE_DEBUG("Starting backend with events-file: \"{}\"", filename);
-  _output.open(filename);
-  PRECICE_CHECK(_output, "Unable to open the events-file: \"{}\"", filename);
-
   using std::literals::operator""sv;
+
+  auto root = [&]() -> std::filesystem::path {
+    if (_directory.empty()) {
+      return ".";
+    } else {
+      return _directory;
+    }
+  }();
+
+  auto local = root / _applicationName / fmt::format("{:02d}", _rank % 100);
+  std::filesystem::create_directories(local);
+
+  auto filename = local / fmt::format("{}-{}-{}.txt", _applicationName, _rank, _size);
+  PRECICE_DEBUG("Starting backend with events-file: \"{}\"", filename.c_str());
+  _output.open(filename);
+  PRECICE_CHECK(_output, "Unable to open the events-file: \"{}\"", filename.c_str());
+
 #ifdef PRECICE_COMPRESSION
   _strm = LZMA_STREAM_INIT;
   lzma_options_lzma options;
