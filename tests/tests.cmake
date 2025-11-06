@@ -395,7 +395,7 @@ target_sources(testprecice
     tests/serial/parallel-coupling/SolverBFirstSubsteps.cpp
     tests/serial/parallel-coupling/helpers.cpp
     tests/serial/parallel-coupling/helpers.hpp
-    tests/serial/rbf-parameter-tuning/GaussianShapeParameter.cpp
+    tests/serial/rbf-parameter-tuning/GaussianSupportRadiusTuning.cpp
     tests/serial/rbf-parameter-tuning/helpers.cpp
     tests/serial/rbf-parameter-tuning/helpers.hpp
     tests/serial/three-solvers/ThreeSolversExplicitExplicit.cpp

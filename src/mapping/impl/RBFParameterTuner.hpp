@@ -75,7 +75,8 @@ Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputId
   constexpr bool radiusRBF = Solver::BASIS_FUNCTION_T::hasCompactSupport();
   static_assert(radiusRBF, "RBF is not supported by this optimizer, as it does not accept a support-radius."
                             "Currently supported: Compactly supported RBFs and Gaussians.");
-
+  
+  // TODO: maybe make dependent on domain extend
   constexpr double increaseSize = 10;
   double           sampleRadius = _lowerBound;
 
@@ -85,11 +86,14 @@ Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputId
 
   solver.rebuildKernelDecomposition(inputIds, sampleRadius);
   auto [error, rcond] = solver.computeErrorEstimate(inputData, inputIds);
-  Sample lowerBound   = {sampleRadius, sampleRadius};
+  Sample lowerBound   = {sampleRadius, error};
 
-  // error is numerically insignificant
+  std::cout << "lowerBound " << lowerBound.radius << " error "<< error << std::endl;
+
+  // error is numerically insignificant: Either zero data or fully explained by the polynomial
   if (error < 1e-15) {
     _lastSampleWasOptimum = true;
+    _currentOptimum = lowerBound;
     return lowerBound;
   }
 
@@ -160,6 +164,7 @@ inline bool RBFParameterTuner::shouldContinue(const Sample &lowerBound, const Sa
 {
   bool shouldContinue = upperBound.error == std::numeric_limits<double>::max();
   shouldContinue |= upperBound.radius > POS_TOLERANCE * lowerBound.radius;
+  // TODO: instead of a simple difference consider some logarithmic criterion, since the errors on meshes with different reslutions converge to different values of varying orders of magnitude?
   shouldContinue |= std::abs(upperBound.error - lowerBound.error) < ERR_TOLERANCE * std::min(upperBound.error, lowerBound.error);
   return shouldContinue;
 }

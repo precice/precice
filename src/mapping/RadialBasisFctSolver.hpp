@@ -326,10 +326,6 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 
   _tuningConfig = tuningConfig;
 
-  std::cout << std::endl;
-  std::cout << "[ RadialBasisFctSolver() ] _decMatrixC: " << _decMatrixC.rows() << "x" << _decMatrixC.cols() << ", in/outIDs: " << inputIDs.size() << ", " << outputIDs.size() << ", polynomial: " << (polynomial == Polynomial::ON) << std::endl;
-  std::cout << std::endl;
-
   // First, assemble the interpolation matrix and check the invertability
   fillMatrixCLU(_decMatrixCoefficients, basisFunction, inputMesh, inputIDs, _activeAxis, polynomial);
   _decMatrixC.compute(_decMatrixCoefficients);
@@ -463,11 +459,14 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
 
   if (_tuningConfig.autotuneShape) {
     if constexpr (RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) {
-    // @todo: Data dimension not considered
-    const bool optimizeThisIteration = _tuner->getLastOptimizationError() < 1e-15 || (_tuningConfig.iterationInterval == _iterSinceOptimization);
+
+      const bool isProbablyZeroData = _tuner->getLastOptimizationError() < 1e-15;
+      // @todo: Data dimension not considered
+      const bool isOptimizationInterval = _tuningConfig.iterationInterval == _iterSinceOptimization;
+      const bool isOptimizedAndSouldOnce = _tuningConfig.optimizeOnce() && _tuner->getLastOptimizationError() != std::numeric_limits<double>::max();
 
       // @todo: Add error criterion.
-      if (optimizeThisIteration) {
+      if (isProbablyZeroData || isOptimizationInterval || !isOptimizedAndSouldOnce) {
         auto& mutableSolver = *const_cast<RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>*>(this);
         Sample sample = _tuner->optimize(mutableSolver, inputIDs, inputData);
         if (!_tuner->lastSampleWasOptimum()) {

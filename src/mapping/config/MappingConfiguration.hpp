@@ -104,6 +104,11 @@ public:
 
     bool autotuneShape     = false;
     int  iterationInterval = UNINITIALIZED;
+
+    bool optimizeOnce() const
+    {
+      return iterationInterval == OPTIMIZE_ONLY_ONCE;
+    }
   };
 
   struct GeoMultiscaleConfiguration {
