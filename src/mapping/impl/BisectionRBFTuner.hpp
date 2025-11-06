@@ -7,112 +7,12 @@
 
 namespace precice::mapping {
 
-template <typename Solver>
-class BisectionRBFTuner : public RBFParameterTuner<Solver> {
+class BisectionRBFTuner {
 
   mutable logging::Logger _log{"mapping::BisectionRBFTuner"};
 
-  std::vector<Sample> _samples;
 
-public:
-  explicit BisectionRBFTuner(const mesh::Mesh &inputMesh);
-
-  template <typename IndexContainer>
-  std::tuple<double, double> optimize(const Solver &solver, const IndexContainer &inputIds, const Eigen::VectorXd &inputData);
-
-private:
-  template <typename IndexContainer>
-  Sample      optimizeBisection(const Solver &solver, const Eigen::VectorXd &inputData, const IndexContainer &inputIds, double posTolerance, double errorTolerance, int maxIterations);
-  static bool shouldContinue(const Sample &lowerBound, const Sample &upperBound, double posTolerance, double errorTolerance);
 };
 
-template <typename Solver>
-BisectionRBFTuner<Solver>::BisectionRBFTuner(const mesh::Mesh &inputMesh)
-    : RBFParameterTuner<Solver>(inputMesh)
-{
-}
-
-template <typename Solver>
-template <typename IndexContainer>
-std::tuple<double, double> BisectionRBFTuner<Solver>::optimize(const Solver &solver, const IndexContainer &inputIds, const Eigen::VectorXd &inputData)
-{
-  constexpr double POS_TOLERANCE        = 1.5; // Factor by which the radius is allowed to change before stopping
-  constexpr double ERR_TOLERANCE        = 0.5; // Factor by which the error is allowed to change before stopping
-  constexpr int    MAX_BISEC_ITERATIONS = 6;   // Number of iterations during the "bisection" step. After finding initial samples
-
-  const Sample bestSample = optimizeBisection(solver, inputData, inputIds, POS_TOLERANCE, ERR_TOLERANCE, MAX_BISEC_ITERATIONS);
-  PRECICE_INFO("Best sample: rad={:.4e}, err={:.4e}", bestSample.pos, bestSample.error);
-
-  return {bestSample.pos, bestSample.error};
-}
-
-template <typename Solver>
-bool BisectionRBFTuner<Solver>::shouldContinue(const Sample &lowerBound, const Sample &upperBound, double posTolerance, double errorTolerance)
-{
-  bool shouldContinue = std::isinf(upperBound.error);
-  shouldContinue |= upperBound.pos > posTolerance * lowerBound.pos;
-  shouldContinue |= std::abs(upperBound.error - lowerBound.error) < errorTolerance * std::min(upperBound.error, lowerBound.error);
-  return shouldContinue;
-}
-
-template <typename Solver>
-template <typename IndexContainer>
-Sample BisectionRBFTuner<Solver>::optimizeBisection(const Solver &solver, const Eigen::VectorXd &inputData, const IndexContainer &inputIds, double posTolerance, double errorTolerance, int maxIterations)
-{
-  constexpr double increaseSize = 10;
-  double           sampleRadius = this->_lowerBound;
-
-  this->_lastSampleWasOptimum = false;
-
-  PRECICE_INFO("Start optimization with lower bound = {:.4e}, upper bound = {:.4e}", this->_lowerBound, this->_upperBound);
-
-  auto [error, rcond] = solver.computeErrorEstimate(inputData, inputIds, sampleRadius);
-  Sample lowerBound   = {sampleRadius, sampleRadius};
-
-  // Error is numerically insignificant
-  if (error < 1e-15) {
-    this->_lastSampleWasOptimum = true;
-    return lowerBound;
-  }
-
-  // collect samples with exponential growth and decrease growth rate until the support radius is "good enough"
-  while (std::isnan(this->_upperBound)) {
-    sampleRadius *= increaseSize;
-
-    auto [error, rcond] = solver.computeErrorEstimate(inputData, inputIds, sampleRadius);
-
-    PRECICE_INFO("RBF tuner sample: rad={:.4e}, err={:.4e}, 1/cond={:.4e}", sampleRadius, error, rcond);
-
-    if (rcond < 1e-12 || std::isinf(error)) {
-      PRECICE_CHECK(sampleRadius != this->_lowerBound, "Parameter tuning failed in first iteration using support-radius={}", sampleRadius);
-      this->_upperBound = sampleRadius;
-      break;
-    }
-    lowerBound = {sampleRadius, error};
-  }
-  Sample upperBound = {this->_upperBound, std::numeric_limits<double>::infinity()};
-
-  int    i = 0;
-  Sample centerSample;
-
-  while (shouldContinue(lowerBound, upperBound, posTolerance, errorTolerance) && i < maxIterations) {
-    centerSample.pos   = (lowerBound.pos + upperBound.pos) / 2;
-    centerSample.error = std::get<0>(solver.computeErrorEstimate(inputData, inputIds, centerSample.pos));
-
-    PRECICE_INFO("Current interval: [({:.2e},{:.2e}), ({:.2e},{:.2e})], Sample: rad={:.2e}, err={:.2e}",
-                 lowerBound.pos, lowerBound.error, upperBound.pos, upperBound.error, centerSample.pos, centerSample.error);
-
-    if (lowerBound.error < upperBound.error || std::isinf(centerSample.error)) {
-      upperBound = centerSample;
-    } else {
-      lowerBound = centerSample;
-    }
-    i++;
-  }
-  const Sample bestSample     = std::isinf(centerSample.error) ? lowerBound : centerSample;
-  this->_lastSampleWasOptimum = centerSample.pos == bestSample.pos;
-
-  return bestSample;
-}
 
 } // namespace precice::mapping

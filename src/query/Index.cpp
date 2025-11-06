@@ -181,7 +181,7 @@ VertexMatch Index::getClosestVertex(const Eigen::VectorXd &sourceCoord)
   return match;
 }
 
-std::vector<VertexID> Index::getClosestVertices(const Eigen::VectorXd &sourceCoord, int n) const
+std::vector<VertexID> Index::getClosestVertices(const Eigen::VectorXd &sourceCoord, int n)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(!(_mesh->empty()), _mesh->getName());
