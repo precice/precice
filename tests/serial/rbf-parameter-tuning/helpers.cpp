@@ -102,8 +102,6 @@ void testRBFTuning(const std::string configFile, const TestContext &context)
 
     std::array<double, n * dim> expectedValues = evaluateFunction(meshB, tA);
 
-    int it = 0;
-
     while (interfaceB.isCouplingOngoing()) {
       double dt = interfaceB.getMaxTimeStepSize();
 
@@ -117,7 +115,6 @@ void testRBFTuning(const std::string configFile, const TestContext &context)
       for (size_t i = 0; i < values.size(); i++) {
         BOOST_TEST(values[i] == expectedValues[i], boost::test_tools::tolerance(1e-5));
       }
-      it++;
     }
     interfaceB.finalize();
   }

@@ -121,7 +121,7 @@ Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputId
     solver.rebuildKernelDecomposition(inputIds, centerSample.radius);
     centerSample.error = std::get<0>(solver.computeErrorEstimate(inputData, inputIds));
 
-    PRECICE_INFO("Current interval: [({:.2e},{:.2e}), ({:.2e},{:.2e})], Sample: rad={:.2e}, err={:.2e}",
+    PRECICE_DEBUG("Current interval: [({:.2e},{:.2e}), ({:.2e},{:.2e})], Sample: rad={:.2e}, err={:.2e}",
                  lowerBound.radius, lowerBound.error, upperBound.radius, upperBound.error, centerSample.radius, centerSample.error);
 
     if (lowerBound.error < upperBound.error || (centerSample.error >= std::numeric_limits<double>::max())) {
@@ -134,14 +134,14 @@ Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputId
   _currentOptimum = centerSample.error >= std::numeric_limits<double>::max() ? lowerBound : centerSample;
   _lastSampleWasOptimum = centerSample.radius == _currentOptimum.radius;
 
-  PRECICE_INFO("Best sample: rad={:.4e}, err={:.4e}", _currentOptimum.radius, _currentOptimum.error);
+  PRECICE_DEBUG("Best sample: rad={:.4e}, err={:.4e}", _currentOptimum.radius, _currentOptimum.error);
 
   return _currentOptimum;
 }
 
 inline double RBFParameterTuner::estimateMeshResolution(mesh::Mesh &inputMesh)
 {
-  constexpr int sampleSize = 3;
+  size_t sampleSize = std::min((size_t)3, inputMesh.vertices().size());
 
   const auto         i0 = inputMesh.vertices().size() / 2;
   const mesh::Vertex x0 = inputMesh.vertices().at(i0);
