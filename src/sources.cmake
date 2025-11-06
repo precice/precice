@@ -205,7 +205,6 @@ target_sources(preciceCore
     src/mapping/config/MappingConfiguration.hpp
     src/mapping/config/MappingConfigurationTypes.hpp
     src/mapping/impl/BasisFunctions.hpp
-    src/mapping/impl/BisectionRBFTuner.hpp
     src/mapping/impl/CreateClustering.hpp
     src/mapping/impl/MappingDataCache.hpp
     src/mapping/impl/RBFParameterTuner.hpp
