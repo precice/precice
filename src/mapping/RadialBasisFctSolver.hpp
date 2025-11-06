@@ -29,8 +29,11 @@ class RadialBasisFctSolver {
 public:
   using DecompositionType = std::conditional_t<RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), Eigen::LLT<Eigen::Ref<Eigen::MatrixXd>>, Eigen::ColPivHouseholderQR<Eigen::Ref<Eigen::MatrixXd>>>;
   using BASIS_FUNCTION_T  = RADIAL_BASIS_FUNCTION_T;
-  /// Default constructor
-  RadialBasisFctSolver();
+
+  /// Deleted since we use Eigen::Ref<Eigen::MatrixXd> for the decomposition type
+  RadialBasisFctSolver() = delete;
+  /// Deleted since we use Eigen::Ref<Eigen::MatrixXd> for the decomposition type
+  RadialBasisFctSolver<BASIS_FUNCTION_T> &operator=(const RadialBasisFctSolver<BASIS_FUNCTION_T>&) = delete;
 
   /**
    * assembles the system matrices and computes the decomposition of the interpolation matrix
@@ -113,8 +116,8 @@ private:
   bool                computeCrossValidation = false;
   std::array<bool, 3> _localActiveAxis;
 
-  MappingConfiguration::AutotuningParams                           _tuningConfig;
-  mutable std::unique_ptr<BisectionRBFTuner<RadialBasisFctSolver>> _tuner;
+  MappingConfiguration::AutotuningParams     _tuningConfig;
+  mutable std::unique_ptr<RBFParameterTuner> _tuner;
 
   mutable int    _iterSinceOptimization = 1;
   mutable double _lastTuningError       = 0;
@@ -198,7 +201,8 @@ inline void fillKernelEntries(Eigen::MatrixXd &matrixCLU, RADIAL_BASIS_FUNCTION_
   matrixCLU.block(0, 0, n, n).triangularView<Eigen::Lower>() = matrixCLU.block(0, 0, n, n).transpose();
 }
 
-inline Eigen::MatrixXd allocateMatrixCLU(const mesh::PtrMesh &inputMesh, std::vector<bool> &deadAxis, Polynomial polynomial)
+template <typename IndexContainer>
+inline Eigen::MatrixXd allocateMatrixCLU(const mesh::PtrMesh &inputMesh, const IndexContainer &inputIDs, std::vector<bool> &deadAxis, Polynomial polynomial)
 {
   std::array<bool, 3> activeAxis = {false, false, false};
   std::transform(deadAxis.begin(), deadAxis.end(), activeAxis.begin(), [](const auto ax) { return !ax; });
@@ -209,7 +213,7 @@ inline Eigen::MatrixXd allocateMatrixCLU(const mesh::PtrMesh &inputMesh, std::ve
   const unsigned int polyparams     = polynomial == Polynomial::ON ? 1 + dimensions - deadDimensions : 0;
 
   // Add linear polynom degrees if polynomial requires this
-  const auto inputSize = inputMesh->nVertices();
+  const auto inputSize = inputIDs.size();
   const auto n         = inputSize + polyparams;
 
   PRECICE_ASSERT((inputMesh->getDimensions() == 3) || activeAxis[2] == false);
@@ -220,16 +224,14 @@ inline Eigen::MatrixXd allocateMatrixCLU(const mesh::PtrMesh &inputMesh, std::ve
 
 template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
 void fillMatrixCLU(Eigen::MatrixXd &matrixCLU, RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::PtrMesh &inputMesh, const IndexContainer &inputIDs,
-                                      std::array<bool, 3> activeAxis, Polynomial polynomial, bool skipKernelEntries = false) //TODO skip still necessary?
+                                      std::array<bool, 3> activeAxis, Polynomial polynomial)
 {
   // Required to fill the poly -> poly entries in the matrix, which remain otherwise untouched
   if (polynomial == Polynomial::ON) {
     matrixCLU.setZero();
   }
 
-  if (!skipKernelEntries) {
-    fillKernelEntries(matrixCLU, basisFunction, inputMesh, inputIDs, activeAxis);
-  }
+  fillKernelEntries(matrixCLU, basisFunction, inputMesh, inputIDs, activeAxis);
 
   const auto inSize = inputIDs.size();
   const auto polyparams = matrixCLU.cols() - inSize;
@@ -303,12 +305,6 @@ double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::evaluateRippaLOOCVerror(co
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver()
-    : _decMatrixC(_decMatrixCoefficients), _localActiveAxis({false, false, false}), _polynomial(Polynomial::OFF), _activeAxis({false, false, false})
-{
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, mesh::PtrMesh inputMesh, const IndexContainer &inputIDs,
                                                                     mesh::PtrMesh outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial)
@@ -320,7 +316,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, mesh::PtrMesh inputMesh, const IndexContainer &inputIDs,
                                                                     mesh::PtrMesh outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::AutotuningParams tuningConfig)
-    : _decMatrixCoefficients(allocateMatrixCLU(inputMesh, deadAxis, polynomial)), _decMatrixC(_decMatrixCoefficients), _polynomial(polynomial), _activeAxis({false, false, false}), _inputMesh(inputMesh)
+    : _decMatrixCoefficients(allocateMatrixCLU(inputMesh, inputIDs, deadAxis, polynomial)), _decMatrixC(_decMatrixCoefficients), _polynomial(polynomial), _activeAxis({false, false, false}), _inputMesh(inputMesh)
 {
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
@@ -328,12 +324,16 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 
   _tuningConfig = tuningConfig;
 
+  std::cout << std::endl;
+  std::cout << "[ RadialBasisFctSolver() ] _decMatrixC: " << _decMatrixC.rows() << "x" << _decMatrixC.cols() << ", in/outIDs: " << inputIDs.size() << ", " << outputIDs.size() << ", polynomial: " << (polynomial == Polynomial::ON) << std::endl;
+  std::cout << std::endl;
+
   // First, assemble the interpolation matrix and check the invertability
   fillMatrixCLU(_decMatrixCoefficients, basisFunction, inputMesh, inputIDs, _activeAxis, polynomial);
   _decMatrixC.compute(_decMatrixCoefficients);
 
   if (_tuningConfig.autotuneShape && RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) {
-    _tuner = std::make_unique<BisectionRBFTuner<RadialBasisFctSolver>>(*inputMesh.get());
+    _tuner = std::make_unique<RBFParameterTuner>(*inputMesh.get());
   } else {
     fillMatrixCLU(_decMatrixCoefficients, basisFunction, inputMesh, inputIDs, _activeAxis, polynomial);
     _decMatrixC.compute(_decMatrixCoefficients);
@@ -486,6 +486,10 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
 
   // Integrated polynomial (and separated)
   PRECICE_ASSERT(inputData.size() == _matrixA.cols());
+  std::cout << std::endl;
+  std::cout << "inputData: " << inputData.rows() << "x" << inputData.cols() << ", _decMatrixC: " << _decMatrixC.rows() << "x" << _decMatrixC.cols() << ", _decMatrixCoefficients: " << _decMatrixCoefficients.rows() << "x" << _decMatrixCoefficients.cols() << std::endl;
+  std::cout << std::endl;
+
   Eigen::VectorXd p = _decMatrixC.solve(inputData);
 
   if (polynomial != Polynomial::ON && computeCrossValidation) {
