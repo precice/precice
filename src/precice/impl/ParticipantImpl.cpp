@@ -138,6 +138,8 @@ ParticipantImpl::ParticipantImpl(
                   _accessorCommunicatorSize, currentSize);
   }
   e3.stop();
+#else
+  PRECICE_WARN_IF(communicator.has_value(), "preCICE was configured without MPI but you passed an MPI communicator. preCICE ignores the communicator and continues.");
 #endif
 
   Event e1("configure", profiling::Fundamental);
@@ -410,8 +412,12 @@ void ParticipantImpl::advance(
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before advance().");
   PRECICE_ASSERT(_couplingScheme->isInitialized());
   PRECICE_CHECK(isCouplingOngoing(), "advance() cannot be called when isCouplingOngoing() returns false.");
+
+  // validating computed time step
+  PRECICE_CHECK(std::isfinite(computedTimeStepSize), "advance() cannot be called with an infinite time step size.");
   PRECICE_CHECK(!math::equals(computedTimeStepSize, 0.0), "advance() cannot be called with a time step size of 0.");
   PRECICE_CHECK(computedTimeStepSize > 0.0, "advance() cannot be called with a negative time step size {}.", computedTimeStepSize);
+
   _numberAdvanceCalls++;
 
 #ifndef NDEBUG
@@ -568,7 +574,7 @@ void ParticipantImpl::trimOldDataBefore(double time)
 {
   for (auto &context : _accessor->usedMeshContexts()) {
     for (const auto &name : context->mesh->availableData()) {
-      context->mesh->data(name)->timeStepsStorage().trimBefore(time);
+      context->mesh->data(name)->waveform().trimBefore(time);
     }
   }
 }
@@ -739,8 +745,8 @@ int ParticipantImpl::getMeshVertexSize(
   PRECICE_REQUIRE_MESH_USE(meshName);
   // In case we access received mesh data: check, if the requested mesh data has already been received.
   // Otherwise, the function call doesn't make any sense
-  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshName), "initialize() has to be called before accessing"
-                                                                                       " data of the received mesh \"{}\" on participant \"{}\".",
+  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshName),
+                "initialize() has to be called before accessing data of the received mesh \"{}\" on participant \"{}\".",
                 meshName, _accessor->getName());
   MeshContext &context = _accessor->usedMeshContext(meshName);
   PRECICE_ASSERT(context.mesh.get() != nullptr);
@@ -979,8 +985,6 @@ void ParticipantImpl::setMeshQuad(
                 second, third, fourth);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
-  PRECICE_CHECK(context.mesh->getDimensions() == 3,
-                "setMeshQuad is only possible for 3D meshes. Please set the mesh dimension to 3 in the preCICE configuration file.");
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
     return;
   }
@@ -998,7 +1002,7 @@ void ParticipantImpl::setMeshQuad(
 
   auto coords = mesh::coordsFor(mesh, vertexIDs);
   PRECICE_CHECK(utils::unique_elements(coords),
-                "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle."
+                "The four vertices that form the quad are not unique. The resulting shape may be a point, line or triangle. "
                 "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface is composed of quads.");
 
   auto convexity = math::geometry::isConvexQuad(coords);
@@ -1062,7 +1066,7 @@ void ParticipantImpl::setMeshQuads(
 
     auto coords = mesh::coordsFor(mesh, vertexIDs);
     PRECICE_CHECK(utils::unique_elements(coords),
-                  "The four vertices that form the quad nr {} are not unique. The resulting shape may be a point, line or triangle."
+                  "The four vertices that form the quad nr {} are not unique. The resulting shape may be a point, line or triangle. "
                   "Please check that the adapter sends the four unique vertices that form the quad, or that the mesh on the interface is composed of quads.",
                   i);
 
@@ -1099,8 +1103,8 @@ void ParticipantImpl::setMeshTetrahedron(
   PRECICE_TRACE(meshName, first, second, third, fourth);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
-  PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes."
-                                                    " Please set the mesh dimension to 3 in the preCICE configuration file.");
+  PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes. "
+                                                    "Please set the mesh dimension to 3 in the preCICE configuration file.");
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
     return;
   }
@@ -1128,8 +1132,8 @@ void ParticipantImpl::setMeshTetrahedra(
   PRECICE_TRACE(meshName, vertices.size());
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   MeshContext &context = _accessor->usedMeshContext(meshName);
-  PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes."
-                                                    " Please set the mesh dimension to 3 in the preCICE configuration file.");
+  PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes. "
+                                                    "Please set the mesh dimension to 3 in the preCICE configuration file.");
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
     return;
   }
@@ -1497,8 +1501,8 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
   PRECICE_DEBUG("Get {} mesh vertices with IDs", ids.size());
 
   // Check, if the requested mesh data has already been received. Otherwise, the function call doesn't make any sense
-  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshName), "initialize() has to be called before accessing"
-                                                                                       " data of the received mesh \"{}\" on participant \"{}\".",
+  PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshName),
+                "initialize() has to be called before accessing data of the received mesh \"{}\" on participant \"{}\".",
                 meshName, _accessor->getName());
 
   if (ids.empty() && coordinates.empty()) {

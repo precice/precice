@@ -47,7 +47,7 @@ ProfilingConfiguration::ProfilingConfiguration(xml::XMLTag &parent)
 
   auto attrFlush = makeXMLAttribute<int>("flush-every", DEFAULT_SYNC_EVERY)
                        .setDocumentation("Set the amount of event records that should be kept in memory before flushing them to file. "
-                                         "One event consists out of multiple records."
+                                         "One event consists out of multiple records. "
                                          "0 keeps all records in memory and writes them at the end of the program, useful for slower network filesystems. "
                                          "1 writes records directly to the file, useful to get profiling data despite program crashes. "
                                          "Settings greater than 1 keep records in memory and write them to file in blocks, which is recommended.");

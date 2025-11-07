@@ -47,7 +47,7 @@ function(precice_validate_lib ARG_CODE)
       COMPILE_DEFINITIONS ${ARG_COMPILE_DEFINITIONS}
       LINK_LIBRARIES ${ARG_LINK_LIBRARIES}
       OUTPUT_VARIABLE VAL_OUT
-      CXX_STANDARD 11
+      CXX_STANDARD 17
       )
     if(NOT VAL_SUCCESS)
       message(FATAL_ERROR "Validating ${ARG_NAME} - failure\n\n${VAL_OUT}")

@@ -11,7 +11,7 @@ namespace precice::time {
 TimeGrids::TimeGrids(const DataMap &cplData, std::vector<int> dataIDs, bool reducedTimeGrid)
 {
   for (int dataID : dataIDs) {
-    Eigen::VectorXd timeGrid = cplData.at(dataID)->timeStepsStorage().getTimes();
+    Eigen::VectorXd timeGrid = cplData.at(dataID)->waveform().getTimes();
     if (reducedTimeGrid) {
       _timeGrids.insert(std::pair<int, Eigen::VectorXd>(dataID, timeGrid.tail<1>()));
     } else {
@@ -38,11 +38,11 @@ void TimeGrids::moveTimeGridToNewWindow(const DataMap &cplData)
 {
   for (auto &pair : _timeGrids) {
     if (pair.second.size() == 1) {
-      _timeGrids.at(pair.first) = cplData.at(pair.first)->timeStepsStorage().getTimes().tail<1>();
+      _timeGrids.at(pair.first) = cplData.at(pair.first)->waveform().getTimes().tail<1>();
     } else {
       int dataID = pair.first;
       // Only way to access the first time stamp is through the whole vector
-      Eigen::VectorXd newtimeGrid = cplData.at(dataID)->timeStepsStorage().getTimes();
+      Eigen::VectorXd newtimeGrid = cplData.at(dataID)->waveform().getTimes();
       double          newTimesMin = newtimeGrid(0);
       double          newTimesMax = newtimeGrid(newtimeGrid.size() - 1);
 

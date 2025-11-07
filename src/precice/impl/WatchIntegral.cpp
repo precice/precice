@@ -108,7 +108,7 @@ void WatchIntegral::exportIntegralData(
 Eigen::VectorXd WatchIntegral::calculateIntegral(double time, const mesh::PtrData &data) const
 {
   int             dim    = data->getDimensions();
-  const auto      sample = data->timeStepsStorage().sample(time);
+  const auto      sample = data->waveform().sample(time);
   Eigen::VectorXd sum    = Eigen::VectorXd::Zero(dim);
 
   if (_mesh->edges().empty() || (not _isScalingOn)) {

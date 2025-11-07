@@ -40,6 +40,31 @@ PRECICE_API void precicef_create_(
     int         participantNameLength,
     int         configFileNameLength);
 
+/**
+ * Fortran syntax:
+ * precicef_create_with_communicator_(
+ *   CHARACTER participantName(*),
+ *   CHARACTER configFileName(*),
+ *   INTEGER   solverProcessIndex,
+ *   INTEGER   solverProcessSize,
+ *   INTEGER   communicator )
+ *
+ * IN:  participantName, configFileName, solverProcessIndex, solverProcessSize,
+ *      communicator
+ * OUT: -
+ *
+ * @copydoc precice::Participant::Participant()
+ *
+ */
+PRECICE_API void precicef_create_with_communicator_(
+    const char *participantName,
+    const char *configFileName,
+    const int  *solverProcessIndex,
+    const int  *solverProcessSize,
+    const int  *communicator,
+    int         participantNameLength,
+    int         configFileNameLength);
+
 ///@}
 
 /// @name Steering Methods

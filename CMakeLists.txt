@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.22.1)
-project(preCICE VERSION 3.2.0 LANGUAGES CXX)
+project(preCICE VERSION 3.3.0 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -205,7 +205,7 @@ if(POLICY CMP0167)
 endif()
 
 find_package(Boost 1.74.0 REQUIRED CONFIG
-  COMPONENTS log log_setup program_options system thread unit_test_framework
+  COMPONENTS log log_setup program_options thread unit_test_framework
   )
 mark_as_advanced(Boost_INCLUDE_DIR Boost_LOG_LIBRARY_RELEASE Boost_LOG_SETUP_LIBRARY_RELEASE Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE Boost_SYSTEM_LIBRARY_RELEASE Boost_THREAD_LIBRARY_RELEASE Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE)
 mark_as_advanced(Boost_INCLUDE_DIR Boost_LOG_LIBRARY_DEBUG Boost_LOG_SETUP_LIBRARY_DEBUG Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG Boost_SYSTEM_LIBRARY_DEBUG Boost_THREAD_LIBRARY_DEBUG Boost_UNIT_TEST_FRAMEWORK_LIBRARY_DEBUG)
@@ -216,8 +216,12 @@ if(TPL_ENABLE_EIGEN3)
   # Use EIGEN3_ROOT to set the directory
   xsdk_tpl_require(EIGEN3 EIGEN3_INCLUDE_DIR)
 endif()
-find_package(Eigen3 3.4.0 REQUIRED)
-message(STATUS "Found Eigen ${EIGEN3_VERSION}")
+# Try to find version 5 first and fallback to version 3.4 otherwise
+find_package(Eigen3 5 NO_MODULE QUIET)
+if(NOT Eigen3_FOUND)
+  find_package(Eigen3 3.4 REQUIRED NO_MODULE)
+endif()
+message(STATUS "Found Eigen ${Eigen3_VERSION}")
 precice_validate_eigen()
 
 # LibXML2
@@ -406,7 +410,6 @@ target_link_libraries(preciceCore PUBLIC
   Boost::log
   Boost::log_setup
   Boost::program_options
-  Boost::system
   Boost::thread
   Boost::unit_test_framework
   )
@@ -715,6 +718,7 @@ endif()
 include(GNUInstallDirs)
 install(TARGETS precice
   EXPORT preciceTargets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/precice
@@ -840,9 +844,6 @@ if (BUILD_TESTING)
   print_section("TESTS")
 
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
-
-  # Add precice-profiling tests
-  add_subdirectory(tools/profiling)
 
   #
   # Add test_install

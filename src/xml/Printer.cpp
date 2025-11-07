@@ -230,7 +230,7 @@ std::ostream &printMD(std::ostream &out, const XMLTag &tag, int level, std::map<
 
   out << tag.getDocumentation() << "\n\n";
 
-  out << "**Example:**  \n```xml\n";
+  out << "**Example:**  \n\n```xml\n";
   printExample(out, tag, 0) << "\n```\n\n";
 
   if (const auto &attributes = tag.getAttributes();

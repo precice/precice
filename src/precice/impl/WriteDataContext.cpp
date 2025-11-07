@@ -20,12 +20,12 @@ void WriteDataContext::resetBufferedData()
 
 void WriteDataContext::trimAfter(double time)
 {
-  _providedData->timeStepsStorage().trimAfter(time);
+  _providedData->waveform().trimAfter(time);
 
   // reset all toData
   PRECICE_ASSERT(!hasReadMapping(), "Read mapping is not allowed for WriteDataContext.");
   if (hasWriteMapping()) {
-    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [time](auto &context) { context.toData->timeStepsStorage().trimAfter(time); });
+    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [time](auto &context) { context.toData->waveform().trimAfter(time); });
   }
 }
 

@@ -293,6 +293,9 @@ void BaseQNAcceleration::performAcceleration(
     if (not(_filter == Acceleration::QR2FILTER || _filter == Acceleration::QR3FILTER)) { // for QR2 and QR3 filter, there is no need to do this twice
       _qrV.reset(_matrixV, getLSSystemRows());
     }
+    if (_filter == Acceleration::QR3FILTER) { // QR3 filter needs to recompute QR3 filter
+      _qrV.requireQR3Fallback();
+    }
     _preconditioner->newQRfulfilled();
   }
 
@@ -397,7 +400,7 @@ void BaseQNAcceleration::updateCouplingData(
     size_t dataSize     = couplingData.getSize();
 
     Eigen::VectorXd timeGrid = _timeGrids->getTimeGridAfter(id, windowStart);
-    couplingData.timeStepsStorage().trimAfter(windowStart);
+    couplingData.waveform().trimAfter(windowStart);
     for (int i = 0; i < timeGrid.size(); i++) {
 
       Eigen::VectorXd temp = Eigen::VectorXd::Zero(dataSize);
@@ -639,7 +642,7 @@ void BaseQNAcceleration::concatenateCouplingData(Eigen::VectorXd &data, Eigen::V
 
     for (int i = 0; i < timeGrid.size(); i++) {
 
-      auto current = cplData.at(id)->timeStepsStorage().sample(timeGrid(i));
+      auto current = cplData.at(id)->waveform().sample(timeGrid(i));
       auto old     = cplData.at(id)->getPreviousValuesAtTime(timeGrid(i));
 
       PRECICE_ASSERT(data.size() >= offset + dataSize, "the values were not initialized correctly");
