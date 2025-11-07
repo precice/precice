@@ -310,7 +310,7 @@ MappingConfiguration::MappingConfiguration(
       XMLTag{*this, RBF_CTPS_C2, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Compact thin-plate-spline C2")};
 
   auto attrTunerInterval = makeXMLAttribute(ATTR_TUNER_INTERVAL, "")
-                             .setDocumentation("Support radius optimization every N solver calls");
+                               .setDocumentation("Support radius optimization every N solver calls");
 
   auto attrSupportRadius = XMLAttribute<std::string>(ATTR_SUPPORT_RADIUS)
                                .setDocumentation("Support radius of each RBF basis function (global choice), or \"auto\" if preCICE should automatically try to determine a fitting support radius.");
@@ -339,7 +339,7 @@ MappingConfiguration::MappingConfiguration(
   std::list<XMLTag> GaussRBF{
       XMLTag{*this, RBF_GAUSSIAN, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Gaussian basis function accepting a support radius or a shape parameter.")};
   attrShapeParam.setDefaultValue(std::numeric_limits<double>::quiet_NaN());
-  attrSupportRadius.setDefaultValue(""); //TODO REPLACED "NaN"
+  attrSupportRadius.setDefaultValue(""); // TODO REPLACED "NaN"
   addAttributes(GaussRBF, {attrShapeParam, attrSupportRadius, attrTunerInterval});
   addSubtagsToParents(GaussRBF, rbfIterativeTags);
   addSubtagsToParents(GaussRBF, rbfDirectTags);

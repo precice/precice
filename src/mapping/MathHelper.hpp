@@ -38,8 +38,7 @@ inline Eigen::MatrixXd invertLowerTriangularBlockwise(const Eigen::MatrixXd &L)
     int i_blockSize = i_end - i_start;
 
     // Step 1: Invert the diagonal block
-    L.block(i_start, i_start, i_blockSize, i_blockSize).triangularView<Eigen::Lower>()
-        .solveInPlace(L_inv.block(i_start, i_start, i_blockSize, i_blockSize));
+    L.block(i_start, i_start, i_blockSize, i_blockSize).triangularView<Eigen::Lower>().solveInPlace(L_inv.block(i_start, i_start, i_blockSize, i_blockSize));
 
     // Step 2: Compute off-diagonal blocks
     for (int j = 0; j < i; ++j) {
@@ -160,10 +159,8 @@ inline Eigen::VectorXd computeInverseDiagonal(const Eigen::ColPivHouseholderQR<M
 template <typename DecompositionType>
 double computeRippaLOOCVerror(const DecompositionType &choleskyDec, const Eigen::VectorXd &inputData)
 {
-  constexpr bool isQRDecompositionType = std::is_same_v<DecompositionType, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>>
-    || std::is_same_v<DecompositionType, Eigen::ColPivHouseholderQR<Eigen::Ref<Eigen::MatrixXd>>>;
-  constexpr bool isLLTDecompositionType = std::is_same_v<DecompositionType, Eigen::LLT<Eigen::MatrixXd>>
-    || std::is_same_v<DecompositionType, Eigen::LLT<Eigen::Ref<Eigen::MatrixXd>>>;
+  constexpr bool isQRDecompositionType  = std::is_same_v<DecompositionType, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>> || std::is_same_v<DecompositionType, Eigen::ColPivHouseholderQR<Eigen::Ref<Eigen::MatrixXd>>>;
+  constexpr bool isLLTDecompositionType = std::is_same_v<DecompositionType, Eigen::LLT<Eigen::MatrixXd>> || std::is_same_v<DecompositionType, Eigen::LLT<Eigen::Ref<Eigen::MatrixXd>>>;
 
   static_assert(isQRDecompositionType || isLLTDecompositionType);
 

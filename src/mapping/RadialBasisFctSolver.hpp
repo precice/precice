@@ -47,9 +47,9 @@ public:
   RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, mesh::PtrMesh inputMesh, const IndexContainer &inputIDs,
                        mesh::PtrMesh outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial); // TODO: refactor and adapt for PUM
 
-  /** 
+  /**
    * Maps the given input data.
-   * The object state will be changed if automatic parameter tuninng is enabled, 
+   * The object state will be changed if automatic parameter tuninng is enabled,
    * since the interpolation matrix decomposition will be recomputed for different parameters.
    */
   template <typename IndexContainer>
@@ -87,7 +87,7 @@ public:
   void rebuildKernelDecomposition(const IndexConatiner &inputIds, double parameter);
 
   template <typename IndexConatiner>
-  std::tuple<double, double> computeErrorEstimate(const Eigen::VectorXd &inputData, const IndexConatiner &inputIds) const;
+  RBFErrorEstimate computeErrorEstimate(const Eigen::VectorXd &inputData, const IndexConatiner &inputIds) const;
 
 private:
   mutable precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
@@ -95,7 +95,7 @@ private:
   double evaluateRippaLOOCVerror(const Eigen::VectorXd &lambda) const;
 
   /// Matrix used for storing the kernel coefficients and the modified coefficients used by the decomposition.
-  Eigen::MatrixXd   _decMatrixCoefficients;
+  Eigen::MatrixXd _decMatrixCoefficients;
   /// Eigen in-place decomposition type of the interpolation matrix _decMatrixCoefficients. std::unique_ptr since Eigen:Ref is not resizable.
   std::unique_ptr<DecompositionType> _decMatrixC;
 
@@ -120,7 +120,7 @@ private:
   MappingConfiguration::AutotuningParams     _tuningConfig;
   mutable std::unique_ptr<RBFParameterTuner> _tuner;
 
-  mutable int    _iterSinceOptimization = 1;
+  mutable int _iterSinceOptimization = 1;
 
   Polynomial _polynomial;
 
@@ -223,7 +223,7 @@ inline Eigen::MatrixXd allocateMatrixCLU(const mesh::PtrMesh &inputMesh, const I
 
 template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
 void fillMatrixCLU(Eigen::MatrixXd &matrixCLU, RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::PtrMesh &inputMesh, const IndexContainer &inputIDs,
-                                      std::array<bool, 3> activeAxis, Polynomial polynomial)
+                   std::array<bool, 3> activeAxis, Polynomial polynomial)
 {
   // Required to fill the poly -> poly entries in the matrix, which remain otherwise untouched
   if (polynomial == Polynomial::ON) {
@@ -232,7 +232,7 @@ void fillMatrixCLU(Eigen::MatrixXd &matrixCLU, RADIAL_BASIS_FUNCTION_T basisFunc
 
   fillKernelEntries(matrixCLU, basisFunction, inputMesh, inputIDs, activeAxis);
 
-  const auto inSize = inputIDs.size();
+  const auto inSize     = inputIDs.size();
   const auto polyparams = matrixCLU.cols() - inSize;
 
   // Add potentially the polynomial contribution in the matrix
@@ -242,7 +242,6 @@ void fillMatrixCLU(Eigen::MatrixXd &matrixCLU, RADIAL_BASIS_FUNCTION_T basisFunc
     matrixCLU.block(inSize, inSize, polyparams, polyparams).template triangularView<Eigen::Lower>() = matrixCLU.block(inSize, inSize, polyparams, polyparams).transpose();
   }
 }
-
 
 template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
 inline Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::PtrMesh &inputMesh, const IndexContainer &inputIDs,
@@ -459,13 +458,13 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
 
       const bool isProbablyZeroData = _tuner->getLastOptimizationError() < 1e-15;
       // @todo: Data dimension not considered
-      const bool isOptimizationInterval = _tuningConfig.iterationInterval == _iterSinceOptimization;
+      const bool isOptimizationInterval  = _tuningConfig.iterationInterval == _iterSinceOptimization;
       const bool isOptimizedAndSouldOnce = _tuningConfig.optimizeOnce() && _tuner->getLastOptimizationError() != std::numeric_limits<double>::max();
 
       // @todo: Add error criterion.
       if (isProbablyZeroData || isOptimizationInterval || !isOptimizedAndSouldOnce) {
-        auto& mutableSolver = *const_cast<RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>*>(this);
-        Sample sample = _tuner->optimize(mutableSolver, inputIDs, inputData);
+        auto  &mutableSolver = *const_cast<RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T> *>(this);
+        Sample sample        = _tuner->optimize(mutableSolver, inputIDs, inputData);
         if (!_tuner->lastSampleWasOptimum()) {
           mutableSolver.rebuildKernelDecomposition(inputIDs, _tuner->getLastOptimizedRadius());
         }
@@ -532,7 +531,7 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::rebuildKernelDecomposition(c
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexConatiner>
-std::tuple<double, double> RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeErrorEstimate(const Eigen::VectorXd &inputData, const IndexConatiner &inputIds) const
+RBFErrorEstimate RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeErrorEstimate(const Eigen::VectorXd &inputData, const IndexConatiner &inputIds) const
 {
   if (_decMatrixC->info() != Eigen::ComputationInfo::Success) {
     return {std::numeric_limits<double>::max(), 0};

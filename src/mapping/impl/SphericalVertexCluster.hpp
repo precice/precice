@@ -182,7 +182,7 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
   _rbfSolver          = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>(function, inputMesh, _inputIDs, outputMesh, _outputIDs, deadAxis, _polynomial, rbfOptional);
   _hasComputedMapping = true;
 
-  //warning: use of function template name with no prior declaration in function call with explicit template arguments is a C++20 extension [-Wc++20-extensions]
+  // warning: use of function template name with no prior declaration in function call with explicit template arguments is a C++20 extension [-Wc++20-extensions]
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

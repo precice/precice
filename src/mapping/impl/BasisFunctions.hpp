@@ -299,7 +299,7 @@ public:
 
   static double transformRadiusToShape(const double radius)
   {
-      return std::sqrt(-std::log(cutoffThreshold)) / radius;
+    return std::sqrt(-std::log(cutoffThreshold)) / radius;
   }
 
 public:
@@ -631,7 +631,6 @@ private:
   double                _r_inv;
   RadialBasisParameters _params;
 };
-
 
 #undef PRECICE_FMA
 #undef PRECICE_LOG

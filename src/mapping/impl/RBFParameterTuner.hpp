@@ -6,14 +6,22 @@
 
 namespace precice::mapping {
 
+struct RBFErrorEstimate {
+  double error;
+  double rcond;
+
+  RBFErrorEstimate(double error, double rcond)
+      : error(error), rcond(rcond)
+  {
+  }
+};
+
 struct Sample {
   double radius;
   double error;
 
   Sample(double radius, double error)
-      : radius(radius), error(error)
-  {
-  }
+      : radius(radius), error(error) {}
 
   Sample()
       : radius(std::numeric_limits<double>::quiet_NaN()), error(std::numeric_limits<double>::max())
@@ -26,13 +34,13 @@ class RBFParameterTuner {
   mutable logging::Logger _log{"mapping::RBFParameterTuner"};
 
   /// Factor by which the radius is allowed to change before stopping
-  static constexpr double POS_TOLERANCE = 1.5; 
+  static constexpr double POS_TOLERANCE = 1.5;
   /// Factor by which the error is allowed to change before stopping
-  static constexpr double ERR_TOLERANCE = 0.5; 
+  static constexpr double ERR_TOLERANCE = 0.5;
   /// Which reciprocal condition number should be considered too low for a good support radius
   static constexpr double RCOND_TOLERANCE = 1e-12;
   /// Number of iterations during the "bisection" step. After finding initial samples
-  static constexpr int MAX_BISEC_ITERATIONS = 6;   
+  static constexpr int MAX_BISEC_ITERATIONS = 6;
 
 protected:
   std::vector<Sample> _samples;
@@ -74,8 +82,8 @@ Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputId
 {
   constexpr bool radiusRBF = Solver::BASIS_FUNCTION_T::hasCompactSupport();
   static_assert(radiusRBF, "RBF is not supported by this optimizer, as it does not accept a support-radius."
-                            "Currently supported: Compactly supported RBFs and Gaussians.");
-  
+                           "Currently supported: Compactly supported RBFs and Gaussians.");
+
   // TODO: maybe make dependent on domain extend
   constexpr double increaseSize = 10;
   double           sampleRadius = _lowerBound;
@@ -85,15 +93,13 @@ Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputId
   PRECICE_INFO("Starting optimization with lower bound = {:.4e}, upper bound = {:.4e}", _lowerBound, _upperBound);
 
   solver.rebuildKernelDecomposition(inputIds, sampleRadius);
-  auto [error, rcond] = solver.computeErrorEstimate(inputData, inputIds);
-  Sample lowerBound   = {sampleRadius, error};
-
-  std::cout << "lowerBound " << lowerBound.radius << " error "<< error << std::endl;
+  RBFErrorEstimate estimate   = solver.computeErrorEstimate(inputData, inputIds);
+  Sample           lowerBound = {sampleRadius, estimate.error};
 
   // error is numerically insignificant: Either zero data or fully explained by the polynomial
-  if (error < 1e-15) {
+  if (estimate.error < 1e-15) {
     _lastSampleWasOptimum = true;
-    _currentOptimum = lowerBound;
+    _currentOptimum       = lowerBound;
     return lowerBound;
   }
 
@@ -102,16 +108,19 @@ Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputId
     sampleRadius *= increaseSize;
 
     solver.rebuildKernelDecomposition(inputIds, sampleRadius);
-    auto [error, rcond] = solver.computeErrorEstimate(inputData, inputIds);
+    RBFErrorEstimate estimate = solver.computeErrorEstimate(inputData, inputIds);
 
-    PRECICE_INFO("RBF tuner sample: rad={:.4e}, err={:.4e}, 1/cond={:.4e}", sampleRadius, error, rcond);
+    PRECICE_INFO("RBF tuner sample: rad={:.4e}, err={:.4e}, 1/cond={:.4e}", sampleRadius, estimate.error, estimate.rcond);
 
-    if (rcond < RCOND_TOLERANCE || error >= std::numeric_limits<double>::max()) {
-      PRECICE_CHECK(sampleRadius != _lowerBound, "Parameter tuning failed in first iteration using support-radius={}", sampleRadius);
+    if (estimate.rcond < RCOND_TOLERANCE || estimate.error >= std::numeric_limits<double>::max()) {
+      PRECICE_CHECK(sampleRadius != _lowerBound, "Parameter tuning failed in first iteration using support-radius={}."
+                                                 "Try using a different basis function, or select a smaller support radius manually.",
+                    sampleRadius);
+
       _upperBound = sampleRadius;
       break;
     }
-    lowerBound = {sampleRadius, error};
+    lowerBound = {sampleRadius, estimate.error};
   }
   Sample upperBound = {_upperBound, std::numeric_limits<double>::max()};
 
@@ -123,10 +132,10 @@ Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputId
     centerSample.radius = (lowerBound.radius + upperBound.radius) / 2;
 
     solver.rebuildKernelDecomposition(inputIds, centerSample.radius);
-    centerSample.error = std::get<0>(solver.computeErrorEstimate(inputData, inputIds));
+    centerSample.error = solver.computeErrorEstimate(inputData, inputIds).error;
 
     PRECICE_DEBUG("Current interval: [({:.2e},{:.2e}), ({:.2e},{:.2e})], Sample: rad={:.2e}, err={:.2e}",
-                 lowerBound.radius, lowerBound.error, upperBound.radius, upperBound.error, centerSample.radius, centerSample.error);
+                  lowerBound.radius, lowerBound.error, upperBound.radius, upperBound.error, centerSample.radius, centerSample.error);
 
     if (lowerBound.error < upperBound.error || (centerSample.error >= std::numeric_limits<double>::max())) {
       upperBound = centerSample;
@@ -135,7 +144,7 @@ Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputId
     }
     i++;
   }
-  _currentOptimum = centerSample.error >= std::numeric_limits<double>::max() ? lowerBound : centerSample;
+  _currentOptimum       = centerSample.error >= std::numeric_limits<double>::max() ? lowerBound : centerSample;
   _lastSampleWasOptimum = centerSample.radius == _currentOptimum.radius;
 
   PRECICE_DEBUG("Best sample: rad={:.4e}, err={:.4e}", _currentOptimum.radius, _currentOptimum.error);
@@ -145,7 +154,7 @@ Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputId
 
 inline double RBFParameterTuner::estimateMeshResolution(mesh::Mesh &inputMesh)
 {
-  size_t sampleSize = std::min((size_t)3, inputMesh.vertices().size());
+  size_t sampleSize = std::min((size_t) 3, inputMesh.vertices().size());
 
   const auto         i0 = inputMesh.vertices().size() / 2;
   const mesh::Vertex x0 = inputMesh.vertices().at(i0);
@@ -164,7 +173,7 @@ inline bool RBFParameterTuner::shouldContinue(const Sample &lowerBound, const Sa
 {
   bool shouldContinue = upperBound.error == std::numeric_limits<double>::max();
   shouldContinue |= upperBound.radius > POS_TOLERANCE * lowerBound.radius;
-  // TODO: instead of a simple difference consider some logarithmic criterion, since the errors on meshes with different reslutions converge to different values of varying orders of magnitude?
+  // TODO: instead of a simple difference consider some logarithmic criterion, since the errors on meshes with different resolutions converge to different values of varying orders of magnitude?
   shouldContinue |= std::abs(upperBound.error - lowerBound.error) < ERR_TOLERANCE * std::min(upperBound.error, lowerBound.error);
   return shouldContinue;
 }
@@ -174,11 +183,13 @@ inline bool RBFParameterTuner::lastSampleWasOptimum() const
   return _lastSampleWasOptimum;
 }
 
-inline double RBFParameterTuner::getLastOptimizedRadius() const {
+inline double RBFParameterTuner::getLastOptimizedRadius() const
+{
   return _currentOptimum.radius;
 }
 
-inline double RBFParameterTuner::getLastOptimizationError() const {
+inline double RBFParameterTuner::getLastOptimizationError() const
+{
   return _currentOptimum.error;
 }
 
