@@ -105,7 +105,7 @@ private:
   const double _radius;
 
   /// The RBF solver
-  std::unique_ptr<RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>> _rbfSolver;
+  RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T> _rbfSolver;
 
   // Stores the global IDs of the vertices so that we can apply a binary
   // search in order to query specific objects. Here we have logarithmic
@@ -179,7 +179,7 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
   // mapping in this cluster as computed (mostly for debugging purpose)
   std::vector<bool>         deadAxis(inputMesh->getDimensions(), false);
   precice::profiling::Event e("map.pou.computeMapping.rbfSolver");
-  _rbfSolver          = std::make_unique<RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>>(function, inputMesh, _inputIDs, outputMesh, _outputIDs, deadAxis, _polynomial, rbfOptional);
+  _rbfSolver          = RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>(function, inputMesh, _inputIDs, outputMesh, _outputIDs, deadAxis, _polynomial, rbfOptional);
   _hasComputedMapping = true;
 
   //warning: use of function template name with no prior declaration in function call with explicit template arguments is a C++20 extension [-Wc++20-extensions]
@@ -215,7 +215,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
   const auto        &localInData = inData.values;
 
   // TODO: We can probably reduce the temporary allocations here
-  Eigen::VectorXd in(_rbfSolver->getOutputSize());
+  Eigen::VectorXd in(_rbfSolver.getOutputSize());
 
   // Now we perform the data mapping component-wise
   for (unsigned int c = 0; c < nComponents; ++c) {
@@ -230,7 +230,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
     }
 
     // Step 2: solve the system using a conservative constraint
-    auto result = _rbfSolver->solveConservative(in, _inputIDs, _polynomial);
+    auto result = _rbfSolver.solveConservative(in, _inputIDs, _polynomial);
     PRECICE_ASSERT(result.size() == static_cast<Eigen::Index>(_inputIDs.size()));
 
     // Step 3: now accumulate the result into our global output data
@@ -246,7 +246,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::evaluateConservativeCache(Eigen::MatrixXd &epsilon, const Eigen::MatrixXd &Au, Eigen::Ref<Eigen::MatrixXd> out)
 {
   Eigen::MatrixXd localIn(_inputIDs.size(), Au.cols());
-  _rbfSolver->evaluateConservativeCache(epsilon, Au, localIn);
+  _rbfSolver.evaluateConservativeCache(epsilon, Au, localIn);
   // Step 3: now accumulate the result into our global output data
   for (std::size_t i = 0; i < _inputIDs.size(); ++i) {
     const auto dataIndex = *(_inputIDs.nth(i));
@@ -259,7 +259,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::computeCacheData(const Eigen::Ref<const Eigen::MatrixXd> &globalIn, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffOut) const
 {
   PRECICE_TRACE();
-  Eigen::MatrixXd in(_rbfSolver->getInputSize(), globalIn.rows());
+  Eigen::MatrixXd in(_rbfSolver.getInputSize(), globalIn.rows());
   // Step 1: extract the relevant input data from the global input data and store
   // it in a contiguous array, which is required for the RBF solver (last polyparams entries remain zero)
   for (std::size_t i = 0; i < _inputIDs.size(); i++) {
@@ -268,14 +268,14 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::computeCacheData(const Eig
     in.row(i) = globalIn.col(dataIndex);
   }
   // Step 2: solve the system using a consistent constraint
-  _rbfSolver->computeCacheData(in, _polynomial, polyOut, coeffOut);
+  _rbfSolver.computeCacheData(in, _polynomial, polyOut, coeffOut);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::VectorXd SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs, const mesh::Mesh &inMesh) const
 {
   PRECICE_TRACE();
-  return _rbfSolver->interpolateAt(v, poly, coeffs, _function, _inputIDs, inMesh);
+  return _rbfSolver.interpolateAt(v, poly, coeffs, _function, _inputIDs, inMesh);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -284,14 +284,14 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const 
                                                                           const mesh::Mesh &inMesh)
 {
   PRECICE_TRACE();
-  _rbfSolver->addWriteDataToCache(v, load, epsilon, Au, _function, _inputIDs, inMesh);
+  _rbfSolver.addWriteDataToCache(v, load, epsilon, Au, _function, _inputIDs, inMesh);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::initializeCacheData(Eigen::MatrixXd &poly, Eigen::MatrixXd &coeffs, const int nComponents)
 {
   if (Polynomial::SEPARATE == _polynomial) {
-    poly.resize(_rbfSolver->getNumberOfPolynomials(), nComponents);
+    poly.resize(_rbfSolver.getNumberOfPolynomials(), nComponents);
   }
   coeffs.resize(_inputIDs.size(), nComponents);
 }
@@ -308,7 +308,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
   const unsigned int nComponents = inData.dataDims;
   const auto        &localInData = inData.values;
 
-  Eigen::VectorXd in(_rbfSolver->getInputSize());
+  Eigen::VectorXd in(_rbfSolver.getInputSize());
 
   // Now we perform the data mapping component-wise
   for (unsigned int c = 0; c < nComponents; ++c) {
@@ -321,7 +321,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
     }
 
     // Step 2: solve the system using a consistent constraint
-    auto result = _rbfSolver->solveConsistent(in, _inputIDs, _polynomial);
+    auto result = _rbfSolver.solveConsistent(in, _inputIDs, _polynomial);
     PRECICE_ASSERT(static_cast<Eigen::Index>(_outputIDs.size()) == result.size());
 
     // Step 3: now accumulate the result into our global output data
@@ -368,7 +368,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::clear()
   PRECICE_TRACE();
   _inputIDs.clear();
   _outputIDs.clear();
-  _rbfSolver->clear();
+  _rbfSolver.clear();
   _hasComputedMapping = false;
 }
 } // namespace precice::mapping
