@@ -302,6 +302,9 @@ jobs:
 
           # Start the launch service
           Start-Service MsMpiLaunchSvc
+
+          # Start smpd process
+          Start-Process -FilePath "C:\Program Files\Microsoft MPI\Bin\smpd.exe" -ArgumentList '-d'
         shell: powershell
       - uses: msys2/setup-msys2@v2
         with:
