@@ -1,13 +1,12 @@
+#include <chrono>
+#include <fstream>
+#include <future>
 #include <iostream> //cpp11
 #include <memory>   //make_unique from cpp14 rest cpp11
 #include <mutex>    //cpp11
 #include <random>
-#include <future>
-#include <thread>
-#include <chrono>
 #include <string>
-#include <fstream>
-
+#include <thread>
 
 #include <precice/Tooling.hpp>
 #include <precice/Types.hpp>
@@ -15,7 +14,7 @@
 // project dependencies, used to remove reliance an std types maybe not available on older versions of cpp or outside libs
 
 // --figure out why compilation was weird (weird issue when creating the current git structure merged old version of makefile incorrectly)
-// --Ltrans warning is not easily avoidable (has to do with the way linking is handeled in the entire project)
+// --Ltrans warning is not easily avoidable (has to do with the way linking is handled in the entire project)
 // --only happens on build from a clean state
 
 // Add dummy data exchange
@@ -145,14 +144,16 @@ namespace precice {
 
 namespace impl {
 
-
 class FileDoubleReader {
 public:
-  explicit FileDoubleReader(const std::string &path = std::string()) : path_(path) {
-    if (!path_.empty()) open(path_);
+  explicit FileDoubleReader(const std::string &path = std::string()) : path_(path)
+  {
+    if (!path_.empty())
+      open(path_);
   }
 
-  bool open(const std::string &path) {
+  bool open(const std::string &path)
+  {
     std::lock_guard<std::mutex> lk(mtx_);
     path_ = path;
     ifs_.close();
@@ -161,14 +162,17 @@ public:
     return ifs_.is_open();
   }
 
-  bool isOpen() const {
+  bool isOpen() const
+  {
     return ifs_.is_open();
   }
 
-  bool readNext(double &value) {
+  bool readNext(double &value)
+  {
     std::lock_guard<std::mutex> lk(mtx_);
     if (!ifs_.is_open()) {
-      if (path_.empty() || !open(path_)) return false;
+      if (path_.empty() || !open(path_))
+        return false;
     }
     for (;;) {
       if (ifs_ >> value) {
@@ -177,7 +181,8 @@ public:
       if (ifs_.eof()) {
         ifs_.clear();
         ifs_.seekg(0);
-        if (ifs_.peek() == EOF) return false;
+        if (ifs_.peek() == EOF)
+          return false;
         continue;
       }
       return false;
@@ -185,7 +190,7 @@ public:
   }
 
 private:
-  std::string  path_;
+  std::string           path_;
   mutable std::ifstream ifs_;
   mutable std::mutex    mtx_;
 };
@@ -221,12 +226,12 @@ public:
   std::mutex  mtx;
 
   std::vector<double> dataSeries;
-  bool        useFile         = false;
-  uint32_t    seed            = 0;
-  std::size_t currentStep     = 0;
-  double      currentTime     = 0.0;
-  std::string promptedFilepath;
-  bool        filepathSet = false;
+  bool                useFile     = false;
+  uint32_t            seed        = 0;
+  std::size_t         currentStep = 0;
+  double              currentTime = 0.0;
+  std::string         promptedFilepath;
+  bool                filepathSet = false;
 
   std::unique_ptr<FileDoubleReader> fileReader;
 };
@@ -275,44 +280,45 @@ void Participant::initialize()
   if (!_impl->filepathSet) {
     std::cout << "Enter filepath for data series (10s timeout): " << std::flush;
 
-    std::atomic<bool> timedOut{false};
+    std::atomic<bool>         timedOut{false};
     std::promise<std::string> p;
-    auto fut = p.get_future();
+    auto                      fut = p.get_future();
 
     std::thread t([&p, &timedOut]() {
-        std::string input;
-        if (std::getline(std::cin, input)) {
-            if (!timedOut.load()) {
-                p.set_value(input);
-            }
-        } else {
-            if (!timedOut.load()) {
-                p.set_value(std::string());
-            }
+      std::string input;
+      if (std::getline(std::cin, input)) {
+        if (!timedOut.load()) {
+          p.set_value(input);
         }
+      } else {
+        if (!timedOut.load()) {
+          p.set_value(std::string());
+        }
+      }
     });
 
     if (fut.wait_for(std::chrono::seconds(10)) == std::future_status::ready) {
-        _impl->promptedFilepath = fut.get();
-        _impl->useFile = !_impl->promptedFilepath.empty();
-        std::cout << "\nReceived filepath: " << _impl->promptedFilepath << std::endl;
-        if (_impl->useFile) {
-          _impl->fileReader = std::make_unique<impl::FileDoubleReader>(_impl->promptedFilepath);
-          if (!_impl->fileReader->isOpen()) {
-            std::cerr << "precice mock: failed to open file '" << _impl->promptedFilepath << "'. Falling back to random data.\n";
-            _impl->useFile = false;
-            _impl->fileReader.reset();
-          }
+      _impl->promptedFilepath = fut.get();
+      _impl->useFile          = !_impl->promptedFilepath.empty();
+      std::cout << "\nReceived filepath: " << _impl->promptedFilepath << std::endl;
+      if (_impl->useFile) {
+        _impl->fileReader = std::make_unique<impl::FileDoubleReader>(_impl->promptedFilepath);
+        if (!_impl->fileReader->isOpen()) {
+          std::cerr << "precice mock: failed to open file '" << _impl->promptedFilepath << "'. Falling back to random data.\n";
+          _impl->useFile = false;
+          _impl->fileReader.reset();
         }
-        if (t.joinable()) t.join();
+      }
+      if (t.joinable())
+        t.join();
     } else {
-        timedOut = true;
-        std::cout << "\nNo input within 10 seconds. Proceeding without filepath.\n";
-        if (t.joinable()) t.detach();
+      timedOut = true;
+      std::cout << "\nNo input within 10 seconds. Proceeding without filepath.\n";
+      if (t.joinable())
+        t.detach();
     }
     _impl->filepathSet = true;
   }
-
 
   _impl->initialized     = true;
   _impl->couplingOngoing = true;
@@ -327,12 +333,11 @@ void Participant::advance(double computedTimeStepSize)
     return;
   std::lock_guard<std::mutex> lk(_impl->mtx);
   (void) computedTimeStepSize;
-  if (_impl->maxTimeStep == _impl->currentStep)
-  {
+  if (_impl->maxTimeStep == _impl->currentStep) {
     _impl->couplingOngoing = false;
     return;
   }
-  
+
   _impl->currentStep += 1;
   _impl->currentTime += computedTimeStepSize;
 
@@ -519,7 +524,7 @@ void Participant::readData(
   if (!_impl)
     return;
   std::lock_guard<std::mutex> lk(_impl->mtx);
-  const std::size_t n = values.size();
+  const std::size_t           n = values.size();
 
   if (_impl->useFile && _impl->fileReader) // return data from file
   {
@@ -531,10 +536,9 @@ void Participant::readData(
         values[i] = 0.0;
       }
     }
-  }
-  else //use random data
+  } else // use random data
   {
-    std::mt19937 gen(static_cast<uint32_t>(_impl->seed + static_cast<uint32_t>(_impl->currentStep)));
+    std::mt19937                           gen(static_cast<uint32_t>(_impl->seed + static_cast<uint32_t>(_impl->currentStep)));
     std::uniform_real_distribution<double> dist(0.0, 1.0);
     for (std::size_t i = 0; i < n; ++i) {
       values[i] = dist(gen);
