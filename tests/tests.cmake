@@ -21,7 +21,7 @@ target_sources(testprecice
     tests/fundamental/profiling/NotAllStopped.cpp
     tests/fundamental/profiling/NotStoppedAtFinalize.cpp
     tests/fundamental/profiling/UserProfiling.cpp
-    tests/geometric-multiscale/AxialGeoMultiscale.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleParabolic.cpp
     tests/geometric-multiscale/AxialGeoMultiscaleUniform.cpp
     tests/geometric-multiscale/RadialGeoMultiscale.cpp
     tests/parallel/CouplingOnLine.cpp
