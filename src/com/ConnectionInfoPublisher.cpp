@@ -12,6 +12,10 @@
 #include "utils/Hash.hpp"
 #include "utils/assertion.hpp"
 
+#include <profiling/Event.hpp>
+
+using precice::profiling::Event;
+
 namespace fs = std::filesystem;
 namespace precice::com {
 
@@ -53,6 +57,7 @@ std::string ConnectionInfoReader::read() const
 {
   auto path = getFilename();
 
+  Event e0 = Event("ConnectionInfoReader.read.waitingForConnectionFile");
   PRECICE_DEBUG("Waiting for connection file \"{}\"", path);
   const auto waitdelay = std::chrono::milliseconds(1);
   while (!fs::exists(path)) {
@@ -60,6 +65,9 @@ std::string ConnectionInfoReader::read() const
   }
   PRECICE_ASSERT(fs::exists(path));
   PRECICE_DEBUG("Found connection file \"{}\"", path);
+
+  e0.stop();
+  Event e1 = Event("ConnectionInfoReader.read.readingConnectionFile");
 
   std::ifstream ifs(path);
 
@@ -80,18 +88,31 @@ std::string ConnectionInfoReader::read() const
                 "Please report this bug to the preCICE developers.",
                 path);
   boost::algorithm::trim_right(addressData);
+
+  e1.stop();
+
   return addressData;
 }
 
 ConnectionInfoWriter::~ConnectionInfoWriter()
 {
+  Event e0 = Event("ConnectionInfoWriter.init.constructingFilename");
+
   fs::path path(getFilename());
+
+  e0.stop();
+  Event e1 = Event("ConnectionInfoWriter.init.checkingConnectingFile");
+
   if (!fs::exists(path)) {
     PRECICE_WARN("Cannot clean-up the connection file \"{}\" as it doesn't exist. "
                  "In case of connection problems, please report this to the preCICE developers.",
                  path.generic_string());
     return;
   }
+
+  e1.stop();
+  Event e2 = Event("ConnectionInfoWriter.init.deletingConnectionFile");
+
   PRECICE_DEBUG("Deleting connection file \"{}\"", path.generic_string());
   try {
     fs::remove(path);
@@ -105,12 +126,18 @@ ConnectionInfoWriter::~ConnectionInfoWriter()
                  "Make sure to delete the \"precice-run\" directory before restarting the simulation.",
                  e.what());
   }
+
+  e2.stop();
 }
 
 void ConnectionInfoWriter::write(std::string_view info) const
 {
+  Event e0 = Event("ConnectionInfoWriter.write.constructingFilename");
   auto path = getFilename();
   auto tmp  = fs::path(path + "~");
+
+  e0.stop();
+  Event e1 = Event("ConnectionInfoWriter.write.checkExistingFile");
 
   {
     auto message = "Unable to establish connection as a {}connection file already exists at \"{}\". "
@@ -119,6 +146,9 @@ void ConnectionInfoWriter::write(std::string_view info) const
     PRECICE_CHECK(!fs::exists(path), message, "", path);
     PRECICE_CHECK(!fs::exists(tmp), message, "temporary ");
   }
+
+  e1.stop();
+  Event e2 = Event("ConnectionInfoWriter.write.writingTemporaryFile");
 
   PRECICE_DEBUG("Writing temporary connection file \"{}\"", tmp.generic_string());
   fs::create_directories(tmp.parent_path());
@@ -137,13 +167,22 @@ void ConnectionInfoWriter::write(std::string_view info) const
                "{}\nAcceptor: {}, Requester: {}, Tag: {}, Rank: {}",
                info, acceptorName, requesterName, tag, rank);
   }
+  e2.stop();
+  Event e3 = Event("ConnectionInfoWriter.write.checkingTemporaryFile");
   PRECICE_CHECK(fs::exists(tmp),
                 "Unable to establish connection as the temporary connection file \"{}\" was written, but doesn't exist on disk. "
                 "Please report this bug to the preCICE developers.",
                 tmp.generic_string());
+  e3.stop();
+
+  Event e4 = Event("ConnectionInfoWriter.write.publishingFile");
 
   PRECICE_DEBUG("Publishing connection file \"{}\"", path);
   fs::rename(tmp, path);
+
+  e4.stop();
+  Event e5 = Event("ConnectionInfoWriter.write.checkingFile");
+
   PRECICE_WARN_IF(
       fs::exists(tmp),
       "The temporary connection file \"{}\" wasn't properly removed. "
@@ -153,6 +192,8 @@ void ConnectionInfoWriter::write(std::string_view info) const
                 "Unable to establish connection as the connection file \"{}\" doesn't exist on disk. "
                 "Please report this bug to the preCICE developers.",
                 path);
+
+  e5.stop();
 }
 
 } // namespace precice::com
