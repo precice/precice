@@ -185,17 +185,18 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadUniformZ)
 
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
-  // Point A (3D): Check if z axis data is 4.0
+  // Check that the 3D data is initialized to zero and the MultiscaleAxis-component is assigned the same value on all points
+  // Point A (3D)
   BOOST_TEST(outValues(0) == 0.0);
   BOOST_TEST(outValues(1) == 0.0);
   BOOST_TEST(outValues(2) == 4.0);
 
-  // Point B (3D): Check if z axis data is 4.0
+  // Point B (3D)
   BOOST_TEST(outValues(3) == 0.0);
   BOOST_TEST(outValues(4) == 0.0);
   BOOST_TEST(outValues(5) == 4.0);
 
-  // Point C (3D): Check if z axis data is 4.0
+  // Point C (3D)
   BOOST_TEST(outValues(6) == 0.0);
   BOOST_TEST(outValues(7) == 0.0);
   BOOST_TEST(outValues(8) == 4.0);
