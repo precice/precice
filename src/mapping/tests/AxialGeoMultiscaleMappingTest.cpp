@@ -331,5 +331,5 @@ BOOST_AUTO_TEST_CASE(ConsistentCollectZScalar)
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
   // All outputs equal to the scalar input
-  BOOST_TEST(outValues(0) == (3.0 + 7.0 + 5.0) / 3.0);
+  BOOST_TEST(outValues(0) == (3.0 + 7.0 + 5.0) / 3);
 }
