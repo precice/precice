@@ -248,7 +248,7 @@ PRECICE_TEST_SETUP(1_rank);
 BOOST_AUTO_TEST_CASE(ConsistentSpreadXScalar)
 {
   PRECICE_TEST();
-  // 1D -> 3D, scalar data: the same value is copied to all output vertices, along X axis
+  // 1D -> 3D, scalar data, uniform spread along the X axis
   constexpr int dimensions = 3;
   using testing::equals;
 
