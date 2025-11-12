@@ -272,8 +272,7 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadXScalar)
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
   // Create data to map
-  double inValues(1);
-  inValues << 42.0;
+  double             inValues = 42.0;
   const time::Sample inSample{1, inValues};
   Eigen::VectorXd    outValues(3);
   outValues = Eigen::VectorXd::Zero(3);
