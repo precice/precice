@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadUniformZ)
   PRECICE_TEST();
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, coupled along the z-axis.
       Then, the data is mapped from the single vertex of the 1D mesh to defined vertices on the circular inlet of the 3D mesh (hence, "spread").
-      The values are spread following a uniform spread, it is, all vertices from the 3D mesh receive the same values.
+      The values are spread following a uniform spread, meaning that all vertices from the 3D mesh receive the same values.
       Finally, this expected behavior is tested.
   */
   constexpr int dimensions = 3;
