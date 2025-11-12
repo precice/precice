@@ -36,7 +36,7 @@
       multiscale-type="spread"
       multiscale-radius="1.0"
       multiscale-axis="z"
-      spread-profile="uniform"
+      multiscale-spread-profile="uniform"
       from="Mesh1D"
       to="Mesh3D"
       constraint="consistent" />

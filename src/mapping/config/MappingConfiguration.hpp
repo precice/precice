@@ -195,7 +195,7 @@ private:
   const std::string ATTR_GEOMETRIC_MULTISCALE_TYPE           = "multiscale-type";
   const std::string ATTR_GEOMETRIC_MULTISCALE_AXIS           = "multiscale-axis";
   const std::string ATTR_GEOMETRIC_MULTISCALE_RADIUS         = "multiscale-radius";
-  const std::string ATTR_GEOMETRIC_MULTISCALE_SPREAD_PROFILE = "spread-profile";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_SPREAD_PROFILE = "multiscale-spread-profile";
   const std::string GEOMETRIC_MULTISCALE_TYPE_SPREAD         = "spread";
   const std::string GEOMETRIC_MULTISCALE_TYPE_COLLECT        = "collect";
   const std::string GEOMETRIC_MULTISCALE_AXIS_X              = "x";
