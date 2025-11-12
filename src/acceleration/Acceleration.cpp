@@ -19,13 +19,13 @@ void Acceleration::applyRelaxation(double omega, DataMap &cplData, double window
   for (auto &pair : cplData) {
     auto &couplingData = *(pair.second);
 
-    if (couplingData.timeStepsStorage().empty()) {
+    if (couplingData.waveform().empty()) {
       continue;
     }
     // @todo: This will apply the scaling to the sample at t=0 and t=1 when
     // calling performAcceleration the first time. Computations at the
     // previousValuesAtTime/oldValues don't change anything and are unneeded
-    for (auto &stample : couplingData.timeStepsStorage().stamples()) {
+    for (auto &stample : couplingData.waveform().stamples()) {
       if (!math::greater(stample.timestamp, windowStart)) {
         // skip stamples at beginning of this window or earlier since this is either initial data or already converged data from previous windows
         continue;

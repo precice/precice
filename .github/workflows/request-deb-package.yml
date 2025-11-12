@@ -28,16 +28,30 @@ on:
         default: "20.04"
         required: true
         type: string
+  workflow_call:
+    inputs:
+      release:
+        required: true
+        type: string
+      distro:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
 
 jobs:
   package:
-    name: 'Package ${{ github.event.inputs.release }} for ${{ github.event.inputs.distro }} ${{ github.event.inputs.version }}'
+    name: 'Package ${{ inputs.release }} for ${{ inputs.distro }} ${{ inputs.version }}'
     runs-on: ubuntu-latest
-    container: '${{ github.event.inputs.distro }}:${{ github.event.inputs.version }}'
+    container: '${{ inputs.distro }}:${{ inputs.version }}'
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ github.event.inputs.release }}
+          ref: ${{ inputs.release }}
       - name: Generate build directory
         run: mkdir -p build
       - name: Install common dependencies
@@ -59,11 +73,29 @@ jobs:
       - name: Create packages
         working-directory: build
         run: cpack
-      - name: Upload debian package
-        uses: svenstaro/upload-release-action@v2
+      - uses: actions/upload-artifact@v5
+        id: upload
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/libprecice*.deb*
-          file_glob: true
+          name: ${{ format('{0}_{1}_{2}_deb', inputs.distro, inputs.version, inputs.release ) }}
+          path: ./build/libprecice*.deb*
           overwrite: true
-          tag: ${{ github.event.inputs.release }}
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: 'Upload DEB package for ${{ inputs.distro }}:${{ inputs.version }} to release ${{ inputs.release }}'
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@v6
+        with:
+          artifact-ids: ${{ needs.package.outputs.artifact-id }}
+          path: build
+      - name: Upload debian package
+        run: gh release upload --clobber -R precice/precice "${{ inputs.release }}" ./build/libprecice*.deb*
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

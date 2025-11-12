@@ -14,77 +14,47 @@ jobs:
   release-draft:
     name: 'Draft release'
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
     steps:
-        - name: "Create draft release"
-          uses: softprops/action-gh-release@v2
-          with:
-            draft: True
+      - name: Create draft release
+        run: gh release create "${{ github.ref_name}}" --draft --verify-tag -R precice/precice
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   package-deb:
     needs: release-draft
-    name: 'Package ${{ matrix.TARGET }}'
-    runs-on: ubuntu-latest
-    container: '${{ matrix.TARGET }}'
     strategy:
       fail-fast: false
       matrix:
-        TARGET: ["ubuntu:22.04", "ubuntu:24.04", "debian:13"]
-    steps:
-      - uses: actions/checkout@v5
-      - name: Generate build directory
-        run: mkdir -p build
-      - name: Install common dependencies
-        env:
-          DEBIAN_FRONTEND: noninteractive
-          TZ: Europe/Berlin
-        run: |
-          apt update
-          apt -y upgrade
-          apt -y install git build-essential lsb-release cmake libeigen3-dev libxml2-dev libboost-all-dev python3-dev python3-numpy petsc-dev
-      - name: Configure
-        working-directory: build
-        run: |
-          cmake --version
-          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR="DEB" -DPRECICE_FEATURE_PETSC_MAPPING=ON -DBUILD_TESTING=OFF -DBUILD_SHARED_LIBS=ON -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON ..
-      - name: Compile
-        working-directory: build
-        run: make -j "$(nproc)"
-      - name: Create packages
-        working-directory: build
-        run: cpack
-      - name: Upload debian package
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/libprecice*.deb*
-          file_glob: true
-          tag: ${{ github.ref }}
+        include:
+        - distro: ubuntu
+          version: "22.04"
+        - distro: ubuntu
+          version: "24.04"
+        - distro: debian
+          version: "13"
+    uses: ./.github/workflows/request-deb-package.yml
+    with:
+      release: ${{ github.ref_name }}
+      distro: ${{ matrix.distro }}
+      version: ${{ matrix.version }}
+    secrets: inherit
 
-  dockerfile:
+  docker-release:
     name: "Release Dockerfile"
     needs: package-deb
-    runs-on: ubuntu-latest
-    env:
-        docker_username: precice
-    steps:
-      - name: Get tag
-        id: tag
-        uses: dawidd6/action-get-tag@v1
-        with:
-          strip_v: true
-      - uses: actions/checkout@v5
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ env.docker_username }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push Dockerfile
-        uses: docker/build-push-action@v6
-        with:
-          push: true
-          file: "./tools/releasing/packaging/docker/release.dockerfile"
-          tags: ${{ env.docker_username }}/precice:${{ steps.tag.outputs.tag }},${{ env.docker_username }}/precice:latest
-          build-args: |
-            version=${{ steps.tag.outputs.tag }}
+    uses: ./.github/workflows/publish-docker-release.yml
+    with:
+      version: ${{ github.ref_name }}
+      latest: true
+    secrets: inherit
+
+  docker-nightly:
+    name: "Release Nightly"
+    needs: release-draft
+    uses: ./.github/workflows/publish-docker-nightly.yml
+    with:
+      branch: ${{ github.ref_name }}
+    secrets: inherit

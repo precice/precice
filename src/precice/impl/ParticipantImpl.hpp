@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <deque>
 #include <map>
 #include <set>
 #include <string>
@@ -19,18 +20,12 @@
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/Types.hpp"
+#include "profiling/Event.hpp"
 #include "utils/MultiLock.hpp"
 
-namespace precice {
-
-namespace profiling {
-class Event;
-}
-
-namespace config {
+namespace precice::config {
 class Configuration;
-}
-} // namespace precice
+} // namespace precice::config
 
 // Forward declaration to friend the boost test struct
 
@@ -514,7 +509,7 @@ private:
   std::unique_ptr<profiling::Event> _solverInitEvent;
   std::unique_ptr<profiling::Event> _solverAdvanceEvent;
 
-  std::vector<profiling::Event> _userEvents;
+  std::deque<profiling::Event> _userEvents;
 };
 
 } // namespace impl

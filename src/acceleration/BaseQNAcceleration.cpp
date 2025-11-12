@@ -400,7 +400,7 @@ void BaseQNAcceleration::updateCouplingData(
     size_t dataSize     = couplingData.getSize();
 
     Eigen::VectorXd timeGrid = _timeGrids->getTimeGridAfter(id, windowStart);
-    couplingData.timeStepsStorage().trimAfter(windowStart);
+    couplingData.waveform().trimAfter(windowStart);
     for (int i = 0; i < timeGrid.size(); i++) {
 
       Eigen::VectorXd temp = Eigen::VectorXd::Zero(dataSize);
@@ -642,7 +642,7 @@ void BaseQNAcceleration::concatenateCouplingData(Eigen::VectorXd &data, Eigen::V
 
     for (int i = 0; i < timeGrid.size(); i++) {
 
-      auto current = cplData.at(id)->timeStepsStorage().sample(timeGrid(i));
+      auto current = cplData.at(id)->waveform().sample(timeGrid(i));
       auto old     = cplData.at(id)->getPreviousValuesAtTime(timeGrid(i));
 
       PRECICE_ASSERT(data.size() >= offset + dataSize, "the values were not initialized correctly");
