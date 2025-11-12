@@ -282,7 +282,7 @@ void Mesh::clearPartitioning()
 void Mesh::clearDataStamples()
 {
   for (mesh::PtrData &data : _data) {
-    data->timeStepsStorage().clear();
+    data->waveform().clear();
   }
 }
 

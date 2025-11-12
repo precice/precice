@@ -42,20 +42,32 @@ int main(int argc, char **argv)
   int dimensions       = participant.getMeshDimensions(meshName);
   int numberOfVertices = 3;
 
-  std::vector<double> readData(numberOfVertices * dimensions);
-  std::vector<double> writeData(numberOfVertices * dimensions);
+  participant.startProfilingSection("Define mesh");
+
+  participant.startProfilingSection("Prepare coordinates");
   std::vector<double> vertices(numberOfVertices * dimensions);
   std::vector<int>    vertexIDs(numberOfVertices);
 
   for (int i = 0; i < numberOfVertices; i++) {
     for (int j = 0; j < dimensions; j++) {
-      vertices.at(j + dimensions * i)  = i;
+      vertices.at(j + dimensions * i) = i;
+    }
+  }
+  participant.stopLastProfilingSection();
+
+  participant.setMeshVertices(meshName, vertices, vertexIDs);
+  participant.stopLastProfilingSection();
+
+  participant.startProfilingSection("Prepare data");
+  std::vector<double> readData(numberOfVertices * dimensions);
+  std::vector<double> writeData(numberOfVertices * dimensions);
+  for (int i = 0; i < numberOfVertices; i++) {
+    for (int j = 0; j < dimensions; j++) {
       readData.at(j + dimensions * i)  = i;
       writeData.at(j + dimensions * i) = i;
     }
   }
-
-  participant.setMeshVertices(meshName, vertices, vertexIDs);
+  participant.stopLastProfilingSection();
 
   if (participant.requiresInitialData()) {
     std::cout << "DUMMY: Writing initial data\n";
