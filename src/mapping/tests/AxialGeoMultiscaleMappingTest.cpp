@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 PRECICE_TEST_SETUP(1_rank);
-BOOST_AUTO_TEST_CASE(ConsistentSpreadScalarScalarParabolicY)
+BOOST_AUTO_TEST_CASE(ConsistentSpreadScalarParabolicY)
 {
   PRECICE_TEST();
   // 1D -> 3D, scalar data, parabolic spread along the Y axis
@@ -283,9 +283,11 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadScalarScalarParabolicY)
 
   BOOST_TEST(mapping.hasComputedMapping() == true);
 
-  // All outputs equal to the scalar input
+  // Point A (3D): Check if point data is doubled at center node
   BOOST_TEST(outValues(0) == 2 * inSample.values(0));
+  // Point B (3D): Check if point data at distance = r is equal to zero
   BOOST_TEST(outValues(1) == 0);
+  // Point C (3D): Check if point data at distance = r/2 is 3/2 times invalue data
   BOOST_TEST(outValues(2) == 1.5 * inSample.values(0));
 }
 
