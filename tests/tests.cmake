@@ -21,8 +21,10 @@ target_sources(testprecice
     tests/fundamental/profiling/NotAllStopped.cpp
     tests/fundamental/profiling/NotStoppedAtFinalize.cpp
     tests/fundamental/profiling/UserProfiling.cpp
-    tests/geometric-multiscale/AxialGeoMultiscale.cpp
-    tests/geometric-multiscale/AxialGeoMultiscaleReverse.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarParabolic.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarUniform.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorParabolic.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorUniform.cpp
     tests/geometric-multiscale/RadialGeoMultiscale.cpp
     tests/parallel/CouplingOnLine.cpp
     tests/parallel/GlobalRBFPartitioning.cpp

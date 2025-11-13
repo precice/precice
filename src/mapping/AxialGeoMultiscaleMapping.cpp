@@ -9,11 +9,13 @@ AxialGeoMultiscaleMapping::AxialGeoMultiscaleMapping(
     int            dimensions,
     MultiscaleType type,
     MultiscaleAxis axis,
-    double         radius)
+    double         radius,
+    SpreadProfile  profile)
     : Mapping(constraint, dimensions, false, Mapping::InitialGuessRequirement::None),
       _type(type),
       _axis(axis),
-      _radius(radius)
+      _radius(radius),
+      _profile(profile)
 {
   setInputRequirement(Mapping::MeshRequirement::VERTEX);
   setOutputRequirement(Mapping::MeshRequirement::VERTEX);
@@ -128,24 +130,18 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
 
     PRECICE_ASSERT(input()->nVertices() == 1);
     size_t const outSize = output()->nVertices();
-    if (inDataDimensions == 1) {
-      // Scalar: copy same value to all output vertices
-      const double s = inputValues(0);
-      for (size_t i = 0; i < outSize; i++) {
-        outputValues(i) = s;
-      }
-    } else {
-      // Vector: Currently, a Hagen-Poiseuille profile determines the velocity value.
-      for (size_t i = 0; i < outSize; i++) {
-        PRECICE_ASSERT(static_cast<size_t>((i * outDataDimensions) + effectiveCoordinate) < static_cast<size_t>(outputValues.size()),
-                       ((i * outDataDimensions) + effectiveCoordinate), outputValues.size());
+
+    for (size_t i = 0; i < outSize; i++) {
+      PRECICE_ASSERT(static_cast<size_t>((i * outDataDimensions) + effectiveCoordinate) < static_cast<size_t>(outputValues.size()), ((i * outDataDimensions) + effectiveCoordinate), outputValues.size());
+      if (_profile == SpreadProfile::PARABOLIC) {
         // When adding support for 2D, remember that this should be 1.5 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
         outputValues((i * outDataDimensions) + effectiveCoordinate) = 2 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
+      } else if (_profile == SpreadProfile::UNIFORM) {
+        outputValues((i * outDataDimensions) + effectiveCoordinate) = inputValues(effectiveCoordinate);
       }
     }
   } else {
     PRECICE_ASSERT(_type == MultiscaleType::COLLECT);
-    // Scalar & Vector: 1D vertex gets the average of the effective component across all 3D vertices.
     PRECICE_ASSERT(output()->nVertices() == 1);
     outputValues(effectiveCoordinate) = 0;
     size_t const inSize               = input()->nVertices();
