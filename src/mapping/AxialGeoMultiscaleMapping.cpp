@@ -131,22 +131,13 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
     PRECICE_ASSERT(input()->nVertices() == 1);
     size_t const outSize = output()->nVertices();
 
-    if (inDataDimensions == 1) {
-      const double s = inputValues(0);
-      for (size_t i = 0; i < outSize; i++) {
-        outputValues(i) = s;
-      }
-    } else {
-      for (size_t i = 0; i < outSize; i++) {
-        PRECICE_ASSERT(static_cast<size_t>((i * outDataDimensions) + effectiveCoordinate) < static_cast<size_t>(outputValues.size()), ((i * outDataDimensions) + effectiveCoordinate), outputValues.size());
-        if (_profile == SpreadProfile::PARABOLIC) {
-          // When adding support for 2D, remember that this should be 1.5 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
-          outputValues((i * outDataDimensions) + effectiveCoordinate) = 2 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
-        }
-
-        else if (_profile == SpreadProfile::UNIFORM) {
-          outputValues((i * outDataDimensions) + effectiveCoordinate) = inputValues(effectiveCoordinate);
-        }
+    for (size_t i = 0; i < outSize; i++) {
+      PRECICE_ASSERT(static_cast<size_t>((i * outDataDimensions) + effectiveCoordinate) < static_cast<size_t>(outputValues.size()), ((i * outDataDimensions) + effectiveCoordinate), outputValues.size());
+      if (_profile == SpreadProfile::PARABOLIC) {
+        // When adding support for 2D, remember that this should be 1.5 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
+        outputValues((i * outDataDimensions) + effectiveCoordinate) = 2 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
+      } else if (_profile == SpreadProfile::UNIFORM) {
+        outputValues((i * outDataDimensions) + effectiveCoordinate) = inputValues(effectiveCoordinate);
       }
     }
   } else {
