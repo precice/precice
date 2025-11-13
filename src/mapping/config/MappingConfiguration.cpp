@@ -250,7 +250,7 @@ MappingConfiguration::MappingConfiguration(
   auto attrGeoMultiscaleSpreadProfile = XMLAttribute<std::string>(ATTR_GEOMETRIC_MULTISCALE_SPREAD_PROFILE)
                                             .setDocumentation("Profile when spreading from 1D to 3D: 'uniform' or 'parabolic'")
                                             .setOptions({GEOMETRIC_MULTISCALE_SPREAD_UNIFORM, GEOMETRIC_MULTISCALE_SPREAD_PARABOLIC})
-                                            .setDefaultValue(GEOMETRIC_MULTISCALE_SPREAD_PARABOLIC);
+                                            .setDefaultValue(GEOMETRIC_MULTISCALE_SPREAD_UNIFORM);
 
   // Add the relevant attributes to the relevant tags
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
@@ -653,9 +653,9 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       PRECICE_UNREACHABLE("Unknown geometric multiscale type \"{}\".", geoMultiscaleType);
     }
 
-    AxialGeoMultiscaleMapping::SpreadProfile spreadProfile;
+    AxialGeoMultiscaleMapping::SpreadProfile spreadProfile = AxialGeoMultiscaleMapping::SpreadProfile::PARABOLIC;
     if (multiscaleType == AxialGeoMultiscaleMapping::MultiscaleType::SPREAD) {
-      if (spreadProfileStr.empty() || spreadProfileStr == "parabolic") {
+      if (spreadProfileStr == "parabolic") {
         spreadProfile = AxialGeoMultiscaleMapping::SpreadProfile::PARABOLIC;
       } else if (spreadProfileStr == "uniform") {
         spreadProfile = AxialGeoMultiscaleMapping::SpreadProfile::UNIFORM;

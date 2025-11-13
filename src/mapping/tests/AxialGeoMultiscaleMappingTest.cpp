@@ -20,69 +20,7 @@ BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(AxialGeoMultiscaleMapping)
 
 PRECICE_TEST_SETUP(1_rank);
-BOOST_AUTO_TEST_CASE(ConsistentSpreadX)
-{
-  PRECICE_TEST();
-  /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, coupled along the x-axis.
-      Then, the data is mapped from the single vertex of the 1D mesh to defined vertices on the circular inlet of the 3D mesh (hence, "spread").
-      The defined vertices are at certain distances from the center, which enables to predict the expected behavior for Hagen-Poiseuille flow.
-      Finally, this expected behavior is tested.
-  */
-  constexpr int dimensions = 3;
-  using testing::equals;
-
-  // Create mesh to map from
-  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID())); // Point a (1D)
-  inMesh->createVertex(Eigen::Vector3d::Constant(0.0));
-  inMesh->allocateDataValues();
-
-  // Create mesh to map to
-  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
-  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point A (3D): center, equal to incoming mesh node
-  outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0)); // Point B (3D): distance of 1.0 = r to center
-  outMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // Point C (3D): distance of 0.5 = r/2 to center
-  outMesh->allocateDataValues();
-
-  double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
-
-  // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::MultiscaleType::SPREAD, mapping::AxialGeoMultiscaleMapping::MultiscaleAxis::X, radius);
-  mapping.setMeshes(inMesh, outMesh);
-  BOOST_TEST(mapping.hasComputedMapping() == false);
-
-  // Create data to map
-  Eigen::VectorXd inValues(3);
-  inValues << 2.0, 0.0, 0.0;
-  const time::Sample inSample{3, inValues};
-  Eigen::VectorXd    outValues(9);
-  outValues = Eigen::VectorXd::Zero(9);
-
-  // Map data
-  mapping.computeMapping();
-  mapping.computeMapping(); // Check (only in this case) if calling computeMapping() additional times works.
-  mapping.map(inSample, outValues);
-
-  BOOST_TEST(mapping.hasComputedMapping() == true);
-  mapping.computeMapping(); // Check (only in this case) if calling computeMapping() additional times works.
-
-  // Point A (3D): Check if x axis data is doubled at center node (parabolic profile)
-  BOOST_TEST(outValues(0) == 2 * inSample.values(0));
-  BOOST_TEST(outValues(1) == 0);
-  BOOST_TEST(outValues(2) == 0);
-
-  // Point B (3D): Check if x axis data at distance = r is equal to zero
-  BOOST_TEST(outValues(3) == 0.0);
-  BOOST_TEST(outValues(4) == 0.0);
-  BOOST_TEST(outValues(5) == 0.0);
-
-  // Point C (3D): Check if x axis data at distance = r/2 is 3/2 times invalue data
-  BOOST_TEST(outValues(6) == 1.5 * inSample.values(0));
-  BOOST_TEST(outValues(7) == 0.0);
-  BOOST_TEST(outValues(8) == 0.0);
-}
-
-PRECICE_TEST_SETUP(1_rank);
-BOOST_AUTO_TEST_CASE(ConsistentSpreadParabolicZ)
+BOOST_AUTO_TEST_CASE(ConsistentSpreadVectorParabolicZ)
 {
   PRECICE_TEST();
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, coupled along the z-axis.
@@ -142,10 +80,10 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadParabolicZ)
 }
 
 PRECICE_TEST_SETUP(1_rank);
-BOOST_AUTO_TEST_CASE(ConsistentSpreadUniformZ)
+BOOST_AUTO_TEST_CASE(ConsistentSpreadVectorUniformX)
 {
   PRECICE_TEST();
-  /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, coupled along the z-axis.
+  /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, coupled along the x-axis.
       Then, the data is mapped from the single vertex of the 1D mesh to defined vertices on the circular inlet of the 3D mesh (hence, "spread").
       The values are spread following a uniform spread, meaning that all vertices from the 3D mesh receive the same values.
       Finally, this expected behavior is tested.
@@ -161,20 +99,20 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadUniformZ)
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
   outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point A (3D): center, equal to incoming mesh node
-  outMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0)); // Point B (3D): distance of 1.0 = r to center
+  outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0)); // Point B (3D): distance of 1.0 = r to center
   outMesh->createVertex(Eigen::Vector3d(0.0, 0.5, 0.0)); // Point C (3D): distance of 0.5 = r/2 to center
   outMesh->allocateDataValues();
 
   double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
   // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::MultiscaleType::SPREAD, mapping::AxialGeoMultiscaleMapping::MultiscaleAxis::Z, radius, mapping::AxialGeoMultiscaleMapping::SpreadProfile::UNIFORM);
+  precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::MultiscaleType::SPREAD, mapping::AxialGeoMultiscaleMapping::MultiscaleAxis::X, radius, mapping::AxialGeoMultiscaleMapping::SpreadProfile::UNIFORM);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
   // Create data to map
   Eigen::VectorXd inValues(3);
-  inValues << 0.0, 0.0, 4.0;
+  inValues << 4.0, 0.0, 0.0;
   const time::Sample inSample{3, inValues};
   Eigen::VectorXd    outValues(9);
   outValues = Eigen::VectorXd::Zero(9);
@@ -187,23 +125,23 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadUniformZ)
 
   // Check that the 3D data is initialized to zero and the MultiscaleAxis-component is assigned the same value on all points
   // Point A (3D)
-  BOOST_TEST(outValues(0) == 0.0);
+  BOOST_TEST(outValues(0) == 4.0);
   BOOST_TEST(outValues(1) == 0.0);
-  BOOST_TEST(outValues(2) == 4.0);
+  BOOST_TEST(outValues(2) == 0.0);
 
   // Point B (3D)
-  BOOST_TEST(outValues(3) == 0.0);
+  BOOST_TEST(outValues(3) == 4.0);
   BOOST_TEST(outValues(4) == 0.0);
-  BOOST_TEST(outValues(5) == 4.0);
+  BOOST_TEST(outValues(5) == 0.0);
 
   // Point C (3D)
-  BOOST_TEST(outValues(6) == 0.0);
+  BOOST_TEST(outValues(6) == 4.0);
   BOOST_TEST(outValues(7) == 0.0);
-  BOOST_TEST(outValues(8) == 4.0);
+  BOOST_TEST(outValues(8) == 0.0);
 }
 
 PRECICE_TEST_SETUP(1_rank);
-BOOST_AUTO_TEST_CASE(ConsistentCollectX)
+BOOST_AUTO_TEST_CASE(ConsistentCollectVectorX)
 {
   PRECICE_TEST();
   /*  The following test works by creating two dimensionally heterogeneous meshes, namely 1D and 3D, coupled along the x-axis.
@@ -306,7 +244,53 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 PRECICE_TEST_SETUP(1_rank);
-BOOST_AUTO_TEST_CASE(ConsistentSpreadXScalar)
+BOOST_AUTO_TEST_CASE(ConsistentSpreadScalarScalarParabolicY)
+{
+  PRECICE_TEST();
+  // 1D -> 3D, scalar data, parabolic spread along the Y axis
+  constexpr int dimensions = 3;
+  using testing::equals;
+
+  // Create mesh to map from
+  PtrMesh inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
+  inMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point a (1D)
+  inMesh->allocateDataValues();
+
+  // Create mesh to map to
+  PtrMesh outMesh(new Mesh("OutMesh", dimensions, testing::nextMeshID()));
+  outMesh->createVertex(Eigen::Vector3d::Constant(0.0)); // Point A (3D): center, equal to incoming mesh node
+  outMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0)); // Point B (3D): distance of 1.0 = r to center
+  outMesh->createVertex(Eigen::Vector3d(0.5, 0.0, 0.0)); // Point C (3D): distance of 0.5 = r/2 to center
+  outMesh->allocateDataValues();
+
+  double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
+
+  // Setup mapping with mapping coordinates and geometry used
+  precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::MultiscaleType::SPREAD, mapping::AxialGeoMultiscaleMapping::MultiscaleAxis::Y, radius, mapping::AxialGeoMultiscaleMapping::SpreadProfile::PARABOLIC);
+  mapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(mapping.hasComputedMapping() == false);
+
+  // Create data to map
+  Eigen::VectorXd inValues(1);
+  inValues << 30.0;
+  const time::Sample inSample{1, inValues};
+  Eigen::VectorXd    outValues(3);
+  outValues = Eigen::VectorXd::Zero(3);
+
+  // Map data
+  mapping.computeMapping();
+  mapping.map(inSample, outValues);
+
+  BOOST_TEST(mapping.hasComputedMapping() == true);
+
+  // All outputs equal to the scalar input
+  BOOST_TEST(outValues(0) == 2 * inSample.values(0));
+  BOOST_TEST(outValues(1) == 0);
+  BOOST_TEST(outValues(2) == 1.5 * inSample.values(0));
+}
+
+PRECICE_TEST_SETUP(1_rank);
+BOOST_AUTO_TEST_CASE(ConsistentSpreadScalarUniformX)
 {
   PRECICE_TEST();
   // 1D -> 3D, scalar data, uniform spread along the X axis
@@ -328,7 +312,7 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadXScalar)
   double radius = 1.0; // radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
 
   // Setup mapping with mapping coordinates and geometry used
-  precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::MultiscaleType::SPREAD, mapping::AxialGeoMultiscaleMapping::MultiscaleAxis::X, radius);
+  precice::mapping::AxialGeoMultiscaleMapping mapping(mapping::Mapping::CONSISTENT, dimensions, mapping::AxialGeoMultiscaleMapping::MultiscaleType::SPREAD, mapping::AxialGeoMultiscaleMapping::MultiscaleAxis::X, radius, mapping::AxialGeoMultiscaleMapping::SpreadProfile::UNIFORM);
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false);
 
@@ -352,7 +336,7 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadXScalar)
 }
 
 PRECICE_TEST_SETUP(1_rank);
-BOOST_AUTO_TEST_CASE(ConsistentCollectZScalar)
+BOOST_AUTO_TEST_CASE(ConsistentCollectScalarZ)
 {
   PRECICE_TEST();
   // 3D -> 1D, scalar data: average over input vertices to the single output vertex, along Z axis

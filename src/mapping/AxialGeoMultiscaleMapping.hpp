@@ -45,7 +45,7 @@ public:
    * @param[in] radius Radius of the 1D solver "tube"
    * @param[in] profile Profile for SPREAD (ignored for COLLECT).
    */
-  AxialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleType type, MultiscaleAxis axis, double radius, SpreadProfile profile = SpreadProfile::PARABOLIC);
+  AxialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleType type, MultiscaleAxis axis, double radius, SpreadProfile profile = SpreadProfile::UNIFORM);
 
   /// Takes care of compute-heavy operations needed only once to set up the mapping.
   void computeMapping() override;

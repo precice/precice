@@ -12,16 +12,14 @@ using precice::testing::TestContext;
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(GeometricMultiscale)
 PRECICE_TEST_SETUP("Fluid1D"_on(1_rank), "Fluid3D"_on(1_rank))
-BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleParabolic)
+BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleScalarUniform)
 {
   PRECICE_TEST();
 
-  /*  In this test case, Fluid1D is the 1D code (despite having 3D vertices, due to current shortcomings)
-      and we're testing the AxialGeoMultiscaleMapping feature with a parabolic inlet profile at the (downstream) 3D inlet.
-
-      We are assuming that the exchanged data follows a parabolic velocity profile, which means that a 3D
-      maximum velocity value is mapped to a 1D average velocity value. Therefore, the expected value in the
-      test is different than the one set on the other side.
+  /*  Reverse case:
+      - Fluid1D writes PressureLike (to be SPREAD with same value at all vertices)
+      - Fluid1D reads VelocityLike (COLLECT/averaged from 3D)
+      This mirrors the non-reverse test by swapping which field is spread/collected.
   */
 
   using Eigen::Vector3d;
@@ -31,25 +29,30 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleParabolic)
     auto     meshName  = "Mesh1D";
     Vector3d posOne    = Vector3d::Constant(0.0);
     auto     vid       = cplInterface.setMeshVertex(meshName, posOne);
-    auto     dataAName = "VelocityLike";
-    auto     dataBName = "PressureLike";
+    auto     dataAName = "PressureLike";
+    auto     dataBName = "VelocityLike";
 
-    double valueDataB;
+    Vector3d valueDataB;
+    double   valueDataA;
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
-    cplInterface.readData(meshName, dataBName, {&vid, 1}, maxDt, {&valueDataB, 1});
-    double expectedDataB = 8.0; // Read, averaged (collect) from one vertex with value 8.0
+
+    // First read: VelocityLike collected from 3D. With one 3D vertex at (0,0,8), average stays 8.
+    cplInterface.readData(meshName, dataBName, {&vid, 1}, maxDt, valueDataB);
+    Vector3d expectedDataB(0.0, 0.0, 8.0);
     BOOST_TEST(valueDataB == expectedDataB);
 
     while (cplInterface.isCouplingOngoing()) {
-      Vector3d valueDataA(0.0, 0.0, 8.0); // Written, to be scaled up (spread) to 16.0, following a parabolic profile
-      cplInterface.writeData(meshName, dataAName, {&vid, 1}, valueDataA);
+      // Write scalar PressureLike = 8.0 on 1D -> SPREAD to 3D (uniform, remains 8.0 at 3D centerline)
+      valueDataA = 8.0;
+      cplInterface.writeData(meshName, dataAName, {&vid, 1}, {&valueDataA, 1});
 
       cplInterface.advance(maxDt);
       maxDt = cplInterface.getMaxTimeStepSize();
 
-      cplInterface.readData(meshName, dataBName, {&vid, 1}, maxDt, {&valueDataB, 1});
+      // Read VelocityLike again (collected from 3D); still (0,0,8) with a single 3D vertex providing 8
+      cplInterface.readData(meshName, dataBName, {&vid, 1}, maxDt, valueDataB);
       BOOST_TEST(valueDataB == expectedDataB);
     }
     cplInterface.finalize();
@@ -62,29 +65,29 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleParabolic)
     // are only defining one point.
     Vector3d pos       = Vector3d::Constant(0.0);
     auto     vid       = cplInterface.setMeshVertex(meshName, pos);
-    auto     dataAName = "VelocityLike";
-    auto     dataBName = "PressureLike";
+    auto     dataAName = "PressureLike";
+    auto     dataBName = "VelocityLike";
 
     BOOST_REQUIRE(cplInterface.requiresInitialData());
-    double valueDataB = 8; // Written, to be averaged (collect) to 8.0
-    cplInterface.writeData(meshName, dataBName, {&vid, 1}, {&valueDataB, 1});
+    Vector3d valueDataB(0.0, 0.0, 8.0); // Written, to be averaged (collect) to 8.0
+    cplInterface.writeData(meshName, dataBName, {&vid, 1}, valueDataB);
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
 
-    Vector3d valueDataA;
-    cplInterface.readData(meshName, dataAName, {&vid, 1}, maxDt, valueDataA);
-    Vector3d expectedDataA(0.0, 0.0, 16.0); // Read, scaled up (spread) from 8.0
+    double valueDataA;
+    cplInterface.readData(meshName, dataAName, {&vid, 1}, maxDt, {&valueDataA, 1});
+    double expectedDataA = 8.0;
     BOOST_TEST(valueDataA == expectedDataA);
 
     while (cplInterface.isCouplingOngoing()) {
 
-      valueDataB = 8.0; // Written, to be averaged (collect) to 8.0
-      cplInterface.writeData(meshName, dataBName, {&vid, 1}, {&valueDataB, 1});
+      valueDataB << 0.0, 0.0, 8.0; // Written, to be averaged (collect) to 8.0
+      cplInterface.writeData(meshName, dataBName, {&vid, 1}, valueDataB);
 
       cplInterface.advance(maxDt);
       maxDt = cplInterface.getMaxTimeStepSize();
-      cplInterface.readData(meshName, dataAName, {&vid, 1}, maxDt, valueDataA);
+      cplInterface.readData(meshName, dataAName, {&vid, 1}, maxDt, {&valueDataA, 1});
       BOOST_TEST(valueDataA == expectedDataA);
     }
     cplInterface.finalize();

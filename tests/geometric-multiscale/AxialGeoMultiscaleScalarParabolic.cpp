@@ -12,12 +12,12 @@ using precice::testing::TestContext;
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(GeometricMultiscale)
 PRECICE_TEST_SETUP("Fluid1D"_on(1_rank), "Fluid3D"_on(1_rank))
-BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleReverse)
+BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleScalarParabolic)
 {
   PRECICE_TEST();
 
   /*  Reverse case:
-      - Fluid1D writes PressureLike (to be SPREAD with same value at all vertices)
+      - Fluid1D writes PressureLike (to be SPREAD with in a parabolic way across the vertices)
       - Fluid1D reads VelocityLike (COLLECT/averaged from 3D)
       This mirrors the non-reverse test by swapping which field is spread/collected.
   */
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleReverse)
     BOOST_TEST(valueDataB == expectedDataB);
 
     while (cplInterface.isCouplingOngoing()) {
-      // Write scalar PressureLike = 8.0 on 1D -> SPREAD to 3D (uniform, remains 8.0 at 3D centerline)
+      // Write scalar PressureLike = 8.0 on 1D -> SPREAD to 3D (parabolic, scaled up to 16.0 at 3D centerline)
       valueDataA = 8.0;
       cplInterface.writeData(meshName, dataAName, {&vid, 1}, {&valueDataA, 1});
 
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleReverse)
 
     double valueDataA;
     cplInterface.readData(meshName, dataAName, {&vid, 1}, maxDt, {&valueDataA, 1});
-    double expectedDataA = 8.0;
+    double expectedDataA = 16.0;
     BOOST_TEST(valueDataA == expectedDataA);
 
     while (cplInterface.isCouplingOngoing()) {

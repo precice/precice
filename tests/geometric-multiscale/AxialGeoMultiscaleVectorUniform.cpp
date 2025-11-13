@@ -12,7 +12,7 @@ using precice::testing::TestContext;
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(GeometricMultiscale)
 PRECICE_TEST_SETUP("Fluid1D"_on(1_rank), "Fluid3D"_on(1_rank))
-BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleUniform)
+BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleVectorUniform)
 {
   PRECICE_TEST();
 
