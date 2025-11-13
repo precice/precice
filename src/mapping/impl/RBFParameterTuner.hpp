@@ -6,17 +6,19 @@
 
 namespace precice::mapping {
 
+/// Solver estimate of the mapping error and the reciprocal condition number of the interpolation matrix.
 struct RBFErrorEstimate {
+public:
   double error;
   double rcond;
 
   RBFErrorEstimate(double error, double rcond)
-      : error(error), rcond(rcond)
-  {
-  }
+      : error(error), rcond(rcond) {}
 };
 
+/// RBF parameter tuner sample consisting of a support radius and its corresponding mapping error estimate.
 struct Sample {
+public:
   double radius;
   double error;
 
@@ -24,11 +26,12 @@ struct Sample {
       : radius(radius), error(error) {}
 
   Sample()
-      : radius(std::numeric_limits<double>::quiet_NaN()), error(std::numeric_limits<double>::max())
-  {
-  }
+      : radius(std::numeric_limits<double>::quiet_NaN()), error(std::numeric_limits<double>::max()) {}
 };
 
+/**
+ * Parameter optimization of support radius RBFs using a bisection algorithm.
+ */
 class RBFParameterTuner {
 
   mutable logging::Logger _log{"mapping::RBFParameterTuner"};
@@ -43,29 +46,56 @@ class RBFParameterTuner {
   static constexpr int MAX_BISEC_ITERATIONS = 6;
 
 protected:
-  std::vector<Sample> _samples;
-
+  /// Defines the lower bound of the optimization range.
   double _lowerBound;
+  /// Defines the upper bound of the optimization range.
   double _upperBound;
-  bool   _lastSampleWasOptimum;
 
+  bool   _lastSampleWasOptimum;
   Sample _currentOptimum;
 
+  /**
+   * @brief Estimates the mesh resolution by finding the three closest vertices to some sample vertex.
+   * It might trigger the cration of an RTree.
+   * 
+   * This function is used to estimate a lower bound on the support radius.
+   * Therefore, it is not required to be highly accurate, but rather to be in the right order of magnitude.
+   */
   static double estimateMeshResolution(mesh::Mesh &inputMesh);
 
 public:
   ~RBFParameterTuner() = default;
+  /**
+   * @param[in] inputMesh refers to the mesh where the interpolants are built on, 
+   * i.e., the input mesh for consistent mappings and the output mesh for conservative mappings.
+   * 
+   * Non const reference because of @ref RBFParameterTuner::estimateMeshResolution(mesh::Mesh &).
+   */
   explicit RBFParameterTuner(mesh::Mesh &inputMesh);
 
+  /**
+   * @brief Optimizes the support radius of an RBF using the bisection method.
+   * 
+   * The bisection method is only guaranteed to find a minimum for convex optimiation problems, however, 
+   * in the case of RBFs it is possible to find a reasonably good radius of the right order of magnitude.
+   * 
+   * @param[in] solver an RBF mapping solver, see @ref precice::mapping::RadialBasisFctSolver. Expected are the following methods:
+   *  - void Solver::rebuildKernelDecomposition(const IndexContainer &inputIds, double radius);
+   *  - ErrorEstimate Solver::computeErrorEstimate(const Eigen::VectorXd &inputData, const IndexContainer &inputIds);
+   * @param[in] inputIds Index container fo the vertices on the input mesh.
+   * @param[in] inputData Imput values for which the optimizer tries to reduce the mapping error by envoking the computeErrorEstimate() method.
+   */
   template <typename IndexContainer, typename Solver>
   Sample optimize(Solver &solver, const IndexContainer &inputIds, const Eigen::VectorXd &inputData);
 
+  /// Returns true if the last sample tested by the optimizer also corresponds to the found optimum.
   bool lastSampleWasOptimum() const;
 
   double getLastOptimizedRadius() const;
   double getLastOptimizationError() const;
 
 private:
+  /// Check if the bisection algorithm should continue based on @ref POS_TOLERANCE, @ref ERR_TOLERANCE and @ref MAX_BISEC_ITERATIONS
   static bool shouldContinue(const Sample &lowerBound, const Sample &upperBound);
 };
 
@@ -84,7 +114,9 @@ Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputId
   static_assert(radiusRBF, "RBF is not supported by this optimizer, as it does not accept a support-radius."
                            "Currently supported: Compactly supported RBFs and Gaussians.");
 
-  // TODO: maybe make dependent on domain extend
+  // To determine the _upperBound we exponentially increase the support radius by increaseSize starting with _lowerBound
+  // and check if the condition number is too high or the decomposition fails.
+  // TODO: maybe make dependent on domain extent.
   constexpr double increaseSize = 10;
   double           sampleRadius = _lowerBound;
 
@@ -113,9 +145,9 @@ Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputId
     PRECICE_INFO("RBF tuner sample: rad={:.4e}, err={:.4e}, 1/cond={:.4e}", sampleRadius, estimate.error, estimate.rcond);
 
     if (estimate.rcond < RCOND_TOLERANCE || estimate.error >= std::numeric_limits<double>::max()) {
-      PRECICE_CHECK(sampleRadius != _lowerBound, "Parameter tuning failed in first iteration using support-radius={}."
-                                                 "Try using a different basis function, or select a smaller support radius manually.",
-                    sampleRadius);
+      PRECICE_CHECK(sampleRadius != _lowerBound, "RBF parameter tuning diverged in first iteration using support-radius={}."
+                                                 "Try using a different basis function, or manually select support radius smaller than {}.",
+                    sampleRadius, sampleRadius);
 
       _upperBound = sampleRadius;
       break;
@@ -162,7 +194,7 @@ inline double RBFParameterTuner::estimateMeshResolution(mesh::Mesh &inputMesh)
   const std::vector<VertexID> matches = inputMesh.index().getClosestVertices(x0.getCoords(), sampleSize);
 
   double h = 0;
-  for (int i = 0; i < sampleSize; i++) {
+  for (size_t i = 0; i < sampleSize; i++) {
     const mesh::Vertex xi = inputMesh.vertices().at(matches.at(i));
     h += std::sqrt(utils::computeSquaredDifference(xi.rawCoords(), x0.rawCoords()));
   }

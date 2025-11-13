@@ -339,7 +339,7 @@ MappingConfiguration::MappingConfiguration(
   std::list<XMLTag> GaussRBF{
       XMLTag{*this, RBF_GAUSSIAN, once, SUBTAG_BASIS_FUNCTION}.setDocumentation("Gaussian basis function accepting a support radius or a shape parameter.")};
   attrShapeParam.setDefaultValue(std::numeric_limits<double>::quiet_NaN());
-  attrSupportRadius.setDefaultValue(""); // TODO REPLACED "NaN"
+  attrSupportRadius.setDefaultValue("");
   addAttributes(GaussRBF, {attrShapeParam, attrSupportRadius, attrTunerInterval});
   addSubtagsToParents(GaussRBF, rbfIterativeTags);
   addSubtagsToParents(GaussRBF, rbfDirectTags);

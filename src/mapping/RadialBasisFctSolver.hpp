@@ -27,6 +27,12 @@ namespace precice::mapping {
 template <typename RADIAL_BASIS_FUNCTION_T>
 class RadialBasisFctSolver {
 public:
+  /**
+   * Depending on the positive definiteness, the decomposition type is an in-place Cholesky or QR decomposition.
+   * To make the decomposition in-place we use an Eigen::Ref<Eigen::MatrixXd> as the matrix type.
+   * 
+   * This decomposition type is not resizable but allows direct access to the internal coefficients via the matrix reference used to initialize the decomposition.
+   */
   using DecompositionType = std::conditional_t<RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), Eigen::LLT<Eigen::Ref<Eigen::MatrixXd>>, Eigen::ColPivHouseholderQR<Eigen::Ref<Eigen::MatrixXd>>>;
   using BASIS_FUNCTION_T  = RADIAL_BASIS_FUNCTION_T;
 
@@ -41,11 +47,11 @@ public:
    */
   template <typename IndexContainer>
   RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, mesh::PtrMesh inputMesh, const IndexContainer &inputIDs,
-                       mesh::PtrMesh outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::AutotuningParams rbfConfig);
+                       mesh::PtrMesh outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::AutotuningParams rbfTunerConfig);
 
   template <typename IndexContainer>
   RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, mesh::PtrMesh inputMesh, const IndexContainer &inputIDs,
-                       mesh::PtrMesh outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial); // TODO: refactor and adapt for PUM
+                       mesh::PtrMesh outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial);
 
   /**
    * Maps the given input data.
@@ -94,9 +100,10 @@ private:
 
   double evaluateRippaLOOCVerror(const Eigen::VectorXd &lambda) const;
 
-  /// Matrix used for storing the kernel coefficients and the modified coefficients used by the decomposition.
+  /// Matrix used for storing the kernel coefficients and the modified coefficients used by the decomposition @ref _decMatrixC on the same memory.
+  /// This is needed to allow the @ref _tuner to modify the coefficients and rebuild the decomposition without allocating a new matrix.
   Eigen::MatrixXd _decMatrixCoefficients;
-  /// Eigen in-place decomposition type of the interpolation matrix _decMatrixCoefficients. std::unique_ptr since Eigen:Ref is not resizable.
+  /// Eigen in-place decomposition type of the interpolation matrix. Points to the same memory as @ref _decMatrixCoefficients. std::unique_ptr since Eigen:Ref is not resizable.
   std::unique_ptr<DecompositionType> _decMatrixC;
 
   /// Diagonal entris of the inverse matrix C, requires for the Rippa scheme
@@ -117,7 +124,7 @@ private:
   bool                computeCrossValidation = false;
   std::array<bool, 3> _localActiveAxis;
 
-  MappingConfiguration::AutotuningParams     _tuningConfig;
+  MappingConfiguration::AutotuningParams     _rbfTunerConfig;
   mutable std::unique_ptr<RBFParameterTuner> _tuner;
 
   mutable int _iterSinceOptimization = 1;
@@ -313,27 +320,27 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, mesh::PtrMesh inputMesh, const IndexContainer &inputIDs,
-                                                                    mesh::PtrMesh outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::AutotuningParams tuningConfig)
+                                                                    mesh::PtrMesh outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::AutotuningParams rbfTunerConfig)
     : _decMatrixCoefficients(allocateMatrixCLU(inputMesh, inputIDs, deadAxis, polynomial)), _decMatrixC(std::make_unique<DecompositionType>(_decMatrixCoefficients)), _polynomial(polynomial), _activeAxis({false, false, false}), _inputMesh(inputMesh)
 {
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
   std::transform(deadAxis.begin(), deadAxis.end(), _activeAxis.begin(), [](const auto ax) { return !ax; });
 
-  _tuningConfig = tuningConfig;
+  _rbfTunerConfig = rbfTunerConfig;
 
   // First, assemble the interpolation matrix and check the invertability
   fillMatrixCLU(_decMatrixCoefficients, basisFunction, inputMesh, inputIDs, _activeAxis, polynomial);
   _decMatrixC->compute(_decMatrixCoefficients);
 
-  if (_tuningConfig.autotuneShape && RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) {
+  if (_rbfTunerConfig.autotuneShape && RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) {
     _tuner = std::make_unique<RBFParameterTuner>(*inputMesh.get());
   } else {
     fillMatrixCLU(_decMatrixCoefficients, basisFunction, inputMesh, inputIDs, _activeAxis, polynomial);
     _decMatrixC->compute(_decMatrixCoefficients);
   }
 
-  PRECICE_CHECK(_tuningConfig.autotuneShape || _decMatrixC->info() == Eigen::ComputationInfo::Success,
+  PRECICE_CHECK(_rbfTunerConfig.autotuneShape || _decMatrixC->info() == Eigen::ComputationInfo::Success,
                 "The interpolation matrix of the RBF mapping from mesh \"{}\" to mesh \"{}\" is not invertable. "
                 "This means that the mapping problem is not well-posed. "
                 "Please check if your coupling meshes are correct (e.g. no vertices are duplicated) or reconfigure "
@@ -347,7 +354,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
     _inverseDiagonal = utils::computeInverseDiagonal(*_decMatrixC);
   }
   // Second, assemble evaluation matrix
-  if (_tuningConfig.autotuneShape) {
+  if (_rbfTunerConfig.autotuneShape) {
     _matrixA = buildMatrixA(VolumeSplines(), inputMesh, inputIDs, outputMesh, outputIDs, _activeAxis, polynomial);
   } else {
     _matrixA = buildMatrixA(basisFunction, inputMesh, inputIDs, outputMesh, outputIDs, _activeAxis, polynomial);
@@ -389,7 +396,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
     _qrMatrixQ = _matrixQ.colPivHouseholderQr();
   }
 
-  if (!_tuningConfig.autotuneShape) {
+  if (!_rbfTunerConfig.autotuneShape) {
     // Compute the condition number
     profiling::Event e("map.rbf.condition");
 
@@ -453,13 +460,13 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
     inputData -= (_matrixQ * polynomialContribution);
   }
 
-  if (_tuningConfig.autotuneShape) {
+  if (_rbfTunerConfig.autotuneShape) {
     if constexpr (RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) {
 
       const bool isProbablyZeroData = _tuner->getLastOptimizationError() < 1e-15;
       // @todo: Data dimension not considered
-      const bool isOptimizationInterval  = _tuningConfig.iterationInterval == _iterSinceOptimization;
-      const bool isOptimizedAndSouldOnce = _tuningConfig.optimizeOnce() && _tuner->getLastOptimizationError() != std::numeric_limits<double>::max();
+      const bool isOptimizationInterval  = _rbfTunerConfig.iterationInterval == _iterSinceOptimization;
+      const bool isOptimizedAndSouldOnce = _rbfTunerConfig.optimizeOnce() && _tuner->getLastOptimizationError() != std::numeric_limits<double>::max();
 
       // @todo: Add error criterion.
       if (isProbablyZeroData || isOptimizationInterval || !isOptimizedAndSouldOnce) {
@@ -491,7 +498,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   PRECICE_ASSERT(p.size() == _matrixA.cols());
 
   Eigen::VectorXd out;
-  if (_tuningConfig.autotuneShape) {
+  if (_rbfTunerConfig.autotuneShape) {
     if constexpr (RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) {
       const int outSize    = _matrixA.rows();
       const int inSize     = inputData.size();

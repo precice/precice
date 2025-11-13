@@ -61,7 +61,7 @@ public:
       unsigned int                           verticesPerCluster,
       double                                 relativeOverlap,
       bool                                   projectToInput,
-      MappingConfiguration::AutotuningParams rbfOptional);
+      MappingConfiguration::AutotuningParams rbfTunerConfig);
 
   /**
    * Computes the clustering for the partition of unity method and fills the \p _clusters vector,
@@ -126,7 +126,7 @@ private:
 
   std::unique_ptr<mesh::Mesh> _centerMesh;
 
-  MappingConfiguration::AutotuningParams _rbfOptional;
+  MappingConfiguration::AutotuningParams _rbfTunerConfig;
 
   /// @copydoc Mapping::mapConservative
   void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) override;
@@ -166,9 +166,9 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
     unsigned int                           verticesPerCluster,
     double                                 relativeOverlap,
     bool                                   projectToInput,
-    MappingConfiguration::AutotuningParams rbfOptional)
+    MappingConfiguration::AutotuningParams rbfTunerConfig)
     : Mapping(constraint, dimension, false, Mapping::InitialGuessRequirement::None),
-      _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial), _rbfOptional(rbfOptional)
+      _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial), _rbfTunerConfig(rbfTunerConfig)
 {
   PRECICE_ASSERT(this->getDimensions() <= 3);
   PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.");
@@ -225,7 +225,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
     const VertexID                                  vertexID = meshVertices.size();
     mesh::Vertex                                    center(c.getCoords(), vertexID);
-    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _polynomial, inMesh, outMesh, _rbfOptional);
+    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _polynomial, inMesh, outMesh, _rbfTunerConfig);
 
     // Consider only non-empty clusters (more of a safeguard here)
     if (!cluster.empty()) {
