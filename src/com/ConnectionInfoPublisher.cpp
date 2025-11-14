@@ -55,9 +55,13 @@ std::string ConnectionInfoPublisher::getFilename() const
 
 std::string ConnectionInfoReader::read() const
 {
+  Event e0 = Event("ConnectionInfoReader.read.constructingFilename");
+
   auto path = getFilename();
 
-  Event e0 = Event("ConnectionInfoReader.read.waitingForConnectionFile");
+  e0.stop();
+  Event e1 = Event("ConnectionInfoReader.read.waitingForConnectionFile");
+
   PRECICE_DEBUG("Waiting for connection file \"{}\"", path);
   const auto waitdelay = std::chrono::milliseconds(1);
   while (!fs::exists(path)) {
@@ -66,8 +70,8 @@ std::string ConnectionInfoReader::read() const
   PRECICE_ASSERT(fs::exists(path));
   PRECICE_DEBUG("Found connection file \"{}\"", path);
 
-  e0.stop();
-  Event e1 = Event("ConnectionInfoReader.read.readingConnectionFile");
+  e1.stop();
+  Event e2 = Event("ConnectionInfoReader.read.readingConnectionFile");
 
   std::ifstream ifs(path);
 
@@ -89,7 +93,7 @@ std::string ConnectionInfoReader::read() const
                 path);
   boost::algorithm::trim_right(addressData);
 
-  e1.stop();
+  e2.stop();
 
   return addressData;
 }

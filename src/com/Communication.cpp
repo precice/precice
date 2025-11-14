@@ -7,7 +7,10 @@
 #include "Request.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/impl/Types.hpp"
+#include "profiling/Event.hpp"
 #include "utils/assertion.hpp"
+
+using precice::profiling::Event;
 
 namespace precice::com {
 
@@ -26,9 +29,21 @@ void Communication::connectIntraComm(std::string const &participantName,
   int            secondaryRanksSize = size - rankOffset;
   if (rank == 0) {
     PRECICE_INFO("Connecting Primary rank to {} Secondary ranks", secondaryRanksSize);
+    Event e0("prepareEstablishment");
+
     prepareEstablishment(primaryName, secondaryName);
+
+    e0.stop();
+    Event e1("acceptConnection");
+
     acceptConnection(primaryName, secondaryName, tag, rank, rankOffset);
+
+    e1.stop();
+    Event e2("cleanupEstablishment");
+
     cleanupEstablishment(primaryName, secondaryName);
+
+    e2.stop();
   } else {
     int secondaryRank = rank - rankOffset;
     PRECICE_INFO("Connecting Secondary rank #{} to Primary rank", secondaryRank);

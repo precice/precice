@@ -187,8 +187,12 @@ void M2N::acceptSecondaryRanksPreConnection(
 
   _areSecondaryRanksConnected = true;
   for (const auto &pair : _distComs) {
+    Event e1("m2n.acceptSecondaryRanksPreConnection." + std::to_string(pair.first));
+
     pair.second->acceptPreConnection(acceptorName, requesterName);
     _areSecondaryRanksConnected = _areSecondaryRanksConnected && pair.second->isConnected();
+
+    e1.stop();
   }
   PRECICE_ASSERT(_areSecondaryRanksConnected);
 }
@@ -203,8 +207,12 @@ void M2N::requestSecondaryRanksPreConnection(
 
   _areSecondaryRanksConnected = true;
   for (const auto &pair : _distComs) {
+    Event e1("m2n.requestSecondaryRanksPreConnection." + std::to_string(pair.first));
+
     pair.second->requestPreConnection(acceptorName, requesterName);
     _areSecondaryRanksConnected = _areSecondaryRanksConnected && pair.second->isConnected();
+
+    e1.stop();
   }
   PRECICE_ASSERT(_areSecondaryRanksConnected);
 }
