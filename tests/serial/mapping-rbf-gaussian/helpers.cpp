@@ -111,7 +111,7 @@ void testRBFMappingVectorial(const std::string configFile, const TestContext &co
     interfaceB.readData(meshTwoID, dataOneID, idsTwo, maxDt, values);
     interfaceB.advance(maxDt);
 
-    for (size_t i = 0; i < values.size(); i++) {
+    for (Eigen::Index i = 0; i < values.size(); i++) {
       BOOST_TEST(values[i] == expectedValues[i], boost::test_tools::tolerance(1e-5));
     }
     interfaceB.finalize();

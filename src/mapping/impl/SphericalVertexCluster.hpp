@@ -322,8 +322,8 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
   PRECICE_ASSERT(static_cast<Eigen::Index>(_outputIDs.size() * nComponents) == result.size());
 
   // Step 3: now accumulate the result into our global output data
-  for (unsigned int c = 0; c < nComponents; ++c) {
-    for (unsigned int i = 0; i < _outputIDs.size(); ++i) {
+  for (unsigned int i = 0; i < _outputIDs.size(); ++i) {
+    for (unsigned int c = 0; c < nComponents; ++c) {
       const auto dataIndex = *(_outputIDs.nth(i));
       PRECICE_ASSERT(dataIndex * nComponents + c < outData.size(), dataIndex * nComponents + c, outData.size());
       PRECICE_ASSERT(_normalizedWeights[i] > 0);
