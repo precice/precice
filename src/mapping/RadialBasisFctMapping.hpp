@@ -113,6 +113,16 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::computeMapping()
     outMesh = this->output();
   }
 
+  // We don't want the solver to have a pointer and ownership of the global input mesh.
+  // The default initialization of the RBF when unsing the tuner might also mess with the tagging.
+  if constexpr (0 < std::tuple_size_v<std::tuple<Args...>>) {
+    if constexpr (std::is_same_v<std::remove_reference_t<decltype(std::get<0>(optionalArgs))>, MappingConfiguration::AutotuningParams>) {
+      PRECICE_CHECK(!(utils::IntraComm::isPrimary() && std::get<0>(optionalArgs).autotuneShape), "The parameter tuner is not available for parallel global RBF mappings, "
+      "since it doesn't have access to the input mesh during the mapping stage and the optimized support radius is unknown during the repartitioning."
+      "Make sure to use a serial RBF mapping or the partition of unity (PUM) method.");
+    }
+  }
+
   if (utils::IntraComm::isSecondary()) {
 
     // Input mesh may have overlaps
@@ -149,8 +159,8 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::computeMapping()
       }
 
     } else { // Serial
-      globalInMesh->addMesh(*inMesh);
-      globalOutMesh->addMesh(*outMesh);
+      globalInMesh = inMesh;
+      globalOutMesh = outMesh;
     }
 
     // Forwarding the tuples here requires some template magic I don't want to implement

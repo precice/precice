@@ -86,7 +86,7 @@ public:
    * @param[in] inputData Imput values for which the optimizer tries to reduce the mapping error by envoking the computeErrorEstimate() method.
    */
   template <typename IndexContainer, typename Solver>
-  Sample optimize(Solver &solver, const IndexContainer &inputIds, const Eigen::VectorXd &inputData);
+  Sample optimize(Solver &solver, const mesh::PtrMesh inMesh, const IndexContainer &inputIds, const Eigen::VectorXd &inputData);
 
   /// Returns true if the last sample tested by the optimizer also corresponds to the found optimum.
   bool lastSampleWasOptimum() const;
@@ -108,7 +108,7 @@ inline RBFParameterTuner::RBFParameterTuner(mesh::Mesh &inputMesh)
 }
 
 template <typename IndexContainer, typename Solver>
-Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputIds, const Eigen::VectorXd &inputData)
+Sample RBFParameterTuner::optimize(Solver &solver, const mesh::PtrMesh inMesh, const IndexContainer &inputIds, const Eigen::VectorXd &inputData)
 {
   constexpr bool radiusRBF = Solver::BASIS_FUNCTION_T::hasCompactSupport();
   static_assert(radiusRBF, "RBF is not supported by this optimizer, as it does not accept a support-radius."
@@ -124,7 +124,7 @@ Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputId
 
   PRECICE_INFO("Starting optimization with lower bound = {:.4e}, upper bound = {:.4e}", _lowerBound, _upperBound);
 
-  solver.rebuildKernelDecomposition(inputIds, sampleRadius);
+  solver.rebuildKernelDecomposition(inMesh, inputIds, sampleRadius);
   RBFErrorEstimate estimate   = solver.computeErrorEstimate(inputData, inputIds);
   Sample           lowerBound = {sampleRadius, estimate.error};
 
@@ -139,7 +139,7 @@ Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputId
   while (std::isnan(_upperBound)) {
     sampleRadius *= increaseSize;
 
-    solver.rebuildKernelDecomposition(inputIds, sampleRadius);
+    solver.rebuildKernelDecomposition(inMesh, inputIds, sampleRadius);
     RBFErrorEstimate estimate = solver.computeErrorEstimate(inputData, inputIds);
 
     PRECICE_INFO("RBF tuner sample: rad={:.4e}, err={:.4e}, 1/cond={:.4e}", sampleRadius, estimate.error, estimate.rcond);
@@ -163,7 +163,7 @@ Sample RBFParameterTuner::optimize(Solver &solver, const IndexContainer &inputId
   while (shouldContinue(lowerBound, upperBound) && i < MAX_BISEC_ITERATIONS) {
     centerSample.radius = (lowerBound.radius + upperBound.radius) / 2;
 
-    solver.rebuildKernelDecomposition(inputIds, centerSample.radius);
+    solver.rebuildKernelDecomposition(inMesh, inputIds, centerSample.radius);
     centerSample.error = solver.computeErrorEstimate(inputData, inputIds).error;
 
     PRECICE_DEBUG("Current interval: [({:.2e},{:.2e}), ({:.2e},{:.2e})], Sample: rad={:.2e}, err={:.2e}",

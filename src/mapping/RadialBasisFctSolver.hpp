@@ -90,7 +90,7 @@ public:
   void evaluateConservativeCache(Eigen::MatrixXd &epsilon, const Eigen::MatrixXd &Au, Eigen::MatrixXd &result) const;
 
   template <typename IndexConatiner>
-  void rebuildKernelDecomposition(const IndexConatiner &inputIds, double parameter);
+  void rebuildKernelDecomposition(const mesh::PtrMesh inMesh, const IndexConatiner &inputIds, double parameter);
 
   template <typename IndexConatiner>
   RBFErrorEstimate computeErrorEstimate(const Eigen::VectorXd &inputData, const IndexConatiner &inputIds) const;
@@ -132,7 +132,7 @@ private:
   Polynomial _polynomial;
 
   std::array<bool, 3> _activeAxis;
-  mesh::PtrMesh       _inputMesh;
+  std::weak_ptr<mesh::Mesh>      _inputMesh;
 };
 
 // ------- Non-Member Functions ---------
@@ -332,7 +332,6 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   // First, assemble the interpolation matrix and check the invertability
   fillMatrixCLU(_decMatrixCoefficients, basisFunction, inputMesh, inputIDs, _activeAxis, polynomial);
   _decMatrixC->compute(_decMatrixCoefficients);
-
   if (_rbfTunerConfig.autotuneShape && RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) {
     _tuner = std::make_unique<RBFParameterTuner>(*inputMesh.get());
   } else {
@@ -471,9 +470,9 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
       // @todo: Add error criterion.
       if (isProbablyZeroData || isOptimizationInterval || !isOptimizedAndSouldOnce) {
         auto  &mutableSolver = *const_cast<RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T> *>(this);
-        Sample sample        = _tuner->optimize(mutableSolver, inputIDs, inputData);
+        Sample sample        = _tuner->optimize(mutableSolver, _inputMesh.lock(), inputIDs, inputData);
         if (!_tuner->lastSampleWasOptimum()) {
-          mutableSolver.rebuildKernelDecomposition(inputIDs, _tuner->getLastOptimizedRadius());
+          mutableSolver.rebuildKernelDecomposition(_inputMesh.lock(), inputIDs, _tuner->getLastOptimizedRadius());
         }
         PRECICE_INFO("Using: radius={}, LOOCV={}", _tuner->getLastOptimizedRadius(), sample.error);
         _iterSinceOptimization = 1;
@@ -524,7 +523,7 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexConatiner>
-void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::rebuildKernelDecomposition(const IndexConatiner &inputIds, double parameter)
+void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::rebuildKernelDecomposition(const mesh::PtrMesh inMesh, const IndexConatiner &inputIds, double parameter)
 {
   static_assert(RADIAL_BASIS_FUNCTION_T::hasCompactSupport(), "RBF does not support a radius-initialization and was still used to instantiate an optimizer.");
 
@@ -532,7 +531,7 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::rebuildKernelDecomposition(c
     parameter = RADIAL_BASIS_FUNCTION_T::transformRadiusToShape(parameter);
   }
   RADIAL_BASIS_FUNCTION_T kernel(parameter);
-  fillMatrixCLU((_decMatrixCoefficients), kernel, _inputMesh, inputIds, _activeAxis, _polynomial);
+  fillMatrixCLU((_decMatrixCoefficients), kernel, inMesh, inputIds, _activeAxis, _polynomial);
   _decMatrixC->compute(_decMatrixCoefficients);
 }
 
