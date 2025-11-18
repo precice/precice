@@ -67,7 +67,7 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
   int peerCount   = -1; // The total count of peers (initialized in the first iteration)
   int peerCurrent = 0;  // Current peer to connect to
   do {
-    Event e1("mpi.acceptConnection.peer." + peerCurrent);
+    Event e1("mpi.acceptConnection.peer." + std::to_string(peerCurrent));
     Event e2("accept");
 
     // Connection
@@ -111,14 +111,14 @@ void MPIPortsCommunication::acceptConnection(std::string const &acceptorName,
     e1.stop();
   } while (++peerCurrent < peerCount);
 
-  Event e4("mpi.acceptConnection.closePort");
+  Event e5("mpi.acceptConnection.closePort");
 
   res = MPI_Close_port(const_cast<char *>(_portName.c_str()));
   PRECICE_CHECK(res, "MPI_Close_port failed with message: {}", res.message());
   _portName.clear();
   PRECICE_DEBUG("Closed Port");
 
-  e4.stop();
+  e5.stop();
 
   _isConnected = true;
 }
@@ -248,7 +248,7 @@ void MPIPortsCommunication::requestConnectionAsClient(std::string const   &accep
   _isAcceptor = false;
 
   for (int acceptorRank : acceptorRanks) {
-    Event e("mpi.requestConnectionAsClient." + acceptorRank);
+    Event e("mpi.requestConnectionAsClient." + std::to_string(acceptorRank));
 
     ConnectionInfoReader conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
     _portName = conInfo.read();
