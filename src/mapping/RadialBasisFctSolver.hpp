@@ -30,7 +30,7 @@ public:
   /**
    * Depending on the positive definiteness, the decomposition type is an in-place Cholesky or QR decomposition.
    * To make the decomposition in-place we use an Eigen::Ref<Eigen::MatrixXd> as the matrix type.
-   * 
+   *
    * This decomposition type is not resizable but allows direct access to the internal coefficients via the matrix reference used to initialize the decomposition.
    */
   using DecompositionType = std::conditional_t<RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite(), Eigen::LLT<Eigen::Ref<Eigen::MatrixXd>>, Eigen::ColPivHouseholderQR<Eigen::Ref<Eigen::MatrixXd>>>;
@@ -131,8 +131,8 @@ private:
 
   Polynomial _polynomial;
 
-  std::array<bool, 3> _activeAxis;
-  std::weak_ptr<mesh::Mesh>      _inputMesh;
+  std::array<bool, 3>       _activeAxis;
+  std::weak_ptr<mesh::Mesh> _inputMesh;
 };
 
 // ------- Non-Member Functions ---------

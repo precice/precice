@@ -56,8 +56,8 @@ protected:
 
   /**
    * @brief Estimates the mesh resolution by finding the three closest vertices to some sample vertex.
-   * It might trigger the cration of an RTree.
-   * 
+   * It might trigger the creation of an RTree.
+   *
    * This function is used to estimate a lower bound on the support radius.
    * Therefore, it is not required to be highly accurate, but rather to be in the right order of magnitude.
    */
@@ -66,24 +66,24 @@ protected:
 public:
   ~RBFParameterTuner() = default;
   /**
-   * @param[in] inputMesh refers to the mesh where the interpolants are built on, 
+   * @param[in] inputMesh refers to the mesh where the interpolants are built on,
    * i.e., the input mesh for consistent mappings and the output mesh for conservative mappings.
-   * 
+   *
    * Non const reference because of @ref RBFParameterTuner::estimateMeshResolution(mesh::Mesh &).
    */
   explicit RBFParameterTuner(mesh::Mesh &inputMesh);
 
   /**
    * @brief Optimizes the support radius of an RBF using the bisection method.
-   * 
-   * The bisection method is only guaranteed to find a minimum for convex optimiation problems, however, 
+   *
+   * The bisection method is only guaranteed to find a minimum for convex optimiation problems, however,
    * in the case of RBFs it is possible to find a reasonably good radius of the right order of magnitude.
-   * 
+   *
    * @param[in] solver an RBF mapping solver, see @ref precice::mapping::RadialBasisFctSolver. Expected are the following methods:
    *  - void Solver::rebuildKernelDecomposition(const IndexContainer &inputIds, double radius);
    *  - ErrorEstimate Solver::computeErrorEstimate(const Eigen::VectorXd &inputData, const IndexContainer &inputIds);
-   * @param[in] inputIds Index container fo the vertices on the input mesh.
-   * @param[in] inputData Imput values for which the optimizer tries to reduce the mapping error by envoking the computeErrorEstimate() method.
+   * @param[in] inputIds Index container of the vertices on the input mesh.
+   * @param[in] inputData Input values for which the optimizer tries to reduce the mapping error by invoking the computeErrorEstimate() method.
    */
   template <typename IndexContainer, typename Solver>
   Sample optimize(Solver &solver, const mesh::PtrMesh inMesh, const IndexContainer &inputIds, const Eigen::VectorXd &inputData);
