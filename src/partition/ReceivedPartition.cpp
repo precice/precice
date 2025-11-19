@@ -508,6 +508,8 @@ void ReceivedPartition::compareBoundingBoxes()
   } else {
     PRECICE_ASSERT(utils::IntraComm::isSecondary());
 
+    Event e6("partition.compareBoundingBoxes.secondary.determineOverlappingBBs." + _mesh->getName());
+
     std::vector<Rank> connectedRanks;
     for (const auto &remoteBB : remoteBBMap) {
       if (_bb.overlapping(remoteBB.second)) {
@@ -517,8 +519,13 @@ void ReceivedPartition::compareBoundingBoxes()
     PRECICE_ASSERT(_mesh->getConnectedRanks().empty());
     _mesh->setConnectedRanks(connectedRanks);
 
+    e6.stop();
+    Event e7("partition.compareBoundingBoxes.secondary.sendConnectedRanks." + _mesh->getName());
+
     // send connected ranks to primary rank
     utils::IntraComm::getCommunication()->sendRange(connectedRanks, 0);
+
+    e7.stop();
   }
 
   e5.stop();

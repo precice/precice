@@ -277,9 +277,14 @@ void ProvidedPartition::compareBoundingBoxes()
 
     // primary rank receives bbs from secondary ranks and stores them in bbm
     for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
+      Event e0_1("partition.receiveBoundingBox" + _mesh->getName());
+      e0_1.addData("rank", secondaryRank);
+
       // initialize bbm
       bbm.emplace(secondaryRank, bb);
       com::receiveBoundingBox(*utils::IntraComm::getCommunication(), secondaryRank, bbm.at(secondaryRank));
+
+      e0_1.stop();
     }
 
     e0.stop();
@@ -297,11 +302,15 @@ void ProvidedPartition::compareBoundingBoxes()
   int remoteConnectionMapSize = 0;
 
   if (utils::IntraComm::isPrimary()) {
+    Event e0("partition.feedback.receiveConnectedRanksList");
 
     // primary rank receives feedback map (map of other participant ranks -> connected ranks at this participant)
     // from other participants primary rank
     std::vector<Rank> connectedRanksList = _m2ns[0]->getPrimaryRankCommunication()->receiveRange(0, com::asVector<Rank>);
     remoteConnectionMapSize              = connectedRanksList.size();
+
+    e0.stop();
+    Event e1("partition.feedback.receiveConnectionMap");
 
     mesh::Mesh::CommunicationMap remoteConnectionMap;
     for (auto &rank : connectedRanksList) {
@@ -311,11 +320,17 @@ void ProvidedPartition::compareBoundingBoxes()
       com::receiveConnectionMap(*_m2ns[0]->getPrimaryRankCommunication(), 0, remoteConnectionMap);
     }
 
+    e1.stop();
+    Event e2("partition.feedback.broadcastSendConnectionMap");
+
     // broadcast the received feedbackMap
     utils::IntraComm::getCommunication()->broadcast(connectedRanksList);
     if (remoteConnectionMapSize != 0) {
       com::broadcastSendConnectionMap(*utils::IntraComm::getCommunication(), remoteConnectionMap);
     }
+
+    e2.stop();
+    Event e3("partition.feedback.checkConnectedRanks");
 
     // primary rank checks which ranks are connected to it
     PRECICE_ASSERT(_mesh->getConnectedRanks().empty());
@@ -331,9 +346,16 @@ void ProvidedPartition::compareBoundingBoxes()
       return ranks;
     }());
 
+    e3.stop();
+
   } else { // Secondary rank
+    Event e0("partition.feedback.broadcastConnectedRanksList");
+
     std::vector<Rank> connectedRanksList;
     utils::IntraComm::getCommunication()->broadcast(connectedRanksList, 0);
+
+    e0.stop();
+    Event e1("partition.feedback.broadcastReceiveConnectionMap");
 
     mesh::Mesh::CommunicationMap remoteConnectionMap;
     if (!connectedRanksList.empty()) {
@@ -342,6 +364,9 @@ void ProvidedPartition::compareBoundingBoxes()
       }
       com::broadcastReceiveConnectionMap(*utils::IntraComm::getCommunication(), remoteConnectionMap);
     }
+
+    e1.stop();
+    Event e2("partition.feedback.checkConnectedRanks");
 
     PRECICE_ASSERT(_mesh->getConnectedRanks().empty());
     _mesh->setConnectedRanks([&] {
@@ -355,6 +380,8 @@ void ProvidedPartition::compareBoundingBoxes()
       }
       return ranks;
     }());
+
+    e2.stop();
   }
 }
 
