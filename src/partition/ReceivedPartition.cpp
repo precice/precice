@@ -429,11 +429,23 @@ void ReceivedPartition::compareBoundingBoxes()
 
   // receive and broadcast remote bounding box map
   if (utils::IntraComm::isPrimary()) {
+    Event e3_1("partition.compareBoundingBoxes.receiveBroadcastBBMap." + _mesh->getName());
+
     com::receiveBoundingBoxMap(*m2n().getPrimaryRankCommunication(), 0, remoteBBMap);
+
+    e3_1.stop();
+    Event e3_2("partition.compareBoundingBoxes.broadcastSendBBMap." + _mesh->getName());
+
     com::broadcastSendBoundingBoxMap(*utils::IntraComm::getCommunication(), remoteBBMap);
+
+    e3_2.stop();
   } else {
     PRECICE_ASSERT(utils::IntraComm::isSecondary());
+    Event e3_3("partition.compareBoundingBoxes.broadcastReceiveBBMap." + _mesh->getName());
+
     com::broadcastReceiveBoundingBoxMap(*utils::IntraComm::getCommunication(), remoteBBMap);
+
+    e3_3.stop();
   }
 
   e3.stop();
