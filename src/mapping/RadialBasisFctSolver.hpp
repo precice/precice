@@ -4,7 +4,6 @@
 #include <Eigen/QR>
 #include <Eigen/SVD>
 #include <boost/range/adaptor/indexed.hpp>
-#include <functional>
 #include <type_traits>
 #include "impl/BasisFunctions.hpp"
 #include "impl/RBFParameterTuner.hpp"
@@ -13,7 +12,6 @@
 #include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
-#include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 
 namespace precice::mapping {
@@ -499,9 +497,9 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   Eigen::VectorXd out;
   if (_rbfTunerConfig.autotuneShape) {
     if constexpr (RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) {
-      const int outSize    = _matrixA.rows();
-      const int inSize     = inputData.size();
-      const int polyParams = _matrixA.cols() - inSize;
+      const Eigen::Index outSize    = _matrixA.rows();
+      const Eigen::Index inSize     = inputData.size();
+      const Eigen::Index polyParams = _matrixA.cols() - inSize;
 
       // not yet necessary: integrated polynomial is only supported for SPD functions
       out = applyKernelToMatrix<RADIAL_BASIS_FUNCTION_T>(_matrixA.block(0, 0, outSize, inSize), _tuner->getLastOptimizedRadius()) * p.segment(0, inSize);

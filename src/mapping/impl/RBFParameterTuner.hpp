@@ -1,8 +1,11 @@
 #pragma once
 
+#include <limits>
 #include <mapping/MathHelper.hpp>
 #include <mapping/impl/BasisFunctions.hpp>
 #include <mesh/Mesh.hpp>
+#include <mesh/Utils.hpp>
+#include <optional>
 
 namespace precice::mapping {
 
@@ -49,19 +52,12 @@ protected:
   /// Defines the lower bound of the optimization range.
   double _lowerBound;
   /// Defines the upper bound of the optimization range.
-  double _upperBound;
+  std::optional<double> _upperBound;
 
-  bool   _lastSampleWasOptimum;
+  bool   _lastSampleWasOptimum = false;
   Sample _currentOptimum;
 
-  /**
-   * @brief Estimates the mesh resolution by finding the three closest vertices to some sample vertex.
-   * It might trigger the creation of an RTree.
-   *
-   * This function is used to estimate a lower bound on the support radius.
-   * Therefore, it is not required to be highly accurate, but rather to be in the right order of magnitude.
-   */
-  static double estimateMeshResolution(mesh::Mesh &inputMesh);
+  std::string _meshName;
 
 public:
   ~RBFParameterTuner() = default;
@@ -100,11 +96,8 @@ private:
 };
 
 inline RBFParameterTuner::RBFParameterTuner(mesh::Mesh &inputMesh)
+    : _upperBound(std::nullopt), _lowerBound(mesh::estimateMeshResolution(inputMesh)), _meshName(inputMesh.getName())
 {
-  _lowerBound = estimateMeshResolution(inputMesh);
-  _upperBound = std::numeric_limits<double>::quiet_NaN();
-
-  _lastSampleWasOptimum = false;
 }
 
 template <typename IndexContainer, typename Solver>
@@ -122,7 +115,8 @@ Sample RBFParameterTuner::optimize(Solver &solver, const mesh::PtrMesh inMesh, c
 
   _lastSampleWasOptimum = false;
 
-  PRECICE_INFO("Starting optimization with lower bound = {:.4e}, upper bound = {:.4e}", _lowerBound, _upperBound);
+  PRECICE_INFO("Starting optimization with lower bound = {:.4e}, upper bound = {:.4e} on input mesh: {}.",
+               _lowerBound, _upperBound.value_or(std::numeric_limits<double>::quiet_NaN()), _meshName);
 
   solver.rebuildKernelDecomposition(inMesh, inputIds, sampleRadius);
   RBFErrorEstimate estimate   = solver.computeErrorEstimate(inputData, inputIds);
@@ -136,25 +130,26 @@ Sample RBFParameterTuner::optimize(Solver &solver, const mesh::PtrMesh inMesh, c
   }
 
   // collect samples with exponential growth and decrease growth rate until the support radius is "good enough"
-  while (std::isnan(_upperBound)) {
+  while (!_upperBound.has_value()) {
     sampleRadius *= increaseSize;
 
     solver.rebuildKernelDecomposition(inMesh, inputIds, sampleRadius);
     RBFErrorEstimate estimate = solver.computeErrorEstimate(inputData, inputIds);
 
-    PRECICE_INFO("RBF tuner sample: rad={:.4e}, err={:.4e}, 1/cond={:.4e}", sampleRadius, estimate.error, estimate.rcond);
+    PRECICE_INFO("RBF tuner sample: rad={:.4e}, err={:.4e}, 1/cond={:.4e}} on input mesh: {}",
+                 sampleRadius, estimate.error, estimate.rcond, _meshName);
 
-    if (estimate.rcond < RCOND_TOLERANCE || estimate.error >= std::numeric_limits<double>::max()) {
-      PRECICE_CHECK(sampleRadius != _lowerBound, "RBF parameter tuning diverged in first iteration using support-radius={}."
+    if (estimate.rcond < RCOND_TOLERANCE || estimate.error == std::numeric_limits<double>::max()) {
+      PRECICE_CHECK(sampleRadius != _lowerBound, "RBF parameter tuning diverged in first iteration on input mesh {} using support-radius={}."
                                                  "Try using a different basis function, or manually select support radius smaller than {}.",
-                    sampleRadius, sampleRadius);
+                    _meshName, sampleRadius, sampleRadius);
 
       _upperBound = sampleRadius;
       break;
     }
     lowerBound = {sampleRadius, estimate.error};
   }
-  Sample upperBound = {_upperBound, std::numeric_limits<double>::max()};
+  Sample upperBound{_upperBound.value(), std::numeric_limits<double>::max()};
 
   int    i = 0;
   Sample centerSample;
@@ -166,10 +161,10 @@ Sample RBFParameterTuner::optimize(Solver &solver, const mesh::PtrMesh inMesh, c
     solver.rebuildKernelDecomposition(inMesh, inputIds, centerSample.radius);
     centerSample.error = solver.computeErrorEstimate(inputData, inputIds).error;
 
-    PRECICE_DEBUG("Current interval: [({:.2e},{:.2e}), ({:.2e},{:.2e})], Sample: rad={:.2e}, err={:.2e}",
-                  lowerBound.radius, lowerBound.error, upperBound.radius, upperBound.error, centerSample.radius, centerSample.error);
+    PRECICE_DEBUG("Current interval: [({:.2e},{:.2e}), ({:.2e},{:.2e})], Sample: rad={:.2e}, err={:.2e}, on input mesh: {}.",
+                  lowerBound.radius, lowerBound.error, upperBound.radius, upperBound.error, centerSample.radius, centerSample.error, _meshName);
 
-    if (lowerBound.error < upperBound.error || (centerSample.error >= std::numeric_limits<double>::max())) {
+    if (lowerBound.error < upperBound.error || (centerSample.error == std::numeric_limits<double>::max())) {
       upperBound = centerSample;
     } else {
       lowerBound = centerSample;
@@ -179,26 +174,9 @@ Sample RBFParameterTuner::optimize(Solver &solver, const mesh::PtrMesh inMesh, c
   _currentOptimum       = centerSample.error >= std::numeric_limits<double>::max() ? lowerBound : centerSample;
   _lastSampleWasOptimum = centerSample.radius == _currentOptimum.radius;
 
-  PRECICE_DEBUG("Best sample: rad={:.4e}, err={:.4e}", _currentOptimum.radius, _currentOptimum.error);
+  PRECICE_DEBUG("Best sample: rad={:.4e}, err={:.4e} on input mesh: {}.", _currentOptimum.radius, _currentOptimum.error, _meshName);
 
   return _currentOptimum;
-}
-
-inline double RBFParameterTuner::estimateMeshResolution(mesh::Mesh &inputMesh)
-{
-  size_t sampleSize = std::min((size_t) 3, inputMesh.vertices().size());
-
-  const auto         i0 = inputMesh.vertices().size() / 2;
-  const mesh::Vertex x0 = inputMesh.vertices().at(i0);
-
-  const std::vector<VertexID> matches = inputMesh.index().getClosestVertices(x0.getCoords(), sampleSize);
-
-  double h = 0;
-  for (size_t i = 0; i < sampleSize; i++) {
-    const mesh::Vertex xi = inputMesh.vertices().at(matches.at(i));
-    h += std::sqrt(utils::computeSquaredDifference(xi.rawCoords(), x0.rawCoords()));
-  }
-  return h / sampleSize;
 }
 
 inline bool RBFParameterTuner::shouldContinue(const Sample &lowerBound, const Sample &upperBound)
