@@ -363,7 +363,7 @@ void SocketCommunication::requestConnectionAsClient(std::string const   &accepto
   PRECICE_ASSERT(not isConnected());
 
   for (auto const &acceptorRank : acceptorRanks) {
-    Event e0("socket.requestConnectionAsClient.");
+    Event e0("socket.requestConnectionAsClient.requestConnection");
     e0.addData("acceptorRank", acceptorRank);
     Event e0_0("socket.requestConnectionAsClient.readConInfo");
 
