@@ -68,8 +68,13 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
   std::string address;
 
   try {
+    Event e0("socket.acceptConnection.getIpAddress");
+
     std::string ipAddress = getIpAddress();
     PRECICE_CHECK(not ipAddress.empty(), "Network \"{}\" not found for socket connection!", _networkName);
+
+    e0.stop();
+    Event e1("socket.acceptConnection.openPort");
 
     using asio::ip::tcp;
 
@@ -81,17 +86,27 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
     acceptor.bind(endpoint);
     acceptor.listen();
 
+    e1.stop();
+    Event e2("socket.acceptConnection.writeConInfo");
+
     _portNumber = acceptor.local_endpoint().port();
     address     = ipAddress + ":" + std::to_string(_portNumber);
     ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, _addressDirectory);
     conInfo.write(address);
     PRECICE_DEBUG("Accept connection at {}", address);
 
+    e2.stop();
+    Event e3("socket.acceptConnection.acceptConnections");
+
     int peerCurrent               = 0;  // Current peer to connect to
     int peerCount                 = -1; // The total count of peers (initialized in the first iteration)
     int requesterCommunicatorSize = -1;
 
     do {
+      Event e3_0("socket.acceptConnection.acceptConnection");
+      e3_0.addData("peerCurrent", peerCurrent);
+      Event e3_0_0("socket.acceptConnection.makeSocket");
+
       auto socket = std::make_shared<Socket>(*_ioContext);
 
       acceptor.accept(*socket);
@@ -101,6 +116,9 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
       PRECICE_DEBUG("Accepted connection at {}", address);
       _isConnected = true;
 
+      e3_0_0.stop();
+      Event e3_0_1("socket.acceptConnection.readRequesterRank");
+
       int requesterRank = -1;
 
       asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
@@ -109,12 +127,19 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
                      "Rank {} has already been connected. Duplicate requests are not allowed.", requesterRank);
 
       _sockets[requesterRank] = std::move(socket);
+
+      e3_0_1.stop();
+
       // send and receive expect a rank from the acceptor perspective.
       // Thus we need to apply given rankOffset before passing it to send/receive.
       // This is essentially the inverse of adjustRank().
       auto adjustedRequesterRank = requesterRank + rankOffset;
+      Event e3_0_2("socket.acceptConnection.sendAcceptorRank");
       send(acceptorRank, adjustedRequesterRank);
+      e3_0_2.stop();
+      Event e3_0_3("socket.acceptConnection.receiveRequesterCommunicatorSize");
       receive(requesterCommunicatorSize, adjustedRequesterRank);
+      e3_0_3.stop();
 
       // Initialize the count of peers to connect to
       if (peerCurrent == 0) {
@@ -125,16 +150,24 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
                      "Requester communicator size is {} which is invalid.", requesterCommunicatorSize);
       PRECICE_ASSERT(requesterCommunicatorSize == peerCount,
                      "Current requester size from rank {} is {} but should be {}", requesterRank, requesterCommunicatorSize, peerCount);
+
+      e3_0.stop();
     } while (++peerCurrent < requesterCommunicatorSize);
 
+    e3.stop();
+    Event e4("socket.acceptConnection.closeAcceptor");
     acceptor.close();
+    e4.stop();
   } catch (std::exception &e) {
     PRECICE_ERROR("Accepting a socket connection at {} failed with the system error: {}", address, e.what());
   }
 
+  Event e5("socket.acceptConnection.startThread");
   // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
   _workGuard = std::make_unique<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
   _thread    = std::thread([this] { _ioContext->run(); });
+
+  e5.stop();
 }
 
 void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorName,
@@ -156,8 +189,13 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
   std::string address;
 
   try {
+    Event e0("socket.acceptConnectionAsServer.getIpAddress");
+
     std::string ipAddress = getIpAddress();
     PRECICE_ASSERT(not ipAddress.empty(), "Network \"{}\" not found for socket connection!", _networkName);
+
+    e0.stop();
+    Event e1("socket.acceptConnectionAsServer.openPort");
 
     using asio::ip::tcp;
 
@@ -173,13 +211,23 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
       _portNumber = acceptor.local_endpoint().port();
     }
 
+    e1.stop();
+    Event e2("socket.acceptConnectionAsServer.writeConInfo");
+
     address = ipAddress + ":" + std::to_string(_portNumber);
     ConnectionInfoWriter conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
     conInfo.write(address);
 
+    e2.stop();
+    Event e3("socket.acceptConnectionAsServer.acceptConnections");
+
     PRECICE_DEBUG("Accepting connection at {}", address);
 
     for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
+      Event e3_0("socket.acceptConnectionAsServer.acceptConnection");
+      e3_0.addData("connection", connection);
+      Event e3_0_0("socket.acceptConnectionAsServer.makeSocket");
+
       auto socket = std::make_shared<Socket>(*_ioContext);
       acceptor.accept(*socket);
       boost::asio::ip::tcp::no_delay option(true);
@@ -187,19 +235,31 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
       PRECICE_DEBUG("Accepted connection at {}", address);
       _isConnected = true;
 
+      e3_0_0.stop();
+      Event e3_0_1("socket.acceptConnectionAsServer.readRequesterRank");
+
       int requesterRank;
       asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
       _sockets[requesterRank] = std::move(socket);
+
+      e3_0_1.stop();
+      e3_0.stop();
     }
 
+    e3.stop();
+    Event e4("socket.acceptConnectionAsServer.closeAcceptor");
     acceptor.close();
+    e4.stop();
   } catch (std::exception &e) {
     PRECICE_ERROR("Accepting a socket connection at {} failed with the system error: {}", address, e.what());
   }
 
+  Event e5("socket.acceptConnectionAsServer.startThread");
   // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
   _workGuard = std::make_unique<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
   _thread    = std::thread([this] { _ioContext->run(); });
+
+  e5.stop();
 }
 
 void SocketCommunication::requestConnection(std::string const &acceptorName,
@@ -211,6 +271,8 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not isConnected());
 
+  Event e0("socket.requestConnection.readConInfo");
+
   ConnectionInfoReader conInfo(acceptorName, requesterName, tag, _addressDirectory);
   std::string const    address = conInfo.read();
   PRECICE_DEBUG("Request connection to {}", address);
@@ -219,48 +281,75 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
   std::string const portNumber = address.substr(sepidx + 1);
   _portNumber                  = static_cast<unsigned short>(std::stoul(portNumber));
 
+  e0.stop();
+
   try {
+    Event e1("socket.acceptConnection.makeSocket");
     auto socket = std::make_shared<Socket>(*_ioContext);
+
+    e1.stop();
+    Event e2("socket.requestConnection.connect");
 
     using asio::ip::tcp;
 
     while (not isConnected()) {
+      Event e2_0("socket.requestConnection.resolve");
       tcp::resolver resolver(*_ioContext);
       auto          results = resolver.resolve(ipAddress, portNumber, boost::asio::ip::resolver_base::numeric_host);
+
+      e2_0.stop();
+      Event e2_1("socket.requestConnection.connectToEndpoint");
 
       auto                      endpoint = results.begin()->endpoint();
       boost::system::error_code error    = asio::error::host_not_found;
       socket->connect(endpoint, error);
 
+      e2_1.stop();
+
       _isConnected = not error;
 
       if (not isConnected()) {
+        Event e2_2("socket.requestConnection.wait");
         // Wait a little, since after a couple of ten-thousand trials the system
         // seems to get confused and the requester connects wrongly to itself.
         boost::asio::deadline_timer timer(*_ioContext, boost::posix_time::milliseconds(1));
         timer.wait();
+        e2_2.stop();
       }
     }
     boost::asio::ip::tcp::no_delay option(true);
     socket->set_option(option);
 
+    e2.stop();
+    Event e3("socket.requestConnection.writeRequesterRank");
+
     PRECICE_DEBUG("Requested connection to {}", address);
 
     asio::write(*socket, asio::buffer(&requesterRank, sizeof(int)));
+
+    e3.stop();
+    Event e4("socket.requestConnection.readAcceptorRank");
 
     int acceptorRank = -1;
     asio::read(*socket, asio::buffer(&acceptorRank, sizeof(int)));
     _sockets[0] = std::move(socket); // should be acceptorRank instead of 0, likewise all communication below
 
+    e4.stop();
+    Event e5("socket.requestConnection.sendRequesterCommunicatorSize");
+
     send(requesterCommunicatorSize, 0);
 
+    e5.stop();
   } catch (std::exception &e) {
     PRECICE_ERROR("Requesting a socket connection at {} failed with the system error: {}", address, e.what());
   }
 
+  Event e6("socket.requestConnection.startThread");
   // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
   _workGuard = std::make_unique<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
   _thread    = std::thread([this] { _ioContext->run(); });
+
+  e6.stop();
 }
 
 void SocketCommunication::requestConnectionAsClient(std::string const   &acceptorName,
@@ -274,6 +363,10 @@ void SocketCommunication::requestConnectionAsClient(std::string const   &accepto
   PRECICE_ASSERT(not isConnected());
 
   for (auto const &acceptorRank : acceptorRanks) {
+    Event e0("socket.requestConnectionAsClient.");
+    e0.addData("acceptorRank", acceptorRank);
+    Event e0_0("socket.requestConnectionAsClient.readConInfo");
+
     _isConnected = false;
     ConnectionInfoReader conInfo(acceptorName, requesterName, tag, acceptorRank, _addressDirectory);
     std::string const    address    = conInfo.read();
@@ -282,43 +375,69 @@ void SocketCommunication::requestConnectionAsClient(std::string const   &accepto
     std::string const    portNumber = address.substr(sepidx + 1);
     _portNumber                     = static_cast<unsigned short>(std::stoul(portNumber));
 
+    e0_0.stop();
+
     try {
+      Event e0_1("socket.requestConnectionAsClient.makeSocket");
+
       auto socket = std::make_shared<Socket>(*_ioContext);
+
+      e0_1.stop();
+      Event e0_2("socket.requestConnectionAsClient.connect");
 
       using asio::ip::tcp;
 
       PRECICE_DEBUG("Requesting connection to {}, port {}", ipAddress, portNumber);
 
       while (not isConnected()) {
+        Event e0_2_0("socket.requestConnectionAsClient.resolve");
         tcp::resolver resolver(*_ioContext);
         auto          endpoints = resolver.resolve(ipAddress, portNumber, boost::asio::ip::resolver_base::numeric_host);
+
+        e0_2_0.stop();
+        Event e0_2_1("socket.requestConnectionAsClient.connectToEndpoint");
 
         boost::system::error_code error = asio::error::host_not_found;
         boost::asio::connect(*socket, endpoints, error);
 
         _isConnected = not error;
 
+        e0_2_1.stop();
+
         if (not isConnected()) {
+          Event e0_2_2("socket.requestConnectionAsClient.wait");
           // Wait a little, since after a couple of ten-thousand trials the system
           // seems to get confused and the requester connects wrongly to itself.
           boost::asio::deadline_timer timer(*_ioContext, boost::posix_time::milliseconds(1));
           timer.wait();
+
+          e0_2_2.stop();
         }
       }
       boost::asio::ip::tcp::no_delay option(true);
       socket->set_option(option);
 
+      e0_2.stop();
+      Event e0_3("socket.requestConnectionAsClient.sendRequesterRank");
+
       PRECICE_DEBUG("Requested connection to {}, rank = {}", address, acceptorRank);
       _sockets[acceptorRank] = std::move(socket);
       send(requesterRank, acceptorRank); // send my rank
 
+      e0_3.stop();
     } catch (std::exception &e) {
       PRECICE_ERROR("Requesting a socket connection at {} failed with the system error: {}", address, e.what());
     }
+
+    e0.stop();
   }
+
+  Event e6("socket.requestConnectionAsClient.startThread");
   // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
   _workGuard = std::make_unique<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
   _thread    = std::thread([this] { _ioContext->run(); });
+
+  e6.stop();
 }
 
 void SocketCommunication::closeConnection()
