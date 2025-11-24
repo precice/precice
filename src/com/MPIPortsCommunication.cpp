@@ -150,7 +150,7 @@ void MPIPortsCommunication::acceptConnectionAsServer(std::string const &acceptor
   PRECICE_DEBUG("Accept connection at {}", _portName);
 
   for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
-    Event e1("mpi.acceptConnectionAsServer.connection." + connection);
+    Event e1("mpi.acceptConnectionAsServer.connection." + std::to_string(connection));
     Event e2("accept");
 
     MPI_Comm communicator;
