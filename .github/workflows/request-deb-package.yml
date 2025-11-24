@@ -49,7 +49,7 @@ jobs:
       artifact-id: ${{ steps.upload.outputs.artifact-id }}
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: ${{ inputs.release }}
       - name: Generate build directory
