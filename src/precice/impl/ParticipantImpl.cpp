@@ -1810,10 +1810,18 @@ void ParticipantImpl::initializeIntraCommunication()
   PRECICE_TRACE();
 
   Event e("com.initializeIntraCom", profiling::Fundamental);
+  Event e1("com.initializeIntraCom.connect");
+
   utils::IntraComm::getCommunication()->connectIntraComm(
       _accessorName, "IntraComm",
       _accessorProcessRank, _accessorCommunicatorSize);
+
+  e1.stop();
+  Event e2("com.initializeIntraCom.barrier");
+
   utils::IntraComm::barrier();
+
+  e2.stop();
 }
 
 void ParticipantImpl::syncTimestep(double computedTimeStepSize)
