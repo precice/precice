@@ -93,7 +93,7 @@ public:
   template <typename IndexConatiner>
   RBFErrorEstimate computeErrorEstimate(const Eigen::VectorXd &inputData, const IndexConatiner &inputIds) const;
 
-private:
+protected:
   mutable precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
 
   double evaluateRippaLOOCVerror(const Eigen::VectorXd &lambda) const;
