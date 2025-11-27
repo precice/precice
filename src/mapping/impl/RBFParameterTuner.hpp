@@ -60,7 +60,6 @@ protected:
   std::string _meshName;
 
 public:
-  ~RBFParameterTuner() = default;
   /**
    * @param[in] inputMesh refers to the mesh where the interpolants are built on,
    * i.e., the input mesh for consistent mappings and the output mesh for conservative mappings.
@@ -68,6 +67,10 @@ public:
    * Non const reference because of @ref RBFParameterTuner::estimateMeshResolution(mesh::Mesh &).
    */
   explicit RBFParameterTuner(mesh::Mesh &inputMesh);
+
+  RBFParameterTuner() = default;
+
+  ~RBFParameterTuner() = default;
 
   /**
    * @brief Optimizes the support radius of an RBF using the bisection method.
@@ -96,9 +99,7 @@ private:
 };
 
 inline RBFParameterTuner::RBFParameterTuner(mesh::Mesh &inputMesh)
-    : _upperBound(std::nullopt), _lowerBound(mesh::estimateMeshResolution(inputMesh)), _meshName(inputMesh.getName())
-{
-}
+    : _upperBound(std::nullopt), _lowerBound(mesh::estimateMeshResolution(inputMesh)), _meshName(inputMesh.getName()) {}
 
 template <typename IndexContainer, typename Solver>
 Sample RBFParameterTuner::optimize(Solver &solver, const mesh::PtrMesh inMesh, const IndexContainer &inputIds, const Eigen::VectorXd &inputData)

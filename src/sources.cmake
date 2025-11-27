@@ -172,6 +172,7 @@ target_sources(preciceCore
     src/m2n/SharedPointer.hpp
     src/m2n/config/M2NConfiguration.cpp
     src/m2n/config/M2NConfiguration.hpp
+    src/mapping/AutoTunedRBFSolver.hpp
     src/mapping/AxialGeoMultiscaleMapping.cpp
     src/mapping/AxialGeoMultiscaleMapping.hpp
     src/mapping/BarycentricBaseMapping.cpp

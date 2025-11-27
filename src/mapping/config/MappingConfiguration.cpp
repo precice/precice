@@ -488,6 +488,9 @@ void MappingConfiguration::xmlTagCallback(
     PRECICE_WARN_IF(!_autotunerConfig.autotuneShape && !tunerIntervalTag.empty(), "The \"{}\" tag will be ignored. Set \"{}\" to \"auto\" for it to take effect.",
                     ATTR_SUPPORT_RADIUS, ATTR_TUNER_INTERVAL);
 
+    PRECICE_CHECK(!(_autotunerConfig.autotuneShape && constraintValue == Mapping::Constraint::CONSERVATIVE), "Conservative tuning is not available and not necessary."
+                                                                                                             "If you are unsure, use volume splines with a polynomial.");
+
     // Check validity and parse the optimization interval
     if (_autotunerConfig.autotuneShape && _autotunerConfig.iterationInterval == AutotuningParams::UNINITIALIZED) {
       if (tunerIntervalTag.empty()) {

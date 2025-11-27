@@ -33,6 +33,10 @@ namespace precice::mapping {
  */
 template <typename Solver>
 class SphericalVertexCluster {
+
+  using AutotuningParams = MappingConfiguration::AutotuningParams;
+  using BASIS_FUNCTION_T = typename Solver::BASIS_FUNCTION_T;
+
 public:
   /**
    * The constructor uses the index RTree of the input mesh and output mesh in order to collect
@@ -52,13 +56,13 @@ public:
    * @param[in] outputMesh mesh where we evaluate the interpolants, i.e., the output mesh consistent
    *                      mappings and the input mesh for conservative mappings
    */
-  SphericalVertexCluster(mesh::Vertex                           center,
-                         double                                 radius,
-                         typename Solver::BASIS_FUNCTION_T      function,
-                         Polynomial                             polynomial,
-                         mesh::PtrMesh                          inputMesh,
-                         mesh::PtrMesh                          outputMesh,
-                         MappingConfiguration::AutotuningParams rbfOptional);
+  SphericalVertexCluster(mesh::Vertex     center,
+                         double           radius,
+                         BASIS_FUNCTION_T function,
+                         Polynomial       polynomial,
+                         mesh::PtrMesh    inputMesh,
+                         mesh::PtrMesh    outputMesh,
+                         AutotuningParams rbfTunerConfig);
 
   /// Evaluates a conservative mapping and agglomerates the result in the given output data
   void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) const;
@@ -127,7 +131,7 @@ private:
   /// Polynomial treatment in the RBF solver
   Polynomial _polynomial;
 
-  typename Solver::BASIS_FUNCTION_T _function;
+  BASIS_FUNCTION_T _function;
 
   /// The weighting function
   CompactPolynomialC2 _weightingFunction;
@@ -140,13 +144,13 @@ private:
 
 template <typename Solver>
 SphericalVertexCluster<Solver>::SphericalVertexCluster(
-    mesh::Vertex                           center,
-    double                                 radius,
-    typename Solver::BASIS_FUNCTION_T      function,
-    Polynomial                             polynomial,
-    mesh::PtrMesh                          inputMesh,
-    mesh::PtrMesh                          outputMesh,
-    MappingConfiguration::AutotuningParams rbfOptional)
+    mesh::Vertex     center,
+    double           radius,
+    BASIS_FUNCTION_T function,
+    Polynomial       polynomial,
+    mesh::PtrMesh    inputMesh,
+    mesh::PtrMesh    outputMesh,
+    AutotuningParams rbfTunerConfig)
     : _center(center), _radius(radius), _polynomial(polynomial), _function(function), _weightingFunction(radius)
 {
   PRECICE_TRACE(_center.getCoords(), _radius);
@@ -182,16 +186,10 @@ SphericalVertexCluster<Solver>::SphericalVertexCluster(
   std::vector<bool>         deadAxis(inputMesh->getDimensions(), false);
   precice::profiling::Event e("map.pou.computeMapping.rbfSolver");
 
-  std::cout << std::endl;
-  std::cout << "std::is_same_v<AutoTunedRBFSolver<typename Solver::BASIS_FUNCTION_T>, Solver> = " << std::is_same_v<AutoTunedRBFSolver<typename Solver::BASIS_FUNCTION_T>, Solver> << std::endl;
-  std::cout << "std::is_same_v<RadialBasisFctSolver<typename Solver::BASIS_FUNCTION_T>, Solver> = " << std::is_same_v<RadialBasisFctSolver<typename Solver::BASIS_FUNCTION_T>, Solver> << std::endl;
-  std::cout << std::endl;
-
-  // TODO kommentar
-  if constexpr (std::is_same_v<AutoTunedRBFSolver<typename Solver::BASIS_FUNCTION_T>, Solver>) {
-    _rbfSolver = AutoTunedRBFSolver<typename Solver::BASIS_FUNCTION_T>(function, inputMesh, _inputIDs, outputMesh, _outputIDs, deadAxis, _polynomial, rbfOptional);
+  if constexpr (std::is_same_v<AutoTunedRBFSolver<BASIS_FUNCTION_T>, Solver>) {
+    _rbfSolver = AutoTunedRBFSolver<BASIS_FUNCTION_T>(function, inputMesh, _inputIDs, outputMesh, _outputIDs, deadAxis, _polynomial, rbfTunerConfig);
   } else {
-    _rbfSolver = RadialBasisFctSolver<typename Solver::BASIS_FUNCTION_T>(function, inputMesh, _inputIDs, outputMesh, _outputIDs, deadAxis, _polynomial);
+    _rbfSolver = RadialBasisFctSolver<BASIS_FUNCTION_T>(function, inputMesh, _inputIDs, outputMesh, _outputIDs, deadAxis, _polynomial);
   }
   _hasComputedMapping = true;
 }

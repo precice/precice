@@ -28,6 +28,10 @@ namespace mapping {
  */
 template <typename Solver>
 class PartitionOfUnityMapping : public Mapping {
+
+  using BASIS_FUNCTION_T = typename Solver::BASIS_FUNCTION_T;
+  using AutotuningParams = MappingConfiguration::AutotuningParams;
+
 public:
   /**
    * Constructor, which mostly sets the mesh connectivity requirements and initializes member variables.
@@ -45,24 +49,24 @@ public:
    * See also \ref mapping::impl::createClustering()
    */
   PartitionOfUnityMapping(
-      Mapping::Constraint               constraint,
-      int                               dimension,
-      typename Solver::BASIS_FUNCTION_T function,
-      Polynomial                        polynomial,
-      unsigned int                      verticesPerCluster,
-      double                            relativeOverlap,
-      bool                              projectToInput);
+      Mapping::Constraint constraint,
+      int                 dimension,
+      BASIS_FUNCTION_T    function,
+      Polynomial          polynomial,
+      unsigned int        verticesPerCluster,
+      double              relativeOverlap,
+      bool                projectToInput);
 
-  // TODO: COPYDOC
+  /// \copydoc PartitionOfUnityMapping
   PartitionOfUnityMapping(
-      Mapping::Constraint                    constraint,
-      int                                    dimension,
-      typename Solver::BASIS_FUNCTION_T      function,
-      Polynomial                             polynomial,
-      unsigned int                           verticesPerCluster,
-      double                                 relativeOverlap,
-      bool                                   projectToInput,
-      MappingConfiguration::AutotuningParams rbfTunerConfig);
+      Mapping::Constraint constraint,
+      int                 dimension,
+      BASIS_FUNCTION_T    function,
+      Polynomial          polynomial,
+      unsigned int        verticesPerCluster,
+      double              relativeOverlap,
+      bool                projectToInput,
+      AutotuningParams    rbfTunerConfig);
 
   /**
    * Computes the clustering for the partition of unity method and fills the \p _clusters vector,
@@ -106,7 +110,7 @@ private:
   std::vector<SphericalVertexCluster<Solver>> _clusters;
 
   /// Radial basis function type used in interpolation
-  typename Solver::BASIS_FUNCTION_T _basisFunction;
+  BASIS_FUNCTION_T _basisFunction;
 
   /// Input parameters provided by the user for the clustering algorithm:
 
@@ -127,7 +131,7 @@ private:
 
   std::unique_ptr<mesh::Mesh> _centerMesh;
 
-  MappingConfiguration::AutotuningParams _rbfTunerConfig;
+  AutotuningParams _rbfTunerConfig;
 
   /// @copydoc Mapping::mapConservative
   void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) override;
@@ -147,27 +151,25 @@ private:
 
 template <typename Solver>
 PartitionOfUnityMapping<Solver>::PartitionOfUnityMapping(
-    Mapping::Constraint               constraint,
-    int                               dimension,
-    typename Solver::BASIS_FUNCTION_T function,
-    Polynomial                        polynomial,
-    unsigned int                      verticesPerCluster,
-    double                            relativeOverlap,
-    bool                              projectToInput)
-    : PartitionOfUnityMapping(constraint, dimension, function, polynomial, verticesPerCluster, relativeOverlap, projectToInput, {})
-{
-}
+    Mapping::Constraint constraint,
+    int                 dimension,
+    BASIS_FUNCTION_T    function,
+    Polynomial          polynomial,
+    unsigned int        verticesPerCluster,
+    double              relativeOverlap,
+    bool                projectToInput)
+    : PartitionOfUnityMapping(constraint, dimension, function, polynomial, verticesPerCluster, relativeOverlap, projectToInput, {}) {}
 
 template <typename Solver>
 PartitionOfUnityMapping<Solver>::PartitionOfUnityMapping(
-    Mapping::Constraint                    constraint,
-    int                                    dimension,
-    typename Solver::BASIS_FUNCTION_T      function,
-    Polynomial                             polynomial,
-    unsigned int                           verticesPerCluster,
-    double                                 relativeOverlap,
-    bool                                   projectToInput,
-    MappingConfiguration::AutotuningParams rbfTunerConfig)
+    Mapping::Constraint constraint,
+    int                 dimension,
+    BASIS_FUNCTION_T    function,
+    Polynomial          polynomial,
+    unsigned int        verticesPerCluster,
+    double              relativeOverlap,
+    bool                projectToInput,
+    AutotuningParams    rbfTunerConfig)
     : Mapping(constraint, dimension, false, Mapping::InitialGuessRequirement::None),
       _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial), _rbfTunerConfig(rbfTunerConfig)
 {
