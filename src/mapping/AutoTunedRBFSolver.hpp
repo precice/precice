@@ -4,7 +4,6 @@
 #include <Eigen/QR>
 #include <Eigen/SVD>
 #include <boost/range/adaptor/indexed.hpp>
-#include <type_traits>
 #include "impl/BasisFunctions.hpp"
 #include "impl/RBFParameterTuner.hpp"
 #include "mapping/MathHelper.hpp"
@@ -14,7 +13,6 @@
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "profiling/Event.hpp"
-#include "mapping/RadialBasisFctSolver.hpp"
 
 namespace precice::mapping {
 
@@ -26,28 +24,66 @@ namespace precice::mapping {
  */
 template <typename RADIAL_BASIS_FUNCTION_T>
 class AutoTunedRBFSolver : public RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T> {
-    mutable precice::logging::Logger _log{"mapping::AutoTunedRBFSolver"};
+  mutable precice::logging::Logger _log{"mapping::AutoTunedRBFSolver"};
+
 public:
-    using BASIS_FUNCTION_T  = RADIAL_BASIS_FUNCTION_T;
-    
-    template <typename IndexContainer>
-    Eigen::VectorXd solveConsistent(Eigen::VectorXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial);
+  using BASIS_FUNCTION_T = RADIAL_BASIS_FUNCTION_T;
 
-    template <typename IndexContainer>
-    AutoTunedRBFSolver(RADIAL_BASIS_FUNCTION_T basisFunction, mesh::PtrMesh inputMesh, const IndexContainer &inputIDs,
-                       mesh::PtrMesh outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::AutotuningParams rbfTunerConfig);
+  template <typename IndexContainer>
+  Eigen::VectorXd solveConsistent(Eigen::VectorXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial);
 
-    AutoTunedRBFSolver() = default;
+  template <typename IndexContainer>
+  AutoTunedRBFSolver(RADIAL_BASIS_FUNCTION_T basisFunction, mesh::PtrMesh inputMesh, const IndexContainer &inputIDs,
+                     mesh::PtrMesh outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial, MappingConfiguration::AutotuningParams rbfTunerConfig);
+
+  AutoTunedRBFSolver() = default;
+
+private:
+  MappingConfiguration::AutotuningParams _rbfTunerConfig;
+  std::unique_ptr<RBFParameterTuner> _tuner;
+
+  int _iterSinceOptimization = 1;
+
+  std::weak_ptr<mesh::Mesh> _inputMesh;
 };
-
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 AutoTunedRBFSolver<RADIAL_BASIS_FUNCTION_T>::AutoTunedRBFSolver(RADIAL_BASIS_FUNCTION_T basisFunction, mesh::PtrMesh inputMesh, const IndexContainer &inputIDs,
-                                                                    mesh::PtrMesh outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, 
-                                                                    Polynomial polynomial, MappingConfiguration::AutotuningParams rbfTunerConfig)
-    : RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>(basisFunction, inputMesh, inputIDs, outputMesh, outputIDs, deadAxis, polynomial, rbfTunerConfig) {}
+                                                                mesh::PtrMesh outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis,
+                                                                Polynomial polynomial, MappingConfiguration::AutotuningParams rbfTunerConfig)
+  : RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>(basisFunction, inputMesh, inputIDs, deadAxis, polynomial),
+  _rbfTunerConfig(rbfTunerConfig),
+  _inputMesh(inputMesh)
+{
+  //TODO: _polynomial & polynomial
+  // First, assemble the interpolation matrix and check the invertability
+  fillMatrixCLU(this->_decMatrixCoefficients, basisFunction, inputMesh, inputIDs, this->_activeAxis, polynomial);// TODO: gebraucht?? Ne?
+  this->_decMatrixC->compute(this->_decMatrixCoefficients); // TODO: gebraucht?? Ne?
 
+  _tuner = std::make_unique<RBFParameterTuner>(*inputMesh.get()); // TODO: hässlich, kein ptr
+
+  // For polynomial on, the algorithm might fail in determining the size of the system
+  if (polynomial != Polynomial::ON && this->computeCrossValidation) {
+    // TODO: Disable synchronization
+    precice::profiling::Event e("map.rbf.computeLOOCV");
+    this->_inverseDiagonal = utils::computeInverseDiagonal(*(this->_decMatrixC));
+  }
+  // Second, assemble evaluation matrix //TODO KOMMENTAR
+  this->_matrixA = buildMatrixA(VolumeSplines(), inputMesh, inputIDs, outputMesh, outputIDs, this->_activeAxis, polynomial);
+
+  // In case we deal with separated polynomials, we need dedicated matrices for the polynomial contribution
+  if (polynomial == Polynomial::SEPARATE) {
+    this->configureSeparatePolynomial(inputMesh, inputIDs, outputMesh, outputIDs);
+  }
+
+  // Compute the condition number
+  profiling::Event e("map.rbf.condition");
+
+  double rcond = utils::approximateReciprocalConditionNumber(*(this->_decMatrixC));
+  PRECICE_DEBUG("reciprocal condition number < {}", rcond);
+  e.addData("100-log-rcond", static_cast<int>(100 * std::log10(rcond)));
+}
 
 // @todo: change the signature to Eigen::MatrixXd and process all components at once, the solve function of eigen can handle that
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -67,12 +103,12 @@ Eigen::VectorXd AutoTunedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eig
 
       const bool isProbablyZeroData = this->_tuner->getLastOptimizationError() < 1e-15;
       // @todo: Data dimension not considered
-      const bool isOptimizationInterval  = this->_rbfTunerConfig.iterationInterval == this->_iterSinceOptimization;
+      const bool isOptimizationInterval   = this->_rbfTunerConfig.iterationInterval == this->_iterSinceOptimization;
       const bool isOptimizedAndShouldOnce = this->_rbfTunerConfig.optimizeOnce() && this->_tuner->getLastOptimizationError() != std::numeric_limits<double>::max();
 
       // @todo: Add error criterion.
       if (isProbablyZeroData || isOptimizationInterval || !isOptimizedAndShouldOnce) {
-        Sample sample        = this->_tuner->optimize(*this, this->_inputMesh.lock(), inputIDs, inputData);
+        Sample sample = this->_tuner->optimize(*this, this->_inputMesh.lock(), inputIDs, inputData);
         if (!this->_tuner->lastSampleWasOptimum()) {
           this->rebuildKernelDecomposition(this->_inputMesh.lock(), inputIDs, this->_tuner->getLastOptimizedRadius());
         }
@@ -123,4 +159,4 @@ Eigen::VectorXd AutoTunedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eig
   return out;
 }
 
-};
+}; // namespace precice::mapping

@@ -1781,7 +1781,7 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(PartitionOfUnityMappingTests)
 {
   PRECICE_TEST();
-  mapping::CompactPolynomialC0                          function(3);
+  mapping::CompactPolynomialC0                                                function(3);
   mapping::PartitionOfUnityMapping<RadialBasisFctSolver<CompactPolynomialC0>> consistentMap2D(Mapping::CONSISTENT, 2, function, Polynomial::SEPARATE, 5, 0.4, false);
   perform2DTestConsistentMapping(consistentMap2D);
   mapping::PartitionOfUnityMapping<RadialBasisFctSolver<CompactPolynomialC0>> consistentMap2DVector(Mapping::CONSISTENT, 2, function, Polynomial::SEPARATE, 5, 0.4, false);
@@ -1809,20 +1809,20 @@ BOOST_AUTO_TEST_CASE(JustInTimeMapping)
 {
   PRECICE_TEST();
   // using scalar data
-  mapping::CompactPolynomialC0                          c0function(3);
+  mapping::CompactPolynomialC0                                                c0function(3);
   mapping::PartitionOfUnityMapping<RadialBasisFctSolver<CompactPolynomialC0>> polynomial3Dconsistent(Mapping::CONSISTENT, 3, c0function, Polynomial::SEPARATE, 5, 0.265, false);
   perform3DTestJustInTimeMappingWithPolynomial(polynomial3Dconsistent);
   // using vector data
-  mapping::CompactPolynomialC4                          c4function(3);
+  mapping::CompactPolynomialC4                                                c4function(3);
   mapping::PartitionOfUnityMapping<RadialBasisFctSolver<CompactPolynomialC4>> noPolynomial2Dconsistent(Mapping::CONSISTENT, 2, c4function, Polynomial::OFF, 5, 0.265, false);
   perform2DTestJustInTimeMappingNoPolynomial(noPolynomial2Dconsistent);
 
   // using scalar data
-  mapping::CompactPolynomialC2                          c2function(3);
+  mapping::CompactPolynomialC2                                                c2function(3);
   mapping::PartitionOfUnityMapping<RadialBasisFctSolver<CompactPolynomialC2>> polynomial3Dconservative(Mapping::CONSERVATIVE, 3, c2function, Polynomial::SEPARATE, 5, 0.265, false);
   perform3DTestJustInTimeMappingConservative(polynomial3Dconservative);
   // using vector data
-  mapping::CompactPolynomialC6                          c6function(10);
+  mapping::CompactPolynomialC6                                                c6function(10);
   mapping::PartitionOfUnityMapping<RadialBasisFctSolver<CompactPolynomialC6>> noPolynomial2Dconservative(Mapping::CONSERVATIVE, 2, c6function, Polynomial::OFF, 5, 0.265, false);
   perform2DTestJustInTimeMappingConservative(noPolynomial2Dconservative);
 }
@@ -1832,7 +1832,7 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(TestSingleClusterPartitionOfUnity)
 {
   PRECICE_TEST();
-  mapping::CompactPolynomialC0                          function(3);
+  mapping::CompactPolynomialC0                                                function(3);
   mapping::PartitionOfUnityMapping<RadialBasisFctSolver<CompactPolynomialC0>> mapping(Mapping::CONSISTENT, 3, function, Polynomial::SEPARATE, 50, 0.4, false);
 
   int dimensions = 3;
@@ -2361,7 +2361,7 @@ void testTagging(const TestContext &context,
   mesh::PtrData outData = outMesh->createData("OutData", valueDimension, 1_dataID);
   getDistributedMesh(context, outMeshSpec, outMesh, outData);
 
-  Mapping::Constraint                                   constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
+  Mapping::Constraint                                                         constr = consistent ? Mapping::CONSISTENT : Mapping::CONSERVATIVE;
   mapping::PartitionOfUnityMapping<RadialBasisFctSolver<CompactPolynomialC4>> mapping(constr, 2, CompactPolynomialC4(2), Polynomial::SEPARATE, 2, 0.3, false);
   inMesh->computeBoundingBox();
   outMesh->computeBoundingBox();

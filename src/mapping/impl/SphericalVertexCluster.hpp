@@ -3,7 +3,9 @@
 #include <Eigen/Core>
 
 #include <boost/container/flat_set.hpp>
+#include <type_traits>
 
+#include "mapping/AutoTunedRBFSolver.hpp"
 #include "mapping/RadialBasisFctSolver.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
@@ -179,7 +181,18 @@ SphericalVertexCluster<Solver>::SphericalVertexCluster(
   // mapping in this cluster as computed (mostly for debugging purpose)
   std::vector<bool>         deadAxis(inputMesh->getDimensions(), false);
   precice::profiling::Event e("map.pou.computeMapping.rbfSolver");
-  _rbfSolver          = Solver(function, inputMesh, _inputIDs, outputMesh, _outputIDs, deadAxis, _polynomial, rbfOptional);
+
+  std::cout << std::endl;
+  std::cout << "std::is_same_v<AutoTunedRBFSolver<typename Solver::BASIS_FUNCTION_T>, Solver> = " << std::is_same_v<AutoTunedRBFSolver<typename Solver::BASIS_FUNCTION_T>, Solver> << std::endl;
+  std::cout << "std::is_same_v<RadialBasisFctSolver<typename Solver::BASIS_FUNCTION_T>, Solver> = " << std::is_same_v<RadialBasisFctSolver<typename Solver::BASIS_FUNCTION_T>, Solver> << std::endl;
+  std::cout << std::endl;
+
+  // TODO kommentar
+  if constexpr (std::is_same_v<AutoTunedRBFSolver<typename Solver::BASIS_FUNCTION_T>, Solver>) {
+    _rbfSolver = AutoTunedRBFSolver<typename Solver::BASIS_FUNCTION_T>(function, inputMesh, _inputIDs, outputMesh, _outputIDs, deadAxis, _polynomial, rbfOptional);
+  } else {
+    _rbfSolver = RadialBasisFctSolver<typename Solver::BASIS_FUNCTION_T>(function, inputMesh, _inputIDs, outputMesh, _outputIDs, deadAxis, _polynomial);
+  }
   _hasComputedMapping = true;
 }
 
@@ -278,8 +291,8 @@ Eigen::VectorXd SphericalVertexCluster<Solver>::interpolateAt(const mesh::Vertex
 
 template <typename Solver>
 void SphericalVertexCluster<Solver>::addWriteDataToCache(const mesh::Vertex &v, const Eigen::VectorXd &load,
-                                                                          Eigen::MatrixXd &epsilon, Eigen::MatrixXd &Au,
-                                                                          const mesh::Mesh &inMesh)
+                                                         Eigen::MatrixXd &epsilon, Eigen::MatrixXd &Au,
+                                                         const mesh::Mesh &inMesh)
 {
   PRECICE_TRACE();
   _rbfSolver.addWriteDataToCache(v, load, epsilon, Au, _function, _inputIDs, inMesh);

@@ -45,18 +45,19 @@ public:
    * See also \ref mapping::impl::createClustering()
    */
   PartitionOfUnityMapping(
-      Mapping::Constraint     constraint,
-      int                     dimension,
+      Mapping::Constraint               constraint,
+      int                               dimension,
       typename Solver::BASIS_FUNCTION_T function,
-      Polynomial              polynomial,
-      unsigned int            verticesPerCluster,
-      double                  relativeOverlap,
-      bool                    projectToInput);
+      Polynomial                        polynomial,
+      unsigned int                      verticesPerCluster,
+      double                            relativeOverlap,
+      bool                              projectToInput);
 
+  // TODO: COPYDOC
   PartitionOfUnityMapping(
       Mapping::Constraint                    constraint,
       int                                    dimension,
-      typename Solver::BASIS_FUNCTION_T function,
+      typename Solver::BASIS_FUNCTION_T      function,
       Polynomial                             polynomial,
       unsigned int                           verticesPerCluster,
       double                                 relativeOverlap,
@@ -146,13 +147,13 @@ private:
 
 template <typename Solver>
 PartitionOfUnityMapping<Solver>::PartitionOfUnityMapping(
-    Mapping::Constraint     constraint,
-    int                     dimension,
+    Mapping::Constraint               constraint,
+    int                               dimension,
     typename Solver::BASIS_FUNCTION_T function,
-    Polynomial              polynomial,
-    unsigned int            verticesPerCluster,
-    double                  relativeOverlap,
-    bool                    projectToInput)
+    Polynomial                        polynomial,
+    unsigned int                      verticesPerCluster,
+    double                            relativeOverlap,
+    bool                              projectToInput)
     : PartitionOfUnityMapping(constraint, dimension, function, polynomial, verticesPerCluster, relativeOverlap, projectToInput, {})
 {
 }
@@ -161,7 +162,7 @@ template <typename Solver>
 PartitionOfUnityMapping<Solver>::PartitionOfUnityMapping(
     Mapping::Constraint                    constraint,
     int                                    dimension,
-    typename Solver::BASIS_FUNCTION_T                function,
+    typename Solver::BASIS_FUNCTION_T      function,
     Polynomial                             polynomial,
     unsigned int                           verticesPerCluster,
     double                                 relativeOverlap,
@@ -223,8 +224,8 @@ void PartitionOfUnityMapping<Solver>::computeMapping()
   for (const auto &c : centerCandidates) {
     // We cannot simply copy the vertex from the container in order to fill the vertices of the centerMesh, as the vertexID of each center needs to match the index
     // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
-    const VertexID                                  vertexID = meshVertices.size();
-    mesh::Vertex                                    center(c.getCoords(), vertexID);
+    const VertexID                 vertexID = meshVertices.size();
+    mesh::Vertex                   center(c.getCoords(), vertexID);
     SphericalVertexCluster<Solver> cluster(center, _clusterRadius, _basisFunction, _polynomial, inMesh, outMesh, _rbfTunerConfig);
 
     // Consider only non-empty clusters (more of a safeguard here)
@@ -359,7 +360,7 @@ void PartitionOfUnityMapping<Solver>::mapConsistent(const time::Sample &inData, 
 
 template <typename Solver>
 void PartitionOfUnityMapping<Solver>::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source,
-                                                                         impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd>)
+                                                        impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd>)
 {
   precice::profiling::Event e("map.pou.mapConservativeAt.From" + input()->getName());
   // @todo: it would most probably be more efficient to first group the vertices we receive here according to the clusters and then compute the solution

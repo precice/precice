@@ -8,6 +8,7 @@
 #include <utility>
 #include <variant>
 #include "logging/LogMacros.hpp"
+#include "mapping/AutoTunedRBFSolver.hpp"
 #include "mapping/AxialGeoMultiscaleMapping.hpp"
 #include "mapping/GinkgoRadialBasisFctSolver.hpp"
 #include "mapping/LinearCellInterpolationMapping.hpp"
@@ -31,8 +32,6 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
-#include "mapping/AutoTunedRBFSolver.hpp"
-
 
 namespace precice::mapping {
 
@@ -80,7 +79,7 @@ struct BackendSelector {
 // Specialization for the RBF Eigen backend
 template <typename RBF>
 struct BackendSelector<RBFBackend::Eigen, RBF> {
-  typedef mapping::RadialBasisFctMapping<RadialBasisFctSolver<RBF>, MappingConfiguration::AutotuningParams> type;
+  typedef mapping::RadialBasisFctMapping<RadialBasisFctSolver<RBF>> type;
 };
 
 template <typename RBF>
@@ -796,7 +795,7 @@ void MappingConfiguration::finishRBFConfiguration()
       if (_autotunerConfig.autotuneShape) {
         mapping.mapping = getRBFMapping<RBFBackend::EigenTuned>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _autotunerConfig);
       } else {
-        mapping.mapping = getRBFMapping<RBFBackend::Eigen>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _autotunerConfig);
+        mapping.mapping = getRBFMapping<RBFBackend::Eigen>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial);
       }
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
 #ifndef PRECICE_NO_PETSC
@@ -808,10 +807,12 @@ void MappingConfiguration::finishRBFConfiguration()
       PRECICE_CHECK(false, "The global-iterative RBF solver on a CPU requires a preCICE build with PETSc enabled.");
 #endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _autotunerConfig);
-    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::PUMTuned>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _autotunerConfig);
-    }else {
+      if (_autotunerConfig.autotuneShape) {
+        mapping.mapping = getRBFMapping<RBFBackend::PUMTuned>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _autotunerConfig);
+      } else {
+        mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _autotunerConfig);
+      }
+    } else {
       PRECICE_UNREACHABLE("Unknown RBF solver.");
     }
     // 2. any other executor is configured via Ginkgo
