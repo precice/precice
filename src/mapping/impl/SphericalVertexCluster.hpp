@@ -189,7 +189,7 @@ SphericalVertexCluster<Solver>::SphericalVertexCluster(
   if constexpr (std::is_same_v<AutoTunedRBFSolver<BASIS_FUNCTION_T>, Solver>) {
     _rbfSolver = AutoTunedRBFSolver<BASIS_FUNCTION_T>(function, inputMesh, _inputIDs, outputMesh, _outputIDs, deadAxis, _polynomial, rbfTunerConfig);
   } else {
-    _rbfSolver = RadialBasisFctSolver<BASIS_FUNCTION_T>(function, inputMesh, _inputIDs, outputMesh, _outputIDs, deadAxis, _polynomial);
+    _rbfSolver = Solver(function, inputMesh, _inputIDs, outputMesh, _outputIDs, deadAxis, _polynomial);
   }
   _hasComputedMapping = true;
 }
