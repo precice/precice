@@ -77,13 +77,12 @@ set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "python3")
 
 set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "\
- preCICE is a coupling library for partitioned multi-physics simulations,\n\
- including, but not restricted to fluid-structure interaction and\n\
- conjugate heat transfer simulations.\n\
+ preCICE is a coupling library for general partitioned multi-physics\n\
+ and multi-scale simulations, including surface and volume coupling.\n\
  Partitioned means that preCICE couples existing programs (solvers) capable of\n\
  simulating a subpart of the complete physics involved in a simulation.\n\
  This allows for the high flexibility that is needed to keep a decent\n\
- time-to-solution for complex multi-physics scenarios.\
+ time-to-solution for complex coupled problems.\
 ")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_STRUCT_PERMISSION TRUE)
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${preCICE_SOURCE_DIR}/tools/releasing/packaging/debian/triggers")
