@@ -2,11 +2,13 @@
 
 #include <boost/range/adaptor/map.hpp>
 #include <cmath>
+#include <deque>
 #include <memory>
 #include <stddef.h>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include "SharedPointer.hpp"
@@ -18,14 +20,41 @@
 #include "mapping/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "partition/ReceivedPartition.hpp"
+#include "precice/impl/MeshContext.hpp"
+#include "precice/impl/ProvidedMeshContext.hpp"
 #include "precice/impl/ReadDataContext.hpp"
+#include "precice/impl/ReceivedMeshContext.hpp"
 #include "precice/impl/Types.hpp"
 #include "precice/impl/WriteDataContext.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 
 namespace precice::impl {
-struct MeshContext;
+
+/// Type alias for variant holding either provided or received mesh context pointers
+using MeshContextVariant = std::variant<ProvidedMeshContext *, ReceivedMeshContext *>;
+
+/// Helper to extract base MeshContext pointer from variant
+inline MeshContext *getMeshContext(const MeshContextVariant &variant)
+{
+  return std::visit([](auto *p) -> MeshContext * { return p; }, variant);
+}
+
+/// Helper to extract mesh from variant
+inline mesh::Mesh &getMesh(const MeshContextVariant &variant)
+{
+  return std::visit([](auto *p) -> mesh::Mesh & { return *p->mesh; }, variant);
+}
+
+/// Helper to extract partition from variant
+inline partition::Partition &getPartition(const MeshContextVariant &variant)
+{
+  return std::visit([](auto *p) -> partition::Partition & { return *p->partition; }, variant);
+}
+
+class MeshContext;
+class ProvidedMeshContext;
+class ReceivedMeshContext;
 struct MappingContext;
 } // namespace precice::impl
 
@@ -83,8 +112,6 @@ public:
       std::string                 name,
       mesh::PtrMeshConfiguration &meshConfig);
 
-  virtual ~ParticipantState();
-
   /// @name Configuration interface
   /// @{
   /// Adds a configured write \ref Data to the ParticipantState
@@ -119,10 +146,10 @@ public:
   void addExportContext(const io::ExportContext &context);
 
   /// Adds a mesh to be provided by the participant.
-  void provideMesh(const mesh::PtrMesh &mesh);
+  void provideMesh(mesh::PtrMesh mesh);
 
   /// Adds a mesh to be received by the participant.
-  void receiveMesh(const mesh::PtrMesh                          &mesh,
+  void receiveMesh(mesh::PtrMesh                                 mesh,
                    const std::string                            &fromParticipant,
                    double                                        safetyFactor,
                    partition::ReceivedPartition::GeometricFilter geoFilter,
@@ -207,26 +234,12 @@ public:
   /** Provides unordered access to all \ref MeshContext.used by this \ref ParticipantState
    * @remarks The sequence does not contain nullptr
    */
-  const std::vector<MeshContext *> &usedMeshContexts() const;
+  const std::vector<MeshContextVariant> &usedMeshContexts() const;
 
   /** Provides unordered access to all \ref MeshContext.used by this \ref ParticipantState
    * @remarks The sequence does not contain nullptr
    */
-  std::vector<MeshContext *> &usedMeshContexts();
-
-  /** Looks for a used MeshContext with a given mesh name.
-   * @param[in] name the name of the \ref Mesh
-   * @return a reference to the MeshContext
-   * @pre there is a matching mesh
-   */
-  MeshContext &usedMeshContext(std::string_view name);
-
-  /** Looks for a used MeshContext with a given mesh name.
-   * @param[in] name the name of the \ref Mesh
-   * @return a reference to the MeshContext
-   * @pre there is a matching mesh
-   */
-  MeshContext const &usedMeshContext(std::string_view name) const;
+  std::vector<MeshContextVariant> &usedMeshContexts();
 
   /// Does preCICE know a mesh with this name?
   bool hasMesh(std::string_view mesh) const;
@@ -243,6 +256,54 @@ public:
   /// Returns whether we are allowed to access a received mesh direct
   /// which requires the config tag <receive-mesh ... direct-access="true"
   bool isDirectAccessAllowed(std::string_view mesh) const;
+
+  /** Provides access to a ReceivedMeshContext given the mesh name.
+   * @param[in] mesh the name of the mesh
+   * @return a reference to the ReceivedMeshContext
+   * @pre the mesh is a received mesh (use isMeshReceived() to check)
+   */
+  ReceivedMeshContext &receivedMeshContext(std::string_view mesh);
+
+  /** Provides const access to a ReceivedMeshContext given the mesh name.
+   * @param[in] mesh the name of the mesh
+   * @return a const reference to the ReceivedMeshContext
+   * @pre the mesh is a received mesh (use isMeshReceived() to check)
+   */
+  const ReceivedMeshContext &receivedMeshContext(std::string_view mesh) const;
+
+  /** Provides access to a ProvidedMeshContext given the mesh name.
+   * @param[in] mesh the name of the mesh
+   * @pre The mesh must be a provided mesh (check with isMeshProvided())
+   * @return a reference to the ProvidedMeshContext
+   */
+  ProvidedMeshContext &providedMeshContext(std::string_view mesh);
+
+  /** Provides const access to a ProvidedMeshContext given the mesh name.
+   * @param[in] mesh the name of the mesh
+   * @pre The mesh must be a provided mesh (check with isMeshProvided())
+   * @return a const reference to the ProvidedMeshContext
+   */
+  const ProvidedMeshContext &providedMeshContext(std::string_view mesh) const;
+
+  /** Provides access to all ProvidedMeshContexts.
+   * @return a reference to the deque of ProvidedMeshContext
+   */
+  std::deque<ProvidedMeshContext> &providedMeshContexts();
+
+  /** Provides const access to all ProvidedMeshContexts.
+   * @return a const reference to the deque of ProvidedMeshContext
+   */
+  const std::deque<ProvidedMeshContext> &providedMeshContexts() const;
+
+  /** Provides access to all ReceivedMeshContexts.
+   * @return a reference to the deque of ReceivedMeshContext
+   */
+  std::deque<ReceivedMeshContext> &receivedMeshContexts();
+
+  /** Provides const access to all ReceivedMeshContexts.
+   * @return a const reference to the deque of ReceivedMeshContext
+   */
+  const std::deque<ReceivedMeshContext> &receivedMeshContexts() const;
   /// @}
 
   /// Initializes the MappingDataCache in the DataContext after having computed the mappings
@@ -337,8 +398,14 @@ private:
   template <typename T>
   using DataMap = std::map<MeshDataKey<std::string>, T, std::less<>>;
 
-  /// All mesh contexts involved in a simulation
+  /// All mesh contexts involved in a simulation (for name-based lookup)
   MeshMap<MeshContext *> _meshContexts;
+
+  /// Provided mesh contexts (owning container)
+  std::deque<ProvidedMeshContext> _providedMeshContexts;
+
+  /// Received mesh contexts (owning container)
+  std::deque<ReceivedMeshContext> _receivedMeshContexts;
 
   /// Read mapping contexts used by the participant.
   std::vector<MappingContext> _readMappingContexts;
@@ -347,7 +414,7 @@ private:
   std::vector<MappingContext> _writeMappingContexts;
 
   /// Mesh contexts used by the participant.
-  std::vector<MeshContext *> _usedMeshContexts;
+  std::vector<MeshContextVariant> _usedMeshContexts;
 
   DataMap<WriteDataContext> _writeDataContexts;
 
