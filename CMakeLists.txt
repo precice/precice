@@ -566,6 +566,12 @@ target_include_directories(preciceMocked PUBLIC
   $<INSTALL_INTERFACE:include>
   )
 
+if (PRECICE_FEATURE_MPI_COMMUNICATION)
+  target_link_libraries(preciceMocked PUBLIC MPI::MPI_CXX)
+else()
+  target_compile_definitions(preciceMocked PUBLIC PRECICE_NO_MPI)
+endif()
+
 # Sources Configuration
 include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
 
