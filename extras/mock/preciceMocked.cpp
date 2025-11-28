@@ -27,6 +27,12 @@
 
 // ssh link for git
 
+// add documentation to classes and functions
+
+// add example data to mock directory and maybe integratiuon test
+
+// use assertions where applicable
+
 // API declaration
 namespace precice {
 
@@ -144,11 +150,11 @@ namespace precice {
 
 namespace impl {
 
-class FileDoubleReader {
+/*class FileDoubleReader {
 public:
   explicit FileDoubleReader(const std::string &path = std::string()) : path_(path)
   {
-    if (!path_.empty())
+    if (!path_.empty()) //rewrite using assertion
       open(path_);
   }
 
@@ -193,7 +199,7 @@ private:
   std::string           path_;
   mutable std::ifstream ifs_;
   mutable std::mutex    mtx_;
-};
+};*/
 
 class ParticipantImpl {
 public:
@@ -233,7 +239,7 @@ public:
   std::string         promptedFilepath;
   bool                filepathSet = false;
 
-  std::unique_ptr<FileDoubleReader> fileReader;
+  //std::unique_ptr<FileDoubleReader> fileReader;
 };
 
 } // namespace impl
@@ -277,7 +283,7 @@ void Participant::initialize()
     return;
   std::lock_guard<std::mutex> lk(_impl->mtx);
 
-  if (!_impl->filepathSet) {
+  if (!_impl->filepathSet) { // assertion 
     std::cout << "Enter filepath for data series (10s timeout): " << std::flush;
 
     std::atomic<bool>         timedOut{false};
@@ -301,14 +307,14 @@ void Participant::initialize()
       _impl->promptedFilepath = fut.get();
       _impl->useFile          = !_impl->promptedFilepath.empty();
       std::cout << "\nReceived filepath: " << _impl->promptedFilepath << std::endl;
-      if (_impl->useFile) {
+      /*if (_impl->useFile) {
         _impl->fileReader = std::make_unique<impl::FileDoubleReader>(_impl->promptedFilepath);
         if (!_impl->fileReader->isOpen()) {
           std::cerr << "precice mock: failed to open file '" << _impl->promptedFilepath << "'. Falling back to random data.\n";
           _impl->useFile = false;
           _impl->fileReader.reset();
         }
-      }
+      }*/
       if (t.joinable())
         t.join();
     } else {
@@ -526,16 +532,16 @@ void Participant::readData(
   std::lock_guard<std::mutex> lk(_impl->mtx);
   const std::size_t           n = values.size();
 
-  if (_impl->useFile && _impl->fileReader) // return data from file
+  if (_impl->useFile /*&& _impl->fileReader*/) // return data from file
   {
-    for (std::size_t i = 0; i < n; ++i) {
+    /*for (std::size_t i = 0; i < n; ++i) {
       double val = 0.0;
       if (_impl->fileReader->readNext(val)) {
         values[i] = val;
       } else {
         values[i] = 0.0;
       }
-    }
+    }*/
   } else // use random data
   {
     std::mt19937                           gen(static_cast<uint32_t>(_impl->seed + static_cast<uint32_t>(_impl->currentStep)));
