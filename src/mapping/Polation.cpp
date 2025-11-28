@@ -78,7 +78,7 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Tetrahedron &ele
   _distance = 0.0;
 }
 
-const std::vector<WeightedElement> &Polation::getWeightedElements() const
+const boost::container::static_vector<WeightedElement, 4> &Polation::getWeightedElements() const
 {
   return _weightedElements;
 }
