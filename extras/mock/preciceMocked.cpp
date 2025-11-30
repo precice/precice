@@ -7,6 +7,7 @@
 #include <random>
 #include <string>
 #include <thread>
+#include <cassert>
 
 #include <precice/Tooling.hpp>
 #include <precice/Types.hpp>
@@ -214,6 +215,9 @@ public:
         size(solverProcessSize),
         comm(communicator)
   {
+    // Basic invariant checks for the mock participant
+    assert(solverProcessSize > 0 && "solverProcessSize must be > 0");
+    assert(solverProcessIndex >= 0 && solverProcessIndex < solverProcessSize && "solverProcessIndex must be in [0, solverProcessSize)");
     seed = static_cast<uint32_t>(rank) ^ 0x9e3779b9u;
   }
 
@@ -279,11 +283,12 @@ Participant::~Participant() = default;
 
 void Participant::initialize()
 {
+  assert(_impl && "Participant implementation missing in initialize().");
   if (!_impl)
     return;
   std::lock_guard<std::mutex> lk(_impl->mtx);
-
-  if (!_impl->filepathSet) { // assertion 
+  assert(!_impl->initialized && "initialize() called while participant is already initialized.");
+  if (!_impl->filepathSet) { 
     std::cout << "Enter filepath for data series (10s timeout): " << std::flush;
 
     std::atomic<bool>         timedOut{false};
@@ -335,10 +340,13 @@ void Participant::initialize()
 
 void Participant::advance(double computedTimeStepSize)
 {
+  assert(_impl && "Participant implementation missing in advance().");
   if (!_impl)
     return;
   std::lock_guard<std::mutex> lk(_impl->mtx);
   (void) computedTimeStepSize;
+  assert(_impl->initialized && "advance() called before initialize().");
+  assert(computedTimeStepSize >= 0.0 && "computedTimeStepSize must be non-negative.");
   if (_impl->maxTimeStep == _impl->currentStep) {
     _impl->couplingOngoing = false;
     return;
@@ -354,9 +362,11 @@ void Participant::advance(double computedTimeStepSize)
 
 void Participant::finalize()
 {
+  assert(_impl && "Participant implementation missing in finalize().");
   if (!_impl)
     return;
   std::lock_guard<std::mutex> lk(_impl->mtx);
+  assert(_impl->initialized && "finalize() called before initialize().");
   _impl->initialized     = false;
   _impl->couplingOngoing = false;
 }
@@ -390,6 +400,7 @@ int Participant::getDataDimensions(::precice::string_view /*meshName*/,
 
 bool Participant::isCouplingOngoing() const
 {
+  assert(_impl && "Participant implementation missing in isCouplingOngoing().");
   if (!_impl)
     return false;
   return _impl->couplingOngoing;
@@ -402,6 +413,7 @@ bool Participant::isTimeWindowComplete() const
 
 double Participant::getMaxTimeStepSize() const
 {
+  assert(_impl && "Participant implementation missing in getMaxTimeStepSize().");
   if (!_impl)
     return 0.0;
   return _impl->maxTimeStep;
@@ -421,8 +433,10 @@ void Participant::resetMesh(::precice::string_view /*meshName*/)
 
 VertexID Participant::setMeshVertex(
     ::precice::string_view /*meshName*/,
-    ::precice::span<const double> /*position*/)
+    ::precice::span<const double> position)
 {
+  // Expect a 3D position for a single vertex in this mock
+  assert(position.size() == 3 && "setMeshVertex: position must be of size 3 (3D) in the mock implementation.");
   return VertexID{};
 }
 
@@ -433,74 +447,92 @@ int Participant::getMeshVertexSize(::precice::string_view /*meshName*/) const
 
 void Participant::setMeshVertices(
     ::precice::string_view /*meshName*/,
-    ::precice::span<const double> /*coordinates*/,
-    ::precice::span<VertexID> /*ids*/)
+    ::precice::span<const double> coordinates,
+    ::precice::span<VertexID> ids)
 {
+  // Expect coordinates as 3 * N entries for N VertexIDs
+  assert(coordinates.size() == (ids.size() * 3) && "setMeshVertices: coordinates should have 3*ids.size() entries in the mock implementation.");
   // no-op
 }
 
 void Participant::setMeshEdge(
     ::precice::string_view /*meshName*/,
-    VertexID /*first*/,
-    VertexID /*second*/)
+    VertexID first,
+    VertexID second)
 {
+  // basic check: edge endpoints should not be identical
+  assert(first != second && "setMeshEdge: first and second vertex ids should be different.");
   // no-op
 }
 
 void Participant::setMeshEdges(
     ::precice::string_view /*meshName*/,
-    ::precice::span<const VertexID> /*ids*/)
+    ::precice::span<const VertexID> ids)
 {
+  // expect pairs of vertex ids
+  assert((ids.size() % 2 == 0) && "setMeshEdges: ids size must be divisible by 2.");
   // no-op
 }
 
 void Participant::setMeshTriangle(
     ::precice::string_view /*meshName*/,
-    VertexID /*first*/,
-    VertexID /*second*/,
-    VertexID /*third*/)
+    VertexID first,
+    VertexID second,
+    VertexID third)
 {
+  // triangle vertices should be distinct
+  assert(first != second && first != third && second != third && "setMeshTriangle: triangle vertices must be distinct.");
   // no-op
 }
 
 void Participant::setMeshTriangles(
     ::precice::string_view /*meshName*/,
-    ::precice::span<const VertexID> /*ids*/)
+    ::precice::span<const VertexID> ids)
 {
+  // expect triples of ids
+  assert((ids.size() % 3 == 0) && "setMeshTriangles: ids size must be divisible by 3.");
   // no-op
 }
 
 void Participant::setMeshQuad(
     ::precice::string_view /*meshName*/,
-    VertexID /*first*/,
-    VertexID /*second*/,
-    VertexID /*third*/,
-    VertexID /*fourth*/)
+    VertexID first,
+    VertexID second,
+    VertexID third,
+    VertexID fourth)
 {
+  // quad vertices should be distinct
+  assert(first != second && first != third && first != fourth && second != third && second != fourth && third != fourth && "setMeshQuad: quad vertices should be distinct.");
   // no-op
 }
 
 void Participant::setMeshQuads(
     ::precice::string_view /*meshName*/,
-    ::precice::span<const VertexID> /*ids*/)
+    ::precice::span<const VertexID> ids)
 {
+  // expect groups of 4 vertex ids
+  assert((ids.size() % 4 == 0) && "setMeshQuads: ids size must be divisible by 4.");
   // no-op
 }
 
 void Participant::setMeshTetrahedron(
     ::precice::string_view /*meshName*/,
-    VertexID /*first*/,
-    VertexID /*second*/,
-    VertexID /*third*/,
-    VertexID /*fourth*/)
+    VertexID first,
+    VertexID second,
+    VertexID third,
+    VertexID fourth)
 {
+  // tetrahedron vertices should be distinct
+  assert(first != second && first != third && first != fourth && second != third && second != fourth && third != fourth && "setMeshTetrahedron: vertices must be distinct.");
   // no-op
 }
 
 void Participant::setMeshTetrahedra(
     ::precice::string_view /*meshName*/,
-    ::precice::span<const VertexID> /*ids*/)
+    ::precice::span<const VertexID> ids)
 {
+  // expect groups of 4 vertex ids
+  assert((ids.size() % 4 == 0) && "setMeshTetrahedra: ids size must be divisible by 4.");
   // no-op
 }
 
@@ -514,23 +546,30 @@ bool Participant::requiresInitialData()
 void Participant::writeData(
     ::precice::string_view /*meshName*/,
     ::precice::string_view /*dataName*/,
-    ::precice::span<const VertexID> /*ids*/,
-    ::precice::span<const double> /*values*/)
+    ::precice::span<const VertexID> ids,
+    ::precice::span<const double> values)
 {
+  assert(_impl && "Participant implementation missing in writeData().");
+  assert(_impl->initialized && "writeData() called before initialize().");
+  // expect one value per id (scalar data in the mock)
+  assert(values.size() == ids.size() && "writeData: values size must equal number of ids.");
   // no-op
 }
 
 void Participant::readData(
     ::precice::string_view /*meshName*/,
     ::precice::string_view /*dataName*/,
-    ::precice::span<const VertexID> /*ids*/,
+    ::precice::span<const VertexID> ids,
     double /*relativeReadTime*/,
     ::precice::span<double> values) const
 {
+  assert(_impl && "Participant implementation missing in readData().");
   if (!_impl)
     return;
   std::lock_guard<std::mutex> lk(_impl->mtx);
   const std::size_t           n = values.size();
+  assert(_impl->initialized && "readData() called before initialize().");
+  assert(n == ids.size() && "readData: values size must equal number of ids.");
 
   if (_impl->useFile /*&& _impl->fileReader*/) // return data from file
   {
@@ -557,19 +596,28 @@ void Participant::readData(
 void Participant::writeAndMapData(
     ::precice::string_view /*meshName*/,
     ::precice::string_view /*dataName*/,
-    ::precice::span<const double> /*coordinates*/,
-    ::precice::span<const double> /*values*/)
+    ::precice::span<const double> coordinates,
+    ::precice::span<const double> values)
 {
+  assert(_impl && "Participant implementation missing in writeAndMapData().");
+  assert(_impl->initialized && "writeAndMapData() called before initialize().");
+  // coordinates are 3*N, values are N for scalar data
+  assert(coordinates.size() % 3 == 0 && "writeAndMapData: coordinates size must be a multiple of 3.");
+  assert(values.size() == coordinates.size() / 3 && "writeAndMapData: values size must equal number of coordinate points.");
   // no-op
 }
 
 void Participant::mapAndReadData(
     ::precice::string_view /*meshName*/,
     ::precice::string_view /*dataName*/,
-    ::precice::span<const double> /*coordinates*/,
+    ::precice::span<const double> coordinates,
     double /*relativeReadTime*/,
-    ::precice::span<double> /*values*/) const
+    ::precice::span<double> values) const
 {
+  assert(_impl && "Participant implementation missing in mapAndReadData().");
+  assert(_impl->initialized && "mapAndReadData() called before initialize().");
+  assert(coordinates.size() % 3 == 0 && "mapAndReadData: coordinates size must be a multiple of 3.");
+  assert(values.size() == coordinates.size() / 3 && "mapAndReadData: values size must equal number of coordinate points.");
   // no-op
 }
 
@@ -577,16 +625,24 @@ void Participant::mapAndReadData(
 
 void Participant::setMeshAccessRegion(
     ::precice::string_view /*meshName*/,
-    ::precice::span<const double> /*boundingBox*/) const
+    ::precice::span<const double> boundingBox) const
 {
+  assert(_impl && "Participant implementation missing in setMeshAccessRegion().");
+  assert(_impl->initialized && "setMeshAccessRegion() called before initialize().");
+  // bounding box: min/max for each dimension -> 3D: 6 entries
+  assert(boundingBox.size() == 6 && "setMeshAccessRegion: expected 6 entries for 3D bounding box (min/max per dimension).");
   // no-op
 }
 
 void Participant::getMeshVertexIDsAndCoordinates(
     ::precice::string_view /*meshName*/,
-    ::precice::span<VertexID> /*ids*/,
-    ::precice::span<double> /*coordinates*/) const
+    ::precice::span<VertexID> ids,
+    ::precice::span<double> coordinates) const
 {
+  assert(_impl && "Participant implementation missing in getMeshVertexIDsAndCoordinates().");
+  assert(_impl->initialized && "getMeshVertexIDsAndCoordinates() called before initialize().");
+  // coordinates are 3 * ids.size()
+  assert(coordinates.size() == ids.size() * 3 && "getMeshVertexIDsAndCoordinates: coordinates size must be 3 * ids.size().");
   // no-op
 }
 
@@ -601,9 +657,13 @@ bool Participant::requiresGradientDataFor(::precice::string_view /*meshName*/,
 void Participant::writeGradientData(
     ::precice::string_view /*meshName*/,
     ::precice::string_view /*dataName*/,
-    ::precice::span<const VertexID> /*ids*/,
-    ::precice::span<const double> /*gradients*/)
+    ::precice::span<const VertexID> ids,
+    ::precice::span<const double> gradients)
 {
+  assert(_impl && "Participant implementation missing in writeGradientData().");
+  assert(_impl->initialized && "writeGradientData() called before initialize().");
+  // gradients expected as 3 components per id for vector gradient in 3D
+  assert(gradients.size() == ids.size() * 3 && "writeGradientData: gradients size must be 3 * ids.size() in this mock.");
   // no-op
 }
 
@@ -611,11 +671,15 @@ void Participant::writeGradientData(
 
 void Participant::startProfilingSection(::precice::string_view /*sectionName*/)
 {
+  assert(_impl && "Participant implementation missing in startProfilingSection().");
+  assert(_impl->initialized && "startProfilingSection() called before initialize().");
   // no-op
 }
 
 void Participant::stopLastProfilingSection()
 {
+  assert(_impl && "Participant implementation missing in stopLastProfilingSection().");
+  assert(_impl->initialized && "stopLastProfilingSection() called before initialize().");
   // no-op
 }
 
