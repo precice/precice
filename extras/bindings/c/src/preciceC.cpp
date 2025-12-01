@@ -28,7 +28,7 @@ void precicec_createParticipant_withCommunicator(
     int         solverProcessSize,
     void       *communicator)
 try {
-  if (impl == nullptr) {
+  if (impl != nullptr) {
     std::cerr << errormsgCreate;
     std::abort();
   }
@@ -47,7 +47,7 @@ void precicec_createParticipant(
     int         solverProcessIndex,
     int         solverProcessSize)
 try {
-  if (impl == nullptr) {
+  if (impl != nullptr) {
     std::cerr << errormsgCreate;
     std::abort();
   }
@@ -61,7 +61,7 @@ try {
 
 void precicec_initialize()
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -72,7 +72,7 @@ try {
 
 void precicec_advance(double computedTimeStepSize)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -83,7 +83,7 @@ try {
 
 void precicec_finalize()
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -95,7 +95,7 @@ try {
 
 int precicec_getMeshDimensions(const char *meshName)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -107,7 +107,7 @@ try {
 
 int precicec_getDataDimensions(const char *meshName, const char *dataName)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -119,7 +119,7 @@ try {
 
 int precicec_isCouplingOngoing()
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -134,7 +134,7 @@ try {
 
 int precicec_isTimeWindowComplete()
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -157,7 +157,7 @@ try {
 
 int precicec_requiresInitialData()
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -169,7 +169,7 @@ try {
 
 int precicec_requiresWritingCheckpoint()
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -181,7 +181,7 @@ try {
 
 int precicec_requiresReadingCheckpoint()
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -193,7 +193,7 @@ try {
 
 int precicec_requiresMeshConnectivityFor(const char *meshName)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -208,7 +208,7 @@ try {
 
 void precicec_resetMesh(const char *meshName)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -221,7 +221,7 @@ int precicec_setMeshVertex(
     const char   *meshName,
     const double *position)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -238,7 +238,7 @@ void precicec_setMeshVertices(
     const double *positions,
     int          *ids)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -252,7 +252,7 @@ try {
 int precicec_getMeshVertexSize(
     const char *meshName)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -267,7 +267,7 @@ void precicec_setMeshEdge(
     int         firstVertexID,
     int         secondVertexID)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -281,7 +281,7 @@ void precicec_setMeshEdges(
     int         size,
     const int  *vertices)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -297,7 +297,7 @@ void precicec_setMeshTriangle(
     int         secondVertexID,
     int         thirdVertexID)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -311,7 +311,7 @@ void precicec_setMeshTriangles(
     int         size,
     const int  *vertices)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -328,7 +328,7 @@ void precicec_setMeshQuad(
     int         thirdVertexID,
     int         fourthVertexID)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -342,7 +342,7 @@ void precicec_setMeshQuads(
     int         size,
     const int  *vertices)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -359,7 +359,7 @@ void precicec_setMeshTetrahedron(
     int         thirdVertexID,
     int         fourthVertexID)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -373,7 +373,7 @@ void precicec_setMeshTetrahedra(
     int         size,
     const int  *vertices)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -390,7 +390,7 @@ void precicec_writeData(
     const int    *valueIndices,
     const double *values)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -408,7 +408,7 @@ void precicec_readData(
     double      relativeReadTime,
     double     *values)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -425,7 +425,7 @@ void precicec_writeAndMapData(
     const double *coordinates,
     const double *values)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -444,7 +444,7 @@ void precicec_mapAndReadData(
     double        relativeReadTime,
     double       *values)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -458,7 +458,7 @@ try {
 int precicec_requiresGradientDataFor(const char *meshName,
                                      const char *dataName)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -478,7 +478,7 @@ void precicec_writeGradientData(
     const int    *valueIndices,
     const double *gradients)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
