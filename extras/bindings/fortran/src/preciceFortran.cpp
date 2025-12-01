@@ -89,7 +89,7 @@ try {
 
 void precicef_initialize_()
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -101,7 +101,7 @@ try {
 void precicef_advance_(
     const double *timeStepSize)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -112,7 +112,7 @@ try {
 
 void precicef_finalize_()
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -127,7 +127,7 @@ void precicef_get_mesh_dimensions_(
     int        *dimensions,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -143,7 +143,7 @@ void precicef_get_data_dimensions_(
     int         meshNameLength,
     int         dataNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -155,7 +155,7 @@ try {
 void precicef_is_coupling_ongoing_(
     int *isOngoing)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -171,7 +171,7 @@ try {
 void precicef_is_time_window_complete_(
     int *isComplete)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -187,7 +187,7 @@ try {
 void precicef_get_max_time_step_size_(
     double *maxTimeStepSize)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -199,7 +199,7 @@ try {
 void precicef_requires_initial_data_(
     int *isRequired)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -211,7 +211,7 @@ try {
 void precicef_requires_writing_checkpoint_(
     int *isRequired)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -223,7 +223,7 @@ try {
 void precicef_requires_reading_checkpoint_(
     int *isRequired)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -237,7 +237,7 @@ void precicef_requires_mesh_connectivity_for_(
     int        *required,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -254,7 +254,7 @@ void precicef_reset_mesh_(
     const char *meshName,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -269,7 +269,7 @@ void precicef_set_vertex_(
     int          *vertexID,
     int           meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -285,7 +285,7 @@ void precicef_get_mesh_vertex_size_(
     int        *meshSize,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -301,7 +301,7 @@ void precicef_set_vertices_(
     int        *ids,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -318,7 +318,7 @@ void precicef_set_edge_(
     const int  *secondVertexID,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -333,7 +333,7 @@ void precicef_set_mesh_edges_(
     const int  *ids,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -350,7 +350,7 @@ void precicef_set_triangle_(
     const int  *thirdVertexID,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -365,7 +365,7 @@ void precicef_set_mesh_triangles_(
     const int  *ids,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -383,7 +383,7 @@ void precicef_set_quad_(
     const int  *fourthVertexID,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -398,7 +398,7 @@ void precicef_set_mesh_quads_(
     const int  *ids,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -416,7 +416,7 @@ void precicef_set_tetrahedron(
     const int  *fourthVertexID,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -431,7 +431,7 @@ void precicef_set_mesh_tetrahedra_(
     const int  *ids,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -450,7 +450,7 @@ void precicef_write_data_(
     int         meshNameLength,
     int         dataNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -475,7 +475,7 @@ void precicef_read_data_(
     int           meshNameLength,
     int           dataNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -521,7 +521,7 @@ void precicef_requires_gradient_data_for_(
     int meshNameLength,
     int dataNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -543,7 +543,7 @@ void precicef_write_gradient_data_(
     int           meshNameLength,
     int           dataNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -569,7 +569,7 @@ void precicef_write_and_map_data_(
     int         meshNameLength,
     int         dataNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -595,7 +595,7 @@ void precicef_map_and_read_data_(
     int           meshNameLength,
     int           dataNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -618,7 +618,7 @@ void precicef_set_mesh_access_region_(
     const double *boundingBox,
     int           meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -636,7 +636,7 @@ void precicef_get_mesh_vertex_ids_and_coordinates_(
     double     *coordinates,
     int         meshNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -651,7 +651,7 @@ void precicef_start_profiling_section_(
     const char *sectionName,
     int         sectionNameLength)
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
@@ -663,7 +663,7 @@ try {
 
 void precicef_stop_last_profiling_section_()
 try {
-  if (impl != nullptr) {
+  if (impl == nullptr) {
     std::cerr << errormsg;
     std::abort();
   }
