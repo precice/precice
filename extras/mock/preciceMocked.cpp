@@ -32,7 +32,7 @@
 
 // add example data to mock directory and maybe integratiuon test
 
-// use assertions where applicable
+// --use assertions where applicable
 
 // API declaration
 namespace precice {
@@ -40,6 +40,7 @@ namespace precice {
 // Using definition from Participant.hpp
 using string_view = ::precice::span<const char>;
 
+// Forward declaration of implementation class to hide implementation details and remove need for a header
 namespace impl {
 class ParticipantImpl;
 }
@@ -146,7 +147,14 @@ private:
 
 } // namespace precice
 
-// Implementation
+/*Implementation
+  This is the implementation of the precice mock Participant class.
+  It provides a minimal mock implementation of the preCICE Participant API,
+  suitable for testing and demonstration purposes.
+  Currently only basic checks using assertions are performed.
+  Currently, data reading returns seeded generate random data, 
+  using data from a user-specified file if provided at initialization is currently beeing implemented.
+  */
 namespace precice {
 
 namespace impl {
