@@ -133,6 +133,24 @@ void BarycentricBaseMapping::addPolation(VertexID out, const Polation &p)
   }
 }
 
+void BarycentricBaseMapping::postProcessOperations()
+{
+  if (hasConstraint(CONSERVATIVE)) {
+    // We order the operations to make them write sequentially
+    std::sort(_operations.begin(), _operations.end(), [](const auto &lhs, const auto &rhs) {
+      // weak order for a pair
+      if (lhs.in < rhs.in) {
+        return true;
+      }
+      if (rhs.in < lhs.in) {
+        return false;
+      }
+      // lhs.in == rhs.in
+      return lhs.out < rhs.out;
+    });
+  }
+}
+
 void BarycentricBaseMapping::tagMeshSecondRound()
 {
   PRECICE_TRACE();

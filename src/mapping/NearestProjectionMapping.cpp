@@ -116,6 +116,8 @@ void NearestProjectionMapping::computeMapping()
     PRECICE_INFO("Nearest-projections are {} triangles, {} edges, and {} vertices", toTriangles, toEdges, toVertices);
   }
 
+  postProcessOperations();
+
   _hasComputedMapping = true;
 }
 

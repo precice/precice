@@ -40,6 +40,9 @@ protected:
   /// Takes a polation and registers each weighed input as one Operation
   void addPolation(VertexID out, const Polation &p);
 
+  /// Post processed operations after the mapping has been computed
+  void postProcessOperations();
+
   std::vector<Operation> _operations;
 };
 
