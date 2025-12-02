@@ -116,6 +116,8 @@ void LinearCellInterpolationMapping::computeMapping()
     }
   }
 
+  postProcessOperations();
+
   _hasComputedMapping = true;
 }
 
