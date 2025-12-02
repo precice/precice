@@ -1,3 +1,4 @@
+#include <cassert>
 #include <chrono>
 #include <fstream>
 #include <future>
@@ -7,7 +8,6 @@
 #include <random>
 #include <string>
 #include <thread>
-#include <cassert>
 
 #include <precice/Tooling.hpp>
 #include <precice/Types.hpp>
@@ -152,8 +152,8 @@ private:
   It provides a minimal mock implementation of the preCICE Participant API,
   suitable for testing and demonstration purposes.
   Currently only basic checks using assertions are performed.
-  Currently, data reading returns seeded generate random data, 
-  using data from a user-specified file if provided at initialization is currently beeing implemented.
+  Currently, data reading returns seeded generate random data,
+  using data from a user-specified file if provided at initialization is currently being implemented.
   */
 namespace precice {
 
@@ -251,7 +251,7 @@ public:
   std::string         promptedFilepath;
   bool                filepathSet = false;
 
-  //std::unique_ptr<FileDoubleReader> fileReader;
+  // std::unique_ptr<FileDoubleReader> fileReader;
 };
 
 } // namespace impl
@@ -296,7 +296,7 @@ void Participant::initialize()
     return;
   std::lock_guard<std::mutex> lk(_impl->mtx);
   assert(!_impl->initialized && "initialize() called while participant is already initialized.");
-  if (!_impl->filepathSet) { 
+  if (!_impl->filepathSet) {
     std::cout << "Enter filepath for data series (10s timeout): " << std::flush;
 
     std::atomic<bool>         timedOut{false};
@@ -456,7 +456,7 @@ int Participant::getMeshVertexSize(::precice::string_view /*meshName*/) const
 void Participant::setMeshVertices(
     ::precice::string_view /*meshName*/,
     ::precice::span<const double> coordinates,
-    ::precice::span<VertexID> ids)
+    ::precice::span<VertexID>     ids)
 {
   // Expect coordinates as 3 * N entries for N VertexIDs
   assert(coordinates.size() == (ids.size() * 3) && "setMeshVertices: coordinates should have 3*ids.size() entries in the mock implementation.");
@@ -555,7 +555,7 @@ void Participant::writeData(
     ::precice::string_view /*meshName*/,
     ::precice::string_view /*dataName*/,
     ::precice::span<const VertexID> ids,
-    ::precice::span<const double> values)
+    ::precice::span<const double>   values)
 {
   assert(_impl && "Participant implementation missing in writeData().");
   assert(_impl->initialized && "writeData() called before initialize().");
@@ -645,7 +645,7 @@ void Participant::setMeshAccessRegion(
 void Participant::getMeshVertexIDsAndCoordinates(
     ::precice::string_view /*meshName*/,
     ::precice::span<VertexID> ids,
-    ::precice::span<double> coordinates) const
+    ::precice::span<double>   coordinates) const
 {
   assert(_impl && "Participant implementation missing in getMeshVertexIDsAndCoordinates().");
   assert(_impl->initialized && "getMeshVertexIDsAndCoordinates() called before initialize().");
@@ -666,7 +666,7 @@ void Participant::writeGradientData(
     ::precice::string_view /*meshName*/,
     ::precice::string_view /*dataName*/,
     ::precice::span<const VertexID> ids,
-    ::precice::span<const double> gradients)
+    ::precice::span<const double>   gradients)
 {
   assert(_impl && "Participant implementation missing in writeGradientData().");
   assert(_impl->initialized && "writeGradientData() called before initialize().");
