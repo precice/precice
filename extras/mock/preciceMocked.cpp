@@ -1,4 +1,3 @@
-#include <cassert>
 #include <chrono>
 #include <fstream>
 #include <future>
@@ -12,6 +11,7 @@
 #include <precice/Tooling.hpp>
 #include <precice/Types.hpp>
 #include <precice/span.hpp>
+#include "utils/assertion.hpp"
 // project dependencies, used to remove reliance an std types maybe not available on older versions of cpp or outside libs
 
 // --figure out why compilation was weird (weird issue when creating the current git structure merged old version of makefile incorrectly)
@@ -224,8 +224,8 @@ public:
         comm(communicator)
   {
     // Basic invariant checks for the mock participant
-    assert(solverProcessSize > 0 && "solverProcessSize must be > 0");
-    assert(solverProcessIndex >= 0 && solverProcessIndex < solverProcessSize && "solverProcessIndex must be in [0, solverProcessSize)");
+    PRECICE_ASSERT(solverProcessSize > 0, "solverProcessSize must be > 0");
+    PRECICE_ASSERT(solverProcessIndex >= 0 && solverProcessIndex < solverProcessSize, "solverProcessIndex must be in [0, solverProcessSize)");
     seed = static_cast<uint32_t>(rank) ^ 0x9e3779b9u;
   }
 
@@ -291,11 +291,13 @@ Participant::~Participant() = default;
 
 void Participant::initialize()
 {
-  assert(_impl && "Participant implementation missing in initialize().");
+  PRECICE_ASSERT(_impl, "Participant implementation missing in initialize().");
   if (!_impl)
     return;
   std::lock_guard<std::mutex> lk(_impl->mtx);
-  assert(!_impl->initialized && "initialize() called while participant is already initialized.");
+  PRECICE_ASSERT(!_impl->initialized, "initialize() called while participant is already initialized.");
+  
+  // wait for input or timeout to set a path for data series (usage of file reader is currently commented out)
   if (!_impl->filepathSet) {
     std::cout << "Enter filepath for data series (10s timeout): " << std::flush;
 
@@ -348,13 +350,13 @@ void Participant::initialize()
 
 void Participant::advance(double computedTimeStepSize)
 {
-  assert(_impl && "Participant implementation missing in advance().");
+  PRECICE_ASSERT(_impl, "Participant implementation missing in advance().");
   if (!_impl)
     return;
   std::lock_guard<std::mutex> lk(_impl->mtx);
   (void) computedTimeStepSize;
-  assert(_impl->initialized && "advance() called before initialize().");
-  assert(computedTimeStepSize >= 0.0 && "computedTimeStepSize must be non-negative.");
+  PRECICE_ASSERT(_impl->initialized, "advance() called before initialize().");
+  PRECICE_ASSERT(computedTimeStepSize >= 0.0, "computedTimeStepSize must be non-negative.");
   if (_impl->maxTimeStep == _impl->currentStep) {
     _impl->couplingOngoing = false;
     return;
@@ -370,11 +372,11 @@ void Participant::advance(double computedTimeStepSize)
 
 void Participant::finalize()
 {
-  assert(_impl && "Participant implementation missing in finalize().");
+  PRECICE_ASSERT(_impl, "Participant implementation missing in finalize().");
   if (!_impl)
     return;
   std::lock_guard<std::mutex> lk(_impl->mtx);
-  assert(_impl->initialized && "finalize() called before initialize().");
+  PRECICE_ASSERT(_impl->initialized, "finalize() called before initialize().");
   _impl->initialized     = false;
   _impl->couplingOngoing = false;
 }
@@ -408,7 +410,7 @@ int Participant::getDataDimensions(::precice::string_view /*meshName*/,
 
 bool Participant::isCouplingOngoing() const
 {
-  assert(_impl && "Participant implementation missing in isCouplingOngoing().");
+  PRECICE_ASSERT(_impl, "Participant implementation missing in isCouplingOngoing().");
   if (!_impl)
     return false;
   return _impl->couplingOngoing;
@@ -421,7 +423,7 @@ bool Participant::isTimeWindowComplete() const
 
 double Participant::getMaxTimeStepSize() const
 {
-  assert(_impl && "Participant implementation missing in getMaxTimeStepSize().");
+  PRECICE_ASSERT(_impl, "Participant implementation missing in getMaxTimeStepSize().");
   if (!_impl)
     return 0.0;
   return _impl->maxTimeStep;
@@ -444,7 +446,7 @@ VertexID Participant::setMeshVertex(
     ::precice::span<const double> position)
 {
   // Expect a 3D position for a single vertex in this mock
-  assert(position.size() == 3 && "setMeshVertex: position must be of size 3 (3D) in the mock implementation.");
+  PRECICE_ASSERT(position.size() == 3, "setMeshVertex: position must be of size 3 (3D) in the mock implementation.");
   return VertexID{};
 }
 
@@ -459,7 +461,7 @@ void Participant::setMeshVertices(
     ::precice::span<VertexID>     ids)
 {
   // Expect coordinates as 3 * N entries for N VertexIDs
-  assert(coordinates.size() == (ids.size() * 3) && "setMeshVertices: coordinates should have 3*ids.size() entries in the mock implementation.");
+  PRECICE_ASSERT(coordinates.size() == (ids.size() * 3), "setMeshVertices: coordinates should have 3*ids.size() entries in the mock implementation.");
   // no-op
 }
 
@@ -469,7 +471,7 @@ void Participant::setMeshEdge(
     VertexID second)
 {
   // basic check: edge endpoints should not be identical
-  assert(first != second && "setMeshEdge: first and second vertex ids should be different.");
+  PRECICE_ASSERT(first != second, "setMeshEdge: first and second vertex ids should be different.");
   // no-op
 }
 
@@ -478,7 +480,7 @@ void Participant::setMeshEdges(
     ::precice::span<const VertexID> ids)
 {
   // expect pairs of vertex ids
-  assert((ids.size() % 2 == 0) && "setMeshEdges: ids size must be divisible by 2.");
+  PRECICE_ASSERT((ids.size() % 2 == 0), "setMeshEdges: ids size must be divisible by 2.");
   // no-op
 }
 
@@ -489,7 +491,7 @@ void Participant::setMeshTriangle(
     VertexID third)
 {
   // triangle vertices should be distinct
-  assert(first != second && first != third && second != third && "setMeshTriangle: triangle vertices must be distinct.");
+  PRECICE_ASSERT(first != second && first != third && second != third, "setMeshTriangle: triangle vertices must be distinct.");
   // no-op
 }
 
@@ -498,7 +500,7 @@ void Participant::setMeshTriangles(
     ::precice::span<const VertexID> ids)
 {
   // expect triples of ids
-  assert((ids.size() % 3 == 0) && "setMeshTriangles: ids size must be divisible by 3.");
+  PRECICE_ASSERT((ids.size() % 3 == 0), "setMeshTriangles: ids size must be divisible by 3.");
   // no-op
 }
 
@@ -510,7 +512,7 @@ void Participant::setMeshQuad(
     VertexID fourth)
 {
   // quad vertices should be distinct
-  assert(first != second && first != third && first != fourth && second != third && second != fourth && third != fourth && "setMeshQuad: quad vertices should be distinct.");
+  PRECICE_ASSERT(first != second && first != third && first != fourth && second != third && second != fourth && third != fourth, "setMeshQuad: quad vertices should be distinct.");
   // no-op
 }
 
@@ -519,7 +521,7 @@ void Participant::setMeshQuads(
     ::precice::span<const VertexID> ids)
 {
   // expect groups of 4 vertex ids
-  assert((ids.size() % 4 == 0) && "setMeshQuads: ids size must be divisible by 4.");
+  PRECICE_ASSERT((ids.size() % 4 == 0), "setMeshQuads: ids size must be divisible by 4.");
   // no-op
 }
 
@@ -531,7 +533,7 @@ void Participant::setMeshTetrahedron(
     VertexID fourth)
 {
   // tetrahedron vertices should be distinct
-  assert(first != second && first != third && first != fourth && second != third && second != fourth && third != fourth && "setMeshTetrahedron: vertices must be distinct.");
+  PRECICE_ASSERT(first != second && first != third && first != fourth && second != third && second != fourth && third != fourth, "setMeshTetrahedron: vertices must be distinct.");
   // no-op
 }
 
@@ -540,7 +542,7 @@ void Participant::setMeshTetrahedra(
     ::precice::span<const VertexID> ids)
 {
   // expect groups of 4 vertex ids
-  assert((ids.size() % 4 == 0) && "setMeshTetrahedra: ids size must be divisible by 4.");
+  PRECICE_ASSERT((ids.size() % 4 == 0), "setMeshTetrahedra: ids size must be divisible by 4.");
   // no-op
 }
 

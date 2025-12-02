@@ -76,7 +76,7 @@ option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization f
 
 option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
-option(PRECICE_RELEASE_WITH_ASSERTIONS "Enable assertions in release builds" OFF)
+option(PRECICE_RELEASE_WITH_ASSERTIONS "Enable assertions in release builds" ON)
 
 xsdk_tpl_option_override(PRECICE_FEATURE_MPI_COMMUNICATION TPL_ENABLE_MPI)
 xsdk_tpl_option_override(PRECICE_FEATURE_PETSC_MAPPING TPL_ENABLE_PETSC)
