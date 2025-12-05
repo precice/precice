@@ -46,15 +46,28 @@ void BarycentricBaseMapping::mapConservative(const time::Sample &inData, Eigen::
 
   // For each input vertex, distribute the conserved data among the relevant output vertices
   // Do it for all dimensions (i.e. components if data is a vector)
-  if (dimensions == 1) {
-    // Use non-strided access for 1D data
+  switch (dimensions) {
+  case 1: // Use non-strided access for 1D data
     for (const auto &op : _operations) {
       outValues[op.in] += op.weight * inValues[op.out];
     }
-  } else {
+    return;
+  case 2: // Use templated segment access for 2D
     for (const auto &op : _operations) {
-      outValues.segment(op.in * dimensions, dimensions) += op.weight * inValues.segment(op.out * dimensions, dimensions);
+      outValues.segment<2>(op.in * 2).noalias() += op.weight * inValues.segment<2>(op.out * 2);
     }
+    return;
+  case 3: // Use MatrixX3d row access for 3D
+  {
+    auto inMap  = Eigen::MatrixX3d::Map(inData.values.data(), input()->nVertices(), 3);
+    auto outMap = Eigen::MatrixX3d::Map(outData.data(), output()->nVertices(), 3);
+    for (const auto &op : _operations) {
+      outMap.row(op.in).noalias() += op.weight * inMap.row(op.out);
+    }
+    return;
+  }
+  default:
+    PRECICE_UNREACHABLE("Implement for unknown dimension");
   }
 }
 
@@ -70,15 +83,28 @@ void BarycentricBaseMapping::mapConsistent(const time::Sample &inData, Eigen::Ve
 
   // For each output vertex, compute the linear combination of input vertices
   // Do it for all dimensions (i.e. components if data is a vector)
-  if (dimensions == 1) {
-    // Use non-strided access for 1D data
+  switch (dimensions) {
+  case 1: // Use non-strided access for 1D data
     for (const auto &op : _operations) {
       outValues[op.out] += op.weight * inValues[op.in];
     }
-  } else {
+    return;
+  case 2: // Use templated segment access for 2D
     for (const auto &op : _operations) {
-      outValues.segment(op.out * dimensions, dimensions) += op.weight * inValues.segment(op.in * dimensions, dimensions);
+      outValues.segment<2>(op.out * 2).noalias() += op.weight * inValues.segment<2>(op.in * 2);
     }
+    return;
+  case 3: // Use MatrixX3d row access for 3D
+  {
+    auto inMap  = Eigen::MatrixX3d::Map(inData.values.data(), input()->nVertices(), 3);
+    auto outMap = Eigen::MatrixX3d::Map(outData.data(), output()->nVertices(), 3);
+    for (const auto &op : _operations) {
+      outMap.row(op.out).noalias() += op.weight * inMap.row(op.in);
+    }
+    return;
+  }
+  default:
+    PRECICE_UNREACHABLE("Implement for unknown dimension");
   }
 }
 
