@@ -126,26 +126,22 @@ void BarycentricBaseMapping::tagMeshFirstRound()
   }
 
   // Gather all vertices to be tagged in a first phase.
-  // max_count is used to shortcut if all vertices have been tagged.
-  std::unordered_set<int> tagged;
-  const std::size_t       max_count = origins->nVertices();
-
+  std::vector<bool> tagged(origins->nVertices(), false);
   for (const auto &op : _operations) {
     PRECICE_ASSERT(!math::equals(op.weight, 0.0));
-    tagged.insert(op.in);
-    // Shortcut if all vertices are tagged
-    if (tagged.size() == max_count) {
-      break;
-    }
+    tagged[op.in] = true;
   }
 
   // Now tag all vertices to be tagged in the second phase.
-  for (auto &v : origins->vertices()) {
-    if (tagged.count(v.getID()) == 1) {
-      v.tag();
+  size_t ntagged = 0;
+  for (size_t i = 0; i < origins->nVertices(); ++i) {
+    if (tagged[i]) {
+      origins->vertex(i).tag();
+      ++ntagged;
     }
   }
-  PRECICE_DEBUG("First Round Tagged {}/{} Vertices", tagged.size(), max_count);
+
+  PRECICE_DEBUG("First Round Tagged {}/{} Vertices", ntagged, origins->nVertices());
 
   clear();
 }
