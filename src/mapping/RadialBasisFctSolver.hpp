@@ -109,7 +109,7 @@ inline double computeSquaredDifference(
     v[d] = (u[d] - v[d]) * static_cast<int>(activeAxis[d]);
   }
   // @todo: this can be replaced by std::hypot when moving to C++17
-  return std::accumulate(v.begin(), v.end(), static_cast<double>(0.), [](auto &res, auto &val) { return res + val * val; });
+  return std::accumulate(v.begin(), v.end(), static_cast<double>(0.), [](auto res, auto &val) { return res + val * val; });
 }
 
 /// given the active axis, computes sets the axis with the lowest spatial expansion to dead
