@@ -566,6 +566,10 @@ target_include_directories(preciceMocked PUBLIC
   $<INSTALL_INTERFACE:include>
   )
 
+  target_link_libraries(preciceMocked PUBLIC Eigen3::Eigen)
+target_compile_definitions(preciceMocked PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
+target_link_libraries(preciceMocked PUBLIC fmtlib-static)
+
 if (PRECICE_FEATURE_MPI_COMMUNICATION)
   target_link_libraries(preciceMocked PUBLIC MPI::MPI_CXX)
 else()
