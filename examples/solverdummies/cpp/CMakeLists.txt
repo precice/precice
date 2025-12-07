@@ -7,11 +7,6 @@ add_executable(solverdummy solverdummy.cpp)
 set_target_properties(solverdummy PROPERTIES CXX_STANDARD 11)
 target_link_libraries(solverdummy PRIVATE precice::precice)
 
-add_executable(solverdummy_broken solverdummy_broken.cpp)
-set_target_properties(solverdummy_broken PROPERTIES CXX_STANDARD 11)
-target_link_libraries(solverdummy_broken PRIVATE precice::precice)
-
-
 enable_testing()
 add_test(NAME precice.solverdummy
   COMMAND ${CMAKE_COMMAND}
