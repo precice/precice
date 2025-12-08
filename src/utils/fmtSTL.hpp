@@ -11,7 +11,7 @@ struct fmt::formatter<std::vector<T, Allocator>> : formatter<string_view> {
   template <typename FormatContext>
   auto format(const std::vector<T, Allocator> &v, FormatContext &ctx) const
   {
-    return format_to(ctx.out(), "[{}]", fmt::join(v, ", "));
+    return fmt::format_to(ctx.out(), "[{}]", fmt::join(v, ", "));
   }
 };
 
@@ -21,7 +21,7 @@ struct fmt::formatter<std::deque<T, Allocator>> : formatter<string_view> {
   template <typename FormatContext>
   auto format(const std::deque<T, Allocator> &v, FormatContext &ctx) const
   {
-    return format_to(ctx.out(), "[{}]", fmt::join(v, ", "));
+    return fmt::format_to(ctx.out(), "[{}]", fmt::join(v, ", "));
   }
 };
 
@@ -31,7 +31,7 @@ struct fmt::formatter<std::array<T, n>> : formatter<string_view> {
   template <typename FormatContext>
   auto format(const std::array<T, n> &v, FormatContext &ctx) const
   {
-    return format_to(ctx.out(), "[{}]", fmt::join(v, ", "));
+    return fmt::format_to(ctx.out(), "[{}]", fmt::join(v, ", "));
   }
 };
 
@@ -41,7 +41,7 @@ struct fmt::formatter<std::set<T, Compare, Allocator>> : formatter<string_view> 
   template <typename FormatContext>
   auto format(const std::set<T, Compare, Allocator> &s, FormatContext &ctx) const
   {
-    return format_to(ctx.out(), "{{{}}}", fmt::join(s, ", "));
+    return fmt::format_to(ctx.out(), "{{{}}}", fmt::join(s, ", "));
   }
 };
 
@@ -51,7 +51,7 @@ struct fmt::formatter<std::map<T, Compare, Allocator>> : formatter<string_view> 
   template <typename FormatContext>
   auto format(const std::map<T, Compare, Allocator> &s, FormatContext &ctx) const
   {
-    return format_to(ctx.out(), "({})", fmt::join(s, ", "));
+    return fmt::format_to(ctx.out(), "({})", fmt::join(s, ", "));
   }
 };
 
@@ -61,6 +61,6 @@ struct fmt::formatter<std::pair<F, S>> : formatter<string_view> {
   template <typename FormatContext>
   auto format(const std::pair<F, S> &p, FormatContext &ctx) const
   {
-    return format_to(ctx.out(), "({}, {})", p.first, p.second);
+    return fmt::format_to(ctx.out(), "({}, {})", p.first, p.second);
   }
 };
