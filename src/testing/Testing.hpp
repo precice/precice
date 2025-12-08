@@ -15,7 +15,7 @@ namespace precice::testing {
 
 namespace bt = boost::unit_test;
 
-DataID operator"" _dataID(unsigned long long n);
+DataID operator""_dataID(unsigned long long n);
 
 namespace inject {
 using precice::testing::Require;
