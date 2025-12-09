@@ -204,7 +204,7 @@ if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
 endif()
 
-set(Boost_USE_STATIC_LIBS OFF)
+option(Boost_USE_STATIC_LIBS "Force BoostConfig.cmake to find static libraries." OFF)
 find_package(Boost 1.74.0 REQUIRED CONFIG
   COMPONENTS log log_setup program_options thread unit_test_framework
   )
