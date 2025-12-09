@@ -78,6 +78,8 @@ option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" O
 option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_ASSERTIONS "Enable assertions in release builds" OFF)
 
+set(PRECICE_CXX_STANDARD "17" CACHE STRING "CXX Standard for all preCICE targets" )
+
 xsdk_tpl_option_override(PRECICE_FEATURE_MPI_COMMUNICATION TPL_ENABLE_MPI)
 xsdk_tpl_option_override(PRECICE_FEATURE_PETSC_MAPPING TPL_ENABLE_PETSC)
 xsdk_tpl_option_override(PRECICE_FEATURE_PYTHON_ACTIONS TPL_ENABLE_PYTHON)
@@ -281,7 +283,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     include(CheckLanguage)
     check_language(CUDA)
     enable_language(CUDA)
-    set(CMAKE_CUDA_STANDARD 17)
+    set(CMAKE_CUDA_STANDARD ${PRECICE_CXX_STANDARD})
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
     set(CMAKE_CUDA_FLAGS "${GINKGO_CUDA_ARCH_FLAGS} --expt-relaxed-constexpr")
 
@@ -296,7 +298,7 @@ endif()
     include(CheckLanguage)
     check_language(HIP)
     enable_language(HIP)
-    set(CMAKE_HIP_STANDARD 17)
+    set(CMAKE_HIP_STANDARD ${PRECICE_CXX_STANDARD})
     set(CMAKE_HIP_STANDARD_REQUIRED ON)
     if(NOT DEFINED HIP_PATH)
      if(NOT DEFINED $ENV{HIP_PATH})
@@ -372,7 +374,7 @@ print_section("TARGETS & PACKAGES")
 # The main library and tests link against this.
 add_library(preciceCore OBJECT)
 set_target_properties(preciceCore PROPERTIES
-  CXX_STANDARD 17
+  CXX_STANDARD ${PRECICE_CXX_STANDARD}
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
   POSITION_INDEPENDENT_CODE YES
@@ -607,8 +609,7 @@ if (PRECICE_BUILD_TOOLS)
       precice
       )
     set_target_properties(${TARGET} PROPERTIES
-      # precice is a C++17 project
-      CXX_STANDARD 17
+      CXX_STANDARD ${PRECICE_CXX_STANDARD}
       CXX_STANDARD_REQUIRED Yes
       CXX_EXTENSIONS No
       )
@@ -630,7 +631,7 @@ IF (BUILD_TESTING)
     preciceCore
     )
   set_target_properties(testprecice PROPERTIES
-    CXX_STANDARD 17
+    CXX_STANDARD ${PRECICE_CXX_STANDARD}
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
     ENABLE_EXPORTS Yes
@@ -697,8 +698,7 @@ if(PRECICE_BUILD_BENCHMARKS)
     benchmark::benchmark
     )
   set_target_properties(precice-bench PROPERTIES
-    # precice is a C++17 project
-    CXX_STANDARD 17
+    CXX_STANDARD ${PRECICE_CXX_STANDARD}
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
     )
