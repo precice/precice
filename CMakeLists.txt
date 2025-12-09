@@ -79,6 +79,8 @@ option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" O
 option(PRECICE_RELEASE_WITH_ASSERTIONS "Enable assertions in release builds" OFF)
 
 set(PRECICE_CXX_STANDARD "17" CACHE STRING "CXX Standard for all preCICE targets" )
+option(PRECICE_HIDE_SYMBOLS "Hide non-API symbols in preCICE library" ON)
+mark_as_advanced(PRECICE_HIDE_SYMBOLS PRECICE_CXX_STANDARD)
 
 xsdk_tpl_option_override(PRECICE_FEATURE_MPI_COMMUNICATION TPL_ENABLE_MPI)
 xsdk_tpl_option_override(PRECICE_FEATURE_PETSC_MAPPING TPL_ENABLE_PETSC)
@@ -270,6 +272,11 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
   find_package(Kokkos 4.1 REQUIRED)
   message(STATUS "Found Kokkos version ${Kokkos_VERSION} at ${Kokkos_DIR}")
 
+  if(PRECICE_HIDE_SYMBOLS AND Kokkos_VERSION VERSION_LESS 4.4)
+    message(STATUS "preCICE symbol visibility turned back ON due to Kokkos < 4.4")
+    set(PRECICE_HIDE_SYMBOLS OFF)
+  endif()
+
   include(CMakeDependentOption)
   cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_CUDA" OFF)
   cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_HIP" OFF)
@@ -380,7 +387,7 @@ set_target_properties(preciceCore PROPERTIES
   POSITION_INDEPENDENT_CODE YES
   )
 
-if(NOT Kokkos_VERSION OR NOT Kokkos_VERSION VERSION_LESS 4.4)
+if(PRECICE_HIDE_SYMBOLS)
   set_target_properties(preciceCore PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
@@ -531,7 +538,7 @@ set_target_properties(precice PROPERTIES
   SOVERSION ${preCICE_SOVERSION}
   )
 
-if(NOT Kokkos_VERSION OR NOT Kokkos_VERSION VERSION_LESS 4.4)
+if(PRECICE_HIDE_SYMBOLS)
   set_target_properties(precice PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
