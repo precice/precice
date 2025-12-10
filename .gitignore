@@ -29,3 +29,4 @@ examples/tutorials
 .gitignore
 examples/solverdummies/cpp/precice-profiling
 examples/solverdummies/cpp/Testing/Temporary
+.venv
