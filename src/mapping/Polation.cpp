@@ -7,7 +7,7 @@ namespace precice::mapping {
 
 Polation::Polation(const Eigen::VectorXd &location, const mesh::Vertex &element)
 {
-  _weightedElements.emplace_back(WeightedElement{element.getID(), 1.0});
+  _weightedElements = {WeightedElement{element.getID(), 1.0}};
   // The projection in this case is simply the nearest point.
   _distance = (location - element.getCoords()).norm();
 }
@@ -23,8 +23,8 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Edge &element)
       B.getCoords(),
       location);
 
-  _weightedElements.emplace_back(WeightedElement{A.getID(), bcoords(0)});
-  _weightedElements.emplace_back(WeightedElement{B.getID(), bcoords(1)});
+  _weightedElements = {WeightedElement{A.getID(), bcoords(0)},
+                       WeightedElement{B.getID(), bcoords(1)}};
 
   Eigen::VectorXd projection = A.getCoords() * bcoords(0) +
                                B.getCoords() * bcoords(1);
@@ -44,9 +44,9 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Triangle &elemen
       C.getCoords(),
       location);
 
-  _weightedElements.emplace_back(WeightedElement{A.getID(), bcoords(0)});
-  _weightedElements.emplace_back(WeightedElement{B.getID(), bcoords(1)});
-  _weightedElements.emplace_back(WeightedElement{C.getID(), bcoords(2)});
+  _weightedElements = {WeightedElement{A.getID(), bcoords(0)},
+                       WeightedElement{B.getID(), bcoords(1)},
+                       WeightedElement{C.getID(), bcoords(2)}};
 
   Eigen::VectorXd projection = A.getCoords() * bcoords(0) +
                                B.getCoords() * bcoords(1) +
@@ -69,16 +69,16 @@ Polation::Polation(const Eigen::VectorXd &location, const mesh::Tetrahedron &ele
       D.getCoords(),
       location);
 
-  _weightedElements.emplace_back(WeightedElement{A.getID(), bcoords(0)});
-  _weightedElements.emplace_back(WeightedElement{B.getID(), bcoords(1)});
-  _weightedElements.emplace_back(WeightedElement{C.getID(), bcoords(2)});
-  _weightedElements.emplace_back(WeightedElement{D.getID(), bcoords(3)});
+  _weightedElements = {WeightedElement{A.getID(), bcoords(0)},
+                       WeightedElement{B.getID(), bcoords(1)},
+                       WeightedElement{C.getID(), bcoords(2)},
+                       WeightedElement{D.getID(), bcoords(3)}};
 
   // There is no projection happening, so the distance is always 0.
   _distance = 0.0;
 }
 
-const std::vector<WeightedElement> &Polation::getWeightedElements() const
+const boost::container::static_vector<WeightedElement, 4> &Polation::getWeightedElements() const
 {
   return _weightedElements;
 }

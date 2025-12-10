@@ -201,6 +201,7 @@ std::vector<EdgeMatch> Index::getClosestEdges(const Eigen::VectorXd &sourceCoord
   const auto &rtree = _pimpl->getEdgeRTree(*_mesh);
 
   std::vector<EdgeMatch> matches;
+  matches.reserve(n);
   rtree->query(bgi::nearest(sourceCoord, n), boost::make_function_output_iterator([&](size_t matchID) {
                  matches.emplace_back(matchID);
                }));
@@ -213,6 +214,7 @@ std::vector<TriangleMatch> Index::getClosestTriangles(const Eigen::VectorXd &sou
   const auto &rtree = _pimpl->getTriangleRTree(*_mesh);
 
   std::vector<TriangleMatch> matches;
+  matches.reserve(n);
   rtree->query(bgi::nearest(sourceCoord, n),
                boost::make_function_output_iterator([&](TriangleTraits::IndexType const &match) {
                  matches.emplace_back(match.second);
