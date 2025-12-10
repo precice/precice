@@ -1,7 +1,7 @@
 #pragma once
 
+#include <boost/container/static_vector.hpp>
 #include <iosfwd>
-#include <vector>
 #include "Eigen/Core"
 #include "mesh/Edge.hpp"
 #include "mesh/Tetrahedron.hpp"
@@ -38,7 +38,7 @@ public:
   std::size_t nElements() const;
 
   /// Get the weights and indices of the calculated interpolation
-  const std::vector<WeightedElement> &getWeightedElements() const;
+  const boost::container::static_vector<WeightedElement, 4> &getWeightedElements() const;
 
   /// Check whether all the weights are positive, which means it is interpolation
   bool isInterpolation() const;
@@ -47,8 +47,8 @@ public:
   double distance() const;
 
 private:
-  std::vector<WeightedElement> _weightedElements;
-  double                       _distance;
+  boost::container::static_vector<WeightedElement, 4> _weightedElements;
+  double                                              _distance;
 };
 
 /// Make the WeightedElement printable

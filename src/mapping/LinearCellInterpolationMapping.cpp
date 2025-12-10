@@ -77,14 +77,14 @@ void LinearCellInterpolationMapping::computeMapping()
   auto                                  &index = searchSpace->index();
   utils::statistics::DistanceAccumulator fallbackStatistics;
 
-  _interpolations.clear();
-  _interpolations.reserve(fVertices.size());
+  _operations.clear();
+  _operations.reserve(fVertices.size() * (getDimensions() + 1));
 
   for (const auto &fVertex : fVertices) {
     // Find tetrahedra (3D) or triangle (2D) or fall-back on NP
     auto match    = index.findCellOrProjection(fVertex.getCoords(), nnearest);
     auto distance = match.polation.distance();
-    _interpolations.push_back(std::move(match.polation));
+    addPolation(fVertex.getID(), match.polation);
     if (!math::equals(distance, 0.0)) {
       // Only push when fall-back occurs, so the number of entries is the number of vertices outside the domain
       fallbackStatistics(distance);
@@ -115,6 +115,8 @@ void LinearCellInterpolationMapping::computeMapping()
       PRECICE_INFO("Successfully computed linear-cell-interpolation mapping.");
     }
   }
+
+  postProcessOperations();
 
   _hasComputedMapping = true;
 }
