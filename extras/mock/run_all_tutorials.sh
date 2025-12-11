@@ -1,11 +1,45 @@
 #!/bin/bash
 
 # SET CORRECT PATHS BEFORE RUNNING
+# Usage: ./run_all_tutorials.sh [--mock] [--mock-lib PATH] [--tutorials-dir PATH] [--timeout SECONDS]
 # recommended to run from the extras/mock/ directory with the command:
 # ./run_all_tutorials.sh &> mock_all_tutorials.log
-MOCK_LIB="/home/julian/Documents/precice/build/libpreciceMocked.so.3.3.0"
-TUTORIALS_DIR="/home/julian/Documents/precice/examples/tutorials"
-TIMEOUT=300  # 5 minutes timeout per tutorial
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+MOCK_LIB="$REPO_ROOT/build/libpreciceMocked.so.3.3.0"
+TUTORIALS_DIR="$REPO_ROOT/examples/tutorials"
+TIMEOUT=300  # 5 minute timeout per tutorial
+USE_MOCK=1
+
+print_usage() {
+    cat <<EOF
+Usage: $0 [--mock] [--mock-lib PATH] [--tutorials-dir PATH] [--timeout SECONDS] [--help]
+
+Options:
+  --mock-lib PATH    Path to mocked precice library (default: $MOCK_LIB)
+  --tutorials-dir    Path to tutorials dir (default: $TUTORIALS_DIR)
+  --timeout N        Timeout per tutorial in seconds (default: $TIMEOUT)
+  --help, -h         Show this help
+EOF
+}
+
+# Parse args
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --mock-lib)
+            MOCK_LIB="$2"; shift 2 ;;
+        --tutorials-dir)
+            TUTORIALS_DIR="$2"; shift 2 ;;
+        --timeout)
+            TIMEOUT="$2"; shift 2 ;;
+        --help|-h)
+            print_usage; exit 0 ;;
+        *) echo "Unknown option: $1"; print_usage; exit 2 ;;
+    esac
+done
+
 FAILED_TUTORIALS=()
 PASSED_TUTORIALS=()
 TIMEOUT_TUTORIALS=()

@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <mock-config>
   <!-- Example 1: Random data mode -->
-  <data-mapping mesh="MeshOne" data="Temperature" mode="random" />
+  <mocked-data mesh="MeshOne" data="Temperature" mode="random" />
 
   <!-- Example 2: Buffer mode (returns writeData values as-is) -->
-  <data-mapping mesh="MeshTwo" data="Displacement" mode="buffer" />
+  <mocked-data mesh="MeshTwo" data="Displacement" mode="buffer" />
 
   <!-- Example 3: Scaled buffer with scalar multiplier -->
-  <data-mapping mesh="MeshOne" data="Pressure" mode="scaled">
+  <mocked-data mesh="MeshOne" data="Pressure" mode="scaled">
     <scalar-multiplier value="2.0" />
-  </data-mapping>
+  </mocked-data>
 
   <!-- Example 4: Scaled buffer with element-wise vector multiplier -->
-  <data-mapping mesh="MeshTwo" data="Velocity" mode="scaled">
+  <mocked-data mesh="MeshTwo" data="Velocity" mode="scaled">
     <!-- For 3D vector data: multiply component-wise -->
     <vector-multiplier values="1.0;2.0;3.0" />
-  </data-mapping>
+  </mocked-data>
 
   <!-- Example 5: Multiple scalar values can use semicolons too -->
-  <data-mapping mesh="MeshThree" data="Heat-Flux" mode="scaled">
+  <mocked-data mesh="MeshThree" data="Heat-Flux" mode="scaled">
     <!-- Will cycle through multipliers for each value -->
     <vector-multiplier values="0.5;1.0;1.5;2.0" />
-  </data-mapping>
+  </mocked-data>
 </mock-config>

@@ -5,7 +5,7 @@ A lightweight mock implementation of the preCICE Participant API for testing and
 ## Features
 
 - **Full API Coverage**: Implements the complete preCICE Participant API
-- **Configuration Validation**: Parses preCICE XML configs and validates API calls
+- **Caller Validation**: Parses preCICE XML configs and validates that an adapter sends API calls matching the given config
 - **Implicit Coupling Support**: Handles checkpoint requirements for implicit coupling schemes
 - **Flexible Data Exchange**: Three modes for handling read/write data operations
 - **Error Handling**: Throws proper preCICE exceptions with helpful error messages
@@ -18,14 +18,14 @@ The mock participant supports three modes for `readData()` operations, configure
 Returns random seeded data (useful for testing error handling).
 
 ```xml
-<data-mapping mesh="MeshName" data="DataName" mode="random" />
+<mocked-data mesh="MeshName" data="DataName" mode="random" />
 ```
 
 ### 2. Buffer Mode (Default)
-Returns the data previously written via `writeData()`. This mimics the behavior of the Python adapter mock and is the default if no mock-config is provided.
+Returns the data previously written via `writeData()`. This is the default if no mock-config is provided.
 
 ```xml
-<data-mapping mesh="MeshName" data="DataName" mode="buffer" />
+<mocked-data mesh="MeshName" data="DataName" mode="buffer" />
 ```
 
 ### 3. Scaled Buffer Mode
@@ -33,16 +33,16 @@ Returns the buffered write data multiplied by a scalar or element-wise by a vect
 
 **Scalar multiplication:**
 ```xml
-<data-mapping mesh="MeshName" data="DataName" mode="scaled">
+<mocked-data mesh="MeshName" data="DataName" mode="scaled">
   <scalar-multiplier value="2.0" />
-</data-mapping>
+</mocked-data>
 ```
 
 **Element-wise vector multiplication:**
 ```xml
-<data-mapping mesh="MeshName" data="DataName" mode="scaled">
+<mocked-data mesh="MeshName" data="DataName" mode="scaled">
   <vector-multiplier values="1.0;2.0;3.0" />
-</data-mapping>
+</mocked-data>
 ```
 
 ## Configuration Files
@@ -61,22 +61,33 @@ Place `mock-config.xml` in the same directory as your preCICE config file.
 **Example mock-config.xml:**
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  Mock Configuration for preCICE Mock Participant
+
+  This file configures how the mock participant handles readData() calls.
+  Place this file in the same directory as your precice-config.xml file.
+
+  Three modes are supported:
+  1. "random" - Returns random data (seeded)
+  2. "buffer" - Returns data written by writeData() (default if no mock-config)
+  3. "scaled" - Returns data written by writeData() multiplied by a scalar or vector
+-->
 <mock-config>
   <!-- Random data for temperature -->
-  <data-mapping mesh="FluidMesh" data="Temperature" mode="random" />
+  <mocked-data mesh="FluidMesh" data="Temperature" mode="random" />
 
   <!-- Return written data as-is for pressure -->
-  <data-mapping mesh="FluidMesh" data="Pressure" mode="buffer" />
+  <mocked-data mesh="FluidMesh" data="Pressure" mode="buffer" />
 
   <!-- Scale displacement by factor of 2 -->
-  <data-mapping mesh="StructureMesh" data="Displacement" mode="scaled">
+  <mocked-data mesh="StructureMesh" data="Displacement" mode="scaled">
     <scalar-multiplier value="2.0" />
-  </data-mapping>
+  </mocked-data>
 
   <!-- Scale force vector components differently -->
-  <data-mapping mesh="StructureMesh" data="Force" mode="scaled">
+  <mocked-data mesh="StructureMesh" data="Force" mode="scaled">
     <vector-multiplier values="1.0;1.5;2.0" />
-  </data-mapping>
+  </mocked-data>
 </mock-config>
 ```
 
@@ -125,18 +136,19 @@ For implicit coupling schemes, the mock automatically:
 
 ## Building
 
-The mock is built as part of the preCICE library. Link against `libpreciceMocked.so` instead of `libprecice.so`:
+The mock is built as part of the preCICE library.
 
-```cmake
-target_link_libraries(your_solver preciceMocked)
-```
-
-Alternatively build normally and use LD_PRELOAD to load the mock at runtime
+Build normally and use LD_PRELOAD to load the mock at runtime
 
 ```
 LD_PRELOAD=/path/to/precicedir/precice/build/libpreciceMocked.so.3.3.0
 ```
 
+Alternatively link against `libpreciceMocked.so` instead of `libprecice.so`:
+
+```cmake
+target_link_libraries(your_solver preciceMocked)
+```
 ## Error Handling
 
 The mock validates all API calls against the configuration and throws `precice::Error` with descriptive messages:
@@ -159,7 +171,7 @@ This helps catch configuration mistakes early in development.
 ## Testing Your Adapter
 
 1. Create a simple preCICE config with your participant
-2. Optionally create a mock-config.xml for specific data behavior
+2. Optionally, create a 'mock-config.xml' for specific data behavior
 3. Run your adapter against the mock
 4. Verify correct API usage patterns
 5. Test error handling by introducing configuration mistakes

@@ -263,9 +263,9 @@ public:
   double      maxTimeStep     = 0.0;
   std::mutex  mtx;
 
-  uint32_t            seed        = 0;
-  std::size_t         currentStep = 0;
-  double              currentTime = 0.0;
+  uint32_t    seed        = 0;
+  std::size_t currentStep = 0;
+  double      currentTime = 0.0;
 
   ConfigData configData;
   bool       configParsed = false;
@@ -277,7 +277,6 @@ public:
   std::map<std::string, std::vector<double>> writeBuffers;
   // Vertex counts per mesh to detect empty provided meshes
   std::map<std::string, std::size_t> meshVertexCounts;
-
 
   void parseConfig()
   {
@@ -310,22 +309,28 @@ public:
       // and optional spaces around '='). Returns empty string if not found.
       auto getAttr = [](const std::string &ln, const std::string &attr) -> std::string {
         size_t p = ln.find(attr);
-        if (p == std::string::npos) return std::string();
+        if (p == std::string::npos)
+          return std::string();
         p = ln.find('=', p);
-        if (p == std::string::npos) return std::string();
+        if (p == std::string::npos)
+          return std::string();
         // skip spaces
         ++p;
-        while (p < ln.size() && (ln[p] == ' ' || ln[p] == '\t')) ++p;
-        if (p >= ln.size()) return std::string();
+        while (p < ln.size() && (ln[p] == ' ' || ln[p] == '\t'))
+          ++p;
+        if (p >= ln.size())
+          return std::string();
         char q = ln[p];
         if (q == '"' || q == '\'') {
           size_t end = ln.find(q, p + 1);
-          if (end == std::string::npos) return std::string();
+          if (end == std::string::npos)
+            return std::string();
           return ln.substr(p + 1, end - (p + 1));
         }
         // no quote - read until space or '>'
         size_t end = p;
-        while (end < ln.size() && ln[end] != ' ' && ln[end] != '>' && ln[end] != '\r' && ln[end] != '\n' && ln[end] != '\t') ++end;
+        while (end < ln.size() && ln[end] != ' ' && ln[end] != '>' && ln[end] != '\r' && ln[end] != '\n' && ln[end] != '\t')
+          ++end;
         return ln.substr(p, end - p);
       };
       std::string currentMesh, currentData;
@@ -342,10 +347,12 @@ public:
 
         if (line.find("<data:scalar") != std::string::npos) {
           std::string dataName = getAttr(line, "name");
-          if (!dataName.empty()) dataTypeDimensions[dataName] = 1;
+          if (!dataName.empty())
+            dataTypeDimensions[dataName] = 1;
         } else if (line.find("<data:vector") != std::string::npos) {
           std::string dataName = getAttr(line, "name");
-          if (!dataName.empty()) dataTypeDimensions[dataName] = 3; // Vectors are 3D
+          if (!dataName.empty())
+            dataTypeDimensions[dataName] = 3; // Vectors are 3D
         }
       }
       fileFirst.close();
@@ -373,8 +380,8 @@ public:
         if (line.find("<mesh") != std::string::npos) {
           std::string meshNameCandidate = getAttr(line, "name");
           if (!meshNameCandidate.empty()) {
-            std::string dimsStr = getAttr(line, "dimensions");
-            int parsedDims = meshDims;
+            std::string dimsStr    = getAttr(line, "dimensions");
+            int         parsedDims = meshDims;
             if (!dimsStr.empty()) {
               try {
                 parsedDims = std::stoi(dimsStr);
@@ -386,7 +393,7 @@ public:
             auto itMesh = configData.meshes.find(meshNameCandidate);
             if (itMesh == configData.meshes.end()) {
               MeshInfo meshInfo;
-              meshInfo.name = meshNameCandidate;
+              meshInfo.name       = meshNameCandidate;
               meshInfo.dimensions = parsedDims;
               // Detect inline provide/receive attributes (common in course configs)
               if (line.find("provide=\"yes\"") != std::string::npos || line.find("provide=\"true\"") != std::string::npos || line.find("provide=\"1\"") != std::string::npos) {
@@ -532,15 +539,17 @@ public:
         auto it = configData.meshes.find(dataInfo.meshName);
         if (it == configData.meshes.end()) {
           MeshInfo mi;
-          mi.name       = dataInfo.meshName;
-          mi.dimensions = 3; // default to 3D mesh
-          mi.provided   = dataInfo.isWrite;
-          mi.received   = dataInfo.isRead;
+          mi.name                              = dataInfo.meshName;
+          mi.dimensions                        = 3; // default to 3D mesh
+          mi.provided                          = dataInfo.isWrite;
+          mi.received                          = dataInfo.isRead;
           configData.meshes[dataInfo.meshName] = mi;
         } else {
           // If mesh exists, mark provided/received according to data usage
-          if (dataInfo.isWrite) it->second.provided = true;
-          if (dataInfo.isRead) it->second.received = true;
+          if (dataInfo.isWrite)
+            it->second.provided = true;
+          if (dataInfo.isRead)
+            it->second.received = true;
         }
       }
 
@@ -594,10 +603,10 @@ public:
 
       // Parse mock config using simple XML parser
       // Format: <mock-config>
-      //           <data-mapping mesh="MeshName" data="DataName" mode="buffer|random|scaled">
+      //           <mocked-data mesh="MeshName" data="DataName" mode="buffer|random|scaled">
       //             <scalar-multiplier value="2.0" /> or
       //             <vector-multiplier values="1.0;2.0;3.0" />
-      //           </data-mapping>
+      //           </mocked-data>
       //         </mock-config>
 
       std::ifstream       file(mockConfigPath);
@@ -609,7 +618,7 @@ public:
 
       while (std::getline(file, line)) {
         // Simple parsing - look for key attributes
-        if (line.find("<data-mapping") != std::string::npos) {
+        if (line.find("<mocked-data") != std::string::npos) {
           // Extract mesh
           size_t meshPos = line.find("mesh=\"");
           if (meshPos != std::string::npos) {
@@ -668,7 +677,7 @@ public:
               pos = nextSemi + 1;
             }
           }
-        } else if (line.find("</data-mapping>") != std::string::npos) {
+        } else if (line.find("</mocked-data>") != std::string::npos) {
           if (!currentMesh.empty() && !currentData.empty()) {
             std::string    key = currentMesh + ":" + currentData;
             MockDataConfig config;
@@ -861,12 +870,12 @@ void Participant::finalize()
   if (_impl->finalized) {
     throw precice::Error("finalize() may only be called once.");
   }
-  
+
   // Print finalize message (only on rank 0)
   if (_impl->rank == 0) {
     std::cout << "---[precice]  Finalizing preCICE (mock)" << std::endl;
   }
-  
+
   _impl->initialized     = false;
   _impl->couplingOngoing = false;
   _impl->finalized       = true;
@@ -1051,7 +1060,7 @@ void Participant::resetMesh(::precice::string_view meshName)
 }
 
 VertexID Participant::setMeshVertex(
-    ::precice::string_view meshName,
+    ::precice::string_view        meshName,
     ::precice::span<const double> position)
 {
   if (!_impl) {
@@ -1060,11 +1069,11 @@ VertexID Participant::setMeshVertex(
   if (_impl->initialized) {
     throw precice::Error("setMeshVertex() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
-  std::string                 meshNameStr(meshName.data(), meshName.size());
+  std::string meshNameStr(meshName.data(), meshName.size());
   // Determine expected dimensionality from configuration if available
   _impl->parseConfig();
-  int expectedDims = 3;
-  auto meshIt = _impl->configData.meshes.find(meshNameStr);
+  int  expectedDims = 3;
+  auto meshIt       = _impl->configData.meshes.find(meshNameStr);
   if (meshIt != _impl->configData.meshes.end()) {
     expectedDims = meshIt->second.dimensions;
   }
@@ -1091,7 +1100,7 @@ int Participant::getMeshVertexSize(::precice::string_view meshName) const
 }
 
 void Participant::setMeshVertices(
-    ::precice::string_view meshName,
+    ::precice::string_view        meshName,
     ::precice::span<const double> coordinates,
     ::precice::span<VertexID>     ids)
 {
