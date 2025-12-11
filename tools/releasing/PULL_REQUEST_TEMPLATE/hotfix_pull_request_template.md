@@ -5,7 +5,6 @@
 
 Only the release manager should update this post (even tickboxes, due to race conditions in editing). Everybody else should comment on the PR with the progress.
 
-
 ## Pre-PR steps
 
 * [ ] Make sure you have the latest `main` branch locally.
@@ -26,17 +25,11 @@ Only the release manager should update this post (even tickboxes, due to race co
    * [ ] `tools/releasing/packaging/debian/changelog`
 * [ ] Commit the version bump: `git commit -m "Bump version to X.Y.Z"`
 * [ ] Push the hotfix branch to the precice repository: `git push -u upstream hotfix-vX.Y.Z`
-* Prepare independent hotfixes
-   * [ ] [Python bindings](https://github.com/precice/python-bindings/blob/develop/docs/hotfixGuide.md)
-   * [ ] (if necessary!) [MATLAB bindings](https://github.com/precice/matlab-bindings/blob/develop/docs/hotfixGuide.md)
-   * [ ] (if necessary!) [JULIA bindings](https://github.com/precice/PreCICE.jl)
-
 
 ## Step by step guide
 
 * [ ] Open PR from `hotfix-vX.Y.Z` to `main` (use [this template](https://github.com/precice/precice/blob/develop/tools/releasing/PULL_REQUEST_TEMPLATE/hotfix_pull_request_template.md))
 * [ ] Trigger the system tests using the `trigger-system-tests` label ([`release_test` suite](https://github.com/precice/tutorials/blob/develop/tools/tests/tests.yaml)). After any force-push, remove and add the label again.
-* [ ] Do any additional regression tests using the hotfix branch (specific revision) _list below :arrow_down:_ (all)
 * [ ] Fix potential problems on the hotfix branch (all)
 * [ ] Reorder the commits for the version bump to be the latest. `git rebase -i main`
 * [ ] Draft release notes
@@ -54,66 +47,15 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Write hotfix text
 * [ ] Publish the GitHub hotfix
 
-
-## Regression Tests
-
-Use the following branches:
-* precice `hotfix-vX.Y.Z`
-* pyprecice `python-bindings-vX.Y.Z.1`
-* matlab-bindings `matlab-bindings-vX.Y.Z.1`
-* rest `main`(`master`)
-
-Run all these tests manually on your system. If you succeed, please write a comment with the revisions of the components that you used below. Example: https://github.com/precice/precice/pull/507#issuecomment-530432289 and update the table.
-
-Tests covered by the system tests: see `release_test` in [`tests.yaml`](https://github.com/precice/tutorials/blob/develop/tools/tests/tests.yaml) (and the respective job summary).
-
-| State | Success | Failure | Skipped |
-| --- | --- | --- | --- |
-| Write | `:o:` | `:x:` | `:fast_forward:` |
-| Read | :o: | :x: | :fast_forward: |
-
-| State | Tester | Test |
-| --- | --- | --- |
-| | | [quickstart](https://github.com/precice/tutorials/tree/master/quickstart) fluid-openfoam - solid-cpp |
-| | | [perpendicular-flap](https://github.com/precice/tutorials/tree/master/perpendicular-flap) fluid-openfoam - solid-dune |
-| | | [perpendicular-flap](https://github.com/precice/tutorials/tree/master/perpendicular-flap) fluid-nutils - solid-calculix |
-| | | [flow-over-heated-plate](https://github.com/precice/tutorials/tree/master/flow-over-heated-plate) fluid-openfoam - solid-openfoam parallel |
-| | | [flow-over-heated-plate](https://github.com/precice/tutorials/tree/master/flow-over-heated-plate) fluid-openfoam - solid-fenics parallel |
-| | | [flow-over-heated-plate](https://github.com/precice/tutorials/tree/master/flow-over-heated-plate) fluid-openfoam - solid-nutils |
-| | | [flow-over-heated-plate-nearest-projection](https://github.com/precice/tutorials/tree/master/flow-over-heated-plate-nearest-projection) fluid-openfoam - solid-openfoam |
-| | | [flow-over-heated-plate-steady-state](https://github.com/precice/tutorials/tree/master/flow-over-heated-plate-steady-state) fluid-openfoam - solid-codeaster |
-| | | [heat-exchanger](https://github.com/precice/tutorials/tree/master/heat-exchanger) fluid-(inner+outer)-openfoam - solid-calculix |
-| | | [partitioned-elastic-beam](https://github.com/precice/tutorials/tree/master/partitioned-elastic-beam) dirichlet-calculix - neumann-calculix |
-| | | [partitioned-heat-conduction](https://github.com/precice/tutorials/tree/master/partitioned-heat-conduction) fenics - nutils |
-| | | [partitioned-heat-conduction-complex](https://github.com/precice/tutorials/tree/master/partitioned-heat-conduction-complex) fenics- fenics |
-| | | [partitioned-pipe](https://github.com/precice/tutorials/tree/master/partitioned-pipe) fluid1-openfoam-pimplefoam - fluid2-openfoam-sonicliquidfoam |
-| | | [elastic-tube-3d](https://github.com/precice/tutorials/tree/master/elastic-tube-3d) fluid-openfoam - solid-calculix |
-| | | MATLAB / MATLAB [ODEs](https://github.com/precice/matlab-bindings/tree/develop/tutorial) |
-| | | Solverdummy [Fortran module](https://github.com/precice/fortran-module/tree/develop/examples/solverdummy) |
-| | | Solverdummy [Python](https://github.com/precice/python-bindings/tree/develop/solverdummy) |
-| | | Solverdummy [MATLAB](https://github.com/precice/matlab-bindings/tree/develop/solverdummy) |
-| | | Solverdummy [Julia](https://github.com/precice/PreCICE.jl/tree/develop/solverdummy) |
-| | | Alya |
-| | | SuperMUC |
-
 ## Post-release
 
 * [ ] Update version specific documentation
 * [ ] Flag [Arch Linux AUR package](https://aur.archlinux.org/packages/precice) and dependants as out-of-date.
 * [ ] Update Spack recipe
-* [ ] Update `pyprecice` Spack
 * [ ] Update Website:
     * [ ] Bump version in [`_config.yml`](https://github.com/precice/precice.github.io/blob/master/_config.yml)
     * [ ] Update the [XML reference](https://github.com/precice/precice.github.io/blob/master/_includes/xmlreference.md) using `binprecice md`
     * [ ] Look over the [Roadmap](https://www.precice.org/fundamentals-roadmap.html) and update entries.
-
-### Release new version for bindings (to ensure compatibility with newest preCICE version)
-
-- [ ] [Fortran module](https://github.com/precice/fortran-module/compare/master...develop)
-- [ ] [MATLAB bindings](https://github.com/precice/matlab-bindings/blob/develop/docs/hotfixGuide.md)
-- [ ] [python bindings](https://github.com/precice/python-bindings/blob/develop/docs/hotfixGuide.md)
-- [ ] [Julia bindings](https://github.com/precice/PreCICE.jl)
-- [ ] [Rust bindings](https://github.com/precice/rust-bindings)
 
 ### Marketing
 
