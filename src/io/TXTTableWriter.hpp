@@ -6,8 +6,7 @@
 #include <vector>
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 /**
  * @brief File writer for table-data in text-format.
@@ -64,11 +63,11 @@ public:
    * The write order is fixed by the order addData() is called.
    */
   void writeData(
-      const std::string &    name,
+      const std::string     &name,
       const Eigen::Vector2d &value);
 
   void writeData(
-      const std::string &    name,
+      const std::string     &name,
       const Eigen::Vector3d &value);
 
   /// Closes the file, is automatically called on destruction.
@@ -100,9 +99,9 @@ private:
   std::ofstream _outputStream;
 };
 
-} // namespace io
-} // namespace precice
-//Required in order to print the vector types via the fmt interface
+} // namespace precice::io
+
+// Required in order to print the vector types via the fmt interface
 template <>
 struct fmt::formatter<precice::io::TXTTableWriter::DataType> : formatter<string_view> {
   // parse is inherited from formatter<string_view>.

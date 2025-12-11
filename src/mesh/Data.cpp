@@ -35,19 +35,9 @@ const Eigen::VectorXd &Data::values() const
   return _sample.values;
 }
 
-Eigen::MatrixXd &Data::gradients()
-{
-  return _sample.gradients;
-}
-
 const Eigen::MatrixXd &Data::gradients() const
 {
   return _sample.gradients;
-}
-
-time::Sample &Data::sample()
-{
-  return _sample;
 }
 
 const time::Sample &Data::sample() const
@@ -55,34 +45,61 @@ const time::Sample &Data::sample() const
   return _sample;
 }
 
-Eigen::VectorXd Data::sampleAtTime(double time) const
+time::SampleResult Data::sampleAtTime(double time) const
 {
   return _waveform.sample(time);
 }
 
 int Data::getWaveformDegree() const
 {
-  return _waveform.timeStepsStorage().getInterpolationDegree();
+  return _waveform.getInterpolationDegree();
 }
 
-time::Storage &Data::timeStepsStorage()
+time::Waveform &Data::waveform()
 {
-  return _waveform.timeStepsStorage();
+  return _waveform;
 }
 
 void Data::moveToNextWindow()
 {
-  if (stamples().size() > 1) { // Needed to avoid CompositionalCouplingScheme callong moveToNextWindow on same Data multiple times. Could be simplified by replacing Storage::move() with clearBefore(double time). See https://github.com/precice/precice/issues/1821.
-    timeStepsStorage().move();
+  if (stamples().size() > 1) { // Needed to avoid CompositionalCouplingScheme callong moveToNextWindow on same Data multiple times. Could be simplified by replacing Waveform::move() with clearBefore(double time). See https://github.com/precice/precice/issues/1821.
+    waveform().move();
     PRECICE_ASSERT(stamples().size() == 1);
-    sample() = stamples().back().sample;
+    setGlobalSample(stamples().back().sample); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsWaveform, see https://github.com/precice/precice/issues/1645
   }
 }
 
 void Data::setSampleAtTime(double time, const time::Sample &sample)
 {
-  _sample = sample; // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage
-  _waveform.timeStepsStorage().setSampleAtTime(time, sample);
+  PRECICE_ASSERT(sample.dataDims == getDimensions(), "Sample has incorrect data dimension");
+  setGlobalSample(sample); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsWaveform, see https://github.com/precice/precice/issues/1645
+  _waveform.setSampleAtTime(time, sample);
+}
+
+void Data::setGlobalSample(const time::Sample &sample)
+{
+  PRECICE_ASSERT(not sample.values.hasNaN());
+  _sample = sample;
+}
+
+void Data::emplaceSampleAtTime(double time)
+{
+  setSampleAtTime(time, time::Sample{getDimensions()});
+}
+
+void Data::emplaceSampleAtTime(double time, std::initializer_list<double> values)
+{
+  setSampleAtTime(time, time::Sample{getDimensions(),
+                                     Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size())});
+}
+
+void Data::emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients)
+{
+  PRECICE_ASSERT(gradients.size() == values.size() * getSpatialDimensions(), "Gradient isn't correctly sized", values.size(), gradients.size());
+  auto nVertices = values.size() / getDimensions();
+  setSampleAtTime(time, time::Sample{getDimensions(),
+                                     Eigen::Map<const Eigen::VectorXd>(values.begin(), values.size()),
+                                     Eigen::Map<const Eigen::MatrixXd>(gradients.begin(), getSpatialDimensions(), nVertices * getDimensions())});
 }
 
 const std::string &Data::getName() const
@@ -95,17 +112,14 @@ DataID Data::getID() const
   return _id;
 }
 
-void Data::toZero()
-{
-  _sample.values.setZero();
-  if (_hasGradient) {
-    _sample.gradients.setZero();
-  }
-}
-
 bool Data::hasGradient() const
 {
   return _hasGradient;
+}
+
+bool Data::hasSamples() const
+{
+  return !_waveform.empty();
 }
 
 void Data::requireDataGradient()

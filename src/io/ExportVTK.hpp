@@ -6,23 +6,28 @@
 #include "io/Export.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Mesh;
 }
-} // namespace precice
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 /// Writes polygonal, or triangle meshes to vtk files.
 class ExportVTK : public Export {
 public:
+  ExportVTK(
+      std::string_view  participantName,
+      std::string_view  location,
+      const mesh::Mesh &mesh,
+      ExportKind        kind,
+      int               frequency,
+      int               rank,
+      int               size);
+
   /// Perform writing to VTK file
-  virtual void doExport(
-      const std::string &name,
-      const std::string &location,
-      const mesh::Mesh & mesh);
+  void doExport(int index, double time) final override;
+
+  void exportSeries() const final override;
 
   static void initializeWriting(
       std::ofstream &filestream);
@@ -31,7 +36,7 @@ public:
 
   static void writeVertex(
       const Eigen::VectorXd &position,
-      std::ostream &         outFile);
+      std::ostream          &outFile);
 
   static void writeLine(
       int           vertexIndices[2],
@@ -49,21 +54,20 @@ private:
   mutable logging::Logger _log{"io::ExportVTK"};
 
   void openFile(
-      std::ofstream &    outFile,
+      std::ofstream     &outFile,
       const std::string &filename) const;
 
   void exportMesh(
-      std::ofstream &   outFile,
+      std::ofstream    &outFile,
       const mesh::Mesh &mesh);
 
   void exportData(
-      std::ofstream &   outFile,
+      std::ofstream    &outFile,
       const mesh::Mesh &mesh);
 
   void exportGradient(
-      std::ofstream &   outFile,
+      std::ofstream    &outFile,
       const mesh::Mesh &mesh);
 };
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

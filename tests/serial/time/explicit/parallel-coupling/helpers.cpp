@@ -23,14 +23,10 @@ void subcyclingWithNSteps(TestContext const &context, int nSubsteps, bool useAdv
     readDataName  = "DataOne";
   }
 
-  double writeData, readData;
+  double writeData;
 
   double   v0[]     = {0, 0, 0};
   VertexID vertexID = precice.setMeshVertex(meshName, v0);
-
-  int    timestep   = 0;
-  int    timewindow = 0;
-  double time       = 0;
 
   if (precice.requiresInitialData()) {
     writeData = 1; // don't care
@@ -42,13 +38,11 @@ void subcyclingWithNSteps(TestContext const &context, int nSubsteps, bool useAdv
   double windowDt = precice.getMaxTimeStepSize();
   double solverDt = windowDt / nSubsteps;
   int    didSteps = 0;
-  int    nWindows = 0;
 
   while (precice.isCouplingOngoing()) {
     if (precice.isTimeWindowComplete()) {
       BOOST_TEST(didSteps == nSubsteps);
       didSteps = 0; // reset counter for next window
-      nWindows++;
     }
     double preciceDt = precice.getMaxTimeStepSize();
 

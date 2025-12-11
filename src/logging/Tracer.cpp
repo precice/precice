@@ -1,12 +1,12 @@
-#include "Tracer.hpp"
 #include <string>
 #include <utility>
-#include "logging/Logger.hpp"
+
+#include "logging/Tracer.hpp"
 
 namespace precice::logging {
 
 Tracer::Tracer(
-    Logger &    log,
+    Logger     &log,
     LogLocation loc)
     : _log(log),
       _loc(std::move(loc))

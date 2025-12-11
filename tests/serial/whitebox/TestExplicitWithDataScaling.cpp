@@ -18,9 +18,10 @@ BOOST_AUTO_TEST_SUITE(Whitebox)
  * and stay constant over the coupling cycles. SolverTwo has a scaling of the
  * values activated and reads the scaled values.
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   Participant cplInterface(context.name, context.config(), 0, 1);
 
@@ -46,7 +47,6 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
       }
       cplInterface.writeData(meshName, velocitiesID, ids, data);
       cplInterface.advance(dt);
-      double dt = cplInterface.getMaxTimeStepSize();
     }
     cplInterface.finalize();
   } else {
@@ -74,7 +74,6 @@ BOOST_AUTO_TEST_CASE(TestExplicitWithDataScaling)
       BOOST_TEST(data == expected, boost::test_tools::per_element());
 
       cplInterface.advance(dt);
-      double dt = cplInterface.getMaxTimeStepSize();
     }
     cplInterface.finalize();
   }

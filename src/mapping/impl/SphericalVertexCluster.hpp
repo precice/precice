@@ -11,9 +11,7 @@
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
 
-namespace precice {
-
-namespace mapping {
+namespace precice::mapping {
 
 /**
  * The SphericalVertexCluster represents a single partition in the partition of unity mapping.
@@ -62,15 +60,21 @@ public:
   /// Evaluates a conservative mapping and agglomerates the result in the given output data
   void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) const;
 
+  /// Computes and saves the RBF coefficients
+  void computeCacheData(const Eigen::Ref<const Eigen::MatrixXd> &globalIn, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coefficientsOut) const;
+
   /// Evaluates a consistent mapping and agglomerates the result in the given output data
   void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) const;
 
   /// Set the normalized weight for the given \p vertexID in the outputMesh
   void setNormalizedWeight(double normalizedWeight, VertexID vertexID);
 
+  void evaluateConservativeCache(Eigen::MatrixXd &epsilon, const Eigen::MatrixXd &Au, Eigen::Ref<Eigen::MatrixXd> out);
+
   /// Compute the weight for a given vertex
   double computeWeight(const mesh::Vertex &v) const;
 
+  Eigen::VectorXd interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs, const mesh::Mesh &inMesh) const;
   /// Number of input vertices this partition operates on
   unsigned int getNumberOfInputVertices() const;
 
@@ -84,9 +88,14 @@ public:
   /// are either no input vertices or output vertices.
   bool empty() const;
 
+  void addWriteDataToCache(const mesh::Vertex &v, const Eigen::VectorXd &load, Eigen::MatrixXd &epsilon, Eigen::MatrixXd &Au,
+                           const mesh::Mesh &inMesh);
+
+  void initializeCacheData(Eigen::MatrixXd &polynomial, Eigen::MatrixXd &coeffs, const int nComponents);
+
 private:
   /// logger, as usual
-  precice::logging::Logger _log{"mapping::SphericalVertexCluster"};
+  mutable precice::logging::Logger _log{"mapping::SphericalVertexCluster"};
 
   /// center vertex of the cluster
   mesh::Vertex _center;
@@ -115,6 +124,8 @@ private:
   /// Polynomial treatment in the RBF solver
   Polynomial _polynomial;
 
+  RADIAL_BASIS_FUNCTION_T _function;
+
   /// The weighting function
   CompactPolynomialC2 _weightingFunction;
 
@@ -132,7 +143,7 @@ SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::SphericalVertexCluster(
     Polynomial              polynomial,
     mesh::PtrMesh           inputMesh,
     mesh::PtrMesh           outputMesh)
-    : _center(center), _radius(radius), _polynomial(polynomial), _weightingFunction(radius)
+    : _center(center), _radius(radius), _polynomial(polynomial), _function(function), _weightingFunction(radius)
 {
   PRECICE_TRACE(_center.getCoords(), _radius);
   precice::profiling::Event eq("map.pou.computeMapping.queryVertices");
@@ -197,7 +208,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
 
   // Define an alias for data dimension in order to avoid ambiguity
   const unsigned int nComponents = inData.dataDims;
-  const auto &       localInData = inData.values;
+  const auto        &localInData = inData.values;
 
   // TODO: We can probably reduce the temporary allocations here
   Eigen::VectorXd in(_rbfSolver.getOutputSize());
@@ -228,6 +239,60 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::evaluateConservativeCache(Eigen::MatrixXd &epsilon, const Eigen::MatrixXd &Au, Eigen::Ref<Eigen::MatrixXd> out)
+{
+  Eigen::MatrixXd localIn(_inputIDs.size(), Au.cols());
+  _rbfSolver.evaluateConservativeCache(epsilon, Au, localIn);
+  // Step 3: now accumulate the result into our global output data
+  for (std::size_t i = 0; i < _inputIDs.size(); ++i) {
+    const auto dataIndex = *(_inputIDs.nth(i));
+    PRECICE_ASSERT(dataIndex < out.cols(), out.cols());
+    out.col(dataIndex) += localIn.row(i);
+  }
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::computeCacheData(const Eigen::Ref<const Eigen::MatrixXd> &globalIn, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffOut) const
+{
+  PRECICE_TRACE();
+  Eigen::MatrixXd in(_rbfSolver.getInputSize(), globalIn.rows());
+  // Step 1: extract the relevant input data from the global input data and store
+  // it in a contiguous array, which is required for the RBF solver (last polyparams entries remain zero)
+  for (std::size_t i = 0; i < _inputIDs.size(); i++) {
+    const auto dataIndex = *(_inputIDs.nth(i));
+    PRECICE_ASSERT(dataIndex < globalIn.cols(), globalIn.cols());
+    in.row(i) = globalIn.col(dataIndex);
+  }
+  // Step 2: solve the system using a consistent constraint
+  _rbfSolver.computeCacheData(in, _polynomial, polyOut, coeffOut);
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+Eigen::VectorXd SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs, const mesh::Mesh &inMesh) const
+{
+  PRECICE_TRACE();
+  return _rbfSolver.interpolateAt(v, poly, coeffs, _function, _inputIDs, inMesh);
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const mesh::Vertex &v, const Eigen::VectorXd &load,
+                                                                          Eigen::MatrixXd &epsilon, Eigen::MatrixXd &Au,
+                                                                          const mesh::Mesh &inMesh)
+{
+  PRECICE_TRACE();
+  _rbfSolver.addWriteDataToCache(v, load, epsilon, Au, _function, _inputIDs, inMesh);
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::initializeCacheData(Eigen::MatrixXd &poly, Eigen::MatrixXd &coeffs, const int nComponents)
+{
+  if (Polynomial::SEPARATE == _polynomial) {
+    poly.resize(_rbfSolver.getNumberOfPolynomials(), nComponents);
+  }
+  coeffs.resize(_inputIDs.size(), nComponents);
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
 void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) const
 {
   // First, a few sanity checks. Empty partitions shouldn't be stored at all
@@ -237,7 +302,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
 
   // Define an alias for data dimension in order to avoid ambiguity
   const unsigned int nComponents = inData.dataDims;
-  const auto &       localInData = inData.values;
+  const auto        &localInData = inData.values;
 
   Eigen::VectorXd in(_rbfSolver.getInputSize());
 
@@ -290,7 +355,7 @@ std::array<double, 3> SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::getCenter
 template <typename RADIAL_BASIS_FUNCTION_T>
 bool SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::empty() const
 {
-  return _outputIDs.size() == 0 || _inputIDs.size() == 0;
+  return _inputIDs.size() == 0;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -302,5 +367,4 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::clear()
   _rbfSolver.clear();
   _hasComputedMapping = false;
 }
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

@@ -186,9 +186,9 @@ void MPIPortsCommunication::requestConnection(std::string const &acceptorName,
   _communicators.emplace(acceptorRank, communicator);
 }
 
-void MPIPortsCommunication::requestConnectionAsClient(std::string const &  acceptorName,
-                                                      std::string const &  requesterName,
-                                                      std::string const &  tag,
+void MPIPortsCommunication::requestConnectionAsClient(std::string const   &acceptorName,
+                                                      std::string const   &requesterName,
+                                                      std::string const   &tag,
                                                       std::set<int> const &acceptorRanks,
                                                       int                  requesterRank)
 

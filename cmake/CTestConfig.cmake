@@ -25,55 +25,6 @@ else()
 endif()
 mark_as_advanced(PRECICE_TEST_WRAPPER_SCRIPT)
 
-
-function(add_precice_test)
-  cmake_parse_arguments(PARSE_ARGV 0 PAT "PETSC;MPIPORTS;GINKGO;GINKGO_OMP;GINKGO_CUDA;GINKGO_HIP" "NAME;ARGUMENTS;TIMEOUT;LABELS" "")
-  # Check arguments
-  if(NOT PAT_NAME)
-    message(FATAL_ERROR "Argument NAME not passed")
-  endif()
-
-  # We always prefix our tests
-  set(PAT_FULL_NAME "precice.${PAT_NAME}")
-
-  # Are direct dependencies fulfilled?
-  if( (NOT PRECICE_FEATURE_MPI_COMMUNICATION) OR (PAT_PETSC AND NOT PRECICE_FEATURE_PETSC_MAPPING)
-       OR (PAT_GINKGO AND NOT PRECICE_FEATURE_GINKGO_MAPPING)
-       OR (PAT_GINKGO_OMP AND NOT PRECICE_WITH_OMP)
-       OR (PAT_GINKGO_CUDA AND NOT PRECICE_WITH_CUDA)
-       OR (PAT_GINKGO_HIP AND NOT PRECICE_WITH_HIP))
-    message(STATUS "Test ${PAT_FULL_NAME} - skipped")
-    return()
-  endif()
-
-  if(PAT_MPIPORTS AND PRECICE_MPI_OPENMPI)
-    message(STATUS "Test ${PAT_FULL_NAME} - skipped (OpenMPI)")
-    return()
-  endif()
-
-  # Assemble the command
-  # Note that --map-by=:OVERSUBSCRIBE work for OpenMPI(4+5), MPICH, and Intel MPI.
-  message(STATUS "Test ${PAT_FULL_NAME}")
-  add_test(NAME ${PAT_FULL_NAME}
-    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 --map-by :OVERSUBSCRIBE ${PRECICE_CTEST_MPI_FLAGS} ${MPIEXEC_PREFLAGS} $<TARGET_FILE:testprecice> ${MPIEXEC_POSTFLAGS} ${PAT_ARGUMENTS}
-    )
-  unset(_extra_mpi_flags)
-  # Generate working directory
-  set(PAT_WDIR "${PRECICE_TEST_DIR}/${PAT_NAME}")
-  file(MAKE_DIRECTORY "${PAT_WDIR}")
-  # Setting properties
-  set_tests_properties(${PAT_FULL_NAME}
-    PROPERTIES
-    WORKING_DIRECTORY "${PAT_WDIR}"
-    ENVIRONMENT "OMP_NUM_THREADS=2"
-    )
-  if(PAT_TIMEOUT)
-    set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PAT_TIMEOUT} )
-  endif()
-  set(_labels ${PAT_LABELS})
-  set_tests_properties(${PAT_FULL_NAME} PROPERTIES LABELS "${_labels}")
-endfunction(add_precice_test)
-
 function(add_precice_test_build_solverdummy PAT_LANG)
   # Turn language to lowercase
   string(TOLOWER ${PAT_LANG} PAT_LANG)
@@ -118,7 +69,7 @@ function(add_precice_test_build_solverdummy PAT_LANG)
     PROPERTIES
     WORKING_DIRECTORY "${PAT_BIN_DIR}"
     FIXTURES_SETUP "${PAT_LANG}-solverdummy"
-    LABELS "Solverdummy"
+    LABELS "solverdummy"
     TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
     )
 endfunction(add_precice_test_build_solverdummy)
@@ -178,7 +129,9 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
   message(STATUS "Test ${PAT_FULL_NAME}")
   add_test(NAME ${PAT_FULL_NAME}
     COMMAND ${CMAKE_COMMAND}
+    -D Python3_EXECUTABLE=${Python3_EXECUTABLE}
     -D WRAPPER=${PRECICE_TEST_WRAPPER_SCRIPT}
+    -D CHECKER=${preCICE_SOURCE_DIR}/tools/profiling/validate-rank-files
     -D DUMMY_A=${PAT_BIN_DIR_A}/solverdummy
     -D DUMMY_B=${PAT_BIN_DIR_B}/solverdummy
     -D DUMMY_RUN_DIR=${PAT_RUN_DIR}
@@ -191,7 +144,7 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
     PROPERTIES
     WORKING_DIRECTORY "${PAT_RUN_DIR}"
     FIXTURES_REQUIRED "${PAT_LANG_A}-solverdummy;${PAT_LANG_B}-solverdummy"
-    LABELS "Solverdummy"
+    LABELS "solverdummy"
     TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
     )
 endfunction(add_precice_test_run_solverdummies)
@@ -199,164 +152,55 @@ endfunction(add_precice_test_run_solverdummies)
 
 enable_testing()
 
-if(NOT PRECICE_FEATURE_MPI_COMMUNICATION)
-  message("Tests require MPICommunication to be enabled.")
+# Autodiscovery of CTest
+
+# This file is automatically loaded by CTEST and needs to exist to prevent strange errors
+set(ctest_tests_file "${preCICE_BINARY_DIR}/ctest_tests.cmake")
+if(NOT EXISTS "${ctest_tests_file}")
+  file(WRITE "${ctest_tests_file}" "")
+endif()
+set_property(DIRECTORY
+  APPEND PROPERTY TEST_INCLUDE_FILES "${ctest_tests_file}"
+)
+
+  # Custom command to generate the tests list using the testprecice binary
+if(PRECICE_FEATURE_MPI_COMMUNICATION)
+  add_custom_command(
+    OUTPUT "${ctest_tests_file}"
+    COMMAND "${Python3_EXECUTABLE}"
+    "${preCICE_SOURCE_DIR}/cmake/discover_tests.py"
+    "--executable=$<TARGET_FILE:testprecice>"
+    "--output=${ctest_tests_file}"
+    "--run-dir=${PRECICE_TEST_DIR}"
+    "--mpi"
+    "--mpi-version=${PRECICE_MPI_VERSION}"
+    "--mpi-exec=${MPIEXEC_EXECUTABLE}"
+    "--mpi-np=${MPIEXEC_NUMPROC_FLAG}"
+    "--mpi-extra=${PRECICE_CTEST_MPI_FLAGS}"
+    "--mpi-pre=${MPIEXEC_PREFLAGS}"
+    "--mpi-post=${MPIEXEC_POSTFLAGS}"
+    DEPENDS testprecice
+    COMMENT "Generating list of tests"
+    VERBATIM)
+else()
+  add_custom_command(
+    OUTPUT "${ctest_tests_file}"
+    COMMAND "${Python3_EXECUTABLE}"
+    "${preCICE_SOURCE_DIR}/cmake/discover_tests.py"
+    "--executable=$<TARGET_FILE:testprecice>"
+    "--output=${ctest_tests_file}"
+    "--run-dir=${PRECICE_TEST_DIR}"
+    DEPENDS testprecice
+    COMMENT "Generating list of tests"
+    VERBATIM)
 endif()
 
-add_precice_test(
-  NAME acceleration
-  ARGUMENTS "--run_test=AccelerationTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME action
-  ARGUMENTS "--run_test=ActionTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME com
-  ARGUMENTS "--run_test=CommunicationTests:\!CommunicationTests/MPIPorts:\!CommunicationTests/MPISinglePorts"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME com.mpiports
-  ARGUMENTS "--run_test=CommunicationTests/MPIPorts:CommunicationTests/MPISinglePorts"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS "mpiports"
-  MPIPORTS
-  )
-add_precice_test(
-  NAME cplscheme
-  ARGUMENTS "--run_test=CplSchemeTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-  )
-add_precice_test(
-  NAME io
-  ARGUMENTS "--run_test=IOTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME m2n
-  ARGUMENTS "--run_test=M2NTests:\!M2NTests/MPIPorts:\!M2NTets/MPISinglePorts"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME m2n.mpiports
-  ARGUMENTS "--run_test=M2NTests/MPIPorts:M2NTests/MPISinglePorts"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS "mpiports"
-  MPIPORTS
-  )
-add_precice_test(
-  NAME mapping
-  ARGUMENTS "--run_test=MappingTests:\!MappingTests/PetRadialBasisFunctionMapping:\!MappingTests/GinkgoRadialBasisFunctionSolver"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_NORMAL}
-  )
-add_precice_test(
-  NAME mapping.petrbf
-  ARGUMENTS "--run_test=MappingTests/PetRadialBasisFunctionMapping"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-  LABELS petsc
-  PETSC
-  )
-add_precice_test(
-  NAME mapping.ginkgo.reference
-  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Reference"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS ginkgo
-  GINKGO
-  )
-add_precice_test(
-  NAME mapping.ginkgo.openmp
-  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/OpenMP"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-  LABELS ginkgo
-  GINKGO_OMP
-  )
-add_precice_test(
-  NAME mapping.ginkgo.cuda
-  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Cuda"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS ginkgo
-  GINKGO_CUDA
-  )
-add_precice_test(
-  NAME mapping.ginkgo.cuSolver
-  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/cuSolver"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS ginkgo
-  GINKGO_CUDA
-  )
-add_precice_test(
-  NAME mapping.ginkgo.hip
-  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/Hip"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS ginkgo
-  GINKGO_HIP
-  )
-add_precice_test(
-  NAME mapping.ginkgo.hipSolver
-  ARGUMENTS "--run_test=MappingTests/GinkgoRadialBasisFunctionSolver/hipSolver"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  LABELS ginkgo
-  GINKGO_HIP
-  )
-add_precice_test(
-  NAME math
-  ARGUMENTS "--run_test=MathTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME mesh
-  ARGUMENTS "--run_test=MeshTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME partition
-  ARGUMENTS "--run_test=PartitionTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME interface
-  ARGUMENTS "--run_test=PreciceTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME query
-  ARGUMENTS "--run_test=QueryTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME testing
-  ARGUMENTS "--run_test=TestingTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME time
-  ARGUMENTS "--run_test=TimeTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME utils
-  ARGUMENTS "--run_test=UtilsTests"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
-add_precice_test(
-  NAME xml
-  ARGUMENTS "--run_test=XML"
-  TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-  )
+# Custom target that forces the test list to be updated
+add_custom_target(precice-test-list ALL
+  DEPENDS "${ctest_tests_file}"
+)
 
-# Register integration tests from tests/
-# These are defined in tests/tests.cmake
-foreach(testsuite IN LISTS PRECICE_TEST_SUITES)
-  add_precice_test(
-    NAME "integration.${testsuite}"
-    ARGUMENTS "--run_test=Integration/${testsuite}"
-    TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
-    )
-endforeach()
-
+# Add solverdummy tests
 add_precice_test_build_solverdummy(cpp)
 add_precice_test_build_solverdummy(c)
 add_precice_test_build_solverdummy(fortran)
@@ -389,61 +233,174 @@ if(PRECICE_BUILD_TOOLS)
     endif()
   endfunction()
 
+  # precice-tools
 
   add_tools_test(
-    NAME noarg
+    NAME legacy.noarg
     COMMAND precice-tools
     WILL_FAIL)
 
   add_tools_test(
-    NAME invalidcmd
+    NAME legacy.invalidcmd
     COMMAND precice-tools invalidcommand
     WILL_FAIL)
 
   add_tools_test(
-    NAME version
+    NAME legacy.version
     COMMAND precice-tools version
     MATCH "${CMAKE_PROJECT_VERSION}"
     )
 
   add_tools_test(
-    NAME versionopt
+    NAME legacy.versionopt
     COMMAND precice-tools --version
     MATCH "${CMAKE_PROJECT_VERSION}"
     )
 
   add_tools_test(
-    NAME markdown
+    NAME legacy.markdown
     COMMAND precice-tools md
     MATCH "# precice-configuration"
     )
 
   add_tools_test(
-    NAME xml
+    NAME legacy.xml
     COMMAND precice-tools xml
     MATCH "<!-- TAG precice-configuration"
     )
 
   add_tools_test(
-    NAME dtd
+    NAME legacy.dtd
     COMMAND precice-tools dtd
     MATCH "<!ELEMENT precice-configuration"
     )
 
   add_tools_test(
-    NAME check.file
+    NAME legacy.check.file
     COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml
     )
 
   add_tools_test(
-    NAME check.file+name
+    NAME legacy.check.file+name
     COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
     )
 
   add_tools_test(
-    NAME check.file+name+size
+    NAME legacy.check.file+name+size
     COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
     )
+
+  # precice-version
+
+  add_tools_test(
+    NAME version
+    COMMAND precice-version
+    MATCH "${CMAKE_PROJECT_VERSION}"
+    )
+
+  # precice-config-doc
+
+  add_tools_test(
+    NAME config-doc.noarg
+    COMMAND precice-config-doc
+    WILL_FAIL)
+
+  add_tools_test(
+    NAME config-doc.markdown
+    COMMAND precice-config-doc md
+    MATCH "# precice-configuration"
+    )
+
+  add_tools_test(
+    NAME config-doc.xml
+    COMMAND precice-config-doc xml
+    MATCH "<!-- TAG precice-configuration"
+    )
+
+  add_tools_test(
+    NAME config-doc.dtd
+    COMMAND precice-config-doc dtd
+    MATCH "<!ELEMENT precice-configuration"
+    )
+
+  # precice-config-validate
+
+  add_tools_test(
+    NAME config-validate.noarg
+    COMMAND precice-config-validate
+    WILL_FAIL)
+
+  add_tools_test(
+    NAME config-validate.missingfile
+    COMMAND precice-config-validate ${PROJECT_SOURCE_DIR}/definitely/missing/file.xml
+    MATCH ERROR:
+    )
+
+  add_tools_test(
+    NAME config-validate.file
+    COMMAND precice-config-validate ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml
+    )
+
+  add_tools_test(
+    NAME config-validate.file+name
+    COMMAND precice-config-validate ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
+    )
+
+  add_tools_test(
+    NAME config-validate.file+name+size
+    COMMAND precice-config-validate ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
+    )
+
+  # Simple configuration tests
+
+  function(precice_test_config_valid path)
+    set(name "precice.config.${path}.valid")
+    set(solver "")
+    set(ranks "")
+
+    if (ARGC GREATER 1)
+      set(solver "${ARGV1}")
+      set(name "${name}:${solver}")
+    endif()
+
+    if (ARGC GREATER 2)
+      set(ranks "${ARGV2}")
+      set(name "${name}@${ranks}")
+    endif()
+    add_test(NAME ${name}
+      COMMAND precice-config-validate "${PROJECT_SOURCE_DIR}/tests/config/${path}" ${solver} ${ranks}
+      )
+    set_tests_properties(${name}
+      PROPERTIES
+      TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+      LABELS "tools;bin;config;valid")
+  endfunction()
+
+  function(precice_test_config_invalid path expression)
+    set(name "precice.config.${path}.invalid")
+    set(solver "")
+    set(ranks "")
+
+    if (ARGC GREATER 2)
+      set(solver "${ARGV2}")
+      set(name "${name}:${solver}")
+    endif()
+
+    if (ARGC GREATER 3)
+      set(ranks "${ARGV3}")
+      set(name "${name}@${ranks}")
+    endif()
+    add_test(NAME ${name}
+      COMMAND precice-config-validate "${PROJECT_SOURCE_DIR}/tests/config/${path}" ${solver} ${ranks}
+      )
+    set_tests_properties(${name}
+      PROPERTIES
+      TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+      PASS_REGULAR_EXPRESSION "${expression}"
+      LABELS "tools;bin;config;invalid")
+  endfunction()
+
+  include(${PROJECT_SOURCE_DIR}/tests/config/tests.cmake)
 endif()
 
 # Add a separate target to test only the base

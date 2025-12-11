@@ -19,12 +19,10 @@
 #include "precice/impl/Types.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 class CompositionalCouplingScheme;
 class BiCouplingScheme;
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme
 
 // Forward declaration to friend the boost test struct
 namespace CplSchemeTests {
@@ -37,8 +35,8 @@ struct testParseConfigurationWithRelaxation;
 } // namespace CplSchemeTests
 
 // ----------------------------------------------------------- CLASS DEFINITION
-namespace precice {
-namespace cplscheme {
+
+namespace precice::cplscheme {
 class MultiCouplingScheme;
 
 /// Configuration for coupling schemes.
@@ -53,15 +51,15 @@ public:
    * @param[in] participantConfig For checking waveform degree.
    */
   CouplingSchemeConfiguration(
-      xml::XMLTag &                        parent,
+      xml::XMLTag                         &parent,
       mesh::PtrMeshConfiguration           meshConfig,
       m2n::M2NConfiguration::SharedPointer m2nConfig,
       config::PtrParticipantConfiguration  participantConfig);
 
-  void setExperimental(bool experimental);
+  void setRemeshing(bool allowed);
 
   /// Destructor, empty.
-  virtual ~CouplingSchemeConfiguration() {}
+  ~CouplingSchemeConfiguration() override = default;
 
   /// Check, if a coupling scheme is configured for a participant.
   bool hasCouplingScheme(const std::string &participantName) const;
@@ -73,15 +71,16 @@ public:
   const std::string &getDataToExchange(int index) const;
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
   /// Callback method required when using xml::XMLTag.
-  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
   /// Adds a manually configured coupling scheme for a participant.
   void addCouplingScheme(const PtrCouplingScheme &cplScheme, const std::string &participantName);
 
 private:
+  bool                    _allowRemeshing = false;
   mutable logging::Logger _log{"cplscheme::CouplingSchemeConfiguration"};
 
   const std::string TAG;
@@ -135,7 +134,6 @@ private:
     bool                        strict;
     std::string                 meshName;
     impl::PtrConvergenceMeasure measure;
-    bool                        doesLogging;
   };
 
   struct Config {
@@ -192,7 +190,7 @@ private:
 
   void addTagParticipant(xml::XMLTag &tag);
 
-  void addTagExchange(xml::XMLTag &tag);
+  void addTagExchange(xml::XMLTag &tag, bool substepsDefault);
 
   void addTagAbsoluteConvergenceMeasure(xml::XMLTag &tag);
 
@@ -266,7 +264,7 @@ private:
 
   /// Adds configured exchange data to be sent or received to scheme.
   void addDataToBeExchanged(
-      BiCouplingScheme & scheme,
+      BiCouplingScheme  &scheme,
       const std::string &accessor) const;
 
   /**
@@ -275,27 +273,27 @@ private:
    */
   void addMultiDataToBeExchanged(
       MultiCouplingScheme &scheme,
-      const std::string &  accessor) const;
+      const std::string   &accessor) const;
 
   void checkIfDataIsExchanged(
-      DataID dataID) const;
+      DataID dataID, std::string_view participant) const;
 
   void checkSerialImplicitAccelerationData(
       DataID dataID, const std::string &first, const std::string &second) const;
 
   void addConvergenceMeasures(
-      BaseCouplingScheme *                            scheme,
-      const std::string &                             participant,
+      BaseCouplingScheme                             *scheme,
+      const std::string                              &participant,
       const std::vector<ConvergenceMeasureDefintion> &convergenceMeasureDefinitions) const;
 
   void setSerialAcceleration(
       BaseCouplingScheme *scheme,
-      const std::string & first,
-      const std::string & second) const;
+      const std::string  &first,
+      const std::string  &second) const;
 
   void setParallelAcceleration(
       BaseCouplingScheme *scheme,
-      const std::string & participant) const;
+      const std::string  &participant) const;
 
   friend struct CplSchemeTests::ParallelImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation; // For whitebox tests
   friend struct CplSchemeTests::SerialImplicitCouplingSchemeTests::testParseConfigurationWithRelaxation;   // For whitebox tests
@@ -321,5 +319,4 @@ private:
    */
   void checkIterationLimits() const;
 };
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

@@ -11,9 +11,10 @@ BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(MultiCoupling)
 /// Four solvers are multi-coupled.
+PRECICE_TEST_SETUP("SOLIDZ1"_on(1_rank), "SOLIDZ2"_on(1_rank), "SOLIDZ3"_on(1_rank), "NASTIN"_on(1_rank))
 BOOST_AUTO_TEST_CASE(MultiCoupling)
 {
-  PRECICE_TEST("SOLIDZ1"_on(1_rank), "SOLIDZ2"_on(1_rank), "SOLIDZ3"_on(1_rank), "NASTIN"_on(1_rank));
+  PRECICE_TEST();
   std::vector<Eigen::Vector2d> positions;
   Eigen::Vector2d              position;
   position << 0.0, 0.0;

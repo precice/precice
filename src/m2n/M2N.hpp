@@ -43,18 +43,22 @@ public:
    *
    * @param[in] acceptorName Name of calling participant.
    * @param[in] requesterName Name of remote participant to connect to.
+   * @param[in] configHash Hash of the local config
    */
   void acceptPrimaryRankConnection(const std::string &acceptorName,
-                                   const std::string &requesterName);
+                                   const std::string &requesterName,
+                                   std::string_view   configHash);
 
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
    *
    * @param[in] acceptorName Name of remote participant to connect to.
    * @param[in] requesterName Name of calling participant.
+   * @param[in] configHash Hash of the local config
    */
   void requestPrimaryRankConnection(const std::string &acceptorName,
-                                    const std::string &requesterName);
+                                    const std::string &requesterName,
+                                    std::string_view   configHash);
 
   /**
    * @brief Connects to another participant, which has to call requestConnection().
@@ -226,7 +230,8 @@ private:
   /// mesh::getID() -> Pointer to distributed communication
   std::map<int, DistributedCommunication::SharedPointer> _distComs;
 
-  com::PtrCommunication _intraComm;
+  /// connection between the primary ranks of the connected participants
+  com::PtrCommunication _interComm;
 
   DistributedComFactory::SharedPointer _distrFactory;
 
@@ -250,6 +255,12 @@ private:
 
   // @brief To allow access to _useOnlyPrimaryCom
   friend struct WhiteboxAccessor;
+
+  /// checks the info of the remote participant against the version and config hash of the local participant
+  void checkRemoteInfo(std::string_view localParticipant,
+                       std::string_view remoteParticipant,
+                       std::string_view localConfigHash,
+                       std::string_view remoteInfo);
 };
 
 /// struct giving access _useOnlyPrimaryCom

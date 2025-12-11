@@ -44,9 +44,10 @@ IQNIMVJAcceleration::IQNIMVJAcceleration(
     int                            imvjRestartType,
     int                            chunkSize,
     int                            RSLSreusedTimeWindows,
-    double                         RSSVDtruncationEps)
+    double                         RSSVDtruncationEps,
+    bool                           reducedTimeGrid)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
-                         filter, singularityLimit, std::move(dataIDs), rangeTypes, lowerBounds, upperBounds, preconditioner),
+                         filter, singularityLimit, std::move(dataIDs), rangeTypes, lowerBounds, upperBounds, preconditioner, reducedTimeGrid),
       //  _secondaryOldXTildes(),
       _invJacobian(),
       _oldInvJacobian(),
@@ -60,7 +61,7 @@ IQNIMVJAcceleration::IQNIMVJAcceleration(
       _svdJ(RSSVDtruncationEps, preconditioner),
       _alwaysBuildJacobian(alwaysBuildJacobian),
       _imvjRestartType(imvjRestartType),
-      _imvjRestart(false),
+      _imvjRestart(imvjRestartType > 0),
       _chunkSize(chunkSize),
       _RSLSreusedTimeWindows(RSLSreusedTimeWindows),
       _nbRestarts(0),
@@ -70,67 +71,6 @@ IQNIMVJAcceleration::IQNIMVJAcceleration(
 
 // ==================================================================================
 IQNIMVJAcceleration::~IQNIMVJAcceleration() = default;
-
-// ==================================================================================
-void IQNIMVJAcceleration::initialize(
-    const DataMap &cplData)
-{
-  PRECICE_TRACE();
-
-  // do common QN acceleration initialization
-  BaseQNAcceleration::initialize(cplData);
-
-  if (_imvjRestartType > 0)
-    _imvjRestart = true;
-
-  // initialize parallel matrix-matrix operation module
-  _parMatrixOps = std::make_shared<impl::ParallelMatrixOperations>();
-  _parMatrixOps->initialize(not _imvjRestart);
-  _svdJ.initialize(_parMatrixOps, getLSSystemRows());
-
-  int entries  = _residuals.size();
-  int global_n = 0;
-
-  if (!utils::IntraComm::isParallel()) {
-    global_n = entries;
-  } else {
-    global_n = _dimOffsets.back();
-  }
-
-  if (not _imvjRestart) {
-    // only need memory for Jacobain of not in restart mode
-    _invJacobian    = Eigen::MatrixXd::Zero(global_n, entries);
-    _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
-  }
-  // initialize V, W matrices for the LS restart
-  if (_imvjRestartType == RS_LS) {
-    _matrixCols_RSLS.push_front(0);
-    _matrixV_RSLS = Eigen::MatrixXd::Zero(entries, 0);
-    _matrixW_RSLS = Eigen::MatrixXd::Zero(entries, 0);
-  }
-  _Wtil = Eigen::MatrixXd::Zero(entries, 0);
-
-  if (utils::IntraComm::isPrimary() || !utils::IntraComm::isParallel()) {
-    _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimeWindows << "\n--------\n"
-                      << '\n';
-  }
-}
-
-// ==================================================================================
-void IQNIMVJAcceleration::computeUnderrelaxationSecondaryData(
-    const DataMap &cplData)
-{
-  // Perform underrelaxation with initial relaxation factor for secondary data
-  for (int id : _secondaryDataIDs) {
-    PtrCouplingData  data   = cplData.at(id);
-    Eigen::VectorXd &values = data->values();
-    values *= _initialRelaxation; // new * omg
-    Eigen::VectorXd &secResiduals = _secondaryResiduals[id];
-    secResiduals                  = data->previousIteration();
-    secResiduals *= 1.0 - _initialRelaxation; // (1-omg) * old
-    values += secResiduals;                   // (1-omg) * old + new * omg
-  }
-}
 
 // ==================================================================================
 void IQNIMVJAcceleration::updateDifferenceMatrices(
@@ -164,7 +104,7 @@ void IQNIMVJAcceleration::updateDifferenceMatrices(
         bool columnLimitReached = _Wtil.cols() == _maxIterationsUsed;
         bool overdetermined     = _Wtil.cols() <= getLSSystemRows();
 
-        Eigen::VectorXd wtil = Eigen::VectorXd::Zero(_matrixV.rows());
+        Eigen::VectorXd wtil = Eigen::VectorXd::Zero(_matrixW.rows());
 
         // add column: Wtil(:,0) = W(:,0) - sum_q [ Wtil^q * ( Z^q * V(:,0)) ]
         //                                         |--- J_prev ---|
@@ -192,7 +132,7 @@ void IQNIMVJAcceleration::updateDifferenceMatrices(
         } else {
           // compute J_prev * V(0) := wtil the new column in _Wtil of dimension: (n x n) * (n x 1) = (n x 1),
           //                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
-          _parMatrixOps->multiply(_oldInvJacobian, v, wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+          _parMatrixOps->multiply(_oldInvJacobian, v, wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false, false);
         }
         wtil *= -1;
         wtil += w;
@@ -208,9 +148,7 @@ void IQNIMVJAcceleration::updateDifferenceMatrices(
 }
 
 // ==================================================================================
-void IQNIMVJAcceleration::computeQNUpdate(
-    const DataMap &  cplData,
-    Eigen::VectorXd &xUpdate)
+void IQNIMVJAcceleration::computeQNUpdate(Eigen::VectorXd &xUpdate)
 {
   /**
    * The inverse Jacobian
@@ -230,9 +168,9 @@ void IQNIMVJAcceleration::computeQNUpdate(
    *             using it in multiplications with the other matrices.
    */
   if (_alwaysBuildJacobian) {
-    computeNewtonUpdate(cplData, xUpdate);
+    computeNewtonUpdate(xUpdate);
   } else {
-    computeNewtonUpdateEfficient(cplData, xUpdate);
+    computeNewtonUpdateEfficient(xUpdate);
   }
 }
 
@@ -284,7 +222,7 @@ void IQNIMVJAcceleration::buildWtil()
   PRECICE_ASSERT(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());
   PRECICE_ASSERT(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
 
-  _Wtil = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
+  _Wtil = Eigen::MatrixXd::Zero(_residuals.rows(), _qrV.cols());
 
   // imvj restart mode: re-compute Wtil: Wtil = W - sum_q [ Wtil^q * (Z^q*V) ]
   //                                                      |--- J_prev ---|
@@ -304,7 +242,7 @@ void IQNIMVJAcceleration::buildWtil()
   } else {
     // multiply J_prev * V = W_til of dimension: (n x n) * (n x m) = (n x m),
     //                                    parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
-    _parMatrixOps->multiply(_oldInvJacobian, _matrixV, _Wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols(), false);
+    _parMatrixOps->multiply(_oldInvJacobian, _matrixV, _Wtil, _dimOffsets, getLSSystemRows(), getPrimaryLSSystemRows(), getLSSystemCols(), false, false);
   }
 
   // W_til = (W-J_inv_n*V) = (W-V_tilde)
@@ -347,7 +285,7 @@ void IQNIMVJAcceleration::buildJacobian()
    *  where Z = (V^T*V)^-1*V^T via QR-dec and back-substitution       dimension: (n x n) * (n x m) = (n x m),
    *  and W_til = (W - J_inv_n*V)                                     parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
    */
-  _parMatrixOps->multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
+  _parMatrixOps->multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getPrimaryLSSystemRows());
   // --------
 
   // update Jacobian
@@ -355,9 +293,7 @@ void IQNIMVJAcceleration::buildJacobian()
 }
 
 // ==================================================================================
-void IQNIMVJAcceleration::computeNewtonUpdateEfficient(
-    const DataMap &  cplData,
-    Eigen::VectorXd &xUpdate)
+void IQNIMVJAcceleration::computeNewtonUpdateEfficient(Eigen::VectorXd &xUpdate)
 {
   PRECICE_TRACE();
 
@@ -406,7 +342,7 @@ void IQNIMVJAcceleration::computeNewtonUpdateEfficient(
    *  dimension: (m x n) * (n x 1) = (m x 1),
    *  parallel:  (m x n_local) * (n x 1) = (m x 1)
    */
-  Eigen::VectorXd negativeResiduals = -_residuals;
+  Eigen::VectorXd negativeResiduals = -_primaryResiduals;
   Eigen::VectorXd r_til             = Eigen::VectorXd::Zero(getLSSystemCols());
   _parMatrixOps->multiply(Z, negativeResiduals, r_til, getLSSystemCols(), getLSSystemRows(), 1); // --------
 
@@ -441,7 +377,7 @@ void IQNIMVJAcceleration::computeNewtonUpdateEfficient(
 
     // imvj without restart is used, i.e., compute directly J_prev * (-res)
   } else {
-    _parMatrixOps->multiply(_oldInvJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+    _parMatrixOps->multiply(_oldInvJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false, false);
     PRECICE_DEBUG("Mult J*V DONE");
   }
 
@@ -455,7 +391,7 @@ void IQNIMVJAcceleration::computeNewtonUpdateEfficient(
 }
 
 // ==================================================================================
-void IQNIMVJAcceleration::computeNewtonUpdate(const DataMap &cplData, Eigen::VectorXd &xUpdate)
+void IQNIMVJAcceleration::computeNewtonUpdate(Eigen::VectorXd &xUpdate)
 {
   PRECICE_TRACE();
 
@@ -478,18 +414,18 @@ void IQNIMVJAcceleration::computeNewtonUpdate(const DataMap &cplData, Eigen::Vec
    *  where Z = (V^T*V)^-1*V^T via QR-dec and back-substitution             dimension: (n x n) * (n x m) = (n x m),
    *  and W_til = (W - J_inv_n*V)                                           parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
    */
-  _parMatrixOps->multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows()); // --------
+  _parMatrixOps->multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getPrimaryLSSystemRows()); // --------
 
   // update Jacobian
   _invJacobian = _invJacobian + _oldInvJacobian;
 
   /**  (4) solve delta_x = - J_inv * res
    */
-  Eigen::VectorXd negativeResiduals = -_residuals;
+  Eigen::VectorXd negativeResiduals = -_primaryResiduals;
 
   // multiply J_inv * (-res) = x_Update of dimension: (n x n) * (n x 1) = (n x 1),
   //                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
-  _parMatrixOps->multiply(_invJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false); // --------
+  _parMatrixOps->multiply(_invJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getPrimaryLSSystemRows(), 1, false, false); // --------
 }
 
 // ==================================================================================
@@ -498,7 +434,7 @@ void IQNIMVJAcceleration::restartIMVJ()
   PRECICE_TRACE();
 
   // int used_storage = 0;
-  // int theoreticalJ_storage = 2*getLSSystemRows()*_residuals.size() + 3*_residuals.size()*getLSSystemCols() + _residuals.size()*_residuals.size();
+  // int theoreticalJ_storage = 2*getLSSystemRows()*_primaryResiduals.size() + 3*_primaryResiduals.size()*getLSSystemCols() + _primaryResiduals.size()*_primaryResiduals.size();
   //                ------------ RESTART SVD ------------
   if (_imvjRestartType == IQNIMVJAcceleration::RS_SVD) {
 
@@ -583,7 +519,7 @@ void IQNIMVJAcceleration::restartIMVJ()
       _preconditioner->apply(_matrixW_RSLS);
 
       impl::QRFactorization qr(_filter);
-      qr.setGlobalRows(getLSSystemRows());
+      qr.setGlobalRows(getPrimaryLSSystemRows());
       // for QR2-filter, the QR-dec is computed in qr-applyFilter()
       if (_filter != Acceleration::QR2FILTER) {
         for (int i = 0; i < static_cast<int>(_matrixV_RSLS.cols()); i++) {
@@ -661,7 +597,7 @@ void IQNIMVJAcceleration::restartIMVJ()
       // multiply: ZV := Z^q * V of size (m x m) with m=#cols, stored on each proc.
       _parMatrixOps->multiply(_pseudoInverseChunk.front(), _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), _qrV.cols());
       // multiply: Wtil^0 * (Z_0*V)  dimensions: (n x m) * (m x m), fully local and embarrassingly parallel
-      Eigen::MatrixXd tmp = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
+      Eigen::MatrixXd tmp = Eigen::MatrixXd::Zero(_residuals.rows(), _qrV.cols());
       tmp                 = _WtilChunk.front() * ZV;
       _WtilChunk[i] += tmp;
 
@@ -798,6 +734,55 @@ void IQNIMVJAcceleration::removeMatrixColumn(
     utils::removeColumnFromMatrix(_Wtil, columnIndex);
 
   BaseQNAcceleration::removeMatrixColumn(columnIndex);
+}
+
+void IQNIMVJAcceleration::specializedInitializeVectorsAndPreconditioner(const DataMap &cplData)
+{
+  int entries        = _primaryResiduals.size();
+  int cplDataEntries = _residuals.size();
+  int global_n       = 0;
+
+  if (!utils::IntraComm::isParallel()) {
+    global_n = cplDataEntries;
+  } else {
+    global_n = _dimOffsets.back();
+  }
+
+  // initialize parallel matrix-matrix operation module
+  _parMatrixOps = std::make_shared<impl::ParallelMatrixOperations>();
+  _parMatrixOps->initialize(not _imvjRestart);
+  _svdJ.initialize(_parMatrixOps, global_n, getLSSystemRows());
+
+  if (not _imvjRestart) {
+    // only need memory for Jacobain if not in restart mode
+    _invJacobian    = Eigen::MatrixXd::Zero(global_n, entries);
+    _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
+  }
+
+  // initialize parallel matrix-matrix operation module
+  _parMatrixOps = std::make_shared<impl::ParallelMatrixOperations>();
+  _parMatrixOps->initialize(not _imvjRestart);
+  _svdJ.reset();
+  _svdJ.initialize(_parMatrixOps, global_n, getLSSystemRows());
+
+  // initialize V, W matrices for the LS restart
+  if (_imvjRestartType == RS_LS) {
+    _matrixCols_RSLS.clear();
+    _matrixCols_RSLS.push_front(0);
+    _matrixV_RSLS = Eigen::MatrixXd::Zero(entries, 0);
+    _matrixW_RSLS = Eigen::MatrixXd::Zero(cplDataEntries, 0);
+  }
+  _Wtil = Eigen::MatrixXd::Zero(cplDataEntries, 0);
+  if (_imvjRestartType > 0) {
+    // drop all stored Wtil^q, Z^q matrices
+    _WtilChunk.clear();
+    _pseudoInverseChunk.clear();
+  }
+
+  if (utils::IntraComm::isPrimary() || !utils::IntraComm::isParallel()) {
+    _infostringstream << " IMVJ restart mode: " << _imvjRestart << "\n chunk size: " << _chunkSize << "\n trunc eps: " << _svdJ.getThreshold() << "\n R_RS: " << _RSLSreusedTimeWindows << "\n--------\n"
+                      << '\n';
+  }
 }
 
 // ==================================================================================

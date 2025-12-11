@@ -25,26 +25,26 @@ class SerialCouplingScheme : public BiCouplingScheme {
   friend struct testing::SerialCouplingSchemeFixture; // Make the fixture friend of this class
 public:
   /**
- * @brief Constructor.
- *
- * @param[in] maxTime Simulation time limit, or UNDEFINED_MAX_TIME.
- * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIME_WINDOWS.
- * @param[in] timeWindowSize Simulation time window size.
- * @param[in] firstParticipant Name of participant starting simulation.
- * @param[in] secondParticipant Name of second participant in coupling.
- * @param[in] localParticipant Name of participant using this coupling scheme.
- * @param[in] m2n Communication object for com. between participants.
- * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
- * @param[in] cplMode Set implicit or explicit coupling
- * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
- */
+   * @brief Constructor.
+   *
+   * @param[in] maxTime Simulation time limit, or UNDEFINED_MAX_TIME.
+   * @param[in] maxTimeWindows Simulation time windows limit, or UNDEFINED_TIME_WINDOWS.
+   * @param[in] timeWindowSize Simulation time window size.
+   * @param[in] firstParticipant Name of participant starting simulation.
+   * @param[in] secondParticipant Name of second participant in coupling.
+   * @param[in] localParticipant Name of participant using this coupling scheme.
+   * @param[in] m2n Communication object for com. between participants.
+   * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
+   * @param[in] cplMode Set implicit or explicit coupling
+   * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
+   */
   SerialCouplingScheme(
       double                        maxTime,
       int                           maxTimeWindows,
       double                        timeWindowSize,
-      const std::string &           firstParticipant,
-      const std::string &           secondParticipant,
-      const std::string &           localParticipant,
+      const std::string            &firstParticipant,
+      const std::string            &secondParticipant,
+      const std::string            &localParticipant,
       m2n::PtrM2N                   m2n,
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode,
@@ -55,14 +55,14 @@ public:
       double                        maxTime,
       int                           maxTimeWindows,
       double                        timeWindowSize,
-      const std::string &           firstParticipant,
-      const std::string &           secondParticipant,
-      const std::string &           localParticipant,
+      const std::string            &firstParticipant,
+      const std::string            &secondParticipant,
+      const std::string            &localParticipant,
       m2n::PtrM2N                   m2n,
       constants::TimesteppingMethod dtMethod,
       CouplingMode                  cplMode);
 
-  ImplicitData implicitDataToReceive() const override final;
+  ImplicitData implicitDataToReceive() const final override;
 
 private:
   logging::Logger _log{"cplschemes::SerialCouplingSchemes"};
@@ -80,13 +80,13 @@ private:
   void receiveAndSetTimeWindowSize();
 
   /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
-  void exchangeInitialData() override final;
+  void exchangeInitialData() final override;
 
-  void exchangeFirstData() override final;
+  void exchangeFirstData() final override;
 
-  void exchangeSecondData() override final;
+  void exchangeSecondData() final override;
 
-  DataMap &getAccelerationData() override final;
+  DataMap &getAccelerationData() final override;
 };
 
 } // namespace cplscheme

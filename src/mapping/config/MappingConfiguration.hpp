@@ -50,7 +50,7 @@ public:
   };
 
   MappingConfiguration(
-      xml::XMLTag &              parent,
+      xml::XMLTag               &parent,
       mesh::PtrMeshConfiguration meshConfiguration);
 
   void setExperimental(bool experimental);
@@ -60,18 +60,18 @@ public:
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback(
+  void xmlTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+      xml::XMLTag                     &callingTag) override;
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback(
+  void xmlEndTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+      xml::XMLTag                     &callingTag) override;
 
   /// Returns all configured mappings.
   const std::vector<ConfiguredMapping> &mappings();
@@ -192,14 +192,17 @@ private:
   const std::string ATTR_SUPPORT_RADIUS = "support-radius";
 
   // Attributes for geometric multiscale
-  const std::string ATTR_GEOMETRIC_MULTISCALE_TYPE    = "multiscale-type";
-  const std::string ATTR_GEOMETRIC_MULTISCALE_AXIS    = "multiscale-axis";
-  const std::string ATTR_GEOMETRIC_MULTISCALE_RADIUS  = "multiscale-radius";
-  const std::string GEOMETRIC_MULTISCALE_TYPE_SPREAD  = "spread";
-  const std::string GEOMETRIC_MULTISCALE_TYPE_COLLECT = "collect";
-  const std::string GEOMETRIC_MULTISCALE_AXIS_X       = "x";
-  const std::string GEOMETRIC_MULTISCALE_AXIS_Y       = "y";
-  const std::string GEOMETRIC_MULTISCALE_AXIS_Z       = "z";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_TYPE           = "multiscale-type";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_AXIS           = "multiscale-axis";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_RADIUS         = "multiscale-radius";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_SPREAD_PROFILE = "multiscale-spread-profile";
+  const std::string GEOMETRIC_MULTISCALE_TYPE_SPREAD         = "spread";
+  const std::string GEOMETRIC_MULTISCALE_TYPE_COLLECT        = "collect";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_X              = "x";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_Y              = "y";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_Z              = "z";
+  const std::string GEOMETRIC_MULTISCALE_SPREAD_PARABOLIC    = "parabolic";
+  const std::string GEOMETRIC_MULTISCALE_SPREAD_UNIFORM      = "uniform";
 
   // For iterative RBFs using Ginkgo
   const std::string SUBTAG_EXECUTOR = "executor";
@@ -263,7 +266,8 @@ private:
       const std::string &toMeshName,
       const std::string &geoMultiscaleType,
       const std::string &geoMultiscaleAxis,
-      const double &     multiscaleRadius) const;
+      const double      &multiscaleRadius,
+      const std::string &spreadProfileStr) const;
 
   /**
    * Stores additional information about the requested RBF mapping such as the

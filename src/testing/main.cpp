@@ -15,6 +15,8 @@
 
 #include "com/SharedPointer.hpp"
 #include "logging/LogConfiguration.hpp"
+#include "mapping/device/Ginkgo.hpp"
+#include "testing/Testing.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 
@@ -39,7 +41,7 @@ private:
     if (ts.p_type_name == "suite") {
       prefix.push_back(ts.p_name);
     }
-    return test_tree_visitor::visit((boost::unit_test::test_unit const &) ts);
+    return true;
   }
 
   void test_suite_finish(boost::unit_test::test_suite const &ts) override
@@ -54,7 +56,13 @@ private:
     for (const auto &p : prefix) {
       std::cout << p << '/';
     }
-    std::cout << tc.p_name << '\n';
+    std::cout << tc.p_name << ' ';
+
+    if (auto setup = precice::testing::getTestSetupFor(tc); setup) {
+      std::cout << setup->totalRanks() << '\n';
+    } else {
+      std::cout << "?\n";
+    }
   }
 };
 
@@ -62,6 +70,12 @@ void printTestList()
 {
   using namespace boost::unit_test;
   test_case_printer tcp;
+  // We need to manually initialize boost test
+  // Internally it always accesses the first argument
+  char  arg0[] = "./testprecice";
+  char *argv[] = {arg0};
+  framework::init(&init_unit_test, 1, argv);
+  framework::finalize_setup_phase();
   traverse_test_tree(framework::master_test_suite(), tcp, true);
 }
 
@@ -88,20 +102,17 @@ int main(int argc, char *argv[])
 {
   using namespace precice;
 
+  // Handle unit list printing first to avoid the MPI initialization overhead
+  if (argc == 2 && std::string(argv[1]) == "--list_units") {
+    printTestList();
+    return 0;
+  }
+
   precice::syncMode = false;
   utils::Parallel::initializeTestingMPI(&argc, &argv);
   const auto rank = utils::Parallel::current()->rank();
   const auto size = utils::Parallel::current()->size();
   logging::setMPIRank(rank);
-
-  // Handle custom printing
-  if (argc == 2 && std::string(argv[1]) == "--list_units") {
-    if (rank == 0) {
-      printTestList();
-    }
-    utils::Parallel::finalizeTestingMPI();
-    return 0;
-  }
 
   // Handle not enough MPI ranks
   if (size < 4 && argc < 2) {
@@ -126,7 +137,11 @@ int main(int argc, char *argv[])
   if ((testsRan == 0) && (rank != 0)) {
     retCode = EXIT_SUCCESS;
   }
-
+  // Required for Kokkos, which doesn't allow to initialize multiple times, i.e.,
+  // finalize and initialize can really only be called once
+#ifndef PRECICE_NO_GINKGO
+  precice::device::Ginkgo::finalize();
+#endif
   utils::IntraComm::getCommunication() = nullptr;
   utils::Parallel::finalizeTestingMPI();
   return retCode;

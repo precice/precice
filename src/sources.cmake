@@ -124,6 +124,7 @@ target_sources(preciceCore
     src/cplscheme/impl/SharedPointer.hpp
     src/cplscheme/impl/TimeHandler.cpp
     src/cplscheme/impl/TimeHandler.hpp
+    src/io/Export.cpp
     src/io/Export.hpp
     src/io/ExportCSV.cpp
     src/io/ExportCSV.hpp
@@ -175,11 +176,13 @@ target_sources(preciceCore
     src/mapping/AxialGeoMultiscaleMapping.hpp
     src/mapping/BarycentricBaseMapping.cpp
     src/mapping/BarycentricBaseMapping.hpp
+    src/mapping/GinkgoDefinitions.hpp
     src/mapping/GinkgoRadialBasisFctSolver.hpp
     src/mapping/LinearCellInterpolationMapping.cpp
     src/mapping/LinearCellInterpolationMapping.hpp
     src/mapping/Mapping.cpp
     src/mapping/Mapping.hpp
+    src/mapping/MathHelper.hpp
     src/mapping/NearestNeighborBaseMapping.cpp
     src/mapping/NearestNeighborBaseMapping.hpp
     src/mapping/NearestNeighborGradientMapping.cpp
@@ -203,6 +206,7 @@ target_sources(preciceCore
     src/mapping/config/MappingConfigurationTypes.hpp
     src/mapping/impl/BasisFunctions.hpp
     src/mapping/impl/CreateClustering.hpp
+    src/mapping/impl/MappingDataCache.hpp
     src/mapping/impl/SphericalVertexCluster.hpp
     src/math/Bspline.cpp
     src/math/Bspline.hpp
@@ -244,6 +248,7 @@ target_sources(preciceCore
     src/partition/ReceivedPartition.cpp
     src/partition/ReceivedPartition.hpp
     src/partition/SharedPointer.hpp
+    src/precice/Exceptions.hpp
     src/precice/Participant.cpp
     src/precice/Participant.hpp
     src/precice/Tooling.cpp
@@ -286,11 +291,12 @@ target_sources(preciceCore
     src/query/Index.hpp
     src/query/impl/RTreeAdapter.hpp
     src/time/Sample.hpp
+    src/time/SampleResult.hpp
     src/time/Stample.hpp
-    src/time/Storage.cpp
-    src/time/Storage.hpp
     src/time/Time.cpp
     src/time/Time.hpp
+    src/time/TimeGrids.cpp
+    src/time/TimeGrids.hpp
     src/time/Waveform.cpp
     src/time/Waveform.hpp
     src/utils/ArgumentFormatter.hpp
@@ -300,6 +306,8 @@ target_sources(preciceCore
     src/utils/EigenHelperFunctions.cpp
     src/utils/EigenHelperFunctions.hpp
     src/utils/EigenIO.hpp
+    src/utils/Hash.cpp
+    src/utils/Hash.hpp
     src/utils/Helpers.cpp
     src/utils/Helpers.hpp
     src/utils/IntraComm.cpp
@@ -348,6 +356,7 @@ target_sources(preciceCore
 
 set_property(TARGET precice PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/Version.h
+    src/precice/Exceptions.hpp
     src/precice/Participant.hpp
     src/precice/Tooling.hpp
     src/precice/Types.hpp

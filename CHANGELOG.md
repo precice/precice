@@ -2,6 +2,138 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 3.3.0
+
+- Added CMake option `PRECICE_FEATURE_PROFILING_COMPRESSION` to optionally enable LZMA compression of the textual records of the profiling files. (https://github.com/precice/precice/pull/2328)
+- Added a clear error message when calling `advance(getMaxTimeStepSize())` on the participant that is supposed to provide the time-window size due to `<time-window-size method="first-participant"/>`. (https://github.com/precice/precice/pull/2347)
+- Added all coupling partners of `coupling-scheme:multi` to info statement in compositional coupling schemes. (https://github.com/precice/precice/pull/2353)
+- Added detailed CMake, compiler and linker information to the CMake configuration log. (https://github.com/precice/precice/pull/2282)
+- Added executables `precice-version`, `precice-config-validate`, and `precice-config-doc`. (https://github.com/precice/precice/pull/2312)
+- Added function to create a participant from Fortran with a custom communicator. (https://github.com/precice/precice/pull/2363)
+- Added implicit socket-based intra-comms for parallel participants in case preCICE is compiled without MPI. (https://github.com/precice/precice/pull/2336)
+- Added missing libraries for compilation on Windows. (https://github.com/precice/precice/pull/2280)
+- Added one retry in case opening of connection info files fails during communication buildup. (https://github.com/precice/precice/pull/2276)
+- Added option `<export:X update-series="true"/>` to enable keeping the series files of exporters updated after each time window instead of generating them at the end of the simulation. (https://github.com/precice/precice/pull/2272)
+- Added support for using `setMeshQuad` and `setMeshQuads` with 2D meshes. (https://github.com/precice/precice/pull/2364)
+- Added support for version `5.0.0` of Eigen. (https://github.com/precice/precice/pull/2366)
+- Added warning when an MPI communicator is passed to the Participant constructor, but preCICE was build without MPI. (https://github.com/precice/precice/pull/2365)
+- Changed Eigen detection to only using the CMake configuration files provided by the Eigen installation. (https://github.com/precice/precice/pull/2366)
+- Changed default profiling `mode="fundamental"` to only include steering methods. Use the new `mode="api"` to profile all API methods. (https://github.com/precice/precice/pull/2320)
+- Changed output of coupling scheme state in advance to be more compact. (https://github.com/precice/precice/pull/2325)
+- Changed profiling output format to a text based format, which is more space efficient than the JSON format. (https://github.com/precice/precice/pull/2328)
+- Deprecated the `precice-profiling` script in favor of the `precice-profiling` python package or the `precice-cli`. (https://github.com/precice/precice/pull/2317)
+- Deprecated the executable `precice-tools` in favor of `precice-version`, `precice-config-validate`, and `precice-config-doc`. (https://github.com/precice/precice/pull/2312)
+- Fixed Kokkos deallocation when solver initializes Kokkos instead of preCICE. (https://github.com/precice/precice/pull/2263)
+- Fixed QR3 filter of acceleration not falling back to QR2 for non-constant pre-scaling coefficients. (https://github.com/precice/precice/pull/2370)
+- Fixed `precice-profiling merge` mistakenly detecting non-precice json files such as solver or adapter configuration files. (https://github.com/precice/precice/pull/2298)
+- Fixed `setMeshTriangle` still creating edges instead of relying on the mesh preprocessing to generate required edges. (https://github.com/precice/precice/pull/2302)
+- Fixed `~Participant()` calling `std::abort()`, when coupling scheme expects a requirement. (https://github.com/precice/precice/pull/2352)
+- Fixed a bug in the Fortran bindings signature of `precicef_get_mesh_vertex_ids_and_coordinates_`. (https://github.com/precice/precice/pull/2316)
+- Fixed compatibility with boost.asio `1.89.0`. (https://github.com/precice/precice/pull/2351 and https://github.com/precice/precice/pull/2354)
+- Fixed coupling state info statement of compositional coupling schemes using newlines. (https://github.com/precice/precice/pull/2353)
+- Fixed error in configuration for a convergence measure of a multi coupling scheme using data that was exchanged, but not with the controller. (https://github.com/precice/precice/pull/2287)
+- Fixed incorrect declaration for Fortran `precicef_set_mesh_triangles_`. (https://github.com/precice/precice/pull/2293)
+- Fixed rounding errors computing time-window size to send to the second participant using `<time-window-size method="first-participant" />`. (https://github.com/precice/precice/pull/2344)
+- Fixed the use of the deprecated libxml2 header `libxml/SAX.h`, which leads to compile errors for libxml2 `2.14.0` and newer. (https://github.com/precice/precice/pull/2306)
+- Fixed user-defined `<intra-comm... />` leading to error when running participant in serial. (https://github.com/precice/precice/pull/2337)
+- Improved checks when using incorrectly configured JIT mappings. (https://github.com/precice/precice/pull/2309)
+- Improved error messages when requirement functions haven't been called when expected, namely `requiresInitialData()`, `requiresWritingCheckpoint()`, and `requiresReadingCheckpoint()`. (https://github.com/precice/precice/pull/2350)
+- Migrated `precice-profiling merge` to the sqlite intermediate output. (https://github.com/precice/precice/pull/2343)
+- Moved the generation of the test list to a separate target `precice-test-list`. Use `make testprecice precice-test-list` if you only want to run the tests. (https://github.com/precice/precice/pull/2310)
+- Removed all commands from `precice-profiling` except `merge`. (https://github.com/precice/precice/pull/2343)
+- Removed support for configuring preCICE as static library, which has been broken since version 3.0.0. (https://github.com/precice/precice/pull/2300)
+
+## 3.2.0
+
+- Added initial data for time=0 in watch integrals and watch points. (https://github.com/precice/precice/pull/2181)
+- Added Paraview series files to `vtk`, `vtu`, and `vtp` exporters when exporting time windows. This makes loading exports easier and assigns the correct time stamps to them. (https://github.com/precice/precice/pull/2055)
+- Added QR3 filter and use it in default IQN-ILS and IQN-IMVJ configurations (see https://doi.org/10.3390/mca27030040). (https://github.com/precice/precice/pull/1493)
+- Added a check to ensure coupled participants use configuration files with the same content. (https://github.com/precice/precice/pull/2217)
+- Added a clearer error message when attempting to use a pre-version 3 configuration file. (https://github.com/precice/precice/pull/2007)
+- Added a configuration check for missing data samples, which may be caused by missing mappings or `write-data` tags. (https://github.com/precice/precice/pull/2044)
+- Added a log info statement showing the amount of selected elements when computing a nearest-projection mapping. (https://github.com/precice/precice/pull/2184)
+- Added an error if participants using different preCICE versions attempt coupling. (https://github.com/precice/precice/pull/2202)
+- Added an error message for data that is read but never mapped or exchanged. (https://github.com/precice/precice/pull/2064)
+- Added current working directory of participant to the startup output of preCICE. (https://github.com/precice/precice/pull/2170)
+- Added default initial-relaxation factor of 0.5 to the Aitken acceleration. (https://github.com/precice/precice/pull/2112)
+- Added descriptive error when meshes are swapped in read/write mappings. (https://github.com/precice/precice/pull/2124)
+- Added error in case of missing samples in origin of read mappings. (https://github.com/precice/precice/pull/2024)
+- Added error message when defining multiple acceleration schemes per coupling-scheme. (https://github.com/precice/precice/pull/2111)
+- Added experimental support for just-in-time mapping with NN and PU-RBF via the new API functions `mapAndReadData` and `writeAndMapData`. (https://github.com/precice/precice/pull/2099)
+- Added experimental support for remeshing at runtime of parallel coupling schemes. Adding `<precice-configuration experimental="true" allow-remeshing="true" />` in the configuration allows calling `resetMesh()` for any provided mesh in the first iteration of a time-window. (https://github.com/precice/precice/pull/2070)
+- Added header `precice/Exceptions.hpp` which provides the preCICE exception type `precice::Error`. It is included via `precice/precice.hpp`. (https://github.com/precice/precice/pull/2065)
+- Added profiling event for handling exports, which can be a substantial part of `advance`. (https://github.com/precice/precice/pull/2041)
+- Added profiling events to most API calls. (https://github.com/precice/precice/pull/2130)
+- Added support for Intel MPI version 2021.13. (https://github.com/precice/precice/pull/1826)
+- Added support for Intel oneAPI C/DPC++/C++/Fortran Compilers icx, icpx, and ifx version 2024.2. (https://github.com/precice/precice/pull/1826)
+- Added support for Kokkos configured with parallel host and device executors. (https://github.com/precice/precice/pull/2169)
+- Added support for secondary data in IQN-IMVJ method. (https://github.com/precice/precice/pull/2010)
+- Added support for user-defined profiling sections using `startProfilingSection(name)` and `stopLastProfilingSection()`. This is an easy way measure and display profiling of adapter code in the context of the whole participant or simulation. (https://github.com/precice/precice/pull/1657)
+- Added support for using unity builds via the CMake option `PRECICE_BUILD_UNITY`, which is enabled by default. (https://github.com/precice/precice/pull/2068)
+- Added support for waveform iterations in Aitken acceleration (https://github.com/precice/precice/pull/2163)
+- Added support for waveform iterations in Quasi-Newton acceleration (https://github.com/precice/precice/pull/2005)
+- Added the synchronization of ranks to the profiling data if `<profiling synchronize="true" />` (https://github.com/precice/precice/pull/2019)
+- Added warning when user set larger `max-used-iterations` in acceleration than `max-iterations` in coupling-scheme when no previous time window is reused in acceleration. (https://github.com/precice/precice/pull/2201)
+- Added warning when using `<m2n:mpi-multiple-ports />` with Intel MPI due to frequent hangs. (https://github.com/precice/precice/pull/1826)
+- Added weight monitoring for residual-sum preconditioner and use it in default IQN-ILS and IQN-IMVJ configurations (see https://doi.org/10.3390/mca27030040). (https://github.com/precice/precice/pull/1493)
+- Changed all exchanges of implicit coupling schemes to use `substeps="True"` by default. This will activate exchange of additional data from inside the coupling time window if subcycling is used. Even without subcycling additional data will be communicated (see https://github.com/precice/precice/issues/2226 for details). (https://github.com/precice/precice/pull/2220)
+- Changed `m2n:sockets` and `intra-comm:sockets` to disable Nagle's algorithm using `TCP_NODELAY`, which improves data communication delay. This is especially noticeable when using substeps. (https://github.com/precice/precice/pull/2208)
+- Changed `setMeshAccessRegion` to be callable once per mesh instead of once per participant. (https://github.com/precice/precice/pull/2072)
+- Changed error when using `<time-window-size value="X" method="first-participant"/>` with any value other than -1 to a warning. (https://github.com/precice/precice/pull/2092)
+- Changed exporters to skip exporting data of a mesh when the data correctly does not containing any samples. (https://github.com/precice/precice/pull/2132)
+- Changed output of `precice-profiling analyze` to show nested events using indentation. (https://github.com/precice/precice/pull/2117)
+- Changed scoping of events to be handled in post-processing. This leads to a consistent event naming. (https://github.com/precice/precice/pull/2066)
+- Changed the C++ API to throw a `precice::Error` instead of aborting if preCICE detects an error. This allows adapters to clean up on error and makes preCICE easier to use via interactive sessions. (https://github.com/precice/precice/pull/2065)
+- Changed the baseline from Ubuntu 20.04 LTS to Ubuntu 22.04 LTS, which lifts minimum required versions of dependencies to: CMake 3.22.1, GCC/stdlibc++ 11.2.0, Eigen 3.4.0, Boost 1.74.0, PETSc 3.15, Python 3.10.6, and Numpy 1.21.5. (https://github.com/precice/precice/pull/1962)
+- Changed the behavior of the function `getMeshVertexIDsAndCoordinates`, when combining direct-mesh access with mappings, to return only the vertices within the defined access region (`setMeshAccessRegion`). Setting an access region is mandatory if no other mapping is defined. In parallel, it has been mandatory anyway. (https://github.com/precice/precice/pull/2099)
+- Changed the default mode for IMVJ from no-restart to SVD-restart. (https://github.com/precice/precice/pull/2136)
+- Fixed a bug in sample retrieval of `readData` which leads to crashes for some combinations of time-window-sizes and time-windows. (https://github.com/precice/precice/pull/2191)
+- Fixed a crash when meshes in a mapping neither received nor provided by a participant. (https://github.com/precice/precice/pull/2124)
+- Fixed bug resulting in inconsistent watch points and integrals for different coupling schemes. (https://github.com/precice/precice/pull/2188)
+- Fixed bugs due to size of gradients if gradient mapping is used and substeps are exchanged. (https://github.com/precice/precice/pull/2223)
+- Fixed confusing output of the final advance at the end of the simulation. (https://github.com/precice/precice/pull/2182)
+- Fixed crash in finalize after an inter-participant communication fails to connect. (https://github.com/precice/precice/pull/2141)
+- Fixed direct mesh access (api access) to correctly read and write data in serial runs, where vertices are filtered through the defined mesh access region. (https://github.com/precice/precice/pull/2224)
+- Fixed incompatibility between Cuda and more recent boost.asio versions by using `BOOST_ASIO_USE_TS_EXECUTOR_AS_DEFAULT` if Cuda was enabled. (https://github.com/precice/precice/pull/2218)
+- Fixed incorrect escapes in version information for some CMake versions (https://github.com/precice/precice/pull/2030)
+- Fixed mismatched MPI communicator sizes to trigger an assertion before their sanitization check. (https://github.com/precice/precice/pull/2065)
+- Fixed parallel repartitioning for PU-RBF to be more accurate. (https://github.com/precice/precice/pull/1912)
+- Fixed the API functions `setMeshAccessRegion` and `getMeshVertexIDsAndCoordinates` to now require the flag `<receive-mesh ... api-access="true" />` in the configuration file. If not set, the function will throw an error. (https://github.com/precice/precice/pull/2099)
+- Fixed unnecessary creation of empty watch point and watch integral files at non-owning participants. (https://github.com/precice/precice/pull/2126)
+- Improved convergence log to display mesh and data name in convergence measures. (https://github.com/precice/precice/pull/2032)
+- Improved memory footprint when handling non-interpolated data. (https://github.com/precice/precice/pull/2190)
+- Improved the runtime of the creation of the Bspline interpolation, by switching the matrix A inside the Bspline class to a sparse matrix. (https://github.com/precice/precice/pull/2021)
+- Improved time-interpolation to allow arbitrary high waveform degree. (https://github.com/precice/precice/pull/2039)
+- Moved Kokkos initialization into solver class to prevent unnecessary initializations where they are not required. (https://github.com/precice/precice/pull/2080)
+- Renamed the `direct-access` flag in `<receive-mesh direct-access="..." />` to `api-access` `<receive-mesh api-access="..." />` and deprecated `direct-access`. (https://github.com/precice/precice/pull/2099)
+- Renamed the `develop` CMake preset to `development`. (https://github.com/precice/precice/pull/2241)
+- Replaced Ginkgo's triangular solver by cublas and hipblas implementations. Using the Cuda/HIP QR decomposition requires now the Cuda/HIP blas library. (https://github.com/precice/precice/pull/2079)
+- Speed-up parallel repartitioning for global RBF mappings. (https://github.com/precice/precice/pull/1912)
+- Updated CMake to use `BoostConfig.cmake` instead of CMake's FindBoost module to find boost. (https://github.com/precice/precice/pull/2056)
+- Updated Ginkgo integration with Kokkos for accelerated (GPU or OpenMP) RBF data mapping. Kokkos is now a mandatory dependency when using Ginkgo in preCICE. preCICE is now compatible with Ginkgo v1.8.0 or higher with Kokkos version 4.1 or higher. (https://github.com/precice/precice/pull/2051)
+- Updated boost asio interface for compatibility with boost 1.86. (https://github.com/precice/precice/pull/2158)
+- Updated pre-commit hook versions and applied corresponding changes. (https://github.com/precice/precice/pull/2244)
+
+## 3.1.2
+
+- Fixed incorrect handling of compositional coupling involving an implicit scheme. Explicit schemes now run after the implicit scheme has reached convergence, correctly receive data of the final iteration.
+
+## 3.1.1
+
+- Added missing checks for incorrect Participant names in M2N and coupling-scheme. (https://github.com/precice/precice/pull/1995)
+- Fixed skipping initial mapping when data contains only zeros in parallel. (https://github.com/precice/precice/pull/1999)
+
+## 3.1.0
+
+- Added warnings when using invalid options inside log configuration files. (https://github.com/precice/precice/pull/1956)
+- Changed the output of `precice-profiling analyze` to be sorted by event name. (https://github.com/precice/precice/pull/1953)
+- Fixed a bug where reading from the end of the time window can trigger an assertion. (https://github.com/precice/precice/pull/1982)
+- Fixed bug when using log configuration files with invalid options. (https://github.com/precice/precice/pull/1956)
+- Fixed oversubscription errors when running tests. (https://github.com/precice/precice/pull/1960)
+- Fixed too strict check on allowed mapping types when combining serial and parallel participants. (https://github.com/precice/precice/pull/1964)
+- Improved numerical accuracy of time handling for simulations with many time steps or time windows, using separate Kahan sums for time-window start and window progress. (https://github.com/precice/precice/pull/1954)
+- Replaced boost.filesystem with `std::filesystem`. (https://github.com/precice/precice/pull/1972)
+
 ## 3.0.0
 
 - Added API method `getMaxTimeStepSize()`, replacing return values and simplifying usability of `advance(double dt)` and `initialize()`. (https://github.com/precice/precice/pull/1623)
@@ -237,7 +369,7 @@ All notable changes to this project will be documented in this file. For future 
 ## 2.3.0
 
 - Added `isMeshConnectivityRequired(meshID)` to the SolverInterface API. This is useful to generate connectivity information only if required by preCICE.
-- Added a configuration option to enable experiemental API functions.
+- Added a configuration option to enable experimental API functions.
 - Added bindings to doxygen.
 - Added check of user-written data to be finite.
 - Added convergence information for linear solvers of PETSc-based RBF mappings. Reports of converged solvers are logged as DEBUG, stopped solvers as WARNING and diverged solvers as ERROR messages.
@@ -623,7 +755,7 @@ All notable changes to this project will be documented in this file. For future 
   - Remove the `staticlib` and `bin` from the default targets to reduce the building time and storage requirements.
   - Change build types to mixed case, i.e. ```Debug``` and ```Release```. Old versions are retained for backward compatibility.
   - Make `mpicxx` default setting for compiler.
-  - Experiemental support for building with Conda, see `tools/anaconda_building`
+  - Experimental support for building with Conda, see `tools/anaconda_building`
   - Use NumPy to figure out Python include paths.
   - Search for PETSc in more paths
   - Add experimental CMake build control files.

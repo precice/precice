@@ -18,9 +18,10 @@ BOOST_AUTO_TEST_SUITE(ParallelCoupling)
  * Does not write initial data and therefore automatically uses 0 initial data.
  * Provides a dt argument to the read function. A first order waveform is used.
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirstNoInit)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   Participant precice(context.name, context.config(), 0, 1);
 

@@ -48,74 +48,85 @@ BOOST_AUTO_TEST_SUITE(GinkgoRadialBasisFunctionSolver)
   }
 
 #define TEST_FOR_ALL_RBFS(EXECUTOR, SOLVER)                                              \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                                            \
   BOOST_AUTO_TEST_CASE(MapThinPlateSplines)                                              \
   {                                                                                      \
-    PRECICE_TEST(1_rank);                                                                \
+    PRECICE_TEST();                                                                      \
     ThinPlateSplines fct;                                                                \
     doLocalCode(ThinPlateSplines, fct, Polynomial::SEPARATE, EXECUTOR, SOLVER);          \
   }                                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                                            \
   BOOST_AUTO_TEST_CASE(MapMultiquadrics)                                                 \
   {                                                                                      \
-    PRECICE_TEST(1_rank);                                                                \
+    PRECICE_TEST();                                                                      \
     Multiquadrics fct(1e-3);                                                             \
     doLocalCode(Multiquadrics, fct, Polynomial::SEPARATE, EXECUTOR, SOLVER);             \
   }                                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                                            \
   BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)                                          \
   {                                                                                      \
-    PRECICE_TEST(1_rank);                                                                \
+    PRECICE_TEST();                                                                      \
     InverseMultiquadrics fct(1e-3);                                                      \
     doLocalCode(InverseMultiquadrics, fct, Polynomial::SEPARATE, EXECUTOR, SOLVER);      \
   }                                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                                            \
   BOOST_AUTO_TEST_CASE(MapVolumeSplines)                                                 \
   {                                                                                      \
-    PRECICE_TEST(1_rank);                                                                \
+    PRECICE_TEST();                                                                      \
     VolumeSplines fct;                                                                   \
     doLocalCode(VolumeSplines, fct, Polynomial::SEPARATE, EXECUTOR, SOLVER);             \
   }                                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                                            \
   BOOST_AUTO_TEST_CASE(MapGaussian)                                                      \
   {                                                                                      \
-    PRECICE_TEST(1_rank);                                                                \
+    PRECICE_TEST();                                                                      \
     Gaussian fct(1.0);                                                                   \
     doLocalCode(Gaussian, fct, Polynomial::SEPARATE, EXECUTOR, SOLVER);                  \
   }                                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                                            \
   BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)                                     \
   {                                                                                      \
-    PRECICE_TEST(1_rank);                                                                \
+    PRECICE_TEST();                                                                      \
     double                    supportRadius = 1.2;                                       \
     CompactThinPlateSplinesC2 fct(supportRadius);                                        \
     doLocalCode(CompactThinPlateSplinesC2, fct, Polynomial::SEPARATE, EXECUTOR, SOLVER); \
   }                                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                                            \
   BOOST_AUTO_TEST_CASE(MapCompactPolynomialC0)                                           \
   {                                                                                      \
-    PRECICE_TEST(1_rank);                                                                \
+    PRECICE_TEST();                                                                      \
     double              supportRadius = 1.2;                                             \
     CompactPolynomialC0 fct(supportRadius);                                              \
     doLocalCode(CompactPolynomialC0, fct, Polynomial::SEPARATE, EXECUTOR, SOLVER);       \
   }                                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                                            \
   BOOST_AUTO_TEST_CASE(MapCompactPolynomialC2)                                           \
   {                                                                                      \
-    PRECICE_TEST(1_rank);                                                                \
+    PRECICE_TEST();                                                                      \
     double              supportRadius = 1.2;                                             \
     CompactPolynomialC2 fct(supportRadius);                                              \
     doLocalCode(CompactPolynomialC2, fct, Polynomial::SEPARATE, EXECUTOR, SOLVER);       \
   }                                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                                            \
   BOOST_AUTO_TEST_CASE(MapCompactPolynomialC4)                                           \
   {                                                                                      \
-    PRECICE_TEST(1_rank);                                                                \
+    PRECICE_TEST();                                                                      \
     double              supportRadius = 1.2;                                             \
     CompactPolynomialC4 fct(supportRadius);                                              \
     doLocalCode(CompactPolynomialC4, fct, Polynomial::SEPARATE, EXECUTOR, SOLVER);       \
   }                                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                                            \
   BOOST_AUTO_TEST_CASE(MapCompactPolynomialC6)                                           \
   {                                                                                      \
-    PRECICE_TEST(1_rank);                                                                \
+    PRECICE_TEST();                                                                      \
     double              supportRadius = 1.2;                                             \
     CompactPolynomialC6 fct(supportRadius);                                              \
     doLocalCode(CompactPolynomialC6, fct, Polynomial::SEPARATE, EXECUTOR, SOLVER);       \
   }                                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                                            \
   BOOST_AUTO_TEST_CASE(MapCompactPolynomialC8)                                           \
   {                                                                                      \
-    PRECICE_TEST(1_rank);                                                                \
+    PRECICE_TEST();                                                                      \
     double              supportRadius = 1.2;                                             \
     CompactPolynomialC8 fct(supportRadius);                                              \
     doLocalCode(CompactPolynomialC8, fct, Polynomial::SEPARATE, EXECUTOR, SOLVER);       \
@@ -125,7 +136,7 @@ BOOST_AUTO_TEST_SUITE(Reference)
 TEST_FOR_ALL_RBFS("reference-executor", "gmres-solver");
 BOOST_AUTO_TEST_SUITE_END()
 
-#ifdef PRECICE_WITH_OMP
+#ifdef PRECICE_WITH_OPENMP
 BOOST_AUTO_TEST_SUITE(OpenMP)
 TEST_FOR_ALL_RBFS("omp-executor", "gmres-solver");
 BOOST_AUTO_TEST_SUITE_END()

@@ -9,9 +9,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(Compositional)
+PRECICE_TEST_SETUP("M1SM"_on(1_rank), "M2SM"_on(1_rank), "M1"_on(1_rank), "M2"_on(1_rank))
 BOOST_AUTO_TEST_CASE(TwoActivatedMuscles)
 {
-  PRECICE_TEST("M1SM"_on(1_rank), "M2SM"_on(1_rank), "M1"_on(1_rank), "M2"_on(1_rank));
+  PRECICE_TEST();
 
   precice::Participant participant(context.name, context.config(), context.rank, context.size);
 
@@ -22,27 +23,23 @@ BOOST_AUTO_TEST_CASE(TwoActivatedMuscles)
   std::vector<int> activationVertexIDs(1);
   std::vector<int> stretchVertexIDs(1);
 
-  double timestepSize = 1.0;
+  const double timestepSize = 1.0;
 
   if (context.isNamed("M1SM")) {
-
     participant.setMeshVertices("Surface_M1SM_Mesh", surfaceCoords, surfaceVertexIDs);
     participant.setMeshVertices("Activation_M1SM_Mesh", neuralCoords, activationVertexIDs);
     participant.setMeshVertices("Stretch_M1SM_Mesh", neuralCoords, stretchVertexIDs);
-
-  } else if (context.isNamed("M2SM")) {
-
+  }
+  if (context.isNamed("M2SM")) {
     participant.setMeshVertices("Surface_M2SM_Mesh", surfaceCoords, surfaceVertexIDs);
     participant.setMeshVertices("Activation_M2SM_Mesh", neuralCoords, activationVertexIDs);
     participant.setMeshVertices("Stretch_M2SM_Mesh", neuralCoords, stretchVertexIDs);
-
-  } else if (context.isNamed("M1")) {
-
+  }
+  if (context.isNamed("M1")) {
     participant.setMeshVertices("Stretch_M1_Mesh", neuralCoords, stretchVertexIDs);
     participant.setMeshVertices("Activation_M1_Mesh", neuralCoords, activationVertexIDs);
-
-  } else {
-
+  }
+  if (context.isNamed("M2")) {
     participant.setMeshVertices("Stretch_M2_Mesh", neuralCoords, stretchVertexIDs);
     participant.setMeshVertices("Activation_M2_Mesh", neuralCoords, activationVertexIDs);
   }
@@ -63,39 +60,43 @@ BOOST_AUTO_TEST_CASE(TwoActivatedMuscles)
   std::vector<double> receivedCrossStretch1{0.0};
   std::vector<double> receivedStretch2{0.0};
 
+  const bool isImplicit = context.isNamed("M1SM") || context.isNamed("M2SM");
   for (int timestep = 0; timestep < 2; ++timestep) {
+    BOOST_REQUIRE(participant.isCouplingOngoing());
+
+    if (isImplicit) {
+      BOOST_TEST(participant.requiresWritingCheckpoint());
+    } else {
+      BOOST_TEST(!participant.requiresWritingCheckpoint());
+    }
 
     if (context.isNamed("M1SM")) {
       participant.writeData("Surface_M1SM_Mesh", "Displacement", surfaceVertexIDs, displacements);
       participant.readData("Activation_M1SM_Mesh", "Activation1", activationVertexIDs, timestepSize, receivedActivation1);
       participant.writeData("Stretch_M1SM_Mesh", "stretch1", stretchVertexIDs, stretch1);
-
-    } else if (context.isNamed("M2SM")) {
-
+    }
+    if (context.isNamed("M2SM")) {
       participant.readData("Surface_M2SM_Mesh", "Displacement", surfaceVertexIDs, timestepSize, receivedDisplacements);
       participant.readData("Activation_M2SM_Mesh", "Activation2", activationVertexIDs, timestepSize, receivedActivation2);
       participant.writeData("Stretch_M2SM_Mesh", "stretch2", stretchVertexIDs, stretch2);
-
-    } else if (context.isNamed("M1")) {
-
+    }
+    if (context.isNamed("M1")) {
       participant.writeData("Activation_M1_Mesh", "Activation1", activationVertexIDs, activation1);
       participant.readData("Stretch_M1_Mesh", "stretch1", stretchVertexIDs, timestepSize, receivedStretch1);
       participant.readData("Stretch_M1_Mesh", "stretch2", stretchVertexIDs, timestepSize, receivedCrossStretch1);
-
-    } else {
-
-      BOOST_TEST(context.isNamed("M2"));
-
+    }
+    if (context.isNamed("M2")) {
       participant.writeData("Activation_M2_Mesh", "Activation2", activationVertexIDs, activation2);
       participant.readData("Stretch_M2_Mesh", "stretch2", stretchVertexIDs, timestepSize, receivedStretch2);
     }
 
-    if (participant.requiresWritingCheckpoint()) {
-    }
     participant.advance(timestepSize);
-    if (participant.requiresReadingCheckpoint()) {
-    }
+
+    // Always converges
+    BOOST_TEST(!participant.requiresReadingCheckpoint());
   }
+
+  BOOST_REQUIRE(!participant.isCouplingOngoing());
 
   // Test read and write
   if (context.isNamed("M1SM")) {

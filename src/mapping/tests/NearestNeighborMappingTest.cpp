@@ -21,9 +21,10 @@ using namespace precice::mesh;
 BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(NearestNeighborMapping)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int dimensions = 2;
   using testing::equals;
 
@@ -101,15 +102,16 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   BOOST_CHECK(equals(expected, outValuesVector));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int dimensions = 2;
 
   // Create mesh to map from
   PtrMesh         inMesh(new Mesh("InMesh", dimensions, testing::nextMeshID()));
-  Vertex &        inVertex0 = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
-  Vertex &        inVertex1 = inMesh->createVertex(Eigen::Vector2d::Constant(1.0));
+  Vertex         &inVertex0 = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
+  Vertex         &inVertex1 = inMesh->createVertex(Eigen::Vector2d::Constant(1.0));
   Eigen::VectorXd inValues  = Eigen::VectorXd::Zero(2);
   inValues(0)               = 1.0;
   inValues(1)               = 2.0;
@@ -166,9 +168,10 @@ BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
   BOOST_TEST(outValues(1) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ScaledConsistentNonIncremental)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int dimensions = 2;
 
   // Create mesh to map from
@@ -251,9 +254,10 @@ PtrMesh create2DLinSpaceMesh(std::string_view name, int dims, double x0, double 
 }
 } // namespace
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ScaledConsistentZeroData)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int dimensions = 2;
 
   // Create mesh to map from
@@ -287,9 +291,10 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentZeroData)
   BOOST_TEST(outputIntegral.isZero());
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ScaledConsistentZeroIntegral)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int dimensions = 2;
 
   // Create mesh to map from
@@ -323,9 +328,10 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentZeroIntegral)
   BOOST_TEST(outputIntegral(0) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ScaledConsistentZeroDataComponent)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int dimensions = 2;
 
   // Create mesh to map from
@@ -362,9 +368,10 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentZeroDataComponent)
   BOOST_TEST(outputIntegral(1) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ScaledConsistentZeroIntegralComponent)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int dimensions = 2;
 
   // Create mesh to map from
@@ -401,9 +408,10 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentZeroIntegralComponent)
   BOOST_TEST(outputIntegral(1) == 0.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ScaledConsistentVolume2D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int dimensions = 2;
 
   // Create mesh to map from
@@ -473,9 +481,10 @@ BOOST_AUTO_TEST_CASE(ScaledConsistentVolume2D)
   BOOST_TEST(inValues(3) * scaleFactor == outValues(3));
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ScaledConsistentVolume3D)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   int dimensions = 3;
 
   // Create mesh to map from

@@ -9,8 +9,7 @@
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 /**
  * @brief Acts as one coupling scheme, but consists of several composed ones.
@@ -57,7 +56,7 @@ namespace cplscheme {
 class CompositionalCouplingScheme final : public CouplingScheme {
 public:
   /// Destructor, empty.
-  virtual ~CompositionalCouplingScheme() {}
+  ~CompositionalCouplingScheme() override = default;
 
   /**
    * @brief Adds another coupling scheme in parallel to this scheme.
@@ -74,15 +73,13 @@ public:
   /**
    * @brief Initializes the coupling scheme and establishes a communication
    *        connection to the coupling partner.
-   * @param[in] startTime TODO
-   * @param[in] startTimeWindow TODO
    */
-  void initialize(
-      double startTime,
-      int    startTimeWindow) final override;
+  void initialize() final override;
+
+  void reinitialize() final override;
 
   /// Returns true, if any of the composed coupling schemes sendsInitializedData for this participant
-  bool sendsInitializedData() const override final;
+  bool sendsInitializedData() const final override;
 
   /// Returns true, if initialize has been called.
   bool isInitialized() const final override;
@@ -91,7 +88,7 @@ public:
   bool addComputedTime(double timeToAdd) final override;
 
   /// Exchanges data and updates the state of the coupling scheme.
-  //void advance() final override;
+  // void advance() final override override;
 
   ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override;
 
@@ -106,6 +103,9 @@ public:
 
   /// Returns list of all coupling partners
   std::vector<std::string> getCouplingPartners() const final override;
+
+  /// @copydoc cplscheme::CouplingScheme::localParticipant()
+  std::string localParticipant() const final override;
 
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
@@ -131,7 +131,7 @@ public:
    */
   double getTime() const final override;
 
-  double getTimeWindowStart() const override final;
+  double getTimeWindowStart() const final override;
 
   /**
    * @brief Returns the currently computed time windows of the coupling scheme.
@@ -199,16 +199,16 @@ public:
   std::string printCouplingState() const final override;
 
   /// True if one cplscheme is an implicit scheme
-  bool isImplicitCouplingScheme() const final;
+  bool isImplicitCouplingScheme() const final override;
 
   /// True if the implicit scheme has converged or no implicit scheme is defined
-  bool hasConverged() const final;
+  bool hasConverged() const final override;
 
   /// @copydoc cplscheme::CouplingScheme::requiresSubsteps()
-  bool requiresSubsteps() const override final;
+  bool requiresSubsteps() const final override;
 
   /// @copydoc cplscheme::CouplingScheme::implicitDataToReceive()
-  ImplicitData implicitDataToReceive() const override final;
+  ImplicitData implicitDataToReceive() const final override;
 
 private:
   mutable logging::Logger _log{"cplscheme::CompositionalCouplingScheme"};
@@ -220,6 +220,9 @@ private:
 
   /// The optional implicit scheme to be handled last
   PtrCouplingScheme _implicitScheme;
+
+  /// Are explicit schemes on hold?
+  bool _explicitOnHold = false;
 
   /** All schemes to run next
    *
@@ -240,7 +243,9 @@ private:
 
   /// Actions also work before initialize is called
   std::vector<CouplingScheme *> activeOrAllSchemes() const;
+
+  /// check if time windows are compatible
+  void checkCompatibleTimeWindowSizes(const CouplingScheme &impl, const CouplingScheme &expl) const;
 };
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

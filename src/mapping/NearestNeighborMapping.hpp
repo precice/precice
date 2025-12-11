@@ -5,8 +5,7 @@
 #include "logging/Logger.hpp"
 #include "mapping/NearestNeighborBaseMapping.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /// Mapping using nearest neighboring vertices.
 class NearestNeighborMapping : public NearestNeighborBaseMapping {
@@ -22,6 +21,12 @@ public:
   /// name of the nn mapping
   std::string getName() const final override;
 
+  /// For reading data just-in-time (only consistent at the moment)
+  void mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values) final override;
+
+  /// For writing data just-in-time (only conservative at the moment)
+  void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> target) final override;
+
 protected:
   /// @copydoc Mapping::mapConservative
   void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) final override;
@@ -30,5 +35,4 @@ protected:
   void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) final override;
 };
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

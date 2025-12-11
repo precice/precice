@@ -7,9 +7,10 @@
 
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
+PRECICE_TEST_SETUP("Fluid"_on(2_ranks), "Structure"_on(2_ranks))
 BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
 {
-  PRECICE_TEST("Fluid"_on(2_ranks), "Structure"_on(2_ranks));
+  PRECICE_TEST();
 
   std::vector<Eigen::Vector3d> positions;
   std::vector<Eigen::Vector3d> data;
@@ -18,7 +19,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
   Eigen::Vector3d position;
   Eigen::Vector3d datum;
 
-  int i1 = -1, i2 = -1; //indices for data and positions
+  int i1 = -1, i2 = -1; // indices for data and positions
 
   if (context.isNamed("Fluid")) {
     if (context.isPrimary()) {

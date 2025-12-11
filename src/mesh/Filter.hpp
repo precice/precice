@@ -5,8 +5,7 @@
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 /** filters the source Mesh and adds it to the destination Mesh
  * @param[inout] destination the destination mesh to append the filtered Mesh to
@@ -69,5 +68,4 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
   }
 }
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

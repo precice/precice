@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <initializer_list>
 #include <stddef.h>
 #include <string>
 
@@ -8,20 +9,16 @@
 #include "logging/Logger.hpp"
 #include "precice/impl/Types.hpp"
 #include "time/Sample.hpp"
-#include "time/Storage.hpp"
 #include "time/Time.hpp"
 #include "time/Waveform.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class Mesh;
 }
-} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 /**
  * @brief Describes a set of data values belonging to the vertices of a mesh.
@@ -42,11 +39,11 @@ public:
   //  };
 
   // @brief Name of an undefined data type.
-  //static const std::string TYPE_NAME_UNDEFINED;
+  // static const std::string TYPE_NAME_UNDEFINED;
   // @brief Name of a double data type.
-  //static const std::string TYPE_NAME_DOUBLE;
+  // static const std::string TYPE_NAME_DOUBLE;
   // @brief Name of a vector data type.
-  //static const std::string TYPE_NAME_VECTOR;
+  // static const std::string TYPE_NAME_VECTOR;
 
   /**
    * @brief Constructor
@@ -64,14 +61,8 @@ public:
   /// Returns a const reference to the data values.
   const Eigen::VectorXd &values() const;
 
-  /// Returns a reference to the gradient data values.
-  Eigen::MatrixXd &gradients();
-
   /// Returns a const reference to the gradient data values.
   const Eigen::MatrixXd &gradients() const;
-
-  /// Returns a reference to the _sample.
-  time::Sample &sample();
 
   /// Returns a const reference to the _sample.
   const time::Sample &sample() const;
@@ -82,7 +73,7 @@ public:
    * @param time Time where the sampling happens.
    * @return Value of _waveform at time \ref time.
    */
-  Eigen::VectorXd sampleAtTime(double time) const;
+  time::SampleResult sampleAtTime(double time) const;
 
   /**
    * @brief get degree of _waveform.
@@ -91,19 +82,31 @@ public:
    */
   int getWaveformDegree() const;
 
-  /// Returns a reference to the _timeStepsStorage of _waveform.
-  time::Storage &timeStepsStorage();
+  /// Returns a reference to the waveform
+  time::Waveform &waveform();
 
   void moveToNextWindow();
 
-  /// Returns a the stamples from _timeStepsStorage.
+  /// Returns a the stamples from the waveform
   auto stamples() const
   {
     return _waveform.stamples();
   }
 
-  /// Add sample at given time to _timeStepsStorage.
+  /// Add sample at given time to the waveform
   void setSampleAtTime(double time, const time::Sample &sample);
+
+  /// Set _sample
+  void setGlobalSample(const time::Sample &sample); // @todo try to remove this function
+
+  /// Creates an empty sample at given time
+  void emplaceSampleAtTime(double time);
+
+  /// Creates a sample at given time with given values
+  void emplaceSampleAtTime(double time, std::initializer_list<double> values);
+
+  /// Creates a sample at given time with given values and gradients
+  void emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients);
 
   /// Returns the name of the data set, as set in the config file.
   const std::string &getName() const;
@@ -111,11 +114,11 @@ public:
   /// Returns the ID of the data set (supposed to be unique).
   DataID getID() const;
 
-  /// Sets all values to zero
-  void toZero();
-
   /// Returns if the data contains gradient data
   bool hasGradient() const;
+
+  /// Returns if there are sample of this data
+  bool hasSamples() const;
 
   /// Set the additional requirement of gradient data
   void requireDataGradient();
@@ -136,7 +139,7 @@ public:
 private:
   logging::Logger _log{"mesh::Data"};
 
-  /// Waveform wrapping this Data.
+  /// Sample storage of this Data.
   time::Waveform _waveform;
 
   /// Name of the data set.
@@ -157,5 +160,4 @@ private:
   time::Sample _sample;
 };
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

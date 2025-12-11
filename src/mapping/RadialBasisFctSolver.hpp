@@ -6,12 +6,14 @@
 #include <boost/range/adaptor/indexed.hpp>
 #include <boost/range/irange.hpp>
 #include <numeric>
+#include <type_traits>
+#include "mapping/MathHelper.hpp"
 #include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
+#include "profiling/Event.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /**
  * This class assembles and solves an RBF system, given an input mesh and an output mesh with relevant vertex IDs.
@@ -33,13 +35,15 @@ public:
    * for consistent mappings and the output mesh for conservative mappings
    * outputMesh refers to the mesh where we evaluate the interpolants, i.e., the output mesh
    * consistent mappings and the input mesh for conservative mappings
-  */
+   */
   template <typename IndexContainer>
   RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                        const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial);
 
   /// Maps the given input data
   Eigen::VectorXd solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const;
+
+  void computeCacheData(Eigen::MatrixXd &inputData, Polynomial polynomial, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffsOut) const;
 
   /// Maps the given input data
   Eigen::VectorXd solveConservative(const Eigen::VectorXd &inputData, Polynomial polynomial) const;
@@ -53,11 +57,28 @@ public:
   // Returns the size of the input data
   Eigen::Index getOutputSize() const;
 
-private:
-  precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
+  // Returns the number of active axis in use
+  Eigen::Index getNumberOfPolynomials() const;
 
+  template <typename IndexContainer>
+  Eigen::VectorXd interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs,
+                                const RADIAL_BASIS_FUNCTION_T &function, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const;
+
+  template <typename IndexContainer>
+  void addWriteDataToCache(const mesh::Vertex &v, const Eigen::VectorXd &load, Eigen::MatrixXd &epsilon, Eigen::MatrixXd &Au,
+                           const RADIAL_BASIS_FUNCTION_T &basisFunction, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const;
+
+  void evaluateConservativeCache(Eigen::MatrixXd &epsilon, const Eigen::MatrixXd &Au, Eigen::MatrixXd &result) const;
+
+private:
+  mutable precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
+
+  double evaluateRippaLOOCVerror(const Eigen::VectorXd &lambda) const;
   /// Decomposition of the interpolation matrix
   DecompositionType _decMatrixC;
+
+  /// Diagonal entris of the inverse matrix C, requires for the Rippa scheme
+  Eigen::VectorXd _inverseDiagonal;
 
   /// Decomposition of the polynomial (for separate polynomial)
   Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qrMatrixQ;
@@ -70,6 +91,9 @@ private:
 
   /// Evaluation matrix (output x input)
   Eigen::MatrixXd _matrixA;
+
+  bool                computeCrossValidation = false;
+  std::array<bool, 3> _localActiveAxis;
 };
 
 // ------- Non-Member Functions ---------
@@ -78,14 +102,14 @@ private:
 inline double computeSquaredDifference(
     const std::array<double, 3> &u,
     std::array<double, 3>        v,
-    const std::array<bool, 3> &  activeAxis = {{true, true, true}})
+    const std::array<bool, 3>   &activeAxis = {{true, true, true}})
 {
   // Subtract the values and multiply out dead dimensions
   for (unsigned int d = 0; d < v.size(); ++d) {
     v[d] = (u[d] - v[d]) * static_cast<int>(activeAxis[d]);
   }
-  // @todo: this can be replaced by std::hypot when moving to C++17
-  return std::accumulate(v.begin(), v.end(), static_cast<double>(0.), [](auto &res, auto &val) { return res + val * val; });
+  // use std::inner_product to avoid the need for lambda expressions
+  return std::inner_product(v.begin(), v.end(), v.begin(), 0.0);
 }
 
 /// given the active axis, computes sets the axis with the lowest spatial expansion to dead
@@ -123,7 +147,7 @@ inline void fillPolynomialEntries(Eigen::MatrixXd &matrix, const mesh::Mesh &mes
     matrix(i.index(), startIndex) = 1.0;
 
     // 2. the linear contribution
-    const auto & u = mesh.vertex(i.value()).rawCoords();
+    const auto  &u = mesh.vertex(i.value()).rawCoords();
     unsigned int k = 0;
     // Loop over all three space dimension and ignore dead axis
     for (unsigned int d = 0; d < activeAxis.size(); ++d) {
@@ -217,6 +241,102 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
   return matrixA;
 }
 
+// Variant operating on the Cholesky decopmosition
+inline Eigen::VectorXd computeInverseDiagonal(Eigen::LLT<Eigen::MatrixXd> decMatrixC)
+{
+  // 1. Compute the diagonal entries of the inverse kernel matrix:
+  // We already have the Cholesky decomposition. So instead of solving for the
+  // kernel matrix directly, we invert the lower triangular matrix of the
+  // decomposition:
+  // using A^{-1} = (L^T)^{-1}L^{-1} enables the computation of the diagonal
+  // entries of A^{-1} by evaluating the product above:
+  // A^{-1}_{ii} = sum_{k=1}^n L^{-T}_{ik} L^{-1}_{ki}
+
+  // 1a: Compute the inverse of the lower triangular matrix L
+  // Eigen::MatrixXd L_inv = L.inverse(); is not supported by Eigen (linker errors)
+  // However, Eigen provides triangular solver (LAPACK::trsm), which can be used
+  // to solve L * Linv = I
+  // Eigen::MatrixXd L_inv = Eigen::MatrixXd::Identity(inSize, inSize);
+  // _decMatrixC.matrixL().solveInPlace(L_inv);
+  // which yields cubic complexity (BLAS level 3).
+
+  // Here, we use our own implementation to compute the triangular inverse
+  // (similar to LAPACK:trtri) more efficient, given that the RHS is also
+  // triangular was unfortunately slower.
+
+  // Solve L * Linv = I
+  // Eigen::MatrixXd L_inv = Eigen::MatrixXd::Identity(n, n);
+  // decMatrixC.matrixL().solveInPlace(L_inv);
+  Eigen::MatrixXd L_inv = utils::invertLowerTriangularBlockwise(decMatrixC.matrixL());
+
+  // 1b: Compute the diagonal elements of A^{-1} by evaluating (L^T)^{-1}L^{-1}
+  Eigen::VectorXd inverseDiagonal = (L_inv.array().square().colwise().sum()).transpose();
+
+  return inverseDiagonal;
+}
+
+// Variant operating on the QR decomposition
+inline Eigen::VectorXd computeInverseDiagonal(Eigen::ColPivHouseholderQR<Eigen::MatrixXd> decMatrixC)
+{
+  // 1. Compute the diagonal entries of the inverse kernel matrix:
+  // We could use
+  //     diag_inv_A= _decMatrixC.inverse().diagonal();
+  // as Eigen offers this for the QR decomposition, but the inverse() call is
+  // more expensive than it has to be (as we compute all entries of the inverse). On the
+  // other hand, using non strictily-positive definite functions is less relevant anyway.
+  // Still, let's try the following:
+
+  // We already have the QR decomposition. So instead of solving for the
+  // kernel matrix directly, make use of the following:
+  // A^{-1} = R^{-1}Q^{-1}
+  // Since Q is orthogonal, Q^{-1} = Q^T
+  // R is upper triangular and we need to compute the inverse (using backwards substitution)
+
+  // enables the computation of the diagonal
+  // entries of A^{-1} by evaluating the product above:
+  // A^{-1} = R^{-1} Q^T
+  // A^{-1}_{ii} = sum_{k=1}^n R^{-1}_{ik} Q^{T}_{ki}
+
+  Eigen::VectorXd    inverseDiagonal;
+  const Eigen::Index n = decMatrixC.matrixR().cols();
+
+  // 1a: Compute the inverse of the lower triangular matrix L
+  // Solve R * Rinv = I
+  Eigen::MatrixXd R_inv = Eigen::MatrixXd::Identity(n, n);
+  decMatrixC.matrixR().template triangularView<Eigen::Upper>().solveInPlace(R_inv);
+  Eigen::VectorXi P = decMatrixC.colsPermutation().indices();
+  Eigen::MatrixXd Q = decMatrixC.householderQ();
+
+  // Now evaluate, caution with the column permutation
+  inverseDiagonal.resize(n);
+  for (Eigen::Index i = 0; i < n; ++i) {
+    inverseDiagonal(P(i)) = R_inv.row(i) * Q.transpose().col(P(i));
+  }
+  return inverseDiagonal;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::evaluateRippaLOOCVerror(const Eigen::VectorXd &lambda) const
+{
+  // Implementation of LOOCV according to Rippa(1999), DOI: 10.1023/a:1018975909870
+  double             loocv = 0;
+  const Eigen::Index n     = lambda.size();
+  // 2: Next, compute the RBF coefficient. These are exactly the same as computed during
+  // the solve_consistent and we could also pass them into the function, depending on how
+  // often wen want to compute the LOOCV. We omit the polynomial contribution here, i.e.,
+  // the input data remains untouched
+  // Eigen::VectorXd lambda = _decMatrixC.solve(inputData);
+
+  // 3: Evaluate the Rippa formula:
+  // The error estimate is given by a component-wise division: lambda/A^{-1}_{ii}.
+  // We then compute the RMS of all LOOCV error entries (other options for the
+  // aggregation should be possible)
+  // TODO:Consider storing the reciprocal inverse diagonal entries
+  loocv = std::sqrt((lambda.array() / _inverseDiagonal.array()).array().square().sum() / n);
+
+  return loocv;
+}
+
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
@@ -244,6 +364,12 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
                 "your basis-function (e.g. reduce the support-radius).",
                 inputMesh.getName(), outputMesh.getName());
 
+  // For polynomial on, the algorithm might fail in determining the size of the system
+  if (polynomial != Polynomial::ON && computeCrossValidation) {
+    // TODO: Disable synchronization
+    precice::profiling::Event e("map.rbf.computeLOOCV");
+    _inverseDiagonal = computeInverseDiagonal(_decMatrixC);
+  }
   // Second, assemble evaluation matrix
   _matrixA = buildMatrixA(basisFunction, inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial);
 
@@ -251,13 +377,13 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   if (polynomial == Polynomial::SEPARATE) {
 
     // 4 = 1 + dimensions(3) = maximum number of polynomial parameters
-    auto         localActiveAxis = activeAxis;
-    unsigned int polyParams      = 4 - std::count(localActiveAxis.begin(), localActiveAxis.end(), false);
+    _localActiveAxis        = activeAxis;
+    unsigned int polyParams = getNumberOfPolynomials();
 
     do {
       // First, build matrix Q and check for the condition number
       _matrixQ.resize(inputIDs.size(), polyParams);
-      fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, localActiveAxis);
+      fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, _localActiveAxis);
 
       // Compute the condition number
       Eigen::JacobiSVD<Eigen::MatrixXd> svd(_matrixQ);
@@ -268,8 +394,8 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 
       // Disable one axis
       if (conditionNumber > 1e5) {
-        reduceActiveAxis(inputMesh, inputIDs, localActiveAxis);
-        polyParams = 4 - std::count(localActiveAxis.begin(), localActiveAxis.end(), false);
+        reduceActiveAxis(inputMesh, inputIDs, _localActiveAxis);
+        polyParams = getNumberOfPolynomials();
       } else {
         break;
       }
@@ -277,7 +403,7 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 
     // allocate and fill matrix V for the outputMesh
     _matrixV.resize(outputIDs.size(), polyParams);
-    fillPolynomialEntries(_matrixV, outputMesh, outputIDs, 0, localActiveAxis);
+    fillPolynomialEntries(_matrixV, outputMesh, outputIDs, 0, _localActiveAxis);
 
     // 3. compute decomposition
     _qrMatrixQ = _matrixQ.colPivHouseholderQr();
@@ -306,32 +432,12 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative
     PRECICE_ASSERT(epsilon.size() == _matrixQ.cols());
 
     // out  = out - solveTranspose tau (sigma in the PETSc impl)
-    // Newer version of eigen provide the solve() for transpose() matrix decopmositions
-#if EIGEN_VERSION_AT_LEAST(3, 4, 0)
     out -= static_cast<Eigen::VectorXd>(_qrMatrixQ.transpose().solve(-epsilon));
-#else
-    // Backwards compatible version
-    Eigen::VectorXd    sigma(_matrixQ.rows());
-    const Eigen::Index nonzero_pivots = _qrMatrixQ.nonzeroPivots();
-
-    if (nonzero_pivots == 0) {
-      sigma.setZero();
-    } else {
-      Eigen::VectorXd c(_qrMatrixQ.colsPermutation().transpose() * (-epsilon));
-
-      _qrMatrixQ.matrixQR().topLeftCorner(nonzero_pivots, nonzero_pivots).template triangularView<Eigen::Upper>().transpose().conjugate().solveInPlace(c.topRows(nonzero_pivots));
-
-      sigma.topRows(nonzero_pivots) = c.topRows(nonzero_pivots);
-      sigma.bottomRows(_qrMatrixQ.rows() - nonzero_pivots).setZero();
-
-      sigma.applyOnTheLeft(_qrMatrixQ.householderQ().setLength(nonzero_pivots));
-      out -= sigma;
-    }
-#endif
   }
   return out;
 }
 
+// @todo: change the signature to Eigen::MatrixXd and process all components at once, the solve function of eigen can handle that
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const
 {
@@ -346,6 +452,11 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   // Integrated polynomial (and separated)
   PRECICE_ASSERT(inputData.size() == _matrixA.cols());
   Eigen::VectorXd p = _decMatrixC.solve(inputData);
+
+  if (polynomial != Polynomial::ON && computeCrossValidation) {
+    precice::profiling::Event e("map.rbf.evaluateLOOCV");
+    PRECICE_INFO("Cross validation error (LOOCV): {}", evaluateRippaLOOCVerror(p));
+  }
   PRECICE_ASSERT(p.size() == _matrixA.cols());
   Eigen::VectorXd out = _matrixA * p;
 
@@ -354,6 +465,113 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
     out += (_matrixV * polynomialContribution);
   }
   return out;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeCacheData(Eigen::MatrixXd &inputData, Polynomial polynomial, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffsOut) const
+{
+  PRECICE_ASSERT((_matrixQ.size() > 0 && polynomial == Polynomial::SEPARATE) || _matrixQ.size() == 0);
+  // Solve polynomial QR and subtract it from the input data
+  if (polynomial == Polynomial::SEPARATE) {
+    polyOut = _qrMatrixQ.solve(inputData);
+    inputData -= (_matrixQ * polyOut);
+  }
+
+  // Integrated polynomial (and separated)
+  coeffsOut = _decMatrixC.solve(inputData);
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+template <typename IndexContainer>
+Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs,
+                                                                             const RADIAL_BASIS_FUNCTION_T &basisFunction, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const
+{
+  PRECICE_TRACE();
+  // We ignore the dead axis here for the evaluation matrix (matrixA), as the vertex coordinates are zero for a potential 2d case and there is no option in PUM to set them from the user
+
+  // Two cases we have to distinguish here:
+  // 1. there is no polynomial given, then the result is out = _matrixA * p;
+  Eigen::VectorXd result(coeffs.cols());
+  result.setZero();
+
+  // Compute RBF values for matrix A
+  const auto &out = v.rawCoords();
+  for (const auto &j : inputIDs | boost::adaptors::indexed()) {
+    const auto &in                = inMesh.vertex(j.value()).rawCoords();
+    double      squaredDifference = computeSquaredDifference(out, in);
+    double      eval              = basisFunction.evaluate(std::sqrt(squaredDifference));
+
+    result += eval * coeffs.row(j.index()).transpose();
+  }
+
+  // 2. we have a separate polynomial, then we have to add it again here;
+  //   out += (_matrixV * polynomialContribution);
+  if (poly.size() > 0) {
+    // constant polynomial
+    result += 1 * poly.row(0).transpose();
+    // the linear contributions
+    int k = 1;
+    for (std::size_t d = 0; d < _localActiveAxis.size(); ++d) {
+      if (_localActiveAxis[d]) {
+        result += out[d] * poly.row(k).transpose();
+        ++k;
+      }
+    }
+  }
+  return result;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+template <typename IndexContainer>
+void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const mesh::Vertex &v, const Eigen::VectorXd &load, Eigen::MatrixXd &epsilon, Eigen::MatrixXd &Au,
+                                                                        const RADIAL_BASIS_FUNCTION_T &basisFunction, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const
+{
+  PRECICE_TRACE();
+  // We ignore the dead axis here for the evaluation matrix (matrixA), as the vertex coordinates are zero for a potential 2d case and there is no option in PUM to set them from the user
+
+  // 1. The matrix contribution
+  // Compute RBF values for matrix A
+  PRECICE_ASSERT(Au.rows() == static_cast<Eigen::Index>(inputIDs.size()));
+  PRECICE_ASSERT(Au.cols() == load.size());
+
+  const auto &out = v.rawCoords();
+  for (const auto &j : inputIDs | boost::adaptors::indexed()) {
+    const auto &in                = inMesh.vertex(j.value()).rawCoords();
+    double      squaredDifference = computeSquaredDifference(out, in);
+    double      eval              = basisFunction.evaluate(std::sqrt(squaredDifference));
+
+    Au.row(j.index()) += eval * load.transpose();
+  }
+
+  // 2. we have a separate polynomial, then we have to add it again here;
+  // Eigen::VectorXd epsilon = _matrixV.transpose() * inputData;
+  if (epsilon.size() > 0) {
+    PRECICE_ASSERT(epsilon.rows() == getNumberOfPolynomials());
+    PRECICE_ASSERT(epsilon.cols() == load.size());
+    // constant polynomial
+    epsilon.row(0) += 1 * load.transpose();
+    // the linear contributions
+    int k = 1;
+    for (std::size_t d = 0; d < _localActiveAxis.size(); ++d) {
+      if (_localActiveAxis[d]) {
+        epsilon.row(k) += out[d] * load.transpose();
+        ++k;
+      }
+    }
+  }
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::evaluateConservativeCache(Eigen::MatrixXd &epsilon, const Eigen::MatrixXd &Au, Eigen::MatrixXd &out) const
+{
+  // mu in the PETSc implementation
+  out = _decMatrixC.solve(Au);
+
+  if (epsilon.size() > 0) {
+    epsilon -= _matrixQ.transpose() * out;
+    // out  = out - solveTranspose tau (sigma in the PETSc impl)
+    out -= static_cast<Eigen::MatrixXd>(_qrMatrixQ.transpose().solve(-epsilon));
+  }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -366,7 +584,7 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::clear()
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::Index RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getInputSize() const
 {
-  return _matrixA.cols();
+  return _decMatrixC.cols();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -374,5 +592,11 @@ Eigen::Index RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getOutputSize() cons
 {
   return _matrixA.rows();
 }
-} // namespace mapping
-} // namespace precice
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+Eigen::Index RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getNumberOfPolynomials() const
+{
+  return 1 + std::count(_localActiveAxis.begin(), _localActiveAxis.end(), true);
+}
+
+} // namespace precice::mapping

@@ -12,9 +12,10 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Serial)
 BOOST_AUTO_TEST_SUITE(ActionTimings)
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ActionTimingsSerialExplicit)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   using namespace precice;
   Participant interface(context.name, context.config(), 0, 1);
@@ -59,15 +60,11 @@ BOOST_AUTO_TEST_CASE(ActionTimingsSerialExplicit)
   BOOST_TEST(action::RecorderAction::records.at(1).timing == action::Action::READ_MAPPING_POST);
   action::RecorderAction::reset();
 
-  int iteration = 0;
-
   while (interface.isCouplingOngoing()) {
     interface.readData(meshName, readDataName, {&vertexID, 1}, dt, readData);
     interface.writeData(meshName, writeDataName, {&vertexID, 1}, writeData);
     interface.advance(dt);
-    double dt = interface.getMaxTimeStepSize();
     BOOST_TEST(interface.isTimeWindowComplete());
-    iteration++;
 
     BOOST_TEST(action::RecorderAction::records.size() == 2);
     BOOST_TEST(action::RecorderAction::records.at(0).timing == action::Action::WRITE_MAPPING_POST);

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <precice/Exceptions.hpp>
 #include <precice/Tooling.hpp>
 #include <stdexcept>
 #include <string>
@@ -16,6 +17,10 @@ void printUsage()
 
 int main(int argc, char **argv)
 {
+
+  std::cout << "WARNING: precice-tools is deprecated and will be removed in preCICE version 4.\n"
+               "Please use precice-version , precice-config-validate or precice-config-doc instead.\n";
+
   if (argc < 2) {
     printUsage();
     return 1;
@@ -56,7 +61,11 @@ int main(int argc, char **argv)
         return 1;
       }
     }
-    precice::tooling::checkConfiguration(file, participant, size);
+    try {
+      precice::tooling::checkConfiguration(file, participant, size);
+    } catch (const ::precice::Error &) {
+      return 2;
+    }
     return 0;
   }
 

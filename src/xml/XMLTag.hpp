@@ -4,21 +4,18 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <set>
 #include <string>
+#include <variant>
 #include <vector>
 #include "logging/Logger.hpp"
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
-namespace precice {
-namespace xml {
+namespace precice::xml {
 class ConfigParser;
 }
-} // namespace precice
 
-namespace precice {
-namespace xml {
+namespace precice::xml {
 
 /// Tightly coupled to the parameters of Participant()
 struct ConfigurationContext {
@@ -36,15 +33,21 @@ public:
 
   using Subtags = typename std::vector<std::shared_ptr<XMLTag>>;
 
-  template <typename T>
-  using AttributeMap = typename std::map<std::string, XMLAttribute<T>>;
+  using Attribute = std::variant<
+      XMLAttribute<double>,
+      XMLAttribute<int>,
+      XMLAttribute<std::string>,
+      XMLAttribute<bool>,
+      XMLAttribute<Eigen::VectorXd>>;
+
+  using Attributes = typename std::vector<Attribute>;
 
   /// Callback interface for configuration classes using XMLTag.
   struct Listener {
 
     Listener &operator=(Listener &&) = delete;
 
-    virtual ~Listener(){};
+    virtual ~Listener() = default;
     /**
      * @brief Callback at begin of XML tag.
      *
@@ -72,7 +75,7 @@ public:
     OCCUR_ARBITRARY_NESTED
   };
 
-  static std::string getOccurrenceString(Occurrence occurrence);
+  static std::string_view getOccurrenceString(Occurrence occurrence);
 
   /**
    * @brief Standard constructor
@@ -83,7 +86,7 @@ public:
    * @param[in] xmlNamespace Defines a prefix/namespace for the tag. Tags with equal namespace or treated as group.
    */
   XMLTag(
-      Listener &  listener,
+      Listener   &listener,
       std::string name,
       Occurrence  occurrence,
       std::string xmlNamespace = "");
@@ -93,7 +96,7 @@ public:
    *
    * The description and more information is printed with printDocumentation().
    */
-  XMLTag &setDocumentation(const std::string &documentation);
+  XMLTag &setDocumentation(std::string_view documentation);
 
   std::string getDocumentation() const
   {
@@ -116,9 +119,6 @@ public:
     return _subtags;
   };
 
-  /// Removes the XML subtag with given name
-  //XMLTag& removeSubtag ( const std::string& tagName );
-
   /// Adds a XML attribute by making a copy of the given attribute.
   XMLTag &addAttribute(const XMLAttribute<double> &attribute);
 
@@ -137,7 +137,7 @@ public:
   /// Adds a hint for missing attributes, which will be displayed along the error message.
   void addAttributeHint(std::string name, std::string message);
 
-  bool hasAttribute(const std::string &attributeName);
+  bool hasAttribute(const std::string &attributeName) const;
 
   template <typename Container>
   void addSubtags(const Container &subtags)
@@ -180,43 +180,14 @@ public:
 
   bool getBooleanAttributeValue(const std::string &name, std::optional<bool> default_value = std::nullopt) const;
 
-  const AttributeMap<double> &getDoubleAttributes() const
-  {
-    return _doubleAttributes;
-  };
+  Eigen::VectorXd getEigenVectorXdAttributeValue(const std::string &name) const;
 
-  const AttributeMap<int> &getIntAttributes() const
-  {
-    return _intAttributes;
-  };
+  std::vector<std::string> getAttributeNames() const;
 
-  const AttributeMap<std::string> &getStringAttributes() const
+  const Attributes &getAttributes() const
   {
-    return _stringAttributes;
+    return _attributes;
   };
-
-  const AttributeMap<bool> &getBooleanAttributes() const
-  {
-    return _booleanAttributes;
-  };
-
-  const AttributeMap<Eigen::VectorXd> &getEigenVectorXdAttributes() const
-  {
-    return _eigenVectorXdAttributes;
-  };
-
-  /**
-   * @brief Returns Eigen vector attribute value with given dimensions.
-   *
-   * If the parsed vector has less dimensions then required, an error message
-   * is thrown.
-   *
-   * @param[in] name Name of attribute.
-   * @param[in] dimensions Dimensions of the vector to be returned.
-   */
-  Eigen::VectorXd getEigenVectorXdAttributeValue(
-      const std::string &name,
-      int                dimensions) const;
 
   bool isConfigured() const
   {
@@ -227,9 +198,6 @@ public:
   {
     return _occurrence;
   }
-
-  /// Removes all attributes and subtags
-  void clear();
 
   /// reads all attributes of this tag
   void readAttributes(const std::map<std::string, std::string> &aAttributes);
@@ -260,17 +228,7 @@ private:
 
   std::map<std::string, bool> _configuredNamespaces;
 
-  std::set<std::string> _attributes;
-
-  AttributeMap<double> _doubleAttributes;
-
-  AttributeMap<int> _intAttributes;
-
-  AttributeMap<std::string> _stringAttributes;
-
-  AttributeMap<bool> _booleanAttributes;
-
-  AttributeMap<Eigen::VectorXd> _eigenVectorXdAttributes;
+  Attributes _attributes;
 
   std::map<std::string, std::string> _attributeHints;
 
@@ -278,6 +236,9 @@ private:
 
   void resetAttributes();
 };
+
+/// Returns the name of an Attribute
+std::string getName(const XMLTag::Attribute &attribute);
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION
 
@@ -288,13 +249,6 @@ struct NoPListener : public XMLTag::Listener {
 };
 
 /**
- * @brief Returns an XMLTag::Listener that does nothing on callbacks.
- *
- * This is useful for tests, when the root tag to be specified in
- */
-//NoPListener& getNoPListener();
-
-/**
  * @brief Returns an empty root tag with name "configuration".
  *
  * A static NoPListener is added, and the occurrence is set to OCCUR_ONCE.
@@ -302,17 +256,9 @@ struct NoPListener : public XMLTag::Listener {
 XMLTag getRootTag();
 
 /// Configures the given configuration from file configurationFilename.
-void configure(
-    XMLTag &                                  tag,
+std::string configure(
+    XMLTag                                   &tag,
     const precice::xml::ConfigurationContext &context,
     std::string_view                          configurationFilename);
 
-} // namespace xml
-} // namespace precice
-
-/**
- * @brief Adds documentation of tag to output stream os.
- */
-//std::ostream& operator<< (
-//  std::ostream&                 os,
-//  const precice::xml::XMLTag& tag );
+} // namespace precice::xml

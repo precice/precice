@@ -4,10 +4,7 @@
     {
       "name": "base",
       "hidden": true,
-      "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "BUILD_SHARED_LIBS": "ON"
-      }
+      "binaryDir": "${sourceDir}/build"
     },
     {
       "name": "production",
@@ -22,15 +19,15 @@
     {
       "name": "production-audit",
       "inherits": "production",
-      "displayName": "Production release with assertions",
-      "description": "Release build assertions enabled for auditting a specific run.",
+      "displayName": "Production release with assertions and debug log",
+      "description": "Release build with assertions and debug log enabled for auditing a specific run.",
       "cacheVariables": {
         "PRECICE_RELEASE_WITH_ASSERTIONS": "ON",
         "PRECICE_RELEASE_WITH_DEBUG_LOG": "ON"
       }
     },
     {
-      "name": "develop",
+      "name": "development",
       "inherits": "base",
       "displayName": "Development",
       "description": "Development config with default settings",
@@ -69,7 +66,7 @@
     },
     {
       "name": "profiling",
-      "inherits": "develop",
+      "inherits": "development",
       "displayName": "Profiling",
       "description": "Profiling configuration",
       "cacheVariables": {

@@ -8,12 +8,12 @@
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
 BOOST_AUTO_TEST_SUITE(MappingVolume)
+PRECICE_TEST_SETUP("SolverOneCubeConservative1To3"_on(1_rank), "SolverTwoCubeConservative1To3"_on(3_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
 {
+  PRECICE_TEST();
   using precice::VertexID;
   using precice::testing::equals;
-
-  PRECICE_TEST("SolverOneCubeConservative1To3"_on(1_rank), "SolverTwoCubeConservative1To3"_on(3_ranks).setupIntraComm());
   precice::Participant interface(context.name, context.config(), context.rank, context.size);
 
   std::vector<VertexID> vertexIDs;
@@ -136,25 +136,25 @@ BOOST_AUTO_TEST_CASE(ParallelCubeConservative1To3)
 
     switch (context.rank) {
     case 0:
-      forces[0] = readData[vertexIDs[0]]; //A
-      forces[4] = readData[vertexIDs[1]]; //E
-      forces[7] = readData[vertexIDs[2]]; //H
-      forces[6] = readData[vertexIDs[3]]; //G
-      forces[3] = readData[vertexIDs[4]]; //D
+      forces[0] = readData[vertexIDs[0]]; // A
+      forces[4] = readData[vertexIDs[1]]; // E
+      forces[7] = readData[vertexIDs[2]]; // H
+      forces[6] = readData[vertexIDs[3]]; // G
+      forces[3] = readData[vertexIDs[4]]; // D
       break;
     case 1:
-      forces[0] = readData[vertexIDs[0]]; //A
-      forces[4] = readData[vertexIDs[1]]; //E
-      forces[5] = readData[vertexIDs[2]]; //F
-      forces[6] = readData[vertexIDs[3]]; //G
-      forces[1] = readData[vertexIDs[4]]; //B
+      forces[0] = readData[vertexIDs[0]]; // A
+      forces[4] = readData[vertexIDs[1]]; // E
+      forces[5] = readData[vertexIDs[2]]; // F
+      forces[6] = readData[vertexIDs[3]]; // G
+      forces[1] = readData[vertexIDs[4]]; // B
       break;
     case 2:
-      forces[0] = readData[vertexIDs[0]]; //A
-      forces[3] = readData[vertexIDs[1]]; //D
-      forces[6] = readData[vertexIDs[2]]; //G
-      forces[2] = readData[vertexIDs[3]]; //C
-      forces[1] = readData[vertexIDs[4]]; //B
+      forces[0] = readData[vertexIDs[0]]; // A
+      forces[3] = readData[vertexIDs[1]]; // D
+      forces[6] = readData[vertexIDs[2]]; // G
+      forces[2] = readData[vertexIDs[3]]; // C
+      forces[1] = readData[vertexIDs[4]]; // B
       break;
 
     default:

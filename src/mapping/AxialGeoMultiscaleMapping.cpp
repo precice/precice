@@ -9,11 +9,13 @@ AxialGeoMultiscaleMapping::AxialGeoMultiscaleMapping(
     int            dimensions,
     MultiscaleType type,
     MultiscaleAxis axis,
-    double         radius)
+    double         radius,
+    SpreadProfile  profile)
     : Mapping(constraint, dimensions, false, Mapping::InitialGuessRequirement::None),
       _type(type),
       _axis(axis),
-      _radius(radius)
+      _radius(radius),
+      _profile(profile)
 {
   setInputRequirement(Mapping::MeshRequirement::VERTEX);
   setOutputRequirement(Mapping::MeshRequirement::VERTEX);
@@ -49,7 +51,7 @@ void AxialGeoMultiscaleMapping::computeMapping()
                      "Unknown multiscale axis type.");
 
       // compute distances between 1D vertex and 3D vertices
-      mesh::Vertex &   v0                           = input()->vertex(0);
+      mesh::Vertex    &v0                           = input()->vertex(0);
       size_t const     outSize                      = output()->nVertices();
       constexpr double distance_to_radius_threshold = 1.05;
 
@@ -97,15 +99,9 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
 
   const int              inDataDimensions = inData.dataDims;
   const Eigen::VectorXd &inputValues      = inData.values;
-  Eigen::VectorXd &      outputValues     = outData;
+  Eigen::VectorXd       &outputValues     = outData;
   // TODO: check if this needs to change when access to mesh dimension is possible
   const int outDataDimensions = outData.size() / output()->nVertices();
-
-  int effectiveCoordinate = static_cast<std::underlying_type_t<MultiscaleType>>(_axis);
-  PRECICE_ASSERT(effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::X) ||
-                     effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Y) ||
-                     effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Z),
-                 "Unknown multiscale axis type.");
 
   // Check that the number of values for the input and output is right according to their dimensions
   PRECICE_ASSERT((inputValues.size() / static_cast<std::size_t>(inDataDimensions) == input()->nVertices()),
@@ -116,31 +112,42 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
   // We currently don't support 1D data, so we need that the user specifies data of the same dimensions on both sides
   PRECICE_ASSERT(inDataDimensions == outDataDimensions);
 
+  // Effective component (axis) to read/write: 0 for scalar fields (to avoid out-of-bounds), or 0 (x)/ 1 (y)/ 2 (z) for vectors
+  int effectiveCoordinate;
+  if (inDataDimensions == 1) {
+    effectiveCoordinate = 0;
+  } else {
+    effectiveCoordinate = static_cast<std::underlying_type_t<MultiscaleType>>(_axis);
+    PRECICE_ASSERT(effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::X) ||
+                       effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Y) ||
+                       effectiveCoordinate == static_cast<std::underlying_type_t<MultiscaleType>>(MultiscaleAxis::Z),
+                   "Unknown multiscale axis type.");
+  }
+
   PRECICE_DEBUG("Map consistent");
+
   if (_type == MultiscaleType::SPREAD) {
-    /*
-      3D vertices are assigned a value based on distance from the 1D vertex.
-      Currently, a Hagen-Poiseuille profile determines the velocity value.
-    */
+
     PRECICE_ASSERT(input()->nVertices() == 1);
     size_t const outSize = output()->nVertices();
 
     for (size_t i = 0; i < outSize; i++) {
       PRECICE_ASSERT(static_cast<size_t>((i * outDataDimensions) + effectiveCoordinate) < static_cast<size_t>(outputValues.size()), ((i * outDataDimensions) + effectiveCoordinate), outputValues.size());
-      // When adding support for 2D, remember that this should be 1.5 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
-      outputValues((i * outDataDimensions) + effectiveCoordinate) = 2 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
+      if (_profile == SpreadProfile::PARABOLIC) {
+        // When adding support for 2D, remember that this should be 1.5 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
+        outputValues((i * outDataDimensions) + effectiveCoordinate) = 2 * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
+      } else if (_profile == SpreadProfile::UNIFORM) {
+        outputValues((i * outDataDimensions) + effectiveCoordinate) = inputValues(effectiveCoordinate);
+      }
     }
   } else {
     PRECICE_ASSERT(_type == MultiscaleType::COLLECT);
-    /*
-      1D vertex is assigned the averaged value over all 3D vertices at the outlet,
-      but only of the effectiveCoordinate component of the velocity vector.
-    */
     PRECICE_ASSERT(output()->nVertices() == 1);
     outputValues(effectiveCoordinate) = 0;
     size_t const inSize               = input()->nVertices();
     for (size_t i = 0; i < inSize; i++) {
-      PRECICE_ASSERT(static_cast<size_t>((i * inDataDimensions) + effectiveCoordinate) < static_cast<size_t>(inputValues.size()), ((i * inDataDimensions) + effectiveCoordinate), inputValues.size());
+      PRECICE_ASSERT(static_cast<size_t>((i * inDataDimensions) + effectiveCoordinate) < static_cast<size_t>(inputValues.size()),
+                     ((i * inDataDimensions) + effectiveCoordinate), inputValues.size());
       outputValues(effectiveCoordinate) += inputValues((i * inDataDimensions) + effectiveCoordinate);
     }
     outputValues(effectiveCoordinate) = outputValues(effectiveCoordinate) / inSize;

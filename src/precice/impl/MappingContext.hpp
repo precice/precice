@@ -3,8 +3,8 @@
 #include "mapping/Mapping.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
-namespace precice {
-namespace impl {
+
+namespace precice::impl {
 
 /// Holds a data mapping and related information.
 struct MappingContext {
@@ -33,5 +33,4 @@ struct MappingContext {
   }
 };
 
-} // namespace impl
-} // namespace precice
+} // namespace precice::impl

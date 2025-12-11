@@ -8,9 +8,10 @@ BOOST_AUTO_TEST_SUITE(UtilsTests)
 
 BOOST_AUTO_TEST_SUITE(IntraComm)
 
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(SerialConfig)
 {
-  PRECICE_TEST(""_on(1_rank).setupIntraComm());
+  PRECICE_TEST();
 
   BOOST_TEST(!utils::IntraComm::isPrimary());
   BOOST_TEST(!utils::IntraComm::isSecondary());
@@ -34,9 +35,10 @@ BOOST_AUTO_TEST_CASE(SerialConfig)
   BOOST_TEST(!static_cast<bool>(utils::IntraComm::getCommunication()));
 }
 
+PRECICE_TEST_SETUP(""_on(3_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ParallelConfig)
 {
-  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   BOOST_TEST(utils::IntraComm::isPrimary() == context.isPrimary());
   BOOST_TEST(utils::IntraComm::isSecondary() != context.isPrimary());
@@ -62,9 +64,10 @@ BOOST_AUTO_TEST_CASE(ParallelConfig)
   BOOST_TEST(static_cast<bool>(utils::IntraComm::getCommunication()));
 }
 
+PRECICE_TEST_SETUP(""_on(3_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(Parallell2norm)
 {
-  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   const double norm = 16.881943016134134;
   if (context.isPrimary()) {
@@ -84,9 +87,10 @@ BOOST_AUTO_TEST_CASE(Parallell2norm)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(Seriall2norm)
 {
-  PRECICE_TEST(""_on(1_rank).setupIntraComm());
+  PRECICE_TEST();
 
   const double    norm = 16.881943016134134;
   Eigen::VectorXd v(9);
@@ -94,9 +98,10 @@ BOOST_AUTO_TEST_CASE(Seriall2norm)
   BOOST_TEST(utils::IntraComm::l2norm(v) == norm);
 }
 
+PRECICE_TEST_SETUP(""_on(3_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(Paralleldot)
 {
-  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   if (context.isPrimary()) {
     Eigen::VectorXd u(3), v(3);
@@ -118,9 +123,10 @@ BOOST_AUTO_TEST_CASE(Paralleldot)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(Serialdot)
 {
-  PRECICE_TEST(""_on(1_rank).setupIntraComm());
+  PRECICE_TEST();
 
   Eigen::VectorXd u(9), v(9);
   u << 1, 2, 3, 4, 5, 6, 7, 8, 9;
@@ -128,9 +134,10 @@ BOOST_AUTO_TEST_CASE(Serialdot)
   BOOST_TEST(utils::IntraComm::dot(u, v) == 165);
 }
 
+PRECICE_TEST_SETUP(""_on(3_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ParallelReduceSum)
 {
-  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   if (context.isPrimary()) {
     {
@@ -187,9 +194,10 @@ BOOST_AUTO_TEST_CASE(ParallelReduceSum)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(SerialReduceSum)
 {
-  PRECICE_TEST(""_on(1_rank).setupIntraComm());
+  PRECICE_TEST();
 
   {
     std::vector<double> in{1, 2, 3}, out{-1, -1, -1};
@@ -208,9 +216,10 @@ BOOST_AUTO_TEST_CASE(SerialReduceSum)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(3_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ParallelAllReduceSum)
 {
-  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   if (context.isPrimary()) {
     {
@@ -265,9 +274,10 @@ BOOST_AUTO_TEST_CASE(ParallelAllReduceSum)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(SerialAllReduceSum)
 {
-  PRECICE_TEST(""_on(1_rank).setupIntraComm());
+  PRECICE_TEST();
 
   {
     std::vector<double> in{1, 2, 3}, out{-1, -1, -1};
@@ -286,9 +296,10 @@ BOOST_AUTO_TEST_CASE(SerialAllReduceSum)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(3_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ParallelBroadcast)
 {
-  PRECICE_TEST(""_on(3_ranks).setupIntraComm());
+  PRECICE_TEST();
 
   if (context.isPrimary()) {
     {
@@ -325,9 +336,10 @@ BOOST_AUTO_TEST_CASE(ParallelBroadcast)
   }
 }
 
+PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(SerialBroadcast)
 {
-  PRECICE_TEST(""_on(1_rank).setupIntraComm());
+  PRECICE_TEST();
   {
     std::vector<double> in{1, 2, 3};
     utils::IntraComm::broadcast(in);

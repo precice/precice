@@ -15,11 +15,16 @@
 #include "profiling/Event.hpp"
 #include "utils/assertion.hpp"
 
+#ifdef PRECICE_COMPRESSION
+#include <lzma.h>
+#endif
+
 namespace precice::profiling {
 
 /// The Mode of the Event utility
 enum struct Mode {
   All,
+  API,
   Fundamental,
   Off
 };
@@ -28,11 +33,6 @@ enum struct EventClass : bool {
   Normal      = false,
   Fundamental = true
 };
-
-inline EventClass toEventClass(bool isFundamental)
-{
-  return static_cast<EventClass>(isFundamental);
-}
 
 /// An event that has been recorded and it waiting to be written to file
 struct TimedEntry {
@@ -82,10 +82,10 @@ public:
   ~EventRegistry();
 
   /// Deleted copy and move SMFs for singleton pattern
-  EventRegistry(EventRegistry const &) = delete;
-  EventRegistry(EventRegistry &&)      = delete;
+  EventRegistry(EventRegistry const &)            = delete;
+  EventRegistry(EventRegistry &&)                 = delete;
   EventRegistry &operator=(EventRegistry const &) = delete;
-  EventRegistry &operator=(EventRegistry &&) = delete;
+  EventRegistry &operator=(EventRegistry &&)      = delete;
 
   /// Returns the only instance (singleton) of the EventRegistry class
   static EventRegistry &instance();
@@ -119,19 +119,35 @@ public:
   /// Records an event
   void put(PendingEntry pe);
 
+  /// Records an event without flushing events
+  void putCritical(PendingEntry pe);
+
   /// Writes all recorded events to file and flushes the buffer.
   void flush();
 
   /// Should an event of this class be forwarded to the registry?
-  inline bool accepting(EventClass ec) const
+  inline bool accepting(Group g) const
   {
-    return _mode == Mode::All || (ec == EventClass::Fundamental && _mode == Mode::Fundamental);
+    switch (_mode) {
+    case Mode::Off:
+      return false;
+    case Mode::All:
+      return true;
+    case Mode::Fundamental:
+      return g == Group::Fundamental;
+    case Mode::API:
+      return (g == Group::Fundamental) || (g == Group::API);
+    }
+    PRECICE_UNREACHABLE("Unknown mode");
+  }
+
+  /// Is the solver running in parallel?
+  inline bool parallel() const
+  {
+    return _size > 1;
   }
 
   int nameToID(std::string_view name);
-
-  /// Currently active prefix. Changing that applies only to newly created events.
-  std::string prefix;
 
 private:
   /// The name of the current participant
@@ -148,8 +164,13 @@ private:
   /// The amount of parallel instances of the current program
   int _size = 1;
 
-  /// Indicator for the first record to be written
-  bool _firstwrite = true;
+#ifdef PRECICE_COMPRESSION
+  lzma_stream       _strm;
+  std::vector<char> _buf = std::vector<char>(4 * 64);
+#endif
+
+  /// Buffer for the text to be written to file
+  std::vector<char> _inbuf;
 
   /// The id of the global event
   std::optional<int> _globalId;

@@ -4,9 +4,11 @@
 #include "DistributedCommunication.hpp"
 #include "M2N.hpp"
 #include "com/Communication.hpp"
+#include "logging/LogConfiguration.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
+#include "precice/impl/versions.hpp"
 #include "profiling/Event.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
@@ -18,8 +20,8 @@ extern bool syncMode;
 
 namespace m2n {
 
-M2N::M2N(com::PtrCommunication intraComm, DistributedComFactory::SharedPointer distrFactory, bool useOnlyPrimaryCom, bool useTwoLevelInit)
-    : _intraComm(std::move(intraComm)),
+M2N::M2N(com::PtrCommunication interComm, DistributedComFactory::SharedPointer distrFactory, bool useOnlyPrimaryCom, bool useTwoLevelInit)
+    : _interComm(std::move(interComm)),
       _distrFactory(std::move(distrFactory)),
       _useOnlyPrimaryCom(useOnlyPrimaryCom),
       _useTwoLevelInit(useTwoLevelInit)
@@ -38,9 +40,40 @@ bool M2N::isConnected()
   return _isPrimaryRankConnected;
 }
 
+namespace {
+std::string makeLocalInfo(std::string_view configHash)
+{
+  std::string info = PRECICE_VERSION;
+  info += ";";
+  info += configHash;
+  return info;
+}
+
+} // namespace
+
+void M2N::checkRemoteInfo(std::string_view localParticipant,
+                          std::string_view remoteParticipant,
+                          std::string_view localConfigHash,
+                          std::string_view remoteInfo)
+{
+  auto sep = remoteInfo.find(";");
+  PRECICE_CHECK(sep != std::string::npos, "The received information string from participant {} is damaged. \"{}\"");
+
+  auto remoteVersion = remoteInfo.substr(0, sep);
+  PRECICE_CHECK(remoteVersion == PRECICE_VERSION,
+                "This participant {} uses preCICE version {} but the requester participant {} uses preCICE version {}. Mixing preCICE versions can lead to undefined behavior and is, thus, forbidden.",
+                localParticipant, PRECICE_VERSION, remoteParticipant, remoteVersion);
+
+  auto remoteConfigHash = remoteInfo.substr(sep + 1);
+  PRECICE_CHECK(remoteConfigHash == localConfigHash,
+                "This participant {} uses a different configuration file than the remote participant {}. Hashes differ {} != {}.",
+                localParticipant, remoteParticipant, localConfigHash, remoteConfigHash);
+}
+
 void M2N::acceptPrimaryRankConnection(
     const std::string &acceptorName,
-    const std::string &requesterName)
+    const std::string &requesterName,
+    std::string_view   configHash)
 {
   PRECICE_TRACE(acceptorName, requesterName);
 
@@ -48,9 +81,19 @@ void M2N::acceptPrimaryRankConnection(
 
   if (not utils::IntraComm::isSecondary()) {
     PRECICE_DEBUG("Accept primary connection");
-    PRECICE_ASSERT(_intraComm);
-    _intraComm->acceptConnection(acceptorName, requesterName, "PRIMARYCOM", utils::IntraComm::getRank());
-    _isPrimaryRankConnected = _intraComm->isConnected();
+    PRECICE_ASSERT(_interComm);
+    _interComm->acceptConnection(acceptorName, requesterName, "PRIMARYCOM", utils::IntraComm::getRank());
+    _isPrimaryRankConnected = _interComm->isConnected();
+
+    std::string localInfo = makeLocalInfo(configHash);
+    _interComm->send(localInfo, 0);
+    std::string remoteInfo;
+    _interComm->receive(remoteInfo, 0);
+
+    checkRemoteInfo(acceptorName,
+                    requesterName,
+                    configHash,
+                    remoteInfo);
   }
 
   utils::IntraComm::broadcast(_isPrimaryRankConnected);
@@ -58,17 +101,29 @@ void M2N::acceptPrimaryRankConnection(
 
 void M2N::requestPrimaryRankConnection(
     const std::string &acceptorName,
-    const std::string &requesterName)
+    const std::string &requesterName,
+    std::string_view   configHash)
 {
   PRECICE_TRACE(acceptorName, requesterName);
 
   Event e("m2n.requestPrimaryRankConnection." + acceptorName, profiling::Fundamental, profiling::Synchronize);
 
   if (not utils::IntraComm::isSecondary()) {
-    PRECICE_ASSERT(_intraComm);
+    PRECICE_ASSERT(_interComm);
     PRECICE_DEBUG("Request primary connection");
-    _intraComm->requestConnection(acceptorName, requesterName, "PRIMARYCOM", 0, 1);
-    _isPrimaryRankConnected = _intraComm->isConnected();
+    _interComm->requestConnection(acceptorName, requesterName, "PRIMARYCOM", 0, 1);
+    _isPrimaryRankConnected = _interComm->isConnected();
+
+    // check that local and remote have the same precice version
+    std::string remoteInfo;
+    _interComm->receive(remoteInfo, 0);
+    std::string localInfo = makeLocalInfo(configHash);
+    _interComm->send(localInfo, 0);
+
+    checkRemoteInfo(requesterName,
+                    acceptorName,
+                    configHash,
+                    remoteInfo);
   }
 
   utils::IntraComm::broadcast(_isPrimaryRankConnected);
@@ -112,14 +167,14 @@ void M2N::prepareEstablishment(const std::string &acceptorName,
                                const std::string &requesterName)
 {
   PRECICE_TRACE();
-  _intraComm->prepareEstablishment(acceptorName, requesterName);
+  _interComm->prepareEstablishment(acceptorName, requesterName);
 }
 
 void M2N::cleanupEstablishment(const std::string &acceptorName,
                                const std::string &requesterName)
 {
   PRECICE_TRACE();
-  _intraComm->cleanupEstablishment(acceptorName, requesterName);
+  _interComm->cleanupEstablishment(acceptorName, requesterName);
 }
 
 void M2N::acceptSecondaryRanksPreConnection(
@@ -168,8 +223,8 @@ void M2N::closeConnection()
 void M2N::closePrimaryRankConnection()
 {
   PRECICE_TRACE();
-  if (not utils::IntraComm::isSecondary() && _intraComm->isConnected()) {
-    _intraComm->closeConnection();
+  if (not utils::IntraComm::isSecondary() && _interComm->isConnected()) {
+    _interComm->closeConnection();
     _isPrimaryRankConnected = false;
   }
 
@@ -195,7 +250,7 @@ void M2N::closeDistributedConnections()
 com::PtrCommunication M2N::getPrimaryRankCommunication()
 {
   PRECICE_ASSERT(not utils::IntraComm::isSecondary());
-  return _intraComm; /// @todo maybe it would be a nicer design to not offer this
+  return _interComm; /// @todo maybe it would be a nicer design to not offer this
 }
 
 void M2N::createDistributedCommunication(const mesh::PtrMesh &mesh)
@@ -216,10 +271,11 @@ void M2N::send(
     PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
 
     if (precice::syncMode && not utils::IntraComm::isSecondary()) {
-      bool ack = true;
-      _intraComm->send(ack, 0);
-      _intraComm->receive(ack, 0);
-      _intraComm->send(ack, 0);
+      Event es("mn2.sendData.interSync");
+      bool  ack = true;
+      _interComm->send(ack, 0);
+      _interComm->receive(ack, 0);
+      _interComm->send(ack, 0);
     }
 
     Event e("m2n.sendData", profiling::Synchronize);
@@ -227,7 +283,7 @@ void M2N::send(
     _distComs[meshID]->send(itemsToSend, valueDimension);
   } else {
     PRECICE_ASSERT(_isPrimaryRankConnected);
-    _intraComm->send(itemsToSend, 0);
+    _interComm->send(itemsToSend, 0);
   }
 }
 
@@ -235,7 +291,7 @@ void M2N::send(bool itemToSend)
 {
   PRECICE_TRACE(utils::IntraComm::getRank());
   if (not utils::IntraComm::isSecondary()) {
-    _intraComm->send(itemToSend, 0);
+    _interComm->send(itemToSend, 0);
   }
 }
 
@@ -243,7 +299,7 @@ void M2N::send(double itemToSend)
 {
   PRECICE_TRACE(utils::IntraComm::getRank());
   if (not utils::IntraComm::isSecondary()) {
-    _intraComm->send(itemToSend, 0);
+    _interComm->send(itemToSend, 0);
   }
 }
 
@@ -251,7 +307,7 @@ void M2N::send(precice::span<double const> itemsToSend)
 {
   PRECICE_TRACE(utils::IntraComm::getRank());
   if (not utils::IntraComm::isSecondary()) {
-    _intraComm->send(itemsToSend, 0);
+    _interComm->send(itemsToSend, 0);
   }
 }
 
@@ -259,7 +315,7 @@ void M2N::send(int itemToSend)
 {
   PRECICE_TRACE(utils::IntraComm::getRank());
   if (not utils::IntraComm::isSecondary()) {
-    _intraComm->send(itemToSend, 0);
+    _interComm->send(itemToSend, 0);
   }
 }
 
@@ -275,7 +331,7 @@ void M2N::broadcastSendMesh(mesh::Mesh &mesh)
 }
 
 void M2N::scatterAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap,
-                                     mesh::Mesh &                     mesh)
+                                     mesh::Mesh                      &mesh)
 {
   PRECICE_ASSERT(utils::IntraComm::isParallel(),
                  "This method can only be used for parallel participants");
@@ -302,14 +358,12 @@ void M2N::receive(precice::span<double> itemsToReceive,
     PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
     PRECICE_ASSERT(_distComs[meshID].get() != nullptr);
 
-    if (precice::syncMode) {
-      if (not utils::IntraComm::isSecondary()) {
-        bool ack;
-
-        _intraComm->receive(ack, 0);
-        _intraComm->send(ack, 0);
-        _intraComm->receive(ack, 0);
-      }
+    if (precice::syncMode && not utils::IntraComm::isSecondary()) {
+      Event es("m2n.receiveData.interSync");
+      bool  ack;
+      _interComm->receive(ack, 0);
+      _interComm->send(ack, 0);
+      _interComm->receive(ack, 0);
     }
 
     Event e("m2n.receiveData", profiling::Synchronize);
@@ -317,7 +371,7 @@ void M2N::receive(precice::span<double> itemsToReceive,
     _distComs[meshID]->receive(itemsToReceive, valueDimension);
   } else {
     PRECICE_ASSERT(_isPrimaryRankConnected);
-    _intraComm->receive(itemsToReceive, 0);
+    _interComm->receive(itemsToReceive, 0);
   }
 }
 
@@ -325,7 +379,7 @@ void M2N::receive(bool &itemToReceive)
 {
   PRECICE_TRACE(utils::IntraComm::getRank());
   if (not utils::IntraComm::isSecondary()) {
-    _intraComm->receive(itemToReceive, 0);
+    _interComm->receive(itemToReceive, 0);
   }
 
   utils::IntraComm::broadcast(itemToReceive);
@@ -337,7 +391,7 @@ void M2N::receive(double &itemToReceive)
 {
   PRECICE_TRACE(utils::IntraComm::getRank());
   if (not utils::IntraComm::isSecondary()) {
-    _intraComm->receive(itemToReceive, 0);
+    _interComm->receive(itemToReceive, 0);
   }
 
   utils::IntraComm::broadcast(itemToReceive);
@@ -349,7 +403,7 @@ void M2N::receive(precice::span<double> itemsToReceive)
 {
   PRECICE_TRACE(utils::IntraComm::getRank());
   if (not utils::IntraComm::isSecondary()) {
-    _intraComm->receive(itemsToReceive, 0);
+    _interComm->receive(itemsToReceive, 0);
   }
 
   utils::IntraComm::broadcast(itemsToReceive);
@@ -361,7 +415,7 @@ void M2N::receive(int &itemToReceive)
 {
   PRECICE_TRACE(utils::IntraComm::getRank());
   if (not utils::IntraComm::isSecondary()) {
-    _intraComm->receive(itemToReceive, 0);
+    _interComm->receive(itemToReceive, 0);
   }
 
   utils::IntraComm::broadcast(itemToReceive);

@@ -19,7 +19,6 @@ build() {
     cmake . \
           -DCMAKE_BUILD_TYPE=None \
           -DCMAKE_INSTALL_PREFIX=/usr \
-          -DBUILD_SHARED_LIBS=ON \
           -DPRECICE_MPICommunication=ON \
           -DPRECICE_PETScMapping=ON \
           -DPRECICE_PythonActions=ON \

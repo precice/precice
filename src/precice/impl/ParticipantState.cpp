@@ -80,8 +80,8 @@ void ParticipantState::provideMesh(const mesh::PtrMesh &mesh)
   _usedMeshContexts.push_back(context);
 }
 
-void ParticipantState::receiveMesh(const mesh::PtrMesh &                         mesh,
-                                   const std::string &                           fromParticipant,
+void ParticipantState::receiveMesh(const mesh::PtrMesh                          &mesh,
+                                   const std::string                            &fromParticipant,
                                    double                                        safetyFactor,
                                    partition::ReceivedPartition::GeometricFilter geoFilter,
                                    const bool                                    allowDirectAccess)
@@ -150,7 +150,7 @@ ReadDataContext &ParticipantState::readDataContext(std::string_view mesh, std::s
 mesh::PtrMesh ParticipantState::findMesh(std::string_view data) const
 {
   for (const auto &meshContext : _meshContexts) {
-    const auto &             mesh = meshContext.second->mesh->getName();
+    const auto              &mesh = meshContext.second->mesh->getName();
     MeshDataKey<std::string> key{mesh, std::string{data}};
     const auto               it = _readDataContexts.find(key);
     if (it != _readDataContexts.end()) {
@@ -265,23 +265,39 @@ bool ParticipantState::isMeshUsed(std::string_view mesh) const
 
 bool ParticipantState::isMeshProvided(std::string_view mesh) const
 {
-  PRECICE_ASSERT(hasMesh(mesh));
+  if (!hasMesh(mesh)) {
+    return false;
+  }
   return usedMeshContext(mesh).provideMesh;
 }
 
 bool ParticipantState::isMeshReceived(std::string_view mesh) const
 {
-  PRECICE_ASSERT(hasMesh(mesh));
+  if (!hasMesh(mesh)) {
+    return false;
+  }
   return !usedMeshContext(mesh).provideMesh;
 }
 
 bool ParticipantState::isDirectAccessAllowed(std::string_view mesh) const
 {
-  PRECICE_ASSERT(hasMesh(mesh));
+  if (!hasMesh(mesh)) {
+    return false;
+  }
   return meshContext(mesh).allowDirectAccess;
 }
 
 // Other queries
+
+bool ParticipantState::hasReadMappings() const
+{
+  return !_readMappingContexts.empty();
+}
+
+bool ParticipantState::hasWriteMappings() const
+{
+  return !_writeMappingContexts.empty();
+}
 
 std::vector<MappingContext> &ParticipantState::readMappingContexts()
 {
@@ -341,32 +357,45 @@ void ParticipantState::exportInitial()
       continue;
     }
 
-    for (const MeshContext *meshContext : usedMeshContexts()) {
-      auto &mesh = *meshContext->mesh;
-      PRECICE_DEBUG("Exporting initial mesh {} to location \"{}\"", mesh.getName(), context.location);
-      context.exporter->doExport(fmt::format("{}-{}.init", mesh.getName(), getName()), context.location, mesh);
+    PRECICE_DEBUG("Exporting initial mesh {} to location \"{}\"", context.meshName, context.location);
+    context.exporter->doExport(0, 0.0);
+
+    if (context.updateSeries) {
+      PRECICE_DEBUG("Exporting series file of mesh {} to location \"{}\"", context.meshName, context.location);
+      context.exporter->exportSeries();
     }
   }
+
+  for (const PtrWatchPoint &watchPoint : watchPoints()) {
+    watchPoint->exportPointData(0.0);
+  }
+
+  for (const PtrWatchIntegral &watchIntegral : watchIntegrals()) {
+    watchIntegral->exportIntegralData(0.0);
+  }
+}
+
+bool ParticipantState::hasExports() const
+{
+  return !_exportContexts.empty() || !_watchPoints.empty() || !_watchIntegrals.empty();
 }
 
 void ParticipantState::exportIntermediate(IntermediateExport exp)
 {
   for (const io::ExportContext &context : exportContexts()) {
-    if (exp.complete && (context.everyNTimeWindows > 0) && (exp.timewindow % context.everyNTimeWindows == 0)) {
-      for (const MeshContext *meshContext : usedMeshContexts()) {
-        auto &mesh = *meshContext->mesh;
-        PRECICE_DEBUG("Exporting mesh {} for timewindow {} to location \"{}\"", mesh.getName(), exp.timewindow, context.location);
-        context.exporter->doExport(fmt::format("{}-{}.dt{}", mesh.getName(), getName(), exp.timewindow), context.location, mesh);
-      }
+    if (context.everyIteration) {
+      PRECICE_DEBUG("Exporting mesh {} for iteration {} to location \"{}\"", context.meshName, exp.iteration, context.location);
+      context.exporter->doExport(exp.iteration, exp.time);
+      continue;
+    }
+    if (exp.complete) {
+      PRECICE_DEBUG("Exporting mesh {} for timewindow {} to location \"{}\"", context.meshName, exp.timewindow, context.location);
+      context.exporter->doExport(exp.timewindow, exp.time);
     }
 
-    if (context.everyIteration) {
-      for (const MeshContext *meshContext : usedMeshContexts()) {
-        auto &mesh = *meshContext->mesh;
-        PRECICE_DEBUG("Exporting mesh {} for iteration {} to location \"{}\"", meshContext->mesh->getName(), exp.iteration, context.location);
-        /// @todo this is the global iteration count. Shouldn't this be local to the timestep? example .dtN.itM or similar
-        context.exporter->doExport(fmt::format("{}-{}.it{}", mesh.getName(), getName(), exp.iteration), context.location, mesh);
-      }
+    if (exp.final || (exp.complete && context.updateSeries)) {
+      PRECICE_DEBUG("Exporting series file of mesh {} to location \"{}\"", context.meshName, context.location);
+      context.exporter->exportSeries();
     }
   }
 
@@ -439,12 +468,37 @@ std::string ParticipantState::hintForMeshData(std::string_view mesh, std::string
   }
 
   // Was the data typoed?
-  auto matches = utils::computeMatches(mesh, localData);
+  auto matches = utils::computeMatches(data, localData);
   if (matches.front().distance < 3) {
     return " Did you mean data \"" + matches.front().name + "\"?";
   }
 
   return fmt::format(" Available data are: {}", fmt::join(localData, ", "));
+}
+
+void ParticipantState::initializeMappingDataCache(std::string_view mappingType)
+{
+  if (mappingType == "write") {
+    for (auto &context : writeDataContexts()) {
+      context.initializeMappingDataCache();
+    }
+  } else {
+    for (auto &context : readDataContexts()) {
+      context.initializeMappingDataCache();
+    }
+  }
+}
+
+void ParticipantState::configureInputMeshContext(std::string_view fromMesh, impl::MappingContext &mappingContext, mapping::Mapping::MeshRequirement requirement)
+{
+  meshContext(fromMesh).meshRequirement = std::max(meshContext(fromMesh).meshRequirement, requirement);
+  meshContext(fromMesh).fromMappingContexts.push_back(mappingContext);
+}
+
+void ParticipantState::configureOutputMeshContext(std::string_view toMesh, impl::MappingContext &mappingContext, mapping::Mapping::MeshRequirement requirement)
+{
+  meshContext(toMesh).toMappingContexts.push_back(mappingContext);
+  meshContext(toMesh).meshRequirement = std::max(meshContext(toMesh).meshRequirement, requirement);
 }
 
 } // namespace precice::impl

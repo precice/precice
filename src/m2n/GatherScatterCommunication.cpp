@@ -65,10 +65,10 @@ void GatherScatterCommunication::closeConnection()
 namespace {
 template <class Indices, class Src, class Dst, class Size>
 void add_to_indirect_blocks(
-    const Src &    src,
+    const Src     &src,
     const Indices &indices,
     Size           blockSize,
-    Dst &          dst)
+    Dst           &dst)
 {
   for (size_t i = 0; i < indices.size(); ++i) {
     auto srcfirst = blockSize * i;
@@ -81,10 +81,10 @@ void add_to_indirect_blocks(
 
 template <class Indices, class Src, class Dst, class Size>
 void copy_from_indirect_blocks(
-    const Src &    src,
+    const Src     &src,
     const Indices &indices,
     Size           blockSize,
-    Dst &          dst)
+    Dst           &dst)
 {
   for (size_t i = 0; i < indices.size(); ++i) {
     auto srcfirst = blockSize * indices[i];
@@ -156,7 +156,7 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
   // Secondary ranks receive scattered data
   if (utils::IntraComm::isSecondary()) { // Secondary rank
     if (!itemsToReceive.empty()) {
-      auto received = utils::IntraComm::getCommunication()->receiveRange(0, com::AsVectorTag<double>{});
+      auto received = utils::IntraComm::getCommunication()->receiveRange(0, com::asVector<double>);
       PRECICE_ASSERT(!received.empty());
       PRECICE_DEBUG("Received scattered data starting with {}", received[0]);
       std::copy(received.begin(), received.end(), itemsToReceive.begin());
@@ -170,7 +170,7 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
   const int globalSize = _mesh->getGlobalNumberOfVertices() * valueDimension;
   PRECICE_DEBUG("Receiving {} elements from other participant to scatter", globalSize);
 
-  auto globalItemsToReceive = _com->receiveRange(0, com::AsVectorTag<double>{});
+  auto globalItemsToReceive = _com->receiveRange(0, com::asVector<double>);
   PRECICE_ASSERT(globalItemsToReceive.size() == static_cast<std::size_t>(globalSize));
 
   const auto &vertexDistribution = _mesh->getVertexDistribution();

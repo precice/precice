@@ -4,11 +4,10 @@
 #include <vector>
 #include "cplscheme/CouplingScheme.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "time/Storage.hpp"
+#include "time/Waveform.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace cplscheme {
+namespace precice::cplscheme {
 
 class CouplingData {
 public:
@@ -26,49 +25,66 @@ public:
 
   int getSize() const;
 
-  /// Returns a reference to the data values.
-  Eigen::VectorXd &values();
+  int nVertices() const;
 
   /// Returns a const reference to the data values.
   const Eigen::VectorXd &values() const;
 
-  /// Returns a reference to the gradient data values.
-  Eigen::MatrixXd &gradients();
-
   /// Returns a const reference to the gradient data values.
   const Eigen::MatrixXd &gradients() const;
 
-  /// Returns a reference to the gradient data Sample.
-  time::Sample &sample();
+  /// Returns number of rows of the stored gradients.
+  int gradientsRows() const;
+
+  /// Returns number of columns of the stored gradients.
+  int gradientsCols() const;
 
   /// Returns a const reference to the data Sample.
   const time::Sample &sample() const;
 
   /// Returns a reference to the time step storage of the data.
-  time::Storage &timeStepsStorage();
+  time::Waveform &waveform();
 
   /// returns previous data interpolated to the relativeDt time
-  Eigen::VectorXd getPreviousValuesAtTime(double relativeDt);
+  time::SampleResult getPreviousValuesAtTime(double relativeDt);
 
   Eigen::MatrixXd getPreviousGradientsAtTime(double relativeDt);
 
   /// Returns a const reference to the time step storage of the data.
-  const time::Storage &timeStepsStorage() const;
+  const time::Waveform &waveform() const;
 
-  /// Returns the stamples in _timeStepsStorage.
+  /// Returns the stamples in the Waveform
   auto stamples() const
   {
-    return timeStepsStorage().stamples();
+    return waveform().stamples();
   }
 
-  /// Add sample at given time to _timeStepsStorage.
+  /// Add sample at given time to the Waveform
   void setSampleAtTime(double time, time::Sample sample);
+
+  /// Set _data::_sample
+  void setGlobalSample(const time::Sample &sample); // @todo try to remove this function
+
+  /// Add sample with zero values at given time to the Waveform
+  void initializeWithZeroAtTime(double time);
+
+  /// Creates an empty sample at given time
+  void emplaceSampleAtTime(double time);
+
+  /// Creates a sample at given time with given values
+  void emplaceSampleAtTime(double time, std::initializer_list<double> values);
+
+  /// Creates a sample at given time with given values and gradients
+  void emplaceSampleAtTime(double time, std::initializer_list<double> values, std::initializer_list<double> gradients);
 
   /// Returns if the data contains gradient data
   bool hasGradient() const;
 
   /// Returns the dimensions of the current mesh (2D or 3D)
   int meshDimensions() const;
+
+  /// Reshape the past iterations and initial sample during remeshing
+  void reinitialize();
 
   /// store _data->values() in read-only variable _previousIteration for convergence checks etc.
   void storeIteration();
@@ -89,7 +105,10 @@ public:
   int getDataID();
 
   /// get name of this CouplingData's data. See Data::getName().
-  std::string getDataName();
+  std::string getDataName() const;
+
+  /// get name of this CouplingData's mesh. See Mesh::getName().
+  std::string getMeshName() const;
 
   /// get vertex offsets of this CouplingData's mesh. See Mesh::getVertexOffsets().
   std::vector<int> getVertexOffsets();
@@ -115,7 +134,7 @@ private:
   mesh::PtrData _data;
 
   /// Sample values of previous iteration (end of time window).
-  time::Storage _previousTimeStepsStorage;
+  time::Waveform _previousTimeStepsStorage;
 
   /// If true, all substeps will be sent / received for this coupling data
   bool _exchangeSubsteps;
@@ -123,5 +142,4 @@ private:
   Direction _direction;
 };
 
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme

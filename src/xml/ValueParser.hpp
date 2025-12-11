@@ -4,8 +4,7 @@
 #include <string>
 #include "utils/String.hpp"
 
-namespace precice {
-namespace xml {
+namespace precice::xml {
 
 void readValueSpecific(const std::string &rawValue, double &value);
 
@@ -23,5 +22,4 @@ inline void readValueSpecific(const std::string &rawValue, bool &value)
 
 void readValueSpecific(const std::string &rawValue, Eigen::VectorXd &value);
 
-} // namespace xml
-} // namespace precice
+} // namespace precice::xml

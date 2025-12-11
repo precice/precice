@@ -3,11 +3,12 @@
 #include <Eigen/Core>
 #include <iosfwd>
 
+#include "mapping/impl/MappingDataCache.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "precice/span.hpp"
 
-namespace precice {
-namespace mapping {
+namespace precice::mapping {
 
 /**
  * @brief Abstract base class for mapping of data from one mesh to another.
@@ -115,6 +116,12 @@ public:
   /// Return true if the mapping requires an initial guess
   bool requiresInitialGuess() const;
 
+  /// Returns true if either the input or output is a just-in-time (dummy) mesh
+  /// which is used for just-in-time mappings. The just-in-time mesh is essentially
+  /// a placeholder for the non-existent or just-in-time mesh provided
+  /// by the user through the API functions
+  bool isJustInTimeMapping() const;
+
   /// Return the provided initial guess of a mapping using an initialGuess
   const Eigen::VectorXd &initialGuess() const;
 
@@ -188,6 +195,98 @@ public:
 
   /// Returns the name of the mapping method for logging purpose
   virtual std::string getName() const = 0;
+
+  /**
+   * @brief Just-in-time mapping variant of mapConservative
+   *
+   * Depending on the underlying mapping implementation, the result is either stored
+   * in an intermediate \p cache or directly in the \p target values, i.e., one of both
+   * arguments is typically unused in the mapping method. In case the data is stored
+   * in the cache, final results may be computed using \p completeJustInTimeMapping
+   *
+   * @param coordinates[in] where to compute the mapping
+   * @param source[in] the data values passed from the user
+   * @param cache[out] the mapping data cache previously initialized with \p initializeMappingDataCache
+   * @param target[out] preCICE-interal buffer where we store the result
+   *
+   * @note the default implementation in this class simply aborts the code and actual
+   * implementations are in derived classes
+   */
+  virtual void mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> target);
+
+  /**
+   * @brief Just-in-time mapping variant of mapConsistent
+   *
+   * @param coordinates[in] where to compute the mapping
+   * @param cache[in] the mapping data cache previously computed with \p updateMappingDataCache
+   * @param values[out] data buffer passed from the user (needs to have the correct shape)
+   *
+   * @note the default implementation in this class simply aborts the code and actual
+   * implementations are in derived classes
+   */
+  virtual void mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values);
+
+  /**
+   * @brief Allows updating a so-called MappingDataCache for more efficient just-in-time mappings
+   *
+   * To compute a mapping just-in-time (either with \p mapConservativeAt or \p mapConsistentAt ), we
+   * first sample in time and then (using this time sample) compute an interpolant in space.
+   * Since we typically need to evaluate at a specific point in time for many different locations
+   * (potentially corresponding to many different calls of \p mapConservativeAt or \p mapConsistentAt )
+   * we would compute the same time interpolant many times. Depending on the mapping method selected,
+   * we need to compute further derived data structures and values from the time interpolant (e.g. RBF
+   * coefficients) which is computationally demanding. The cache enables to store the latest queried
+   * time snapshot and (potentially, depending on the mapping) further derived data structures which
+   * remain constant for a specific point in time.
+   *
+   * In the default implementation, the cache stores the latest waveform sample in time.
+   *
+   * This function updates the cache in use to the provided time-interpolated data ( \p in ).
+   * It is called in the ReadDataContext::mapAndReadValues and called whenever the timestamp
+   * of the MappingDataCache is different from the actual 'readTime'.
+   * See also the documentation of the impl::MappingDataCache for more information.
+   *
+   * @param cache the cache in use, specific to a particular mapping-data pair
+   * @param in the time-interpolated data values
+   */
+  virtual void updateMappingDataCache(impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::VectorXd> &in);
+
+  /**
+   * @brief Allocates memory and sets up the data structures inside the MappingDataCache
+   *
+   * This is only relevant for just-in-time mappings. The MappingDataCache is specific to a Data-Mapping pair
+   * and stores intermediate computatons for efficiency reasons. The initialization happens immediately after
+   * ParticipantImpl::computeMappings through the DataContext::initializeMappingDataCache, which owns the
+   * just-in-time mapping, since only then the size of relevant data structures is known.
+   *
+   * See the documentation in impl::MappingDataCache for more information.
+   *
+   * @param cache the cache in use, specific to the mapping-data pair
+   */
+  virtual void initializeMappingDataCache(impl::MappingDataCache &cache);
+
+  /**
+   * @brief Completes a just-in-time mapping for conservative constraints
+   *
+   * For conservative constraints (only implemented in write direction at the moment), we potentially buffer
+   * (partially mapped) data written by the user into the MappingDataCache. Once the user has written all
+   * data, we complete the mapping to generate the full output data. In many cases, the initial 'partial processing'
+   * or partial mapping is a computationally cheaper operation, whereas the finalization in this function call
+   * performs the computationally more demanding operations. To prevent the expensive operations from entering the
+   * API functions, we use the MappingDataCache and the additional completeJustInTimeMapping function. The function
+   * needs to be called in the ParticipantImpl before calling storeBufferedData (which adds the (mapped and written)
+   * output data to the time step storage). The function is called through the (Write)DataContext owning the just-in-time
+   * mapping.
+   *
+   * This is not relevant for consistent constraints (only implemented in read direction at the moment), as we
+   * map before we give the data to the user, i.e., there is no completion to defer.
+   *
+   * See also the documentation in impl::MappingDataCache for more information.
+   *
+   * @param[in] cache The MappingDataCache holding the buffered data we want to evaluate
+   * @param[out] result The data vector we store the output data in.
+   */
+  virtual void completeJustInTimeMapping(impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> result);
 
 protected:
   /// Returns pointer to input mesh.
@@ -263,16 +362,15 @@ private:
 };
 
 /** Defines an ordering for MeshRequirement in terms of specificality
-* @param[in] lhs the left-hand side of the binary operator
-* @param[in] rhs the right-hand side of the binary operator
-*/
+ * @param[in] lhs the left-hand side of the binary operator
+ * @param[in] rhs the right-hand side of the binary operator
+ */
 bool operator<(Mapping::MeshRequirement lhs, Mapping::MeshRequirement rhs);
 
 /** Defines the output operation to streams
-* @param[in,out] out stream to output to.
-* @param[in] val the value to output.
-*/
+ * @param[in,out] out stream to output to.
+ * @param[in] val the value to output.
+ */
 std::ostream &operator<<(std::ostream &out, Mapping::MeshRequirement val);
 
-} // namespace mapping
-} // namespace precice
+} // namespace precice::mapping

@@ -14,12 +14,14 @@
 #include "acceleration/test/helper.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "cplscheme/SharedPointer.hpp"
+#include "testing/Meshes.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
 using namespace precice;
 using namespace precice::acceleration;
+using namespace precice::acceleration::impl;
 
 using precice::testing::makeCouplingData;
 
@@ -39,17 +41,20 @@ void testIQNIMVJPP(bool exchangeSubsteps)
 {
   using DataMap = AccelerationSerialTestsFixture::DataMap;
   // use two vectors and see if underrelaxation works
-  double           initialRelaxation          = 0.01;
-  int              maxIterationsUsed          = 50;
-  int              timeWindowsReused          = 6;
-  int              reusedTimeWindowsAtRestart = 0;
-  int              chunkSize                  = 0;
-  int              filter                     = Acceleration::QR1FILTER;
-  int              restartType                = IQNIMVJAcceleration::NO_RESTART;
-  double           singularityLimit           = 1e-10;
-  double           svdTruncationEps           = 0.0;
-  bool             enforceInitialRelaxation   = false;
-  bool             alwaysBuildJacobian        = false;
+  double       initialRelaxation          = 0.01;
+  int          maxIterationsUsed          = 50;
+  int          timeWindowsReused          = 6;
+  int          reusedTimeWindowsAtRestart = 0;
+  int          chunkSize                  = 0;
+  int          filter                     = Acceleration::QR1FILTER;
+  int          restartType                = IQNIMVJAcceleration::NO_RESTART;
+  double       singularityLimit           = 1e-10;
+  double       svdTruncationEps           = 0.0;
+  bool         enforceInitialRelaxation   = false;
+  bool         alwaysBuildJacobian        = false;
+  const double windowStart                = 0;
+  const double windowEnd                  = 1;
+
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
@@ -64,27 +69,23 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   upperBounds.insert(std::make_pair(1, 1.0e16));
   std::vector<double> factors;
   factors.resize(2, 1.0);
-  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
-  mesh::PtrMesh           dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
+  PtrPreconditioner prec(new ConstantPreconditioner(factors));
+  auto              dummyMesh = testing::makeDummy2DMesh(4);
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                          timeWindowsReused, filter, singularityLimit, dataIDs, rangeTypes, lowerBounds, upperBounds, prec, alwaysBuildJacobian,
-                         restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps);
+                         restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps, !exchangeSubsteps);
 
   Eigen::VectorXd fcol1;
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
-  // init displacements
-  displacements->values().resize(4);
-  displacements->values() << 1.0, 1.0, 1.0, 1.0;
-  displacements->setSampleAtTime(0, displacements->sample());
-
-  // init forces
-  forces->values().resize(4);
-  forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(0, forces->sample());
+  // init displacements & forces
+  displacements->emplaceSampleAtTime(windowStart, {1.0, 1.0, 1.0, 1.0});
+  displacements->emplaceSampleAtTime(windowEnd, {1.0, 1.0, 1.0, 1.0});
+  forces->emplaceSampleAtTime(windowStart, {0.2, 0.2, 0.2, 0.2});
+  forces->emplaceSampleAtTime(windowEnd, {0.2, 0.2, 0.2, 0.2});
 
   cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
   cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
@@ -97,48 +98,47 @@ void testIQNIMVJPP(bool exchangeSubsteps)
 
   pp.initialize(data);
 
-  displacements->values() << 1.0, 2.0, 3.0, 4.0;
-  displacements->setSampleAtTime(1, displacements->sample());
-  forces->values() << 0.1, 0.1, 0.1, 0.1;
-  forces->setSampleAtTime(1, forces->sample());
+  displacements->emplaceSampleAtTime(windowEnd, {1.0, 2.0, 3.0, 4.0});
+  forces->emplaceSampleAtTime(windowEnd, {0.1, 0.1, 0.1, 0.1});
 
-  pp.performAcceleration(data);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00000000000000000000));
-  BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01000000000000000888));
-  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.02000000000000001776));
-  BOOST_TEST(testing::equals(data.at(0)->values()(3), 1.03000000000000002665));
-  BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.199000000000000010214));
-  BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.199000000000000010214));
-  BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.199000000000000010214));
-  BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(0), 1.00000000000000000000));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(1), 1.01000000000000000888));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(2), 1.02000000000000001776));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(3), 1.03000000000000002665));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(0), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(1), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(2), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(3), 0.199000000000000010214));
 
-  data.begin()->second->values() << 10, 10, 10, 10;
+  // Update the waveform as well
+  displacements->emplaceSampleAtTime(windowEnd, {10, 10, 10, 10});
+  forces->setSampleAtTime(windowEnd, forces->sample());
 
-  pp.performAcceleration(data);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929695848558e-01));
-  BOOST_TEST(testing::equals(data.at(0)->values()(1), 6.10309919173602111186e-01));
-  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.78402117927690184729e+00));
-  BOOST_TEST(testing::equals(data.at(0)->values()(3), 2.95773243938020247157e+00));
-  BOOST_TEST(testing::equals(data.at(1)->values()(0), 8.28025852497733250157e-02));
-  BOOST_TEST(testing::equals(data.at(1)->values()(1), 8.28025852497733250157e-02));
-  BOOST_TEST(testing::equals(data.at(1)->values()(2), 8.28025852497733250157e-02));
-  BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(0), -5.63401340929695848558e-01));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(1), 6.10309919173602111186e-01));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(2), 1.78402117927690184729e+00));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(3), 2.95773243938020247157e+00));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(0), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(1), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(2), 8.28025852497733250157e-02));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(3), 8.28025852497733250157e-02));
 }
 
-#if 0
-// TODO not yet supported
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testIQNIMVJPPWithSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testIQNIMVJPP(true);
 }
-#endif
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testIQNIMVJPPWithoutSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testIQNIMVJPP(false);
 }
 
@@ -154,6 +154,9 @@ void testVIQNPP(bool exchangeSubsteps)
   double           singularityLimit         = 1e-10;
   bool             enforceInitialRelaxation = false;
   std::vector<int> dataIDs;
+  const double     windowStart = 0;
+  const double     windowEnd   = 1;
+
   dataIDs.push_back(0);
   dataIDs.push_back(1);
   std::map<int, std::string> rangeTypes;
@@ -167,28 +170,24 @@ void testVIQNPP(bool exchangeSubsteps)
   upperBounds.insert(std::make_pair(1, 1.0e16));
   std::vector<double> factors;
   factors.resize(2, 1.0);
-  acceleration::impl::PtrPreconditioner prec(new acceleration::impl::ConstantPreconditioner(factors));
+  PtrPreconditioner prec(new ConstantPreconditioner(factors));
 
   std::map<int, double> scalings;
   scalings.insert(std::make_pair(0, 1.0));
   scalings.insert(std::make_pair(1, 1.0));
-  mesh::PtrMesh dummyMesh(new mesh::Mesh("DummyMesh", 3, testing::nextMeshID()));
+  auto dummyMesh = testing::makeDummy2DMesh(4);
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                        timeWindowsReused, filter, singularityLimit, dataIDs, rangeTypes, lowerBounds, upperBounds, prec);
+                        timeWindowsReused, filter, singularityLimit, dataIDs, rangeTypes, lowerBounds, upperBounds, prec, !exchangeSubsteps);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
 
-  // init displacements
-  displacements->values().resize(4);
-  displacements->values() << 1.0, 1.0, 1.0, 1.0;
-  displacements->setSampleAtTime(0, displacements->sample());
-
-  // init forces
-  forces->values().resize(4);
-  forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(0, forces->sample());
+  // init displacements & forces
+  displacements->emplaceSampleAtTime(windowStart, {1.0, 1.0, 1.0, 1.0});
+  displacements->emplaceSampleAtTime(windowEnd, {1.0, 1.0, 1.0, 1.0});
+  forces->emplaceSampleAtTime(windowStart, {0.2, 0.2, 0.2, 0.2});
+  forces->emplaceSampleAtTime(windowEnd, {0.2, 0.2, 0.2, 0.2});
 
   cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
   cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
@@ -202,78 +201,74 @@ void testVIQNPP(bool exchangeSubsteps)
 
   pp.initialize(data);
 
-  displacements->values() << 1.0, 2.0, 3.0, 4.0;
-  displacements->setSampleAtTime(1, displacements->sample());
-  forces->values() << 0.1, 0.1, 0.1, 0.1;
-  forces->setSampleAtTime(1, forces->sample());
+  displacements->emplaceSampleAtTime(windowEnd, {1.0, 2.0, 3.0, 4.0});
+  forces->emplaceSampleAtTime(windowEnd, {0.1, 0.1, 0.1, 0.1});
 
-  pp.performAcceleration(data);
+  pp.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(testing::equals(data.at(0)->values()(0), 1.00));
-  BOOST_TEST(testing::equals(data.at(0)->values()(1), 1.01));
-  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.02));
-  BOOST_TEST(testing::equals(data.at(0)->values()(3), 1.03));
-  BOOST_TEST(testing::equals(data.at(1)->values()(0), 0.199));
-  BOOST_TEST(testing::equals(data.at(1)->values()(1), 0.199));
-  BOOST_TEST(testing::equals(data.at(1)->values()(2), 0.199));
-  BOOST_TEST(testing::equals(data.at(1)->values()(3), 0.199));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(0), 1.00));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(1), 1.01));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(2), 1.02));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(3), 1.03));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(0), 0.199));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(1), 0.199));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(2), 0.199));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(3), 0.199));
 
   Eigen::VectorXd newdvalues;
   utils::append(newdvalues, 10.0);
   utils::append(newdvalues, 10.0);
   utils::append(newdvalues, 10.0);
   utils::append(newdvalues, 10.0);
-  data.begin()->second->values() = newdvalues;
 
-  pp.performAcceleration(data);
+  displacements->setSampleAtTime(windowEnd, time::Sample(displacements->getDimensions(), newdvalues));
+  forces->setSampleAtTime(windowEnd, forces->sample());
 
-  BOOST_TEST(testing::equals(data.at(0)->values()(0), -5.63401340929692295845e-01));
-  BOOST_TEST(testing::equals(data.at(0)->values()(1), 6.10309919173607440257e-01));
-  BOOST_TEST(testing::equals(data.at(0)->values()(2), 1.78402117927690717636e+00));
-  BOOST_TEST(testing::equals(data.at(0)->values()(3), 2.95773243938020513610e+00));
-  BOOST_TEST(testing::equals(data.at(1)->values()(0), 8.28025852497733944046e-02));
-  BOOST_TEST(testing::equals(data.at(1)->values()(1), 8.28025852497733944046e-02));
-  BOOST_TEST(testing::equals(data.at(1)->values()(2), 8.28025852497733944046e-02));
-  BOOST_TEST(testing::equals(data.at(1)->values()(3), 8.28025852497733944046e-02));
+  pp.performAcceleration(data, windowStart, windowEnd);
+
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(0), -5.63401340929692295845e-01));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(1), 6.10309919173607440257e-01));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(2), 1.78402117927690717636e+00));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(3), 2.95773243938020513610e+00));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(0), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(1), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(2), 8.28025852497733944046e-02));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(3), 8.28025852497733944046e-02));
 }
 
-#if 0
-// TODO not yet supported
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testVIQNPPWithSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testVIQNPP(true);
- }
-#endif
+}
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testVIQNPPWithoutSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   testVIQNPP(false);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   // use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
-  mesh::PtrMesh    dummyMesh = std::make_shared<mesh::Mesh>("DummyMesh", 3, testing::nextMeshID());
+  auto             dummyMesh   = testing::makeDummy3DMesh(4);
+  const double     windowStart = 0;
+  const double     windowEnd   = 1;
 
   ConstantRelaxationAcceleration acc(relaxation, dataIDs);
 
   mesh::PtrData displacements = std::make_shared<mesh::Data>("dvalues", -1, 1);
   mesh::PtrData forces        = std::make_shared<mesh::Data>("fvalues", -1, 1);
 
-  // //init displacements
-  displacements->values().resize(4);
-  displacements->values() << 1.0, 2.0, 3.0, 4.0;
-  displacements->setSampleAtTime(0, displacements->sample());
-
-  // //init forces
-  forces->values().resize(4);
-  forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(0, forces->sample());
+  // init displacements & forces
+  displacements->emplaceSampleAtTime(windowStart, {1.0, 2.0, 3.0, 4.0});
+  forces->emplaceSampleAtTime(windowStart, {0.2, 0.2, 0.2, 0.2});
 
   bool exchangeSubsteps = false;
 
@@ -288,62 +283,56 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithSubsteps)
 
   acc.initialize(data);
 
-  displacements->values() << 3.5, 2.0, 2.0, 1.0;
-  displacements->setSampleAtTime(1, displacements->sample());
-  forces->values() << 0.1, 0.1, 0.1, 0.1;
-  forces->setSampleAtTime(1, forces->sample());
+  displacements->emplaceSampleAtTime(windowEnd, {3.5, 2.0, 2.0, 1.0});
+  forces->emplaceSampleAtTime(windowEnd, {0.1, 0.1, 0.1, 0.1});
 
-  acc.performAcceleration(data);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(data.at(0)->values()(0) == 2);
-  BOOST_TEST(data.at(0)->values()(1) == 2);
-  BOOST_TEST(data.at(0)->values()(2) == 2.6);
-  BOOST_TEST(data.at(0)->values()(3) == 2.8);
-  BOOST_TEST(data.at(1)->values()(0) == 0.16);
-  BOOST_TEST(data.at(1)->values()(1) == 0.16);
-  BOOST_TEST(data.at(1)->values()(2) == 0.16);
-  BOOST_TEST(data.at(1)->values()(3) == 0.16);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(0) == 2);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(1) == 2);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(2) == 2.6);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(3) == 2.8);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(0) == 0.16);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(1) == 0.16);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(2) == 0.16);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(3) == 0.16);
 
-  displacements->values() << 10, 10, 10, 10;
-  displacements->setSampleAtTime(1.0, displacements->sample());
-  forces->setSampleAtTime(1.0, forces->sample());
+  displacements->emplaceSampleAtTime(windowEnd, {10, 10, 10, 10});
+  forces->setSampleAtTime(windowEnd, forces->sample());
 
-  acc.performAcceleration(data);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(data.at(0)->values()(0) == 4.6);
-  BOOST_TEST(data.at(0)->values()(1) == 5.2);
-  BOOST_TEST(data.at(0)->values()(2) == 5.8);
-  BOOST_TEST(data.at(0)->values()(3) == 6.4);
-  BOOST_TEST(data.at(1)->values()(0) == 0.184);
-  BOOST_TEST(data.at(1)->values()(1) == 0.184);
-  BOOST_TEST(data.at(1)->values()(2) == 0.184);
-  BOOST_TEST(data.at(1)->values()(3) == 0.184);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(0) == 4.6);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(1) == 5.2);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(2) == 5.8);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(3) == 6.4);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(0) == 0.184);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(1) == 0.184);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(2) == 0.184);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(3) == 0.184);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithoutSubsteps)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   double              relaxation = 0.4;
   std::vector<int>    dataIDs{0, 1};
   std::vector<double> factors{1, 1};
-  mesh::PtrMesh       dummyMesh = std::make_shared<mesh::Mesh>("DummyMesh", 3, testing::nextMeshID());
+  auto                dummyMesh   = testing::makeDummy3DMesh(4);
+  const double        windowStart = 0;
+  const double        windowEnd   = 1;
 
-  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
-  AitkenAcceleration      acc(relaxation, dataIDs, prec);
+  PtrPreconditioner  prec(new ConstantPreconditioner(factors));
+  AitkenAcceleration acc(relaxation, dataIDs, prec);
 
   mesh::PtrData displacements = std::make_shared<mesh::Data>("dvalues", -1, 1);
   mesh::PtrData forces        = std::make_shared<mesh::Data>("fvalues", -1, 1);
 
-  // //init displacements
-  displacements->values().resize(4);
-  displacements->values() << 1.0, 2.0, 3.0, 4.0;
-  displacements->setSampleAtTime(0.0, displacements->sample());
-
-  // //init forces
-  forces->values().resize(4);
-  forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(0.0, forces->sample());
+  // //init displacements & forces
+  displacements->emplaceSampleAtTime(windowStart, {1.0, 2.0, 3.0, 4.0});
+  forces->emplaceSampleAtTime(windowStart, {0.2, 0.2, 0.2, 0.2});
 
   cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, false);
   cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, false);
@@ -356,73 +345,61 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithoutSubsteps)
 
   acc.initialize(data);
 
-  displacements->values() << 3.5, 2.0, 2.0, 1.0;
-  displacements->setSampleAtTime(1.0, displacements->sample());
-  forces->values() << 0.1, 0.1, 0.1, 0.1;
-  forces->setSampleAtTime(1.0, forces->sample());
+  displacements->emplaceSampleAtTime(windowEnd, {3.5, 2.0, 2.0, 1.0});
+  forces->emplaceSampleAtTime(windowEnd, {0.1, 0.1, 0.1, 0.1});
 
-  acc.performAcceleration(data);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(data.at(0)->values()(0) == 2);
-  BOOST_TEST(data.at(0)->values()(1) == 2);
-  BOOST_TEST(data.at(0)->values()(2) == 2.6);
-  BOOST_TEST(data.at(0)->values()(3) == 2.8);
-  BOOST_TEST(data.at(1)->values()(0) == 0.16);
-  BOOST_TEST(data.at(1)->values()(1) == 0.16);
-  BOOST_TEST(data.at(1)->values()(2) == 0.16);
-  BOOST_TEST(data.at(1)->values()(3) == 0.16);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(0) == 2);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(1) == 2);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(2) == 2.6);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(3) == 2.8);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(0) == 0.16);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(1) == 0.16);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(2) == 0.16);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(3) == 0.16);
 
-  data.begin()->second->values() << 10, 10, 10, 10;
-  displacements->setSampleAtTime(1.0, displacements->sample());
-  forces->setSampleAtTime(1.0, forces->sample());
+  displacements->emplaceSampleAtTime(windowEnd, {10, 10, 10, 10});
+  forces->setSampleAtTime(windowEnd, forces->sample());
 
-  acc.performAcceleration(data);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(data.at(0)->values()(0) == 1.2689851805508461);
-  BOOST_TEST(data.at(0)->values()(1) == 2.2390979382674185);
-  BOOST_TEST(data.at(0)->values()(2) == 3.2092106959839914);
-  BOOST_TEST(data.at(0)->values()(3) == 4.1793234537005644);
-  BOOST_TEST(data.at(1)->values()(0) == 0.19880451030866292);
-  BOOST_TEST(data.at(1)->values()(1) == 0.19880451030866292);
-  BOOST_TEST(data.at(1)->values()(2) == 0.19880451030866292);
-  BOOST_TEST(data.at(1)->values()(3) == 0.19880451030866292);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(0) == 1.2689851805508461);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(1) == 2.2390979382674185);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(2) == 3.2092106959839914);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(3) == 4.1793234537005644);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(0) == 0.19880451030866292);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(1) == 0.19880451030866292);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(2) == 0.19880451030866292);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(3) == 0.19880451030866292);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
 
   double           relaxation = 0.8;
   std::vector<int> dataIDs{0, 1, 2, 3};
-  mesh::PtrMesh    dummyMesh = std::make_shared<mesh::Mesh>("DummyMesh", 3, testing::nextMeshID());
+  auto             dummyMesh = testing::makeDummy2DMesh(2);
 
-  impl::PtrPreconditioner prec(new impl::ResidualPreconditioner(-1));
-  AitkenAcceleration      acc(relaxation, dataIDs, prec);
+  double       windowStart = 0;
+  double       windowEnd   = 1;
+  const double dt          = 1;
+
+  PtrPreconditioner  prec(new ResidualPreconditioner(-1));
+  AitkenAcceleration acc(relaxation, dataIDs, prec);
 
   mesh::PtrData data1 = std::make_shared<mesh::Data>("dvalues", -1, 1);
   mesh::PtrData data2 = std::make_shared<mesh::Data>("fvalues", -1, 1);
-  mesh::PtrData data3 = std::make_shared<mesh::Data>("gvalues", -1, 3);
-  mesh::PtrData data4 = std::make_shared<mesh::Data>("hvalues", -1, 1);
+  mesh::PtrData data3 = std::make_shared<mesh::Data>("gvalues", -1, 2);
+  mesh::PtrData data4 = std::make_shared<mesh::Data>("hvalues", -1, 2);
 
-  // init data1
-  data1->values().resize(2);
-  data1->values() << 40, 80;
-  data1->setSampleAtTime(0.0, data1->sample());
-
-  // init data2
-  data2->values().resize(2);
-  data2->values() << 5, 5;
-  data2->setSampleAtTime(0.0, data2->sample());
-
-  // init data3
-  data3->values().resize(3);
-  data3->values() << 1, 2, 3;
-  data3->setSampleAtTime(0.0, data3->sample());
-
-  // init data4
-  data4->values().resize(4);
-  data4->values() << 20, 40, 60, 80;
-  data4->setSampleAtTime(0.0, data4->sample());
+  // init data
+  data1->emplaceSampleAtTime(windowStart, {40, 80});
+  data2->emplaceSampleAtTime(windowStart, {5, 5});
+  data3->emplaceSampleAtTime(windowStart, {1, 2, 3, 4});
+  data4->emplaceSampleAtTime(windowStart, {20, 40, 60, 80});
 
   cplscheme::PtrCouplingData dpcd = makeCouplingData(data1, dummyMesh, false);
   cplscheme::PtrCouplingData fpcd = makeCouplingData(data2, dummyMesh, false);
@@ -441,118 +418,111 @@ BOOST_AUTO_TEST_CASE(testAitkenUnderrelaxationWithPreconditioner)
 
   acc.initialize(data);
 
-  data1->values() << 1, 7;
-  data1->setSampleAtTime(1.0, data1->sample());
-  data2->values() << 10, 10;
-  data2->setSampleAtTime(1.0, data2->sample());
-  data3->values() << 10, 11, 12;
-  data3->setSampleAtTime(1.0, data3->sample());
-  data4->values() << 40, 60, 80, 100;
-  data4->setSampleAtTime(1.0, data4->sample());
+  data1->emplaceSampleAtTime(windowEnd, {1, 7});
+  data2->emplaceSampleAtTime(windowEnd, {10, 10});
+  data3->emplaceSampleAtTime(windowEnd, {10, 11, 12, 13});
+  data4->emplaceSampleAtTime(windowEnd, {40, 60, 80, 100});
 
-  acc.performAcceleration(data);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(data.at(0)->values()(0) == 8.8);
-  BOOST_TEST(data.at(0)->values()(1) == 21.6);
-  BOOST_TEST(data.at(1)->values()(0) == 9);
-  BOOST_TEST(data.at(1)->values()(1) == 9);
-  BOOST_TEST(data.at(2)->values()(0) == 8.2);
-  BOOST_TEST(data.at(2)->values()(1) == 9.2);
-  BOOST_TEST(data.at(2)->values()(2) == 10.2);
-  BOOST_TEST(data.at(3)->values()(0) == 36);
-  BOOST_TEST(data.at(3)->values()(1) == 56);
-  BOOST_TEST(data.at(3)->values()(2) == 76);
-  BOOST_TEST(data.at(3)->values()(3) == 96);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(0) == 8.8);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(1) == 21.6);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(0) == 9);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(1) == 9);
+  BOOST_TEST(data.at(2)->waveform().sample(windowEnd)(0) == 8.2);
+  BOOST_TEST(data.at(2)->waveform().sample(windowEnd)(1) == 9.2);
+  BOOST_TEST(data.at(2)->waveform().sample(windowEnd)(2) == 10.2);
+  BOOST_TEST(data.at(3)->waveform().sample(windowEnd)(0) == 36);
+  BOOST_TEST(data.at(3)->waveform().sample(windowEnd)(1) == 56);
+  BOOST_TEST(data.at(3)->waveform().sample(windowEnd)(2) == 76);
+  BOOST_TEST(data.at(3)->waveform().sample(windowEnd)(3) == 96);
 
-  data1->values() << 2, 14;
-  data1->setSampleAtTime(1.0, data1->sample());
-  data2->values() << 8, 8;
-  data2->setSampleAtTime(1.0, data2->sample());
-  data3->values() << 13, 14, 15;
-  data3->setSampleAtTime(1.0, data3->sample());
-  data4->values() << 41, 61, 81, 90;
-  data4->setSampleAtTime(1.0, data4->sample());
+  data1->emplaceSampleAtTime(windowEnd, {2, 14});
+  data2->emplaceSampleAtTime(windowEnd, {8, 8});
+  data3->emplaceSampleAtTime(windowEnd, {13, 14, 15, 16});
+  data4->emplaceSampleAtTime(windowEnd, {41, 61, 81, 90});
 
-  acc.performAcceleration(data);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
-  BOOST_TEST(data.at(0)->values()(0) == -17.745640722103754);
-  BOOST_TEST(data.at(0)->values()(1) == -20.295060201548626);
-  BOOST_TEST(data.at(1)->values()(0) == 9.5588663727976648);
-  BOOST_TEST(data.at(1)->values()(1) == 9.5588663727976648);
-  BOOST_TEST(data.at(2)->values()(0) == 19.235465491190659);
-  BOOST_TEST(data.at(2)->values()(1) == 20.235465491190659);
-  BOOST_TEST(data.at(2)->values()(2) == 21.235465491190659);
-  BOOST_TEST(data.at(3)->values()(0) == 51.912064609583652);
-  BOOST_TEST(data.at(3)->values()(1) == 71.912064609583652);
-  BOOST_TEST(data.at(3)->values()(2) == 91.912064609583652);
-  BOOST_TEST(data.at(3)->values()(3) == 95.196221242658879);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(0) == -17.745640722103754);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(1) == -20.295060201548626);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(0) == 9.5588663727976648);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(1) == 9.5588663727976648);
+  BOOST_TEST(data.at(2)->waveform().sample(windowEnd)(0) == 19.235465491190659);
+  BOOST_TEST(data.at(2)->waveform().sample(windowEnd)(1) == 20.235465491190659);
+  BOOST_TEST(data.at(2)->waveform().sample(windowEnd)(2) == 21.235465491190659);
+  BOOST_TEST(data.at(3)->waveform().sample(windowEnd)(0) == 51.912064609583652);
+  BOOST_TEST(data.at(3)->waveform().sample(windowEnd)(1) == 71.912064609583652);
+  BOOST_TEST(data.at(3)->waveform().sample(windowEnd)(2) == 91.912064609583652);
+  BOOST_TEST(data.at(3)->waveform().sample(windowEnd)(3) == 95.196221242658879);
 
-  data1->values() << 2.1, 14.1;
-  data1->setSampleAtTime(1.0, data1->sample());
-  data2->values() << 8, 8;
-  data2->setSampleAtTime(1.0, data2->sample());
-  data3->values() << 13.05, 14.07, 15.1;
-  data3->setSampleAtTime(1.0, data3->sample());
-  data4->values() << 42, 60, 81.3, 91;
-  data4->setSampleAtTime(1.0, data4->sample());
+  data1->emplaceSampleAtTime(windowEnd, {2.1, 14.1});
+  data2->emplaceSampleAtTime(windowEnd, {8, 8});
+  data3->emplaceSampleAtTime(windowEnd, {13.05, 14.07, 15.1, 16.1});
+  data4->emplaceSampleAtTime(windowEnd, {42, 60, 81.3, 91});
 
-  acc.iterationsConverged(data);
+  acc.iterationsConverged(data, windowStart);
 
-  data1->values() << 3, 16;
-  data1->setSampleAtTime(2.0, data1->sample());
-  data2->values() << 7, 7;
-  data2->setSampleAtTime(2.0, data2->sample());
-  data3->values() << 18, 19, 20;
-  data3->setSampleAtTime(2.0, data3->sample());
-  data4->values() << 50, 70, 90, 110;
-  data4->setSampleAtTime(2.0, data4->sample());
+  // move to next window
+  windowStart += dt;
+  windowEnd += dt;
 
-  acc.performAcceleration(data);
+  // move to next window
+  windowStart += dt;
+  windowEnd += dt;
 
-  BOOST_TEST(data.at(0)->values()(0) == 10.4);
-  BOOST_TEST(data.at(0)->values()(1) == 28.8);
-  BOOST_TEST(data.at(1)->values()(0) == 6.6);
-  BOOST_TEST(data.at(1)->values()(1) == 6.6);
-  BOOST_TEST(data.at(2)->values()(0) == 14.6);
-  BOOST_TEST(data.at(2)->values()(1) == 15.6);
-  BOOST_TEST(data.at(2)->values()(2) == 16.6);
-  BOOST_TEST(data.at(3)->values()(0) == 44);
-  BOOST_TEST(data.at(3)->values()(1) == 64);
-  BOOST_TEST(data.at(3)->values()(2) == 84);
-  BOOST_TEST(data.at(3)->values()(3) == 104);
+  data1->emplaceSampleAtTime(windowEnd, {3, 16});
+  data2->emplaceSampleAtTime(windowEnd, {7, 7});
+  data3->emplaceSampleAtTime(windowEnd, {18, 19, 20, 21});
+  data4->emplaceSampleAtTime(windowEnd, {50, 70, 90, 110});
+
+  acc.performAcceleration(data, windowStart, windowEnd);
+
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(0) == 10.4);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(1) == 28.8);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(0) == 6.6);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(1) == 6.6);
+  BOOST_TEST(data.at(2)->waveform().sample(windowEnd)(0) == 14.6);
+  BOOST_TEST(data.at(2)->waveform().sample(windowEnd)(1) == 15.6);
+  BOOST_TEST(data.at(2)->waveform().sample(windowEnd)(2) == 16.6);
+  BOOST_TEST(data.at(3)->waveform().sample(windowEnd)(0) == 44);
+  BOOST_TEST(data.at(3)->waveform().sample(windowEnd)(1) == 64);
+  BOOST_TEST(data.at(3)->waveform().sample(windowEnd)(2) == 84);
+  BOOST_TEST(data.at(3)->waveform().sample(windowEnd)(3) == 104);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
 {
-  PRECICE_TEST(1_rank);
-  //use two vectors and see if underrelaxation works
+  PRECICE_TEST();
+  // use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
-  const int        dim       = 3;
-  mesh::PtrMesh    dummyMesh = std::make_shared<mesh::Mesh>("DummyMesh", dim, testing::nextMeshID());
+  const int        dim         = 3;
+  auto             dummyMesh   = testing::makeDummy3DMesh(4);
+  const double     windowStart = 0;
+  const double     windowEnd   = 1;
 
   ConstantRelaxationAcceleration acc(relaxation, dataIDs);
 
   mesh::PtrData displacements = std::make_shared<mesh::Data>("dvalues", -1, 1);
   mesh::PtrData forces        = std::make_shared<mesh::Data>("fvalues", -1, 1);
 
-  // //init displacements
-  displacements->values().resize(4);
-  displacements->values() << 1.0, 2.0, 3.0, 4.0;
+  // init displacements
   displacements->requireDataGradient();
-  displacements->gradients().resize(dim, 4);
+  Eigen::MatrixXd displacementGradient(displacements->gradients());
+  displacementGradient.resize(dim, 4);
   for (unsigned int r = 0; r < dim; ++r) {
     for (unsigned int c = 0; c < 4; ++c)
-      displacements->gradients()(r, c) = r + r * c;
+      displacementGradient(r, c) = r + r * c;
   }
-  displacements->setSampleAtTime(0.0, displacements->sample());
-  // //init forces
-  forces->values().resize(4);
-  forces->values() << 0.2, 0.2, 0.2, 0.2;
+  displacements->setSampleAtTime(windowStart, time::Sample(displacements->getDimensions(), Eigen::Vector4d{1.0, 2.0, 3.0, 4.0}, displacementGradient));
+  // init forces
   forces->requireDataGradient();
-  forces->gradients().resize(dim, 4);
-  forces->gradients().setConstant(-2);
-  forces->setSampleAtTime(0.0, forces->sample());
+  Eigen::MatrixXd forcesGradient(forces->gradients());
+  forcesGradient.resize(dim, 4);
+  forcesGradient.setConstant(-2);
+  forces->setSampleAtTime(windowStart, time::Sample(forces->getDimensions(), Eigen::Vector4d{0.2, 0.2, 0.2, 0.2}, forcesGradient));
 
   bool exchangeSubsteps = true;
 
@@ -567,24 +537,20 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
 
   acc.initialize(data);
 
-  displacements->values() << 3.5, 2.0, 2.0, 1.0;
-  displacements->gradients().setConstant(2.5);
-  displacements->setSampleAtTime(1.0, displacements->sample());
-  forces->values() << 0.1, 0.1, 0.1, 0.1;
-  forces->gradients().setConstant(3);
-  forces->setSampleAtTime(1.0, forces->sample());
+  displacements->setSampleAtTime(windowEnd, time::Sample(displacements->getDimensions(), Eigen::Vector4d{3.5, 2.0, 2.0, 1.0}, Eigen::MatrixXd(displacements->gradients()).setConstant(2.5)));
+  forces->setSampleAtTime(windowEnd, time::Sample(forces->getDimensions(), Eigen::Vector4d{0.1, 0.1, 0.1, 0.1}, Eigen::MatrixXd(forces->gradients()).setConstant(3)));
 
-  acc.performAcceleration(data);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   // Test value data
-  BOOST_TEST(data.at(0)->values()(0) == 2);
-  BOOST_TEST(data.at(0)->values()(1) == 2);
-  BOOST_TEST(data.at(0)->values()(2) == 2.6);
-  BOOST_TEST(data.at(0)->values()(3) == 2.8);
-  BOOST_TEST(data.at(1)->values()(0) == 0.16);
-  BOOST_TEST(data.at(1)->values()(1) == 0.16);
-  BOOST_TEST(data.at(1)->values()(2) == 0.16);
-  BOOST_TEST(data.at(1)->values()(3) == 0.16);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(0) == 2);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(1) == 2);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(2) == 2.6);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(3) == 2.8);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(0) == 0.16);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(1) == 0.16);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(2) == 0.16);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(3) == 0.16);
 
   // Test gradient data
   BOOST_TEST(data.at(0)->gradients()(0, 0) == 1);
@@ -600,22 +566,20 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
   BOOST_TEST(data.at(1)->gradients()(1, 1) == 0);
   BOOST_TEST(data.at(1)->gradients()(1, 2) == 0);
 
-  displacements->values() << 10, 10, 10, 10;
-  displacements->gradients().setConstant(4);
-  displacements->setSampleAtTime(1, displacements->sample());
-  forces->setSampleAtTime(1, forces->sample());
+  displacements->setSampleAtTime(windowEnd, time::Sample(displacements->getDimensions(), Eigen::Vector4d{10, 10, 10, 10}, Eigen::MatrixXd(displacements->gradients()).setConstant(4)));
+  forces->setSampleAtTime(windowEnd, forces->sample());
 
-  acc.performAcceleration(data);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   // Check that store iteration works properly
-  BOOST_TEST(data.at(0)->values()(0) == 4.6);
-  BOOST_TEST(data.at(0)->values()(1) == 5.2);
-  BOOST_TEST(data.at(0)->values()(2) == 5.8);
-  BOOST_TEST(data.at(0)->values()(3) == 6.4);
-  BOOST_TEST(data.at(1)->values()(0) == 0.184);
-  BOOST_TEST(data.at(1)->values()(1) == 0.184);
-  BOOST_TEST(data.at(1)->values()(2) == 0.184);
-  BOOST_TEST(data.at(1)->values()(3) == 0.184);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(0) == 4.6);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(1) == 5.2);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(2) == 5.8);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(3) == 6.4);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(0) == 0.184);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(1) == 0.184);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(2) == 0.184);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(3) == 0.184);
 
   BOOST_TEST(data.at(0)->gradients()(0, 0) == 1.6);
   BOOST_TEST(data.at(0)->gradients()(0, 1) == 1.6);
@@ -625,105 +589,24 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithSubsteps)
   BOOST_TEST(data.at(0)->gradients()(1, 2) == 3.4);
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithoutSubsteps)
 {
-  PRECICE_TEST(1_rank);
-  //use two vectors and see if underrelaxation works
-  double           relaxation = 0.4;
-  std::vector<int> dataIDs{0, 1};
-  mesh::PtrMesh    dummyMesh = std::make_shared<mesh::Mesh>("DummyMesh", 3, testing::nextMeshID());
-
-  ConstantRelaxationAcceleration acc(relaxation, dataIDs);
-
-  mesh::PtrData displacements = std::make_shared<mesh::Data>("dvalues", -1, 1);
-  mesh::PtrData forces        = std::make_shared<mesh::Data>("fvalues", -1, 1);
-
-  // //init displacements
-  displacements->values().resize(4);
-  displacements->values() << 1.0, 2.0, 3.0, 4.0;
-  displacements->setSampleAtTime(0.0, displacements->sample());
-
-  // //init forces
-  forces->values().resize(4);
-  forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->setSampleAtTime(0.0, forces->sample());
-
-  bool exchangeSubsteps = false;
-
-  cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
-  cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
-
-  DataMap data;
-  data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
-  data.insert(std::pair<int, cplscheme::PtrCouplingData>(1, fpcd));
-  dpcd->storeIteration();
-  fpcd->storeIteration();
-
-  acc.initialize(data);
-
-  displacements->values() << 3.5, 2.0, 2.0, 1.0;
-  displacements->setSampleAtTime(1.0, displacements->sample());
-  forces->values() << 0.1, 0.1, 0.1, 0.1;
-  forces->setSampleAtTime(1.0, forces->sample());
-
-  acc.performAcceleration(data);
-
-  BOOST_TEST(data.at(0)->values()(0) == 2);
-  BOOST_TEST(data.at(0)->values()(1) == 2);
-  BOOST_TEST(data.at(0)->values()(2) == 2.6);
-  BOOST_TEST(data.at(0)->values()(3) == 2.8);
-  BOOST_TEST(data.at(1)->values()(0) == 0.16);
-  BOOST_TEST(data.at(1)->values()(1) == 0.16);
-  BOOST_TEST(data.at(1)->values()(2) == 0.16);
-  BOOST_TEST(data.at(1)->values()(3) == 0.16);
-
-  displacements->values() << 10, 10, 10, 10;
-  displacements->setSampleAtTime(1.0, displacements->sample());
-  forces->setSampleAtTime(1.0, forces->sample());
-
-  acc.performAcceleration(data);
-
-  BOOST_TEST(data.at(0)->values()(0) == 4.6);
-  BOOST_TEST(data.at(0)->values()(1) == 5.2);
-  BOOST_TEST(data.at(0)->values()(2) == 5.8);
-  BOOST_TEST(data.at(0)->values()(3) == 6.4);
-  BOOST_TEST(data.at(1)->values()(0) == 0.184);
-  BOOST_TEST(data.at(1)->values()(1) == 0.184);
-  BOOST_TEST(data.at(1)->values()(2) == 0.184);
-  BOOST_TEST(data.at(1)->values()(3) == 0.184);
-}
-
-BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
-{
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   // use two vectors and see if underrelaxation works
   double           relaxation = 0.4;
   std::vector<int> dataIDs{0, 1};
-  const int        dim       = 3;
-  mesh::PtrMesh    dummyMesh = std::make_shared<mesh::Mesh>("DummyMesh", dim, testing::nextMeshID());
+  auto             dummyMesh   = testing::makeDummy3DMesh(4);
+  const double     windowStart = 0;
+  const double     windowEnd   = 1;
 
   ConstantRelaxationAcceleration acc(relaxation, dataIDs);
 
   mesh::PtrData displacements = std::make_shared<mesh::Data>("dvalues", -1, 1);
   mesh::PtrData forces        = std::make_shared<mesh::Data>("fvalues", -1, 1);
 
-  // //init displacements
-  displacements->values().resize(4);
-  displacements->values() << 1.0, 2.0, 3.0, 4.0;
-  displacements->requireDataGradient();
-  displacements->gradients().resize(dim, 4);
-  for (unsigned int r = 0; r < dim; ++r) {
-    for (unsigned int c = 0; c < 4; ++c)
-      displacements->gradients()(r, c) = r + r * c;
-  }
-  displacements->setSampleAtTime(0, displacements->sample());
-  // //init forces
-  forces->values().resize(4);
-  forces->values() << 0.2, 0.2, 0.2, 0.2;
-  forces->requireDataGradient();
-  forces->gradients().resize(dim, 4);
-  forces->gradients().setConstant(-2);
-  forces->setSampleAtTime(0, forces->sample());
+  displacements->emplaceSampleAtTime(windowStart, {1.0, 2.0, 3.0, 4.0});
+  forces->emplaceSampleAtTime(windowStart, {0.2, 0.2, 0.2, 0.2});
 
   bool exchangeSubsteps = false;
 
@@ -738,24 +621,96 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
 
   acc.initialize(data);
 
-  displacements->values() << 3.5, 2.0, 2.0, 1.0;
-  displacements->gradients().setConstant(2.5);
-  displacements->setSampleAtTime(1, displacements->sample());
-  forces->values() << 0.1, 0.1, 0.1, 0.1;
-  forces->gradients().setConstant(3);
-  forces->setSampleAtTime(1, forces->sample());
+  displacements->emplaceSampleAtTime(windowEnd, {3.5, 2.0, 2.0, 1.0});
+  forces->emplaceSampleAtTime(windowEnd, {0.1, 0.1, 0.1, 0.1});
 
-  acc.performAcceleration(data);
+  acc.performAcceleration(data, windowStart, windowEnd);
+
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(0) == 2);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(1) == 2);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(2) == 2.6);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(3) == 2.8);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(0) == 0.16);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(1) == 0.16);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(2) == 0.16);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(3) == 0.16);
+
+  displacements->emplaceSampleAtTime(windowEnd, {10, 10, 10, 10});
+
+  forces->setSampleAtTime(windowEnd, forces->sample());
+
+  acc.performAcceleration(data, windowStart, windowEnd);
+
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(0) == 4.6);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(1) == 5.2);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(2) == 5.8);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(3) == 6.4);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(0) == 0.184);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(1) == 0.184);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(2) == 0.184);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(3) == 0.184);
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
+{
+  PRECICE_TEST();
+  // use two vectors and see if underrelaxation works
+  double           relaxation = 0.4;
+  std::vector<int> dataIDs{0, 1};
+  const int        dim         = 3;
+  auto             dummyMesh   = testing::makeDummy3DMesh(4);
+  const double     windowStart = 0;
+  const double     windowEnd   = 1;
+
+  ConstantRelaxationAcceleration acc(relaxation, dataIDs);
+
+  mesh::PtrData displacements = std::make_shared<mesh::Data>("dvalues", -1, 1);
+  mesh::PtrData forces        = std::make_shared<mesh::Data>("fvalues", -1, 1);
+
+  // init displacements
+  displacements->requireDataGradient();
+  Eigen::MatrixXd displacementGradient(displacements->gradients());
+  displacementGradient.resize(dim, 4);
+  for (unsigned int r = 0; r < dim; ++r) {
+    for (unsigned int c = 0; c < 4; ++c)
+      displacementGradient(r, c) = r + r * c;
+  }
+  displacements->setSampleAtTime(windowStart, time::Sample(displacements->getDimensions(), Eigen::Vector4d{1.0, 2.0, 3.0, 4.0}, displacementGradient));
+  // init forces
+  forces->requireDataGradient();
+  Eigen::MatrixXd forcesGradient(forces->gradients());
+  forcesGradient.resize(dim, 4);
+  forcesGradient.setConstant(-2);
+  forces->setSampleAtTime(windowStart, time::Sample(forces->getDimensions(), Eigen::Vector4d{0.2, 0.2, 0.2, 0.2}, forcesGradient));
+
+  bool exchangeSubsteps = false;
+
+  cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, exchangeSubsteps);
+  cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, exchangeSubsteps);
+
+  DataMap data;
+  data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
+  data.insert(std::pair<int, cplscheme::PtrCouplingData>(1, fpcd));
+  dpcd->storeIteration();
+  fpcd->storeIteration();
+
+  acc.initialize(data);
+
+  displacements->setSampleAtTime(windowEnd, time::Sample(displacements->getDimensions(), Eigen::Vector4d{3.5, 2.0, 2.0, 1.0}, Eigen::MatrixXd(displacements->gradients()).setConstant(2.5)));
+  forces->setSampleAtTime(windowEnd, time::Sample(displacements->getDimensions(), Eigen::Vector4d{0.1, 0.1, 0.1, 0.1}, Eigen::MatrixXd(displacements->gradients()).setConstant(3)));
+
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   // Test value data
-  BOOST_TEST(data.at(0)->values()(0) == 2);
-  BOOST_TEST(data.at(0)->values()(1) == 2);
-  BOOST_TEST(data.at(0)->values()(2) == 2.6);
-  BOOST_TEST(data.at(0)->values()(3) == 2.8);
-  BOOST_TEST(data.at(1)->values()(0) == 0.16);
-  BOOST_TEST(data.at(1)->values()(1) == 0.16);
-  BOOST_TEST(data.at(1)->values()(2) == 0.16);
-  BOOST_TEST(data.at(1)->values()(3) == 0.16);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(0) == 2);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(1) == 2);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(2) == 2.6);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(3) == 2.8);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(0) == 0.16);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(1) == 0.16);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(2) == 0.16);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(3) == 0.16);
 
   // Test gradient data
   BOOST_TEST(data.at(0)->gradients()(0, 0) == 1);
@@ -771,22 +726,20 @@ BOOST_AUTO_TEST_CASE(testConstantUnderrelaxationWithGradientWithoutSubsteps)
   BOOST_TEST(data.at(1)->gradients()(1, 1) == 0);
   BOOST_TEST(data.at(1)->gradients()(1, 2) == 0);
 
-  data.begin()->second->values() << 10, 10, 10, 10;
-  displacements->gradients().setConstant(4);
-  displacements->setSampleAtTime(1, displacements->sample());
-  forces->setSampleAtTime(1, forces->sample());
+  displacements->setSampleAtTime(windowEnd, time::Sample(displacements->getDimensions(), Eigen::Vector4d{10, 10, 10, 10}, Eigen::MatrixXd(displacements->gradients()).setConstant(4)));
+  forces->setSampleAtTime(windowEnd, forces->sample());
 
-  acc.performAcceleration(data);
+  acc.performAcceleration(data, windowStart, windowEnd);
 
   // Check that store iteration works properly
-  BOOST_TEST(data.at(0)->values()(0) == 4.6);
-  BOOST_TEST(data.at(0)->values()(1) == 5.2);
-  BOOST_TEST(data.at(0)->values()(2) == 5.8);
-  BOOST_TEST(data.at(0)->values()(3) == 6.4);
-  BOOST_TEST(data.at(1)->values()(0) == 0.184);
-  BOOST_TEST(data.at(1)->values()(1) == 0.184);
-  BOOST_TEST(data.at(1)->values()(2) == 0.184);
-  BOOST_TEST(data.at(1)->values()(3) == 0.184);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(0) == 4.6);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(1) == 5.2);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(2) == 5.8);
+  BOOST_TEST(data.at(0)->waveform().sample(windowEnd)(3) == 6.4);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(0) == 0.184);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(1) == 0.184);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(2) == 0.184);
+  BOOST_TEST(data.at(1)->waveform().sample(windowEnd)(3) == 0.184);
 
   BOOST_TEST(data.at(0)->gradients()(0, 0) == 1.6);
   BOOST_TEST(data.at(0)->gradients()(0, 1) == 1.6);

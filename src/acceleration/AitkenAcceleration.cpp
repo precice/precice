@@ -24,7 +24,7 @@ AitkenAcceleration::AitkenAcceleration(double                  initialRelaxation
                                        std::vector<int>        dataIDs,
                                        impl::PtrPreconditioner preconditioner)
     : _initialRelaxation(initialRelaxation),
-      _dataIDs(std::move(dataIDs)),
+      _primaryDataIDs(std::move(dataIDs)),
       _aitkenFactor(initialRelaxation),
       _preconditioner(std::move(preconditioner))
 {
@@ -38,16 +38,12 @@ AitkenAcceleration::AitkenAcceleration(double                  initialRelaxation
 void AitkenAcceleration::initialize(const DataMap &cplData)
 {
   checkDataIDs(cplData);
-  for (const auto &data : cplData | boost::adaptors::map_values) {
-    PRECICE_CHECK(!data->exchangeSubsteps(),
-                  "Aitken acceleration does not yet support using data from all substeps. Please set substeps=\"false\" in the exchange tag of data \"{}\".", data->getDataName());
-  }
 
   // Accumulate number of entries
   // Size for each subvector needed for preconditioner
   std::vector<std::size_t> subVectorSizes;
   // Gather sizes
-  std::transform(_dataIDs.cbegin(), _dataIDs.cend(), std::back_inserter(subVectorSizes), [&cplData](const auto &d) { return cplData.at(d)->getSize(); });
+  std::transform(_primaryDataIDs.cbegin(), _primaryDataIDs.cend(), std::back_inserter(subVectorSizes), [&cplData](const auto &d) { return cplData.at(d)->getSize(); });
   // The accumulated sum
   Eigen::Index entries = std::accumulate(subVectorSizes.cbegin(), subVectorSizes.cend(), static_cast<Eigen::Index>(0));
 
@@ -55,20 +51,22 @@ void AitkenAcceleration::initialize(const DataMap &cplData)
   _oldResiduals = Eigen::VectorXd::Zero(entries);
   _values       = Eigen::VectorXd::Zero(entries);
   _oldValues    = Eigen::VectorXd::Zero(entries);
-  if (_dataIDs.size() > 1) {
+  if (_primaryDataIDs.size() > 1) {
     _preconditioner->initialize(subVectorSizes);
   }
 }
 
 void AitkenAcceleration::performAcceleration(
-    DataMap &cplData)
+    DataMap &cplData,
+    double   windowStart,
+    double   windowEnd)
 {
   PRECICE_TRACE();
 
   // Compute aitken relaxation factor
-  PRECICE_ASSERT(utils::contained(*_dataIDs.begin(), cplData));
+  PRECICE_ASSERT(utils::contained(*_primaryDataIDs.begin(), cplData));
 
-  concatenateCouplingData(cplData, _dataIDs, _values, _oldValues);
+  concatenateCouplingData(cplData, _primaryDataIDs, _values, _oldValues, windowStart, windowEnd);
 
   // Compute current residual = values - oldValues
   Eigen::VectorXd residuals = _values - _oldValues;
@@ -77,7 +75,7 @@ void AitkenAcceleration::performAcceleration(
   Eigen::VectorXd residualDeltas = residuals - _oldResiduals;
 
   // We need to update the preconditioner in every iteration
-  if (_dataIDs.size() > 1) {
+  if (_primaryDataIDs.size() > 1) {
     _preconditioner->update(false, _values, residuals);
   }
 
@@ -88,7 +86,7 @@ void AitkenAcceleration::performAcceleration(
   } else {
     // If we have more than one data set, we scale the data to get a better approximation
     // of the Aitken factor
-    if (_dataIDs.size() > 1) {
+    if (_primaryDataIDs.size() > 1) {
       _preconditioner->apply(residualDeltas);
       _preconditioner->apply(_oldResiduals);
     }
@@ -101,7 +99,7 @@ void AitkenAcceleration::performAcceleration(
   PRECICE_DEBUG("AitkenFactor: {}", _aitkenFactor);
 
   // Perform relaxation with aitken factor
-  applyRelaxation(_aitkenFactor, cplData);
+  applyRelaxation(_aitkenFactor, cplData, windowStart);
 
   // Store residuals for next iteration
   _oldResiduals = std::move(residuals);
@@ -110,13 +108,35 @@ void AitkenAcceleration::performAcceleration(
 }
 
 void AitkenAcceleration::iterationsConverged(
-    const DataMap &cplData)
+    const DataMap &cplData, double windowStart)
 {
   _iterationCounter = 0;
-  if (_dataIDs.size() > 1) {
+  if (_primaryDataIDs.size() > 1) {
     _preconditioner->update(true, _values, _oldResiduals);
   }
   _oldResiduals = Eigen::VectorXd::Constant(_oldResiduals.size(), std::numeric_limits<double>::max());
 }
 
+void AitkenAcceleration::concatenateCouplingData(
+    const DataMap &cplData, const std::vector<DataID> &dataIDs, Eigen::VectorXd &targetValues, Eigen::VectorXd &targetOldValues, double windowStart, double windowEnd) const
+{
+  Eigen::Index offset = 0;
+
+  for (auto id : dataIDs) {
+    Eigen::Index size = cplData.at(id)->getSize();
+
+    auto valuesSample    = cplData.at(id)->waveform().sample(windowEnd);
+    auto oldValuesSample = cplData.at(id)->getPreviousValuesAtTime(windowEnd);
+
+    PRECICE_ASSERT(valuesSample.values().size() == size, valuesSample.values().size(), size);
+    PRECICE_ASSERT(oldValuesSample.values().size() == size, oldValuesSample.values().size(), size);
+    PRECICE_ASSERT(targetValues.size() >= offset + size, "Target vector was not initialized.", targetValues.size(), offset + size);
+    PRECICE_ASSERT(targetOldValues.size() >= offset + size, "Target vector was not initialized.");
+    for (Eigen::Index i = 0; i < size; i++) {
+      targetValues(i + offset)    = valuesSample.values()(i);
+      targetOldValues(i + offset) = oldValuesSample.values()(i);
+    }
+    offset += size;
+  }
+}
 } // namespace precice::acceleration

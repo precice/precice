@@ -12,22 +12,19 @@
 #include "utils/ManageUniqueIDs.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 class DataConfiguration;
 }
-} // namespace precice
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
-namespace precice {
-namespace mesh {
+namespace precice::mesh {
 
 class MeshConfiguration : public xml::XMLTag::Listener {
 public:
   /// Constructor, takes a valid data configuration as argument.
   MeshConfiguration(
-      xml::XMLTag &        parent,
+      xml::XMLTag         &parent,
       PtrDataConfiguration config);
 
   /// Returns all configured meshes.
@@ -42,11 +39,13 @@ public:
   /// Returns the configured mesh with given name, or NULL.
   mesh::PtrMesh getMesh(const std::string &meshName) const;
 
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag);
+  static mesh::PtrMesh getJustInTimeMappingMesh(int dimension);
 
-  virtual void xmlEndTagCallback(
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
+
+  void xmlEndTagCallback(
       const xml::ConfigurationContext &context,
-      xml::XMLTag &                    callingTag);
+      xml::XMLTag                     &callingTag) override;
 
   const PtrDataConfiguration &getDataConfiguration() const;
 
@@ -60,11 +59,6 @@ public:
   void addNeededMesh(
       const std::string &participant,
       const std::string &mesh);
-
-  std::unique_ptr<utils::ManageUniqueIDs> extractMeshIdManager()
-  {
-    return std::move(_meshIdManager);
-  }
 
   /// Initialize the map between meshes and dimensions, for unit tests that directly create mesh objects without going through the config reading.
   void insertMeshToMeshDimensionsMap(const std::string &mesh,
@@ -93,10 +87,9 @@ private:
   /// to check later if all meshes that any coupling scheme needs are actually used by the participants
   std::map<std::string, std::vector<std::string>> _neededMeshes;
 
-  std::unique_ptr<utils::ManageUniqueIDs> _meshIdManager;
+  utils::ManageUniqueIDs _meshIdManager;
 
   utils::ManageUniqueIDs _dataIDManager;
 };
 
-} // namespace mesh
-} // namespace precice
+} // namespace precice::mesh

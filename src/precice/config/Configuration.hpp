@@ -6,6 +6,7 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "logging/config/LogConfiguration.hpp"
+#include "m2n/BoundM2N.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "mapping/SharedPointer.hpp"
@@ -13,8 +14,7 @@
 #include "profiling/config/ProfilingConfiguration.hpp"
 #include "xml/XMLTag.hpp"
 
-namespace precice {
-namespace config {
+namespace precice::config {
 
 /**
  * @brief Main class for preCICE XML configuration tree.
@@ -29,7 +29,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~Configuration() {}
+  ~Configuration() override = default;
 
   /**
    * @brief Returns root xml tag to start the automatic configuration process.
@@ -41,19 +41,25 @@ public:
    *
    * @return True, if successful.
    */
-  virtual void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag);
+  void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag) override;
 
   /**
    * @brief Callback function required for use of automatic configuration.
    *
    * @return True, if successful.
    */
-  virtual void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag);
+  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &tag) override;
 
   /// @brief Returns whether experimental features are allowed or not
   bool allowsExperimental() const
   {
     return _experimental;
+  }
+
+  /// @brief Returns whether experimental remeshing is allowed or not
+  bool allowsRemeshing() const
+  {
+    return _remeshing;
   }
 
   /// @brief Returns whether participants wait for each other in finalize
@@ -101,18 +107,25 @@ public:
   }
 
   /**
-    * @brief For manual configuration in test cases.
-    */
+   * @brief For manual configuration in test cases.
+   */
   void setParticipantConfiguration(PtrParticipantConfiguration config)
   {
     _participantConfiguration = config;
   }
+
+  std::map<std::string, m2n::BoundM2N> getBoundM2NsFor(std::string_view participant) const;
+
+  void configurePartitionsFor(std::string_view participantName);
 
 private:
   logging::Logger _log{"config::Configuration"};
 
   /// Allow the use of experimental features
   bool _experimental = false;
+
+  /// Allow the use of experimental remeshing features
+  bool _remeshing = false;
 
   /// Synchronize participants in finalize
   bool _waitInFinalize = false;
@@ -121,7 +134,7 @@ private:
   xml::XMLTag _tag;
 
   // The log configuration must be constructed first to prevent log clutter
-  LogConfiguration _logConfig;
+  logging::LogConfiguration _logConfig;
 
   // Handle other configuration afterwards
   precice::profiling::ProfilingConfiguration _profilingConfig;
@@ -137,5 +150,4 @@ private:
   cplscheme::PtrCouplingSchemeConfiguration _couplingSchemeConfiguration;
 };
 
-} // namespace config
-} // namespace precice
+} // namespace precice::config

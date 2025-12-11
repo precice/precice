@@ -16,21 +16,34 @@ using namespace precice;
 using namespace precice::acceleration;
 using namespace precice::acceleration::impl;
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testSVDFactorization)
 {
-  PRECICE_TEST(1_rank);
-  int                      m                   = 8;
+  PRECICE_TEST();
+  int                      m                   = 2; // size of a*
+  int                      n                   = 3; // size of b*
   double                   eps                 = 1.2e-3;
   const bool               cyclicCommunication = false;
   std::vector<double>      factors(1.0, 1.0);
-  Eigen::VectorXd          a(m);
-  Eigen::VectorXd          b(m);
+  Eigen::VectorXd          a1(2);
+  Eigen::VectorXd          a2(2);
+  Eigen::VectorXd          a3(2);
+  Eigen::VectorXd          b1(3);
+  Eigen::VectorXd          b2(3);
+  Eigen::VectorXd          b3(3);
   SVDFactorization::Vector singleValues = SVDFactorization::Vector::Zero(2);
-  singleValues(0)                       = 0.000578589774323541;
-  singleValues(1)                       = 8.13011257500996e-05;
+
+  a1 << 1., -1.;
+  a2 << 1., -1.;
+  a3 << 1., 0.;
+  b1 << 2., 4., 4.;
+  b2 << 2., 4., 4.;
+  b3 << -2., -10., -7.;
+  singleValues(0) = 12.;
+  singleValues(1) = 3.;
 
   // prepare preConditioner to be used to construct a SVD factorization class
-  auto prec(std::make_shared<impl::ConstantPreconditioner>(factors));
+  auto prec(std::make_shared<ConstantPreconditioner>(factors));
 
   // prepare matrix operation to be used in SVD update
   ParallelMatrixOperations matOperation;
@@ -40,15 +53,12 @@ BOOST_AUTO_TEST_CASE(testSVDFactorization)
   // construct a SVD factorization object
   SVDFactorization svd_1(eps, prec);
 
-  svd_1.initialize(ptrParMatrixOp, m);
-  // update 4 times
-  for (int i = 0; i < 4; i++) {
-    for (int j = 0; j < m; j++) {
-      a(j) = j * 0.001 - i * 0.001;
-      b(j) = j * 0.001 - i * 0.007;
-    }
-    svd_1.update(a, b);
-  }
+  svd_1.initialize(ptrParMatrixOp, m, n);
+
+  svd_1.update(a1, b1);
+  svd_1.update(a2, b2);
+  svd_1.update(a3, b3);
+
   // check if the over small single values have been correctly truncated
   BOOST_TEST(svd_1.rank() == 2);
   BOOST_TEST(testing::equals(svd_1.singularValues(), singleValues, 1e-10));

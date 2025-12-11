@@ -34,7 +34,6 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
 
     auto &mesh = precice::testing::WhiteboxAccessor::impl(participant).mesh("MeshOne");
     BOOST_REQUIRE(mesh.nVertices() == 3);
-    BOOST_REQUIRE(mesh.edges().size() == 3);
     BOOST_REQUIRE(mesh.triangles().size() == 1);
 
     BOOST_TEST(equals(mesh.triangles()[0].getArea(), 0.5), "Triangle area must be 0.5");
@@ -77,7 +76,7 @@ void testMappingVolumeOneTriangle(const std::string configFile, const TestContex
     participant.advance(dt);
     BOOST_TEST(!participant.isCouplingOngoing(), "Receiving participant must advance only once.");
 
-    //Check expected VS read
+    // Check expected VS read
     Eigen::VectorXd expected(1);
     Eigen::VectorXd readData(1);
     // Expected value in the middle of the triangle is the average of inputs (1, 10, 100)
@@ -143,7 +142,7 @@ void testMappingVolumeOneTriangleConservative(const std::string configFile, cons
     participant.advance(dt);
     BOOST_TEST(!participant.isCouplingOngoing(), "Receiving participant must advance only once.");
 
-    //Check expected VS read
+    // Check expected VS read
     Eigen::VectorXd expected(3);
     Eigen::VectorXd readData(3);
     // For conservative load, each point takes a fraction of the load.
@@ -240,7 +239,7 @@ void testMappingVolumeOneTetra(const std::string configFile, const TestContext &
     participant.advance(dt);
     BOOST_TEST(!participant.isCouplingOngoing(), "Receiving participant must advance only once.");
 
-    //Check expected VS read
+    // Check expected VS read
     Eigen::VectorXd expected(1);
     Eigen::VectorXd readData(1);
     // Expected value in the middle of the tetra is the average of inputs (13.0/4)
@@ -324,7 +323,7 @@ void testMappingVolumeOneTetraConservative(const std::string configFile, const T
     participant.advance(dt);
     BOOST_TEST(!participant.isCouplingOngoing(), "Receiving participant must advance only once.");
 
-    //Check expected VS read
+    // Check expected VS read
     Eigen::VectorXd expected(4);
     Eigen::VectorXd readData(4);
     // For conservative load, each point takes a fraction of the load.

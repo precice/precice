@@ -9,14 +9,13 @@
 #include "partition/ReceivedPartition.hpp"
 #include "partition/SharedPointer.hpp"
 
-namespace precice {
-namespace impl {
+namespace precice::impl {
 
 /// Stores a mesh and related objects and data.
 struct MeshContext {
   /** Upgrades the mesh requirement to a more specific level.
-    * @param[in] requirement The requirement to upgrade to.
-    */
+   * @param[in] requirement The requirement to upgrade to.
+   */
   void require(mapping::Mapping::MeshRequirement requirement);
 
   /// Mesh holding the geometry data structure.
@@ -35,6 +34,13 @@ struct MeshContext {
   /// bounding-boxes.
   bool allowDirectAccess = false;
 
+  /// setMeshAccessRegion may only be called once per mesh(context).
+  /// putting this into the mesh context means that we can only call
+  /// this once, regardless of combinations with just-in-time mappings
+  /// or multiple such mappings. If multiples are desired, we would
+  /// need to shift this into the MappingContext
+  std::shared_ptr<mesh::BoundingBox> userDefinedAccessRegion;
+
   /// True, if accessor does create the mesh.
   bool provideMesh = false;
 
@@ -50,6 +56,13 @@ struct MeshContext {
   /// Mappings used when mapping data to the mesh. Can be empty.
   std::vector<MappingContext> toMappingContexts;
 
+  /// Checks, that all vertices are within the user-defined access region and throws
+  /// an error if vertices are not. The function does not return the result to be able
+  /// to log the actual outliers
+  void checkVerticesInsideAccessRegion(precice::span<const double> coordinates, const int meshDim, std::string_view functionName) const;
+
+  std::vector<std::reference_wrapper<const mesh::Vertex>> filterVerticesToLocalAccessRegion(bool requiresBB) const;
+
   void clearMappings()
   {
     for (auto &mc : fromMappingContexts) {
@@ -59,6 +72,9 @@ struct MeshContext {
       mc.mapping->clear();
     }
   }
+
+private:
+  mutable logging::Logger _log{"impl::MeshContext"};
 };
 
 inline void MeshContext::require(mapping::Mapping::MeshRequirement requirement)
@@ -66,5 +82,40 @@ inline void MeshContext::require(mapping::Mapping::MeshRequirement requirement)
   meshRequirement = std::max(meshRequirement, requirement);
 }
 
-} // namespace impl
-} // namespace precice
+inline void MeshContext::checkVerticesInsideAccessRegion(precice::span<const double> coordinates, const int meshDim, std::string_view functionName) const
+{
+
+  if (userDefinedAccessRegion) {
+    const auto                        nVertices = (coordinates.size() / meshDim);
+    Eigen::Map<const Eigen::MatrixXd> C(coordinates.data(), meshDim, nVertices);
+    Eigen::VectorXd                   minCoeffs = C.rowwise().minCoeff();
+    Eigen::VectorXd                   maxCoeffs = C.rowwise().maxCoeff();
+    bool                              minCheck  = (minCoeffs.array() >= userDefinedAccessRegion->minCorner().array()).all();
+    bool                              maxCheck  = (maxCoeffs.array() <= userDefinedAccessRegion->maxCorner().array()).all();
+    PRECICE_CHECK(minCheck && maxCheck, "The provided coordinates in \"{}\" are not within the access region defined with \"setMeshAccessRegion()\". "
+                                        "Minimum corner of the provided values is (x,y,z) = ({}), the minimum corner of the access region box is (x,y,z) = ({}). "
+                                        "Maximum corner of the provided values is (x,y,z) = ({}), the maximum corner of the access region box is (x,y,z) = ({}). ",
+                  functionName, minCoeffs, userDefinedAccessRegion->minCorner(), maxCoeffs, userDefinedAccessRegion->maxCorner());
+    C.colwise().maxCoeff();
+  }
+}
+
+inline std::vector<std::reference_wrapper<const mesh::Vertex>> MeshContext::filterVerticesToLocalAccessRegion(bool requiresBB) const
+{
+  std::vector<std::reference_wrapper<const mesh::Vertex>> filteredVertices;
+  for (const auto &v : mesh->vertices()) {
+    // either the vertex lies within the region OR the user-defined region is not strictly necessary
+    if (userDefinedAccessRegion) {
+      // region is defined: only add if the vertex is inside the region
+      if (userDefinedAccessRegion->contains(v)) {
+        filteredVertices.push_back(std::cref(v));
+      }
+    } else if (!requiresBB) {
+      // region is not defined, so if filtering isn't required, add all vertices
+      filteredVertices.push_back(std::cref(v));
+    }
+  }
+  return filteredVertices;
+}
+
+} // namespace precice::impl

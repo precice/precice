@@ -12,11 +12,20 @@ BOOST_AUTO_TEST_SUITE(MapIfNecessary)
 BOOST_AUTO_TEST_SUITE(ThreeSolvers)
 BOOST_AUTO_TEST_SUITE(MixedSubsteps)
 
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(1_rank), "C"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ParallelImplicit)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), "C"_on(1_rank));
+  PRECICE_TEST();
 
-  std::vector<int> readMappings{3, 1, 3, 1, 3, 1};
+  std::vector<int> readMappings{
+      2, // iterating: mid and end from B
+      2, // end from A + new start from B
+      2, // iterating: mid and end from B
+      2, // end from A + new start from B
+      2, // iterating: mid and end from B
+      2  // last end from A + last end from B
+  };
+
   // When the coupling scheme A - B moves on to the next time window, C discards samples in the send data
   // namely MeshA:DataC.
   // While the itererative scheme is iterating, it still has this beginning timestamp and will be mapped in the writeMapping

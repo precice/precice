@@ -20,21 +20,48 @@
 
 namespace precice::io {
 
-void ExportXML::doExport(
-    const std::string &name,
-    const std::string &location,
-    const mesh::Mesh & mesh)
+ExportXML::ExportXML(
+    std::string_view  participantName,
+    std::string_view  location,
+    const mesh::Mesh &mesh,
+    ExportKind        kind,
+    int               frequency,
+    int               rank,
+    int               size)
+    : Export(participantName, location, mesh, kind, frequency, rank, size) {};
+
+void ExportXML::doExport(int index, double time)
 {
-  PRECICE_TRACE(name, location, mesh.getName());
+  PRECICE_TRACE(index, time, _mesh->getName());
+
+  if (!keepExport(index))
+    return;
+
+  const auto &mesh = *_mesh;
+
   processDataNamesAndDimensions(mesh);
-  if (not location.empty())
-    std::filesystem::create_directories(location);
-  if (utils::IntraComm::isPrimary()) {
-    writeParallelFile(name, location, mesh);
+  if (not _location.empty())
+    std::filesystem::create_directories(_location);
+
+  if (isParallel()) {
+    if (_rank == 0) {
+      writeParallelFile(index, time);
+    }
+    if (!mesh.isPartitionEmpty(_rank)) { // only procs at the coupling interface should write output (for performance reasons)
+      writeSubFile(index, time);
+    }
+  } else {
+    writeSubFile(index, time);
   }
-  if (mesh.nVertices() > 0) { // only procs at the coupling interface should write output (for performance reasons)
-    writeSubFile(name, location, mesh);
-  }
+}
+
+void ExportXML::exportSeries() const
+{
+  if (isParallel() && _rank > 0)
+    return;
+
+  auto ext = isParallel() ? getParallelExtension() : getPieceExtension();
+  writeSeriesFile(fmt::format("{}-{}.{}.series", _mesh->getName(), _participantName, ext));
 }
 
 void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
@@ -43,6 +70,9 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
   _scalarDataNames.clear();
   const bool isThreeDim = (mesh.getDimensions() == 3);
   for (const mesh::PtrData &data : mesh.data()) {
+    if (data->waveform().empty()) {
+      continue;
+    }
     int        dataDimensions = data->getDimensions();
     const bool hasGradient    = data->hasGradient();
     PRECICE_ASSERT(dataDimensions >= 1);
@@ -65,14 +95,30 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
   }
 }
 
-void ExportXML::writeParallelFile(
-    const std::string &name,
-    const std::string &location,
-    const mesh::Mesh & mesh) const
+std::string ExportXML::parallelPieceFilenameFor(int index, int rank) const
 {
+  PRECICE_ASSERT(isParallel());
+  return fmt::format("{}-{}.{}_{}.{}", _mesh->getName(), _participantName, formatIndex(index), rank, getPieceExtension());
+}
+
+std::string ExportXML::serialPieceFilename(int index) const
+{
+  PRECICE_ASSERT(!isParallel());
+  return fmt::format("{}-{}.{}.{}", _mesh->getName(), _participantName, formatIndex(index), getPieceExtension());
+}
+
+void ExportXML::writeParallelFile(int index, double time)
+{
+  PRECICE_ASSERT(isParallel());
+
+  // Construct filename
+  // Mesh-Participant.it_2.pvtu
+  auto filename = fmt::format("{}-{}.{}.{}", _mesh->getName(), _participantName, formatIndex(index), getParallelExtension());
+  recordExport(filename, time);
+
   namespace fs = std::filesystem;
-  fs::path outfile(location);
-  outfile = outfile / fs::path(name + getParallelExtension());
+  fs::path outfile(_location);
+  outfile = outfile / filename;
   std::ofstream outParallelFile(outfile.string(), std::ios::trunc);
 
   PRECICE_CHECK(outParallelFile, "{} export failed to open primary file \"{}\"", getVTKFormat(), outfile.generic_string());
@@ -91,16 +137,11 @@ void ExportXML::writeParallelFile(
 
   writeParallelData(outParallelFile);
 
-  const auto &offsets = mesh.getVertexOffsets();
-  PRECICE_ASSERT(offsets.size() > 0);
-  if (offsets[0] > 0) {
-    outParallelFile << "      <Piece Source=\"" << name << "_" << 0 << getPieceExtension() << "\"/>\n";
-  }
-  for (size_t rank : utils::IntraComm::allSecondaryRanks()) {
-    PRECICE_ASSERT(rank < offsets.size());
-    if (offsets[rank] - offsets[rank - 1] > 0) {
+  // const auto &offsets = _mesh->getVertexOffsets();
+  for (size_t rank : utils::IntraComm::allRanks()) {
+    if (!_mesh->isPartitionEmpty(rank)) {
       // only non-empty subfiles
-      outParallelFile << "      <Piece Source=\"" << name << "_" << rank << getPieceExtension() << "\"/>\n";
+      outParallelFile << "      <Piece Source=\"" << parallelPieceFilenameFor(index, rank) << "\"/>\n";
     }
   }
 
@@ -110,24 +151,19 @@ void ExportXML::writeParallelFile(
   outParallelFile.close();
 }
 
-namespace {
-std::string getPieceSuffix()
+void ExportXML::writeSubFile(int index, double time)
 {
-  if (!utils::IntraComm::isParallel()) {
-    return "";
+  std::string filename;
+  if (isParallel()) {
+    filename = parallelPieceFilenameFor(index, _rank);
+  } else {
+    filename = serialPieceFilename(index);
+    recordExport(filename, time);
   }
-  return "_" + std::to_string(utils::IntraComm::getRank());
-}
-} // namespace
 
-void ExportXML::writeSubFile(
-    const std::string &name,
-    const std::string &location,
-    const mesh::Mesh & mesh) const
-{
   namespace fs = std::filesystem;
-  fs::path outfile(location);
-  outfile /= fs::path(name + getPieceSuffix() + getPieceExtension());
+  fs::path outfile(_location);
+  outfile /= filename;
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);
 
   PRECICE_CHECK(outSubFile, "{} export failed to open secondary file \"{}\"", getVTKFormat(), outfile.generic_string());
@@ -138,14 +174,15 @@ void ExportXML::writeSubFile(
   outSubFile << (utils::isMachineBigEndian() ? "BigEndian\">" : "LittleEndian\">") << '\n';
 
   outSubFile << "   <" << formatType << ">\n";
-  outSubFile << "      <Piece " << getPieceAttributes(mesh) << "> \n";
-  exportPoints(outSubFile, mesh);
 
-  // Write Mesh
-  exportConnectivity(outSubFile, mesh);
+  outSubFile << "      <Piece " << getPieceAttributes(*_mesh) << "> \n";
+  exportPoints(outSubFile, *_mesh);
+
+  // Write *_mesh
+  exportConnectivity(outSubFile, *_mesh);
 
   // Write data
-  exportData(outSubFile, mesh);
+  exportData(outSubFile, *_mesh);
 
   outSubFile << "      </Piece>\n";
   outSubFile << "   </" << formatType << "> \n";
@@ -156,7 +193,7 @@ void ExportXML::writeSubFile(
 
 void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std::ostream &outFile) const
 {
-  const auto &             gradients      = data->gradients();
+  const auto              &gradients      = data->waveform().last().sample.gradients;
   const int                dataDimensions = data->getDimensions();
   std::vector<std::string> suffices;
   if (dataDimensions == 1) {
@@ -189,7 +226,7 @@ void ExportXML::exportGradient(const mesh::PtrData data, const int spaceDim, std
 }
 
 void ExportXML::exportData(
-    std::ostream &    outFile,
+    std::ostream     &outFile,
     const mesh::Mesh &mesh) const
 {
   outFile << "         <PointData Scalars=\"Rank ";
@@ -212,11 +249,14 @@ void ExportXML::exportData(
   outFile << "\n            </DataArray>\n";
 
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
-    Eigen::VectorXd &values         = data->values();
-    int              dataDimensions = data->getDimensions();
-    std::string      dataName(data->getName());
-    int              numberOfComponents = (dataDimensions == 2) ? 3 : dataDimensions;
-    const bool       hasGradient        = data->hasGradient();
+    if (data->waveform().empty()) {
+      continue;
+    }
+    const Eigen::VectorXd &values         = data->waveform().last().sample.values;
+    int                    dataDimensions = data->getDimensions();
+    std::string            dataName(data->getName());
+    int                    numberOfComponents = (dataDimensions == 2) ? 3 : dataDimensions;
+    const bool             hasGradient        = data->hasGradient();
     outFile << "            <DataArray type=\"Float64\" Name=\"" << dataName << "\" NumberOfComponents=\"" << numberOfComponents;
     outFile << "\" format=\"ascii\">\n";
     outFile << "               ";
@@ -251,7 +291,7 @@ void ExportXML::exportData(
 
 void ExportXML::writeVertex(
     const Eigen::VectorXd &position,
-    std::ostream &         outFile)
+    std::ostream          &outFile)
 {
   outFile << "               ";
   for (int i = 0; i < position.size(); i++) {
@@ -265,7 +305,7 @@ void ExportXML::writeVertex(
 
 void ExportXML::writeTriangle(
     const mesh::Triangle &triangle,
-    std::ostream &        outFile)
+    std::ostream         &outFile)
 {
   outFile << triangle.vertex(0).getID() << "  ";
   outFile << triangle.vertex(1).getID() << "  ";
@@ -274,7 +314,7 @@ void ExportXML::writeTriangle(
 
 void ExportXML::writeTetrahedron(
     const mesh::Tetrahedron &tetra,
-    std::ostream &           outFile)
+    std::ostream            &outFile)
 {
   outFile << tetra.vertex(0).getID() << "  ";
   outFile << tetra.vertex(1).getID() << "  ";
@@ -284,14 +324,14 @@ void ExportXML::writeTetrahedron(
 
 void ExportXML::writeLine(
     const mesh::Edge &edge,
-    std::ostream &    outFile)
+    std::ostream     &outFile)
 {
   outFile << edge.vertex(0).getID() << "  ";
   outFile << edge.vertex(1).getID() << "  ";
 }
 
 void ExportXML::exportPoints(
-    std::ostream &    outFile,
+    std::ostream     &outFile,
     const mesh::Mesh &mesh) const
 {
   outFile << "         <Points> \n";

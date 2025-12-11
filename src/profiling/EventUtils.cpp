@@ -9,6 +9,7 @@
 #include <memory>
 #include <optional>
 #include <ratio>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <sys/types.h>
@@ -22,7 +23,14 @@
 #include "utils/assertion.hpp"
 #include "utils/fmt.hpp"
 
+#ifdef PRECICE_COMPRESSION
+#include <lzma.h>
+#endif
+
 namespace precice::profiling {
+
+/// The version of the Events file. Increase on changes
+constexpr int file_version{2};
 
 using sys_clk  = std::chrono::system_clock;
 using stdy_clk = std::chrono::steady_clock;
@@ -64,8 +72,10 @@ void EventRegistry::initialize(std::string_view applicationName, int rank, int s
   this->_initClock       = initClock;
 
   _writeQueue.clear();
-  _firstwrite = true;
-  _globalId   = std::nullopt;
+  _nameDict.clear();
+
+  _globalId = nameToID("_GLOBAL");
+  _writeQueue.emplace_back(StartEntry{_globalId.value(), _initClock});
 
   _initialized = true;
   _finalized   = false;
@@ -97,6 +107,8 @@ std::string toString(Mode m)
     return "off";
   case (Mode::Fundamental):
     return "fundamental";
+  case (Mode::API):
+    return "api";
   case (Mode::All):
     return "all";
   }
@@ -125,32 +137,37 @@ void EventRegistry::startBackend()
       std::filesystem::create_directories(_directory);
     }
   }
-  auto filename = fmt::format("{}/{}-{}-{}.json", _directory, _applicationName, _rank, _size);
+  auto filename = fmt::format("{}/{}-{}-{}.txt", _directory, _applicationName, _rank, _size);
   PRECICE_DEBUG("Starting backend with events-file: \"{}\"", filename);
   _output.open(filename);
   PRECICE_CHECK(_output, "Unable to open the events-file: \"{}\"", filename);
-  _globalId = nameToID("_GLOBAL");
-  _writeQueue.emplace_back(StartEntry{_globalId.value(), _initClock});
+
+  using std::literals::operator""sv;
+#ifdef PRECICE_COMPRESSION
+  _strm = LZMA_STREAM_INIT;
+  lzma_options_lzma options;
+  lzma_lzma_preset(&options, 0);
+  options.mode = LZMA_MODE_FAST;
+  if (lzma_alone_encoder(&_strm, &options) != LZMA_OK) {
+    throw std::runtime_error("Failed to init LZMA encoder");
+  }
+  auto compression = "true"sv;
+#else
+  auto compression = "false"sv;
+#endif
 
   // write header
-  fmt::print(_output,
-             R"({{
-  "meta":{{
-  "name": "{}",
-  "rank": "{}",
-  "size": "{}",
-  "unix_us": "{}",
-  "tinit": "{}",
-  "mode": "{}"
-  }},
-  "events":[
-  )",
-             _applicationName,
-             _rank,
-             _size,
-             std::chrono::duration_cast<std::chrono::microseconds>(_initTime.time_since_epoch()).count(),
-             timepoint_to_string(_initTime),
-             toString(_mode));
+  fmt::println(_output,
+               R"({{"name":"{}","rank":{},"size":{},"unix_us":"{}","tinit":"{}","mode":"{}","compression":{},"file_version":{}}})",
+               _applicationName,
+               _rank,
+               _size,
+               std::chrono::duration_cast<std::chrono::microseconds>(_initTime.time_since_epoch()).count(),
+               timepoint_to_string(_initTime),
+               toString(_mode),
+               compression,
+               ::precice::profiling::file_version);
+
   _output.flush();
   _isBackendRunning = true;
 }
@@ -165,7 +182,23 @@ void EventRegistry::stopBackend()
   put(StopEntry{*_globalId, now});
   // flush the queue
   flush();
-  _output << "]}";
+
+#ifdef PRECICE_COMPRESSION
+  lzma_ret ret;
+  do {
+    _strm.next_out  = reinterpret_cast<uint8_t *>(_buf.data());
+    _strm.avail_out = _buf.size();
+
+    ret = lzma_code(&_strm, LZMA_FINISH);
+    if (ret != LZMA_OK && ret != LZMA_STREAM_END) {
+      throw std::runtime_error("Finalization failed");
+    }
+    _output.write(_buf.data(), _buf.size() - _strm.avail_out);
+  } while (ret != LZMA_STREAM_END);
+
+  lzma_end(&_strm);
+#endif
+
   _output.close();
   _nameDict.clear();
 
@@ -192,17 +225,29 @@ void EventRegistry::clear()
 void EventRegistry::put(PendingEntry pe)
 {
   PRECICE_ASSERT(_mode != Mode::Off, "The profiling is off.");
+
+  // avoid flushing the queue when we start measuring but only if we don't explicitly want to write every entry
+  auto skipFlush = _writeQueueMax != 1 && std::holds_alternative<StartEntry>(pe);
+
   _writeQueue.emplace_back(std::move(pe));
-  if (_writeQueueMax > 0 && _writeQueue.size() > _writeQueueMax) {
+  if (!skipFlush && _writeQueueMax > 0 && _writeQueue.size() > _writeQueueMax) {
     flush();
   }
 }
 
+void EventRegistry::putCritical(PendingEntry pe)
+{
+  PRECICE_ASSERT(_mode != Mode::Off, "The profiling is off.");
+  _writeQueue.emplace_back(std::move(pe));
+}
+
 namespace {
+template <class OIter>
 struct EventWriter {
-  std::ostream &           out;
+  OIter                    out;
   Event::Clock::time_point initClock;
-  std::string              prefix;
+
+  EventWriter(OIter iter, Event::Clock::time_point tp) : out(iter), initClock(tp) {}
 
   auto sinceInit(Event::Clock::time_point tp)
   {
@@ -211,30 +256,30 @@ struct EventWriter {
 
   void operator()(const StartEntry &se)
   {
-    fmt::print(out,
-               R"({}{{"et":"{}","eid":{},"ts":{}}})",
-               prefix, se.type, se.eid, sinceInit(se.clock));
+    fmt::format_to(out,
+                   "B{}:{}\n",
+                   se.eid, sinceInit(se.clock));
   }
 
   void operator()(const StopEntry &se)
   {
-    fmt::print(out,
-               R"({}{{"et":"{}","eid":{},"ts":{}}})",
-               prefix, se.type, se.eid, sinceInit(se.clock));
+    fmt::format_to(out,
+                   "E{}:{}\n",
+                   se.eid, sinceInit(se.clock));
   }
 
   void operator()(const DataEntry &de)
   {
-    fmt::print(out,
-               R"({}{{"et":"{}","eid":{},"ts":{},"dn":{},"dv":"{}"}})",
-               prefix, de.type, de.eid, sinceInit(de.clock), de.did, de.dvalue);
+    fmt::format_to(out,
+                   "D{}:{}:{}:{}\n",
+                   de.eid, sinceInit(de.clock), de.did, de.dvalue);
   }
 
   void operator()(const NameEntry &ne)
   {
-    fmt::print(out,
-               R"({}{{"et":"n","en":"{}","eid":{}}})",
-               prefix, ne.name, ne.id);
+    fmt::format_to(out,
+                   "N{}:{}\n",
+                   ne.id, ne.name);
   }
 };
 } // namespace
@@ -246,17 +291,24 @@ try {
   }
   PRECICE_ASSERT(_output, "Filestream doesn't exist.");
 
-  auto first = _writeQueue.begin();
-  // Don't prefix the first write with a comma
-  if (_firstwrite) {
-    PRECICE_ASSERT(!_writeQueue.empty() && !_writeQueue.front().valueless_by_exception());
-    std::visit(EventWriter{_output, _initClock, ""}, _writeQueue.front());
-    ++first;
-    _firstwrite = false;
-  }
+  _inbuf.clear();
+  EventWriter ew{std::back_inserter(_inbuf), _initClock};
+  std::for_each(_writeQueue.begin(), _writeQueue.end(), [&ew](const auto &pe) { std::visit(ew, pe); });
 
-  EventWriter ew{_output, _initClock, ","};
-  std::for_each(first, _writeQueue.end(), [&ew](const auto &pe) { std::visit(ew, pe); });
+#ifdef PRECICE_COMPRESSION
+  _strm.next_in  = reinterpret_cast<uint8_t *>(_inbuf.data());
+  _strm.avail_in = _inbuf.size();
+
+  while (_strm.avail_in > 0) {
+    _strm.next_out  = reinterpret_cast<uint8_t *>(_buf.data());
+    _strm.avail_out = _buf.size();
+    lzma_ret ret    = lzma_code(&_strm, LZMA_RUN);
+    PRECICE_ASSERT(ret == LZMA_OK, "Compression failed");
+    _output.write(_buf.data(), _buf.size() - _strm.avail_out);
+  }
+#else
+  _output.write(_inbuf.data(), _inbuf.size());
+#endif
 
   _output.flush();
   _writeQueue.clear();

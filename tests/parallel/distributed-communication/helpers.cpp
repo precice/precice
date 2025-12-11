@@ -9,7 +9,7 @@
 void runTestDistributedCommunication(std::string const &config, TestContext const &context)
 {
   std::string meshName;
-  int         i1 = -1, i2 = -1; //indices for data and positions
+  int         i1 = -1, i2 = -1; // indices for data and positions
 
   std::vector<Eigen::VectorXd> positions;
   std::vector<Eigen::VectorXd> data;
@@ -22,15 +22,15 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
     position[0] = i * 1.0;
     position[1] = 0.0;
     position[2] = 0.0;
-    positions.push_back(position);
+    positions.emplace_back(position);
     datum[0] = i * 1.0;
     datum[1] = i * 1.0;
     datum[2] = 0.0;
-    data.push_back(datum);
+    data.emplace_back(datum);
     datum[0] = i * 2.0 + 1.0;
     datum[1] = i * 2.0 + 1.0;
     datum[2] = 1.0;
-    expectedData.push_back(datum);
+    expectedData.emplace_back(datum);
   }
 
   if (context.isNamed("Fluid")) {
@@ -66,7 +66,7 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
   precice.initialize();
   double dt = precice.getMaxTimeStepSize();
 
-  if (context.isNamed("Fluid")) { //Fluid
+  if (context.isNamed("Fluid")) { // Fluid
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       precice.writeData(meshName, forcesID, {&vertexIDs[i], 1}, {data[i + i1].data(), 3});
     }
@@ -82,7 +82,7 @@ void runTestDistributedCommunication(std::string const &config, TestContext cons
   precice.advance(1.0);
   dt = precice.getMaxTimeStepSize();
 
-  if (context.isNamed("Fluid")) { //Fluid
+  if (context.isNamed("Fluid")) { // Fluid
     for (size_t i = 0; i < vertexIDs.size(); i++) {
       precice.readData(meshName, velocID, {&vertexIDs[i], 1}, dt, {data[i + i1].data(), 3});
       for (size_t d = 0; d < 3; d++) {

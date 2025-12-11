@@ -357,8 +357,8 @@ int Communication::adjustRank(Rank rank) const
 }
 
 void connectCircularComm(
-    std::string const & participantName,
-    std::string const & tag,
+    std::string const  &participantName,
+    std::string const  &tag,
     int                 rank,
     int                 size,
     com::Communication &left,

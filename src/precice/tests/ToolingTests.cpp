@@ -6,8 +6,10 @@
 BOOST_AUTO_TEST_SUITE(PreciceTests)
 BOOST_AUTO_TEST_SUITE(Tooling)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MarkdownReference)
 {
+  PRECICE_TEST();
   const std::string ref = [] {
     std::ostringstream oss;
     precice::tooling::printConfigReference(oss, precice::tooling::ConfigReferenceType::MD);
@@ -20,8 +22,10 @@ BOOST_AUTO_TEST_CASE(MarkdownReference)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(XMLReference)
 {
+  PRECICE_TEST();
   const std::string ref = [] {
     std::ostringstream oss;
     precice::tooling::printConfigReference(oss, precice::tooling::ConfigReferenceType::XML);
@@ -34,8 +38,10 @@ BOOST_AUTO_TEST_CASE(XMLReference)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DTDReference)
 {
+  PRECICE_TEST();
   const std::string ref = [] {
     std::ostringstream oss;
     precice::tooling::printConfigReference(oss, precice::tooling::ConfigReferenceType::DTD);
@@ -50,8 +56,10 @@ BOOST_AUTO_TEST_CASE(DTDReference)
 
 BOOST_AUTO_TEST_SUITE(ConfigCheck)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Serial)
 {
+  PRECICE_TEST();
   BOOST_REQUIRE_NO_THROW(
       precice::tooling::checkConfiguration(
           precice::testing::getPathToSources() + "/precice/tests/config-checker.xml",
@@ -59,14 +67,18 @@ BOOST_AUTO_TEST_CASE(Serial)
           1));
 }
 
+#ifndef PRECICE_NO_MPI
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Parallel)
 {
+  PRECICE_TEST();
   BOOST_REQUIRE_NO_THROW(
       precice::tooling::checkConfiguration(
           precice::testing::getPathToSources() + "/precice/tests/config-checker.xml",
           "SolverTwo",
           4));
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
 

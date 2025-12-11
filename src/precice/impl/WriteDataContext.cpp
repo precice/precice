@@ -1,7 +1,5 @@
 #include "WriteDataContext.hpp"
 
-#include "utils/EigenHelperFunctions.hpp"
-
 namespace precice::impl {
 
 logging::Logger WriteDataContext::_log{"impl::WriteDataContext"};
@@ -13,21 +11,49 @@ WriteDataContext::WriteDataContext(mesh::PtrData data,
 {
 }
 
-void WriteDataContext::resetBuffer()
+void WriteDataContext::resetBufferedData()
 {
+  invalidateMappingCacheAndResetData();
   _writeDataBuffer.values.setZero();
   _writeDataBuffer.gradients.setZero();
 }
 
 void WriteDataContext::trimAfter(double time)
 {
-  _providedData->timeStepsStorage().trimAfter(time);
+  _providedData->waveform().trimAfter(time);
 
   // reset all toData
   PRECICE_ASSERT(!hasReadMapping(), "Read mapping is not allowed for WriteDataContext.");
   if (hasWriteMapping()) {
-    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [time](auto &context) { context.toData->timeStepsStorage().trimAfter(time); });
+    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [time](auto &context) { context.toData->waveform().trimAfter(time); });
   }
+}
+
+void WriteDataContext::completeJustInTimeMapping()
+{
+  PRECICE_TRACE();
+  if (justInTimeMapping) {
+    // finalize  mapping the data stored in the cache and transfer it to the _writeDataBuffer
+    Eigen::Map<Eigen::MatrixXd> map(_writeDataBuffer.values.data(), _providedData->getDimensions(), _writeDataBuffer.values.size() / _providedData->getDimensions());
+    justInTimeMapping->completeJustInTimeMapping(*mappingCache, map);
+  }
+}
+
+void WriteDataContext::writeAndMapValues(::precice::span<const double> coordinates, ::precice::span<const double> values)
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(hasJustInTimeMapping());
+  PRECICE_ASSERT(mappingCache);
+  PRECICE_ASSERT((coordinates.size() / getSpatialDimensions()) * getDataDimensions() == values.size());
+  PRECICE_ASSERT(_writeDataBuffer.values.data());
+
+  // We forward both, the _writeDataBuffer and the cache to the justInTimeMapping
+  Eigen::Map<const Eigen::MatrixXd> coords(coordinates.data(), getSpatialDimensions(), coordinates.size() / getSpatialDimensions());
+  Eigen::Map<const Eigen::MatrixXd> inputData(values.data(), getDataDimensions(), coordinates.size() / getDataDimensions());
+  Eigen::Map<Eigen::MatrixXd>       localData(_writeDataBuffer.values.data(), getDataDimensions(), getMeshVertexCount());
+
+  // Function to fill the localData
+  justInTimeMapping->mapConservativeAt(coords, inputData, *mappingCache, localData);
 }
 
 void WriteDataContext::writeValuesIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> values)
@@ -67,36 +93,27 @@ void WriteDataContext::resizeBufferTo(int nVertices)
   // Allocate data values
   const SizeType expectedSize = nVertices * getDataDimensions();
   const auto     actualSize   = static_cast<SizeType>(_writeDataBuffer.values.size());
-  // Shrink Buffer
-  if (expectedSize < actualSize) {
-    _writeDataBuffer.values.resize(expectedSize);
-  }
+  const auto     change       = expectedSize - actualSize;
+
+  _writeDataBuffer.values.conservativeResize(expectedSize);
   // Enlarge Buffer
-  if (expectedSize > actualSize) {
-    const auto leftToAllocate = expectedSize - actualSize;
-    utils::append(_writeDataBuffer.values, Eigen::VectorXd(Eigen::VectorXd::Zero(leftToAllocate)));
+  if (change > 0) {
+    _writeDataBuffer.values.tail(change).setZero();
   }
   PRECICE_DEBUG("Data {} now has {} values", getDataName(), _writeDataBuffer.values.size());
 
-  // Allocate gradient data values
-  if (_providedData->hasGradient()) {
-    const SizeType spaceDimensions = getSpatialDimensions();
-
-    const SizeType expectedColumnSize = expectedSize * getDataDimensions();
-    const auto     actualColumnSize   = static_cast<SizeType>(_writeDataBuffer.gradients.cols());
-
-    // Shrink Buffer
-    if (expectedColumnSize < actualColumnSize) {
-      _writeDataBuffer.gradients.resize(spaceDimensions, expectedColumnSize);
-    }
-
-    // Enlarge Buffer
-    if (expectedColumnSize > actualColumnSize) {
-      const auto columnLeftToAllocate = expectedColumnSize - actualColumnSize;
-      utils::append(_writeDataBuffer.gradients, Eigen::MatrixXd(Eigen::MatrixXd::Zero(spaceDimensions, columnLeftToAllocate)));
-    }
-    PRECICE_DEBUG("Gradient Data {} now has {} x {} values", getDataName(), _writeDataBuffer.gradients.rows(), _writeDataBuffer.gradients.cols());
+  if (!_providedData->hasGradient()) {
+    return;
   }
+
+  // Allocate gradient data values
+  _writeDataBuffer.gradients.conservativeResize(getSpatialDimensions(), expectedSize);
+
+  // Enlarge Buffer
+  if (change > 0) {
+    _writeDataBuffer.gradients.rightCols(change).setZero();
+  }
+  PRECICE_DEBUG("Gradient Data {} now has {} x {} values", getDataName(), _writeDataBuffer.gradients.rows(), _writeDataBuffer.gradients.cols());
 }
 
 void WriteDataContext::storeBufferedData(double currentTime)

@@ -12,16 +12,17 @@ BOOST_AUTO_TEST_SUITE(MapIfNecessary)
 BOOST_AUTO_TEST_SUITE(ThreeSolvers)
 BOOST_AUTO_TEST_SUITE(WithoutSubsteps)
 
+PRECICE_TEST_SETUP("A"_on(1_rank), "B"_on(1_rank), "C"_on(1_rank))
 BOOST_AUTO_TEST_CASE(SerialImplicit)
 {
-  PRECICE_TEST("A"_on(1_rank), "B"_on(1_rank), "C"_on(1_rank));
+  PRECICE_TEST();
 
   std::vector<int> readMappings{
       // initialized not checked (tw0 of A)
-      3, // iterate: end of A (tw1) and mid + end of B
-      2, // new mid + end of B
-      3, // iterate: final end of A (tw2) and mid + end of B
-      2, // new mid + end of B
+      2, // iterate: mid + end of B
+      3, // end of A (tw1) and new mid + end of B
+      2, // iterate: mid + end of B
+      3, // final end of A (tw2) and new mid + end of B
       2, // iterate: new mid + end of B
       0  // nothing from B (second)
   };

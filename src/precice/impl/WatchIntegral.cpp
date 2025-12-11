@@ -66,7 +66,7 @@ void WatchIntegral::exportIntegralData(
 
   for (auto &elem : _dataToExport) {
     const int dataDimensions = elem->getDimensions();
-    auto      integral       = calculateIntegral(elem);
+    auto      integral       = calculateIntegral(time, elem);
 
     if (utils::IntraComm::getSize() > 1) {
       Eigen::VectorXd valueRecv = Eigen::VectorXd::Zero(dataDimensions);
@@ -105,22 +105,22 @@ void WatchIntegral::exportIntegralData(
   }
 }
 
-Eigen::VectorXd WatchIntegral::calculateIntegral(const mesh::PtrData &data) const
+Eigen::VectorXd WatchIntegral::calculateIntegral(double time, const mesh::PtrData &data) const
 {
-  int                    dim    = data->getDimensions();
-  const Eigen::VectorXd &values = data->values();
-  Eigen::VectorXd        sum    = Eigen::VectorXd::Zero(dim);
+  int             dim    = data->getDimensions();
+  const auto      sample = data->waveform().sample(time);
+  Eigen::VectorXd sum    = Eigen::VectorXd::Zero(dim);
 
   if (_mesh->edges().empty() || (not _isScalingOn)) {
     for (const auto &vertex : _mesh->vertices()) {
       int offset = vertex.getID() * dim;
       for (int i = 0; i < dim; i++) {
-        sum[i] += values[offset + i];
+        sum[i] += sample(offset + i);
       }
     }
     return sum;
   } else { // Connectivity information is given
-    return mesh::integrateSurface(_mesh, data->values());
+    return mesh::integrateSurface(_mesh, sample.values());
   }
 }
 

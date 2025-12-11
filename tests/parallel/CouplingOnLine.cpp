@@ -8,9 +8,10 @@
 /// This testcase is based on a bug reported by Thorsten for acoustic FASTEST-Ateles coupling
 BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(Parallel)
+PRECICE_TEST_SETUP("Ateles"_on(3_ranks), "FASTEST"_on(1_rank))
 BOOST_AUTO_TEST_CASE(CouplingOnLine)
 {
-  PRECICE_TEST("Ateles"_on(3_ranks), "FASTEST"_on(1_rank));
+  PRECICE_TEST();
 
   if (context.isNamed("Ateles")) {
     precice::Participant interface(context.name, context.config(), context.rank, context.size);
@@ -35,15 +36,15 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine)
     double               xCoord        = -0.0001;
     double               yCoord        = 1.00001;
     double               positions[30] = {xCoord, yCoord, 0.12,
-                            xCoord, yCoord, 0.24,
-                            xCoord, yCoord, 0.36,
-                            xCoord, yCoord, 0.48,
-                            xCoord, yCoord, 0.60,
-                            xCoord, yCoord, 0.72,
-                            xCoord, yCoord, 0.84,
-                            xCoord, yCoord, 0.96,
-                            xCoord, yCoord, 1.08,
-                            xCoord, yCoord, 1.2};
+                                          xCoord, yCoord, 0.24,
+                                          xCoord, yCoord, 0.36,
+                                          xCoord, yCoord, 0.48,
+                                          xCoord, yCoord, 0.60,
+                                          xCoord, yCoord, 0.72,
+                                          xCoord, yCoord, 0.84,
+                                          xCoord, yCoord, 0.96,
+                                          xCoord, yCoord, 1.08,
+                                          xCoord, yCoord, 1.2};
     interface.setMeshVertices(meshName, positions, vertexIDs);
     interface.initialize();
     interface.advance(1.0);

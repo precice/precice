@@ -2,8 +2,7 @@
 
 #include <memory>
 
-namespace precice {
-namespace io {
+namespace precice::io {
 
 class Export;
 class ExportConfiguration;
@@ -11,5 +10,4 @@ class ExportConfiguration;
 using PtrExport              = std::shared_ptr<Export>;
 using PtrExportConfiguration = std::shared_ptr<ExportConfiguration>;
 
-} // namespace io
-} // namespace precice
+} // namespace precice::io

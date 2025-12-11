@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<precice-configuration>
-  <data:scalar name="Data1" />
-  <data:scalar name="Data2" />
+<precice-configuration experimental="true">
+  <data:scalar name="Data1" waveform-degree="2" />
+  <data:scalar name="Data2" waveform-degree="2" />
 
   <mesh name="MeshOne" dimensions="2">
     <use-data name="Data1" />
@@ -40,29 +40,17 @@
 
   <coupling-scheme:serial-implicit>
     <participants first="SolverOne" second="SolverTwo" />
-    <max-time-windows value="2" />
+    <max-time-windows value="3" />
     <time-window-size value="1.0" />
     <exchange data="Data1" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
     <exchange data="Data2" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
-    <max-iterations value="200" />
-    <relative-convergence-measure limit="1e-8" data="Data1" mesh="MeshOne" />
-    <acceleration:IQN-IMVJ>
-      <data
-        name="Data2"
-        mesh="MeshOne"
-        lower-bound="-0.99999"
-        upper-bound="1.00001"
-        range-type="two-ends-bounded" />
-      <filter type="QR2" limit="1e-3" />
-      <initial-relaxation value="0.2" />
-      <max-used-iterations value="2" />
-      <preconditioner type="residual-sum" />
-      <time-windows-reused value="1" />
-      <imvj-restart-mode
-        truncation-threshold="0.0001"
-        chunk-size="8"
-        reused-time-windows-at-restart="8"
-        type="RS-SVD" />
-    </acceleration:IQN-IMVJ>
+    <max-iterations value="20" />
+    <relative-convergence-measure limit="1e-13" data="Data2" mesh="MeshOne" />
+    <acceleration:IQN-ILS reduced-time-grid="false">
+      <data name="Data2" mesh="MeshOne" />
+      <initial-relaxation value="0.1" />
+      <max-used-iterations value="20" />
+      <time-windows-reused value="2" />
+    </acceleration:IQN-ILS>
   </coupling-scheme:serial-implicit>
 </precice-configuration>

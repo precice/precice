@@ -18,7 +18,7 @@ bool lineIntersection(
     const Eigen::Ref<const Eigen::Vector2d> &b,
     const Eigen::Ref<const Eigen::Vector2d> &c,
     const Eigen::Ref<const Eigen::Vector2d> &d,
-    Eigen::Ref<Eigen::Vector2d> &            intersectionPoint)
+    Eigen::Ref<Eigen::Vector2d>             &intersectionPoint)
 {
   // Compute denominator for solving 2x2 equation system
   double D = a(0) * (d(1) - c(1)) +
@@ -44,7 +44,7 @@ ResultConstants segmentPlaneIntersection(
     const Eigen::Vector3d &planeNormal,
     const Eigen::Vector3d &firstPointSegment,
     const Eigen::Vector3d &secondPointSegment,
-    Eigen::Vector3d &      intersectionPoint)
+    Eigen::Vector3d       &intersectionPoint)
 {
   // Methodology of "Computation Geometry in C", Joseph O'Rourke, Chapter 7.3.1
 
@@ -147,26 +147,44 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
     the convexity of the quad. These new coordinates are stored in 'coords'.
   */
   PRECICE_ASSERT(std::all_of(coords.cbegin(), coords.cend(),
-                             [](const auto &v) { return v.size() == 3; }),
-                 "This only works in 3D.");
+                             [](const auto &v) { return v.size() == 2 || v.size() == 3; }),
+                 "This only works in 2D or 3D.");
 
-  Eigen::Vector3d coordOrigin; // Origin point for the transformation of points onto the new plane
-  coordOrigin = coords[0];
+  // Check that quad is planar and project to a new plane
+  if (coords[0].size() == 3) {
 
-  // Normal of the plane of first three points in the list of vertices
-  Eigen::Vector3d e_1          = coords[1] - coordOrigin;
-  Eigen::Vector3d e_2          = coords[2] - coordOrigin;
-  Eigen::Vector3d normalVector = e_1.cross(e_2);
+    Eigen::Vector3d coordOrigin; // Origin point for the transformation of points onto the new plane
+    coordOrigin = coords[0];
 
-  PRECICE_CHECK(math::equals(normalVector.dot(coords[3] - coordOrigin), 0.0),
-                "Non-planar quads are not supported. The vertex coordinates are: {}.", coords);
+    // Normal of the plane of first three points in the list of vertices
+    Eigen::Vector3d e_1          = coords[1] - coordOrigin;
+    Eigen::Vector3d e_2          = coords[2] - coordOrigin;
+    Eigen::Vector3d normalVector = e_1.cross(e_2);
 
-  //Transform Coordinates - coord[0] is the origin
-  for (int i = 0; i < 4; i++) {
-    Eigen::Vector3d coordinateDifference = coords[i] - coordOrigin;
-    coords[i][0]                         = e_1.dot(coordinateDifference);
-    coords[i][1]                         = e_2.dot(coordinateDifference);
-    coords[i][2]                         = normalVector.dot(coordinateDifference);
+    PRECICE_CHECK(math::equals(normalVector.dot(coords[3] - coordOrigin), 0.0),
+                  "Non-planar quads are not supported. The vertex coordinates are: {}.", coords);
+
+    // Transform Coordinates - coord[0] is the origin
+    for (int i = 0; i < 4; i++) {
+      Eigen::Vector3d coordinateDifference = coords[i] - coordOrigin;
+      coords[i][0]                         = e_1.dot(coordinateDifference);
+      coords[i][1]                         = e_2.dot(coordinateDifference);
+      coords[i][2]                         = normalVector.dot(coordinateDifference);
+    }
+  }
+  if (coords[0].size() == 2) {
+    Eigen::Vector2d coordOrigin; // Origin point for the transformation of points onto the new plane
+    coordOrigin = coords[0];
+
+    Eigen::Vector2d e_1 = coords[1] - coordOrigin;
+    Eigen::Vector2d e_2 = coords[2] - coordOrigin;
+
+    // Transform Coordinates - coord[0] is the origin
+    for (int i = 0; i < 4; i++) {
+      Eigen::Vector2d coordinateDifference = coords[i] - coordOrigin;
+      coords[i][0]                         = e_1.dot(coordinateDifference);
+      coords[i][1]                         = e_2.dot(coordinateDifference);
+    }
   }
 
   /*
@@ -175,7 +193,7 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
   previous most right hand point. The algorithm must find 3 other points in order to be a valid quad.
   */
 
-  //First find point with smallest x coord. This point must be in the convex set then and is the starting point of gift wrapping algorithm
+  // First find point with smallest x coord. This point must be in the convex set then and is the starting point of gift wrapping algorithm
   int idLowestPoint = 0;
   for (int i = 1; i < 4; i++) {
     if (coords[i][0] < coords[idLowestPoint][0]) {
@@ -185,8 +203,9 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
 
   // Found starting point. Add this as the first vertex in the convex hull.
   // current is the origin point => hull[0]
-  int             validVertexIDCounter = 0;             // Counts number of times a valid vertex is found. Must be 4 for a valid quad.
-  int             currentVertex        = idLowestPoint; // current valid vertex
+  int validVertexIDCounter = 0;             // Counts number of times a valid vertex is found. Must be 4 for a valid quad.
+  int currentVertex        = idLowestPoint; // current valid vertex
+
   ConvexityResult result{};
   do {
     // Add current point to result
@@ -212,10 +231,9 @@ ConvexityResult isConvexQuad(std::array<Eigen::VectorXd, 4> coords)
     validVertexIDCounter++;
   } while (currentVertex != idLowestPoint); // While we don't come to first point
 
-  //Ordering of quad is hull 0-1-2-3-0
+  // Ordering of quad is hull 0-1-2-3-0
   result.convex = (validVertexIDCounter == 4);
 
   return result;
 }
-
 } // namespace precice::math::geometry

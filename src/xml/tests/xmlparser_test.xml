@@ -8,6 +8,8 @@
     <test-bool attribute="No" />
     <test-bool attribute="Yes" />
     <test-bool attribute="1" />
-    <test-eigen attribute="3.0; 2.0; 1.0" />
+    <test-eigen-1 attribute="3.0" />
+    <test-eigen-2 attribute="3.0; 2.0" />
+    <test-eigen-3 attribute="3.0; 2.0; 1.0" />
   </test-config>
 </configuration>

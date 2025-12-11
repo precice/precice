@@ -18,9 +18,10 @@ BOOST_AUTO_TEST_SUITE(ParallelCoupling)
  *
  * Provides a dt argument to the read function. A first order waveform is used.
  */
+PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(WaveformSubcyclingWithDifferentNumberOfDts)
 {
-  PRECICE_TEST("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank));
+  PRECICE_TEST();
 
   Participant precice(context.name, context.config(), 0, 1);
 
@@ -103,7 +104,7 @@ BOOST_AUTO_TEST_CASE(WaveformSubcyclingWithDifferentNumberOfDts)
     time += currentDt;
     if (iterations == 0) { // Sends the first function in the first iteration
       writeData = funcIterOne(time);
-    } else { //Otherwise send the second function
+    } else { // Otherwise send the second function
       writeData = funcIterTwo(time);
     }
 

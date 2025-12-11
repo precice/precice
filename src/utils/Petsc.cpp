@@ -20,52 +20,13 @@
 #include "petscsystypes.h"
 #include "petscvec.h"
 #include "petscviewertypes.h"
+#include "precice/impl/versions.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 
 #endif // not PRECICE_NO_PETSC
 
 namespace precice::utils {
-
-#ifndef PRECICE_NO_PETSC
-
-namespace {
-
-using new_signature = PetscErrorCode(PetscOptions, const char[], const char[]);
-using old_signature = PetscErrorCode(const char[], const char[]);
-
-/**
- * @brief Fix for compatibility with PETSc < 3.7.
- *
- * This enables to call PetscOptionsSetValue with proper number of arguments.
- * This instantiates only the template, that specifies correct function signature, whilst
- * the other one is discarded ( https://en.cppreference.com/w/cpp/language/sfinae )
- */
-template <typename curr_signature = decltype(PetscOptionsSetValue)>
-PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[],
-                                           typename std::enable_if<std::is_same<curr_signature, new_signature>::value, curr_signature>::type PetscOptionsSetValueImpl =
-                                               PetscOptionsSetValue)
-{
-  return PetscOptionsSetValueImpl(nullptr, name, value);
-}
-
-/**
- * @brief Fix for compatibility with PETSc < 3.7.
- *
- * This enables to call PetscOptionsSetValue with proper number of arguments.
- * This instantiates only the template, that specifies correct function signature, whilst
- * the other one is discarded ( https://en.cppreference.com/w/cpp/language/sfinae )
- */
-template <typename curr_signature = decltype(PetscOptionsSetValue)>
-PetscErrorCode PetscOptionsSetValueWrapper(const char name[], const char value[],
-                                           typename std::enable_if<std::is_same<curr_signature, old_signature>::value, curr_signature>::type PetscOptionsSetValueImpl =
-                                               PetscOptionsSetValue)
-{
-  return PetscOptionsSetValueImpl(name, value);
-}
-
-} // namespace
-#endif
 
 precice::logging::Logger precice::utils::Petsc::_log("utils::Petsc");
 
@@ -87,7 +48,7 @@ void Petsc::initialize(Parallel::Communicator comm)
     PetscOptionsSetValue(nullptr, "-no_signal_handler", nullptr);
     PetscErrorCode ierr;
     int            argc = 0;
-    char **        argv = nullptr;
+    char         **argv = nullptr;
     ierr                = PetscInitialize(&argc, &argv, "", nullptr);
     CHKERRV(ierr);
     weInitialized = true;
@@ -104,7 +65,7 @@ void Petsc::finalize()
   PetscBool petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
   if (petscIsInitialized) {
-    PetscOptionsSetValueWrapper("-options_left", "no");
+    PetscOptionsSetValue(nullptr, "-options_left", "no");
     PetscFinalize();
   }
 #endif // not PRECICE_NO_PETSC
@@ -329,7 +290,7 @@ void Vector::setValue(PetscInt row, PetscScalar value)
 void Vector::arange(double start, double stop)
 {
   PetscErrorCode ierr = 0;
-  PetscScalar *  a;
+  PetscScalar   *a;
   PetscInt       range_start, range_end, size;
   VecGetSize(vector, &size);
   VecGetOwnershipRange(vector, &range_start, &range_end);
@@ -366,7 +327,7 @@ Vector &Vector::copyFrom(precice::span<const double> source)
     return *this;
   }
   PRECICE_ASSERT(static_cast<PetscInt>(source.size()) == getLocalSize());
-  PetscScalar *  data;
+  PetscScalar   *data;
   PetscErrorCode ierr = 0;
   ierr                = VecGetArray(vector, &data);
   PRECICE_ASSERT(ierr == 0);
@@ -384,7 +345,7 @@ Vector &Vector::copyTo(precice::span<double> destination)
   }
   auto localSize = getLocalSize();
   PRECICE_ASSERT(static_cast<PetscInt>(destination.size()) == localSize);
-  PetscScalar *  data;
+  PetscScalar   *data;
   PetscErrorCode ierr = 0;
   ierr                = VecGetArray(vector, &data);
   PRECICE_ASSERT(ierr == 0);
@@ -399,7 +360,7 @@ void Vector::sort()
 {
   PetscErrorCode ierr = 0;
   PetscInt       size;
-  PetscReal *    a;
+  PetscReal     *a;
   ierr = VecGetArray(vector, &a);
   CHKERRV(ierr);
   ierr = VecGetSize(vector, &size);
@@ -731,11 +692,19 @@ std::string KSPSolver::summaryFor(Vector &b)
 
   switch (convReason) {
   case (KSP_CONVERGED_RTOL):
+#if (PETSC_MAJOR == 3) && (PETSC_MINOR < 24)
   case (KSP_CONVERGED_RTOL_NORMAL):
+#else
+  case (KSP_CONVERGED_RTOL_NORMAL_EQUATIONS):
+#endif
     oss << " sufficient relative convergence";
     break;
   case (KSP_CONVERGED_ATOL):
+#if (PETSC_MAJOR == 3) && (PETSC_MINOR < 24)
   case (KSP_CONVERGED_ATOL_NORMAL):
+#else
+  case (KSP_CONVERGED_ATOL_NORMAL_EQUATIONS):
+#endif
     oss << " sufficient absolute convergence";
     break;
   case (KSP_DIVERGED_ITS):

@@ -36,45 +36,42 @@ public:
    * @param[in] secondParticipant Name of second participant in coupling.
    * @param[in] localParticipant Name of participant using this coupling scheme.
    * @param[in] m2n Communication object for com. between participants.
-   * @param[in] dtMethod Method used for determining the time window size, see https://www.precice.org/couple-your-code-timestep-sizes.html
    * @param[in] cplMode Set implicit or explicit coupling
    * @param[in] maxIterations maximum number of coupling iterations allowed for implicit coupling per time window
    */
   ParallelCouplingScheme(
-      double                        maxTime,
-      int                           maxTimeWindows,
-      double                        timeWindowSize,
-      const std::string &           firstParticipant,
-      const std::string &           secondParticipant,
-      const std::string &           localParticipant,
-      m2n::PtrM2N                   m2n,
-      constants::TimesteppingMethod dtMethod,
-      CouplingMode                  cplMode,
-      int                           minIterations,
-      int                           maxIterations);
+      double             maxTime,
+      int                maxTimeWindows,
+      double             timeWindowSize,
+      const std::string &firstParticipant,
+      const std::string &secondParticipant,
+      const std::string &localParticipant,
+      m2n::PtrM2N        m2n,
+      CouplingMode       cplMode,
+      int                minIterations,
+      int                maxIterations);
 
   ParallelCouplingScheme(
-      double                        maxTime,
-      int                           maxTimeWindows,
-      double                        timeWindowSize,
-      const std::string &           firstParticipant,
-      const std::string &           secondParticipant,
-      const std::string &           localParticipant,
-      m2n::PtrM2N                   m2n,
-      constants::TimesteppingMethod dtMethod,
-      CouplingMode                  cplMode);
+      double             maxTime,
+      int                maxTimeWindows,
+      double             timeWindowSize,
+      const std::string &firstParticipant,
+      const std::string &secondParticipant,
+      const std::string &localParticipant,
+      m2n::PtrM2N        m2n,
+      CouplingMode       cplMode);
 
 private:
   logging::Logger _log{"cplscheme::ParallelCouplingScheme"};
 
   /// @copydoc cplscheme::BaseCouplingScheme::exchangeInitialData()
-  void exchangeInitialData() override final;
+  void exchangeInitialData() final override;
 
-  void exchangeFirstData() override final;
+  void exchangeFirstData() final override;
 
-  void exchangeSecondData() override final;
+  void exchangeSecondData() final override;
 
-  DataMap &getAccelerationData() override final;
+  DataMap &getAccelerationData() final override;
 };
 
 } // namespace cplscheme

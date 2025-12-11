@@ -1,5 +1,3 @@
-#include <boost/test/detail/log_level.hpp>
-#include <boost/test/tools/fpc_tolerance.hpp>
 #include <boost/test/tree/test_unit.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_parameters.hpp>
@@ -11,54 +9,6 @@
 
 namespace precice::testing {
 
-/// Boost test Initialization function
-/**
-Boost Test Log Levels and corresponding command line arguments to --log_level
-as of Boost 1.68:
-
-\code
-type = enum boost::unit_test::log_level : int {
-  boost::unit_test::invalid_log_level = -1,
-  boost::unit_test::log_successful_tests = 0, all
-  boost::unit_test::log_test_units = 1, unit_scope, test_suite
-  boost::unit_test::log_messages = 2, message
-  boost::unit_test::log_warnings = 3, warning
-  boost::unit_test::log_all_errors = 4, error (default log level)
-  boost::unit_test::log_cpp_exception_errors = 5, cpp_exception
-  boost::unit_test::log_system_errors = 6, system_error
-  boost::unit_test::log_fatal_errors, fatal_error
-  boost::unit_test::log_nothing, nothing
-}
-\endcode
-**/
-boost::unit_test::log_level getBoostTestLogLevel()
-{
-  namespace bu = boost::unit_test;
-#if BOOST_VERSION == 106900 || __APPLE__ && __MACH__
-  std::cerr << "Boost 1.69 and macOS get log_level is broken, preCICE log level set to debug.\n";
-  return bu::log_successful_tests;
-#else
-  return bu::runtime_config::get<bu::log_level>(bu::runtime_config::btrt_log_level);
-#endif
-}
-
-std::string filterFromLogLevel(boost::unit_test::log_level logLevel)
-{
-  namespace bu = boost::unit_test;
-
-  if (logLevel == bu::log_successful_tests || logLevel == bu::log_test_units) {
-    return "%Severity% >= debug";
-  }
-  if (logLevel == bu::log_messages) {
-    return "%Severity% >= info";
-  }
-  if (logLevel == bu::log_warnings) {
-    return "%Severity% >= warning";
-  }
-  // log warnings in any case
-  return "%Severity% >= warning";
-}
-
 void setupTestLogging()
 {
   // See if there is a manual override using a log.conf file.
@@ -69,7 +19,7 @@ void setupTestLogging()
     // We configure the log level based on the test framework log level
 
     logging::BackendConfiguration config;
-    config.filter = filterFromLogLevel(getBoostTestLogLevel());
+    config.filter = "%Severity% >= debug";
 
     const std::string prefix{"%TimeStamp(format=\"%H:%M:%S.%f\")%|%Participant%|%Rank%|%Module%|l%Line%|%Function%|"};
 

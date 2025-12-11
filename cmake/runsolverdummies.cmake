@@ -21,6 +21,9 @@ endif()
 # Remove precice-run
 execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory "${DUMMY_RUN_DIR}/precice-run")
 
+# Remove precice-profiling
+execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory "${DUMMY_RUN_DIR}/precice-profiling")
+
 # Execute both solvers in parallel
 execute_process(
   COMMAND ${WRAPPER} ${DUMMY_A} ${DUMMY_B} ${DUMMY_CONFIG}
@@ -32,4 +35,17 @@ execute_process(
 if(NOT (DUMMY_RESULT EQUAL 0))
   # Fail in case we encounter another error code/condition other than 0
   message(FATAL_ERROR "An error occurred running the solverdummies! Return code : \"${DUMMY_RESULT}\"")
+endif()
+
+# Check profiling output
+execute_process(
+  COMMAND ${Python3_EXECUTABLE} ${CHECKER}
+  WORKING_DIRECTORY ${DUMMY_RUN_DIR}
+  RESULT_VARIABLE CHECK_RESULT
+  )
+
+# Check the return codes/statuses of the solvers
+if(NOT (CHECK_RESULT EQUAL 0))
+  # Fail in case we encounter another error code/condition other than 0
+  message(FATAL_ERROR "The generated profiling files are incorrect! Return code : \"${CHECK_RESULT}\"")
 endif()

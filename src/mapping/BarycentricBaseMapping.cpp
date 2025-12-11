@@ -30,7 +30,7 @@ BarycentricBaseMapping::BarycentricBaseMapping(Constraint constraint, int dimens
 void BarycentricBaseMapping::clear()
 {
   PRECICE_TRACE();
-  _interpolations.clear();
+  _operations.clear();
   _hasComputedMapping = false;
 }
 
@@ -40,24 +40,20 @@ void BarycentricBaseMapping::mapConservative(const time::Sample &inData, Eigen::
   precice::profiling::Event e("map.bbm.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
   PRECICE_ASSERT(getConstraint() == CONSERVATIVE);
   PRECICE_DEBUG("Map conservative using {}", getName());
-  PRECICE_ASSERT(_interpolations.size() == input()->nVertices(),
-                 _interpolations.size(), input()->nVertices());
   const int              dimensions = inData.dataDims;
   const Eigen::VectorXd &inValues   = inData.values;
-  Eigen::VectorXd &      outValues  = outData;
+  Eigen::VectorXd       &outValues  = outData;
 
   // For each input vertex, distribute the conserved data among the relevant output vertices
   // Do it for all dimensions (i.e. components if data is a vector)
-  for (size_t i = 0; i < input()->nVertices(); i++) {
-    const size_t inOffset = i * dimensions;
-    const auto & elems    = _interpolations[i].getWeightedElements();
-    for (const auto &elem : elems) {
-      size_t outOffset = static_cast<size_t>(elem.vertexID) * dimensions;
-      for (int dim = 0; dim < dimensions; dim++) {
-        PRECICE_ASSERT(outOffset + dim < (size_t) outValues.size());
-        PRECICE_ASSERT(inOffset + dim < (size_t) inValues.size());
-        outValues(outOffset + dim) += elem.weight * inValues(inOffset + dim);
-      }
+  if (dimensions == 1) {
+    // Use non-strided access for 1D data
+    for (const auto &op : _operations) {
+      outValues[op.in] += op.weight * inValues[op.out];
+    }
+  } else {
+    for (const auto &op : _operations) {
+      outValues.segment(op.in * dimensions, dimensions) += op.weight * inValues.segment(op.out * dimensions, dimensions);
     }
   }
 }
@@ -67,25 +63,21 @@ void BarycentricBaseMapping::mapConsistent(const time::Sample &inData, Eigen::Ve
   PRECICE_TRACE();
   precice::profiling::Event e("map.bbm.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
   PRECICE_DEBUG("Map {} using {}", (hasConstraint(CONSISTENT) ? "consistent" : "scaled-consistent"), getName());
-  PRECICE_ASSERT(_interpolations.size() == output()->nVertices(),
-                 _interpolations.size(), output()->nVertices());
 
   const int              dimensions = inData.dataDims;
   const Eigen::VectorXd &inValues   = inData.values;
-  Eigen::VectorXd &      outValues  = outData;
+  Eigen::VectorXd       &outValues  = outData;
 
   // For each output vertex, compute the linear combination of input vertices
   // Do it for all dimensions (i.e. components if data is a vector)
-  for (size_t i = 0; i < output()->nVertices(); i++) {
-    const auto &elems     = _interpolations[i].getWeightedElements();
-    size_t      outOffset = i * dimensions;
-    for (const auto &elem : elems) {
-      const size_t inOffset = static_cast<size_t>(elem.vertexID) * dimensions;
-      for (int dim = 0; dim < dimensions; dim++) {
-        PRECICE_ASSERT(outOffset + dim < (size_t) outValues.size());
-        PRECICE_ASSERT(inOffset + dim < (size_t) inValues.size());
-        outValues(outOffset + dim) += elem.weight * inValues(inOffset + dim);
-      }
+  if (dimensions == 1) {
+    // Use non-strided access for 1D data
+    for (const auto &op : _operations) {
+      outValues[op.out] += op.weight * inValues[op.in];
+    }
+  } else {
+    for (const auto &op : _operations) {
+      outValues.segment(op.out * dimensions, dimensions) += op.weight * inValues.segment(op.in * dimensions, dimensions);
     }
   }
 }
@@ -112,12 +104,9 @@ void BarycentricBaseMapping::tagMeshFirstRound()
   std::unordered_set<int> tagged;
   const std::size_t       max_count = origins->nVertices();
 
-  for (const Polation &interpolation : _interpolations) {
-    for (const auto &elem : interpolation.getWeightedElements()) {
-      if (!math::equals(elem.weight, 0.0)) {
-        tagged.insert(elem.vertexID);
-      }
-    }
+  for (const auto &op : _operations) {
+    PRECICE_ASSERT(!math::equals(op.weight, 0.0));
+    tagged.insert(op.in);
     // Shortcut if all vertices are tagged
     if (tagged.size() == max_count) {
       break;
@@ -133,6 +122,33 @@ void BarycentricBaseMapping::tagMeshFirstRound()
   PRECICE_DEBUG("First Round Tagged {}/{} Vertices", tagged.size(), max_count);
 
   clear();
+}
+
+void BarycentricBaseMapping::addPolation(VertexID out, const Polation &p)
+{
+  for (const auto &we : p.getWeightedElements()) {
+    if (!precice::math::equals(we.weight, 0.0)) {
+      _operations.push_back({out, we.vertexID, we.weight});
+    }
+  }
+}
+
+void BarycentricBaseMapping::postProcessOperations()
+{
+  if (hasConstraint(CONSERVATIVE)) {
+    // We order the operations to make them write sequentially
+    std::sort(_operations.begin(), _operations.end(), [](const auto &lhs, const auto &rhs) {
+      // weak order for a pair
+      if (lhs.in < rhs.in) {
+        return true;
+      }
+      if (rhs.in < lhs.in) {
+        return false;
+      }
+      // lhs.in == rhs.in
+      return lhs.out < rhs.out;
+    });
+  }
 }
 
 void BarycentricBaseMapping::tagMeshSecondRound()

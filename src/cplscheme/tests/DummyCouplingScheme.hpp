@@ -6,9 +6,7 @@
 #include "logging/Logger.hpp"
 #include "utils/assertion.hpp"
 
-namespace precice {
-namespace cplscheme {
-namespace tests {
+namespace precice::cplscheme::tests {
 
 /**
  * @brief Used to test CompositionalCouplingScheme.
@@ -29,19 +27,19 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  //virtual ~DummyCouplingScheme() {}
+  // virtual ~DummyCouplingScheme() {}
 
   /**
    * @brief
    */
-  void initialize(
-      double startTime,
-      int    startTimeWindows) override final;
+  void initialize() final override;
+
+  void reinitialize() final override {};
 
   /**
    * @brief Not implemented.
    */
-  bool isInitialized() const override final
+  bool isInitialized() const final override
   {
     PRECICE_ASSERT(false);
     return false;
@@ -50,25 +48,18 @@ public:
   /**
    * @brief Not implemented.
    */
-  bool sendsInitializedData() const override final
+  bool sendsInitializedData() const final override
   {
     PRECICE_ASSERT(false);
     return false;
   }
 
-  /**
-   * @brief Not implemented.
-   */
-  bool addComputedTime(double timeToAdd) override final
-  {
-    PRECICE_ASSERT(false);
-    return true;
-  }
+  bool addComputedTime(double timeToAdd) final override;
 
   /**
    * @brief
    */
-  //void advance() override final;
+  // void advance() override final override;
 
   ChangedMeshes firstSynchronization(const ChangedMeshes &changes) override;
 
@@ -76,26 +67,32 @@ public:
 
   ChangedMeshes secondSynchronization() override;
 
-  void secondExchange() final;
+  void secondExchange() final override;
 
   /**
    * @brief
    */
-  void finalize() override final;
+  void finalize() final override;
 
   /*
    * @brief Not implemented.
    */
-  std::vector<std::string> getCouplingPartners() const override final
+  std::vector<std::string> getCouplingPartners() const final override
   {
     PRECICE_ASSERT(false);
     return std::vector<std::string>();
   }
 
+  std::string localParticipant() const final override
+  {
+    PRECICE_ASSERT(false);
+    return "unknown";
+  }
+
   /**
    * @brief Not implemented.
    */
-  bool willDataBeExchanged(double lastSolverTimeStepSize) const override final
+  bool willDataBeExchanged(double lastSolverTimeStepSize) const final override
   {
     PRECICE_ASSERT(false);
     return false;
@@ -104,7 +101,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  bool hasDataBeenReceived() const override final
+  bool hasDataBeenReceived() const final override
   {
     PRECICE_ASSERT(false);
     return false;
@@ -113,65 +110,19 @@ public:
   /**
    * @brief Not implemented.
    */
-  double getTime() const override final;
+  double getTime() const final override;
 
-  double getTimeWindowStart() const override final;
+  double getTimeWindowStart() const final override;
 
   /**
    * @brief Not implemented.
    */
-  int getTimeWindows() const override final
+  int getTimeWindows() const final override
   {
     return _timeWindows;
   }
 
-  /**
-   * @brief Not implemented.
-   */
-  bool hasTimeWindowSize() const override final
-  {
-    PRECICE_ASSERT(false);
-    return false;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  double getTimeWindowSize() const override final
-  {
-    PRECICE_ASSERT(false);
-    return 0;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  double getNextTimeStepMaxSize() const override final
-  {
-    PRECICE_ASSERT(false);
-    return 0;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  bool isCouplingOngoing() const override final;
-
-  /**
-   * @brief Not implemented.
-   */
-  bool isTimeWindowComplete() const override final
-  {
-    PRECICE_ASSERT(false);
-    return false;
-  }
-
-  /**
-   * @brief Not implemented.
-   */
-  bool isActionRequired(Action action) const override final;
-
-  bool isActionFulfilled(Action action) const override final
+  bool hasTimeWindowSize() const final override
   {
     return true;
   }
@@ -179,7 +130,48 @@ public:
   /**
    * @brief Not implemented.
    */
-  void markActionFulfilled(Action action) override final
+  double getTimeWindowSize() const final override
+  {
+    return 1.0;
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  double getNextTimeStepMaxSize() const final override
+  {
+    PRECICE_ASSERT(false);
+    return 0;
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  bool isCouplingOngoing() const final override;
+
+  /**
+   * @brief Not implemented.
+   */
+  bool isTimeWindowComplete() const final override
+  {
+    PRECICE_ASSERT(false);
+    return false;
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  bool isActionRequired(Action action) const final override;
+
+  bool isActionFulfilled(Action action) const final override
+  {
+    return true;
+  }
+
+  /**
+   * @brief Not implemented.
+   */
+  void markActionFulfilled(Action action) final override
   {
     PRECICE_ASSERT(false);
   }
@@ -196,7 +188,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  void requireAction(Action action) override final
+  void requireAction(Action action) final override
   {
     PRECICE_ASSERT(false);
   }
@@ -204,7 +196,7 @@ public:
   /**
    * @brief Empty.
    */
-  std::string printCouplingState() const override final
+  std::string printCouplingState() const final override
   {
     return std::string();
   }
@@ -216,12 +208,12 @@ public:
 
   bool hasConverged() const override;
 
-  bool requiresSubsteps() const override final
+  bool requiresSubsteps() const final override
   {
     return true;
   }
 
-  ImplicitData implicitDataToReceive() const override final
+  ImplicitData implicitDataToReceive() const final override
   {
     return {};
   }
@@ -251,6 +243,4 @@ private:
   bool _hasConverged = false;
 };
 
-} // namespace tests
-} // namespace cplscheme
-} // namespace precice
+} // namespace precice::cplscheme::tests

@@ -13,9 +13,10 @@ using namespace precice::mesh;
 BOOST_AUTO_TEST_SUITE(MeshTests)
 BOOST_AUTO_TEST_SUITE(BoundingBoxTests)
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Constructor)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   { // 3D
     Eigen::VectorXd boundMin(3);
     boundMin << 1.0, 2.0, 3.0;
@@ -40,9 +41,10 @@ BOOST_AUTO_TEST_CASE(Constructor)
   }
 } // Constructor
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExpandByBoundingBox)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   { // 3D
     BoundingBox bb1({0.0, 1.0,
                      0.0, 1.0,
@@ -68,9 +70,10 @@ BOOST_AUTO_TEST_CASE(ExpandByBoundingBox)
   }
 } // ExpandByBoundingBox
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExpandByVertex)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   { // 3D
     BoundingBox bb({0.0, 1.0,
                     0.0, 1.0,
@@ -93,9 +96,10 @@ BOOST_AUTO_TEST_CASE(ExpandByVertex)
   }
 } // ExpandByVertex
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExpandByRadius)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   { // 3D
     BoundingBox bb({0.0, 1.0,
                     0.5, 2.0,
@@ -118,9 +122,10 @@ BOOST_AUTO_TEST_CASE(ExpandByRadius)
   }
 } // ExpandByRadius
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Scaling)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   { // 3D
     BoundingBox bb1({-1.0, 1.0,
                      0.5, 2.0,
@@ -143,9 +148,10 @@ BOOST_AUTO_TEST_CASE(Scaling)
   }
 } // Scaling
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(CenterOfGravity)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   { // 3D
     BoundingBox bb({0.0, 1.0,
                     -1.0, 3.0,
@@ -163,9 +169,10 @@ BOOST_AUTO_TEST_CASE(CenterOfGravity)
   }
 } // CenterOfGravity
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(MinMaxCorner)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   { // 3D
     BoundingBox bb({0.0, 1.0,
                     -1.0, 3.0,
@@ -187,9 +194,10 @@ BOOST_AUTO_TEST_CASE(MinMaxCorner)
   }
 } // CenterOfGravity
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EdgeLength)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   { // 3D
     BoundingBox bb({0.0, 1.0,
                     -1.0, 3.0,
@@ -212,9 +220,10 @@ BOOST_AUTO_TEST_CASE(EdgeLength)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Area)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   { // 3D
     BoundingBox bb({0.0, 1.0,
                     -1.0, 3.0,
@@ -261,9 +270,10 @@ BOOST_AUTO_TEST_CASE(Area)
   }
 } // Area
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Overlapping)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   { // 3D
     BoundingBox bb1({0.0, 1.0,
                      -1.0, 3.0,
@@ -291,9 +301,10 @@ BOOST_AUTO_TEST_CASE(Overlapping)
   }
 } // Overalapping
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Comparison)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   { // 3D
     BoundingBox bb1({0.0, 1.0,
                      -1.0, 3.0,
@@ -321,9 +332,10 @@ BOOST_AUTO_TEST_CASE(Comparison)
   }
 } // Comparison
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Contains)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   { // 3D
     BoundingBox bb({0.0, 1.0,
                     -1.0, 3.0,
@@ -361,9 +373,10 @@ BOOST_AUTO_TEST_CASE(Contains)
   }
 } // Contains
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(DefaultCase)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   { // 3D
     BoundingBox bb1({0.0, 1.0,
                      -1.0, 3.0,
@@ -383,9 +396,10 @@ BOOST_AUTO_TEST_CASE(DefaultCase)
   }
 } // DefaultCase
 
+PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(EmptyCase)
 {
-  PRECICE_TEST(1_rank);
+  PRECICE_TEST();
   { // 3D
     BoundingBox bb1({0.0, 1.0,
                      -1.0, 3.0,

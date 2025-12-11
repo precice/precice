@@ -26,8 +26,8 @@ getData()
 
   static double *data[] = {data_0, data_1, data_2};
   static int     size[] = {sizeof(data_0) / sizeof(*data_0),
-                       sizeof(data_1) / sizeof(*data_1),
-                       sizeof(data_2) / sizeof(*data_2)};
+                           sizeof(data_1) / sizeof(*data_1),
+                           sizeof(data_2) / sizeof(*data_2)};
 
   return std::move(vector<double>(data[rank], data[rank] + size[rank]));
 }
@@ -43,8 +43,8 @@ getExpectedData()
 
   static double *data[] = {data_0, data_1, data_2};
   static int     size[] = {sizeof(data_0) / sizeof(*data_0),
-                       sizeof(data_1) / sizeof(*data_1),
-                       sizeof(data_2) / sizeof(*data_2)};
+                           sizeof(data_1) / sizeof(*data_1),
+                           sizeof(data_2) / sizeof(*data_2)};
 
   return std::move(vector<double>(data[rank], data[rank] + size[rank]));
 }
@@ -138,9 +138,9 @@ int main(int argc, char **argv)
   std::vector<com::PtrCommunicationFactory> cfs(
       {com::PtrCommunicationFactory(new com::SocketCommunicationFactory)});
 
-  //std::vector<com::PtrCommunicationFactory> cfs(
-  //     {com::PtrCommunicationFactory(new com::SocketCommunicationFactory),
-  //      com::PtrCommunicationFactory(new com::MPIPortsCommunicationFactory)});
+  // std::vector<com::PtrCommunicationFactory> cfs(
+  //      {com::PtrCommunicationFactory(new com::SocketCommunicationFactory),
+  //       com::PtrCommunicationFactory(new com::MPIPortsCommunicationFactory)});
 
   for (auto cf : cfs) {
     m2n::PointToPointCommunication c(cf, mesh);
