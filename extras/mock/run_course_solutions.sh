@@ -201,13 +201,13 @@ for dir in "${TASK_DIRS[@]}"; do
                 GEN_OUTS+=("$out")
                 # pick a python file to run
                 if [ -f "$gd/generator.py" ]; then
-                    timeout "$TIMEOUT" bash -c "cd '$gd' && LD_PRELOAD=$MOCK_LIB python3 generator.py" > "$out" 2>&1 || true
+                    timeout "$TIMEOUT" bash -c "cd '$gd' && LD_PRELOAD=$MOCK_LIB python3 generator.py" > "$out" 2>&1
                     rc=$?
                 else
                     pyfile=$(ls -1 "$gd"/*.py 2>/dev/null | head -n1 || true)
                     if [ -n "$pyfile" ]; then
                         fname=$(basename "$pyfile")
-                        timeout "$TIMEOUT" bash -c "cd '$gd' && LD_PRELOAD=$MOCK_LIB python3 $fname" > "$out" 2>&1 || true
+                        timeout "$TIMEOUT" bash -c "cd '$gd' && LD_PRELOAD=$MOCK_LIB python3 $fname" > "$out" 2>&1
                         rc=$?
                     else rc=0; fi
                 fi
@@ -217,13 +217,13 @@ for dir in "${TASK_DIRS[@]}"; do
                 out=$(mktemp /tmp/course_prop_out.XXXXXX)
                 PROP_OUTS+=("$out")
                 if [ -f "$pd/propagator.py" ]; then
-                    timeout "$TIMEOUT" bash -c "cd '$pd' && LD_PRELOAD=$MOCK_LIB python3 propagator.py" > "$out" 2>&1 || true
+                    timeout "$TIMEOUT" bash -c "cd '$pd' && LD_PRELOAD=$MOCK_LIB python3 propagator.py" > "$out" 2>&1
                     rc=$?
                 else
                     pyfile=$(ls -1 "$pd"/*.py 2>/dev/null | head -n1 || true)
                     if [ -n "$pyfile" ]; then
                         fname=$(basename "$pyfile")
-                        timeout "$TIMEOUT" bash -c "cd '$pd' && LD_PRELOAD=$MOCK_LIB python3 $fname" > "$out" 2>&1 || true
+                        timeout "$TIMEOUT" bash -c "cd '$pd' && LD_PRELOAD=$MOCK_LIB python3 $fname" > "$out" 2>&1
                         rc=$?
                     else rc=0; fi
                 fi
