@@ -142,17 +142,17 @@ jobs:
           . ../venv/bin/activate # There is always a venv present
           cmake --version
           cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DPRECICE_FEATURE_GINKGO_MAPPING=${{ env.Ginkgo }} -DPRECICE_FEATURE_PROFILING_COMPRESSION=${{ env.COMPRESS }} -DPRECICE_FEATURE_LIBBACKTRACE_STACKTRACES=ON -DPRECICE_BUILD_BENCHMARKS=ON  -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" ..
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeCache
           path: build/CMakeCache.txt
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeLogs
           path: 'build/CMakeFiles/*.log'
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CompileCommands
@@ -197,7 +197,7 @@ jobs:
         run: |
           cpack
           lintian -i --suppress-tags control-file-has-bad-permissions ./*.deb
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} TestOutput
@@ -240,17 +240,17 @@ jobs:
       run: |
         cmake --version
         cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} ..
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       if: failure()
       with:
         name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeCache
         path: build/CMakeCache.txt
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       if: failure()
       with:
         name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeLogs
         path: 'build/CMakeFiles/*.log'
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       if: failure()
       with:
         name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CompileCommands
@@ -267,7 +267,7 @@ jobs:
         OMPI_MCA_pml: ob1
       working-directory: build
       run: ctest -j
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       if: failure()
       with:
         name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} TestOutput
@@ -322,7 +322,7 @@ jobs:
         run: |
           # Allow each test to rerun to iron out sporadic MPI failures
           ctest -j --repeat until-pass:3
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: debugdump
