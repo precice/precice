@@ -34,6 +34,44 @@ void BarycentricBaseMapping::clear()
   _hasComputedMapping = false;
 }
 
+namespace {
+
+template <int n>
+void mapTemplatedConsistent(const std::vector<Operation> &ops, const Eigen::VectorXd &in, Eigen::VectorXd &out)
+{
+  static_assert(n > 0 && n <= 3);
+  // For each output vertex, compute the linear combination of input vertices
+  // Do it for all dimensions (i.e. components if data is a vector)
+  for (const auto &op : ops) {
+    if constexpr (n == 1) {
+      // We use a direct index-loop when no dimension offset is required
+      out[op.out] += op.weight * in[op.in];
+    } else {
+      // Segments of templated size are the fastest option when the data has multiple components
+      out.segment<n>(op.out * n).noalias() += op.weight * in.segment<n>(op.in * n);
+    }
+  }
+}
+
+template <int n>
+void mapTemplatedConservative(const std::vector<Operation> &ops, const Eigen::VectorXd &in, Eigen::VectorXd &out)
+{
+  static_assert(n > 0 && n <= 3);
+  // For each input vertex, distribute the conserved data among the relevant output vertices
+  // Do it for all dimensions (i.e. components if data is a vector)
+  for (const auto &op : ops) {
+    if constexpr (n == 1) {
+      // We use a direct index-loop when no dimension offset is required
+      out[op.in] += op.weight * in[op.out];
+    } else {
+      // Segments of templated size are the fastest option when the data has multiple components
+      out.segment<n>(op.in * n).noalias() += op.weight * in.segment<n>(op.out * n);
+    }
+  }
+}
+
+} // namespace
+
 void BarycentricBaseMapping::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
@@ -44,28 +82,16 @@ void BarycentricBaseMapping::mapConservative(const time::Sample &inData, Eigen::
   const Eigen::VectorXd &inValues   = inData.values;
   Eigen::VectorXd       &outValues  = outData;
 
-  // For each input vertex, distribute the conserved data among the relevant output vertices
-  // Do it for all dimensions (i.e. components if data is a vector)
   switch (dimensions) {
-  case 1: // Use non-strided access for 1D data
-    for (const auto &op : _operations) {
-      outValues[op.in] += op.weight * inValues[op.out];
-    }
+  case 1:
+    mapTemplatedConservative<1>(_operations, inValues, outValues);
     return;
-  case 2: // Use templated segment access for 2D
-    for (const auto &op : _operations) {
-      outValues.segment<2>(op.in * 2).noalias() += op.weight * inValues.segment<2>(op.out * 2);
-    }
+  case 2:
+    mapTemplatedConservative<2>(_operations, inValues, outValues);
     return;
-  case 3: // Use MatrixX3d row access for 3D
-  {
-    auto inMap  = Eigen::MatrixX3d::Map(inData.values.data(), input()->nVertices(), 3);
-    auto outMap = Eigen::MatrixX3d::Map(outData.data(), output()->nVertices(), 3);
-    for (const auto &op : _operations) {
-      outMap.row(op.in).noalias() += op.weight * inMap.row(op.out);
-    }
+  case 3:
+    mapTemplatedConservative<3>(_operations, inValues, outValues);
     return;
-  }
   default:
     PRECICE_UNREACHABLE("Implement for unknown dimension");
   }
@@ -81,28 +107,16 @@ void BarycentricBaseMapping::mapConsistent(const time::Sample &inData, Eigen::Ve
   const Eigen::VectorXd &inValues   = inData.values;
   Eigen::VectorXd       &outValues  = outData;
 
-  // For each output vertex, compute the linear combination of input vertices
-  // Do it for all dimensions (i.e. components if data is a vector)
   switch (dimensions) {
-  case 1: // Use non-strided access for 1D data
-    for (const auto &op : _operations) {
-      outValues[op.out] += op.weight * inValues[op.in];
-    }
+  case 1:
+    mapTemplatedConsistent<1>(_operations, inValues, outValues);
     return;
-  case 2: // Use templated segment access for 2D
-    for (const auto &op : _operations) {
-      outValues.segment<2>(op.out * 2).noalias() += op.weight * inValues.segment<2>(op.in * 2);
-    }
+  case 2:
+    mapTemplatedConsistent<2>(_operations, inValues, outValues);
     return;
-  case 3: // Use MatrixX3d row access for 3D
-  {
-    auto inMap  = Eigen::MatrixX3d::Map(inData.values.data(), input()->nVertices(), 3);
-    auto outMap = Eigen::MatrixX3d::Map(outData.data(), output()->nVertices(), 3);
-    for (const auto &op : _operations) {
-      outMap.row(op.out).noalias() += op.weight * inMap.row(op.in);
-    }
+  case 3:
+    mapTemplatedConsistent<3>(_operations, inValues, outValues);
     return;
-  }
   default:
     PRECICE_UNREACHABLE("Implement for unknown dimension");
   }
