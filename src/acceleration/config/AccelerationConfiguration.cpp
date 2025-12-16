@@ -44,19 +44,21 @@ AccelerationConfiguration::AccelerationConfiguration(
       ATTR_MESH("mesh"),
       ATTR_SCALING("scaling"),
       ATTR_VALUE("value"),
-      ATTR_RANGETYPE("range-type"),
-      ATTR_MIN("lower-bound"),
-      ATTR_MAX("upper-bound"),
       ATTR_ENFORCE("enforce"),
       ATTR_SINGULARITYLIMIT("limit"),
       ATTR_TYPE("type"),
       ATTR_BUILDJACOBIAN("always-build-jacobian"),
+      ATTR_ON_BOUND_VIOLATION("on-bound-violation"),
       ATTR_REDUCEDTIMEGRIDQN("reduced-time-grid"),
       ATTR_IMVJCHUNKSIZE("chunk-size"),
       ATTR_RSLS_REUSED_TIME_WINDOWS("reused-time-windows-at-restart"),
       ATTR_RSSVD_TRUNCATIONEPS("truncation-threshold"),
       ATTR_PRECOND_NONCONST_TIME_WINDOWS("freeze-after"),
       ATTR_PRECOND_UPDATE_ON_THRESHOLD("update-on-threshold"),
+      VALUE_IGNORE("ignore"),
+      VALUE_CLAMP("clamp"),
+      VALUE_DISCARD("discard"),
+      VALUE_SCALE_TO_BOUND("scale"),
       VALUE_CONSTANT("constant"),
       VALUE_AITKEN("aitken"),
       VALUE_IQNILS("IQN-ILS"),
@@ -74,10 +76,6 @@ AccelerationConfiguration::AccelerationConfiguration(
       VALUE_SVD_RESTART("RS-SVD"),
       VALUE_SLIDE_RESTART("RS-SLIDE"),
       VALUE_NO_RESTART("no-restart"),
-      VALUE_NO_BOUND("not-bounded"),
-      VALUE_LOWER_BOUND("lower-bounded"),
-      VALUE_UPPER_BOUND("upper-bounded"),
-      VALUE_ALL_BOUND("two-ends-bounded"),
       _meshConfig(meshConfig),
       _acceleration(),
       _neededMeshes(),
@@ -116,6 +114,18 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
                                  .setDocumentation("Whether only the last time step of each time window is used to construct the Jacobian.");
     tag.addAttribute(reducedTimeGridQN);
 
+    auto onBoundViolation = makeXMLAttribute(ATTR_ON_BOUND_VIOLATION, VALUE_DISCARD)
+                                .setOptions({VALUE_IGNORE,
+                                             VALUE_CLAMP,
+                                             VALUE_DISCARD,
+                                             VALUE_SCALE_TO_BOUND})
+                                .setDocumentation("Defines the strategy to handle updates that violate variable bounds. Possible options are:\n\n"
+                                                  "- `ignore`: do nothing\n"
+                                                  "- `clamp`: clamp the violating components to their bounds\n"
+                                                  "- `discard`: discard this QN step\n"
+                                                  "- `scale`: scale the QN step with a constant to fit all violating components into the bounds.");
+    tag.addAttribute(onBoundViolation);
+
     addTypeSpecificSubtags(tag);
     tags.push_back(tag);
   }
@@ -131,6 +141,18 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
     auto reducedTimeGridQN = makeXMLAttribute(ATTR_REDUCEDTIMEGRIDQN, true)
                                  .setDocumentation("Whether only the last time step of each time window is used to construct the Jacobian.");
     tag.addAttribute(reducedTimeGridQN);
+
+    auto onBoundViolation = makeXMLAttribute(ATTR_ON_BOUND_VIOLATION, VALUE_DISCARD)
+                                .setOptions({VALUE_IGNORE,
+                                             VALUE_CLAMP,
+                                             VALUE_DISCARD,
+                                             VALUE_SCALE_TO_BOUND})
+                                .setDocumentation("Defines the strategy to handle Quasi-Newton updates that violate variable bounds. Possible options are:\n\n"
+                                                  "- `ignore`: do nothing\n"
+                                                  "- `clamp`: clamp the violating components to their bounds\n"
+                                                  "- `discard`: discard this QN step\n"
+                                                  "- `scale`: scale the QN step with a constant to fit all violating components into the bounds.");
+    tag.addAttribute(onBoundViolation);
 
     addTypeSpecificSubtags(tag);
     tags.push_back(tag);
@@ -155,11 +177,15 @@ void AccelerationConfiguration::xmlTagCallback(
   if (callingTag.getNamespace() == TAG) {
     _config.type = callingTag.getName();
 
-    if (_config.type == VALUE_IQNIMVJ)
+    if (_config.type == VALUE_IQNIMVJ) {
       _config.alwaysBuildJacobian = callingTag.getBooleanAttributeValue(ATTR_BUILDJACOBIAN);
+      _config.onBoundViolation    = callingTag.getStringAttributeValue(ATTR_ON_BOUND_VIOLATION);
+    }
 
-    if (_config.type == VALUE_IQNIMVJ || _config.type == VALUE_IQNILS)
+    if (_config.type == VALUE_IQNIMVJ || _config.type == VALUE_IQNILS) {
       _config.reducedTimeGridQN = callingTag.getBooleanAttributeValue(ATTR_REDUCEDTIMEGRIDQN);
+      _config.onBoundViolation  = callingTag.getStringAttributeValue(ATTR_ON_BOUND_VIOLATION);
+    }
   }
   if (callingTag.getName() == TAG_RELAX) {
     _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
@@ -173,24 +199,11 @@ void AccelerationConfiguration::xmlTagCallback(
                   "Please remove the duplicated entry.",
                   dataName, meshName);
 
-    _meshName              = callingTag.getStringAttributeValue(ATTR_MESH);
-    double      scaling    = 1.0;
-    std::string rangeType  = VALUE_NO_BOUND;
-    double      lowerBound = -1.0e16;
-    double      upperBound = 1.0e16;
+    _meshName      = callingTag.getStringAttributeValue(ATTR_MESH);
+    double scaling = 1.0;
 
     if (_config.type == VALUE_IQNILS || _config.type == VALUE_IQNIMVJ) {
       scaling = callingTag.getDoubleAttributeValue(ATTR_SCALING);
-
-      if (callingTag.hasAttribute(ATTR_RANGETYPE)) {
-        rangeType = callingTag.getStringAttributeValue(ATTR_RANGETYPE);
-      }
-      lowerBound = callingTag.getDoubleAttributeValue(ATTR_MIN);
-      upperBound = callingTag.getDoubleAttributeValue(ATTR_MAX);
-
-      PRECICE_CHECK(lowerBound < upperBound,
-                    "Data with name \"{0}\" associated to mesh \"{1}\" has larger minimum value than maximum.",
-                    dataName, _meshName);
     }
 
     PRECICE_CHECK(_meshConfig->hasMeshName(_meshName) && _meshConfig->getMesh(_meshName)->hasDataName(dataName),
@@ -202,9 +215,6 @@ void AccelerationConfiguration::xmlTagCallback(
     const mesh::PtrData &data = mesh->data(dataName);
     _config.dataIDs.push_back(data->getID());
     _config.scalings.insert(std::make_pair(data->getID(), scaling));
-    _config.rangeTypes.insert(std::make_pair(data->getID(), rangeType));
-    _config.lowerBounds.insert(std::make_pair(data->getID(), lowerBound));
-    _config.upperBounds.insert(std::make_pair(data->getID(), upperBound));
 
     _neededMeshes.push_back(_meshName);
   } else if (callingTag.getName() == TAG_INIT_RELAX) {
@@ -317,9 +327,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
-              _config.rangeTypes,
-              _config.lowerBounds,
-              _config.upperBounds,
+              _config.onBoundViolation,
               _preconditioner,
               _config.reducedTimeGridQN));
     } else if (callingTag.getName() == VALUE_IQNIMVJ) {
@@ -361,9 +369,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
-              _config.rangeTypes,
-              _config.lowerBounds,
-              _config.upperBounds,
+              _config.onBoundViolation,
               _preconditioner,
               _config.alwaysBuildJacobian,
               _config.imvjRestartType,
@@ -403,25 +409,9 @@ void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
                              "To improve the performance of a parallel or a multi coupling schemes, "
                              "each data set can be manually scaled using this scaling factor with preconditioner type = \"constant\". For all other preconditioner types, the factor is ignored. "
                              "We recommend, however, to use an automatic scaling via a preconditioner.");
-  auto attrBoundType = XMLAttribute<std::string>(ATTR_RANGETYPE)
-                           .setOptions({VALUE_NO_BOUND,
-                                        VALUE_LOWER_BOUND,
-                                        VALUE_UPPER_BOUND,
-                                        VALUE_ALL_BOUND})
-                           .setDefaultValue(VALUE_NO_BOUND)
-                           .setDocumentation("The type of value interval for the data. Possible types:\n"
-                                             " - `not-bounded`: the value could range in \\(-\\infty, \\infty)\\ \n"
-                                             " - `lower-bounded`: the value is bounded at the left end\n"
-                                             " - `upper-bounded`: the value is bounded at the right send\n"
-                                             " - `two-ends-bounded`: the value has a range that is bounded at both the left and right ends.");
-  XMLAttribute<double> attrLowerBound = makeXMLAttribute(ATTR_MIN, -1.0e16).setDocumentation("The lower bound of the data. Default is -1.0e16.");
-  XMLAttribute<double> attrUpperBound = makeXMLAttribute(ATTR_MAX, 1.0e16).setDocumentation("The upper bound of the data. Default is 1.0e16.");
   tagData.addAttribute(attrName);
   tagData.addAttribute(attrMesh);
   tagData.addAttribute(attrScaling);
-  tagData.addAttribute(attrBoundType);
-  tagData.addAttribute(attrLowerBound);
-  tagData.addAttribute(attrUpperBound);
   tag.addSubtag(tagData);
 
   XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);

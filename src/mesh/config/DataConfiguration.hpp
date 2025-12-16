@@ -14,15 +14,19 @@ namespace precice::mesh {
 class DataConfiguration : public xml::XMLTag::Listener {
 public:
   struct ConfiguredData {
-    std::string    name;
-    Data::typeName typeName;
-    int            waveformDegree;
+    std::string         name;
+    Data::typeName      typeName;
+    int                 waveformDegree;
+    std::vector<double> lowerBound;
+    std::vector<double> upperBound;
 
     ConfiguredData(
         const std::string   &name,
         const Data::typeName typeName,
-        int                  waveformDegree)
-        : name(name), typeName(typeName), waveformDegree(waveformDegree) {}
+        int                  waveformDegree,
+        std::vector<double>  lowerBound,
+        std::vector<double>  upperBound)
+        : name(name), typeName(typeName), waveformDegree(waveformDegree), lowerBound(lowerBound), upperBound(upperBound) {}
   };
 
   DataConfiguration(xml::XMLTag &parent);
@@ -45,19 +49,31 @@ public:
    * @param[in] name Unique name of the data.
    * @param[in] dataDimensions Dimensionality (1: scalar, 2,3: vector) of data.
    * @param[in] waveformDegree Degree of waveform associated with this data.
+   * @param[in] lowerBound Lower bound of the data for violation check.
+   * @param[in] upperBound Upper bound of the data for violation check.
    */
   void addData(const std::string   &name,
                const Data::typeName typeName,
-               int                  waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE);
+               int                  waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE,
+               std::vector<double>  lowerBound     = std::vector<double>(3, -std::numeric_limits<double>::infinity()),
+               std::vector<double>  upperBound     = std::vector<double>(3, std::numeric_limits<double>::infinity()));
 
 private:
   mutable logging::Logger _log{"mesh::DataConfiguration"};
 
-  const std::string TAG          = "data";
-  const std::string ATTR_NAME    = "name";
-  const std::string ATTR_DEGREE  = "waveform-degree";
-  const std::string VALUE_VECTOR = "vector";
-  const std::string VALUE_SCALAR = "scalar";
+  const std::string TAG                = "data";
+  const std::string ATTR_NAME          = "name";
+  const std::string ATTR_DEGREE        = "waveform-degree";
+  const std::string ATTR_LOWER_BOUND   = "lower-bound";
+  const std::string ATTR_UPPER_BOUND   = "upper-bound";
+  const std::string ATTR_LOWER_BOUND_X = "lower-bound-x";
+  const std::string ATTR_LOWER_BOUND_Y = "lower-bound-y";
+  const std::string ATTR_LOWER_BOUND_Z = "lower-bound-z";
+  const std::string ATTR_UPPER_BOUND_X = "upper-bound-x";
+  const std::string ATTR_UPPER_BOUND_Y = "upper-bound-y";
+  const std::string ATTR_UPPER_BOUND_Z = "upper-bound-z";
+  const std::string VALUE_VECTOR       = "vector";
+  const std::string VALUE_SCALAR       = "scalar";
 
   std::vector<ConfiguredData> _data;
 

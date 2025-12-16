@@ -58,22 +58,14 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
-  std::map<int, std::string> rangeTypes;
-  rangeTypes.insert(std::make_pair(0, "not-bounded"));
-  rangeTypes.insert(std::make_pair(1, "not-bounded"));
-  std::map<int, double> lowerBounds;
-  lowerBounds.insert(std::make_pair(0, -1.0e16));
-  lowerBounds.insert(std::make_pair(1, -1.0e16));
-  std::map<int, double> upperBounds;
-  upperBounds.insert(std::make_pair(0, 1.0e16));
-  upperBounds.insert(std::make_pair(1, 1.0e16));
+  std::string         onBoundViolations = "ignore";
   std::vector<double> factors;
   factors.resize(2, 1.0);
   PtrPreconditioner prec(new ConstantPreconditioner(factors));
   auto              dummyMesh = testing::makeDummy2DMesh(4);
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                         timeWindowsReused, filter, singularityLimit, dataIDs, rangeTypes, lowerBounds, upperBounds, prec, alwaysBuildJacobian,
+                         timeWindowsReused, filter, singularityLimit, dataIDs, onBoundViolations, prec, alwaysBuildJacobian,
                          restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps, !exchangeSubsteps);
 
   Eigen::VectorXd fcol1;
@@ -159,15 +151,7 @@ void testVIQNPP(bool exchangeSubsteps)
 
   dataIDs.push_back(0);
   dataIDs.push_back(1);
-  std::map<int, std::string> rangeTypes;
-  rangeTypes.insert(std::make_pair(0, "not-bounded"));
-  rangeTypes.insert(std::make_pair(1, "not-bounded"));
-  std::map<int, double> lowerBounds;
-  lowerBounds.insert(std::make_pair(0, -1.0e16));
-  lowerBounds.insert(std::make_pair(1, -1.0e16));
-  std::map<int, double> upperBounds;
-  upperBounds.insert(std::make_pair(0, 1.0e16));
-  upperBounds.insert(std::make_pair(1, 1.0e16));
+  std::string         onBoundViolations = "ignore";
   std::vector<double> factors;
   factors.resize(2, 1.0);
   PtrPreconditioner prec(new ConstantPreconditioner(factors));
@@ -178,7 +162,7 @@ void testVIQNPP(bool exchangeSubsteps)
   auto dummyMesh = testing::makeDummy2DMesh(4);
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                        timeWindowsReused, filter, singularityLimit, dataIDs, rangeTypes, lowerBounds, upperBounds, prec, !exchangeSubsteps);
+                        timeWindowsReused, filter, singularityLimit, dataIDs, onBoundViolations, prec, !exchangeSubsteps);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));

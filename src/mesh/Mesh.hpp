@@ -182,10 +182,12 @@ public:
       Vertex &vertexFour);
 
   /// Create only data for vertex
-  PtrData &createData(const std::string &name,
-                      int                dimension,
-                      DataID             id,
-                      int                waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE);
+  PtrData &createData(const std::string  &name,
+                      int                 dimension,
+                      DataID              id,
+                      int                 waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE,
+                      std::vector<double> lowerBound     = std::vector<double>(3, -std::numeric_limits<double>::infinity()),
+                      std::vector<double> upperBound     = std::vector<double>(3, std::numeric_limits<double>::infinity()));
 
   /// Allows access to all data
   const DataContainer &data() const;

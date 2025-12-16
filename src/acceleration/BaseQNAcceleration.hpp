@@ -64,18 +64,16 @@ namespace acceleration {
 class BaseQNAcceleration : public Acceleration {
 public:
   BaseQNAcceleration(
-      double                     initialRelaxation,
-      bool                       forceInitialRelaxation,
-      int                        maxIterationsUsed,
-      int                        timeWindowsReused,
-      int                        filter,
-      double                     singularityLimit,
-      std::vector<int>           dataIDs,
-      std::map<int, std::string> rangeTypes,
-      std::map<int, double>      lowerBounds,
-      std::map<int, double>      upperBounds,
-      impl::PtrPreconditioner    preconditioner,
-      bool                       reducedTimeGrid);
+      double                  initialRelaxation,
+      bool                    forceInitialRelaxation,
+      int                     maxIterationsUsed,
+      int                     timeWindowsReused,
+      int                     filter,
+      double                  singularityLimit,
+      std::vector<int>        dataIDs,
+      std::string             onBoundViolation,
+      impl::PtrPreconditioner preconditioner,
+      bool                    reducedTimeGrid);
 
   /**
    * @brief Destructor, empty.
@@ -110,15 +108,9 @@ public:
    */
   void performAcceleration(DataMap &cplData, double windowStart, double windowEnd) final override;
   /**
-   * @brief Transform the bounded input data into the inf range.
+   * @brief Handles bound violations by performing QN update.
    */
-  virtual void forwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds,
-                                     std::map<int, double> upperBounds);
-  /**
-   * @brief Transform the output data backward from inf to certain range.
-   */
-  virtual void backwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds,
-                                      std::map<int, double> upperBounds, Eigen::VectorXd &xUpdate);
+  void checkBound(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &dataIDs, std::string onBoundViolation, Eigen::VectorXd &xUpdate);
   /**
    * @brief Marks a iteration sequence as converged.
    *
@@ -164,9 +156,6 @@ public:
    */
   int getMaxUsedTimeWindows() const;
 
-  // options are "cropping", "transformation", "Aitken" and "cutStep"
-  std::string methodForQN = "Aitken";
-
   // if this step would fall back to Aitken under-relaxation
   bool   _fallBack     = false;
   double _aitkenFactor = 0.5;
@@ -205,14 +194,7 @@ protected:
    */
   bool _hasNodesOnInterface = true;
 
-  /// @brief store the bound type for each dataID, 0 = none, 1 = lower bounded, 2 = upper bounded, 3 = both sides bounded
-  std::map<int, std::string> _rangeTypes;
-
-  /// @brief store the lower limit for each dataID
-  std::map<int, double> _lowerBounds;
-
-  /// @brief store the upper limit for each dataID
-  std::map<int, double> _upperBounds;
+  std::string _onBoundViolation;
 
   /* @brief If true, the QN-scheme always performs a underrelaxation in the first iteration of
    *        a new time window. Otherwise, the LS system from the previous time window is used in the

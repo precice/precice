@@ -39,6 +39,18 @@ int CouplingData::getSize() const
   return _mesh->nVertices() * getDimensions();
 }
 
+std::vector<double> CouplingData::getLowerBound() const
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->getLowerBound();
+}
+
+std::vector<double> CouplingData::getUpperBound() const
+{
+  PRECICE_ASSERT(_data != nullptr);
+  return _data->getUpperBound();
+}
+
 int CouplingData::nVertices() const
 {
   return _mesh->nVertices();

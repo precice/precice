@@ -14,4 +14,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 void runTestQNWithWaveforms(std::string const &config, TestContext const &context);
 
 void runTestQNWithWaveformsReducedTimeGrid(std::string const &config, TestContext const &context);
+
+void runTestQNWithBound(std::string const &config, TestContext const &context);
+
 #endif

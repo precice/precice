@@ -56,13 +56,11 @@ private:
   const std::string ATTR_MESH;
   const std::string ATTR_SCALING;
   const std::string ATTR_VALUE;
-  const std::string ATTR_RANGETYPE;
-  const std::string ATTR_MIN;
-  const std::string ATTR_MAX;
   const std::string ATTR_ENFORCE;
   const std::string ATTR_SINGULARITYLIMIT;
   const std::string ATTR_TYPE;
   const std::string ATTR_BUILDJACOBIAN;
+  const std::string ATTR_ON_BOUND_VIOLATION;
   const std::string ATTR_REDUCEDTIMEGRIDQN;
   const std::string ATTR_IMVJCHUNKSIZE;
   const std::string ATTR_RSLS_REUSED_TIME_WINDOWS;
@@ -70,6 +68,10 @@ private:
   const std::string ATTR_PRECOND_NONCONST_TIME_WINDOWS;
   const std::string ATTR_PRECOND_UPDATE_ON_THRESHOLD;
 
+  const std::string VALUE_IGNORE;
+  const std::string VALUE_CLAMP;
+  const std::string VALUE_DISCARD;
+  const std::string VALUE_SCALE_TO_BOUND;
   const std::string VALUE_CONSTANT;
   const std::string VALUE_AITKEN;
   const std::string VALUE_IQNILS;
@@ -87,10 +89,6 @@ private:
   const std::string VALUE_SVD_RESTART;
   const std::string VALUE_SLIDE_RESTART;
   const std::string VALUE_NO_RESTART;
-  const std::string VALUE_NO_BOUND;
-  const std::string VALUE_LOWER_BOUND;
-  const std::string VALUE_UPPER_BOUND;
-  const std::string VALUE_ALL_BOUND;
 
   const mesh::PtrMeshConfiguration _meshConfig;
 
@@ -106,28 +104,26 @@ private:
   std::set<std::pair<std::string, std::string>> _uniqueDataAndMeshNames;
 
   struct ConfigurationData {
-    std::vector<int>           dataIDs;
-    std::map<int, double>      scalings;
-    std::map<int, std::string> rangeTypes;
-    std::map<int, double>      lowerBounds;
-    std::map<int, double>      upperBounds;
-    std::string                type;
-    double                     relaxationFactor           = 0;
-    bool                       forceInitialRelaxation     = false;
-    int                        maxIterationsUsed          = 0;
-    int                        timeWindowsReused          = 0;
-    int                        filter                     = Acceleration::NOFILTER;
-    int                        imvjRestartType            = 0;
-    int                        imvjChunkSize              = 0;
-    int                        imvjRSLS_reusedTimeWindows = 0;
-    int                        precond_nbNonConstTWindows = -1;
-    double                     singularityLimit           = 0;
-    double                     imvjRSSVD_truncationEps    = 0;
-    bool                       estimateJacobian           = false;
-    bool                       alwaysBuildJacobian        = false;
-    bool                       reducedTimeGridQN          = true;
-    bool                       preconditionerUpdateOnThreshold  = true;
-    std::string                preconditionerType;
+    std::vector<int>      dataIDs;
+    std::map<int, double> scalings;
+    std::string           type;
+    double                relaxationFactor                 = 0;
+    bool                  forceInitialRelaxation           = false;
+    int                   maxIterationsUsed                = 0;
+    int                   timeWindowsReused                = 0;
+    int                   filter                           = Acceleration::NOFILTER;
+    int                   imvjRestartType                  = 0;
+    int                   imvjChunkSize                    = 0;
+    int                   imvjRSLS_reusedTimeWindows       = 0;
+    int                   preconditionerNbNonConstTWindows = -1;
+    double                singularityLimit                 = 0;
+    double                imvjRSSVD_truncationEps          = 0;
+    bool                  estimateJacobian                 = false;
+    bool                  alwaysBuildJacobian              = false;
+    bool                  reducedTimeGridQN                = true;
+    bool                  preconditionerUpdateOnThreshold  = true;
+    std::string           preconditionerType;
+    std::string           onBoundViolation;
 
     std::vector<double> scalingFactorsInOrder() const;
   } _config;

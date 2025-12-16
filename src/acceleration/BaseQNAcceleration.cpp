@@ -33,25 +33,22 @@ namespace acceleration {
  * ----------------------------------------------------------------------------
  */
 BaseQNAcceleration::BaseQNAcceleration(
-    double                     initialRelaxation,
-    bool                       forceInitialRelaxation,
-    int                        maxIterationsUsed,
-    int                        timeWindowsReused,
-    int                        filter,
-    double                     singularityLimit,
-    std::vector<int>           dataIDs,
-    std::map<int, std::string> rangeTypes,
-    std::map<int, double>      lowerBounds,
-    std::map<int, double>      upperBounds,
-    impl::PtrPreconditioner    preconditioner,
-    bool                       reducedTimeGrid)
+    double                  initialRelaxation,
+    bool                    forceInitialRelaxation,
+    int                     maxIterationsUsed,
+    int                     timeWindowsReused,
+    int                     filter,
+    double                  singularityLimit,
+    std::vector<int>        dataIDs,
+    std::string             onBoundViolation,
+    impl::PtrPreconditioner preconditioner,
+    bool                    reducedTimeGrid)
     : _preconditioner(std::move(preconditioner)),
       _initialRelaxation(initialRelaxation),
       _maxIterationsUsed(maxIterationsUsed),
       _timeWindowsReused(timeWindowsReused),
-      _lowerBounds(lowerBounds),
-      _upperBounds(upperBounds),
       _primaryDataIDs(std::move(dataIDs)),
+      _onBoundViolation(std::move(onBoundViolation)),
       _forceInitialRelaxation(forceInitialRelaxation),
       _reducedTimeGrid(reducedTimeGrid),
       _qrV(filter),
@@ -109,253 +106,73 @@ void BaseQNAcceleration::initialize(
   _firstIteration  = true;
   _firstTimeWindow = true;
 }
-void BaseQNAcceleration::forwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds, std::map<int, double> upperBounds)
+
+void BaseQNAcceleration::checkBound(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &dataIDs, std::string onBoundViolation, Eigen::VectorXd &xUpdate)
 {
-  if (methodForQN == "transformation") {
-    Eigen::Index offset = 0;
-    for (auto id : dataIDs) {
-      Eigen::Index size       = cplData.at(id)->values().size();
-      auto         rangeType  = rangeTypes.at(id);
-      auto         lowerBound = lowerBounds.at(id);
-      auto         upperBound = upperBounds.at(id);
+  Eigen::Index offset            = 0;
+  bool         violationDetected = false;
+  for (auto id : dataIDs) {
+    if (violationDetected)
+      break;
 
-      if (rangeType == "not-bounded") {
-        // do nothing
-      } else if (rangeType == "lower-bounded") {
-        // use piecewise transformation function: close to the lower bound, the function is non-linear, otherwise it's linear
-        double delta       = 0.1;
-        double leftLimit   = lowerBound - delta;
-        double rightLimit  = lowerBound + 1.0 + delta;
-        double intervalLen = rightLimit - leftLimit;
+    Eigen::Index size          = cplData.at(id)->values().size();
+    int          dataDimension = cplData.at(id)->getDimensions();
+    auto         lowerBound    = cplData.at(id)->getLowerBound();
+    auto         upperBound    = cplData.at(id)->getUpperBound();
 
-        for (Eigen::Index i = 0; i < size; i++) {
-          double normalizedOldValue = (_oldValues[i + offset] - leftLimit) / intervalLen;
-          double normalizedValue    = (_values[i + offset] - leftLimit) / intervalLen;
-
-          if (normalizedValue < 0.5) {
-            _values[i + offset] = log(normalizedValue / (1.0 - normalizedValue));
-          } else {
-            _values[i + offset] = normalizedValue - 0.5;
-          }
-          if (normalizedOldValue < 0.5) {
-            _oldValues[i + offset] = log(normalizedOldValue / (1.0 - normalizedOldValue));
-          } else {
-            _oldValues[i + offset] = normalizedOldValue - 0.5;
-          }
-        }
-      } else if (rangeType == "upper-bounded") {
-        double delta       = 0.1;
-        double leftLimit   = upperBound - 1.0 - delta;
-        double rightLimit  = upperBound + delta;
-        double intervalLen = rightLimit - leftLimit;
-
-        for (Eigen::Index i = 0; i < size; i++) {
-          double normalizedOldValue = (_oldValues[i + offset] - leftLimit) / intervalLen;
-          double normalizedValue    = (_values[i + offset] - leftLimit) / intervalLen;
-
-          if (normalizedValue > 0.5) {
-            _values[i + offset] = log(normalizedValue / (1.0 - normalizedValue));
-          } else {
-            _values[i + offset] = normalizedValue - 0.5;
-          }
-          if (normalizedOldValue > 0.5) {
-            _oldValues[i + offset] = log(normalizedOldValue / (1.0 - normalizedOldValue));
-          } else {
-            _oldValues[i + offset] = normalizedOldValue - 0.5;
-          }
-        }
-      } else {
-        double delta       = 0.1;
-        double leftLimit   = lowerBound - delta;
-        double rightLimit  = upperBound + delta;
-        double intervalLen = rightLimit - leftLimit;
-
-        for (Eigen::Index i = 0; i < size; i++) {
-          double normalizedOldValue = (_oldValues[i + offset] - leftLimit) / intervalLen;
-          double normalizedValue    = (_values[i + offset] - leftLimit) / intervalLen;
-
-          _values[i + offset]    = log(normalizedValue / (1.0 - normalizedValue));
-          _oldValues[i + offset] = log(normalizedOldValue / (1.0 - normalizedOldValue));
+    for (int j = 0; j < dataDimension; j++) {
+      for (Eigen::Index i = j; i < size; i += dataDimension) {
+        if (data[i + offset] < lowerBound[j] || data[i + offset] > upperBound[j]) {
+          violationDetected = true;
+          break;
         }
       }
-
-      offset += size;
     }
-  } else if (methodForQN == "cropping") {
-    // do nothing
-  } else if (methodForQN == "Aitken") {
-    // do nothing
-  } else if (methodForQN == "cutStep") {
-    // do nothing
-  } else {
-    PRECICE_ERROR("The method for quasi-Newton acceleration is not correctly defined");
+    offset += size;
   }
-}
-void BaseQNAcceleration::backwardTransformation(DataMap &cplData, const std::vector<DataID> &dataIDs, std::map<int, std::string> rangeTypes, std::map<int, double> lowerBounds, std::map<int, double> upperBounds, Eigen::VectorXd &xUpdate)
-{
-  if (methodForQN == "transformation") {
-    Eigen::Index offset = 0;
-    for (auto id : dataIDs) {
-      Eigen::Index size       = cplData.at(id)->values().size();
-      auto         rangeType  = rangeTypes.at(id);
-      auto         lowerBound = lowerBounds.at(id);
-      auto         upperBound = upperBounds.at(id);
+  if (violationDetected) {
+    if (onBoundViolation == "discard") {
+      PRECICE_WARN("The coupling data has violated its bound after the Quasi-Newton step. The current step will be discarded.");
+      data -= xUpdate;
+    } else if (onBoundViolation == "clamp") {
+      PRECICE_WARN("The coupling data has violated its bound after the Quasi-Newton step. The values will be clamped to their bounds.");
 
-      if (rangeType == "not-bounded") {
-        // do nothing
-      } else if (rangeType == "lower-bounded") {
-        double delta       = 0.1;
-        double leftLimit   = lowerBound - delta;
-        double rightLimit  = lowerBound + 1.0 + delta;
-        double intervalLen = rightLimit - leftLimit;
-
-        for (Eigen::Index i = 0; i < size; i++) {
-          if (_values[i + offset] < 0.0) {
-            _values[i + offset] = 1 / (1 + exp(-_values[i + offset])) * intervalLen + leftLimit;
-            _values[i + offset] = fmax(lowerBound, _values[i + offset]);
-          } else {
-            _values[i + offset] = (_values[i + offset] + 0.5) * intervalLen + leftLimit;
+      offset = 0;
+      for (auto id : dataIDs) {
+        Eigen::Index size          = cplData.at(id)->values().size();
+        int          dataDimension = cplData.at(id)->getDimensions();
+        auto         lowerBound    = cplData.at(id)->getLowerBound();
+        auto         upperBound    = cplData.at(id)->getUpperBound();
+        for (int j = 0; j < dataDimension; j++) {
+          for (Eigen::Index i = j; i < size; i += dataDimension) {
+            data[i + offset] = std::clamp(data[i + offset], lowerBound[j], upperBound[j]);
           }
         }
-      } else if (rangeType == "upper-bounded") {
-        double delta       = 0.1;
-        double leftLimit   = upperBound - 1.0 - delta;
-        double rightLimit  = upperBound + delta;
-        double intervalLen = rightLimit - leftLimit;
-
-        for (Eigen::Index i = 0; i < size; i++) {
-          if (_values[i + offset] > 0.0) {
-            _values[i + offset] = 1 / (1 + exp(-_values[i + offset])) * intervalLen + leftLimit;
-            _values[i + offset] = fmin(_values[i + offset], upperBound);
-          } else {
-            _values[i + offset] = (_values[i + offset] + 0.5) * intervalLen + leftLimit;
-          }
-        }
-      } else {
-        double delta       = 0.1;
-        double leftLimit   = lowerBound - delta;
-        double rightLimit  = upperBound + delta;
-        double intervalLen = rightLimit - leftLimit;
-
-        for (Eigen::Index i = 0; i < size; i++) {
-          _values[i + offset] = 1 / (1 + exp(-_values[i + offset])) * intervalLen + leftLimit;
-          _values[i + offset] = fmin(fmax(lowerBound, _values[i + offset]), upperBound);
-          // TODO: when the cropped part is large, warn preCICE against fake convergence( accelerate to the boundary for consecutive time windows, thus residual is zero when it's actually not converged)
-        }
+        offset += size;
       }
+    } else if (onBoundViolation == "scale") {
+      PRECICE_WARN(
+          "The coupling data has violated its bound after the Quasi-Newton step. The step length will be scaled to avoid the bound violation.");
+      offset           = 0;
+      double scaleStep = 0.0;
+      for (auto id : dataIDs) {
+        Eigen::Index size          = cplData.at(id)->values().size();
+        int          dataDimension = cplData.at(id)->getDimensions();
+        auto         lowerBound    = cplData.at(id)->getLowerBound();
+        auto         upperBound    = cplData.at(id)->getUpperBound();
 
-      offset += size;
-    }
-  } else if (methodForQN == "cropping") {
-    Eigen::Index offset = 0;
-    for (auto id : dataIDs) {
-      Eigen::Index size       = cplData.at(id)->values().size();
-      auto         rangeType  = rangeTypes.at(id);
-      auto         lowerBound = lowerBounds.at(id);
-      auto         upperBound = upperBounds.at(id);
-
-      if (rangeType == "not-bounded") {
-        // do nothing
-      } else if (rangeType == "lower-bounded") {
-        for (Eigen::Index i = 0; i < size; i++) {
-          _values[i + offset] = fmax(_values[i + offset], lowerBound);
+        for (int j = 0; j < dataDimension; j++) {
+          for (Eigen::Index i = j; i < size; i += dataDimension) {
+            if (xUpdate[i + offset] > 0 && data[i + offset] > upperBound[j])
+              scaleStep = std::max(scaleStep, (data[i + offset] - upperBound[j]) / xUpdate[i + offset]);
+            else if (xUpdate[i + offset] < 0 && data[i + offset] < lowerBound[j])
+              scaleStep = std::max(scaleStep, (data[i + offset] - lowerBound[j]) / xUpdate[i + offset]);
+          }
         }
-      } else if (rangeType == "upper-bounded") {
-        for (Eigen::Index i = 0; i < size; i++) {
-          _values[i + offset] = fmin(_values[i + offset], upperBound);
-        }
-      } else {
-        for (Eigen::Index i = 0; i < size; i++) {
-          _values[i + offset] = fmin(fmax(lowerBound, _values[i + offset]), upperBound);
-        }
+        offset += size;
       }
-      offset += size;
+      data -= xUpdate * scaleStep;
     }
-  } else if (methodForQN == "Aitken") {
-    Eigen::Index offset = 0;
-    for (auto id : dataIDs) {
-      Eigen::Index size       = cplData.at(id)->values().size();
-      auto         rangeType  = rangeTypes.at(id);
-      auto         lowerBound = lowerBounds.at(id);
-      auto         upperBound = upperBounds.at(id);
-
-      // find the scaling factor for the step length
-      if (_fallBack) {
-        break;
-      } else if (rangeType == "lower-bounded") {
-        for (Eigen::Index i = 0; i < size; i++) {
-          if (_values[i + offset] < lowerBound) {
-            _fallBack = true;
-            break;
-          }
-        }
-      } else if (rangeType == "upper-bounded") {
-        for (Eigen::Index i = 0; i < size; i++) {
-          if (_values[i + offset] > upperBound) {
-            _fallBack = true;
-            break;
-          }
-        }
-      } else if (rangeType == "two-ends-bounded") {
-        for (Eigen::Index i = 0; i < size; i++) {
-          if (_values[i + offset] < lowerBound || _values[i + offset] > upperBound) {
-            _fallBack = true;
-            break;
-          }
-        }
-      }
-      offset += size;
-      std::cout << "fallback " << _fallBack << std::endl;
-    }
-  } else if (methodForQN == "cutStep") {
-    Eigen::Index offset    = 0;
-    double       scaleStep = 1.0;
-    for (auto id : dataIDs) {
-      Eigen::Index size       = cplData.at(id)->values().size();
-      auto         rangeType  = rangeTypes.at(id);
-      auto         lowerBound = lowerBounds.at(id);
-      auto         upperBound = upperBounds.at(id);
-
-      // find the scaling factor for the step length
-      if (rangeType == "not-bounded") {
-        // do nothing
-      } else if (rangeType == "lower-bounded") {
-        for (Eigen::Index i = 0; i < size; i++) {
-          if (_values[i + offset] < lowerBound) {
-            scaleStep = fmin(scaleStep, (lowerBound - _values[i + offset] + xUpdate[i + offset]) / xUpdate[i + offset]);
-          }
-        }
-      } else if (rangeType == "upper-bounded") {
-        for (Eigen::Index i = 0; i < size; i++) {
-          if (_values[i + offset] > upperBound) {
-            scaleStep = fmin(scaleStep, (upperBound - _values[i + offset] + xUpdate[i + offset]) / xUpdate[i + offset]);
-          }
-        }
-      } else {
-        for (Eigen::Index i = 0; i < size; i++) {
-          if (_values[i + offset] < lowerBound) {
-            scaleStep = fmin(scaleStep, (lowerBound - _values[i + offset] + xUpdate[i + offset]) / xUpdate[i + offset]);
-          } else if (_values[i + offset] > upperBound) {
-            std::cout << std::fixed << std::setprecision(16);
-            std::cout << "_values[i + offset]: " << _values[i + offset] << std::endl;
-            scaleStep = fmin(scaleStep, (upperBound - _values[i + offset] + xUpdate[i + offset]) / xUpdate[i + offset]);
-          }
-        }
-      }
-      offset += size;
-      std::cout << "scaleStep: " << scaleStep << std::endl;
-    }
-    // update the new values
-    offset = 0;
-    for (auto id : dataIDs) {
-      Eigen::Index size = cplData.at(id)->values().size();
-      for (Eigen::Index i = 0; i < size; i++) {
-        _values[i + offset] -= xUpdate[i + offset] * (1.0 - scaleStep);
-      }
-      offset += size;
-    }
-  } else {
-    PRECICE_ERROR("The method for quasi-Newton acceleration is not correctly defined");
   }
 }
 /** ---------------------------------------------------------------------------------------------
@@ -579,6 +396,10 @@ void BaseQNAcceleration::performAcceleration(
 
   // Apply the quasi-Newton update
   _values += xUpdate;
+
+  // Check for bound violations
+  if (_onBoundViolation != "ignore")
+    checkBound(_values, cplData, _dataIDs, _onBoundViolation, xUpdate);
 
   // pending deletion: delete old V, W matrices if timeWindowsReused = 0
   // those were only needed for the first iteration (instead of underrelax.)

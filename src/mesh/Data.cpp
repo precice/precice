@@ -10,12 +10,16 @@
 namespace precice::mesh {
 
 Data::Data(
-    std::string name,
-    DataID      id,
-    int         dimensions,
-    int         spatialDimensions,
-    int         waveformDegree)
+    std::string         name,
+    DataID              id,
+    int                 dimensions,
+    int                 spatialDimensions,
+    int                 waveformDegree,
+    std::vector<double> lowerBound,
+    std::vector<double> upperBound)
     : _waveform(waveformDegree),
+      _lowerBound(lowerBound),
+      _upperBound(upperBound),
       _name(std::move(name)),
       _id(id),
       _dimensions(dimensions),
@@ -58,6 +62,16 @@ int Data::getWaveformDegree() const
 time::Waveform &Data::waveform()
 {
   return _waveform;
+}
+
+std::vector<double> Data::getLowerBound() const
+{
+  return _lowerBound;
+}
+
+std::vector<double> Data::getUpperBound() const
+{
+  return _upperBound;
 }
 
 void Data::moveToNextWindow()

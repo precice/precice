@@ -25,18 +25,16 @@ namespace precice::acceleration {
 class IQNILSAcceleration : public BaseQNAcceleration {
 public:
   IQNILSAcceleration(
-      double                     initialRelaxation,
-      bool                       forceInitialRelaxation,
-      int                        maxIterationsUsed,
-      int                        pastTimeWindowsReused,
-      int                        filter,
-      double                     singularityLimit,
-      std::vector<int>           dataIDs,
-      std::map<int, std::string> rangeTypes,
-      std::map<int, double>      lowerBounds,
-      std::map<int, double>      upperBounds,
-      impl::PtrPreconditioner    preconditioner,
-      bool                       reducedTimeGrid);
+      double                  initialRelaxation,
+      bool                    forceInitialRelaxation,
+      int                     maxIterationsUsed,
+      int                     pastTimeWindowsReused,
+      int                     filter,
+      double                  singularityLimit,
+      std::vector<int>        dataIDs,
+      std::string             onBoundViolation,
+      impl::PtrPreconditioner preconditioner,
+      bool                    reducedTimeGrid);
 
   ~IQNILSAcceleration() override = default;
 
