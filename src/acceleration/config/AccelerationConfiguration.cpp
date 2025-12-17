@@ -179,7 +179,6 @@ void AccelerationConfiguration::xmlTagCallback(
 
     if (_config.type == VALUE_IQNIMVJ) {
       _config.alwaysBuildJacobian = callingTag.getBooleanAttributeValue(ATTR_BUILDJACOBIAN);
-      _config.onBoundViolation    = callingTag.getStringAttributeValue(ATTR_ON_BOUND_VIOLATION);
     }
 
     if (_config.type == VALUE_IQNIMVJ || _config.type == VALUE_IQNILS) {
