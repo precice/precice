@@ -232,17 +232,18 @@ public:
   };
 
   // Minimal internal state
-  std::string name;
-  std::string config;
-  std::string mockConfigPath;
-  int         rank            = 0;
-  int         size            = 1;
-  void       *comm            = nullptr;
-  bool        initialized     = false;
-  bool        finalized       = false;
-  bool        couplingOngoing = false;
-  double      maxTimeStep     = 0.0;
-  std::mutex  mtx;
+  std::string        name;
+  std::string        config;
+  std::string        mockConfigPath;
+  int                rank            = 0;
+  bool               primary         = false;
+  int                size            = 1;
+  void              *comm            = nullptr;
+  bool               initialized     = false;
+  bool               finalized       = false;
+  bool               couplingOngoing = false;
+  double             maxTimeStep     = 0.0;
+  mutable std::mutex mtx;
 
   uint32_t    seed        = 0;
   std::size_t currentStep = 0;
@@ -311,6 +312,7 @@ impl::ParticipantImpl::ParticipantImpl(::precice::string_view participantName,
     : name(std::string(participantName.data(), participantName.size())),
       config(std::string(configurationFileName.data(), configurationFileName.size())),
       rank(solverProcessIndex),
+      primary(rank == 0),
       size(solverProcessSize),
       comm(communicator)
 {
@@ -750,7 +752,7 @@ void Participant::initialize()
   }
 
   // Print startup banner (only on rank 0)
-  if (_impl->rank == 0) {
+  if (_impl->primary) {
     std::cout << "---[precice]  This is preCICE version 3.3.0 (mock)" << std::endl;
     std::cout << "---[precice]  Revision info: mock-implementation" << std::endl;
     std::cout << "---[precice]  Build type: Release (mock)" << std::endl;
@@ -768,7 +770,7 @@ void Participant::initialize()
   }
 
   // Communication setup prints
-  if (_impl->rank == 0) {
+  if (_impl->primary) {
     std::cout << "---[precice]  Setting up primary communication to coupling partner/s" << std::endl;
     std::cout << "---[precice]  Primary ranks are connected" << std::endl;
     std::cout << "---[precice]  Setting up preliminary secondary communication to coupling partner/s" << std::endl;
@@ -781,7 +783,7 @@ void Participant::initialize()
       continue;
     }
 
-    if (_impl->rank == 0) {
+    if (_impl->primary) {
       std::cout << "---[precice]  Prepare partition for mesh " << meshInfo.name << std::endl;
       std::cout << "---[precice]  Gather mesh " << meshInfo.name << std::endl;
       std::cout << "---[precice]  Send global mesh " << meshInfo.name << std::endl;
@@ -874,7 +876,7 @@ void Participant::finalize()
   }
 
   // Print finalize message (only on rank 0)
-  if (_impl->rank == 0) {
+  if (_impl->primary) {
     std::cout << "---[precice]  Finalizing preCICE (mock)" << std::endl;
   }
 
@@ -890,6 +892,7 @@ bool Participant::requiresWritingCheckpoint()
   if (!_impl) {
     throw precice::Error("Participant implementation missing in requiresWritingCheckpoint().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (!_impl->initialized) {
     throw precice::Error("initialize() has to be called before requiresWritingCheckpoint().");
   }
@@ -908,6 +911,7 @@ bool Participant::requiresReadingCheckpoint()
   if (!_impl) {
     throw precice::Error("Participant implementation missing in requiresReadingCheckpoint().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (!_impl->initialized) {
     throw precice::Error("initialize() has to be called before requiresReadingCheckpoint().");
   }
@@ -928,6 +932,7 @@ int Participant::getMeshDimensions(::precice::string_view meshName) const
   if (!_impl) {
     throw precice::Error("Participant implementation missing in getMeshDimensions().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
 
   std::string meshNameStr(meshName.data(), meshName.size());
 
@@ -971,6 +976,7 @@ int Participant::getDataDimensions(::precice::string_view meshName,
   if (!_impl) {
     throw precice::Error("Participant implementation missing in getDataDimensions().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
 
   std::string meshNameStr(meshName.data(), meshName.size());
   std::string dataNameStr(dataName.data(), dataName.size());
@@ -998,6 +1004,7 @@ bool Participant::isCouplingOngoing() const
   if (!_impl) {
     throw precice::Error("Participant implementation missing in isCouplingOngoing().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (_impl->finalized) {
     throw precice::Error("isCouplingOngoing() cannot be called after finalize().");
   }
@@ -1012,6 +1019,7 @@ bool Participant::isTimeWindowComplete() const
   if (!_impl) {
     throw precice::Error("Participant implementation missing in isTimeWindowComplete().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (!_impl->initialized) {
     throw precice::Error("initialize() has to be called before isTimeWindowComplete().");
   }
@@ -1032,6 +1040,7 @@ double Participant::getMaxTimeStepSize() const
   if (!_impl) {
     throw precice::Error("Participant implementation missing in getMaxTimeStepSize().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (_impl->finalized) {
     throw precice::Error("getMaxTimeStepSize() cannot be called after finalize().");
   }
@@ -1068,6 +1077,7 @@ VertexID Participant::setMeshVertex(
   if (!_impl) {
     throw precice::Error("Participant implementation missing in setMeshVertex().");
   }
+  std::lock_guard<std::mutex> lkm(_impl->mtx);
   if (_impl->initialized) {
     throw precice::Error("setMeshVertex() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
@@ -1081,8 +1091,7 @@ VertexID Participant::setMeshVertex(
   if (position.size() != static_cast<std::size_t>(expectedDims)) {
     throw precice::Error(std::format("setMeshVertex() was called with {} coordinates, but expects {} coordinates for this mesh.", position.size(), expectedDims));
   }
-  std::lock_guard<std::mutex> lkm(_impl->mtx);
-  auto                       &count = _impl->meshVertexCounts[meshNameStr];
+  auto &count = _impl->meshVertexCounts[meshNameStr];
   ++count;
   return VertexID(count - 1);
 }
@@ -1092,8 +1101,9 @@ int Participant::getMeshVertexSize(::precice::string_view meshName) const
   if (!_impl) {
     throw precice::Error("Participant implementation missing in getMeshVertexSize().");
   }
-  std::string meshNameStr(meshName.data(), meshName.size());
-  auto        it = _impl->meshVertexCounts.find(meshNameStr);
+  std::lock_guard<std::mutex> lk(_impl->mtx);
+  std::string                 meshNameStr(meshName.data(), meshName.size());
+  auto                        it = _impl->meshVertexCounts.find(meshNameStr);
   if (it != _impl->meshVertexCounts.end()) {
     return static_cast<int>(it->second);
   }
@@ -1108,6 +1118,7 @@ void Participant::setMeshVertices(
   if (!_impl) {
     throw precice::Error("Participant implementation missing in setMeshVertices().");
   }
+  std::lock_guard<std::mutex> lkm(_impl->mtx);
   if (_impl->initialized) {
     throw precice::Error("setMeshVertices() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
@@ -1122,7 +1133,6 @@ void Participant::setMeshVertices(
   if (coordinates.size() != ids.size() * expectedDims) {
     throw precice::Error(std::format("setMeshVertices() was called with {} vertices and {} coordinates ({}D), but needs {} coordinates ({} x {}).", ids.size(), coordinates.size(), expectedDims, ids.size() * expectedDims, ids.size(), expectedDims));
   }
-  std::lock_guard<std::mutex> lkm(_impl->mtx);
   _impl->meshVertexCounts[meshNameStr] += ids.size();
 }
 
@@ -1134,6 +1144,7 @@ void Participant::setMeshEdge(
   if (!_impl) {
     throw precice::Error("Participant implementation missing in setMeshEdge().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (_impl->initialized) {
     throw precice::Error("setMeshEdge() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
@@ -1151,6 +1162,7 @@ void Participant::setMeshEdges(
   if (!_impl) {
     throw precice::Error("Participant implementation missing in setMeshEdges().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (_impl->initialized) {
     throw precice::Error("setMeshEdges() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
@@ -1170,6 +1182,7 @@ void Participant::setMeshTriangle(
   if (!_impl) {
     throw precice::Error("Participant implementation missing in setMeshTriangle().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (_impl->initialized) {
     throw precice::Error("setMeshTriangle() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
@@ -1187,6 +1200,7 @@ void Participant::setMeshTriangles(
   if (!_impl) {
     throw precice::Error("Participant implementation missing in setMeshTriangles().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (_impl->initialized) {
     throw precice::Error("setMeshTriangles() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
@@ -1207,6 +1221,7 @@ void Participant::setMeshQuad(
   if (!_impl) {
     throw precice::Error("Participant implementation missing in setMeshQuad().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (_impl->initialized) {
     throw precice::Error("setMeshQuad() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
@@ -1221,6 +1236,13 @@ void Participant::setMeshQuads(
     ::precice::string_view /*meshName*/,
     precice::span<const VertexID> ids)
 {
+  if (!_impl) {
+    throw precice::Error("Participant implementation missing in setMeshQuads().");
+  }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
+  if (_impl->initialized) {
+    throw precice::Error("setMeshQuads() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
+  }
   // expect groups of 4 vertex ids
   if (ids.size() % 4 != 0) {
     throw precice::Error(std::format("setMeshQuads() was called with {} vertices, but needs a number of vertices divisible by 4 (4 per quad).", ids.size()));
@@ -1238,6 +1260,7 @@ void Participant::setMeshTetrahedron(
   if (!_impl) {
     throw precice::Error("Participant implementation missing in setMeshTetrahedron().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (_impl->initialized) {
     throw precice::Error("setMeshTetrahedron() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
@@ -1255,6 +1278,7 @@ void Participant::setMeshTetrahedra(
   if (!_impl) {
     throw precice::Error("Participant implementation missing in setMeshTetrahedra().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (_impl->initialized) {
     throw precice::Error("setMeshTetrahedra() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
@@ -1272,6 +1296,7 @@ bool Participant::requiresInitialData()
   if (!_impl) {
     throw precice::Error("Participant implementation missing in requiresInitialData().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (_impl->initialized) {
     throw precice::Error("requiresInitialData() has to be called before initialize().");
   }
@@ -1287,6 +1312,7 @@ void Participant::writeData(
   if (!_impl) {
     throw precice::Error("Participant implementation missing in writeData().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (!_impl->initialized) {
     throw precice::Error("initialize() has to be called before writeData().");
   }
@@ -1337,8 +1363,7 @@ void Participant::writeData(
   }
 
   // Store written data in buffer for later reading
-  std::string                 key = meshNameStr + ":" + dataNameStr;
-  std::lock_guard<std::mutex> lk(_impl->mtx);
+  std::string key = meshNameStr + ":" + dataNameStr;
   _impl->writeBuffers[key].assign(values.begin(), values.end());
 }
 
@@ -1496,6 +1521,7 @@ void Participant::writeAndMapData(
   if (!_impl) {
     throw precice::Error("Participant implementation missing in writeAndMapData().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (!_impl->initialized) {
     throw precice::Error("initialize() has to be called before writeAndMapData().");
   }
@@ -1519,6 +1545,7 @@ void Participant::mapAndReadData(
   if (!_impl) {
     throw precice::Error("Participant implementation missing in mapAndReadData().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (!_impl->initialized) {
     throw precice::Error("initialize() has to be called before mapAndReadData().");
   }
@@ -1540,6 +1567,7 @@ void Participant::setMeshAccessRegion(
   if (!_impl) {
     throw precice::Error("Participant implementation missing in setMeshAccessRegion().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (!_impl->initialized) {
     throw precice::Error("initialize() has to be called before setMeshAccessRegion().");
   }
@@ -1558,6 +1586,7 @@ void Participant::getMeshVertexIDsAndCoordinates(
   if (!_impl) {
     throw precice::Error("Participant implementation missing in getMeshVertexIDsAndCoordinates().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (!_impl->initialized) {
     throw precice::Error("initialize() has to be called before getMeshVertexIDsAndCoordinates().");
   }
@@ -1585,6 +1614,7 @@ void Participant::writeGradientData(
   if (!_impl) {
     throw precice::Error("Participant implementation missing in writeGradientData().");
   }
+  std::lock_guard<std::mutex> lk(_impl->mtx);
   if (!_impl->initialized) {
     throw precice::Error("initialize() has to be called before writeGradientData().");
   }

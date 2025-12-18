@@ -78,7 +78,7 @@ option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" O
 option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_ASSERTIONS "Enable assertions in release builds" OFF)
 
-set(PRECICE_CXX_STANDARD "20" CACHE STRING "CXX Standard for all preCICE targets" )
+set(PRECICE_CXX_STANDARD "17" CACHE STRING "CXX Standard for all preCICE targets" )
 option(PRECICE_HIDE_SYMBOLS "Hide non-API symbols in preCICE library" ON)
 mark_as_advanced(PRECICE_HIDE_SYMBOLS PRECICE_CXX_STANDARD)
 
@@ -567,6 +567,7 @@ set_target_properties(preciceMocked PROPERTIES
   SOVERSION ${preCICE_SOVERSION}
   CXX_STANDARD 20
   CXX_STANDARD_REQUIRED YES
+  INTERPROCEDURAL_OPTIMIZATION OFF
   )
 target_sources(preciceMocked PRIVATE extras/mock/preciceMocked.cpp)
 set_property(TARGET preciceMocked APPEND PROPERTY PUBLIC_HEADER
@@ -578,7 +579,7 @@ target_include_directories(preciceMocked PUBLIC
   $<INSTALL_INTERFACE:include>
   )
 
-  target_link_libraries(preciceMocked PUBLIC Eigen3::Eigen)
+target_link_libraries(preciceMocked PUBLIC Eigen3::Eigen)
 target_compile_definitions(preciceMocked PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
 target_link_libraries(preciceMocked PUBLIC LibXml2::LibXml2)
 
