@@ -1,6 +1,5 @@
 #include <cstring>
 #include <filesystem>
-#include <format>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -15,6 +14,7 @@
 #include <precice/Tooling.hpp>
 #include <precice/Types.hpp>
 #include <precice/span.hpp>
+#include "utils/fmt.hpp"
 // project dependencies, used to remove reliance an std types maybe not available on older versions of cpp or outside libs
 
 // --include precise errors instead of assertions !! check when error/exception should be used
@@ -321,13 +321,13 @@ impl::ParticipantImpl::ParticipantImpl(::precice::string_view participantName,
     throw precice::Error("Participant name is empty.");
   }
   if (solverProcessSize <= 0) {
-    throw precice::Error(std::format("solverProcessSize must be > 0, but is {}.", solverProcessSize));
+    throw precice::Error(precice::utils::format_or_error("solverProcessSize must be > 0, but is {}.", solverProcessSize));
   }
   if (solverProcessIndex < 0) {
-    throw precice::Error(std::format("solverProcessIndex must be >= 0, but is {}.", solverProcessIndex));
+    throw precice::Error(precice::utils::format_or_error("solverProcessIndex must be >= 0, but is {}.", solverProcessIndex));
   }
   if (solverProcessIndex >= solverProcessSize) {
-    throw precice::Error(std::format("solverProcessIndex={} must be smaller than solverProcessSize={}.", solverProcessIndex, solverProcessSize));
+    throw precice::Error(precice::utils::format_or_error("solverProcessIndex={} must be smaller than solverProcessSize={}.", solverProcessIndex, solverProcessSize));
   }
   seed = static_cast<uint32_t>(rank) ^ 0x9e3779b9u;
 }
@@ -488,12 +488,12 @@ void impl::ParticipantImpl::parseXMLFile(const std::string &filePath,
   // Read file content
   std::ifstream ifs(filePath);
   if (!ifs) {
-    throw precice::Error(std::format(
+    throw precice::Error(precice::utils::format_or_error(
         "Could not open configuration file '{}'", filePath));
   }
   std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
   if (content.empty()) {
-    throw precice::Error(std::format(
+    throw precice::Error(precice::utils::format_or_error(
         "Configuration file '{}' is empty", filePath));
   }
 
@@ -515,7 +515,7 @@ void impl::ParticipantImpl::parseConfig()
     parseXMLFile(config, onConfigStartElement, onConfigEndElement);
 
     if (!configParseState.inParticipant && configParseState.participantName.empty()) {
-      throw precice::Error(std::format(
+      throw precice::Error(precice::utils::format_or_error(
           "Participant '{}' not found in configuration '{}'", name, config));
     }
 
@@ -795,7 +795,7 @@ void Participant::initialize()
       count = it->second;
     }
     if (count == 0) {
-      throw precice::Error(std::format(
+      throw precice::Error(precice::utils::format_or_error(
           "The provided mesh \"{}\" is empty. Please set the mesh using setMeshVertex()/setMeshVertices() prior to calling initialize().",
           meshInfo.name));
     }
@@ -836,7 +836,7 @@ void Participant::advance(double computedTimeStepSize)
     throw precice::Error("advance() cannot be called with a time step size of 0.");
   }
   if (computedTimeStepSize < 0.0) {
-    throw precice::Error(std::format("advance() cannot be called with a negative time step size {}.", computedTimeStepSize));
+    throw precice::Error(precice::utils::format_or_error("advance() cannot be called with a negative time step size {}.", computedTimeStepSize));
   }
   if (_impl->maxTimeStep == _impl->currentStep) {
     _impl->couplingOngoing = false;
@@ -942,7 +942,7 @@ int Participant::getMeshDimensions(::precice::string_view meshName) const
     if (it != _impl->configData.meshes.end()) {
       return it->second.dimensions;
     } else {
-      throw precice::Error(std::format(
+      throw precice::Error(precice::utils::format_or_error(
           "Mesh '{}' is not used by participant '{}'. Available meshes: {}",
           meshNameStr, _impl->name, [&]() {
             std::string meshes;
@@ -990,7 +990,7 @@ int Participant::getDataDimensions(::precice::string_view meshName,
     }
 
     // Data not found - throw error
-    throw precice::Error(std::format(
+    throw precice::Error(precice::utils::format_or_error(
         "Data '{}' on mesh '{}' is not used by participant '{}'",
         dataNameStr, meshNameStr, _impl->name));
   }
@@ -1089,7 +1089,7 @@ VertexID Participant::setMeshVertex(
     expectedDims = meshIt->second.dimensions;
   }
   if (position.size() != static_cast<std::size_t>(expectedDims)) {
-    throw precice::Error(std::format("setMeshVertex() was called with {} coordinates, but expects {} coordinates for this mesh.", position.size(), expectedDims));
+    throw precice::Error(precice::utils::format_or_error("setMeshVertex() was called with {} coordinates, but expects {} coordinates for this mesh.", position.size(), expectedDims));
   }
   auto &count = _impl->meshVertexCounts[meshNameStr];
   ++count;
@@ -1131,7 +1131,7 @@ void Participant::setMeshVertices(
   }
   // Expect coordinates as expectedDims * N entries for N VertexIDs
   if (coordinates.size() != ids.size() * expectedDims) {
-    throw precice::Error(std::format("setMeshVertices() was called with {} vertices and {} coordinates ({}D), but needs {} coordinates ({} x {}).", ids.size(), coordinates.size(), expectedDims, ids.size() * expectedDims, ids.size(), expectedDims));
+    throw precice::Error(precice::utils::format_or_error("setMeshVertices() was called with {} vertices and {} coordinates ({}D), but needs {} coordinates ({} x {}).", ids.size(), coordinates.size(), expectedDims, ids.size() * expectedDims, ids.size(), expectedDims));
   }
   _impl->meshVertexCounts[meshNameStr] += ids.size();
 }
@@ -1150,7 +1150,7 @@ void Participant::setMeshEdge(
   }
   // basic check: edge endpoints should not be identical
   if (first == second) {
-    throw precice::Error(std::format("setMeshEdge() was called with vertices [{}, {}], but both vertices are equal.", first, second));
+    throw precice::Error(precice::utils::format_or_error("setMeshEdge() was called with vertices [{}, {}], but both vertices are equal.", first, second));
   }
   // no-op
 }
@@ -1168,7 +1168,7 @@ void Participant::setMeshEdges(
   }
   // expect pairs of vertex ids
   if (ids.size() % 2 != 0) {
-    throw precice::Error(std::format("setMeshEdges() was called with {} vertices, but needs an even number of vertices (2 per edge).", ids.size()));
+    throw precice::Error(precice::utils::format_or_error("setMeshEdges() was called with {} vertices, but needs an even number of vertices (2 per edge).", ids.size()));
   }
   // no-op
 }
@@ -1188,7 +1188,7 @@ void Participant::setMeshTriangle(
   }
   // triangle vertices should be distinct
   if (first == second || first == third || second == third) {
-    throw precice::Error(std::format("setMeshTriangle() was called with vertices [{}, {}, {}], but some vertices are equal.", first, second, third));
+    throw precice::Error(precice::utils::format_or_error("setMeshTriangle() was called with vertices [{}, {}, {}], but some vertices are equal.", first, second, third));
   }
   // no-op
 }
@@ -1206,7 +1206,7 @@ void Participant::setMeshTriangles(
   }
   // expect triples of ids
   if (ids.size() % 3 != 0) {
-    throw precice::Error(std::format("setMeshTriangles() was called with {} vertices, but needs a number of vertices divisible by 3 (3 per triangle).", ids.size()));
+    throw precice::Error(precice::utils::format_or_error("setMeshTriangles() was called with {} vertices, but needs a number of vertices divisible by 3 (3 per triangle).", ids.size()));
   }
   // no-op
 }
@@ -1227,7 +1227,7 @@ void Participant::setMeshQuad(
   }
   // quad vertices should be distinct
   if (first == second || first == third || first == fourth || second == third || second == fourth || third == fourth) {
-    throw precice::Error(std::format("setMeshQuad() was called with vertices [{}, {}, {}, {}], but some vertices are equal.", first, second, third, fourth));
+    throw precice::Error(precice::utils::format_or_error("setMeshQuad() was called with vertices [{}, {}, {}, {}], but some vertices are equal.", first, second, third, fourth));
   }
   // no-op
 }
@@ -1245,7 +1245,7 @@ void Participant::setMeshQuads(
   }
   // expect groups of 4 vertex ids
   if (ids.size() % 4 != 0) {
-    throw precice::Error(std::format("setMeshQuads() was called with {} vertices, but needs a number of vertices divisible by 4 (4 per quad).", ids.size()));
+    throw precice::Error(precice::utils::format_or_error("setMeshQuads() was called with {} vertices, but needs a number of vertices divisible by 4 (4 per quad).", ids.size()));
   }
   // no-op
 }
@@ -1266,7 +1266,7 @@ void Participant::setMeshTetrahedron(
   }
   // tetrahedron vertices should be distinct
   if (first == second || first == third || first == fourth || second == third || second == fourth || third == fourth) {
-    throw precice::Error(std::format("setMeshTetrahedron() was called with vertices [{}, {}, {}, {}], but some vertices are equal.", first, second, third, fourth));
+    throw precice::Error(precice::utils::format_or_error("setMeshTetrahedron() was called with vertices [{}, {}, {}, {}], but some vertices are equal.", first, second, third, fourth));
   }
   // no-op
 }
@@ -1284,7 +1284,7 @@ void Participant::setMeshTetrahedra(
   }
   // expect groups of 4 vertex ids
   if (ids.size() % 4 != 0) {
-    throw precice::Error(std::format("setMeshTetrahedra() was called with {} vertices, but needs a number of vertices divisible by 4 (4 per tetrahedron).", ids.size()));
+    throw precice::Error(precice::utils::format_or_error("setMeshTetrahedra() was called with {} vertices, but needs a number of vertices divisible by 4 (4 per tetrahedron).", ids.size()));
   }
   // no-op
 }
@@ -1328,7 +1328,7 @@ void Participant::writeData(
     for (const auto &dataInfo : _impl->configData.dataItems) {
       if (dataInfo.name == dataNameStr && dataInfo.meshName == meshNameStr) {
         if (!dataInfo.isWrite) {
-          throw precice::Error(std::format(
+          throw precice::Error(precice::utils::format_or_error(
               "Data '{}' on mesh '{}' is not configured for writing by participant '{}'. "
               "Please add <write-data name=\"{}\" mesh=\"{}\" /> to the configuration.",
               dataNameStr, meshNameStr, _impl->name, dataNameStr, meshNameStr));
@@ -1340,14 +1340,14 @@ void Participant::writeData(
     }
 
     if (!found) {
-      throw precice::Error(std::format(
+      throw precice::Error(precice::utils::format_or_error(
           "Data '{}' on mesh '{}' is not used by participant '{}'",
           dataNameStr, meshNameStr, _impl->name));
     }
 
     // Check value count matches data dimensions
     if (values.size() != ids.size() * expectedDims) {
-      throw precice::Error(std::format(
+      throw precice::Error(precice::utils::format_or_error(
           "writeData() was called with {} vertices and {} values for {}-dimensional data '{}', "
           "but needs {} values ({} x {}).",
           ids.size(), values.size(), expectedDims, dataNameStr,
@@ -1356,7 +1356,7 @@ void Participant::writeData(
   } else {
     // Fallback validation without config
     if (values.size() != ids.size()) {
-      throw precice::Error(std::format(
+      throw precice::Error(precice::utils::format_or_error(
           "writeData() was called with {} vertices and {} values, but the number of vertices and values must match.",
           ids.size(), values.size()));
     }
@@ -1394,7 +1394,7 @@ void Participant::readData(
     for (const auto &dataInfo : _impl->configData.dataItems) {
       if (dataInfo.name == dataNameStr && dataInfo.meshName == meshNameStr) {
         if (!dataInfo.isRead) {
-          throw precice::Error(std::format(
+          throw precice::Error(precice::utils::format_or_error(
               "Data '{}' on mesh '{}' is not configured for reading by participant '{}'. "
               "Please add <read-data name=\"{}\" mesh=\"{}\" /> to the configuration.",
               dataNameStr, meshNameStr, _impl->name, dataNameStr, meshNameStr));
@@ -1406,14 +1406,14 @@ void Participant::readData(
     }
 
     if (!found) {
-      throw precice::Error(std::format(
+      throw precice::Error(precice::utils::format_or_error(
           "Data '{}' on mesh '{}' is not used by participant '{}'",
           dataNameStr, meshNameStr, _impl->name));
     }
 
     // Check value count matches data dimensions
     if (n != ids.size() * expectedDims) {
-      throw precice::Error(std::format(
+      throw precice::Error(precice::utils::format_or_error(
           "readData() was called with {} vertices and {} values for {}-dimensional data '{}', "
           "but needs {} values ({} x {}).",
           ids.size(), values.size(), expectedDims, dataNameStr,
@@ -1422,7 +1422,7 @@ void Participant::readData(
   } else {
     // Fallback validation without config
     if (n != ids.size()) {
-      throw precice::Error(std::format(
+      throw precice::Error(precice::utils::format_or_error(
           "readData() was called with {} vertices and {} values, but the number of vertices and values must match.",
           ids.size(), values.size()));
     }
@@ -1527,10 +1527,10 @@ void Participant::writeAndMapData(
   }
   // coordinates are 3*N, values are N for scalar data
   if (coordinates.size() % 3 != 0) {
-    throw precice::Error(std::format("writeAndMapData() was called with {} coordinates, but needs a multiple of 3 coordinates.", coordinates.size()));
+    throw precice::Error(precice::utils::format_or_error("writeAndMapData() was called with {} coordinates, but needs a multiple of 3 coordinates.", coordinates.size()));
   }
   if (values.size() != coordinates.size() / 3) {
-    throw precice::Error(std::format("writeAndMapData() was called with {} coordinates and {} values, but needs {} values ({} / 3).", coordinates.size(), values.size(), coordinates.size() / 3, coordinates.size()));
+    throw precice::Error(precice::utils::format_or_error("writeAndMapData() was called with {} coordinates and {} values, but needs {} values ({} / 3).", coordinates.size(), values.size(), coordinates.size() / 3, coordinates.size()));
   }
   // no-op
 }
@@ -1550,10 +1550,10 @@ void Participant::mapAndReadData(
     throw precice::Error("initialize() has to be called before mapAndReadData().");
   }
   if (coordinates.size() % 3 != 0) {
-    throw precice::Error(std::format("mapAndReadData() was called with {} coordinates, but needs a multiple of 3 coordinates.", coordinates.size()));
+    throw precice::Error(precice::utils::format_or_error("mapAndReadData() was called with {} coordinates, but needs a multiple of 3 coordinates.", coordinates.size()));
   }
   if (values.size() != coordinates.size() / 3) {
-    throw precice::Error(std::format("mapAndReadData() was called with {} coordinates and {} values, but needs {} values ({} / 3).", coordinates.size(), values.size(), coordinates.size() / 3, coordinates.size()));
+    throw precice::Error(precice::utils::format_or_error("mapAndReadData() was called with {} coordinates and {} values, but needs {} values ({} / 3).", coordinates.size(), values.size(), coordinates.size() / 3, coordinates.size()));
   }
   // no-op
 }
@@ -1573,7 +1573,7 @@ void Participant::setMeshAccessRegion(
   }
   // bounding box: min/max for each dimension -> 3D: 6 entries
   if (boundingBox.size() != 6) {
-    throw precice::Error(std::format("setMeshAccessRegion() was called with {} bounding box coordinates, but expects 6 coordinates (min and max for each dimension in 3D).", boundingBox.size()));
+    throw precice::Error(precice::utils::format_or_error("setMeshAccessRegion() was called with {} bounding box coordinates, but expects 6 coordinates (min and max for each dimension in 3D).", boundingBox.size()));
   }
   // no-op
 }
@@ -1592,7 +1592,7 @@ void Participant::getMeshVertexIDsAndCoordinates(
   }
   // coordinates are 3 * ids.size()
   if (coordinates.size() != ids.size() * 3) {
-    throw precice::Error(std::format("getMeshVertexIDsAndCoordinates() was called with {} vertices and {} coordinates, but needs {} coordinates ({} x 3).", ids.size(), coordinates.size(), ids.size() * 3, ids.size()));
+    throw precice::Error(precice::utils::format_or_error("getMeshVertexIDsAndCoordinates() was called with {} vertices and {} coordinates, but needs {} coordinates ({} x 3).", ids.size(), coordinates.size(), ids.size() * 3, ids.size()));
   }
   // no-op
 }
@@ -1620,7 +1620,7 @@ void Participant::writeGradientData(
   }
   // gradients expected as 3 components per id for vector gradient in 3D
   if (gradients.size() != ids.size() * 3) {
-    throw precice::Error(std::format("writeGradientData() was called with {} vertices and {} gradient components, but needs {} components ({} x 3).", ids.size(), gradients.size(), ids.size() * 3, ids.size()));
+    throw precice::Error(precice::utils::format_or_error("writeGradientData() was called with {} vertices and {} gradient components, but needs {} components ({} x 3).", ids.size(), gradients.size(), ids.size() * 3, ids.size()));
   }
   // no-op
 }

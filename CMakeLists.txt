@@ -565,9 +565,6 @@ add_library(preciceMocked SHARED)
 set_target_properties(preciceMocked PROPERTIES
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
-  CXX_STANDARD 20
-  CXX_STANDARD_REQUIRED YES
-  INTERPROCEDURAL_OPTIMIZATION OFF
   )
 target_sources(preciceMocked PRIVATE extras/mock/preciceMocked.cpp)
 set_property(TARGET preciceMocked APPEND PROPERTY PUBLIC_HEADER
@@ -582,6 +579,8 @@ target_include_directories(preciceMocked PUBLIC
 target_link_libraries(preciceMocked PUBLIC Eigen3::Eigen)
 target_compile_definitions(preciceMocked PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
 target_link_libraries(preciceMocked PUBLIC LibXml2::LibXml2)
+target_link_libraries(preciceMocked PUBLIC fmtlib-static)
+
 
 if (PRECICE_FEATURE_MPI_COMMUNICATION)
   target_link_libraries(preciceMocked PUBLIC MPI::MPI_CXX)
