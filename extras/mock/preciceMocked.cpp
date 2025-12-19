@@ -243,7 +243,7 @@ public:
   bool               finalized       = false;
   bool               couplingOngoing = false;
   double             maxTimeStep     = 0.0;
-  mutable std::mutex mtx;
+  mutable std::recursive_mutex mtx;
 
   uint32_t    seed        = 0;
   std::size_t currentStep = 0;
