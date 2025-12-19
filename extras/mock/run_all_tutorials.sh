@@ -15,7 +15,7 @@ USE_MOCK=1
 
 print_usage() {
     cat <<EOF
-Usage: $0 [--mock] [--mock-lib PATH] [--tutorials-dir PATH] [--timeout SECONDS] [--help]
+Usage: $0 [--mock-lib PATH] [--tutorials-dir PATH] [--timeout SECONDS] [--help]
 
 Options:
   --mock-lib PATH    Path to mocked precice library (default: $MOCK_LIB)
