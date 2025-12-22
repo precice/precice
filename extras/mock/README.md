@@ -45,6 +45,27 @@ Returns the buffered write data multiplied by a scalar or element-wise by a vect
 </mocked-data>
 ```
 
+### Global Default Configuration
+
+You can set a global default mode and multipliers that apply to all data items not explicitly configured:
+
+```xml
+<mock-config>
+  <!-- Set default mode for all unmapped data -->
+  <default mode="scaled">
+    <scalar-multiplier value="1.5" />
+  </default>
+
+  <!-- Specific configs override the global default -->
+  <mocked-data mesh="MeshOne" data="SpecialData" mode="random" />
+</mock-config>
+```
+
+In this example:
+- `SpecialData` uses random mode
+- All other data items use scaled mode with 1.5 multiplier
+- If no `<default>` is specified, the global default is buffer mode
+
 ## Configuration Files
 
 ### preCICE Configuration
@@ -73,20 +94,36 @@ Place `mock-config.xml` in the same directory as your preCICE config file.
   3. "scaled" - Returns data written by writeData() multiplied by a scalar or vector
 -->
 <mock-config>
-  <!-- Random data for temperature -->
+
+  <!-- GLOBAL DEFAULT (optional) -->
+  <!-- If specified, this mode applies to all data items not explicitly configured.
+       If omitted, defaults to buffer mode. -->
+  <default mode="buffer">
+    <!-- Optional: default scalar multiplier for scaled mode -->
+    <scalar-multiplier value="1.0" />
+  </default>
+
+  <!-- Example 1: Random data mode (no multipliers) -->
   <mocked-data mesh="FluidMesh" data="Temperature" mode="random" />
 
-  <!-- Return written data as-is for pressure -->
-  <mocked-data mesh="FluidMesh" data="Pressure" mode="buffer" />
+  <!-- Example 2: Buffer mode (returns writeData values as-is) -->
+  <mocked-data mesh="MeshTwo" data="Displacement" mode="buffer" />
 
-  <!-- Scale displacement by factor of 2 -->
-  <mocked-data mesh="StructureMesh" data="Displacement" mode="scaled">
+  <!-- Example 3: Scaled buffer with scalar multiplier -->
+  <mocked-data mesh="MeshOne" data="Pressure" mode="scaled">
     <scalar-multiplier value="2.0" />
   </mocked-data>
 
-  <!-- Scale force vector components differently -->
-  <mocked-data mesh="StructureMesh" data="Force" mode="scaled">
-    <vector-multiplier values="1.0;1.5;2.0" />
+  <!-- Example 4: Scaled buffer with element-wise vector multiplier -->
+  <mocked-data mesh="MeshTwo" data="Velocity" mode="scaled">
+    <!-- For 3D vector data: multiply component-wise -->
+    <vector-multiplier values="1.0;2.0;3.0" />
+  </mocked-data>
+
+  <!-- Example 5: Multiple scalar values can use semicolons too -->
+  <mocked-data mesh="MeshThree" data="Heat-Flux" mode="scaled">
+    <!-- Will cycle through multipliers for each value -->
+    <vector-multiplier values="0.5;1.0;1.5;2.0" />
   </mocked-data>
 </mock-config>
 ```

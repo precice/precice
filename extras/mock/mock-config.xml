@@ -1,7 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <mock-config>
-  <!-- Example 1: Random data mode -->
-  <mocked-data mesh="MeshOne" data="Temperature" mode="random" />
+  <!-- GLOBAL DEFAULT (optional) -->
+  <!-- If specified, this mode applies to all data items not explicitly configured.
+       If omitted, defaults to buffer mode. -->
+  <default mode="buffer">
+    <!-- Optional: default scalar multiplier for scaled mode -->
+    <scalar-multiplier value="1.0" />
+  </default>
+
+  <!-- Example 1: Random data mode (no multipliers) -->
+  <mocked-data mesh="FluidMesh" data="Temperature" mode="random" />
 
   <!-- Example 2: Buffer mode (returns writeData values as-is) -->
   <mocked-data mesh="MeshTwo" data="Displacement" mode="buffer" />

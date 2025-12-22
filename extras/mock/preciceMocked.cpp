@@ -228,7 +228,9 @@ public:
 
   struct MockConfig {
     std::map<std::string, MockDataConfig> dataConfigs; // Key: "meshName:dataName"
-    DataMode                              defaultMode = DataMode::Buffer;
+    DataMode                              defaultMode             = DataMode::Buffer;
+    double                                defaultScalarMultiplier = 1.0;
+    std::vector<double>                   defaultVectorMultiplier; // Empty means use scalar
   };
 
   // Minimal internal state
@@ -274,6 +276,7 @@ public:
   // SAX parsing state for mock config
   struct MockParseState {
     bool                inMockedData = false;
+    bool                inDefault    = false;
     std::string         currentMesh;
     std::string         currentData;
     DataMode            currentMode   = DataMode::Buffer;
@@ -592,7 +595,19 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
     attrs[attrName]        = std::string(valueBegin, valueEnd - valueBegin);
   }
 
-  if (elemName == "mocked-data") {
+  if (elemName == "default") {
+    impl->mockParseState.inDefault = true;
+    std::string modeStr            = attrs["mode"];
+    if (modeStr == "random") {
+      impl->mockConfig.defaultMode = DataMode::Random;
+    } else if (modeStr == "scaled") {
+      impl->mockConfig.defaultMode = DataMode::ScaledBuffer;
+    } else {
+      impl->mockConfig.defaultMode = DataMode::Buffer;
+    }
+    impl->mockParseState.currentScalar = 1.0;
+    impl->mockParseState.currentVector.clear();
+  } else if (elemName == "mocked-data") {
     impl->mockParseState.inMockedData = true;
     impl->mockParseState.currentMesh  = attrs["mesh"];
     impl->mockParseState.currentData  = attrs["data"];
@@ -606,7 +621,7 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
     }
     impl->mockParseState.currentScalar = 1.0;
     impl->mockParseState.currentVector.clear();
-  } else if (impl->mockParseState.inMockedData) {
+  } else if (impl->mockParseState.inMockedData || impl->mockParseState.inDefault) {
     if (elemName == "scalar-multiplier") {
       std::string valueStr = attrs["value"];
       if (!valueStr.empty()) {
@@ -634,7 +649,12 @@ void impl::ParticipantImpl::onMockEndElement(void *ctx, const xmlChar *localname
 {
   auto       *impl = static_cast<impl::ParticipantImpl *>(ctx);
   std::string elemName(reinterpret_cast<const char *>(localname));
-  if (elemName == "mocked-data" && impl->mockParseState.inMockedData) {
+  if (elemName == "default" && impl->mockParseState.inDefault) {
+    // Apply default multipliers
+    impl->mockConfig.defaultScalarMultiplier = impl->mockParseState.currentScalar;
+    impl->mockConfig.defaultVectorMultiplier = impl->mockParseState.currentVector;
+    impl->mockParseState.inDefault           = false;
+  } else if (elemName == "mocked-data" && impl->mockParseState.inMockedData) {
     if (!impl->mockParseState.currentMesh.empty() && !impl->mockParseState.currentData.empty()) {
       std::string    key = impl->mockParseState.currentMesh + ":" + impl->mockParseState.currentData;
       MockDataConfig config;
@@ -1357,11 +1377,15 @@ void Participant::readData(
   std::string                                  key            = meshNameStr + ":" + dataNameStr;
   impl::ParticipantImpl::DataMode              mode           = _impl->mockConfig.defaultMode;
   const impl::ParticipantImpl::MockDataConfig *mockDataConfig = nullptr;
+  double                                       scalarMult     = _impl->mockConfig.defaultScalarMultiplier;
+  std::vector<double>                          vectorMult     = _impl->mockConfig.defaultVectorMultiplier;
 
   auto mockIt = _impl->mockConfig.dataConfigs.find(key);
   if (mockIt != _impl->mockConfig.dataConfigs.end()) {
     mode           = mockIt->second.mode;
     mockDataConfig = &mockIt->second;
+    scalarMult     = mockIt->second.scalarMultiplier;
+    vectorMult     = mockIt->second.vectorMultiplier;
   }
 
   // Apply the selected mode
@@ -1406,17 +1430,15 @@ void Participant::readData(
       const auto &buffer   = bufferIt->second;
       size_t      copySize = std::min(n, buffer.size());
 
-      if (mockDataConfig && !mockDataConfig->vectorMultiplier.empty()) {
+      if (!vectorMult.empty()) {
         // Element-wise multiplication with vector
-        const auto &multiplier = mockDataConfig->vectorMultiplier;
         for (std::size_t i = 0; i < copySize; ++i) {
-          values[i] = buffer[i] * multiplier[i % multiplier.size()];
+          values[i] = buffer[i] * vectorMult[i % vectorMult.size()];
         }
       } else {
         // Scalar multiplication
-        double scalar = mockDataConfig ? mockDataConfig->scalarMultiplier : 1.0;
         for (std::size_t i = 0; i < copySize; ++i) {
-          values[i] = buffer[i] * scalar;
+          values[i] = buffer[i] * scalarMult;
         }
       }
 
