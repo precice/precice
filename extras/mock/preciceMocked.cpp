@@ -1405,14 +1405,17 @@ void Participant::readData(
     auto bufferIt = _impl->writeBuffers.find(key);
     if (bufferIt != _impl->writeBuffers.end() && !bufferIt->second.empty()) {
       const auto &buffer = bufferIt->second;
-      // Copy as much as we can from the buffer
-      size_t copySize = std::min(n, buffer.size());
-      for (std::size_t i = 0; i < copySize; ++i) {
-        values[i] = buffer[i];
+      // Strict validation: buffer size must match requested size
+      if (buffer.size() != n) {
+        throw precice::Error(precice::utils::format_or_error(
+            "readData() was called with {} values for data '{}' on mesh '{}', "
+            "but writeData() previously wrote {} values. "
+            "The number of values in readData() must match writeData() for the same mesh/data pair. "
+            "This typically indicates that mesh vertex counts changed between write and read, which should not happen.",
+            n, dataNameStr, meshNameStr, buffer.size()));
       }
-      // Fill remaining with zeros if buffer is smaller
-      for (std::size_t i = copySize; i < n; ++i) {
-        values[i] = 0.0;
+      for (std::size_t i = 0; i < n; ++i) {
+        values[i] = buffer[i];
       }
     } else {
       // No buffer available - return zeros
@@ -1427,24 +1430,27 @@ void Participant::readData(
     // Mode 3: Return buffered write data with scaling
     auto bufferIt = _impl->writeBuffers.find(key);
     if (bufferIt != _impl->writeBuffers.end() && !bufferIt->second.empty()) {
-      const auto &buffer   = bufferIt->second;
-      size_t      copySize = std::min(n, buffer.size());
+      const auto &buffer = bufferIt->second;
+      // Strict validation: buffer size must match requested size
+      if (buffer.size() != n) {
+        throw precice::Error(precice::utils::format_or_error(
+            "readData() was called with {} values for data '{}' on mesh '{}', "
+            "but writeData() previously wrote {} values. "
+            "The number of values in readData() must match writeData() for the same mesh/data pair. "
+            "This typically indicates that mesh vertex counts changed between write and read, which should not happen.",
+            n, dataNameStr, meshNameStr, buffer.size()));
+      }
 
       if (!vectorMult.empty()) {
         // Element-wise multiplication with vector
-        for (std::size_t i = 0; i < copySize; ++i) {
+        for (std::size_t i = 0; i < n; ++i) {
           values[i] = buffer[i] * vectorMult[i % vectorMult.size()];
         }
       } else {
         // Scalar multiplication
-        for (std::size_t i = 0; i < copySize; ++i) {
+        for (std::size_t i = 0; i < n; ++i) {
           values[i] = buffer[i] * scalarMult;
         }
-      }
-
-      // Fill remaining with zeros
-      for (std::size_t i = copySize; i < n; ++i) {
-        values[i] = 0.0;
       }
     } else {
       // No buffer available - return zeros
