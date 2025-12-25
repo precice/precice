@@ -15,10 +15,12 @@ A lightweight mock implementation of the preCICE Participant API for testing and
 The mock participant supports three modes for `readData()` operations, configured via an optional `mock-config.xml` file:
 
 ### 1. Random Mode
-Returns random seeded data (useful for testing error handling). Optional `lower` and `upper` attributes bound the uniform distribution (defaults: 0.0 to 1.0).
+Returns random seeded data (useful for testing error handling). Optional bounds can be specified with a nested `bounds` element (defaults: 0.0 to 1.0).
 
 ```xml
-<mocked-data mesh="MeshName" data="DataName" mode="random" lower="-1.0" upper="1.0" />
+<mocked-data mesh="MeshName" data="DataName" mode="random">
+  <bounds lower="-1.0" upper="1.0" />
+</mocked-data>
 ```
 
 ### 2. Buffer Mode (Default)
@@ -57,7 +59,9 @@ You can set a global default mode and multipliers that apply to all data items n
   </default>
 
   <!-- Specific configs override the global default -->
-  <mocked-data mesh="MeshOne" data="SpecialData" mode="random" lower="0.0" upper="5.0" />
+  <mocked-data mesh="MeshOne" data="SpecialData" mode="random">
+    <bounds lower="0.0" upper="5.0" />
+  </mocked-data>
 </mock-config>
 ```
 
@@ -134,8 +138,10 @@ Place `mock-config.xml` in the same directory as your preCICE config file.
     <scalar-multiplier value="1.0" />
   </default>
 
-  <!-- Example 1: Random data mode (no multipliers) -->
-  <mocked-data mesh="FluidMesh" data="Temperature" mode="random" />
+  <!-- Example 1: Random data mode with bounds -->
+  <mocked-data mesh="FluidMesh" data="Temperature" mode="random">
+    <bounds lower="0.0" upper="1.0" />
+  </mocked-data>
 
   <!-- Example 2: Buffer mode (returns writeData values as-is) -->
   <mocked-data mesh="MeshTwo" data="Displacement" mode="buffer" />
