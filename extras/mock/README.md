@@ -66,6 +66,36 @@ In this example:
 - All other data items use scaled mode with 1.5 multiplier
 - If no `<default>` is specified, the global default is buffer mode
 
+## Simulation Termination
+
+### Explicit Coupling
+For explicit coupling schemes, termination is controlled by the preCICE configuration file using `<max-time value="..."/>` or `<max-time-windows value="..."/>` in the `<coupling-scheme:.../>`.
+
+**The mock requires at least one of these to be present to prevent infinite execution.**
+
+### Implicit Coupling  
+For implicit coupling schemes, you can configure termination in the mock-config.xml:
+
+```xml
+<termination max-implicit-rounds="5" />
+```
+
+**Parameters:**
+- `max-implicit-rounds`: Number of completed implicit coupling iterations (sub-cycles) before termination. Default: 5
+
+**Example:**
+```xml
+<mock-config>
+  <!-- Simulate for 10 implicit rounds -->
+  <termination max-implicit-rounds="10" />
+
+  <default mode="buffer" />
+  <!-- ... rest of config ... -->
+</mock-config>
+```
+
+In implicit coupling, the mock counts one "implicit round" each time an entire sub-cycling iteration converges (i.e., when all iterations of a single time window are complete).
+
 ## Configuration Files
 
 ### preCICE Configuration
