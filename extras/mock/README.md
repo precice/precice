@@ -15,10 +15,10 @@ A lightweight mock implementation of the preCICE Participant API for testing and
 The mock participant supports three modes for `readData()` operations, configured via an optional `mock-config.xml` file:
 
 ### 1. Random Mode
-Returns random seeded data (useful for testing error handling).
+Returns random seeded data (useful for testing error handling). Optional `lower` and `upper` attributes bound the uniform distribution (defaults: 0.0 to 1.0).
 
 ```xml
-<mocked-data mesh="MeshName" data="DataName" mode="random" />
+<mocked-data mesh="MeshName" data="DataName" mode="random" lower="-1.0" upper="1.0" />
 ```
 
 ### 2. Buffer Mode (Default)
@@ -57,12 +57,13 @@ You can set a global default mode and multipliers that apply to all data items n
   </default>
 
   <!-- Specific configs override the global default -->
-  <mocked-data mesh="MeshOne" data="SpecialData" mode="random" />
+  <mocked-data mesh="MeshOne" data="SpecialData" mode="random" lower="0.0" upper="5.0" />
 </mock-config>
 ```
 
 In this example:
 - `SpecialData` uses random mode
+- Random mode honors optional `lower`/`upper` bounds (defaults to 0.0-1.0)
 - All other data items use scaled mode with 1.5 multiplier
 - If no `<default>` is specified, the global default is buffer mode
 

@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -225,6 +226,8 @@ public:
     std::string         meshName;
     DataMode            mode             = DataMode::Buffer; // Default to buffer mode
     double              scalarMultiplier = 1.0;
+    double              randomLower      = 0.0;
+    double              randomUpper      = 1.0;
     std::vector<double> vectorMultiplier; // Empty means use scalar
   };
 
@@ -232,6 +235,8 @@ public:
     std::map<std::string, MockDataConfig> dataConfigs; // Key: "meshName:dataName"
     DataMode                              defaultMode             = DataMode::Buffer;
     double                                defaultScalarMultiplier = 1.0;
+    double                                defaultRandomLower      = 0.0;
+    double                                defaultRandomUpper      = 1.0;
     std::vector<double>                   defaultVectorMultiplier; // Empty means use scalar
   };
 
@@ -293,6 +298,8 @@ public:
     std::string         currentData;
     DataMode            currentMode   = DataMode::Buffer;
     double              currentScalar = 1.0;
+    double              currentRandomLower = 0.0;
+    double              currentRandomUpper = 1.0;
     std::vector<double> currentVector;
   } mockParseState;
 
@@ -649,6 +656,17 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
     }
     impl->mockParseState.currentScalar = 1.0;
     impl->mockParseState.currentVector.clear();
+    impl->mockParseState.currentRandomLower = impl->mockConfig.defaultRandomLower;
+    impl->mockParseState.currentRandomUpper = impl->mockConfig.defaultRandomUpper;
+
+    std::string lowerStr = attrs["lower"];
+    std::string upperStr = attrs["upper"];
+    if (!lowerStr.empty()) {
+      impl->mockParseState.currentRandomLower = std::stod(lowerStr);
+    }
+    if (!upperStr.empty()) {
+      impl->mockParseState.currentRandomUpper = std::stod(upperStr);
+    }
   } else if (elemName == "mocked-data") {
     impl->mockParseState.inMockedData = true;
     impl->mockParseState.currentMesh  = attrs["mesh"];
@@ -663,6 +681,17 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
     }
     impl->mockParseState.currentScalar = 1.0;
     impl->mockParseState.currentVector.clear();
+    impl->mockParseState.currentRandomLower = impl->mockConfig.defaultRandomLower;
+    impl->mockParseState.currentRandomUpper = impl->mockConfig.defaultRandomUpper;
+
+    std::string lowerStr = attrs["lower"];
+    std::string upperStr = attrs["upper"];
+    if (!lowerStr.empty()) {
+      impl->mockParseState.currentRandomLower = std::stod(lowerStr);
+    }
+    if (!upperStr.empty()) {
+      impl->mockParseState.currentRandomUpper = std::stod(upperStr);
+    }
   } else if (impl->mockParseState.inMockedData || impl->mockParseState.inDefault) {
     if (elemName == "scalar-multiplier") {
       std::string valueStr = attrs["value"];
@@ -695,6 +724,18 @@ void impl::ParticipantImpl::onMockEndElement(void *ctx, const xmlChar *localname
     // Apply default multipliers
     impl->mockConfig.defaultScalarMultiplier = impl->mockParseState.currentScalar;
     impl->mockConfig.defaultVectorMultiplier = impl->mockParseState.currentVector;
+    impl->mockConfig.defaultRandomLower      = impl->mockParseState.currentRandomLower;
+    impl->mockConfig.defaultRandomUpper      = impl->mockParseState.currentRandomUpper;
+    if (impl->mockConfig.defaultMode == DataMode::Random) {
+      if (!std::isfinite(impl->mockConfig.defaultRandomLower) || !std::isfinite(impl->mockConfig.defaultRandomUpper)) {
+        throw precice::Error("mock-config default random bounds must be finite.");
+      }
+      if (impl->mockConfig.defaultRandomUpper <= impl->mockConfig.defaultRandomLower) {
+        throw precice::Error(precice::utils::format_or_error(
+            "mock-config default random bounds are invalid: upper={} must be greater than lower={}.",
+            impl->mockConfig.defaultRandomUpper, impl->mockConfig.defaultRandomLower));
+      }
+    }
     if (impl->mockConfig.defaultMode == DataMode::ScaledBuffer) {
       bool allOnes = !impl->mockParseState.currentVector.empty();
       if (allOnes) {
@@ -722,7 +763,21 @@ void impl::ParticipantImpl::onMockEndElement(void *ctx, const xmlChar *localname
       config.dataName                   = impl->mockParseState.currentData;
       config.mode                       = impl->mockParseState.currentMode;
       config.scalarMultiplier           = impl->mockParseState.currentScalar;
+      config.randomLower                = impl->mockParseState.currentRandomLower;
+      config.randomUpper                = impl->mockParseState.currentRandomUpper;
       config.vectorMultiplier           = impl->mockParseState.currentVector;
+      if (config.mode == DataMode::Random) {
+        if (!std::isfinite(config.randomLower) || !std::isfinite(config.randomUpper)) {
+          throw precice::Error(precice::utils::format_or_error(
+              "mock-config for mesh '{}' data '{}' uses non-finite random bounds (lower={}, upper={}).",
+              config.meshName, config.dataName, config.randomLower, config.randomUpper));
+        }
+        if (config.randomUpper <= config.randomLower) {
+          throw precice::Error(precice::utils::format_or_error(
+              "mock-config for mesh '{}' data '{}' uses invalid random bounds: upper={} must be greater than lower={}.",
+              config.meshName, config.dataName, config.randomUpper, config.randomLower));
+        }
+      }
       if (config.mode == DataMode::ScaledBuffer) {
         bool allOnes = !config.vectorMultiplier.empty();
         if (allOnes) {
@@ -1475,10 +1530,12 @@ void Participant::readData(
   }
 
   // Determine data mode from mock config
-  std::string                                  key            = dataNameStr;
+  std::string                                  key            = meshNameStr + ":" + dataNameStr;
   impl::ParticipantImpl::DataMode              mode           = _impl->mockConfig.defaultMode;
   const impl::ParticipantImpl::MockDataConfig *mockDataConfig = nullptr;
   double                                       scalarMult     = _impl->mockConfig.defaultScalarMultiplier;
+  double                                       randLower      = _impl->mockConfig.defaultRandomLower;
+  double                                       randUpper      = _impl->mockConfig.defaultRandomUpper;
   std::vector<double>                          vectorMult     = _impl->mockConfig.defaultVectorMultiplier;
 
   auto mockIt = _impl->mockConfig.dataConfigs.find(key);
@@ -1486,6 +1543,8 @@ void Participant::readData(
     mode           = mockIt->second.mode;
     mockDataConfig = &mockIt->second;
     scalarMult     = mockIt->second.scalarMultiplier;
+    randLower      = mockIt->second.randomLower;
+    randUpper      = mockIt->second.randomUpper;
     vectorMult     = mockIt->second.vectorMultiplier;
   }
 
@@ -1500,9 +1559,14 @@ void Participant::readData(
   // Apply the selected mode
   switch (mode) {
     case impl::ParticipantImpl::DataMode::Random: {
-      // Mode 1: Random data
+      // Mode 1: Random data with configurable bounds
+      if (!std::isfinite(randLower) || !std::isfinite(randUpper) || randUpper <= randLower) {
+        throw precice::Error(precice::utils::format_or_error(
+            "Invalid random bounds for data '{}' on mesh '{}': upper={} must be greater than lower={} and both must be finite.",
+            dataNameStr, meshNameStr, randUpper, randLower));
+      }
       std::mt19937                           gen(static_cast<uint32_t>(_impl->seed + static_cast<uint32_t>(_impl->currentStep)));
-      std::uniform_real_distribution<double> dist(0.0, 1.0);
+      std::uniform_real_distribution<double> dist(randLower, randUpper);
       for (std::size_t i = 0; i < n; ++i) {
         values[i] = dist(gen);
       }
