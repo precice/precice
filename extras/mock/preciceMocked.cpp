@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -210,6 +211,8 @@ public:
     int                             maxIterations         = 1;
     int                             currentIteration      = 0;
     bool                            iterationConverged    = false;
+    double                          maxTime               = -1.0; // -1 means not set
+    int                             maxTimeWindows        = -1;   // -1 means not set
   };
 
   enum class DataMode {
@@ -223,6 +226,8 @@ public:
     std::string         meshName;
     DataMode            mode             = DataMode::Buffer; // Default to buffer mode
     double              scalarMultiplier = 1.0;
+    double              randomLower      = 0.0;
+    double              randomUpper      = 1.0;
     std::vector<double> vectorMultiplier; // Empty means use scalar
   };
 
@@ -230,6 +235,8 @@ public:
     std::map<std::string, MockDataConfig> dataConfigs; // Key: "meshName:dataName"
     DataMode                              defaultMode             = DataMode::Buffer;
     double                                defaultScalarMultiplier = 1.0;
+    double                                defaultRandomLower      = 0.0;
+    double                                defaultRandomUpper      = 1.0;
     std::vector<double>                   defaultVectorMultiplier; // Empty means use scalar
   };
 
@@ -258,8 +265,18 @@ public:
   bool       mockConfigParsed = false;
   bool       mockConfigExists = false;
 
-  // Write data buffers: Key is "meshName:dataName"
-  std::map<std::string, std::vector<double>> writeBuffers;
+  // Termination configuration
+  struct TerminationConfig {
+    int maxImplicitRounds = 5; // Number of completed implicit coupling rounds before stopping
+  };
+
+  TerminationConfig terminationConfig;
+  int               totalImplicitRounds = 0; // Counter for completed implicit rounds
+
+  // Write data buffer shared across all meshes/data names
+  std::vector<double> writeBuffer;
+  // Track last written value count per mesh/data for read-size validation
+  std::map<std::string, std::size_t> lastWriteSizes;
   // Vertex counts per mesh to detect empty provided meshes
   std::map<std::string, std::size_t> meshVertexCounts;
 
@@ -279,8 +296,10 @@ public:
     bool                inDefault    = false;
     std::string         currentMesh;
     std::string         currentData;
-    DataMode            currentMode   = DataMode::Buffer;
-    double              currentScalar = 1.0;
+    DataMode            currentMode        = DataMode::Buffer;
+    double              currentScalar      = 1.0;
+    double              currentRandomLower = 0.0;
+    double              currentRandomUpper = 1.0;
     std::vector<double> currentVector;
   } mockParseState;
 
@@ -455,6 +474,8 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
   // Handle coupling schemes
   if (nsPrefix == "coupling-scheme" && (elemName == "serial-implicit" || elemName == "parallel-implicit")) {
     impl->configData.isImplicitCoupling = true;
+  } else if (nsPrefix == "coupling-scheme" && (elemName == "serial-explicit" || elemName == "parallel-explicit")) {
+    impl->configData.isImplicitCoupling = false;
   } else if (impl->configData.isImplicitCoupling && elemName == "max-iterations") {
     std::string maxIterStr = getAttr("value");
     if (!maxIterStr.empty()) {
@@ -464,6 +485,18 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
              (elemName == "relative-convergence-measure" || elemName == "absolute-convergence-measure" ||
               elemName == "residual-relative-convergence-measure" || elemName == "min-iteration-convergence-measure")) {
     impl->configData.hasConvergenceMeasure = true;
+  }
+  // Parse max-time and max-time-windows for termination
+  if ((nsPrefix.empty() || nsPrefix == "coupling-scheme") && elemName == "max-time") {
+    std::string maxTimeStr = getAttr("value");
+    if (!maxTimeStr.empty()) {
+      impl->configData.maxTime = std::stod(maxTimeStr);
+    }
+  } else if ((nsPrefix.empty() || nsPrefix == "coupling-scheme") && elemName == "max-time-windows") {
+    std::string maxTimeWindowsStr = getAttr("value");
+    if (!maxTimeWindowsStr.empty()) {
+      impl->configData.maxTimeWindows = std::stoi(maxTimeWindowsStr);
+    }
   }
 }
 
@@ -560,20 +593,30 @@ void impl::ParticipantImpl::parseConfig()
     if (configData.isImplicitCoupling) {
       // Only print warning if no convergence measure was found
       if (!configData.hasConvergenceMeasure) {
-        std::cerr << "---[precice]  WARNING: No convergence measures were defined for an implicit coupling scheme. "
-                  << "It will always iterate the maximum amount iterations, which is " << configData.maxIterations
-                  << ". You may want to add a convergence measure in your <coupling-scheme:.../> in your configuration."
-                  << std::endl;
+        throw precice::Error(precice::utils::format_or_error(
+            "---[precice]  WARNING: No convergence measures were defined for an implicit coupling scheme. "
+            "It will always iterate the maximum amount iterations, which is {}. "
+            "You may want to add a convergence measure in your <coupling-scheme:.../> in your configuration.",
+            configData.maxIterations));
       }
+    }
+
+    // Validate termination configuration
+    if (configData.maxTime < 0 && configData.maxTimeWindows < 0) {
+      throw precice::Error(precice::utils::format_or_error(
+          "No termination configuration found in preCICE config '{}'. "
+          "Please add <max-time value=\"...\"/> or <max-time-windows value=\"...\"/> "
+          "to your <coupling-scheme:.../> to prevent infinite execution.",
+          config));
     }
 
     configParsed = true;
   } catch (const precice::Error &) {
     throw;
   } catch (const std::exception &e) {
-    std::cerr << "Warning: Could not parse configuration file '" << config
-              << "': " << e.what() << ". Using limited mock behavior." << std::endl;
-    configParsed = true;
+    throw precice::Error(precice::utils::format_or_error(
+        "---[precice]  Warning: Could not parse configuration file '{}': {}. Using limited mock behavior.",
+        config, e.what()));
   }
 }
 
@@ -595,7 +638,13 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
     attrs[attrName]        = std::string(valueBegin, valueEnd - valueBegin);
   }
 
-  if (elemName == "default") {
+  if (elemName == "termination") {
+    // Parse termination configuration
+    std::string maxImplicitRoundsStr = attrs["max-implicit-rounds"];
+    if (!maxImplicitRoundsStr.empty()) {
+      impl->terminationConfig.maxImplicitRounds = std::stoi(maxImplicitRoundsStr);
+    }
+  } else if (elemName == "default") {
     impl->mockParseState.inDefault = true;
     std::string modeStr            = attrs["mode"];
     if (modeStr == "random") {
@@ -607,6 +656,17 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
     }
     impl->mockParseState.currentScalar = 1.0;
     impl->mockParseState.currentVector.clear();
+    impl->mockParseState.currentRandomLower = impl->mockConfig.defaultRandomLower;
+    impl->mockParseState.currentRandomUpper = impl->mockConfig.defaultRandomUpper;
+
+    std::string lowerStr = attrs["lower"];
+    std::string upperStr = attrs["upper"];
+    if (!lowerStr.empty()) {
+      impl->mockParseState.currentRandomLower = std::stod(lowerStr);
+    }
+    if (!upperStr.empty()) {
+      impl->mockParseState.currentRandomUpper = std::stod(upperStr);
+    }
   } else if (elemName == "mocked-data") {
     impl->mockParseState.inMockedData = true;
     impl->mockParseState.currentMesh  = attrs["mesh"];
@@ -621,6 +681,17 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
     }
     impl->mockParseState.currentScalar = 1.0;
     impl->mockParseState.currentVector.clear();
+    impl->mockParseState.currentRandomLower = impl->mockConfig.defaultRandomLower;
+    impl->mockParseState.currentRandomUpper = impl->mockConfig.defaultRandomUpper;
+
+    std::string lowerStr = attrs["lower"];
+    std::string upperStr = attrs["upper"];
+    if (!lowerStr.empty()) {
+      impl->mockParseState.currentRandomLower = std::stod(lowerStr);
+    }
+    if (!upperStr.empty()) {
+      impl->mockParseState.currentRandomUpper = std::stod(upperStr);
+    }
   } else if (impl->mockParseState.inMockedData || impl->mockParseState.inDefault) {
     if (elemName == "scalar-multiplier") {
       std::string valueStr = attrs["value"];
@@ -641,6 +712,15 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
           pos = nextSemi + 1;
         }
       }
+    } else if (elemName == "bounds") {
+      std::string lowerStr = attrs["lower"];
+      std::string upperStr = attrs["upper"];
+      if (!lowerStr.empty()) {
+        impl->mockParseState.currentRandomLower = std::stod(lowerStr);
+      }
+      if (!upperStr.empty()) {
+        impl->mockParseState.currentRandomUpper = std::stod(upperStr);
+      }
     }
   }
 }
@@ -653,16 +733,80 @@ void impl::ParticipantImpl::onMockEndElement(void *ctx, const xmlChar *localname
     // Apply default multipliers
     impl->mockConfig.defaultScalarMultiplier = impl->mockParseState.currentScalar;
     impl->mockConfig.defaultVectorMultiplier = impl->mockParseState.currentVector;
-    impl->mockParseState.inDefault           = false;
+    impl->mockConfig.defaultRandomLower      = impl->mockParseState.currentRandomLower;
+    impl->mockConfig.defaultRandomUpper      = impl->mockParseState.currentRandomUpper;
+    if (impl->mockConfig.defaultMode == DataMode::Random) {
+      if (!std::isfinite(impl->mockConfig.defaultRandomLower) || !std::isfinite(impl->mockConfig.defaultRandomUpper)) {
+        throw precice::Error("mock-config default random bounds must be finite.");
+      }
+      if (impl->mockConfig.defaultRandomUpper <= impl->mockConfig.defaultRandomLower) {
+        throw precice::Error(precice::utils::format_or_error(
+            "mock-config default random bounds are invalid: upper={} must be greater than lower={}.",
+            impl->mockConfig.defaultRandomUpper, impl->mockConfig.defaultRandomLower));
+      }
+    }
+    if (impl->mockConfig.defaultMode == DataMode::ScaledBuffer) {
+      bool allOnes = !impl->mockParseState.currentVector.empty();
+      if (allOnes) {
+        for (double v : impl->mockParseState.currentVector) {
+          if (v != 1.0) {
+            allOnes = false;
+            break;
+          }
+        }
+      }
+      if ((impl->mockParseState.currentVector.empty() && impl->mockParseState.currentScalar == 1.0) || allOnes) {
+        std::cout << "---[precice]  WARNING: mock-config default uses mode 'scaled' but the multiplier is effectively 1 (no scaling)." << std::endl;
+      }
+    }
+    if (impl->mockConfig.defaultMode == DataMode::Buffer &&
+        (impl->mockParseState.currentScalar != 1.0 || !impl->mockParseState.currentVector.empty())) {
+      std::cout << "---[precice]  WARNING: mock-config default uses mode 'buffer' but also specifies scalar/vector multipliers; multipliers are ignored for buffer mode." << std::endl;
+    }
+    impl->mockParseState.inDefault = false;
   } else if (elemName == "mocked-data" && impl->mockParseState.inMockedData) {
     if (!impl->mockParseState.currentMesh.empty() && !impl->mockParseState.currentData.empty()) {
       std::string    key = impl->mockParseState.currentMesh + ":" + impl->mockParseState.currentData;
       MockDataConfig config;
-      config.meshName                   = impl->mockParseState.currentMesh;
-      config.dataName                   = impl->mockParseState.currentData;
-      config.mode                       = impl->mockParseState.currentMode;
-      config.scalarMultiplier           = impl->mockParseState.currentScalar;
-      config.vectorMultiplier           = impl->mockParseState.currentVector;
+      config.meshName         = impl->mockParseState.currentMesh;
+      config.dataName         = impl->mockParseState.currentData;
+      config.mode             = impl->mockParseState.currentMode;
+      config.scalarMultiplier = impl->mockParseState.currentScalar;
+      config.randomLower      = impl->mockParseState.currentRandomLower;
+      config.randomUpper      = impl->mockParseState.currentRandomUpper;
+      config.vectorMultiplier = impl->mockParseState.currentVector;
+      if (config.mode == DataMode::Random) {
+        if (!std::isfinite(config.randomLower) || !std::isfinite(config.randomUpper)) {
+          throw precice::Error(precice::utils::format_or_error(
+              "mock-config for mesh '{}' data '{}' uses non-finite random bounds (lower={}, upper={}).",
+              config.meshName, config.dataName, config.randomLower, config.randomUpper));
+        }
+        if (config.randomUpper <= config.randomLower) {
+          throw precice::Error(precice::utils::format_or_error(
+              "mock-config for mesh '{}' data '{}' uses invalid random bounds: upper={} must be greater than lower={}.",
+              config.meshName, config.dataName, config.randomUpper, config.randomLower));
+        }
+      }
+      if (config.mode == DataMode::ScaledBuffer) {
+        bool allOnes = !config.vectorMultiplier.empty();
+        if (allOnes) {
+          for (double v : config.vectorMultiplier) {
+            if (v != 1.0) {
+              allOnes = false;
+              break;
+            }
+          }
+        }
+        if ((config.vectorMultiplier.empty() && config.scalarMultiplier == 1.0) || allOnes) {
+          std::cout << "---[precice]  WARNING: mock-config for mesh '" << config.meshName << "' data '" << config.dataName
+                    << "' uses mode 'scaled' but the multiplier is effectively 1 (no scaling)." << std::endl;
+        }
+      }
+      if (config.mode == DataMode::Buffer &&
+          (config.scalarMultiplier != 1.0 || !config.vectorMultiplier.empty())) {
+        std::cout << "---[precice]  WARNING: mock-config for mesh '" << config.meshName << "' data '" << config.dataName
+                  << "' uses mode 'buffer' but also specifies scalar/vector multipliers; multipliers are ignored for buffer mode." << std::endl;
+      }
       impl->mockConfig.dataConfigs[key] = config;
     }
     impl->mockParseState.inMockedData = false;
@@ -708,10 +852,9 @@ void impl::ParticipantImpl::parseMockConfig()
     mockConfigParsed = true;
 
   } catch (const std::exception &e) {
-    std::cerr << "Warning: Could not parse mock configuration file: " << e.what()
-              << ". Using default buffer mode." << std::endl;
-    mockConfig.defaultMode = DataMode::Buffer;
-    mockConfigParsed       = true;
+    throw precice::Error(precice::utils::format_or_error(
+        "---[precice]  Warning: Could not parse mock configuration file: {}. Using default buffer mode.",
+        e.what()));
   }
 }
 
@@ -781,7 +924,7 @@ void Participant::initialize()
     if (_impl->mockConfigExists) {
       std::cout << "---[precice]  Configuring preCICE (mock) with configuration \"" << std::filesystem::absolute(_impl->config).string() << "\" and mock configuration \"" << std::filesystem::absolute(_impl->mockConfigPath).string() << "\"" << std::endl;
     } else {
-      std::cout << "---[precice]  Configuring preCICE (mock) with configuration \"" << std::filesystem::absolute(_impl->config).string() << "\" and default mock configuration" << std::endl;
+      std::cout << "---[precice]  Configuring preCICE (mock) with configuration \"" << std::filesystem::absolute(_impl->config).string() << "\" and default mock configuration. See the README about how to adjust this." << std::endl;
     }
     std::cout << "---[precice]  I am participant \"" << _impl->name << "\"" << std::endl;
   }
@@ -852,14 +995,16 @@ void Participant::advance(double computedTimeStepSize)
   if (computedTimeStepSize < 0.0) {
     throw precice::Error(precice::utils::format_or_error("advance() cannot be called with a negative time step size {}.", computedTimeStepSize));
   }
-  if (_impl->maxTimeStep == _impl->currentStep) {
-    _impl->couplingOngoing = false;
-    return;
-  }
 
   // Handle implicit coupling iterations
   if (_impl->configData.isImplicitCoupling) {
+
     _impl->configData.currentIteration++;
+
+    if (_impl->totalImplicitRounds >= _impl->terminationConfig.maxImplicitRounds) {
+      _impl->couplingOngoing = false;
+      return;
+    }
 
     // Simple convergence logic: converge after max iterations
     if (_impl->configData.currentIteration >= _impl->configData.maxIterations) {
@@ -867,11 +1012,29 @@ void Participant::advance(double computedTimeStepSize)
       _impl->configData.currentIteration   = 0;
       _impl->currentStep += 1;
       _impl->currentTime += computedTimeStepSize;
+      _impl->totalImplicitRounds += 1;
+
+      // Check if we've just completed the final implicit round
+      if (_impl->totalImplicitRounds >= _impl->terminationConfig.maxImplicitRounds) {
+        _impl->couplingOngoing = false;
+      }
     }
   } else {
     // Explicit coupling: always advance
     _impl->currentStep += 1;
     _impl->currentTime += computedTimeStepSize;
+
+    // Check termination based on precice config
+    bool shouldTerminate = false;
+    if (_impl->configData.maxTimeWindows > 0 && _impl->currentStep >= static_cast<std::size_t>(_impl->configData.maxTimeWindows)) {
+      shouldTerminate = true;
+    }
+    if (_impl->configData.maxTime > 0 && _impl->currentTime >= _impl->configData.maxTime) {
+      shouldTerminate = true;
+    }
+    if (shouldTerminate) {
+      _impl->couplingOngoing = false;
+    }
   }
 
   if (computedTimeStepSize > 0.0) {
@@ -1310,9 +1473,10 @@ void Participant::writeData(
     }
   }
 
-  // Store written data in buffer for later reading
-  std::string key = meshNameStr + ":" + dataNameStr;
-  _impl->writeBuffers[key].assign(values.begin(), values.end());
+  // Store written data in global buffer (shared across all meshes/data)
+  _impl->writeBuffer.assign(values.begin(), values.end());
+  // Track last write size for this mesh+data to validate future reads
+  _impl->lastWriteSizes[meshNameStr + ":" + dataNameStr] = values.size();
 }
 
 void Participant::readData(
@@ -1378,6 +1542,8 @@ void Participant::readData(
   impl::ParticipantImpl::DataMode              mode           = _impl->mockConfig.defaultMode;
   const impl::ParticipantImpl::MockDataConfig *mockDataConfig = nullptr;
   double                                       scalarMult     = _impl->mockConfig.defaultScalarMultiplier;
+  double                                       randLower      = _impl->mockConfig.defaultRandomLower;
+  double                                       randUpper      = _impl->mockConfig.defaultRandomUpper;
   std::vector<double>                          vectorMult     = _impl->mockConfig.defaultVectorMultiplier;
 
   auto mockIt = _impl->mockConfig.dataConfigs.find(key);
@@ -1385,15 +1551,30 @@ void Participant::readData(
     mode           = mockIt->second.mode;
     mockDataConfig = &mockIt->second;
     scalarMult     = mockIt->second.scalarMultiplier;
+    randLower      = mockIt->second.randomLower;
+    randUpper      = mockIt->second.randomUpper;
     vectorMult     = mockIt->second.vectorMultiplier;
+  }
+
+  // Validate read size against last write for the same mesh/data (if available)
+  auto sizeIt = _impl->lastWriteSizes.find(meshNameStr + ":" + dataNameStr);
+  if (sizeIt != _impl->lastWriteSizes.end() && sizeIt->second != n) {
+    throw precice::Error(precice::utils::format_or_error(
+        "readData() was called with {} values for data '{}' on mesh '{}', but the last write had {} values for this mesh/data.",
+        n, dataNameStr, meshNameStr, sizeIt->second));
   }
 
   // Apply the selected mode
   switch (mode) {
   case impl::ParticipantImpl::DataMode::Random: {
-    // Mode 1: Random data
+    // Mode 1: Random data with configurable bounds
+    if (!std::isfinite(randLower) || !std::isfinite(randUpper) || randUpper <= randLower) {
+      throw precice::Error(precice::utils::format_or_error(
+          "Invalid random bounds for data '{}' on mesh '{}': upper={} must be greater than lower={} and both must be finite.",
+          dataNameStr, meshNameStr, randUpper, randLower));
+    }
     std::mt19937                           gen(static_cast<uint32_t>(_impl->seed + static_cast<uint32_t>(_impl->currentStep)));
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    std::uniform_real_distribution<double> dist(randLower, randUpper);
     for (std::size_t i = 0; i < n; ++i) {
       values[i] = dist(gen);
     }
@@ -1401,21 +1582,11 @@ void Participant::readData(
   }
 
   case impl::ParticipantImpl::DataMode::Buffer: {
-    // Mode 2: Return buffered write data
-    auto bufferIt = _impl->writeBuffers.find(key);
-    if (bufferIt != _impl->writeBuffers.end() && !bufferIt->second.empty()) {
-      const auto &buffer = bufferIt->second;
-      // Strict validation: buffer size must match requested size
-      if (buffer.size() != n) {
-        throw precice::Error(precice::utils::format_or_error(
-            "readData() was called with {} values for data '{}' on mesh '{}', "
-            "but writeData() previously wrote {} values. "
-            "The number of values in readData() must match writeData() for the same mesh/data pair. "
-            "This typically indicates that mesh vertex counts changed between write and read, which should not happen.",
-            n, dataNameStr, meshNameStr, buffer.size()));
-      }
+    // Mode 2: Return buffered write data (shared buffer, cyclic if shorter)
+    if (!_impl->writeBuffer.empty()) {
+      const auto &buffer = _impl->writeBuffer;
       for (std::size_t i = 0; i < n; ++i) {
-        values[i] = buffer[i];
+        values[i] = buffer[i % buffer.size()];
       }
     } else {
       // No buffer available - return zeros
@@ -1427,29 +1598,18 @@ void Participant::readData(
   }
 
   case impl::ParticipantImpl::DataMode::ScaledBuffer: {
-    // Mode 3: Return buffered write data with scaling
-    auto bufferIt = _impl->writeBuffers.find(key);
-    if (bufferIt != _impl->writeBuffers.end() && !bufferIt->second.empty()) {
-      const auto &buffer = bufferIt->second;
-      // Strict validation: buffer size must match requested size
-      if (buffer.size() != n) {
-        throw precice::Error(precice::utils::format_or_error(
-            "readData() was called with {} values for data '{}' on mesh '{}', "
-            "but writeData() previously wrote {} values. "
-            "The number of values in readData() must match writeData() for the same mesh/data pair. "
-            "This typically indicates that mesh vertex counts changed between write and read, which should not happen.",
-            n, dataNameStr, meshNameStr, buffer.size()));
-      }
-
+    // Mode 3: Return buffered write data with scaling (shared buffer, cyclic if shorter)
+    if (!_impl->writeBuffer.empty()) {
+      const auto &buffer = _impl->writeBuffer;
       if (!vectorMult.empty()) {
-        // Element-wise multiplication with vector
+        // Element-wise multiplication with vector multiplier (also cycled if needed)
         for (std::size_t i = 0; i < n; ++i) {
-          values[i] = buffer[i] * vectorMult[i % vectorMult.size()];
+          values[i] = buffer[i % buffer.size()] * vectorMult[i % vectorMult.size()];
         }
       } else {
         // Scalar multiplication
         for (std::size_t i = 0; i < n; ++i) {
-          values[i] = buffer[i] * scalarMult;
+          values[i] = buffer[i % buffer.size()] * scalarMult;
         }
       }
     } else {
@@ -1588,10 +1748,9 @@ void printConfigReference(std::ostream &out, ConfigReferenceType reftype)
 
 void checkConfiguration(const std::string &filename, const std::string &participant, int size)
 {
-  (void) filename;
-  (void) participant;
-  (void) size;
-  std::cerr << "precice mock: checkConfiguration called\n";
+  throw precice::Error(precice::utils::format_or_error(
+      "---[precice]  precice mock: checkConfiguration called for file '{}' participant '{}' size {}",
+      filename, participant, size));
 }
 
 } // namespace tooling

@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <mock-config>
+  <!-- SIMULATION TERMINATION (optional) -->
+  <!-- Configure when to stop implicit coupling:
+       - max-implicit-rounds: Number of completed implicit coupling iterations/rounds before termination. Default: 5
+       Note: Explicit coupling termination is controlled by max-time or max-time-windows in the preCICE config.
+  -->
+  <termination max-implicit-rounds="5" />
+
   <!-- GLOBAL DEFAULT (optional) -->
   <!-- If specified, this mode applies to all data items not explicitly configured.
        If omitted, defaults to buffer mode. -->
-  <default mode="buffer">
+  <default mode="scaled">
     <!-- Optional: default scalar multiplier for scaled mode -->
-    <scalar-multiplier value="1.0" />
+    <scalar-multiplier value="5.0" />
   </default>
 
   <!-- Example 1: Random data mode (no multipliers) -->

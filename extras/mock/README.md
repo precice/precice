@@ -15,10 +15,12 @@ A lightweight mock implementation of the preCICE Participant API for testing and
 The mock participant supports three modes for `readData()` operations, configured via an optional `mock-config.xml` file:
 
 ### 1. Random Mode
-Returns random seeded data (useful for testing error handling).
+Returns random seeded data (useful for testing error handling). Optional bounds can be specified with a nested `bounds` element (defaults: 0.0 to 1.0).
 
 ```xml
-<mocked-data mesh="MeshName" data="DataName" mode="random" />
+<mocked-data mesh="MeshName" data="DataName" mode="random">
+  <bounds lower="-1.0" upper="1.0" />
+</mocked-data>
 ```
 
 ### 2. Buffer Mode (Default)
@@ -57,14 +59,47 @@ You can set a global default mode and multipliers that apply to all data items n
   </default>
 
   <!-- Specific configs override the global default -->
-  <mocked-data mesh="MeshOne" data="SpecialData" mode="random" />
+  <mocked-data mesh="MeshOne" data="SpecialData" mode="random">
+    <bounds lower="0.0" upper="5.0" />
+  </mocked-data>
 </mock-config>
 ```
 
 In this example:
 - `SpecialData` uses random mode
+- Random mode honors optional `lower`/`upper` bounds (defaults to 0.0-1.0)
 - All other data items use scaled mode with 1.5 multiplier
 - If no `<default>` is specified, the global default is buffer mode
+
+## Simulation Termination
+
+### Explicit Coupling
+For explicit coupling schemes, termination is controlled by the preCICE configuration file using `<max-time value="..."/>` or `<max-time-windows value="..."/>` in the `<coupling-scheme:.../>`.
+
+**The mock requires at least one of these to be present to prevent infinite execution.**
+
+### Implicit Coupling  
+For implicit coupling schemes, you can configure termination in the mock-config.xml:
+
+```xml
+<termination max-implicit-rounds="5" />
+```
+
+**Parameters:**
+- `max-implicit-rounds`: Number of completed implicit coupling iterations (sub-cycles) before termination. Default: 5
+
+**Example:**
+```xml
+<mock-config>
+  <!-- Simulate for 10 implicit rounds -->
+  <termination max-implicit-rounds="10" />
+
+  <default mode="buffer" />
+  <!-- ... rest of config ... -->
+</mock-config>
+```
+
+In implicit coupling, the mock counts one "implicit round" each time an entire sub-cycling iteration converges (i.e., when all iterations of a single time window are complete).
 
 ## Configuration Files
 
@@ -103,8 +138,10 @@ Place `mock-config.xml` in the same directory as your preCICE config file.
     <scalar-multiplier value="1.0" />
   </default>
 
-  <!-- Example 1: Random data mode (no multipliers) -->
-  <mocked-data mesh="FluidMesh" data="Temperature" mode="random" />
+  <!-- Example 1: Random data mode with bounds -->
+  <mocked-data mesh="FluidMesh" data="Temperature" mode="random">
+    <bounds lower="0.0" upper="1.0" />
+  </mocked-data>
 
   <!-- Example 2: Buffer mode (returns writeData values as-is) -->
   <mocked-data mesh="MeshTwo" data="Displacement" mode="buffer" />
