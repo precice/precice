@@ -15,11 +15,12 @@ A lightweight mock implementation of the preCICE Participant API for testing and
 The mock participant supports three modes for `readData()` operations, configured via an optional `mock-config.xml` file:
 
 ### 1. Random Mode
-Returns random seeded data (useful for testing error handling). Optional bounds can be specified with a nested `bounds` element (defaults: 0.0 to 1.0).
+Returns random seeded data (useful for testing error handling). Optional bounds and seed can be specified with nested elements (bounds defaults: 0.0 to 1.0, seed defaults to rank-based value).
 
 ```xml
 <mocked-data mesh="MeshName" data="DataName" mode="random">
   <bounds lower="-1.0" upper="1.0" />
+  <seed value="42" />
 </mocked-data>
 ```
 
@@ -61,13 +62,14 @@ You can set a global default mode and multipliers that apply to all data items n
   <!-- Specific configs override the global default -->
   <mocked-data mesh="MeshOne" data="SpecialData" mode="random">
     <bounds lower="0.0" upper="5.0" />
+    <seed value="123" />
   </mocked-data>
 </mock-config>
 ```
 
 In this example:
-- `SpecialData` uses random mode
-- Random mode honors optional `lower`/`upper` bounds (defaults to 0.0-1.0)
+- `SpecialData` uses random mode with custom bounds and seed
+- Random mode honors optional `bounds` element (defaults to 0.0-1.0) and optional `seed` element (defaults to rank-based)
 - All other data items use scaled mode with 1.5 multiplier
 - If no `<default>` is specified, the global default is buffer mode
 
@@ -141,6 +143,7 @@ Place `mock-config.xml` in the same directory as your preCICE config file.
   <!-- Example 1: Random data mode with bounds -->
   <mocked-data mesh="FluidMesh" data="Temperature" mode="random">
     <bounds lower="0.0" upper="1.0" />
+    <seed value="99" />
   </mocked-data>
 
   <!-- Example 2: Buffer mode (returns writeData values as-is) -->
@@ -161,6 +164,12 @@ Place `mock-config.xml` in the same directory as your preCICE config file.
   <mocked-data mesh="MeshThree" data="Heat-Flux" mode="scaled">
     <!-- Will cycle through multipliers for each value -->
     <vector-multiplier values="0.5;1.0;1.5;2.0" />
+  </mocked-data>
+
+  <!-- Example 6: Random data with custom seed -->
+  <mocked-data mesh="MeshFour" data="NoiseData" mode="random">
+    <bounds lower="-10.0" upper="10.0" />
+    <seed value="12345" />
   </mocked-data>
 </mock-config>
 ```

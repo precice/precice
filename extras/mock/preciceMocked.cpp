@@ -228,7 +228,8 @@ public:
     double              scalarMultiplier = 1.0;
     double              randomLower      = 0.0;
     double              randomUpper      = 1.0;
-    std::vector<double> vectorMultiplier; // Empty means use scalar
+    uint32_t            randomSeed       = 0; // 0 means use default seed from rank
+    std::vector<double> vectorMultiplier;     // Empty means use scalar
   };
 
   struct MockConfig {
@@ -237,7 +238,8 @@ public:
     double                                defaultScalarMultiplier = 1.0;
     double                                defaultRandomLower      = 0.0;
     double                                defaultRandomUpper      = 1.0;
-    std::vector<double>                   defaultVectorMultiplier; // Empty means use scalar
+    uint32_t                              defaultRandomSeed       = 0; // 0 means use default seed from rank
+    std::vector<double>                   defaultVectorMultiplier;     // Empty means use scalar
   };
 
   // Minimal internal state
@@ -300,6 +302,7 @@ public:
     double              currentScalar      = 1.0;
     double              currentRandomLower = 0.0;
     double              currentRandomUpper = 1.0;
+    uint32_t            currentRandomSeed  = 0;
     std::vector<double> currentVector;
   } mockParseState;
 
@@ -351,6 +354,7 @@ impl::ParticipantImpl::ParticipantImpl(::precice::string_view participantName,
   if (solverProcessIndex >= solverProcessSize) {
     throw precice::Error(precice::utils::format_or_error("solverProcessIndex={} must be smaller than solverProcessSize={}.", solverProcessIndex, solverProcessSize));
   }
+  // Initialize seed for random data generation 0x9e3779b9u is the fractional part of the golden ratio scaled to 32 bits used as an arbitrary constant
   seed = static_cast<uint32_t>(rank) ^ 0x9e3779b9u;
 }
 
@@ -658,6 +662,7 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
     impl->mockParseState.currentVector.clear();
     impl->mockParseState.currentRandomLower = impl->mockConfig.defaultRandomLower;
     impl->mockParseState.currentRandomUpper = impl->mockConfig.defaultRandomUpper;
+    impl->mockParseState.currentRandomSeed  = impl->mockConfig.defaultRandomSeed;
 
     std::string lowerStr = attrs["lower"];
     std::string upperStr = attrs["upper"];
@@ -683,6 +688,7 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
     impl->mockParseState.currentVector.clear();
     impl->mockParseState.currentRandomLower = impl->mockConfig.defaultRandomLower;
     impl->mockParseState.currentRandomUpper = impl->mockConfig.defaultRandomUpper;
+    impl->mockParseState.currentRandomSeed  = impl->mockConfig.defaultRandomSeed;
 
     std::string lowerStr = attrs["lower"];
     std::string upperStr = attrs["upper"];
@@ -721,6 +727,11 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
       if (!upperStr.empty()) {
         impl->mockParseState.currentRandomUpper = std::stod(upperStr);
       }
+    } else if (elemName == "seed") {
+      std::string seedStr = attrs["value"];
+      if (!seedStr.empty()) {
+        impl->mockParseState.currentRandomSeed = static_cast<uint32_t>(std::stoul(seedStr));
+      }
     }
   }
 }
@@ -735,6 +746,7 @@ void impl::ParticipantImpl::onMockEndElement(void *ctx, const xmlChar *localname
     impl->mockConfig.defaultVectorMultiplier = impl->mockParseState.currentVector;
     impl->mockConfig.defaultRandomLower      = impl->mockParseState.currentRandomLower;
     impl->mockConfig.defaultRandomUpper      = impl->mockParseState.currentRandomUpper;
+    impl->mockConfig.defaultRandomSeed       = impl->mockParseState.currentRandomSeed;
     if (impl->mockConfig.defaultMode == DataMode::Random) {
       if (!std::isfinite(impl->mockConfig.defaultRandomLower) || !std::isfinite(impl->mockConfig.defaultRandomUpper)) {
         throw precice::Error("mock-config default random bounds must be finite.");
@@ -774,6 +786,7 @@ void impl::ParticipantImpl::onMockEndElement(void *ctx, const xmlChar *localname
       config.scalarMultiplier = impl->mockParseState.currentScalar;
       config.randomLower      = impl->mockParseState.currentRandomLower;
       config.randomUpper      = impl->mockParseState.currentRandomUpper;
+      config.randomSeed       = impl->mockParseState.currentRandomSeed;
       config.vectorMultiplier = impl->mockParseState.currentVector;
       if (config.mode == DataMode::Random) {
         if (!std::isfinite(config.randomLower) || !std::isfinite(config.randomUpper)) {
@@ -1544,6 +1557,7 @@ void Participant::readData(
   double                                       scalarMult     = _impl->mockConfig.defaultScalarMultiplier;
   double                                       randLower      = _impl->mockConfig.defaultRandomLower;
   double                                       randUpper      = _impl->mockConfig.defaultRandomUpper;
+  uint32_t                                     randSeed       = _impl->mockConfig.defaultRandomSeed;
   std::vector<double>                          vectorMult     = _impl->mockConfig.defaultVectorMultiplier;
 
   auto mockIt = _impl->mockConfig.dataConfigs.find(key);
@@ -1553,6 +1567,7 @@ void Participant::readData(
     scalarMult     = mockIt->second.scalarMultiplier;
     randLower      = mockIt->second.randomLower;
     randUpper      = mockIt->second.randomUpper;
+    randSeed       = mockIt->second.randomSeed;
     vectorMult     = mockIt->second.vectorMultiplier;
   }
 
@@ -1567,14 +1582,15 @@ void Participant::readData(
   // Apply the selected mode
   switch (mode) {
   case impl::ParticipantImpl::DataMode::Random: {
-    // Mode 1: Random data with configurable bounds
+    // Mode 1: Random data with configurable bounds and optional seed
     if (!std::isfinite(randLower) || !std::isfinite(randUpper) || randUpper <= randLower) {
       throw precice::Error(precice::utils::format_or_error(
           "Invalid random bounds for data '{}' on mesh '{}': upper={} must be greater than lower={} and both must be finite.",
           dataNameStr, meshNameStr, randUpper, randLower));
     }
-    std::mt19937                           gen(static_cast<uint32_t>(_impl->seed + static_cast<uint32_t>(_impl->currentStep)));
-    std::uniform_real_distribution<double> dist(randLower, randUpper);
+    // Use custom seed if provided (non-zero), otherwise use default seed
+    uint32_t     effectiveSeed = (randSeed != 0) ? randSeed : (static_cast<uint32_t>(_impl->seed + static_cast<uint32_t>(_impl->currentStep)));
+    std::mt19937 gen(effectiveSeed);
     for (std::size_t i = 0; i < n; ++i) {
       values[i] = dist(gen);
     }
