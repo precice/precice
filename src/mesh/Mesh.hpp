@@ -311,7 +311,9 @@ public:
    */
   const BoundingBox &getBoundingBox() const;
 
-  void expandBoundingBox(const BoundingBox &bounding_box);
+  void appendToAccessRegions(const BoundingBox &bounding_box);
+
+  const std::vector<BoundingBox> &getAccessRegions() const;
 
   bool operator==(const Mesh &other) const;
 
@@ -401,7 +403,8 @@ private:
   /// for just-in-time mapping, we need an artificial mesh, which we can use
   bool _isJustInTime = false;
 
-  BoundingBox _boundingBox;
+  BoundingBox              _boundingBox;
+  std::vector<BoundingBox> _accessRegions;
 
   query::Index _index;
 

@@ -85,7 +85,8 @@ private:
 
   GeometricFilter _geometricFilter;
 
-  mesh::BoundingBox _bb;
+  mesh::BoundingBox              _bb;
+  std::vector<mesh::BoundingBox> _accessCollection;
 
   int _dimensions;
 

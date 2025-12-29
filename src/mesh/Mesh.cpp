@@ -390,9 +390,14 @@ const BoundingBox &Mesh::getBoundingBox() const
   return _boundingBox;
 }
 
-void Mesh::expandBoundingBox(const BoundingBox &boundingBox)
+void Mesh::appendToAccessRegions(const BoundingBox &boundingBox)
 {
-  _boundingBox.expandBy(boundingBox);
+  _accessRegions.emplace_back(boundingBox);
+}
+
+const std::vector<BoundingBox> &Mesh::getAccessRegions() const
+{
+  return _accessRegions;
 }
 
 void Mesh::preprocess()

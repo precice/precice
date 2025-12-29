@@ -34,12 +34,12 @@ struct MeshContext {
   /// bounding-boxes.
   bool allowDirectAccess = false;
 
-  /// setMeshAccessRegion may only be called once per mesh(context).
+  /// setMeshAccessRegion may be called multiple times per mesh(context).
   /// putting this into the mesh context means that we can only call
   /// this once, regardless of combinations with just-in-time mappings
   /// or multiple such mappings. If multiples are desired, we would
   /// need to shift this into the MappingContext
-  std::shared_ptr<mesh::BoundingBox> userDefinedAccessRegion;
+  std::vector<mesh::BoundingBox> userDefinedAccessRegions;
 
   /// True, if accessor does create the mesh.
   bool provideMesh = false;
@@ -85,17 +85,23 @@ inline void MeshContext::require(mapping::Mapping::MeshRequirement requirement)
 inline void MeshContext::checkVerticesInsideAccessRegion(precice::span<const double> coordinates, const int meshDim, std::string_view functionName) const
 {
 
-  if (userDefinedAccessRegion) {
+  if (!userDefinedAccessRegions.empty()) {
     const auto                        nVertices = (coordinates.size() / meshDim);
     Eigen::Map<const Eigen::MatrixXd> C(coordinates.data(), meshDim, nVertices);
     Eigen::VectorXd                   minCoeffs = C.rowwise().minCoeff();
     Eigen::VectorXd                   maxCoeffs = C.rowwise().maxCoeff();
-    bool                              minCheck  = (minCoeffs.array() >= userDefinedAccessRegion->minCorner().array()).all();
-    bool                              maxCheck  = (maxCoeffs.array() <= userDefinedAccessRegion->maxCorner().array()).all();
-    PRECICE_CHECK(minCheck && maxCheck, "The provided coordinates in \"{}\" are not within the access region defined with \"setMeshAccessRegion()\". "
-                                        "Minimum corner of the provided values is (x,y,z) = ({}), the minimum corner of the access region box is (x,y,z) = ({}). "
-                                        "Maximum corner of the provided values is (x,y,z) = ({}), the maximum corner of the access region box is (x,y,z) = ({}). ",
-                  functionName, minCoeffs, userDefinedAccessRegion->minCorner(), maxCoeffs, userDefinedAccessRegion->maxCorner());
+
+    const auto vertexInside = [&](const mesh::BoundingBox &bb) {
+      return (minCoeffs.array() >= bb.minCorner().array()).all() && (maxCoeffs.array() <= bb.maxCorner().array()).all();
+    };
+    const bool insideAnyRegion = std::any_of(userDefinedAccessRegions.begin(),
+                                             userDefinedAccessRegions.end(),
+                                             vertexInside);
+
+    PRECICE_CHECK(insideAnyRegion, "The provided coordinates in \"{}\" are not within the access region defined with \"setMeshAccessRegion()\". "
+                                   "Minimum corner of the provided values is (x,y,z) = ({}). "
+                                   "Maximum corner of the provided values is (x,y,z) = ({}). ",
+                  functionName, minCoeffs, maxCoeffs);
     C.colwise().maxCoeff();
   }
 }
@@ -103,16 +109,19 @@ inline void MeshContext::checkVerticesInsideAccessRegion(precice::span<const dou
 inline std::vector<std::reference_wrapper<const mesh::Vertex>> MeshContext::filterVerticesToLocalAccessRegion(bool requiresBB) const
 {
   std::vector<std::reference_wrapper<const mesh::Vertex>> filteredVertices;
+  const bool                                              regionDefined = !userDefinedAccessRegions.empty();
+
+  const auto insideOneRegion = [&](const mesh::Vertex &v) {
+    return std::any_of(userDefinedAccessRegions.begin(),
+                       userDefinedAccessRegions.end(),
+                       [&](const auto &bb) { return bb.contains(v); });
+  };
+
   for (const auto &v : mesh->vertices()) {
-    // either the vertex lies within the region OR the user-defined region is not strictly necessary
-    if (userDefinedAccessRegion) {
-      // region is defined: only add if the vertex is inside the region
-      if (userDefinedAccessRegion->contains(v)) {
-        filteredVertices.push_back(std::cref(v));
-      }
-    } else if (!requiresBB) {
-      // region is not defined, so if filtering isn't required, add all vertices
-      filteredVertices.push_back(std::cref(v));
+    if (regionDefined ? insideOneRegion(v) // at least one box contains the vertex
+                      : !requiresBB)       // no region list; keep everything
+    {
+      filteredVertices.emplace_back(v);
     }
   }
   return filteredVertices;

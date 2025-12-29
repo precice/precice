@@ -103,10 +103,10 @@ void ReceivedPartition::compute()
       prepareBoundingBox();
 
       // To discuss: maybe check this somewhere in the ParticipantImpl, as we have now a similar check for the parallel case
-      PRECICE_CHECK(!_bb.empty(), "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setMeshAccessRegion with valid data?", _mesh->getName());
+      PRECICE_CHECK(std::any_of(_accessCollection.begin(), _accessCollection.end(), [](const auto &bb) { return !bb.empty(); }) || !_bb.empty(), "You are running this participant in serial mode and the bounding box on mesh \"{}\", is empty. Did you call setMeshAccessRegion with valid data?", _mesh->getName());
 
       // In serial mode, we keep the vertices, but filter them in the API functions
-      const auto   nVerticesInBox    = mesh::countVerticesInBoundingBox(_mesh, _bb);
+      const auto   nVerticesInBox    = mesh::countVerticesInBoundingBox(_mesh, _accessCollection);
       unsigned int nFilteredVertices = nVerticesInBox - _mesh->nVertices();
 
       PRECICE_WARN_IF(nFilteredVertices > 0,
@@ -301,6 +301,7 @@ void ReceivedPartition::filterByBoundingBox()
   if (_geometricFilter == ON_PRIMARY_RANK) { // filter on primary rank and communicate reduced mesh then
 
     PRECICE_ASSERT(not m2n().usesTwoLevelInitialization());
+    PRECICE_CHECK(_accessCollection.empty(), "The received mesh \"{}\", cannot be filtered on the primary rank with direct mesh access. Use \"filter-on-secondary-rank\" instead.");
     PRECICE_INFO("Pre-filter mesh {} by bounding box on primary rank", _mesh->getName());
     Event e("partition.preFilterMesh." + _mesh->getName(), profiling::Synchronize);
 
@@ -361,7 +362,10 @@ void ReceivedPartition::filterByBoundingBox()
       Event e("partition.filterMeshBB." + _mesh->getName(), profiling::Synchronize);
 
       mesh::Mesh filteredMesh("FilteredMesh", _dimensions, mesh::Mesh::MESH_ID_UNDEFINED);
-      mesh::filterMesh(filteredMesh, *_mesh, [&](const mesh::Vertex &v) { return _bb.contains(v); });
+
+      mesh::filterMesh(filteredMesh, *_mesh, [&](const auto &v) { return _bb.contains(v) || std::any_of(
+                                                                                                _accessCollection.begin(), _accessCollection.end(),
+                                                                                                [&](const auto &box) { return box.contains(v); }); });
 
       PRECICE_DEBUG("Bounding box filter, filtered from {} to {} vertices, {} to {} edges, and {} to {} triangles.",
                     _mesh->nVertices(), filteredMesh.nVertices(),
@@ -431,8 +435,12 @@ void ReceivedPartition::compareBoundingBoxes()
 
     // connected ranks for primary rank
     std::vector<Rank> connectedRanks;
+
+    mesh::BoundingBox bbUnity(_bb.getDimension());
+    bbUnity.expandBy(_bb);
+    std::for_each(_accessCollection.cbegin(), _accessCollection.cend(), [&bbUnity](const auto &in) { bbUnity.expandBy(in); });
     for (auto &remoteBB : remoteBBMap) {
-      if (_bb.overlapping(remoteBB.second)) {
+      if (bbUnity.overlapping(remoteBB.second)) {
         connectedRanks.push_back(remoteBB.first); // connected remote ranks for this rank
       }
     }
@@ -464,8 +472,12 @@ void ReceivedPartition::compareBoundingBoxes()
     PRECICE_ASSERT(utils::IntraComm::isSecondary());
 
     std::vector<Rank> connectedRanks;
+    mesh::BoundingBox bbUnity(_bb.getDimension());
+    bbUnity.expandBy(_bb);
+    std::for_each(_accessCollection.cbegin(), _accessCollection.cend(), [&bbUnity](const auto &in) { bbUnity.expandBy(in); });
+
     for (const auto &remoteBB : remoteBBMap) {
-      if (_bb.overlapping(remoteBB.second)) {
+      if (bbUnity.overlapping(remoteBB.second)) {
         connectedRanks.push_back(remoteBB.first);
       }
     }
@@ -508,8 +520,7 @@ void ReceivedPartition::prepareBoundingBox()
 
   // Expand by user-defined bounding box in case a direct access is desired
   if (_allowDirectAccess) {
-    auto &other_bb = _mesh->getBoundingBox();
-    _bb.expandBy(other_bb);
+    _accessCollection = _mesh->getAccessRegions();
 
     // In case we have an just-in-time mapping associated to this direct access
     // we need to extend the bounding box for accuracy reasons
@@ -519,7 +530,7 @@ void ReceivedPartition::prepareBoundingBox()
       // The (preliminary) repartitioning is based on the _bb
       // we extend the _bb here and later on enable the (just-in-time) mappings
       // to apply any kind of tagging to account for the halo layer added here
-      _bb.scaleBy(_safetyFactor);
+      std::for_each(_accessCollection.begin(), _accessCollection.end(), [&](auto &bb) { bb.scaleBy(_safetyFactor); });
     }
     // The safety factor is for mapping based partitionings applied, as usual.
     // For the direct access, however, we don't apply any safety factor scaling.
@@ -592,10 +603,14 @@ void ReceivedPartition::createOwnerInformation()
     // receive list of possible shared vertices from neighboring ranks
     mesh::Mesh::CommunicationMap sharedVerticesReceiveMap;
 
+    // follow the naive approach for multiple boxes: merge bounding boxes together and do the comm initialization via a unity of all
+    mesh::BoundingBox bbUnity(_bb.getDimension());
+    bbUnity.expandBy(_bb);
+    std::for_each(_accessCollection.cbegin(), _accessCollection.cend(), [&bbUnity](const auto &in) { bbUnity.expandBy(in); });
     if (utils::IntraComm::isPrimary()) {
 
       // Insert bounding box of primary ranks
-      localBBMap.at(0) = _bb;
+      localBBMap.at(0) = bbUnity;
 
       // primary rank receives local bb from each secondary rank
       for (int secondaryRank = 1; secondaryRank < utils::IntraComm::getSize(); secondaryRank++) {
@@ -606,7 +621,7 @@ void ReceivedPartition::createOwnerInformation()
       com::broadcastSendBoundingBoxMap(*utils::IntraComm::getCommunication(), localBBMap);
     } else if (utils::IntraComm::isSecondary()) {
       // secondary ranks send local bb to primary rank
-      com::sendBoundingBox(*utils::IntraComm::getCommunication(), 0, _bb);
+      com::sendBoundingBox(*utils::IntraComm::getCommunication(), 0, bbUnity);
       // secondary ranks receive localBBMap from primary rank
       com::broadcastReceiveBoundingBoxMap(*utils::IntraComm::getCommunication(), localBBMap);
     }
@@ -616,7 +631,7 @@ void ReceivedPartition::createOwnerInformation()
     localBBMap.erase(utils::IntraComm::getRank());
     // find and store local connected ranks
     for (const auto &localBB : localBBMap) {
-      if (_bb.overlapping(localBB.second)) {
+      if (bbUnity.overlapping(localBB.second)) { // TODO: Could we use the collection here instead?
         localConnectedBBMap.emplace(localBB.first, localBB.second);
       }
     }
@@ -775,9 +790,7 @@ void ReceivedPartition::createOwnerInformation()
         PRECICE_ASSERT(ownerVec.size() == static_cast<std::size_t>(numberOfVertices));
         setOwnerInformation(ownerVec);
       }
-    }
-
-    else if (utils::IntraComm::isPrimary()) {
+    } else if (utils::IntraComm::isPrimary()) {
       // To temporary store which vertices already have an owner
       std::vector<VertexID> globalOwnerVec(_mesh->getGlobalNumberOfVertices(), 0);
       // The same per rank
@@ -925,9 +938,13 @@ void ReceivedPartition::tagMeshFirstRound()
     // concluding: it might be that the boundingBox is not (purely) the one asked for by the user
     // but using mesh-tagAll() would tag the safety margin. Of course, this only applied for combinations of direct access plus mapping, for pure
     // direct accesses, there is no safety factor
-    auto userDefinedBB = _mesh->getBoundingBox();
+
     for (auto &vertex : _mesh->vertices()) {
-      if (userDefinedBB.contains(vertex)) {
+      if (
+          std::any_of(_accessCollection.begin(), _accessCollection.end(),
+                      [&](const auto &box) {
+                        return box.contains(vertex);
+                      })) {
         vertex.tag();
       }
     }
