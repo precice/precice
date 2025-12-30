@@ -267,14 +267,6 @@ public:
   bool       mockConfigParsed = false;
   bool       mockConfigExists = false;
 
-  // Termination configuration
-  struct TerminationConfig {
-    int maxImplicitRounds = 5; // Number of completed implicit coupling rounds before stopping
-  };
-
-  TerminationConfig terminationConfig;
-  int               totalImplicitRounds = 0; // Counter for completed implicit rounds
-
   // Write data buffer shared across all meshes/data names
   std::vector<double> writeBuffer;
   // Track last written value count per mesh/data for read-size validation
@@ -642,13 +634,7 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
     attrs[attrName]        = std::string(valueBegin, valueEnd - valueBegin);
   }
 
-  if (elemName == "termination") {
-    // Parse termination configuration
-    std::string maxImplicitRoundsStr = attrs["max-implicit-rounds"];
-    if (!maxImplicitRoundsStr.empty()) {
-      impl->terminationConfig.maxImplicitRounds = std::stoi(maxImplicitRoundsStr);
-    }
-  } else if (elemName == "default-mocked-data") {
+  if (elemName == "default-mocked-data") {
     impl->mockParseState.inDefault = true;
     std::string modeStr            = attrs["mode"];
     if (modeStr == "random") {
@@ -937,7 +923,7 @@ void Participant::initialize()
     if (_impl->mockConfigExists) {
       std::cout << "---[precice]  Configuring preCICE (mock) with configuration \"" << std::filesystem::absolute(_impl->config).string() << "\" and mock configuration \"" << std::filesystem::absolute(_impl->mockConfigPath).string() << "\"" << std::endl;
     } else {
-      std::cout << "---[precice]  Configuring preCICE (mock) with configuration \"" << std::filesystem::absolute(_impl->config).string() << "\" and default mock configuration. See the README about how to adjust this." << std::endl;
+      std::cout << "---[precice]  Configuring preCICE (mock) with configuration \"" << std::filesystem::absolute(_impl->config).string() << "\" and default mock configuration. See the mock-README about how to adjust this." << std::endl;
     }
     std::cout << "---[precice]  I am participant \"" << _impl->name << "\"" << std::endl;
   }
@@ -985,6 +971,15 @@ void Participant::initialize()
     _impl->configData.currentIteration   = 0;
     _impl->configData.iterationConverged = false;
   }
+
+  // Validate that termination criteria are provided
+  if (_impl->configData.maxTime <= 0 && _impl->configData.maxTimeWindows <= 0) {
+    throw precice::Error(
+        "The preCICE configuration must specify either max-time or max-time-windows in the coupling-scheme \n"
+        "to prevent infinite execution. Please add one of these attributes:\n"
+        "  <max-time value=\"...\"/>\n"
+        "  <max-time-windows value=\"...\"/>");
+  }
 }
 
 void Participant::advance(double computedTimeStepSize)
@@ -1014,21 +1009,22 @@ void Participant::advance(double computedTimeStepSize)
 
     _impl->configData.currentIteration++;
 
-    if (_impl->totalImplicitRounds >= _impl->terminationConfig.maxImplicitRounds) {
-      _impl->couplingOngoing = false;
-      return;
-    }
-
     // Simple convergence logic: converge after max iterations
     if (_impl->configData.currentIteration >= _impl->configData.maxIterations) {
       _impl->configData.iterationConverged = true;
       _impl->configData.currentIteration   = 0;
       _impl->currentStep += 1;
       _impl->currentTime += computedTimeStepSize;
-      _impl->totalImplicitRounds += 1;
 
-      // Check if we've just completed the final implicit round
-      if (_impl->totalImplicitRounds >= _impl->terminationConfig.maxImplicitRounds) {
+      // Check termination at end of time window (after convergence)
+      bool shouldTerminate = false;
+      if (_impl->configData.maxTimeWindows > 0 && _impl->currentStep >= static_cast<std::size_t>(_impl->configData.maxTimeWindows)) {
+        shouldTerminate = true;
+      }
+      if (_impl->configData.maxTime > 0 && _impl->currentTime >= _impl->configData.maxTime) {
+        shouldTerminate = true;
+      }
+      if (shouldTerminate) {
         _impl->couplingOngoing = false;
       }
     }

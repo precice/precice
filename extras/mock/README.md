@@ -75,33 +75,21 @@ In this example:
 
 ## Simulation Termination
 
-### Explicit Coupling
-For explicit coupling schemes, termination is controlled by the preCICE configuration file using `<max-time value="..."/>` or `<max-time-windows value="..."/>` in the `<coupling-scheme:.../>`.
+Both explicit and implicit coupling schemes require termination criteria to be specified in the preCICE configuration file using `<max-time value="..."/>` or `<max-time-windows value="..."/>` in the `<coupling-scheme:.../>`.
 
 **The mock requires at least one of these to be present to prevent infinite execution.**
 
-### Implicit Coupling  
-For implicit coupling schemes, you can configure termination in the mock-config.xml:
+### Behavior by Coupling Type
 
-```xml
-<termination max-implicit-rounds="5" />
-```
+**Explicit Coupling:**
+- Termination is checked after each time window
+- Simulation ends when max-time or max-time-windows is reached
 
-**Parameters:**
-- `max-implicit-rounds`: Number of completed implicit coupling iterations (sub-cycles) before termination. Default: 5
+**Implicit Coupling:**
+- `max-time-windows`: Terminates after completing the specified number of time windows (each time window may involve multiple sub-iterations)
+- `max-time`: Terminates at the end of a time window when the accumulated time reaches or exceeds the limit (does not terminate during sub-cycling)
 
-**Example:**
-```xml
-<mock-config>
-  <!-- Simulate for 10 implicit rounds -->
-  <termination max-implicit-rounds="10" />
-
-  <default-mocked-data mode="buffer" />
-  <!-- ... rest of config ... -->
-</mock-config>
-```
-
-In implicit coupling, the mock counts one "implicit round" each time an entire sub-cycling iteration converges (i.e., when all iterations of a single time window are complete).
+Both coupling schemes will throw an error if neither termination criterion is provided.
 
 ## Configuration Files
 
