@@ -55,7 +55,7 @@ You can set a global default mode and multipliers that apply to all data items n
 ```xml
 <mock-config>
   <!-- Set default mode for all unmapped data -->
-  <default mode="scaled">
+  <default-mocked-data mode="scaled">
     <scalar-multiplier value="1.5" />
   </default>
 
@@ -71,7 +71,7 @@ In this example:
 - `SpecialData` uses random mode with custom bounds and seed
 - Random mode honors optional `bounds` element (defaults to 0.0-1.0) and optional `seed` element (defaults to rank-based)
 - All other data items use scaled mode with 1.5 multiplier
-- If no `<default>` is specified, the global default is buffer mode
+- If no `<default-mocked-data>` is specified, the global default is buffer mode
 
 ## Simulation Termination
 
@@ -96,7 +96,7 @@ For implicit coupling schemes, you can configure termination in the mock-config.
   <!-- Simulate for 10 implicit rounds -->
   <termination max-implicit-rounds="10" />
 
-  <default mode="buffer" />
+  <default-mocked-data mode="buffer" />
   <!-- ... rest of config ... -->
 </mock-config>
 ```
@@ -135,10 +135,10 @@ Place `mock-config.xml` in the same directory as your preCICE config file.
   <!-- GLOBAL DEFAULT (optional) -->
   <!-- If specified, this mode applies to all data items not explicitly configured.
        If omitted, defaults to buffer mode. -->
-  <default mode="buffer">
+  <default-mocked-data mode="buffer">
     <!-- Optional: default scalar multiplier for scaled mode -->
     <scalar-multiplier value="1.0" />
-  </default>
+  </default-mocked-data>
 
   <!-- Example 1: Random data mode with bounds -->
   <mocked-data mesh="FluidMesh" data="Temperature" mode="random">

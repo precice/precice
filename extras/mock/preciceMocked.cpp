@@ -648,7 +648,7 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
     if (!maxImplicitRoundsStr.empty()) {
       impl->terminationConfig.maxImplicitRounds = std::stoi(maxImplicitRoundsStr);
     }
-  } else if (elemName == "default") {
+  } else if (elemName == "default-mocked-data") {
     impl->mockParseState.inDefault = true;
     std::string modeStr            = attrs["mode"];
     if (modeStr == "random") {
@@ -740,7 +740,7 @@ void impl::ParticipantImpl::onMockEndElement(void *ctx, const xmlChar *localname
 {
   auto       *impl = static_cast<impl::ParticipantImpl *>(ctx);
   std::string elemName(reinterpret_cast<const char *>(localname));
-  if (elemName == "default" && impl->mockParseState.inDefault) {
+  if (elemName == "default-mocked-data" && impl->mockParseState.inDefault) {
     // Apply default multipliers
     impl->mockConfig.defaultScalarMultiplier = impl->mockParseState.currentScalar;
     impl->mockConfig.defaultVectorMultiplier = impl->mockParseState.currentVector;
@@ -1589,8 +1589,9 @@ void Participant::readData(
           dataNameStr, meshNameStr, randUpper, randLower));
     }
     // Use custom seed if provided (non-zero), otherwise use default seed
-    uint32_t     effectiveSeed = (randSeed != 0) ? randSeed : (static_cast<uint32_t>(_impl->seed + static_cast<uint32_t>(_impl->currentStep)));
-    std::mt19937 gen(effectiveSeed);
+    uint32_t                               effectiveSeed = (randSeed != 0) ? randSeed : (static_cast<uint32_t>(_impl->seed + static_cast<uint32_t>(_impl->currentStep)));
+    std::mt19937                           gen(effectiveSeed);
+    std::uniform_real_distribution<double> dist(randLower, randUpper);
     for (std::size_t i = 0; i < n; ++i) {
       values[i] = dist(gen);
     }

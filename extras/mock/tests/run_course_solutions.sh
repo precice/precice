@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# run with 
+# run with
 # ./run_course_solutions.sh --mock &> mock_course.log
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
