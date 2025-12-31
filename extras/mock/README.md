@@ -91,6 +91,21 @@ Both explicit and implicit coupling schemes require termination criteria to be s
 
 Both coupling schemes will throw an error if neither termination criterion is provided.
 
+### Reducing Runtime for Testing (Implicit Coupling)
+
+For implicit coupling, you can override the `max-iterations` value from the preCICE config using the mock-config.xml:
+
+```xml
+<mock-config>
+  <!-- Override max-iterations to converge faster (useful for testing) -->
+  <max-iterations-override value="2" />
+
+  <!-- ... rest of mock config ... -->
+</mock-config>
+```
+
+This allows you to test with fewer iterations without modifying the preCICE configuration file.
+
 ## Configuration Files
 
 ### preCICE Configuration
@@ -119,6 +134,10 @@ Place `mock-config.xml` in the same directory as your preCICE config file.
   3. "scaled" - Returns data written by writeData() multiplied by a scalar or vector
 -->
 <mock-config>
+
+  <!-- MAX ITERATIONS OVERRIDE (optional, for implicit coupling only) -->
+  <!-- Override max-iterations from preCICE config to reduce runtime during testing -->
+  <max-iterations-override value="2" />
 
   <!-- GLOBAL DEFAULT (optional) -->
   <!-- If specified, this mode applies to all data items not explicitly configured.

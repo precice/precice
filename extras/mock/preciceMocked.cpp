@@ -213,6 +213,7 @@ public:
     bool                            iterationConverged    = false;
     double                          maxTime               = -1.0; // -1 means not set
     int                             maxTimeWindows        = -1;   // -1 means not set
+    double                          timeWindowSize        = -1.0; // -1 means not set
   };
 
   enum class DataMode {
@@ -253,7 +254,7 @@ public:
   bool                         initialized     = false;
   bool                         finalized       = false;
   bool                         couplingOngoing = false;
-  double                       maxTimeStep     = 0.0;
+  double                       timeWindowSize  = 0.0;
   mutable std::recursive_mutex mtx;
 
   uint32_t    seed        = 0;
@@ -281,7 +282,8 @@ public:
   struct ConfigParseState {
     bool                            inParticipant = false;
     std::string                     participantName;
-    std::map<std::string, DataType> dataType; // type marker: scalar or vector
+    std::map<std::string, DataType> dataType;                 // type marker: scalar or vector
+    bool                            inCouplingScheme = false; // Track if we're inside a coupling-scheme element
   } configParseState;
 
   // SAX parsing state for mock config
@@ -467,31 +469,40 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
       }
     }
   }
-  // Handle coupling schemes
-  if (nsPrefix == "coupling-scheme" && (elemName == "serial-implicit" || elemName == "parallel-implicit")) {
-    impl->configData.isImplicitCoupling = true;
-  } else if (nsPrefix == "coupling-scheme" && (elemName == "serial-explicit" || elemName == "parallel-explicit")) {
-    impl->configData.isImplicitCoupling = false;
-  } else if (impl->configData.isImplicitCoupling && elemName == "max-iterations") {
+  // Handle coupling schemes - detect when we enter a coupling-scheme element
+  if (elemName == "serial-implicit" || elemName == "parallel-implicit" ||
+      elemName == "serial-explicit" || elemName == "parallel-explicit") {
+    impl->configParseState.inCouplingScheme = true;
+    if (elemName == "serial-implicit" || elemName == "parallel-implicit") {
+      impl->configData.isImplicitCoupling = true;
+    } else {
+      impl->configData.isImplicitCoupling = false;
+    }
+  } else if (impl->configParseState.inCouplingScheme && elemName == "max-iterations") {
     std::string maxIterStr = getAttr("value");
     if (!maxIterStr.empty()) {
       impl->configData.maxIterations = std::stoi(maxIterStr);
     }
-  } else if (impl->configData.isImplicitCoupling &&
+  } else if (impl->configParseState.inCouplingScheme &&
              (elemName == "relative-convergence-measure" || elemName == "absolute-convergence-measure" ||
               elemName == "residual-relative-convergence-measure" || elemName == "min-iteration-convergence-measure")) {
     impl->configData.hasConvergenceMeasure = true;
   }
-  // Parse max-time and max-time-windows for termination
-  if ((nsPrefix.empty() || nsPrefix == "coupling-scheme") && elemName == "max-time") {
+  // Parse max-time, max-time-windows, and time-window-size (only inside coupling-scheme)
+  if (impl->configParseState.inCouplingScheme && elemName == "max-time") {
     std::string maxTimeStr = getAttr("value");
     if (!maxTimeStr.empty()) {
       impl->configData.maxTime = std::stod(maxTimeStr);
     }
-  } else if ((nsPrefix.empty() || nsPrefix == "coupling-scheme") && elemName == "max-time-windows") {
+  } else if (impl->configParseState.inCouplingScheme && elemName == "max-time-windows") {
     std::string maxTimeWindowsStr = getAttr("value");
     if (!maxTimeWindowsStr.empty()) {
       impl->configData.maxTimeWindows = std::stoi(maxTimeWindowsStr);
+    }
+  } else if (impl->configParseState.inCouplingScheme && elemName == "time-window-size") {
+    std::string timeWindowSizeStr = getAttr("value");
+    if (!timeWindowSizeStr.empty()) {
+      impl->configData.timeWindowSize = std::stod(timeWindowSizeStr);
     }
   }
 }
@@ -502,6 +513,9 @@ void impl::ParticipantImpl::onConfigEndElement(void *ctx, const xmlChar *localna
   std::string elemName(reinterpret_cast<const char *>(localname));
   if (elemName == "participant") {
     impl->configParseState.inParticipant = false;
+  } else if (elemName == "serial-implicit" || elemName == "parallel-implicit" ||
+             elemName == "serial-explicit" || elemName == "parallel-explicit") {
+    impl->configParseState.inCouplingScheme = false;
   }
 }
 
@@ -634,7 +648,16 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
     attrs[attrName]        = std::string(valueBegin, valueEnd - valueBegin);
   }
 
-  if (elemName == "default-mocked-data") {
+  // Handle max-iterations-override at root level
+  if (elemName == "max-iterations-override") {
+    std::string valueStr = attrs["value"];
+    if (!valueStr.empty()) {
+      int override = std::stoi(valueStr);
+      if (override > 0) {
+        impl->configData.maxIterations = override;
+      }
+    }
+  } else if (elemName == "default-mocked-data") {
     impl->mockParseState.inDefault = true;
     std::string modeStr            = attrs["mode"];
     if (modeStr == "random") {
@@ -962,9 +985,10 @@ void Participant::initialize()
 
   _impl->initialized     = true;
   _impl->couplingOngoing = true;
-  _impl->maxTimeStep     = 1.0;
-  _impl->currentStep     = 0;
-  _impl->currentTime     = 0.0;
+  // Set timeWindowSize from parsed time-window-size, or use a default if not set
+  _impl->timeWindowSize = (_impl->configData.timeWindowSize > 0) ? _impl->configData.timeWindowSize : 1.0;
+  _impl->currentStep    = 0;
+  _impl->currentTime    = 0.0;
 
   // Initialize implicit coupling state
   if (_impl->configData.isImplicitCoupling) {
@@ -1009,12 +1033,13 @@ void Participant::advance(double computedTimeStepSize)
 
     _impl->configData.currentIteration++;
 
-    // Simple convergence logic: converge after max iterations
+    // Converge when reaching maxIterations (respects max-iterations-override from mock config)
     if (_impl->configData.currentIteration >= _impl->configData.maxIterations) {
       _impl->configData.iterationConverged = true;
       _impl->configData.currentIteration   = 0;
       _impl->currentStep += 1;
-      _impl->currentTime += computedTimeStepSize;
+      // For implicit coupling, time advances by one time window from config
+      _impl->currentTime += _impl->timeWindowSize;
 
       // Check termination at end of time window (after convergence)
       bool shouldTerminate = false;
@@ -1027,6 +1052,9 @@ void Participant::advance(double computedTimeStepSize)
       if (shouldTerminate) {
         _impl->couplingOngoing = false;
       }
+    } else {
+      // Not converged yet - iteration did not reach maxIterations
+      _impl->configData.iterationConverged = false;
     }
   } else {
     // Explicit coupling: always advance
@@ -1044,10 +1072,6 @@ void Participant::advance(double computedTimeStepSize)
     if (shouldTerminate) {
       _impl->couplingOngoing = false;
     }
-  }
-
-  if (computedTimeStepSize > 0.0) {
-    _impl->maxTimeStep = std::max(_impl->maxTimeStep, computedTimeStepSize);
   }
 }
 
@@ -1079,8 +1103,8 @@ bool Participant::requiresWritingCheckpoint()
 
   // For implicit coupling, require checkpoint at start of iteration
   if (_impl->configData.isImplicitCoupling) {
-    // Checkpoint needed at beginning of time window (iteration 0)
-    return _impl->configData.currentIteration == 0 && !_impl->configData.iterationConverged;
+    // Checkpoint needed at beginning of time window (iteration 0, before first advance)
+    return _impl->configData.currentIteration == 0;
   }
 
   return false;
@@ -1209,7 +1233,7 @@ double Participant::getMaxTimeStepSize() const
   if (!_impl->initialized) {
     throw precice::Error("initialize() has to be called before getMaxTimeStepSize() can be evaluated.");
   }
-  return _impl->maxTimeStep;
+  return _impl->timeWindowSize;
 }
 
 // Mesh access
