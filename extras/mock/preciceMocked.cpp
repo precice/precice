@@ -16,39 +16,6 @@
 #include <precice/Types.hpp>
 #include <precice/span.hpp>
 #include "utils/fmt.hpp"
-// project dependencies, used to remove reliance an std types maybe not available on older versions of cpp or outside libs
-
-// --include precise errors instead of assertions !! check when error/exception should be used
-// test for exception handling (exceptions/errors when meant to be thrown)
-// --mimick implicit coupling with checkpointing
-// catch errors from course !! do course against mock
-// replace python (and fenics) adapter mocks
-// check if vector components are written correctly (later/put in issues)
-// --read config (parts) to see if adapter does what config expects from it !!
-// --names, dims...
-// --libxml2 wrapper in utils or xml !! Not feasible due to requiring linking the full precice library
-// allow optional file input for mock config path do data for now no data reading !!(or modify precice config)
-// data from file exists as ASTE already
-
-// --figure out why compilation was weird (weird issue when creating the current git structure merged old version of makefile incorrectly)
-// --Ltrans warning is not easily avoidable (has to do with the way linking is handled in the entire project)
-// --only happens on build from a clean state
-
-// Add dummy data exchange
-// user specifies timeseries of data from file
-// run an open foam example against the mock (flap has this data alt. flow over heated plate)
-
-// dont use random data instead use linear transform
-
-// --add pre-commit
-
-// ssh link for git
-
-// add documentation to classes and functions
-
-// add example data to mock directory and maybe integratiuon test
-
-// --use assertions where applicable
 
 // API declaration
 namespace precice {
@@ -169,9 +136,7 @@ private:
   This is the implementation of the precice mock Participant class.
   It provides a minimal mock implementation of the preCICE Participant API,
   suitable for testing and demonstration purposes.
-  Currently only basic checks are performed.
-  Currently, data reading returns seeded generate random data,
-  using data from a user-specified file if provided at initialization is currently being implemented.
+  Performs basic checks and returns various basic data series for testing purposes.
   */
 namespace precice {
 
@@ -850,7 +815,7 @@ void impl::ParticipantImpl::parseMockConfig()
       if (lastDot != std::string::npos && lastDot > lastSlash) {
         mockConfigPath = mockConfigPath.substr(0, lastSlash + 1) + "mock-config.xml";
       } else {
-        mockConfigPath = mockConfigPath + "/mock-config.xml";
+        mockConfigPath = mockConfigPath + "/precice-mock-config.xml";
       }
     } else {
       // No directory, same directory as executable
@@ -912,9 +877,6 @@ Participant::Participant(
                                                     solverProcessSize,
                                                     communicator))
 {
-  // Parse configuration at construction time so that mesh/data queries
-  // (and bindings) can work before initialize() is called — matching
-  // behavior of the real preCICE library.
   _impl->parseConfig();
   _impl->parseMockConfig();
 }

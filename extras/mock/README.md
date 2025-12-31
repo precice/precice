@@ -12,7 +12,7 @@ A lightweight mock implementation of the preCICE Participant API for testing and
 
 ## Data Exchange Modes
 
-The mock participant supports three modes for `readData()` operations, configured via an optional `mock-config.xml` file:
+The mock participant supports three modes for `readData()` operations, configured via an optional `precice-mock-config.xml` file:
 
 ### 1. Random Mode
 Returns random seeded data (useful for testing error handling). Optional bounds and seed can be specified with nested elements (bounds defaults: 0.0 to 1.0, seed defaults to rank-based value).
@@ -93,7 +93,7 @@ Both coupling schemes will throw an error if neither termination criterion is pr
 
 ### Reducing Runtime for Testing (Implicit Coupling)
 
-For implicit coupling, you can override the `max-iterations` value from the preCICE config using the mock-config.xml:
+For implicit coupling, you can override the `max-iterations` value from the preCICE config using the precice-mock-config.xml:
 
 ```xml
 <mock-config>
@@ -117,9 +117,9 @@ Use any standard preCICE configuration file. The mock will:
 - Return correct dimensions for meshes and data
 
 ### Mock Configuration (Optional)
-Place `mock-config.xml` in the same directory as your preCICE config file.
+Place `precice-mock-config.xml` in the same directory as your preCICE config file.
 
-**Example mock-config.xml:**
+**Example precice-mock-config.xml:**
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
@@ -189,7 +189,7 @@ Place `mock-config.xml` in the same directory as your preCICE config file.
 int main() {
   precice::Participant participant("SolverOne", "precice-config.xml", 0, 1);
 
-  // Initialize reads precice-config.xml and mock-config.xml (if present)
+  // Initialize reads precice-config.xml and precice-mock-config.xml (if present)
   participant.initialize();
 
   // Set up mesh
@@ -203,7 +203,7 @@ int main() {
 
   participant.advance(0.1);
 
-  // Read data - behavior depends on mock-config.xml
+  // Read data - behavior depends on precice-mock-config.xml
   std::vector<double> readValues(2);
   participant.readData("MyMesh", "Temperature", ids, 0.0, readValues);
   // readValues will contain:
@@ -261,7 +261,7 @@ This helps catch configuration mistakes early in development.
 ## Testing Your Adapter
 
 1. Create a simple preCICE config with your participant
-2. Optionally, create a 'mock-config.xml' for specific data behavior
+2. Optionally, create a 'precice-mock-config.xml' for specific data behavior
 3. Run your adapter against the mock
 4. Verify correct API usage patterns
 5. Test error handling by introducing configuration mistakes
