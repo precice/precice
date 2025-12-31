@@ -234,6 +234,42 @@ find_package(LibXml2 REQUIRED)
 message(STATUS "Found LibXml2 ${LIBXML2_VERSION_STRING}")
 precice_validate_libxml2()
 
+# Check for std::filesystem support
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_FLAGS "-std=c++${PRECICE_CXX_STANDARD}")
+check_cxx_source_compiles("
+#include <filesystem>
+int main() {
+  std::filesystem::path p;
+  return 0;
+}
+" HAVE_STD_FILESYSTEM_WITHOUT_LIB)
+
+if(NOT HAVE_STD_FILESYSTEM_WITHOUT_LIB)
+  set(CMAKE_REQUIRED_LIBRARIES "stdc++fs")
+  check_cxx_source_compiles("
+  #include <filesystem>
+  int main() {
+    std::filesystem::path p;
+    return 0;
+  }
+  " HAVE_STD_FILESYSTEM_WITH_STDCXXFS)
+  unset(CMAKE_REQUIRED_LIBRARIES)
+
+  if(NOT HAVE_STD_FILESYSTEM_WITH_STDCXXFS)
+    set(CMAKE_REQUIRED_LIBRARIES "c++fs")
+    check_cxx_source_compiles("
+    #include <filesystem>
+    int main() {
+      std::filesystem::path p;
+      return 0;
+    }
+    " HAVE_STD_FILESYSTEM_WITH_CXXFS)
+    unset(CMAKE_REQUIRED_LIBRARIES)
+  endif()
+endif()
+unset(CMAKE_REQUIRED_FLAGS)
+
 # libfmt
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt)
 
@@ -580,6 +616,13 @@ target_link_libraries(preciceMocked PUBLIC Eigen3::Eigen)
 target_compile_definitions(preciceMocked PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
 target_link_libraries(preciceMocked PUBLIC LibXml2::LibXml2)
 target_link_libraries(preciceMocked PUBLIC fmtlib-static)
+
+# Link filesystem library if needed
+if(HAVE_STD_FILESYSTEM_WITH_STDCXXFS)
+  target_link_libraries(preciceMocked PUBLIC stdc++fs)
+elseif(HAVE_STD_FILESYSTEM_WITH_CXXFS)
+  target_link_libraries(preciceMocked PUBLIC c++fs)
+endif()
 
 
 if (PRECICE_FEATURE_MPI_COMMUNICATION)
