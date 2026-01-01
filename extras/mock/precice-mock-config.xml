@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <mock-config>
   <!-- MAX ITERATIONS OVERRIDE (optional, for implicit coupling only) -->
-  <!-- Override max-iterations from preCICE config to reduce runtime during testing.
-       If specified, this value will be used instead of the max-iterations from the coupling-scheme.
-       Must be at least 1. -->
+    <!-- Override max-iterations from preCICE config to reduce runtime during testing.
+      If specified, this value will be used instead of the max-iterations from the coupling-scheme.
+      Use -1 to respect the preCICE config value. If the override is higher than the config
+      value, a warning will be printed but the override will still be used. -->
   <max-iterations-override value="2" />
 
   <!-- GLOBAL DEFAULT (optional) -->

@@ -174,6 +174,8 @@ public:
     bool                            isImplicitCoupling    = false;
     bool                            hasConvergenceMeasure = false;
     int                             maxIterations         = 1;
+    int                             configMaxIterations   = 1; // Stores the value from preCICE config
+    int                             maxIterationsOverride = 2; // Default override (2), -1 use config, >0 override
     int                             currentIteration      = 0;
     bool                            iterationConverged    = false;
     double                          maxTime               = -1.0; // -1 means not set
@@ -268,6 +270,7 @@ public:
   // Configuration parsing methods
   void parseConfig();
   void parseMockConfig();
+  void applyMaxIterationsOverride();
 
   // Helper method for XML parsing
   void parseXMLFile(const std::string &filePath,
@@ -446,7 +449,9 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
   } else if (impl->configParseState.inCouplingScheme && elemName == "max-iterations") {
     std::string maxIterStr = getAttr("value");
     if (!maxIterStr.empty()) {
-      impl->configData.maxIterations = std::stoi(maxIterStr);
+      int maxIter = std::stoi(maxIterStr);
+      impl->configData.maxIterations   = maxIter;
+      impl->configData.configMaxIterations = maxIter;
     }
   } else if (impl->configParseState.inCouplingScheme &&
              (elemName == "relative-convergence-measure" || elemName == "absolute-convergence-measure" ||
@@ -585,6 +590,8 @@ void impl::ParticipantImpl::parseConfig()
           config));
     }
 
+    applyMaxIterationsOverride();
+
     configParsed = true;
   } catch (const precice::Error &) {
     throw;
@@ -618,8 +625,8 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
     std::string valueStr = attrs["value"];
     if (!valueStr.empty()) {
       int override = std::stoi(valueStr);
-      if (override > 0) {
-        impl->configData.maxIterations = override;
+      if (override == -1 || override > 0) {
+        impl->configData.maxIterationsOverride = override;
       }
     }
   } else if (elemName == "default-mocked-data") {
@@ -813,7 +820,7 @@ void impl::ParticipantImpl::parseMockConfig()
 
     if (lastSlash != std::string::npos) {
       if (lastDot != std::string::npos && lastDot > lastSlash) {
-        mockConfigPath = mockConfigPath.substr(0, lastSlash + 1) + "mock-config.xml";
+        mockConfigPath = mockConfigPath.substr(0, lastSlash + 1) + "precice-mock-config.xml";
       } else {
         mockConfigPath = mockConfigPath + "/precice-mock-config.xml";
       }
@@ -836,12 +843,39 @@ void impl::ParticipantImpl::parseMockConfig()
 
     // Parse mock configuration file
     parseXMLFile(mockConfigPath, onMockStartElement, onMockEndElement);
+
+    applyMaxIterationsOverride();
     mockConfigParsed = true;
 
   } catch (const std::exception &e) {
     throw precice::Error(precice::utils::format_or_error(
         "---[precice]  Warning: Could not parse mock configuration file: {}. Using default buffer mode.",
         e.what()));
+  }
+}
+
+void impl::ParticipantImpl::applyMaxIterationsOverride()
+{
+  int override = configData.maxIterationsOverride;
+
+  if (override == 0) {
+    // No override specified; keep config value
+    return;
+  }
+
+  if (override == -1) {
+    // Respect preCICE config value
+    configData.maxIterations = configData.configMaxIterations;
+    return;
+  }
+
+  if (override > 0) {
+    if (configData.configMaxIterations > 0 && override > configData.configMaxIterations) {
+      std::cerr << "[precice-mock] WARNING: max-iterations-override (" << override
+                << ") is higher than max-iterations from preCICE config ("
+                << configData.configMaxIterations << "). Using override value." << std::endl;
+    }
+    configData.maxIterations = override;
   }
 }
 

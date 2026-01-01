@@ -98,13 +98,14 @@ For implicit coupling, you can override the `max-iterations` value from the preC
 ```xml
 <mock-config>
   <!-- Override max-iterations to converge faster (useful for testing) -->
+  <!-- Value: positive integer for custom iterations, -1 to use config value -->
   <max-iterations-override value="2" />
 
   <!-- ... rest of mock config ... -->
 </mock-config>
 ```
 
-This allows you to test with fewer iterations without modifying the preCICE configuration file.
+This allows you to test with fewer iterations without modifying the preCICE configuration file. If you omit the tag entirely, the mock defaults to `2` iterations. If you set the value to `-1`, the mock will use the `max-iterations` value from the preCICE config. If the override value is higher than the config value, a warning will be printed but the override will still be respected.
 
 ## Configuration Files
 
@@ -136,7 +137,8 @@ Place `precice-mock-config.xml` in the same directory as your preCICE config fil
 <mock-config>
 
   <!-- MAX ITERATIONS OVERRIDE (optional, for implicit coupling only) -->
-  <!-- Override max-iterations from preCICE config to reduce runtime during testing -->
+    <!-- Override max-iterations from preCICE config to reduce runtime during testing.
+      If omitted, the mock defaults to 2 iterations. Use -1 to respect the preCICE config value. -->
   <max-iterations-override value="2" />
 
   <!-- GLOBAL DEFAULT (optional) -->
