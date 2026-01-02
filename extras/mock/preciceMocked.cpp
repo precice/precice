@@ -449,8 +449,8 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
   } else if (impl->configParseState.inCouplingScheme && elemName == "max-iterations") {
     std::string maxIterStr = getAttr("value");
     if (!maxIterStr.empty()) {
-      int maxIter = std::stoi(maxIterStr);
-      impl->configData.maxIterations   = maxIter;
+      int maxIter                          = std::stoi(maxIterStr);
+      impl->configData.maxIterations       = maxIter;
       impl->configData.configMaxIterations = maxIter;
     }
   } else if (impl->configParseState.inCouplingScheme &&
