@@ -5,7 +5,6 @@
 #include <boost/container/flat_set.hpp>
 #include <functional>
 #include <iostream>
-#include <strings.h>
 #include "logging/LogMacros.hpp"
 #include "profiling/Event.hpp"
 #include "utils/EigenHelperFunctions.hpp"
