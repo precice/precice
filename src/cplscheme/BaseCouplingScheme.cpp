@@ -791,7 +791,7 @@ void BaseCouplingScheme::advanceTXTWriters()
 
     if (not doesFirstStep() && _acceleration) {
       // Let the acceleration write its custom iteration column values (no-op by default)
-      _acceleration->writeLogEntries*_iterationsWriter);
+      _acceleration->writeLogEntries(*_iterationsWriter);
     }
   }
 }
