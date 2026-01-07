@@ -7,13 +7,24 @@ target_sources(testprecice
     tests/exporter/timeseries/FinalTimeseries.cpp
     tests/exporter/timeseries/UpdatedTimeseries.cpp
     tests/fundamental/DifferentConfigs.cpp
+    tests/fundamental/first-participant/InfiniteAdvance.cpp
     tests/fundamental/initial-data/InterleavedCreation.cpp
     tests/fundamental/initial-data/InterleavedCreationWithGradients.cpp
+    tests/fundamental/just-in-time/Both/NoneConfigured.cpp
+    tests/fundamental/just-in-time/Both/ReadNotConfigured.cpp
+    tests/fundamental/just-in-time/Both/WriteNotConfigured.cpp
+    tests/fundamental/just-in-time/Read/BeforeInitialize.cpp
+    tests/fundamental/just-in-time/Read/NotConfigured.cpp
+    tests/fundamental/just-in-time/Write/BeforeInitialize.cpp
+    tests/fundamental/just-in-time/Write/NotConfigured.cpp
     tests/fundamental/profiling/InvalidName.cpp
     tests/fundamental/profiling/NotAllStopped.cpp
     tests/fundamental/profiling/NotStoppedAtFinalize.cpp
     tests/fundamental/profiling/UserProfiling.cpp
-    tests/geometric-multiscale/AxialGeoMultiscale.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarParabolic.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarUniform.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorParabolic.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorUniform.cpp
     tests/geometric-multiscale/RadialGeoMultiscale.cpp
     tests/parallel/CouplingOnLine.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
@@ -237,6 +248,10 @@ target_sources(testprecice
     tests/serial/explicit/TestExplicitSockets.cpp
     tests/serial/explicit/helpers.cpp
     tests/serial/explicit/helpers.hpp
+    tests/serial/implicit/Basic.cpp
+    tests/serial/implicit/NoInit.cpp
+    tests/serial/implicit/NoRead.cpp
+    tests/serial/implicit/NoWrite.cpp
     tests/serial/initialize-data/Explicit.cpp
     tests/serial/initialize-data/Implicit.cpp
     tests/serial/initialize-data/ImplicitBoth.cpp
@@ -344,6 +359,7 @@ target_sources(testprecice
     tests/serial/mapping-volume/OneTriangleConservativeWrite.cpp
     tests/serial/mapping-volume/OneTriangleRead.cpp
     tests/serial/mapping-volume/OneTriangleWrite.cpp
+    tests/serial/mapping-volume/QuadRead2D.cpp
     tests/serial/mapping-volume/helpers.cpp
     tests/serial/mapping-volume/helpers.hpp
     tests/serial/mesh-requirements/NearestNeighborA.cpp
@@ -413,6 +429,8 @@ target_sources(testprecice
     tests/serial/time/explicit/serial-coupling/DoNothingWithSmallStepsNoSubsteps.cpp
     tests/serial/time/explicit/serial-coupling/DoNothingWithSmallStepsSubsteps.cpp
     tests/serial/time/explicit/serial-coupling/DoNothingWithSubcycling.cpp
+    tests/serial/time/explicit/serial-coupling/FirstParticipantRandomTimeWindows.cpp
+    tests/serial/time/explicit/serial-coupling/FirstParticipantTimeBug.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipant.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipantInitData.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp

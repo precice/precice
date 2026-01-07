@@ -166,6 +166,9 @@ public:
   // @brief returns the number of times the QR2 filter step was performed
   size_t getResetFilterCounter() const;
 
+  // @brief marks that the prescaling coefficients aren't constant and the QR3 filter needs to fallback to QR2
+  void requireQR3Fallback();
+
 private:
   struct givensRot {
     int    i, j;

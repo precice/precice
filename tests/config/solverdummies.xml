@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <log>
+    <sink
+      type="stream"
+      output="stdout"
+      filter="%Severity% > debug"
+      format="preCICE:%ColorizedSeverity% %Message%"
+      enabled="true" />
+  </log>
+
+  <data:vector name="Data-One" />
+  <data:vector name="Data-Two" />
+
+  <mesh name="SolverOne-Mesh" dimensions="3">
+    <use-data name="Data-One" />
+    <use-data name="Data-Two" />
+  </mesh>
+
+  <mesh name="SolverTwo-Mesh" dimensions="3">
+    <use-data name="Data-One" />
+    <use-data name="Data-Two" />
+  </mesh>
+
+  <participant name="SolverOne">
+    <provide-mesh name="SolverOne-Mesh" />
+    <write-data name="Data-One" mesh="SolverOne-Mesh" />
+    <read-data name="Data-Two" mesh="SolverOne-Mesh" />
+  </participant>
+
+  <participant name="SolverTwo">
+    <receive-mesh name="SolverOne-Mesh" from="SolverOne" />
+    <provide-mesh name="SolverTwo-Mesh" />
+    <mapping:nearest-neighbor
+      direction="write"
+      from="SolverTwo-Mesh"
+      to="SolverOne-Mesh"
+      constraint="conservative" />
+    <mapping:nearest-neighbor
+      direction="read"
+      from="SolverOne-Mesh"
+      to="SolverTwo-Mesh"
+      constraint="consistent" />
+    <write-data name="Data-Two" mesh="SolverTwo-Mesh" />
+    <read-data name="Data-One" mesh="SolverTwo-Mesh" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverOne" connector="SolverTwo" />
+
+  <coupling-scheme:serial-implicit>
+    <participants first="SolverOne" second="SolverTwo" />
+    <max-time-windows value="2" />
+    <time-window-size value="1.0" />
+    <min-iterations value="2" />
+    <max-iterations value="2" />
+    <exchange data="Data-One" mesh="SolverOne-Mesh" from="SolverOne" to="SolverTwo" />
+    <exchange data="Data-Two" mesh="SolverOne-Mesh" from="SolverTwo" to="SolverOne" />
+  </coupling-scheme:serial-implicit>
+</precice-configuration>

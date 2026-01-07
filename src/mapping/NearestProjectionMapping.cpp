@@ -83,8 +83,8 @@ void NearestProjectionMapping::computeMapping()
   utils::statistics::DistanceAccumulator distanceStatistics;
   std::size_t                            toTriangles{0}, toEdges{0}, toVertices{0};
 
-  _interpolations.clear();
-  _interpolations.reserve(fVertices.size());
+  _operations.clear();
+  _operations.reserve(fVertices.size() * getDimensions());
 
   auto &index = searchSpace->index();
   for (const auto &fVertex : fVertices) {
@@ -106,7 +106,7 @@ void NearestProjectionMapping::computeMapping()
       PRECICE_UNREACHABLE("");
     }
 
-    _interpolations.push_back(std::move(match.polation));
+    addPolation(fVertex.getID(), match.polation);
   }
 
   if (distanceStatistics.empty()) {
@@ -115,6 +115,8 @@ void NearestProjectionMapping::computeMapping()
     PRECICE_INFO("Mapping distance {}", distanceStatistics);
     PRECICE_INFO("Nearest-projections are {} triangles, {} edges, and {} vertices", toTriangles, toEdges, toVertices);
   }
+
+  postProcessOperations();
 
   _hasComputedMapping = true;
 }

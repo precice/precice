@@ -246,6 +246,10 @@ MappingConfiguration::MappingConfiguration(
                                    .setOptions({GEOMETRIC_MULTISCALE_AXIS_X, GEOMETRIC_MULTISCALE_AXIS_Y, GEOMETRIC_MULTISCALE_AXIS_Z});
   auto attrGeoMultiscaleRadius = XMLAttribute<double>(ATTR_GEOMETRIC_MULTISCALE_RADIUS)
                                      .setDocumentation("Radius of the circular interface between the 1D and 3D participant.");
+  auto attrGeoMultiscaleSpreadProfile = XMLAttribute<std::string>(ATTR_GEOMETRIC_MULTISCALE_SPREAD_PROFILE)
+                                            .setDocumentation("Profile when spreading from 1D to 3D: 'uniform' or 'parabolic'")
+                                            .setOptions({GEOMETRIC_MULTISCALE_SPREAD_UNIFORM, GEOMETRIC_MULTISCALE_SPREAD_PARABOLIC})
+                                            .setDefaultValue(GEOMETRIC_MULTISCALE_SPREAD_UNIFORM);
 
   // Add the relevant attributes to the relevant tags
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
@@ -253,7 +257,7 @@ MappingConfiguration::MappingConfiguration(
   addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol});
   addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, verticesPerCluster, relativeOverlap, projectToInput});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
-  addAttributes(geoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius});
+  addAttributes(geoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius, attrGeoMultiscaleSpreadProfile});
 
   // Now we take care of the subtag executor. We repeat some of the subtags in order to add individual documentation
   XMLTag::Occurrence once = XMLTag::OCCUR_NOT_OR_ONCE;
@@ -424,6 +428,7 @@ void MappingConfiguration::xmlTagCallback(
     std::string geoMultiscaleType = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_TYPE, "");
     std::string geoMultiscaleAxis = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_AXIS, "");
     double      multiscaleRadius  = tag.getDoubleAttributeValue(ATTR_GEOMETRIC_MULTISCALE_RADIUS, 1.0);
+    std::string spreadProfileStr  = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_SPREAD_PROFILE, "");
 
     if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE || type == TYPE_RADIAL_GEOMETRIC_MULTISCALE) {
       PRECICE_CHECK(_experimental, "Axial geometric multiscale is experimental and the configuration can change between minor releases. Set experimental=\"on\" in the precice-configuration tag.");
@@ -455,7 +460,7 @@ void MappingConfiguration::xmlTagCallback(
       PRECICE_UNREACHABLE("Unknown mapping constraint \"{}\".", constraint);
     }
 
-    ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh, geoMultiscaleType, geoMultiscaleAxis, multiscaleRadius);
+    ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh, geoMultiscaleType, geoMultiscaleAxis, multiscaleRadius, spreadProfileStr);
 
     _rbfConfig = configureRBFMapping(type, strPolynomial, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
@@ -584,7 +589,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     const std::string &toMeshName,
     const std::string &geoMultiscaleType,
     const std::string &geoMultiscaleAxis,
-    const double      &multiscaleRadius) const
+    const double      &multiscaleRadius,
+    const std::string &spreadProfileStr) const
 {
   PRECICE_TRACE(direction, type);
 
@@ -685,7 +691,18 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       PRECICE_UNREACHABLE("Unknown geometric multiscale type \"{}\".", geoMultiscaleType);
     }
 
-    configuredMapping.mapping = PtrMapping(new AxialGeoMultiscaleMapping(constraintValue, fromMesh->getDimensions(), multiscaleType, multiscaleAxis, multiscaleRadius));
+    AxialGeoMultiscaleMapping::SpreadProfile spreadProfile = AxialGeoMultiscaleMapping::SpreadProfile::PARABOLIC;
+    if (multiscaleType == AxialGeoMultiscaleMapping::MultiscaleType::SPREAD) {
+      if (spreadProfileStr == "parabolic") {
+        spreadProfile = AxialGeoMultiscaleMapping::SpreadProfile::PARABOLIC;
+      } else if (spreadProfileStr == "uniform") {
+        spreadProfile = AxialGeoMultiscaleMapping::SpreadProfile::UNIFORM;
+      } else {
+        PRECICE_UNREACHABLE("Unknown spread profile \"{}\".", spreadProfileStr);
+      }
+    }
+
+    configuredMapping.mapping = PtrMapping(new AxialGeoMultiscaleMapping(constraintValue, fromMesh->getDimensions(), multiscaleType, multiscaleAxis, multiscaleRadius, spreadProfile));
 
   } else if (type == TYPE_RADIAL_GEOMETRIC_MULTISCALE) {
 

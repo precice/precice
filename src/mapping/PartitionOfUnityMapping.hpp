@@ -252,7 +252,10 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::_computeCPU(mesh::PtrMesh
   PRECICE_DEBUG("Partition of unity data mapping between mesh \"{}\" and mesh \"{}\": mesh \"{}\" on rank {} was decomposed into {} clusters.", this->input()->getName(), this->output()->getName(), inMesh->getName(), utils::IntraComm::getRank(), _clusters.size());
 
   if (_clusters.size() > 0) {
-    PRECICE_DEBUG("Average number of vertices per cluster {}", std::accumulate(_clusters.begin(), _clusters.end(), static_cast<unsigned int>(0), [](auto &acc, auto &val) { return acc += val.getNumberOfInputVertices(); }) / _clusters.size());
+    PRECICE_DEBUG("Average number of vertices per cluster {}", std::transform_reduce(
+                                                                   _clusters.begin(), _clusters.end(), size_t{0}, std::plus<>(),
+                                                                   [](const auto &c) { return c.getNumberOfInputVertices(); }) /
+                                                                   _clusters.size());
     PRECICE_DEBUG("Maximum number of vertices per cluster {}", std::max_element(_clusters.begin(), _clusters.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices());
     PRECICE_DEBUG("Minimum number of vertices per cluster {}", std::min_element(_clusters.begin(), _clusters.end(), [](auto &v1, auto &v2) { return v1.getNumberOfInputVertices() < v2.getNumberOfInputVertices(); })->getNumberOfInputVertices());
   }
@@ -309,9 +312,8 @@ std::pair<std::vector<int>, std::vector<double>> PartitionOfUnityMapping<RADIAL_
   // However, this leads to a conflict with weights already set in the corresponding cluster, since we insert the ID and, later on, map the ID to a local weight index
   // Of course, we could rearrange the weights, but we want to avoid the case here anyway, i.e., prefer to abort.
   PRECICE_CHECK(localNumberOfClusters > 0,
-                "Output vertex {} of mesh \"{}\" could not be assigned to any cluster in the rbf-pum mapping. This probably means that the meshes do not match well geometry-wise: Visualize the exported preCICE meshes to confirm."
-                " If the meshes are fine geometry-wise, you can try to increase the number of \"vertices-per-cluster\" (default is 50), the \"relative-overlap\" (default is 0.15),"
-                " or disable the option \"project-to-input\"."
+                "Output vertex {} of mesh \"{}\" could not be assigned to any cluster in the rbf-pum mapping. This probably means that the meshes do not match well geometry-wise: Visualize the exported preCICE meshes to confirm. "
+                "If the meshes are fine geometry-wise, you can try to increase the number of \"vertices-per-cluster\" (default is 50), the \"relative-overlap\" (default is 0.15), or disable the option \"project-to-input\". "
                 "These options are only valid for the <mapping:rbf-pum-direct/> tag.",
                 vertex.getCoords(), mesh);
 

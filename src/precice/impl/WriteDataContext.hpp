@@ -116,7 +116,7 @@ public:
 private:
   static logging::Logger _log;
 
-  /// @brief Buffer to store written data until it is copied to _providedData->timeStepsStorage()
+  /// @brief Buffer to store written data until it is copied to _providedData->waveform()
   time::Sample _writeDataBuffer;
 };
 

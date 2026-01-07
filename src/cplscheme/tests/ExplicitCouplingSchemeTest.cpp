@@ -169,7 +169,7 @@ void runExplicitCouplingWithSubcycling(
   if (participantName == nameParticipant0) {
     mesh->data(0)->setSampleAtTime(0, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
     cplScheme.initialize();
-    mesh->data(0)->timeStepsStorage().trim();
+    mesh->data(0)->waveform().trim();
     double dtDesired = cplScheme.getNextTimeStepMaxSize() / 2.0;
     double dtUsed    = dtDesired;
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
@@ -211,7 +211,7 @@ void runExplicitCouplingWithSubcycling(
         // correct in following timesteps.
         valueData0 += 1.0;
         valueData1 += Eigen::VectorXd::Constant(3, 1.0);
-        mesh->data(0)->timeStepsStorage().trim();
+        mesh->data(0)->waveform().trim();
       } else {
         BOOST_TEST(not cplScheme.isTimeWindowComplete());
       }
