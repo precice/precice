@@ -772,7 +772,7 @@ void BaseCouplingScheme::initializeTXTWriters()
         _convergenceWriter->addData(convMeasure.logHeader(), io::TXTTableWriter::DOUBLE);
       }
       if (_acceleration) {
-        // Ask acceleration to add any custom iteration columns (default no-op)
+        // Ask acceleration to add any custom iteration columns
         _acceleration->addLogEntries(*_iterationsWriter);
       }
     }
