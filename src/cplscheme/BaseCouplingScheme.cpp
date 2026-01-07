@@ -773,7 +773,7 @@ void BaseCouplingScheme::initializeTXTWriters()
       }
       if (_acceleration) {
         // Ask acceleration to add any custom iteration columns (default no-op)
-        _acceleration->addIterationColumns(*_iterationsWriter);
+        _acceleration->addLogEntries(*_iterationsWriter);
       }
     }
   }
@@ -791,7 +791,7 @@ void BaseCouplingScheme::advanceTXTWriters()
 
     if (not doesFirstStep() && _acceleration) {
       // Let the acceleration write its custom iteration column values (no-op by default)
-      _acceleration->writeIterationColumns(*_iterationsWriter);
+      _acceleration->writeLogEntries*_iterationsWriter);
     }
   }
 }

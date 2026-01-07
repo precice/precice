@@ -42,13 +42,13 @@ public:
   virtual void importState(io::TXTReader &reader) {}
 
   /// Allows the acceleration to add custom columns to the iteration log file
-  virtual void addIterationColumns(io::TXTTableWriter &writer) const
+  virtual void addLogEntries(io::TXTTableWriter &writer) const
   {
     // Default: no extra iteration columns
   }
 
   /// Allows the acceleration to write values to custom iteration log columns
-  virtual void writeIterationColumns(io::TXTTableWriter &writer) const
+  virtual void writeLogEntries(io::TXTTableWriter &writer) const
   {
     // Default: nothing to write
   }

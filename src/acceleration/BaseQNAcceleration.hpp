@@ -153,10 +153,10 @@ public:
   int getMaxUsedTimeWindows() const;
 
   /// Adds QN-specific columns to the iteration log file
-  void addIterationColumns(io::TXTTableWriter &writer) const override;
+  void addLogEntries(io::TXTTableWriter &writer) const override;
 
   /// Writes QN-specific values to the iteration log columns
-  void writeIterationColumns(io::TXTTableWriter &writer) const override;
+  void writeLogEntries(io::TXTTableWriter &writer) const override;
 
 protected:
   logging::Logger _log{"acceleration::BaseQNAcceleration"};

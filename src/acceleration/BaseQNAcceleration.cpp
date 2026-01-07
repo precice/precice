@@ -751,14 +751,14 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
   specializedInitializeVectorsAndPreconditioner(cplData);
 }
 
-void BaseQNAcceleration::addIterationColumns(io::TXTTableWriter &writer) const
+void BaseQNAcceleration::addLogEntries(io::TXTTableWriter &writer) const
 {
   writer.addData("QNColumns", io::TXTTableWriter::INT);
   writer.addData("DeletedQNColumns", io::TXTTableWriter::INT);
   writer.addData("DroppedQNColumns", io::TXTTableWriter::INT);
 }
 
-void BaseQNAcceleration::writeIterationColumns(io::TXTTableWriter &writer) const
+void BaseQNAcceleration::writeLogEntries(io::TXTTableWriter &writer) const
 {
   writer.writeData("QNColumns", getLSSystemCols());
   writer.writeData("DeletedQNColumns", getDeletedColumns());
