@@ -49,13 +49,13 @@ public:
    * @brief Constructor
    */
   Data(
-      std::string         name,
-      DataID              id,
-      int                 dimension,
-      int                 spatialDimensions = -1,
-      int                 waveformDegree    = time::Time::DEFAULT_WAVEFORM_DEGREE,
-      std::vector<double> lowerBound        = std::vector<double>(3, -std::numeric_limits<double>::infinity()),
-      std::vector<double> upperBound        = std::vector<double>(3, std::numeric_limits<double>::infinity()));
+      std::string                        name,
+      DataID                             id,
+      int                                dimension,
+      int                                spatialDimensions = -1,
+      int                                waveformDegree    = time::Time::DEFAULT_WAVEFORM_DEGREE,
+      std::vector<std::optional<double>> lowerBound        = std::vector<std::optional<double>>(3),
+      std::vector<std::optional<double>> upperBound        = std::vector<std::optional<double>>(3));
 
   /// Returns a reference to the data values.
   Eigen::VectorXd &values();
@@ -87,9 +87,9 @@ public:
   /// Returns a reference to the waveform
   time::Waveform &waveform();
 
-  std::vector<double> getLowerBound() const;
+  std::vector<std::optional<double>> getLowerBound() const;
 
-  std::vector<double> getUpperBound() const;
+  std::vector<std::optional<double>> getUpperBound() const;
 
   void moveToNextWindow();
 
@@ -149,10 +149,10 @@ private:
   time::Waveform _waveform;
 
   /// Lower bound for data values.
-  std::vector<double> _lowerBound;
+  std::vector<std::optional<double>> _lowerBound;
 
   /// Upper bound for data values.
-  std::vector<double> _upperBound;
+  std::vector<std::optional<double>> _upperBound;
 
   /// Name of the data set.
   std::string _name;

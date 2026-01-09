@@ -14,18 +14,18 @@ namespace precice::mesh {
 class DataConfiguration : public xml::XMLTag::Listener {
 public:
   struct ConfiguredData {
-    std::string         name;
-    Data::typeName      typeName;
-    int                 waveformDegree;
-    std::vector<double> lowerBound;
-    std::vector<double> upperBound;
+    std::string                        name;
+    Data::typeName                     typeName;
+    int                                waveformDegree;
+    std::vector<std::optional<double>> lowerBound;
+    std::vector<std::optional<double>> upperBound;
 
     ConfiguredData(
-        const std::string   &name,
-        const Data::typeName typeName,
-        int                  waveformDegree,
-        std::vector<double>  lowerBound,
-        std::vector<double>  upperBound)
+        const std::string                 &name,
+        const Data::typeName               typeName,
+        int                                waveformDegree,
+        std::vector<std::optional<double>> lowerBound,
+        std::vector<std::optional<double>> upperBound)
         : name(name), typeName(typeName), waveformDegree(waveformDegree), lowerBound(lowerBound), upperBound(upperBound) {}
   };
 
@@ -52,11 +52,11 @@ public:
    * @param[in] lowerBound Lower bound of the data for violation check.
    * @param[in] upperBound Upper bound of the data for violation check.
    */
-  void addData(const std::string   &name,
-               const Data::typeName typeName,
-               int                  waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE,
-               std::vector<double>  lowerBound     = std::vector<double>(3, -std::numeric_limits<double>::infinity()),
-               std::vector<double>  upperBound     = std::vector<double>(3, std::numeric_limits<double>::infinity()));
+  void addData(const std::string                 &name,
+               const Data::typeName               typeName,
+               int                                waveformDegree = time::Time::DEFAULT_WAVEFORM_DEGREE,
+               std::vector<std::optional<double>> lowerBound     = std::vector<std::optional<double>>(3),
+               std::vector<std::optional<double>> upperBound     = std::vector<std::optional<double>>(3));
 
 private:
   mutable logging::Logger _log{"mesh::DataConfiguration"};

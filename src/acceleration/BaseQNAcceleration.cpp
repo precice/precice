@@ -110,6 +110,8 @@ void BaseQNAcceleration::checkBound(Eigen::VectorXd &data, DataMap &cplData, con
 {
   Eigen::Index offset            = 0;
   bool         violationDetected = false;
+
+  // check for bound violations
   for (auto id : dataIDs) {
     if (violationDetected)
       break;
@@ -120,15 +122,29 @@ void BaseQNAcceleration::checkBound(Eigen::VectorXd &data, DataMap &cplData, con
     auto         upperBound    = cplData.at(id)->getUpperBound();
 
     for (int j = 0; j < dataDimension; j++) {
-      for (Eigen::Index i = j; i < size; i += dataDimension) {
-        if (data[i + offset] < lowerBound[j] || data[i + offset] > upperBound[j]) {
-          violationDetected = true;
-          break;
+      if (lowerBound[j].has_value()) {
+        for (Eigen::Index i = j; i < size; i += dataDimension) {
+          if (data[i + offset] < lowerBound[j].value()) {
+            violationDetected = true;
+            break;
+          }
+        }
+      }
+      if (violationDetected)
+        break;
+      if (upperBound[j].has_value()) {
+        for (Eigen::Index i = j; i < size; i += dataDimension) {
+          if (data[i + offset] > upperBound[j].value()) {
+            violationDetected = true;
+            break;
+          }
         }
       }
     }
     offset += size;
   }
+
+  // limit bound violations
   if (violationDetected) {
     if (_onBoundViolation == OnBoundViolationActions::DISCARD) {
       PRECICE_WARN("The coupling data has violated its bound after the Quasi-Newton step. The current step will be discarded.");
@@ -142,10 +158,16 @@ void BaseQNAcceleration::checkBound(Eigen::VectorXd &data, DataMap &cplData, con
         int          dataDimension = cplData.at(id)->getDimensions();
         auto         lowerBound    = cplData.at(id)->getLowerBound();
         auto         upperBound    = cplData.at(id)->getUpperBound();
+
         for (int j = 0; j < dataDimension; j++) {
-          for (Eigen::Index i = j; i < size; i += dataDimension) {
-            data[i + offset] = std::clamp(data[i + offset], lowerBound[j], upperBound[j]);
-          }
+          if (lowerBound[j].has_value())
+            for (Eigen::Index i = j; i < size; i += dataDimension) {
+              data[i + offset] = std::max(data[i + offset], lowerBound[j].value());
+            }
+          if (upperBound[j].has_value())
+            for (Eigen::Index i = j; i < size; i += dataDimension) {
+              data[i + offset] = std::min(data[i + offset], upperBound[j].value());
+            }
         }
         offset += size;
       }
@@ -161,11 +183,15 @@ void BaseQNAcceleration::checkBound(Eigen::VectorXd &data, DataMap &cplData, con
         auto         upperBound    = cplData.at(id)->getUpperBound();
 
         for (int j = 0; j < dataDimension; j++) {
-          for (Eigen::Index i = j; i < size; i += dataDimension) {
-            if (xUpdate[i + offset] > 0 && data[i + offset] > upperBound[j])
-              scaleStep = std::max(scaleStep, (data[i + offset] - upperBound[j]) / xUpdate[i + offset]);
-            else if (xUpdate[i + offset] < 0 && data[i + offset] < lowerBound[j])
-              scaleStep = std::max(scaleStep, (data[i + offset] - lowerBound[j]) / xUpdate[i + offset]);
+          if (lowerBound[j].has_value()) {
+            for (Eigen::Index i = j; i < size; i += dataDimension) {
+              xUpdate[i + offset] < 0 ? scaleStep = std::max(scaleStep, (data[i + offset] - lowerBound[j].value()) / xUpdate[i + offset]) : scaleStep;
+            }
+          }
+          if (upperBound[j].has_value()) {
+            for (Eigen::Index i = j; i < size; i += dataDimension) {
+              xUpdate[i + offset] > 0 ? scaleStep = std::max(scaleStep, (data[i + offset] - upperBound[j].value()) / xUpdate[i + offset]) : scaleStep;
+            }
           }
         }
         offset += size;
