@@ -58,7 +58,7 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
-  std::string         onBoundViolations = "ignore";
+  auto                onBoundViolations = Acceleration::OnBoundViolationActions::IGNORE;
   std::vector<double> factors;
   factors.resize(2, 1.0);
   PtrPreconditioner prec(new ConstantPreconditioner(factors));
@@ -151,7 +151,7 @@ void testVIQNPP(bool exchangeSubsteps)
 
   dataIDs.push_back(0);
   dataIDs.push_back(1);
-  std::string         onBoundViolations = "ignore";
+  auto                onBoundViolations = Acceleration::OnBoundViolationActions::IGNORE;
   std::vector<double> factors;
   factors.resize(2, 1.0);
   PtrPreconditioner prec(new ConstantPreconditioner(factors));

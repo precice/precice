@@ -39,7 +39,7 @@ BaseQNAcceleration::BaseQNAcceleration(
     int                     filter,
     double                  singularityLimit,
     std::vector<int>        dataIDs,
-    std::string             onBoundViolation,
+    OnBoundViolationActions onBoundViolation,
     impl::PtrPreconditioner preconditioner,
     bool                    reducedTimeGrid)
     : _preconditioner(std::move(preconditioner)),
@@ -106,7 +106,7 @@ void BaseQNAcceleration::initialize(
   _firstTimeWindow = true;
 }
 
-void BaseQNAcceleration::checkBound(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &dataIDs, std::string onBoundViolation, Eigen::VectorXd &xUpdate)
+void BaseQNAcceleration::checkBound(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &dataIDs, OnBoundViolationActions onBoundViolation, Eigen::VectorXd &xUpdate)
 {
   Eigen::Index offset            = 0;
   bool         violationDetected = false;
@@ -130,10 +130,10 @@ void BaseQNAcceleration::checkBound(Eigen::VectorXd &data, DataMap &cplData, con
     offset += size;
   }
   if (violationDetected) {
-    if (onBoundViolation == "discard") {
+    if (_onBoundViolation == OnBoundViolationActions::DISCARD) {
       PRECICE_WARN("The coupling data has violated its bound after the Quasi-Newton step. The current step will be discarded.");
       data -= xUpdate;
-    } else if (onBoundViolation == "clamp") {
+    } else if (_onBoundViolation == OnBoundViolationActions::CLAMP) {
       PRECICE_WARN("The coupling data has violated its bound after the Quasi-Newton step. The values will be clamped to their bounds.");
 
       offset = 0;
@@ -149,7 +149,7 @@ void BaseQNAcceleration::checkBound(Eigen::VectorXd &data, DataMap &cplData, con
         }
         offset += size;
       }
-    } else if (onBoundViolation == "scale") {
+    } else if (_onBoundViolation == OnBoundViolationActions::SCALE_TO_BOUND) {
       PRECICE_WARN(
           "The coupling data has violated its bound after the Quasi-Newton step. The step length will be scaled to avoid the bound violation.");
       offset           = 0;
@@ -397,7 +397,7 @@ void BaseQNAcceleration::performAcceleration(
   _values += xUpdate;
 
   // Check for bound violations
-  if (_onBoundViolation != "ignore")
+  if (_onBoundViolation != OnBoundViolationActions::IGNORE)
     checkBound(_values, cplData, _dataIDs, _onBoundViolation, xUpdate);
 
   // pending deletion: delete old V, W matrices if timeWindowsReused = 0

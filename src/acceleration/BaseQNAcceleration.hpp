@@ -71,7 +71,7 @@ public:
       int                     filter,
       double                  singularityLimit,
       std::vector<int>        dataIDs,
-      std::string             onBoundViolation,
+      OnBoundViolationActions onBoundViolation,
       impl::PtrPreconditioner preconditioner,
       bool                    reducedTimeGrid);
 
@@ -110,7 +110,7 @@ public:
   /**
    * @brief Handles bound violations by performing QN update.
    */
-  void checkBound(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &dataIDs, std::string onBoundViolation, Eigen::VectorXd &xUpdate);
+  void checkBound(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &dataIDs, OnBoundViolationActions onBoundViolation, Eigen::VectorXd &xUpdate);
   /**
    * @brief Marks a iteration sequence as converged.
    *
@@ -194,7 +194,7 @@ protected:
    */
   bool _hasNodesOnInterface = true;
 
-  std::string _onBoundViolation;
+  OnBoundViolationActions _onBoundViolation;
 
   /* @brief If true, the QN-scheme always performs a underrelaxation in the first iteration of
    *        a new time window. Otherwise, the LS system from the previous time window is used in the

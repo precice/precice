@@ -55,7 +55,7 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
-  std::string         onBoundViolations = "ignore";
+  auto                onBoundViolations = Acceleration::OnBoundViolationActions::IGNORE;
   std::vector<double> factors;
   factors.resize(2, 1.0);
   PtrPreconditioner prec(new ConstantPreconditioner(factors));
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
-  std::string         onBoundViolations = "ignore";
+  auto                onBoundViolations = Acceleration::OnBoundViolationActions::IGNORE;
   std::vector<double> factors;
   factors.resize(2, 1.0);
   PtrPreconditioner prec(new ConstantPreconditioner(factors));
@@ -559,7 +559,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
   std::vector<int> dataIDs;
   dataIDs.push_back(4);
   dataIDs.push_back(5);
-  std::string       onBoundViolations = "ignore";
+  auto              onBoundViolations = Acceleration::OnBoundViolationActions::IGNORE;
   PtrPreconditioner _preconditioner   = PtrPreconditioner(new ResidualSumPreconditioner(-1, true));
   std::vector<int>  vertexOffsets{0, 11, 22, 22};
 
@@ -1065,7 +1065,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   bool             exchangeSubsteps         = false; // @todo add testColumnsLoggingWithSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
-  std::string         onBoundViolations = "ignore";
+  auto                onBoundViolations = Acceleration::OnBoundViolationActions::IGNORE;
   std::vector<double> factors;
   factors.resize(1.0, 1.0);
   PtrPreconditioner prec(new ConstantPreconditioner(factors));

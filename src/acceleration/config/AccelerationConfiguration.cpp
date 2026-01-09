@@ -318,7 +318,21 @@ void AccelerationConfiguration::xmlEndTagCallback(
       _config.timeWindowsReused = (_userDefinitions.definedTimeWindowsReused) ? _config.timeWindowsReused : _defaultValuesIQNILS.timeWindowsReused;
       _config.filter            = (_userDefinitions.definedFilter) ? _config.filter : _defaultValuesIQNILS.filter;
       _config.singularityLimit  = (_userDefinitions.definedFilter) ? _config.singularityLimit : _defaultValuesIQNILS.singularityLimit;
-      _acceleration             = PtrAcceleration(
+
+      Acceleration::OnBoundViolationActions onBoundViolation;
+      if (_config.onBoundViolation == VALUE_IGNORE) {
+        onBoundViolation = Acceleration::OnBoundViolationActions::IGNORE;
+      } else if (_config.onBoundViolation == VALUE_CLAMP) {
+        onBoundViolation = Acceleration::OnBoundViolationActions::CLAMP;
+      } else if (_config.onBoundViolation == VALUE_DISCARD) {
+        onBoundViolation = Acceleration::OnBoundViolationActions::DISCARD;
+      } else if (_config.onBoundViolation == VALUE_SCALE_TO_BOUND) {
+        onBoundViolation = Acceleration::OnBoundViolationActions::SCALE_TO_BOUND;
+      } else {
+        PRECICE_ASSERT(false);
+      }
+
+      _acceleration = PtrAcceleration(
           new IQNILSAcceleration(
               _config.relaxationFactor,
               _config.forceInitialRelaxation,
@@ -326,7 +340,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
-              _config.onBoundViolation,
+              onBoundViolation,
               _preconditioner,
               _config.reducedTimeGridQN));
     } else if (callingTag.getName() == VALUE_IQNIMVJ) {
@@ -360,6 +374,19 @@ void AccelerationConfiguration::xmlEndTagCallback(
         _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_defaultValuesIQNILS.preconditionerNbNonConstTWindows, _defaultValuesIQNIMVJ.preconditionerUpdateOnThreshold));
       }
 
+      Acceleration::OnBoundViolationActions onBoundViolation;
+      if (_config.onBoundViolation == VALUE_IGNORE) {
+        onBoundViolation = Acceleration::OnBoundViolationActions::IGNORE;
+      } else if (_config.onBoundViolation == VALUE_CLAMP) {
+        onBoundViolation = Acceleration::OnBoundViolationActions::CLAMP;
+      } else if (_config.onBoundViolation == VALUE_DISCARD) {
+        onBoundViolation = Acceleration::OnBoundViolationActions::DISCARD;
+      } else if (_config.onBoundViolation == VALUE_SCALE_TO_BOUND) {
+        onBoundViolation = Acceleration::OnBoundViolationActions::SCALE_TO_BOUND;
+      } else {
+        PRECICE_ASSERT(false);
+      }
+
       _acceleration = PtrAcceleration(
           new IQNIMVJAcceleration(
               _config.relaxationFactor,
@@ -368,7 +395,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
-              _config.onBoundViolation,
+              onBoundViolation,
               _preconditioner,
               _config.alwaysBuildJacobian,
               _config.imvjRestartType,

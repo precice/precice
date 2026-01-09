@@ -36,7 +36,7 @@ IQNIMVJAcceleration::IQNIMVJAcceleration(
     int                            filter,
     double                         singularityLimit,
     std::vector<int>               dataIDs,
-    std::string                    onBoundViolation,
+    OnBoundViolationActions        onBoundViolation,
     const impl::PtrPreconditioner &preconditioner,
     bool                           alwaysBuildJacobian,
     int                            imvjRestartType,
