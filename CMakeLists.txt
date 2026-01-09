@@ -676,6 +676,12 @@ IF (BUILD_TESTING)
     endforeach()
   endif()
 
+  if(WIN32)
+    add_custom_command(TARGET testprecice POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:testprecice> $<TARGET_FILE_DIR:testprecice>
+                       COMMAND_EXPAND_LISTS
+                       )
+  endif()
 else(BUILD_TESTING)
   message(STATUS "Excluding test sources")
 endif(BUILD_TESTING)
