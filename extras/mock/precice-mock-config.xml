@@ -10,10 +10,10 @@
   <!-- GLOBAL DEFAULT (optional) -->
   <!-- If specified, this mode applies to all data items not explicitly configured.
        If omitted, defaults to buffer mode. -->
-  <default-mocked-data mode="scaled">
+  <mocked-data-default mode="scaled">
     <!-- Optional: default scalar multiplier for scaled mode -->
     <scalar-multiplier value="5.0" />
-  </default-mocked-data>
+  </mocked-data-default>
 
   <!-- Example 1: Random data mode (no multipliers) -->
   <mocked-data mesh="FluidMesh" data="Temperature" mode="random" />

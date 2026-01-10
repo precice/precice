@@ -55,9 +55,9 @@ You can set a global default mode and multipliers that apply to all data items n
 ```xml
 <mock-config>
   <!-- Set default mode for all unmapped data -->
-  <default-mocked-data mode="scaled">
+  <mocked-data-default mode="scaled">
     <scalar-multiplier value="1.5" />
-  </default>
+  </mocked-data-default>
 
   <!-- Specific configs override the global default -->
   <mocked-data mesh="MeshOne" data="SpecialData" mode="random">
@@ -71,7 +71,7 @@ In this example:
 - `SpecialData` uses random mode with custom bounds and seed
 - Random mode honors optional `bounds` element (defaults to 0.0-1.0) and optional `seed` element (defaults to rank-based)
 - All other data items use scaled mode with 1.5 multiplier
-- If no `<default-mocked-data>` is specified, the global default is buffer mode
+- If no `<mocked-data-default>` is specified, the global default is buffer mode
 
 ## Simulation Termination
 
@@ -144,10 +144,10 @@ Place `precice-mock-config.xml` in the same directory as your preCICE config fil
   <!-- GLOBAL DEFAULT (optional) -->
   <!-- If specified, this mode applies to all data items not explicitly configured.
        If omitted, defaults to buffer mode. -->
-  <default-mocked-data mode="buffer">
+  <mocked-data-default mode="buffer">
     <!-- Optional: default scalar multiplier for scaled mode -->
     <scalar-multiplier value="1.0" />
-  </default-mocked-data>
+  </mocked-data-default>
 
   <!-- Example 1: Random data mode with bounds -->
   <mocked-data mesh="FluidMesh" data="Temperature" mode="random">
@@ -274,3 +274,13 @@ The mock is ideal for:
 - Testing error handling code paths
 - Developing adapters without a coupling partner
 - CI/CD integration testing
+
+
+## Recommendations
+
+For practitioners adopting the mock:
+  - Use the mock as the default testing environment during development for fast feedback loops.
+  - Integrate mock-based tests into CI pipelines to enable tight feedback on commits.
+  - Augment mock tests with full-stack validation before production deployment.
+  - Exploit mock configuration files for scenario-based robustness testing.
+  - Keep the mock synchronized with preCICE releases.

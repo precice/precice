@@ -629,7 +629,7 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
         impl->configData.maxIterationsOverride = override;
       }
     }
-  } else if (elemName == "default-mocked-data") {
+  } else if (elemName == "mocked-data-default") {
     impl->mockParseState.inDefault = true;
     std::string modeStr            = attrs["mode"];
     if (modeStr == "random") {
@@ -721,7 +721,7 @@ void impl::ParticipantImpl::onMockEndElement(void *ctx, const xmlChar *localname
 {
   auto       *impl = static_cast<impl::ParticipantImpl *>(ctx);
   std::string elemName(reinterpret_cast<const char *>(localname));
-  if (elemName == "default-mocked-data" && impl->mockParseState.inDefault) {
+  if (elemName == "mocked-data-default" && impl->mockParseState.inDefault) {
     // Apply default multipliers
     impl->mockConfig.defaultScalarMultiplier = impl->mockParseState.currentScalar;
     impl->mockConfig.defaultVectorMultiplier = impl->mockParseState.currentVector;
