@@ -25,3 +25,9 @@ src/precice/Version.h
 src/testing/SourceLocation.hpp
 .idea
 CMakeUserPresets.json
+examples/tutorials
+examples/course
+.gitignore
+examples/solverdummies/cpp/precice-profiling
+examples/solverdummies/cpp/Testing/Temporary
+.venv

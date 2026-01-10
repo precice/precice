@@ -566,7 +566,7 @@ set_target_properties(preciceMocked PROPERTIES
   VERSION ${preCICE_VERSION}
   SOVERSION ${preCICE_SOVERSION}
   )
-target_sources(preciceMocked PRIVATE extras/mock/Participant.cpp)
+target_sources(preciceMocked PRIVATE extras/mock/preciceMocked.cpp)
 set_property(TARGET preciceMocked APPEND PROPERTY PUBLIC_HEADER
     ${PROJECT_BINARY_DIR}/src/precice/export.h)
 
@@ -575,6 +575,18 @@ target_include_directories(preciceMocked PUBLIC
   $<BUILD_INTERFACE:${preCICE_BINARY_DIR}/src>
   $<INSTALL_INTERFACE:include>
   )
+
+target_link_libraries(preciceMocked PUBLIC Eigen3::Eigen)
+target_compile_definitions(preciceMocked PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZE_MATRICES_BY_NAN>")
+target_link_libraries(preciceMocked PUBLIC LibXml2::LibXml2)
+target_link_libraries(preciceMocked PUBLIC fmtlib-static)
+
+
+if (PRECICE_FEATURE_MPI_COMMUNICATION)
+  target_link_libraries(preciceMocked PUBLIC MPI::MPI_CXX)
+else()
+  target_compile_definitions(preciceMocked PUBLIC PRECICE_NO_MPI)
+endif()
 
 # Sources Configuration
 include(${CMAKE_CURRENT_LIST_DIR}/src/sources.cmake)
