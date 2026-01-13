@@ -484,7 +484,7 @@ void ReceivedPartition::prepareBoundingBox()
   if (_boundingBoxPrepared)
     return;
 
-  PRECICE_DEBUG("Merge bounding boxes and increase by safety factor");
+  PRECICE_DEBUG("Increase bounding boxes by safety factor and merging them");
 
   // Reset the BoundingBox
   _bb = mesh::BoundingBox{_dimensions};
