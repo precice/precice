@@ -18,6 +18,7 @@
     <receive-mesh name="Mesh3D" from="Fluid3D" />
     <mapping:axial-geometric-multiscale
       direction="read"
+      multiscale-dimension="1d-3d"
       multiscale-type="collect"
       multiscale-radius="1.0"
       multiscale-axis="z"
@@ -33,6 +34,7 @@
     <provide-mesh name="Mesh3D" />
     <mapping:axial-geometric-multiscale
       direction="read"
+      multiscale-dimension="1d-3d"
       multiscale-type="spread"
       multiscale-radius="1.0"
       multiscale-axis="z"
