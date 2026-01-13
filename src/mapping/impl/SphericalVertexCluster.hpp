@@ -308,9 +308,10 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
 
   // Now we perform the data mapping component-wise
   for (unsigned int c = 0; c < nComponents; ++c) {
-    // Step 1: extract the relevant input data from the global input data and store
-    // it in a contiguous array, which is required for the RBF solver (last polyparams entries remain zero)
-    for (unsigned int i = 0; i < _inputIDs.size(); i++) {
+for (unsigned int i = 0; i < _inputIDs.size(); i++) {
+  // Step 1: extract the relevant input data from the global input data and store
+  // it in a contiguous array, which is required for the RBF solver (last polyparams entries remain zero)
+  for (unsigned int c = 0; c < nComponents; ++c) {
       const auto dataIndex = *(_inputIDs.nth(i));
       PRECICE_ASSERT(dataIndex * nComponents + c < localInData.size(), dataIndex * nComponents + c, localInData.size());
       in(i, c) = localInData[dataIndex * nComponents + c];
