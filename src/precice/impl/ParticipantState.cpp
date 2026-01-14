@@ -33,14 +33,6 @@ ParticipantState::ParticipantState(
 {
 }
 
-ParticipantState::~ParticipantState()
-{
-  for (MeshContext *context : _usedMeshContexts) {
-    delete context;
-  }
-  _usedMeshContexts.clear();
-}
-
 /// Configuration interface
 
 void ParticipantState::addAction(action::PtrAction &&action)
@@ -67,20 +59,19 @@ void ParticipantState::addWatchIntegral(
   _watchIntegrals.push_back(watchIntegral);
 }
 
-void ParticipantState::provideMesh(const mesh::PtrMesh &mesh)
+void ParticipantState::provideMesh(mesh::PtrMesh mesh)
 {
   std::string meshName = mesh->getName();
   PRECICE_TRACE(_name, meshName);
   checkDuplicatedUse(meshName);
 
-  auto context                       = new MeshContext();
-  context->mesh                      = mesh;
-  context->provideMesh               = true;
-  _meshContexts[std::move(meshName)] = context;
-  _usedMeshContexts.push_back(context);
+  _providedMeshContexts.emplace_back();
+  _providedMeshContexts.back().mesh = std::move(mesh);
+  _meshContexts[meshName]           = &_providedMeshContexts.back();
+  _usedMeshContexts.push_back(&_providedMeshContexts.back());
 }
 
-void ParticipantState::receiveMesh(const mesh::PtrMesh                          &mesh,
+void ParticipantState::receiveMesh(mesh::PtrMesh                                 mesh,
                                    const std::string                            &fromParticipant,
                                    double                                        safetyFactor,
                                    partition::ReceivedPartition::GeometricFilter geoFilter,
@@ -91,17 +82,17 @@ void ParticipantState::receiveMesh(const mesh::PtrMesh                          
   checkDuplicatedUse(meshName);
   PRECICE_ASSERT(!fromParticipant.empty());
   PRECICE_ASSERT(safetyFactor >= 0);
-  auto context               = new MeshContext();
-  context->mesh              = mesh;
-  context->receiveMeshFrom   = fromParticipant;
-  context->safetyFactor      = safetyFactor;
-  context->provideMesh       = false;
-  context->geoFilter         = geoFilter;
-  context->allowDirectAccess = allowDirectAccess;
 
-  _meshContexts[std::move(meshName)] = context;
+  _receivedMeshContexts.emplace_back();
+  auto &context             = _receivedMeshContexts.back();
+  context.mesh              = std::move(mesh);
+  context.receiveMeshFrom   = fromParticipant;
+  context.safetyFactor      = safetyFactor;
+  context.geoFilter         = geoFilter;
+  context.allowDirectAccess = allowDirectAccess;
 
-  _usedMeshContexts.push_back(context);
+  _meshContexts[meshName] = &context;
+  _usedMeshContexts.push_back(&context);
 }
 
 void ParticipantState::addWriteData(
@@ -219,34 +210,14 @@ MeshContext &ParticipantState::meshContext(std::string_view mesh)
   return *pos->second;
 }
 
-const std::vector<MeshContext *> &ParticipantState::usedMeshContexts() const
+const std::vector<MeshContextVariant> &ParticipantState::usedMeshContexts() const
 {
   return _usedMeshContexts;
 }
 
-std::vector<MeshContext *> &ParticipantState::usedMeshContexts()
+std::vector<MeshContextVariant> &ParticipantState::usedMeshContexts()
 {
   return _usedMeshContexts;
-}
-
-MeshContext &ParticipantState::usedMeshContext(std::string_view mesh)
-{
-  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(),
-                          [mesh](MeshContext const *context) {
-                            return context->mesh->getName() == mesh;
-                          });
-  PRECICE_ASSERT(pos != _usedMeshContexts.end());
-  return **pos;
-}
-
-MeshContext const &ParticipantState::usedMeshContext(std::string_view mesh) const
-{
-  auto pos = std::find_if(_usedMeshContexts.begin(), _usedMeshContexts.end(),
-                          [mesh](MeshContext const *context) {
-                            return context->mesh->getName() == mesh;
-                          });
-  PRECICE_ASSERT(pos != _usedMeshContexts.end());
-  return **pos;
 }
 
 bool ParticipantState::hasMesh(std::string_view mesh) const
@@ -258,33 +229,83 @@ bool ParticipantState::isMeshUsed(std::string_view mesh) const
 {
   return std::any_of(
       _usedMeshContexts.begin(), _usedMeshContexts.end(),
-      [mesh](const MeshContext *mcptr) {
-        return mcptr->mesh->getName() == mesh;
+      [mesh](const MeshContextVariant &variant) {
+        return getMesh(variant).getName() == mesh;
       });
 }
 
 bool ParticipantState::isMeshProvided(std::string_view mesh) const
 {
-  if (!hasMesh(mesh)) {
-    return false;
-  }
-  return usedMeshContext(mesh).provideMesh;
+  return std::any_of(_providedMeshContexts.begin(), _providedMeshContexts.end(),
+                     [mesh](const auto &ctx) { return ctx.mesh->getName() == mesh; });
 }
 
 bool ParticipantState::isMeshReceived(std::string_view mesh) const
 {
-  if (!hasMesh(mesh)) {
-    return false;
-  }
-  return !usedMeshContext(mesh).provideMesh;
+  return std::any_of(_receivedMeshContexts.begin(), _receivedMeshContexts.end(),
+                     [mesh](const auto &ctx) { return ctx.mesh->getName() == mesh; });
 }
 
 bool ParticipantState::isDirectAccessAllowed(std::string_view mesh) const
 {
-  if (!hasMesh(mesh)) {
-    return false;
+  auto it = std::find_if(_receivedMeshContexts.begin(), _receivedMeshContexts.end(),
+                         [mesh](const auto &ctx) { return ctx.mesh->getName() == mesh; });
+  if (it != _receivedMeshContexts.end()) {
+    return it->allowDirectAccess;
   }
-  return meshContext(mesh).allowDirectAccess;
+  return false;
+}
+
+ReceivedMeshContext &ParticipantState::receivedMeshContext(std::string_view mesh)
+{
+  auto it = std::find_if(_receivedMeshContexts.begin(), _receivedMeshContexts.end(),
+                         [mesh](const auto &ctx) { return ctx.mesh->getName() == mesh; });
+  PRECICE_ASSERT(it != _receivedMeshContexts.end(), "Mesh \"{}\" is not a received mesh", mesh);
+  return *it;
+}
+
+const ReceivedMeshContext &ParticipantState::receivedMeshContext(std::string_view mesh) const
+{
+  auto it = std::find_if(_receivedMeshContexts.begin(), _receivedMeshContexts.end(),
+                         [mesh](const auto &ctx) { return ctx.mesh->getName() == mesh; });
+  PRECICE_ASSERT(it != _receivedMeshContexts.end(), "Mesh \"{}\" is not a received mesh", mesh);
+  return *it;
+}
+
+ProvidedMeshContext &ParticipantState::providedMeshContext(std::string_view mesh)
+{
+  auto it = std::find_if(_providedMeshContexts.begin(), _providedMeshContexts.end(),
+                         [mesh](const auto &ctx) { return ctx.mesh->getName() == mesh; });
+  PRECICE_ASSERT(it != _providedMeshContexts.end(), "Mesh \"{}\" is not a provided mesh", mesh);
+  return *it;
+}
+
+const ProvidedMeshContext &ParticipantState::providedMeshContext(std::string_view mesh) const
+{
+  auto it = std::find_if(_providedMeshContexts.begin(), _providedMeshContexts.end(),
+                         [mesh](const auto &ctx) { return ctx.mesh->getName() == mesh; });
+  PRECICE_ASSERT(it != _providedMeshContexts.end(), "Mesh \"{}\" is not a provided mesh", mesh);
+  return *it;
+}
+
+std::deque<ProvidedMeshContext> &ParticipantState::providedMeshContexts()
+{
+  return _providedMeshContexts;
+}
+
+const std::deque<ProvidedMeshContext> &ParticipantState::providedMeshContexts() const
+{
+  return _providedMeshContexts;
+}
+
+std::deque<ReceivedMeshContext> &ParticipantState::receivedMeshContexts()
+{
+  return _receivedMeshContexts;
+}
+
+const std::deque<ReceivedMeshContext> &ParticipantState::receivedMeshContexts() const
+{
+  return _receivedMeshContexts;
 }
 
 // Other queries

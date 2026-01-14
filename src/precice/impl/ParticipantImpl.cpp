@@ -12,6 +12,7 @@
 #include <optional>
 #include <ostream>
 #include <sstream>
+#include <string_view>
 #include <tuple>
 #include <utility>
 
@@ -55,7 +56,9 @@
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/ParticipantState.hpp"
+#include "precice/impl/ProvidedMeshContext.hpp"
 #include "precice/impl/ReadDataContext.hpp"
+#include "precice/impl/ReceivedMeshContext.hpp"
 #include "precice/impl/Types.hpp"
 #include "precice/impl/ValidationMacros.hpp"
 #include "precice/impl/WatchIntegral.hpp"
@@ -182,24 +185,25 @@ void ParticipantImpl::configure(
   if (_accessorProcessRank == 0) {
     PRECICE_INFO("This is preCICE version {}", PRECICE_VERSION);
     PRECICE_INFO("Revision info: {}", precice::preciceRevision);
-    PRECICE_INFO("Build type: "
+    constexpr std::string_view buildTypeStr = "Build type: "
 #ifndef NDEBUG
-                 "Debug"
+                                              "Debug"
 #else // NDEBUG
-                 "Release"
+                                              "Release"
 #ifndef PRECICE_NO_DEBUG_LOG
-                 " + debug log"
+                                              " + debug log"
 #else
-                 " (without debug log)"
+                                              " (without debug log)"
 #endif
 #ifndef PRECICE_NO_TRACE_LOG
-                 " + trace log"
+                                              " + trace log"
 #endif
 #ifndef PRECICE_NO_ASSERTIONS
-                 " + assertions"
+                                              " + assertions"
 #endif
 #endif // NDEBUG
-    );
+        ;
+    PRECICE_INFO(buildTypeStr);
     try {
       PRECICE_INFO("Working directory \"{}\"", std::filesystem::current_path().string());
     } catch (std::filesystem::filesystem_error &fse) {
@@ -237,8 +241,8 @@ void ParticipantImpl::configure(
   // Register all MeshIds to the lock, but unlock them straight away as
   // writing is allowed after configuration.
   _meshLock.clear();
-  for (const MeshContext *meshContext : _accessor->usedMeshContexts()) {
-    _meshLock.add(meshContext->mesh->getName(), false);
+  for (const auto &variant : _accessor->usedMeshContexts()) {
+    _meshLock.add(getMesh(variant).getName(), false);
   }
 }
 
@@ -260,10 +264,8 @@ void ParticipantImpl::initialize()
   _solverInitEvent.reset();
   Event e("initialize", profiling::Fundamental, profiling::Synchronize);
 
-  for (const auto &context : _accessor->usedMeshContexts()) {
-    if (context->provideMesh) {
-      e.addData("meshSize" + context->mesh->getName(), context->mesh->nVertices());
-    }
+  for (const auto &context : _accessor->providedMeshContexts()) {
+    e.addData("meshSize" + context.mesh->getName(), context.mesh->nVertices());
   }
 
   setupCommunication();
@@ -306,10 +308,8 @@ void ParticipantImpl::reinitialize()
   Event e("reinitialize", profiling::Fundamental);
   closeCommunicationChannels(CloseChannels::Distributed);
 
-  for (const auto &context : _accessor->usedMeshContexts()) {
-    if (context->provideMesh) {
-      e.addData("meshSize" + context->mesh->getName(), context->mesh->nVertices());
-    }
+  for (const auto &context : _accessor->providedMeshContexts()) {
+    e.addData("meshSize" + context.mesh->getName(), context.mesh->nVertices());
   }
 
   setupCommunication();
@@ -325,12 +325,10 @@ void ParticipantImpl::setupCommunication()
 
   // TODO only preprocess changed meshes
   PRECICE_DEBUG("Preprocessing provided meshes");
-  for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
-    if (meshContext->provideMesh) {
-      auto &mesh = *meshContext->mesh;
-      Event e("preprocess." + mesh.getName());
-      mesh.preprocess();
-    }
+  for (auto &context : _accessor->providedMeshContexts()) {
+    auto &mesh = *context.mesh;
+    Event e("preprocess." + mesh.getName());
+    mesh.preprocess();
   }
 
   // Setup communication
@@ -572,9 +570,10 @@ void ParticipantImpl::samplizeWriteData(double time)
 
 void ParticipantImpl::trimOldDataBefore(double time)
 {
-  for (auto &context : _accessor->usedMeshContexts()) {
-    for (const auto &name : context->mesh->availableData()) {
-      context->mesh->data(name)->waveform().trimBefore(time);
+  for (auto &variant : _accessor->usedMeshContexts()) {
+    auto &mesh = getMesh(variant);
+    for (const auto &name : mesh.availableData()) {
+      mesh.data(name)->waveform().trimBefore(time);
     }
   }
 }
@@ -642,7 +641,7 @@ int ParticipantImpl::getMeshDimensions(std::string_view meshName) const
 {
   PRECICE_TRACE(meshName);
   PRECICE_VALIDATE_MESH_NAME(meshName);
-  return _accessor->usedMeshContext(meshName).mesh->getDimensions();
+  return _accessor->meshContext(meshName).mesh->getDimensions();
 }
 
 int ParticipantImpl::getDataDimensions(std::string_view meshName, std::string_view dataName) const
@@ -650,7 +649,7 @@ int ParticipantImpl::getDataDimensions(std::string_view meshName, std::string_vi
   PRECICE_TRACE(meshName, dataName);
   PRECICE_VALIDATE_MESH_NAME(meshName);
   PRECICE_VALIDATE_DATA_NAME(meshName, dataName);
-  return _accessor->usedMeshContext(meshName).mesh->data(dataName)->getDimensions();
+  return _accessor->meshContext(meshName).mesh->data(dataName)->getDimensions();
 }
 
 bool ParticipantImpl::isCouplingOngoing() const
@@ -722,7 +721,7 @@ bool ParticipantImpl::requiresReadingCheckpoint()
 bool ParticipantImpl::requiresMeshConnectivityFor(std::string_view meshName) const
 {
   PRECICE_VALIDATE_MESH_NAME(meshName);
-  MeshContext &context = _accessor->usedMeshContext(meshName);
+  MeshContext &context = _accessor->meshContext(meshName);
   return context.meshRequirement == mapping::Mapping::MeshRequirement::FULL;
 }
 
@@ -748,29 +747,29 @@ int ParticipantImpl::getMeshVertexSize(
   PRECICE_CHECK((_state == State::Initialized) || _accessor->isMeshProvided(meshName),
                 "initialize() has to be called before accessing data of the received mesh \"{}\" on participant \"{}\".",
                 meshName, _accessor->getName());
-  MeshContext &context = _accessor->usedMeshContext(meshName);
-  PRECICE_ASSERT(context.mesh.get() != nullptr);
 
   // Returns true if we have api access configured and we run in parallel and have a received mesh
-  if ((context.userDefinedAccessRegion || requiresUserDefinedAccessRegion(meshName)) && _accessor->isDirectAccessAllowed(meshName)) {
-    // filter nVertices to the actual number of vertices queried by the user
-    PRECICE_CHECK(context.userDefinedAccessRegion, "The function getMeshVertexSize was called on the received mesh \"{0}\", "
-                                                   "but no access region was defined although this is necessary for parallel runs. "
-                                                   "Please define an access region using \"setMeshAccessRegion()\" before calling \"getMeshVertexSize()\".",
-                  meshName);
-
-    auto result = mesh::countVerticesInBoundingBox(context.mesh, *context.userDefinedAccessRegion);
-
-    PRECICE_DEBUG("Filtered {} of {} vertices out on mesh {} due to the local access region. Mesh size in the access region: {}", context.mesh->nVertices() - result, context.mesh->nVertices(), meshName, result);
-    return result;
-  } else {
-    // For provided meshes and in case the api-access was not configured, we return here all vertices
-    PRECICE_WARN_IF(_accessor->isMeshReceived(meshName) && !_accessor->isDirectAccessAllowed(meshName),
-                    "You are calling \"getMeshVertexSize()\" on a received mesh without api-access enabled (<receive-mesh name=\"{0}\" ... api-access=\"false\"/>). "
-                    "Note that enabling api-access is required for this function to work properly with direct mesh access and just-in-time mappings.",
+  if (_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName)) {
+    auto &receivedContext = _accessor->receivedMeshContext(meshName);
+    if (receivedContext.userDefinedAccessRegion || requiresUserDefinedAccessRegion(meshName)) {
+      // filter nVertices to the actual number of vertices queried by the user
+      PRECICE_CHECK(receivedContext.userDefinedAccessRegion, "The function getMeshVertexSize was called on the received mesh \"{0}\", "
+                                                             "but no access region was defined although this is necessary for parallel runs. "
+                                                             "Please define an access region using \"setMeshAccessRegion()\" before calling \"getMeshVertexSize()\".",
                     meshName);
-    return context.mesh->nVertices();
+
+      auto result = mesh::countVerticesInBoundingBox(receivedContext.mesh, *receivedContext.userDefinedAccessRegion);
+
+      PRECICE_DEBUG("Filtered {} of {} vertices out on mesh {} due to the local access region. Mesh size in the access region: {}", receivedContext.mesh->nVertices() - result, receivedContext.mesh->nVertices(), meshName, result);
+      return result;
+    }
   }
+  // For provided meshes and in case the api-access was not configured, we return here all vertices
+  PRECICE_WARN_IF(_accessor->isMeshReceived(meshName) && !_accessor->isDirectAccessAllowed(meshName),
+                  "You are calling \"getMeshVertexSize()\" on a received mesh without api-access enabled (<receive-mesh name=\"{0}\" ... api-access=\"false\"/>). "
+                  "Note that enabling api-access is required for this function to work properly with direct mesh access and just-in-time mappings.",
+                  meshName);
+  return _accessor->meshContext(meshName).mesh->nVertices();
 }
 
 /// @todo Currently not supported as we would need to re-compute the re-partition
@@ -784,7 +783,7 @@ void ParticipantImpl::resetMesh(
   PRECICE_VALIDATE_MESH_NAME(meshName);
   PRECICE_CHECK(_couplingScheme->isCouplingOngoing(), "Cannot remesh after the last time window has been completed.");
   PRECICE_CHECK(_couplingScheme->isTimeWindowComplete(), "Cannot remesh while subcycling or iterating. Remeshing is only allowed when the time window is completed.");
-  impl::MeshContext &context = _accessor->usedMeshContext(meshName);
+  impl::MeshContext &context = _accessor->meshContext(meshName);
 
   PRECICE_DEBUG("Clear mesh positions for mesh \"{}\"", context.mesh->getName());
   _meshLock.unlock(meshName);
@@ -797,8 +796,8 @@ VertexID ParticipantImpl::setMeshVertex(
 {
   PRECICE_TRACE(meshName);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
-  MeshContext &context = _accessor->usedMeshContext(meshName);
-  auto        &mesh    = *context.mesh;
+  ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
+  auto                &mesh    = *context.mesh;
   PRECICE_CHECK(position.size() == static_cast<unsigned long>(mesh.getDimensions()),
                 "Cannot set vertex for mesh \"{}\". Expected {} position components but found {}.", meshName, mesh.getDimensions(), position.size());
   Event e{fmt::format("setMeshVertex.{}", meshName), profiling::API};
@@ -822,8 +821,8 @@ void ParticipantImpl::setMeshVertices(
 {
   PRECICE_TRACE(meshName, positions.size(), ids.size());
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
-  MeshContext &context = _accessor->usedMeshContext(meshName);
-  auto        &mesh    = *context.mesh;
+  ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
+  auto                &mesh    = *context.mesh;
 
   const auto meshDims             = mesh.getDimensions();
   const auto expectedPositionSize = ids.size() * meshDims;
@@ -855,7 +854,7 @@ void ParticipantImpl::setMeshEdge(
 {
   PRECICE_TRACE(meshName, first, second);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
-  MeshContext &context = _accessor->usedMeshContext(meshName);
+  ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
     return;
   }
@@ -876,7 +875,7 @@ void ParticipantImpl::setMeshEdges(
 {
   PRECICE_TRACE(meshName, vertices.size());
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
-  MeshContext &context = _accessor->usedMeshContext(meshName);
+  ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
     return;
   }
@@ -914,7 +913,7 @@ void ParticipantImpl::setMeshTriangle(
 {
   PRECICE_TRACE(meshName, first, second, third);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
-  MeshContext &context = _accessor->usedMeshContext(meshName);
+  ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
     return;
   }
@@ -941,7 +940,7 @@ void ParticipantImpl::setMeshTriangles(
 {
   PRECICE_TRACE(meshName, vertices.size());
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
-  MeshContext &context = _accessor->usedMeshContext(meshName);
+  ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
     return;
   }
@@ -984,7 +983,7 @@ void ParticipantImpl::setMeshQuad(
   PRECICE_TRACE(meshName, first,
                 second, third, fourth);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
-  MeshContext &context = _accessor->usedMeshContext(meshName);
+  ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
     return;
   }
@@ -1034,7 +1033,7 @@ void ParticipantImpl::setMeshQuads(
 {
   PRECICE_TRACE(meshName, vertices.size());
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
-  MeshContext &context = _accessor->usedMeshContext(meshName);
+  ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
     return;
   }
@@ -1102,7 +1101,7 @@ void ParticipantImpl::setMeshTetrahedron(
 {
   PRECICE_TRACE(meshName, first, second, third, fourth);
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
-  MeshContext &context = _accessor->usedMeshContext(meshName);
+  ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes. "
                                                     "Please set the mesh dimension to 3 in the preCICE configuration file.");
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
@@ -1131,7 +1130,7 @@ void ParticipantImpl::setMeshTetrahedra(
 {
   PRECICE_TRACE(meshName, vertices.size());
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
-  MeshContext &context = _accessor->usedMeshContext(meshName);
+  ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes. "
                                                     "Please set the mesh dimension to 3 in the preCICE configuration file.");
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
@@ -1281,14 +1280,14 @@ void ParticipantImpl::mapAndReadData(
                 meshName);
   // If an access region is required, we have to check its existence
   bool requiresBB = requiresUserDefinedAccessRegion(meshName);
-  PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->meshContext(meshName).userDefinedAccessRegion),
+  PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->receivedMeshContext(meshName).userDefinedAccessRegion),
                 "The function \"mapAndReadData\" was called on mesh \"{0}\", "
                 "but no access region was defined although this is necessary for parallel runs. "
                 "Please define an access region using \"setMeshAccessRegion()\" before calling \"mapAndReadData()\".",
                 meshName);
 
-  PRECICE_CHECK(!_accessor->meshContext(meshName).mesh->empty(), "This participant tries to mapAndRead data values for data \"{0}\" on mesh \"{1}\", but the mesh \"{1}\" is empty within the defined access region on this rank. "
-                                                                 "How should the provided data values be read? Please make sure the mesh \"{1}\" is non-empty within the access region.",
+  PRECICE_CHECK(!_accessor->receivedMeshContext(meshName).mesh->empty(), "This participant tries to mapAndRead data values for data \"{0}\" on mesh \"{1}\", but the mesh \"{1}\" is empty within the defined access region on this rank. "
+                                                                         "How should the provided data values be read? Please make sure the mesh \"{1}\" is non-empty within the access region.",
                 dataName, meshName);
 
   ReadDataContext &dataContext = _accessor->readDataContext(meshName, dataName);
@@ -1306,13 +1305,13 @@ void ParticipantImpl::mapAndReadData(
   Event e{fmt::format("mapAndReadData.{}_{}", meshName, dataName), profiling::API};
 
   // Note that meshName refers to a remote mesh
-  const auto   dataDims  = dataContext.getDataDimensions();
-  const auto   dim       = dataContext.getSpatialDimensions();
-  const auto   nVertices = (coordinates.size() / dim);
-  MeshContext &context   = _accessor->meshContext(meshName);
+  const auto           dataDims  = dataContext.getDataDimensions();
+  const auto           dim       = dataContext.getSpatialDimensions();
+  const auto           nVertices = (coordinates.size() / dim);
+  ReceivedMeshContext &context   = _accessor->receivedMeshContext(meshName);
 
   // Check that the vertex is actually within the defined access region
-  context.checkVerticesInsideAccessRegion(coordinates, dim, "mapAndReadData");
+  _accessor->receivedMeshContext(meshName).checkVerticesInsideAccessRegion(coordinates, dim, "mapAndReadData");
 
   // Make use of the read data context
   PRECICE_CHECK(nVertices * dataDims == values.size(),
@@ -1347,7 +1346,7 @@ void ParticipantImpl::writeAndMapData(
                 meshName);
   // If an access region is required, we have to check its existence
   bool requiresBB = requiresUserDefinedAccessRegion(meshName);
-  PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->meshContext(meshName).userDefinedAccessRegion),
+  PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->receivedMeshContext(meshName).userDefinedAccessRegion),
                 "The function \"writeAndMapData\" was called on mesh \"{0}\", "
                 "but no access region was defined although this is necessary for parallel runs. "
                 "Please define an access region using \"setMeshAccessRegion()\" before calling \"writeAndMapData()\".",
@@ -1368,13 +1367,13 @@ void ParticipantImpl::writeAndMapData(
   Event e{fmt::format("writeAndMapData.{}_{}", meshName, dataName), profiling::API};
 
   // Note that meshName refers here typically to a remote mesh
-  const auto   dataDims  = dataContext.getDataDimensions();
-  const auto   dim       = dataContext.getSpatialDimensions();
-  const auto   nVertices = (coordinates.size() / dim);
-  MeshContext &context   = _accessor->meshContext(meshName);
+  const auto           dataDims  = dataContext.getDataDimensions();
+  const auto           dim       = dataContext.getSpatialDimensions();
+  const auto           nVertices = (coordinates.size() / dim);
+  ReceivedMeshContext &context   = _accessor->receivedMeshContext(meshName);
 
   // Check that the vertex is actually within the defined access region
-  context.checkVerticesInsideAccessRegion(coordinates, dim, "writeAndMapData");
+  _accessor->receivedMeshContext(meshName).checkVerticesInsideAccessRegion(coordinates, dim, "writeAndMapData");
 
   PRECICE_CHECK(nVertices * dataDims == values.size(),
                 "Input sizes are inconsistent attempting to write {}D data \"{}\" to mesh \"{}\". "
@@ -1451,11 +1450,11 @@ void ParticipantImpl::setMeshAccessRegion(
   PRECICE_CHECK(_state != State::Finalized, "setMeshAccessRegion() cannot be called after finalize().");
   PRECICE_CHECK(_state != State::Initialized, "setMeshAccessRegion() needs to be called before initialize().");
 
-  // Get the related mesh
-  MeshContext &context = _accessor->meshContext(meshName);
+  // Get the related mesh - setMeshAccessRegion only works for received meshes
+  ReceivedMeshContext &receivedContext = _accessor->receivedMeshContext(meshName);
 
-  PRECICE_CHECK(!context.userDefinedAccessRegion, "A mesh access region was already defined for mesh \"{}\". setMeshAccessRegion may only be called once per mesh.", context.mesh->getName());
-  mesh::Mesh &mesh = *context.mesh;
+  PRECICE_CHECK(!receivedContext.userDefinedAccessRegion, "A mesh access region was already defined for mesh \"{}\". setMeshAccessRegion may only be called once per mesh.", receivedContext.mesh->getName());
+  mesh::Mesh &mesh = *receivedContext.mesh;
   int         dim  = mesh.getDimensions();
   PRECICE_CHECK(boundingBox.size() == static_cast<unsigned long>(dim) * 2,
                 "Incorrect amount of bounding box components attempting to set the bounding box of {}D mesh \"{}\" . "
@@ -1473,9 +1472,9 @@ void ParticipantImpl::setMeshAccessRegion(
     bounds[2 * d + 1] = boundingBox[2 * d + 1];
   }
   // Create a bounding box
-  context.userDefinedAccessRegion = std::make_shared<mesh::BoundingBox>(bounds);
+  receivedContext.userDefinedAccessRegion = std::make_shared<mesh::BoundingBox>(bounds);
   // Expand the mesh associated bounding box
-  mesh.expandBoundingBox(*context.userDefinedAccessRegion.get());
+  mesh.expandBoundingBox(*receivedContext.userDefinedAccessRegion.get());
 }
 
 void ParticipantImpl::getMeshVertexIDsAndCoordinates(
@@ -1492,7 +1491,7 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
                 meshName);
   // If an access region is required, we have to check its existence
   bool requiresBB = requiresUserDefinedAccessRegion(meshName);
-  PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->meshContext(meshName).userDefinedAccessRegion),
+  PRECICE_CHECK(!requiresBB || (requiresBB && _accessor->receivedMeshContext(meshName).userDefinedAccessRegion),
                 "The function \"getMeshVertexIDsAndCoordinates\" was called on mesh \"{0}\", "
                 "but no access region was defined although this is necessary for parallel runs. "
                 "Please define an access region using \"setMeshAccessRegion()\" before calling \"getMeshVertexIDsAndCoordinates()\".",
@@ -1513,7 +1512,7 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
 
   const MeshContext &context = _accessor->meshContext(meshName);
 
-  auto       filteredVertices = context.filterVerticesToLocalAccessRegion(requiresBB);
+  auto       filteredVertices = _accessor->receivedMeshContext(meshName).filterVerticesToLocalAccessRegion(requiresBB);
   const auto meshSize         = filteredVertices.size();
 
   const mesh::Mesh &mesh     = *(context.mesh);
@@ -1547,19 +1546,23 @@ void ParticipantImpl::compareBoundingBoxes()
 {
   // sort meshContexts by name, for communication in right order.
   std::sort(_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
-            [](MeshContext const *const lhs, MeshContext const *const rhs) -> bool {
-              return lhs->mesh->getName() < rhs->mesh->getName();
+            [](const MeshContextVariant &lhs, const MeshContextVariant &rhs) -> bool {
+              return getMesh(lhs).getName() < getMesh(rhs).getName();
             });
 
-  for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
-    if (meshContext->provideMesh) // provided meshes need their bounding boxes already for the re-partitioning
-      meshContext->mesh->computeBoundingBox();
-
-    meshContext->clearMappings();
+  // Provided meshes need their bounding boxes already for the re-partitioning
+  for (auto &context : _accessor->providedMeshContexts()) {
+    context.mesh->computeBoundingBox();
   }
 
-  for (MeshContext *meshContext : _accessor->usedMeshContexts()) {
-    meshContext->partition->compareBoundingBoxes();
+  // Clear mappings for all meshes
+  for (auto &variant : _accessor->usedMeshContexts()) {
+    getMeshContext(variant)->clearMappings();
+  }
+
+  // Compare bounding boxes for all meshes
+  for (const auto &variant : _accessor->usedMeshContexts()) {
+    getPartition(variant).compareBoundingBoxes();
   }
 }
 
@@ -1572,12 +1575,12 @@ void ParticipantImpl::computePartitions()
   auto &contexts = _accessor->usedMeshContexts();
 
   std::sort(contexts.begin(), contexts.end(),
-            [](MeshContext const *const lhs, MeshContext const *const rhs) -> bool {
-              return lhs->mesh->getName() < rhs->mesh->getName();
+            [](const MeshContextVariant &lhs, const MeshContextVariant &rhs) -> bool {
+              return getMesh(lhs).getName() < getMesh(rhs).getName();
             });
 
-  for (MeshContext *meshContext : contexts) {
-    meshContext->partition->communicate();
+  for (const auto &variant : contexts) {
+    getPartition(variant).communicate();
   }
 
   // for two-level initialization, there is also still communication in partition::compute()
@@ -1594,22 +1597,25 @@ void ParticipantImpl::computePartitions()
   if (resort) {
     // pull provided meshes up front, to have them ready for the decomposition of the received meshes (for the mappings)
     std::stable_partition(contexts.begin(), contexts.end(),
-                          [](MeshContext const *const meshContext) -> bool {
-                            return meshContext->provideMesh;
+                          [](const MeshContextVariant &variant) -> bool {
+                            return std::holds_alternative<ProvidedMeshContext *>(variant);
                           });
   }
 
-  for (MeshContext *meshContext : contexts) {
-    meshContext->partition->compute();
-    if (not meshContext->provideMesh) { // received mesh can only compute their bounding boxes here
-      meshContext->mesh->computeBoundingBox();
+  for (const auto &variant : contexts) {
+    auto &mesh = getMesh(variant);
+    getPartition(variant).compute();
+
+    // Received meshes can only compute their bounding boxes here
+    if (std::holds_alternative<ReceivedMeshContext *>(variant)) {
+      mesh.computeBoundingBox();
     }
 
-    meshContext->mesh->allocateDataValues();
+    mesh.allocateDataValues();
 
-    const auto requiredSize = meshContext->mesh->nVertices();
+    const auto requiredSize = mesh.nVertices();
     for (auto &context : _accessor->writeDataContexts()) {
-      if (context.getMeshName() == meshContext->mesh->getName()) {
+      if (context.getMeshName() == mesh.getName()) {
         context.resizeBufferTo(requiredSize);
       }
     }
@@ -1868,7 +1874,7 @@ bool ParticipantImpl::requiresUserDefinedAccessRegion(std::string_view meshName)
 const mesh::Mesh &ParticipantImpl::mesh(const std::string &meshName) const
 {
   PRECICE_TRACE(meshName);
-  return *_accessor->usedMeshContext(meshName).mesh;
+  return *_accessor->meshContext(meshName).mesh;
 }
 
 ParticipantImpl::MappedSamples ParticipantImpl::mappedSamples() const
@@ -1889,8 +1895,8 @@ ParticipantImpl::MeshChanges ParticipantImpl::getTotalMeshChanges() const
 
   // Gather local changes
   std::vector<double> localMeshChanges;
-  for (auto context : _accessor->usedMeshContexts()) {
-    localMeshChanges.push_back(_meshLock.check(context->mesh->getName()) ? 0.0 : 1.0);
+  for (const auto &variant : _accessor->usedMeshContexts()) {
+    localMeshChanges.push_back(_meshLock.check(getMesh(variant).getName()) ? 0.0 : 1.0);
   }
   PRECICE_DEBUG("Mesh changes of rank: {}", localMeshChanges);
 
@@ -1906,11 +1912,13 @@ ParticipantImpl::MeshChanges ParticipantImpl::getTotalMeshChanges() const
 
 void ParticipantImpl::clearStamplesOfChangedMeshes(MeshChanges totalMeshChanges)
 {
-  auto meshContexts = _accessor->usedMeshContexts();
-  for (std::size_t i = 0; i < totalMeshChanges.size(); ++i) {
+  // Clear stamples where changes were detected
+  std::size_t i = 0;
+  for (auto &variant : _accessor->usedMeshContexts()) {
     if (totalMeshChanges[i] > 0.0) {
-      meshContexts[i]->mesh->clearDataStamples();
+      getMesh(variant).clearDataStamples();
     }
+    ++i;
   }
 }
 
