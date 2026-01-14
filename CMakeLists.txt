@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.22.1)
-project(preCICE VERSION 3.3.0 LANGUAGES CXX)
+project(preCICE VERSION 3.3.1 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -204,6 +204,7 @@ if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
 endif()
 
+option(Boost_USE_STATIC_LIBS "Force BoostConfig.cmake to find static libraries." OFF)
 find_package(Boost 1.74.0 REQUIRED CONFIG
   COMPONENTS log log_setup program_options thread unit_test_framework
   )

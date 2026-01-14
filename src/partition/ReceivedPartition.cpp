@@ -107,7 +107,7 @@ void ReceivedPartition::compute()
 
       // In serial mode, we keep the vertices, but filter them in the API functions
       const auto   nVerticesInBox    = mesh::countVerticesInBoundingBox(_mesh, _bb);
-      unsigned int nFilteredVertices = nVerticesInBox - _mesh->nVertices();
+      unsigned int nFilteredVertices = _mesh->nVertices() - nVerticesInBox;
 
       PRECICE_WARN_IF(nFilteredVertices > 0,
                       "{} vertices on mesh \"{}\" have been filtered out due to the defined bounding box in \"setMeshAccessRegion\" "
