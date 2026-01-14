@@ -108,13 +108,13 @@ public:
    */
   void performAcceleration(DataMap &cplData, double windowStart, double windowEnd) final override;
   /**
-   * @brief Check if any of the dataIDs has bounds defined.
+   * @brief Check which dataIDs has bounds defined.
    */
-  bool hasBounds(const DataMap &cplData) const;
+  void checkHasBounds(const DataMap &cplData);
   /**
    * @brief Check bound violations caused by performing QN update.
    */
-  std::vector<DataID> checkBound(Eigen::VectorXd &data, DataMap &cplData) const;
+  std::vector<DataID> checkBoundViolation(Eigen::VectorXd &data, DataMap &cplData) const;
   /**
    * @brief Handles bound violations after QN update.
    */
@@ -188,6 +188,9 @@ protected:
 
   /// Data IDs of all coupling data.
   std::vector<int> _dataIDs;
+
+  /// Data IDs of all coupling data that have bounds defined.
+  std::vector<DataID> _idsWithBounds;
 
   /// Indicates the first iteration, where constant relaxation is used.
   bool _firstIteration = true;
