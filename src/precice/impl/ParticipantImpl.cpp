@@ -12,6 +12,7 @@
 #include <optional>
 #include <ostream>
 #include <sstream>
+#include <string_view>
 #include <tuple>
 #include <utility>
 
@@ -182,24 +183,25 @@ void ParticipantImpl::configure(
   if (_accessorProcessRank == 0) {
     PRECICE_INFO("This is preCICE version {}", PRECICE_VERSION);
     PRECICE_INFO("Revision info: {}", precice::preciceRevision);
-    PRECICE_INFO("Build type: "
+    constexpr std::string_view buildTypeStr = "Build type: "
 #ifndef NDEBUG
-                 "Debug"
+                                              "Debug"
 #else // NDEBUG
-                 "Release"
+                                              "Release"
 #ifndef PRECICE_NO_DEBUG_LOG
-                 " + debug log"
+                                              " + debug log"
 #else
-                 " (without debug log)"
+                                              " (without debug log)"
 #endif
 #ifndef PRECICE_NO_TRACE_LOG
-                 " + trace log"
+                                              " + trace log"
 #endif
 #ifndef PRECICE_NO_ASSERTIONS
-                 " + assertions"
+                                              " + assertions"
 #endif
 #endif // NDEBUG
-    );
+        ;
+    PRECICE_INFO(buildTypeStr);
     try {
       PRECICE_INFO("Working directory \"{}\"", std::filesystem::current_path().string());
     } catch (std::filesystem::filesystem_error &fse) {
