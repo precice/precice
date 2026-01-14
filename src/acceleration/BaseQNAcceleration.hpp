@@ -108,10 +108,6 @@ public:
    */
   void performAcceleration(DataMap &cplData, double windowStart, double windowEnd) final override;
   /**
-   * @brief Check which dataIDs has bounds defined.
-   */
-  void checkHasBounds(const DataMap &cplData);
-  /**
    * @brief Check bound violations caused by performing QN update.
    */
   std::vector<DataID> checkBoundViolation(Eigen::VectorXd &data, DataMap &cplData) const;

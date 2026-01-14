@@ -97,35 +97,21 @@ void BaseQNAcceleration::initialize(
   checkDataIDs(cplData);
   // store all data IDs in vector
   _dataIDs.clear();
+  _idsWithBounds.clear();
   for (const DataMap::value_type &pair : cplData) {
     _dataIDs.push_back(pair.first);
-  }
 
+    auto lowerBound = pair.second->getLowerBound();
+    auto upperBound = pair.second->getUpperBound();
+    if (std::any_of(lowerBound.begin(), lowerBound.end(), [](const auto &v) { return v.has_value(); }) ||
+        std::any_of(upperBound.begin(), upperBound.end(), [](const auto &v) { return v.has_value(); })) {
+      _idsWithBounds.push_back(pair.first);
+    }
+  }
   _matrixCols.clear();
   _matrixCols.push_front(0);
   _firstIteration  = true;
   _firstTimeWindow = true;
-  checkHasBounds(cplData);
-}
-
-void BaseQNAcceleration::checkHasBounds(const DataMap &cplData)
-{
-  for (auto id : _dataIDs) {
-    auto lowerBound = cplData.at(id)->getLowerBound();
-    auto upperBound = cplData.at(id)->getUpperBound();
-    for (auto &bound : lowerBound) {
-      if (bound.has_value()) {
-        _idsWithBounds.push_back(id);
-        break;
-      }
-    }
-    for (auto &bound : upperBound) {
-      if (bound.has_value()) {
-        _idsWithBounds.push_back(id);
-        break;
-      }
-    }
-  }
 }
 
 std::vector<DataID> BaseQNAcceleration::checkBoundViolation(Eigen::VectorXd &data, DataMap &cplData) const
