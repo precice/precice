@@ -119,7 +119,7 @@ for name, ranks in get_tests():
     ]
 
     if args.paths:
-        pargs += ["ENVIRONMENT_MODIFICATION", f"PATH=path_list_append:{args.paths}"]
+        pargs += ["ENVIRONMENT_MODIFICATION", f'"PATH=path_list_append:{args.paths}"']
 
     add_command(args.output, "set_tests_properties", pargs)
     print(file=args.output)
