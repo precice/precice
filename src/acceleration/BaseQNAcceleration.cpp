@@ -213,14 +213,14 @@ void BaseQNAcceleration::onBoundViolations(Eigen::VectorXd &data, DataMap &cplDa
 
       for (int j = 0; j < dataDimension; j++) {
         if (lowerBound[j].has_value()) {
-          Eigen::ArrayXd numer = (dataMat.col(j).array() - lowerBound[j].value());
-          Eigen::ArrayXd denom = -(updMat.col(j).array()).abs();
-          scaleStep            = std::max(scaleStep, (numer / denom).maxCoeff());
+          Eigen::ArrayXd numerator   = (dataMat.col(j).array() - lowerBound[j].value());
+          Eigen::ArrayXd denominator = -(updMat.col(j).array()).abs();
+          scaleStep                  = std::max(scaleStep, (numerator / denominator).maxCoeff());
         }
         if (upperBound[j].has_value()) {
-          Eigen::ArrayXd numer = (dataMat.col(j).array() - upperBound[j].value());
-          Eigen::ArrayXd denom = (updMat.col(j).array()).abs();
-          scaleStep            = std::max(scaleStep, (numer / denom).maxCoeff());
+          Eigen::ArrayXd numerator   = (dataMat.col(j).array() - upperBound[j].value());
+          Eigen::ArrayXd denominator = (updMat.col(j).array()).abs();
+          scaleStep                  = std::max(scaleStep, (numerator / denominator).maxCoeff());
         }
       }
       offset += size;
