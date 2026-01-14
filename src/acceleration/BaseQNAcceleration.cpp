@@ -250,9 +250,6 @@ void BaseQNAcceleration::updateDifferenceMatrices(
 
   // if (_firstIteration && (_firstTimeWindow || (_matrixCols.size() < 2))) {
   if (_firstIteration && (_firstTimeWindow || _forceInitialRelaxation)) {
-
-    _aitkenFactor = _initialRelaxation;
-
     // do nothing: constant relaxation
   } else {
     PRECICE_DEBUG("   Update Difference Matrices");
