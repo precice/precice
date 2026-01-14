@@ -24,11 +24,11 @@ public:
   static const int QR3FILTER     = 5;
 
   /// Options for handling bound violations
-  enum struct OnBoundViolationActions {
-    IGNORE,
-    CLAMP,
-    DISCARD,
-    SCALE_TO_BOUND
+  enum struct OnBoundViolation {
+    Ignore,
+    Clamp,
+    Discard,
+    ScaleToBound
   };
 
   /// Map from data ID to data values.

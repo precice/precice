@@ -32,7 +32,7 @@ IQNILSAcceleration::IQNILSAcceleration(
     int                     filter,
     double                  singularityLimit,
     std::vector<int>        dataIDs,
-    OnBoundViolationActions onBoundViolation,
+    OnBoundViolation        onBoundViolation,
     impl::PtrPreconditioner preconditioner,
     bool                    reducedTimeGrid)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,

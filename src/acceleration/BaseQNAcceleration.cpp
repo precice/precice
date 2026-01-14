@@ -39,7 +39,7 @@ BaseQNAcceleration::BaseQNAcceleration(
     int                     filter,
     double                  singularityLimit,
     std::vector<int>        dataIDs,
-    OnBoundViolationActions onBoundViolation,
+    OnBoundViolation        onBoundViolation,
     impl::PtrPreconditioner preconditioner,
     bool                    reducedTimeGrid)
     : _preconditioner(std::move(preconditioner)),
@@ -47,7 +47,7 @@ BaseQNAcceleration::BaseQNAcceleration(
       _maxIterationsUsed(maxIterationsUsed),
       _timeWindowsReused(timeWindowsReused),
       _primaryDataIDs(std::move(dataIDs)),
-      _onBoundViolation(std::move(onBoundViolation)),
+      _onBoundViolation(onBoundViolation),
       _forceInitialRelaxation(forceInitialRelaxation),
       _reducedTimeGrid(reducedTimeGrid),
       _qrV(filter),
@@ -106,98 +106,126 @@ void BaseQNAcceleration::initialize(
   _firstTimeWindow = true;
 }
 
-void BaseQNAcceleration::checkBound(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &dataIDs, OnBoundViolationActions onBoundViolation, Eigen::VectorXd &xUpdate)
+bool BaseQNAcceleration::hasBounds(const DataMap &cplData) const
 {
-  Eigen::Index offset            = 0;
-  bool         violationDetected = false;
+  for (auto id : _dataIDs) {
+    auto lowerBound = cplData.at(id)->getLowerBound();
+    auto upperBound = cplData.at(id)->getUpperBound();
+    if (lowerBound.empty() && upperBound.empty()) {
+      continue;
+    }
+    return true;
+  }
+  return false;
+}
+
+std::vector<DataID> BaseQNAcceleration::checkBound(Eigen::VectorXd &data, DataMap &cplData) const
+{
+  Eigen::Index        offset     = 0;
+  std::vector<DataID> violatedID = {};
 
   // check for bound violations
-  for (auto id : dataIDs) {
-    if (violationDetected)
-      break;
+  for (auto id : _dataIDs) {
 
-    Eigen::Index size          = cplData.at(id)->values().size();
+    auto lowerBound = cplData.at(id)->getLowerBound();
+    auto upperBound = cplData.at(id)->getUpperBound();
+    if (lowerBound.empty() && upperBound.empty()) {
+      continue;
+    }
+
     int          dataDimension = cplData.at(id)->getDimensions();
-    auto         lowerBound    = cplData.at(id)->getLowerBound();
-    auto         upperBound    = cplData.at(id)->getUpperBound();
+    Eigen::Index size          = cplData.at(id)->values().size();
+    auto         dataPerEntry  = data.segment(offset, size);
+
+    Eigen::Map<Eigen::MatrixXd> dataPerDimension(dataPerEntry.data(), dataPerEntry.size() / dataDimension, dataDimension);
 
     for (int j = 0; j < dataDimension; j++) {
-      if (lowerBound[j].has_value()) {
-        for (Eigen::Index i = j; i < size; i += dataDimension) {
-          if (data[i + offset] < lowerBound[j].value()) {
-            violationDetected = true;
-            break;
-          }
-        }
-      }
-      if (violationDetected)
+      if ((lowerBound[j].has_value() && (dataPerDimension.col(j).array() < lowerBound[j].value()).any()) || (upperBound[j].has_value() && (dataPerDimension.col(j).array() > upperBound[j].value()).any())) {
+        violatedID.push_back(id);
         break;
-      if (upperBound[j].has_value()) {
-        for (Eigen::Index i = j; i < size; i += dataDimension) {
-          if (data[i + offset] > upperBound[j].value()) {
-            violationDetected = true;
-            break;
-          }
-        }
       }
     }
     offset += size;
   }
 
-  // limit bound violations
-  if (violationDetected) {
-    if (_onBoundViolation == OnBoundViolationActions::DISCARD) {
-      PRECICE_WARN("The coupling data has violated its bound after the Quasi-Newton step. The current step will be discarded.");
-      data -= xUpdate;
-    } else if (_onBoundViolation == OnBoundViolationActions::CLAMP) {
-      PRECICE_WARN("The coupling data has violated its bound after the Quasi-Newton step. The values will be clamped to their bounds.");
+  return violatedID;
+}
 
-      offset = 0;
-      for (auto id : dataIDs) {
-        Eigen::Index size          = cplData.at(id)->values().size();
-        int          dataDimension = cplData.at(id)->getDimensions();
-        auto         lowerBound    = cplData.at(id)->getLowerBound();
-        auto         upperBound    = cplData.at(id)->getUpperBound();
+void BaseQNAcceleration::onBoundViolations(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &violatingIDs, OnBoundViolation onBoundViolation, Eigen::VectorXd &xUpdate)
+{
+  Eigen::Index offset = 0;
 
-        for (int j = 0; j < dataDimension; j++) {
-          if (lowerBound[j].has_value())
-            for (Eigen::Index i = j; i < size; i += dataDimension) {
-              data[i + offset] = std::max(data[i + offset], lowerBound[j].value());
-            }
-          if (upperBound[j].has_value())
-            for (Eigen::Index i = j; i < size; i += dataDimension) {
-              data[i + offset] = std::min(data[i + offset], upperBound[j].value());
-            }
-        }
+  if (_onBoundViolation == OnBoundViolation::Discard) {
+    PRECICE_WARN("The coupling data of ID {} has violated its bound after the Quasi-Newton step. The current step will be discarded.", violatingIDs);
+    data -= xUpdate;
+  } else if (_onBoundViolation == OnBoundViolation::Clamp) {
+    PRECICE_WARN("The coupling data of ID {} has violated its bound after the Quasi-Newton step. The values will be clamped to their bounds.", violatingIDs);
+
+    offset = 0;
+    for (auto id : _dataIDs) {
+      Eigen::Index size = cplData.at(id)->values().size();
+
+      if (std::find(violatingIDs.begin(), violatingIDs.end(), id) == violatingIDs.end()) {
         offset += size;
+        continue;
       }
-    } else if (_onBoundViolation == OnBoundViolationActions::SCALE_TO_BOUND) {
-      PRECICE_WARN(
-          "The coupling data has violated its bound after the Quasi-Newton step. The step length will be scaled to avoid the bound violation.");
-      offset           = 0;
-      double scaleStep = 0.0;
-      for (auto id : dataIDs) {
-        Eigen::Index size          = cplData.at(id)->values().size();
-        int          dataDimension = cplData.at(id)->getDimensions();
-        auto         lowerBound    = cplData.at(id)->getLowerBound();
-        auto         upperBound    = cplData.at(id)->getUpperBound();
 
-        for (int j = 0; j < dataDimension; j++) {
-          if (lowerBound[j].has_value()) {
-            for (Eigen::Index i = j; i < size; i += dataDimension) {
-              xUpdate[i + offset] < 0 ? scaleStep = std::max(scaleStep, (data[i + offset] - lowerBound[j].value()) / xUpdate[i + offset]) : scaleStep;
-            }
-          }
-          if (upperBound[j].has_value()) {
-            for (Eigen::Index i = j; i < size; i += dataDimension) {
-              xUpdate[i + offset] > 0 ? scaleStep = std::max(scaleStep, (data[i + offset] - upperBound[j].value()) / xUpdate[i + offset]) : scaleStep;
-            }
-          }
+      int  dataDimension = cplData.at(id)->getDimensions();
+      auto lowerBound    = cplData.at(id)->getLowerBound();
+      auto upperBound    = cplData.at(id)->getUpperBound();
+      auto dataPerEntry  = data.segment(offset, size);
+
+      const Eigen::Index          nEntries = dataPerEntry.size() / dataDimension;
+      Eigen::Map<Eigen::MatrixXd> dataPerDimension(dataPerEntry.data(), nEntries, dataDimension);
+
+      for (int j = 0; j < dataDimension; j++) {
+        if (lowerBound[j].has_value()) {
+          dataPerDimension.col(j) = dataPerDimension.col(j).cwiseMax(lowerBound[j].value());
         }
-        offset += size;
+        if (upperBound[j].has_value()) {
+          dataPerDimension.col(j) = dataPerDimension.col(j).cwiseMin(upperBound[j].value());
+        }
       }
-      data -= xUpdate * scaleStep;
+      offset += size;
     }
+  } else if (_onBoundViolation == OnBoundViolation::ScaleToBound) {
+    PRECICE_WARN(
+        "The coupling data of ID {} has violated its bound after the Quasi-Newton step. The step length will be scaled to avoid the bound violation.", violatingIDs);
+    offset           = 0;
+    double scaleStep = 0.0;
+    for (auto id : _dataIDs) {
+      Eigen::Index size = cplData.at(id)->values().size();
+
+      if (std::find(violatingIDs.begin(), violatingIDs.end(), id) == violatingIDs.end()) {
+        offset += size;
+        continue;
+      }
+
+      int  dataDimension  = cplData.at(id)->getDimensions();
+      auto lowerBound     = cplData.at(id)->getLowerBound();
+      auto upperBound     = cplData.at(id)->getUpperBound();
+      auto dataPerEntry   = data.segment(offset, size);
+      auto updatePerEntry = xUpdate.segment(offset, size);
+
+      const Eigen::Index          nEntries = dataPerEntry.size() / dataDimension;
+      Eigen::Map<Eigen::MatrixXd> dataMat(dataPerEntry.data(), nEntries, dataDimension);
+      Eigen::Map<Eigen::MatrixXd> updMat(updatePerEntry.data(), nEntries, dataDimension);
+
+      for (int j = 0; j < dataDimension; j++) {
+        if (lowerBound[j].has_value()) {
+          Eigen::ArrayXd numer = (dataMat.col(j).array() - lowerBound[j].value());
+          Eigen::ArrayXd denom = -(updMat.col(j).array()).abs();
+          scaleStep            = std::max(scaleStep, (numer / denom).maxCoeff());
+        }
+        if (upperBound[j].has_value()) {
+          Eigen::ArrayXd numer = (dataMat.col(j).array() - upperBound[j].value());
+          Eigen::ArrayXd denom = (updMat.col(j).array()).abs();
+          scaleStep            = std::max(scaleStep, (numer / denom).maxCoeff());
+        }
+      }
+      offset += size;
+    }
+    data -= xUpdate * scaleStep;
   }
 }
 /** ---------------------------------------------------------------------------------------------
@@ -423,8 +451,17 @@ void BaseQNAcceleration::performAcceleration(
   _values += xUpdate;
 
   // Check for bound violations
-  if (_onBoundViolation != OnBoundViolationActions::IGNORE)
-    checkBound(_values, cplData, _dataIDs, _onBoundViolation, xUpdate);
+
+  if (hasBounds(cplData)) {
+    profiling::Event CheckBoundViolationsInQN("CheckBoundViolationsInQN");
+
+    if (_onBoundViolation != OnBoundViolation::Ignore) {
+      auto violatingIDs = checkBound(_values, cplData);
+      if (!violatingIDs.empty()) {
+        onBoundViolations(_values, cplData, violatingIDs, _onBoundViolation, xUpdate);
+      }
+    }
+  }
 
   // pending deletion: delete old V, W matrices if timeWindowsReused = 0
   // those were only needed for the first iteration (instead of underrelax.)

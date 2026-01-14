@@ -119,11 +119,7 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
                                              VALUE_CLAMP,
                                              VALUE_DISCARD,
                                              VALUE_SCALE_TO_BOUND})
-                                .setDocumentation("Defines the strategy to handle updates that violate variable bounds. Possible options are:\n\n"
-                                                  "- `ignore`: do nothing\n"
-                                                  "- `clamp`: clamp the violating components to their bounds\n"
-                                                  "- `discard`: discard this QN step\n"
-                                                  "- `scale`: scale the QN step with a constant to fit all violating components into the bounds.");
+                                .setDocumentation("Defines the strategy to handle updates that violate variable bounds. Use ignore when no special handling is desired. Use clamp to limit the violating components to their bounds. Use discard to skip the QN update when a bound violation occurs. Use scale to scale the QN step with a constant to fit all violating components into the bounds.");
     tag.addAttribute(onBoundViolation);
 
     addTypeSpecificSubtags(tag);
@@ -147,11 +143,7 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
                                              VALUE_CLAMP,
                                              VALUE_DISCARD,
                                              VALUE_SCALE_TO_BOUND})
-                                .setDocumentation("Defines the strategy to handle Quasi-Newton updates that violate variable bounds. Possible options are:\n\n"
-                                                  "- `ignore`: do nothing\n"
-                                                  "- `clamp`: clamp the violating components to their bounds\n"
-                                                  "- `discard`: discard this QN step\n"
-                                                  "- `scale`: scale the QN step with a constant to fit all violating components into the bounds.");
+                                .setDocumentation("Defines the strategy to handle updates that violate variable bounds. Use ignore when no special handling is desired. Use clamp to limit the violating components to their bounds. Use discard to skip the QN update when a bound violation occurs. Use scale to scale the QN step with a constant to fit all violating components into the bounds.");
     tag.addAttribute(onBoundViolation);
 
     addTypeSpecificSubtags(tag);
@@ -182,8 +174,20 @@ void AccelerationConfiguration::xmlTagCallback(
     }
 
     if (_config.type == VALUE_IQNIMVJ || _config.type == VALUE_IQNILS) {
-      _config.reducedTimeGridQN = callingTag.getBooleanAttributeValue(ATTR_REDUCEDTIMEGRIDQN);
-      _config.onBoundViolation  = callingTag.getStringAttributeValue(ATTR_ON_BOUND_VIOLATION);
+      _config.reducedTimeGridQN    = callingTag.getBooleanAttributeValue(ATTR_REDUCEDTIMEGRIDQN);
+      std::string onBoundViolation = callingTag.getStringAttributeValue(ATTR_ON_BOUND_VIOLATION);
+
+      if (onBoundViolation == VALUE_IGNORE) {
+        _config.onBoundViolation = Acceleration::OnBoundViolation::Ignore;
+      } else if (onBoundViolation == VALUE_CLAMP) {
+        _config.onBoundViolation = Acceleration::OnBoundViolation::Clamp;
+      } else if (onBoundViolation == VALUE_DISCARD) {
+        _config.onBoundViolation = Acceleration::OnBoundViolation::Discard;
+      } else if (onBoundViolation == VALUE_SCALE_TO_BOUND) {
+        _config.onBoundViolation = Acceleration::OnBoundViolation::ScaleToBound;
+      } else {
+        PRECICE_UNREACHABLE("");
+      }
     }
   }
   if (callingTag.getName() == TAG_RELAX) {
@@ -319,19 +323,6 @@ void AccelerationConfiguration::xmlEndTagCallback(
       _config.filter            = (_userDefinitions.definedFilter) ? _config.filter : _defaultValuesIQNILS.filter;
       _config.singularityLimit  = (_userDefinitions.definedFilter) ? _config.singularityLimit : _defaultValuesIQNILS.singularityLimit;
 
-      Acceleration::OnBoundViolationActions onBoundViolation;
-      if (_config.onBoundViolation == VALUE_IGNORE) {
-        onBoundViolation = Acceleration::OnBoundViolationActions::IGNORE;
-      } else if (_config.onBoundViolation == VALUE_CLAMP) {
-        onBoundViolation = Acceleration::OnBoundViolationActions::CLAMP;
-      } else if (_config.onBoundViolation == VALUE_DISCARD) {
-        onBoundViolation = Acceleration::OnBoundViolationActions::DISCARD;
-      } else if (_config.onBoundViolation == VALUE_SCALE_TO_BOUND) {
-        onBoundViolation = Acceleration::OnBoundViolationActions::SCALE_TO_BOUND;
-      } else {
-        PRECICE_ASSERT(false);
-      }
-
       _acceleration = PtrAcceleration(
           new IQNILSAcceleration(
               _config.relaxationFactor,
@@ -340,7 +331,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
-              onBoundViolation,
+              _config.onBoundViolation,
               _preconditioner,
               _config.reducedTimeGridQN));
     } else if (callingTag.getName() == VALUE_IQNIMVJ) {
@@ -374,19 +365,6 @@ void AccelerationConfiguration::xmlEndTagCallback(
         _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(_defaultValuesIQNILS.preconditionerNbNonConstTWindows, _defaultValuesIQNIMVJ.preconditionerUpdateOnThreshold));
       }
 
-      Acceleration::OnBoundViolationActions onBoundViolation;
-      if (_config.onBoundViolation == VALUE_IGNORE) {
-        onBoundViolation = Acceleration::OnBoundViolationActions::IGNORE;
-      } else if (_config.onBoundViolation == VALUE_CLAMP) {
-        onBoundViolation = Acceleration::OnBoundViolationActions::CLAMP;
-      } else if (_config.onBoundViolation == VALUE_DISCARD) {
-        onBoundViolation = Acceleration::OnBoundViolationActions::DISCARD;
-      } else if (_config.onBoundViolation == VALUE_SCALE_TO_BOUND) {
-        onBoundViolation = Acceleration::OnBoundViolationActions::SCALE_TO_BOUND;
-      } else {
-        PRECICE_ASSERT(false);
-      }
-
       _acceleration = PtrAcceleration(
           new IQNIMVJAcceleration(
               _config.relaxationFactor,
@@ -395,7 +373,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
-              onBoundViolation,
+              _config.onBoundViolation,
               _preconditioner,
               _config.alwaysBuildJacobian,
               _config.imvjRestartType,

@@ -104,26 +104,26 @@ private:
   std::set<std::pair<std::string, std::string>> _uniqueDataAndMeshNames;
 
   struct ConfigurationData {
-    std::vector<int>      dataIDs;
-    std::map<int, double> scalings;
-    std::string           type;
-    double                relaxationFactor                 = 0;
-    bool                  forceInitialRelaxation           = false;
-    int                   maxIterationsUsed                = 0;
-    int                   timeWindowsReused                = 0;
-    int                   filter                           = Acceleration::NOFILTER;
-    int                   imvjRestartType                  = 0;
-    int                   imvjChunkSize                    = 0;
-    int                   imvjRSLS_reusedTimeWindows       = 0;
-    int                   preconditionerNbNonConstTWindows = -1;
-    double                singularityLimit                 = 0;
-    double                imvjRSSVD_truncationEps          = 0;
-    bool                  estimateJacobian                 = false;
-    bool                  alwaysBuildJacobian              = false;
-    bool                  reducedTimeGridQN                = true;
-    bool                  preconditionerUpdateOnThreshold  = true;
-    std::string           preconditionerType;
-    std::string           onBoundViolation;
+    std::vector<int>               dataIDs;
+    std::map<int, double>          scalings;
+    std::string                    type;
+    double                         relaxationFactor                 = 0;
+    bool                           forceInitialRelaxation           = false;
+    int                            maxIterationsUsed                = 0;
+    int                            timeWindowsReused                = 0;
+    int                            filter                           = Acceleration::NOFILTER;
+    int                            imvjRestartType                  = 0;
+    int                            imvjChunkSize                    = 0;
+    int                            imvjRSLS_reusedTimeWindows       = 0;
+    int                            preconditionerNbNonConstTWindows = -1;
+    double                         singularityLimit                 = 0;
+    double                         imvjRSSVD_truncationEps          = 0;
+    bool                           estimateJacobian                 = false;
+    bool                           alwaysBuildJacobian              = false;
+    bool                           reducedTimeGridQN                = true;
+    bool                           preconditionerUpdateOnThreshold  = true;
+    std::string                    preconditionerType;
+    Acceleration::OnBoundViolation onBoundViolation;
 
     std::vector<double> scalingFactorsInOrder() const;
   } _config;

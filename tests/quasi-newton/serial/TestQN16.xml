@@ -3,12 +3,7 @@
   <data:scalar name="Data11" />
   <data:vector name="Data12" />
   <data:scalar name="Data21" lower-bound="-1" upper-bound="1" />
-  <data:vector
-    name="Data22"
-    lower-bound-x="-1"
-    upper-bound-x="1"
-    lower-bound-y="-1"
-    upper-bound-y="1" />
+  <data:vector name="Data22" upper-bound-x="1" lower-bound-y="-1" upper-bound-y="1" />
 
   <mesh name="MeshOne" dimensions="2">
     <use-data name="Data11" />

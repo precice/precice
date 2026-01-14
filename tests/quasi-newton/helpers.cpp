@@ -512,7 +512,11 @@ void runTestQNWithBound(bool includeSecondaryData, std::string const &config, Te
         outValues1[i] = inValues1[i];
       }
       if (includeSecondaryData) {
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 8; i += 2) {
+          BOOST_TEST(inValues2[i] <= 1.0);
+          outValues2[i] = inValues2[i];
+        }
+        for (int i = 1; i < 8; i += 2) {
           BOOST_TEST(inValues2[i] >= -1.0);
           BOOST_TEST(inValues2[i] <= 1.0);
           outValues2[i] = inValues2[i];

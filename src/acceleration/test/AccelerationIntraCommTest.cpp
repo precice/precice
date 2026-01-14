@@ -55,7 +55,6 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
-  auto                onBoundViolations = Acceleration::OnBoundViolationActions::IGNORE;
   std::vector<double> factors;
   factors.resize(2, 1.0);
   PtrPreconditioner prec(new ConstantPreconditioner(factors));
@@ -65,7 +64,7 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                        timeWindowsReused, filter, singularityLimit, dataIDs, onBoundViolations, prec, !exchangeSubsteps);
+                        timeWindowsReused, filter, singularityLimit, dataIDs, Acceleration::OnBoundViolation::Ignore, prec, !exchangeSubsteps);
 
   Eigen::VectorXd dcol1;
   Eigen::VectorXd fcol1;
@@ -285,7 +284,6 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
-  auto                onBoundViolations = Acceleration::OnBoundViolationActions::IGNORE;
   std::vector<double> factors;
   factors.resize(2, 1.0);
   PtrPreconditioner prec(new ConstantPreconditioner(factors));
@@ -295,7 +293,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                         timeWindowsReused, filter, singularityLimit, dataIDs, onBoundViolations, prec, alwaysBuildJacobian,
+                         timeWindowsReused, filter, singularityLimit, dataIDs, Acceleration::OnBoundViolation::Ignore, prec, alwaysBuildJacobian,
                          restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps, !exchangeSubsteps);
 
   Eigen::VectorXd dcol1;
@@ -559,15 +557,14 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
   std::vector<int> dataIDs;
   dataIDs.push_back(4);
   dataIDs.push_back(5);
-  auto              onBoundViolations = Acceleration::OnBoundViolationActions::IGNORE;
-  PtrPreconditioner _preconditioner   = PtrPreconditioner(new ResidualSumPreconditioner(-1, true));
+  PtrPreconditioner _preconditioner = PtrPreconditioner(new ResidualSumPreconditioner(-1, true));
   std::vector<int>  vertexOffsets{0, 11, 22, 22};
 
   mesh::PtrMesh dummyMesh(new mesh::Mesh("dummyMesh", 2, testing::nextMeshID()));
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                         timeWindowsReused, filter, singularityLimit, dataIDs, onBoundViolations, _preconditioner, alwaysBuildJacobian,
+                         timeWindowsReused, filter, singularityLimit, dataIDs, Acceleration::OnBoundViolation::Ignore, _preconditioner, alwaysBuildJacobian,
                          restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps, !exchangeSubsteps);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 2));
@@ -1065,7 +1062,6 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   bool             exchangeSubsteps         = false; // @todo add testColumnsLoggingWithSubsteps, where exchangeSubsteps = true as soon as acceleration scheme supports subcycling.
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
-  auto                onBoundViolations = Acceleration::OnBoundViolationActions::IGNORE;
   std::vector<double> factors;
   factors.resize(1.0, 1.0);
   PtrPreconditioner prec(new ConstantPreconditioner(factors));
@@ -1084,7 +1080,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   }
 
   IQNILSAcceleration acc(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                         timeWindowsReused, filter, singularityLimit, dataIDs, onBoundViolations, prec, !exchangeSubsteps);
+                         timeWindowsReused, filter, singularityLimit, dataIDs, Acceleration::OnBoundViolation::Ignore, prec, !exchangeSubsteps);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
 
