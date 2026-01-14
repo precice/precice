@@ -790,7 +790,7 @@ void BaseCouplingScheme::advanceTXTWriters()
     _iterationsWriter->writeData("Convergence", converged ? 1 : 0);
 
     if (not doesFirstStep() && _acceleration) {
-      // Let the acceleration write its custom iteration column values (no-op by default)
+      // Let the acceleration write its custom iteration column values
       _acceleration->writeLogEntries(*_iterationsWriter);
     }
   }
