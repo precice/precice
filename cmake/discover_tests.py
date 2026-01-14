@@ -51,6 +51,7 @@ parser.add_argument("--mpi-extra")
 parser.add_argument("--mpi-np")
 parser.add_argument("--mpi-pre")
 parser.add_argument("--mpi-post")
+parser.add_argument("--paths")
 
 args = parser.parse_args()
 
@@ -116,5 +117,9 @@ for name, ranks in get_tests():
         "LABELS",
         f'"{";".join(labels)}"',
     ]
+
+    if args.paths:
+        pargs += ["ENVIRONMENT_MODIFICATION", f"PATH=path_list_append:{args.paths}"]
+
     add_command(args.output, "set_tests_properties", pargs)
     print(file=args.output)

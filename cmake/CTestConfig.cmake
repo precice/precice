@@ -179,6 +179,7 @@ if(PRECICE_FEATURE_MPI_COMMUNICATION)
     "--mpi-extra=${PRECICE_CTEST_MPI_FLAGS}"
     "--mpi-pre=${MPIEXEC_PREFLAGS}"
     "--mpi-post=${MPIEXEC_POSTFLAGS}"
+    "--paths=$<TARGET_RUNTIME_DLL_DIRS:testprecice>"
     DEPENDS testprecice
     COMMENT "Generating list of tests"
     VERBATIM)
