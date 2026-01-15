@@ -116,8 +116,8 @@ void BaseQNAcceleration::initialize(
 
 std::vector<DataID> BaseQNAcceleration::checkBoundViolation(Eigen::VectorXd &data, DataMap &cplData) const
 {
-  Eigen::Index        offset     = 0;
-  std::vector<DataID> violatedID = {};
+  Eigen::Index        offset       = 0;
+  std::vector<DataID> violatingIDs = {};
 
   // check for bound violations
   for (auto id : _dataIDs) {
@@ -138,23 +138,28 @@ std::vector<DataID> BaseQNAcceleration::checkBoundViolation(Eigen::VectorXd &dat
     for (int j = 0; j < dataDimension; j++) {
       if ((lowerBound[j].has_value() && (dataPerDimension.col(j).array() < lowerBound[j].value()).any()) ||
           (upperBound[j].has_value() && (dataPerDimension.col(j).array() > upperBound[j].value()).any())) {
-        violatedID.push_back(id);
+        violatingIDs.push_back(id);
         break;
       }
     }
     offset += size;
   }
 
-  return violatedID;
+  return violatingIDs;
 }
 
 void BaseQNAcceleration::onBoundViolations(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &violatingIDs, OnBoundViolation onBoundViolation, Eigen::VectorXd &xUpdate)
 {
   if (_onBoundViolation == OnBoundViolation::Discard) {
-    PRECICE_WARN("The coupling data of ID {} has violated its bound after the Quasi-Newton step. The current step will be discarded.", violatingIDs);
+    for (auto id : violatingIDs) {
+      PRECICE_WARN("The coupling data {} has violated its bound after the Quasi-Newton step. The current step will be discarded.", cplData.at(id)->getDataName());
+    }
+
     data -= xUpdate;
   } else if (_onBoundViolation == OnBoundViolation::Clamp) {
-    PRECICE_WARN("The coupling data of ID {} has violated its bound after the Quasi-Newton step. The values will be clamped to their bounds.", violatingIDs);
+    for (auto id : violatingIDs) {
+      PRECICE_WARN("The coupling data {} has violated its bound after the Quasi-Newton step. The values will be clamped to their bounds.", cplData.at(id)->getDataName());
+    }
 
     Eigen::Index offset = 0;
     for (auto id : _dataIDs) {
@@ -184,8 +189,10 @@ void BaseQNAcceleration::onBoundViolations(Eigen::VectorXd &data, DataMap &cplDa
       offset += size;
     }
   } else if (_onBoundViolation == OnBoundViolation::ScaleToBound) {
-    PRECICE_WARN(
-        "The coupling data of ID {} has violated its bound after the Quasi-Newton step. The step length will be scaled to avoid the bound violation.", violatingIDs);
+    for (auto id : violatingIDs) {
+      PRECICE_WARN("The coupling data {} has violated its bound after the Quasi-Newton step. The step length will be scaled to avoid the bound violation.", cplData.at(id)->getDataName());
+    }
+
     Eigen::Index offset    = 0;
     double       scaleStep = 0.0;
 
