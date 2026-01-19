@@ -211,29 +211,30 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time
   const auto        &localInData = inData.values;
 
   // TODO: We can probably reduce the temporary allocations here
-  Eigen::VectorXd in(_rbfSolver.getOutputSize());
+  Eigen::MatrixXd in(_rbfSolver.getOutputSize(), nComponents);
 
   // Now we perform the data mapping component-wise
-  for (unsigned int c = 0; c < nComponents; ++c) {
-    // Step 1: extract the relevant input data from the global input data and store
-    // it in a contiguous array, which is required for the RBF solver
-    for (unsigned int i = 0; i < _outputIDs.size(); ++i) {
+  // Step 1: extract the relevant input data from the global input data and store
+  // it in a contiguous array, which is required for the RBF solver
+  for (unsigned int i = 0; i < _outputIDs.size(); ++i) {
+    for (unsigned int c = 0; c < nComponents; ++c) {
       const auto dataIndex = *(_outputIDs.nth(i));
       PRECICE_ASSERT(dataIndex * nComponents + c < localInData.size(), dataIndex * nComponents + c, localInData.size());
       PRECICE_ASSERT(_normalizedWeights[i] > 0, _normalizedWeights[i], i);
       // here, we also directly apply the weighting, i.e., we split the input data
-      in[i] = localInData[dataIndex * nComponents + c] * _normalizedWeights[i];
+      in(i, c) = localInData[dataIndex * nComponents + c] * _normalizedWeights[i];
     }
+  }
+  // Step 2: solve the system using a conservative constraint
+  Eigen::MatrixXd result = _rbfSolver.solveConservative(in, _polynomial);
+  PRECICE_ASSERT(result.rows() == static_cast<Eigen::Index>(_inputIDs.size()));
 
-    // Step 2: solve the system using a conservative constraint
-    auto result = _rbfSolver.solveConservative(in, _polynomial);
-    PRECICE_ASSERT(result.size() == static_cast<Eigen::Index>(_inputIDs.size()));
-
-    // Step 3: now accumulate the result into our global output data
-    for (unsigned int i = 0; i < _inputIDs.size(); ++i) {
+  // Step 3: now accumulate the result into our global output data
+  for (unsigned int i = 0; i < _inputIDs.size(); ++i) {
+    for (unsigned int c = 0; c < nComponents; ++c) {
       const auto dataIndex = *(_inputIDs.nth(i));
       PRECICE_ASSERT(dataIndex * nComponents + c < outData.size(), dataIndex * nComponents + c, outData.size());
-      outData[dataIndex * nComponents + c] += result(i);
+      outData[dataIndex * nComponents + c] += result(i, c);
     }
   }
 }
@@ -318,7 +319,7 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
   }
 
   // Step 2: solve the system using a consistent constraint
-  auto result = _rbfSolver.solveConsistent(in, _polynomial);
+  Eigen::MatrixXd result = _rbfSolver.solveConsistent(in, _polynomial);
   PRECICE_ASSERT(static_cast<Eigen::Index>(_outputIDs.size() * nComponents) == result.size());
 
   // Step 3: now accumulate the result into our global output data
