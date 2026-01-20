@@ -107,6 +107,7 @@ target_sources(testprecice
     tests/quasi-newton/parallel/TestQN9.cpp
     tests/quasi-newton/parallel/TestQN9EmptyPartition.cpp
     tests/quasi-newton/serial/DefaultConfig.cpp
+    tests/quasi-newton/serial/ILSWithBound.cpp
     tests/quasi-newton/serial/TestQN1.cpp
     tests/quasi-newton/serial/TestQN10.cpp
     tests/quasi-newton/serial/TestQN11.cpp
@@ -114,7 +115,6 @@ target_sources(testprecice
     tests/quasi-newton/serial/TestQN13.cpp
     tests/quasi-newton/serial/TestQN14.cpp
     tests/quasi-newton/serial/TestQN15.cpp
-    tests/quasi-newton/serial/ILSWithBound.cpp
     tests/quasi-newton/serial/TestQN2.cpp
     tests/quasi-newton/serial/TestQN3.cpp
     tests/quasi-newton/serial/TestQN4.cpp
