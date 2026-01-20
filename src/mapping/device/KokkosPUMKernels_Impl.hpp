@@ -47,7 +47,7 @@ inline int powerOfTwo(int n, const Pow2Mode mode)
   } else if (mode == Pow2Mode::Smaller) {
     return lower;
   } else {
-    // (mode == Pow2Mode::Closest)
+    PRECICE_ASSERT(mode == Pow2Mode::Closest);
     // decide whether n is closer to lower or upper (pow2)
     if (n - lower < pow2 - n) {
       return lower;

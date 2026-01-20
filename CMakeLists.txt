@@ -128,8 +128,8 @@ add_feature_info(PRECICE_FEATURE_PETSC_MAPPING PRECICE_FEATURE_PETSC_MAPPING
 
    The executor can be specified as a subtag of the mapping configuration.
 
-   This feature can be enabled/disabled by setting the PRECICE_FEATURE_GINKGO_MAPPING CMake option.
-   Requires Kokkos-kernels, Kokkos (v4.1 or higher) and Eigen 3.4.
+   This feature can be enabled/disabled by setting the PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING CMake option.
+   Requires Kokkos-kernels and Kokkos as additional dependencies.
   ")
 
 
@@ -140,7 +140,7 @@ add_feature_info(PRECICE_FEATURE_PETSC_MAPPING PRECICE_FEATURE_PETSC_MAPPING
    It uses iterative solvers provided by Ginkgo or direct solvers offered by hip/cuSolver.
 
    This feature can be enabled/disabled by setting the PRECICE_FEATURE_GINKGO_MAPPING CMake option.
-   Requires the Ginkgo library, Kokkos (v4.1 or higher) and Eigen 3.4.
+   Requires the Ginkgo and Kokkos as additional dependencies.
   ")
 
   add_feature_info(PRECICE_FEATURE_PYTHON_ACTIONS PRECICE_FEATURE_PYTHON_ACTIONS
