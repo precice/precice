@@ -12,7 +12,6 @@
 #include "mapping/device/KokkosPUMKernels.hpp"
 #include "mapping/device/KokkosTypes.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
-#include "mapping/impl/SphericalVertexCluster.hpp"
 #include "mesh/Mesh.hpp"
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
