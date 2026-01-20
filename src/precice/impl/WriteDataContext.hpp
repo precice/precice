@@ -110,13 +110,13 @@ public:
   WriteDataContext &operator=(const WriteDataContext &assign) = delete;
 
   /// Move constructor, use the implicitly declared.
-  WriteDataContext(WriteDataContext &&) = default;
+  WriteDataContext(WriteDataContext &&)            = default;
   WriteDataContext &operator=(WriteDataContext &&) = default;
 
 private:
   static logging::Logger _log;
 
-  /// @brief Buffer to store written data until it is copied to _providedData->timeStepsStorage()
+  /// @brief Buffer to store written data until it is copied to _providedData->waveform()
   time::Sample _writeDataBuffer;
 };
 

@@ -43,7 +43,7 @@ ExportCSV::ExportCSV(
     int               frequency,
     int               rank,
     int               size)
-    : Export(participantName, location, mesh, kind, frequency, rank, size){};
+    : Export(participantName, location, mesh, kind, frequency, rank, size) {};
 
 void ExportCSV::doExport(int index, double time)
 {
@@ -82,7 +82,7 @@ void ExportCSV::doExport(int index, double time)
   }
   outFile << ";Rank";
   for (const auto &data : _mesh->data()) {
-    if (data->timeStepsStorage().empty()) {
+    if (data->waveform().empty()) {
       continue;
     }
     auto dataName = data->getName();
@@ -99,11 +99,11 @@ void ExportCSV::doExport(int index, double time)
   // Prepare writing data
   std::vector<StridedAccess> dataColumns;
   for (const auto &data : _mesh->data()) {
-    if (data->timeStepsStorage().empty()) {
+    if (data->waveform().empty()) {
       continue;
     }
     auto          dim    = data->getDimensions();
-    double const *values = data->timeStepsStorage().last().sample.values.data();
+    double const *values = data->waveform().last().sample.values.data();
     for (int i = 0; i < dim; ++i) {
       dataColumns.push_back({std::next(values, i), dim});
     }

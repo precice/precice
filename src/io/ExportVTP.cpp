@@ -16,7 +16,7 @@ ExportVTP::ExportVTP(
     int               rank,
     int               size)
 
-    : ExportXML(participantName, location, mesh, kind, frequency, rank, size){};
+    : ExportXML(participantName, location, mesh, kind, frequency, rank, size) {};
 
 std::string ExportVTP::getVTKFormat() const
 {
@@ -55,7 +55,7 @@ void ExportVTP::writeParallelCells(std::ostream &out) const
 }
 
 void ExportVTP::exportConnectivity(
-    std::ostream &    outFile,
+    std::ostream     &outFile,
     const mesh::Mesh &mesh) const
 {
   outFile << "         <Lines>\n";

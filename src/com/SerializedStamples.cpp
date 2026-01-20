@@ -8,7 +8,7 @@ SerializedStamples SerializedStamples::serialize(const cplscheme::CouplingData &
 {
   SerializedStamples result;
 
-  result._timeSteps = data.timeStepsStorage().nTimes(); // @todo use all available time steps for subcycling
+  result._timeSteps = data.waveform().nTimes(); // @todo use all available time steps for subcycling
   result.allocate(data);
   result.serializeValues(data);
   if (data.hasGradient()) {
@@ -30,7 +30,7 @@ SerializedStamples SerializedStamples::empty(int nTimeStamps, const cplscheme::C
 
 void SerializedStamples::deserializeInto(precice::span<const double> timeStamps, cplscheme::CouplingData &data)
 {
-  PRECICE_ASSERT(_timeSteps == timeStamps.size());
+  PRECICE_ASSERT(_timeSteps == static_cast<int>(timeStamps.size()));
 
   deserialize(timeStamps, data);
 }
@@ -71,13 +71,13 @@ void SerializedStamples::serializeGradients(const cplscheme::CouplingData &data)
 
 void SerializedStamples::deserialize(precice::span<const double> timeStamps, cplscheme::CouplingData &data) const
 {
-  PRECICE_ASSERT(timeStamps.size() * data.getSize() == _values.size(), timeStamps.size() * data.getSize(), _values.size());
+  PRECICE_ASSERT(static_cast<int>(timeStamps.size()) * data.getSize() == _values.size(), timeStamps.size() * data.getSize(), _values.size());
 
-  data.timeStepsStorage().clear(); // @todo needs optimization. Don't need to communicate and serialize / deserialize data at beginning of window, because it is already there.
+  data.waveform().clear(); // @todo needs optimization. Don't need to communicate and serialize / deserialize data at beginning of window, because it is already there.
 
   const auto dataDims = data.getDimensions();
 
-  for (int timeId = 0; timeId < timeStamps.size(); timeId++) {
+  for (int timeId = 0; timeId < static_cast<int>(timeStamps.size()); timeId++) {
     const double time = timeStamps[timeId];
 
     Eigen::VectorXd slice(data.getSize());

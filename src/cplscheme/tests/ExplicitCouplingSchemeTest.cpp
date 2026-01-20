@@ -34,8 +34,8 @@ using namespace precice::cplscheme;
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
 void runSimpleExplicitCoupling(
-    CouplingScheme &               cplScheme,
-    const std::string &            participantName,
+    CouplingScheme                &cplScheme,
+    const std::string             &participantName,
     const mesh::MeshConfiguration &meshConfig)
 {
   BOOST_TEST(meshConfig.meshes().size() == 1);
@@ -44,7 +44,7 @@ void runSimpleExplicitCoupling(
   auto &dataValues0 = mesh->data(0)->values();
   auto &dataValues1 = mesh->data(1)->values();
   BOOST_TEST(mesh->nVertices() > 0);
-  mesh::Vertex &  vertex     = mesh->vertex(0);
+  mesh::Vertex   &vertex     = mesh->vertex(0);
   double          valueData0 = 1.0;
   Eigen::VectorXd valueData1 = Eigen::VectorXd::Constant(3, 1.0);
 
@@ -147,19 +147,19 @@ void runSimpleExplicitCoupling(
 }
 
 void runExplicitCouplingWithSubcycling(
-    CouplingScheme &               cplScheme,
-    const std::string &            participantName,
+    CouplingScheme                &cplScheme,
+    const std::string             &participantName,
     const mesh::MeshConfiguration &meshConfig)
 {
   BOOST_TEST(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
   BOOST_TEST(mesh->data().size() == 2);
   BOOST_TEST(mesh->nVertices() > 0);
-  mesh::Vertex &  vertex      = mesh->vertex(0);
+  mesh::Vertex   &vertex      = mesh->vertex(0);
   double          valueData0  = 1.0;
   Eigen::VectorXd valueData1  = Eigen::VectorXd::Constant(3, 1.0);
-  auto &          dataValues0 = mesh->data(0)->values();
-  auto &          dataValues1 = mesh->data(1)->values();
+  auto           &dataValues0 = mesh->data(0)->values();
+  auto           &dataValues1 = mesh->data(1)->values();
 
   double      computedTime      = 0.0;
   int         computedTimesteps = 0;
@@ -169,7 +169,7 @@ void runExplicitCouplingWithSubcycling(
   if (participantName == nameParticipant0) {
     mesh->data(0)->setSampleAtTime(0, time::Sample{mesh->data(0)->getDimensions(), mesh->data(0)->values()});
     cplScheme.initialize();
-    mesh->data(0)->timeStepsStorage().trim();
+    mesh->data(0)->waveform().trim();
     double dtDesired = cplScheme.getNextTimeStepMaxSize() / 2.0;
     double dtUsed    = dtDesired;
     BOOST_TEST(not cplScheme.hasDataBeenReceived());
@@ -211,7 +211,7 @@ void runExplicitCouplingWithSubcycling(
         // correct in following timesteps.
         valueData0 += 1.0;
         valueData1 += Eigen::VectorXd::Constant(3, 1.0);
-        mesh->data(0)->timeStepsStorage().trim();
+        mesh->data(0)->waveform().trim();
       } else {
         BOOST_TEST(not cplScheme.isTimeWindowComplete());
       }
@@ -285,7 +285,7 @@ struct ExplicitCouplingSchemeFixture : m2n::WhiteboxAccessor {
       const std::string &participant0,
       const std::string &participant1,
       const std::string &localParticipant,
-      m2n::PtrM2N &      communication)
+      m2n::PtrM2N       &communication)
   {
     BOOST_TEST(communication);
     BOOST_TEST(not communication->isConnected());
@@ -327,7 +327,6 @@ BOOST_AUTO_TEST_CASE(testSimpleExplicitCoupling)
   const double maxTime        = 1.0;
   const int    maxTimeWindows = 10;
   const double timeWindowSize = 0.1;
-  const double timeStepSize   = timeWindowSize; // solver is not subcycling
   std::string  nameParticipant0("Participant0");
   std::string  nameParticipant1("Participant1");
   int          sendDataIndex    = -1;
@@ -704,7 +703,6 @@ BOOST_AUTO_TEST_CASE(testExplicitCouplingWithSubcycling)
   const double maxTime        = 1.0;
   const int    maxTimeWindows = 10;
   const double timeWindowSize = 0.1;
-  const double timeStepSize   = timeWindowSize; // solver is not subcycling
   std::string  nameParticipant0("Participant0");
   std::string  nameParticipant1("Participant1");
   int          sendDataIndex    = -1;

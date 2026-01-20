@@ -51,7 +51,7 @@ void NearestNeighborBaseMapping::computeMapping()
 
   // Set up of output arrays
   const size_t verticesSize   = origins->nVertices();
-  const auto & sourceVertices = origins->vertices();
+  const auto  &sourceVertices = origins->vertices();
   _vertexIndices.resize(verticesSize);
 
   // Needed for error calculations

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <deque>
 #include <map>
 #include <set>
 #include <string>
@@ -19,18 +20,12 @@
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/Types.hpp"
+#include "profiling/Event.hpp"
 #include "utils/MultiLock.hpp"
 
-namespace precice {
-
-namespace profiling {
-class Event;
-}
-
-namespace config {
+namespace precice::config {
 class Configuration;
-}
-} // namespace precice
+} // namespace precice::config
 
 // Forward declaration to friend the boost test struct
 
@@ -385,8 +380,6 @@ private:
    */
   void configure(const config::Configuration &configuration);
 
-  void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
-
   enum struct ExportTiming : bool {
     Advance = false,
     Initial = true
@@ -395,10 +388,6 @@ private:
   /// Exports meshes with data and watch point data.
   /// @param[in] timing when the exports are requested
   void handleExports(ExportTiming timing);
-
-  /// Determines participants providing meshes to other participants.
-  void configurePartitions(
-      const m2n::M2NConfiguration::SharedPointer &m2nConfig);
 
   /// Communicate bounding boxes and look for overlaps
   void compareBoundingBoxes();
@@ -441,7 +430,7 @@ private:
    * @param isAtWindowEnd set true, if function is called at end of window to also trim the time sample storage
    * @param isTimeWindowComplete set true, if function is called at end of converged window to trim and move the sample storage.
    */
-  void resetWrittenData(); //bool isAtWindowEnd, bool isTimeWindowComplete);
+  void resetWrittenData(); // bool isAtWindowEnd, bool isTimeWindowComplete);
 
   /// Determines participant accessing this interface from the configuration.
   impl::PtrParticipant determineAccessingParticipant(
@@ -480,10 +469,16 @@ private:
   /// Discards send (currently write) data of a participant after a given time when another iteration is required
   void trimSendDataAfter(double time);
 
+  /// How many ranks have changed each used mesh
+  using MeshChanges = std::vector<int>;
+
   /** Allreduce of the amount of changed meshes on each rank.
-   * @return the total amount of changed meshes of all ranks on each rank
+   * @return a vector of the size of meshcontexts which contain the amount of ranks that changed each mesh
    */
-  int getTotalMeshChanges() const;
+  MeshChanges getTotalMeshChanges() const;
+
+  /// Clears stample of changed meshes to make them consistent after the reinitialization.
+  void clearStamplesOfChangedMeshes(MeshChanges totalMeshChanges);
 
   /** Exchanges request to remesh with all connecting participants.
    *
@@ -514,7 +509,7 @@ private:
   std::unique_ptr<profiling::Event> _solverInitEvent;
   std::unique_ptr<profiling::Event> _solverAdvanceEvent;
 
-  std::vector<profiling::Event> _userEvents;
+  std::deque<profiling::Event> _userEvents;
 };
 
 } // namespace impl

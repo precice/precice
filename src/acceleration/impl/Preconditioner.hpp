@@ -40,6 +40,10 @@ public:
 
     _subVectorSizes = svs;
 
+    // Compute offsets of each subvector
+    _subVectorOffsets.resize(_subVectorSizes.size(), 0);
+    std::partial_sum(_subVectorSizes.begin(), --_subVectorSizes.end(), ++_subVectorOffsets.begin());
+
     size_t N = std::accumulate(_subVectorSizes.begin(), _subVectorSizes.end(), static_cast<std::size_t>(0));
 
     // cannot do this already in the constructor as the size is unknown at that point
@@ -82,7 +86,7 @@ public:
   void revert(Eigen::MatrixXd &M, bool transpose)
   {
     PRECICE_TRACE();
-    //PRECICE_ASSERT(_needsGlobalWeights);
+    // PRECICE_ASSERT(_needsGlobalWeights);
     if (transpose) {
       PRECICE_DEBUG_IF((int) _weights.size() != M.cols(), "The number of columns of the matrix {} and weights size {} mismatched.", M.cols(), _weights.size());
 
@@ -216,6 +220,9 @@ protected:
 
   /// Sizes of each sub-vector, i.e. each coupling data
   std::vector<size_t> _subVectorSizes;
+
+  /// Offsets of each sub-vector in concatenated data, i.e. each coupling data
+  std::vector<size_t> _subVectorOffsets;
 
   /** @brief maximum number of non-const time windows, i.e., after this number of time windows,
    *  the preconditioner is frozen with the current weights and becomes a constant preconditioner

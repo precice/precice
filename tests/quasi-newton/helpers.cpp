@@ -85,7 +85,7 @@ void runTestQN(bool includeSecondaryData, std::string const &config, TestContext
 
     if (context.isNamed("SolverOne")) {
       for (int i = 0; i < 4; i++) {
-        outValues1[i] = inValues1[i]; //only pushes solution through
+        outValues1[i] = inValues1[i]; // only pushes solution through
         if (includeSecondaryData) {
           outValues2[i] = inValues2[i];
         }
@@ -116,7 +116,7 @@ void runTestQN(bool includeSecondaryData, std::string const &config, TestContext
 
   interface.finalize();
 
-  //relative residual in config is 1e-7, so 2 orders of magnitude less strict
+  // relative residual in config is 1e-7, so 2 orders of magnitude less strict
   BOOST_TEST(outValues1[0] == -2.0, boost::test_tools::tolerance(1e-5));
   BOOST_TEST(outValues1[1] == 0.0, boost::test_tools::tolerance(1e-5));
   BOOST_TEST(outValues1[2] == -2.0, boost::test_tools::tolerance(1e-5));
@@ -199,7 +199,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
     if (context.isNamed("SolverOne")) {
       for (int i = 0; i < 4; i++) {
-        outValues[i] = inValues[i]; //only pushes solution through
+        outValues[i] = inValues[i]; // only pushes solution through
       }
     } else {
       outValues[0] = 2 * inValues[0] * inValues[0] - inValues[1] * inValues[2] - 8.0 + inValues[0];
@@ -221,7 +221,7 @@ void runTestQNEmptyPartition(std::string const &config, TestContext const &conte
 
   interface.finalize();
 
-  //relative residual in config is 1e-7, so 2 orders of magnitude less strict
+  // relative residual in config is 1e-7, so 2 orders of magnitude less strict
   if ((context.isNamed("SolverOne") and context.isPrimary()) or
       (context.isNamed("SolverTwo") and (not context.isPrimary()))) {
     BOOST_TEST(outValues[0] == -2.0, boost::test_tools::tolerance(1e-5));
@@ -280,17 +280,15 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
   double       maxDt         = interface.getMaxTimeStepSize();
   double       inValues[2]   = {0.0, 0.0};
   double       outValues[2]  = {0.0, 0.0};
-  const double solverDt      = maxDt / nSubsteps;                   //Do 5 substeps to check if QN and Waveform iterations work together
+  const double solverDt      = maxDt / nSubsteps;                   // Do 5 substeps to check if QN and Waveform iterations work together
   double       dt            = solverDt > maxDt ? maxDt : solverDt; // actual dt that will be updated on-the-fly
   int          nSubStepsDone = 0;                                   // Counts the number of substeps that are done
   double       t             = 0;
-  int          iterations    = 0;
   double       timeCheckpoint;
   while (interface.isCouplingOngoing()) {
 
     if (interface.requiresWritingCheckpoint()) {
       timeCheckpoint = t;
-      iterations     = 0;
       nSubStepsDone  = 0;
     }
 
@@ -305,7 +303,7 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
 
     if (context.isNamed("SolverOne")) {
       for (int i = 0; i < 2; i++) {
-        outValues[i] = inValues[i]; //only pushes solution through
+        outValues[i] = inValues[i]; // only pushes solution through
       }
     } else {
       outValues[0] = (-inValues[0] - inValues[1] + t * t);
@@ -328,7 +326,6 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
     if (interface.requiresReadingCheckpoint()) {
       nSubStepsDone = 0;
       t             = timeCheckpoint;
-      iterations++;
     }
   }
   interface.finalize();
@@ -388,18 +385,16 @@ void runTestQNWithWaveformsReducedTimeGrid(std::string const &config, TestContex
   double       maxDt         = interface.getMaxTimeStepSize();
   double       inValues[1]   = {0.0};
   double       outValues[1]  = {0.0};
-  const double solverDt      = maxDt / nSubsteps;                   //Do 2 substeps to check if QN and Waveform iterations work together
+  const double solverDt      = maxDt / nSubsteps;                   // Do 2 substeps to check if QN and Waveform iterations work together
   double       dt            = solverDt > maxDt ? maxDt : solverDt; // actual dt that will be updated on-the-fly
   int          nSubStepsDone = 0;                                   // Counts the number of substeps that are done
   double       t             = 0;
-  int          iterations    = 0;
   double       timeCheckpoint;
   double       pastXValue = 1;
   while (interface.isCouplingOngoing()) {
 
     if (interface.requiresWritingCheckpoint()) {
       timeCheckpoint = t;
-      iterations     = 0;
       nSubStepsDone  = 0;
     }
 
@@ -416,7 +411,7 @@ void runTestQNWithWaveformsReducedTimeGrid(std::string const &config, TestContex
     */
 
     if (context.isNamed("SolverOne")) {
-      outValues[0] = inValues[0]; //only pushes solution through
+      outValues[0] = inValues[0]; // only pushes solution through
     } else {
       outValues[0] = (-inValues[0] + pastXValue);
       pastXValue   = outValues[0];
@@ -438,7 +433,6 @@ void runTestQNWithWaveformsReducedTimeGrid(std::string const &config, TestContex
       nSubStepsDone = 0;
       t             = timeCheckpoint;
       pastXValue    = 1;
-      iterations++;
     }
   }
   interface.finalize();

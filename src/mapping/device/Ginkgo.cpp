@@ -14,8 +14,8 @@ void Ginkgo::initialize(int *argc, char ***argv)
   // We initialize Ginkgo internally through Kokkos
   if (!Kokkos::is_initialized() && !Kokkos::is_finalized()) {
     Kokkos::initialize(*argc, *argv);
+    weInitialized = true;
   }
-  weInitialized = true;
 }
 
 void Ginkgo::initialize(int nThreads, int deviceId)
@@ -29,8 +29,8 @@ void Ginkgo::initialize(int nThreads, int deviceId)
     else {
       Kokkos::initialize(Kokkos::InitializationSettings().set_num_threads(nThreads).set_device_id(deviceId).set_disable_warnings(true));
     }
+    weInitialized = true;
   }
-  weInitialized = true;
 }
 
 void Ginkgo::finalize()

@@ -38,8 +38,8 @@
     <participants first="B" second="A" />
     <max-time value="1.0" />
     <time-window-size value="1.0" />
-    <exchange data="Data" mesh="B-Mesh" from="A" to="B" substeps="true" />
-    <exchange data="Data2" mesh="B-Mesh" from="B" to="A" substeps="true" />
+    <exchange data="Data" mesh="B-Mesh" from="A" to="B" />
+    <exchange data="Data2" mesh="B-Mesh" from="B" to="A" />
     <max-iterations value="100" />
     <relative-convergence-measure limit="1.0e-10" data="Data" mesh="B-Mesh" />
     <acceleration:aitken>

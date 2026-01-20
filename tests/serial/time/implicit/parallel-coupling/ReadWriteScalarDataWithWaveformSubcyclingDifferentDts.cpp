@@ -66,7 +66,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
     nSubsteps = 3;
   }
   int    nWindows = 5; // perform 5 windows.
-  int    window   = 0; // counter for current window
   int    timestep = 0;
   double time     = 0;
 
@@ -90,7 +89,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSubcyclingDifferentDts)
       timeCheckpoint     = time;
       timestepCheckpoint = timestep;
       iterations         = 0;
-      window++;
     }
     precice.readData(meshName, readDataName, {&vertexID, 1}, currentDt, {&readData, 1});
 

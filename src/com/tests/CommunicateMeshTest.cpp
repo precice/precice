@@ -35,9 +35,9 @@ BOOST_AUTO_TEST_CASE(VertexEdgeMesh)
     mesh::Vertex &v0 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 0));
     mesh::Vertex &v1 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
     mesh::Vertex &v2 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
-    mesh::Edge &  e0 = sendMesh.createEdge(v0, v1);
-    mesh::Edge &  e1 = sendMesh.createEdge(v1, v2);
-    mesh::Edge &  e2 = sendMesh.createEdge(v2, v0);
+    mesh::Edge   &e0 = sendMesh.createEdge(v0, v1);
+    mesh::Edge   &e1 = sendMesh.createEdge(v1, v2);
+    mesh::Edge   &e2 = sendMesh.createEdge(v2, v0);
 
     auto &comm = *m2n->getPrimaryRankCommunication();
 
@@ -68,12 +68,12 @@ BOOST_AUTO_TEST_CASE(VertexEdgeTriangleMesh)
 
   int             dim = 3;
   mesh::Mesh      sendMesh("Sent Mesh", dim, testing::nextMeshID());
-  mesh::Vertex &  v0 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 0));
-  mesh::Vertex &  v1 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
-  mesh::Vertex &  v2 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
-  mesh::Edge &    e0 = sendMesh.createEdge(v0, v1);
-  mesh::Edge &    e1 = sendMesh.createEdge(v1, v2);
-  mesh::Edge &    e2 = sendMesh.createEdge(v2, v0);
+  mesh::Vertex   &v0 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 0));
+  mesh::Vertex   &v1 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
+  mesh::Vertex   &v2 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
+  mesh::Edge     &e0 = sendMesh.createEdge(v0, v1);
+  mesh::Edge     &e1 = sendMesh.createEdge(v1, v2);
+  mesh::Edge     &e2 = sendMesh.createEdge(v2, v0);
   mesh::Triangle &t0 = sendMesh.createTriangle(e0, e1, e2);
 
   // Create mesh communicator
@@ -106,12 +106,12 @@ BOOST_AUTO_TEST_CASE(BroadcastVertexEdgeTriangleMesh)
 
   int             dim = 3;
   mesh::Mesh      sendMesh("Sent Mesh", dim, testing::nextMeshID());
-  mesh::Vertex &  v0 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 0));
-  mesh::Vertex &  v1 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
-  mesh::Vertex &  v2 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
-  mesh::Edge &    e0 = sendMesh.createEdge(v0, v1);
-  mesh::Edge &    e1 = sendMesh.createEdge(v1, v2);
-  mesh::Edge &    e2 = sendMesh.createEdge(v2, v0);
+  mesh::Vertex   &v0 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 0));
+  mesh::Vertex   &v1 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 1));
+  mesh::Vertex   &v2 = sendMesh.createVertex(Eigen::VectorXd::Constant(dim, 2));
+  mesh::Edge     &e0 = sendMesh.createEdge(v0, v1);
+  mesh::Edge     &e1 = sendMesh.createEdge(v1, v2);
+  mesh::Edge     &e2 = sendMesh.createEdge(v2, v0);
   mesh::Triangle &t0 = sendMesh.createTriangle(e0, e1, e2);
 
   // Create mesh communicator

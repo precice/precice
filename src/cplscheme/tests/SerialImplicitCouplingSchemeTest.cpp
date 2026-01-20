@@ -45,10 +45,10 @@ using namespace precice::cplscheme;
 BOOST_AUTO_TEST_SUITE(CplSchemeTests)
 
 void runCoupling(
-    CouplingScheme &               cplScheme,
-    const std::string &            nameParticipant,
+    CouplingScheme                &cplScheme,
+    const std::string             &nameParticipant,
     const mesh::MeshConfiguration &meshConfig,
-    const std::vector<int> &       validIterations)
+    const std::vector<int>        &validIterations)
 {
   BOOST_REQUIRE(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
@@ -56,10 +56,10 @@ void runCoupling(
   BOOST_REQUIRE(!mesh->empty());
   BOOST_REQUIRE(!validIterations.empty());
 
-  mesh::Vertex &  vertex               = mesh->vertex(0);
+  mesh::Vertex   &vertex               = mesh->vertex(0);
   int             index                = vertex.getID();
-  auto &          dataValues0          = mesh->data(0)->values();
-  auto &          dataValues1          = mesh->data(1)->values();
+  auto           &dataValues0          = mesh->data(0)->values();
+  auto           &dataValues1          = mesh->data(1)->values();
   double          initialStepsizeData0 = 5.0;
   double          stepsizeData0        = 5.0;
   Eigen::VectorXd initialStepsizeData1 = Eigen::VectorXd::Constant(3, 5.0);
@@ -135,7 +135,7 @@ void runCoupling(
         stepsizeData0 -= 1.0;
       }
       // the first participant always receives new data
-      //if(cplScheme.isCouplingOngoing())
+      // if(cplScheme.isCouplingOngoing())
       BOOST_TEST(cplScheme.hasDataBeenReceived());
     }
     cplScheme.finalize(); // Ends the coupling scheme
@@ -206,7 +206,7 @@ void runCoupling(
         BOOST_TEST(cplScheme.isActionFulfilled(CouplingScheme::Action::ReadCheckpoint));
         // The written data value is decreased in a regular manner, in order
         // to achieve a predictable convergence.
-        //stepsizeData1 -= 1.0;
+        // stepsizeData1 -= 1.0;
         stepsizeData1 -= Eigen::Vector3d::Constant(1.0);
       }
       // only check if data is received
@@ -220,10 +220,10 @@ void runCoupling(
 }
 
 void runCouplingWithSubcycling(
-    CouplingScheme &               cplScheme,
-    const std::string &            nameParticipant,
+    CouplingScheme                &cplScheme,
+    const std::string             &nameParticipant,
     const mesh::MeshConfiguration &meshConfig,
-    const std::vector<int> &       validIterations)
+    const std::vector<int>        &validIterations)
 {
   BOOST_REQUIRE(meshConfig.meshes().size() == 1);
   mesh::PtrMesh mesh = meshConfig.meshes().at(0);
@@ -263,7 +263,7 @@ void runCouplingWithSubcycling(
     int    subcyclingStep       = 0;
 
     // Clear data for iteration.
-    mesh->data(0)->timeStepsStorage().trim();
+    mesh->data(0)->waveform().trim();
 
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
@@ -278,7 +278,7 @@ void runCouplingWithSubcycling(
       // timestep.
       if (cplScheme.isTimeWindowComplete()) {
         // Advance participant time and timestep
-        mesh->data(0)->timeStepsStorage().trim();
+        mesh->data(0)->waveform().trim();
         computedTime += maxTimeStepSize;
         computedTimesteps++;
         BOOST_TEST(testing::equals(computedTime, cplScheme.getTime()));
@@ -353,7 +353,7 @@ void runCouplingWithSubcycling(
     int    subcyclingStep        = 0;
 
     // Clear data for iteration.
-    mesh->data(1)->timeStepsStorage().trim();
+    mesh->data(1)->waveform().trim();
 
     // Main coupling loop
     while (cplScheme.isCouplingOngoing()) {
@@ -371,7 +371,7 @@ void runCouplingWithSubcycling(
       // globally converged and if subcycling steps have filled one global
       // time step.
       if (cplScheme.isTimeWindowComplete()) {
-        mesh->data(1)->timeStepsStorage().trim();
+        mesh->data(1)->waveform().trim();
         // Advance participant time and time step
         computedTime += maxTimeStepSize;
         computedTimesteps++;
@@ -444,8 +444,6 @@ BOOST_AUTO_TEST_CASE(testParseConfigurationWithRelaxation)
   PRECICE_TEST();
   using namespace mesh;
 
-  int dimensions = 3;
-
   std::string path(_pathToTests + "serial-implicit-cplscheme-relax-const-config.xml");
 
   xml::XMLTag                          root = xml::getRootTag();
@@ -475,8 +473,6 @@ BOOST_AUTO_TEST_CASE(testAbsConvergenceMeasureSynchronized)
   auto m2n                  = context.connectPrimaryRanks("Participant0", "Participant1", options);
 
   using namespace mesh;
-
-  int dimensions = 3;
 
   xml::XMLTag root = xml::getRootTag();
   // Create a data configuration, to simplify configuration of data
@@ -536,8 +532,6 @@ BOOST_AUTO_TEST_CASE(testConfiguredAbsConvergenceMeasureSynchronized)
   PRECICE_TEST();
 
   using namespace mesh;
-
-  int dimensions = 3;
 
   std::string configurationPath(
       _pathToTests + "serial-implicit-cplscheme-absolute-config.xml");

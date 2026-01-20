@@ -7,22 +7,29 @@
 
 namespace precice::profiling {
 
-/// Tag to annotate fundamental events
-struct FundamentalTag {
-};
-
 /// Tag to annotate synchronized events
 struct SynchronizeTag {
 };
 
-/// Convenience instance of the @ref FundamentalTag
-static constexpr FundamentalTag Fundamental{};
+/// Tag to annotate event group
+enum struct Group {
+  Default,
+  Fundamental,
+  API
+};
+
+/// Convenience instance of the @ref Cat::Fundamental
+static constexpr Group Fundamental = Group::Fundamental;
+
+/// Convenience instance of the @ref Cat::API
+static constexpr Group API = Group::API;
+
 /// Convenience instance of the @ref SynchronizeTag
 static constexpr SynchronizeTag Synchronize{};
 
 // Is the type a valid options tag?
 template <typename T>
-static constexpr bool isOptionsTag = std::is_same_v<T, FundamentalTag> || std::is_same_v<T, SynchronizeTag>;
+static constexpr bool isOptionsTag = std::is_same_v<T, Group> || std::is_same_v<T, SynchronizeTag>;
 
 /** Represents an event that can be started and stopped.
  *
@@ -44,12 +51,13 @@ public:
   std::string name;
 
   struct Options {
-    bool synchronized = false;
-    bool fundamental  = false;
+    bool  synchronized = false;
+    bool  fundamental  = false;
+    Group group        = Group::Default;
 
-    void handle(FundamentalTag)
+    void handle(Group g)
     {
-      fundamental = true;
+      group = g;
     }
     void handle(SynchronizeTag)
     {
@@ -74,11 +82,11 @@ public:
 
   Event(std::string_view eventName, Options options);
 
-  Event(Event &&) = default;
+  Event(Event &&)            = default;
   Event &operator=(Event &&) = default;
 
   // Copies would lead to duplicate entries
-  Event(const Event &other) = delete;
+  Event(const Event &other)       = delete;
   Event &operator=(const Event &) = delete;
 
   /// Stops the event if it's running and report its times to the EventRegistry
@@ -97,7 +105,7 @@ private:
   int   _eid;
   int   _sid{-1};
   State _state = State::STOPPED;
-  bool  _fundamental{false};
+  Group _group = Group::Default;
   bool  _synchronize{false};
 };
 

@@ -12,23 +12,23 @@
 namespace precice::utils {
 
 /**
-   * @brief This function is by and large the same as std::set_intersection().
-   * The only difference is that we don't return the intersection set itself, but
-   * we return the indices of elements in \p InputIt1, which appear in both sets
-   * ( \p InputIt1 and \p InputIt2 )
-   * The implementation was taken from
-   * https://en.cppreference.com/w/cpp/algorithm/set_intersection#Version_1 with the
-   * only difference that we compute and store std::distance() (i.e. the indices)
-   * in the output iterator. Similar to the std function, this function operates
-   * on sorted ranges.
-   *
-   * @param ref1 The reference iterator, to which we compute the distance/indices.
-   * @param first1 The begin of the first range we want to compute the intersection with
-   * @param last1 The end of the first range we want to compute the intersection with
-   * @param first1 The begin of the second range we want to compute the intersection with
-   * @param last1 The end of the second range we want to compute the intersection with
-   * @param d_first Beginning of the output range
-   */
+ * @brief This function is by and large the same as std::set_intersection().
+ * The only difference is that we don't return the intersection set itself, but
+ * we return the indices of elements in \p InputIt1, which appear in both sets
+ * ( \p InputIt1 and \p InputIt2 )
+ * The implementation was taken from
+ * https://en.cppreference.com/w/cpp/algorithm/set_intersection#Version_1 with the
+ * only difference that we compute and store std::distance() (i.e. the indices)
+ * in the output iterator. Similar to the std function, this function operates
+ * on sorted ranges.
+ *
+ * @param ref1 The reference iterator, to which we compute the distance/indices.
+ * @param first1 The begin of the first range we want to compute the intersection with
+ * @param last1 The end of the first range we want to compute the intersection with
+ * @param first1 The begin of the second range we want to compute the intersection with
+ * @param last1 The end of the second range we want to compute the intersection with
+ * @param d_first Beginning of the output range
+ */
 template <class InputIt1, class InputIt2, class OutputIt>
 void set_intersection_indices(InputIt1 ref1, InputIt1 first1, InputIt1 last1,
                               InputIt2 first2, InputIt2 last2, OutputIt d_first)
@@ -47,7 +47,7 @@ void set_intersection_indices(InputIt1 ref1, InputIt1 first1, InputIt1 last1,
 
 /// Function that generates an array from given elements.
 template <typename... Elements>
-auto make_array(Elements &&... elements) -> std::array<typename std::common_type<Elements...>::type, sizeof...(Elements)>
+auto make_array(Elements &&...elements) -> std::array<typename std::common_type<Elements...>::type, sizeof...(Elements)>
 {
   return {std::forward<Elements>(elements)...};
 }
@@ -178,7 +178,7 @@ const RangePreview<Iter> previewRange(Size n, const Range &range)
 template <typename T, typename Index, size_t n>
 auto reorder_array(const std::array<Index, n> &order, const std::array<T, n> &elements) -> std::array<T, n>
 {
-  static_assert(n > 0, "Reodering nothing is pointless");
+  static_assert(n > 0, "Reordering nothing is pointless");
   std::array<T, n> reordered;
   for (std::size_t i = 0; i < n; ++i) {
     reordered[i] = elements[order[i]];

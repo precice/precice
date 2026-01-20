@@ -163,7 +163,7 @@ PtrData &Mesh::createData(
                   "Please rename or remove one of the use-data tags with name \"{}\".",
                   name, _name, name);
   }
-  //#rows = dimensions of current mesh #columns = dimensions of corresponding data set
+  // #rows = dimensions of current mesh #columns = dimensions of corresponding data set
   PtrData data(new Data(name, id, dimension, _dimensions, waveformDegree));
   _data.push_back(data);
   return _data.back();
@@ -263,9 +263,9 @@ void Mesh::clear()
   _tetrahedra.clear();
   _index.clear();
 
+  clearDataStamples();
   for (mesh::PtrData &data : _data) {
     data->values().resize(0);
-    data->timeStepsStorage().clear();
   }
 }
 
@@ -279,9 +279,16 @@ void Mesh::clearPartitioning()
   _globalNumberOfVertices = 0;
 }
 
+void Mesh::clearDataStamples()
+{
+  for (mesh::PtrData &data : _data) {
+    data->waveform().clear();
+  }
+}
+
 bool Mesh::isPartitionEmpty(Rank rank) const
 {
-  // Without offset data, we assume non-empty partititions
+  // Without offset data, we assume non-empty partitions
   if (_vertexOffsets.empty()) {
     return false;
   }

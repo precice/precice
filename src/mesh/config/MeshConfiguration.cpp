@@ -17,7 +17,7 @@
 namespace precice::mesh {
 
 MeshConfiguration::MeshConfiguration(
-    xml::XMLTag &        parent,
+    xml::XMLTag         &parent,
     PtrDataConfiguration config)
     : TAG("mesh"),
       ATTR_NAME("name"),
@@ -27,8 +27,7 @@ MeshConfiguration::MeshConfiguration(
       _meshDimensionsMap(),
       _dataConfig(std::move(config)),
       _meshes(),
-      _neededMeshes(),
-      _meshIdManager(new utils::ManageUniqueIDs())
+      _neededMeshes()
 {
   using namespace xml;
   std::string doc;
@@ -60,7 +59,7 @@ MeshConfiguration::MeshConfiguration(
 
 void MeshConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
@@ -68,8 +67,7 @@ void MeshConfiguration::xmlTagCallback(
     int         dimensions = tag.getIntAttributeValue(ATTR_DIMENSIONS);
     insertMeshToMeshDimensionsMap(name, dimensions);
     PRECICE_ASSERT(dimensions != 0);
-    PRECICE_ASSERT(_meshIdManager);
-    _meshes.push_back(std::make_shared<Mesh>(name, dimensions, _meshIdManager->getFreeID()));
+    _meshes.push_back(std::make_shared<Mesh>(name, dimensions, _meshIdManager.getFreeID()));
   } else if (tag.getName() == TAG_DATA) {
     std::string name  = tag.getStringAttributeValue(ATTR_NAME);
     bool        found = false;
@@ -90,7 +88,7 @@ void MeshConfiguration::xmlTagCallback(
 
 void MeshConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
 }
 

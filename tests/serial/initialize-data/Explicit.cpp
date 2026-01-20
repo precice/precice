@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(Explicit)
     auto   dataBID      = "DataTwo";
     double valueDataB[] = {2.0};
     cplInterface.writeData(meshName, dataBID, {&vid, 1}, valueDataB);
-    //tell preCICE that data has been written and call initializeData
+    // tell preCICE that data has been written and call initializeData
     cplInterface.initialize();
     double   maxDt = cplInterface.getMaxTimeStepSize();
     Vector3d valueDataA;

@@ -13,7 +13,7 @@ Eigen::VectorXd integrateSurface(const PtrMesh &mesh, const Eigen::VectorXd &inp
   PRECICE_ASSERT(mesh->nVertices() > 0);
   const int       meshDimensions  = mesh->getDimensions();
   const int       valueDimensions = input.size() / mesh->nVertices();
-  const auto &    values          = input;
+  const auto     &values          = input;
   Eigen::VectorXd integral        = Eigen::VectorXd::Zero(valueDimensions);
 
   if (meshDimensions == 2) {
@@ -43,7 +43,7 @@ Eigen::VectorXd integrateVolume(const PtrMesh &mesh, const Eigen::VectorXd &inpu
   PRECICE_ASSERT(mesh->nVertices() > 0);
   const int       meshDimensions  = mesh->getDimensions();
   const int       valueDimensions = input.size() / mesh->nVertices();
-  const auto &    values          = input;
+  const auto     &values          = input;
   Eigen::VectorXd integral        = Eigen::VectorXd::Zero(valueDimensions);
   if (meshDimensions == 2) {
     for (const auto &face : mesh->triangles()) {

@@ -70,7 +70,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
 
   int    nWindows        = 5; // perform 5 windows.
   int    timestep        = 0;
-  int    timewindow      = 0;
   double windowStartTime = 0;
   int    windowStartStep = 0;
   int    nSamples        = 4;
@@ -132,7 +131,6 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithWaveformSamplingFirst)
       time     = windowStartTime;
     }
     if (precice.isTimeWindowComplete()) {
-      timewindow++;
       iterations = 0;
     }
   }

@@ -84,7 +84,7 @@ boost::log::record precice_feature<BaseT>::open_record_unlocked(ArgsT const &arg
 struct precice_log : public boost::mpl::quote1<precice_feature> {
 };
 
-/// The boost logger that combines required featrues
+/// The boost logger that combines required features
 template <class BaseLogger>
 using BoostLogger = boost::log::sources::basic_composite_logger<
     char,

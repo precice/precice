@@ -22,11 +22,11 @@ public:
       : _owned(std::move(vec)), _view(_owned.data(), _owned.size()) {}
 
   // No copy
-  SampleResult(const SampleResult &other) = delete;
+  SampleResult(const SampleResult &other)            = delete;
   SampleResult &operator=(const SampleResult &other) = delete;
 
   // Move is allowed
-  SampleResult(SampleResult &&other) = default;
+  SampleResult(SampleResult &&other)            = default;
   SampleResult &operator=(SampleResult &&other) = default;
 
   /// Access the values as a vector

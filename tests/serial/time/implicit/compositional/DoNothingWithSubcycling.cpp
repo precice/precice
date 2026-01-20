@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_CASE(DoNothingWithSubcycling)
     nSubsteps = 3;
   }
 
-  double   v0[]     = {0, 0, 0};
-  VertexID vertexID = precice.setMeshVertex(meshName, v0);
+  double v0[] = {0, 0, 0};
+  precice.setMeshVertex(meshName, v0);
 
   int totalSolves             = 0;
   int totalCompletedTimesteps = 0;

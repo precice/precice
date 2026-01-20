@@ -82,8 +82,8 @@ void perform2DTestConsistentMapping(Mapping &mapping)
   mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
   int           outDataID = outData->getID();
   mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
-  mesh::Vertex &vertex1   = outMesh->createVertex(Vector2d(3.5, 0.5));
-  mesh::Vertex &vertex2   = outMesh->createVertex(Vector2d(2.5, 0.5));
+  outMesh->createVertex(Vector2d(3.5, 0.5));
+  outMesh->createVertex(Vector2d(2.5, 0.5));
   // vertex will be changed
   outMesh->createVertex(Vector2d(0, 0));
   outMesh->createVertex(Vector2d(5, 1));
@@ -216,8 +216,8 @@ void perform2DTestConsistentMappingVector(Mapping &mapping)
   mesh::PtrData outData   = outMesh->createData("OutData", dataDimensions, 1_dataID);
   int           outDataID = outData->getID();
   mesh::Vertex &vertex    = outMesh->createVertex(Vector2d(0, 0));
-  mesh::Vertex &vertex1   = outMesh->createVertex(Vector2d(3.5, 0.5));
-  mesh::Vertex &vertex2   = outMesh->createVertex(Vector2d(2.5, 0.5));
+  outMesh->createVertex(Vector2d(3.5, 0.5));
+  outMesh->createVertex(Vector2d(2.5, 0.5));
   // vertex will be changed
   outMesh->createVertex(Vector2d(0, 0));
   outMesh->createVertex(Vector2d(5, 1));
@@ -389,9 +389,9 @@ void perform2DTestConservativeMapping(Mapping &mapping)
   int           inDataID = inData->getID();
 
   // vertices will be changed
-  mesh::Vertex &vertex  = inMesh->createVertex(Vector2d(1.0, 0.0));
-  mesh::Vertex &vertex1 = inMesh->createVertex(Vector2d(3.5, 0.0));
-  mesh::Vertex &vertex2 = inMesh->createVertex(Vector2d(2.5, 0.5));
+  inMesh->createVertex(Vector2d(1.0, 0.0));
+  inMesh->createVertex(Vector2d(3.5, 0.0));
+  inMesh->createVertex(Vector2d(2.5, 0.5));
 
   inMesh->createVertex(Vector2d(0, 0));
   inMesh->createVertex(Vector2d(5, 1));
@@ -486,8 +486,8 @@ void perform2DTestConservativeMappingVector(Mapping &mapping)
   mesh::PtrData inData   = inMesh->createData("InData", dataDimensions, 0_dataID);
   DataID        inDataID = inData->getID();
   mesh::Vertex &vertex   = inMesh->createVertex(Vector2d(0, 0));
-  mesh::Vertex &vertex1  = inMesh->createVertex(Vector2d(3.5, 0.5));
-  mesh::Vertex &vertex2  = inMesh->createVertex(Vector2d(2.5, 0.5));
+  inMesh->createVertex(Vector2d(3.5, 0.5));
+  inMesh->createVertex(Vector2d(2.5, 0.5));
   // vertex will be changed
   inMesh->createVertex(Vector2d(0, 0));
   inMesh->createVertex(Vector2d(5, 1));
@@ -673,8 +673,8 @@ void perform3DTestConsistentMapping(Mapping &mapping)
   mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
   int           outDataID = outData->getID();
   mesh::Vertex &vertex    = outMesh->createVertex(Vector3d(0, 0, 0));
-  mesh::Vertex &vertex1   = outMesh->createVertex(Vector3d(3.5, 0.5, 0.5));
-  mesh::Vertex &vertex2   = outMesh->createVertex(Vector3d(2.5, 0.5, 1.0));
+  outMesh->createVertex(Vector3d(3.5, 0.5, 0.5));
+  outMesh->createVertex(Vector3d(2.5, 0.5, 1.0));
   outMesh->createVertex(Vector3d(0, 0, 0.5));
   outMesh->createVertex(Vector3d(5, 1, 0.5));
   outMesh->allocateDataValues();
@@ -776,8 +776,7 @@ void perform3DTestJustInTimeMappingWithPolynomial(Mapping &mapping)
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", dataComponents, 0_dataID);
-  int           inDataID = inData->getID();
+  mesh::PtrData inData = inMesh->createData("InData", dataComponents, 0_dataID);
   inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
   inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
   inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
@@ -944,8 +943,7 @@ void perform2DTestJustInTimeMappingNoPolynomial(Mapping &mapping)
 
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
-  mesh::PtrData inData   = inMesh->createData("InData", dataComponents, 0_dataID);
-  int           inDataID = inData->getID();
+  mesh::PtrData inData = inMesh->createData("InData", dataComponents, 0_dataID);
   inMesh->createVertex(Eigen::Vector2d(0.0, 0.0));
   inMesh->createVertex(Eigen::Vector2d(1.0, 0.0));
   inMesh->createVertex(Eigen::Vector2d(1.0, 1.0));
@@ -1149,9 +1147,9 @@ void perform3DTestConsistentMappingVector(Mapping &mapping)
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData outData   = outMesh->createData("OutData", dataDimensions, 1_dataID);
   int           outDataID = outData->getID();
-  mesh::Vertex &vertex    = outMesh->createVertex(Vector3d(0, 0, 0));
-  mesh::Vertex &vertex1   = outMesh->createVertex(Vector3d(3.5, 0.5, 0.5));
-  mesh::Vertex &vertex2   = outMesh->createVertex(Vector3d(2.5, 0.5, 1.0));
+  outMesh->createVertex(Vector3d(0, 0, 0));
+  outMesh->createVertex(Vector3d(3.5, 0.5, 0.5));
+  outMesh->createVertex(Vector3d(2.5, 0.5, 1.0));
   outMesh->createVertex(Vector3d(0, 0, 0.5));
   outMesh->createVertex(Vector3d(5, 1, 0.5));
   outMesh->allocateDataValues();
@@ -1206,9 +1204,9 @@ void perform3DTestConservativeMapping(Mapping &mapping)
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData inData   = inMesh->createData("InData", 1, 0_dataID);
   const DataID  inDataID = inData->getID();
-  mesh::Vertex &vertex   = inMesh->createVertex(Vector3d(0, 0, 0));
-  mesh::Vertex &vertex1  = inMesh->createVertex(Vector3d(3.5, 0.5, 0.5));
-  mesh::Vertex &vertex2  = inMesh->createVertex(Vector3d(2.5, 0.5, 1.0));
+  inMesh->createVertex(Vector3d(0, 0, 0));
+  inMesh->createVertex(Vector3d(3.5, 0.5, 0.5));
+  inMesh->createVertex(Vector3d(2.5, 0.5, 1.0));
   inMesh->createVertex(Vector3d(1, 1, 1));
   inMesh->createVertex(Vector3d(5, 1, 0.5));
   inMesh->allocateDataValues();
@@ -1649,9 +1647,9 @@ void perform3DTestConservativeMappingVector(Mapping &mapping)
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, testing::nextMeshID()));
   mesh::PtrData inData   = inMesh->createData("InData", dataDimension, 0_dataID);
   const DataID  inDataID = inData->getID();
-  mesh::Vertex &vertex   = inMesh->createVertex(Vector3d(0, 0, 0));
-  mesh::Vertex &vertex1  = inMesh->createVertex(Vector3d(3.5, 0.5, 0.5));
-  mesh::Vertex &vertex2  = inMesh->createVertex(Vector3d(2.5, 0.5, 1.0));
+  inMesh->createVertex(Vector3d(0, 0, 0));
+  inMesh->createVertex(Vector3d(3.5, 0.5, 0.5));
+  inMesh->createVertex(Vector3d(2.5, 0.5, 1.0));
   inMesh->createVertex(Vector3d(1, 1, 1));
   inMesh->createVertex(Vector3d(5, 1, 0.5));
   inMesh->allocateDataValues();
@@ -1753,7 +1751,7 @@ void perform3DTestConservativeMappingVector(Mapping &mapping)
     BOOST_TEST(outData->values()(i * dataDimension + 1) == 0);
   }
 
-  // Check for the correct relation between copmonents
+  // Check for the correct relation between components
   for (unsigned int i = 0; i < inData->values().size() / dataDimension; ++i) {
     inData->values()(i * dataDimension)     = std::pow(i * dataDimension, 3);
     inData->values()(i * dataDimension + 1) = 5 * std::pow(i * dataDimension, 3);
@@ -1885,8 +1883,8 @@ BOOST_AUTO_TEST_CASE(TestSingleClusterPartitionOfUnity)
   mesh::PtrData outData   = outMesh->createData("OutData", 1, 1_dataID);
   int           outDataID = outData->getID();
   mesh::Vertex &vertex    = outMesh->createVertex(Vector3d(0, 0, 0));
-  mesh::Vertex &vertex1   = outMesh->createVertex(Vector3d(3.5, 0.5, 0.5));
-  mesh::Vertex &vertex2   = outMesh->createVertex(Vector3d(2.5, 0.5, 1.0));
+  outMesh->createVertex(Vector3d(3.5, 0.5, 0.5));
+  outMesh->createVertex(Vector3d(2.5, 0.5, 1.0));
   outMesh->createVertex(Vector3d(0, 0, 0.5));
   outMesh->createVertex(Vector3d(5, 1, 0.5));
   outMesh->allocateDataValues();
@@ -1993,10 +1991,10 @@ using MeshSpecification = std::vector<VertexSpecification>;
 /// Contains which values are expected on which rank: rank -> vector of data.
 using ReferenceSpecification = std::vector<std::pair<int, std::vector<double>>>;
 
-void getDistributedMesh(const TestContext &      context,
+void getDistributedMesh(const TestContext       &context,
                         MeshSpecification const &vertices,
-                        mesh::PtrMesh &          mesh,
-                        mesh::PtrData &          data,
+                        mesh::PtrMesh           &mesh,
+                        mesh::PtrData           &data,
                         int                      globalIndexOffset = 0,
                         bool                     meshIsSmaller     = false)
 {
@@ -2036,8 +2034,8 @@ void getDistributedMesh(const TestContext &      context,
   data->values() = d;
 }
 
-void testDistributed(const TestContext &    context,
-                     Mapping &              mapping,
+void testDistributed(const TestContext     &context,
+                     Mapping               &mapping,
                      MeshSpecification      inMeshSpec,
                      MeshSpecification      outMeshSpec,
                      ReferenceSpecification referenceSpec,
@@ -2372,7 +2370,7 @@ void testTagging(const TestContext &context,
 
   for (const auto &v : inMesh->vertices()) {
     auto pos   = std::find_if(shouldTagFirstRound.begin(), shouldTagFirstRound.end(),
-                            [meshDimension, &v](const VertexSpecification &spec) {
+                              [meshDimension, &v](const VertexSpecification &spec) {
                               return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
                             });
     bool found = pos != shouldTagFirstRound.end();
@@ -2386,12 +2384,12 @@ void testTagging(const TestContext &context,
 
   for (const auto &v : inMesh->vertices()) {
     auto posFirst    = std::find_if(shouldTagFirstRound.begin(), shouldTagFirstRound.end(),
-                                 [meshDimension, &v](const VertexSpecification &spec) {
+                                    [meshDimension, &v](const VertexSpecification &spec) {
                                    return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
                                  });
     bool foundFirst  = posFirst != shouldTagFirstRound.end();
     auto posSecond   = std::find_if(shouldTagSecondRound.begin(), shouldTagSecondRound.end(),
-                                  [meshDimension, &v](const VertexSpecification &spec) {
+                                    [meshDimension, &v](const VertexSpecification &spec) {
                                     return std::equal(spec.position.data(), spec.position.data() + meshDimension, v.getCoords().data());
                                   });
     bool foundSecond = posSecond != shouldTagSecondRound.end();

@@ -36,15 +36,15 @@ BOOST_AUTO_TEST_CASE(CouplingOnLine)
     double               xCoord        = -0.0001;
     double               yCoord        = 1.00001;
     double               positions[30] = {xCoord, yCoord, 0.12,
-                            xCoord, yCoord, 0.24,
-                            xCoord, yCoord, 0.36,
-                            xCoord, yCoord, 0.48,
-                            xCoord, yCoord, 0.60,
-                            xCoord, yCoord, 0.72,
-                            xCoord, yCoord, 0.84,
-                            xCoord, yCoord, 0.96,
-                            xCoord, yCoord, 1.08,
-                            xCoord, yCoord, 1.2};
+                                          xCoord, yCoord, 0.24,
+                                          xCoord, yCoord, 0.36,
+                                          xCoord, yCoord, 0.48,
+                                          xCoord, yCoord, 0.60,
+                                          xCoord, yCoord, 0.72,
+                                          xCoord, yCoord, 0.84,
+                                          xCoord, yCoord, 0.96,
+                                          xCoord, yCoord, 1.08,
+                                          xCoord, yCoord, 1.2};
     interface.setMeshVertices(meshName, positions, vertexIDs);
     interface.initialize();
     interface.advance(1.0);

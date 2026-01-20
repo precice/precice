@@ -979,9 +979,9 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
     mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
     mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
-    mesh::Edge &  e1 = mesh->createEdge(v1, v2);
-    mesh::Edge &  e2 = mesh->createEdge(v2, v3);
-    mesh::Edge &  e5 = mesh->createEdge(v1, v3);
+    mesh::Edge   &e1 = mesh->createEdge(v1, v2);
+    mesh::Edge   &e2 = mesh->createEdge(v2, v3);
+    mesh::Edge   &e5 = mesh->createEdge(v1, v3);
     mesh->createTriangle(e1, e2, e5);
   }
   if (context.isRank(1)) {
@@ -992,9 +992,9 @@ BOOST_AUTO_TEST_CASE(ScalarDataFaceConnectivityParallel)
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
     mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
     mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector3d(0.0, 4.0, 0.0));
-    mesh::Edge &  e3 = mesh->createEdge(v3, v4);
-    mesh::Edge &  e4 = mesh->createEdge(v4, v1);
-    mesh::Edge &  e5 = mesh->createEdge(v1, v3);
+    mesh::Edge   &e3 = mesh->createEdge(v3, v4);
+    mesh::Edge   &e4 = mesh->createEdge(v4, v1);
+    mesh::Edge   &e5 = mesh->createEdge(v1, v3);
     mesh->createTriangle(e3, e4, e5);
   }
 
@@ -1071,9 +1071,9 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
     mesh::Vertex &v2 = mesh->createVertex(Eigen::Vector3d(3.0, 0.0, 0.0));
     mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
-    mesh::Edge &  e1 = mesh->createEdge(v1, v2);
-    mesh::Edge &  e2 = mesh->createEdge(v2, v3);
-    mesh::Edge &  e5 = mesh->createEdge(v1, v3);
+    mesh::Edge   &e1 = mesh->createEdge(v1, v2);
+    mesh::Edge   &e2 = mesh->createEdge(v2, v3);
+    mesh::Edge   &e5 = mesh->createEdge(v1, v3);
     mesh->createTriangle(e1, e2, e5);
   }
   if (context.isRank(1)) {
@@ -1084,9 +1084,9 @@ BOOST_AUTO_TEST_CASE(VectorDataFaceConnectivityParallel)
     mesh::Vertex &v1 = mesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
     mesh::Vertex &v3 = mesh->createVertex(Eigen::Vector3d(3.0, 4.0, 0.0));
     mesh::Vertex &v4 = mesh->createVertex(Eigen::Vector3d(0.0, 4.0, 0.0));
-    mesh::Edge &  e3 = mesh->createEdge(v3, v4);
-    mesh::Edge &  e4 = mesh->createEdge(v4, v1);
-    mesh::Edge &  e5 = mesh->createEdge(v1, v3);
+    mesh::Edge   &e3 = mesh->createEdge(v3, v4);
+    mesh::Edge   &e4 = mesh->createEdge(v4, v1);
+    mesh::Edge   &e5 = mesh->createEdge(v1, v3);
     mesh->createTriangle(e3, e4, e5);
   }
 

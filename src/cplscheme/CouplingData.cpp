@@ -22,7 +22,7 @@ CouplingData::CouplingData(
       _direction(direction)
 {
   PRECICE_ASSERT(_data != nullptr);
-  _previousTimeStepsStorage = _data->timeStepsStorage();
+  _previousTimeStepsStorage = _data->waveform();
 
   PRECICE_ASSERT(_mesh != nullptr);
   PRECICE_ASSERT(_mesh.use_count() > 0);
@@ -36,16 +36,12 @@ int CouplingData::getDimensions() const
 
 int CouplingData::getSize() const
 {
-  // @todo this correct implementation breaks a ton of tests that don't define vertices of a test mesh
-  //return _mesh->nVertices() * getDimensions();
-  return sample().values.size();
+  return _mesh->nVertices() * getDimensions();
 }
 
 int CouplingData::nVertices() const
 {
-  // @todo this correct implementation breaks a ton of tests that don't define vertices of a test mesh
-  //return _mesh->nVertices();
-  return sample().values.size() / getDimensions();
+  return _mesh->nVertices();
 }
 
 const Eigen::VectorXd &CouplingData::values() const
@@ -78,16 +74,16 @@ const time::Sample &CouplingData::sample() const
   return _data->sample();
 }
 
-time::Storage &CouplingData::timeStepsStorage()
+time::Waveform &CouplingData::waveform()
 {
   PRECICE_ASSERT(_data != nullptr);
-  return _data->timeStepsStorage();
+  return _data->waveform();
 }
 
-const time::Storage &CouplingData::timeStepsStorage() const
+const time::Waveform &CouplingData::waveform() const
 {
   PRECICE_ASSERT(_data != nullptr);
-  return _data->timeStepsStorage();
+  return _data->waveform();
 }
 
 time::SampleResult CouplingData::getPreviousValuesAtTime(double relativeDt)
@@ -162,7 +158,7 @@ void CouplingData::reinitialize()
   auto zero = time::Sample(getDimensions(), nVertices());
   zero.setZero();
 
-  _data->timeStepsStorage().setAllSamples(zero);
+  _data->waveform().setAllSamples(zero);
   _previousTimeStepsStorage.setAllSamples(zero);
 }
 
@@ -170,7 +166,7 @@ void CouplingData::storeIteration()
 {
   const auto &stamples = this->stamples();
   PRECICE_ASSERT(stamples.size() > 0);
-  _previousTimeStepsStorage = _data->timeStepsStorage();
+  _previousTimeStepsStorage = _data->waveform();
 }
 
 const Eigen::VectorXd &CouplingData::previousIteration() const
@@ -225,10 +221,10 @@ void CouplingData::moveToNextWindow()
 {
   if (_direction == Direction::Receive) {
     //_data->moveToNextWindow();
-    // _previousTimeStepsStorage = _data->timeStepsStorage();
+    // _previousTimeStepsStorage = _data->waveform();
   }
   _data->moveToNextWindow();
-  _previousTimeStepsStorage = _data->timeStepsStorage();
+  _previousTimeStepsStorage = _data->waveform();
 }
 
 bool CouplingData::exchangeSubsteps() const

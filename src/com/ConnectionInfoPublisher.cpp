@@ -62,6 +62,14 @@ std::string ConnectionInfoReader::read() const
   PRECICE_DEBUG("Found connection file \"{}\"", path);
 
   std::ifstream ifs(path);
+
+  if (!ifs) {
+    PRECICE_DEBUG("Opening connection file \"{}\" failed. Retrying", path);
+    std::this_thread::sleep_for(waitdelay);
+    ifs.clear();
+    ifs.open(path);
+  }
+
   PRECICE_CHECK(ifs,
                 "Unable to establish connection as the connection file \"{}\" couldn't be opened.",
                 path);
@@ -115,7 +123,15 @@ void ConnectionInfoWriter::write(std::string_view info) const
   PRECICE_DEBUG("Writing temporary connection file \"{}\"", tmp.generic_string());
   fs::create_directories(tmp.parent_path());
   {
-    std::ofstream ofs(tmp.string());
+    std::ofstream ofs(tmp);
+
+    if (!ofs) {
+      PRECICE_DEBUG("Opening temporary connection file \"{}\" failed. Retrying", tmp.generic_string());
+      std::this_thread::sleep_for(std::chrono::milliseconds{1});
+      ofs.clear();
+      ofs.open(tmp);
+    }
+
     PRECICE_CHECK(ofs, "Unable to establish connection as the temporary connection file \"{}\" couldn't be opened.", tmp.generic_string());
     fmt::print(ofs,
                "{}\nAcceptor: {}, Requester: {}, Tag: {}, Rank: {}",

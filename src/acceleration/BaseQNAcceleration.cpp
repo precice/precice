@@ -10,6 +10,7 @@
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "cplscheme/CouplingData.hpp"
+#include "io/TXTTableWriter.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -174,7 +175,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
         // insert column deltaR = _primaryResiduals - _oldPrimaryResiduals at pos. 0 (front) into the
         // QR decomposition and update decomposition
 
-        //apply scaling here
+        // apply scaling here
         _preconditioner->apply(deltaR);
         _qrV.pushFront(deltaR);
 
@@ -235,7 +236,7 @@ void BaseQNAcceleration::performAcceleration(
   }
 
   /// Sample all the data to the corresponding time grid in _timeGrids and concatenate everything into a long vector
-  /// timeGrids are stored using std::opional, thus the .value() to get the actual object
+  /// timeGrids are stored using std::optional, thus the .value() to get the actual object
   concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value(), windowStart);
   concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value(), windowStart);
 
@@ -290,8 +291,11 @@ void BaseQNAcceleration::performAcceleration(
   _preconditioner->apply(_matrixV);
 
   if (_preconditioner->requireNewQR()) {
-    if (not(_filter == Acceleration::QR2FILTER)) { // for QR2 filter, there is no need to do this twice
+    if (not(_filter == Acceleration::QR2FILTER || _filter == Acceleration::QR3FILTER)) { // for QR2 and QR3 filter, there is no need to do this twice
       _qrV.reset(_matrixV, getLSSystemRows());
+    }
+    if (_filter == Acceleration::QR3FILTER) { // QR3 filter needs to recompute QR3 filter
+      _qrV.requireQR3Fallback();
     }
     _preconditioner->newQRfulfilled();
   }
@@ -393,11 +397,11 @@ void BaseQNAcceleration::updateCouplingData(
 
   for (int id : _dataIDs) {
 
-    auto & couplingData = *cplData.at(id);
+    auto  &couplingData = *cplData.at(id);
     size_t dataSize     = couplingData.getSize();
 
     Eigen::VectorXd timeGrid = _timeGrids->getTimeGridAfter(id, windowStart);
-    couplingData.timeStepsStorage().trimAfter(windowStart);
+    couplingData.waveform().trimAfter(windowStart);
     for (int i = 0; i < timeGrid.size(); i++) {
 
       Eigen::VectorXd temp = Eigen::VectorXd::Zero(dataSize);
@@ -446,7 +450,7 @@ void BaseQNAcceleration::iterationsConverged(
     _primaryTimeGrids->moveTimeGridToNewWindow(cplData);
   }
   /// Sample all the data to the corresponding time grid in _timeGrids and concatenate everything into a long vector
-  /// timeGrids are stored using std::opional, thus the .value() to get the actual object
+  /// timeGrids are stored using std::optional, thus the .value() to get the actual object
   concatenateCouplingData(_values, _oldValues, cplData, _dataIDs, _timeGrids.value(), windowStart);
   concatenateCouplingData(_primaryValues, _oldPrimaryValues, cplData, _primaryDataIDs, _primaryTimeGrids.value(), windowStart);
   updateDifferenceMatrices(cplData);
@@ -639,7 +643,7 @@ void BaseQNAcceleration::concatenateCouplingData(Eigen::VectorXd &data, Eigen::V
 
     for (int i = 0; i < timeGrid.size(); i++) {
 
-      auto current = cplData.at(id)->timeStepsStorage().sample(timeGrid(i));
+      auto current = cplData.at(id)->waveform().sample(timeGrid(i));
       auto old     = cplData.at(id)->getPreviousValuesAtTime(timeGrid(i));
 
       PRECICE_ASSERT(data.size() >= offset + dataSize, "the values were not initialized correctly");
@@ -745,6 +749,20 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
   _preconditioner->initialize(subVectorSizes);
 
   specializedInitializeVectorsAndPreconditioner(cplData);
+}
+
+void BaseQNAcceleration::addLogEntries(io::TXTTableWriter &writer) const
+{
+  writer.addData("QNColumns", io::TXTTableWriter::INT);
+  writer.addData("DeletedQNColumns", io::TXTTableWriter::INT);
+  writer.addData("DroppedQNColumns", io::TXTTableWriter::INT);
+}
+
+void BaseQNAcceleration::writeLogEntries(io::TXTTableWriter &writer) const
+{
+  writer.writeData("QNColumns", getLSSystemCols());
+  writer.writeData("DeletedQNColumns", getDeletedColumns());
+  writer.writeData("DroppedQNColumns", getDroppedColumns());
 }
 
 } // namespace acceleration

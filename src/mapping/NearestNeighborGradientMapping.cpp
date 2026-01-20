@@ -5,7 +5,6 @@
 #include <boost/container/flat_set.hpp>
 #include <functional>
 #include <iostream>
-#include <strings.h>
 #include "logging/LogMacros.hpp"
 #include "profiling/Event.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -66,7 +65,7 @@ void NearestNeighborGradientMapping::mapConsistent(const time::Sample &inData, E
 
   const int              valueDimensions = inData.dataDims;
   const Eigen::VectorXd &inputValues     = inData.values;
-  Eigen::VectorXd &      outputValues    = outData;
+  Eigen::VectorXd       &outputValues    = outData;
   const Eigen::MatrixXd &gradients       = inData.gradients;
 
   // Consistent mapping

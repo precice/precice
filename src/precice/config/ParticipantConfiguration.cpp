@@ -8,7 +8,6 @@
 
 #include "action/Action.hpp"
 #include "action/config/ActionConfiguration.hpp"
-#include "com/MPIDirectCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
 #include "io/ExportCSV.hpp"
@@ -27,6 +26,8 @@
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/ParticipantState.hpp"
+#include "precice/impl/ProvidedMeshContext.hpp"
+#include "precice/impl/ReceivedMeshContext.hpp"
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "utils/IntraComm.hpp"
@@ -35,10 +36,16 @@
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 
+#ifdef PRECICE_NO_MPI
+#include "com/SocketCommunication.hpp"
+#else
+#include "com/MPIDirectCommunication.hpp"
+#endif
+
 namespace precice::config {
 
 ParticipantConfiguration::ParticipantConfiguration(
-    xml::XMLTag &              parent,
+    xml::XMLTag               &parent,
     mesh::PtrMeshConfiguration meshConfiguration)
     : _meshConfig(std::move(meshConfiguration))
 {
@@ -248,11 +255,11 @@ void ParticipantConfiguration::setRemeshing(
 
 void ParticipantConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE(tag.getName());
   if (tag.getName() == TAG) {
-    const std::string &  name = tag.getStringAttributeValue(ATTR_NAME);
+    const std::string   &name = tag.getStringAttributeValue(ATTR_NAME);
     impl::PtrParticipant p(new impl::ParticipantState(name, _meshConfig));
     _participants.push_back(p);
   } else if (tag.getName() == TAG_PROVIDE_MESH) {
@@ -274,7 +281,7 @@ void ParticipantConfiguration::xmlTagCallback(
     // Start with defining the mesh
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     PRECICE_CHECK(mesh,
-                  R"(Participant "{}" attempts to provide an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
+                  R"(Participant "{}" attempts to receive an unknown mesh "{}". <mesh name="{}"> needs to be defined first.)",
                   _participants.back()->getName(), name, name);
 
     // Then check the attributes
@@ -325,6 +332,11 @@ void ParticipantConfiguration::xmlTagCallback(
     config.isScalingOn = tag.getBooleanAttributeValue(ATTR_SCALE_WITH_CONN);
     _watchIntegralConfigs.push_back(config);
   } else if (tag.getNamespace() == TAG_INTRA_COMM) {
+    if (auto participant = _participants.back()->getName();
+        context.size == 1 && participant == context.name) {
+      PRECICE_INFO("Ignoring user-defined intra-comm for participant {} as it is running in serial.", participant);
+      return;
+    }
     com::CommunicationConfiguration comConfig;
     utils::IntraComm::getCommunication() = comConfig.createCommunication(tag);
     _isIntraCommDefined                  = true;
@@ -334,11 +346,16 @@ void ParticipantConfiguration::xmlTagCallback(
 
 void ParticipantConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   if (tag.getName() == TAG) {
     finishParticipantConfiguration(context, _participants.back());
   }
+}
+
+std::size_t ParticipantConfiguration::nParticipants() const
+{
+  return _participants.size();
 }
 
 const std::vector<impl::PtrParticipant> &
@@ -347,7 +364,7 @@ ParticipantConfiguration::getParticipants() const
   return _participants;
 }
 
-const impl::PtrParticipant ParticipantConfiguration::getParticipant(const std::string &participantName) const
+const impl::PtrParticipant ParticipantConfiguration::getParticipant(std::string_view participantName) const
 {
   auto participant = std::find_if(_participants.begin(), _participants.end(), [&participantName](const auto &p) { return p->getName() == participantName; });
   PRECICE_ASSERT(participant != _participants.end(), "Did not find participant \"{}\"", participantName);
@@ -395,7 +412,7 @@ partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFi
 
 const mesh::PtrData &ParticipantConfiguration::getData(
     const mesh::PtrMesh &mesh,
-    const std::string &  nameData) const
+    const std::string   &nameData) const
 {
   PRECICE_CHECK(mesh->hasDataName(nameData),
                 "Participant \"{}\" asks for data \"{}\" from mesh \"{}\", but this mesh does not use such data. "
@@ -406,7 +423,7 @@ const mesh::PtrData &ParticipantConfiguration::getData(
 
 void ParticipantConfiguration::finishParticipantConfiguration(
     const xml::ConfigurationContext &context,
-    const impl::PtrParticipant &     participant)
+    const impl::PtrParticipant      &participant)
 {
   PRECICE_TRACE(participant->getName());
 
@@ -473,10 +490,16 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     // safety margin such that the mapping is still correct.
     if (confMapping.requiresBasisFunction) {
       if (!confMapping.fromMesh->isJustInTime()) {
-        participant->meshContext(fromMesh).geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+        // Only set geoFilter if this is a ReceivedMeshContext
+        if (participant->isMeshReceived(fromMesh)) {
+          participant->receivedMeshContext(fromMesh).geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+        }
       }
       if (!confMapping.toMesh->isJustInTime()) {
-        participant->meshContext(toMesh).geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+        // Only set geoFilter if this is a ReceivedMeshContext
+        if (participant->isMeshReceived(toMesh)) {
+          participant->receivedMeshContext(toMesh).geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+        }
       }
     }
 
@@ -635,13 +658,19 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     _participants.back()->addAction(std::move(action));
   }
 
+  // Check for unsupported remeshing options
+  for (auto &context : participant->writeDataContexts()) {
+    bool isProvided = participant->isMeshProvided(context.getMeshName());
+    PRECICE_CHECK(isProvided || !(participant->isDirectAccessAllowed(context.getMeshName()) && _remeshing), "Writing data via API access (configuration <write-data ... mesh=\"{}\") is not (yet) supported with remeshing", context.getMeshName());
+  }
+
   // Add export contexts
   for (io::ExportContext &exportContext : _exportConfig->exportContexts()) {
     auto kind = exportContext.everyIteration ? io::Export::ExportKind::Iterations : io::Export::ExportKind::TimeWindows;
-    // Create one exporter per mesh
-    for (const auto &meshContext : participant->usedMeshContexts()) {
 
-      exportContext.meshName = meshContext->mesh->getName();
+    // Lambda to create exporter for any mesh context (avoids code duplication)
+    auto createExporter = [&](const impl::MeshContext &meshContext) {
+      exportContext.meshName = meshContext.mesh->getName();
 
       io::PtrExport exporter;
       if (exportContext.type == VALUE_VTK) {
@@ -650,7 +679,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         if (context.size > 1) {
           // Only display the warning message if this participant configuration is the current one.
           if (context.name == participant->getName()) {
-            PRECICE_ERROR("You attempted to use the legacy VTK exporter with the parallel participant {}, which isn't supported."
+            PRECICE_ERROR("You attempted to use the legacy VTK exporter with the parallel participant {}, which isn't supported. "
                           "Migrate to another exporter, such as the VTU exporter by specifying \"<export:vtu ... />\"  instead of \"<export:vtk ... />\".",
                           participant->getName());
           }
@@ -658,7 +687,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
           exporter = io::PtrExport(new io::ExportVTK(
               participant->getName(),
               exportContext.location,
-              *meshContext->mesh,
+              *meshContext.mesh,
               kind,
               exportContext.everyNTimeWindows,
               context.rank,
@@ -668,7 +697,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         exporter = io::PtrExport(new io::ExportVTU(
             participant->getName(),
             exportContext.location,
-            *meshContext->mesh,
+            *meshContext.mesh,
             kind,
             exportContext.everyNTimeWindows,
             context.rank,
@@ -677,7 +706,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         exporter = io::PtrExport(new io::ExportVTP(
             participant->getName(),
             exportContext.location,
-            *meshContext->mesh,
+            *meshContext.mesh,
             kind,
             exportContext.everyNTimeWindows,
             context.rank,
@@ -686,7 +715,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         exporter = io::PtrExport(new io::ExportCSV(
             participant->getName(),
             exportContext.location,
-            *meshContext->mesh,
+            *meshContext.mesh,
             kind,
             exportContext.everyNTimeWindows,
             context.rank,
@@ -696,9 +725,19 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                       _participants.back()->getName(), exportContext.type);
       }
       exportContext.exporter = std::move(exporter);
-
       _participants.back()->addExportContext(exportContext);
+    };
+
+    // Create one exporter per provided mesh
+    for (const auto &meshContext : participant->providedMeshContexts()) {
+      createExporter(meshContext);
     }
+
+    // Create one exporter per received mesh
+    for (const auto &meshContext : participant->receivedMeshContexts()) {
+      createExporter(meshContext);
+    }
+
     PRECICE_WARN_IF(exportContext.everyNTimeWindows > 1 && exportContext.everyIteration,
                     "Participant {} defines an exporter of type {} which exports every iteration. "
                     "This overrides the every-n-time-window value you provided.",
@@ -713,11 +752,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                     "Participant \"{}\" defines watchpoint \"{}\" for mesh \"{}\" which is not provided by the participant. "
                     "Please add <provide-mesh name=\"{}\" /> to the participant.",
                     participant->getName(), config.name, config.nameMesh, config.nameMesh);
-      const auto &meshContext = participant->usedMeshContext(config.nameMesh);
-      PRECICE_CHECK(meshContext.provideMesh,
+
+      PRECICE_CHECK(!participant->isMeshReceived(config.nameMesh),
                     "Participant \"{}\" defines watchpoint \"{}\" for the received mesh \"{}\", which is not allowed. "
                     "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                     participant->getName(), config.name, config.nameMesh, config.nameMesh);
+      const auto &meshContext = participant->providedMeshContext(config.nameMesh);
       PRECICE_CHECK(config.coordinates.size() == meshContext.mesh->getDimensions(),
                     "Provided coordinate to watch is {}D, which does not match the dimension of the {}D mesh \"{}\".",
                     config.coordinates.size(), meshContext.mesh->getDimensions(), meshContext.mesh->getName());
@@ -734,8 +774,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                     "Participant \"{}\" defines watch integral \"{}\" for mesh \"{}\" which is not used by the participant. "
                     "Please add a provide-mesh node with name=\"{}\".",
                     participant->getName(), config.name, config.nameMesh, config.nameMesh);
-      const auto &meshContext = participant->usedMeshContext(config.nameMesh);
-      PRECICE_CHECK(meshContext.provideMesh,
+      const auto &meshContext = participant->meshContext(config.nameMesh);
+      PRECICE_CHECK(participant->isMeshProvided(config.nameMesh),
                     "Participant \"{}\" defines watch integral \"{}\" for the received mesh \"{}\", which is not allowed. "
                     "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                     participant->getName(), config.name, config.nameMesh, config.nameMesh);
@@ -749,19 +789,22 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   // create default primary communication if needed
   if (context.size > 1 && not _isIntraCommDefined && participant->getName() == context.name) {
 #ifdef PRECICE_NO_MPI
-    PRECICE_ERROR("Implicit intra-participant communications for parallel participants are only available if preCICE was built with MPI. "
-                  "Either explicitly define an intra-participant communication for each parallel participant or rebuild preCICE with \"PRECICE_MPICommunication=ON\".");
+    auto lo = utils::networking::loopbackInterfaceName();
+    PRECICE_INFO("Implicit intra-participant communications for parallel participants using preCICE without MPI defaults to a sockets intracomm using the default loopback device {}. "
+                 "Define your own <intra-comm:sockets ... /> to modify these defaults.",
+                 lo);
+    utils::IntraComm::getCommunication() = std::make_shared<com::SocketCommunication>(0, false, lo, ".");
 #else
     utils::IntraComm::getCommunication() = std::make_shared<com::MPIDirectCommunication>();
-    participant->setUsePrimaryRank(true);
 #endif
+    participant->setUsePrimaryRank(true);
   }
   _isIntraCommDefined = false; // to not mess up with previous participant
 }
 
 void ParticipantConfiguration::checkIllDefinedMappings(
     const mapping::MappingConfiguration::ConfiguredMapping &mapping,
-    const impl::PtrParticipant &                            participant)
+    const impl::PtrParticipant                             &participant)
 {
   PRECICE_TRACE();
   using ConfMapping = mapping::MappingConfiguration::ConfiguredMapping;

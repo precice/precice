@@ -182,9 +182,9 @@ void MPISinglePortsCommunication::requestConnection(std::string const &acceptorN
   _isConnected     = true;
 }
 
-void MPISinglePortsCommunication::requestConnectionAsClient(std::string const &  acceptorName,
-                                                            std::string const &  requesterName,
-                                                            std::string const &  tag,
+void MPISinglePortsCommunication::requestConnectionAsClient(std::string const   &acceptorName,
+                                                            std::string const   &requesterName,
+                                                            std::string const   &tag,
                                                             std::set<int> const &acceptorRanks,
                                                             int                  requesterRank)
 {

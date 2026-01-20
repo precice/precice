@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(ExportMissingParallel)
     mesh.createVertex(Eigen::Vector2d::Constant(1));
   }
   mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
-  BOOST_TEST_REQUIRE(data->timeStepsStorage().empty());
+  BOOST_TEST_REQUIRE(data->waveform().empty());
   // no sample
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(ExportScalarAndMissingParallel)
     mesh.createVertex(Eigen::Vector2d::Constant(1));
   }
   auto missing = mesh.createData("missing", 2, 0_dataID);
-  BOOST_TEST_REQUIRE(missing->timeStepsStorage().empty());
+  BOOST_TEST_REQUIRE(missing->waveform().empty());
   mesh::PtrData data = mesh.createData("data", 2, 1_dataID);
   data->setSampleAtTime(0, time::Sample{2, 1}.setZero());
   // no sample
@@ -245,9 +245,9 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh::Vertex &v1  = mesh.createVertex(Eigen::Vector3d{-1.0, 1.0, 0.0});
     mesh::Vertex &v2  = mesh.createVertex(Eigen::Vector3d{1.0, 1.0, 0.0});
     mesh::Vertex &vo  = mesh.createVertex(Eigen::Vector3d{0.0, 2.0, 0.0});
-    mesh::Edge &  em1 = mesh.createEdge(vm, v1);
-    mesh::Edge &  e12 = mesh.createEdge(v1, v2);
-    mesh::Edge &  e2m = mesh.createEdge(v2, vm);
+    mesh::Edge   &em1 = mesh.createEdge(vm, v1);
+    mesh::Edge   &e12 = mesh.createEdge(v1, v2);
+    mesh::Edge   &e2m = mesh.createEdge(v2, vm);
     mesh.createTriangle(em1, e12, e2m);
     mesh::Edge &eo1 = mesh.createEdge(vo, v1);
     mesh::Edge &e2o = mesh.createEdge(v2, vo);
@@ -258,9 +258,9 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh::Vertex &v1  = mesh.createVertex(Eigen::Vector3d{1.0, -1.0, 0.0});
     mesh::Vertex &v2  = mesh.createVertex(Eigen::Vector3d{-1.0, -1.0, 0.0});
     mesh::Vertex &vo  = mesh.createVertex(Eigen::Vector3d{0.0, -2.0, 0.0});
-    mesh::Edge &  em1 = mesh.createEdge(vm, v1);
-    mesh::Edge &  e12 = mesh.createEdge(v1, v2);
-    mesh::Edge &  e2m = mesh.createEdge(v2, vm);
+    mesh::Edge   &em1 = mesh.createEdge(vm, v1);
+    mesh::Edge   &e12 = mesh.createEdge(v1, v2);
+    mesh::Edge   &e2m = mesh.createEdge(v2, vm);
     mesh.createTriangle(em1, e12, e2m);
     mesh::Edge &eo1 = mesh.createEdge(vo, v1);
     mesh::Edge &e2o = mesh.createEdge(v2, vo);
@@ -269,9 +269,9 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh::Vertex &v1  = mesh.createVertex(Eigen::Vector3d{-1.0, 1.0, 0.0});
     mesh::Vertex &v2  = mesh.createVertex(Eigen::Vector3d{-1.0, -1.0, 0.0});
     mesh::Vertex &vo  = mesh.createVertex(Eigen::Vector3d{-2.0, 0.0, 0.0});
-    mesh::Edge &  em1 = mesh.createEdge(vm, v1);
-    mesh::Edge &  e12 = mesh.createEdge(v1, v2);
-    mesh::Edge &  e2m = mesh.createEdge(v2, vm);
+    mesh::Edge   &em1 = mesh.createEdge(vm, v1);
+    mesh::Edge   &e12 = mesh.createEdge(v1, v2);
+    mesh::Edge   &e2m = mesh.createEdge(v2, vm);
     mesh.createTriangle(em1, e12, e2m);
     mesh::Edge &eo1 = mesh.createEdge(vo, v1);
     mesh::Edge &e2o = mesh.createEdge(v2, vo);
@@ -280,9 +280,9 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
     mesh::Vertex &v1  = mesh.createVertex(Eigen::Vector3d{1.0, 1.0, 0.0});
     mesh::Vertex &v2  = mesh.createVertex(Eigen::Vector3d{1.0, -1.0, 0.0});
     mesh::Vertex &vo  = mesh.createVertex(Eigen::Vector3d{2.0, 0.0, 0.0});
-    mesh::Edge &  em1 = mesh.createEdge(vm, v1);
-    mesh::Edge &  e12 = mesh.createEdge(v1, v2);
-    mesh::Edge &  e2m = mesh.createEdge(v2, vm);
+    mesh::Edge   &em1 = mesh.createEdge(vm, v1);
+    mesh::Edge   &e12 = mesh.createEdge(v1, v2);
+    mesh::Edge   &e2m = mesh.createEdge(v2, vm);
     mesh.createTriangle(em1, e12, e2m);
     mesh::Edge &eo1 = mesh.createEdge(vo, v1);
     mesh::Edge &e2o = mesh.createEdge(v2, vo);

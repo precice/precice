@@ -48,10 +48,10 @@ public:
 
     return expr::stream
            << expr::if_(severity == boost::log::trivial::severity_level::error)
-                  [expr::stream << "\033[31m" //red
+                  [expr::stream << "\033[31m" // red
                                 << "ERROR: "]
            << expr::if_(severity == boost::log::trivial::severity_level::warning)
-                  [expr::stream << "\033[36m" //cyan
+                  [expr::stream << "\033[36m" // cyan
                                 << "WARNING: "]
            << "\033[0m";
   }

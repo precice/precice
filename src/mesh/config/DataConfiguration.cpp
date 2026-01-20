@@ -47,7 +47,7 @@ DataConfiguration::ConfiguredData DataConfiguration::getRecentlyConfiguredData()
 
 void DataConfiguration::xmlTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   if (tag.getNamespace() == TAG) {
     const std::string &name = tag.getStringAttributeValue(ATTR_NAME);
@@ -72,12 +72,12 @@ void DataConfiguration::xmlTagCallback(
 
 void DataConfiguration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
 }
 
 void DataConfiguration::addData(
-    const std::string &  name,
+    const std::string   &name,
     const Data::typeName typeName,
     int                  waveformDegree)
 {

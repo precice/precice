@@ -118,12 +118,12 @@ int DataContext::mapData(std::optional<double> after, bool skipZero)
   for (auto &context : _mappingContexts) {
     PRECICE_CHECK(!context.fromData->stamples().empty(),
                   "Data {0} on mesh {1} didn't contain any data samples while attempting to map to mesh {2}. "
-                  "Check your exchange tags to ensure your coupling scheme exchanges the data or the pariticipant produces it using an action. "
+                  "Check your exchange tags to ensure your coupling scheme exchanges the data or the participant produces it using an action. "
                   "The expected exchange tag should look like this: <exchange data=\"{0}\" mesh=\"{1}\" from=... to=... />.",
                   context.fromData->getName(), context.mapping->getInputMesh()->getName(), context.mapping->getOutputMesh()->getName());
 
     // linear lookup should be sufficient here
-    const auto timestampExists = [times = context.toData->timeStepsStorage().getTimes()](double lookup) -> bool {
+    const auto timestampExists = [times = context.toData->waveform().getTimes()](double lookup) -> bool {
       return std::any_of(times.data(), std::next(times.data(), times.size()), [lookup](double time) {
         return math::equals(time, lookup);
       });

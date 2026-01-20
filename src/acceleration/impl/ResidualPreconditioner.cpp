@@ -19,17 +19,11 @@ void ResidualPreconditioner::_update_(bool                   timeWindowComplete,
   if (not timeWindowComplete) {
     std::vector<double> norms(_subVectorSizes.size(), 0.0);
 
-    int offset = 0;
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
-      Eigen::VectorXd part = Eigen::VectorXd::Zero(_subVectorSizes[k]);
-      for (size_t i = 0; i < _subVectorSizes[k]; i++) {
-        part(i) = res(i + offset);
-      }
-      norms[k] = utils::IntraComm::l2norm(part);
-      offset += _subVectorSizes[k];
+      Eigen::VectorXd part = res.segment(_subVectorOffsets[k], _subVectorSizes[k]);
+      norms[k]             = utils::IntraComm::l2norm(part);
     }
 
-    offset = 0;
     for (size_t k = 0; k < _subVectorSizes.size(); k++) {
       if (norms[k] < math::NUMERICAL_ZERO_DIFFERENCE) {
         PRECICE_WARN("A sub-vector in the residual preconditioner became numerically zero. "
@@ -39,11 +33,11 @@ void ResidualPreconditioner::_update_(bool                   timeWindowComplete,
       } else {
         for (size_t i = 0; i < _subVectorSizes[k]; i++) {
           PRECICE_ASSERT(norms[k] > 0.0);
+          auto offset             = _subVectorOffsets[k];
           _weights[i + offset]    = 1.0 / norms[k];
           _invWeights[i + offset] = norms[k];
         }
       }
-      offset += _subVectorSizes[k];
     }
 
     _requireNewQR = true;

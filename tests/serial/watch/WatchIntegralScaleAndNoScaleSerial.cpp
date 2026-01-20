@@ -49,7 +49,6 @@ BOOST_AUTO_TEST_CASE(WatchIntegralScaleAndNoScaleSerial)
       interface.writeData(meshName, dataOneID, ids, values);
 
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
 
       for (int i = 0; i < nVertices; i++) {
         values[i] += increment;

@@ -41,12 +41,12 @@ public:
                        const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial);
 
   /// Maps the given input data
-  Eigen::VectorXd solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const;
+  Eigen::MatrixXd solveConsistent(Eigen::MatrixXd &inputData, Polynomial polynomial) const;
 
   void computeCacheData(Eigen::MatrixXd &inputData, Polynomial polynomial, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffsOut) const;
 
   /// Maps the given input data
-  Eigen::VectorXd solveConservative(const Eigen::VectorXd &inputData, Polynomial polynomial) const;
+  Eigen::MatrixXd solveConservative(const Eigen::MatrixXd &inputData, Polynomial polynomial) const;
 
   // Clear all stored matrices
   void clear();
@@ -102,14 +102,14 @@ private:
 inline double computeSquaredDifference(
     const std::array<double, 3> &u,
     std::array<double, 3>        v,
-    const std::array<bool, 3> &  activeAxis = {{true, true, true}})
+    const std::array<bool, 3>   &activeAxis = {{true, true, true}})
 {
   // Subtract the values and multiply out dead dimensions
   for (unsigned int d = 0; d < v.size(); ++d) {
     v[d] = (u[d] - v[d]) * static_cast<int>(activeAxis[d]);
   }
-  // @todo: this can be replaced by std::hypot when moving to C++17
-  return std::accumulate(v.begin(), v.end(), static_cast<double>(0.), [](auto &res, auto &val) { return res + val * val; });
+  // use std::inner_product to avoid the need for lambda expressions
+  return std::inner_product(v.begin(), v.end(), v.begin(), 0.0);
 }
 
 /// given the active axis, computes sets the axis with the lowest spatial expansion to dead
@@ -147,7 +147,7 @@ inline void fillPolynomialEntries(Eigen::MatrixXd &matrix, const mesh::Mesh &mes
     matrix(i.index(), startIndex) = 1.0;
 
     // 2. the linear contribution
-    const auto & u = mesh.vertex(i.value()).rawCoords();
+    const auto  &u = mesh.vertex(i.value()).rawCoords();
     unsigned int k = 0;
     // Loop over all three space dimension and ignore dead axis
     for (unsigned int d = 0; d < activeAxis.size(); ++d) {
@@ -411,38 +411,38 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const Eigen::VectorXd &inputData, Polynomial polynomial) const
+Eigen::MatrixXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const Eigen::MatrixXd &inputData, Polynomial polynomial) const
 {
   PRECICE_ASSERT((_matrixV.size() > 0 && polynomial == Polynomial::SEPARATE) || _matrixV.size() == 0, _matrixV.size());
   // TODO: Avoid temporary allocations
   // Au is equal to the eta in our PETSc implementation
-  PRECICE_ASSERT(inputData.size() == _matrixA.rows());
-  Eigen::VectorXd Au = _matrixA.transpose() * inputData;
-  PRECICE_ASSERT(Au.size() == _matrixA.cols());
+  PRECICE_ASSERT(inputData.rows() == _matrixA.rows());
+  Eigen::MatrixXd Au = _matrixA.transpose() * inputData;
+  PRECICE_ASSERT(Au.rows() == _matrixA.cols());
 
   // mu in the PETSc implementation
-  Eigen::VectorXd out = _decMatrixC.solve(Au);
+  Eigen::MatrixXd out = _decMatrixC.solve(Au);
 
   if (polynomial == Polynomial::SEPARATE) {
-    Eigen::VectorXd epsilon = _matrixV.transpose() * inputData;
-    PRECICE_ASSERT(epsilon.size() == _matrixV.cols());
+    Eigen::MatrixXd epsilon = _matrixV.transpose() * inputData;
+    PRECICE_ASSERT(epsilon.rows() == _matrixV.cols());
 
     // epsilon = Q^T * mu - epsilon (tau in the PETSc impl)
     epsilon -= _matrixQ.transpose() * out;
-    PRECICE_ASSERT(epsilon.size() == _matrixQ.cols());
+    PRECICE_ASSERT(epsilon.rows() == _matrixQ.cols());
 
     // out  = out - solveTranspose tau (sigma in the PETSc impl)
-    out -= static_cast<Eigen::VectorXd>(_qrMatrixQ.transpose().solve(-epsilon));
+    out -= static_cast<Eigen::MatrixXd>(_qrMatrixQ.transpose().solve(-epsilon));
   }
   return out;
 }
 
 // @todo: change the signature to Eigen::MatrixXd and process all components at once, the solve function of eigen can handle that
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::VectorXd &inputData, Polynomial polynomial) const
+Eigen::MatrixXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::MatrixXd &inputData, Polynomial polynomial) const
 {
   PRECICE_ASSERT((_matrixQ.size() > 0 && polynomial == Polynomial::SEPARATE) || _matrixQ.size() == 0);
-  Eigen::VectorXd polynomialContribution;
+  Eigen::MatrixXd polynomialContribution;
   // Solve polynomial QR and subtract it from the input data
   if (polynomial == Polynomial::SEPARATE) {
     polynomialContribution = _qrMatrixQ.solve(inputData);
@@ -450,15 +450,15 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(E
   }
 
   // Integrated polynomial (and separated)
-  PRECICE_ASSERT(inputData.size() == _matrixA.cols());
-  Eigen::VectorXd p = _decMatrixC.solve(inputData);
+  PRECICE_ASSERT(inputData.rows() == _matrixA.cols());
+  Eigen::MatrixXd p = _decMatrixC.solve(inputData);
 
   if (polynomial != Polynomial::ON && computeCrossValidation) {
     precice::profiling::Event e("map.rbf.evaluateLOOCV");
     PRECICE_INFO("Cross validation error (LOOCV): {}", evaluateRippaLOOCVerror(p));
   }
-  PRECICE_ASSERT(p.size() == _matrixA.cols());
-  Eigen::VectorXd out = _matrixA * p;
+  PRECICE_ASSERT(p.rows() == _matrixA.cols());
+  Eigen::MatrixXd out = _matrixA * p;
 
   // Add the polynomial part again for separated polynomial
   if (polynomial == Polynomial::SEPARATE) {

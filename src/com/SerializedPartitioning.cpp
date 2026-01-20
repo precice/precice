@@ -15,7 +15,7 @@ namespace precice::com::serialize {
 SerializedConnectionMap SerializedConnectionMap::serialize(const ConnectionMap &cm)
 {
   SerializedConnectionMap scm;
-  auto &                  content = scm.content;
+  auto                   &content = scm.content;
 
   auto elements = std::transform_reduce(
       cm.begin(), cm.end(),
@@ -192,8 +192,8 @@ SerializedBoundingBoxMap SerializedBoundingBoxMap::serialize(const BoundingBoxMa
   }
 
   SerializedBoundingBoxMap sbbm;
-  auto &                   info   = sbbm.info;
-  auto &                   coords = sbbm.coords;
+  auto                    &info   = sbbm.info;
+  auto                    &coords = sbbm.coords;
 
   // Entries, dimensions, ranks
   auto size = bbm.size();

@@ -58,12 +58,12 @@ protected:
   std::vector<bool> _deadAxis;
 
   /**
- * @brief Computes the number of polynomial degrees of freedom based on the problem dimension and the dead axis
- *
- * @note This function does not take the handling of the polynomial (ON, OFF, SEPARATE) into account.
- *
- * @return int the polynomial degrees of freedom of the RBF system
- */
+   * @brief Computes the number of polynomial degrees of freedom based on the problem dimension and the dead axis
+   *
+   * @note This function does not take the handling of the polynomial (ON, OFF, SEPARATE) into account.
+   *
+   * @return int the polynomial degrees of freedom of the RBF system
+   */
   int getPolynomialParameters() const;
 
 private:
@@ -112,7 +112,7 @@ int RadialBasisFctBaseMapping<RADIAL_BASIS_FUNCTION_T>::getPolynomialParameters(
   PRECICE_ASSERT(_deadAxis.size() > 0);
   // Count the dead axis
   const int deadDimensions = std::count(_deadAxis.begin(), _deadAxis.end(), true);
-  //Formula for the polynomial parameters
+  // Formula for the polynomial parameters
   return 1 + getDimensions() - deadDimensions;
 }
 

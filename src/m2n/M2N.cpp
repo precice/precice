@@ -114,7 +114,7 @@ void M2N::requestPrimaryRankConnection(
     _interComm->requestConnection(acceptorName, requesterName, "PRIMARYCOM", 0, 1);
     _isPrimaryRankConnected = _interComm->isConnected();
 
-    //check that local and remote have the same precice version
+    // check that local and remote have the same precice version
     std::string remoteInfo;
     _interComm->receive(remoteInfo, 0);
     std::string localInfo = makeLocalInfo(configHash);
@@ -331,7 +331,7 @@ void M2N::broadcastSendMesh(mesh::Mesh &mesh)
 }
 
 void M2N::scatterAllCommunicationMap(std::map<int, std::vector<int>> &localCommunicationMap,
-                                     mesh::Mesh &                     mesh)
+                                     mesh::Mesh                      &mesh)
 {
   PRECICE_ASSERT(utils::IntraComm::isParallel(),
                  "This method can only be used for parallel participants");

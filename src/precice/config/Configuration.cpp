@@ -11,9 +11,13 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "partition/ProvidedPartition.hpp"
+#include "partition/ReceivedPartition.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/ParticipantState.hpp"
+#include "precice/impl/ProvidedMeshContext.hpp"
+#include "precice/impl/ReceivedMeshContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "utils/assertion.hpp"
 #include "xml/ConfigParser.hpp"
@@ -82,12 +86,12 @@ void Configuration::xmlTagCallback(const xml::ConfigurationContext &context, xml
 
 void Configuration::xmlEndTagCallback(
     const xml::ConfigurationContext &context,
-    xml::XMLTag &                    tag)
+    xml::XMLTag                     &tag)
 {
   PRECICE_TRACE(tag.getName());
   PRECICE_ASSERT(tag.getName() == "precice-configuration");
 
-  //test if both participants do have the exchange meshes
+  // test if both participants do have the exchange meshes
   typedef std::map<std::string, std::vector<std::string>>::value_type neededMeshPair;
   for (const neededMeshPair &neededMeshes : _meshConfiguration->getNeededMeshes()) {
     bool participantFound = false;
@@ -122,6 +126,96 @@ const PtrParticipantConfiguration &
 Configuration::getParticipantConfiguration() const
 {
   return _participantConfiguration;
+}
+
+std::map<std::string, m2n::BoundM2N> Configuration::getBoundM2NsFor(std::string_view participantName) const
+{
+  std::map<std::string, m2n::BoundM2N> result;
+
+  for (const auto &m2nConf : _m2nConfiguration->m2ns()) {
+    if (m2nConf.acceptor != participantName && m2nConf.connector != participantName) {
+      continue;
+    }
+
+    std::string comPartner("");
+    bool        isRequesting;
+    if (m2nConf.acceptor == participantName) {
+      comPartner   = m2nConf.connector;
+      isRequesting = true;
+    } else {
+      comPartner   = m2nConf.acceptor;
+      isRequesting = false;
+    }
+
+    PRECICE_ASSERT(!comPartner.empty());
+    for (const impl::PtrParticipant &participant : _participantConfiguration->getParticipants()) {
+      if (participant->getName() == comPartner) {
+        PRECICE_ASSERT(not utils::contained(comPartner, result), comPartner);
+        PRECICE_ASSERT(m2nConf.m2n);
+
+        result[comPartner] = [&] {
+          m2n::BoundM2N bound;
+          bound.m2n          = m2nConf.m2n;
+          bound.localName    = participantName;
+          bound.remoteName   = comPartner;
+          bound.isRequesting = isRequesting;
+          return bound;
+        }();
+      }
+    }
+  }
+  return result;
+}
+
+void Configuration::configurePartitionsFor(std::string_view participantName)
+{
+  PRECICE_TRACE();
+  PRECICE_ASSERT(_participantConfiguration->hasParticipant(participantName));
+
+  auto participant = _participantConfiguration->getParticipant(participantName);
+
+  // Iterate over provided mesh contexts
+  for (auto &context : participant->providedMeshContexts()) {
+    // Accessor provides mesh
+    context.partition = std::make_shared<partition::ProvidedPartition>(context.mesh);
+
+    for (auto &receiver : _participantConfiguration->getParticipants()) {
+      for (auto &receivedMeshContext : receiver->receivedMeshContexts()) {
+        if (receivedMeshContext.receiveMeshFrom == participantName && receivedMeshContext.mesh->getName() == context.mesh->getName()) {
+          // meshRequirement has to be copied from "from" to provide", since
+          // mapping are only defined at "provide"
+          if (receivedMeshContext.meshRequirement > context.meshRequirement) {
+            context.meshRequirement = receivedMeshContext.meshRequirement;
+          }
+
+          m2n::PtrM2N m2n = _m2nConfiguration->getM2N(receiver->getName(), std::string(participantName));
+          m2n->createDistributedCommunication(context.mesh);
+          context.partition->addM2N(m2n);
+        }
+      }
+    }
+  }
+
+  // Iterate over received mesh contexts
+  for (auto &receivedContext : participant->receivedMeshContexts()) {
+    // Accessor receives mesh
+    std::string receiver(participantName);
+    std::string provider(receivedContext.receiveMeshFrom);
+
+    PRECICE_DEBUG("Receiving mesh from {}", provider);
+
+    receivedContext.partition = std::make_shared<partition::ReceivedPartition>(receivedContext.mesh, receivedContext.geoFilter, receivedContext.safetyFactor, receivedContext.allowDirectAccess);
+
+    m2n::PtrM2N m2n = _m2nConfiguration->getM2N(receiver, provider);
+    m2n->createDistributedCommunication(receivedContext.mesh);
+    receivedContext.partition->addM2N(m2n);
+    for (const precice::impl::MappingContext &mappingContext : receivedContext.fromMappingContexts) {
+      receivedContext.partition->addFromMapping(mappingContext.mapping);
+    }
+    for (const precice::impl::MappingContext &mappingContext : receivedContext.toMappingContexts) {
+      receivedContext.partition->addToMapping(mappingContext.mapping);
+    }
+  }
 }
 
 } // namespace precice::config

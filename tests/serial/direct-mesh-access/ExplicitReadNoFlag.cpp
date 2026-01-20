@@ -29,7 +29,6 @@ BOOST_AUTO_TEST_CASE(ExplicitReadNoFlag)
 
   if (context.isNamed("SolverOne")) {
     auto otherMeshName = "MeshTwo";
-    auto dataName      = "Velocities";
     BOOST_REQUIRE(couplingInterface.getMeshDimensions(otherMeshName) == 2);
 
     // Check for thwrowing when trying to set the region

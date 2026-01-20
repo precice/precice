@@ -56,20 +56,20 @@ static constexpr std::string_view ASSERT_FMT =
  * @param[in] check the expression which needs to evaluate to true for the assertion to pass
  * @param[in] args the expression which evaluates to the formatted arguments
  */
-#define PRECICE_ASSERT_IMPL(check, args)                           \
-  do {                                                             \
-    if (!(check)) {                                                \
-      std::cerr << precice::utils::format_or_error(                \
-                       precice::utils::ASSERT_FMT,                 \
-                       BOOST_CURRENT_FUNCTION, __FILE__, __LINE__, \
-                       BOOST_PP_STRINGIZE(check),                  \
-                       precice::utils::Parallel::getProcessRank(), \
-                       args,                                       \
-                       getStacktrace())                            \
-                << std::flush;                                     \
-      std::cout.flush();                                           \
-      PRECICE_ASSERT_WRAPPER();                                    \
-    }                                                              \
+#define PRECICE_ASSERT_IMPL(check, args)                                 \
+  do {                                                                   \
+    if (!(check)) {                                                      \
+      std::cerr << precice::utils::format_or_error(                      \
+          precice::utils::ASSERT_FMT,                                    \
+          BOOST_CURRENT_FUNCTION, __FILE__, __LINE__,                    \
+          BOOST_PP_STRINGIZE(check),                                     \
+                             precice::utils::Parallel::getProcessRank(), \
+                             args,                                       \
+                             getStacktrace())                            \
+          << std::flush;                                                 \
+      std::cout.flush();                                                 \
+      PRECICE_ASSERT_WRAPPER();                                          \
+    }                                                                    \
   } while (false)
 
 #define PRECICE_ASSERT_IMPL_N(check, ...) \

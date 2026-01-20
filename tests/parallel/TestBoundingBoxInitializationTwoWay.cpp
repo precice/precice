@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(TestBoundingBoxInitializationTwoWay)
   Eigen::Vector3d position;
   Eigen::Vector3d datum;
 
-  int i1 = -1, i2 = -1; //indices for data and positions
+  int i1 = -1, i2 = -1; // indices for data and positions
 
   if (context.isNamed("Fluid")) {
     if (context.isPrimary()) {

@@ -36,7 +36,7 @@ Participant::Participant(
     ::precice::string_view configurationFileName,
     int                    solverProcessIndex,
     int                    solverProcessSize,
-    void *                 communicator)
+    void                  *communicator)
     : _impl(new impl::ParticipantImpl(toSV(participantName), toSV(configurationFileName), solverProcessIndex, solverProcessSize, {communicator}))
 {
 }

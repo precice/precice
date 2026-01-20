@@ -16,6 +16,7 @@ constexpr const char *DEFAULT_MODE       = "fundamental";
 constexpr const char *DEFAULT_DIRECTORY  = ".";
 constexpr const char *MODE_OFF           = "off";
 constexpr const char *MODE_FUNDAMENTAL   = "fundamental";
+constexpr const char *MODE_API           = "api";
 constexpr const char *MODE_ALL           = "all";
 
 /**
@@ -29,7 +30,7 @@ public:
 
   void xmlTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override;
 
-  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override{};
+  void xmlEndTagCallback(const xml::ConfigurationContext &context, xml::XMLTag &callingTag) override {};
 
 private:
   logging::Logger _log{"profiling::ProfilingConfiguration"};

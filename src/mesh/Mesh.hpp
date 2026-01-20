@@ -233,6 +233,9 @@ public:
   /// Clears the partitioning information
   void clearPartitioning();
 
+  /// Clears all data stamples
+  void clearDataStamples();
+
   void setVertexDistribution(VertexDistribution vd)
   {
     PRECICE_ASSERT(std::all_of(vd.begin(), vd.end(), [](const auto &p) { return std::is_sorted(p.second.begin(), p.second.end()); }));

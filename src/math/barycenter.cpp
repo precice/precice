@@ -130,15 +130,15 @@ Eigen::Vector4d calcBarycentricCoordsForTetrahedron(
   Vector3d bc = c - b;
 
   // Triangles
-  Vector3d abc = ab.cross(bc);
-  Vector3d abd = ab.cross(-ad);
-  Vector3d acd = ac.cross(ad);
+  Vector3d tri_abc = ab.cross(bc);
+  Vector3d tri_abd = ab.cross(-ad);
+  Vector3d tri_acd = ac.cross(ad);
 
-  auto volume = abc.dot(ad);
+  auto volume = tri_abc.dot(ad);
 
-  barycentricCoords(3) = abc.dot(au) / volume;
-  barycentricCoords(2) = abd.dot(du) / volume;
-  barycentricCoords(1) = acd.dot(cu) / volume;
+  barycentricCoords(3) = tri_abc.dot(au) / volume;
+  barycentricCoords(2) = tri_abd.dot(du) / volume;
+  barycentricCoords(1) = tri_acd.dot(cu) / volume;
   barycentricCoords(0) = 1 - barycentricCoords(3) - barycentricCoords(2) - barycentricCoords(1);
 
   return barycentricCoords;

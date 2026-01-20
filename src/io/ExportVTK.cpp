@@ -25,7 +25,7 @@ ExportVTK::ExportVTK(
     int               frequency,
     int               rank,
     int               size)
-    : Export(participantName, location, mesh, kind, frequency, rank, size){};
+    : Export(participantName, location, mesh, kind, frequency, rank, size) {};
 
 void ExportVTK::doExport(int index, double time)
 {
@@ -65,7 +65,7 @@ void ExportVTK::exportSeries() const
 }
 
 void ExportVTK::exportMesh(
-    std::ofstream &   outFile,
+    std::ofstream    &outFile,
     const mesh::Mesh &mesh)
 {
   PRECICE_TRACE(mesh.getName());
@@ -140,7 +140,7 @@ void ExportVTK::exportMesh(
 }
 
 void ExportVTK::exportData(
-    std::ofstream &   outFile,
+    std::ofstream    &outFile,
     const mesh::Mesh &mesh)
 {
   outFile << "POINT_DATA " << mesh.nVertices() << "\n\n";
@@ -151,10 +151,10 @@ void ExportVTK::exportData(
   outFile << "\n\n";
 
   for (const mesh::PtrData &data : mesh.data()) { // Plot vertex data
-    if (data->timeStepsStorage().empty()) {
+    if (data->waveform().empty()) {
       continue;
     }
-    const Eigen::VectorXd &values = data->timeStepsStorage().last().sample.values;
+    const Eigen::VectorXd &values = data->waveform().last().sample.values;
     if (data->getDimensions() > 1) {
       Eigen::VectorXd viewTemp(data->getDimensions());
       outFile << "VECTORS " << data->getName() << " double\n";
@@ -188,10 +188,10 @@ void ExportVTK::exportGradient(std::ofstream &outFile, const mesh::Mesh &mesh)
 {
   const int spaceDim = mesh.getDimensions();
   for (const mesh::PtrData &data : mesh.data()) {
-    if (data->timeStepsStorage().empty() || !data->hasGradient()) {
+    if (data->waveform().empty() || !data->hasGradient()) {
       continue;
     }
-    const auto &gradients = data->timeStepsStorage().last().sample.gradients;
+    const auto &gradients = data->waveform().last().sample.gradients;
     if (data->getDimensions() == 1) { // Scalar data, create a vector <dataname>_gradient
       outFile << "VECTORS " << data->getName() << "_gradient"
               << " double\n";
@@ -275,7 +275,7 @@ void ExportVTK::writeHeader(
 
 void ExportVTK::writeVertex(
     const Eigen::VectorXd &position,
-    std::ostream &         outFile)
+    std::ostream          &outFile)
 {
   if (position.size() == 2) {
     outFile << position(0) << "  " << position(1) << "  " << 0.0 << '\n';

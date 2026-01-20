@@ -84,7 +84,6 @@ BOOST_AUTO_TEST_CASE(ImplicitDataInitialization)
       BOOST_TEST(expectedData == readData, boost::test_tools::per_element());
       interface.writeAndMapData(otherMeshID, writeDataID, ownPositions, writeData);
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
         // do nothing
@@ -161,7 +160,6 @@ BOOST_AUTO_TEST_CASE(ImplicitDataInitialization)
       BOOST_TEST(expectedData == readData, boost::test_tools::per_element());
       interface.writeData(meshName, writeDataName, ids, writeData);
       interface.advance(dt);
-      double dt = interface.getMaxTimeStepSize();
       iterations++;
       if (interface.requiresReadingCheckpoint()) {
         // do nothing

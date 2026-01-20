@@ -220,7 +220,7 @@ public:
       ::precice::string_view configurationFileName,
       int                    solverProcessIndex,
       int                    solverProcessSize,
-      void *                 communicator);
+      void                  *communicator);
 
   ~Participant();
 
@@ -426,7 +426,7 @@ public:
   /**
    * @brief Returns the spatial dimensionality of the given data on the given mesh.
    *
-   * Note that vectorial data dimensionality directly depends on the spacial dimensionality of the mesh.
+   * Note that vectorial data dimensionality directly depends on the spatial dimensionality of the mesh.
    *
    * @param[in] meshName the name of the associated mesh
    * @param[in] dataName the name of the data to get the dimensions for
@@ -921,7 +921,7 @@ public:
    * @param[in] coordinates A span to the coordinates of the vertices
    *        The 2D-format is (d0x, d0y, d1x, d1y, ..., dnx, dny)
    *        The 3D-format is (d0x, d0y, d0z, d1x, d1y, d1z, ..., dnx, dny, dnz)
-   * @param[out] values The values containing the write data.
+   * @param[in] values The values containing the write data.
    *
    * @pre The coordinates are within the bounding box previously defined via \ref setMeshAccessRegion(). Using coordinates
    * outside the defined bounding box will throw an error.
@@ -1087,7 +1087,7 @@ public:
    * is exchanged during the @p initialize() call.
    *
    * @see getMeshVertexSize() to get the amount of vertices in the mesh
-   * @see getMeshDimensions() to get the spacial dimensionality of the mesh
+   * @see getMeshDimensions() to get the spatial dimensionality of the mesh
    */
   void getMeshVertexIDsAndCoordinates(
       ::precice::string_view    meshName,
@@ -1190,7 +1190,7 @@ public:
    *
    * All active sections must be stopped before calling initialize() or advance().
    *
-   * \param[in] sectionName the name of the profiling section to start
+   * \param[in] sectionName the name of the profiling section to start. The name may not contain forward slashes `/`.
    *
    */
   void startProfilingSection(::precice::string_view sectionName);

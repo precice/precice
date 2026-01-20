@@ -28,7 +28,7 @@ void appendFront(
   } else {
     PRECICE_ASSERT(v.size() == n, v.size(), A.rows());
     A.conservativeResize(n, m + 1);
-    //A.topRightCorner(n, m) = A.topLeftCorner(n, m); // bad error, reason unknown!
+    // A.topRightCorner(n, m) = A.topLeftCorner(n, m); // bad error, reason unknown!
     for (auto i = A.cols() - 1; i > 0; i--)
       A.col(i) = A.col(i - 1);
     A.col(0) = v;

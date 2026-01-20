@@ -12,11 +12,11 @@ public:
   int getFreeID();
 
   /**
-    * @brief Inserts an ID which has to be unique.
-    *
-    * The inserted ID has to be different to all other IDs inserted and obtained
-    * from getFreeID().
-    */
+   * @brief Inserts an ID which has to be unique.
+   *
+   * The inserted ID has to be different to all other IDs inserted and obtained
+   * from getFreeID().
+   */
   bool insertID(int id);
 
   /// Resets all retrieved and inserted IDs.

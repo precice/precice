@@ -1,0 +1,36 @@
+.TH precice-config-doc 1
+
+.SH NAME
+precice-config-doc \- command line utility for preCICE
+
+.SH SYNOPSIS
+.B precice-config-doc
+.B xml
+|
+.B dtd
+|
+.B md
+
+.SH OPTIONS
+
+.TP
+.B xml
+Prints the configuration reference as XML with inlined help to the standard output.
+
+.TP
+.B dtd
+Prints the DTD file to the standard output, which may be used to check XML configuration files.
+
+.TP
+.B md
+Prints the configuration reference as markdown to the standard output.
+
+.SH EXIT STATUS
+precice-config-doc returns a zero exit status if it succeeds to run the provided command.
+Non zero is returned in case of failure.
+
+.SH SEE ALSO
+.BR precice-version (1),
+.BR precice-config-validate (1)
+.PP
+precice.org \- the website of the project

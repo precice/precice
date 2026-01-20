@@ -38,11 +38,11 @@ public:
   ~IQNILSAcceleration() override = default;
 
   /**
-    * @brief Marks a iteration sequence as converged.
-    *
-    * called by the iterationsConverged() method in the BaseQNAcceleration class
-    * handles the acceleration specific action after the convergence of one iteration
-    */
+   * @brief Marks a iteration sequence as converged.
+   *
+   * called by the iterationsConverged() method in the BaseQNAcceleration class
+   * handles the acceleration specific action after the convergence of one iteration
+   */
   void specializedIterationsConverged(const DataMap &cplData) override;
 
 private:
@@ -59,6 +59,6 @@ private:
   void removeMatrixColumn(int columnIndex) override;
 
   /// @copydoc precice::Acceleration::BaseQNAcceleration::specializedInitializeVectorsAndPreconditioner()
-  void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) final override{};
+  void specializedInitializeVectorsAndPreconditioner(const DataMap &cplData) final override {};
 };
 } // namespace precice::acceleration

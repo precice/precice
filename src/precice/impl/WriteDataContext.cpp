@@ -20,12 +20,12 @@ void WriteDataContext::resetBufferedData()
 
 void WriteDataContext::trimAfter(double time)
 {
-  _providedData->timeStepsStorage().trimAfter(time);
+  _providedData->waveform().trimAfter(time);
 
   // reset all toData
   PRECICE_ASSERT(!hasReadMapping(), "Read mapping is not allowed for WriteDataContext.");
   if (hasWriteMapping()) {
-    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [time](auto &context) { context.toData->timeStepsStorage().trimAfter(time); });
+    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [time](auto &context) { context.toData->waveform().trimAfter(time); });
   }
 }
 
@@ -42,8 +42,8 @@ void WriteDataContext::completeJustInTimeMapping()
 void WriteDataContext::writeAndMapValues(::precice::span<const double> coordinates, ::precice::span<const double> values)
 {
   PRECICE_TRACE();
+  PRECICE_ASSERT(hasJustInTimeMapping());
   PRECICE_ASSERT(mappingCache);
-  PRECICE_ASSERT(justInTimeMapping);
   PRECICE_ASSERT((coordinates.size() / getSpatialDimensions()) * getDataDimensions() == values.size());
   PRECICE_ASSERT(_writeDataBuffer.values.data());
 

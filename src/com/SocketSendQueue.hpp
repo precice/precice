@@ -19,7 +19,7 @@ public:
   SocketSendQueue() = default;
   ~SocketSendQueue();
 
-  SocketSendQueue(SocketSendQueue const &) = delete;
+  SocketSendQueue(SocketSendQueue const &)            = delete;
   SocketSendQueue &operator=(SocketSendQueue const &) = delete;
 
   /// Put data in the queue, start processing the queue.

@@ -55,7 +55,7 @@ struct ParticipantState {
 
   /// Constructs a serial participant with a given name
   constexpr explicit ParticipantState(std::string_view n)
-      : name(std::move(n)){};
+      : name(std::move(n)) {};
 
   /** Injects the amount of ranks this participant should run on.
    *
@@ -262,14 +262,14 @@ public:
 
   /** Creates a M2N and establishes a primary connection between participants
    * @param[in] acceptor the accepting participant
-   * @param[in] requestor the requesting participant
+   * @param[in] connector the requesting participant
    * @param[in] options a set of options concerning the created connection
    *
-   * @note This function throws if the acceptor or requestor are unknown!
+   * @note This function throws if the acceptor or connector are unknown!
    *
    * @see ConnectionOptions
    */
-  m2n::PtrM2N connectPrimaryRanks(const std::string &acceptor, const std::string &requestor, const ConnectionOptions &options = ConnectionOptions{}) const;
+  m2n::PtrM2N connectPrimaryRanks(const std::string &acceptor, const std::string &connector, const ConnectionOptions &options = ConnectionOptions{}) const;
 
   /// Provides a user- and log-friendly description of the current context
   std::string describe() const;

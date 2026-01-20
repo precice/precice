@@ -78,8 +78,6 @@ BOOST_AUTO_TEST_CASE(testInitializeData)
 
   xml::XMLTag root = xml::getRootTag();
 
-  int dimensions = 3;
-
   // Create a data configuration, to simplify configuration of data
   mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
   dataConfig->addData("Data0", mesh::Data::typeName::SCALAR);

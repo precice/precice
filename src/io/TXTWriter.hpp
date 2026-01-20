@@ -17,10 +17,10 @@ public:
    */
   explicit TXTWriter(const std::string &filename);
 
-  ///Writes (appends) the matrix to the file.
+  /// Writes (appends) the matrix to the file.
   void write(const Eigen::MatrixXd &matrix);
 
-  ///Flush the buffer to file
+  /// Flush the buffer to file
   void flush();
 
 private:

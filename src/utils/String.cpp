@@ -43,7 +43,7 @@ std::string wrapText(
 }
 
 std::string &checkAppendExtension(
-    std::string &      filename,
+    std::string       &filename,
     const std::string &extension)
 {
   size_t pos = filename.rfind(extension);

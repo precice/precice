@@ -21,7 +21,7 @@ namespace precice::com {
  * either compiled into one executable or, are started by one mpi execution call
  * on the command line.
  *
- * It is imporant, that all processes in the used communicator have to
+ * It is important, that all processes in the used communicator have to
  * participate in the communication. If one of the processes does not call
  * either acceptConnection(), or closeConnection(), a deadlock is achieved.
  */
@@ -69,9 +69,9 @@ public:
                          int                requesterRank,
                          int                requesterCommunicatorSize) override;
 
-  void requestConnectionAsClient(std::string const &  acceptorName,
-                                 std::string const &  requesterName,
-                                 std::string const &  tag,
+  void requestConnectionAsClient(std::string const   &acceptorName,
+                                 std::string const   &requesterName,
+                                 std::string const   &tag,
                                  std::set<int> const &acceptorRanks,
                                  int                  requesterRank) override
   {

@@ -95,44 +95,62 @@ void PythonAction::performAction()
     initialize();
   }
 
-  PyObject *dataArgs = PyTuple_New(_numberArguments);
+  if (!_sourceData) {
+    PyObject *dataArgs = PyTuple_New(_numberArguments);
+    for (auto &targetStample : _targetData->stamples()) {
+      PyObject *pythonTime = PyFloat_FromDouble(targetStample.timestamp);
+      PyTuple_SetItem(dataArgs, 0, pythonTime);
 
-  int i = 0;
-  for (auto &targetStample : _targetData->stamples()) { // iterate over _targetData, because it must always exist
-    PRECICE_ASSERT(_targetData);                        // _targetData is mandatory, cannot call setSampleAtTime, if target data is not provided!
+      npy_intp targetDim[]  = {targetStample.sample.values.size()};
+      double  *targetValues = const_cast<double *>(targetStample.sample.values.data());
+      _targetValues         = PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
+      PRECICE_CHECK(_targetValues != nullptr, "Creating python target values failed. Please check that the target data name is used by the mesh in action:python.");
+      PyTuple_SetItem(dataArgs, 1, _targetValues);
+
+      PyObject_CallObject(_performAction, dataArgs);
+      PRECICE_CHECK(!PyErr_Occurred(),
+                    "Error occurred during call of function performAction() in python module \"{}\". "
+                    "The error message is: {}",
+                    _moduleName, python_error_as_string());
+    }
+
+    _targetData->setGlobalSample(_targetData->stamples().back().sample);
+    Py_DECREF(dataArgs);
+    return;
+  }
+
+  PyObject *dataArgs       = PyTuple_New(_numberArguments);
+  auto      targetStamples = _targetData->stamples();
+  auto      sourceStamples = _sourceData->stamples();
+  PRECICE_CHECK(targetStamples.size() == sourceStamples.size(), "Cannot perform python actions on different amount of samples in target and source data.");
+
+  for (size_t i = 0; i < targetStamples.size(); ++i) {
+    auto &targetStample = targetStamples[i];
+    auto &sourceStample = sourceStamples[i];
+    PRECICE_CHECK(math::equals(sourceStample.timestamp, targetStample.timestamp), "Trying to perform python action on samples with different timestamps: {} for source data and {} for target data. Time mesh of source data and target data must agree.", sourceStample.timestamp, targetStample.timestamp);
 
     PyObject *pythonTime = PyFloat_FromDouble(targetStample.timestamp);
     PyTuple_SetItem(dataArgs, 0, pythonTime);
 
-    if (_sourceData) {                                     // _sourceData is optional
-      auto &sourceStample   = _sourceData->stamples()[i];  // simultaneously iterate over _targetData->stamples()
-      _sourceData->values() = sourceStample.sample.values; // put data into temporary buffer
-      PRECICE_CHECK(math::equals(sourceStample.timestamp, targetStample.timestamp), "Trying to perform python action on samples with different timestamps: {} for source data and {} for target data. Time mesh of source data and target data must agree.", sourceStample.timestamp, targetStample.timestamp);
-      i++;
-      npy_intp sourceDim[]  = {_sourceData->values().size()};
-      double * sourceValues = _sourceData->values().data();
-      _sourceValues         = PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
-      PRECICE_CHECK(_sourceValues != nullptr, "Creating python source values failed. Please check that the source data name is used by the mesh in action:python.");
-      PyTuple_SetItem(dataArgs, 1, _sourceValues);
-    }
+    npy_intp sourceDim[]  = {sourceStample.sample.values.size()};
+    double  *sourceValues = const_cast<double *>(sourceStample.sample.values.data());
+    _sourceValues         = PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
+    PRECICE_CHECK(_sourceValues != nullptr, "Creating python source values failed. Please check that the source data name is used by the mesh in action:python.");
+    PyTuple_SetItem(dataArgs, 1, _sourceValues);
 
-    _targetData->values() = targetStample.sample.values; // put data into temporary buffer
-    npy_intp targetDim[]  = {_targetData->values().size()};
-    double * targetValues = _targetData->values().data();
-    // PRECICE_ASSERT(_targetValues == NULL);
-    _targetValues = PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
+    npy_intp targetDim[]  = {targetStample.sample.values.size()};
+    double  *targetValues = const_cast<double *>(targetStample.sample.values.data());
+    _targetValues         = PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
     PRECICE_CHECK(_targetValues != nullptr, "Creating python target values failed. Please check that the target data name is used by the mesh in action:python.");
-    int argumentIndex = _sourceData ? 2 : 1;
-    PyTuple_SetItem(dataArgs, argumentIndex, _targetValues);
+    PyTuple_SetItem(dataArgs, 2, _targetValues);
 
     PyObject_CallObject(_performAction, dataArgs);
     PRECICE_CHECK(!PyErr_Occurred(),
                   "Error occurred during call of function performAction() in python module \"{}\". "
                   "The error message is: {}",
                   _moduleName, python_error_as_string());
-
-    _targetData->setSampleAtTime(targetStample.timestamp, _targetData->sample());
   }
+  _targetData->setGlobalSample(_targetData->stamples().back().sample);
   Py_DECREF(dataArgs);
 }
 

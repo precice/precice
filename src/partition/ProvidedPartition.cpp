@@ -164,7 +164,7 @@ void ProvidedPartition::prepare()
       PRECICE_ASSERT(_mesh->getVertexDistribution().empty());
       /// @TODO are these distributions allowed to contain verices already?
       mesh::Mesh::VertexDistribution vertexDistribution;
-      auto &                         localIds = vertexDistribution[0];
+      auto                          &localIds = vertexDistribution[0];
       localIds.resize(vertexOffsets[0]);
       std::iota(localIds.begin(), localIds.end(), 0);
 

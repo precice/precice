@@ -215,7 +215,7 @@ public:
   /// @brief: applies the preconditioner to the factorized and truncated representation of the Jacobian matrix
   // void applyPreconditioner();
 
-  /// @brief: appplies the inverse preconditioner to the factorized and truncated representation of the Jacobian matrix
+  /// @brief: applies the inverse preconditioner to the factorized and truncated representation of the Jacobian matrix
   // void revertPreconditioner();
 
   void setPrecondApplied(bool b);

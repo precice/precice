@@ -4,10 +4,7 @@
     {
       "name": "base",
       "hidden": true,
-      "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "BUILD_SHARED_LIBS": "ON"
-      }
+      "binaryDir": "${sourceDir}/build"
     },
     {
       "name": "production",
@@ -30,7 +27,7 @@
       }
     },
     {
-      "name": "develop",
+      "name": "development",
       "inherits": "base",
       "displayName": "Development",
       "description": "Development config with default settings",
@@ -69,7 +66,7 @@
     },
     {
       "name": "profiling",
-      "inherits": "develop",
+      "inherits": "development",
       "displayName": "Profiling",
       "description": "Profiling configuration",
       "cacheVariables": {

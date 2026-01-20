@@ -42,7 +42,7 @@ bool contained(const ELEMENT_T &element, const std::vector<ELEMENT_T> &vec)
 
 template <typename KEY_T, typename ELEMENT_T>
 bool contained(
-    const KEY_T &                     key,
+    const KEY_T                      &key,
     const std::map<KEY_T, ELEMENT_T> &map)
 {
   return map.find(key) != map.end();
@@ -50,7 +50,7 @@ bool contained(
 
 template <typename KEY_T>
 bool contained(
-    const KEY_T &          key,
+    const KEY_T           &key,
     const std::set<KEY_T> &set)
 {
   return set.find(key) != set.end();
