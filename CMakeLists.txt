@@ -275,10 +275,8 @@ else()
   message(STATUS "PETSc support disabled")
 endif()
 
-# Option: Ginkgo
-if (PRECICE_FEATURE_GINKGO_MAPPING)
-  find_package(Ginkgo 1.8.0 REQUIRED)
-  message(STATUS "Found Ginkgo ${GINKGO_PROJECT_VERSION} at ${Ginkgo_DIR}")
+# Common setup for Ginkgo and Kokkos Kernels
+if(PRECICE_FEATURE_GINKGO_MAPPING OR PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING)
 
   find_package(Kokkos 4.1 REQUIRED)
   message(STATUS "Found Kokkos version ${Kokkos_VERSION} at ${Kokkos_DIR}")
@@ -287,11 +285,36 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     message(STATUS "preCICE symbol visibility turned back ON due to Kokkos < 4.4")
     set(PRECICE_HIDE_SYMBOLS OFF)
   endif()
-
   include(CMakeDependentOption)
+
   cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_CUDA" OFF)
+  cmake_dependent_option(PRECICE_WITH_CUDA "Enable Kokkos Cuda support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_CUDA" OFF)
+
   cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_HIP" OFF)
+  cmake_dependent_option(PRECICE_WITH_HIP "Enable Kokkos HIP support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_HIP" OFF)
+
   cmake_dependent_option(PRECICE_WITH_OPENMP "Enable Ginkgo OpenMP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_OPENMP" OFF)
+  cmake_dependent_option(PRECICE_WITH_OPENMP "Enable Kokkos OpenMP support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_OPENMP" OFF)
+
+  # SYCL is only supported in Kokkos-kernels currently
+  cmake_dependent_option(PRECICE_WITH_SYCL "Enable Kokkos SYCL support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_SYCL" OFF)
+
+
+  # Things Ginkgo and Kokkos Kernels share for the HIP setup
+  if(PRECICE_WITH_HIP)
+    include(CheckLanguage)
+    check_language(HIP)
+    enable_language(HIP)
+    set(CMAKE_HIP_STANDARD ${PRECICE_CXX_STANDARD})
+    set(CMAKE_HIP_STANDARD_REQUIRED ON)
+    find_package(hip REQUIRED)
+  endif()
+endif()
+
+# Option: Ginkgo
+if (PRECICE_FEATURE_GINKGO_MAPPING)
+  find_package(Ginkgo 1.8.0 REQUIRED)
+  message(STATUS "Found Ginkgo ${GINKGO_PROJECT_VERSION} at ${Ginkgo_DIR}")
 
   # We aim for the same configuration as Ginkgo itself and check immediately for device compiler
   # such that preciceCore inherits all relevant flags directly
@@ -304,21 +327,11 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     set(CMAKE_CUDA_STANDARD ${PRECICE_CXX_STANDARD})
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
     set(CMAKE_CUDA_FLAGS "${GINKGO_CUDA_ARCH_FLAGS} --expt-relaxed-constexpr")
-
-    # Similar to Ginkgo, we don't let CMake deduce the architecture, but inherit the Ginkgo flags
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
-      set(CMAKE_CUDA_ARCHITECTURES OFF)
-    endif()
-endif()
+    set(CMAKE_CUDA_ARCHITECTURES OFF)
+  endif()
 
   # 2. Check if Ginkgo was built with HIP and if HIP is available on the system
   if(PRECICE_WITH_HIP)
-    include(CheckLanguage)
-    check_language(HIP)
-    enable_language(HIP)
-    set(CMAKE_HIP_STANDARD ${PRECICE_CXX_STANDARD})
-    set(CMAKE_HIP_STANDARD_REQUIRED ON)
-    find_package(hip REQUIRED)
     find_package(hipsolver REQUIRED)
     find_package(hipblas REQUIRED)
   endif()
@@ -333,27 +346,8 @@ else()
 endif()
 
 if(PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING)
-  find_package(Kokkos 4.1 REQUIRED)
-  message(STATUS "Found Kokkos version ${Kokkos_VERSION} at ${Kokkos_DIR}")
-
   find_package(KokkosKernels 4.1 REQUIRED)
   message(STATUS "Found KokkosKernels version ${KokkosKernels_VERSION} at ${KokkosKernels_DIR}")
-
-  include(CMakeDependentOption)
-  # The kokkos config will be the same as above in case we enable both features
-  cmake_dependent_option(PRECICE_WITH_CUDA "Enable Kokkos Cuda support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_CUDA" OFF)
-  cmake_dependent_option(PRECICE_WITH_HIP "Enable Kokkos HIP support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_HIP" OFF)
-  cmake_dependent_option(PRECICE_WITH_SYCL "Enable Kokkos SYCL support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_SYCL" OFF)
-  cmake_dependent_option(PRECICE_WITH_OPENMP "Enable Kokkos OpenMP support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_OPENMP" OFF)
-
-  if(PRECICE_WITH_HIP)
-    include(CheckLanguage)
-    check_language(HIP)
-    enable_language(HIP)
-    set(CMAKE_HIP_STANDARD 17)
-    set(CMAKE_HIP_STANDARD_REQUIRED ON)
-    find_package(hip REQUIRED) # required to link against hip::device
-  endif()
 else()
   message(STATUS "Kokkos-kernels support disabled")
 endif()
