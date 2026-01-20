@@ -1,5 +1,6 @@
+#include <Eigen/Core>
+
 #include "mapping/Polation.hpp"
-#include <Eigen/src/Core/Matrix.h>
 #include "math/barycenter.hpp"
 #include "math/differences.hpp"
 
