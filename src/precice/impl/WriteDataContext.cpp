@@ -101,7 +101,7 @@ void WriteDataContext::resizeBufferTo(int nVertices, bool invalidateBufferedData
     _writeDataBuffer.values.tail(change).setZero();
   }
   if (invalidateBufferedData)
-    _writeDataBuffer.values.setConstant(-1);
+    _writeDataBuffer.values.setZero(); // Zero since the waveform uses the initial sample
 
   PRECICE_DEBUG("Data {} now has {} values", getDataName(), _writeDataBuffer.values.size());
 
@@ -118,7 +118,7 @@ void WriteDataContext::resizeBufferTo(int nVertices, bool invalidateBufferedData
   }
 
   if (invalidateBufferedData)
-    _writeDataBuffer.gradients.setConstant(-1);
+    _writeDataBuffer.gradients.setZero();
 
   PRECICE_DEBUG("Gradient Data {} now has {} x {} values", getDataName(), _writeDataBuffer.gradients.rows(), _writeDataBuffer.gradients.cols());
 }
