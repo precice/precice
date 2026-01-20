@@ -1305,10 +1305,9 @@ void ParticipantImpl::mapAndReadData(
   Event e{fmt::format("mapAndReadData.{}_{}", meshName, dataName), profiling::API};
 
   // Note that meshName refers to a remote mesh
-  const auto           dataDims  = dataContext.getDataDimensions();
-  const auto           dim       = dataContext.getSpatialDimensions();
-  const auto           nVertices = (coordinates.size() / dim);
-  ReceivedMeshContext &context   = _accessor->receivedMeshContext(meshName);
+  const auto dataDims  = dataContext.getDataDimensions();
+  const auto dim       = dataContext.getSpatialDimensions();
+  const auto nVertices = (coordinates.size() / dim);
 
   // Check that the vertex is actually within the defined access region
   _accessor->receivedMeshContext(meshName).checkVerticesInsideAccessRegion(coordinates, dim, "mapAndReadData");
@@ -1613,10 +1612,11 @@ void ParticipantImpl::computePartitions()
 
     mesh.allocateDataValues();
 
+    // Should be relevant for direct mesh access only
     const auto requiredSize = mesh.nVertices();
     for (auto &context : _accessor->writeDataContexts()) {
       if (context.getMeshName() == mesh.getName()) {
-        context.resizeBufferTo(requiredSize);
+        context.resizeBufferTo(requiredSize, std::holds_alternative<ReceivedMeshContext *>(variant));
       }
     }
   }
