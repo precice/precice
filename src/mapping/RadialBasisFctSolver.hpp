@@ -38,8 +38,7 @@ public:
    */
   template <typename IndexContainer>
   RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
-                       const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis,
-                       Polynomial polynomial, bool computeSeparatePolynomialOnly = false);
+                       const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial);
 
   /// Maps the given input data
   Eigen::MatrixXd solveConsistent(Eigen::MatrixXd &inputData, Polynomial polynomial) const;
@@ -70,8 +69,6 @@ public:
                            const RADIAL_BASIS_FUNCTION_T &basisFunction, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const;
 
   void evaluateConservativeCache(Eigen::MatrixXd &epsilon, const Eigen::MatrixXd &Au, Eigen::MatrixXd &result) const;
-
-  void solveConsistentPolynomial(Eigen::VectorXd &in, Eigen::VectorXd &out) const;
 
 private:
   mutable precice::logging::Logger _log{"mapping::RadialBasisFctSolver"};
@@ -343,41 +340,38 @@ double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::evaluateRippaLOOCVerror(co
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
-                                                                    const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis,
-                                                                    Polynomial polynomial, bool computeSeparatePolynomialOnly)
+                                                                    const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial)
 {
   PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
   // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
   std::array<bool, 3> activeAxis({{false, false, false}});
   std::transform(deadAxis.begin(), deadAxis.end(), activeAxis.begin(), [](const auto ax) { return !ax; });
 
-  if (!computeSeparatePolynomialOnly) {
-    // First, assemble the interpolation matrix and check the invertability
-    bool decompositionSuccessful = false;
-    if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
-      _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).llt();
-      decompositionSuccessful = _decMatrixC.info() == Eigen::ComputationInfo::Success;
-    } else {
-      _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).colPivHouseholderQr();
-      decompositionSuccessful = _decMatrixC.isInvertible();
-    }
-
-    PRECICE_CHECK(decompositionSuccessful,
-                  "The interpolation matrix of the RBF mapping from mesh \"{}\" to mesh \"{}\" is not invertable. "
-                  "This means that the mapping problem is not well-posed. "
-                  "Please check if your coupling meshes are correct (e.g. no vertices are duplicated) or reconfigure "
-                  "your basis-function (e.g. reduce the support-radius).",
-                  inputMesh.getName(), outputMesh.getName());
-
-    // For polynomial on, the algorithm might fail in determining the size of the system
-    if (polynomial != Polynomial::ON && computeCrossValidation) {
-      // TODO: Disable synchronization
-      precice::profiling::Event e("map.rbf.computeLOOCV");
-      _inverseDiagonal = computeInverseDiagonal(_decMatrixC);
-    }
-    // Second, assemble evaluation matrix
-    _matrixA = buildMatrixA(basisFunction, inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial);
+  // First, assemble the interpolation matrix and check the invertability
+  bool decompositionSuccessful = false;
+  if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
+    _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).llt();
+    decompositionSuccessful = _decMatrixC.info() == Eigen::ComputationInfo::Success;
+  } else {
+    _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).colPivHouseholderQr();
+    decompositionSuccessful = _decMatrixC.isInvertible();
   }
+
+  PRECICE_CHECK(decompositionSuccessful,
+                "The interpolation matrix of the RBF mapping from mesh \"{}\" to mesh \"{}\" is not invertable. "
+                "This means that the mapping problem is not well-posed. "
+                "Please check if your coupling meshes are correct (e.g. no vertices are duplicated) or reconfigure "
+                "your basis-function (e.g. reduce the support-radius).",
+                inputMesh.getName(), outputMesh.getName());
+
+  // For polynomial on, the algorithm might fail in determining the size of the system
+  if (polynomial != Polynomial::ON && computeCrossValidation) {
+    // TODO: Disable synchronization
+    precice::profiling::Event e("map.rbf.computeLOOCV");
+    _inverseDiagonal = computeInverseDiagonal(_decMatrixC);
+  }
+  // Second, assemble evaluation matrix
+  _matrixA = buildMatrixA(basisFunction, inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial);
 
   // In case we deal with separated polynomials, we need dedicated matrices for the polynomial contribution
   if (polynomial == Polynomial::SEPARATE) {
@@ -441,17 +435,6 @@ Eigen::MatrixXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative
     out -= static_cast<Eigen::MatrixXd>(_qrMatrixQ.transpose().solve(-epsilon));
   }
   return out;
-}
-
-template <typename RADIAL_BASIS_FUNCTION_T>
-void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistentPolynomial(Eigen::VectorXd &in, Eigen::VectorXd &out) const
-{
-  // assumes a separate polynomial
-  PRECICE_ASSERT(_matrixQ.size() > 0);
-  PRECICE_ASSERT(_matrixV.size() > 0);
-  Eigen::VectorXd polynomialContribution = _qrMatrixQ.solve(in);
-  in -= (_matrixQ * polynomialContribution);
-  out = (_matrixV * polynomialContribution);
 }
 
 // @todo: change the signature to Eigen::MatrixXd and process all components at once, the solve function of eigen can handle that

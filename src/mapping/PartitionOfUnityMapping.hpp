@@ -238,7 +238,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::_computeCPU(mesh::PtrMesh
     // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
     const VertexID                                  vertexID = meshVertices.size();
     mesh::Vertex                                    center(c.getCoords(), vertexID);
-    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _polynomial, inMesh, outMesh, _useBatchedSolver);
+    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _polynomial, inMesh, outMesh);
 
     // Consider only non-empty clusters (more of a safeguard here)
     if (!cluster.empty()) {
