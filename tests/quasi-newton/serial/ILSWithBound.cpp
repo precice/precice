@@ -10,7 +10,7 @@ BOOST_AUTO_TEST_SUITE(Integration)
 BOOST_AUTO_TEST_SUITE(QuasiNewton)
 BOOST_AUTO_TEST_SUITE(Serial)
 PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
-BOOST_DATA_TEST_CASE(TestQN16, boost::unit_test::data::make({true, false}), includeSecondaryData)
+BOOST_DATA_TEST_CASE(ILSWithBound, boost::unit_test::data::make({true, false}), includeSecondaryData)
 {
   PRECICE_TEST();
   // to test `onBoundViolation` parameter; Fail by setting to `ignore` for bound violation;
