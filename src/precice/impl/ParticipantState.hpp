@@ -52,9 +52,6 @@ inline partition::Partition &getPartition(const MeshContextVariant &variant)
   return std::visit([](auto *p) -> partition::Partition & { return *p->partition; }, variant);
 }
 
-class MeshContext;
-class ProvidedMeshContext;
-class ReceivedMeshContext;
 struct MappingContext;
 } // namespace precice::impl
 
