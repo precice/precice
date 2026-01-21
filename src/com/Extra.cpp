@@ -2,6 +2,7 @@
 
 #include "com/SerializedMesh.hpp"
 #include "com/SerializedPartitioning.hpp"
+#include "com/SerializedConnectionInfo.hpp"
 
 namespace precice::com {
 
@@ -63,6 +64,36 @@ void sendBoundingBoxMap(Communication &communication, int rankReceiver, const me
 void receiveBoundingBoxMap(Communication &communication, int rankSender, mesh::Mesh::BoundingBoxMap &bbm)
 {
   bbm = serialize::SerializedBoundingBoxMap::receive(communication, rankSender).toBoundingBoxMap();
+}
+
+void sendConnectionInfo(Communication &communication, int rankReceiver, const std::string &connectionInfo)
+{
+  communication.send(connectionInfo, rankReceiver);
+}
+
+void receiveConnectionInfo(Communication &communication, int rankSender, std::string &connectionInfo)
+{
+  communication.receive(connectionInfo, rankSender);
+}
+
+void sendConnectionInfoMap(Communication &communication, int rankReceiver, const serialize::SerializedConnectionInfoMap::ConnectionInfoMap &connectionInfoMap)
+{
+  serialize::SerializedConnectionInfoMap::serialize(connectionInfoMap).send(communication, rankReceiver);
+}
+
+void receiveConnectionInfoMap(Communication &communication, int rankSender, serialize::SerializedConnectionInfoMap::ConnectionInfoMap &connectionInfoMap)
+{
+  connectionInfoMap = serialize::SerializedConnectionInfoMap::receive(communication, rankSender).toConnectionInfoMap();
+}
+
+void broadcastSendConnectionInfoMap(Communication &communication, const serialize::SerializedConnectionInfoMap::ConnectionInfoMap &connectionInfoMap)
+{
+  serialize::SerializedConnectionInfoMap::serialize(connectionInfoMap).broadcastSend(communication);
+}
+
+void broadcastReceiveConnectionInfoMap(Communication &communication, serialize::SerializedConnectionInfoMap::ConnectionInfoMap &connectionInfoMap)
+{
+  connectionInfoMap = serialize::SerializedConnectionInfoMap::broadcastReceive(communication).toConnectionInfoMap();
 }
 
 void broadcastSendBoundingBoxMap(Communication &communication, const mesh::Mesh::BoundingBoxMap &bbm)

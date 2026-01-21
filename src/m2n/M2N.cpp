@@ -197,9 +197,49 @@ void M2N::acceptSecondaryRanksPreConnection(
   PRECICE_ASSERT(_areSecondaryRanksConnected);
 }
 
-void M2N::requestSecondaryRanksPreConnection(
+std::string M2N::prepareAcceptSecondaryRanksPreConnection(
     const std::string &acceptorName,
     const std::string &requesterName)
+{
+  PRECICE_TRACE(acceptorName);
+  PRECICE_ASSERT(not _useOnlyPrimaryCom);
+  Event e("m2n.prepareAcceptSecondaryRanksPreConnection");
+
+  for (const auto &pair : _distComs) {
+    Event e1("m2n.prepareAcceptSecondaryRanksPreConnection." + std::to_string(pair.first));
+
+    std::string connectionInfo = pair.second->prepareAcceptPreConnection(acceptorName, requesterName);
+
+    e1.stop();
+
+    // TODO: Make this work with more than one communication pair
+    return connectionInfo;
+  }
+
+  PRECICE_ASSERT(false, "Must have at least one communication pair");
+}
+
+void M2N::finishAcceptSecondaryRanksPreConnection(
+    const std::string &acceptorName,
+    const std::string &requesterName)
+{
+  PRECICE_TRACE(acceptorName, requesterName);
+  PRECICE_ASSERT(not _useOnlyPrimaryCom);
+  Event e("m2n.finishAcceptSecondaryRanksPreConnection");
+
+  // TODO: Assert that prepareAcceptSecondaryRanksPreConnection has been called before
+  for (const auto &pair : _distComs) {
+    Event e1("m2n.finishAcceptSecondaryRanksPreConnection." + std::to_string(pair.first));
+
+    pair.second->finishAcceptPreConnection(acceptorName, requesterName);
+    _areSecondaryRanksConnected = _areSecondaryRanksConnected && pair.second->isConnected();
+
+    e1.stop();
+  }
+  PRECICE_ASSERT(_areSecondaryRanksConnected);
+}
+
+void M2N::requestSecondaryRanksPreConnection(const std::string &acceptorName, const std::string &requesterName)
 {
   PRECICE_TRACE(acceptorName, requesterName);
   PRECICE_ASSERT(not _useOnlyPrimaryCom);
@@ -210,6 +250,27 @@ void M2N::requestSecondaryRanksPreConnection(
     Event e1("m2n.requestSecondaryRanksPreConnection." + std::to_string(pair.first));
 
     pair.second->requestPreConnection(acceptorName, requesterName);
+    _areSecondaryRanksConnected = _areSecondaryRanksConnected && pair.second->isConnected();
+
+    e1.stop();
+  }
+  PRECICE_ASSERT(_areSecondaryRanksConnected);
+}
+
+void M2N::requestSecondaryRanksPreConnection(
+    const std::string                                                    &acceptorName,
+    const std::string                                                    &requesterName,
+    const com::serialize::SerializedConnectionInfoMap::ConnectionInfoMap &connectionInfoMap)
+{
+  PRECICE_TRACE(acceptorName, requesterName);
+  PRECICE_ASSERT(not _useOnlyPrimaryCom);
+  Event e("m2n.requestSecondaryRanksPreConnection", profiling::Synchronize);
+
+  _areSecondaryRanksConnected = true;
+  for (const auto &pair : _distComs) {
+    Event e1("m2n.requestSecondaryRanksPreConnection." + std::to_string(pair.first));
+
+    pair.second->requestPreConnection(acceptorName, requesterName, connectionInfoMap);
     _areSecondaryRanksConnected = _areSecondaryRanksConnected && pair.second->isConnected();
 
     e1.stop();

@@ -1,5 +1,8 @@
 #pragma once
 
+#include "ConnectionInfoPublisher.hpp"
+#include "SerializedConnectionInfo.hpp"
+
 #include <set>
 #include <stddef.h>
 #include <string>
@@ -125,6 +128,18 @@ public:
                                         int                acceptorRank,
                                         int                requesterCommunicatorSize) = 0;
 
+  virtual std::string prepareAcceptConnectionAsServer(std::string const &acceptorName,
+                                                      std::string const &requesterName,
+                                                      std::string const &tag,
+                                                      int                acceptorRank,
+                                                      int                requesterCommunicatorSize) = 0;
+
+  virtual void finishAcceptConnectionAsServer(std::string const &acceptorName,
+                                              std::string const &requesterName,
+                                              std::string const &tag,
+                                              int                acceptorRank,
+                                              int                requesterCommunicatorSize) = 0;
+
   /**
    * @brief Connects to another communicator, which has to call acceptConnection().
    *
@@ -165,6 +180,28 @@ public:
                                          std::string const   &tag,
                                          std::set<int> const &acceptorRanks,
                                          int                  requesterRank) = 0;
+
+  /**
+   * @brief Connects to another communicator, which has to call acceptConnectionAsServer().
+   *
+   * Establishes a 1-to-N communication, whereas the requestor's side is the "N". Contrary to
+   * requestConnection(), this side can have arbitrary ranks (e.g. 2,3,7). All ranks need to
+   * call this function. This communication is only used in PointToPointCommunication, i.e.
+   * for the M-to-N communication between two participants.
+   *
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to
+   * @param[in] tag Tag for establishing this connection
+   * @param[in] acceptorRanks Set of ranks that accept a connection
+   * @param[in] requesterRank Rank that requests the connection, usually the caller's rank
+   * @param[in] connectionInfoMap Information on how to connect to the acceptor ranks
+   */
+  virtual void requestConnectionAsClient(std::string const                                               &acceptorName,
+                                         std::string const                                               &requesterName,
+                                         std::string const                                               &tag,
+                                         std::set<int> const                                             &acceptorRanks,
+                                         int                                                              requesterRank,
+                                         serialize::SerializedConnectionInfoMap::ConnectionInfoMap const &connectionInfoMap) = 0;
 
   /** Establishes the intra-participant communication connection.
    *

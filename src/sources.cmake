@@ -72,6 +72,8 @@ target_sources(preciceCore
     src/com/MPISinglePortsCommunicationFactory.hpp
     src/com/Request.cpp
     src/com/Request.hpp
+    src/com/SerializedConnectionInfo.cpp
+    src/com/SerializedConnectionInfo.hpp
     src/com/SerializedMesh.cpp
     src/com/SerializedMesh.hpp
     src/com/SerializedPartitioning.cpp

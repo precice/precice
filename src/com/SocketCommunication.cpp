@@ -12,9 +12,12 @@
 #include "SocketRequest.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/impl/Types.hpp"
+#include "profiling/Event.hpp"
 #include "utils/assertion.hpp"
 #include "utils/networking.hpp"
 #include "utils/span_tools.hpp"
+
+using precice::profiling::Event;
 
 namespace precice::com {
 
@@ -133,7 +136,7 @@ void SocketCommunication::acceptConnection(std::string const &acceptorName,
       // send and receive expect a rank from the acceptor perspective.
       // Thus we need to apply given rankOffset before passing it to send/receive.
       // This is essentially the inverse of adjustRank().
-      auto adjustedRequesterRank = requesterRank + rankOffset;
+      auto  adjustedRequesterRank = requesterRank + rankOffset;
       Event e3_0_2("socket.acceptConnection.sendAcceptorRank");
       send(acceptorRank, adjustedRequesterRank);
       e3_0_2.stop();
@@ -262,6 +265,113 @@ void SocketCommunication::acceptConnectionAsServer(std::string const &acceptorNa
   e5.stop();
 }
 
+std::string SocketCommunication::prepareAcceptConnectionAsServer(std::string const &acceptorName,
+                                                                 std::string const &requesterName,
+                                                                 std::string const &tag,
+                                                                 int                acceptorRank,
+                                                                 int                requesterCommunicatorSize)
+{
+  PRECICE_TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
+  PRECICE_ASSERT(requesterCommunicatorSize >= 0, "Requester communicator size has to be positive.");
+  PRECICE_ASSERT(not isConnected());
+
+  if (requesterCommunicatorSize == 0) {
+    PRECICE_DEBUG("Accepting no connections.");
+    _isConnected = true;
+    return nullptr;
+  }
+
+  std::string address;
+
+  try {
+    Event e0("socket.acceptConnectionAsServer.getIpAddress");
+
+    std::string ipAddress = getIpAddress();
+    PRECICE_ASSERT(not ipAddress.empty(), "Network \"{}\" not found for socket connection!", _networkName);
+
+    e0.stop();
+    Event e1("socket.acceptConnectionAsServer.openPort");
+
+    using asio::ip::tcp;
+
+    _acceptor = std::make_unique<Acceptor>(*_ioContext);
+    {
+      tcp::endpoint endpoint(tcp::v4(), _portNumber);
+
+      _acceptor->open(endpoint.protocol());
+      _acceptor->set_option(tcp::acceptor::reuse_address(_reuseAddress));
+      _acceptor->bind(endpoint);
+      _acceptor->listen();
+
+      _portNumber = _acceptor->local_endpoint().port();
+    }
+
+    e1.stop();
+
+    address = ipAddress + ":" + std::to_string(_portNumber);
+    return address;
+  } catch (std::exception &e) {
+    PRECICE_ERROR("Preparing accepting a socket connection at {} failed with the system error: {}", address, e.what());
+  }
+}
+
+void SocketCommunication::finishAcceptConnectionAsServer(std::string const &acceptorName,
+                                                                std::string const &requesterName,
+                                                                std::string const &tag,
+                                                                int                acceptorRank,
+                                                                int                requesterCommunicatorSize)
+{
+  PRECICE_TRACE(acceptorName, requesterName, acceptorRank, requesterCommunicatorSize);
+  PRECICE_ASSERT(requesterCommunicatorSize >= 0, "Requester communicator size has to be positive.");
+  PRECICE_ASSERT(not isConnected());
+  // TODO: Check if acceptor is fine
+
+  std::string address = getIpAddress() + ":" + std::to_string(_portNumber);
+
+  try {
+    Event e3("socket.acceptConnectionAsServer.acceptConnections");
+
+    PRECICE_DEBUG("Accepting connection at {}", address);
+
+    for (int connection = 0; connection < requesterCommunicatorSize; ++connection) {
+      Event e3_0("socket.acceptConnectionAsServer.acceptConnection");
+      e3_0.addData("connection", connection);
+      Event e3_0_0("socket.acceptConnectionAsServer.makeSocket");
+
+      auto socket = std::make_shared<Socket>(*_ioContext);
+      _acceptor->accept(*socket);
+      asio::ip::tcp::no_delay option(true);
+      socket->set_option(option);
+      PRECICE_DEBUG("Accepted connection at {}", address);
+      _isConnected = true;
+
+      e3_0_0.stop();
+      Event e3_0_1("socket.acceptConnectionAsServer.readRequesterRank");
+
+      int requesterRank;
+      asio::read(*socket, asio::buffer(&requesterRank, sizeof(int)));
+      _sockets[requesterRank] = std::move(socket);
+
+      e3_0_1.stop();
+      e3_0.stop();
+    }
+
+    e3.stop();
+    Event e4("socket.acceptConnectionAsServer.closeAcceptor");
+    _acceptor->close();
+    e4.stop();
+  } catch (std::exception &e) {
+    PRECICE_ERROR("Accepting a socket connection at {} failed with the system error: {}", address, e.what());
+  }
+
+  Event e5("socket.acceptConnectionAsServer.startThread");
+  // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
+  _workGuard = std::make_unique<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
+  _thread    = std::thread([this] { _ioContext->run(); });
+
+  e5.stop();
+}
+
 void SocketCommunication::requestConnection(std::string const &acceptorName,
                                             std::string const &requesterName,
                                             std::string const &tag,
@@ -285,7 +395,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
 
   try {
     Event e1("socket.acceptConnection.makeSocket");
-    auto socket = std::make_shared<Socket>(*_ioContext);
+    auto  socket = std::make_shared<Socket>(*_ioContext);
 
     e1.stop();
     Event e2("socket.requestConnection.connect");
@@ -293,7 +403,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
     using asio::ip::tcp;
 
     while (not isConnected()) {
-      Event e2_0("socket.requestConnection.resolve");
+      Event         e2_0("socket.requestConnection.resolve");
       tcp::resolver resolver(*_ioContext);
       auto          results = resolver.resolve(ipAddress, portNumber, boost::asio::ip::resolver_base::numeric_host);
 
@@ -390,7 +500,96 @@ void SocketCommunication::requestConnectionAsClient(std::string const   &accepto
       PRECICE_DEBUG("Requesting connection to {}, port {}", ipAddress, portNumber);
 
       while (not isConnected()) {
-        Event e0_2_0("socket.requestConnectionAsClient.resolve");
+        Event         e0_2_0("socket.requestConnectionAsClient.resolve");
+        tcp::resolver resolver(*_ioContext);
+        auto          endpoints = resolver.resolve(ipAddress, portNumber, boost::asio::ip::resolver_base::numeric_host);
+
+        e0_2_0.stop();
+        Event e0_2_1("socket.requestConnectionAsClient.connectToEndpoint");
+
+        boost::system::error_code error = asio::error::host_not_found;
+        boost::asio::connect(*socket, endpoints, error);
+
+        _isConnected = not error;
+
+        e0_2_1.stop();
+
+        if (not isConnected()) {
+          Event e0_2_2("socket.requestConnectionAsClient.wait");
+          // Wait a little, since after a couple of ten-thousand trials the system
+          // seems to get confused and the requester connects wrongly to itself.
+          boost::asio::deadline_timer timer(*_ioContext, boost::posix_time::milliseconds(1));
+          timer.wait();
+
+          e0_2_2.stop();
+        }
+      }
+      boost::asio::ip::tcp::no_delay option(true);
+      socket->set_option(option);
+
+      e0_2.stop();
+      Event e0_3("socket.requestConnectionAsClient.sendRequesterRank");
+
+      PRECICE_DEBUG("Requested connection to {}, rank = {}", address, acceptorRank);
+      _sockets[acceptorRank] = std::move(socket);
+      send(requesterRank, acceptorRank); // send my rank
+
+      e0_3.stop();
+    } catch (std::exception &e) {
+      PRECICE_ERROR("Requesting a socket connection at {} failed with the system error: {}", address, e.what());
+    }
+
+    e0.stop();
+  }
+
+  Event e6("socket.requestConnectionAsClient.startThread");
+  // NOTE: Keep IO context running so that it fires asynchronous handlers from another thread.
+  _workGuard = std::make_unique<WorkGuard>(boost::asio::make_work_guard(_ioContext->get_executor()));
+  _thread    = std::thread([this] { _ioContext->run(); });
+
+  e6.stop();
+}
+
+void SocketCommunication::requestConnectionAsClient(std::string const                                               &acceptorName,
+                                                    std::string const                                               &requesterName,
+                                                    std::string const                                               &tag,
+                                                    std::set<int> const                                             &acceptorRanks,
+                                                    int                                                              requesterRank,
+                                                    serialize::SerializedConnectionInfoMap::ConnectionInfoMap const &connectionInfoMap)
+
+{
+  PRECICE_TRACE(acceptorName, requesterName, acceptorRanks, requesterRank);
+  PRECICE_ASSERT(not isConnected());
+
+  for (auto const &acceptorRank : acceptorRanks) {
+    Event e0("socket.requestConnectionAsClient.requestConnection");
+    e0.addData("acceptorRank", acceptorRank);
+    Event e0_0("socket.requestConnectionAsClient.readConInfo");
+
+    _isConnected = false;
+
+    std::string const address    = connectionInfoMap.at(acceptorRank);
+    auto const        sepidx     = address.find(':');
+    std::string const ipAddress  = address.substr(0, sepidx);
+    std::string const portNumber = address.substr(sepidx + 1);
+    _portNumber                  = static_cast<unsigned short>(std::stoul(portNumber));
+
+    e0_0.stop();
+
+    try {
+      Event e0_1("socket.requestConnectionAsClient.makeSocket");
+
+      auto socket = std::make_shared<Socket>(*_ioContext);
+
+      e0_1.stop();
+      Event e0_2("socket.requestConnectionAsClient.connect");
+
+      using asio::ip::tcp;
+
+      PRECICE_DEBUG("Requesting connection to {}, port {}", ipAddress, portNumber);
+
+      while (not isConnected()) {
+        Event         e0_2_0("socket.requestConnectionAsClient.resolve");
         tcp::resolver resolver(*_ioContext);
         auto          endpoints = resolver.resolve(ipAddress, portNumber, boost::asio::ip::resolver_base::numeric_host);
 

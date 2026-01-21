@@ -464,6 +464,72 @@ void PointToPointCommunication::acceptPreConnection(std::string const &acceptorN
   _isConnected = true;
 }
 
+std::string PointToPointCommunication::prepareAcceptPreConnection(std::string const &acceptorName,
+                                                                  std::string const &requesterName)
+{
+  PRECICE_TRACE(acceptorName, requesterName);
+  PRECICE_ASSERT(not isConnected(), "Already connected.");
+
+  Event e0("m2n.acceptPreConnection.getConnectedRanks");
+
+  const std::vector<int> &localConnectedRanks = _mesh->getConnectedRanks();
+
+  if (localConnectedRanks.empty()) {
+    _isConnected = true;
+    return nullptr;
+  }
+
+  e0.stop();
+  Event e1("m2n.acceptPreConnection.newCommunication");
+
+  _communication = _communicationFactory->newCommunication();
+
+  e1.stop();
+  Event e2("m2n.acceptPreConnection.prepareAcceptConnectionAsServer");
+
+  const std::string connectionInfo = _communication->prepareAcceptConnectionAsServer(
+      acceptorName,
+      requesterName,
+      _mesh->getName(),
+      utils::IntraComm::getRank(),
+      localConnectedRanks.size());
+
+  e2.stop();
+
+  return connectionInfo;
+}
+
+void PointToPointCommunication::finishAcceptPreConnection(const std::string &acceptorName,
+                                                          const std::string &requesterName)
+{
+  PRECICE_TRACE(acceptorName, requesterName);
+  PRECICE_ASSERT(not isConnected(), "Already connected.");
+
+  Event e0("m2n.acceptPreConnection.finishAcceptConnectionAsServer");
+
+  const std::vector<int> &localConnectedRanks = _mesh->getConnectedRanks();
+
+  _communication->finishAcceptConnectionAsServer(
+      acceptorName,
+      requesterName,
+      _mesh->getName(),
+      utils::IntraComm::getRank(),
+      localConnectedRanks.size());
+
+  e0.stop();
+  Event e1("m2n.acceptPreConnection.buildConnectionDataVector");
+
+  _connectionDataVector.reserve(localConnectedRanks.size());
+
+  for (int connectedRank : localConnectedRanks) {
+    _connectionDataVector.push_back({connectedRank, com::PtrRequest()});
+  }
+
+  e1.stop();
+
+  _isConnected = true;
+}
+
 void PointToPointCommunication::requestConnection(std::string const &acceptorName,
                                                   std::string const &requesterName)
 {
@@ -600,6 +666,54 @@ void PointToPointCommunication::requestPreConnection(std::string const &acceptor
   _communication->requestConnectionAsClient(acceptorName, requesterName,
                                             _mesh->getName(),
                                             acceptingRanks, utils::IntraComm::getRank());
+  e3.stop();
+
+  Event e4("m2n.requestPreConnection.buildConnectionDataVector");
+
+  for (auto &connectedRank : localConnectedRanks) {
+    _connectionDataVector.push_back({connectedRank, com::PtrRequest()});
+  }
+
+  e4.stop();
+
+  _isConnected = true;
+}
+
+void PointToPointCommunication::requestPreConnection(std::string const                                                    &acceptorName,
+                                                     std::string const                                                    &requesterName,
+                                                     com::serialize::SerializedConnectionInfoMap::ConnectionInfoMap const &connectionInfoMap)
+{
+  PRECICE_TRACE(acceptorName, requesterName);
+  PRECICE_ASSERT(not isConnected(), "Already connected.");
+
+  Event e0("m2n.requestPreConnection.getConnectedRanks");
+
+  std::vector<int> localConnectedRanks = _mesh->getConnectedRanks();
+
+  if (localConnectedRanks.empty()) {
+    _isConnected = true;
+    return;
+  }
+
+  e0.stop();
+  Event e1("m2n.requestPreConnection.reserveVectors");
+
+  std::vector<com::PtrRequest> requests;
+  requests.reserve(localConnectedRanks.size());
+  _connectionDataVector.reserve(localConnectedRanks.size());
+
+  std::set<int> acceptingRanks(localConnectedRanks.begin(), localConnectedRanks.end());
+
+  e1.stop();
+
+  Event e2("m2n.requestPreConnection.newCommunication");
+  _communication = _communicationFactory->newCommunication();
+  e2.stop();
+
+  Event e3("m2n.requestPreConnection.requestConnectionAsClient");
+  _communication->requestConnectionAsClient(acceptorName, requesterName,
+                                            _mesh->getName(),
+                                            acceptingRanks, utils::IntraComm::getRank(), connectionInfoMap);
   e3.stop();
 
   Event e4("m2n.requestPreConnection.buildConnectionDataVector");

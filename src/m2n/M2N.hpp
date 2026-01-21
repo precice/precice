@@ -7,6 +7,7 @@
 #include <vector>
 #include "DistributedComFactory.hpp"
 #include "SharedPointer.hpp"
+#include "com/ConnectionInfoPublisher.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "m2n/DistributedCommunication.hpp"
@@ -86,11 +87,36 @@ public:
                                          const std::string &requesterName);
 
   /**
+   * Sets up accepting a pre-connection for secondary ranks intercommunication.
+   * @return connection info with the information needed for connecting to the server that has been set up.
+   */
+  std::string prepareAcceptSecondaryRanksPreConnection(const std::string &acceptorName,
+                                                       const std::string &requesterName);
+
+  /**
+   *
+   * @param acceptorName
+   * @param requesterName
+   */
+  void finishAcceptSecondaryRanksPreConnection(const std::string &acceptorName,
+                                               const std::string &requesterName);
+
+  /**
    * Same as requestSecondaryRanksConnection except this only creates the channels,
    * no vertex list needed!
    */
   void requestSecondaryRanksPreConnection(const std::string &acceptorName,
                                           const std::string &requesterName);
+
+  /**
+   *
+   * @param acceptorName
+   * @param requesterName
+   * @param connectionInfoMap Info of where to find the accepting side
+   */
+  void requestSecondaryRanksPreConnection(const std::string                                                    &acceptorName,
+                                          const std::string                                                    &requesterName,
+                                          const com::serialize::SerializedConnectionInfoMap::ConnectionInfoMap &connectionInfoMap);
 
   /*
    * @brief After preliminary communication channels were set up and after

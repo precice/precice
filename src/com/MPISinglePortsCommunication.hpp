@@ -52,6 +52,24 @@ public:
                                 int                acceptorRank,
                                 int                requesterCommunicatorSize) override;
 
+  std::string prepareAcceptConnectionAsServer(std::string const &acceptorName,
+                                                      std::string const &requesterName,
+                                                      std::string const &tag,
+                                                      int                acceptorRank,
+                                                      int                requesterCommunicatorSize) override
+  {
+    PRECICE_ASSERT(false, "Not implemented!");
+  }
+
+  void finishAcceptConnectionAsServer(std::string const &acceptorName,
+                                              std::string const &requesterName,
+                                              std::string const &tag,
+                                              int                acceptorRank,
+                                              int                requesterCommunicatorSize) override
+  {
+    PRECICE_ASSERT(false, "Not implemented!");
+  }
+
   void requestConnection(std::string const &acceptorName,
                          std::string const &requesterName,
                          std::string const &tag,
@@ -63,6 +81,16 @@ public:
                                  std::string const   &tag,
                                  std::set<int> const &acceptorRanks,
                                  int                  requesterRank) override;
+
+  void requestConnectionAsClient(std::string const                                               &acceptorName,
+                                 std::string const                                               &requesterName,
+                                 std::string const                                               &tag,
+                                 std::set<int> const                                             &acceptorRanks,
+                                 int                                                              requesterRank,
+                                 serialize::SerializedConnectionInfoMap::ConnectionInfoMap const &connectionInfoMap) override
+  {
+    PRECICE_ASSERT(false, "Not implemented!");
+  }
 
   void prepareEstablishment(std::string const &acceptorName,
                             std::string const &requesterName) override;

@@ -42,6 +42,18 @@ public:
                                 int                acceptorRank,
                                 int                requesterCommunicatorSize) override;
 
+  std::string prepareAcceptConnectionAsServer(std::string const &acceptorName,
+                                              std::string const &requesterName,
+                                              std::string const &tag,
+                                              int                acceptorRank,
+                                              int                requesterCommunicatorSize) override;
+
+  void finishAcceptConnectionAsServer(std::string const &acceptorName,
+                                      std::string const &requesterName,
+                                      std::string const &tag,
+                                      int                acceptorRank,
+                                      int                requesterCommunicatorSize) override;
+
   void requestConnection(std::string const &acceptorName,
                          std::string const &requesterName,
                          std::string const &tag,
@@ -53,6 +65,13 @@ public:
                                  std::string const   &tag,
                                  std::set<int> const &acceptorRanks,
                                  int                  requesterRank) override;
+
+  void requestConnectionAsClient(std::string const                                               &acceptorName,
+                                 std::string const                                               &requesterName,
+                                 std::string const                                               &tag,
+                                 std::set<int> const                                             &acceptorRanks,
+                                 int                                                              requesterRank,
+                                 serialize::SerializedConnectionInfoMap::ConnectionInfoMap const &connectionInfoMap) override;
 
   void closeConnection() override;
 
@@ -141,10 +160,12 @@ private:
   std::string _addressDirectory;
 
   using IOContext = boost::asio::io_context;
+  using Acceptor  = boost::asio::ip::tcp::acceptor;
   using Socket    = boost::asio::ip::tcp::socket;
   using WorkGuard = boost::asio::executor_work_guard<IOContext::executor_type>;
 
   std::shared_ptr<IOContext> _ioContext;
+  std::unique_ptr<Acceptor>  _acceptor;
   std::unique_ptr<WorkGuard> _workGuard;
   std::thread                _thread;
 

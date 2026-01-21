@@ -213,9 +213,32 @@ void GatherScatterCommunication::acceptPreConnection(
   PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }
 
+std::string GatherScatterCommunication::prepareAcceptPreConnection(
+    std::string const &acceptorName,
+    std::string const &requesterName)
+{
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
+  return nullptr;
+}
+
+void GatherScatterCommunication::finishAcceptPreConnection(
+    std::string const &acceptorName,
+    std::string const &requesterName)
+{
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
+}
+
 void GatherScatterCommunication::requestPreConnection(
     std::string const &acceptorName,
     std::string const &requesterName)
+{
+  PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
+}
+
+void GatherScatterCommunication::requestPreConnection(
+    std::string const                                                    &acceptorName,
+    std::string const                                                    &requesterName,
+    com::serialize::SerializedConnectionInfoMap::ConnectionInfoMap const &connectionInfo)
 {
   PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
 }

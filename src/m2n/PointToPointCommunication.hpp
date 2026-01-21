@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 #include "DistributedCommunication.hpp"
+#include "com/SerializedConnectionInfo.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/Mesh.hpp"
@@ -70,6 +71,29 @@ public:
                            std::string const &requesterName) override;
 
   /**
+   * @brief Set up a server, so that another participant can connect using requestConnection().
+   *        Call finishAcceptConnection() afterward to respond to requestConnection() calls.
+   *
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
+   * @return connectionInfo Information on how to connect to the server that has been set up in this function
+   */
+  std::string prepareAcceptPreConnection(
+      const std::string &acceptorName,
+      const std::string &requesterName) override;
+
+  /**
+   * @brief Connects to another participant, which has to call requestConnection().
+   *        Must not be called before prepareAcceptConnection
+   *
+   * @param[in] acceptorName Name of calling participant.
+   * @param[in] requesterName Name of remote participant to connect to.
+   */
+  void finishAcceptPreConnection(
+      const std::string &acceptorName,
+      const std::string &requesterName) override;
+
+  /**
    * @brief Requests connection from participant, which has to call acceptConnection().
    *        Only initial connection is created.
    *
@@ -78,6 +102,22 @@ public:
    */
   void requestPreConnection(std::string const &acceptorName,
                             std::string const &requesterName) override;
+
+  /**
+   * @brief Connects to another participant, which has to call acceptPreConnection().
+   *        Exchanged vertex list is not included, only connection between ranks
+   *        is established.
+   *        This version of the function takes a connectionInfo string, that tells
+   *        it how to connect to the accepting side.
+   *
+   * @param[in] acceptorName Name of remote participant to connect to.
+   * @param[in] requesterName Name of calling participant.
+   * @param[in] connectionInfoMap Connection info containing information on how to connect to accepting side
+   */
+  void requestPreConnection(
+      std::string const                                                    &acceptorName,
+      std::string const                                                    &requesterName,
+      com::serialize::SerializedConnectionInfoMap::ConnectionInfoMap const &connectionInfoMap) override;
 
   /// Completes the secondary connections for both acceptor and requester by updating the vertex list in _mappings
   void completeSecondaryRanksConnection() override;

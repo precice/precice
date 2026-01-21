@@ -59,6 +59,24 @@ public:
     PRECICE_ASSERT(false, "Not implemented!");
   }
 
+  std::string prepareAcceptConnectionAsServer(std::string const &acceptorName,
+                                                      std::string const &requesterName,
+                                                      std::string const &tag,
+                                                      int                acceptorRank,
+                                                      int                requesterCommunicatorSize) override
+  {
+    PRECICE_ASSERT(false, "Not implemented!");
+  }
+
+  void finishAcceptConnectionAsServer(std::string const &acceptorName,
+                                              std::string const &requesterName,
+                                              std::string const &tag,
+                                              int                acceptorRank,
+                                              int                requesterCommunicatorSize) override
+  {
+    PRECICE_ASSERT(false, "Not implemented!");
+  }
+
   /** See precice::com::Communication::requestConnection().
    * @attention Calls precice::utils::Parallel::splitCommunicator()
    * if local and global communicators are equal.
@@ -74,6 +92,16 @@ public:
                                  std::string const   &tag,
                                  std::set<int> const &acceptorRanks,
                                  int                  requesterRank) override
+  {
+    PRECICE_ASSERT(false, "Not implemented!");
+  }
+
+  void requestConnectionAsClient(std::string const                                               &acceptorName,
+                                 std::string const                                               &requesterName,
+                                 std::string const                                               &tag,
+                                 std::set<int> const                                             &acceptorRanks,
+                                 int                                                              requesterRank,
+                                 serialize::SerializedConnectionInfoMap::ConnectionInfoMap const &connectionInfoMap) override
   {
     PRECICE_ASSERT(false, "Not implemented!");
   }

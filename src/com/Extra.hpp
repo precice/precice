@@ -1,5 +1,6 @@
 #pragma once
 
+#include "SerializedConnectionInfo.hpp"
 #include "com/Communication.hpp"
 #include "mesh/Mesh.hpp"
 
@@ -28,6 +29,18 @@ void receiveBoundingBox(Communication &communication, int rankSender, mesh::Boun
 void sendBoundingBoxMap(Communication &communication, int rankReceiver, const mesh::Mesh::BoundingBoxMap &bbm);
 
 void receiveBoundingBoxMap(Communication &communication, int rankSender, mesh::Mesh::BoundingBoxMap &bbm);
+
+void sendConnectionInfo(Communication &communication, int rankReceiver, const std::string &connectionInfo);
+
+void receiveConnectionInfo(Communication &communication, int rankSender, std::string &connectionInfo);
+
+void sendConnectionInfoMap(Communication &communication, int rankReceiver, const serialize::SerializedConnectionInfoMap::ConnectionInfoMap &connectionInfoMap);
+
+void receiveConnectionInfoMap(Communication &communication, int rankSender, serialize::SerializedConnectionInfoMap::ConnectionInfoMap &connectionInfoMap);
+
+void broadcastSendConnectionInfoMap(Communication &communication, const serialize::SerializedConnectionInfoMap::ConnectionInfoMap &connectionInfoMap);
+
+void broadcastReceiveConnectionInfoMap(Communication &communication, serialize::SerializedConnectionInfoMap::ConnectionInfoMap &connectionInfoMap);
 
 void broadcastSendBoundingBoxMap(Communication &communication, const mesh::Mesh::BoundingBoxMap &bbm);
 
