@@ -1,5 +1,4 @@
 #include <Eigen/Core>
-#include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
 #include <array>
 #include <boost/container/flat_map.hpp>

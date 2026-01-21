@@ -1,5 +1,4 @@
 #include <Eigen/Core>
-#include <Eigen/src/Core/util/Meta.h>
 #include <algorithm>
 #include <array>
 #include <cmath>
