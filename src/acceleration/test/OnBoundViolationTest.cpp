@@ -4,8 +4,8 @@
 #include <Eigen/Dense>
 #include <Eigen/src/Core/Matrix.h>
 
-#include "acceleration/IQNILSAcceleration.hpp"
 #include "acceleration/Acceleration.hpp"
+#include "acceleration/IQNILSAcceleration.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
@@ -34,7 +34,6 @@ BOOST_AUTO_TEST_CASE(testOnBoundViolationClamp)
   _upperBound[0] = 1;
   _upperBound[1] = 1;
 
-
   IQNILSAcceleration acceleration(1.0, false, 10, 0, 0, 1e-10, {0}, acceleration::Acceleration::OnBoundViolation::Clamp, nullptr, false);
   acceleration.clampToBounds(dataMap, _lowerBound, _upperBound);
 
@@ -59,17 +58,15 @@ BOOST_AUTO_TEST_CASE(testOnBoundViolationScale)
   _dataAfterUpdate << 0.5, 0.5, 0.2, 0.0, 0.7, 0.42;
   Eigen::Map<Eigen::MatrixXd> dataAfterUpdateMap(_dataAfterUpdate.data(), 3, 2);
 
-
   std::vector<std::optional<double>> _lowerBound(2);
   _lowerBound[0] = 0;
   _lowerBound[1] = 0;
   std::vector<std::optional<double>> _upperBound(2);
   _upperBound[0] = 1;
   _upperBound[1] = 1;
-  
 
   IQNILSAcceleration acceleration(1.0, false, 10, 0, 0, 1e-10, {0}, acceleration::Acceleration::OnBoundViolation::ScaleToBound, nullptr, false);
-  auto scaleFactor = acceleration.scaleToBounds(dataMap, dataUpdateMap, _lowerBound, _upperBound);
+  auto               scaleFactor = acceleration.scaleToBounds(dataMap, dataUpdateMap, _lowerBound, _upperBound);
   dataMap -= dataUpdateMap * scaleFactor;
 
   // check if the over small single values have been correctly truncated
