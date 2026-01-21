@@ -178,14 +178,8 @@ void BaseQNAcceleration::onBoundViolations(Eigen::VectorXd &data, DataMap &cplDa
       const Eigen::Index          nEntries = dataPerEntry.size() / dataDimension;
       Eigen::Map<Eigen::MatrixXd> dataPerDimension(dataPerEntry.data(), nEntries, dataDimension);
 
-      for (int j = 0; j < dataDimension; j++) {
-        if (lowerBound[j].has_value()) {
-          dataPerDimension.col(j) = dataPerDimension.col(j).cwiseMax(lowerBound[j].value());
-        }
-        if (upperBound[j].has_value()) {
-          dataPerDimension.col(j) = dataPerDimension.col(j).cwiseMin(upperBound[j].value());
-        }
-      }
+      clampToBounds(dataPerDimension, lowerBound, upperBound);
+
       offset += size;
     }
   } else if (_onBoundViolation == OnBoundViolation::ScaleToBound) {
@@ -214,22 +208,41 @@ void BaseQNAcceleration::onBoundViolations(Eigen::VectorXd &data, DataMap &cplDa
       Eigen::Map<Eigen::MatrixXd> dataMat(dataPerEntry.data(), nEntries, dataDimension);
       Eigen::Map<Eigen::MatrixXd> updMat(updatePerEntry.data(), nEntries, dataDimension);
 
-      for (int j = 0; j < dataDimension; j++) {
-        if (lowerBound[j].has_value()) {
-          Eigen::ArrayXd numerator   = (dataMat.col(j).array() - lowerBound[j].value());
-          Eigen::ArrayXd denominator = -(updMat.col(j).array()).abs();
-          scaleStep                  = std::max(scaleStep, (numerator / denominator).maxCoeff());
-        }
-        if (upperBound[j].has_value()) {
-          Eigen::ArrayXd numerator   = (dataMat.col(j).array() - upperBound[j].value());
-          Eigen::ArrayXd denominator = (updMat.col(j).array()).abs();
-          scaleStep                  = std::max(scaleStep, (numerator / denominator).maxCoeff());
-        }
-      }
+      scaleStep = std::max(scaleStep, scaleToBounds(dataMat, updMat, lowerBound, upperBound));
       offset += size;
     }
     data -= xUpdate * scaleStep;
   }
+}
+
+void BaseQNAcceleration::clampToBounds(Eigen::Map<Eigen::MatrixXd> &data, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound)
+{
+  for (int j = 0; j < data.cols(); j++) {
+    if (lowerBound[j].has_value()) {
+      data.col(j) = data.col(j).cwiseMax(lowerBound[j].value());
+    }
+    if (upperBound[j].has_value()) {
+      data.col(j) = data.col(j).cwiseMin(upperBound[j].value());
+    }
+  }
+}
+
+double BaseQNAcceleration::scaleToBounds(Eigen::Map<Eigen::MatrixXd> &data, Eigen::Map<Eigen::MatrixXd> &update, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound)
+{
+  double scaleStep = 0.0;
+  for (int j = 0; j < data.cols(); j++) {
+    if (lowerBound[j].has_value()) {
+      Eigen::ArrayXd numerator   = (data.col(j).array() - lowerBound[j].value());
+      Eigen::ArrayXd denominator = -(update.col(j).array()).abs();
+      scaleStep                  = std::max(scaleStep, (numerator / denominator).maxCoeff());
+    }
+    if (upperBound[j].has_value()) {
+      Eigen::ArrayXd numerator   = (data.col(j).array() - upperBound[j].value());
+      Eigen::ArrayXd denominator = (update.col(j).array()).abs();
+      scaleStep                  = std::max(scaleStep, (numerator / denominator).maxCoeff());
+    }
+  }
+  return scaleStep;
 }
 /** ---------------------------------------------------------------------------------------------
  *         updateDifferenceMatrices()

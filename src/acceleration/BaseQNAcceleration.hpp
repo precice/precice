@@ -116,6 +116,14 @@ public:
    */
   void onBoundViolations(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &violatingIDs, OnBoundViolation onBoundViolation, Eigen::VectorXd &xUpdate);
   /**
+   * @brief Clamp data to their bounds.
+   */
+  void clampToBounds(Eigen::Map<Eigen::MatrixXd> &data, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound);
+  /**
+   * @brief calculate the scaling factor and fit the data to the bounds
+   */
+  double scaleToBounds(Eigen::Map<Eigen::MatrixXd> &data, Eigen::Map<Eigen::MatrixXd> &update, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound);
+  /**
    * @brief Marks a iteration sequence as converged.
    *
    * Since convergence measurements are done outside the acceleration, this
