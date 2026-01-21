@@ -2,7 +2,6 @@
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
-#include <Eigen/src/Core/Matrix.h>
 
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/IQNILSAcceleration.hpp"
