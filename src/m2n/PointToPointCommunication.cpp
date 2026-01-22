@@ -476,7 +476,7 @@ std::string PointToPointCommunication::prepareAcceptPreConnection(std::string co
 
   if (localConnectedRanks.empty()) {
     _isConnected = true;
-    return nullptr;
+    return std::string();
   }
 
   e0.stop();

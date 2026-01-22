@@ -218,7 +218,6 @@ std::string GatherScatterCommunication::prepareAcceptPreConnection(
     std::string const &requesterName)
 {
   PRECICE_ASSERT(false, "Not available for GatherScatterCommunication.");
-  return nullptr;
 }
 
 void GatherScatterCommunication::finishAcceptPreConnection(

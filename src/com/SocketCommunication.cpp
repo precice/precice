@@ -278,7 +278,7 @@ std::string SocketCommunication::prepareAcceptConnectionAsServer(std::string con
   if (requesterCommunicatorSize == 0) {
     PRECICE_DEBUG("Accepting no connections.");
     _isConnected = true;
-    return nullptr;
+    return std::string();
   }
 
   std::string address;
