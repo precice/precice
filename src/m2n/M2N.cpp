@@ -231,8 +231,11 @@ void M2N::finishAcceptSecondaryRanksPreConnection(
   for (const auto &pair : _distComs) {
     Event e1("m2n.finishAcceptSecondaryRanksPreConnection." + std::to_string(pair.first));
 
-    pair.second->finishAcceptPreConnection(acceptorName, requesterName);
-    _areSecondaryRanksConnected = _areSecondaryRanksConnected && pair.second->isConnected();
+    // The communication can already be marked as connected (_isConnected == true), if the requesterCommunicatorSize == 0
+    if (!pair.second->isConnected()) {
+      pair.second->finishAcceptPreConnection(acceptorName, requesterName);
+      _areSecondaryRanksConnected = _areSecondaryRanksConnected && pair.second->isConnected();
+    }
 
     e1.stop();
   }
