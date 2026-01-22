@@ -234,9 +234,9 @@ void M2N::finishAcceptSecondaryRanksPreConnection(
     // The communication can already be marked as connected (_isConnected == true), if the requesterCommunicatorSize == 0
     if (!pair.second->isConnected()) {
       pair.second->finishAcceptPreConnection(acceptorName, requesterName);
-      _areSecondaryRanksConnected = _areSecondaryRanksConnected && pair.second->isConnected();
     }
 
+    _areSecondaryRanksConnected = _areSecondaryRanksConnected && pair.second->isConnected();
     e1.stop();
   }
   PRECICE_ASSERT(_areSecondaryRanksConnected);
