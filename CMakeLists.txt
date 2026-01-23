@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.22.1)
-project(preCICE VERSION 3.3.0 LANGUAGES CXX)
+project(preCICE VERSION 3.3.1 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -77,6 +77,10 @@ option(CMAKE_INTERPROCEDURAL_OPTIMIZATION "Enable interprocedural optimization f
 option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_ASSERTIONS "Enable assertions in release builds" OFF)
+
+set(PRECICE_CXX_STANDARD "17" CACHE STRING "CXX Standard for all preCICE targets" )
+option(PRECICE_HIDE_SYMBOLS "Hide non-API symbols in preCICE library" ON)
+mark_as_advanced(PRECICE_HIDE_SYMBOLS PRECICE_CXX_STANDARD)
 
 xsdk_tpl_option_override(PRECICE_FEATURE_MPI_COMMUNICATION TPL_ENABLE_MPI)
 xsdk_tpl_option_override(PRECICE_FEATURE_PETSC_MAPPING TPL_ENABLE_PETSC)
@@ -204,6 +208,7 @@ if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
 endif()
 
+option(Boost_USE_STATIC_LIBS "Force BoostConfig.cmake to find static libraries." OFF)
 find_package(Boost 1.74.0 REQUIRED CONFIG
   COMPONENTS log log_setup program_options thread unit_test_framework
   )
@@ -267,6 +272,11 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
   find_package(Kokkos 4.1 REQUIRED)
   message(STATUS "Found Kokkos version ${Kokkos_VERSION} at ${Kokkos_DIR}")
 
+  if(PRECICE_HIDE_SYMBOLS AND Kokkos_VERSION VERSION_LESS 4.4)
+    message(STATUS "preCICE symbol visibility turned back ON due to Kokkos < 4.4")
+    set(PRECICE_HIDE_SYMBOLS OFF)
+  endif()
+
   include(CMakeDependentOption)
   cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_CUDA" OFF)
   cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_HIP" OFF)
@@ -280,7 +290,7 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
     include(CheckLanguage)
     check_language(CUDA)
     enable_language(CUDA)
-    set(CMAKE_CUDA_STANDARD 17)
+    set(CMAKE_CUDA_STANDARD ${PRECICE_CXX_STANDARD})
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
     set(CMAKE_CUDA_FLAGS "${GINKGO_CUDA_ARCH_FLAGS} --expt-relaxed-constexpr")
 
@@ -295,7 +305,7 @@ endif()
     include(CheckLanguage)
     check_language(HIP)
     enable_language(HIP)
-    set(CMAKE_HIP_STANDARD 17)
+    set(CMAKE_HIP_STANDARD ${PRECICE_CXX_STANDARD})
     set(CMAKE_HIP_STANDARD_REQUIRED ON)
     if(NOT DEFINED HIP_PATH)
      if(NOT DEFINED $ENV{HIP_PATH})
@@ -371,13 +381,13 @@ print_section("TARGETS & PACKAGES")
 # The main library and tests link against this.
 add_library(preciceCore OBJECT)
 set_target_properties(preciceCore PROPERTIES
-  CXX_STANDARD 17
+  CXX_STANDARD ${PRECICE_CXX_STANDARD}
   CXX_STANDARD_REQUIRED Yes
   CXX_EXTENSIONS No
   POSITION_INDEPENDENT_CODE YES
   )
 
-if(NOT Kokkos_VERSION OR NOT Kokkos_VERSION VERSION_LESS 4.4)
+if(PRECICE_HIDE_SYMBOLS)
   set_target_properties(preciceCore PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
@@ -528,7 +538,7 @@ set_target_properties(precice PROPERTIES
   SOVERSION ${preCICE_SOVERSION}
   )
 
-if(NOT Kokkos_VERSION OR NOT Kokkos_VERSION VERSION_LESS 4.4)
+if(PRECICE_HIDE_SYMBOLS)
   set_target_properties(precice PROPERTIES
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN YES
@@ -606,8 +616,7 @@ if (PRECICE_BUILD_TOOLS)
       precice
       )
     set_target_properties(${TARGET} PROPERTIES
-      # precice is a C++17 project
-      CXX_STANDARD 17
+      CXX_STANDARD ${PRECICE_CXX_STANDARD}
       CXX_STANDARD_REQUIRED Yes
       CXX_EXTENSIONS No
       )
@@ -629,7 +638,7 @@ IF (BUILD_TESTING)
     preciceCore
     )
   set_target_properties(testprecice PROPERTIES
-    CXX_STANDARD 17
+    CXX_STANDARD ${PRECICE_CXX_STANDARD}
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
     ENABLE_EXPORTS Yes
@@ -696,8 +705,7 @@ if(PRECICE_BUILD_BENCHMARKS)
     benchmark::benchmark
     )
   set_target_properties(precice-bench PROPERTIES
-    # precice is a C++17 project
-    CXX_STANDARD 17
+    CXX_STANDARD ${PRECICE_CXX_STANDARD}
     CXX_STANDARD_REQUIRED Yes
     CXX_EXTENSIONS No
     )

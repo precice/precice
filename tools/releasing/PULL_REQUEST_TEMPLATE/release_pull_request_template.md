@@ -43,7 +43,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Do any additional regression tests using the release branch (specific revision) _list below :arrow_down:_ (all)
 * [ ] Fix potential problems in develop (all)
 * [ ] Rebase the release branch on develop to pull in fixes
-* [ ] Draft message to mailing list
+* [ ] Draft release notes
 * [ ] Write a draft "blog post" on [Discourse](https://precice.discourse.group/)
 * [ ] Update documentation (all)
    * [ ] Update [XML configuration reference](https://github.com/precice/precice.github.io/blob/master/_includes/xmlreference.md)
@@ -55,7 +55,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 * [ ] Switch to `develop` and merge `main` back into it: `git merge --no-ff -m "Merge release back"`
 * [ ] Verify the tag on develop: `git describe --tags develop`. It should start with `vX.Y.Z-1-` (i.e. tag plus the merge commit).
 * [ ] Triple check that you haven't messed anything up. You can always discard local changes using `git reset --hard upstream BRANCH` or by cloning the precice repository again and start from scratch.
-* [ ] Push `main` and the `vX.Y.Z` tag: `git push upstream main`, `git push upstream v3.2.0`
+* [ ] Push `main` and the `vX.Y.Z` tag: `git push upstream main`, `git push upstream v3.3.0`
 * [ ] Push `develop`: `git push upstream develop`
 * [ ] Wait for the release pipeline
   * [ ] [To create a new draft release on GitHub](https://github.com/precice/precice/releases)
@@ -74,6 +74,8 @@ Use the following branches:
 
 Run all these tests manually on your system. If you succeed, please write a comment with the revisions of the components that you used below. Example: https://github.com/precice/precice/pull/507#issuecomment-530432289 and update the table.
 
+Tests covered by the system tests: see `release_test` in [`tests.yaml`](https://github.com/precice/tutorials/blob/develop/tools/tests/tests.yaml) (and the respective job summary).
+
 | State | Success | Failure | Skipped |
 | --- | --- | --- | --- |
 | Write | `:o:` | `:x:` | `:fast_forward:` |
@@ -84,11 +86,8 @@ Run all these tests manually on your system. If you succeed, please write a comm
 | | | [quickstart](https://github.com/precice/tutorials/tree/master/quickstart) fluid-openfoam - solid-cpp |
 | | | [perpendicular-flap](https://github.com/precice/tutorials/tree/master/perpendicular-flap) fluid-openfoam - solid-dune |
 | | | [perpendicular-flap](https://github.com/precice/tutorials/tree/master/perpendicular-flap) fluid-nutils - solid-calculix |
-| | | [perpendicular-flap](https://github.com/precice/tutorials/tree/master/perpendicular-flap) fluid-openfoam - solid-dealii |
-| | | [perpendicular-flap](https://github.com/precice/tutorials/tree/master/perpendicular-flap) fluid-su2 - solid-fenics |
-| | | [multiple-perpendicular-flaps](https://github.com/precice/tutorials/tree/master/multiple-perpendicular-flaps) fluid-openfoam - solid-(left+right)-dealii |
-| | | [flow-over-heated-plate](https://github.com/precice/tutorials/tree/master/flow-over-heated-plate) fluid-openfoam - solid-openfoam serial + parallel |
-| | | [flow-over-heated-plate](https://github.com/precice/tutorials/tree/master/flow-over-heated-plate) fluid-openfoam - solid-fenics serial + parallel |
+| | | [flow-over-heated-plate](https://github.com/precice/tutorials/tree/master/flow-over-heated-plate) fluid-openfoam - solid-openfoam parallel |
+| | | [flow-over-heated-plate](https://github.com/precice/tutorials/tree/master/flow-over-heated-plate) fluid-openfoam - solid-fenics parallel |
 | | | [flow-over-heated-plate](https://github.com/precice/tutorials/tree/master/flow-over-heated-plate) fluid-openfoam - solid-nutils |
 | | | [flow-over-heated-plate-nearest-projection](https://github.com/precice/tutorials/tree/master/flow-over-heated-plate-nearest-projection) fluid-openfoam - solid-openfoam |
 | | | [flow-over-heated-plate-steady-state](https://github.com/precice/tutorials/tree/master/flow-over-heated-plate-steady-state) fluid-openfoam - solid-codeaster |
@@ -97,7 +96,6 @@ Run all these tests manually on your system. If you succeed, please write a comm
 | | | [partitioned-heat-conduction](https://github.com/precice/tutorials/tree/master/partitioned-heat-conduction) fenics - nutils |
 | | | [partitioned-heat-conduction-complex](https://github.com/precice/tutorials/tree/master/partitioned-heat-conduction-complex) fenics- fenics |
 | | | [partitioned-pipe](https://github.com/precice/tutorials/tree/master/partitioned-pipe) fluid1-openfoam-pimplefoam - fluid2-openfoam-sonicliquidfoam |
-| | | [elastic-tube-1d](https://github.com/precice/tutorials/tree/master/elastic-tube-1d) fluid-cpp - solid-python |
 | | | [elastic-tube-3d](https://github.com/precice/tutorials/tree/master/elastic-tube-3d) fluid-openfoam - solid-calculix |
 | | | MATLAB / MATLAB [ODEs](https://github.com/precice/matlab-bindings/tree/develop/tutorial) |
 | | | Solverdummy [Fortran module](https://github.com/precice/fortran-module/tree/develop/examples/solverdummy) |
@@ -124,48 +122,58 @@ Run all these tests manually on your system. If you succeed, please write a comm
 - [ ] [MATLAB bindings](https://github.com/precice/matlab-bindings/blob/develop/docs/ReleaseGuide.md)
 - [ ] [python bindings](https://github.com/precice/python-bindings/blob/develop/docs/ReleaseGuide.md)
 - [ ] [Julia bindings](https://github.com/precice/PreCICE.jl)
+- [ ] [Rust bindings](https://github.com/precice/rust-bindings)
 
 ### (only if breaking changes) Open PRs or issues `develop -> main` for all adapters
 
-- [ ] [athlet-adapter](https://github.com/precice/athlet-adapter/compare/master...develop)
+In the context of the [distribution](https://precice.org/installation-distribution.html):
+
 - [ ] [calculix-adapter](https://github.com/precice/calculix-adapter/compare/master...develop)
 - [ ] [code_aster-adapter](https://github.com/precice/code_aster-adapter/compare/master...develop)
-- [ ] [comsol-adapter](https://github.com/precice/comsol-adapter/compare/master...develop)
 - [ ] [dealii-adapter](https://github.com/precice/dealii-adapter/compare/master...develop)
+- [ ] [dumux-adapter](https://github.com/precice/dumux-adapter/compare/main...develop)
+- [ ] [dune-adapter](https://github.com/precice/dune-adapter)
 - [ ] [fenics-adapter](https://github.com/precice/fenics-adapter/compare/master...develop)
-- [ ] [fluent-adapter](https://github.com/precice/fluent-adapter/compare/master...develop)
-- [ ] lsdyna-adapter?
-- [ ] mbdyn-adapter?
+- [ ] [fenicsx-adapter](https://github.com/precice/fenicsx-adapter/compare/main...develop)
 - [ ] [openfoam-adapter](https://github.com/precice/openfoam-adapter/compare/master...develop)
 - [ ] [su2-adapter](https://github.com/precice/su2-adapter/compare/master...develop)
+
+Further adapters (involve the community or decide if they will be ported at all):
+
+- [ ] [comsol-adapter](https://github.com/precice/comsol-adapter/compare/master...develop)
+- [ ] [elmer-adapter](https://github.com/precice/elmer-adapter)
+- [ ] [febio-adapter](https://github.com/precice/febio-adapter)
+- [ ] [foam-extend-adapter](https://github.com/precice/foam-extend-adapter)
+- [ ] [fluent-adapter](https://github.com/precice/fluent-adapter/compare/master...develop)
+- [ ] [openfast-adapter](https://github.com/precice/openfast-adapter)
+- [ ] [openfoam-org-adapter](https://github.com/precice/openfoam-org-adapter)
+- [ ] [lsdyna-adapter](https://github.com/precice/lsdyna-adapter)
+- [ ] [mbdyn-adapter](https://github.com/precice/mbdyn-adapter)
 
 ### (only if breaking changes) Open PRs or issues `develop -> main` for all other tools
 
 - [ ] [aste](https://github.com/precice/aste/compare/master...develop)
 - [ ] [elastictube1d](https://github.com/precice/elastictube1d/compare/master...develop)
-- [ ] [run.precice](https://github.com/precice/run.precice-frontend/compare/master...develop)
 - [ ] [tutorials](https://github.com/precice/tutorials/compare/master...develop)
 
 ### Marketing
 
 * [ ] Finalize post on [Discourse](https://precice.discourse.group/)
 * [ ] Write on [Matrix](https://matrix.to/#/#precice_lobby:gitter.im?web-instance[element.io]=app.gitter.im)
-* [ ] Send announcement to the [mailing list](https://mailman.informatik.uni-stuttgart.de/mailman/listinfo/precice)
 * [ ] CFD Online:
      * [ ] [News](https://www.cfd-online.com/Forum/news.cgi/form/0)
-     * [ ] Forum (choose a central topic)
+     * [ ] [Forum](https://www.cfd-online.com/Forums/main/261393-precice-releases.html)
 * [ ] NADigest
 * [ ] [NAFEMS](https://www.nafems.org/mynafems/submitnews/) (needs account, appears in [Upcoming Industry Events](https://www.nafems.org/events/industry-events/))
 * [ ] Post on [Bluesky](https://bsky.app/profile/precice.org)
 * [ ] Post on [Mastodon](https://fosstodon.org/@precice)
 * [ ] Post in LinkedIn. Relevant places:
-    * [ ] [preCICE group](https://www.linkedin.com/groups/9073912/)
+    * [ ] [preCICE company](https://www.linkedin.com/company/precice)
     * [ ] [OpenFOAM group](https://www.linkedin.com/groups/1920608/)
     * [ ] [HPC group](https://www.linkedin.com/groups/87791/)
     * [ ] Personal
-* [ ] reddit [r/cfd](https://www.reddit.com/r/CFD/)
-* [ ] Submit a short article to the [Quartl](https://www.in.tum.de/en/i05/further-activities/quartl/)
 
+See the [advertising a workshop](https://precice.org/precice-workshop-organizing.html#advertising) section for additional ideas.
 
 ### Misc
 

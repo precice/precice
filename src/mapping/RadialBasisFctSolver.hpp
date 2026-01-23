@@ -43,19 +43,15 @@ public:
   RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, mesh::PtrMesh inputMesh, const IndexContainer &inputIDs,
                        mesh::PtrMesh outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial);
 
-  /**
-   * Maps the given input data.
-   * The object state will be changed if automatic parameter tuninng is enabled,
-   * since the interpolation matrix decomposition will be recomputed for different parameters.
-   */
+  /// Maps the given input data
   template <typename IndexContainer>
-  Eigen::VectorXd solveConsistent(Eigen::VectorXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial) const;
+  Eigen::MatrixXd solveConsistent(Eigen::MatrixXd &inputData, const IndexContainer &inputIDs,Polynomial polynomial) const;
 
   void computeCacheData(Eigen::MatrixXd &inputData, Polynomial polynomial, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffsOut) const;
 
   /// Maps the given input data
   template <typename IndexContainer>
-  Eigen::VectorXd solveConservative(const Eigen::VectorXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial) const;
+  Eigen::MatrixXd solveConservative(const Eigen::MatrixXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial) const;
 
   // Clear all stored matrices
   void clear();
@@ -383,30 +379,62 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::configureSeparatePolynomial(
   _qrMatrixQ = _matrixQ.colPivHouseholderQr();
 }
 
+
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
-Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const Eigen::VectorXd &inputData, const IndexContainer &inputIds, Polynomial polynomial) const
+Eigen::MatrixXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const Eigen::MatrixXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial) const
 {
   PRECICE_ASSERT((_matrixV.size() > 0 && polynomial == Polynomial::SEPARATE) || _matrixV.size() == 0, _matrixV.size());
   // TODO: Avoid temporary allocations
   // Au is equal to the eta in our PETSc implementation
-  PRECICE_ASSERT(inputData.size() == _matrixA.rows());
-  Eigen::VectorXd Au = _matrixA.transpose() * inputData;
-  PRECICE_ASSERT(Au.size() == _matrixA.cols());
+  PRECICE_ASSERT(inputData.rows() == _matrixA.rows());
+  Eigen::MatrixXd Au = _matrixA.transpose() * inputData;
+  PRECICE_ASSERT(Au.rows() == _matrixA.cols());
 
   // mu in the PETSc implementation
-  Eigen::VectorXd out = _decMatrixC->solve(Au);
+  Eigen::MatrixXd out = _decMatrixC->solve(Au);
 
   if (polynomial == Polynomial::SEPARATE) {
-    Eigen::VectorXd epsilon = _matrixV.transpose() * inputData;
-    PRECICE_ASSERT(epsilon.size() == _matrixV.cols());
+    Eigen::MatrixXd epsilon = _matrixV.transpose() * inputData;
+    PRECICE_ASSERT(epsilon.rows() == _matrixV.cols());
 
     // epsilon = Q^T * mu - epsilon (tau in the PETSc impl)
     epsilon -= _matrixQ.transpose() * out;
-    PRECICE_ASSERT(epsilon.size() == _matrixQ.cols());
+    PRECICE_ASSERT(epsilon.rows() == _matrixQ.cols());
 
     // out  = out - solveTranspose tau (sigma in the PETSc impl)
-    out -= static_cast<Eigen::VectorXd>(_qrMatrixQ.transpose().solve(-epsilon));
+    out -= static_cast<Eigen::MatrixXd>(_qrMatrixQ.transpose().solve(-epsilon));
+  }
+  return out;
+}
+
+// @todo: change the signature to Eigen::MatrixXd and process all components at once, the solve function of eigen can handle that
+template <typename RADIAL_BASIS_FUNCTION_T>
+template <typename IndexContainer>
+Eigen::MatrixXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::MatrixXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial) const
+{
+  PRECICE_ASSERT((_matrixQ.size() > 0 && polynomial == Polynomial::SEPARATE) || _matrixQ.size() == 0);
+  Eigen::MatrixXd polynomialContribution;
+  // Solve polynomial QR and subtract it from the input data
+  if (polynomial == Polynomial::SEPARATE) {
+    polynomialContribution = _qrMatrixQ.solve(inputData);
+    inputData -= (_matrixQ * polynomialContribution);
+  }
+
+  // Integrated polynomial (and separated)
+  PRECICE_ASSERT(inputData.rows() == _matrixA.cols());
+  Eigen::MatrixXd p = _decMatrixC->solve(inputData);
+
+  if (polynomial != Polynomial::ON && computeCrossValidation) {
+    precice::profiling::Event e("map.rbf.evaluateLOOCV");
+    PRECICE_INFO("Cross validation error (LOOCV): {}", evaluateRippaLOOCVerror(p));
+  }
+  PRECICE_ASSERT(p.rows() == _matrixA.cols());
+  Eigen::MatrixXd out = _matrixA * p;
+
+  // Add the polynomial part again for separated polynomial
+  if (polynomial == Polynomial::SEPARATE) {
+    out += (_matrixV * polynomialContribution);
   }
   return out;
 }
@@ -522,7 +550,7 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::clear()
 {
   _matrixA = Eigen::MatrixXd();
-  _decMatrixC.reset();
+  _decMatrixC->reset();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>

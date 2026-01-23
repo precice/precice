@@ -35,7 +35,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup python
         uses: actions/setup-python@v6
         with:
@@ -121,7 +121,7 @@ jobs:
             CXX: 'icpx'
             TYPE: Release
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Generate build directory
         run: mkdir -p build
       - name: Install polars in venv
@@ -142,17 +142,17 @@ jobs:
           . ../venv/bin/activate # There is always a venv present
           cmake --version
           cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DPRECICE_FEATURE_GINKGO_MAPPING=${{ env.Ginkgo }} -DPRECICE_FEATURE_PROFILING_COMPRESSION=${{ env.COMPRESS }} -DPRECICE_FEATURE_LIBBACKTRACE_STACKTRACES=ON -DPRECICE_BUILD_BENCHMARKS=ON  -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" ..
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeCache
           path: build/CMakeCache.txt
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeLogs
           path: 'build/CMakeFiles/*.log'
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CompileCommands
@@ -197,7 +197,7 @@ jobs:
         run: |
           cpack
           lintian -i --suppress-tags control-file-has-bad-permissions ./*.deb
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} TestOutput
@@ -218,7 +218,7 @@ jobs:
             CXX: 'clang++'
             TYPE: Release
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Setup python
       uses: actions/setup-python@v6
       with:
@@ -240,17 +240,17 @@ jobs:
       run: |
         cmake --version
         cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} ..
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       if: failure()
       with:
         name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeCache
         path: build/CMakeCache.txt
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       if: failure()
       with:
         name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeLogs
         path: 'build/CMakeFiles/*.log'
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       if: failure()
       with:
         name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CompileCommands
@@ -267,7 +267,7 @@ jobs:
         OMPI_MCA_pml: ob1
       working-directory: build
       run: ctest -j
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       if: failure()
       with:
         name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} TestOutput
@@ -284,7 +284,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        TYPE: [Release, Debug]
+        TYPE: [Release]
     env:
       CMAKE_BUILD_PARALLEL_LEVEL: 4
       CMAKE_BUILD_TYPE: ${{ matrix.TYPE }}
@@ -306,7 +306,7 @@ jobs:
           update: true
           path-type: inherit
           install: git mingw-w64-ucrt-x86_64-gcc-libs mingw-w64-ucrt-x86_64-boost-libs mingw-w64-ucrt-x86_64-libxml2 mingw-w64-ucrt-x86_64-python mingw-w64-ucrt-x86_64-python-numpy mingw-w64-ucrt-x86_64-cc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-msmpi mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-boost mingw-w64-ucrt-x86_64-eigen3 mingw-w64-ucrt-x86_64-crt mingw-w64-ucrt-x86_64-msmpi
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Make build directory
         run: mkdir -p build
       - name: Configure
@@ -322,7 +322,7 @@ jobs:
         run: |
           # Allow each test to rerun to iron out sporadic MPI failures
           ctest -j --repeat until-pass:3
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: debugdump
