@@ -1,6 +1,7 @@
 #ifndef PRECICE_NO_MPI
 
 #include "helpers.hpp"
+#include <iostream>
 
 #include "math/differences.hpp"
 #include "precice/precice.hpp"
@@ -439,6 +440,119 @@ void runTestQNWithWaveformsReducedTimeGrid(std::string const &config, TestContex
   // Check that the last time window has converged to the correct solution
   BOOST_TEST(math::equals(savedValues(0), 0.5, 1e-10));
   BOOST_TEST(math::equals(savedValues(1), 0.25, 1e-10));
+}
+
+/// tests for different QN settings if correct fixed point is reached
+void runTestQNWithBound(bool includeSecondaryData, std::string const &config, TestContext const &context)
+{
+  std::string meshName, writeDataName1, writeDataName2, readDataName1, readDataName2;
+
+  if (context.isNamed("SolverOne")) {
+    meshName       = "MeshOne";
+    writeDataName1 = "Data11"; // scalar
+    writeDataName2 = "Data12"; // vector
+    readDataName1  = "Data21"; // scalar
+    readDataName2  = "Data22"; // vector
+  } else {
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
+    meshName       = "MeshTwo";
+    writeDataName1 = "Data21";
+    writeDataName2 = "Data22";
+    readDataName1  = "Data11";
+    readDataName2  = "Data12";
+  }
+
+  precice::Participant interface(context.name, config, context.rank, context.size);
+
+  VertexID vertexIDs[4];
+
+  // meshes for rank 0 and rank 1, we use matching meshes for both participants
+  double positions0[8] = {1.0, 0.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.5};
+  double positions1[8] = {2.0, 0.0, 2.0, 0.5, 2.0, 1.0, 2.0, 1.5};
+
+  if (context.isNamed("SolverOne")) {
+    if (context.isPrimary()) {
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
+    } else {
+      interface.setMeshVertices(meshName, positions1, vertexIDs);
+    }
+  } else {
+    BOOST_REQUIRE(context.isNamed("SolverTwo"));
+    if (context.isPrimary()) {
+      interface.setMeshVertices(meshName, positions0, vertexIDs);
+    } else {
+      interface.setMeshVertices(meshName, positions1, vertexIDs);
+    }
+  }
+
+  interface.initialize();
+  double inValues1[4]  = {0.0, 0.0, 0.0, 0.0};
+  double inValues2[8]  = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  double outValues1[4] = {0.0, 0.0, 0.0, 0.0};
+  double outValues2[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+
+  int iterations = 0;
+
+  while (interface.isCouplingOngoing()) {
+    if (interface.requiresWritingCheckpoint()) {
+    }
+
+    double preciceDt = interface.getMaxTimeStepSize();
+    interface.readData(meshName, readDataName1, vertexIDs, preciceDt, inValues1);
+    if (includeSecondaryData) {
+      interface.readData(meshName, readDataName2, vertexIDs, preciceDt, inValues2);
+    }
+
+    if (context.isNamed("SolverOne")) {
+      // the QN could violate the bound of [-1,1], so we check here that the input values are within the bound
+      // only pushes solution through
+      for (int i = 0; i < 4; i++) {
+        BOOST_TEST(inValues1[i] >= -1.0);
+        BOOST_TEST(inValues1[i] <= 1.0);
+        outValues1[i] = inValues1[i];
+      }
+      if (includeSecondaryData) {
+        for (int i = 0; i < 8; i += 2) {
+          BOOST_TEST(inValues2[i] <= 1.0);
+          outValues2[i] = inValues2[i];
+        }
+        for (int i = 1; i < 8; i += 2) {
+          BOOST_TEST(inValues2[i] >= -1.0);
+          BOOST_TEST(inValues2[i] <= 1.0);
+          outValues2[i] = inValues2[i];
+        }
+      }
+    } else {
+      double alpha  = 0.9;
+      double beta   = 0.6;
+      outValues1[0] = sin(alpha * inValues1[0] - beta * inValues1[1] + 0.1);
+      outValues1[1] = sin(alpha * inValues1[1] - beta * inValues1[2] + 0.2);
+      outValues1[2] = sin(alpha * inValues1[2] - beta * inValues1[3] + 0.3);
+      outValues1[3] = sin(alpha * inValues1[3] - beta * inValues1[0] + 0.4);
+      if (includeSecondaryData) {
+        outValues2[0] = sin(alpha * inValues2[0] - beta * inValues2[1] + 0.1);
+        outValues2[1] = sin(alpha * inValues2[1] - beta * inValues2[2] + 0.2);
+        outValues2[2] = sin(alpha * inValues2[2] - beta * inValues2[3] + 0.3);
+        outValues2[3] = sin(alpha * inValues2[3] - beta * inValues2[0] + 0.4);
+        outValues2[4] = sin(alpha * inValues2[4] - beta * inValues2[5] + 0.1);
+        outValues2[5] = sin(alpha * inValues2[5] - beta * inValues2[6] + 0.2);
+        outValues2[6] = sin(alpha * inValues2[6] - beta * inValues2[7] + 0.3);
+        outValues2[7] = sin(alpha * inValues2[7] - beta * inValues2[4] + 0.4);
+      }
+    }
+
+    interface.writeData(meshName, writeDataName1, vertexIDs, outValues1);
+    if (includeSecondaryData) {
+      interface.writeData(meshName, writeDataName2, vertexIDs, outValues2);
+    }
+    interface.advance(1.0);
+
+    if (interface.requiresReadingCheckpoint()) {
+    }
+    iterations++;
+  }
+
+  interface.finalize();
 }
 
 #endif

@@ -48,12 +48,17 @@ AccelerationConfiguration::AccelerationConfiguration(
       ATTR_SINGULARITYLIMIT("limit"),
       ATTR_TYPE("type"),
       ATTR_BUILDJACOBIAN("always-build-jacobian"),
+      ATTR_ON_BOUND_VIOLATION("on-bound-violation"),
       ATTR_REDUCEDTIMEGRIDQN("reduced-time-grid"),
       ATTR_IMVJCHUNKSIZE("chunk-size"),
       ATTR_RSLS_REUSED_TIME_WINDOWS("reused-time-windows-at-restart"),
       ATTR_RSSVD_TRUNCATIONEPS("truncation-threshold"),
       ATTR_PRECOND_NONCONST_TIME_WINDOWS("freeze-after"),
       ATTR_PRECOND_UPDATE_ON_THRESHOLD("update-on-threshold"),
+      VALUE_IGNORE("ignore"),
+      VALUE_CLAMP("clamp"),
+      VALUE_DISCARD("discard"),
+      VALUE_SCALE_TO_BOUND("scale"),
       VALUE_CONSTANT("constant"),
       VALUE_AITKEN("aitken"),
       VALUE_IQNILS("IQN-ILS"),
@@ -109,6 +114,14 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
                                  .setDocumentation("Whether only the last time step of each time window is used to construct the Jacobian.");
     tag.addAttribute(reducedTimeGridQN);
 
+    auto onBoundViolation = makeXMLAttribute(ATTR_ON_BOUND_VIOLATION, VALUE_DISCARD)
+                                .setOptions({VALUE_IGNORE,
+                                             VALUE_CLAMP,
+                                             VALUE_DISCARD,
+                                             VALUE_SCALE_TO_BOUND})
+                                .setDocumentation("Defines the strategy to handle updates that violate variable bounds. Use ignore when no special handling is desired. Use clamp to limit the violating components to their bounds. Use discard to skip the QN update when a bound violation occurs. Use scale to scale the QN step with a constant to fit all violating components into the bounds.");
+    tag.addAttribute(onBoundViolation);
+
     addTypeSpecificSubtags(tag);
     tags.push_back(tag);
   }
@@ -124,6 +137,14 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
     auto reducedTimeGridQN = makeXMLAttribute(ATTR_REDUCEDTIMEGRIDQN, true)
                                  .setDocumentation("Whether only the last time step of each time window is used to construct the Jacobian.");
     tag.addAttribute(reducedTimeGridQN);
+
+    auto onBoundViolation = makeXMLAttribute(ATTR_ON_BOUND_VIOLATION, VALUE_DISCARD)
+                                .setOptions({VALUE_IGNORE,
+                                             VALUE_CLAMP,
+                                             VALUE_DISCARD,
+                                             VALUE_SCALE_TO_BOUND})
+                                .setDocumentation("Defines the strategy to handle updates that violate variable bounds. Use ignore when no special handling is desired. Use clamp to limit the violating components to their bounds. Use discard to skip the QN update when a bound violation occurs. Use scale to scale the QN step with a constant to fit all violating components into the bounds.");
+    tag.addAttribute(onBoundViolation);
 
     addTypeSpecificSubtags(tag);
     tags.push_back(tag);
@@ -148,11 +169,26 @@ void AccelerationConfiguration::xmlTagCallback(
   if (callingTag.getNamespace() == TAG) {
     _config.type = callingTag.getName();
 
-    if (_config.type == VALUE_IQNIMVJ)
+    if (_config.type == VALUE_IQNIMVJ) {
       _config.alwaysBuildJacobian = callingTag.getBooleanAttributeValue(ATTR_BUILDJACOBIAN);
+    }
 
-    if (_config.type == VALUE_IQNIMVJ || _config.type == VALUE_IQNILS)
-      _config.reducedTimeGridQN = callingTag.getBooleanAttributeValue(ATTR_REDUCEDTIMEGRIDQN);
+    if (_config.type == VALUE_IQNIMVJ || _config.type == VALUE_IQNILS) {
+      _config.reducedTimeGridQN    = callingTag.getBooleanAttributeValue(ATTR_REDUCEDTIMEGRIDQN);
+      std::string onBoundViolation = callingTag.getStringAttributeValue(ATTR_ON_BOUND_VIOLATION);
+
+      if (onBoundViolation == VALUE_IGNORE) {
+        _config.onBoundViolation = Acceleration::OnBoundViolation::Ignore;
+      } else if (onBoundViolation == VALUE_CLAMP) {
+        _config.onBoundViolation = Acceleration::OnBoundViolation::Clamp;
+      } else if (onBoundViolation == VALUE_DISCARD) {
+        _config.onBoundViolation = Acceleration::OnBoundViolation::Discard;
+      } else if (onBoundViolation == VALUE_SCALE_TO_BOUND) {
+        _config.onBoundViolation = Acceleration::OnBoundViolation::ScaleToBound;
+      } else {
+        PRECICE_UNREACHABLE("");
+      }
+    }
   }
   if (callingTag.getName() == TAG_RELAX) {
     _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
@@ -160,6 +196,7 @@ void AccelerationConfiguration::xmlTagCallback(
     std::string dataName = callingTag.getStringAttributeValue(ATTR_NAME);
     std::string meshName = callingTag.getStringAttributeValue(ATTR_MESH);
     auto        success  = _uniqueDataAndMeshNames.emplace(dataName, meshName);
+
     PRECICE_CHECK(success.second,
                   "You have provided a subtag <data name=\"{}\" mesh=\"{}\"/> more than once in your <acceleration:.../>. "
                   "Please remove the duplicated entry.",
@@ -167,6 +204,7 @@ void AccelerationConfiguration::xmlTagCallback(
 
     _meshName      = callingTag.getStringAttributeValue(ATTR_MESH);
     double scaling = 1.0;
+
     if (_config.type == VALUE_IQNILS || _config.type == VALUE_IQNIMVJ) {
       scaling = callingTag.getDoubleAttributeValue(ATTR_SCALING);
     }
@@ -284,7 +322,8 @@ void AccelerationConfiguration::xmlEndTagCallback(
       _config.timeWindowsReused = (_userDefinitions.definedTimeWindowsReused) ? _config.timeWindowsReused : _defaultValuesIQNILS.timeWindowsReused;
       _config.filter            = (_userDefinitions.definedFilter) ? _config.filter : _defaultValuesIQNILS.filter;
       _config.singularityLimit  = (_userDefinitions.definedFilter) ? _config.singularityLimit : _defaultValuesIQNILS.singularityLimit;
-      _acceleration             = PtrAcceleration(
+
+      _acceleration = PtrAcceleration(
           new IQNILSAcceleration(
               _config.relaxationFactor,
               _config.forceInitialRelaxation,
@@ -292,6 +331,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
+              _config.onBoundViolation,
               _preconditioner,
               _config.reducedTimeGridQN));
     } else if (callingTag.getName() == VALUE_IQNIMVJ) {
@@ -333,6 +373,7 @@ void AccelerationConfiguration::xmlEndTagCallback(
               _config.timeWindowsReused,
               _config.filter, _config.singularityLimit,
               _config.dataIDs,
+              _config.onBoundViolation,
               _preconditioner,
               _config.alwaysBuildJacobian,
               _config.imvjRestartType,
@@ -372,9 +413,9 @@ void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
                              "To improve the performance of a parallel or a multi coupling schemes, "
                              "each data set can be manually scaled using this scaling factor with preconditioner type = \"constant\". For all other preconditioner types, the factor is ignored. "
                              "We recommend, however, to use an automatic scaling via a preconditioner.");
-  tagData.addAttribute(attrScaling);
   tagData.addAttribute(attrName);
   tagData.addAttribute(attrMesh);
+  tagData.addAttribute(attrScaling);
   tag.addSubtag(tagData);
 
   XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);

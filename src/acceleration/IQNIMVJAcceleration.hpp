@@ -48,6 +48,7 @@ public:
       int                            filter,
       double                         singularityLimit,
       std::vector<int>               dataIDs,
+      OnBoundViolation               onBoundViolation,
       const impl::PtrPreconditioner &preconditioner,
       bool                           alwaysBuildJacobian,
       int                            imvjRestartType,

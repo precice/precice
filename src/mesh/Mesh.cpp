@@ -150,10 +150,12 @@ Tetrahedron &Mesh::createTetrahedron(
 }
 
 PtrData &Mesh::createData(
-    const std::string &name,
-    int                dimension,
-    DataID             id,
-    int                waveformDegree)
+    const std::string                 &name,
+    int                                dimension,
+    DataID                             id,
+    int                                waveformDegree,
+    std::vector<std::optional<double>> lowerBound,
+    std::vector<std::optional<double>> upperBound)
 {
   PRECICE_TRACE(name, dimension);
   for (const PtrData &data : _data) {
@@ -163,7 +165,7 @@ PtrData &Mesh::createData(
                   name, _name, name);
   }
   // #rows = dimensions of current mesh #columns = dimensions of corresponding data set
-  PtrData data(new Data(name, id, dimension, _dimensions, waveformDegree));
+  PtrData data(new Data(name, id, dimension, _dimensions, waveformDegree, lowerBound, upperBound));
   _data.push_back(data);
   return _data.back();
 }

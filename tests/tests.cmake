@@ -112,6 +112,7 @@ target_sources(testprecice
     tests/quasi-newton/serial/ILSSerialScheme.cpp
     tests/quasi-newton/serial/ILSWaveform.cpp
     tests/quasi-newton/serial/ILSWaveformReduced.cpp
+    tests/quasi-newton/serial/ILSWithBound.cpp
     tests/quasi-newton/serial/IMVJAlwaysJacob.cpp
     tests/quasi-newton/serial/IMVJNoRs.cpp
     tests/quasi-newton/serial/IMVJQR3.cpp

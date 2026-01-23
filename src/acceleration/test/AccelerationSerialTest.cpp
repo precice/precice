@@ -64,7 +64,7 @@ void testIQNIMVJPP(bool exchangeSubsteps)
   auto              dummyMesh = testing::makeDummy2DMesh(4);
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                         timeWindowsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
+                         timeWindowsReused, filter, singularityLimit, dataIDs, Acceleration::OnBoundViolation::Ignore, prec, alwaysBuildJacobian,
                          restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps, !exchangeSubsteps);
 
   Eigen::VectorXd fcol1;
@@ -160,7 +160,7 @@ void testVIQNPP(bool exchangeSubsteps)
   auto dummyMesh = testing::makeDummy2DMesh(4);
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                        timeWindowsReused, filter, singularityLimit, dataIDs, prec, !exchangeSubsteps);
+                        timeWindowsReused, filter, singularityLimit, dataIDs, Acceleration::OnBoundViolation::Ignore, prec, !exchangeSubsteps);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
   mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));

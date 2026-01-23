@@ -21,6 +21,15 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
   tagScalar.setDocumentation("Defines a scalar data set to be assigned to meshes.");
   tagScalar.addAttribute(attrName);
   tagScalar.addAttribute(attrDegree);
+  auto attrLowerBound = XMLAttribute<double>(ATTR_LOWER_BOUND)
+                            .setDefaultValue(-std::numeric_limits<double>::infinity())
+                            .setDocumentation("Lower bound for the scalar data to check violations.");
+  tagScalar.addAttribute(attrLowerBound);
+
+  auto attrUpperBound = XMLAttribute<double>(ATTR_UPPER_BOUND)
+                            .setDefaultValue(std::numeric_limits<double>::infinity())
+                            .setDocumentation("Upper bound for the scalar data to check violations.");
+  tagScalar.addAttribute(attrUpperBound);
   parent.addSubtag(tagScalar);
 
   XMLTag tagVector(*this, VALUE_VECTOR, XMLTag::OCCUR_ARBITRARY, TAG);
@@ -28,6 +37,35 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
                              "components of each data entry depends on the spatial dimensions of the mesh.");
   tagVector.addAttribute(attrName);
   tagVector.addAttribute(attrDegree);
+  auto attrLowerBoundX = XMLAttribute<double>(ATTR_LOWER_BOUND_X)
+                             .setDefaultValue(-std::numeric_limits<double>::infinity())
+                             .setDocumentation("Lower bound for the x-component of the vector data to check violations.");
+  tagVector.addAttribute(attrLowerBoundX);
+
+  auto attrLowerBoundY = XMLAttribute<double>(ATTR_LOWER_BOUND_Y)
+                             .setDefaultValue(-std::numeric_limits<double>::infinity())
+                             .setDocumentation("Lower bound for the y-component of the vector data to check violations.");
+  tagVector.addAttribute(attrLowerBoundY);
+
+  auto attrLowerBoundZ = XMLAttribute<double>(ATTR_LOWER_BOUND_Z)
+                             .setDefaultValue(-std::numeric_limits<double>::infinity())
+                             .setDocumentation("Lower bound for the z-component of the vector data to check violations.");
+  tagVector.addAttribute(attrLowerBoundZ);
+
+  auto attrUpperBoundX = XMLAttribute<double>(ATTR_UPPER_BOUND_X)
+                             .setDefaultValue(std::numeric_limits<double>::infinity())
+                             .setDocumentation("Upper bound for the x-component of the vector data to check violations.");
+  tagVector.addAttribute(attrUpperBoundX);
+
+  auto attrUpperBoundY = XMLAttribute<double>(ATTR_UPPER_BOUND_Y)
+                             .setDefaultValue(std::numeric_limits<double>::infinity())
+                             .setDocumentation("Upper bound for the y-component of the vector data to check violations.");
+  tagVector.addAttribute(attrUpperBoundY);
+
+  auto attrUpperBoundZ = XMLAttribute<double>(ATTR_UPPER_BOUND_Z)
+                             .setDefaultValue(std::numeric_limits<double>::infinity())
+                             .setDocumentation("Upper bound for the z-component of the vector data to check violations.");
+  tagVector.addAttribute(attrUpperBoundZ);
   parent.addSubtag(tagVector);
 }
 
@@ -64,7 +102,56 @@ void DataConfiguration::xmlTagCallback(
     const int waveformDegree = tag.getIntAttributeValue(ATTR_DEGREE);
     PRECICE_CHECK(!(waveformDegree < time::Time::MIN_WAVEFORM_DEGREE),
                   "You tried to configure the data with name \"{}\" to use the waveform-degree=\"{}\", but the degree must be at least \"{}\".", name, waveformDegree, time::Time::MIN_WAVEFORM_DEGREE);
-    addData(name, typeName, waveformDegree);
+    if (tag.getName() == "scalar") {
+      const double lowerBound = tag.getDoubleAttributeValue(ATTR_LOWER_BOUND, -std::numeric_limits<double>::infinity());
+      const double upperBound = tag.getDoubleAttributeValue(ATTR_UPPER_BOUND, std::numeric_limits<double>::infinity());
+
+      std::vector<std::optional<double>> lowerBoundVec(1);
+      std::vector<std::optional<double>> upperBoundVec(1);
+
+      lowerBound != -std::numeric_limits<double>::infinity() ? lowerBoundVec[0] = lowerBound : lowerBoundVec[0] = std::nullopt;
+      upperBound != std::numeric_limits<double>::infinity() ? upperBoundVec[0] = upperBound : upperBoundVec[0] = std::nullopt;
+
+      PRECICE_CHECK(lowerBound <= upperBound,
+                    "You tried to configure the data with name \"{}\" to have a lower-bound=\"{}\" that is larger than the upper-bound=\"{}\".",
+                    name, lowerBound, upperBound);
+      addData(name, typeName, waveformDegree, lowerBoundVec, upperBoundVec);
+    } else if (tag.getName() == "vector") {
+      const double lowerBoundX = tag.getDoubleAttributeValue(ATTR_LOWER_BOUND_X, -std::numeric_limits<double>::infinity());
+      const double lowerBoundY = tag.getDoubleAttributeValue(ATTR_LOWER_BOUND_Y, -std::numeric_limits<double>::infinity());
+      const double lowerBoundZ = tag.getDoubleAttributeValue(ATTR_LOWER_BOUND_Z, -std::numeric_limits<double>::infinity());
+      const double upperBoundX = tag.getDoubleAttributeValue(ATTR_UPPER_BOUND_X, std::numeric_limits<double>::infinity());
+      const double upperBoundY = tag.getDoubleAttributeValue(ATTR_UPPER_BOUND_Y, std::numeric_limits<double>::infinity());
+      const double upperBoundZ = tag.getDoubleAttributeValue(ATTR_UPPER_BOUND_Z, std::numeric_limits<double>::infinity());
+
+      std::vector<std::optional<double>> lowerBoundVec(3);
+      std::vector<std::optional<double>> upperBoundVec(3);
+
+      lowerBoundX != -std::numeric_limits<double>::infinity() ? lowerBoundVec[0] = lowerBoundX : lowerBoundVec[0] = std::nullopt;
+      lowerBoundY != -std::numeric_limits<double>::infinity() ? lowerBoundVec[1] = lowerBoundY : lowerBoundVec[1] = std::nullopt;
+      lowerBoundZ != -std::numeric_limits<double>::infinity() ? lowerBoundVec[2] = lowerBoundZ : lowerBoundVec[2] = std::nullopt;
+      upperBoundX != std::numeric_limits<double>::infinity() ? upperBoundVec[0] = upperBoundX : upperBoundVec[0] = std::nullopt;
+      upperBoundY != std::numeric_limits<double>::infinity() ? upperBoundVec[1] = upperBoundY : upperBoundVec[1] = std::nullopt;
+      upperBoundZ != std::numeric_limits<double>::infinity() ? upperBoundVec[2] = upperBoundZ : upperBoundVec[2] = std::nullopt;
+
+      if (lowerBoundVec[0].has_value() && upperBoundVec[0].has_value()) {
+        PRECICE_CHECK(lowerBoundVec[0].value() <= upperBoundVec[0].value(),
+                      "You tried to configure the data with name \"{}\" to have a lower-bound-x=\"{}\" that is larger than the upper-bound-x=\"{}\".",
+                      name, lowerBoundVec[0].value(), upperBoundVec[0].value());
+      }
+      if (lowerBoundVec[1].has_value() && upperBoundVec[1].has_value()) {
+        PRECICE_CHECK(lowerBoundVec[1].value() <= upperBoundVec[1].value(),
+                      "You tried to configure the data with name \"{}\" to have a lower-bound-y=\"{}\" that is larger than the upper-bound-y=\"{}\".",
+                      name, lowerBoundVec[1].value(), upperBoundVec[1].value());
+      }
+      if (lowerBoundVec[2].has_value() && upperBoundVec[2].has_value()) {
+        PRECICE_CHECK(lowerBoundVec[2].value() <= upperBoundVec[2].value(),
+                      "You tried to configure the data with name \"{}\" to have a lower-bound-z=\"{}\" that is larger than the upper-bound-z=\"{}\".",
+                      name, lowerBoundVec[2].value(), upperBoundVec[2].value());
+      }
+
+      addData(name, typeName, waveformDegree, lowerBoundVec, upperBoundVec);
+    }
   } else {
     PRECICE_ASSERT(false, "Received callback from an unknown tag.", tag.getName());
   }
@@ -77,9 +164,11 @@ void DataConfiguration::xmlEndTagCallback(
 }
 
 void DataConfiguration::addData(
-    const std::string   &name,
-    const Data::typeName typeName,
-    int                  waveformDegree)
+    const std::string                 &name,
+    const Data::typeName               typeName,
+    int                                waveformDegree,
+    std::vector<std::optional<double>> lowerBound,
+    std::vector<std::optional<double>> upperBound)
 {
   // Check if data with same name has been added already
   for (auto &elem : _data) {
@@ -87,8 +176,7 @@ void DataConfiguration::addData(
                   "Data \"{0}\" has already been defined. Please rename or remove one of the data tags with name=\"{0}\".",
                   name);
   }
-
-  _data.emplace_back(name, typeName, waveformDegree);
+  _data.emplace_back(name, typeName, waveformDegree, lowerBound, upperBound);
 }
 
 } // namespace precice::mesh
