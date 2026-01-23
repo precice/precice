@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Cholesky>
+#include <Eigen/Core>
 #include <Eigen/QR>
 #include <Eigen/SVD>
 #include <boost/range/adaptor/indexed.hpp>
@@ -32,7 +33,7 @@ public:
   using AutotuningParams = MappingConfiguration::AutotuningParams;
 
   template <typename IndexContainer>
-  Eigen::VectorXd solveConsistent(Eigen::VectorXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial);
+  Eigen::MatrixXd solveConsistent(Eigen::MatrixXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial);
 
   template <typename IndexContainer>
   AutoTunedRBFSolver(RADIAL_BASIS_FUNCTION_T basisFunction, mesh::PtrMesh inputMesh, const IndexContainer &inputIDs,
@@ -78,37 +79,6 @@ inline auto applyKernelToMatrix(const Eigen::Ref<const Eigen::MatrixXd> &matrixE
   }
   RADIAL_BASIS_FUNCTION_T kernel(parameter);
   return matrixExpr.unaryExpr([kernel](double x) { return kernel.evaluate(x); });
-}
-
-// @todo: change the signature to Eigen::MatrixXd and process all components at once, the solve function of eigen can handle that
-template <typename RADIAL_BASIS_FUNCTION_T>
-template <typename IndexContainer>
-Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::VectorXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial) const
-{
-  PRECICE_ASSERT((_matrixQ.size() > 0 && polynomial == Polynomial::SEPARATE) || _matrixQ.size() == 0);
-  Eigen::VectorXd polynomialContribution;
-  // Solve polynomial QR and subtract it from the input data
-  if (polynomial == Polynomial::SEPARATE) {
-    polynomialContribution = _qrMatrixQ.solve(inputData);
-    inputData -= (_matrixQ * polynomialContribution);
-  }
-
-  // Integrated polynomial (and separated)
-  PRECICE_ASSERT(inputData.size() == _matrixA.cols());
-  Eigen::VectorXd p = _decMatrixC->solve(inputData);
-
-  if (polynomial != Polynomial::ON && computeCrossValidation) {
-    precice::profiling::Event e("map.rbf.evaluateLOOCV");
-    PRECICE_INFO("Cross validation error (LOOCV): {}", evaluateRippaLOOCVerror(p));
-  }
-  PRECICE_ASSERT(p.size() == _matrixA.cols());
-  Eigen::VectorXd out = _matrixA * p;
-
-  // Add the polynomial part again for separated polynomial
-  if (polynomial == Polynomial::SEPARATE) {
-    out += (_matrixV * polynomialContribution);
-  }
-  return out;
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -164,13 +134,12 @@ RBFErrorEstimate AutoTunedRBFSolver<RADIAL_BASIS_FUNCTION_T>::computeErrorEstima
   return {error, rcond};
 }
 
-// @todo: change the signature to Eigen::MatrixXd and process all components at once, the solve function of eigen can handle that
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
-Eigen::VectorXd AutoTunedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::VectorXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial)
+Eigen::MatrixXd AutoTunedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::MatrixXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial)
 {
   PRECICE_ASSERT((this->_matrixQ.size() > 0 && polynomial == Polynomial::SEPARATE) || this->_matrixQ.size() == 0);
-  Eigen::VectorXd polynomialContribution;
+  Eigen::MatrixXd polynomialContribution;
   // Solve polynomial QR and subtract it from the input data
   if (polynomial == Polynomial::SEPARATE) {
     polynomialContribution = this->_qrMatrixQ.solve(inputData);
@@ -205,7 +174,7 @@ Eigen::VectorXd AutoTunedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eig
 
   // Integrated polynomial (and separated)
   PRECICE_ASSERT(inputData.size() == this->_matrixA.cols());
-  Eigen::VectorXd p = this->_decMatrixC->solve(inputData);
+  Eigen::MatrixXd p = this->_decMatrixC->solve(inputData);
 
   // if (polynomial != Polynomial::ON && computeCrossValidation) {
   //   precice::profiling::Event e("map.rbf.evaluateLOOCV");
@@ -213,16 +182,16 @@ Eigen::VectorXd AutoTunedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eig
   // }
   PRECICE_ASSERT(p.size() == this->_matrixA.cols());
 
-  Eigen::VectorXd out;
+  Eigen::MatrixXd out;
   if (_rbfTunerConfig.autotuneShape) {
-    if constexpr (RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) {
+    if constexpr (RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) { // TODO: unmodified:
       const Eigen::Index outSize    = this->_matrixA.rows();
       const Eigen::Index inSize     = inputData.size();
       const Eigen::Index polyParams = this->_matrixA.cols() - inSize;
 
       // not yet necessary: integrated polynomial is only supported for SPD functions
-      out = applyKernelToMatrix<RADIAL_BASIS_FUNCTION_T>(this->_matrixA.block(0, 0, outSize, inSize), _tuner.getLastOptimizedRadius()) * p.segment(0, inSize);
-      out += this->_matrixA.block(0, inSize, outSize, polyParams) * p.segment(inSize, polyParams);
+      out = applyKernelToMatrix<RADIAL_BASIS_FUNCTION_T>(this->_matrixA.block(0, 0, outSize, inSize), _tuner.getLastOptimizedRadius()) * p.block(0, 0, inSize, p.cols());
+      out += this->_matrixA.block(0, inSize, outSize, polyParams) * p.block(inSize, 0, polyParams, p.cols());
     } else {
       // Should not happen, since an error will already be thrown in the configuration.
       PRECICE_ERROR("Parameter optimization is not available for RBFs without a \"support-radius\" configuration.");
