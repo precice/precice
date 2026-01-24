@@ -78,7 +78,7 @@ option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" O
 option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_ASSERTIONS "Enable assertions in release builds" OFF)
 
-set(PRECICE_CXX_STANDARD "17" CACHE STRING "CXX Standard for all preCICE targets" )
+set(PRECICE_CXX_STANDARD "20" CACHE STRING "CXX Standard for all preCICE targets" )
 option(PRECICE_HIDE_SYMBOLS "Hide non-API symbols in preCICE library" ON)
 mark_as_advanced(PRECICE_HIDE_SYMBOLS PRECICE_CXX_STANDARD)
 
