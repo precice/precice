@@ -34,6 +34,44 @@ void BarycentricBaseMapping::clear()
   _hasComputedMapping = false;
 }
 
+namespace {
+
+template <int n>
+void mapTemplatedConsistent(const std::vector<Operation> &ops, const Eigen::VectorXd &in, Eigen::VectorXd &out)
+{
+  static_assert(n > 0 && n <= 3);
+  // For each output vertex, compute the linear combination of input vertices
+  // Do it for all dimensions (i.e. components if data is a vector)
+  for (const auto &op : ops) {
+    if constexpr (n == 1) {
+      // We use a direct index-loop when no dimension offset is required
+      out[op.out] += op.weight * in[op.in];
+    } else {
+      // Segments of templated size are the fastest option when the data has multiple components
+      out.segment<n>(op.out * n).noalias() += op.weight * in.segment<n>(op.in * n);
+    }
+  }
+}
+
+template <int n>
+void mapTemplatedConservative(const std::vector<Operation> &ops, const Eigen::VectorXd &in, Eigen::VectorXd &out)
+{
+  static_assert(n > 0 && n <= 3);
+  // For each input vertex, distribute the conserved data among the relevant output vertices
+  // Do it for all dimensions (i.e. components if data is a vector)
+  for (const auto &op : ops) {
+    if constexpr (n == 1) {
+      // We use a direct index-loop when no dimension offset is required
+      out[op.in] += op.weight * in[op.out];
+    } else {
+      // Segments of templated size are the fastest option when the data has multiple components
+      out.segment<n>(op.in * n).noalias() += op.weight * in.segment<n>(op.out * n);
+    }
+  }
+}
+
+} // namespace
+
 void BarycentricBaseMapping::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
@@ -44,17 +82,18 @@ void BarycentricBaseMapping::mapConservative(const time::Sample &inData, Eigen::
   const Eigen::VectorXd &inValues   = inData.values;
   Eigen::VectorXd       &outValues  = outData;
 
-  // For each input vertex, distribute the conserved data among the relevant output vertices
-  // Do it for all dimensions (i.e. components if data is a vector)
-  if (dimensions == 1) {
-    // Use non-strided access for 1D data
-    for (const auto &op : _operations) {
-      outValues[op.in] += op.weight * inValues[op.out];
-    }
-  } else {
-    for (const auto &op : _operations) {
-      outValues.segment(op.in * dimensions, dimensions) += op.weight * inValues.segment(op.out * dimensions, dimensions);
-    }
+  switch (dimensions) {
+  case 1:
+    mapTemplatedConservative<1>(_operations, inValues, outValues);
+    return;
+  case 2:
+    mapTemplatedConservative<2>(_operations, inValues, outValues);
+    return;
+  case 3:
+    mapTemplatedConservative<3>(_operations, inValues, outValues);
+    return;
+  default:
+    PRECICE_UNREACHABLE("Implement for unknown dimension");
   }
 }
 
@@ -68,17 +107,18 @@ void BarycentricBaseMapping::mapConsistent(const time::Sample &inData, Eigen::Ve
   const Eigen::VectorXd &inValues   = inData.values;
   Eigen::VectorXd       &outValues  = outData;
 
-  // For each output vertex, compute the linear combination of input vertices
-  // Do it for all dimensions (i.e. components if data is a vector)
-  if (dimensions == 1) {
-    // Use non-strided access for 1D data
-    for (const auto &op : _operations) {
-      outValues[op.out] += op.weight * inValues[op.in];
-    }
-  } else {
-    for (const auto &op : _operations) {
-      outValues.segment(op.out * dimensions, dimensions) += op.weight * inValues.segment(op.in * dimensions, dimensions);
-    }
+  switch (dimensions) {
+  case 1:
+    mapTemplatedConsistent<1>(_operations, inValues, outValues);
+    return;
+  case 2:
+    mapTemplatedConsistent<2>(_operations, inValues, outValues);
+    return;
+  case 3:
+    mapTemplatedConsistent<3>(_operations, inValues, outValues);
+    return;
+  default:
+    PRECICE_UNREACHABLE("Implement for unknown dimension");
   }
 }
 
@@ -100,26 +140,22 @@ void BarycentricBaseMapping::tagMeshFirstRound()
   }
 
   // Gather all vertices to be tagged in a first phase.
-  // max_count is used to shortcut if all vertices have been tagged.
-  std::unordered_set<int> tagged;
-  const std::size_t       max_count = origins->nVertices();
-
+  std::vector<bool> tagged(origins->nVertices(), false);
   for (const auto &op : _operations) {
     PRECICE_ASSERT(!math::equals(op.weight, 0.0));
-    tagged.insert(op.in);
-    // Shortcut if all vertices are tagged
-    if (tagged.size() == max_count) {
-      break;
-    }
+    tagged[op.in] = true;
   }
 
   // Now tag all vertices to be tagged in the second phase.
-  for (auto &v : origins->vertices()) {
-    if (tagged.count(v.getID()) == 1) {
-      v.tag();
+  size_t ntagged = 0;
+  for (size_t i = 0; i < origins->nVertices(); ++i) {
+    if (tagged[i]) {
+      origins->vertex(i).tag();
+      ++ntagged;
     }
   }
-  PRECICE_DEBUG("First Round Tagged {}/{} Vertices", tagged.size(), max_count);
+
+  PRECICE_DEBUG("First Round Tagged {}/{} Vertices", ntagged, origins->nVertices());
 
   clear();
 }
