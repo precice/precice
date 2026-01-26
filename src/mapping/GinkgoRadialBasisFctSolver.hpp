@@ -8,7 +8,7 @@
 #include <numeric>
 #include "mapping/GinkgoDefinitions.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
-#include "mapping/device/Ginkgo.hpp"
+#include "mapping/device/Device.hpp"
 #include "mapping/device/GinkgoRBFKernels.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
@@ -175,7 +175,7 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   PRECICE_TRACE();
   // We have to initialize Kokkos and Ginkgo here, as the initialization call allocates memory
   // in the current setup, this will only initialize the device (and allocate memory) on the primary rank
-  device::Ginkgo::initialize(_ginkgoParameter.nThreads, _ginkgoParameter.deviceId);
+  device::Device::initialize(_ginkgoParameter.nThreads, _ginkgoParameter.deviceId);
   PRECICE_INFO("Using Ginkgo solver {} on executor {} with max. iterations {} and residual reduction {}",
                ginkgoParameter.solver,
                ginkgoParameter.executor,

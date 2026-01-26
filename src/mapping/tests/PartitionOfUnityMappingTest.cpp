@@ -1776,6 +1776,102 @@ void perform3DTestConservativeMappingVector(Mapping &mapping)
   // The remaining parts should already be covered by the other 3D/2D tests
 }
 
+void performReferenceTesting(Mapping &testMapping, Mapping &referenceMapping, int dim, int nComponents)
+{
+  // Create mesh to map from
+  mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dim, testing::nextMeshID()));
+  mesh::PtrData testInData   = inMesh->createData("testData", nComponents, 0_dataID);
+  mesh::PtrData refInData    = inMesh->createData("refData", nComponents, 1_dataID);
+  int           testInDataID = testInData->getID();
+  int           refInDataID  = refInData->getID();
+
+  if (dim == 2) {
+    // 10×10 grid over the unit square [0,1]×[0,1]
+    const int N = 10;
+    for (int i = 0; i < N; ++i) {
+      double x = double(i) / double(N - 1);
+      for (int j = 0; j < N; ++j) {
+        double y = double(j) / double(N - 1);
+        inMesh->createVertex(Eigen::Vector2d(x, y));
+      }
+    }
+  } else { // dim == 3
+    // 7×7×7 grid over the unit cube [0,1]^3
+    const int N = 7;
+    for (int i = 0; i < N; ++i) {
+      double x = double(i) / double(N - 1);
+      for (int j = 0; j < N; ++j) {
+        double y = double(j) / double(N - 1);
+        for (int k = 0; k < N; ++k) {
+          double z = double(k) / double(N - 1);
+          inMesh->createVertex(Eigen::Vector3d(x, y, z));
+        }
+      }
+    }
+  }
+  inMesh->allocateDataValues();
+  addGlobalIndex(inMesh);
+
+  // Create mesh to map to
+  mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dim, testing::nextMeshID()));
+  mesh::PtrData testOutData   = outMesh->createData("testData", nComponents, 2_dataID);
+  mesh::PtrData refOutData    = outMesh->createData("refData", nComponents, 3_dataID);
+  int           testOutDataID = testOutData->getID();
+  int           refOutDataID  = refOutData->getID();
+
+  if (dim == 2) {
+    const int N = 9; // 9×9 test grid
+    for (int i = 0; i < N; ++i) {
+      // offset by half‐cell so no test‐point matches the main grid
+      double x = (double(i) + 0.2) / double(N);
+      for (int j = 0; j < N; ++j) {
+        double y = (double(j) + 0.5) / double(N);
+        outMesh->createVertex(Eigen::Vector2d(x, y));
+      }
+    }
+  } else {           // dim == 3
+    const int N = 8; // 8×8×8 test grid
+    for (int i = 0; i < N; ++i) {
+      double x = (double(i) + 0.2) / double(N);
+      for (int j = 0; j < N; ++j) {
+        double y = (double(j) + 0.3) / double(N);
+        for (int k = 0; k < N; ++k) {
+          double z = (double(k) + 0.35) / double(N);
+          outMesh->createVertex(Eigen::Vector3d(x, y, z));
+        }
+      }
+    }
+  }
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  // Setup mapping with mapping coordinates and geometry used
+  testMapping.setMeshes(inMesh, outMesh);
+  referenceMapping.setMeshes(inMesh, outMesh);
+  BOOST_TEST(testMapping.hasComputedMapping() == false);
+
+  auto &val = testInData->values();
+  for (int i = 0; i < inMesh->nVertices(); ++i) {
+    // base value ramps from 0.0 to 1.0
+    double base = double(i) / double(inMesh->nVertices() - 1);
+    for (int c = 0; c < nComponents; ++c) {
+      // (2*c + 1) = 1, 3, 5, = make data components linear dependent
+      val[i * nComponents + c] = (2 * c + 1) * base;
+    }
+  }
+  refInData->values() = testInData->values();
+
+  testMapping.computeMapping();
+  testMapping.map(testInDataID, testOutDataID);
+  referenceMapping.computeMapping();
+  referenceMapping.map(refInDataID, refOutDataID);
+  BOOST_TEST(testMapping.hasComputedMapping() == true);
+  BOOST_TEST(testOutData->values() == refOutData->values(), boost::test_tools::per_element());
+  // The remaining parts should already be covered by the other 3D/2D tests
+  testMapping.clear();
+  referenceMapping.clear();
+}
+
 PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(PartitionOfUnityMappingTests)
 {
@@ -1950,6 +2046,139 @@ BOOST_AUTO_TEST_CASE(TestSingleClusterPartitionOfUnity)
   BOOST_TEST(mapping.hasComputedMapping() == true);
   BOOST_TEST(value < 1.4);
 }
+
+#ifndef PRECICE_NO_KOKKOS_KERNELS
+
+#define PERFORM_REFERENCE_TEST(EXECUTOR, type, function, dim)                                                                                 \
+  {                                                                                                                                           \
+    MappingConfiguration::GinkgoParameter gpm;                                                                                                \
+    gpm.executor                                  = EXECUTOR;                                                                                 \
+    gpm.deviceId                                  = 0;                                                                                        \
+    gpm.nThreads                                  = 2;                                                                                        \
+    int                                    scalar = 1;                                                                                        \
+    int                                    vector = dim;                                                                                      \
+    mapping::PartitionOfUnityMapping<type> testOff(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false, gpm, true);          \
+    mapping::PartitionOfUnityMapping<type> testOn(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false, gpm, false);          \
+    mapping::PartitionOfUnityMapping<type> ref(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false);                         \
+    performReferenceTesting(testOff, ref, dim, scalar);                                                                                       \
+    performReferenceTesting(testOn, ref, dim, scalar);                                                                                        \
+    performReferenceTesting(testOff, ref, dim, vector);                                                                                       \
+    performReferenceTesting(testOn, ref, dim, vector);                                                                                        \
+    mapping::PartitionOfUnityMapping<type> testPolyOff(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false, gpm, true); \
+    mapping::PartitionOfUnityMapping<type> testPolyOn(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false, gpm, false); \
+    mapping::PartitionOfUnityMapping<type> refPoly(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false);                \
+    performReferenceTesting(testPolyOff, refPoly, dim, scalar);                                                                               \
+    performReferenceTesting(testPolyOn, refPoly, dim, scalar);                                                                                \
+    performReferenceTesting(testPolyOff, refPoly, dim, vector);                                                                               \
+    performReferenceTesting(testPolyOn, refPoly, dim, vector);                                                                                \
+  }
+
+#define TEST_CPU_REFERENCE_FOR_SPD_RBFS(EXECUTOR)                        \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                            \
+  BOOST_AUTO_TEST_CASE(MapCompactPolynomialC0)                           \
+  {                                                                      \
+    PRECICE_TEST();                                                      \
+    CompactPolynomialC0 fct(0.8);                                        \
+    PERFORM_REFERENCE_TEST(EXECUTOR, CompactPolynomialC0, fct, 2);       \
+    PERFORM_REFERENCE_TEST(EXECUTOR, CompactPolynomialC0, fct, 3);       \
+  }                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                            \
+  BOOST_AUTO_TEST_CASE(MapCompactPolynomialC2)                           \
+  {                                                                      \
+    PRECICE_TEST();                                                      \
+    CompactPolynomialC2 fct(0.8);                                        \
+    PERFORM_REFERENCE_TEST(EXECUTOR, CompactPolynomialC2, fct, 2);       \
+    PERFORM_REFERENCE_TEST(EXECUTOR, CompactPolynomialC2, fct, 3);       \
+  }                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                            \
+  BOOST_AUTO_TEST_CASE(MapCompactPolynomialC4)                           \
+  {                                                                      \
+    PRECICE_TEST();                                                      \
+    CompactPolynomialC4 fct(0.6);                                        \
+    PERFORM_REFERENCE_TEST(EXECUTOR, CompactPolynomialC4, fct, 2);       \
+    PERFORM_REFERENCE_TEST(EXECUTOR, CompactPolynomialC4, fct, 3);       \
+  }                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                            \
+  BOOST_AUTO_TEST_CASE(MapCompactPolynomialC6)                           \
+  {                                                                      \
+    PRECICE_TEST();                                                      \
+    CompactPolynomialC6 fct(0.4);                                        \
+    PERFORM_REFERENCE_TEST(EXECUTOR, CompactPolynomialC6, fct, 2);       \
+    PERFORM_REFERENCE_TEST(EXECUTOR, CompactPolynomialC6, fct, 3);       \
+  }                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                            \
+  BOOST_AUTO_TEST_CASE(MapCompactPolynomialC8)                           \
+  {                                                                      \
+    PRECICE_TEST();                                                      \
+    CompactPolynomialC8 fct(0.2);                                        \
+    PERFORM_REFERENCE_TEST(EXECUTOR, CompactPolynomialC8, fct, 2);       \
+    PERFORM_REFERENCE_TEST(EXECUTOR, CompactPolynomialC8, fct, 3);       \
+  }                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                            \
+  BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)                     \
+  {                                                                      \
+    PRECICE_TEST();                                                      \
+    double                    supportRadius = 1.2;                       \
+    CompactThinPlateSplinesC2 fct(supportRadius);                        \
+    PERFORM_REFERENCE_TEST(EXECUTOR, CompactThinPlateSplinesC2, fct, 2); \
+    PERFORM_REFERENCE_TEST(EXECUTOR, CompactThinPlateSplinesC2, fct, 3); \
+  }                                                                      \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                            \
+  BOOST_AUTO_TEST_CASE(MapGaussian)                                      \
+  {                                                                      \
+    PRECICE_TEST();                                                      \
+    Gaussian fct(7);                                                     \
+    PERFORM_REFERENCE_TEST(EXECUTOR, Gaussian, fct, 2);                  \
+    PERFORM_REFERENCE_TEST(EXECUTOR, Gaussian, fct, 3);                  \
+  }
+
+#define TEST_EXECUTOR_UNIT(EXECUTOR)                                                                                                                                                  \
+  PRECICE_TEST_SETUP(1_rank, Require::Ginkgo)                                                                                                                                         \
+  BOOST_AUTO_TEST_CASE(UnitTests)                                                                                                                                                     \
+  {                                                                                                                                                                                   \
+    PRECICE_TEST();                                                                                                                                                                   \
+    MappingConfiguration::GinkgoParameter gpm;                                                                                                                                        \
+    gpm.executor = EXECUTOR;                                                                                                                                                          \
+    gpm.deviceId = 0;                                                                                                                                                                 \
+    mapping::CompactPolynomialC0                          function(3);                                                                                                                \
+    mapping::PartitionOfUnityMapping<CompactPolynomialC0> consistentMap2D(Mapping::CONSISTENT, 2, function, Polynomial::SEPARATE, 5, 0.4, false, gpm);                                \
+    perform2DTestConsistentMapping(consistentMap2D);                                                                                                                                  \
+    mapping::PartitionOfUnityMapping<CompactPolynomialC6> consistentMap2DDeadAxis(Mapping::CONSISTENT, 2, mapping::CompactPolynomialC6(6), Polynomial::SEPARATE, 5, 0.4, false, gpm); \
+    performTestConsistentMapDeadAxis(consistentMap2DDeadAxis, 2);                                                                                                                     \
+  }
+
+#ifdef PRECICE_WITH_CUDA
+BOOST_AUTO_TEST_SUITE(Cuda)
+TEST_EXECUTOR_UNIT("cuda");
+TEST_CPU_REFERENCE_FOR_SPD_RBFS("cuda");
+BOOST_AUTO_TEST_SUITE_END()
+#endif
+
+#ifdef PRECICE_WITH_HIP
+BOOST_AUTO_TEST_SUITE(Hip)
+TEST_EXECUTOR_UNIT("hip");
+TEST_CPU_REFERENCE_FOR_SPD_RBFS("hip");
+BOOST_AUTO_TEST_SUITE_END()
+#endif
+
+#ifdef PRECICE_WITH_SYCL
+BOOST_AUTO_TEST_SUITE(Sycl)
+TEST_EXECUTOR_UNIT("sycl");
+TEST_CPU_REFERENCE_FOR_SPD_RBFS("sycl");
+BOOST_AUTO_TEST_SUITE_END()
+#endif
+
+#ifdef PRECICE_WITH_OPENMP
+BOOST_AUTO_TEST_SUITE(OpenMP)
+TEST_EXECUTOR_UNIT("openmp");
+TEST_CPU_REFERENCE_FOR_SPD_RBFS("openmp");
+BOOST_AUTO_TEST_SUITE_END()
+#endif
+
+#undef PERFORM_REFERENCE_TEST
+#undef TEST_CPU_REFERENCE_FOR_SPD_RBFS
+#undef TEST_EXECUTOR_UNIT
+#endif
 
 BOOST_AUTO_TEST_SUITE_END() // Serial
 

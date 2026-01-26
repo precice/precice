@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+  <mesh name="TestMesh" dimensions="3" />
+  <mesh name="TestMeshTwo" dimensions="3" />
+  <mesh name="TestMeshThree" dimensions="3" />
+  <mesh name="TestMeshFour" dimensions="3" />
+  <mesh name="TestMeshFive" dimensions="3" />
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshTwo"
+    to="TestMesh"
+    constraint="consistent"
+    project-to-input="false"
+    vertices-per-cluster="10"
+    relative-overlap="0.4">
+    <basis-function:thin-plate-splines />
+    <executor:cuda gpu-device-id="0" />
+  </mapping:rbf-pum-direct>
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshThree"
+    to="TestMeshTwo"
+    constraint="consistent"
+    project-to-input="false"
+    vertices-per-cluster="10"
+    relative-overlap="0.4">
+    <basis-function:volume-splines />
+    <executor:cpu />
+  </mapping:rbf-pum-direct>
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshFour"
+    to="TestMeshThree"
+    constraint="consistent"
+    project-to-input="false"
+    vertices-per-cluster="10"
+    relative-overlap="0.4">
+    <basis-function:compact-polynomial-c0 support-radius="0.3" />
+    <executor:cuda gpu-device-id="auto" execution-mode="minimal-memory" />
+  </mapping:rbf-pum-direct>
+
+  <mapping:rbf-pum-direct
+    direction="read"
+    from="TestMeshFive"
+    to="TestMeshFour"
+    constraint="consistent"
+    project-to-input="false"
+    vertices-per-cluster="10"
+    relative-overlap="0.4">
+    <basis-function:compact-polynomial-c2 support-radius="0.3" />
+    <executor:cuda gpu-device-id="2" execution-mode="minimal-compute" />
+  </mapping:rbf-pum-direct>
+</configuration>

@@ -16,7 +16,7 @@
 #include "m2n/GatherScatterComFactory.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/PointToPointComFactory.hpp"
-#include "mapping/device/Ginkgo.hpp"
+#include "mapping/device/Device.hpp"
 #include "mesh/Data.hpp"
 #include "precice/impl/Types.hpp"
 #include "profiling/EventUtils.hpp"
@@ -154,7 +154,7 @@ void TestContext::initialize(const Participants &participants)
   initializeIntraComm();
   initializeEvents();
   initializePetsc();
-  initializeGinkgo();
+  initializeKokkos();
 }
 
 void TestContext::initializeMPI(const TestContext::Participants &participants)
@@ -237,13 +237,13 @@ void TestContext::initializePetsc()
   }
 }
 
-void TestContext::initializeGinkgo()
+void TestContext::initializeKokkos()
 {
   if (!invalid && _setup.ginkgo) {
-#ifndef PRECICE_NO_GINKGO
+#if !defined(PRECICE_NO_GINKGO) || !defined(PRECICE_NO_KOKKOS_KERNELS)
     int    argc = 0;
     char **argv;
-    precice::device::Ginkgo::initialize(&argc, &argv);
+    precice::device::Device::initialize(&argc, &argv);
 #endif
   }
 }

@@ -313,7 +313,7 @@ private:
   void initializeEvents();
 
   /// Initialize Ginkgo if required
-  void initializeGinkgo();
+  void initializeKokkos();
   /// @}
 };
 
