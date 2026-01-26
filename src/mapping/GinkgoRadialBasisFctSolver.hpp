@@ -66,15 +66,15 @@ public:
 
   /// Assembles the system matrices and computes the decomposition of the interpolation matrix
   template <typename IndexContainer>
-  GinkgoRadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
-                             const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial,
+  GinkgoRadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::PtrMesh &inputMesh, const IndexContainer &inputIDs,
+                             const mesh::PtrMesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial,
                              MappingConfiguration::GinkgoParameter ginkgoParameter);
 
   /// Maps the given input data
-  Eigen::MatrixXd solveConsistent(const Eigen::MatrixXd &inputData, Polynomial polynomial);
+  Eigen::MatrixXd solveConsistent(const Eigen::MatrixXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial);
 
   /// Maps the given input data
-  Eigen::MatrixXd solveConservative(const Eigen::MatrixXd &inputData, Polynomial polynomial);
+  Eigen::MatrixXd solveConservative(const Eigen::MatrixXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial);
 
   void clear();
 
@@ -167,8 +167,8 @@ private:
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
-GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
-                                                                                const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial,
+GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::PtrMesh &inputMesh, const IndexContainer &inputIDs,
+                                                                                const mesh::PtrMesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial,
                                                                                 MappingConfiguration::GinkgoParameter ginkgoParameter)
     : _ginkgoParameter(ginkgoParameter)
 {
@@ -203,12 +203,12 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   const auto outputSize = outputIDs.size();
   const auto n          = inputSize + polyparams;
 
-  PRECICE_ASSERT((inputMesh.getDimensions() == 3) || activeAxis[2] == false);
+  PRECICE_ASSERT((inputMesh->getDimensions() == 3) || activeAxis[2] == false);
   PRECICE_ASSERT((inputSize >= 1 + polyparams) || polynomial != Polynomial::ON, inputSize);
 
-  const std::size_t inputMeshSize  = inputMesh.nVertices();
-  const std::size_t outputMeshSize = outputMesh.nVertices();
-  const std::size_t meshDim        = inputMesh.vertex(0).getDimensions();
+  const std::size_t inputMeshSize  = inputMesh->nVertices();
+  const std::size_t outputMeshSize = outputMesh->nVertices();
+  const std::size_t meshDim        = inputMesh->vertex(0).getDimensions();
 
   _scalarOne         = gko::share(gko::initialize<GinkgoScalar>({1.0}, _deviceExecutor));
   _scalarNegativeOne = gko::share(gko::initialize<GinkgoScalar>({-1.0}, _deviceExecutor));
@@ -242,18 +242,18 @@ GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::GinkgoRadialBasisFctSolver(
   for (std::size_t i = 0; i < inputMeshSize; ++i) {
     for (std::size_t j = 0; j < meshDim; ++j) {
       if ("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor) {
-        inputVertices->at(j, i) = inputMesh.vertex(i).coord(j);
+        inputVertices->at(j, i) = inputMesh->vertex(i).coord(j);
       } else {
-        inputVertices->at(i, j) = inputMesh.vertex(i).coord(j);
+        inputVertices->at(i, j) = inputMesh->vertex(i).coord(j);
       }
     }
   }
   for (std::size_t i = 0; i < outputMeshSize; ++i) {
     for (std::size_t j = 0; j < meshDim; ++j) {
       if ("cuda-executor" == ginkgoParameter.executor || "hip-executor" == ginkgoParameter.executor) {
-        outputVertices->at(j, i) = outputMesh.vertex(i).coord(j);
+        outputVertices->at(j, i) = outputMesh->vertex(i).coord(j);
       } else {
-        outputVertices->at(i, j) = outputMesh.vertex(i).coord(j);
+        outputVertices->at(i, j) = outputMesh->vertex(i).coord(j);
       }
     }
   }
@@ -456,7 +456,7 @@ void GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::_solveRBFSystem(const 
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::MatrixXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const Eigen::MatrixXd &rhsValues, Polynomial polynomial)
+Eigen::MatrixXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const Eigen::MatrixXd &rhsValues, const IndexContainer &inputIDs, Polynomial polynomial)
 {
   PRECICE_TRACE();
 
@@ -531,7 +531,7 @@ Eigen::MatrixXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsis
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-Eigen::MatrixXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const Eigen::MatrixXd &rhsValues, Polynomial polynomial)
+Eigen::MatrixXd GinkgoRadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const Eigen::MatrixXd &rhsValues, const IndexContainer &inputIDs, Polynomial polynomial)
 {
   PRECICE_TRACE();
   // Copy rhs vector onto GPU by creating a Ginkgo Vector

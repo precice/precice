@@ -98,6 +98,19 @@ public:
     bool                basisFunctionDefined = false;
   };
 
+  struct AutotuningParams {
+    static constexpr int OPTIMIZE_ONLY_ONCE = 0;
+    static constexpr int UNINITIALIZED      = -1;
+
+    bool autotuneShape     = false;
+    int  iterationInterval = UNINITIALIZED;
+
+    bool optimizeOnce() const
+    {
+      return iterationInterval == OPTIMIZE_ONLY_ONCE;
+    }
+  };
+
   struct GeoMultiscaleConfiguration {
 
     double      multiscaleRadius{};
@@ -220,6 +233,8 @@ private:
   // const std::string ATTR_JACOBI_BLOCK_SIZE     = "jacobi-block-size";
   // const std::string ATTR_MAX_ITERATIONS        = "max-iterations";
 
+  const std::string ATTR_TUNER_INTERVAL = "tuner-optimization-interval";
+
   // mapping constraint
   Mapping::Constraint constraintValue{};
 
@@ -232,6 +247,7 @@ private:
   // as we can only instantiate the RBF classes when we know the RBF
   // which is configured in the subtag
   RBFConfiguration _rbfConfig;
+  AutotuningParams _autotunerConfig;
 
   struct ExecutorConfiguration {
     enum struct Executor {

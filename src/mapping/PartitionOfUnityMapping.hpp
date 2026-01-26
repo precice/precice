@@ -26,8 +26,12 @@ namespace mapping {
  * association between evaluation vertices and the clusters during initialization and traverses through all
  * vertex clusters when evaluating the mapping.
  */
-template <typename RADIAL_BASIS_FUNCTION_T>
+template <typename Solver>
 class PartitionOfUnityMapping : public Mapping {
+
+  using BASIS_FUNCTION_T = typename Solver::BASIS_FUNCTION_T;
+  using AutotuningParams = MappingConfiguration::AutotuningParams;
+
 public:
   /**
    * Constructor, which mostly sets the mesh connectivity requirements and initializes member variables.
@@ -45,13 +49,24 @@ public:
    * See also \ref mapping::impl::createClustering()
    */
   PartitionOfUnityMapping(
-      Mapping::Constraint     constraint,
-      int                     dimension,
-      RADIAL_BASIS_FUNCTION_T function,
-      Polynomial              polynomial,
-      unsigned int            verticesPerCluster,
-      double                  relativeOverlap,
-      bool                    projectToInput);
+      Mapping::Constraint constraint,
+      int                 dimension,
+      BASIS_FUNCTION_T    function,
+      Polynomial          polynomial,
+      unsigned int        verticesPerCluster,
+      double              relativeOverlap,
+      bool                projectToInput);
+
+  /// \copydoc PartitionOfUnityMapping
+  PartitionOfUnityMapping(
+      Mapping::Constraint constraint,
+      int                 dimension,
+      BASIS_FUNCTION_T    function,
+      Polynomial          polynomial,
+      unsigned int        verticesPerCluster,
+      double              relativeOverlap,
+      bool                projectToInput,
+      AutotuningParams    rbfTunerConfig);
 
   /**
    * Computes the clustering for the partition of unity method and fills the \p _clusters vector,
@@ -92,10 +107,10 @@ private:
   precice::logging::Logger _log{"mapping::PartitionOfUnityMapping"};
 
   /// main data container storing all the clusters, which need to be solved individually
-  std::vector<SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>> _clusters;
+  std::vector<SphericalVertexCluster<Solver>> _clusters;
 
   /// Radial basis function type used in interpolation
-  RADIAL_BASIS_FUNCTION_T _basisFunction;
+  BASIS_FUNCTION_T _basisFunction;
 
   /// Input parameters provided by the user for the clustering algorithm:
 
@@ -116,6 +131,8 @@ private:
 
   std::unique_ptr<mesh::Mesh> _centerMesh;
 
+  AutotuningParams _rbfTunerConfig;
+
   /// @copydoc Mapping::mapConservative
   void mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
@@ -132,17 +149,29 @@ private:
   void exportClusterCentersAsVTU(mesh::Mesh &centers);
 };
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
-    Mapping::Constraint     constraint,
-    int                     dimension,
-    RADIAL_BASIS_FUNCTION_T function,
-    Polynomial              polynomial,
-    unsigned int            verticesPerCluster,
-    double                  relativeOverlap,
-    bool                    projectToInput)
+template <typename Solver>
+PartitionOfUnityMapping<Solver>::PartitionOfUnityMapping(
+    Mapping::Constraint constraint,
+    int                 dimension,
+    BASIS_FUNCTION_T    function,
+    Polynomial          polynomial,
+    unsigned int        verticesPerCluster,
+    double              relativeOverlap,
+    bool                projectToInput)
+    : PartitionOfUnityMapping(constraint, dimension, function, polynomial, verticesPerCluster, relativeOverlap, projectToInput, {}) {}
+
+template <typename Solver>
+PartitionOfUnityMapping<Solver>::PartitionOfUnityMapping(
+    Mapping::Constraint constraint,
+    int                 dimension,
+    BASIS_FUNCTION_T    function,
+    Polynomial          polynomial,
+    unsigned int        verticesPerCluster,
+    double              relativeOverlap,
+    bool                projectToInput,
+    AutotuningParams    rbfTunerConfig)
     : Mapping(constraint, dimension, false, Mapping::InitialGuessRequirement::None),
-      _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial)
+      _basisFunction(function), _verticesPerCluster(verticesPerCluster), _relativeOverlap(relativeOverlap), _projectToInput(projectToInput), _polynomial(polynomial), _rbfTunerConfig(rbfTunerConfig)
 {
   PRECICE_ASSERT(this->getDimensions() <= 3);
   PRECICE_ASSERT(_polynomial != Polynomial::ON, "Integrated polynomial is not supported for partition of unity data mappings.");
@@ -158,8 +187,8 @@ PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::PartitionOfUnityMapping(
   }
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
+template <typename Solver>
+void PartitionOfUnityMapping<Solver>::computeMapping()
 {
   PRECICE_TRACE();
 
@@ -197,9 +226,9 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   for (const auto &c : centerCandidates) {
     // We cannot simply copy the vertex from the container in order to fill the vertices of the centerMesh, as the vertexID of each center needs to match the index
     // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
-    const VertexID                                  vertexID = meshVertices.size();
-    mesh::Vertex                                    center(c.getCoords(), vertexID);
-    SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _polynomial, inMesh, outMesh);
+    const VertexID                 vertexID = meshVertices.size();
+    mesh::Vertex                   center(c.getCoords(), vertexID);
+    SphericalVertexCluster<Solver> cluster(center, _clusterRadius, _basisFunction, _polynomial, inMesh, outMesh, _rbfTunerConfig);
 
     // Consider only non-empty clusters (more of a safeguard here)
     if (!cluster.empty()) {
@@ -251,8 +280,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   this->_hasComputedMapping = true;
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-std::pair<std::vector<int>, std::vector<double>> PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeNormalizedWeight(const mesh::Vertex &vertex, std::string_view mesh)
+template <typename Solver>
+std::pair<std::vector<int>, std::vector<double>> PartitionOfUnityMapping<Solver>::computeNormalizedWeight(const mesh::Vertex &vertex, std::string_view mesh)
 {
 
   // Step 1: index the clusters / the center mesh in order to define the output vertex -> cluster ownership
@@ -304,8 +333,8 @@ std::pair<std::vector<int>, std::vector<double>> PartitionOfUnityMapping<RADIAL_
   return {clusterIDs, weights};
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
+template <typename Solver>
+void PartitionOfUnityMapping<Solver>::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
 
@@ -319,8 +348,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const tim
   std::for_each(_clusters.begin(), _clusters.end(), [&](auto &cluster) { cluster.mapConservative(inData, outData); });
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
+template <typename Solver>
+void PartitionOfUnityMapping<Solver>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
   PRECICE_TRACE();
 
@@ -334,9 +363,9 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time:
   std::for_each(_clusters.begin(), _clusters.end(), [&](auto &clusters) { clusters.mapConsistent(inData, outData); });
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source,
-                                                                         impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd>)
+template <typename Solver>
+void PartitionOfUnityMapping<Solver>::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source,
+                                                        impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd>)
 {
   precice::profiling::Event e("map.pou.mapConservativeAt.From" + input()->getName());
   // @todo: it would most probably be more efficient to first group the vertices we receive here according to the clusters and then compute the solution
@@ -361,8 +390,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservativeAt(const E
   }
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::completeJustInTimeMapping(impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer)
+template <typename Solver>
+void PartitionOfUnityMapping<Solver>::completeJustInTimeMapping(impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(!cache.p.empty());
@@ -377,8 +406,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::completeJustInTimeMapping
   }
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::initializeMappingDataCache(impl::MappingDataCache &cache)
+template <typename Solver>
+void PartitionOfUnityMapping<Solver>::initializeMappingDataCache(impl::MappingDataCache &cache)
 {
   PRECICE_TRACE();
   PRECICE_ASSERT(_hasComputedMapping);
@@ -389,8 +418,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::initializeMappingDataCach
   }
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::VectorXd> &in)
+template <typename Solver>
+void PartitionOfUnityMapping<Solver>::updateMappingDataCache(impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::VectorXd> &in)
 {
   // We cannot synchronize this event, as the call to this function is rank-local only
   precice::profiling::Event e("map.pou.updateMappingDataCache.From" + input()->getName());
@@ -402,8 +431,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(im
   }
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
+template <typename Solver>
+void PartitionOfUnityMapping<Solver>::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
 {
   precice::profiling::Event e("map.pou.mapConsistentAt.From" + input()->getName());
   // @todo: it would most probably be more efficient to first group the vertices we receive here according to the clusters and then compute the solution
@@ -428,8 +457,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistentAt(const Eig
   }
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
+template <typename Solver>
+void PartitionOfUnityMapping<Solver>::tagMeshFirstRound()
 {
   PRECICE_TRACE();
   mesh::PtrMesh filterMesh, outMesh;
@@ -485,14 +514,14 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   std::for_each(verticesNew.begin(), verticesNew.end(), [&filterMesh](VertexID v) { filterMesh->vertex(v).tag(); });
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
+template <typename Solver>
+void PartitionOfUnityMapping<Solver>::tagMeshSecondRound()
 {
   // Nothing to be done here. There is no global ownership for matrix entries required and we tag all potentially locally relevant vertices already in the first round.
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU(mesh::Mesh &centerMesh)
+template <typename Solver>
+void PartitionOfUnityMapping<Solver>::exportClusterCentersAsVTU(mesh::Mesh &centerMesh)
 {
   PRECICE_TRACE();
 
@@ -542,8 +571,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU
   exporter.doExport(0, 0.0);
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::clear()
+template <typename Solver>
+void PartitionOfUnityMapping<Solver>::clear()
 {
   PRECICE_TRACE();
   _clusters.clear();
@@ -552,8 +581,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::clear()
   this->_hasComputedMapping = false;
 }
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-std::string PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::getName() const
+template <typename Solver>
+std::string PartitionOfUnityMapping<Solver>::getName() const
 {
   return "partition-of-unity RBF";
 }

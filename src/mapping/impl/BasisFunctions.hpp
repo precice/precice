@@ -60,6 +60,13 @@ struct CompactSupportBase {
   {
     return true;
   }
+
+  /// Indicates if the basis function is initialized using a shape parameter and requires a conversion from a support radius to a shape parameter if it offers such a conversion.
+  /// See @ref Gaussian::transformRadiusToShape
+  static constexpr double requiresRadiusToShapeConversion()
+  {
+    return false;
+  }
 };
 
 /// Base class for RBF without compact support
@@ -286,6 +293,16 @@ public:
   {
     return _params;
   };
+
+  static constexpr double requiresRadiusToShapeConversion()
+  {
+    return true;
+  }
+
+  static double transformRadiusToShape(const double supportRadius)
+  {
+    return std::sqrt(-std::log(cutoffThreshold)) / supportRadius;
+  }
 
 public:
   /// Below that value the function is supposed to be zero. Defines the support radius if not explicitly given
