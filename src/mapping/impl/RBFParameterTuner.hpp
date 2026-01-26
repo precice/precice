@@ -85,7 +85,7 @@ public:
    * @param[in] inputData Input values for which the optimizer tries to reduce the mapping error by invoking the computeErrorEstimate() method.
    */
   template <typename IndexContainer, typename Solver>
-  Sample optimize(Solver &solver, const mesh::PtrMesh inMesh, const IndexContainer &inputIds, const Eigen::VectorXd &inputData);
+  Sample optimize(Solver &solver, const mesh::PtrMesh inMesh, const IndexContainer &inputIds, const Eigen::MatrixXd &inputData);
 
   /// Returns true if the last sample tested by the optimizer also corresponds to the found optimum.
   bool lastSampleWasOptimum() const;
@@ -102,7 +102,7 @@ inline RBFParameterTuner::RBFParameterTuner(mesh::Mesh &inputMesh)
     : _upperBound(std::nullopt), _lowerBound(mesh::estimateMeshResolution(inputMesh)), _meshName(inputMesh.getName()) {}
 
 template <typename IndexContainer, typename Solver>
-Sample RBFParameterTuner::optimize(Solver &solver, const mesh::PtrMesh inMesh, const IndexContainer &inputIds, const Eigen::VectorXd &inputData)
+Sample RBFParameterTuner::optimize(Solver &solver, const mesh::PtrMesh inMesh, const IndexContainer &inputIds, const Eigen::MatrixXd &inputData)
 {
   constexpr bool radiusRBF = Solver::BASIS_FUNCTION_T::hasCompactSupport();
   static_assert(radiusRBF, "RBF is not supported by this optimizer, as it does not accept a support-radius."

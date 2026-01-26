@@ -157,7 +157,7 @@ inline Eigen::VectorXd computeInverseDiagonal(const Eigen::ColPivHouseholderQR<M
  * Implementation of LOOCV according to Rippa(1999), DOI: 10.1023/a:1018975909870
  */
 template <typename DecompositionType>
-double computeRippaLOOCVerror(const DecompositionType &choleskyDec, const Eigen::VectorXd &inputData)
+double computeRippaLOOCVerror(const DecompositionType &choleskyDec, const Eigen::Ref<const Eigen::VectorXd> &inputData)
 {
   constexpr bool isQRDecompositionType  = std::is_same_v<DecompositionType, Eigen::ColPivHouseholderQR<Eigen::MatrixXd>> || std::is_same_v<DecompositionType, Eigen::ColPivHouseholderQR<Eigen::Ref<Eigen::MatrixXd>>>;
   constexpr bool isLLTDecompositionType = std::is_same_v<DecompositionType, Eigen::LLT<Eigen::MatrixXd>> || std::is_same_v<DecompositionType, Eigen::LLT<Eigen::Ref<Eigen::MatrixXd>>>;
@@ -230,8 +230,7 @@ inline double computeSquaredDifference(
   for (unsigned int d = 0; d < v.size(); ++d) {
     v[d] = (u[d] - v[d]) * static_cast<int>(activeAxis[d]);
   }
-  // @todo: this can be replaced by std::hypot when moving to C++17
-  return std::accumulate(v.begin(), v.end(), static_cast<double>(0.), [](auto res, auto val) { return res + val * val; });
+  return std::inner_product(v.begin(), v.end(), v.begin(), 0.0);
 }
 
 } // namespace precice::utils

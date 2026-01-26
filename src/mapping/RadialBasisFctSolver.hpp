@@ -45,7 +45,7 @@ public:
 
   /// Maps the given input data
   template <typename IndexContainer>
-  Eigen::MatrixXd solveConsistent(Eigen::MatrixXd &inputData, const IndexContainer &inputIDs,Polynomial polynomial) const;
+  Eigen::MatrixXd solveConsistent(Eigen::MatrixXd &inputData, const IndexContainer &inputIDs, Polynomial polynomial) const;
 
   void computeCacheData(Eigen::MatrixXd &inputData, Polynomial polynomial, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffsOut) const;
 
@@ -378,7 +378,6 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::configureSeparatePolynomial(
   // 3. compute decomposition
   _qrMatrixQ = _matrixQ.colPivHouseholderQr();
 }
-
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>

@@ -5,6 +5,7 @@
 #include <Eigen/QR>
 #include <Eigen/SVD>
 #include <boost/range/adaptor/indexed.hpp>
+#include <cmath>
 #include "impl/BasisFunctions.hpp"
 #include "impl/RBFParameterTuner.hpp"
 #include "mapping/MathHelper.hpp"
@@ -53,7 +54,7 @@ public:
    * based on the current decomposition \ref _decMatrixC.
    */
   template <typename IndexContainer>
-  RBFErrorEstimate computeErrorEstimate(const Eigen::VectorXd &inputData, const IndexContainer &inputIds) const;
+  RBFErrorEstimate computeErrorEstimate(const Eigen::MatrixXd &inputData, const IndexContainer &inputIds) const;
 
 private:
   AutotuningParams  _rbfTunerConfig;
@@ -123,15 +124,19 @@ void AutoTunedRBFSolver<RADIAL_BASIS_FUNCTION_T>::rebuildKernelDecomposition(con
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
-RBFErrorEstimate AutoTunedRBFSolver<RADIAL_BASIS_FUNCTION_T>::computeErrorEstimate(const Eigen::VectorXd &inputData, const IndexContainer &inputIds) const
+RBFErrorEstimate AutoTunedRBFSolver<RADIAL_BASIS_FUNCTION_T>::computeErrorEstimate(const Eigen::MatrixXd &inputData, const IndexContainer &inputIds) const
 {
   if (this->_decMatrixC->info() != Eigen::ComputationInfo::Success) {
     return {std::numeric_limits<double>::max(), 0};
   }
-  double error = utils::computeRippaLOOCVerror(*(this->_decMatrixC), inputData);
+  double errorSum = 0;
+  for (int j = 0; j < inputData.cols(); j++) {
+    double error = utils::computeRippaLOOCVerror(*(this->_decMatrixC), inputData.col(j));
+    errorSum += error * error;
+  }
   double rcond = utils::approximateReciprocalConditionNumber(*(this->_decMatrixC));
 
-  return {error, rcond};
+  return {errorSum, rcond};
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
@@ -173,20 +178,15 @@ Eigen::MatrixXd AutoTunedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eig
   }
 
   // Integrated polynomial (and separated)
-  PRECICE_ASSERT(inputData.size() == this->_matrixA.cols());
+  PRECICE_ASSERT(inputData.rows() == this->_matrixA.cols());
   Eigen::MatrixXd p = this->_decMatrixC->solve(inputData);
-
-  // if (polynomial != Polynomial::ON && computeCrossValidation) {
-  //   precice::profiling::Event e("map.rbf.evaluateLOOCV");
-  //   PRECICE_INFO("Cross validation error (LOOCV): {}", evaluateRippaLOOCVerror(p));
-  // }
-  PRECICE_ASSERT(p.size() == this->_matrixA.cols());
+  PRECICE_ASSERT(p.rows() == this->_matrixA.cols());
 
   Eigen::MatrixXd out;
   if (_rbfTunerConfig.autotuneShape) {
-    if constexpr (RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) { // TODO: unmodified:
+    if constexpr (RADIAL_BASIS_FUNCTION_T::hasCompactSupport()) {
       const Eigen::Index outSize    = this->_matrixA.rows();
-      const Eigen::Index inSize     = inputData.size();
+      const Eigen::Index inSize     = inputData.rows();
       const Eigen::Index polyParams = this->_matrixA.cols() - inSize;
 
       // not yet necessary: integrated polynomial is only supported for SPD functions

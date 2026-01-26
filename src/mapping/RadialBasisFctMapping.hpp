@@ -185,9 +185,9 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::clear()
   this->_hasComputedMapping = false;
 }
 
-template<typename T, typename V = void>
+template <typename T, typename V = void>
 static constexpr bool definesExecutor = false;
-template<typename T>
+template <typename T>
 static constexpr bool definesExecutor<T, std::void_t<decltype(T::executor)>> = true;
 
 template <typename... Args>
@@ -196,7 +196,7 @@ static std::string getNameWithArgs(const std::tuple<Args...> &optionalArgs)
   if constexpr (sizeof...(Args) > 0) {
     auto param = std::get<0>(optionalArgs);
     if constexpr (definesExecutor<decltype(param)>) {
-      std::string exec  = param.executor;
+      std::string exec = param.executor;
       if (param.solver == "qr-solver") {
         return "global-direct RBF (" + exec + ")";
       } else {
@@ -278,7 +278,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
     Eigen::MatrixXd in = MapToMatrix(globalInValues.data(), _rbfSolver->getOutputSize(), valueDim, Eigen::OuterStride(valueDim));
 
     // copy all output values without polynomial entries from col-major to row-major format
-    RowMatrixXd out = _rbfSolver->solveConservative(in, boost::irange<Eigen::Index>(0, in.size()), _polynomial).block(0, 0, this->output()->getGlobalNumberOfVertices(), valueDim);
+    RowMatrixXd out = _rbfSolver->solveConservative(in, boost::irange<Eigen::Index>(0, in.rows()), _polynomial).block(0, 0, this->output()->getGlobalNumberOfVertices(), valueDim);
 
     Eigen::Map<Eigen::VectorXd> outputValues(out.data(), (this->output()->getGlobalNumberOfVertices()) * valueDim);
 
@@ -384,7 +384,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
     in.block(0, 0, this->input()->getGlobalNumberOfVertices(), valueDim) = MapToMatrix(globalInValues.data(), this->input()->getGlobalNumberOfVertices(), valueDim, Eigen::OuterStride(valueDim));
 
     // copy all output values from col-major to row-major format
-    RowMatrixXd out = _rbfSolver->solveConsistent(in, boost::irange<Eigen::Index>(0, in.size()), _polynomial);
+    RowMatrixXd out = _rbfSolver->solveConsistent(in, boost::irange<Eigen::Index>(0, in.rows()), _polynomial);
     // copy mapped data at correct position to output data values
     outData = Eigen::Map<Eigen::VectorXd>(out.data(), outValuesSize.at(0));
 
