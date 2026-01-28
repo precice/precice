@@ -228,6 +228,7 @@ void M2N::finishAcceptSecondaryRanksPreConnection(
   Event e("m2n.finishAcceptSecondaryRanksPreConnection");
 
   // TODO: Assert that prepareAcceptSecondaryRanksPreConnection has been called before
+  _areSecondaryRanksConnected = true;
   for (const auto &pair : _distComs) {
     Event e1("m2n.finishAcceptSecondaryRanksPreConnection." + std::to_string(pair.first));
 
@@ -238,7 +239,6 @@ void M2N::finishAcceptSecondaryRanksPreConnection(
 
     _areSecondaryRanksConnected = _areSecondaryRanksConnected && pair.second->isConnected();
 
-    PRECICE_ASSERT(pair.second->isConnected());
     e1.stop();
   }
   PRECICE_ASSERT(_areSecondaryRanksConnected);
