@@ -341,8 +341,10 @@ void ParticipantImpl::setupCommunication()
     auto &bm2n       = m2nPair.second;
     bool  requesting = bm2n.isRequesting;
     if (bm2n.m2n->isConnected()) {
+      PRECICE_INFO("Primary connection something something already connected.");
       PRECICE_DEBUG("Primary connection {} {} already connected.", (requesting ? "from" : "to"), bm2n.remoteName);
     } else {
+      PRECICE_INFO(requesting ? "Awaiting primary connection from someone" : "Establishing primary connection to someone");
       PRECICE_DEBUG((requesting ? "Awaiting primary connection from {}" : "Establishing primary connection to {}"), bm2n.remoteName);
       bm2n.prepareEstablishment();
       bm2n.connectPrimaryRanks(_configHash);
