@@ -237,6 +237,8 @@ void M2N::finishAcceptSecondaryRanksPreConnection(
     }
 
     _areSecondaryRanksConnected = _areSecondaryRanksConnected && pair.second->isConnected();
+
+    PRECICE_ASSERT(pair.second->isConnected());
     e1.stop();
   }
   PRECICE_ASSERT(_areSecondaryRanksConnected);
