@@ -15,7 +15,7 @@
 
 #include "com/SharedPointer.hpp"
 #include "logging/LogConfiguration.hpp"
-#include "mapping/device/Ginkgo.hpp"
+#include "mapping/device/Device.hpp"
 #include "testing/Testing.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
@@ -139,8 +139,8 @@ int main(int argc, char *argv[])
   }
   // Required for Kokkos, which doesn't allow to initialize multiple times, i.e.,
   // finalize and initialize can really only be called once
-#ifndef PRECICE_NO_GINKGO
-  precice::device::Ginkgo::finalize();
+#if !defined(PRECICE_NO_GINKGO) || !defined(PRECICE_NO_KOKKOS_KERNELS)
+  precice::device::Device::finalize();
 #endif
   utils::IntraComm::getCommunication() = nullptr;
   utils::Parallel::finalizeTestingMPI();
