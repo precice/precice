@@ -688,12 +688,16 @@ void ReceivedPartition::createOwnerInformation()
     // Exchange list of shared vertices with the neighbor
     // to store send requests.
     std::vector<com::PtrRequest> vertexListRequests;
+    vertexListRequests.reserve(2 * sharedVerticesSendMap.size());
+    // to keep all send buffers alive until the async sends are complete
+    std::vector<int> vertexListSizeSendBuffers;
+    vertexListSizeSendBuffers.reserve(sharedVerticesSendMap.size()); // make sure there are no reallocations
 
     for (auto &receivingRank : sharedVerticesSendMap) {
-      int  sendSize = receivingRank.second.size();
-      auto request  = utils::IntraComm::getCommunication()->aSend(sendSize, receivingRank.first);
+      vertexListSizeSendBuffers.push_back(static_cast<int>(receivingRank.second.size()));
+      auto request = utils::IntraComm::getCommunication()->aSend(vertexListSizeSendBuffers.back(), receivingRank.first);
       vertexListRequests.push_back(request);
-      if (sendSize != 0) {
+      if (vertexListSizeSendBuffers.back() != 0) {
         auto request = utils::IntraComm::getCommunication()->aSend(span<const int>{receivingRank.second}, receivingRank.first);
         vertexListRequests.push_back(request);
       }
