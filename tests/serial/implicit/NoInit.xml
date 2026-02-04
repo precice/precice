@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="DA" />
+  <data:scalar name="DB" />
+
+  <mesh name="MA" dimensions="3">
+    <use-data name="DA" />
+    <use-data name="DB" />
+  </mesh>
+
+  <mesh name="MB" dimensions="3">
+    <use-data name="DA" />
+    <use-data name="DB" />
+  </mesh>
+
+  <participant name="PA">
+    <provide-mesh name="MA" />
+    <write-data name="DA" mesh="MA" />
+    <read-data name="DB" mesh="MA" />
+  </participant>
+
+  <participant name="PB">
+    <receive-mesh name="MA" from="PA" />
+    <provide-mesh name="MB" />
+    <mapping:nearest-neighbor direction="write" from="MB" to="MA" constraint="conservative" />
+    <mapping:nearest-neighbor direction="read" from="MA" to="MB" constraint="consistent" />
+    <write-data name="DB" mesh="MB" />
+    <read-data name="DA" mesh="MB" />
+  </participant>
+
+  <m2n:sockets acceptor="PA" connector="PB" />
+
+  <coupling-scheme:parallel-implicit>
+    <participants first="PA" second="PB" />
+    <max-time-windows value="4" />
+    <time-window-size value="1" />
+    <max-iterations value="10" />
+    <absolute-convergence-measure data="DB" mesh="MA" limit="0.01" />
+    <exchange data="DA" mesh="MA" from="PA" to="PB" initialize="true" />
+    <exchange data="DB" mesh="MA" from="PB" to="PA" initialize="true" />
+  </coupling-scheme:parallel-implicit>
+</precice-configuration>

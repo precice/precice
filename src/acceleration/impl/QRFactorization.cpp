@@ -102,6 +102,12 @@ QRFactorization::QRFactorization(
 {
 }
 
+void QRFactorization::requireQR3Fallback()
+{
+  PRECICE_ASSERT(_filter == Acceleration::QR3FILTER);
+  _computeQR2Filter = true;
+}
+
 void QRFactorization::applyFilter(double singularityLimit, std::vector<int> &delIndices, Eigen::MatrixXd &V)
 {
   PRECICE_TRACE();

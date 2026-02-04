@@ -3,17 +3,30 @@
 #
 target_sources(testprecice
     PRIVATE
+    tests/exporter/timeseries/ExportTimeseries.cpp
+    tests/exporter/timeseries/FinalTimeseries.cpp
+    tests/exporter/timeseries/UpdatedTimeseries.cpp
     tests/fundamental/DifferentConfigs.cpp
+    tests/fundamental/first-participant/InfiniteAdvance.cpp
     tests/fundamental/initial-data/InterleavedCreation.cpp
     tests/fundamental/initial-data/InterleavedCreationWithGradients.cpp
+    tests/fundamental/just-in-time/Both/NoneConfigured.cpp
+    tests/fundamental/just-in-time/Both/ReadNotConfigured.cpp
+    tests/fundamental/just-in-time/Both/WriteNotConfigured.cpp
+    tests/fundamental/just-in-time/Read/BeforeInitialize.cpp
+    tests/fundamental/just-in-time/Read/NotConfigured.cpp
+    tests/fundamental/just-in-time/Write/BeforeInitialize.cpp
+    tests/fundamental/just-in-time/Write/NotConfigured.cpp
     tests/fundamental/profiling/InvalidName.cpp
     tests/fundamental/profiling/NotAllStopped.cpp
     tests/fundamental/profiling/NotStoppedAtFinalize.cpp
     tests/fundamental/profiling/UserProfiling.cpp
-    tests/geometric-multiscale/AxialGeoMultiscale.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarParabolic.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarUniform.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorParabolic.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorUniform.cpp
     tests/geometric-multiscale/RadialGeoMultiscale.cpp
     tests/parallel/CouplingOnLine.cpp
-    tests/parallel/ExportTimeseries.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
     tests/parallel/GlobalRBFPartitioningPETSc.cpp
     tests/parallel/LocalRBFPartitioning.cpp
@@ -72,43 +85,43 @@ target_sources(testprecice
     tests/parallel/mapping-volume/ParallelTriangleConservative2To1.cpp
     tests/quasi-newton/helpers.cpp
     tests/quasi-newton/helpers.hpp
-    tests/quasi-newton/parallel/TestQN1.cpp
-    tests/quasi-newton/parallel/TestQN10.cpp
-    tests/quasi-newton/parallel/TestQN10EmptyPartition.cpp
-    tests/quasi-newton/parallel/TestQN11.cpp
-    tests/quasi-newton/parallel/TestQN1EmptyPartition.cpp
-    tests/quasi-newton/parallel/TestQN2.cpp
-    tests/quasi-newton/parallel/TestQN2EmptyPartition.cpp
-    tests/quasi-newton/parallel/TestQN3.cpp
-    tests/quasi-newton/parallel/TestQN3EmptyPartition.cpp
-    tests/quasi-newton/parallel/TestQN4.cpp
-    tests/quasi-newton/parallel/TestQN4EmptyPartition.cpp
-    tests/quasi-newton/parallel/TestQN5.cpp
-    tests/quasi-newton/parallel/TestQN5EmptyPartition.cpp
-    tests/quasi-newton/parallel/TestQN6.cpp
-    tests/quasi-newton/parallel/TestQN6EmptyPartition.cpp
-    tests/quasi-newton/parallel/TestQN7.cpp
-    tests/quasi-newton/parallel/TestQN7EmptyPartition.cpp
-    tests/quasi-newton/parallel/TestQN8.cpp
-    tests/quasi-newton/parallel/TestQN8EmptyPartition.cpp
-    tests/quasi-newton/parallel/TestQN9.cpp
-    tests/quasi-newton/parallel/TestQN9EmptyPartition.cpp
+    tests/quasi-newton/parallel/ILSMultiScheme.cpp
+    tests/quasi-newton/parallel/ILSMultiSchemeEmptyPartition.cpp
+    tests/quasi-newton/parallel/ILSParallelScheme.cpp
+    tests/quasi-newton/parallel/ILSParallelSchemeEmptyPartition.cpp
+    tests/quasi-newton/parallel/ILSSerialScheme.cpp
+    tests/quasi-newton/parallel/ILSSerialSchemeEmptyPartition.cpp
+    tests/quasi-newton/parallel/ILSWaveform.cpp
+    tests/quasi-newton/parallel/IMVJAlwaysJacob.cpp
+    tests/quasi-newton/parallel/IMVJAlwaysJacobEmptyPartition.cpp
+    tests/quasi-newton/parallel/IMVJNoRs.cpp
+    tests/quasi-newton/parallel/IMVJNoRsEmptyPartition.cpp
+    tests/quasi-newton/parallel/IMVJRsLS.cpp
+    tests/quasi-newton/parallel/IMVJRsLSEmptyPartition.cpp
+    tests/quasi-newton/parallel/IMVJRsSVD.cpp
+    tests/quasi-newton/parallel/IMVJRsSVDEmptyPartition.cpp
+    tests/quasi-newton/parallel/IMVJRsZero.cpp
+    tests/quasi-newton/parallel/IMVJRsZeroEmptyPartition.cpp
+    tests/quasi-newton/parallel/IMVJSerialScheme.cpp
+    tests/quasi-newton/parallel/IMVJSerialSchemeEmptyPartition.cpp
+    tests/quasi-newton/parallel/IMVJZeroUpdate.cpp
+    tests/quasi-newton/parallel/IMVJZeroUpdateEmptyPartition.cpp
     tests/quasi-newton/serial/DefaultConfig.cpp
-    tests/quasi-newton/serial/TestQN1.cpp
-    tests/quasi-newton/serial/TestQN10.cpp
-    tests/quasi-newton/serial/TestQN11.cpp
-    tests/quasi-newton/serial/TestQN12.cpp
-    tests/quasi-newton/serial/TestQN13.cpp
-    tests/quasi-newton/serial/TestQN14.cpp
-    tests/quasi-newton/serial/TestQN15.cpp
-    tests/quasi-newton/serial/TestQN2.cpp
-    tests/quasi-newton/serial/TestQN3.cpp
-    tests/quasi-newton/serial/TestQN4.cpp
-    tests/quasi-newton/serial/TestQN5.cpp
-    tests/quasi-newton/serial/TestQN6.cpp
-    tests/quasi-newton/serial/TestQN7.cpp
-    tests/quasi-newton/serial/TestQN8.cpp
-    tests/quasi-newton/serial/TestQN9.cpp
+    tests/quasi-newton/serial/ILSMultiScheme.cpp
+    tests/quasi-newton/serial/ILSParallelScheme.cpp
+    tests/quasi-newton/serial/ILSSerialScheme.cpp
+    tests/quasi-newton/serial/ILSWaveform.cpp
+    tests/quasi-newton/serial/ILSWaveformReduced.cpp
+    tests/quasi-newton/serial/IMVJAlwaysJacob.cpp
+    tests/quasi-newton/serial/IMVJNoRs.cpp
+    tests/quasi-newton/serial/IMVJQR3.cpp
+    tests/quasi-newton/serial/IMVJRsLS.cpp
+    tests/quasi-newton/serial/IMVJRsSVD.cpp
+    tests/quasi-newton/serial/IMVJRsZero.cpp
+    tests/quasi-newton/serial/IMVJSerialScheme.cpp
+    tests/quasi-newton/serial/IMVJWaveform.cpp
+    tests/quasi-newton/serial/IMVJWaveformReduced.cpp
+    tests/quasi-newton/serial/IMVJZeroUpdate.cpp
     tests/remeshing/ReadAfterReset.cpp
     tests/remeshing/ResetAfterSubcycling.cpp
     tests/remeshing/ResetWhileIterating.cpp
@@ -235,6 +248,10 @@ target_sources(testprecice
     tests/serial/explicit/TestExplicitSockets.cpp
     tests/serial/explicit/helpers.cpp
     tests/serial/explicit/helpers.hpp
+    tests/serial/implicit/Basic.cpp
+    tests/serial/implicit/NoInit.cpp
+    tests/serial/implicit/NoRead.cpp
+    tests/serial/implicit/NoWrite.cpp
     tests/serial/initialize-data/Explicit.cpp
     tests/serial/initialize-data/Implicit.cpp
     tests/serial/initialize-data/ImplicitBoth.cpp
@@ -342,6 +359,7 @@ target_sources(testprecice
     tests/serial/mapping-volume/OneTriangleConservativeWrite.cpp
     tests/serial/mapping-volume/OneTriangleRead.cpp
     tests/serial/mapping-volume/OneTriangleWrite.cpp
+    tests/serial/mapping-volume/QuadRead2D.cpp
     tests/serial/mapping-volume/helpers.cpp
     tests/serial/mapping-volume/helpers.hpp
     tests/serial/mesh-requirements/NearestNeighborA.cpp
@@ -411,6 +429,8 @@ target_sources(testprecice
     tests/serial/time/explicit/serial-coupling/DoNothingWithSmallStepsNoSubsteps.cpp
     tests/serial/time/explicit/serial-coupling/DoNothingWithSmallStepsSubsteps.cpp
     tests/serial/time/explicit/serial-coupling/DoNothingWithSubcycling.cpp
+    tests/serial/time/explicit/serial-coupling/FirstParticipantRandomTimeWindows.cpp
+    tests/serial/time/explicit/serial-coupling/FirstParticipantTimeBug.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipant.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataFirstParticipantInitData.cpp
     tests/serial/time/explicit/serial-coupling/ReadWriteScalarDataWithSubcycling.cpp

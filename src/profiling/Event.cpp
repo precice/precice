@@ -6,7 +6,7 @@
 namespace precice::profiling {
 
 Event::Event(std::string_view eventName, Options options)
-    : _fundamental(options.fundamental), _synchronize(options.synchronized)
+    : _group(options.group), _synchronize(options.synchronized)
 {
   auto &er   = EventRegistry::instance();
   auto  name = std::string(eventName);
@@ -30,7 +30,7 @@ void Event::start()
   PRECICE_ASSERT(_state == State::STOPPED, _eid);
   _state         = State::RUNNING;
   auto &registry = EventRegistry::instance();
-  if (!registry.accepting(toEventClass(_fundamental))) {
+  if (!registry.accepting(_group)) {
     return;
   }
 
@@ -54,8 +54,9 @@ void Event::stop()
   PRECICE_ASSERT(_state == State::RUNNING, _eid);
   _state = State::STOPPED;
 
-  if (EventRegistry::instance().accepting(toEventClass(_fundamental))) {
-    EventRegistry::instance().put(StopEntry{_eid, timestamp});
+  if (auto &er = EventRegistry::instance();
+      er.accepting(_group)) {
+    er.put(StopEntry{_eid, timestamp});
   }
 }
 
@@ -64,8 +65,9 @@ void Event::addData(std::string_view key, int value)
   auto timestamp = Clock::now();
   PRECICE_ASSERT(_state == State::RUNNING, _eid);
 
-  auto &er = EventRegistry::instance();
-  if (er.accepting(toEventClass(_fundamental))) {
+  if (
+      auto &er = EventRegistry::instance();
+      er.accepting(_group)) {
     auto did = er.nameToID(key);
     er.put(DataEntry{_eid, timestamp, did, value});
   }

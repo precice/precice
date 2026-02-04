@@ -38,7 +38,7 @@ public:
   };
 
   struct GinkgoParameter {
-    std::string  executor            = "reference-executor";
+    std::string  executor            = "cpu"; // Default used for PUM
     std::string  solver              = "cg-solver";
     std::string  preconditioner      = "jacobi-preconditioner";
     double       residualNorm        = 1e-8;
@@ -198,24 +198,30 @@ private:
   const std::string ATTR_SUPPORT_RADIUS = "support-radius";
 
   // Attributes for geometric multiscale
-  const std::string ATTR_GEOMETRIC_MULTISCALE_TYPE    = "multiscale-type";
-  const std::string ATTR_GEOMETRIC_MULTISCALE_AXIS    = "multiscale-axis";
-  const std::string ATTR_GEOMETRIC_MULTISCALE_RADIUS  = "multiscale-radius";
-  const std::string GEOMETRIC_MULTISCALE_TYPE_SPREAD  = "spread";
-  const std::string GEOMETRIC_MULTISCALE_TYPE_COLLECT = "collect";
-  const std::string GEOMETRIC_MULTISCALE_AXIS_X       = "x";
-  const std::string GEOMETRIC_MULTISCALE_AXIS_Y       = "y";
-  const std::string GEOMETRIC_MULTISCALE_AXIS_Z       = "z";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_TYPE           = "multiscale-type";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_AXIS           = "multiscale-axis";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_RADIUS         = "multiscale-radius";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_SPREAD_PROFILE = "multiscale-spread-profile";
+  const std::string GEOMETRIC_MULTISCALE_TYPE_SPREAD         = "spread";
+  const std::string GEOMETRIC_MULTISCALE_TYPE_COLLECT        = "collect";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_X              = "x";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_Y              = "y";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_Z              = "z";
+  const std::string GEOMETRIC_MULTISCALE_SPREAD_PARABOLIC    = "parabolic";
+  const std::string GEOMETRIC_MULTISCALE_SPREAD_UNIFORM      = "uniform";
 
   // For iterative RBFs using Ginkgo
   const std::string SUBTAG_EXECUTOR = "executor";
   const std::string EXECUTOR_CPU    = "cpu";
   const std::string EXECUTOR_CUDA   = "cuda";
   const std::string EXECUTOR_HIP    = "hip";
+  const std::string EXECUTOR_SYCL   = "sycl";
   const std::string EXECUTOR_OMP    = "openmp";
 
-  const std::string ATTR_DEVICE_ID = "gpu-device-id";
-  const std::string ATTR_N_THREADS = "n-threads";
+  const std::string ATTR_DEVICE_ID      = "gpu-device-id";
+  const std::string ATTR_N_THREADS      = "n-threads";
+  const std::string ATTR_EXECUTION_MODE = "execution-mode";
+
   // const std::string ATTR_ENABLE_UNIFIED_MEMORY = "enable-unified-memory";
   // const std::string ATTR_SOLVER                = "solver";
   // const std::string ATTR_USE_PRECONDITIONER    = "use-preconditioner";
@@ -241,12 +247,14 @@ private:
       CPU,
       CUDA,
       HIP,
+      SYCL,
       OpenMP
     };
 
     Executor executor = Executor::CPU;
     int      deviceId{};
     int      nThreads{};
+    bool     computeEvaluationOffline = true;
   };
 
   std::unique_ptr<ExecutorConfiguration> _executorConfig;
@@ -271,7 +279,8 @@ private:
       const double       cgRange,
       const std::string &geoMultiscaleType,
       const std::string &geoMultiscaleAxis,
-      const double      &multiscaleRadius) const;
+      const double      &multiscaleRadius,
+      const std::string &spreadProfileStr) const;
 
   /**
    * Stores additional information about the requested RBF mapping such as the

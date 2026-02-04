@@ -20,7 +20,6 @@
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctSolver.hpp"
 #include "mapping/RadialGeoMultiscaleMapping.hpp"
-#include "mapping/device/Ginkgo.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -255,6 +254,10 @@ MappingConfiguration::MappingConfiguration(
                                    .setOptions({GEOMETRIC_MULTISCALE_AXIS_X, GEOMETRIC_MULTISCALE_AXIS_Y, GEOMETRIC_MULTISCALE_AXIS_Z});
   auto attrGeoMultiscaleRadius = XMLAttribute<double>(ATTR_GEOMETRIC_MULTISCALE_RADIUS)
                                      .setDocumentation("Radius of the circular interface between the 1D and 3D participant.");
+  auto attrGeoMultiscaleSpreadProfile = XMLAttribute<std::string>(ATTR_GEOMETRIC_MULTISCALE_SPREAD_PROFILE)
+                                            .setDocumentation("Profile when spreading from 1D to 3D: 'uniform' or 'parabolic'")
+                                            .setOptions({GEOMETRIC_MULTISCALE_SPREAD_UNIFORM, GEOMETRIC_MULTISCALE_SPREAD_PARABOLIC})
+                                            .setDefaultValue(GEOMETRIC_MULTISCALE_SPREAD_UNIFORM);
 
   // Add the relevant attributes to the relevant tags
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
@@ -264,12 +267,13 @@ MappingConfiguration::MappingConfiguration(
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
   addAttributes(coarseGrainingTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGrainDimension, attrFunctionRadius});
   addAttributes(geoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius});
+  addAttributes(geoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius, attrGeoMultiscaleSpreadProfile});
 
   // Now we take care of the subtag executor. We repeat some of the subtags in order to add individual documentation
   XMLTag::Occurrence once = XMLTag::OCCUR_NOT_OR_ONCE;
   // TODO, make type an int
-  auto attrDeviceId = makeXMLAttribute(ATTR_DEVICE_ID, static_cast<int>(0))
-                          .setDocumentation("Specifies the ID of the GPU that should be used for the Ginkgo GPU backend.");
+  auto attrDeviceId = makeXMLAttribute(ATTR_DEVICE_ID, static_cast<std::string>("0"))
+                          .setDocumentation("Setting of the GPU device: Set \"auto\" to assign GPUs to each MPI rank in a round robin fashion or specify a number between 0 and the number of available GPUs-1 to assign all MPI ranks to one GPU device with the given ID.");
   auto attrNThreads = makeXMLAttribute(ATTR_N_THREADS, static_cast<int>(0))
                           .setDocumentation("Specifies the number of threads for the OpenMP executor that should be used for the Ginkgo OpenMP backend. If a value of \"0\" is set, preCICE doesn't set the number of threads and the default behavior of OpenMP applies.");
 
@@ -303,8 +307,24 @@ MappingConfiguration::MappingConfiguration(
   }
   {
     std::list<XMLTag> cpuExecutor{
-        XMLTag{*this, EXECUTOR_CPU, once, SUBTAG_EXECUTOR}.setDocumentation("The default (and currently only) executor using a CPU and a distributed memory parallelism via MPI.")};
+        XMLTag{*this, EXECUTOR_CPU, once, SUBTAG_EXECUTOR}.setDocumentation("The default executor using a CPU and a distributed memory parallelism via MPI.")};
+    std::list<XMLTag> deviceExecutors{
+        XMLTag{*this, EXECUTOR_CUDA, once, SUBTAG_EXECUTOR}.setDocumentation("Cuda (Nvidia) executor, which uses Kokkos-kernels, fully parallel"),
+        XMLTag{*this, EXECUTOR_HIP, once, SUBTAG_EXECUTOR}.setDocumentation("Hip (AMD/Nvidia) executor, which uses Kokkos-kernels, fully parallel."),
+        XMLTag{*this, EXECUTOR_SYCL, once, SUBTAG_EXECUTOR}.setDocumentation("SYCL (e.g. Intel) executor, which uses Kokkos-kernels, fully parallel.")};
+    std::list<XMLTag> ompExecutor{
+        XMLTag{*this, EXECUTOR_OMP, once, SUBTAG_EXECUTOR}.setDocumentation("OpenMP executor, which uses Kokkos-kernel, fully parallel.")};
+
+    auto attrExecutionMode = makeXMLAttribute(ATTR_EXECUTION_MODE, "minimal-memory")
+                                 .setDocumentation("Toggle to switch between a minimal-memory vs a minimal-compute algorithm. For option \"minimal-memory\", the RBF evaluation is recomputed for each data mapping on-the-fly, which saves approximately half the memory consumption (if meshes have a similar resolution), but may (!) be slower (depends heavily on the hardware). "
+                                                   "For the option \"minimal-compute\", the RBF evaluation is precomputed, which may be faster, but consumes more memory.")
+                                 .setOptions({"minimal-memory", "minimal-compute"});
+
+    addAttributes(deviceExecutors, {attrDeviceId, attrExecutionMode});
+    addAttributes(ompExecutor, {attrNThreads, attrExecutionMode});
     addSubtagsToParents(cpuExecutor, pumDirectTags);
+    addSubtagsToParents(deviceExecutors, pumDirectTags);
+    addSubtagsToParents(ompExecutor, pumDirectTags);
   }
   // The alias tag doesn't receive the subtag at all
 
@@ -421,6 +441,7 @@ void MappingConfiguration::xmlTagCallback(
     std::string geoMultiscaleType = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_TYPE, "");
     std::string geoMultiscaleAxis = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_AXIS, "");
     double      multiscaleRadius  = tag.getDoubleAttributeValue(ATTR_GEOMETRIC_MULTISCALE_RADIUS, 1.0);
+    std::string spreadProfileStr  = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_SPREAD_PROFILE, "");
 
     if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE || type == TYPE_RADIAL_GEOMETRIC_MULTISCALE) {
       PRECICE_CHECK(_experimental, "Axial geometric multiscale is experimental and the configuration can change between minor releases. Set experimental=\"on\" in the precice-configuration tag.");
@@ -452,7 +473,7 @@ void MappingConfiguration::xmlTagCallback(
       PRECICE_UNREACHABLE("Unknown mapping constraint \"{}\".", constraint);
     }
 
-    ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh, grainDimension, functionRadius, geoMultiscaleType, geoMultiscaleAxis, multiscaleRadius);
+    ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh, grainDimension, functionRadius, geoMultiscaleType, geoMultiscaleAxis, multiscaleRadius, spreadProfileStr);
 
     _rbfConfig = configureRBFMapping(type, strPolynomial, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
@@ -498,12 +519,35 @@ void MappingConfiguration::xmlTagCallback(
       _executorConfig->executor = ExecutorConfiguration::Executor::CUDA;
     } else if (tag.getName() == EXECUTOR_HIP) {
       _executorConfig->executor = ExecutorConfiguration::Executor::HIP;
+    } else if (tag.getName() == EXECUTOR_SYCL) {
+      _executorConfig->executor = ExecutorConfiguration::Executor::SYCL;
     } else if (tag.getName() == EXECUTOR_OMP) {
       _executorConfig->executor = ExecutorConfiguration::Executor::OpenMP;
     }
 
-    _executorConfig->deviceId = tag.getIntAttributeValue(ATTR_DEVICE_ID, -1);
+    auto did = tag.getStringAttributeValue(ATTR_DEVICE_ID, "0");
+    if (did == "auto") {
+      _executorConfig->deviceId = -1;
+    } else {
+      try {
+        _executorConfig->deviceId = std::stoi(did);
+        PRECICE_CHECK(_executorConfig->deviceId >= 0, "The argument provided to \"gpu-device-id\" in the precice configuration file is invalid (negative device id)");
+      } catch (const std::invalid_argument &e) {
+        throw precice::Error("The argument provided to \"gpu-device-id\" in the precice configuration file is invalid (not a valid input).");
+      } catch (const std::out_of_range &e) {
+        throw precice::Error("The argument provided to \"gpu-device-id\" in the precice configuration file is invalid (out of range).");
+      }
+    }
+
     _executorConfig->nThreads = tag.getIntAttributeValue(ATTR_N_THREADS, 0);
+    auto mode                 = tag.getStringAttributeValue(ATTR_EXECUTION_MODE, "minimal-compute");
+    if (mode == "minimal-memory")
+      _executorConfig->computeEvaluationOffline = false;
+    else if (mode == "minimal-compute")
+      _executorConfig->computeEvaluationOffline = true;
+    else {
+      PRECICE_UNREACHABLE("Unknown execution mode");
+    }
   }
 }
 
@@ -560,7 +604,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     const double       functionRadius,
     const std::string &geoMultiscaleType,
     const std::string &geoMultiscaleAxis,
-    const double      &multiscaleRadius) const
+    const double      &multiscaleRadius,
+    const std::string &spreadProfileStr) const
 {
   PRECICE_TRACE(direction, type);
 
@@ -663,7 +708,18 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       PRECICE_UNREACHABLE("Unknown geometric multiscale type \"{}\".", geoMultiscaleType);
     }
 
-    configuredMapping.mapping = PtrMapping(new AxialGeoMultiscaleMapping(constraintValue, fromMesh->getDimensions(), multiscaleType, multiscaleAxis, multiscaleRadius));
+    AxialGeoMultiscaleMapping::SpreadProfile spreadProfile = AxialGeoMultiscaleMapping::SpreadProfile::PARABOLIC;
+    if (multiscaleType == AxialGeoMultiscaleMapping::MultiscaleType::SPREAD) {
+      if (spreadProfileStr == "parabolic") {
+        spreadProfile = AxialGeoMultiscaleMapping::SpreadProfile::PARABOLIC;
+      } else if (spreadProfileStr == "uniform") {
+        spreadProfile = AxialGeoMultiscaleMapping::SpreadProfile::UNIFORM;
+      } else {
+        PRECICE_UNREACHABLE("Unknown spread profile \"{}\".", spreadProfileStr);
+      }
+    }
+
+    configuredMapping.mapping = PtrMapping(new AxialGeoMultiscaleMapping(constraintValue, fromMesh->getDimensions(), multiscaleType, multiscaleAxis, multiscaleRadius, spreadProfile));
 
   } else if (type == TYPE_RADIAL_GEOMETRIC_MULTISCALE) {
 
@@ -762,49 +818,67 @@ void MappingConfiguration::finishRBFConfiguration()
 
       mapping.mapping = getRBFMapping<RBFBackend::PETSc>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial);
 #else
-      PRECICE_CHECK(false, "The global-iterative RBF solver on a CPU requires a preCICE build with PETSc enabled.");
+      PRECICE_ERROR("The global-iterative RBF solver on a CPU requires a preCICE build with PETSc enabled.");
 #endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
+      _ginkgoParameter          = GinkgoParameter();
+      _ginkgoParameter.executor = "cpu";
+      mapping.mapping           = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _ginkgoParameter);
     } else {
       PRECICE_UNREACHABLE("Unknown RBF solver.");
     }
     // 2. any other executor is configured via Ginkgo
   } else {
-#ifndef PRECICE_NO_GINKGO
     _ginkgoParameter                   = GinkgoParameter();
     _ginkgoParameter.usePreconditioner = false;
     _ginkgoParameter.deviceId          = _executorConfig->deviceId;
     if (_executorConfig->executor == ExecutorConfiguration::Executor::CUDA) {
       _ginkgoParameter.executor = "cuda-executor";
 #ifndef PRECICE_WITH_CUDA
-      PRECICE_CHECK(false, "The cuda-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with Cuda enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+      PRECICE_ERROR("The cuda-executor (configured for the mapping from mesh {} to mesh {}) requires a Kokkos and preCICE build with Cuda enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
     } else if (_executorConfig->executor == ExecutorConfiguration::Executor::HIP) {
       _ginkgoParameter.executor = "hip-executor";
 #ifndef PRECICE_WITH_HIP
-      PRECICE_CHECK(false, "The hip-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with HIP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+      PRECICE_ERROR("The hip-executor (configured for the mapping from mesh {} to mesh {}) requires a Kokkos and preCICE build with HIP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
+    } else if (_executorConfig->executor == ExecutorConfiguration::Executor::SYCL) {
+      _ginkgoParameter.executor = "sycl-executor";
+#ifndef PRECICE_WITH_SYCL
+      PRECICE_ERROR("The sycl-executor (configured for the mapping from mesh {} to mesh {}) requires a Kokkos and preCICE build with SYCL enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
     } else if (_executorConfig->executor == ExecutorConfiguration::Executor::OpenMP) {
       _ginkgoParameter.executor = "omp-executor";
       _ginkgoParameter.nThreads = _executorConfig->nThreads;
 #ifndef PRECICE_WITH_OPENMP
-      PRECICE_CHECK(false, "The omp-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with OpenMP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+      PRECICE_ERROR("The omp-executor (configured for the mapping from mesh {} to mesh {}) requires a Kokkos and preCICE build with OpenMP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
     }
     if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
+#ifndef PRECICE_NO_GINKGO
       _ginkgoParameter.solver = "qr-solver";
+      mapping.mapping         = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
+#else
+      PRECICE_ERROR("The selected direct solver for the global RBF mapping on executor {} from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", _ginkgoParameter.executor, mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
+#ifndef PRECICE_NO_GINKGO
       _ginkgoParameter.solver       = "cg-solver";
       _ginkgoParameter.residualNorm = _rbfConfig.solverRtol;
+      mapping.mapping               = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
+#else
+      PRECICE_ERROR("The selected iterative solver for the global RBF mapping on executor {} from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", _ginkgoParameter.executor, mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
+    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
+#ifndef PRECICE_NO_KOKKOS_KERNELS
+      PRECICE_CHECK(!(mapping.fromMesh->isJustInTime() || mapping.toMesh->isJustInTime()), "Executor \"{}\" is not implemented as just-in-time mapping.", _ginkgoParameter.executor);
+      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _ginkgoParameter, _executorConfig->computeEvaluationOffline);
+#else
+      PRECICE_ERROR("The selected pu-rbf solver using executor \"{}\" for the mapping from mesh {} to mesh {} requires a preCICE build with Kokkos-kernels enabled.", _ginkgoParameter.executor, mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
     } else {
       PRECICE_UNREACHABLE("Unknown solver type.");
     }
-
-    mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
-#else
-    PRECICE_CHECK(false, "The selected executor for the mapping from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
-#endif
   }
 }
 

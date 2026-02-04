@@ -1,0 +1,19 @@
+.TH precice-config-validate 1
+
+.SH NAME
+precice-config-validate \- command line utility to validate preCICE configuration files
+
+.SH SYNOPSIS
+.B precice-config-validate \fIfile\fR [\fIparticipant\fR [\fIsize\fR]]
+
+Checks given preCICE configuration \fIfile\fR and prints any errors. Pass the name of a \fIparticipant\fR to fully check its configuration. The optional \fIsize\fR indicates how many ranks run in parallel, which checks custom \fI<intra-comm: ... />\fR tags.
+
+.SH EXIT STATUS
+precice-config-validate returns a zero exit status if it succeeds to run the provided command.
+Non zero is returned in case of failure.
+
+.SH SEE ALSO
+.BR precice-version (1),
+.BR precice-config-doc (1)
+.PP
+precice.org \- the website of the project

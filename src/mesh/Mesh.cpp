@@ -1,5 +1,4 @@
 #include <Eigen/Core>
-#include <Eigen/src/Core/Matrix.h>
 #include <algorithm>
 #include <array>
 #include <boost/container/flat_map.hpp>
@@ -282,7 +281,7 @@ void Mesh::clearPartitioning()
 void Mesh::clearDataStamples()
 {
   for (mesh::PtrData &data : _data) {
-    data->timeStepsStorage().clear();
+    data->waveform().clear();
   }
 }
 

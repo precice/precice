@@ -26,6 +26,16 @@ public:
   };
 
   /**
+   * @brief Profile to use when type == SPREAD.
+   * - UNIFORM: Uniform profile u(r) = U_mean
+   * - PARABOLIC: laminar Poiseuille profile u(r) = 2*U_mean*(1 - (r/R)^2)
+   */
+  enum struct SpreadProfile {
+    UNIFORM,
+    PARABOLIC
+  };
+
+  /**
    * @brief Constructor.
    *
    * @param[in] constraint Specifies mapping to be consistent or conservative.
@@ -33,8 +43,9 @@ public:
    * @param[in] type Geometric multiscale type of the mapping
    * @param[in] axis Main axis along which axial geometric multiscale coupling happens
    * @param[in] radius Radius of the 1D solver "tube"
+   * @param[in] profile Profile for SPREAD (ignored for COLLECT).
    */
-  AxialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleType type, MultiscaleAxis axis, double radius);
+  AxialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleType type, MultiscaleAxis axis, double radius, SpreadProfile profile = SpreadProfile::UNIFORM);
 
   /// Takes care of compute-heavy operations needed only once to set up the mapping.
   void computeMapping() override;
@@ -66,6 +77,9 @@ private:
 
   /// radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
   double _radius;
+
+  /// selected profile used when _type == SPREAD
+  SpreadProfile _profile;
 
   /// computed vertex distances to map data from input vertex to output vertices
   std::vector<double> _vertexDistances;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <deque>
 #include <map>
 #include <set>
 #include <string>
@@ -19,18 +20,12 @@
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/Types.hpp"
+#include "profiling/Event.hpp"
 #include "utils/MultiLock.hpp"
 
-namespace precice {
-
-namespace profiling {
-class Event;
-}
-
-namespace config {
+namespace precice::config {
 class Configuration;
-}
-} // namespace precice
+} // namespace precice::config
 
 // Forward declaration to friend the boost test struct
 
@@ -385,8 +380,6 @@ private:
    */
   void configure(const config::Configuration &configuration);
 
-  void configureM2Ns(const m2n::M2NConfiguration::SharedPointer &config);
-
   enum struct ExportTiming : bool {
     Advance = false,
     Initial = true
@@ -395,10 +388,6 @@ private:
   /// Exports meshes with data and watch point data.
   /// @param[in] timing when the exports are requested
   void handleExports(ExportTiming timing);
-
-  /// Determines participants providing meshes to other participants.
-  void configurePartitions(
-      const m2n::M2NConfiguration::SharedPointer &m2nConfig);
 
   /// Communicate bounding boxes and look for overlaps
   void compareBoundingBoxes();
@@ -520,7 +509,7 @@ private:
   std::unique_ptr<profiling::Event> _solverInitEvent;
   std::unique_ptr<profiling::Event> _solverAdvanceEvent;
 
-  std::vector<profiling::Event> _userEvents;
+  std::deque<profiling::Event> _userEvents;
 };
 
 } // namespace impl

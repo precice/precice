@@ -16,6 +16,7 @@ constexpr const char *DEFAULT_MODE       = "fundamental";
 constexpr const char *DEFAULT_DIRECTORY  = ".";
 constexpr const char *MODE_OFF           = "off";
 constexpr const char *MODE_FUNDAMENTAL   = "fundamental";
+constexpr const char *MODE_API           = "api";
 constexpr const char *MODE_ALL           = "all";
 
 /**

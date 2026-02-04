@@ -6,6 +6,7 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "logging/config/LogConfiguration.hpp"
+#include "m2n/BoundM2N.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "mapping/SharedPointer.hpp"
@@ -112,6 +113,10 @@ public:
   {
     _participantConfiguration = config;
   }
+
+  std::map<std::string, m2n::BoundM2N> getBoundM2NsFor(std::string_view participant) const;
+
+  void configurePartitionsFor(std::string_view participantName);
 
 private:
   logging::Logger _log{"config::Configuration"};

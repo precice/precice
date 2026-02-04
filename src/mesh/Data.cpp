@@ -52,28 +52,28 @@ time::SampleResult Data::sampleAtTime(double time) const
 
 int Data::getWaveformDegree() const
 {
-  return _waveform.timeStepsStorage().getInterpolationDegree();
+  return _waveform.getInterpolationDegree();
 }
 
-time::Storage &Data::timeStepsStorage()
+time::Waveform &Data::waveform()
 {
-  return _waveform.timeStepsStorage();
+  return _waveform;
 }
 
 void Data::moveToNextWindow()
 {
-  if (stamples().size() > 1) { // Needed to avoid CompositionalCouplingScheme callong moveToNextWindow on same Data multiple times. Could be simplified by replacing Storage::move() with clearBefore(double time). See https://github.com/precice/precice/issues/1821.
-    timeStepsStorage().move();
+  if (stamples().size() > 1) { // Needed to avoid CompositionalCouplingScheme callong moveToNextWindow on same Data multiple times. Could be simplified by replacing Waveform::move() with clearBefore(double time). See https://github.com/precice/precice/issues/1821.
+    waveform().move();
     PRECICE_ASSERT(stamples().size() == 1);
-    setGlobalSample(stamples().back().sample); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage, see https://github.com/precice/precice/issues/1645
+    setGlobalSample(stamples().back().sample); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsWaveform, see https://github.com/precice/precice/issues/1645
   }
 }
 
 void Data::setSampleAtTime(double time, const time::Sample &sample)
 {
   PRECICE_ASSERT(sample.dataDims == getDimensions(), "Sample has incorrect data dimension");
-  setGlobalSample(sample); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsStorage, see https://github.com/precice/precice/issues/1645
-  _waveform.timeStepsStorage().setSampleAtTime(time, sample);
+  setGlobalSample(sample); // @todo at some point we should not need this anymore, when mapping, acceleration ... directly work on _timeStepsWaveform, see https://github.com/precice/precice/issues/1645
+  _waveform.setSampleAtTime(time, sample);
 }
 
 void Data::setGlobalSample(const time::Sample &sample)
@@ -119,7 +119,7 @@ bool Data::hasGradient() const
 
 bool Data::hasSamples() const
 {
-  return !_waveform.stamples().empty();
+  return !_waveform.empty();
 }
 
 void Data::requireDataGradient()

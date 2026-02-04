@@ -129,7 +129,9 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
   message(STATUS "Test ${PAT_FULL_NAME}")
   add_test(NAME ${PAT_FULL_NAME}
     COMMAND ${CMAKE_COMMAND}
+    -D Python3_EXECUTABLE=${Python3_EXECUTABLE}
     -D WRAPPER=${PRECICE_TEST_WRAPPER_SCRIPT}
+    -D CHECKER=${preCICE_SOURCE_DIR}/tools/profiling/validate-rank-files
     -D DUMMY_A=${PAT_BIN_DIR_A}/solverdummy
     -D DUMMY_B=${PAT_BIN_DIR_B}/solverdummy
     -D DUMMY_RUN_DIR=${PAT_RUN_DIR}
@@ -151,38 +153,52 @@ endfunction(add_precice_test_run_solverdummies)
 enable_testing()
 
 # Autodiscovery of CTest
-if(NOT PRECICE_FEATURE_MPI_COMMUNICATION)
-  message(STATUS "Unit and integrationtests require MPI to be enabled.")
-else()
 
-  # This file is automatically loaded by CTEST and needs to exist to prevent strange errors
-  set(ctest_tests_file "${preCICE_BINARY_DIR}/ctest_tests.cmake")
-  if(NOT EXISTS "${ctest_tests_file}")
-    file(WRITE "${ctest_tests_file}" "")
-  endif()
-  set_property(DIRECTORY
-    APPEND PROPERTY TEST_INCLUDE_FILES "${ctest_tests_file}"
-  )
-
-  # Custom command that generates the tests list after the testprecice binary is build
-  add_custom_command(
-    TARGET testprecice POST_BUILD
-    COMMAND "${CMAKE_COMMAND}"
-    -D "TEST_EXECUTABLE=$<TARGET_FILE:testprecice>"
-    -D "TEST_FILE=${ctest_tests_file}"
-    -D "TEST_DIR=${PRECICE_TEST_DIR}"
-    -D "PRECICE_MPI_VERSION=${PRECICE_MPI_VERSION}"
-    -D "MPIEXEC_EXECUTABLE=${MPIEXEC_EXECUTABLE}"
-    -D "MPIEXEC_NUMPROC_FLAG=${MPIEXEC_NUMPROC_FLAG}"
-    -D "PRECICE_CTEST_MPI_FLAGS=${PRECICE_CTEST_MPI_FLAGS}"
-    -D "MPIEXEC_PREFLAGS=${MPIEXEC_PREFLAGS}"
-    -D "MPIEXEC_POSTFLAGS=${MPIEXEC_POSTFLAGS}"
-    -P "${preCICE_SOURCE_DIR}/cmake/discover_tests.cmake"
-    COMMENT "Generating list of tests"
-    BYPRODUCTS "${preCICE_BINARY_DIR}/tests.txt"
-    VERBATIM)
-
+# This file is automatically loaded by CTEST and needs to exist to prevent strange errors
+set(ctest_tests_file "${preCICE_BINARY_DIR}/ctest_tests.cmake")
+if(NOT EXISTS "${ctest_tests_file}")
+  file(WRITE "${ctest_tests_file}" "")
 endif()
+set_property(DIRECTORY
+  APPEND PROPERTY TEST_INCLUDE_FILES "${ctest_tests_file}"
+)
+
+  # Custom command to generate the tests list using the testprecice binary
+if(PRECICE_FEATURE_MPI_COMMUNICATION)
+  add_custom_command(
+    OUTPUT "${ctest_tests_file}"
+    COMMAND "${Python3_EXECUTABLE}"
+    "${preCICE_SOURCE_DIR}/cmake/discover_tests.py"
+    "--executable=$<TARGET_FILE:testprecice>"
+    "--output=${ctest_tests_file}"
+    "--run-dir=${PRECICE_TEST_DIR}"
+    "--mpi"
+    "--mpi-version=${PRECICE_MPI_VERSION}"
+    "--mpi-exec=${MPIEXEC_EXECUTABLE}"
+    "--mpi-np=${MPIEXEC_NUMPROC_FLAG}"
+    "--mpi-extra=${PRECICE_CTEST_MPI_FLAGS}"
+    "--mpi-pre=${MPIEXEC_PREFLAGS}"
+    "--mpi-post=${MPIEXEC_POSTFLAGS}"
+    DEPENDS testprecice
+    COMMENT "Generating list of tests"
+    VERBATIM)
+else()
+  add_custom_command(
+    OUTPUT "${ctest_tests_file}"
+    COMMAND "${Python3_EXECUTABLE}"
+    "${preCICE_SOURCE_DIR}/cmake/discover_tests.py"
+    "--executable=$<TARGET_FILE:testprecice>"
+    "--output=${ctest_tests_file}"
+    "--run-dir=${PRECICE_TEST_DIR}"
+    DEPENDS testprecice
+    COMMENT "Generating list of tests"
+    VERBATIM)
+endif()
+
+# Custom target that forces the test list to be updated
+add_custom_target(precice-test-list ALL
+  DEPENDS "${ctest_tests_file}"
+)
 
 # Add solverdummy tests
 add_precice_test_build_solverdummy(cpp)
@@ -217,61 +233,174 @@ if(PRECICE_BUILD_TOOLS)
     endif()
   endfunction()
 
+  # precice-tools
 
   add_tools_test(
-    NAME noarg
+    NAME legacy.noarg
     COMMAND precice-tools
     WILL_FAIL)
 
   add_tools_test(
-    NAME invalidcmd
+    NAME legacy.invalidcmd
     COMMAND precice-tools invalidcommand
     WILL_FAIL)
 
   add_tools_test(
-    NAME version
+    NAME legacy.version
     COMMAND precice-tools version
     MATCH "${CMAKE_PROJECT_VERSION}"
     )
 
   add_tools_test(
-    NAME versionopt
+    NAME legacy.versionopt
     COMMAND precice-tools --version
     MATCH "${CMAKE_PROJECT_VERSION}"
     )
 
   add_tools_test(
-    NAME markdown
+    NAME legacy.markdown
     COMMAND precice-tools md
     MATCH "# precice-configuration"
     )
 
   add_tools_test(
-    NAME xml
+    NAME legacy.xml
     COMMAND precice-tools xml
     MATCH "<!-- TAG precice-configuration"
     )
 
   add_tools_test(
-    NAME dtd
+    NAME legacy.dtd
     COMMAND precice-tools dtd
     MATCH "<!ELEMENT precice-configuration"
     )
 
   add_tools_test(
-    NAME check.file
+    NAME legacy.check.file
     COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml
     )
 
   add_tools_test(
-    NAME check.file+name
+    NAME legacy.check.file+name
     COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
     )
 
   add_tools_test(
-    NAME check.file+name+size
+    NAME legacy.check.file+name+size
     COMMAND precice-tools check ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
     )
+
+  # precice-version
+
+  add_tools_test(
+    NAME version
+    COMMAND precice-version
+    MATCH "${CMAKE_PROJECT_VERSION}"
+    )
+
+  # precice-config-doc
+
+  add_tools_test(
+    NAME config-doc.noarg
+    COMMAND precice-config-doc
+    WILL_FAIL)
+
+  add_tools_test(
+    NAME config-doc.markdown
+    COMMAND precice-config-doc md
+    MATCH "# precice-configuration"
+    )
+
+  add_tools_test(
+    NAME config-doc.xml
+    COMMAND precice-config-doc xml
+    MATCH "<!-- TAG precice-configuration"
+    )
+
+  add_tools_test(
+    NAME config-doc.dtd
+    COMMAND precice-config-doc dtd
+    MATCH "<!ELEMENT precice-configuration"
+    )
+
+  # precice-config-validate
+
+  add_tools_test(
+    NAME config-validate.noarg
+    COMMAND precice-config-validate
+    WILL_FAIL)
+
+  add_tools_test(
+    NAME config-validate.missingfile
+    COMMAND precice-config-validate ${PROJECT_SOURCE_DIR}/definitely/missing/file.xml
+    MATCH ERROR:
+    )
+
+  add_tools_test(
+    NAME config-validate.file
+    COMMAND precice-config-validate ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml
+    )
+
+  add_tools_test(
+    NAME config-validate.file+name
+    COMMAND precice-config-validate ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo
+    )
+
+  add_tools_test(
+    NAME config-validate.file+name+size
+    COMMAND precice-config-validate ${PROJECT_SOURCE_DIR}/src/precice/tests/config-checker.xml SolverTwo 2
+    )
+
+  # Simple configuration tests
+
+  function(precice_test_config_valid path)
+    set(name "precice.config.${path}.valid")
+    set(solver "")
+    set(ranks "")
+
+    if (ARGC GREATER 1)
+      set(solver "${ARGV1}")
+      set(name "${name}:${solver}")
+    endif()
+
+    if (ARGC GREATER 2)
+      set(ranks "${ARGV2}")
+      set(name "${name}@${ranks}")
+    endif()
+    add_test(NAME ${name}
+      COMMAND precice-config-validate "${PROJECT_SOURCE_DIR}/tests/config/${path}" ${solver} ${ranks}
+      )
+    set_tests_properties(${name}
+      PROPERTIES
+      TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+      LABELS "tools;bin;config;valid")
+  endfunction()
+
+  function(precice_test_config_invalid path expression)
+    set(name "precice.config.${path}.invalid")
+    set(solver "")
+    set(ranks "")
+
+    if (ARGC GREATER 2)
+      set(solver "${ARGV2}")
+      set(name "${name}:${solver}")
+    endif()
+
+    if (ARGC GREATER 3)
+      set(ranks "${ARGV3}")
+      set(name "${name}@${ranks}")
+    endif()
+    add_test(NAME ${name}
+      COMMAND precice-config-validate "${PROJECT_SOURCE_DIR}/tests/config/${path}" ${solver} ${ranks}
+      )
+    set_tests_properties(${name}
+      PROPERTIES
+      TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+      PASS_REGULAR_EXPRESSION "${expression}"
+      LABELS "tools;bin;config;invalid")
+  endfunction()
+
+  include(${PROJECT_SOURCE_DIR}/tests/config/tests.cmake)
 endif()
 
 # Add a separate target to test only the base

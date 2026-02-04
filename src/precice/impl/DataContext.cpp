@@ -123,7 +123,7 @@ int DataContext::mapData(std::optional<double> after, bool skipZero)
                   context.fromData->getName(), context.mapping->getInputMesh()->getName(), context.mapping->getOutputMesh()->getName());
 
     // linear lookup should be sufficient here
-    const auto timestampExists = [times = context.toData->timeStepsStorage().getTimes()](double lookup) -> bool {
+    const auto timestampExists = [times = context.toData->waveform().getTimes()](double lookup) -> bool {
       return std::any_of(times.data(), std::next(times.data(), times.size()), [lookup](double time) {
         return math::equals(time, lookup);
       });

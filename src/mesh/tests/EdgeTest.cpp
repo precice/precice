@@ -1,5 +1,4 @@
 #include <Eigen/Core>
-#include <Eigen/src/Core/Matrix.h>
 #include <iosfwd>
 #include <string>
 #include "logging/Logger.hpp"

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration experimental="true">
+  <data:scalar name="D" />
+
+  <mesh name="M" dimensions="2">
+    <use-data name="D" />
+  </mesh>
+
+  <participant name="Provider">
+    <provide-mesh name="M" />
+    <read-data name="D" mesh="M" />
+  </participant>
+
+  <participant name="Receiver">
+    <receive-mesh name="M" from="Provider" api-access="true" />
+    <write-data name="D" mesh="M" />
+  </participant>
+
+  <m2n:sockets acceptor="Provider" connector="Receiver" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="Receiver" second="Provider" />
+    <max-time-windows value="1" />
+    <time-window-size value="1.0" />
+    <exchange data="D" mesh="M" from="Receiver" to="Provider" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

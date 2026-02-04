@@ -4,10 +4,7 @@
     {
       "name": "base",
       "hidden": true,
-      "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "BUILD_SHARED_LIBS": "ON"
-      }
+      "binaryDir": "${sourceDir}/build"
     },
     {
       "name": "production",

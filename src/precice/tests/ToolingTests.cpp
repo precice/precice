@@ -67,6 +67,7 @@ BOOST_AUTO_TEST_CASE(Serial)
           1));
 }
 
+#ifndef PRECICE_NO_MPI
 PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(Parallel)
 {
@@ -77,6 +78,7 @@ BOOST_AUTO_TEST_CASE(Parallel)
           "SolverTwo",
           4));
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
 

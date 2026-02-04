@@ -172,6 +172,12 @@ public:
     }
   }
 
+  // checks if the data context has a just in time mapping
+  bool hasJustInTimeMapping() const
+  {
+    return static_cast<bool>(justInTimeMapping);
+  }
+
 protected:
   /**
    * @brief Construct a new DataContext without a mapping. Protected, because only ReadDataContext and WriteDataContext should use this constructor.

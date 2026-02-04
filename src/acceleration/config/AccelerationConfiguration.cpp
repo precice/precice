@@ -117,9 +117,8 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
     tag.setDocumentation("Accelerates coupling data with the interface quasi-Newton inverse multi-vector Jacobian method.");
 
     auto alwaybuildJacobian = makeXMLAttribute(ATTR_BUILDJACOBIAN, false)
-                                  .setDocumentation("If set to true, the IMVJ will set up the Jacobian matrix"
-                                                    " in each coupling iteration, which is inefficient. If set to false (or not set)"
-                                                    " the Jacobian is only build in the last iteration and the updates are computed using (relatively) cheap MATVEC products.");
+                                  .setDocumentation("If set to true, the IMVJ will set up the Jacobian matrix in each coupling iteration, which is inefficient. "
+                                                    "If set to false (or not set) the Jacobian is only build in the last iteration and the updates are computed using (relatively) cheap MATVEC products.");
     tag.addAttribute(alwaybuildJacobian);
 
     auto reducedTimeGridQN = makeXMLAttribute(ATTR_REDUCEDTIMEGRIDQN, true)
@@ -380,14 +379,13 @@ void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
 
   XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE);
   tagFilter.setDocumentation("Type of filtering technique that is used to "
-                             "maintain good conditioning in the least-squares system. Possible filters:\n"
-                             " - `QR1-filter`: updateQR-dec with (relative) test \\\\(R(i,i) < \\epsilon *\\lVert R\\rVert_F\\\\)\n"
-                             " - `QR1_absolute-filter`: updateQR-dec with (absolute) test \\\\(R(i, i) < \\epsilon\\\\)\n"
-                             " - `QR2-filter`: en-block QR-dec with test \\\\(\\lVert v_\\text{orth} \\rVert_2 < \\epsilon * \\lVert v \\rVert_2\\\\)\n\n"
-                             "Please note that a QR1 is based on Given's rotations whereas QR2 uses "
-                             "modified Gram-Schmidt. This can give different results even when no columns "
-                             "are filtered out.\n"
-                             "When this tag is not provided, the QR2-filter with the limit value 1e-2 is used.");
+                             "maintain good conditioning in the least-squares system. Possible filters:\n\n"
+                             "- `QR1`: update QR-dec with (relative) test \\\\(R(i,i) < \\epsilon *\\lVert R\\rVert_F\\\\)\n"
+                             "- `QR1-absolute`: update QR-dec with (absolute) test \\\\(R(i, i) < \\epsilon\\\\)\n"
+                             "- `QR2`: en-block QR-dec with test \\\\(\\lVert v_\\text{orth} \\rVert_2 < \\epsilon * \\lVert v \\rVert_2\\\\)\n\n"
+                             "- `QR3`: update QR-dec only when the pre-scaling weights have changed or there is one or more columns are to be removed with test \\\\(\\lVert v_\\text{orth} \\rVert_2 < \\epsilon * \\lVert v \\rVert_2\\\\)\n\n"
+                             "Please note that a QR1 is based on Given's rotations whereas QR2 uses modified Gram-Schmidt. "
+                             "This can give different results even when no columns are filtered out.");
   XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT, 1e-16);
   attrSingularityLimit.setDocumentation("Limit eps of the filter.");
   tagFilter.addAttribute(attrSingularityLimit);
@@ -396,6 +394,7 @@ void AccelerationConfiguration::addCommonIQNSubtags(xml::XMLTag &tag)
                                          VALUE_QR1_ABSFILTER,
                                          VALUE_QR2FILTER,
                                          VALUE_QR3FILTER})
+                            .setDefaultValue(VALUE_QR3FILTER)
                             .setDocumentation("Type of the filter.");
   tagFilter.addAttribute(attrFilterName);
   tag.addSubtag(tagFilter);
@@ -436,12 +435,11 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     tag.addSubtag(tagData);
 
     XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
-    tagPreconditioner.setDocumentation("To improve the numerical stability of multiple data vectors a preconditioner"
-                                       " can be applied. A constant preconditioner scales every acceleration data by a constant value, which you can define as"
-                                       " an attribute of data. "
-                                       " A value preconditioner scales every acceleration data by the norm of the data in the previous time window."
-                                       " A residual preconditioner scales every acceleration data by the current residual."
-                                       " A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.");
+    tagPreconditioner.setDocumentation("To improve the numerical stability of multiple data vectors a preconditioner can be applied. "
+                                       "A constant preconditioner scales every acceleration data by a constant value, which you can define as an attribute of data. "
+                                       "A value preconditioner scales every acceleration data by the norm of the data in the previous time window. "
+                                       "A residual preconditioner scales every acceleration data by the current residual. "
+                                       "A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.");
     auto attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
                                       .setOptions({VALUE_CONSTANT_PRECONDITIONER,
                                                    VALUE_VALUE_PRECONDITIONER,
@@ -484,13 +482,12 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
     addCommonIQNSubtags(tag);
 
     XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
-    tagPreconditioner.setDocumentation("To improve the performance of a parallel or a multi coupling schemes a preconditioner"
-                                       " can be applied. "
+    tagPreconditioner.setDocumentation("To improve the performance of a parallel or a multi coupling schemes a preconditioner can be applied.\n\n"
                                        "- A constant preconditioner scales every acceleration data by a constant value, which you can define as an attribute of data. \n "
                                        "- A value preconditioner scales every acceleration data by the norm of the data in the previous time window.\n"
                                        "- A residual preconditioner scales every acceleration data by the current residual.\n"
-                                       "- A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.\n"
-                                       " If this tag is not provided, the residual-sum preconditioner is employed.");
+                                       "- A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.\n\n"
+                                       "If this tag is not provided, the residual-sum preconditioner is employed.");
     auto attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
                                       .setOptions({VALUE_CONSTANT_PRECONDITIONER,
                                                    VALUE_VALUE_PRECONDITIONER,
@@ -499,9 +496,9 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                       .setDocumentation("The type of the preconditioner.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
     auto attrpreconditionerUpdateOnThreshold = XMLAttribute<bool>(ATTR_PRECOND_UPDATE_ON_THRESHOLD, true)
-                                                   .setDocumentation("To update the preconditioner weights after the first time window:"
-                                                                     "- `true`: The preconditioner weights are only updated if the weights will change by more than one order of magnitude.\n"
-                                                                     "- `false`: The preconditioner weights are updated after every iteration.");
+                                                   .setDocumentation("To update the preconditioner weights after the first time window: "
+                                                                     "`true`: The preconditioner weights are only updated if the weights will change by more than one order of magnitude. "
+                                                                     "`false`: The preconditioner weights are updated after every iteration.");
     tagPreconditioner.addAttribute(attrpreconditionerUpdateOnThreshold);
     auto nonconstTWindows = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
                                 .setDocumentation(
@@ -529,12 +526,12 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                .setDefaultValue(VALUE_SVD_RESTART)
                                .setDocumentation("Type of the restart mode.");
     tagIMVJRESTART.addAttribute(attrRestartName);
-    tagIMVJRESTART.setDocumentation("Type of IMVJ restart mode that is used:\n"
-                                    "- `no-restart`: IMVJ runs in normal mode with explicit representation of Jacobian\n"
-                                    "- `RS-0`:    IMVJ runs in restart mode. After M time windows all Jacobain information is dropped, restart with no information\n"
-                                    "- `RS-LS`:      IMVJ runs in restart mode. After M time windows a IQN-LS like approximation for the initial guess of the Jacobian is computed.\n"
-                                    "- `RS-SVD`:     IMVJ runs in restart mode. After M time windows a truncated SVD of the Jacobian is updated.\n"
-                                    "- `RS-SLIDE`:   IMVJ runs in sliding window restart mode.\n"
+    tagIMVJRESTART.setDocumentation("Enable IMVJ Type of IMVJ restart mode that is used: "
+                                    "`no-restart`: IMVJ runs in normal mode with explicit representation of Jacobian. "
+                                    "`RS-0`: IMVJ runs in restart mode. After M time windows all Jacobain information is dropped, restart with no information. "
+                                    "`RS-LS`: IMVJ runs in restart mode. After M time windows a IQN-LS like approximation for the initial guess of the Jacobian is computed. "
+                                    "`RS-SVD`: IMVJ runs in restart mode. After M time windows a truncated SVD of the Jacobian is updated. "
+                                    "`RS-SLIDE`: IMVJ runs in sliding window restart mode. "
                                     "If this tag is not provided, IMVJ runs in restart mode with SVD-method.");
     auto attrChunkSize = makeXMLAttribute(ATTR_IMVJCHUNKSIZE, 8)
                              .setDocumentation("Specifies the number of time windows M after which the IMVJ restarts, if run in restart-mode. Default value is M=8.");
@@ -563,12 +560,12 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
 
     XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE);
     tagPreconditioner.setDocumentation(
-        "To improve the performance of a parallel or a multi coupling schemes a preconditioner can be applied."
+        "To improve the performance of a parallel or a multi coupling schemes a preconditioner can be applied.\n\n"
         "- A constant preconditioner scales every acceleration data by a constant value, which you can define as an attribute of data.\n"
         "- A value preconditioner scales every acceleration data by the norm of the data in the previous time window.\n"
         "- A residual preconditioner scales every acceleration data by the current residual.\n"
-        "- A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.\n"
-        " If this tag is not provided, the residual-sum preconditioner is employed.");
+        "- A residual-sum preconditioner scales every acceleration data by the sum of the residuals from the current time window.\n\n"
+        "If this tag is not provided, the residual-sum preconditioner is employed.");
     auto attrPreconditionerType = XMLAttribute<std::string>(ATTR_TYPE)
                                       .setOptions({VALUE_CONSTANT_PRECONDITIONER,
                                                    VALUE_VALUE_PRECONDITIONER,
@@ -577,9 +574,9 @@ void AccelerationConfiguration::addTypeSpecificSubtags(
                                       .setDocumentation("Type of the preconditioner.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
     auto attrpreconditionerUpdateOnThreshold = XMLAttribute<bool>(ATTR_PRECOND_UPDATE_ON_THRESHOLD, true)
-                                                   .setDocumentation("To update the preconditioner weights after the first time window:"
-                                                                     "- `true`:  The preconditioner weights are only updated if the weights will change by more than one order of magnitude.\n"
-                                                                     "- `false`: The preconditioner weights are updated after every iteration.");
+                                                   .setDocumentation("To update the preconditioner weights after the first time window: "
+                                                                     "`true`: The preconditioner weights are only updated if the weights will change by more than one order of magnitude. "
+                                                                     "`false`: The preconditioner weights are updated after every iteration.");
     tagPreconditioner.addAttribute(attrpreconditionerUpdateOnThreshold);
     auto nonconstTWindows = makeXMLAttribute(ATTR_PRECOND_NONCONST_TIME_WINDOWS, -1)
                                 .setDocumentation("After the given number of time windows, the preconditioner weights are frozen and the preconditioner acts like a constant preconditioner.");

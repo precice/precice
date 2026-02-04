@@ -579,7 +579,7 @@ void CouplingSchemeConfiguration::addTagAbsoluteOrRelativeConvergenceMeasure(
   using namespace xml;
   XMLTag tagConvergenceMeasure(*this, TAG_ABS_OR_REL_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
   tagConvergenceMeasure.setDocumentation(
-      "Absolute or relative convergence, which is the disjunction of an absolute criterion based on the two-norm difference of data values between iterations and a relative criterion based on the relative two-norm difference of data values between iterations,i.e. convergence is reached as soon as one of the both criteria is fulfilled."
+      "Absolute or relative convergence, which is the disjunction of an absolute criterion based on the two-norm difference of data values between iterations and a relative criterion based on the relative two-norm difference of data values between iterations,i.e. convergence is reached as soon as one of the both criteria is fulfilled. "
       "\\$$\\left\\lVert H(x^k) - x^k \\right\\rVert_2 < \\text{abs-limit}\\quad\\text{or}\\quad\\frac{\\left\\lVert H(x^k) - x^k \\right\\rVert_2}{\\left\\lVert H(x^k) \\right\\rVert_2} < \\text{rel-limit} \\$$  ");
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrAbsLimit(ATTR_ABS_LIMIT);
@@ -976,11 +976,11 @@ void CouplingSchemeConfiguration::checkIterationLimits() const
 {
   if (_config.convergenceMeasureDefinitions.empty()) {
     PRECICE_CHECK(_config.maxIterations != -1,
-                  "Not defining convergence measures without providing a maximum iteration limit is forbidden."
+                  "Not defining convergence measures without providing a maximum iteration limit is forbidden. "
                   "Please define a convergence measure or set a maximum iteration limit using <max-iterations value=\"...\" />.");
 
     PRECICE_INFO("No convergence measures were defined for an implicit coupling scheme. "
-                 "It will always iterate the maximum amount iterations, which is {}."
+                 "It will always iterate the maximum amount iterations, which is {}. "
                  "You may want to add a convergence measure in your <coupling-scheme:.../> in your configuration.",
                  _config.maxIterations);
   }
@@ -1203,7 +1203,7 @@ void CouplingSchemeConfiguration::setParallelAcceleration(
         dynamic_cast<acceleration::AitkenAcceleration *>(_accelerationConfig->getAcceleration().get()) != nullptr,
         "You configured participant \"{}\" in a parallel-implicit coupling scheme with \"Aitken\" "
         "acceleration, which is known to perform bad in parallel coupling schemes. "
-        "See https://precice.org/configuration-acceleration.html#dynamic-aitken-under-relaxation for details."
+        "See https://precice.org/configuration-acceleration.html#dynamic-aitken-under-relaxation for details. "
         "Consider switching to a serial-implicit coupling scheme or changing the acceleration method.",
         participant);
   }

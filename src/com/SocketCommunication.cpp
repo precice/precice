@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <boost/asio.hpp>
+#include <boost/asio/system_timer.hpp>
 
+#include <chrono>
 #include <filesystem>
 #include <sstream>
 #include <stdexcept>
@@ -236,7 +238,7 @@ void SocketCommunication::requestConnection(std::string const &acceptorName,
       if (not isConnected()) {
         // Wait a little, since after a couple of ten-thousand trials the system
         // seems to get confused and the requester connects wrongly to itself.
-        boost::asio::deadline_timer timer(*_ioContext, boost::posix_time::milliseconds(1));
+        boost::asio::system_timer timer(*_ioContext, std::chrono::milliseconds(1));
         timer.wait();
       }
     }
@@ -300,7 +302,7 @@ void SocketCommunication::requestConnectionAsClient(std::string const   &accepto
         if (not isConnected()) {
           // Wait a little, since after a couple of ten-thousand trials the system
           // seems to get confused and the requester connects wrongly to itself.
-          boost::asio::deadline_timer timer(*_ioContext, boost::posix_time::milliseconds(1));
+          boost::asio::system_timer timer(*_ioContext, std::chrono::milliseconds(1));
           timer.wait();
         }
       }

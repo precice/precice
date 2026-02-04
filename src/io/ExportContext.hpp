@@ -22,6 +22,9 @@ struct ExportContext {
   // @brief If true, export is done in every iteration (also implicit).
   bool everyIteration = false;
 
+  // @brief If true, updates the series file after every export. Otherwise only at the end
+  bool updateSeries = false;
+
   // @brief type of the exporter (e.g. vtk).
   std::string type;
 };

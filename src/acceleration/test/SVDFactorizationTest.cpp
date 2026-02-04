@@ -2,7 +2,6 @@
 
 #include <Eigen/Core>
 #include <Eigen/Dense>
-#include <Eigen/src/Core/Matrix.h>
 
 #include "acceleration/impl/ConstantPreconditioner.hpp"
 #include "acceleration/impl/ParallelMatrixOperations.hpp"

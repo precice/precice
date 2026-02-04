@@ -9,7 +9,6 @@
 #include "logging/Logger.hpp"
 #include "precice/impl/Types.hpp"
 #include "time/Sample.hpp"
-#include "time/Storage.hpp"
 #include "time/Time.hpp"
 #include "time/Waveform.hpp"
 
@@ -83,18 +82,18 @@ public:
    */
   int getWaveformDegree() const;
 
-  /// Returns a reference to the _timeStepsStorage of _waveform.
-  time::Storage &timeStepsStorage();
+  /// Returns a reference to the waveform
+  time::Waveform &waveform();
 
   void moveToNextWindow();
 
-  /// Returns a the stamples from _timeStepsStorage.
+  /// Returns a the stamples from the waveform
   auto stamples() const
   {
     return _waveform.stamples();
   }
 
-  /// Add sample at given time to _timeStepsStorage.
+  /// Add sample at given time to the waveform
   void setSampleAtTime(double time, const time::Sample &sample);
 
   /// Set _sample
@@ -140,7 +139,7 @@ public:
 private:
   logging::Logger _log{"mesh::Data"};
 
-  /// Waveform wrapping this Data.
+  /// Sample storage of this Data.
   time::Waveform _waveform;
 
   /// Name of the data set.

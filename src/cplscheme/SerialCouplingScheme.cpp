@@ -62,7 +62,7 @@ void SerialCouplingScheme::sendTimeWindowSize()
 {
   PRECICE_TRACE();
   if (_participantSetsTimeWindowSize) {
-    setTimeWindowSize(getTime() - getTimeWindowStart());
+    setTimeWindowSize(getTimeWindowProgress());
     setNextTimeWindowSize(UNDEFINED_TIME_WINDOW_SIZE);
     PRECICE_DEBUG("sending time window size of {}", getTimeWindowSize());
     getM2N()->send(getTimeWindowSize());

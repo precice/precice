@@ -60,11 +60,6 @@ public:
       const std::string &participant,
       const std::string &mesh);
 
-  std::unique_ptr<utils::ManageUniqueIDs> extractMeshIdManager()
-  {
-    return std::move(_meshIdManager);
-  }
-
   /// Initialize the map between meshes and dimensions, for unit tests that directly create mesh objects without going through the config reading.
   void insertMeshToMeshDimensionsMap(const std::string &mesh,
                                      int                dimensions);
@@ -92,7 +87,7 @@ private:
   /// to check later if all meshes that any coupling scheme needs are actually used by the participants
   std::map<std::string, std::vector<std::string>> _neededMeshes;
 
-  std::unique_ptr<utils::ManageUniqueIDs> _meshIdManager;
+  utils::ManageUniqueIDs _meshIdManager;
 
   utils::ManageUniqueIDs _dataIDManager;
 };

@@ -1,0 +1,103 @@
+#!python3
+
+import json
+import argparse
+import pathlib
+import lzma
+
+
+def check_entry_format(line):
+    assert len(line) >= 4
+    assert line[0] in "NBED"
+
+
+def iterateEntries(file, compressed):
+    if not compressed:
+        for line in file:
+            yield line.decode().rstrip()
+        return
+
+    with lzma.LZMAFile(file) as lines:
+        for line in lines:
+            yield line.decode().rstrip()
+
+
+def check_file(file: pathlib.Path):
+    print()
+    print(f"Checking file {path.resolve()}")
+
+    assert path.exists(), f"File {path} doesn't exist"
+
+    with path.open("rb") as fin:
+        header = fin.readline()
+        meta = json.loads(header)
+
+        for key in [
+            "name",
+            "rank",
+            "size",
+            "unix_us",
+            "tinit",
+            "mode",
+            "compression",
+            "file_version",
+        ]:
+            assert key in meta, f"Key {key} not in metadata"
+
+        compressed = bool(meta["compression"])
+        print("File is{} compressed".format("" if compressed else "not"))
+
+        counter: int = 0
+        known = set()
+        active = []
+        last_ts: int = 0
+
+        for text in iterateEntries(fin, compressed):
+            line = counter + 1
+            counter += 1
+
+            check_entry_format(text)
+
+            action = text[0]
+            id = int(text[1:].split(":")[0])
+
+            if action == "N":
+                assert (
+                    id not in known
+                ), f"Repeated declaration of {id} in {file}:{line} {text}"
+                known.add(id)
+                continue
+
+            # BED require N
+            assert id in known, f"Use of undefined id {id} in {file}:{line} {text}"
+
+            ts = int(text[1:].split(":")[1])
+            assert last_ts <= ts, f"Decreasing timestamp in {file}:{line} {text}"
+            last_ts = ts
+
+            if action == "B":
+                active.append(id)
+                continue
+
+            # ED require active action
+            assert (
+                active
+            ), f"Action {action} but no event is active in {file}:{line} {text}"
+            if action == "E":
+                last = active.pop()
+                assert (
+                    id == last
+                ), f"Incorrectly nested event in row {file}:{line} {text}"
+            elif action == "D":
+                assert (
+                    id == active[-1]
+                ), f"Data event not matching latest active event in {file}:{line} {text}"
+
+        print(f"Records {counter}")
+        print(f"Names {len(known)}")
+
+    print("All good")
+
+
+for path in pathlib.Path(".").rglob("**/*-*-*.txt"):
+    check_file(path)

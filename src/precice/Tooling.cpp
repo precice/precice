@@ -35,7 +35,7 @@ void checkConfiguration(const std::string &filename, const std::string &particip
     logging::BackendConfiguration config;
 
     // Console output
-    config.format = "precice-tools: %ColorizedSeverity%%Message%";
+    config.format = "%ColorizedSeverity%%Message%";
     config.filter = "%Severity% >= info";
     config.type   = "stream";
     config.output = "stdout";
@@ -58,7 +58,7 @@ void checkConfiguration(const std::string &filename, const std::string &particip
       0,
       size};
   xml::configure(config.getXMLTag(), context, filename);
-  fmt::print(fmt::emphasis::bold | fg(fmt::color::green), "No major issues detected\n", filename);
+  fmt::print(fmt::emphasis::bold | fg(fmt::color::green), "No major issues detected\n");
   if (!wasInitialized) {
     utils::Petsc::finalize();
     utils::Parallel::finalizeTestingMPI();
