@@ -5,9 +5,15 @@
 
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <limits>
 #include <regex>
+#include <sstream>
 #include <string>
+
+#include <libxml/parser.h>
+#include <libxml/tree.h>
+#include <libxml/xpath.h>
 
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
@@ -137,6 +143,77 @@ boost::test_tools::predicate_result equals(double a, double b, double tolerance)
 void expectFile(std::string_view name)
 {
   BOOST_TEST(std::filesystem::is_regular_file(name), "File " << name << " is not a regular file or doesn't exist.");
+}
+
+void removeFile(std::string_view name)
+{
+  if (std::filesystem::exists(name)) {
+    std::filesystem::remove(name);
+  }
+}
+
+std::string readFile(std::string_view name)
+{
+  std::ifstream t{std::string(name)};
+  std::stringstream buffer;
+  buffer << t.rdbuf();
+  return buffer.str();
+}
+
+static void xmlErrorSuppress(void*, const char*, ...) {}
+
+bool validateXMLWellFormed(std::string_view filename)
+{
+  xmlSetGenericErrorFunc(nullptr, xmlErrorSuppress);
+  xmlDocPtr doc = xmlReadFile(std::string(filename).c_str(), nullptr, 
+                               XML_PARSE_NOWARNING | XML_PARSE_NOERROR);
+  bool valid = (doc != nullptr);
+  if (doc) xmlFreeDoc(doc);
+  return valid;
+}
+
+static bool validateVTKFile(std::string_view filename, const char* typeName)
+{
+  xmlSetGenericErrorFunc(nullptr, xmlErrorSuppress);
+  xmlDocPtr doc = xmlReadFile(std::string(filename).c_str(), nullptr, 
+                               XML_PARSE_NOWARNING | XML_PARSE_NOERROR);
+  if (!doc) return false;
+  
+  auto cleanup = [&]() { xmlFreeDoc(doc); };
+  
+  xmlNodePtr root = xmlDocGetRootElement(doc);
+  if (!root || xmlStrcmp(root->name, BAD_CAST "VTKFile") != 0) {
+    cleanup();
+    return false;
+  }
+  
+  xmlChar *type = xmlGetProp(root, BAD_CAST "type");
+  bool typeMatch = type && xmlStrcmp(type, BAD_CAST typeName) == 0;
+  if (type) xmlFree(type);
+  if (!typeMatch) {
+    cleanup();
+    return false;
+  }
+  
+  bool hasChild = false;
+  for (xmlNodePtr child = root->children; child; child = child->next) {
+    if (child->type == XML_ELEMENT_NODE && 
+        xmlStrcmp(child->name, BAD_CAST typeName) == 0) {
+      hasChild = true;
+      break;
+    }
+  }
+  
+  cleanup();
+  return hasChild;
+}
+
+bool validateVTUFile(std::string_view filename) {
+  return validateVTKFile(filename, "UnstructuredGrid");
+}
+
+bool validateVTPFile(std::string_view filename) {
+  return validateVTKFile(filename, "PolyData");
 }
 
 ErrorPredicate errorContains(std::string_view substring)

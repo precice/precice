@@ -168,6 +168,43 @@ void expectFiles(Args... args)
   (expectFile(args), ...);
 }
 
+void removeFile(std::string_view name);
+
+std::string readFile(std::string_view name);
+
+/** Validates that an XML file is well-formed.
+ * 
+ * Uses libxml2 to parse and validate the XML structure.
+ * 
+ * @param filename Path to the XML file to validate
+ * @returns true if the XML is well-formed, false otherwise
+ */
+bool validateXMLWellFormed(std::string_view filename);
+
+/** Validates that a VTU file is well-formed XML with expected structure.
+ * 
+ * Checks for:
+ * - Well-formed XML
+ * - Root element is VTKFile with type="UnstructuredGrid"
+ * - Contains UnstructuredGrid element
+ * 
+ * @param filename Path to the VTU file to validate
+ * @returns true if valid, false otherwise
+ */
+bool validateVTUFile(std::string_view filename);
+
+/** Validates that a VTP file is well-formed XML with expected structure.
+ * 
+ * Checks for:
+ * - Well-formed XML
+ * - Root element is VTKFile with type="PolyData"
+ * - Contains PolyData element
+ * 
+ * @param filename Path to the VTP file to validate
+ * @returns true if valid, false otherwise
+ */
+bool validateVTPFile(std::string_view filename);
+
 using ErrorPredicate = std::function<bool(::precice::Error)>;
 
 /// Checks if the message of a given precice::Error contains a substring
