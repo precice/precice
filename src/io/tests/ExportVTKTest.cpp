@@ -132,6 +132,8 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
 {
   PRECICE_TEST();
+  testing::removeFile("Mesh-io-VTKExport.init.vtk");
+  testing::removeFile("Mesh-io-VTKExport.dt1.vtk");
   int dimensions = 2;
   // Create mesh to map from
   mesh::Mesh    mesh("Mesh", dimensions, testing::nextMeshID());
@@ -162,6 +164,8 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   PRECICE_TEST();
+  testing::removeFile("Mesh-io-VTKExport.init.vtk");
+  testing::removeFile("Mesh-io-VTKExport.dt1.vtk");
   int           dim = 2;
   mesh::Mesh    mesh("Mesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Constant(0.0));
@@ -182,6 +186,8 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   PRECICE_TEST();
+  testing::removeFile("Mesh-io-VTKExport.init.vtk");
+  testing::removeFile("Mesh-io-VTKExport.dt1.vtk");
   int           dim = 3;
   mesh::Mesh    mesh("Mesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Constant(0.0));
@@ -203,6 +209,7 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExportTetrahedron)
 {
   PRECICE_TEST();
+  testing::removeFile("Mesh-io-VTKExport.init.vtk");
   int           dim = 3;
   mesh::Mesh    mesh("Mesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Constant(0.0));
