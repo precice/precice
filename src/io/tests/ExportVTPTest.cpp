@@ -27,6 +27,9 @@ PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm());
 BOOST_AUTO_TEST_CASE(ExportScalar)
 {
   PRECICE_TEST();
+  std::string filename = "Mesh-io-VTPExport.init.vtp";
+  testing::removeFile(filename);
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
@@ -35,13 +38,18 @@ BOOST_AUTO_TEST_CASE(ExportScalar)
 
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
-  testing::expectFiles("Mesh-io-VTPExport.init.vtp");
+  testing::expectFiles(filename);
+
+  BOOST_TEST(testing::validateVTPFile(filename));
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm());
 BOOST_AUTO_TEST_CASE(ExportVector)
 {
   PRECICE_TEST();
+  std::string filename = "Mesh-io-VTPExport.init.vtp";
+  testing::removeFile(filename);
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
@@ -50,13 +58,18 @@ BOOST_AUTO_TEST_CASE(ExportVector)
 
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
-  testing::expectFiles("Mesh-io-VTPExport.init.vtp");
+  testing::expectFiles(filename);
+
+  BOOST_TEST(testing::validateVTPFile(filename));
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm());
 BOOST_AUTO_TEST_CASE(ExportMissing)
 {
   PRECICE_TEST();
+  std::string filename = "Mesh-io-VTPExport.init.vtp";
+  testing::removeFile(filename);
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
@@ -64,7 +77,9 @@ BOOST_AUTO_TEST_CASE(ExportMissing)
   // no sample
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
-  testing::expectFiles("Mesh-io-VTPExport.init.vtp");
+  testing::expectFiles(filename);
+
+  BOOST_TEST(testing::validateVTPFile(filename));
 }
 
 PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())

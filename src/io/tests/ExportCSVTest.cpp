@@ -27,6 +27,9 @@ PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportScalar)
 {
   PRECICE_TEST();
+  std::string filename = "Mesh-io-CSVExport.init.csv";
+  testing::removeFile(filename);
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
@@ -35,13 +38,22 @@ BOOST_AUTO_TEST_CASE(ExportScalar)
 
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles("Mesh-io-CSVExport.init.csv");
+  testing::expectFiles(filename);
+
+  std::string expected =
+      "PosX;PosY;Rank;data\n"
+      "0;0;0;0\n"
+      "1;1;0;0\n";
+  BOOST_TEST(testing::readFile(filename) == expected);
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportVector)
 {
   PRECICE_TEST();
+  std::string filename = "Mesh-io-CSVExport.init.csv";
+  testing::removeFile(filename);
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
@@ -50,13 +62,22 @@ BOOST_AUTO_TEST_CASE(ExportVector)
 
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles("Mesh-io-CSVExport.init.csv");
+  testing::expectFiles(filename);
+
+  std::string expected =
+      "PosX;PosY;Rank;dataX;dataY\n"
+      "0;0;0;0;0\n"
+      "1;1;0;0;0\n";
+  BOOST_TEST(testing::readFile(filename) == expected);
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportMissing)
 {
   PRECICE_TEST();
+  std::string filename = "Mesh-io-CSVExport.init.csv";
+  testing::removeFile(filename);
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
@@ -64,7 +85,14 @@ BOOST_AUTO_TEST_CASE(ExportMissing)
   // no sample
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles("Mesh-io-CSVExport.init.csv");
+  testing::expectFiles(filename);
+
+  // Missing data columns are skipped
+  std::string expected =
+      "PosX;PosY;Rank\n"
+      "0;0;0\n"
+      "1;1;0\n";
+  BOOST_TEST(testing::readFile(filename) == expected);
 }
 
 PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
@@ -80,9 +108,25 @@ BOOST_AUTO_TEST_CASE(ExportScalarParallel)
   mesh::PtrData data = mesh.createData("data", 1, 0_dataID);
   data->setSampleAtTime(0, time::Sample{1, 1}.setZero());
 
+  const std::string filename = fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank);
+  testing::removeFile(filename);
+
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+  testing::expectFiles(filename);
+
+  // Each rank checks its own file
+  std::string expected;
+  if (context.isRank(0)) {
+    expected =
+        "PosX;PosY;Rank;data\n"
+        "0;0;0;0\n";
+  } else {
+    expected =
+        "PosX;PosY;Rank;data\n"
+        "1;1;1;0\n";
+  }
+  BOOST_TEST(testing::readFile(filename) == expected);
 }
 
 PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
@@ -98,9 +142,24 @@ BOOST_AUTO_TEST_CASE(ExportVectorParallel)
   mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
   data->setSampleAtTime(0, time::Sample{2, 1}.setZero());
 
+  const std::string filename = fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank);
+  testing::removeFile(filename);
+
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+  testing::expectFiles(filename);
+
+  std::string expected;
+  if (context.isRank(0)) {
+    expected =
+        "PosX;PosY;Rank;dataX;dataY\n"
+        "0;0;0;0;0\n";
+  } else {
+    expected =
+        "PosX;PosY;Rank;dataX;dataY\n"
+        "1;1;1;0;0\n";
+  }
+  BOOST_TEST(testing::readFile(filename) == expected);
 }
 
 PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
@@ -115,10 +174,26 @@ BOOST_AUTO_TEST_CASE(ExportMissingParallel)
   }
   mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
   BOOST_TEST_REQUIRE(data->waveform().empty());
+  
+  const std::string filename = fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank);
+  testing::removeFile(filename);
+
   // no sample
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+  testing::expectFiles(filename);
+
+  std::string expected;
+  if (context.isRank(0)) {
+    expected =
+        "PosX;PosY;Rank\n"
+        "0;0;0\n";
+  } else {
+    expected =
+        "PosX;PosY;Rank\n"
+        "1;1;1\n";
+  }
+  BOOST_TEST(testing::readFile(filename) == expected);
 }
 
 PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
@@ -135,10 +210,26 @@ BOOST_AUTO_TEST_CASE(ExportScalarAndMissingParallel)
   BOOST_TEST_REQUIRE(missing->waveform().empty());
   mesh::PtrData data = mesh.createData("data", 2, 1_dataID);
   data->setSampleAtTime(0, time::Sample{2, 1}.setZero());
+  
+  const std::string filename = fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank);
+  testing::removeFile(filename);
+
   // no sample
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+  testing::expectFiles(filename);
+
+  std::string expected;
+  if (context.isRank(0)) {
+    expected =
+        "PosX;PosY;Rank;dataX;dataY\n"
+        "0;0;0;0;0\n";
+  } else {
+    expected =
+        "PosX;PosY;Rank;dataX;dataY\n"
+        "1;1;1;0;0\n";
+  }
+  BOOST_TEST(testing::readFile(filename) == expected);
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
@@ -155,9 +246,11 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
   mesh.createEdge(v2, v3);
   mesh.createEdge(v3, v1);
 
+  std::string filename = "Mesh-io-CSVExport.init.csv";
+  testing::removeFile(filename);
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles("Mesh-io-CSVExport.init.csv");
+  testing::expectFiles(filename);
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -191,8 +284,11 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   }
 
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  
+  const std::string filename = fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank);
+  testing::removeFile(filename);
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+  testing::expectFiles(filename);
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -229,8 +325,11 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   }
 
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  
+  const std::string filename = fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank);
+  testing::removeFile(filename);
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+  testing::expectFiles(filename);
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -290,8 +389,11 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
   }
 
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
+  
+  const std::string filename = fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank);
+  testing::removeFile(filename);
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+  testing::expectFiles(filename);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // IOTests
