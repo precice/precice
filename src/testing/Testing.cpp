@@ -154,65 +154,70 @@ void removeFile(std::string_view name)
 
 std::string readFile(std::string_view name)
 {
-  std::ifstream t{std::string(name)};
+  std::ifstream     t{std::string(name)};
   std::stringstream buffer;
   buffer << t.rdbuf();
   return buffer.str();
 }
 
-static void xmlErrorSuppress(void*, const char*, ...) {}
+static void xmlErrorSuppress(void *, const char *, ...) {}
 
 bool validateXMLWellFormed(std::string_view filename)
 {
   xmlSetGenericErrorFunc(nullptr, xmlErrorSuppress);
-  xmlDocPtr doc = xmlReadFile(std::string(filename).c_str(), nullptr, 
-                               XML_PARSE_NOWARNING | XML_PARSE_NOERROR);
-  bool valid = (doc != nullptr);
-  if (doc) xmlFreeDoc(doc);
+  xmlDocPtr doc   = xmlReadFile(std::string(filename).c_str(), nullptr,
+                                XML_PARSE_NOWARNING | XML_PARSE_NOERROR);
+  bool      valid = (doc != nullptr);
+  if (doc)
+    xmlFreeDoc(doc);
   return valid;
 }
 
-static bool validateVTKFile(std::string_view filename, const char* typeName)
+static bool validateVTKFile(std::string_view filename, const char *typeName)
 {
   xmlSetGenericErrorFunc(nullptr, xmlErrorSuppress);
-  xmlDocPtr doc = xmlReadFile(std::string(filename).c_str(), nullptr, 
-                               XML_PARSE_NOWARNING | XML_PARSE_NOERROR);
-  if (!doc) return false;
-  
+  xmlDocPtr doc = xmlReadFile(std::string(filename).c_str(), nullptr,
+                              XML_PARSE_NOWARNING | XML_PARSE_NOERROR);
+  if (!doc)
+    return false;
+
   auto cleanup = [&]() { xmlFreeDoc(doc); };
-  
+
   xmlNodePtr root = xmlDocGetRootElement(doc);
   if (!root || xmlStrcmp(root->name, BAD_CAST "VTKFile") != 0) {
     cleanup();
     return false;
   }
-  
-  xmlChar *type = xmlGetProp(root, BAD_CAST "type");
-  bool typeMatch = type && xmlStrcmp(type, BAD_CAST typeName) == 0;
-  if (type) xmlFree(type);
+
+  xmlChar *type      = xmlGetProp(root, BAD_CAST "type");
+  bool     typeMatch = type && xmlStrcmp(type, BAD_CAST typeName) == 0;
+  if (type)
+    xmlFree(type);
   if (!typeMatch) {
     cleanup();
     return false;
   }
-  
+
   bool hasChild = false;
   for (xmlNodePtr child = root->children; child; child = child->next) {
-    if (child->type == XML_ELEMENT_NODE && 
+    if (child->type == XML_ELEMENT_NODE &&
         xmlStrcmp(child->name, BAD_CAST typeName) == 0) {
       hasChild = true;
       break;
     }
   }
-  
+
   cleanup();
   return hasChild;
 }
 
-bool validateVTUFile(std::string_view filename) {
+bool validateVTUFile(std::string_view filename)
+{
   return validateVTKFile(filename, "UnstructuredGrid");
 }
 
-bool validateVTPFile(std::string_view filename) {
+bool validateVTPFile(std::string_view filename)
+{
   return validateVTKFile(filename, "PolyData");
 }
 

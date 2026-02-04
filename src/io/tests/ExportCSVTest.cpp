@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(ExportMissingParallel)
   }
   mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
   BOOST_TEST_REQUIRE(data->waveform().empty());
-  
+
   const std::string filename = fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank);
   testing::removeFile(filename);
 
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(ExportScalarAndMissingParallel)
   BOOST_TEST_REQUIRE(missing->waveform().empty());
   mesh::PtrData data = mesh.createData("data", 2, 1_dataID);
   data->setSampleAtTime(0, time::Sample{2, 1}.setZero());
-  
+
   const std::string filename = fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank);
   testing::removeFile(filename);
 
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   }
 
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
-  
+
   const std::string filename = fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank);
   testing::removeFile(filename);
   exportCSV.doExport(0, 0.0);
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   }
 
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
-  
+
   const std::string filename = fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank);
   testing::removeFile(filename);
   exportCSV.doExport(0, 0.0);
@@ -389,7 +389,7 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
   }
 
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
-  
+
   const std::string filename = fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank);
   testing::removeFile(filename);
   exportCSV.doExport(0, 0.0);
