@@ -111,28 +111,9 @@ void CoarseGrainingMapping::computeMapping()
 
   // Setup Direction of Mapping
   PRECICE_CHECK(hasConstraint(CONSERVATIVE), "Only conservative constraints are implemented.");
-  mesh::PtrMesh in  = input();
-  mesh::PtrMesh out = output();
+  // Simply ensure that the index tree is built for the output mesh
+  [[maybe_unused]] auto &index = output()->index();
 
-  // Set up of output arrays
-  const size_t verticesSize   = in->nVertices();
-  const auto  &sourceVertices = in->vertices();
-  // _vertexIndices.resize(verticesSize);
-
-  // Needed for error calculations
-  // utils::statistics::DistanceAccumulator distanceStatistics;
-
-  // auto &index = out->index();
-  // for (size_t i = 0; i < verticesSize; ++i) {
-  //   const auto &sourceCoords  = sourceVertices[i].getCoords();
-  //   const auto  matchedVertex = index.getClosestVertex(sourceCoords);
-  //   _vertexIndices[i]         = matchedVertex.index;
-
-  //   // Compute distance between input and output vertiex for the stats
-  //   const auto &matchCoords = out->vertex(matchedVertex.index).getCoords();
-  //   auto        distance    = (sourceCoords - matchCoords).norm();
-  //   distanceStatistics(distance);
-  // }
   _hasComputedMapping = true;
 }
 
@@ -149,7 +130,6 @@ void CoarseGrainingMapping::mapConsistent(const time::Sample &inData, Eigen::Vec
 void CoarseGrainingMapping::clear()
 {
   PRECICE_TRACE();
-  // _vertexIndices.clear();
   _hasComputedMapping = false;
 
   if (getConstraint() == CONSISTENT) {
@@ -186,24 +166,9 @@ void CoarseGrainingMapping::tagMeshFirstRound()
     output()->tagAll();
     input()->tagAll();
     return;
+  } else {
+    PRECICE_ASSERT(false, "Only just-in-time mapping is implemented, but the mapping is not configured as just-in-time.");
   }
-
-  // computeMapping();
-
-  // // Lookup table of all indices used in the mapping
-  // const boost::container::flat_set<int> indexSet(_vertexIndices.begin(), _vertexIndices.end());
-
-  // // Get the source mesh depending on the constraint
-  // const mesh::PtrMesh &source = hasConstraint(CONSERVATIVE) ? output() : input();
-
-  // // Tag all vertices used in the mapping
-  // for (mesh::Vertex &v : source->vertices()) {
-  //   if (indexSet.count(v.getID()) != 0) {
-  //     v.tag();
-  //   }
-  // }
-
-  // clear();
 }
 
 void CoarseGrainingMapping::tagMeshSecondRound()
