@@ -265,8 +265,7 @@ MappingConfiguration::MappingConfiguration(
   addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol});
   addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, verticesPerCluster, relativeOverlap, projectToInput});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
-  addAttributes(coarseGrainingTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGrainDimension, attrFunctionRadius});
-  addAttributes(geoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius});
+  addAttributes(coarseGrainingTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGrainDimension, attrcgRadius});
   addAttributes(geoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius, attrGeoMultiscaleSpreadProfile});
 
   // Now we take care of the subtag executor. We repeat some of the subtags in order to add individual documentation
