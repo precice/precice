@@ -167,7 +167,7 @@ private:
 
   // For coarse graining
   const std::string ATTR_GRAIN_DIMENSION = "grain-dim";
-  const std::string ATTR_FUNCTION_RADIUS = "function-radius";
+  const std::string ATTR_CG_RADIUS       = "radius";
 
   // For the future
   // const std::string ATTR_PARALLELISM           = "parallelism";

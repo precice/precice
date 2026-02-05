@@ -230,8 +230,8 @@ MappingConfiguration::MappingConfiguration(
 
   auto attrGrainDimension = makeXMLAttribute<int>(ATTR_GRAIN_DIMENSION, 0)
                                 .setDocumentation("Dimension to use in the coarse-graining function.");
-  auto attrFunctionRadius = makeXMLAttribute<double>(ATTR_FUNCTION_RADIUS, 0.)
-                                .setDocumentation("Radius or range of the coarsening function (Lucy function).");
+  auto attrcgRadius = makeXMLAttribute<double>(ATTR_CG_RADIUS, 0.)
+                          .setDocumentation("Radius or range of the coarsening function (Lucy function).");
 
   auto attrSolverRtol = makeXMLAttribute(ATTR_SOLVER_RTOL, 1e-9)
                             .setDocumentation("Solver relative tolerance for convergence");
@@ -432,7 +432,7 @@ void MappingConfiguration::xmlTagCallback(
     bool        yDead          = tag.getBooleanAttributeValue(ATTR_Y_DEAD, false);
     bool        zDead          = tag.getBooleanAttributeValue(ATTR_Z_DEAD, false);
     int         grainDimension = tag.getIntAttributeValue(ATTR_GRAIN_DIMENSION, 0);
-    double      functionRadius = tag.getDoubleAttributeValue(ATTR_FUNCTION_RADIUS, 0.);
+    double      cgRadius       = tag.getDoubleAttributeValue(ATTR_CG_RADIUS, 0.);
     double      solverRtol     = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL, 1e-9);
     std::string strPolynomial  = tag.getStringAttributeValue(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
 
@@ -472,7 +472,7 @@ void MappingConfiguration::xmlTagCallback(
       PRECICE_UNREACHABLE("Unknown mapping constraint \"{}\".", constraint);
     }
 
-    ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh, grainDimension, functionRadius, geoMultiscaleType, geoMultiscaleAxis, multiscaleRadius, spreadProfileStr);
+    ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh, grainDimension, cgRadius, geoMultiscaleType, geoMultiscaleAxis, multiscaleRadius, spreadProfileStr);
 
     _rbfConfig = configureRBFMapping(type, strPolynomial, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
@@ -600,7 +600,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     const std::string &fromMeshName,
     const std::string &toMeshName,
     const int          grainDimension,
-    const double       functionRadius,
+    const double       cgRadius,
     const std::string &geoMultiscaleType,
     const std::string &geoMultiscaleAxis,
     const double      &multiscaleRadius,
@@ -669,7 +669,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
   } else if (type == TYPE_LINEAR_CELL_INTERPOLATION) {
     configuredMapping.mapping = PtrMapping(new LinearCellInterpolationMapping(constraintValue, fromMesh->getDimensions()));
   } else if (type == TYPE_COARSE_GRAINING) {
-    configuredMapping.mapping = PtrMapping(new CoarseGrainingMapping(constraintValue, fromMesh->getDimensions(), grainDimension, functionRadius));
+    configuredMapping.mapping = PtrMapping(new CoarseGrainingMapping(constraintValue, fromMesh->getDimensions(), grainDimension, cgRadius));
   } else if (type == TYPE_NEAREST_NEIGHBOR_GRADIENT) {
 
     // NNG is not applicable with the conservative constraint
