@@ -264,6 +264,7 @@ target_sources(testprecice
     tests/serial/just-in-time-mapping/ExplicitRead.cpp
     tests/serial/just-in-time-mapping/ExplicitReadPUM.cpp
     tests/serial/just-in-time-mapping/ExplicitWrite.cpp
+    tests/serial/just-in-time-mapping/ExplicitWriteCG.cpp
     tests/serial/just-in-time-mapping/ExplicitWritePUM.cpp
     tests/serial/just-in-time-mapping/Implicit.cpp
     tests/serial/just-in-time-mapping/ImplicitDataInitialization.cpp
