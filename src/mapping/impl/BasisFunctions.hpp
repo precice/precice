@@ -450,7 +450,7 @@ public:
     return math::pow_int<4>(1.0 - p) * PRECICE_FMA(4, p, 1);
   }
 
-  RadialBasisParameters getFunctionParameters()
+  RadialBasisParameters getFunctionParameters() const
   {
     return _params;
   }

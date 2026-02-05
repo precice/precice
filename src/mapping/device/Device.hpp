@@ -2,7 +2,7 @@
 
 namespace precice::device {
 
-class Ginkgo {
+class Device {
 public:
   static void initialize(int *argc, char ***argv);
 
