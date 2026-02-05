@@ -166,8 +166,7 @@ private:
   const std::string ATTR_SOLVER_RTOL = "solver-rtol";
 
   // For coarse graining
-  const std::string ATTR_GRAIN_DIMENSION = "grain-dim";
-  const std::string ATTR_CG_RADIUS       = "radius";
+  const std::string ATTR_CG_RADIUS = "radius";
 
   // For the future
   // const std::string ATTR_PARALLELISM           = "parallelism";
@@ -275,7 +274,6 @@ private:
       const std::string &type,
       const std::string &fromMeshName,
       const std::string &toMeshName,
-      const int          grainDimension,
       const double       cgRange,
       const std::string &geoMultiscaleType,
       const std::string &geoMultiscaleAxis,

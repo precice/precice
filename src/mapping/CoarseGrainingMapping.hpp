@@ -21,9 +21,8 @@ public:
    *
    * @param[in] constraint Specifies mapping to be consistent or conservative.
    * @param[in] meshDimension Dimension of the meshes
-   * @param[in] grainDimension Dimension of the coarse graining function
    */
-  CoarseGrainingMapping(Constraint constraint, int meshDimension, int grainDimension, double functionRadius);
+  CoarseGrainingMapping(Constraint constraint, int meshDimension, double functionRadius);
 
   /// Computes the mapping coefficients from the in- and output mesh.
   void computeMapping() final override;

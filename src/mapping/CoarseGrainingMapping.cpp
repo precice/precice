@@ -66,12 +66,15 @@ private:
 CoarseGrainingMapping::CoarseGrainingMapping(
     Constraint constraint,
     int        meshDim,
-    int        grainDim,
     double     functionRadius)
     : Mapping(constraint, meshDim, /*requiresGradientData*/ false, Mapping::InitialGuessRequirement::None)
 {
   PRECICE_CHECK(functionRadius > 0, "Function radius must be greater zero.");
-  _lucyFunction = std::make_unique<impl::LucyKernelFunction>(static_cast<short>(grainDim), functionRadius);
+
+  // I always assume that we deal with 3D particles, i.e., the normalization is in 3 space dimensions.
+  // 2D and 1D cases are rather unphysical and there don't seem to be a real use case for them
+  const short grainDim = 3;
+  _lucyFunction        = std::make_unique<impl::LucyKernelFunction>(static_cast<short>(grainDim), functionRadius);
 }
 
 void CoarseGrainingMapping::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
