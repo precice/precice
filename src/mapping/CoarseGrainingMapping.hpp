@@ -24,6 +24,8 @@ public:
    */
   CoarseGrainingMapping(Constraint constraint, int meshDimension, double functionRadius);
 
+  ~CoarseGrainingMapping();
+
   /// Computes the mapping coefficients from the in- and output mesh.
   void computeMapping() final override;
 

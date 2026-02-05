@@ -77,9 +77,11 @@ CoarseGrainingMapping::CoarseGrainingMapping(
   _lucyFunction        = std::make_unique<impl::LucyKernelFunction>(static_cast<short>(grainDim), functionRadius);
 }
 
+CoarseGrainingMapping::~CoarseGrainingMapping() = default;
+
 void CoarseGrainingMapping::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
 {
-  PRECICE_CHECK(false, "consistent constraint is not implemented.");
+  PRECICE_ERROR("consistent constraint is not implemented.");
 }
 
 void CoarseGrainingMapping::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source, impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> target)
@@ -119,12 +121,12 @@ void CoarseGrainingMapping::computeMapping()
 
 void CoarseGrainingMapping::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
-  PRECICE_CHECK(false, "only just-in-time-mapping variant is implemented.");
+  PRECICE_ERROR("only just-in-time-mapping variant is implemented.");
 }
 
 void CoarseGrainingMapping::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
-  PRECICE_CHECK(false, "only just-in-time-mapping conservative variant is implemented.");
+  PRECICE_ERROR("only just-in-time-mapping conservative variant is implemented.");
 }
 
 void CoarseGrainingMapping::clear()
