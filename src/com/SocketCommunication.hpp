@@ -139,6 +139,18 @@ public:
   /// Asynchronously receives a bool from process with given rank.
   PtrRequest aReceive(bool &itemToReceive, Rank rankSender) override;
 
+  /// Gathers an int per process.
+  void gather(int itemToSend, std::vector<int> &itemsToReceive) override
+  {
+    PRECICE_ASSERT(false, "Not implemented!");
+  }
+
+  /// Gathers an array of ints per process.
+  void gather(span<const int> itemToSend, std::vector<std::vector<int>> itemsToReceive, std::vector<int> recvcounts) override
+  {
+    PRECICE_ASSERT(false, "Not implemented!");
+  }
+
   void prepareEstablishment(std::string const &acceptorName,
                             std::string const &requesterName) override;
 

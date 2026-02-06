@@ -476,19 +476,17 @@ void ReceivedPartition::compareBoundingBoxes()
 
     PRECICE_ASSERT(_mesh->getConnectedRanks().empty());
     _mesh->setConnectedRanks(connectedRanks);
-    if (not connectedRanks.empty()) {
-      connectionMap.emplace(0, std::move(connectedRanks));
-      connectedRanksList.push_back(0);
-    }
 
     e7.stop();
     Event e8("partition.compareBoundingBoxes.primary.secondaryConnectedRanks." + _mesh->getName());
 
     // receive connected ranks from secondary ranks and add them to the connection map
-    for (int rank : utils::IntraComm::allSecondaryRanks()) {
-      Event e("partition.compareBoundingBoxes.receive." + std::to_string(rank));
-      std::vector<Rank> secondaryConnectedRanks = utils::IntraComm::getCommunication()->receiveRange(rank, com::asVector<Rank>);
-      e.stop();
+
+    std::vector<std::vector<Rank>> allSecondaryConnectedRanks = utils::IntraComm::getCommunication()->gatherRanges(connectedRanks, com::asVector<int>);
+
+    for (int rank = 0; rank < allSecondaryConnectedRanks.size(); rank++) {
+      std::vector<Rank> secondaryConnectedRanks = allSecondaryConnectedRanks[rank];
+
       if (!secondaryConnectedRanks.empty()) {
         connectedRanksList.push_back(rank);
         connectionMap.emplace(rank, std::move(secondaryConnectedRanks));
@@ -526,7 +524,7 @@ void ReceivedPartition::compareBoundingBoxes()
     Event e7("partition.compareBoundingBoxes.secondary.sendConnectedRanks." + _mesh->getName());
 
     // send connected ranks to primary rank
-    utils::IntraComm::getCommunication()->sendRange(connectedRanks, 0);
+    utils::IntraComm::getCommunication()->gatherRanges(connectedRanks, com::asVector<int>);
 
     e7.stop();
   }

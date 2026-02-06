@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <ostream>
 
+#include <numeric>
 #include "com/MPICommunication.hpp"
 #include "com/MPIRequest.hpp"
 #include "logging/LogMacros.hpp"
@@ -327,6 +328,45 @@ PtrRequest MPICommunication::aReceive(bool &itemToReceive, Rank rankSender)
             &request);
 
   return PtrRequest(new MPIRequest(request));
+}
+
+void MPICommunication::gather(int itemToSend, std::vector<int> &itemsToReceive)
+{
+  Rank rootRank = adjustRank(0);
+
+  MPI_Gather(&itemToSend,
+             1,
+             MPI_INT,
+             &itemsToReceive,
+             1,
+             MPI_INT,
+             rootRank,
+             communicator(rootRank) // TODO: We cannot just assume that the communicator is the same for all!
+  );
+}
+
+void MPICommunication::gather(span<const int> itemToSend, std::vector<std::vector<int>> itemsToReceive, std::vector<int> recvcounts)
+{
+  std::vector<int> displs(recvcounts.size());
+
+  std::exclusive_scan(
+      recvcounts.begin(),
+      recvcounts.end(),
+      displs.begin(),
+      0);
+
+  Rank rootRank = adjustRank(0);
+
+  MPI_Gatherv(itemToSend.data(),
+              itemToSend.size(),
+              MPI_INT,
+              &itemsToReceive,
+              recvcounts.data(),
+              displs.data(),
+              MPI_INT,
+              rootRank,
+              communicator(rootRank) // TODO: We cannot just assume that the communicator is the same for all!
+  );
 }
 
 } // namespace precice::com

@@ -367,6 +367,12 @@ public:
   /// Asynchronously receives a bool from process with given rank.
   virtual PtrRequest aReceive(bool &itemToReceive, Rank rankSender) = 0;
 
+  /// Gathers an int per process.
+  virtual void gather(int itemToSend, std::vector<int> &itemsToReceive) = 0;
+
+  /// Gathers an array of ints per process.
+  virtual void gather(span<const int> itemToSend, std::vector<std::vector<int>> itemsToReceive, std::vector<int> recvcounts) = 0;
+
   /// @}
 
   /// @name Range communication
@@ -391,6 +397,9 @@ public:
 
   /// Receives a range of doubles as a vector<double>
   std::vector<double> receiveRange(Rank rankSender, AsVectorTag<double>);
+
+  /// Sends and receives a range of ints for each connected rank
+  std::vector<std::vector<int>> gatherRanges(span<const int> itemToSend, AsVectorTag<int>);
 
   /// @}
 

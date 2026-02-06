@@ -119,6 +119,12 @@ public:
   /// Asynchronously receives a bool from process with given rank.
   PtrRequest aReceive(bool &itemToReceive, Rank rankSender) override;
 
+  /// Gathers an int per process.
+  void gather(int itemToSend, std::vector<int> &itemsToReceive) override;
+
+  /// Gathers an array of ints per process.
+  void gather(span<const int> itemToSend, std::vector<std::vector<int>> itemsToReceive, std::vector<int> recvcounts) override;
+
 protected:
   /// Returns the communicator.
   virtual MPI_Comm &communicator(Rank rank) = 0;

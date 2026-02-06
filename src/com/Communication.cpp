@@ -366,6 +366,26 @@ std::vector<double> Communication::receiveRange(Rank rankSender, AsVectorTag<dou
   return result;
 }
 
+std::vector<std::vector<int>> Communication::gatherRanges(span<const int> itemToSend, AsVectorTag<int>)
+{
+  std::vector<int> sizes;
+  gather(itemToSend.size(), sizes);
+
+  std::vector<std::vector<int>> result;
+  result.resize(sizes.size());
+
+  for (int i = 0; i < sizes.size(); i++) {
+    PRECICE_ASSERT(sizes[i] >= 0);
+    result[i].resize(sizes[i]);
+  }
+
+  if (sizes.size() > 0) {
+    gather(itemToSend, result, sizes);
+  }
+
+  return result;
+}
+
 int Communication::adjustRank(Rank rank) const
 {
   return rank - _rankOffset;
