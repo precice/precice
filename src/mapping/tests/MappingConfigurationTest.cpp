@@ -120,6 +120,28 @@ BOOST_AUTO_TEST_CASE(RBFPUMConfiguration)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(CGConfiguration)
+{
+  PRECICE_TEST();
+
+  std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
+  std::string file(pathToTests + "mapping-config-cg.xml");
+  using xml::XMLTag;
+  XMLTag                        tag = xml::getRootTag();
+  mesh::PtrDataConfiguration    dataConfig(new mesh::DataConfiguration(tag));
+  mesh::PtrMeshConfiguration    meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
+  mapping::MappingConfiguration mappingConfig(tag, meshConfig);
+  mappingConfig.setExperimental(true);
+  xml::configure(tag, xml::ConfigurationContext{}, file);
+
+  BOOST_TEST(meshConfig->meshes().size() == 1);
+  BOOST_TEST(mappingConfig.mappings().size() == 1);
+  BOOST_TEST(mappingConfig.mappings().at(0).toMesh == meshConfig->meshes().at(0));
+  BOOST_TEST(mappingConfig.mappings().at(0).direction == MappingConfiguration::WRITE);
+  BOOST_TEST(mappingConfig.mappings().at(0).requiresBasisFunction == false);
+}
+
 #ifndef PRECICE_NO_PETSC
 
 PRECICE_TEST_SETUP(1_rank, Require::PETSc)

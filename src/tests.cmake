@@ -44,6 +44,7 @@ target_sources(testprecice
     src/m2n/tests/GatherScatterCommunicationTest.cpp
     src/m2n/tests/PointToPointCommunicationTest.cpp
     src/mapping/tests/AxialGeoMultiscaleMappingTest.cpp
+    src/mapping/tests/CoarseGrainingMappingTest.cpp
     src/mapping/tests/GinkgoRadialBasisFctSolverTest.cpp
     src/mapping/tests/LinearCellInterpolationMappingTest.cpp
     src/mapping/tests/MappingConfigurationTest.cpp
