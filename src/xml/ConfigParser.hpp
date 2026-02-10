@@ -55,6 +55,9 @@ public:
   /// Reads the xml file
   int readXmlFile(std::string const &filePath);
 
+  /// Reads and returns the content of the file.
+  std::string readFileContent(std::string const &filePath) const;
+
   /// returns the hash of the processed XML file
   std::string hash() const;
 
