@@ -175,12 +175,17 @@ std::string ConfigParser::readFileContent(std::string const &filePath) const
   std::ifstream ifs{filePath};
   PRECICE_CHECK(ifs, "XML parser was unable to open configuration file \"{}\"", filePath);
 
+#ifdef _WIN32
+  // On windows, the returned file_size is an upper bound. So we have to read buffered here.
+  std::string content{std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>()};
+#else
   std::error_code ec;
   auto            size = std::filesystem::file_size(filePath, ec);
   PRECICE_CHECK(!ec, "XML parser was unable to get the size of the configuration file \"{}\": {}", filePath, ec.message());
 
   std::string content(size, '\0');
   ifs.read(content.data(), size);
+#endif
 
   PRECICE_CHECK(!content.empty(), "The configuration file \"{}\" is empty.", filePath);
 
