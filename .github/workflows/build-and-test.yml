@@ -88,6 +88,10 @@ jobs:
             CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Debug
+          - IMAGE: 'ubuntu-2604'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Debug
           - IMAGE: 'archlinux'
             CONFIG: MPIPETSc
             CXX: 'g++'
