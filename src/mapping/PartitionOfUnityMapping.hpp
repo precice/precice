@@ -544,7 +544,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   // vertices().size() is here the same as getGlobalNumberOfVertices. Hence, it is much
   // safer to make use of the unfiltered mesh for the parallel tagging.
   //
-  // Drawback: the "estimateClusterRadius" below makes use of the mesh R* index tree, and
+  // Drawback: the "estimateGhostLayerWidth" below makes use of the mesh R* index tree, and
   // constructing the tree on the (unfiltered) global mesh is computationally expensive (O( N logN)).
   // We could pre-filter the global mesh to a local fraction (using our own geometric filtering,
   // maybe with an increased safety margin or even an iterative increase of the safety margin),
@@ -562,14 +562,14 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
   PRECICE_ASSERT(!localBB.isDefault());
 
   if (_clusterRadius.empty())
-    _clusterRadius.push_back(impl::estimateClusterRadius(_verticesPerCluster, filterMesh, localBB).first);
+    _clusterRadius.push_back(impl::estimateGhostLayerWidth(_verticesPerCluster, filterMesh, localBB));
 
   // TODO: once we have the different radii, we need to select the max here
   PRECICE_DEBUG("Cluster radius estimate: {}", _clusterRadius);
   PRECICE_ASSERT(_clusterRadius[0] > 0);
 
   // Now we extend the bounding box by the radius
-  localBB.expandBy(2 * _clusterRadius[0]);
+  localBB.expandBy(_clusterRadius[0]);
   // ... and tag all affected vertices
   auto verticesNew = filterMesh->index().getVerticesInsideBox(localBB);
 

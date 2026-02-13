@@ -220,7 +220,7 @@ void removeTaggedVertices(Vertices &container)
  *
  * @return The estimate (median) and the samples.
  */
-inline std::pair<double, std::vector<double>> estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMesh inMesh, const mesh::BoundingBox &bb)
+inline std::vector<double> sampleClusterRadii(unsigned int verticesPerCluster, mesh::PtrMesh inMesh, const mesh::BoundingBox &bb)
 {
   precice::logging::Logger _log{"mapping::PartitionOfUnityMapping"};
   // Step 1: Generate random samples from the input mesh
@@ -267,15 +267,52 @@ inline std::pair<double, std::vector<double>> estimateClusterRadius(unsigned int
     auto maxRadius = std::max_element(squaredRadius.begin(), squaredRadius.end());
     sampledClusterRadii.emplace_back(std::sqrt(*maxRadius));
   }
+}
 
-  // Step 3: Sort (using nth_element) the sampled radii and select the median as cluster radius
+inline double medianSample(std::vector<double> &sampledClusterRadii)
+{
   PRECICE_ASSERT(sampledClusterRadii.size() % 2 != 0, "Median calculation is only valid for odd number of elements.");
   PRECICE_ASSERT(sampledClusterRadii.size() > 0);
   unsigned int middle = sampledClusterRadii.size() / 2;
   std::nth_element(sampledClusterRadii.begin(), sampledClusterRadii.begin() + middle, sampledClusterRadii.end());
   double clusterRadius = sampledClusterRadii[middle];
 
-  return {clusterRadius, sampledClusterRadii};
+  return clusterRadius;
+}
+
+inline bool requiresAdaptiveClustering(std::vector<double> &sampledClusterRadii, const int dim)
+{
+  double medianRadius         = medianSample(sampledClusterRadii);
+  auto [minRadius, maxRadius] = std::minmax_element(sampledClusterRadii.begin(), sampledClusterRadii.end());
+
+  // The threshold currently means that we accept a four times larger cluster in 2D and a five times larger cluster in 3D
+  // measured by means of the vertices per cluster
+  const double threshold = dim == 2 ? 2.0 : 1.7;
+
+  // in this case, the choice of the radius would be fine, but rather inefficient.
+  // Most likely, we have a domain region which is stronger refined than other parts
+  bool adaptiveEfficiency = medianRadius / *minRadius > threshold;
+
+  // that's the more critical part: our choice is quite small for some regions in the domain
+  // and it could lead to a bad coverage of the domain
+  bool adaptiveCovering = *maxRadius / medianRadius > threshold;
+
+  return adaptiveEfficiency || adaptiveCovering;
+}
+
+inline double estimateGhostLayerWidth(unsigned int verticesPerCluster, mesh::PtrMesh inMesh, const mesh::BoundingBox &bb)
+{
+  auto   samples = sampleClusterRadii(verticesPerCluster, inMesh, bb);
+  double radius  = 0;
+  if (requiresAdaptiveClustering(samples, inMesh->getDimensions())) {
+    // For the adaptive case, we need the max
+    radius = *std::max_element(samples.begin(), samples.end());
+  } else {
+    // the uniform sampling
+    radius = medianSample(samples);
+  }
+  // We need two times the radius to have one layer of clusters in the ghost layer
+  return 2 * radius;
 }
 
 /**
@@ -438,7 +475,7 @@ inline std::tuple<double, Vertices> createAdaptiveClustering(mesh::PtrMesh inMes
 /**
  * @brief Creates a clustering as a collection of Vertices (representing the cluster centers) and a cluster radius,
  * as required for the partition of unity mapping. The algorithm estimates a cluster radius based on the input parameter
- * \p verticesPerCluster (see also \ref estimateClusterRadius above, which is directly used by the function). Afterwards,
+ * \p verticesPerCluster (see also \ref sampleClusterRadii above, which is directly used by the function). Afterwards,
  * the algorithm creates a cartesian-like grid of center vertices, where the distance of the centers is defined through
  * the \p relativeOverlap and the cluster radius. The parameter \p projectClustersToInput moves the cartesian center
  * vertices to the closest vertex from the input mesh, which is useful in case of very irregular meshes or shell-shaped
@@ -521,18 +558,22 @@ inline std::tuple<std::vector<double>, std::vector<Vertices>> createClustering(m
 
   // Step 2: Now we pick random samples from the input mesh and ask the index tree for the k-nearest neighbors
   // in order to estimate the point density and determine a proper cluster radius (see also the function documentation)
-  auto [clusterRadius, sampledClusterRadii] = estimateClusterRadius(verticesPerCluster, inMesh, localBB);
-  PRECICE_DEBUG("Vertex cluster radius: {}", clusterRadius);
+  auto sampledClusterRadii = sampleClusterRadii(verticesPerCluster, inMesh, localBB);
+  bool adaptive            = requiresAdaptiveClustering(sampledClusterRadii, inMesh->getDimensions());
 
-  if (true) {
-    Vertices centers = createUniformClustering(inMesh, outMesh,
-                                               relativeOverlap, projectClustersToInput, clusterRadius, globalBB, startGridAtEdge);
-    return {std::vector<double>{clusterRadius}, std::vector<Vertices>{centers}};
-  } else {
+  if (adaptive) {
+    PRECICE_DEBUG("Computing adaptive clustering");
     // auto [clusterRadius, centerCandidates] = createAdaptiveClustering(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh,
     //                                                                   double relativeOverlap, unsigned int verticesPerCluster,
     //                                                                   bool projectClustersToInput);
     // return {clusterRadius, centers};
+  } else {
+    PRECICE_DEBUG("Computing uniform clustering");
+    auto clusterRadius = medianSample(sampledClusterRadii);
+    PRECICE_DEBUG("Vertex cluster radius: {}", clusterRadius);
+    Vertices centers = createUniformClustering(inMesh, outMesh,
+                                               relativeOverlap, projectClustersToInput, clusterRadius, globalBB, startGridAtEdge);
+    return {std::vector<double>{clusterRadius}, std::vector<Vertices>{centers}};
   }
 }
 } // namespace precice::mapping::impl
