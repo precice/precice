@@ -48,15 +48,15 @@ BOOST_AUTO_TEST_CASE(createClustering2D)
   bool         projectToInput       = false;
   {
     auto [averagePartitionRadius, centerCandidates] = impl::createClustering(inMesh, outMesh, relativeOverlap, verticesPerPartition, projectToInput);
-    BOOST_TEST(averagePartitionRadius == 2.2360679774997898);
-    BOOST_TEST(centerCandidates.size() == 19);
+    BOOST_TEST(averagePartitionRadius[0] == 2.2360679774997898);
+    BOOST_TEST(centerCandidates[0].size() == 19);
   }
 
   {
     projectToInput                                  = true;
     auto [averagePartitionRadius, centerCandidates] = impl::createClustering(inMesh, outMesh, relativeOverlap, verticesPerPartition, projectToInput);
-    BOOST_TEST(averagePartitionRadius == 2.2360679774997898);
-    BOOST_TEST(centerCandidates.size() == 25);
+    BOOST_TEST(averagePartitionRadius[0] == 2.2360679774997898);
+    BOOST_TEST(centerCandidates[0].size() == 25);
   }
 }
 
@@ -84,15 +84,15 @@ BOOST_AUTO_TEST_CASE(createClustering3D)
   bool         projectToInput       = false;
   {
     auto [averagePartitionRadius, centerCandidates] = impl::createClustering(inMesh, outMesh, relativeOverlap, verticesPerPartition, projectToInput);
-    BOOST_TEST(averagePartitionRadius == 1.4142135623730951);
-    BOOST_TEST(centerCandidates.size() == 188);
+    BOOST_TEST(averagePartitionRadius[0] == 1.4142135623730951);
+    BOOST_TEST(centerCandidates[0].size() == 188);
   }
 
   {
     projectToInput                                  = true;
     auto [averagePartitionRadius, centerCandidates] = impl::createClustering(inMesh, outMesh, relativeOverlap, verticesPerPartition, projectToInput);
-    BOOST_TEST(averagePartitionRadius == 1.4142135623730951);
-    BOOST_TEST(centerCandidates.size() == 222);
+    BOOST_TEST(averagePartitionRadius[0] == 1.4142135623730951);
+    BOOST_TEST(centerCandidates[0].size() == 222);
   }
 }
 
