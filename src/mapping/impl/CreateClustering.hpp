@@ -306,6 +306,24 @@ inline std::vector<double> sampleClusterRadii(unsigned int verticesPerCluster, m
     randomSamples.emplace_back(inMesh->index().getClosestVertex(sample).index);
   }
 
+  // Corner samples at (0.25 / 0.75)^D
+  const int dims        = inMesh->getDimensions();
+  const int cornerCount = 1 << dims; // 2^D
+
+  for (int mask = 0; mask < cornerCount; ++mask) {
+    auto sample = bbCenter;
+
+    for (int d = 0; d < dims; ++d) {
+      const double offset =
+          (mask & (1 << d)) ? 0.75 : 0.25;
+
+      sample[d] += (offset - 0.5) * bb.getEdgeLength(d);
+    }
+
+    randomSamples.emplace_back(
+        inMesh->index().getClosestVertex(sample).index);
+  }
+
   // Step 2: Compute the radius of the randomSamples ('centers'), which would have verticesPerCluster vertices
   std::vector<double> sampledClusterRadii;
   for (auto s : randomSamples) {
