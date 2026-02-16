@@ -276,7 +276,8 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::_computeCPU(mesh::PtrMesh
     PRECICE_DEBUG("Bounding Box of the cluster centers {}", _centerMesh.back()->getBoundingBox());
 
     // Uncomment to add a VTK export of the cluster center distribution for visualization purposes
-    exportClusterCentersAsVTU(*_centerMesh.back(), i);
+    // Caution: this hangs if levels are not synchronized
+    // exportClusterCentersAsVTU(*_centerMesh.back(), i);
   }
 
   precice::profiling::Event eWeights("map.pou.computeMapping.computeWeights");
