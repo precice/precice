@@ -9,6 +9,8 @@
 #include "precice/impl/Types.hpp"
 #include "query/Index.hpp"
 // required for the squared distance computation
+#include <boost/container_hash/hash.hpp>
+#include <unordered_map>
 #include "mapping/RadialBasisFctSolver.hpp"
 
 namespace precice::mapping::impl {
@@ -139,24 +141,95 @@ void tagEmptyClusters(Vertices &clusterCenters, double clusterRadius, mesh::PtrM
   });
 }
 
+struct ClusterKey {
+  int     level;
+  int64_t ix, iy;
+
+  // Equality operator is required for unordered_map
+  bool operator==(const ClusterKey &other) const
+  {
+    return level == other.level && ix == other.ix && iy == other.iy;
+  }
+
+  // Boost uses ADL to find this function automatically
+  friend std::size_t hash_value(const ClusterKey &k)
+  {
+    std::size_t seed = 0;
+    boost::hash_combine(seed, k.level);
+    boost::hash_combine(seed, k.ix);
+    boost::hash_combine(seed, k.iy);
+    return seed;
+  }
+};
+
+using ClusterRegistry = std::unordered_map<ClusterKey, std::size_t, boost::hash<ClusterKey>>;
+
+void checkDuplicates(int level, mesh::Vertex &c, std::size_t vertexPosition, ClusterRegistry &hashMap, double tol)
+{
+  // 1. Quantize (using long double for large-scale stability)
+  std::int64_t ix = static_cast<std::int64_t>(std::llround(static_cast<long double>(c.coord(0)) / tol));
+  std::int64_t iy = static_cast<std::int64_t>(std::llround(static_cast<long double>(c.coord(1)) / tol));
+
+  // 2. This could be a more comprehensive search, where neighbors are checked explicitly
+  ClusterKey neighbor_key{level, ix, iy};
+  auto       it = hashMap.find(neighbor_key);
+  if (it != hashMap.end()) {
+    // Potential duplicate found!
+    // TODO: could  add an actual distance check here
+    // if you want to be extremely precise about the 'tol' radius.
+    c.tag();
+  } else {
+    // 3. Not found in any nearby bucket, create new
+    ClusterKey new_key{level, ix, iy};
+    hashMap[new_key] = vertexPosition;
+  }
+
+  // for (int64_t dx = -1; dx <= 1; ++dx) {
+  //     for (int64_t dy = -1; dy <= 1; ++dy) {
+  //         ClusterKey neighbor_key{level, ix + dx, iy + dy};
+  //         auto it = hashMap.find(neighbor_key);
+
+  //         if (it != hashMap.end()) {
+  //             // Potential duplicate found!
+  //             // Optional: You can add an actual distance check here
+  //             // if you want to be extremely precise about the 'tol' radius.
+  //             return it->second;
+  //         }
+  //     }
+  // }
+}
+
 /**
- * @brief Tag empty and too full clusters, return centers which need to be refined
+ * @brief This function does three things:
+ * first, it tags empty clusters
+ * second, it tags clusters too close
+ * third, it tags and returns clusters which are too full and need further refinement
  *
  * @param[in] refinementThreshold upper bound of the vertics per cluster used to flag the center
  *
  * @return vertices for refinement
  */
-Vertices tagEmptyAndRefinementClusters(Vertices &clusterCenters, double clusterRadius, mesh::PtrMesh mesh, std::size_t refinementThreshold)
+Vertices processRefinementClusters(const int level, Vertices &clusterCenters, double clusterRadius, mesh::PtrMesh mesh, std::size_t refinementThreshold)
 {
-  Vertices refinementCenters;
-  for (auto &c : clusterCenters) {
-    auto vert = mesh->index().getVerticesInsideBox(c, clusterRadius);
+  Vertices        refinementCenters;
+  ClusterRegistry hashMap;
+  for (std::size_t i = 0; i < clusterCenters.size(); ++i) {
+    auto &c    = clusterCenters[i];
+    auto  vert = mesh->index().getVerticesInsideBox(c, clusterRadius);
 
+    // Step 1a: tag empty clusters
     if (vert.empty()) {
       c.tag();
+    } else {
+      // TODO: Open question: do we filter before refining or potentially only clusters which are not refined further
+      // the current structure could lead to holes at very deep levels
+
+      // Step 1b: check for duplicates (vertices which are very close to each other) and tag them
+      checkDuplicates(level, c, i, hashMap, clusterRadius / 3.0);
     }
 
-    if (vert.size() > static_cast<unsigned int>(refinementThreshold)) {
+    // Step 2: tag clusters which are too full and add them to the refinement list
+    if (!c.isTagged() && vert.size() > static_cast<unsigned int>(refinementThreshold)) {
       refinementCenters.emplace_back(c);
       c.tag();
     }
@@ -652,7 +725,7 @@ inline std::tuple<std::vector<double>, std::vector<Vertices>> createAdaptiveClus
   // in 2D: split the coarse cluster into 4 clusters
   // each new cluster center should be placed at x +- radius * 15/40
   // each new cluster center should be placed at y +- radius * 15/40
-  const int    refinementThreshold      = 3.5 * verticesPerCluster;
+  const int    refinementThreshold      = 2.5 * verticesPerCluster;
   const double divisionRatio            = 1.6;
   const double splittingPlacementFactor = 15. / 40.;
 
@@ -662,7 +735,8 @@ inline std::tuple<std::vector<double>, std::vector<Vertices>> createAdaptiveClus
 
   while (true) {
 
-    Vertices refinementCenters = tagEmptyAndRefinementClusters(tmpClustering, tmpRadius, inMesh, refinementThreshold);
+    Vertices refinementCenters = processRefinementClusters(static_cast<int>(clusterRadii.size()),
+                                                           tmpClustering, tmpRadius, inMesh, refinementThreshold);
     removeTaggedVertices(tmpClustering);
     clusterRadii.emplace_back(tmpRadius);
     clustering.emplace_back(tmpClustering);

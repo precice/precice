@@ -260,7 +260,7 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::_computeCPU(mesh::PtrMesh
     }
 
     // Log the average number of resulting clusters
-    PRECICE_DEBUG("Partition of unity data mapping between mesh \"{}\" and mesh \"{}\": mesh \"{}\" on rank {} was decomposed into {} clusters on level {} of {}.", this->input()->getName(), this->output()->getName(), inMesh->getName(), utils::IntraComm::getRank(), levelCluster.size(), i, _clusterRadius.size());
+    PRECICE_INFO("Partition of unity data mapping between mesh \"{}\" and mesh \"{}\": mesh \"{}\" on rank {} was decomposed into {} clusters on level {} of {}.", this->input()->getName(), this->output()->getName(), inMesh->getName(), utils::IntraComm::getRank(), levelCluster.size(), i, _clusterRadius.size());
 
     if (levelCluster.size() > 0) {
       PRECICE_DEBUG("Average number of vertices per cluster {}", std::transform_reduce(
