@@ -164,39 +164,31 @@ struct ClusterKey {
 
 using ClusterRegistry = std::unordered_map<ClusterKey, std::size_t, boost::hash<ClusterKey>>;
 
-void checkDuplicates(int level, mesh::Vertex &c, std::size_t vertexPosition, ClusterRegistry &hashMap, double tol)
+void checkDuplicates(int level, mesh::Vertex &c, std::size_t vertexPosition, const Vertices &vertices, ClusterRegistry &hashMap, double tol)
 {
-  // 1. Quantize (using long double for large-scale stability)
+  // 1. Discretize the center space
   std::int64_t ix = static_cast<std::int64_t>(std::llround(static_cast<long double>(c.coord(0)) / tol));
   std::int64_t iy = static_cast<std::int64_t>(std::llround(static_cast<long double>(c.coord(1)) / tol));
 
   // 2. This could be a more comprehensive search, where neighbors are checked explicitly
-  ClusterKey neighbor_key{level, ix, iy};
-  auto       it = hashMap.find(neighbor_key);
-  if (it != hashMap.end()) {
-    // Potential duplicate found!
-    // TODO: could  add an actual distance check here
-    // if you want to be extremely precise about the 'tol' radius.
-    c.tag();
-  } else {
-    // 3. Not found in any nearby bucket, create new
-    ClusterKey new_key{level, ix, iy};
-    hashMap[new_key] = vertexPosition;
+  for (int64_t dx = -1; dx <= 1; ++dx) {
+    for (int64_t dy = -1; dy <= 1; ++dy) {
+      ClusterKey key{level, ix + dx, iy + dy};
+      auto       it = hashMap.find(key);
+      if (it != hashMap.end()) {
+        // Duplicate in the hash table
+        const auto &other = vertices[it->second];
+        if (computeSquaredDifference(c.rawCoords(), other.rawCoords()) < 2 * math::pow_int<2>(tol)) {
+          c.tag();
+          return;
+        }
+      }
+    }
   }
 
-  // for (int64_t dx = -1; dx <= 1; ++dx) {
-  //     for (int64_t dy = -1; dy <= 1; ++dy) {
-  //         ClusterKey neighbor_key{level, ix + dx, iy + dy};
-  //         auto it = hashMap.find(neighbor_key);
-
-  //         if (it != hashMap.end()) {
-  //             // Potential duplicate found!
-  //             // Optional: You can add an actual distance check here
-  //             // if you want to be extremely precise about the 'tol' radius.
-  //             return it->second;
-  //         }
-  //     }
-  // }
+  // 3. Not found in any nearby bucket, create new
+  ClusterKey new_key{level, ix, iy};
+  hashMap[new_key] = vertexPosition;
 }
 
 /**
@@ -225,7 +217,7 @@ Vertices processRefinementClusters(const int level, Vertices &clusterCenters, do
       // the current structure could lead to holes at very deep levels
 
       // Step 1b: check for duplicates (vertices which are very close to each other) and tag them
-      checkDuplicates(level, c, i, hashMap, clusterRadius / 3.0);
+      checkDuplicates(level, c, i, clusterCenters, hashMap, clusterRadius / 3.0);
     }
 
     // Step 2: tag clusters which are too full and add them to the refinement list
