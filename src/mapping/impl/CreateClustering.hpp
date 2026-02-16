@@ -217,6 +217,7 @@ Vertices processRefinementClusters(const int level, Vertices &clusterCenters, do
       // the current structure could lead to holes at very deep levels
 
       // Step 1b: check for duplicates (vertices which are very close to each other) and tag them
+      // The filtering threshold here (3.0) might be a bit aggressive. Lower -> more filtering, higher -> less filtering
       checkDuplicates(level, c, i, clusterCenters, hashMap, clusterRadius / 3.0);
     }
 
