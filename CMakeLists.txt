@@ -287,14 +287,9 @@ if(PRECICE_FEATURE_GINKGO_MAPPING OR PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING)
   endif()
   include(CMakeDependentOption)
 
-  cmake_dependent_option(PRECICE_WITH_CUDA "Enable Ginkgo Cuda support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_CUDA" OFF)
-  cmake_dependent_option(PRECICE_WITH_CUDA "Enable Kokkos Cuda support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_CUDA" OFF)
-
-  cmake_dependent_option(PRECICE_WITH_HIP "Enable Ginkgo HIP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_HIP" OFF)
-  cmake_dependent_option(PRECICE_WITH_HIP "Enable Kokkos HIP support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_HIP" OFF)
-
-  cmake_dependent_option(PRECICE_WITH_OPENMP "Enable Ginkgo OpenMP support in preCICE" ON "PRECICE_FEATURE_GINKGO_MAPPING;Kokkos_ENABLE_OPENMP" OFF)
-  cmake_dependent_option(PRECICE_WITH_OPENMP "Enable Kokkos OpenMP support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_OPENMP" OFF)
+  cmake_dependent_option(PRECICE_WITH_CUDA "Enable CUDA support in preCICE through Kokkos or Ginkgo" ON "Kokkos_ENABLE_CUDA AND (PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING OR PRECICE_FEATURE_GINKGO_MAPPING)" OFF)
+  cmake_dependent_option(PRECICE_WITH_HIP "Enable HIP support in preCICE through Kokkos or Ginkgo" ON "Kokkos_ENABLE_HIP AND (PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING OR PRECICE_FEATURE_GINKGO_MAPPING)" OFF)
+  cmake_dependent_option(PRECICE_WITH_OPENMP "Enable OpenMP support in preCICE through Kokkos or Ginkgo" ON "Kokkos_ENABLE_OPENMP AND (PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING OR PRECICE_FEATURE_GINKGO_MAPPING)" OFF)
 
   # SYCL is only supported in Kokkos-kernels currently
   cmake_dependent_option(PRECICE_WITH_SYCL "Enable Kokkos SYCL support in preCICE" ON "PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING;Kokkos_ENABLE_SYCL" OFF)
