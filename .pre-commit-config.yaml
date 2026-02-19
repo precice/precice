@@ -54,3 +54,7 @@ repos:
     require_serial: true
     language: python
     types_or: [c, c++]
+  - id: eigen-internals
+    name: Check for Eigen internals
+    language: pygrep
+    entry: "#include *<Eigen/src/"

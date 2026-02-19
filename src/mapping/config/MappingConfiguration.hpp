@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "logging/Logger.hpp"
+#include "mapping/CoarseGrainingMapping.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfigurationTypes.hpp"
@@ -37,7 +38,7 @@ public:
   };
 
   struct GinkgoParameter {
-    std::string  executor            = "reference-executor";
+    std::string  executor            = "cpu"; // Default used for PUM
     std::string  solver              = "cg-solver";
     std::string  preconditioner      = "jacobi-preconditioner";
     double       residualNorm        = 1e-8;
@@ -134,6 +135,7 @@ private:
   const std::string TYPE_RBF_GLOBAL_ITERATIVE        = "rbf-global-iterative";
   const std::string TYPE_RBF_PUM_DIRECT              = "rbf-pum-direct";
   const std::string TYPE_RBF_ALIAS                   = "rbf";
+  const std::string TYPE_COARSE_GRAINING             = "coarse-graining";
   const std::string TYPE_AXIAL_GEOMETRIC_MULTISCALE  = "axial-geometric-multiscale";
   const std::string TYPE_RADIAL_GEOMETRIC_MULTISCALE = "radial-geometric-multiscale";
 
@@ -162,6 +164,9 @@ private:
 
   // For iterative RBFs
   const std::string ATTR_SOLVER_RTOL = "solver-rtol";
+
+  // For coarse graining
+  const std::string ATTR_CG_RADIUS = "radius";
 
   // For the future
   // const std::string ATTR_PARALLELISM           = "parallelism";
@@ -216,10 +221,13 @@ private:
   const std::string EXECUTOR_CPU    = "cpu";
   const std::string EXECUTOR_CUDA   = "cuda";
   const std::string EXECUTOR_HIP    = "hip";
+  const std::string EXECUTOR_SYCL   = "sycl";
   const std::string EXECUTOR_OMP    = "openmp";
 
-  const std::string ATTR_DEVICE_ID = "gpu-device-id";
-  const std::string ATTR_N_THREADS = "n-threads";
+  const std::string ATTR_DEVICE_ID      = "gpu-device-id";
+  const std::string ATTR_N_THREADS      = "n-threads";
+  const std::string ATTR_EXECUTION_MODE = "execution-mode";
+
   // const std::string ATTR_ENABLE_UNIFIED_MEMORY = "enable-unified-memory";
   // const std::string ATTR_SOLVER                = "solver";
   // const std::string ATTR_USE_PRECONDITIONER    = "use-preconditioner";
@@ -245,12 +253,14 @@ private:
       CPU,
       CUDA,
       HIP,
+      SYCL,
       OpenMP
     };
 
     Executor executor = Executor::CPU;
     int      deviceId{};
     int      nThreads{};
+    bool     computeEvaluationOffline = true;
   };
 
   std::unique_ptr<ExecutorConfiguration> _executorConfig;
@@ -271,6 +281,7 @@ private:
       const std::string &type,
       const std::string &fromMeshName,
       const std::string &toMeshName,
+      const double       cgRange,
       const std::string &geoMultiscaleDimension,
       const std::string &geoMultiscaleType,
       const std::string &geoMultiscaleAxis,

@@ -772,9 +772,8 @@ void BaseCouplingScheme::initializeTXTWriters()
         _convergenceWriter->addData(convMeasure.logHeader(), io::TXTTableWriter::DOUBLE);
       }
       if (_acceleration) {
-        _iterationsWriter->addData("QNColumns", io::TXTTableWriter::INT);
-        _iterationsWriter->addData("DeletedQNColumns", io::TXTTableWriter::INT);
-        _iterationsWriter->addData("DroppedQNColumns", io::TXTTableWriter::INT);
+        // Ask acceleration to add any custom iteration columns
+        _acceleration->addLogEntries(*_iterationsWriter);
       }
     }
   }
@@ -791,18 +790,8 @@ void BaseCouplingScheme::advanceTXTWriters()
     _iterationsWriter->writeData("Convergence", converged ? 1 : 0);
 
     if (not doesFirstStep() && _acceleration) {
-      std::shared_ptr<precice::acceleration::BaseQNAcceleration> qnAcceleration = std::dynamic_pointer_cast<precice::acceleration::BaseQNAcceleration>(_acceleration);
-      if (qnAcceleration) {
-        // Only write values for additional columns, if using a QN-based acceleration scheme
-        _iterationsWriter->writeData("QNColumns", qnAcceleration->getLSSystemCols());
-        _iterationsWriter->writeData("DeletedQNColumns", qnAcceleration->getDeletedColumns());
-        _iterationsWriter->writeData("DroppedQNColumns", qnAcceleration->getDroppedColumns());
-      } else {
-        // non-breaking implementation uses "0" for these columns (delete columns in the future?)
-        _iterationsWriter->writeData("QNColumns", 0);
-        _iterationsWriter->writeData("DeletedQNColumns", 0);
-        _iterationsWriter->writeData("DroppedQNColumns", 0);
-      }
+      // Let the acceleration write its custom iteration column values
+      _acceleration->writeLogEntries(*_iterationsWriter);
     }
   }
 }

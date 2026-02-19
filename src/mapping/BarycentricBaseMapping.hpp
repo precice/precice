@@ -7,6 +7,12 @@
 
 namespace precice::mapping {
 
+struct Operation {
+  VertexID out;
+  VertexID in;
+  double   weight;
+};
+
 /**
  * @brief Base class for interpolation based mappings, where mapping is done using a geometry-based linear combination of input values.
  *  Subclasses differ by the way computeMapping() fills the _interpolations and by mesh tagging. Mapping itself is shared.
@@ -31,7 +37,13 @@ protected:
   /// @copydoc Mapping::mapConsistent
   void mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) override;
 
-  std::vector<Polation> _interpolations;
+  /// Takes a polation and registers each weighed input as one Operation
+  void addPolation(VertexID out, const Polation &p);
+
+  /// Post processed operations after the mapping has been computed
+  void postProcessOperations();
+
+  std::vector<Operation> _operations;
 };
 
 } // namespace precice::mapping

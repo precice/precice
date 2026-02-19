@@ -176,6 +176,9 @@ target_sources(preciceCore
     src/mapping/AxialGeoMultiscaleMapping.hpp
     src/mapping/BarycentricBaseMapping.cpp
     src/mapping/BarycentricBaseMapping.hpp
+    src/mapping/BatchedRBFSolver.hpp
+    src/mapping/CoarseGrainingMapping.cpp
+    src/mapping/CoarseGrainingMapping.hpp
     src/mapping/GinkgoDefinitions.hpp
     src/mapping/GinkgoRadialBasisFctSolver.hpp
     src/mapping/LinearCellInterpolationMapping.cpp
@@ -268,8 +271,11 @@ target_sources(preciceCore
     src/precice/impl/ParticipantImpl.hpp
     src/precice/impl/ParticipantState.cpp
     src/precice/impl/ParticipantState.hpp
+    src/precice/impl/ProvidedMeshContext.hpp
     src/precice/impl/ReadDataContext.cpp
     src/precice/impl/ReadDataContext.hpp
+    src/precice/impl/ReceivedMeshContext.cpp
+    src/precice/impl/ReceivedMeshContext.hpp
     src/precice/impl/SharedPointer.hpp
     src/precice/impl/Types.hpp
     src/precice/impl/ValidationMacros.hpp

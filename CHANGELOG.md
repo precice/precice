@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 3.3.1
+
+- Added CMake option `Boost_USE_STATIC_LIBS` defaulting to OFF which forces Boost to find shared library by default. (https://github.com/precice/precice/pull/2415)
+- Fixed compilation error on non-POSIX systems due to unused inclusion of `<string.h>` (https://github.com/precice/precice/pull/2424)
+- Fixed compilation with C++20 required by Kokkos 5.0.0 (https://github.com/precice/precice/pull/2410)
+- Fixed incorrect macro for Windows detection. (https://github.com/precice/precice/pull/2424)
+- Fixed incorrect rank event output when nesting user-defined profiling sections. (https://github.com/precice/precice/pull/2393)
+- Fixed logging of filtered vertices for direct mesh access. (https://github.com/precice/precice/pull/2427)
+- Fixed preprocessor if inside function-like macro invocation leading to errors in MSVC. (https://github.com/precice/precice/pull/2424)
+
 ## 3.3.0
 
 - Added CMake option `PRECICE_FEATURE_PROFILING_COMPRESSION` to optionally enable LZMA compression of the textual records of the profiling files. (https://github.com/precice/precice/pull/2328)

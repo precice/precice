@@ -10,6 +10,7 @@
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "cplscheme/CouplingData.hpp"
+#include "io/TXTTableWriter.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -748,6 +749,20 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
   _preconditioner->initialize(subVectorSizes);
 
   specializedInitializeVectorsAndPreconditioner(cplData);
+}
+
+void BaseQNAcceleration::addLogEntries(io::TXTTableWriter &writer) const
+{
+  writer.addData("QNColumns", io::TXTTableWriter::INT);
+  writer.addData("DeletedQNColumns", io::TXTTableWriter::INT);
+  writer.addData("DroppedQNColumns", io::TXTTableWriter::INT);
+}
+
+void BaseQNAcceleration::writeLogEntries(io::TXTTableWriter &writer) const
+{
+  writer.writeData("QNColumns", getLSSystemCols());
+  writer.writeData("DeletedQNColumns", getDeletedColumns());
+  writer.writeData("DroppedQNColumns", getDroppedColumns());
 }
 
 } // namespace acceleration

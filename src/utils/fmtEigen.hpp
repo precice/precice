@@ -17,6 +17,6 @@ struct fmt::formatter<Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime
   template <typename FormatContext>
   auto format(const Eigen::Matrix<Scalar, RowsAtCompileTime, ColsAtCompileTime> &v, FormatContext &ctx) const
   {
-    return format_to(ctx.out(), "{}", v.format(precice::utils::eigenio::wkt()));
+    return fmt::format_to(ctx.out(), "{}", v.format(precice::utils::eigenio::wkt()));
   }
 };
