@@ -196,9 +196,12 @@ MappingConfiguration::MappingConfiguration(
   std::list<XMLTag> coarseGrainingTags{
       XMLTag{*this, TYPE_COARSE_GRAINING, occ, TAG}.setDocumentation("Coarse graining specifically designed for particle-mesh coupling to write data from the particles to the mesh. The mapping transforms an extensive quantity (e.g., volume, force) into an intensive quantity (e.g., porosity, force-density). "
                                                                      " Currently implemented as just-in-time mapping. Although the constraint does not really fit here (the input is conservative, the output not), we classify it as \"conservative\" for the configuration.")};
-  std::list<XMLTag> geoMultiscaleTags{
-      XMLTag{*this, TYPE_AXIAL_GEOMETRIC_MULTISCALE, occ, TAG}.setDocumentation("Axial geometric multiscale mapping between one 1D and multiple 3D vertices."),
-      XMLTag{*this, TYPE_RADIAL_GEOMETRIC_MULTISCALE, occ, TAG}.setDocumentation("Radial geometric multiscale mapping between multiple 1D and multiple 3D vertices, distributed along a principle axis.")};
+  std::list<XMLTag> axialGeoMultiscaleTags{
+      XMLTag{*this, TYPE_AXIAL_GEOMETRIC_MULTISCALE, occ, TAG}
+          .setDocumentation("Axial geometric multiscale mapping between one 1D and multiple 3D vertices.")};
+  std::list<XMLTag> radialGeoMultiscaleTags{
+      XMLTag{*this, TYPE_RADIAL_GEOMETRIC_MULTISCALE, occ, TAG}
+          .setDocumentation("Radial geometric multiscale mapping between multiple 1D and multiple 3D vertices, distributed along a principle axis.")};
 
   // List of all attributes with corresponding documentation
   auto attrDirection = XMLAttribute<std::string>(ATTR_DIRECTION)
@@ -271,7 +274,10 @@ MappingConfiguration::MappingConfiguration(
   addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, verticesPerCluster, relativeOverlap, projectToInput});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
   addAttributes(coarseGrainingTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrcgRadius});
-  addAttributes(geoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGeoMultiscaleDimension, attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius, attrGeoMultiscaleSpreadProfile, attrGeoMultiscaleCrossSection});
+  addAttributes(axialGeoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
+  addAttributes(radialGeoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
+  addAttributes(axialGeoMultiscaleTags, {attrGeoMultiscaleDimension, attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius, attrGeoMultiscaleSpreadProfile, attrGeoMultiscaleCrossSection});
+  addAttributes(radialGeoMultiscaleTags, {attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius});
 
   // Now we take care of the subtag executor. We repeat some of the subtags in order to add individual documentation
   XMLTag::Occurrence once = XMLTag::OCCUR_NOT_OR_ONCE;
@@ -393,7 +399,8 @@ MappingConfiguration::MappingConfiguration(
   parent.addSubtags(pumDirectTags);
   parent.addSubtags(rbfAliasTag);
   parent.addSubtags(coarseGrainingTags);
-  parent.addSubtags(geoMultiscaleTags);
+  parent.addSubtags(axialGeoMultiscaleTags);
+  parent.addSubtags(radialGeoMultiscaleTags);
 }
 
 void MappingConfiguration::setExperimental(
