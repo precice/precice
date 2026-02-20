@@ -23,12 +23,24 @@ target_sources(testprecice
     tests/fundamental/profiling/UserProfiling.cpp
     tests/geometric-multiscale/AxialGeoMultiscaleParabolic2D3D.cpp
     tests/geometric-multiscale/AxialGeoMultiscaleParabolic2D3DReverse.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarParabolic1D2D.cpp
     tests/geometric-multiscale/AxialGeoMultiscaleScalarParabolic1D3D.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarParabolic1D3D_Square.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarParabolic2D3D_Square.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarUniform1D2D.cpp
     tests/geometric-multiscale/AxialGeoMultiscaleScalarUniform1D3D.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarUniform1D3D_Square.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarUniform2D3D_Square.cpp
     tests/geometric-multiscale/AxialGeoMultiscaleUniform2D3D.cpp
     tests/geometric-multiscale/AxialGeoMultiscaleUniform2D3DReverse.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorParabolic1D2D.cpp
     tests/geometric-multiscale/AxialGeoMultiscaleVectorParabolic1D3D.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorParabolic1D3D_Square.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorParabolic2D3D_Square.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorUniform1D2D.cpp
     tests/geometric-multiscale/AxialGeoMultiscaleVectorUniform1D3D.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorUniform1D3D_Square.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorUniform2D3D_Square.cpp
     tests/geometric-multiscale/RadialGeoMultiscale.cpp
     tests/parallel/CouplingOnLine.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
