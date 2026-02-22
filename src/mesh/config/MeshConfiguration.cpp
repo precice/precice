@@ -80,9 +80,9 @@ void MeshConfiguration::xmlTagCallback(
       }
     }
     PRECICE_CHECK(found,
-                  "Data with name \"{}\" used by mesh \"{}\" is not defined. "
+                  "[Context: Error inside <{}> tag] Data with name \"{}\" used by mesh \"{}\" is not defined. "
                   "Please define a data tag with name=\"{}\".",
-                  name, _meshes.back()->getName(), name);
+                  tag.getFullName(), name, _meshes.back()->getName(), name);
   }
 }
 
