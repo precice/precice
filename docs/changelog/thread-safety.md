@@ -1,0 +1,1 @@
+- Added thread safety to the Participant API by introducing mutex-based synchronization for all public methods, enabling safe concurrent access from multiple threads.
