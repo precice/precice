@@ -79,10 +79,20 @@ void MeshConfiguration::xmlTagCallback(
         break;
       }
     }
+    std::string availableData;
+    for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
+      if (!availableData.empty())
+        availableData += ", ";
+      availableData += "\"" + data.name + "\"";
+    }
+    if (availableData.empty())
+      availableData = "(none)";
     PRECICE_CHECK(found,
                   "Data with name \"{}\" used by mesh \"{}\" is not defined. "
-                  "Please define a data tag with name=\"{}\".",
-                  name, _meshes.back()->getName(), name);
+                  "Please define a <data:scalar name=\"{}\"/> or <data:vector name=\"{}\"/> tag "
+                  "in the <precice-configuration> section. "
+                  "Currently defined data: {}.",
+                  name, _meshes.back()->getName(), name, name, availableData);
   }
 }
 
