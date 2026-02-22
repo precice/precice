@@ -67,9 +67,17 @@ void OnStartElementNs(
 
   auto pParser = static_cast<ConfigParser *>(ctx);
 
+  int lineNumber = -1;
+  if (pParser->_parserCtxt) {
+    auto ctxt = static_cast<xmlParserCtxtPtr>(pParser->_parserCtxt);
+    if (ctxt->input) {
+      lineNumber = ctxt->input->line;
+    }
+  }
+
   std::string_view sPrefix(prefix == nullptr ? "" : reinterpret_cast<const char *>(prefix));
 
-  pParser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap);
+  pParser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap, lineNumber);
 }
 
 void OnEndElementNs(
@@ -191,7 +199,9 @@ int ConfigParser::readXmlFile(std::string const &filePath)
   xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
                                                   content.c_str(), content.size(), nullptr);
 
+  _parserCtxt = ctxt;
   xmlParseChunk(ctxt, nullptr, 0, 1);
+  _parserCtxt = nullptr;
   xmlFreeParserCtxt(ctxt);
   xmlCleanupParser();
 
@@ -263,6 +273,7 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
     }
 
     pDefSubTag->_configuredNamespaces[pDefSubTag->_namespace] = true;
+    pDefSubTag->setLineNumber(subtag->m_LineNumber);
     pDefSubTag->readAttributes(subtag->m_aAttributes);
     pDefSubTag->_listener.xmlTagCallback(context, *pDefSubTag);
     pDefSubTag->_configured = true;
@@ -277,13 +288,15 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 void ConfigParser::OnStartElement(
     std::string_view    localname,
     std::string_view    prefix,
-    CTag::AttributePair attributes)
+    CTag::AttributePair attributes,
+    int                 lineNumber)
 {
   auto pTag = std::make_shared<CTag>();
 
   pTag->m_Prefix      = prefix;
   pTag->m_Name        = localname;
   pTag->m_aAttributes = std::move(attributes);
+  pTag->m_LineNumber  = lineNumber;
 
   if (not m_CurrentTags.empty()) {
     auto pParentTag = m_CurrentTags.back();

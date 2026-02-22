@@ -25,7 +25,8 @@ public:
   struct CTag {
     std::string m_Name;
     std::string m_Prefix;
-    bool        m_Used = false;
+    bool        m_Used       = false;
+    int         m_LineNumber = -1;
 
     using AttributePair = std::map<std::string, std::string>;
     AttributePair                      m_aAttributes;
@@ -55,6 +56,8 @@ public:
   /// Reads the xml file
   int readXmlFile(std::string const &filePath);
 
+  void *_parserCtxt = nullptr;
+
   /// returns the hash of the processed XML file
   std::string hash() const;
 
@@ -69,7 +72,8 @@ public:
   void OnStartElement(
       std::string_view    localname,
       std::string_view    prefix,
-      CTag::AttributePair attributes);
+      CTag::AttributePair attributes,
+      int                 lineNumber);
 
   /// Callback for End-Tag
   void OnEndElement();

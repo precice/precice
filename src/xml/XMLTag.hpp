@@ -199,6 +199,15 @@ public:
     return _occurrence;
   }
 
+  void setLineNumber(int line)
+  {
+    _lineNumber = line;
+  }
+  int getLineNumber() const
+  {
+    return _lineNumber;
+  }
+
   /// reads all attributes of this tag
   void readAttributes(const std::map<std::string, std::string> &aAttributes);
 
@@ -219,6 +228,8 @@ private:
   std::string _doc;
 
   bool _configured = false;
+
+  int _lineNumber = -1;
 
   Occurrence _occurrence;
 
