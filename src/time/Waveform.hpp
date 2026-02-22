@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <boost/range.hpp>
+#include <mutex>
 #include <optional>
 #include "logging/Logger.hpp"
 #include "math/Bspline.hpp"
@@ -161,6 +162,9 @@ private:
   int _degree;
 
   mutable std::optional<math::Bspline> _bspline;
+
+  /// Mutex for thread-safe _bspline initialization
+  mutable std::mutex _bsplineMutex;
 
   /**
    * @brief Computes which degree may be used for interpolation.

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <mutex>
 #include <precice/Version.h>
 #include <precice/export.h>
 #include <precice/span.hpp>
@@ -1212,6 +1213,9 @@ public:
 private:
   /// Pointer to implementation of Participant.
   std::unique_ptr<impl::ParticipantImpl> _impl;
+
+  /// Mutex for thread-safe API access
+  mutable std::mutex _apiMutex;
 
   // @brief To allow white box tests.
   friend struct testing::WhiteboxAccessor;

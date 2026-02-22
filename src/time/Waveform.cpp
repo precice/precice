@@ -219,9 +219,13 @@ SampleResult Waveform::sample(double time) const
   }
 
   // Create a new bspline if _bspline does not already contain a spline
+  // Use double-checked locking pattern for thread-safety
   if (!_bspline.has_value()) {
-    auto [times, values] = getTimesAndValues();
-    _bspline.emplace(times, values, usedDegree);
+    std::scoped_lock lock(_bsplineMutex);
+    if (!_bspline.has_value()) {
+      auto [times, values] = getTimesAndValues();
+      _bspline.emplace(times, values, usedDegree);
+    }
   }
 
   return _bspline.value().interpolateAt(time);

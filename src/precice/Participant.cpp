@@ -1,3 +1,4 @@
+#include <mutex>
 #include <optional>
 #include <string_view>
 
@@ -45,73 +46,87 @@ Participant::~Participant() = default;
 
 void Participant::initialize()
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->initialize();
 }
 
 void Participant::advance(
     double computedTimeStepSize)
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->advance(computedTimeStepSize);
 }
 
 void Participant::finalize()
 {
+  std::scoped_lock lock(_apiMutex);
   return _impl->finalize();
 }
 
 int Participant::getMeshDimensions(::precice::string_view meshName) const
 {
+  std::scoped_lock lock(_apiMutex);
   return _impl->getMeshDimensions(toSV(meshName));
 }
 
 int Participant::getDataDimensions(::precice::string_view meshName, ::precice::string_view dataName) const
 {
+  std::scoped_lock lock(_apiMutex);
   return _impl->getDataDimensions(toSV(meshName), toSV(dataName));
 }
 
 bool Participant::isCouplingOngoing() const
 {
+  std::scoped_lock lock(_apiMutex);
   return _impl->isCouplingOngoing();
 }
 
 bool Participant::isTimeWindowComplete() const
 {
+  std::scoped_lock lock(_apiMutex);
   return _impl->isTimeWindowComplete();
 }
 
 double Participant::getMaxTimeStepSize() const
 {
+  std::scoped_lock lock(_apiMutex);
   return _impl->getMaxTimeStepSize();
 }
 
 bool Participant::requiresInitialData()
 {
+  std::scoped_lock lock(_apiMutex);
   return _impl->requiresInitialData();
 }
 
 bool Participant::requiresReadingCheckpoint()
 {
+  std::scoped_lock lock(_apiMutex);
   return _impl->requiresReadingCheckpoint();
 }
 
 bool Participant::requiresWritingCheckpoint()
 {
+  std::scoped_lock lock(_apiMutex);
   return _impl->requiresWritingCheckpoint();
 }
 
 bool Participant::requiresMeshConnectivityFor(::precice::string_view meshName) const
 {
+  std::scoped_lock lock(_apiMutex);
   return _impl->requiresMeshConnectivityFor(toSV(meshName));
 }
 
 void Participant::resetMesh(::precice::string_view meshName)
 {
+  std::scoped_lock lock(_apiMutex);
   return _impl->resetMesh(toSV(meshName));
 }
 
 bool Participant::requiresGradientDataFor(::precice::string_view meshName,
                                           ::precice::string_view dataName) const
 {
+  std::scoped_lock lock(_apiMutex);
   return _impl->requiresGradientDataFor(toSV(meshName), toSV(dataName));
 }
 
@@ -119,12 +134,14 @@ VertexID Participant::setMeshVertex(
     ::precice::string_view        meshName,
     ::precice::span<const double> coordinates)
 {
+  std::scoped_lock lock(_apiMutex);
   return _impl->setMeshVertex(toSV(meshName), coordinates);
 }
 
 int Participant::getMeshVertexSize(
     ::precice::string_view meshName) const
 {
+  std::scoped_lock lock(_apiMutex);
   return _impl->getMeshVertexSize(toSV(meshName));
 }
 
@@ -133,6 +150,7 @@ void Participant::setMeshVertices(
     ::precice::span<const double> coordinates,
     ::precice::span<VertexID>     ids)
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->setMeshVertices(toSV(meshName), coordinates, ids);
 }
 
@@ -141,6 +159,7 @@ void Participant::setMeshEdge(
     VertexID               first,
     VertexID               second)
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->setMeshEdge(toSV(meshName), first, second);
 }
 
@@ -148,6 +167,7 @@ void Participant::setMeshEdges(
     ::precice::string_view          meshName,
     ::precice::span<const VertexID> ids)
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->setMeshEdges(toSV(meshName), ids);
 }
 
@@ -157,6 +177,7 @@ void Participant::setMeshTriangle(
     VertexID               second,
     VertexID               third)
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->setMeshTriangle(toSV(meshName), first, second, third);
 }
 
@@ -164,6 +185,7 @@ void Participant::setMeshTriangles(
     ::precice::string_view          meshName,
     ::precice::span<const VertexID> ids)
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->setMeshTriangles(toSV(meshName), ids);
 }
 
@@ -174,6 +196,7 @@ void Participant::setMeshQuad(
     VertexID               third,
     VertexID               fourth)
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->setMeshQuad(toSV(meshName), first, second, third, fourth);
 }
 
@@ -181,6 +204,7 @@ void Participant::setMeshQuads(
     ::precice::string_view          meshName,
     ::precice::span<const VertexID> ids)
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->setMeshQuads(toSV(meshName), ids);
 }
 
@@ -191,6 +215,7 @@ void Participant::setMeshTetrahedron(
     VertexID               third,
     VertexID               fourth)
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->setMeshTetrahedron(toSV(meshName), first, second, third, fourth);
 }
 
@@ -198,6 +223,7 @@ void Participant::setMeshTetrahedra(
     ::precice::string_view          meshName,
     ::precice::span<const VertexID> ids)
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->setMeshTetrahedra(toSV(meshName), ids);
 }
 
@@ -207,6 +233,7 @@ void Participant::writeData(
     ::precice::span<const VertexID> ids,
     ::precice::span<const double>   values)
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->writeData(toSV(meshName), toSV(dataName), ids, values);
 }
 
@@ -217,6 +244,7 @@ void Participant::readData(
     double                          relativeReadTime,
     ::precice::span<double>         values) const
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->readData(toSV(meshName), toSV(dataName), ids, relativeReadTime, values);
 }
 
@@ -227,6 +255,7 @@ void Participant::mapAndReadData(
     double                        relativeReadTime,
     ::precice::span<double>       values) const
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->mapAndReadData(toSV(meshName), toSV(dataName), coordinates, relativeReadTime, values);
 }
 
@@ -236,12 +265,14 @@ void Participant::writeAndMapData(
     ::precice::span<const double> coordinates,
     ::precice::span<const double> values)
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->writeAndMapData(toSV(meshName), toSV(dataName), coordinates, values);
 }
 
 void Participant::setMeshAccessRegion(::precice::string_view        meshName,
                                       ::precice::span<const double> boundingBox) const
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->setMeshAccessRegion(toSV(meshName), boundingBox);
 }
 
@@ -249,6 +280,7 @@ void Participant::getMeshVertexIDsAndCoordinates(::precice::string_view    meshN
                                                  ::precice::span<VertexID> ids,
                                                  ::precice::span<double>   coordinates) const
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->getMeshVertexIDsAndCoordinates(toSV(meshName), ids, coordinates);
 }
 
@@ -258,16 +290,19 @@ void Participant::writeGradientData(
     ::precice::span<const VertexID> ids,
     ::precice::span<const double>   gradients)
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->writeGradientData(toSV(meshName), toSV(dataName), ids, gradients);
 }
 
 void Participant::startProfilingSection(::precice::string_view sectionName)
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->startProfilingSection(toSV(sectionName));
 }
 
 void Participant::stopLastProfilingSection()
 {
+  std::scoped_lock lock(_apiMutex);
   _impl->stopLastProfilingSection();
 }
 
