@@ -257,7 +257,7 @@ MappingConfiguration::MappingConfiguration(
                                    .setDocumentation("Principle axis along which geometric multiscale mapping is performed.")
                                    .setOptions({GEOMETRIC_MULTISCALE_AXIS_X, GEOMETRIC_MULTISCALE_AXIS_Y, GEOMETRIC_MULTISCALE_AXIS_Z});
   auto attrGeoMultiscaleRadius = XMLAttribute<double>(ATTR_GEOMETRIC_MULTISCALE_RADIUS)
-                                     .setDocumentation("Radius of the circular interface between the participants.");
+                                     .setDocumentation("Radius of the cross-sectional interface between the participants.");
   auto attrGeoMultiscaleCrossSectionProfile = XMLAttribute<std::string>(ATTR_GEOMETRIC_MULTISCALE_CROSS_SECTION_PROFILE)
                                                   .setDocumentation("Profile of the mapped variable along the cross-sectional interface: 'uniform' or 'parabolic'")
                                                   .setOptions({GEOMETRIC_MULTISCALE_CROSS_SECTION_PROFILE_UNIFORM, GEOMETRIC_MULTISCALE_CROSS_SECTION_PROFILE_PARABOLIC})
