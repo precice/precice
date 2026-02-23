@@ -13,3 +13,5 @@ precice_test_config_valid(unidirectional.xml Fluid 1)
 precice_test_config_invalid(unidirectional.xml "only the mapping combinations read-consistent and write-conservative" Fluid 2)
 precice_test_config_valid(unidirectional.xml Transport 1)
 precice_test_config_valid(unidirectional.xml Transport 2)
+
+precice_test_config_invalid(no-termination-condition.xml "At least one termination condition is required")
