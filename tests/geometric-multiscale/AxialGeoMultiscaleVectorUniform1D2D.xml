@@ -38,7 +38,7 @@
       multiscale-type="spread"
       multiscale-radius="1.0"
       multiscale-axis="z"
-      multiscale-spread-profile="uniform"
+      multiscale-cross-section-profile="uniform"
       from="Mesh1D"
       to="Mesh2D"
       constraint="consistent" />

@@ -197,24 +197,24 @@ private:
   const std::string ATTR_SUPPORT_RADIUS = "support-radius";
 
   // Attributes for geometric multiscale
-  const std::string ATTR_GEOMETRIC_MULTISCALE_DIMENSION       = "multiscale-dimension";
-  const std::string ATTR_GEOMETRIC_MULTISCALE_TYPE            = "multiscale-type";
-  const std::string ATTR_GEOMETRIC_MULTISCALE_AXIS            = "multiscale-axis";
-  const std::string ATTR_GEOMETRIC_MULTISCALE_RADIUS          = "multiscale-radius";
-  const std::string ATTR_GEOMETRIC_MULTISCALE_SPREAD_PROFILE  = "multiscale-spread-profile";
-  const std::string ATTR_GEOMETRIC_MULTISCALE_CROSS_SECTION   = "multiscale-cross-section";
-  const std::string GEOMETRIC_MULTISCALE_DIMENSION_1D3D       = "1d-3d";
-  const std::string GEOMETRIC_MULTISCALE_DIMENSION_1D2D       = "1d-2d";
-  const std::string GEOMETRIC_MULTISCALE_DIMENSION_2D3D       = "2d-3d";
-  const std::string GEOMETRIC_MULTISCALE_TYPE_SPREAD          = "spread";
-  const std::string GEOMETRIC_MULTISCALE_TYPE_COLLECT         = "collect";
-  const std::string GEOMETRIC_MULTISCALE_AXIS_X               = "x";
-  const std::string GEOMETRIC_MULTISCALE_AXIS_Y               = "y";
-  const std::string GEOMETRIC_MULTISCALE_AXIS_Z               = "z";
-  const std::string GEOMETRIC_MULTISCALE_SPREAD_PARABOLIC     = "parabolic";
-  const std::string GEOMETRIC_MULTISCALE_SPREAD_UNIFORM       = "uniform";
-  const std::string GEOMETRIC_MULTISCALE_CROSS_SECTION_CIRCLE = "circle";
-  const std::string GEOMETRIC_MULTISCALE_CROSS_SECTION_SQUARE = "square";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_DIMENSION                  = "multiscale-dimension";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_TYPE                       = "multiscale-type";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_AXIS                       = "multiscale-axis";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_RADIUS                     = "multiscale-radius";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_CROSS_SECTION_PROFILE      = "multiscale-cross-section-profile";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_CROSS_SECTION              = "multiscale-cross-section";
+  const std::string GEOMETRIC_MULTISCALE_DIMENSION_1D3D                  = "1d-3d";
+  const std::string GEOMETRIC_MULTISCALE_DIMENSION_1D2D                  = "1d-2d";
+  const std::string GEOMETRIC_MULTISCALE_DIMENSION_2D3D                  = "2d-3d";
+  const std::string GEOMETRIC_MULTISCALE_TYPE_SPREAD                     = "spread";
+  const std::string GEOMETRIC_MULTISCALE_TYPE_COLLECT                    = "collect";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_X                          = "x";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_Y                          = "y";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_Z                          = "z";
+  const std::string GEOMETRIC_MULTISCALE_CROSS_SECTION_PROFILE_PARABOLIC = "parabolic";
+  const std::string GEOMETRIC_MULTISCALE_CROSS_SECTION_PROFILE_UNIFORM   = "uniform";
+  const std::string GEOMETRIC_MULTISCALE_CROSS_SECTION_CIRCLE            = "circle";
+  const std::string GEOMETRIC_MULTISCALE_CROSS_SECTION_SQUARE            = "square";
 
   // For iterative RBFs using Ginkgo
   const std::string SUBTAG_EXECUTOR = "executor";
@@ -286,8 +286,8 @@ private:
       const std::string &geoMultiscaleType,
       const std::string &geoMultiscaleAxis,
       const double      &multiscaleRadius,
-      const std::string &spreadProfile,
-      const std::string &multiscaleCrossSection) const;
+      const std::string &geoMultiscaleProfile,
+      const std::string &geoMultiscaleCrossSection) const;
 
   /**
    * Stores additional information about the requested RBF mapping such as the

@@ -30,7 +30,7 @@ public:
    * - UNIFORM: Uniform profile u(r) = U_mean
    * - PARABOLIC: laminar Poiseuille profile u(r) = 2*U_mean*(1 - (r/R)^2)
    */
-  enum struct SpreadProfile {
+  enum struct MultiscaleProfile {
     UNIFORM,
     PARABOLIC
   };
@@ -57,7 +57,7 @@ public:
    * @param[in] profile Profile for SPREAD (ignored for COLLECT).
    * @param[in] crossSection Shape of the interface cross-section (default: circle).
    */
-  AxialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleDimension dimension, MultiscaleType type, MultiscaleAxis axis, double radius, SpreadProfile profile = SpreadProfile::UNIFORM, MultiscaleCrossSection crossSection = MultiscaleCrossSection::CIRCLE);
+  AxialGeoMultiscaleMapping(Constraint constraint, int dimensions, MultiscaleDimension dimension, MultiscaleType type, MultiscaleAxis axis, double radius, MultiscaleProfile profile = MultiscaleProfile::UNIFORM, MultiscaleCrossSection crossSection = MultiscaleCrossSection::CIRCLE);
 
   /// Takes care of compute-heavy operations needed only once to set up the mapping.
   void computeMapping() override;
@@ -93,8 +93,8 @@ private:
   /// radius of the "tube" from or to which the data is mapped, i.e., radius of the circular interface between the two participants
   double _radius;
 
-  /// selected profile used when _type == SPREAD
-  SpreadProfile _profile;
+  /// Cross-sectional profile of the exchanged quantity
+  MultiscaleProfile _profile;
 
   // cross-section of the pipe
   MultiscaleCrossSection _crossSection;

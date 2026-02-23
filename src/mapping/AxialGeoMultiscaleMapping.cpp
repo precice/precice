@@ -11,7 +11,7 @@ AxialGeoMultiscaleMapping::AxialGeoMultiscaleMapping(
     MultiscaleType         type,
     MultiscaleAxis         axis,
     double                 radius,
-    SpreadProfile          profile,
+    MultiscaleProfile      profile,
     MultiscaleCrossSection crossSection)
     : Mapping(constraint, dimensions, false, Mapping::InitialGuessRequirement::None),
       _dimension(dimension),
@@ -245,7 +245,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
       PRECICE_ASSERT(input()->nVertices() == 1);
       for (size_t i = 0; i < outSize; i++) {
         PRECICE_ASSERT(static_cast<size_t>((i * outDataDimensions) + effectiveCoordinate) < static_cast<size_t>(outputValues.size()), ((i * outDataDimensions) + effectiveCoordinate), outputValues.size());
-        if (_profile == SpreadProfile::PARABOLIC) {
+        if (_profile == MultiscaleProfile::PARABOLIC) {
           if (_dimension == MultiscaleDimension::D1D2) {
             constexpr double factor                                     = 1.5;
             outputValues((i * outDataDimensions) + effectiveCoordinate) = factor * inputValues(effectiveCoordinate) * (1 - (_vertexDistances[i] * _vertexDistances[i]));
@@ -267,7 +267,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
               outputValues((i * outDataDimensions) + effectiveCoordinate) = factor * inputValues(effectiveCoordinate) * std::pow(b1, m) * std::pow(b2, m);
             }
           }
-        } else if (_profile == SpreadProfile::UNIFORM) {
+        } else if (_profile == MultiscaleProfile::UNIFORM) {
           outputValues((i * outDataDimensions) + effectiveCoordinate) = inputValues(effectiveCoordinate);
         }
       }
@@ -281,9 +281,9 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
         PRECICE_ASSERT(static_cast<size_t>((i * outDataDimensions) + effectiveCoordinate) < static_cast<size_t>(outputValues.size()), (i * outDataDimensions) + effectiveCoordinate, outputValues.size());
         PRECICE_ASSERT(static_cast<size_t>((static_cast<size_t>(_nearestVertex[i]) * inDataDimensions) + effectiveCoordinate) < static_cast<size_t>(inputValues.size()), (static_cast<size_t>(_nearestVertex[i]) * inDataDimensions) + effectiveCoordinate, inputValues.size());
         double R = _maxDistancePerInput[static_cast<size_t>(_nearestVertex[i])];
-        if (_profile == SpreadProfile::UNIFORM) {
+        if (_profile == MultiscaleProfile::UNIFORM) {
           outputValues((i * outDataDimensions) + effectiveCoordinate) = inputValues((static_cast<size_t>(_nearestVertex[i]) * inDataDimensions) + effectiveCoordinate);
-        } else if (_profile == SpreadProfile::PARABOLIC) {
+        } else if (_profile == MultiscaleProfile::PARABOLIC) {
           if (_crossSection == MultiscaleCrossSection::CIRCLE) {
             double r_hat                                                = _vertexDistances[i] / R;
             outputValues((i * outDataDimensions) + effectiveCoordinate) = (4.0 / 3.0) * inputValues((static_cast<size_t>(_nearestVertex[i]) * inDataDimensions) + effectiveCoordinate) * (1.0 - r_hat * r_hat);
@@ -349,7 +349,7 @@ void AxialGeoMultiscaleMapping::mapConsistent(const time::Sample &inData, Eigen:
         }
         outputValues((j * outDataDimensions) + effectiveCoordinate) = outputValues((j * outDataDimensions) + effectiveCoordinate) / static_cast<double>(_collectBands[j].size());
 
-        if (_profile == SpreadProfile::PARABOLIC) {
+        if (_profile == MultiscaleProfile::PARABOLIC) {
           if (_crossSection == MultiscaleCrossSection::CIRCLE) {
             outputValues((j * outDataDimensions) + effectiveCoordinate) *= 9.0 / 8.0;
           } else if (_crossSection == MultiscaleCrossSection::SQUARE) {

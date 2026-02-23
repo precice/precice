@@ -38,7 +38,7 @@
       multiscale-type="spread"
       multiscale-radius="1.0"
       multiscale-axis="z"
-      multiscale-spread-profile="parabolic"
+      multiscale-cross-section-profile="parabolic"
       multiscale-cross-section="square"
       from="Mesh1D"
       to="Mesh3D"
