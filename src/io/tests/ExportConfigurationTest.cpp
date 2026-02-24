@@ -1,6 +1,5 @@
 #include <list>
 #include "io/ExportContext.hpp"
-#include "io/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"

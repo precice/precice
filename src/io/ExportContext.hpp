@@ -1,14 +1,15 @@
 #ifndef PRECICE_IO_EXPORTCONTEXT_HPP_
 #define PRECICE_IO_EXPORTCONTEXT_HPP_
 
+#include <memory>
 #include <string>
-#include "io/SharedPointer.hpp"
+#include "io/Export.hpp"
 
 namespace precice::io {
 
 struct ExportContext {
   // @brief Exporters performing the actual export.
-  io::PtrExport exporter;
+  std::unique_ptr<Export> exporter;
 
   // @brief Path to export location.
   std::string location;

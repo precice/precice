@@ -1,4 +1,5 @@
 #include "ExportConfiguration.hpp"
+#include <utility>
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
@@ -64,7 +65,7 @@ void ExportConfiguration::xmlTagCallback(
     econtext.everyIteration    = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
     econtext.updateSeries      = tag.getBooleanAttributeValue(ATTR_UPDATE_SERIES);
     econtext.type              = tag.getName();
-    _contexts.push_back(econtext);
+    _contexts.push_back(std::move(econtext));
   }
 }
 
