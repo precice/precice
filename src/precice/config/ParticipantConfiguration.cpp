@@ -85,7 +85,7 @@ ParticipantConfiguration::ParticipantConfiguration(
   tag.addSubtag(tagWriteData);
   tag.addSubtag(tagReadData);
 
-  _mappingConfig = std::make_shared<mapping::MappingConfiguration>(
+  _mappingConfig = std::make_unique<mapping::MappingConfiguration>(
       tag, _meshConfig);
 
   _actionConfig = std::make_shared<action::ActionConfiguration>(
@@ -431,7 +431,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   // This for loop transforms the MappingConfiguration::ConfiguredMappings
   // into a MappingContext
   using ConfMapping = mapping::MappingConfiguration::ConfiguredMapping;
-  for (const ConfMapping &confMapping : _mappingConfig->mappings()) {
+  for (ConfMapping &confMapping : _mappingConfig->mappings()) {
 
     checkIllDefinedMappings(confMapping, participant);
 
@@ -463,19 +463,22 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                     participant->getName(), toMesh, toMesh);
     }
 
+    mapping::Mapping *map = confMapping.mapping.get();
+    PRECICE_ASSERT(map != nullptr);
+
     if (context.size > 1 && context.name == participant->getName()) {
       if ((confMapping.direction == mapping::MappingConfiguration::WRITE &&
-           confMapping.mapping->getConstraint() == mapping::Mapping::CONSISTENT) ||
+           map->getConstraint() == mapping::Mapping::CONSISTENT) ||
           (confMapping.direction == mapping::MappingConfiguration::READ &&
-           confMapping.mapping->getConstraint() == mapping::Mapping::CONSERVATIVE)) {
+           map->getConstraint() == mapping::Mapping::CONSERVATIVE)) {
         PRECICE_ERROR("For a parallel participant, only the mapping combinations read-consistent and write-conservative are allowed");
-      } else if (confMapping.mapping->isScaledConsistent()) {
+      } else if (map->isScaledConsistent()) {
         PRECICE_ERROR("Scaled consistent mapping is not yet supported for a parallel participant. "
                       "You could run in serial or use a plain (read-)consistent mapping instead.");
       }
     }
 
-    PRECICE_CHECK(!confMapping.mapping->isScaledConsistent() || !(confMapping.fromMesh->isJustInTime() || confMapping.toMesh->isJustInTime()),
+    PRECICE_CHECK(!map->isScaledConsistent() || !(confMapping.fromMesh->isJustInTime() || confMapping.toMesh->isJustInTime()),
                   "The just-in-time mapping from mesh \"{}\" to mesh \"{}\" was configured with a scaled-consistent constraint. A scaled-consistent constraint is not implemented for just-in-time mappings in preCICE.", confMapping.fromMesh->getName(), confMapping.toMesh->getName());
 
     // We disable the geometric filter for any kernel method, as the default safety factor is not reliable enough to provide a robust
@@ -503,10 +506,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     mappingContext.toMeshID   = confMapping.toMesh->getID();
 
     // Upon creation, the mapping should be empty
-    mapping::PtrMapping &map = mappingContext.mapping;
-    PRECICE_ASSERT(map.get() == nullptr);
+    PRECICE_ASSERT(mappingContext.mapping == nullptr);
     // 2. ... and the mappings
-    map                                   = confMapping.mapping;
+    mappingContext.mapping                = participant->addMapping(std::move(confMapping.mapping));
+    PRECICE_ASSERT(mappingContext.mapping == map);
     mappingContext.configuredWithAliasTag = confMapping.configuredWithAliasTag;
 
     // Set input and output meshes in the Mapping from the mesh contexts

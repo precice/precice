@@ -1,11 +1,11 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
 #include "logging/Logger.hpp"
 #include "mapping/CoarseGrainingMapping.hpp"
 #include "mapping/Mapping.hpp"
-#include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfigurationTypes.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "xml/XMLTag.hpp"
@@ -24,7 +24,7 @@ public:
   /// Configuration data for one mapping.
   struct ConfiguredMapping {
     /// Mapping object.
-    PtrMapping mapping;
+    std::unique_ptr<Mapping> mapping;
     /// Remote mesh to map from
     mesh::PtrMesh fromMesh;
     /// Remote mesh to map to
@@ -75,7 +75,8 @@ public:
       xml::XMLTag                     &callingTag) override;
 
   /// Returns all configured mappings.
-  const std::vector<ConfiguredMapping> &mappings();
+  const std::vector<ConfiguredMapping> &mappings() const;
+  std::vector<ConfiguredMapping> &mappings();
 
   // Only relevant for RBF related mappings
   // Being public here is only required for testing purposes
