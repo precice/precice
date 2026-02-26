@@ -59,13 +59,13 @@ void ExportConfiguration::xmlTagCallback(
     xml::XMLTag                     &tag)
 {
   if (tag.getNamespace() == TAG) {
-    ExportContext econtext;
-    econtext.location          = tag.getStringAttributeValue(ATTR_LOCATION);
-    econtext.everyNTimeWindows = tag.getIntAttributeValue(ATTR_EVERY_N_TIME_WINDOWS);
-    econtext.everyIteration    = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
-    econtext.updateSeries      = tag.getBooleanAttributeValue(ATTR_UPDATE_SERIES);
-    econtext.type              = tag.getName();
-    _contexts.push_back(std::move(econtext));
+    ConfiguredExport config;
+    config.location          = tag.getStringAttributeValue(ATTR_LOCATION);
+    config.everyNTimeWindows = tag.getIntAttributeValue(ATTR_EVERY_N_TIME_WINDOWS);
+    config.everyIteration    = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
+    config.updateSeries      = tag.getBooleanAttributeValue(ATTR_UPDATE_SERIES);
+    config.type              = tag.getName();
+    _contexts.push_back(std::move(config));
   }
 }
 

@@ -665,21 +665,16 @@ void ParticipantConfiguration::finishParticipantConfiguration(
   }
 
   // Add export contexts
-  for (const io::ExportContext &exportContext : _exportConfig->exportContexts()) {
-    auto kind = exportContext.everyIteration ? io::Export::ExportKind::Iterations : io::Export::ExportKind::TimeWindows;
+  for (const io::ConfiguredExport &exportConfig : _exportConfig->exportContexts()) {
+    auto kind = exportConfig.everyIteration ? io::Export::ExportKind::Iterations : io::Export::ExportKind::TimeWindows;
 
     // Lambda to create exporter for any mesh context (avoids code duplication)
     auto createExporter = [&](const impl::MeshContext &meshContext) {
-      io::ExportContext participantExportContext;
-      participantExportContext.location          = exportContext.location;
-      participantExportContext.everyNTimeWindows = exportContext.everyNTimeWindows;
-      participantExportContext.everyIteration    = exportContext.everyIteration;
-      participantExportContext.updateSeries      = exportContext.updateSeries;
-      participantExportContext.type              = exportContext.type;
-      participantExportContext.meshName          = meshContext.mesh->getName();
+      io::ExportContext participantExportContext(exportConfig);
+      participantExportContext.meshName = meshContext.mesh->getName();
 
       std::unique_ptr<io::Export> exporter;
-      if (exportContext.type == VALUE_VTK) {
+      if (exportConfig.type == VALUE_VTK) {
         // This is handled with respect to the current configuration context.
         // Hence, this is potentially wrong for every participant other than context.name.
         if (context.size > 1) {
@@ -692,43 +687,43 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         } else {
           exporter = std::make_unique<io::ExportVTK>(
               participant->getName(),
-              exportContext.location,
+              exportConfig.location,
               *meshContext.mesh,
               kind,
-              exportContext.everyNTimeWindows,
+              exportConfig.everyNTimeWindows,
               context.rank,
               context.size);
         }
-      } else if (exportContext.type == VALUE_VTU) {
+      } else if (exportConfig.type == VALUE_VTU) {
         exporter = std::make_unique<io::ExportVTU>(
             participant->getName(),
-            exportContext.location,
+            exportConfig.location,
             *meshContext.mesh,
             kind,
-            exportContext.everyNTimeWindows,
+            exportConfig.everyNTimeWindows,
             context.rank,
             context.size);
-      } else if (exportContext.type == VALUE_VTP) {
+      } else if (exportConfig.type == VALUE_VTP) {
         exporter = std::make_unique<io::ExportVTP>(
             participant->getName(),
-            exportContext.location,
+            exportConfig.location,
             *meshContext.mesh,
             kind,
-            exportContext.everyNTimeWindows,
+            exportConfig.everyNTimeWindows,
             context.rank,
             context.size);
-      } else if (exportContext.type == VALUE_CSV) {
+      } else if (exportConfig.type == VALUE_CSV) {
         exporter = std::make_unique<io::ExportCSV>(
             participant->getName(),
-            exportContext.location,
+            exportConfig.location,
             *meshContext.mesh,
             kind,
-            exportContext.everyNTimeWindows,
+            exportConfig.everyNTimeWindows,
             context.rank,
             context.size);
       } else {
         PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
-                      _participants.back()->getName(), exportContext.type);
+                      _participants.back()->getName(), exportConfig.type);
       }
       participantExportContext.exporter = std::move(exporter);
       _participants.back()->addExportContext(std::move(participantExportContext));
@@ -744,10 +739,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       createExporter(meshContext);
     }
 
-    PRECICE_WARN_IF(exportContext.everyNTimeWindows > 1 && exportContext.everyIteration,
+    PRECICE_WARN_IF(exportConfig.everyNTimeWindows > 1 && exportConfig.everyIteration,
                     "Participant {} defines an exporter of type {} which exports every iteration. "
                     "This overrides the every-n-time-window value you provided.",
-                    _participants.back()->getName(), exportContext.type);
+                    _participants.back()->getName(), exportConfig.type);
   }
   _exportConfig->resetExports();
 

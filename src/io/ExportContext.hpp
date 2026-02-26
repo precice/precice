@@ -3,19 +3,14 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include "io/Export.hpp"
 
 namespace precice::io {
 
-struct ExportContext {
-  // @brief Exporters performing the actual export.
-  std::unique_ptr<Export> exporter;
-
+struct ConfiguredExport {
   // @brief Path to export location.
   std::string location;
-
-  // @brief Name of the mesh to export.
-  std::string meshName;
 
   // @brief Exporting every N time windows (equals -1 when not set).
   int everyNTimeWindows = -1;
@@ -28,6 +23,24 @@ struct ExportContext {
 
   // @brief type of the exporter (e.g. vtk).
   std::string type;
+};
+
+struct ExportContext : public ConfiguredExport {
+  ExportContext() = default;
+  explicit ExportContext(const ConfiguredExport &config)
+  : ConfiguredExport(config)
+  {
+  }
+  explicit ExportContext(ConfiguredExport &&config)
+  : ConfiguredExport(std::move(config))
+  {
+  }
+
+  // @brief Exporters performing the actual export.
+  std::unique_ptr<Export> exporter;
+
+  // @brief Name of the mesh to export.
+  std::string meshName;
 };
 
 } // namespace precice::io

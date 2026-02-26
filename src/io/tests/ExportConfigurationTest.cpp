@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(VTKEvery10)
   io::ExportConfiguration config(tag);
   xml::configure(tag, xml::ConfigurationContext{}, testing::getPathToSources() + "/io/tests/config1.xml");
   BOOST_TEST(config.exportContexts().size() == 1);
-  const io::ExportContext &econtext = config.exportContexts().front();
+  const io::ConfiguredExport &econtext = config.exportContexts().front();
   BOOST_TEST(econtext.type == "vtk");
   BOOST_TEST(econtext.everyNTimeWindows == 10);
 }
@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(VTKLocation)
   io::ExportConfiguration config(tag);
   xml::configure(tag, xml::ConfigurationContext{}, testing::getPathToSources() + "/io/tests/config2.xml");
   BOOST_TEST(config.exportContexts().size() == 1);
-  const io::ExportContext &econtext = config.exportContexts().front();
+  const io::ConfiguredExport &econtext = config.exportContexts().front();
   BOOST_TEST(econtext.type == "vtk");
   BOOST_TEST(econtext.everyNTimeWindows == 1);
   BOOST_TEST(econtext.location == "somepath");
