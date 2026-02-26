@@ -1,0 +1,109 @@
+name: Performance Regression Test
+# Compare precice-bench results between base and PR branch.
+# Based on the approach from build-and-test.yml (archlinux Release config).
+
+on:
+  pull_request:
+    types: [labeled]
+  schedule:
+    - cron: '0 4 * * 1'  # weekly on Monday
+  workflow_dispatch:
+
+concurrency:
+  group: perf-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CMAKE_GENERATOR: Ninja
+
+jobs:
+  benchmark:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      github.event.label.name == 'trigger-perf-test'
+    runs-on: ubuntu-latest
+    container:
+      image: 'precice/ci-archlinux:latest'
+      options: --shm-size=2gb
+    defaults:
+      run:
+        shell: "bash --login -eo pipefail {0}"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Build and run benchmarks for the base branch first, then HEAD.
+      # Both run on the same machine so the comparison is fair.
+      - name: Build and benchmark base
+        run: |
+          git checkout ${{ github.event.pull_request.base.sha || 'HEAD~1' }}
+          cmake -B build-base -DCMAKE_BUILD_TYPE=Release -DPRECICE_BUILD_BENCHMARKS=ON -DPRECICE_FEATURE_MPI_COMMUNICATION=ON -DPRECICE_FEATURE_PETSC_MAPPING=ON
+          cmake --build build-base -j$(nproc)
+          cd build-base
+          ./precice-bench --benchmark_out=base.json --benchmark_out_format=json --benchmark_repetitions=3
+
+      - name: Build and benchmark head
+        run: |
+          git checkout ${{ github.event.pull_request.head.sha || github.sha }}
+          cmake -B build-head -DCMAKE_BUILD_TYPE=Release -DPRECICE_BUILD_BENCHMARKS=ON -DPRECICE_FEATURE_MPI_COMMUNICATION=ON -DPRECICE_FEATURE_PETSC_MAPPING=ON
+          cmake --build build-head -j$(nproc)
+          cd build-head
+          ./precice-bench --benchmark_out=head.json --benchmark_out_format=json --benchmark_repetitions=3
+
+      - name: Compare results
+        run: |
+          python3 << 'EOF'
+          import json, sys
+
+          # google benchmark json has individual runs + aggregates when using repetitions.
+          # we only care about the mean values for comparison.
+          def load(path):
+              with open(path) as f:
+                  data = json.load(f)
+              means = {}
+              for b in data["benchmarks"]:
+                  if b.get("aggregate_name") == "mean":
+                      means[b["name"].replace("_mean", "")] = b["real_time"]
+              return means
+
+          base = load("build-base/base.json")
+          head = load("build-head/head.json")
+
+          print("| Benchmark | Base (ns) | Head (ns) | Change |")
+          print("|-----------|-----------|-----------|--------|")
+          for name in sorted(base.keys()):
+              if name not in head:
+                  continue
+              b, h = base[name], head[name]
+              pct = ((h - b) / b) * 100 if b > 0 else 0
+              print(f"| {name} | {b:.1f} | {h:.1f} | {pct:+.1f}% |")
+
+          # also write it out for the job summary step
+          with open("summary.md", "w") as f:
+              f.write("| Benchmark | Base (ns) | Head (ns) | Change |\n")
+              f.write("|-----------|-----------|-----------|--------|\n")
+              for name in sorted(base.keys()):
+                  if name not in head:
+                      continue
+                  b, h = base[name], head[name]
+                  pct = ((h - b) / b) * 100 if b > 0 else 0
+                  f.write(f"| {name} | {b:.1f} | {h:.1f} | {pct:+.1f}% |\n")
+          EOF
+
+      - name: Job summary
+        if: always()
+        run: |
+          echo "## Benchmark results" >> $GITHUB_STEP_SUMMARY
+          cat summary.md >> $GITHUB_STEP_SUMMARY
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-results
+          path: |
+            build-base/base.json
+            build-head/head.json
+            summary.md
