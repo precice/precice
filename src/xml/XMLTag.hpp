@@ -202,6 +202,13 @@ public:
   /// reads all attributes of this tag
   void readAttributes(const std::map<std::string, std::string> &aAttributes);
 
+  void setLocation(int line, int column, const std::string *contentPtr);
+  int getLine() const;
+  int getColumn() const;
+  bool hasLocation() const;
+  std::string getLocationContext() const;
+  std::string formatMessage(std::string_view message) const;
+
 private:
   mutable logging::Logger _log{"xml::XMLTag"};
 
@@ -235,7 +242,13 @@ private:
   void areAllSubtagsConfigured() const;
 
   void resetAttributes();
+
+  int _line = -1;
+  int _column = -1;
+  const std::string *_contentPtr = nullptr;
 };
+
+const XMLTag *currentTagForError();
 
 /// Returns the name of an Attribute
 std::string getName(const XMLTag::Attribute &attribute);

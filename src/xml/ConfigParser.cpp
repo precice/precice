@@ -69,7 +69,15 @@ void OnStartElementNs(
 
   std::string_view sPrefix(prefix == nullptr ? "" : reinterpret_cast<const char *>(prefix));
 
-  pParser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap);
+
+  int line   = -1;
+  int column = -1;
+  if (pParser && pParser->m_parserCtxt) {
+    line   = xmlSAX2GetLineNumber(pParser->m_parserCtxt);
+    column = xmlSAX2GetColumnNumber(pParser->m_parserCtxt);
+  }
+
+  pParser->OnStartElement(reinterpret_cast<const char *>(localname), sPrefix, attributesMap, line, column);
 }
 
 void OnEndElementNs(
@@ -120,6 +128,8 @@ void OnFatalErrorFunc(void *userData, const char *error, ...)
 
 precice::logging::Logger ConfigParser::_log("xml::XMLParser");
 
+ConfigParser *ConfigParser::s_currentInstance = nullptr;
+
 ConfigParser::ConfigParser(std::string_view filePath, const ConfigurationContext &context, std::shared_ptr<precice::xml::XMLTag> pXmlTag)
     : m_pXmlTag(std::move(pXmlTag))
 {
@@ -147,6 +157,21 @@ ConfigParser::ConfigParser(std::string_view filePath)
 
 void ConfigParser::MessageProxy(int level, std::string_view mess)
 {
+  if (s_currentInstance && s_currentInstance->m_parserCtxt) {
+    int line   = xmlSAX2GetLineNumber(s_currentInstance->m_parserCtxt);
+    int column = xmlSAX2GetColumnNumber(s_currentInstance->m_parserCtxt);
+    std::string snippet;
+    if (!s_currentInstance->m_content.empty() && line > 0) {
+      std::istringstream iss(s_currentInstance->m_content);
+      std::string lineStr;
+      for (int i = 1; i <= line && std::getline(iss, lineStr); ++i) {
+      }
+      snippet = "\n" + std::to_string(line) + " | " + lineStr +
+                "\n   | " + std::string(std::max(0, column - 1), ' ') + "^";
+    }
+    mess = fmt::format("{} (line {} column {}){}", mess, line, column, snippet);
+  }
+
   switch (level) {
   case (XML_ERR_FATAL):
   case (XML_ERR_ERROR):
@@ -188,10 +213,20 @@ int ConfigParser::readXmlFile(std::string const &filePath)
 
   _hash = utils::preciceHash(content);
 
+  m_content = content;
+
   xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
                                                   content.c_str(), content.size(), nullptr);
 
+  s_currentInstance = this;
+  m_parserCtxt      = ctxt;
+
   xmlParseChunk(ctxt, nullptr, 0, 1);
+
+  m_parserCtxt      = nullptr;
+  s_currentInstance = nullptr;
+  m_content.clear();
+
   xmlFreeParserCtxt(ctxt);
   xmlCleanupParser();
 
@@ -242,18 +277,25 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
       // Tag not found
       auto names = gatherCandidates(DefTags, subtag->m_Prefix);
 
+      std::string loc;
+      if (subtag->m_Line > 0) {
+        loc = fmt::format(" (line {} column {})", subtag->m_Line, subtag->m_Column);
+      }
+
       auto matches = utils::computeMatches(expectedName, names);
       if (!matches.empty() && matches.front().distance < 3) {
         matches.erase(std::remove_if(matches.begin(), matches.end(), [](auto &m) { return m.distance > 2; }), matches.end());
         std::vector<std::string> stringMatches;
         std::transform(matches.begin(), matches.end(), std::back_inserter(stringMatches), [](auto &m) { return m.name; });
-        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Did you mean <{}>?", expectedName, fmt::join(stringMatches, ">,<"));
+        PRECICE_ERROR("The configuration contains an unknown tag <{}>{}. Did you mean <{}>?", expectedName, loc, fmt::join(stringMatches, ">,<"));
       } else {
-        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Expected tags are {}.", expectedName, fmt::join(names, ", "));
+        PRECICE_ERROR("The configuration contains an unknown tag <{}>{}. Expected tags are {}.", expectedName, loc, fmt::join(names, ", "));
       }
     }
 
     auto pDefSubTag = *tagPosition;
+    pDefSubTag->setLocation(subtag->m_Line, subtag->m_Column, &m_content);
+
     pDefSubTag->resetAttributes();
 
     if ((pDefSubTag->_occurrence == XMLTag::OCCUR_ONCE) || (pDefSubTag->_occurrence == XMLTag::OCCUR_NOT_OR_ONCE)) {
@@ -277,13 +319,18 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
 void ConfigParser::OnStartElement(
     std::string_view    localname,
     std::string_view    prefix,
-    CTag::AttributePair attributes)
+    CTag::AttributePair attributes,
+    int                 line,
+    int                 column)
 {
   auto pTag = std::make_shared<CTag>();
 
   pTag->m_Prefix      = prefix;
   pTag->m_Name        = localname;
   pTag->m_aAttributes = std::move(attributes);
+
+  pTag->m_Line   = line;
+  pTag->m_Column = column;
 
   if (not m_CurrentTags.empty()) {
     auto pParentTag = m_CurrentTags.back();

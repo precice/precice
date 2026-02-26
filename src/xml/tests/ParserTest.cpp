@@ -8,6 +8,7 @@
 #include "xml/ValueParser.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
+#include "precice/Exceptions.hpp"
 
 using namespace precice;
 using namespace precice::xml;
@@ -226,6 +227,60 @@ BOOST_AUTO_TEST_CASE(Decode)
   BOOST_TEST(decodeXML("Apostrophe &apos; test") == "Apostrophe ' test");
 
   BOOST_TEST(decodeXML("&quot; &lt; &gt; &gt; &lt; &amp; &quot; &amp; &apos;") == "\" < > > < & \" & '");
+}
+
+struct LocationListener : public XMLTag::Listener {
+  int fooLine = -1;
+  int fooColumn = -1;
+  void xmlTagCallback(const ConfigurationContext &context, XMLTag &callingTag) override
+  {
+    if (callingTag.getName() == "foo") {
+      fooLine = callingTag.getLine();
+      fooColumn = callingTag.getColumn();
+    }
+  }
+  void xmlEndTagCallback(const ConfigurationContext &context, XMLTag &callingTag) override {}
+};
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(LocationInformation)
+{
+  PRECICE_TEST();
+  std::string filename(getPathToSources() + "/xml/tests/xmlparser_location.xml");
+
+  LocationListener listener;
+  XMLTag rootTag(listener, "configuration", XMLTag::OCCUR_ONCE);
+  XMLTag fooTag(listener, "foo", XMLTag::OCCUR_ONCE);
+  XMLAttribute<std::string> attr("attr");
+  fooTag.addAttribute(attr);
+  rootTag.addSubtag(fooTag);
+
+  configure(rootTag, ConfigurationContext{}, filename);
+
+  BOOST_TEST(listener.fooLine == 3);
+  BOOST_TEST(listener.fooColumn == 3);
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(LocationErrorMessage)
+{
+  PRECICE_TEST();
+  std::string filename(getPathToSources() + "/xml/tests/xmlparser_missing_attr.xml");
+
+  LocationListener listener;
+  XMLTag rootTag(listener, "configuration", XMLTag::OCCUR_ONCE);
+  XMLTag fooTag(listener, "foo", XMLTag::OCCUR_ONCE);
+  XMLAttribute<std::string> attr("attr");
+  fooTag.addAttribute(attr);
+  rootTag.addSubtag(fooTag);
+
+  try {
+    configure(rootTag, ConfigurationContext{}, filename);
+    BOOST_FAIL("configuration should have thrown");
+  } catch (const Error &e) {
+    std::string msg = e.what();
+    BOOST_TEST(msg.find("line 3") != std::string::npos);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
