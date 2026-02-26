@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <precice-configuration>
   <data:scalar name="Activation1" />
-  <data:scalar name="stretch1" />
-  <data:scalar name="stretch2" />
+  <data:scalar name="Stretch-1" />
+  <data:scalar name="Stretch-2" />
   <data:scalar name="Traction1" />
   <data:scalar name="Displacement1" />
   <data:scalar name="Traction2" />
@@ -17,16 +17,16 @@
   </mesh>
 
   <mesh name="Stretch_M1SM_Mesh" dimensions="2">
-    <use-data name="stretch1" />
+    <use-data name="Stretch-1" />
   </mesh>
 
   <mesh name="Stretch_M2SM_Mesh" dimensions="2">
-    <use-data name="stretch2" />
+    <use-data name="Stretch-2" />
   </mesh>
 
   <mesh name="Stretch_M1_Mesh" dimensions="2">
-    <use-data name="stretch1" />
-    <use-data name="stretch2" />
+    <use-data name="Stretch-1" />
+    <use-data name="Stretch-2" />
   </mesh>
 
   <mesh name="Surface_M1SM_Mesh" dimensions="2">
@@ -71,8 +71,8 @@
       to="Stretch_M1_Mesh"
       constraint="consistent" />
     <write-data name="Activation1" mesh="Activation_M1_Mesh" />
-    <read-data name="stretch1" mesh="Stretch_M1_Mesh" />
-    <read-data name="stretch2" mesh="Stretch_M1_Mesh" />
+    <read-data name="Stretch-1" mesh="Stretch_M1_Mesh" />
+    <read-data name="Stretch-2" mesh="Stretch_M1_Mesh" />
   </participant>
 
   <participant name="M1SM">
@@ -93,7 +93,7 @@
     <write-data name="Displacement1" mesh="Surface_M1SM_Mesh" />
     <read-data name="Traction1" mesh="Surface_M1SM_Mesh" />
     <read-data name="Activation1" mesh="Activation_M1SM_Mesh" />
-    <write-data name="stretch1" mesh="Stretch_M1SM_Mesh" />
+    <write-data name="Stretch-1" mesh="Stretch_M1SM_Mesh" />
   </participant>
 
   <participant name="M2SM">
@@ -112,7 +112,7 @@
       constraint="consistent" />
     <read-data name="Displacement2" mesh="Surface_M2SM_Mesh" />
     <write-data name="Traction2" mesh="Surface_M2SM_Mesh" />
-    <write-data name="stretch2" mesh="Stretch_M2SM_Mesh" />
+    <write-data name="Stretch-2" mesh="Stretch_M2SM_Mesh" />
   </participant>
 
   <participant name="Tendon">
@@ -133,7 +133,7 @@
     <participants first="M2SM" second="M1" />
     <time-window-size value="1" />
     <max-time-windows value="2" />
-    <exchange data="stretch2" mesh="Stretch_M2SM_Mesh" from="M2SM" to="M1" />
+    <exchange data="Stretch-2" mesh="Stretch_M2SM_Mesh" from="M2SM" to="M1" />
   </coupling-scheme:serial-explicit>
 
   <coupling-scheme:serial-explicit>
@@ -141,7 +141,7 @@
     <time-window-size value="1" />
     <max-time-windows value="2" />
     <exchange data="Activation1" mesh="Activation_M1SM_Mesh" from="M1" to="M1SM" />
-    <exchange data="stretch1" mesh="Stretch_M1SM_Mesh" from="M1SM" to="M1" />
+    <exchange data="Stretch-1" mesh="Stretch_M1SM_Mesh" from="M1SM" to="M1" />
   </coupling-scheme:serial-explicit>
 
   <coupling-scheme:multi>
