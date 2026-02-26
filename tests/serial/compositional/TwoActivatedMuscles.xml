@@ -2,128 +2,128 @@
 <precice-configuration>
   <data:scalar name="Traction" />
   <data:scalar name="Displacement" />
-  <data:scalar name="Activation1" />
-  <data:scalar name="Activation2" />
-  <data:scalar name="Stretch-1" />
-  <data:scalar name="Stretch-2" />
+  <data:scalar name="Activation-M1" />
+  <data:scalar name="Activation-M2" />
+  <data:scalar name="Stretch-M1SM" />
+  <data:scalar name="Stretch-M2SM" />
 
-  <mesh name="Surface_M1SM_Mesh" dimensions="2">
+  <mesh name="Surface-M1SM-Mesh" dimensions="2">
     <use-data name="Traction" />
     <use-data name="Displacement" />
   </mesh>
 
-  <mesh name="Surface_M2SM_Mesh" dimensions="2">
+  <mesh name="Surface-M2SM-Mesh" dimensions="2">
     <use-data name="Traction" />
     <use-data name="Displacement" />
   </mesh>
 
-  <mesh name="Activation_M1_Mesh" dimensions="2">
-    <use-data name="Activation1" />
+  <mesh name="Activation-M1-Mesh" dimensions="2">
+    <use-data name="Activation-M1" />
   </mesh>
 
-  <mesh name="Activation_M1SM_Mesh" dimensions="2">
-    <use-data name="Activation1" />
+  <mesh name="Activation-M1SM-Mesh" dimensions="2">
+    <use-data name="Activation-M1" />
   </mesh>
 
-  <mesh name="Activation_M2_Mesh" dimensions="2">
-    <use-data name="Activation2" />
+  <mesh name="Activation-M2-Mesh" dimensions="2">
+    <use-data name="Activation-M2" />
   </mesh>
 
-  <mesh name="Activation_M2SM_Mesh" dimensions="2">
-    <use-data name="Activation2" />
+  <mesh name="Activation-M2SM-Mesh" dimensions="2">
+    <use-data name="Activation-M2" />
   </mesh>
 
-  <mesh name="Stretch_M1_Mesh" dimensions="2">
-    <use-data name="Stretch-1" />
-    <use-data name="Stretch-2" />
+  <mesh name="Stretch-M1-Mesh" dimensions="2">
+    <use-data name="Stretch-M1SM" />
+    <use-data name="Stretch-M2SM" />
   </mesh>
 
-  <mesh name="Stretch_M1SM_Mesh" dimensions="2">
-    <use-data name="Stretch-1" />
+  <mesh name="Stretch-M1SM-Mesh" dimensions="2">
+    <use-data name="Stretch-M1SM" />
   </mesh>
 
-  <mesh name="Stretch_M2_Mesh" dimensions="2">
-    <use-data name="Stretch-2" />
+  <mesh name="Stretch-M2-Mesh" dimensions="2">
+    <use-data name="Stretch-M2SM" />
   </mesh>
 
-  <mesh name="Stretch_M2SM_Mesh" dimensions="2">
-    <use-data name="Stretch-2" />
+  <mesh name="Stretch-M2SM-Mesh" dimensions="2">
+    <use-data name="Stretch-M2SM" />
   </mesh>
 
   <participant name="M1SM">
-    <provide-mesh name="Surface_M1SM_Mesh" />
-    <receive-mesh name="Surface_M2SM_Mesh" from="M2SM" />
-    <provide-mesh name="Activation_M1SM_Mesh" />
-    <provide-mesh name="Stretch_M1SM_Mesh" />
+    <provide-mesh name="Surface-M1SM-Mesh" />
+    <receive-mesh name="Surface-M2SM-Mesh" from="M2SM" />
+    <provide-mesh name="Activation-M1SM-Mesh" />
+    <provide-mesh name="Stretch-M1SM-Mesh" />
     <mapping:nearest-neighbor
       direction="write"
-      from="Surface_M1SM_Mesh"
-      to="Surface_M2SM_Mesh"
+      from="Surface-M1SM-Mesh"
+      to="Surface-M2SM-Mesh"
       constraint="consistent" />
     <mapping:nearest-neighbor
       direction="read"
-      from="Surface_M2SM_Mesh"
-      to="Surface_M1SM_Mesh"
+      from="Surface-M2SM-Mesh"
+      to="Surface-M1SM-Mesh"
       constraint="consistent" />
-    <write-data name="Displacement" mesh="Surface_M1SM_Mesh" />
-    <read-data name="Traction" mesh="Surface_M1SM_Mesh" />
-    <read-data name="Activation1" mesh="Activation_M1SM_Mesh" />
-    <write-data name="Stretch-1" mesh="Stretch_M1SM_Mesh" />
+    <write-data name="Displacement" mesh="Surface-M1SM-Mesh" />
+    <read-data name="Traction" mesh="Surface-M1SM-Mesh" />
+    <read-data name="Activation-M1" mesh="Activation-M1SM-Mesh" />
+    <write-data name="Stretch-M1SM" mesh="Stretch-M1SM-Mesh" />
   </participant>
 
   <participant name="M2SM">
-    <provide-mesh name="Surface_M2SM_Mesh" />
-    <provide-mesh name="Activation_M2SM_Mesh" />
-    <provide-mesh name="Stretch_M2SM_Mesh" />
-    <write-data name="Traction" mesh="Surface_M2SM_Mesh" />
-    <read-data name="Displacement" mesh="Surface_M2SM_Mesh" />
-    <read-data name="Activation2" mesh="Activation_M2SM_Mesh" />
-    <write-data name="Stretch-2" mesh="Stretch_M2SM_Mesh" />
+    <provide-mesh name="Surface-M2SM-Mesh" />
+    <provide-mesh name="Activation-M2SM-Mesh" />
+    <provide-mesh name="Stretch-M2SM-Mesh" />
+    <write-data name="Traction" mesh="Surface-M2SM-Mesh" />
+    <read-data name="Displacement" mesh="Surface-M2SM-Mesh" />
+    <read-data name="Activation-M2" mesh="Activation-M2SM-Mesh" />
+    <write-data name="Stretch-M2SM" mesh="Stretch-M2SM-Mesh" />
   </participant>
 
   <participant name="M1">
-    <provide-mesh name="Activation_M1_Mesh" />
-    <receive-mesh name="Activation_M1SM_Mesh" from="M1SM" />
-    <provide-mesh name="Stretch_M1_Mesh" />
-    <receive-mesh name="Stretch_M1SM_Mesh" from="M1SM" />
-    <receive-mesh name="Stretch_M2SM_Mesh" from="M2SM" />
+    <provide-mesh name="Activation-M1-Mesh" />
+    <receive-mesh name="Activation-M1SM-Mesh" from="M1SM" />
+    <provide-mesh name="Stretch-M1-Mesh" />
+    <receive-mesh name="Stretch-M1SM-Mesh" from="M1SM" />
+    <receive-mesh name="Stretch-M2SM-Mesh" from="M2SM" />
     <mapping:nearest-neighbor
       direction="write"
-      from="Activation_M1_Mesh"
-      to="Activation_M1SM_Mesh"
+      from="Activation-M1-Mesh"
+      to="Activation-M1SM-Mesh"
       constraint="consistent" />
     <mapping:nearest-neighbor
       direction="read"
-      to="Stretch_M1_Mesh"
-      from="Stretch_M1SM_Mesh"
+      to="Stretch-M1-Mesh"
+      from="Stretch-M1SM-Mesh"
       constraint="consistent" />
     <mapping:nearest-neighbor
       direction="read"
-      to="Stretch_M1_Mesh"
-      from="Stretch_M2SM_Mesh"
+      to="Stretch-M1-Mesh"
+      from="Stretch-M2SM-Mesh"
       constraint="consistent" />
-    <read-data name="Stretch-1" mesh="Stretch_M1_Mesh" />
-    <write-data name="Activation1" mesh="Activation_M1_Mesh" />
-    <read-data name="Stretch-2" mesh="Stretch_M1_Mesh" />
+    <read-data name="Stretch-M1SM" mesh="Stretch-M1-Mesh" />
+    <write-data name="Activation-M1" mesh="Activation-M1-Mesh" />
+    <read-data name="Stretch-M2SM" mesh="Stretch-M1-Mesh" />
   </participant>
 
   <participant name="M2">
-    <provide-mesh name="Activation_M2_Mesh" />
-    <receive-mesh name="Activation_M2SM_Mesh" from="M2SM" />
-    <provide-mesh name="Stretch_M2_Mesh" />
-    <receive-mesh name="Stretch_M2SM_Mesh" from="M2SM" />
+    <provide-mesh name="Activation-M2-Mesh" />
+    <receive-mesh name="Activation-M2SM-Mesh" from="M2SM" />
+    <provide-mesh name="Stretch-M2-Mesh" />
+    <receive-mesh name="Stretch-M2SM-Mesh" from="M2SM" />
     <mapping:nearest-neighbor
       direction="write"
-      from="Activation_M2_Mesh"
-      to="Activation_M2SM_Mesh"
+      from="Activation-M2-Mesh"
+      to="Activation-M2SM-Mesh"
       constraint="consistent" />
     <mapping:nearest-neighbor
       direction="read"
-      to="Stretch_M2_Mesh"
-      from="Stretch_M2SM_Mesh"
+      to="Stretch-M2-Mesh"
+      from="Stretch-M2SM-Mesh"
       constraint="consistent" />
-    <read-data name="Stretch-2" mesh="Stretch_M2_Mesh" />
-    <write-data name="Activation2" mesh="Activation_M2_Mesh" />
+    <read-data name="Stretch-M2SM" mesh="Stretch-M2-Mesh" />
+    <write-data name="Activation-M2" mesh="Activation-M2-Mesh" />
   </participant>
 
   <m2n:sockets acceptor="M1SM" connector="M2SM" />
@@ -135,31 +135,31 @@
     <participants first="M1" second="M2SM" />
     <time-window-size value="1" />
     <max-time-windows value="2" />
-    <exchange data="Stretch-2" mesh="Stretch_M2SM_Mesh" from="M2SM" to="M1" />
+    <exchange data="Stretch-M2SM" mesh="Stretch-M2SM-Mesh" from="M2SM" to="M1" />
   </coupling-scheme:serial-explicit>
 
   <coupling-scheme:serial-explicit>
     <participants first="M1" second="M1SM" />
     <time-window-size value="1" />
     <max-time-windows value="2" />
-    <exchange data="Activation1" mesh="Activation_M1SM_Mesh" from="M1" to="M1SM" />
-    <exchange data="Stretch-1" mesh="Stretch_M1SM_Mesh" from="M1SM" to="M1" />
+    <exchange data="Activation-M1" mesh="Activation-M1SM-Mesh" from="M1" to="M1SM" />
+    <exchange data="Stretch-M1SM" mesh="Stretch-M1SM-Mesh" from="M1SM" to="M1" />
   </coupling-scheme:serial-explicit>
 
   <coupling-scheme:serial-explicit>
     <participants first="M2" second="M2SM" />
     <time-window-size value="1" />
     <max-time-windows value="2" />
-    <exchange data="Activation2" mesh="Activation_M2SM_Mesh" from="M2" to="M2SM" />
-    <exchange data="Stretch-2" mesh="Stretch_M2SM_Mesh" from="M2SM" to="M2" />
+    <exchange data="Activation-M2" mesh="Activation-M2SM-Mesh" from="M2" to="M2SM" />
+    <exchange data="Stretch-M2SM" mesh="Stretch-M2SM-Mesh" from="M2SM" to="M2" />
   </coupling-scheme:serial-explicit>
 
   <coupling-scheme:parallel-implicit>
     <participants first="M1SM" second="M2SM" />
     <time-window-size value="1" />
     <max-time-windows value="2" />
-    <exchange data="Displacement" mesh="Surface_M2SM_Mesh" from="M1SM" to="M2SM" />
-    <exchange data="Traction" mesh="Surface_M2SM_Mesh" from="M2SM" to="M1SM" />
+    <exchange data="Displacement" mesh="Surface-M2SM-Mesh" from="M1SM" to="M2SM" />
+    <exchange data="Traction" mesh="Surface-M2SM-Mesh" from="M2SM" to="M1SM" />
     <max-iterations value="1" />
     <min-iterations value="1" />
   </coupling-scheme:parallel-implicit>

@@ -27,25 +27,25 @@ BOOST_AUTO_TEST_CASE(TwoActivatedMusclesWithFeedback)
 
   if (context.isNamed("M1SM")) {
 
-    participant.setMeshVertices("Surface_M1SM_Mesh", surfaceCoords, surfaceVertexIDs);
-    participant.setMeshVertices("Activation_M1SM_Mesh", neuralCoords, activationVertexIDs);
-    participant.setMeshVertices("Stretch_M1SM_Mesh", neuralCoords, stretchVertexIDs);
+    participant.setMeshVertices("Surface-M1SM-Mesh", surfaceCoords, surfaceVertexIDs);
+    participant.setMeshVertices("Activation-M1SM-Mesh", neuralCoords, activationVertexIDs);
+    participant.setMeshVertices("Stretch-M1SM-Mesh", neuralCoords, stretchVertexIDs);
 
   } else if (context.isNamed("M2SM")) {
 
-    participant.setMeshVertices("Surface_M2SM_Mesh", surfaceCoords, surfaceVertexIDs);
-    participant.setMeshVertices("Activation_M2SM_Mesh", neuralCoords, activationVertexIDs);
-    participant.setMeshVertices("Stretch_M2SM_Mesh", neuralCoords, stretchVertexIDs);
+    participant.setMeshVertices("Surface-M2SM-Mesh", surfaceCoords, surfaceVertexIDs);
+    participant.setMeshVertices("Activation-M2SM-Mesh", neuralCoords, activationVertexIDs);
+    participant.setMeshVertices("Stretch-M2SM-Mesh", neuralCoords, stretchVertexIDs);
 
   } else if (context.isNamed("M1")) {
 
-    participant.setMeshVertices("Stretch_M1_Mesh", neuralCoords, stretchVertexIDs);
-    participant.setMeshVertices("Activation_M1_Mesh", neuralCoords, activationVertexIDs);
+    participant.setMeshVertices("Stretch-M1-Mesh", neuralCoords, stretchVertexIDs);
+    participant.setMeshVertices("Activation-M1-Mesh", neuralCoords, activationVertexIDs);
 
   } else {
 
-    participant.setMeshVertices("Stretch_M2_Mesh", neuralCoords, stretchVertexIDs);
-    participant.setMeshVertices("Activation_M2_Mesh", neuralCoords, activationVertexIDs);
+    participant.setMeshVertices("Stretch-M2-Mesh", neuralCoords, stretchVertexIDs);
+    participant.setMeshVertices("Activation-M2-Mesh", neuralCoords, activationVertexIDs);
   }
 
   participant.initialize();
@@ -68,29 +68,29 @@ BOOST_AUTO_TEST_CASE(TwoActivatedMusclesWithFeedback)
   for (int timestep = 0; timestep < 2; ++timestep) {
 
     if (context.isNamed("M1SM")) {
-      participant.writeData("Surface_M1SM_Mesh", "Displacement", surfaceVertexIDs, displacements);
-      participant.readData("Activation_M1SM_Mesh", "Activation1", activationVertexIDs, timestepSize, receivedActivation1);
-      participant.writeData("Stretch_M1SM_Mesh", "Stretch-1", stretchVertexIDs, stretch1);
+      participant.writeData("Surface-M1SM-Mesh", "Displacement", surfaceVertexIDs, displacements);
+      participant.readData("Activation-M1SM-Mesh", "Activation-M1", activationVertexIDs, timestepSize, receivedActivation1);
+      participant.writeData("Stretch-M1SM-Mesh", "Stretch-M1SM", stretchVertexIDs, stretch1);
 
     } else if (context.isNamed("M2SM")) {
 
-      participant.readData("Surface_M2SM_Mesh", "Displacement", surfaceVertexIDs, timestepSize, receivedDisplacements);
-      participant.readData("Activation_M2SM_Mesh", "Activation2", activationVertexIDs, timestepSize, receivedActivation2);
-      participant.writeData("Stretch_M2SM_Mesh", "Stretch-2", stretchVertexIDs, stretch2);
+      participant.readData("Surface-M2SM-Mesh", "Displacement", surfaceVertexIDs, timestepSize, receivedDisplacements);
+      participant.readData("Activation-M2SM-Mesh", "Activation-M2", activationVertexIDs, timestepSize, receivedActivation2);
+      participant.writeData("Stretch-M2SM-Mesh", "Stretch-M2SM", stretchVertexIDs, stretch2);
 
     } else if (context.isNamed("M1")) {
 
-      participant.writeData("Activation_M1_Mesh", "Activation1", activationVertexIDs, activation1);
-      participant.readData("Stretch_M1_Mesh", "Stretch-1", stretchVertexIDs, timestepSize, receivedStretch1);
-      participant.readData("Stretch_M1_Mesh", "Stretch-2", stretchVertexIDs, timestepSize, receivedCrossStretch1);
+      participant.writeData("Activation-M1-Mesh", "Activation-M1", activationVertexIDs, activation1);
+      participant.readData("Stretch-M1-Mesh", "Stretch-M1SM", stretchVertexIDs, timestepSize, receivedStretch1);
+      participant.readData("Stretch-M1-Mesh", "Stretch-M2SM", stretchVertexIDs, timestepSize, receivedCrossStretch1);
 
     } else {
 
       BOOST_TEST(context.isNamed("M2"));
 
-      participant.writeData("Activation_M2_Mesh", "Activation2", activationVertexIDs, activation2);
-      participant.readData("Stretch_M2_Mesh", "Stretch-2", stretchVertexIDs, timestepSize, receivedStretch2);
-      participant.readData("Stretch_M2_Mesh", "Stretch-1", stretchVertexIDs, timestepSize, receivedCrossStretch2);
+      participant.writeData("Activation-M2-Mesh", "Activation-M2", activationVertexIDs, activation2);
+      participant.readData("Stretch-M2-Mesh", "Stretch-M2SM", stretchVertexIDs, timestepSize, receivedStretch2);
+      participant.readData("Stretch-M2-Mesh", "Stretch-M1SM", stretchVertexIDs, timestepSize, receivedCrossStretch2);
     }
 
     if (participant.requiresWritingCheckpoint()) {
