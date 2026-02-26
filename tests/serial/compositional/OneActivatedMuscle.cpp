@@ -72,19 +72,19 @@ BOOST_AUTO_TEST_CASE(OneActivatedMuscle)
 
     if (context.isNamed("M1")) {
       participant.writeData("Activation_M1_Mesh", "Activation1", activationVertexIDs, activation1);
-      participant.readData("Stretch_M1_Mesh", "stretch1", stretchVertexIDs, timestepSize, receivedStretch1);
-      participant.readData("Stretch_M1_Mesh", "stretch2", stretchVertexIDs, timestepSize, receivedStretch2);
+      participant.readData("Stretch_M1_Mesh", "Stretch-1", stretchVertexIDs, timestepSize, receivedStretch1);
+      participant.readData("Stretch_M1_Mesh", "Stretch-2", stretchVertexIDs, timestepSize, receivedStretch2);
     }
     if (context.isNamed("M1SM")) {
       participant.readData("Activation_M1SM_Mesh", "Activation1", activationVertexIDs, timestepSize, receivedActivation1);
-      participant.writeData("Stretch_M1SM_Mesh", "stretch1", stretchVertexIDs, stretch1);
+      participant.writeData("Stretch_M1SM_Mesh", "Stretch-1", stretchVertexIDs, stretch1);
       participant.writeData("Surface_M1SM_Mesh", "Displacement1", surface1VertexIDs, displacements1);
     }
     if (context.isNamed("Tendon")) {
       participant.readData("SurfaceTendon_M1SM_Mesh", "Displacement1", surface1VertexIDs, timestepSize, receivedDisplacements);
     }
     if (context.isNamed("M2SM")) {
-      participant.writeData("Stretch_M2SM_Mesh", "stretch2", stretchVertexIDs, stretch2);
+      participant.writeData("Stretch_M2SM_Mesh", "Stretch-2", stretchVertexIDs, stretch2);
     }
 
     participant.advance(timestepSize);

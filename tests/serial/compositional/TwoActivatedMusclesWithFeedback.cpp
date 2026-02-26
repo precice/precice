@@ -70,27 +70,27 @@ BOOST_AUTO_TEST_CASE(TwoActivatedMusclesWithFeedback)
     if (context.isNamed("M1SM")) {
       participant.writeData("Surface_M1SM_Mesh", "Displacement", surfaceVertexIDs, displacements);
       participant.readData("Activation_M1SM_Mesh", "Activation1", activationVertexIDs, timestepSize, receivedActivation1);
-      participant.writeData("Stretch_M1SM_Mesh", "stretch1", stretchVertexIDs, stretch1);
+      participant.writeData("Stretch_M1SM_Mesh", "Stretch-1", stretchVertexIDs, stretch1);
 
     } else if (context.isNamed("M2SM")) {
 
       participant.readData("Surface_M2SM_Mesh", "Displacement", surfaceVertexIDs, timestepSize, receivedDisplacements);
       participant.readData("Activation_M2SM_Mesh", "Activation2", activationVertexIDs, timestepSize, receivedActivation2);
-      participant.writeData("Stretch_M2SM_Mesh", "stretch2", stretchVertexIDs, stretch2);
+      participant.writeData("Stretch_M2SM_Mesh", "Stretch-2", stretchVertexIDs, stretch2);
 
     } else if (context.isNamed("M1")) {
 
       participant.writeData("Activation_M1_Mesh", "Activation1", activationVertexIDs, activation1);
-      participant.readData("Stretch_M1_Mesh", "stretch1", stretchVertexIDs, timestepSize, receivedStretch1);
-      participant.readData("Stretch_M1_Mesh", "stretch2", stretchVertexIDs, timestepSize, receivedCrossStretch1);
+      participant.readData("Stretch_M1_Mesh", "Stretch-1", stretchVertexIDs, timestepSize, receivedStretch1);
+      participant.readData("Stretch_M1_Mesh", "Stretch-2", stretchVertexIDs, timestepSize, receivedCrossStretch1);
 
     } else {
 
       BOOST_TEST(context.isNamed("M2"));
 
       participant.writeData("Activation_M2_Mesh", "Activation2", activationVertexIDs, activation2);
-      participant.readData("Stretch_M2_Mesh", "stretch2", stretchVertexIDs, timestepSize, receivedStretch2);
-      participant.readData("Stretch_M2_Mesh", "stretch1", stretchVertexIDs, timestepSize, receivedCrossStretch2);
+      participant.readData("Stretch_M2_Mesh", "Stretch-2", stretchVertexIDs, timestepSize, receivedStretch2);
+      participant.readData("Stretch_M2_Mesh", "Stretch-1", stretchVertexIDs, timestepSize, receivedCrossStretch2);
     }
 
     if (participant.requiresWritingCheckpoint()) {
