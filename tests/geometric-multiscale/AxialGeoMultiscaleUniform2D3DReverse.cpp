@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleUniform2D3DReverse)
 
     {
       Vector3d pos0(0.0, 0.0, 0.0);
-      Vector3d pos1(1.0, 0.0, 0.0);
+      Vector3d pos1(0.5, 0.0, 0.0);
       vids2D[0] = cplInterface.setMeshVertex(meshName, pos0);
       vids2D[1] = cplInterface.setMeshVertex(meshName, pos1);
     }
@@ -52,13 +52,13 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleUniform2D3DReverse)
     cplInterface.readData(
         meshName,
         dataAName,
-        {vids2D.data(), N2D},
+        vids2D,
         maxDt,
-        {valueDataA.data(), N2D});
+        valueDataA);
 
     // After COLLECT (3D -> 2D) of [6, 8, 8]:
     // - 2D vertex x=0 gets 3D(x=0)         → 6
-    // - 2D vertex x=1 gets avg(3D x=1,2)   → avg(8,8) = 8
+    // - 2D vertex x=0.5 gets avg(3D x=0.5,0.5)   → avg(8,8) = 8
     BOOST_TEST(valueDataA[0] == 6.0);
     BOOST_TEST(valueDataA[1] == 8.0);
 
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleUniform2D3DReverse)
 
       // Velocity values on 2D (to be SPREAD to 3D):
       //   2D vertex x=0: (0,0,6)
-      //   2D vertex x=1: (0,0,9)
+      //   2D vertex x=0.5: (0,0,9)
       valueDataB = {
           0.0, 0.0, 6.0, // 2D vertex 0
           0.0, 0.0, 9.0, // 2D vertex 1
@@ -75,8 +75,8 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleUniform2D3DReverse)
       cplInterface.writeData(
           meshName,
           dataBName,
-          {vids2D.data(), N2D},
-          {valueDataB.data(), static_cast<int>(valueDataB.size())});
+          vids2D,
+          valueDataB);
 
       cplInterface.advance(maxDt);
       maxDt = cplInterface.getMaxTimeStepSize();
@@ -86,9 +86,9 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleUniform2D3DReverse)
       cplInterface.readData(
           meshName,
           dataAName,
-          {vids2D.data(), N2D},
+          vids2D,
           maxDt,
-          {valueDataA.data(), N2D});
+          valueDataA);
 
       BOOST_TEST(valueDataA[0] == 6.0);
       BOOST_TEST(valueDataA[1] == 8.0);
@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleUniform2D3DReverse)
 
     {
       Vector3d pos0(0.0, 0.0, 0.0);
-      Vector3d pos1(1.0, 0.0, 1.0);
-      Vector3d pos2(2.0, 0.0, 2.0);
+      Vector3d pos1(0.5, 0.2, 0.0);
+      Vector3d pos2(0.5, 0.5, 0.0);
       vids3D[0] = cplInterface.setMeshVertex(meshName, pos0);
       vids3D[1] = cplInterface.setMeshVertex(meshName, pos1);
       vids3D[2] = cplInterface.setMeshVertex(meshName, pos2);
@@ -126,8 +126,8 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleUniform2D3DReverse)
     cplInterface.writeData(
         meshName,
         dataAName,
-        {vids3D.data(), N3D},
-        {valueDataA3D.data(), N3D});
+        vids3D,
+        valueDataA3D);
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
@@ -138,8 +138,8 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleUniform2D3DReverse)
       cplInterface.writeData(
           meshName,
           dataAName,
-          {vids3D.data(), N3D},
-          {valueDataA3D.data(), N3D});
+          vids3D,
+          valueDataA3D);
 
       cplInterface.advance(maxDt);
       maxDt = cplInterface.getMaxTimeStepSize();
@@ -148,13 +148,13 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleUniform2D3DReverse)
       cplInterface.readData(
           meshName,
           dataBName,
-          {vids3D.data(), N3D},
+          vids3D,
           maxDt,
-          {valueDataB3D.data(), static_cast<int>(valueDataB3D.size())});
+          valueDataB3D);
 
       // After SPREAD (2D -> 3D) of [(0,0,6), (0,0,9)]:
       // - 3D vertex x=0 gets 2D(x=0)       → (0,0,6)
-      // - 3D vertices x=1,2 get 2D(x=1)    → (0,0,9)
+      // - 3D vertices x=0.5,0.5 get 2D(x=0.5)    → (0,0,9)
       //   => [ (0,0,6), (0,0,9), (0,0,9) ]
       int ix0 = 0 * DIM;
       int ix1 = 1 * DIM;
