@@ -313,7 +313,6 @@ target_sources(preciceCore
     src/utils/EigenIO.hpp
     src/utils/Hash.cpp
     src/utils/Hash.hpp
-    src/utils/Helpers.cpp
     src/utils/Helpers.hpp
     src/utils/IntraComm.cpp
     src/utils/IntraComm.hpp
@@ -338,10 +337,8 @@ target_sources(preciceCore
     src/utils/fmtEigen.hpp
     src/utils/fmtSTL.hpp
     src/utils/ignore.hpp
-    src/utils/networking.cpp
     src/utils/networking.hpp
     src/utils/span_tools.hpp
-    src/utils/stacktrace.cpp
     src/utils/stacktrace.hpp
     src/utils/traits.hpp
     src/xml/ConfigParser.cpp

@@ -1,12 +1,9 @@
 #pragma once
 
-#include <algorithm>
 #include <chrono>
+#include <cstddef>
 #include <iomanip>
 #include <iostream>
-#include <memory>
-#include <numeric>
-#include <stddef.h>
 #include <string>
 #include <utility>
 #include <vector>

@@ -1,13 +1,8 @@
 #include "Parallel.hpp"
-#include <algorithm>
-#include <map>
 #include <memory>
-#include <numeric>
 #include <ostream>
 #include <utility>
-#include <vector>
 #include "assertion.hpp"
-#include "com/MPIDirectCommunication.hpp"
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 

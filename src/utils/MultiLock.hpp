@@ -1,8 +1,8 @@
 #pragma once
 
 #include <algorithm>
-#include <exception>
 #include <map>
+#include <stdexcept>
 
 namespace precice::utils {
 

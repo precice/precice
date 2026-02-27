@@ -3,7 +3,6 @@
 #include <Eigen/Core>
 #include <deque>
 #include <iosfwd>
-#include <list>
 #include <map>
 #include <string>
 #include <string_view>
@@ -19,7 +18,6 @@
 #include "mesh/Vertex.hpp"
 #include "precice/impl/Types.hpp"
 #include "query/Index.hpp"
-#include "utils/ManageUniqueIDs.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::mesh {

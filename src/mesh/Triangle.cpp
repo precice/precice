@@ -5,8 +5,6 @@
 #include <algorithm>
 #include <boost/concept/assert.hpp>
 #include <boost/range/concepts.hpp>
-#include <iterator>
-#include "math/differences.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"

@@ -2,19 +2,14 @@
 #include <algorithm>
 #include <array>
 #include <boost/container/flat_map.hpp>
-#include <functional>
-#include <memory>
 #include <ostream>
-#include <type_traits>
 #include <utility>
-#include <vector>
 
 #include "Edge.hpp"
 #include "Mesh.hpp"
 #include "Tetrahedron.hpp"
 #include "Triangle.hpp"
 #include "logging/LogMacros.hpp"
-#include "math/geometry.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Vertex.hpp"
 #include "precice/impl/Types.hpp"

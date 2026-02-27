@@ -1,10 +1,10 @@
 #pragma once
 
 #include <boost/asio.hpp>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <set>
-#include <stddef.h>
 #include <string>
 #include <thread>
 

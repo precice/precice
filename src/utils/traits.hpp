@@ -2,8 +2,7 @@
 
 #include <type_traits>
 
-namespace precice {
-namespace utils {
+namespace precice::utils {
 
 // Implementation of C++17 std::conjunction taken from https://en.cppreference.com/w/cpp/types/conjunction
 template <class...>
@@ -26,5 +25,4 @@ struct type_transform {
 template <class P, class A1, class... A>
 struct transform;
 
-} // namespace utils
-} // namespace precice
+} // namespace precice::utils

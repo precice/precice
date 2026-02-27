@@ -2,8 +2,6 @@
 #include <algorithm>
 
 #include "Edge.hpp"
-#include "math/differences.hpp"
-#include "precice/impl/Types.hpp"
 #include "utils/EigenIO.hpp"
 
 namespace precice::mesh {

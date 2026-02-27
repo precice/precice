@@ -2,7 +2,6 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <boost/concept/assert.hpp>
-#include "math/differences.hpp"
 #include "math/geometry.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/EigenIO.hpp"

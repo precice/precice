@@ -2,9 +2,9 @@
 
 #include <boost/range/adaptor/map.hpp>
 #include <cmath>
+#include <cstddef>
 #include <deque>
 #include <memory>
-#include <stddef.h>
 #include <string>
 #include <string_view>
 #include <utility>

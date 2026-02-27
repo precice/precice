@@ -3,8 +3,6 @@
 #include <iosfwd>
 #include <memory>
 #include <optional>
-#include <string>
-#include <vector>
 
 #include "logging/Logger.hpp"
 #include "precice/impl/Types.hpp"

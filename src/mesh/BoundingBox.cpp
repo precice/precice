@@ -1,9 +1,5 @@
 #include "BoundingBox.hpp"
-#include <algorithm>
-#include <limits>
 #include <ostream>
-#include <string>
-#include <utility>
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 #include "mesh/Vertex.hpp"

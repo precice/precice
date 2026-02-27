@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <array>
-#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>

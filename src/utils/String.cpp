@@ -1,7 +1,6 @@
 #include "String.hpp"
 #include <Eigen/Dense>
 #include <boost/algorithm/string/case_conv.hpp>
-#include <memory>
 #include <regex>
 #include <vector>
 #include "boost/algorithm/string/classification.hpp"

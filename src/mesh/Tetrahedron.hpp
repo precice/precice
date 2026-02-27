@@ -5,7 +5,6 @@
 #include <tuple>
 
 #include "mesh/Vertex.hpp"
-#include "precice/impl/Types.hpp"
 #include "utils/assertion.hpp"
 
 // ----------------------------------------------------------- CLASS DEFINITION

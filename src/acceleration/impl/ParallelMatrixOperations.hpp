@@ -3,8 +3,8 @@
 #ifndef PRECICE_NO_MPI
 
 #include <Eigen/Core>
+#include <cstddef>
 #include <memory>
-#include <stddef.h>
 #include <string>
 #include <vector>
 

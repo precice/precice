@@ -1,8 +1,6 @@
 #include "Data.hpp"
-#include <algorithm>
 #include <utility>
 
-#include "math/differences.hpp"
 #include "precice/impl/Types.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "utils/assertion.hpp"

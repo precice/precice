@@ -1,7 +1,7 @@
 #pragma once
 
+#include <cstddef>
 #include <set>
-#include <stddef.h>
 #include <string>
 #include <vector>
 

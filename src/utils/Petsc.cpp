@@ -4,16 +4,12 @@
 #include "logging/Logger.hpp"
 
 #ifndef PRECICE_NO_PETSC
-#include <memory>
 #include <mpi.h>
 #include <numeric>
 #include <sstream>
-#include <type_traits>
 #include <utility>
-#include <vector>
 
 #include "logging/LogMacros.hpp"
-#include "petsc.h"
 #include "petscdrawtypes.h"
 #include "petscis.h"
 #include "petscksp.h"

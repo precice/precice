@@ -1,10 +1,10 @@
 #pragma once
 #ifndef PRECICE_NO_MPI
 
+#include <cstddef>
 #include <map>
 #include <mpi.h>
 #include <set>
-#include <stddef.h>
 #include <string>
 
 #include "com/MPICommunication.hpp"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <stddef.h>
+#include <cstddef>
 #include <string>
 #include <vector>
 #include "acceleration/impl/Preconditioner.hpp"

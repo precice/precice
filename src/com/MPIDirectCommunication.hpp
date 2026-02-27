@@ -2,9 +2,9 @@
 
 #pragma once
 
+#include <cstddef>
 #include <mpi.h>
 #include <set>
-#include <stddef.h>
 #include <string>
 
 #include "com/MPICommunication.hpp"

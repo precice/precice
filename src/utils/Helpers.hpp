@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cstdint>
 #include <limits>
 #include <map>
 #include <set>
@@ -57,6 +58,14 @@ bool contained(
 }
 
 /// Returns true if machine is big-endian needed for parallel vtk output
-bool isMachineBigEndian();
+inline bool isMachineBigEndian()
+{
+  union {
+    uint32_t i;
+    char     c[4];
+  } bint = {0x01020304};
+
+  return bint.c[0] == 1;
+}
 
 } // namespace precice::utils

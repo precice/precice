@@ -2,7 +2,6 @@
 
 #include <Eigen/Core>
 #include <initializer_list>
-#include <stddef.h>
 #include <string>
 
 #include "SharedPointer.hpp"
