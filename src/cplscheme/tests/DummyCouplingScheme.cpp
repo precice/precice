@@ -6,9 +6,11 @@
 namespace precice::cplscheme::tests {
 
 DummyCouplingScheme::DummyCouplingScheme(
-    int numberIterations,
-    int maxTimeWindows)
-    : _numberIterations(numberIterations),
+    int                numberIterations,
+    int                maxTimeWindows,
+    const std::string &couplingPartner)
+    : _couplingPartner(couplingPartner),
+      _numberIterations(numberIterations),
       _maxTimeWindows(maxTimeWindows)
 {
 }

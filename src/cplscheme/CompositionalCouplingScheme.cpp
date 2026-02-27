@@ -52,6 +52,19 @@ void CompositionalCouplingScheme::addCouplingScheme(
     const PtrCouplingScheme &couplingScheme)
 {
   PRECICE_TRACE();
+
+  // Check for duplicate coupling partners
+  auto newPartners = couplingScheme->getCouplingPartners();
+  for (const auto &scheme : allSchemes()) {
+    auto existingPartners = scheme->getCouplingPartners();
+    for (const auto &newPartner : newPartners) {
+      PRECICE_CHECK(std::find(existingPartners.begin(), existingPartners.end(), newPartner) == existingPartners.end(),
+                    "A coupling scheme with participant \"{}\" already exists in this compositional coupling scheme. "
+                    "Please make sure that only one coupling scheme exists between any two participants.",
+                    newPartner);
+    }
+  }
+
   if (!couplingScheme->isImplicitCouplingScheme()) {
     _explicitSchemes.emplace_back(couplingScheme);
 
