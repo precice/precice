@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleVectorParabolic2D3D_Square)
       Eigen::VectorXd vIn(6);
       vIn << 0.0, 0.0, 10.0,
           0.0, 0.0, 20.0;
-      cplInterface.writeData(meshName2D, dataWriteVec, {vids2D.data(), 2}, vIn);
+      cplInterface.writeData(meshName2D, dataWriteVec, vids2D, vIn);
 
       cplInterface.advance(maxDt);
       maxDt = cplInterface.getMaxTimeStepSize();
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleVectorParabolic2D3D_Square)
 
     Eigen::VectorXd pInit(4);
     pInit << 8.0, 4.0, 6.0, 6.0; // average = 6.0
-    cplInterface.writeData(meshName3D, dataWriteSca, {vids3D.data(), 4}, pInit);
+    cplInterface.writeData(meshName3D, dataWriteSca, vids3D, pInit);
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleVectorParabolic2D3D_Square)
     BOOST_TEST((vOut3 - exp3).norm() <= tol);
 
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeData(meshName3D, dataWriteSca, {vids3D.data(), 4}, pInit);
+      cplInterface.writeData(meshName3D, dataWriteSca, vids3D, pInit);
 
       cplInterface.advance(maxDt);
       maxDt = cplInterface.getMaxTimeStepSize();

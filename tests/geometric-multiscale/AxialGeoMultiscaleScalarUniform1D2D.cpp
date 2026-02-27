@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleScalarUniform1D2D)
     initValues << v0(0), v0(1), v0(2),
         v1(0), v1(1), v1(2);
 
-    cplInterface.writeData(meshName, dataBName, {vids.data(), 2}, initValues);
+    cplInterface.writeData(meshName, dataBName, vids, initValues);
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleScalarUniform1D2D)
     while (cplInterface.isCouplingOngoing()) {
 
       // Keep VelocityLike constant each step, so 1D keeps reading same collected average
-      cplInterface.writeData(meshName, dataBName, {vids.data(), 2}, initValues);
+      cplInterface.writeData(meshName, dataBName, vids, initValues);
 
       cplInterface.advance(maxDt);
       maxDt = cplInterface.getMaxTimeStepSize();

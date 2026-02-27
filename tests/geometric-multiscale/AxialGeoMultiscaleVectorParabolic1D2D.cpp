@@ -70,14 +70,14 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleVectorParabolic1D2D)
 
     Eigen::VectorXd initValues(2);
     initValues << 8.0, 4.0;
-    cplInterface.writeData(meshName, dataBName, {vids.data(), 2}, initValues);
+    cplInterface.writeData(meshName, dataBName, vids, initValues);
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
 
     while (cplInterface.isCouplingOngoing()) {
 
-      cplInterface.writeData(meshName, dataBName, {vids.data(), 2}, initValues);
+      cplInterface.writeData(meshName, dataBName, vids, initValues);
 
       cplInterface.advance(maxDt);
       maxDt = cplInterface.getMaxTimeStepSize();

@@ -76,14 +76,14 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleScalarParabolic1D2D)
     initValues << v0(0), v0(1), v0(2),
         v1(0), v1(1), v1(2);
 
-    cplInterface.writeData(meshName, dataBName, {vids.data(), 2}, initValues);
+    cplInterface.writeData(meshName, dataBName, vids, initValues);
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
 
     while (cplInterface.isCouplingOngoing()) {
 
-      cplInterface.writeData(meshName, dataBName, {vids.data(), 2}, initValues);
+      cplInterface.writeData(meshName, dataBName, vids, initValues);
 
       cplInterface.advance(maxDt);
       maxDt = cplInterface.getMaxTimeStepSize();

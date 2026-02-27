@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleScalarUniform1D3D_Square)
         0.0, 0.0, 6.0,
         0.0, 0.0, 6.0; // average = 6
 
-    cplInterface.writeData(meshName3D, dataWriteVec, {vids3D.data(), 4}, vInit);
+    cplInterface.writeData(meshName3D, dataWriteVec, vids3D, vInit);
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleScalarUniform1D3D_Square)
     BOOST_TEST(pRead3 == 8.0);
 
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeData(meshName3D, dataWriteVec, {vids3D.data(), 4}, vInit);
+      cplInterface.writeData(meshName3D, dataWriteVec, vids3D, vInit);
 
       cplInterface.advance(maxDt);
       maxDt = cplInterface.getMaxTimeStepSize();

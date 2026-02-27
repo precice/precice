@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleScalarUniform2D3D_Square)
     while (cplInterface.isCouplingOngoing()) {
       Eigen::VectorXd pIn(2);
       pIn << 10.0, 20.0;
-      cplInterface.writeData(meshName2D, dataWriteSca, {vids2D.data(), 2}, pIn);
+      cplInterface.writeData(meshName2D, dataWriteSca, vids2D, pIn);
 
       cplInterface.advance(maxDt);
       maxDt = cplInterface.getMaxTimeStepSize();
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleScalarUniform2D3D_Square)
         0.0, 0.0, 6.0,
         0.0, 0.0, 6.0;
 
-    cplInterface.writeData(meshName3D, dataWriteVec, {vids3D.data(), 4}, vInit);
+    cplInterface.writeData(meshName3D, dataWriteVec, vids3D, vInit);
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleScalarUniform2D3D_Square)
     BOOST_TEST(p3 == 20.0);
 
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeData(meshName3D, dataWriteVec, {vids3D.data(), 4}, vInit);
+      cplInterface.writeData(meshName3D, dataWriteVec, vids3D, vInit);
 
       cplInterface.advance(maxDt);
       maxDt = cplInterface.getMaxTimeStepSize();

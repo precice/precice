@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleVectorParabolic1D3D_Square)
 
     Eigen::VectorXd initPressure(4);
     initPressure << 8.0, 4.0, 6.0, 6.0; // average = 6.0
-    cplInterface.writeData(meshName3D, dataWriteSca, {vids.data(), 4}, initPressure);
+    cplInterface.writeData(meshName3D, dataWriteSca, vids, initPressure);
 
     cplInterface.initialize();
     double maxDt = cplInterface.getMaxTimeStepSize();
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleVectorParabolic1D3D_Square)
     BOOST_TEST(vOut3 == exp3);
 
     while (cplInterface.isCouplingOngoing()) {
-      cplInterface.writeData(meshName3D, dataWriteSca, {vids.data(), 4}, initPressure);
+      cplInterface.writeData(meshName3D, dataWriteSca, vids, initPressure);
 
       cplInterface.advance(maxDt);
       maxDt = cplInterface.getMaxTimeStepSize();
