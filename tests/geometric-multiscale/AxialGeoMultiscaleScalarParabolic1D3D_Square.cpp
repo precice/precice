@@ -90,7 +90,6 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleScalarParabolic1D3D_Square)
     constexpr double m      = 0.879;
 
     const double b00 = 1.0;
-    const double b10 = 0.0;
     const double b05 = 1.0 - 0.5 * 0.5;
 
     const double expected0 = factor * 8.0 * std::pow(b00, m) * std::pow(b00, m);

@@ -1001,12 +1001,10 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadScalarParabolicZ1D3D_Square)
   const double u = inSample.values(0);
 
   const double b_center = 1.0;             // 1 - 0^2
-  const double b_edge   = 0.0;             // 1 - 1^2
   const double b_mid    = 1.0 - 0.5 * 0.5; // 0.75
   const double b_corner = 1.0 - 0.5 * 0.5; // 0.75
 
   const double expected_center = factor * u * std::pow(b_center, m) * std::pow(b_center, m);
-  const double expected_edge   = factor * u * std::pow(b_edge, m) * std::pow(b_center, m); // = 0
   const double expected_mid    = factor * u * std::pow(b_mid, m) * std::pow(b_center, m);
   const double expected_corner = factor * u * std::pow(b_corner, m) * std::pow(b_corner, m);
 
@@ -1108,7 +1106,6 @@ BOOST_AUTO_TEST_CASE(ConsistentSpreadVectorParabolicX1D3D_Square)
   const double u = inSample.values(0);
 
   const double b_center = 1.0;
-  const double b_edge   = 0.0;
   const double b_mid    = 1.0 - 0.5 * 0.5; // 0.75
   const double b_corner = 1.0 - 0.5 * 0.5; // 0.75
 

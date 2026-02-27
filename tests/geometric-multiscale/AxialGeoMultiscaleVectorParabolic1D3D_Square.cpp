@@ -95,7 +95,6 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleVectorParabolic1D3D_Square)
     const double u = 8.0;
 
     const double b00 = 1.0;
-    const double b10 = 0.0;
     const double b05 = 1.0 - 0.5 * 0.5; // 0.75
 
     const double expected0 = factor * u * std::pow(b00, m) * std::pow(b00, m);

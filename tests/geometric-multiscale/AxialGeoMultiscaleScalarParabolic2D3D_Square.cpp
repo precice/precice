@@ -107,8 +107,6 @@ BOOST_AUTO_TEST_CASE(AxialGeoMultiscaleScalarParabolic2D3D_Square)
     constexpr double m               = 0.879;
     constexpr double eps             = 1e-12;
 
-    const double radius = 1.0;
-
     // In spread D2D3 square formula, s1 = input()->vertex(inIdx).getCoords()[_lineCoord] / radius.
     // Here input line is along Y, so _lineCoord = Y, s1 = +/-0.5.
     const double s1    = 0.5;
