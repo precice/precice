@@ -24,6 +24,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 #include "utils/assertion.hpp"
@@ -440,14 +441,14 @@ void MappingConfiguration::xmlTagCallback(
     std::string spreadProfileStr  = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_SPREAD_PROFILE, "");
 
     if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE || type == TYPE_RADIAL_GEOMETRIC_MULTISCALE || type == TYPE_COARSE_GRAINING) {
-      PRECICE_CHECK(_experimental, "The configured mapping \"{}\" is experimental and the configuration can change between minor releases. Set experimental=\"on\" in the precice-configuration tag.", type);
+    PRECICE_CHECK(_experimental, "The configured mapping \"{}\" is experimental and the configuration can change between minor releases. Set experimental=\"on\" in the precice-configuration tag.", type);
     }
 
-    if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE && context.size > 1) {
+    if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE && utils::IntraComm::isParallel()) {
       throw std::runtime_error{"Axial geometric multiscale mapping is not available for parallel participants."};
     }
 
-    if (type == TYPE_RADIAL_GEOMETRIC_MULTISCALE && context.size > 1) {
+    if (type == TYPE_RADIAL_GEOMETRIC_MULTISCALE && utils::IntraComm::isParallel()) {
       throw std::runtime_error{"Radial geometric multiscale mapping is not available for parallel participants."};
     }
 
