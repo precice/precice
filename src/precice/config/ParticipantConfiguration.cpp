@@ -728,14 +728,32 @@ void ParticipantConfiguration::finishParticipantConfiguration(
       _participants.back()->addExportContext(exportContext);
     };
 
-    // Create one exporter per provided mesh
-    for (const auto &meshContext : participant->providedMeshContexts()) {
-      createExporter(meshContext);
+    for (const auto &meshName : exportContext.selectedMeshes) {
+      PRECICE_CHECK(participant->isMeshUsed(meshName),
+                    "Participant \"{}\" defines export for mesh \"{}\" which is not used.",
+                    participant->getName(), meshName);
     }
 
-    // Create one exporter per received mesh
+    auto shouldExport = [&](const impl::MeshContext &meshContext) {
+      // Default: export all
+      if (exportContext.selectedMeshes.empty()) {
+        return true;
+      }
+      return std::find(exportContext.selectedMeshes.begin(), exportContext.selectedMeshes.end(),
+                       meshContext.mesh->getName()) != exportContext.selectedMeshes.end();
+    };
+
+    // Create exporters for only selected meshes
+    for (const auto &meshContext : participant->providedMeshContexts()) {
+      if (shouldExport(meshContext)) {
+        createExporter(meshContext);
+      }
+    }
+
     for (const auto &meshContext : participant->receivedMeshContexts()) {
-      createExporter(meshContext);
+      if (shouldExport(meshContext)) {
+        createExporter(meshContext);
+      }
     }
 
     PRECICE_WARN_IF(exportContext.everyNTimeWindows > 1 && exportContext.everyIteration,
