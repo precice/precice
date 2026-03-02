@@ -265,6 +265,25 @@ void M2N::send(
     int                         meshID,
     int                         valueDimension)
 {
+  // compute data size in bytes (exact)
+  const std::size_t dataSizeBytes =
+      itemsToSend.size() * sizeof(double);
+
+  // temporary compression threshold (1 MB)
+  const std::size_t compressionThreshold =
+      1 * 1024 * 1024;
+
+  // compression decision (NO compression yet)
+  const bool shouldCompress =
+      dataSizeBytes >= compressionThreshold;
+
+  // log decision (for verification only)
+  PRECICE_DEBUG(
+      "M2N::send decision: size={} bytes, threshold={} → {}",
+      dataSizeBytes,
+      compressionThreshold,
+      shouldCompress ? "COMPRESS" : "RAW");
+      
   if (not _useOnlyPrimaryCom) {
     PRECICE_ASSERT(_areSecondaryRanksConnected);
     PRECICE_ASSERT(_distComs.find(meshID) != _distComs.end());
