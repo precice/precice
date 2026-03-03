@@ -138,7 +138,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y hwloc
-          TOPO="$(mktemp --suffix=TOPO)"
+          TOPO="$(mktemp --suffix=TOPO -d)/topo.xml"
           lstopo --of xml "$TOPO"
           echo "HWLOC_XMLFILE=$TOPO" >> "$(GITHUB_ENV)"
       - name: Configure
