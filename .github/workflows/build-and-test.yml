@@ -136,9 +136,8 @@ jobs:
       - name: Precompute hwloc topology
         run: |
           TOPO="$(mktemp --suffix=TOPO)"
-          lstopo --of xml "$(TOPO)"
-          echo "HWLOC_XMLFILE=$(TOPO)" >> "$(GITHUB_ENV)"
-          export TOPO
+          lstopo --of xml "$TOPO"
+          echo "HWLOC_XMLFILE=$TOPO" >> "$(GITHUB_ENV)"
       - name: Configure
         working-directory: build
         env:
