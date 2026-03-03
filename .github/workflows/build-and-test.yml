@@ -134,7 +134,10 @@ jobs:
           venv/bin/pip install polars
           venv/bin/pip list
       - name: Precompute hwloc topology
+        if: ${{ contains(matrix.IMAGE, 'ubuntu') }}
         run: |
+          apt-get update
+          apt-get install -y hwloc
           TOPO="$(mktemp --suffix=TOPO)"
           lstopo --of xml "$TOPO"
           echo "HWLOC_XMLFILE=$TOPO" >> "$(GITHUB_ENV)"
