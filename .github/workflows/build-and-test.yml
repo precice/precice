@@ -133,6 +133,12 @@ jobs:
           python3 -m venv --system-site-packages venv
           venv/bin/pip install polars
           venv/bin/pip list
+      - name: Precompute hwloc topology
+        run: |
+          TOPO="$(mktmp --suffix=TOPO)"
+          lstopo --of xml "$(TOPO)"
+          echo "HWLOC_XMLFILE=$(TOPO)" >> "$(GITHUB_ENV)"
+          export TOPO
       - name: Configure
         working-directory: build
         env:
@@ -169,6 +175,8 @@ jobs:
         working-directory: build
         run: |
           cmake --build .
+      - name: Test HWLOC
+        run: echo "HWLOC_XMLFILE= $(HWLOC_XMLFILE)"
       - name: Adjust user rights
         run: chown -R "$PRECICE_USER" build
       - name: Tests
