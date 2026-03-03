@@ -135,7 +135,7 @@ jobs:
           venv/bin/pip list
       - name: Precompute hwloc topology
         run: |
-          TOPO="$(mktmp --suffix=TOPO)"
+          TOPO="$(mktemp --suffix=TOPO)"
           lstopo --of xml "$(TOPO)"
           echo "HWLOC_XMLFILE=$(TOPO)" >> "$(GITHUB_ENV)"
           export TOPO
