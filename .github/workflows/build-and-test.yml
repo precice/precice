@@ -140,7 +140,7 @@ jobs:
           apt-get install -y hwloc
           TOPO="$(mktemp --suffix=TOPO -d)/topo.xml"
           lstopo --of xml "$TOPO"
-          echo "HWLOC_XMLFILE=$TOPO" >> "$(GITHUB_ENV)"
+          echo "HWLOC_XMLFILE=$TOPO" >> "$GITHUB_ENV"
       - name: Configure
         working-directory: build
         env:
