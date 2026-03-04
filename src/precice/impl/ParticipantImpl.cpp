@@ -781,7 +781,7 @@ void ParticipantImpl::resetMesh(
   PRECICE_TRACE(meshName);
   PRECICE_VALIDATE_MESH_NAME(meshName);
   PRECICE_CHECK(_couplingScheme->isCouplingOngoing(), "Cannot remesh after the last time window has been completed.");
-  PRECICE_CHECK(_couplingScheme->isTimeWindowComplete(), "Cannot remesh while subcycling or iterating. Remeshing is only allowed when the time window is completed.");
+  PRECICE_CHECK(_numberAdvanceCalls == 0 || _couplingScheme->isTimeWindowComplete(), "Cannot remesh while subcycling or iterating. Remeshing is only allowed directly after initialization or when the time window is completed.");
   impl::MeshContext &context = _accessor->meshContext(meshName);
 
   PRECICE_DEBUG("Clear mesh positions for mesh \"{}\"", context.mesh->getName());

@@ -139,6 +139,8 @@ target_sources(testprecice
     tests/quasi-newton/serial/IMVJWaveformReduced.cpp
     tests/quasi-newton/serial/IMVJZeroUpdate.cpp
     tests/remeshing/ReadAfterReset.cpp
+    tests/remeshing/ResetAfterInit.cpp
+    tests/remeshing/ResetAfterInitImplicit.cpp
     tests/remeshing/ResetAfterSubcycling.cpp
     tests/remeshing/ResetWhileIterating.cpp
     tests/remeshing/SubcylingAfterReset.cpp
