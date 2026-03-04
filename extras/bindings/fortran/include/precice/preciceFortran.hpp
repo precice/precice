@@ -249,7 +249,7 @@ PRECICE_API void precicef_reset_mesh_(
 
 /**
  * Fortran syntax:
- * precicef_set_vertex(
+ * precicef_set_mesh_vertex(
  *   CHARACTER        meshName(*),
  *   DOUBLE PRECISION coordinates(dim),
  *   INTEGER          id )
@@ -260,6 +260,13 @@ PRECICE_API void precicef_reset_mesh_(
  * @copydoc precice::Participant::setMeshVertex()
  *
  */
+PRECICE_API void precicef_set_mesh_vertex_(
+    const char   *meshName,
+    const double *coordinates,
+    int          *id,
+    int           meshNameLength);
+
+/// Deprecated. Use precicef_set_mesh_vertex_() instead.
 PRECICE_API void precicef_set_vertex_(
     const char   *meshName,
     const double *coordinates,
@@ -306,7 +313,7 @@ PRECICE_API void precicef_set_vertices_(
 
 /**
  * Fortran syntax:
- * precicef_set_edge(
+ * precicef_set_mesh_edge(
  *   CHARACTER meshName(*),
  *   INTEGER firstVertexID,
  *   INTEGER secondVertexID )
@@ -317,6 +324,13 @@ PRECICE_API void precicef_set_vertices_(
  * @copydoc precice::Participant::setMeshEdge()
  *
  */
+PRECICE_API void precicef_set_mesh_edge_(
+    const char *meshName,
+    const int  *firstVertexID,
+    const int  *secondVertexID,
+    int         meshNameLength);
+
+/// Deprecated. Use precicef_set_mesh_edge_() instead.
 PRECICE_API void precicef_set_edge_(
     const char *meshName,
     const int  *firstVertexID,
@@ -344,7 +358,7 @@ PRECICE_API void precicef_set_mesh_edges_(
 
 /**
  * Fortran syntax:
- * precicef_set_triangle_(
+ * precicef_set_mesh_triangle(
  *   CHARACTER meshName(*),
  *   INTEGER firstVertexID,
  *   INTEGER secondVertexID,
@@ -356,6 +370,14 @@ PRECICE_API void precicef_set_mesh_edges_(
  * @copydoc precice::Participant::setMeshTriangle()
  *
  */
+PRECICE_API void precicef_set_mesh_triangle_(
+    const char *meshName,
+    const int  *firstVertexID,
+    const int  *secondVertexID,
+    const int  *thirdVertexID,
+    int         meshNameLength);
+
+/// Deprecated. Use precicef_set_mesh_triangle_() instead.
 PRECICE_API void precicef_set_triangle_(
     const char *meshName,
     const int  *firstVertexID,
@@ -384,7 +406,7 @@ PRECICE_API void precicef_set_mesh_triangles_(
 
 /**
  * Fortran syntax:
- * precicef_set_quad_(
+ * precicef_set_mesh_quad(
  *   CHARACTER meshName(*),
  *   INTEGER firstVertexID,
  *   INTEGER secondVertexID,
@@ -397,6 +419,15 @@ PRECICE_API void precicef_set_mesh_triangles_(
  * @copydoc precice::Participant::setMeshQuad()
  *
  */
+PRECICE_API void precicef_set_mesh_quad_(
+    const char *meshName,
+    const int  *firstVertexID,
+    const int  *secondVertexID,
+    const int  *thirdVertexID,
+    const int  *fourthVertexID,
+    int         meshNameLength);
+
+/// Deprecated. Use precicef_set_mesh_quad_() instead.
 PRECICE_API void precicef_set_quad_(
     const char *meshName,
     const int  *firstVertexID,
@@ -426,7 +457,7 @@ PRECICE_API void precicef_set_mesh_quads_(
 
 /**
  * Fortran syntax:
- * precicef_set_tetrahedron(
+ * precicef_set_mesh_tetrahedron(
  *   CHARACTER meshName(*),
  *   INTEGER firstVertexID,
  *   INTEGER secondVertexID,
@@ -439,6 +470,15 @@ PRECICE_API void precicef_set_mesh_quads_(
  * @copydoc precice::Participant::setMeshTetrahedron()
  *
  */
+PRECICE_API void precicef_set_mesh_tetrahedron_(
+    const char *meshName,
+    const int  *firstVertexID,
+    const int  *secondVertexID,
+    const int  *thirdVertexID,
+    const int  *fourthVertexID,
+    int         meshNameLength);
+
+/// Deprecated. Use precicef_set_mesh_tetrahedron_() instead.
 PRECICE_API void precicef_set_tetrahedron(
     const char *meshName,
     const int  *firstVertexID,
@@ -684,7 +724,7 @@ PRECICE_API void precicef_write_gradient_data_(
     const int    *ids,
     const double *gradients,
     int           meshNameLength,
-    int           dataNameLength);
+    int           dataNameLength );
 
 ///@}
 

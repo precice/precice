@@ -229,7 +229,7 @@ try {
   std::abort();
 }
 
-void precicef_set_vertex_(
+void precicef_set_mesh_vertex_(
     const char   *meshName,
     const double *position,
     int          *vertexID,
@@ -269,7 +269,7 @@ try {
   std::abort();
 }
 
-void precicef_set_edge_(
+void precicef_set_mesh_edge_(
     const char *meshName,
     const int  *firstVertexID,
     const int  *secondVertexID,
@@ -294,7 +294,7 @@ try {
   std::abort();
 }
 
-void precicef_set_triangle_(
+void precicef_set_mesh_triangle_(
     const char *meshName,
     const int  *firstVertexID,
     const int  *secondVertexID,
@@ -320,7 +320,7 @@ try {
   std::abort();
 }
 
-void precicef_set_quad_(
+void precicef_set_mesh_quad_(
     const char *meshName,
     const int  *firstVertexID,
     const int  *secondVertexID,
@@ -347,7 +347,7 @@ try {
   std::abort();
 }
 
-void precicef_set_tetrahedron(
+void precicef_set_mesh_tetrahedron_(
     const char *meshName,
     const int  *firstVertexID,
     const int  *secondVertexID,
@@ -573,6 +573,58 @@ try {
   impl->stopLastProfilingSection();
 } catch (::precice::Error &e) {
   std::abort();
+}
+
+// Deprecated wrappers for backward compatibility
+
+void precicef_set_vertex_(
+    const char   *meshName,
+    const double *coordinates,
+    int          *id,
+    int           meshNameLength)
+{
+  precicef_set_mesh_vertex_(meshName, coordinates, id, meshNameLength);
+}
+
+void precicef_set_edge_(
+    const char *meshName,
+    const int  *firstVertexID,
+    const int  *secondVertexID,
+    int         meshNameLength)
+{
+  precicef_set_mesh_edge_(meshName, firstVertexID, secondVertexID, meshNameLength);
+}
+
+void precicef_set_triangle_(
+    const char *meshName,
+    const int  *firstVertexID,
+    const int  *secondVertexID,
+    const int  *thirdVertexID,
+    int         meshNameLength)
+{
+  precicef_set_mesh_triangle_(meshName, firstVertexID, secondVertexID, thirdVertexID, meshNameLength);
+}
+
+void precicef_set_quad_(
+    const char *meshName,
+    const int  *firstVertexID,
+    const int  *secondVertexID,
+    const int  *thirdVertexID,
+    const int  *fourthVertexID,
+    int         meshNameLength)
+{
+  precicef_set_mesh_quad_(meshName, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID, meshNameLength);
+}
+
+void precicef_set_tetrahedron(
+    const char *meshName,
+    const int  *firstVertexID,
+    const int  *secondVertexID,
+    const int  *thirdVertexID,
+    const int  *fourthVertexID,
+    int         meshNameLength)
+{
+  precicef_set_mesh_tetrahedron_(meshName, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID, meshNameLength);
 }
 
 #ifdef __GNUC__
