@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(ExplicitRead)
         }
       }
 
-      // Check that we catch vertice not within the access region.
+      // Check that we catch vertex not within the access region.
       {
         std::vector<double> solverTwoCoord(dim);
         double              value;
