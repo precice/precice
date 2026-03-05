@@ -266,7 +266,10 @@ PRECICE_API void precicef_set_mesh_vertex_(
     int          *id,
     int           meshNameLength);
 
-/// Deprecated. Use precicef_set_mesh_vertex_() instead.
+/**
+ * @brief @deprecated Use precicef_set_mesh_vertex_() instead.
+ * @see precicef_set_mesh_vertex_
+ */
 PRECICE_API void precicef_set_vertex_(
     const char   *meshName,
     const double *coordinates,
@@ -330,7 +333,10 @@ PRECICE_API void precicef_set_mesh_edge_(
     const int  *secondVertexID,
     int         meshNameLength);
 
-/// Deprecated. Use precicef_set_mesh_edge_() instead.
+/**
+ * @brief @deprecated Use precicef_set_mesh_edge_() instead.
+ * @see precicef_set_mesh_edge_
+ */
 PRECICE_API void precicef_set_edge_(
     const char *meshName,
     const int  *firstVertexID,
@@ -377,7 +383,10 @@ PRECICE_API void precicef_set_mesh_triangle_(
     const int  *thirdVertexID,
     int         meshNameLength);
 
-/// Deprecated. Use precicef_set_mesh_triangle_() instead.
+/**
+ * @brief @deprecated Use precicef_set_mesh_triangle_() instead.
+ * @see precicef_set_mesh_triangle_
+ */
 PRECICE_API void precicef_set_triangle_(
     const char *meshName,
     const int  *firstVertexID,
@@ -427,7 +436,10 @@ PRECICE_API void precicef_set_mesh_quad_(
     const int  *fourthVertexID,
     int         meshNameLength);
 
-/// Deprecated. Use precicef_set_mesh_quad_() instead.
+/**
+ * @brief @deprecated Use precicef_set_mesh_quad_() instead.
+ * @see precicef_set_mesh_quad_
+ */
 PRECICE_API void precicef_set_quad_(
     const char *meshName,
     const int  *firstVertexID,
@@ -478,7 +490,10 @@ PRECICE_API void precicef_set_mesh_tetrahedron_(
     const int  *fourthVertexID,
     int         meshNameLength);
 
-/// Deprecated. Use precicef_set_mesh_tetrahedron_() instead.
+/**
+ * @brief @deprecated Use precicef_set_mesh_tetrahedron_() instead.
+ * @see precicef_set_mesh_tetrahedron_
+ */
 PRECICE_API void precicef_set_tetrahedron(
     const char *meshName,
     const int  *firstVertexID,
@@ -724,7 +739,7 @@ PRECICE_API void precicef_write_gradient_data_(
     const int    *ids,
     const double *gradients,
     int           meshNameLength,
-    int           dataNameLength );
+    int           dataNameLength);
 
 ///@}
 
