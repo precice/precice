@@ -78,7 +78,7 @@ public:
     return _hasValidation;
   };
 
-  void readValue(const std::map<std::string, std::string> &aAttributes);
+  void readValue(const std::map<std::string, std::string> &aAttributes, std::string_view tagName);
 
   const std::string &getName() const
   {
@@ -158,14 +158,14 @@ XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDefaultValue(const ATTR
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::string> &aAttributes)
+void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::string> &aAttributes, std::string_view tagName)
 {
   PRECICE_TRACE(_name);
   PRECICE_ASSERT(!_read, "Attribute \"" + _name + "\" has already been read.");
 
   const auto position = aAttributes.find(getName());
   if (position == aAttributes.end()) {
-    PRECICE_CHECK(_hasDefaultValue, "Attribute \"{}\" is required, but was not defined.", _name);
+    PRECICE_CHECK(_hasDefaultValue, "Tag <{}>: Attribute \"{}\" is required, but was not defined.", tagName, _name);
     set(_value, _defaultValue);
   } else {
     try {
@@ -176,7 +176,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::strin
     if (_hasValidation) {
       if (std::find(_options.begin(), _options.end(), _value) == _options.end()) {
         std::ostringstream stream;
-        stream << "Invalid value \"" << _value << "\" of attribute \""
+        stream << "Tag <" << tagName << ">: Invalid value \"" << _value << "\" of attribute \""
                << getName() << "\": ";
         // print first
         auto first = _options.begin();
