@@ -1292,7 +1292,7 @@ void ParticipantImpl::mapAndReadData(
   ReadDataContext &dataContext = _accessor->readDataContext(meshName, dataName);
   PRECICE_CHECK(dataContext.hasJustInTimeMapping(),
                 "The function \"mapAndReadData\" was called on mesh \"{0}\", but no matching just-in-time mapping was configured. "
-                "Please define a mapping in read direction from the mesh \{0}\" and omit the \"to\" attribute from the definition. "
+                "Please define a mapping in read direction from the mesh \"{0}\" and omit the \"to\" attribute from the definition. "
                 "Example \"<mapping:nearest-neighbor direction=\"read\" from=\"{0}\" constraint=\"consistent\" />",
                 meshName);
 
@@ -1353,7 +1353,7 @@ void ParticipantImpl::writeAndMapData(
   WriteDataContext &dataContext = _accessor->writeDataContext(meshName, dataName);
   PRECICE_CHECK(dataContext.hasJustInTimeMapping(),
                 "The function \"writeAndMapData\" was called on mesh \"{0}\", but no matching just-in-time mapping was configured. "
-                "Please define a mapping in write direction to the mesh \{0}\" and omit the \"from\" attribute from the definition. "
+                "Please define a mapping in write direction to the mesh \"{0}\" and omit the \"from\" attribute from the definition. "
                 "Example \"<mapping:nearest-neighbor direction=\"write\" to=\"{0}\" constraint=\"conservative\" />",
                 meshName);
 
