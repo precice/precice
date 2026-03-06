@@ -71,4 +71,52 @@ BOOST_AUTO_TEST_CASE(VectorAttributes)
   BOOST_TEST(cb.eigenVectorXd(2) == 1.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(MissingRequiredAttribute)
+{
+  PRECICE_TEST();
+  // A required attribute with no default value is absent from the XML file.
+  // The error message should include the owning tag name so the user can
+  // locate the problematic element without grepping their config manually.
+  std::string filename(getPathToSources() + "/xml/tests/xmltest-missing-attr.xml");
+
+  CallbackHost cb;
+  XMLTag       rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
+  XMLTag       testTag(cb, "test-tag", XMLTag::OCCUR_ONCE);
+
+  // "name" is required (no default given)
+  XMLAttribute<std::string> attr("name");
+  testTag.addAttribute(attr);
+  rootTag.addSubtag(testTag);
+
+  BOOST_CHECK_EXCEPTION(
+      configure(rootTag, ConfigurationContext{}, filename),
+      ::precice::Error,
+      ::precice::testing::errorContains("test-tag"));
+}
+
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(InvalidAttributeOption)
+{
+  PRECICE_TEST();
+  // An attribute is present but its value is not in the declared option set.
+  // The error message should include the owning tag name so the user knows
+  // which element to fix.
+  std::string filename(getPathToSources() + "/xml/tests/xmltest-invalid-attr-option.xml");
+
+  CallbackHost cb;
+  XMLTag       rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
+  XMLTag       testTag(cb, "test-tag", XMLTag::OCCUR_ONCE);
+
+  // "mode" only accepts "fast" or "slow"
+  auto attr = makeXMLAttribute("mode", "fast").setOptions({"fast", "slow"});
+  testTag.addAttribute(attr);
+  rootTag.addSubtag(testTag);
+
+  BOOST_CHECK_EXCEPTION(
+      configure(rootTag, ConfigurationContext{}, filename),
+      ::precice::Error,
+      ::precice::testing::errorContains("test-tag"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

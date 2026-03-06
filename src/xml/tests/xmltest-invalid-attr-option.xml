@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <!-- test-tag has attribute "mode" set to an invalid option -->
+  <test-tag mode="invalid-option"/>
+</configuration>
