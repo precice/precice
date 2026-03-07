@@ -20,12 +20,12 @@ void WriteDataContext::resetBufferedData()
 
 void WriteDataContext::trimAfter(double time)
 {
-  _providedData->timeStepsStorage().trimAfter(time);
+  _providedData->waveform().trimAfter(time);
 
   // reset all toData
   PRECICE_ASSERT(!hasReadMapping(), "Read mapping is not allowed for WriteDataContext.");
   if (hasWriteMapping()) {
-    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [time](auto &context) { context.toData->timeStepsStorage().trimAfter(time); });
+    std::for_each(_mappingContexts.begin(), _mappingContexts.end(), [time](auto &context) { context.toData->waveform().trimAfter(time); });
   }
 }
 
@@ -86,7 +86,7 @@ void WriteDataContext::writeGradientsIntoDataBuffer(::precice::span<const Vertex
   }
 }
 
-void WriteDataContext::resizeBufferTo(int nVertices)
+void WriteDataContext::resizeBufferTo(int nVertices, bool invalidateBufferedData)
 {
   using SizeType = std::remove_cv<decltype(nVertices)>::type;
 
@@ -100,6 +100,9 @@ void WriteDataContext::resizeBufferTo(int nVertices)
   if (change > 0) {
     _writeDataBuffer.values.tail(change).setZero();
   }
+  if (invalidateBufferedData)
+    _writeDataBuffer.values.setZero(); // Zero since the waveform uses the initial sample
+
   PRECICE_DEBUG("Data {} now has {} values", getDataName(), _writeDataBuffer.values.size());
 
   if (!_providedData->hasGradient()) {
@@ -113,6 +116,10 @@ void WriteDataContext::resizeBufferTo(int nVertices)
   if (change > 0) {
     _writeDataBuffer.gradients.rightCols(change).setZero();
   }
+
+  if (invalidateBufferedData)
+    _writeDataBuffer.gradients.setZero();
+
   PRECICE_DEBUG("Gradient Data {} now has {} x {} values", getDataName(), _writeDataBuffer.gradients.rows(), _writeDataBuffer.gradients.cols());
 }
 

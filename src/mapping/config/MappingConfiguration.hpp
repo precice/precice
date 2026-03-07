@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include "logging/Logger.hpp"
+#include "mapping/CoarseGrainingMapping.hpp"
 #include "mapping/Mapping.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfigurationTypes.hpp"
@@ -37,7 +38,7 @@ public:
   };
 
   struct GinkgoParameter {
-    std::string  executor            = "reference-executor";
+    std::string  executor            = "cpu"; // Default used for PUM
     std::string  solver              = "cg-solver";
     std::string  preconditioner      = "jacobi-preconditioner";
     double       residualNorm        = 1e-8;
@@ -134,6 +135,7 @@ private:
   const std::string TYPE_RBF_GLOBAL_ITERATIVE        = "rbf-global-iterative";
   const std::string TYPE_RBF_PUM_DIRECT              = "rbf-pum-direct";
   const std::string TYPE_RBF_ALIAS                   = "rbf";
+  const std::string TYPE_COARSE_GRAINING             = "coarse-graining";
   const std::string TYPE_AXIAL_GEOMETRIC_MULTISCALE  = "axial-geometric-multiscale";
   const std::string TYPE_RADIAL_GEOMETRIC_MULTISCALE = "radial-geometric-multiscale";
 
@@ -162,6 +164,9 @@ private:
 
   // For iterative RBFs
   const std::string ATTR_SOLVER_RTOL = "solver-rtol";
+
+  // For coarse graining
+  const std::string ATTR_CG_RADIUS = "radius";
 
   // For the future
   // const std::string ATTR_PARALLELISM           = "parallelism";
@@ -192,24 +197,37 @@ private:
   const std::string ATTR_SUPPORT_RADIUS = "support-radius";
 
   // Attributes for geometric multiscale
-  const std::string ATTR_GEOMETRIC_MULTISCALE_TYPE    = "multiscale-type";
-  const std::string ATTR_GEOMETRIC_MULTISCALE_AXIS    = "multiscale-axis";
-  const std::string ATTR_GEOMETRIC_MULTISCALE_RADIUS  = "multiscale-radius";
-  const std::string GEOMETRIC_MULTISCALE_TYPE_SPREAD  = "spread";
-  const std::string GEOMETRIC_MULTISCALE_TYPE_COLLECT = "collect";
-  const std::string GEOMETRIC_MULTISCALE_AXIS_X       = "x";
-  const std::string GEOMETRIC_MULTISCALE_AXIS_Y       = "y";
-  const std::string GEOMETRIC_MULTISCALE_AXIS_Z       = "z";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_DIMENSION                  = "multiscale-dimension";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_TYPE                       = "multiscale-type";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_AXIS                       = "multiscale-axis";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_RADIUS                     = "multiscale-radius";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_CROSS_SECTION_PROFILE      = "multiscale-cross-section-profile";
+  const std::string ATTR_GEOMETRIC_MULTISCALE_CROSS_SECTION              = "multiscale-cross-section";
+  const std::string GEOMETRIC_MULTISCALE_DIMENSION_1D3D                  = "1d-3d";
+  const std::string GEOMETRIC_MULTISCALE_DIMENSION_1D2D                  = "1d-2d";
+  const std::string GEOMETRIC_MULTISCALE_DIMENSION_2D3D                  = "2d-3d";
+  const std::string GEOMETRIC_MULTISCALE_TYPE_SPREAD                     = "spread";
+  const std::string GEOMETRIC_MULTISCALE_TYPE_COLLECT                    = "collect";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_X                          = "x";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_Y                          = "y";
+  const std::string GEOMETRIC_MULTISCALE_AXIS_Z                          = "z";
+  const std::string GEOMETRIC_MULTISCALE_CROSS_SECTION_PROFILE_PARABOLIC = "parabolic";
+  const std::string GEOMETRIC_MULTISCALE_CROSS_SECTION_PROFILE_UNIFORM   = "uniform";
+  const std::string GEOMETRIC_MULTISCALE_CROSS_SECTION_CIRCLE            = "circle";
+  const std::string GEOMETRIC_MULTISCALE_CROSS_SECTION_SQUARE            = "square";
 
   // For iterative RBFs using Ginkgo
   const std::string SUBTAG_EXECUTOR = "executor";
   const std::string EXECUTOR_CPU    = "cpu";
   const std::string EXECUTOR_CUDA   = "cuda";
   const std::string EXECUTOR_HIP    = "hip";
+  const std::string EXECUTOR_SYCL   = "sycl";
   const std::string EXECUTOR_OMP    = "openmp";
 
-  const std::string ATTR_DEVICE_ID = "gpu-device-id";
-  const std::string ATTR_N_THREADS = "n-threads";
+  const std::string ATTR_DEVICE_ID      = "gpu-device-id";
+  const std::string ATTR_N_THREADS      = "n-threads";
+  const std::string ATTR_EXECUTION_MODE = "execution-mode";
+
   // const std::string ATTR_ENABLE_UNIFIED_MEMORY = "enable-unified-memory";
   // const std::string ATTR_SOLVER                = "solver";
   // const std::string ATTR_USE_PRECONDITIONER    = "use-preconditioner";
@@ -235,12 +253,14 @@ private:
       CPU,
       CUDA,
       HIP,
+      SYCL,
       OpenMP
     };
 
     Executor executor = Executor::CPU;
     int      deviceId{};
     int      nThreads{};
+    bool     computeEvaluationOffline = true;
   };
 
   std::unique_ptr<ExecutorConfiguration> _executorConfig;
@@ -261,9 +281,13 @@ private:
       const std::string &type,
       const std::string &fromMeshName,
       const std::string &toMeshName,
+      const double       cgRange,
+      const std::string &geoMultiscaleDimension,
       const std::string &geoMultiscaleType,
       const std::string &geoMultiscaleAxis,
-      const double      &multiscaleRadius) const;
+      const double      &multiscaleRadius,
+      const std::string &geoMultiscaleProfile,
+      const std::string &geoMultiscaleCrossSection) const;
 
   /**
    * Stores additional information about the requested RBF mapping such as the

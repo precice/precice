@@ -1,7 +1,6 @@
 #include "NearestNeighborGradientMapping.hpp"
 
 #include <Eigen/Core>
-#include <Eigen/src/Core/Matrix.h>
 #include <boost/container/flat_set.hpp>
 #include <functional>
 #include <iostream>

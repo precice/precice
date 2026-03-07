@@ -1,0 +1,9 @@
+# Empty test workflow to allow workflow testing in branches by overwriting.
+on:
+  workflow_dispatch:
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo hi

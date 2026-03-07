@@ -187,14 +187,14 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
   Eigen::VectorXd newdvalues;
   if (context.isPrimary()) { // Primary
 
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.00), dpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 1.01), dpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 1.02), dpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 1.03), dpcd->timeStepsStorage().sample(windowEnd)(3));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(0), 1.00), dpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(1), 1.01), dpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(2), 1.02), dpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(3), 1.03), dpcd->waveform().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(0), 0.199), fpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(1), 0.199), fpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(2), 0.199), fpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(3), 0.199), fpcd->waveform().sample(windowEnd)(3));
 
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
@@ -203,14 +203,14 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
 
   } else if (context.isRank(1)) { // SecondaryRank1
 
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.04), dpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 1.05), dpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 1.06), dpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 1.07), dpcd->timeStepsStorage().sample(windowEnd)(3));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(0), 1.04), dpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(1), 1.05), dpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(2), 1.06), dpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(3), 1.07), dpcd->waveform().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(0), 0.199), fpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(1), 0.199), fpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(2), 0.199), fpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(3), 0.199), fpcd->waveform().sample(windowEnd)(3));
 
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
@@ -221,10 +221,10 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
     // empty proc
   } else if (context.isRank(3)) { // Secondary rank 3
 
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.00), dpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 1.01), dpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 0.199), fpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(0), 1.00), dpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(1), 1.01), dpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(0), 0.199), fpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(1), 0.199), fpcd->waveform().sample(windowEnd)(1));
 
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
@@ -236,30 +236,30 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
   pp.performAcceleration(data, windowStart, windowEnd);
 
   if (context.isPrimary()) { // Primary
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), -1.51483105223442748866e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), -2.35405379763935940218e-01), dpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 1.04402029270655560822e+00), dpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 2.32344596517704804484e+00), dpcd->timeStepsStorage().sample(windowEnd)(3));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(0), -1.51483105223442748866e+00), dpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(1), -2.35405379763935940218e-01), dpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(2), 1.04402029270655560822e+00), dpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(3), 2.32344596517704804484e+00), dpcd->waveform().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(0), 7.23368584254212854123e-02), fpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(1), 7.23368584254212854123e-02), fpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(2), 7.23368584254212854123e-02), fpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(3), 7.23368584254212854123e-02), fpcd->waveform().sample(windowEnd)(3));
   } else if (context.isRank(1)) { // SecondaryRank1
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 3.60287163764754048145e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 4.88229731011803202989e+00), dpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 6.16172298258852357833e+00), dpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 7.44114865505901601495e+00), dpcd->timeStepsStorage().sample(windowEnd)(3));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(0), 3.60287163764754048145e+00), dpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(1), 4.88229731011803202989e+00), dpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(2), 6.16172298258852357833e+00), dpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(3), 7.44114865505901601495e+00), dpcd->waveform().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(0), 7.23368584254212854123e-02), fpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(1), 7.23368584254212854123e-02), fpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(2), 7.23368584254212854123e-02), fpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(3), 7.23368584254212854123e-02), fpcd->waveform().sample(windowEnd)(3));
   } else if (context.isRank(2)) { // Secondary rank 2
     // empty proc
   } else if (context.isRank(3)) { // Secondary rank 3
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), -1.51483105223442748866e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), -2.35405379763935940218e-01), dpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 7.23368584254212854123e-02), fpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(0), -1.51483105223442748866e+00), dpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(1), -2.35405379763935940218e-01), dpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(0), 7.23368584254212854123e-02), fpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(1), 7.23368584254212854123e-02), fpcd->waveform().sample(windowEnd)(1));
   }
 }
 
@@ -344,18 +344,18 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
     BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(1), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(1));
     BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(2), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(2));
     BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(3), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(3));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.0), dpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 2.0), dpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 3.0), dpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 4.0), dpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(0), 1.0), dpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(1), 2.0), dpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(2), 3.0), dpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(3), 4.0), dpcd->waveform().sample(windowEnd)(3));
     BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(0), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(0));
     BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(1), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(1));
     BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(2), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(2));
     BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(3), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(3));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(0), 0.1), fpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(1), 0.1), fpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(2), 0.1), fpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(3), 0.1), fpcd->waveform().sample(windowEnd)(3));
   } else if (context.isRank(1)) { // SecondaryRank1
 
     /**
@@ -389,18 +389,18 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
     BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(1), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(1));
     BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(2), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(2));
     BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(3), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(3));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 5.0), dpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 6.0), dpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 7.0), dpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 8.0), dpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(0), 5.0), dpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(1), 6.0), dpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(2), 7.0), dpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(3), 8.0), dpcd->waveform().sample(windowEnd)(3));
     BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(0), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(0));
     BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(1), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(1));
     BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(2), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(2));
     BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(3), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(3));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(0), 0.1), fpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(1), 0.1), fpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(2), 0.1), fpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(3), 0.1), fpcd->waveform().sample(windowEnd)(3));
   } else if (context.isRank(2)) { // Secondary rank 2
 
     /**
@@ -454,39 +454,39 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
     // check for correct initial data
     BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(0), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(0));
     BOOST_TEST(testing::equals(dpcd->getPreviousValuesAtTime(windowEnd)(1), 1.0), dpcd->getPreviousValuesAtTime(windowEnd)(1));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.0), dpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 2.0), dpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(0), 1.0), dpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(1), 2.0), dpcd->waveform().sample(windowEnd)(1));
     BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(0), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(0));
     BOOST_TEST(testing::equals(fpcd->getPreviousValuesAtTime(windowEnd)(1), 0.2), fpcd->getPreviousValuesAtTime(windowEnd)(1));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 0.1), fpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(0), 0.1), fpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(1), 0.1), fpcd->waveform().sample(windowEnd)(1));
   }
 
   pp.performAcceleration(data, windowStart, windowEnd);
 
   Eigen::VectorXd newdvalues;
   if (context.isPrimary()) { // Primary
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.00000000000000000000e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 1.01000000000000000888e+00), dpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 1.02000000000000001776e+00), dpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 1.03000000000000002665e+00), dpcd->timeStepsStorage().sample(windowEnd)(3));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(0), 1.00000000000000000000e+00), dpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(1), 1.01000000000000000888e+00), dpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(2), 1.02000000000000001776e+00), dpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(3), 1.03000000000000002665e+00), dpcd->waveform().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(0), 1.99000000000000010214e-01), fpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(1), 1.99000000000000010214e-01), fpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(2), 1.99000000000000010214e-01), fpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(3), 1.99000000000000010214e-01), fpcd->waveform().sample(windowEnd)(3));
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
   } else if (context.isRank(1)) { // SecondaryRank1
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.04000000000000003553e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 1.05000000000000004441e+00), dpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 1.06000000000000005329e+00), dpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 1.07000000000000006217e+00), dpcd->timeStepsStorage().sample(windowEnd)(3));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(0), 1.04000000000000003553e+00), dpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(1), 1.05000000000000004441e+00), dpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(2), 1.06000000000000005329e+00), dpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(3), 1.07000000000000006217e+00), dpcd->waveform().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(0), 1.99000000000000010214e-01), fpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(1), 1.99000000000000010214e-01), fpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(2), 1.99000000000000010214e-01), fpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(3), 1.99000000000000010214e-01), fpcd->waveform().sample(windowEnd)(3));
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
@@ -494,10 +494,10 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
   } else if (context.isRank(2)) { // Secondary rank 2
     // empty proc
   } else if (context.isRank(3)) { // Secondary rank 3
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), 1.00000000000000000000e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), 1.01000000000000000888e+00), dpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 1.99000000000000010214e-01), fpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(0), 1.00000000000000000000e+00), dpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(1), 1.01000000000000000888e+00), dpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(0), 1.99000000000000010214e-01), fpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(1), 1.99000000000000010214e-01), fpcd->waveform().sample(windowEnd)(1));
     utils::append(newdvalues, 10.0);
     utils::append(newdvalues, 10.0);
   }
@@ -508,30 +508,30 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
   pp.performAcceleration(data, windowStart, windowEnd);
 
   if (context.isPrimary()) { // Primary
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), -1.51483105223442748866e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), -2.35405379763935940218e-01), dpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(2), 1.04402029270655738458e+00), dpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(3), 2.32344596517704893301e+00), dpcd->timeStepsStorage().sample(windowEnd)(3));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(0), -1.51483105223442748866e+00), dpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(1), -2.35405379763935940218e-01), dpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(2), 1.04402029270655738458e+00), dpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(3), 2.32344596517704893301e+00), dpcd->waveform().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(0), 7.23368584254213131679e-02), fpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(1), 7.23368584254213131679e-02), fpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(2), 7.23368584254213131679e-02), fpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(3), 7.23368584254213131679e-02), fpcd->waveform().sample(windowEnd)(3));
   } else if (context.isRank(1)) { // SecondaryRank1
     BOOST_TEST(testing::equals(dpcd->values()(0), 3.60287163764754048145e+00), dpcd->values()(0));
     BOOST_TEST(testing::equals(dpcd->values()(1), 4.88229731011803202989e+00), dpcd->values()(1));
     BOOST_TEST(testing::equals(dpcd->values()(2), 6.16172298258852446651e+00), dpcd->values()(2));
     BOOST_TEST(testing::equals(dpcd->values()(3), 7.44114865505901601495e+00), dpcd->values()(3));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(2), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(2));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(3), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(3));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(0), 7.23368584254213131679e-02), fpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(1), 7.23368584254213131679e-02), fpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(2), 7.23368584254213131679e-02), fpcd->waveform().sample(windowEnd)(2));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(3), 7.23368584254213131679e-02), fpcd->waveform().sample(windowEnd)(3));
   } else if (context.isRank(2)) { // Secondary rank 2
     // empty proc
   } else if (context.isRank(3)) { // Secondary rank 3
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(0), -1.51483105223442748866e+00), dpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(dpcd->timeStepsStorage().sample(windowEnd)(1), -2.35405379763935940218e-01), dpcd->timeStepsStorage().sample(windowEnd)(1));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(0), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(0));
-    BOOST_TEST(testing::equals(fpcd->timeStepsStorage().sample(windowEnd)(1), 7.23368584254213131679e-02), fpcd->timeStepsStorage().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(0), -1.51483105223442748866e+00), dpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(dpcd->waveform().sample(windowEnd)(1), -2.35405379763935940218e-01), dpcd->waveform().sample(windowEnd)(1));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(0), 7.23368584254213131679e-02), fpcd->waveform().sample(windowEnd)(0));
+    BOOST_TEST(testing::equals(fpcd->waveform().sample(windowEnd)(1), 7.23368584254213131679e-02), fpcd->waveform().sample(windowEnd)(1));
   }
 }
 

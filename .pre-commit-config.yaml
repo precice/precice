@@ -41,11 +41,10 @@ repos:
     - id: codespell
       name: check spelling
       exclude: "^thirdparty"
-- repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: 0.33.2
+- repo: https://github.com/rhysd/actionlint
+  rev: v1.7.7
   hooks:
-    - id: check-github-workflows
-      args: ["--verbose"]
+    - id: actionlint
 - repo: local
   hooks:
   - id: update-cmake-sources
@@ -55,3 +54,7 @@ repos:
     require_serial: true
     language: python
     types_or: [c, c++]
+  - id: eigen-internals
+    name: Check for Eigen internals
+    language: pygrep
+    entry: "#include *<Eigen/src/"

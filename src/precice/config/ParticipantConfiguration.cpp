@@ -26,6 +26,8 @@
 #include "precice/impl/MappingContext.hpp"
 #include "precice/impl/MeshContext.hpp"
 #include "precice/impl/ParticipantState.hpp"
+#include "precice/impl/ProvidedMeshContext.hpp"
+#include "precice/impl/ReceivedMeshContext.hpp"
 #include "precice/impl/WatchIntegral.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "utils/IntraComm.hpp"
@@ -488,10 +490,16 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     // safety margin such that the mapping is still correct.
     if (confMapping.requiresBasisFunction) {
       if (!confMapping.fromMesh->isJustInTime()) {
-        participant->meshContext(fromMesh).geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+        // Only set geoFilter if this is a ReceivedMeshContext
+        if (participant->isMeshReceived(fromMesh)) {
+          participant->receivedMeshContext(fromMesh).geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+        }
       }
       if (!confMapping.toMesh->isJustInTime()) {
-        participant->meshContext(toMesh).geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+        // Only set geoFilter if this is a ReceivedMeshContext
+        if (participant->isMeshReceived(toMesh)) {
+          participant->receivedMeshContext(toMesh).geoFilter = partition::ReceivedPartition::GeometricFilter::NO_FILTER;
+        }
       }
     }
 
@@ -652,16 +660,17 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   // Check for unsupported remeshing options
   for (auto &context : participant->writeDataContexts()) {
-    PRECICE_CHECK(participant->meshContext(context.getMeshName()).provideMesh || !(participant->isDirectAccessAllowed(context.getMeshName()) && _remeshing), "Writing data via API access (configuration <write-data ... mesh=\"{}\") is not (yet) supported with remeshing", context.getMeshName());
+    bool isProvided = participant->isMeshProvided(context.getMeshName());
+    PRECICE_CHECK(isProvided || !(participant->isDirectAccessAllowed(context.getMeshName()) && _remeshing), "Writing data via API access (configuration <write-data ... mesh=\"{}\") is not (yet) supported with remeshing", context.getMeshName());
   }
 
   // Add export contexts
   for (io::ExportContext &exportContext : _exportConfig->exportContexts()) {
     auto kind = exportContext.everyIteration ? io::Export::ExportKind::Iterations : io::Export::ExportKind::TimeWindows;
-    // Create one exporter per mesh
-    for (const auto &meshContext : participant->usedMeshContexts()) {
 
-      exportContext.meshName = meshContext->mesh->getName();
+    // Lambda to create exporter for any mesh context (avoids code duplication)
+    auto createExporter = [&](const impl::MeshContext &meshContext) {
+      exportContext.meshName = meshContext.mesh->getName();
 
       io::PtrExport exporter;
       if (exportContext.type == VALUE_VTK) {
@@ -678,7 +687,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
           exporter = io::PtrExport(new io::ExportVTK(
               participant->getName(),
               exportContext.location,
-              *meshContext->mesh,
+              *meshContext.mesh,
               kind,
               exportContext.everyNTimeWindows,
               context.rank,
@@ -688,7 +697,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         exporter = io::PtrExport(new io::ExportVTU(
             participant->getName(),
             exportContext.location,
-            *meshContext->mesh,
+            *meshContext.mesh,
             kind,
             exportContext.everyNTimeWindows,
             context.rank,
@@ -697,7 +706,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         exporter = io::PtrExport(new io::ExportVTP(
             participant->getName(),
             exportContext.location,
-            *meshContext->mesh,
+            *meshContext.mesh,
             kind,
             exportContext.everyNTimeWindows,
             context.rank,
@@ -706,7 +715,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         exporter = io::PtrExport(new io::ExportCSV(
             participant->getName(),
             exportContext.location,
-            *meshContext->mesh,
+            *meshContext.mesh,
             kind,
             exportContext.everyNTimeWindows,
             context.rank,
@@ -716,9 +725,19 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                       _participants.back()->getName(), exportContext.type);
       }
       exportContext.exporter = std::move(exporter);
-
       _participants.back()->addExportContext(exportContext);
+    };
+
+    // Create one exporter per provided mesh
+    for (const auto &meshContext : participant->providedMeshContexts()) {
+      createExporter(meshContext);
     }
+
+    // Create one exporter per received mesh
+    for (const auto &meshContext : participant->receivedMeshContexts()) {
+      createExporter(meshContext);
+    }
+
     PRECICE_WARN_IF(exportContext.everyNTimeWindows > 1 && exportContext.everyIteration,
                     "Participant {} defines an exporter of type {} which exports every iteration. "
                     "This overrides the every-n-time-window value you provided.",
@@ -733,11 +752,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                     "Participant \"{}\" defines watchpoint \"{}\" for mesh \"{}\" which is not provided by the participant. "
                     "Please add <provide-mesh name=\"{}\" /> to the participant.",
                     participant->getName(), config.name, config.nameMesh, config.nameMesh);
-      const auto &meshContext = participant->usedMeshContext(config.nameMesh);
-      PRECICE_CHECK(meshContext.provideMesh,
+
+      PRECICE_CHECK(!participant->isMeshReceived(config.nameMesh),
                     "Participant \"{}\" defines watchpoint \"{}\" for the received mesh \"{}\", which is not allowed. "
                     "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                     participant->getName(), config.name, config.nameMesh, config.nameMesh);
+      const auto &meshContext = participant->providedMeshContext(config.nameMesh);
       PRECICE_CHECK(config.coordinates.size() == meshContext.mesh->getDimensions(),
                     "Provided coordinate to watch is {}D, which does not match the dimension of the {}D mesh \"{}\".",
                     config.coordinates.size(), meshContext.mesh->getDimensions(), meshContext.mesh->getName());
@@ -754,8 +774,8 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                     "Participant \"{}\" defines watch integral \"{}\" for mesh \"{}\" which is not used by the participant. "
                     "Please add a provide-mesh node with name=\"{}\".",
                     participant->getName(), config.name, config.nameMesh, config.nameMesh);
-      const auto &meshContext = participant->usedMeshContext(config.nameMesh);
-      PRECICE_CHECK(meshContext.provideMesh,
+      const auto &meshContext = participant->meshContext(config.nameMesh);
+      PRECICE_CHECK(participant->isMeshProvided(config.nameMesh),
                     "Participant \"{}\" defines watch integral \"{}\" for the received mesh \"{}\", which is not allowed. "
                     "Please move the watchpoint definition to the participant providing mesh \"{}\".",
                     participant->getName(), config.name, config.nameMesh, config.nameMesh);

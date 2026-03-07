@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(ExportMissingParallel)
     mesh.createVertex(Eigen::Vector2d::Constant(1));
   }
   mesh::PtrData data = mesh.createData("data", 2, 0_dataID);
-  BOOST_TEST_REQUIRE(data->timeStepsStorage().empty());
+  BOOST_TEST_REQUIRE(data->waveform().empty());
   // no sample
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(ExportScalarAndMissingParallel)
     mesh.createVertex(Eigen::Vector2d::Constant(1));
   }
   auto missing = mesh.createData("missing", 2, 0_dataID);
-  BOOST_TEST_REQUIRE(missing->timeStepsStorage().empty());
+  BOOST_TEST_REQUIRE(missing->waveform().empty());
   mesh::PtrData data = mesh.createData("data", 2, 1_dataID);
   data->setSampleAtTime(0, time::Sample{2, 1}.setZero());
   // no sample

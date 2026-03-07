@@ -122,9 +122,9 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
       const auto &stamples = data->stamples();
       PRECICE_ASSERT(!stamples.empty());
 
-      int nTimeSteps = data->timeStepsStorage().nTimes();
+      int nTimeSteps = data->waveform().nTimes();
       PRECICE_ASSERT(nTimeSteps > 0);
-      const auto timesAscending = data->timeStepsStorage().getTimes();
+      const auto timesAscending = data->waveform().getTimes();
       sendTimes(m2n, timesAscending);
 
       const auto serialized = com::serialize::SerializedStamples::serialize(*data);
@@ -136,7 +136,7 @@ void BaseCouplingScheme::sendData(const m2n::PtrM2N &m2n, const DataMap &sendDat
         m2n->send(serialized.gradients(), data->getMeshID(), data->getDimensions() * data->meshDimensions() * serialized.nTimeSteps());
       }
     } else {
-      const auto &sample = data->timeStepsStorage().getSampleAtEnd();
+      const auto &sample = data->waveform().getSampleAtEnd();
       if (data->hasGradient()) {
         // Data is only received on ranks with size>0, which is checked in the derived class implementation
         m2n->send(sample.values, data->getMeshID(), data->getDimensions());
@@ -772,9 +772,8 @@ void BaseCouplingScheme::initializeTXTWriters()
         _convergenceWriter->addData(convMeasure.logHeader(), io::TXTTableWriter::DOUBLE);
       }
       if (_acceleration) {
-        _iterationsWriter->addData("QNColumns", io::TXTTableWriter::INT);
-        _iterationsWriter->addData("DeletedQNColumns", io::TXTTableWriter::INT);
-        _iterationsWriter->addData("DroppedQNColumns", io::TXTTableWriter::INT);
+        // Ask acceleration to add any custom iteration columns
+        _acceleration->addLogEntries(*_iterationsWriter);
       }
     }
   }
@@ -791,18 +790,8 @@ void BaseCouplingScheme::advanceTXTWriters()
     _iterationsWriter->writeData("Convergence", converged ? 1 : 0);
 
     if (not doesFirstStep() && _acceleration) {
-      std::shared_ptr<precice::acceleration::BaseQNAcceleration> qnAcceleration = std::dynamic_pointer_cast<precice::acceleration::BaseQNAcceleration>(_acceleration);
-      if (qnAcceleration) {
-        // Only write values for additional columns, if using a QN-based acceleration scheme
-        _iterationsWriter->writeData("QNColumns", qnAcceleration->getLSSystemCols());
-        _iterationsWriter->writeData("DeletedQNColumns", qnAcceleration->getDeletedColumns());
-        _iterationsWriter->writeData("DroppedQNColumns", qnAcceleration->getDroppedColumns());
-      } else {
-        // non-breaking implementation uses "0" for these columns (delete columns in the future?)
-        _iterationsWriter->writeData("QNColumns", 0);
-        _iterationsWriter->writeData("DeletedQNColumns", 0);
-        _iterationsWriter->writeData("DroppedQNColumns", 0);
-      }
+      // Let the acceleration write its custom iteration column values
+      _acceleration->writeLogEntries(*_iterationsWriter);
     }
   }
 }
