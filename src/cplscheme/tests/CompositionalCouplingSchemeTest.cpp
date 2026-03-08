@@ -453,13 +453,15 @@ BOOST_AUTO_TEST_CASE(testDuplicateCouplingPartnerIsRejected)
   PRECICE_TEST();
   int                         numberIterations = 1;
   int                         maxTimeWindows   = 10;
-  PtrCouplingScheme           scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows, "SamePartner"));
-  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows, "SamePartner"));
+  PtrCouplingScheme           scheme1(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows, "SamePartner", "LocalSolver"));
+  PtrCouplingScheme           scheme2(new tests::DummyCouplingScheme(numberIterations, maxTimeWindows, "SamePartner", "LocalSolver"));
   CompositionalCouplingScheme composition;
   composition.addCouplingScheme(scheme1);
   BOOST_CHECK_EXCEPTION(composition.addCouplingScheme(scheme2), ::precice::Error,
                         [](const ::precice::Error &e) {
-                          return std::string(e.what()).find("SamePartner") != std::string::npos;
+                          auto msg = std::string(e.what());
+                          return msg.find("LocalSolver") != std::string::npos &&
+                                 msg.find("SamePartner") != std::string::npos;
                         });
 }
 

@@ -23,7 +23,8 @@ public:
   DummyCouplingScheme(
       int                numberIterations,
       int                maxTimeWindows,
-      const std::string &couplingPartner = "");
+      const std::string &couplingPartner  = "",
+      const std::string &localParticipant = "");
 
   /**
    * @brief Destructor, empty.
@@ -85,8 +86,7 @@ public:
 
   std::string localParticipant() const final override
   {
-    PRECICE_ASSERT(false);
-    return "unknown";
+    return _localParticipant;
   }
 
   /**
@@ -223,6 +223,9 @@ private:
 
   /// @brief Name of the coupling partner
   std::string _couplingPartner;
+
+  /// @brief Name of the local participant
+  std::string _localParticipant;
 
   /// @brief Number of iterations performed per time window. 1 --> explicit.
   int _numberIterations;

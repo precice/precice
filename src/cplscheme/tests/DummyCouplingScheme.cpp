@@ -8,8 +8,10 @@ namespace precice::cplscheme::tests {
 DummyCouplingScheme::DummyCouplingScheme(
     int                numberIterations,
     int                maxTimeWindows,
-    const std::string &couplingPartner)
+    const std::string &couplingPartner,
+    const std::string &localParticipant)
     : _couplingPartner(couplingPartner),
+      _localParticipant(localParticipant),
       _numberIterations(numberIterations),
       _maxTimeWindows(maxTimeWindows)
 {
