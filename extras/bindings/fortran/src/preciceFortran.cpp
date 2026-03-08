@@ -254,7 +254,7 @@ try {
   std::abort();
 }
 
-void precicef_set_vertices_(
+void precicef_set_mesh_vertices_(
     const char *meshName,
     const int  *size,
     double     *coordinates,
@@ -625,6 +625,16 @@ void precicef_set_tetrahedron(
     int         meshNameLength)
 {
   precicef_set_mesh_tetrahedron_(meshName, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID, meshNameLength);
+}
+
+void precicef_set_vertices_(
+    const char *meshName,
+    const int  *size,
+    double     *coordinates,
+    int        *ids,
+    int         meshNameLength)
+{
+  precicef_set_mesh_vertices_(meshName, size, coordinates, ids, meshNameLength);
 }
 
 #ifdef __GNUC__
