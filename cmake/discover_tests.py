@@ -2,11 +2,19 @@ import argparse
 import pathlib
 import subprocess
 import re
+import os
 
 
-def get_tests():
+def get_tests(extra_paths):
+    env = os.environ.copy()
+    if extra_paths:
+        if "PATH" in env:
+            env["PATH"] = os.pathsep.join([env["PATH"], extra_paths])
+        else:
+            env["PATH"] = extra_paths
+
     out = subprocess.run(
-        [args.executable, "--list_units"], stdout=subprocess.PIPE, check=True
+        [args.executable, "--list_units"], env=env, stdout=subprocess.PIPE, check=True
     ).stdout
     for line in out.strip().splitlines():
         name, ranks = line.decode().split()
@@ -55,7 +63,7 @@ parser.add_argument("--paths")
 
 args = parser.parse_args()
 
-for name, ranks in get_tests():
+for name, ranks in get_tests(args.paths):
 
     print(f"# {name} {ranks}", file=args.output)
 
