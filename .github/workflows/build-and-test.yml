@@ -141,6 +141,7 @@ jobs:
           TOPO="$(mktemp --suffix=TOPO -d)/topo.xml"
           lstopo --of xml "$TOPO"
           echo "HWLOC_XMLFILE=$TOPO" >> "$GITHUB_ENV"
+          cat "$TOPO"
       - name: Configure
         working-directory: build
         env:
@@ -178,7 +179,7 @@ jobs:
         run: |
           cmake --build .
       - name: Test HWLOC
-        run: echo "HWLOC_XMLFILE= $(HWLOC_XMLFILE)"
+        run: echo "HWLOC_XMLFILE= $HWLOC_XMLFILE"
       - name: Adjust user rights
         run: chown -R "$PRECICE_USER" build
       - name: Tests
