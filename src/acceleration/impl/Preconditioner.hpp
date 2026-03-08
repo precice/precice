@@ -34,11 +34,12 @@ public:
    * @brief initialize the preconditioner
    * @param size of the pp system (e.g. rows of V)
    */
-  virtual void initialize(std::vector<size_t> &svs)
+  virtual void initialize(std::vector<size_t> &svs, const std::vector<std::string> &svNames = {})
   {
     PRECICE_TRACE();
 
     _subVectorSizes = svs;
+    _subVectorNames = svNames;
 
     // Compute offsets of each subvector
     _subVectorOffsets.resize(_subVectorSizes.size(), 0);
@@ -220,6 +221,9 @@ protected:
 
   /// Sizes of each sub-vector, i.e. each coupling data
   std::vector<size_t> _subVectorSizes;
+
+  /// Names of each sub-vector, if provided
+  std::vector<std::string> _subVectorNames;
 
   /// Offsets of each sub-vector in concatenated data, i.e. each coupling data
   std::vector<size_t> _subVectorOffsets;

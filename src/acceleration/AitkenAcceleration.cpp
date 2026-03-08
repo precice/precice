@@ -42,8 +42,12 @@ void AitkenAcceleration::initialize(const DataMap &cplData)
   // Accumulate number of entries
   // Size for each subvector needed for preconditioner
   std::vector<std::size_t> subVectorSizes;
-  // Gather sizes
-  std::transform(_primaryDataIDs.cbegin(), _primaryDataIDs.cend(), std::back_inserter(subVectorSizes), [&cplData](const auto &d) { return cplData.at(d)->getSize(); });
+  // Gather sizes and names
+  std::vector<std::string> subVectorNames;
+  for (const auto &d : _primaryDataIDs) {
+    subVectorSizes.push_back(cplData.at(d)->getSize());
+    subVectorNames.push_back(cplData.at(d)->getDataName());
+  }
   // The accumulated sum
   Eigen::Index entries = std::accumulate(subVectorSizes.cbegin(), subVectorSizes.cend(), static_cast<Eigen::Index>(0));
 
@@ -52,7 +56,7 @@ void AitkenAcceleration::initialize(const DataMap &cplData)
   _values       = Eigen::VectorXd::Zero(entries);
   _oldValues    = Eigen::VectorXd::Zero(entries);
   if (_primaryDataIDs.size() > 1) {
-    _preconditioner->initialize(subVectorSizes);
+    _preconditioner->initialize(subVectorSizes, subVectorNames);
   }
 }
 

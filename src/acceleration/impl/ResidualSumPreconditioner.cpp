@@ -16,10 +16,10 @@ ResidualSumPreconditioner::ResidualSumPreconditioner(
 {
 }
 
-void ResidualSumPreconditioner::initialize(std::vector<size_t> &svs)
+void ResidualSumPreconditioner::initialize(std::vector<size_t> &svs, const std::vector<std::string> &svNames)
 {
   PRECICE_TRACE();
-  Preconditioner::initialize(svs);
+  Preconditioner::initialize(svs, svNames);
 
   _residualSum.resize(_subVectorSizes.size(), 0.0);
   _previousResidualSum.resize(_subVectorSizes.size(), 0.0);
@@ -59,14 +59,25 @@ void ResidualSumPreconditioner::_update_(bool                   timeWindowComple
     if (sum > math::NUMERICAL_ZERO_DIFFERENCE)
       _residualSum[k] += norms[k] / sum;
 
-    PRECICE_WARN_IF(
-        math::equals(_residualSum[k], 0.0),
-        "A sub-vector in the residual-sum preconditioner became numerically zero ( sub-vector = {}). "
-        "If this occurred in the second iteration and the initial-relaxation factor is equal to 1.0, "
-        "check if the coupling data values of one solver is zero in the first iteration. "
-        "The preconditioner scaling factors were not updated for this iteration and the scaling factors "
-        "determined in the previous iteration were used.",
-        _residualSum[k]);
+    if (!_subVectorNames.empty()) {
+      PRECICE_WARN_IF(
+          math::equals(_residualSum[k], 0.0),
+          "A sub-vector in the residual-sum preconditioner became numerically zero ( sub-vector = {}, data: {}). "
+          "If this occurred in the second iteration and the initial-relaxation factor is equal to 1.0, "
+          "check if the coupling data values of one solver is zero in the first iteration. "
+          "The preconditioner scaling factors were not updated for this iteration and the scaling factors "
+          "determined in the previous iteration were used.",
+          _residualSum[k], _subVectorNames[k]);
+    } else {
+      PRECICE_WARN_IF(
+          math::equals(_residualSum[k], 0.0),
+          "A sub-vector in the residual-sum preconditioner became numerically zero ( sub-vector = {}). "
+          "If this occurred in the second iteration and the initial-relaxation factor is equal to 1.0, "
+          "check if the coupling data values of one solver is zero in the first iteration. "
+          "The preconditioner scaling factors were not updated for this iteration and the scaling factors "
+          "determined in the previous iteration were used.",
+          _residualSum[k]);
+    }
   }
 
   // Determine if weights needs to be reset
