@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <tuple>
 #include <vector>
 
 namespace precice::impl {
@@ -10,9 +11,10 @@ class SolverImbalance {
 
 public:
   SolverImbalance() = default;
-  double getSolverTimeToAdvance();
-  void   startSolver();
-  void   stopSolver(double solverTimeStepSize);
+  double                     getSolverTimeToAdvance();
+  void                       startSolver();
+  void                       stopSolver(double solverTimeStepSize);
+  std::tuple<double, double> computeSolverImbalance(const std::vector<double> &solverAdvanceTimes);
 
 private:
   std::vector<double>     _participant_dt;
