@@ -38,12 +38,23 @@ void SolverImbalance::stopSolver(double solverTimeStepSize)
   PRECICE_INFO("time per time step: {}", _solver_advance_time.back() / solverTimeStepSize);
 }
 
-std::tuple<double, double> SolverImbalance::computeSolverImbalance(const std::vector<double> &solverAdvanceTimes)
+void SolverImbalance::computeSolverImbalance(const std::vector<double> &solverAdvanceTimes)
 {
-  double mean_sat = std::accumulate(solverAdvanceTimes.begin(), solverAdvanceTimes.end(), 0.0);
-  mean_sat        = mean_sat / solverAdvanceTimes.size();
-  auto max_time   = std::max_element(solverAdvanceTimes.begin(), solverAdvanceTimes.end());
-  return std::tuple<double, double>(*max_time / mean_sat, *max_time / _solver_time_to_advance);
+  double mean_sat  = std::accumulate(solverAdvanceTimes.begin(), solverAdvanceTimes.end(), 0.0);
+  mean_sat         = mean_sat / solverAdvanceTimes.size();
+  auto max_time    = std::max_element(solverAdvanceTimes.begin(), solverAdvanceTimes.end());
+  _imbalance       = *max_time / mean_sat;
+  _imbalanceFactor = *max_time / _solver_time_to_advance;
+}
+
+double SolverImbalance::getImbalance()
+{
+  return _imbalance;
+}
+
+double SolverImbalance::getImbalanceFactor()
+{
+  return _imbalanceFactor;
 }
 
 void SolverImbalance::reset()
