@@ -277,6 +277,8 @@ target_sources(preciceCore
     src/precice/impl/ReceivedMeshContext.cpp
     src/precice/impl/ReceivedMeshContext.hpp
     src/precice/impl/SharedPointer.hpp
+    src/precice/impl/SolverImbalance.cpp
+    src/precice/impl/SolverImbalance.hpp
     src/precice/impl/Types.hpp
     src/precice/impl/ValidationMacros.hpp
     src/precice/impl/WatchIntegral.cpp

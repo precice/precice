@@ -228,6 +228,8 @@ void ParticipantImpl::configure(
   config.configurePartitionsFor(_accessorName);
   _couplingScheme = config.getCouplingSchemeConfiguration()->getCouplingScheme(_accessorName);
 
+  _solverImbalance = std::make_shared<SolverImbalance>();
+
   PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useIntraComm(),
                  "A parallel participant needs an intra-participant communication");
   PRECICE_CHECK(not(_accessorCommunicatorSize == 1 && _accessor->useIntraComm()),
@@ -401,6 +403,7 @@ void ParticipantImpl::advance(
   // Events for the solver time, stopped when we enter, restarted when we leave advance
   PRECICE_ASSERT(_solverAdvanceEvent, "The advance event is created in initialize");
   _solverAdvanceEvent->stop();
+  _solverImbalance->stopSolver(computedTimeStepSize);
 
   Event e("advance", profiling::Fundamental, profiling::Synchronize);
 
@@ -462,6 +465,10 @@ void ParticipantImpl::advance(
   _meshLock.lockAll();
 
   e.stop();
+  if (isAtWindowEnd) {
+    PRECICE_INFO("Avg. time to advance: {}", _solverImbalance->getSolverTimeToAdvance());
+  }
+  _solverImbalance->startSolver();
   _solverAdvanceEvent->start();
 }
 
