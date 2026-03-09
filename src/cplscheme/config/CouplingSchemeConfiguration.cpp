@@ -321,6 +321,13 @@ void CouplingSchemeConfiguration::xmlEndTagCallback(
 {
   PRECICE_TRACE(tag.getFullName());
   if (tag.getNamespace() == TAG) {
+    PRECICE_CHECK(_config.maxTime != CouplingScheme::UNDEFINED_MAX_TIME ||
+                      _config.maxTimeWindows != CouplingScheme::UNDEFINED_TIME_WINDOWS,
+                  "At least one termination condition is required "
+                  "for the coupling scheme of type \"{}\". "
+                  "Please add a <max-time value=\"...\"/> or <max-time-windows value=\"...\"/> tag "
+                  "inside your <coupling-scheme:{}> configuration.",
+                  _config.type, _config.type);
     if (_config.type == VALUE_SERIAL_EXPLICIT) {
       PRECICE_CHECK(!_allowRemeshing, "Remeshing is currently incompatible with serial coupling schemes. Try using a parallel or a multi coupling scheme instead.");
       std::string       accessor(_config.participants[0]);
