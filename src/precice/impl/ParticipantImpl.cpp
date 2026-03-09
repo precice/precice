@@ -466,7 +466,26 @@ void ParticipantImpl::advance(
 
   e.stop();
   if (isAtWindowEnd) {
-    PRECICE_INFO("Avg. time to advance: {}", _solverImbalance->getSolverTimeToAdvance());
+    double timeToAdvance = _solverImbalance->getSolverTimeToAdvance();
+    PRECICE_INFO("Avg. time to advance: {}", timeToAdvance);
+    double              receiveValue = 0.0;
+    std::vector<double> timesToAdvance;
+    timesToAdvance.reserve(_m2ns.size() + 1);
+    timesToAdvance.push_back(timeToAdvance);
+    for (auto &iter : _m2ns) {
+      auto bm2n = iter.second;
+      auto comm = bm2n.m2n;
+      if (bm2n.isRequesting) {
+        comm->send(timeToAdvance);
+        comm->receive(receiveValue);
+      } else {
+        comm->receive(receiveValue);
+        comm->send(timeToAdvance);
+      }
+      timesToAdvance.push_back(receiveValue);
+    }
+    auto [solverImbalance, factor] = _solverImbalance->computeSolverImbalance(timesToAdvance);
+    PRECICE_INFO("Solver imbalance: {}, factor: {}", solverImbalance, factor);
   }
   _solverImbalance->startSolver();
   _solverAdvanceEvent->start();
