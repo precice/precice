@@ -13,3 +13,7 @@ precice_test_config_valid(unidirectional.xml Fluid 1)
 precice_test_config_invalid(unidirectional.xml "only the mapping combinations read-consistent and write-conservative" Fluid 2)
 precice_test_config_valid(unidirectional.xml Transport 1)
 precice_test_config_valid(unidirectional.xml Transport 2)
+
+precice_test_config_invalid(duplicate-coupling-same.xml "already exists in this compositional coupling scheme")
+precice_test_config_invalid(duplicate-coupling-swapped.xml "already exists in this compositional coupling scheme")
+precice_test_config_invalid(duplicate-coupling-multi-explicit.xml "already exists in this compositional coupling scheme")

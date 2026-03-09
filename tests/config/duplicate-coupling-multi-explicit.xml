@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration>
+  <data:scalar name="DataAB" />
+  <data:scalar name="DataBA" />
+  <data:scalar name="DataAC" />
+  <data:scalar name="DataCA" />
+  <data:scalar name="DataExtra" />
+
+  <mesh name="MeshA" dimensions="2">
+    <use-data name="DataAB" />
+    <use-data name="DataBA" />
+    <use-data name="DataAC" />
+    <use-data name="DataCA" />
+    <use-data name="DataExtra" />
+  </mesh>
+
+  <mesh name="MeshB" dimensions="2">
+    <use-data name="DataAB" />
+    <use-data name="DataBA" />
+    <use-data name="DataExtra" />
+  </mesh>
+
+  <mesh name="MeshC" dimensions="2">
+    <use-data name="DataAC" />
+    <use-data name="DataCA" />
+  </mesh>
+
+  <participant name="SolverA">
+    <provide-mesh name="MeshA" />
+    <write-data name="DataAB" mesh="MeshA" />
+    <read-data name="DataBA" mesh="MeshA" />
+    <write-data name="DataAC" mesh="MeshA" />
+    <read-data name="DataCA" mesh="MeshA" />
+    <read-data name="DataExtra" mesh="MeshA" />
+  </participant>
+
+  <participant name="SolverB">
+    <receive-mesh name="MeshA" from="SolverA" />
+    <provide-mesh name="MeshB" />
+    <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshB" constraint="consistent" />
+    <mapping:nearest-neighbor direction="write" from="MeshB" to="MeshA" constraint="conservative" />
+    <write-data name="DataBA" mesh="MeshB" />
+    <read-data name="DataAB" mesh="MeshB" />
+    <write-data name="DataExtra" mesh="MeshB" />
+  </participant>
+
+  <participant name="SolverC">
+    <receive-mesh name="MeshA" from="SolverA" />
+    <provide-mesh name="MeshC" />
+    <mapping:nearest-neighbor direction="read" from="MeshA" to="MeshC" constraint="consistent" />
+    <mapping:nearest-neighbor direction="write" from="MeshC" to="MeshA" constraint="conservative" />
+    <write-data name="DataCA" mesh="MeshC" />
+    <read-data name="DataAC" mesh="MeshC" />
+  </participant>
+
+  <m2n:sockets acceptor="SolverA" connector="SolverB" />
+  <m2n:sockets acceptor="SolverA" connector="SolverC" />
+
+  <coupling-scheme:multi>
+    <participant name="SolverA" control="yes" />
+    <participant name="SolverB" />
+    <participant name="SolverC" />
+    <max-time-windows value="10" />
+    <time-window-size value="1.0" />
+    <max-iterations value="2" />
+    <exchange data="DataBA" mesh="MeshA" from="SolverB" to="SolverA" />
+    <exchange data="DataAB" mesh="MeshA" from="SolverA" to="SolverB" />
+    <exchange data="DataCA" mesh="MeshA" from="SolverC" to="SolverA" />
+    <exchange data="DataAC" mesh="MeshA" from="SolverA" to="SolverC" />
+    <relative-convergence-measure data="DataBA" mesh="MeshA" limit="1e-4" />
+    <relative-convergence-measure data="DataCA" mesh="MeshA" limit="1e-4" />
+  </coupling-scheme:multi>
+
+  <coupling-scheme:parallel-explicit>
+    <participants first="SolverA" second="SolverB" />
+    <max-time-windows value="10" />
+    <time-window-size value="1.0" />
+    <exchange data="DataExtra" mesh="MeshA" from="SolverB" to="SolverA" />
+  </coupling-scheme:parallel-explicit>
+</precice-configuration>

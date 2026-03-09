@@ -21,8 +21,10 @@ public:
    * @param[in] maxTimeWindows Number of time windows this DummyCouplingScheme has to perform.
    */
   DummyCouplingScheme(
-      int numberIterations,
-      int maxTimeWindows);
+      int                numberIterations,
+      int                maxTimeWindows,
+      const std::string &couplingPartner  = "",
+      const std::string &localParticipant = "");
 
   /**
    * @brief Destructor, empty.
@@ -79,14 +81,12 @@ public:
    */
   std::vector<std::string> getCouplingPartners() const final override
   {
-    PRECICE_ASSERT(false);
-    return std::vector<std::string>();
+    return {_couplingPartner};
   }
 
   std::string localParticipant() const final override
   {
-    PRECICE_ASSERT(false);
-    return "unknown";
+    return _localParticipant;
   }
 
   /**
@@ -220,6 +220,12 @@ public:
 
 private:
   mutable logging::Logger _log{"cplscheme::tests::DummyCouplingScheme"};
+
+  /// @brief Name of the coupling partner
+  std::string _couplingPartner;
+
+  /// @brief Name of the local participant
+  std::string _localParticipant;
 
   /// @brief Number of iterations performed per time window. 1 --> explicit.
   int _numberIterations;
