@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <numeric>
+#include <string>
 #include <vector>
 
 #include "cplscheme/SharedPointer.hpp"
@@ -32,13 +33,16 @@ public:
 
   /**
    * @brief initialize the preconditioner
-   * @param size of the pp system (e.g. rows of V)
+   * @param svs sizes of each sub-vector
+   * @param svNames names of the coupling data corresponding to each sub-vector
    */
-  virtual void initialize(std::vector<size_t> &svs)
+  virtual void initialize(std::vector<size_t> svs, std::vector<std::string> svNames)
   {
     PRECICE_TRACE();
+    PRECICE_ASSERT(svs.size() == svNames.size());
 
-    _subVectorSizes = svs;
+    _subVectorSizes = std::move(svs);
+    _subVectorNames = std::move(svNames);
 
     // Compute offsets of each subvector
     _subVectorOffsets.resize(_subVectorSizes.size(), 0);
@@ -220,6 +224,9 @@ protected:
 
   /// Sizes of each sub-vector, i.e. each coupling data
   std::vector<size_t> _subVectorSizes;
+
+  /// Names of the coupling data corresponding to each sub-vector
+  std::vector<std::string> _subVectorNames;
 
   /// Offsets of each sub-vector in concatenated data, i.e. each coupling data
   std::vector<size_t> _subVectorOffsets;
