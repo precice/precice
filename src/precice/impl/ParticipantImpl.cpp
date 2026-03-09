@@ -486,6 +486,7 @@ void ParticipantImpl::advance(
     }
     auto [solverImbalance, factor] = _solverImbalance->computeSolverImbalance(timesToAdvance);
     PRECICE_INFO("Solver imbalance: {}, factor: {}", solverImbalance, factor);
+    _solverImbalance->reset();
   }
   _solverImbalance->startSolver();
   _solverAdvanceEvent->start();
