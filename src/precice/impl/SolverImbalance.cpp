@@ -8,9 +8,10 @@ namespace precice::impl {
 double SolverImbalance::getSolverTimeToAdvance()
 {
   PRECICE_ASSERT(_participant_dt.size() == _solver_advance_time.size());
-  double sum_pdt = std::accumulate(_participant_dt.begin(), _participant_dt.end(), 0.0);
-  double sum_sat = std::accumulate(_solver_advance_time.begin(), _solver_advance_time.end(), 0.0);
-  return sum_sat / sum_pdt;
+  double sum_pdt          = std::accumulate(_participant_dt.begin(), _participant_dt.end(), 0.0);
+  double sum_sat          = std::accumulate(_solver_advance_time.begin(), _solver_advance_time.end(), 0.0);
+  _solver_time_to_advance = sum_sat / sum_pdt;
+  return _solver_time_to_advance;
 }
 
 void SolverImbalance::startSolver()
