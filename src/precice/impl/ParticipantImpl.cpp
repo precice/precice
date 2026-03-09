@@ -492,6 +492,16 @@ void ParticipantImpl::advance(
   _solverAdvanceEvent->start();
 }
 
+double ParticipantImpl::getImbalanceFactor()
+{
+  return _solverImbalance->getImbalanceFactor();
+}
+
+double ParticipantImpl::getSolverImbalance()
+{
+  return _solverImbalance->getImbalance();
+}
+
 void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo)
 {
   // We only have to care about write data, in case substeps are enabled
