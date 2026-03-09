@@ -28,9 +28,9 @@ BOOST_AUTO_TEST_CASE(Edges)
   BOOST_TEST(coords1 == Vector3d::Constant(0.0));
   BOOST_TEST(coords2 == Vector3d::Constant(1.0));
 
-  double expectedLenght = std::sqrt(3.0);
-  double expectedRadius = expectedLenght / 2.0;
-  BOOST_TEST(edge.getLength() == expectedLenght);
+  double expectedLength = std::sqrt(3.0);
+  double expectedRadius = expectedLength / 2.0;
+  BOOST_TEST(edge.getLength() == expectedLength);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), (coords1 + coords2) / 2));
 }
@@ -44,9 +44,9 @@ BOOST_AUTO_TEST_CASE(Dimensions2D)
   Edge   edge(v1, v2);
   BOOST_TEST(edge.getDimensions() == 2);
 
-  double expectedLenght = std::sqrt(2.0);
-  double expectedRadius = expectedLenght / 2.0;
-  BOOST_TEST(edge.getLength() == expectedLenght);
+  double expectedLength = std::sqrt(2.0);
+  double expectedRadius = expectedLength / 2.0;
+  BOOST_TEST(edge.getLength() == expectedLength);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), Vector2d{0.5, 0.5}));
 }
@@ -60,9 +60,9 @@ BOOST_AUTO_TEST_CASE(Dimensions2DX)
   Edge   edge(v1, v2);
   BOOST_TEST(edge.getDimensions() == 2);
 
-  double expectedLenght = std::sqrt(1.0);
-  double expectedRadius = expectedLenght / 2.0;
-  BOOST_TEST(edge.getLength() == expectedLenght);
+  double expectedLength = std::sqrt(1.0);
+  double expectedRadius = expectedLength / 2.0;
+  BOOST_TEST(edge.getLength() == expectedLength);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), Vector2d{0.5, 0}));
 }
@@ -76,9 +76,9 @@ BOOST_AUTO_TEST_CASE(Dimensions2DY)
   Edge   edge(v1, v2);
   BOOST_TEST(edge.getDimensions() == 2);
 
-  double expectedLenght = std::sqrt(1.0);
-  double expectedRadius = expectedLenght / 2.0;
-  BOOST_TEST(edge.getLength() == expectedLenght);
+  double expectedLength = std::sqrt(1.0);
+  double expectedRadius = expectedLength / 2.0;
+  BOOST_TEST(edge.getLength() == expectedLength);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), Vector2d{0, 0.5}));
 }
@@ -92,9 +92,9 @@ BOOST_AUTO_TEST_CASE(Dimensions3DX)
   Edge   edge(v1, v2);
   BOOST_TEST(edge.getDimensions() == 3);
 
-  double expectedLenght = std::sqrt(1.0);
-  double expectedRadius = expectedLenght / 2.0;
-  BOOST_TEST(edge.getLength() == expectedLenght);
+  double expectedLength = std::sqrt(1.0);
+  double expectedRadius = expectedLength / 2.0;
+  BOOST_TEST(edge.getLength() == expectedLength);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), Vector3d{0.5, 0, 0}));
 }
@@ -108,9 +108,9 @@ BOOST_AUTO_TEST_CASE(Dimensions3DY)
   Edge   edge(v1, v2);
   BOOST_TEST(edge.getDimensions() == 3);
 
-  double expectedLenght = std::sqrt(1.0);
-  double expectedRadius = expectedLenght / 2.0;
-  BOOST_TEST(edge.getLength() == expectedLenght);
+  double expectedLength = std::sqrt(1.0);
+  double expectedRadius = expectedLength / 2.0;
+  BOOST_TEST(edge.getLength() == expectedLength);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), Vector3d{0, 0.5, 0}));
 }
@@ -124,9 +124,9 @@ BOOST_AUTO_TEST_CASE(Dimensions3DZ)
   Edge   edge(v1, v2);
   BOOST_TEST(edge.getDimensions() == 3);
 
-  double expectedLenght = std::sqrt(1.0);
-  double expectedRadius = expectedLenght / 2.0;
-  BOOST_TEST(edge.getLength() == expectedLenght);
+  double expectedLength = std::sqrt(1.0);
+  double expectedRadius = expectedLength / 2.0;
+  BOOST_TEST(edge.getLength() == expectedLength);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), Vector3d{0, 0, 0.5}));
 }
@@ -140,9 +140,9 @@ BOOST_AUTO_TEST_CASE(Dimensions3D)
   Edge   edge(v1, v2);
   BOOST_TEST(edge.getDimensions() == 3);
 
-  double expectedLenght = std::sqrt(3.0);
-  double expectedRadius = expectedLenght / 2.0;
-  BOOST_TEST(edge.getLength() == expectedLenght);
+  double expectedLength = std::sqrt(3.0);
+  double expectedRadius = expectedLength / 2.0;
+  BOOST_TEST(edge.getLength() == expectedLength);
   BOOST_TEST(edge.getEnclosingRadius() == expectedRadius);
   BOOST_TEST(testing::equals(edge.getCenter(), Vector3d::Constant(0.5)));
 }
