@@ -166,7 +166,12 @@ ParticipantImpl::~ParticipantImpl()
 {
   if (_state != State::Finalized) {
     PRECICE_INFO("Implicitly finalizing in destructor");
-    finalize();
+    try {
+      finalize();
+    } catch (...) {
+      // Suppress exceptions during cleanup so an in-flight exception (e.g. from
+      // initialize()) can propagate to the caller
+    }
   }
 }
 
@@ -1295,6 +1300,12 @@ void ParticipantImpl::mapAndReadData(
                 "Please define a mapping in read direction from the mesh \"{0}\" and omit the \"to\" attribute from the definition. "
                 "Example \"<mapping:nearest-neighbor direction=\"read\" from=\"{0}\" constraint=\"consistent\" />",
                 meshName);
+
+  PRECICE_CHECK(dataContext.hasSamples(),
+                "Data \"{}\" cannot be read from mesh \"{}\" as it contains no samples. "
+                "This is typically a configuration issue of the data flow. "
+                "Check if the data is correctly exchanged to this participant \"{}\" and mapped to mesh \"{}\".",
+                dataName, meshName, _accessorName, meshName);
 
   // Inconsistent sizes will be handled below
   if (coordinates.empty() && values.empty()) {
