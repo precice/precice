@@ -11,6 +11,7 @@
 
 namespace precice::utils {
 
+<<<<<<< HEAD
 inline std::string getTypeName(const double &var)
 {
   return "float";
@@ -34,6 +35,25 @@ inline std::string getTypeName(const int &var)
 inline std::string getTypeName(Eigen::VectorXd const &var)
 {
   return "vector";
+=======
+template <typename T>
+constexpr std::string_view getTypeName(const T &)
+{
+  using U = std::remove_cv_t<std::remove_reference_t<T>>;
+
+  if constexpr (std::is_same_v<U, double>)
+    return "float";
+  else if constexpr (std::is_same_v<U, std::string>)
+    return "string";
+  else if constexpr (std::is_same_v<U, bool>)
+    return "boolean";
+  else if constexpr (std::is_same_v<U, int>)
+    return "integer";
+  else if constexpr (std::is_same_v<U, Eigen::VectorXd>)
+    return "vector";
+  else
+    static_assert(!sizeof(U), "Unsupported type passed to getTypeName()");
+>>>>>>> 5afb891e (Refactor typename getter logic)
 }
 
 } // namespace precice::utils
