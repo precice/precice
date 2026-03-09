@@ -46,4 +46,11 @@ std::tuple<double, double> SolverImbalance::computeSolverImbalance(const std::ve
   return std::tuple<double, double>(*max_time / mean_sat, *max_time / _solver_time_to_advance);
 }
 
+void SolverImbalance::reset()
+{
+  PRECICE_DEBUG("resetting SolverImbalance");
+  _participant_dt.clear();
+  _solver_advance_time.clear();
+}
+
 } // namespace precice::impl

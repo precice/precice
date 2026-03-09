@@ -15,6 +15,7 @@ public:
   void                       startSolver();
   void                       stopSolver(double solverTimeStepSize);
   std::tuple<double, double> computeSolverImbalance(const std::vector<double> &solverAdvanceTimes);
+  void                       reset();
 
 private:
   std::vector<double>     _participant_dt;
