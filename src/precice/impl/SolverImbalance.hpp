@@ -19,6 +19,7 @@ private:
   mutable logging::Logger _log{"impl::SolverImbalance"};
   std::vector<double>     _solver_advance_time;
   Clock::time_point       _start_time;
+  double                  _solver_time_to_advance;
 
   enum class State : bool {
     STOPPED = false,
