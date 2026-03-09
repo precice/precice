@@ -13,6 +13,7 @@
 #include "utils/String.hpp"
 #include "utils/assertion.hpp"
 #include "xml/ValueParser.hpp"
+#include "xml/XMLTag.hpp"
 
 namespace precice::xml {
 
@@ -164,14 +165,24 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::strin
   PRECICE_ASSERT(!_read, "Attribute \"" + _name + "\" has already been read.");
 
   const auto position = aAttributes.find(getName());
+
+  auto addLocation = [&](const std::string &m) {
+    if (const XMLTag *tag = currentTagForError()) {
+      return tag->formatMessage(m);
+    }
+    return m;
+  };
+
   if (position == aAttributes.end()) {
-    PRECICE_CHECK(_hasDefaultValue, "Attribute \"{}\" is required, but was not defined.", _name);
+    if (!_hasDefaultValue) {
+      PRECICE_ERROR(addLocation(fmt::format("Attribute \"{}\" is required, but was not defined.", _name)));
+    }
     set(_value, _defaultValue);
   } else {
     try {
       readValueSpecific(position->second, _value);
     } catch (const std::exception &e) {
-      PRECICE_ERROR(e.what());
+      PRECICE_ERROR(addLocation(e.what()));
     }
     if (_hasValidation) {
       if (std::find(_options.begin(), _options.end(), _value) == _options.end()) {
@@ -187,7 +198,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::strin
           stream << " or value must be \"" << *first << '"';
         }
 
-        PRECICE_ERROR(stream.str());
+        PRECICE_ERROR(addLocation(stream.str()));
       }
     }
   }

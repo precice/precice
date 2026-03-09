@@ -30,12 +30,15 @@ public:
     using AttributePair = std::map<std::string, std::string>;
     AttributePair                      m_aAttributes;
     std::vector<std::shared_ptr<CTag>> m_aSubTags;
+    int m_Line   = -1;
+    int m_Column = -1;
   };
 
   using CTagPtrVec = std::vector<std::shared_ptr<CTag>>;
 
 private:
   static precice::logging::Logger _log;
+  static ConfigParser *s_currentInstance;
 
   /// the hash of the last processed config
   std::string _hash;
@@ -44,6 +47,9 @@ private:
   CTagPtrVec m_CurrentTags;
 
   std::shared_ptr<precice::xml::XMLTag> m_pXmlTag;
+
+  std::string m_content;
+  xmlParserCtxtPtr m_parserCtxt = nullptr;
 
 public:
   /// Parser ctor for Callback init
@@ -69,7 +75,9 @@ public:
   void OnStartElement(
       std::string_view    localname,
       std::string_view    prefix,
-      CTag::AttributePair attributes);
+      CTag::AttributePair attributes,
+      int                 line,
+      int                 column);
 
   /// Callback for End-Tag
   void OnEndElement();
