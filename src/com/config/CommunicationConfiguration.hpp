@@ -20,8 +20,8 @@ class CommunicationConfiguration {
 public:
   virtual ~CommunicationConfiguration() = default;
 
-  /// Returns a communication object of given type.
-  PtrCommunication createCommunication(const xml::XMLTag &tag) const;
+  /// Returns an IntraCommunication object of given type.
+  PtrIntraCommunication createIntraCommunication(const xml::XMLTag &tag) const;
 
 private:
   mutable logging::Logger _log{"com::CommunicationConfiguration"};

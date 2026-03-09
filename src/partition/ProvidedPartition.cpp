@@ -6,8 +6,8 @@
 #include <utility>
 #include <vector>
 
-#include "com/Communication.hpp"
 #include "com/Extra.hpp"
+#include "com/IntraCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"

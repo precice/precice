@@ -7,7 +7,7 @@
 #include <string>
 
 #include "IntraComm.hpp"
-#include "com/Communication.hpp"
+#include "com/IntraCommunication.hpp"
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
 #include "precice/impl/Types.hpp"
@@ -24,7 +24,7 @@ Rank                  IntraComm::_rank            = -1;
 int                   IntraComm::_size            = -1;
 bool                  IntraComm::_isPrimaryRank   = false;
 bool                  IntraComm::_isSecondaryRank = false;
-com::PtrCommunication IntraComm::_communication;
+com::PtrIntraCommunication IntraComm::_communication;
 
 logging::Logger IntraComm::_log("utils::IntraComm");
 
