@@ -1,4 +1,5 @@
 #include "precice/impl/SolverImbalance.hpp"
+#include <algorithm>
 #include <numeric>
 #include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
@@ -35,6 +36,14 @@ void SolverImbalance::stopSolver(double solverTimeStepSize)
   PRECICE_INFO("solver advance time: {}", _solver_advance_time.back());
   PRECICE_INFO("solver dt: {}", solverTimeStepSize);
   PRECICE_INFO("time per time step: {}", _solver_advance_time.back() / solverTimeStepSize);
+}
+
+std::tuple<double, double> SolverImbalance::computeSolverImbalance(const std::vector<double> &solverAdvanceTimes)
+{
+  double mean_sat = std::accumulate(solverAdvanceTimes.begin(), solverAdvanceTimes.end(), 0.0);
+  mean_sat        = mean_sat / solverAdvanceTimes.size();
+  auto max_time   = std::max_element(solverAdvanceTimes.begin(), solverAdvanceTimes.end());
+  return std::tuple<double, double>(*max_time / mean_sat, *max_time / _solver_time_to_advance);
 }
 
 } // namespace precice::impl
