@@ -20,7 +20,6 @@ void SolverImbalance::startSolver()
   PRECICE_ASSERT(_state == State::STOPPED);
   _state      = State::RUNNING;
   _start_time = Clock::now();
-  PRECICE_INFO("starting solver imbalance");
 }
 
 void SolverImbalance::stopSolver(double solverTimeStepSize)
