@@ -1120,10 +1120,42 @@ void CouplingSchemeConfiguration::checkIfDataIsExchanged(
     dataName = dataptr->getName();
   }
 
-  PRECICE_ERROR("You need to exchange every data that you use for convergence measures and/or the iteration acceleration. "
-                "Data \"{}\" is currently not exchanged over the respective mesh of participant \"{}\" on which it is used for convergence measures and/or iteration acceleration. "
-                "Please check the <exchange ... /> and <...-convergence-measure ... /> tags in the <coupling-scheme:... /> of your precice-config.xml.",
+  PRECICE_ERROR("You need to exchange every data that you use for the iteration acceleration. "
+                "Data \"{}\" is currently not exchanged over the respective mesh of participant \"{}\" on which it is used for iteration acceleration. "
+                "Please check the <exchange ... /> tags in the <coupling-scheme:... /> of your precice-config.xml.",
                 dataName, participant);
+}
+
+void CouplingSchemeConfiguration::checkConvergenceMeasureDataAvailable(
+    DataID dataID, std::string_view participant, const std::string &dataName, const std::string &meshName) const
+{
+  // First, check if the data is exchanged (existing behavior)
+  const auto match = std::find_if(_config.exchanges.begin(),
+                                  _config.exchanges.end(),
+                                  [dataID, participant](const Config::Exchange &exchange) {
+                                    if (exchange.from != participant && exchange.to != participant) {
+                                      return false;
+                                    } else {
+                                      return exchange.data->getID() == dataID;
+                                    }
+                                  });
+  if (match != _config.exchanges.end()) {
+    return;
+  }
+
+  // Data is not exchanged. Check if the convergence-checking participant
+  // writes this data on a mesh it provides
+  const auto &participantPtr = _participantConfig->getParticipant(participant);
+  if (participantPtr->isMeshProvided(meshName) && participantPtr->isDataWrite(meshName, dataName)) {
+    return;
+  }
+
+  PRECICE_ERROR("Data \"{}\" of mesh \"{}\" is used in a convergence measure but is neither exchanged "
+                "nor written by participant \"{}\" on a provided mesh. "
+                "Please either add an <exchange ... /> tag for this data, "
+                "or make sure participant \"{}\" provides the mesh and writes this data. "
+                "See the <coupling-scheme:... /> of your precice-config.xml.",
+                dataName, meshName, participant, participant);
 }
 
 void CouplingSchemeConfiguration::checkSerialImplicitAccelerationData(
@@ -1165,7 +1197,7 @@ void CouplingSchemeConfiguration::addConvergenceMeasures(
 {
   for (auto &elem : convergenceMeasureDefinitions) {
     _meshConfig->addNeededMesh(participant, elem.meshName);
-    checkIfDataIsExchanged(elem.data->getID(), participant);
+    checkConvergenceMeasureDataAvailable(elem.data->getID(), participant, elem.data->getName(), elem.meshName);
     scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure);
   }
 }
