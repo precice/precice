@@ -200,7 +200,7 @@ public:
   }
 
   /// reads all attributes of this tag
-  void readAttributes(const std::map<std::string, std::string> &aAttributes);
+  void readAttributes(const std::map<std::string, std::string> &aAttributes, const std::string_view fullXMLCtx);
 
 private:
   mutable logging::Logger _log{"xml::XMLTag"};
