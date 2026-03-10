@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(testConvergenceMeasures5)
   // Data3 converges on iteration 2 for time window 1, and iteration 3 for time window 2.
   // These values are written by SolverTwo on its provided MeshTwo.
   // Data3 is NOT exchanged, but used in the convergence measure.
-  std::vector<double> writeValuesData3 = {1.0, 1.01, 2.0, 2.5, 2.81};
+  std::vector<double> writeValuesData3 = {1.0, 1.01, 2.0, 2.5, 2.51};
 
   // Expected iterations per time window based on the convergence of Data3
   std::vector<int> expectedIterations = {2, 3};
