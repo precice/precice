@@ -71,4 +71,15 @@ BOOST_AUTO_TEST_CASE(VectorAttributes)
   BOOST_TEST(cb.eigenVectorXd(2) == 1.0);
 }
 
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(OccurrenceStrings)
+{
+  PRECICE_TEST();
+  BOOST_TEST(XMLTag::getOccurrenceString(XMLTag::OCCUR_ARBITRARY) == "0..*");
+  BOOST_TEST(XMLTag::getOccurrenceString(XMLTag::OCCUR_NOT_OR_ONCE) == "0..1");
+  BOOST_TEST(XMLTag::getOccurrenceString(XMLTag::OCCUR_ONCE) == "1");
+  BOOST_TEST(XMLTag::getOccurrenceString(XMLTag::OCCUR_ONCE_OR_MORE) == "1..*");
+  BOOST_TEST(XMLTag::getOccurrenceString(XMLTag::OCCUR_ARBITRARY_NESTED) == "0..* (nested)");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
