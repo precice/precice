@@ -17,6 +17,13 @@
 namespace precice::cplscheme {
 
 namespace {
+// HELPER: Time window size compatibility check
+// ==============================================
+// Validates that explicit and implicit coupling schemes have compatible time windows.
+// For stable convergence in multi-coupling, explicit time steps must align with implicit steps.
+//
+// Rule: edt (explicit) must be an integer multiple of idt (implicit)
+// Example: If implicit uses dt=0.01, explicit can use 0.01, 0.02, 0.03, etc.
 bool compatibleTimeWindowSizes(const CouplingScheme &impl, const CouplingScheme &expl)
 {
   if (!impl.hasTimeWindowSize() || !expl.hasTimeWindowSize()) {
@@ -52,13 +59,29 @@ void CompositionalCouplingScheme::addCouplingScheme(
     const PtrCouplingScheme &couplingScheme)
 {
   PRECICE_TRACE();
+  // MULTI-COUPLING REGISTRATION
+  // ============================
+  // Compositional coupling combines implicit and explicit schemes:
+  //   - Implicit (at most 1): Always runs, drives convergence iterations
+  //   - Explicit (multiple): Second-order accurate, runs after implicit converges
+  //
+  // Example configuration:
+  //   Participant A <-> B (implicit, convergence loop)
+  //   Participant A <-> C (explicit, runs once per implicit time window)
+  //
+  // Validation:
+  //   - Time window sizes must be compatible (explicit = n * implicit)
+  //   - At most one implicit scheme allowed
+  
   if (!couplingScheme->isImplicitCouplingScheme()) {
+    // Register as explicit coupling (sequential, second-order)
     _explicitSchemes.emplace_back(couplingScheme);
 
     if (_implicitScheme) {
       checkCompatibleTimeWindowSizes(*_implicitScheme, *couplingScheme);
     }
   } else {
+    // Register as implicit coupling (iterative, drives convergence)
     PRECICE_ASSERT(_implicitScheme == nullptr);
     _implicitScheme = couplingScheme;
 
@@ -71,6 +94,12 @@ void CompositionalCouplingScheme::addCouplingScheme(
 void CompositionalCouplingScheme::initialize()
 {
   PRECICE_TRACE();
+  // INITIALIZATION OF MULTI-COUPLING SCHEMES
+  // =========================================
+  // Initialize all registered coupling schemes (implicit + explicit).
+  // Both scheme types are active at startup; explicit schemes may be put
+  // on hold later during implicit convergence iterations.
+  
   PRECICE_ASSERT(_activeSchemes.empty());
   for (const auto scheme : allSchemes()) {
     scheme->initialize();
@@ -104,8 +133,25 @@ bool CompositionalCouplingScheme::isInitialized() const
 bool CompositionalCouplingScheme::addComputedTime(double timeToAdd)
 {
   PRECICE_TRACE(timeToAdd);
+  // TIME WINDOW ADVANCEMENT AND IMPLICIT-EXPLICIT ORCHESTRATION
+  // =============================================================
+  // Manages time stepping in multi-coupled scenarios:
+  //
+  // CASE 1: Pure explicit coupling (no implicit scheme)
+  //   - All schemes advance time in lockstep
+  //   - Return true when any explicit scheme reaches window end
+  //
+  // CASE 2: Multi-coupling (implicit + explicit)
+  //   ITERATION 1 (first):
+  //     - Implicit and explicit advance together
+  //     - When implicit reaches window end → explicit schemes go ON HOLD
+  //
+  //   ITERATIONS 2+ (implicit convergence loop):
+  //     - Only implicit continues iterating (explicit frozen)
+  //     - After implicit converges → explicit schemes resume
 
   if (!isImplicitCouplingScheme()) {
+    // Pure explicit coupling: all advance together
     auto explicitAtWindowEnd = false;
     for (auto &scheme : _explicitSchemes) {
       explicitAtWindowEnd |= scheme->addComputedTime(timeToAdd);
@@ -113,27 +159,27 @@ bool CompositionalCouplingScheme::addComputedTime(double timeToAdd)
     return explicitAtWindowEnd;
   }
 
-  // Reaching the timewindow end of the implicit scheme requires explicit coupling schemes to freeze
+  // Multi-coupling case: coordinate implicit-explicit interaction
+  // Step 1: Advance implicit scheme (drives iterations)
   auto implicitAtWindowEnd = _implicitScheme->addComputedTime(timeToAdd);
 
-  // We are done if the implicit scheme is iterating
+  // Step 2: If explicit schemes are on hold, skip them (implicit iterating)
   if (_explicitOnHold) {
-    // No explicit schemes run in later iterations
     PRECICE_DEBUG("Explicit schemes are still on hold");
     return implicitAtWindowEnd;
   }
 
-  // We are in the first iteration so explicit schemes need to step forward
+  // Step 3: In first iteration, explicit schemes advance with implicit
   auto explicitAtWindowEnd = false;
   for (auto &scheme : _explicitSchemes) {
     explicitAtWindowEnd |= scheme->addComputedTime(timeToAdd);
   }
 
+  // Step 4: When implicit reaches window end, explicit must freeze
   if (implicitAtWindowEnd) {
     PRECICE_DEBUG("Implicit scheme reached the end of the first iteration at t={}. "
                   "Explicit schemes are on hold until convergence achieved.",
                   _implicitScheme->getTime());
-    // explicit schemes are on hold until converged
     _explicitOnHold = true;
     updateActiveSchemes();
   }
@@ -157,21 +203,32 @@ CouplingScheme::ChangedMeshes CompositionalCouplingScheme::firstSynchronization(
 void CompositionalCouplingScheme::firstExchange()
 {
   PRECICE_TRACE();
+  // FIRST DATA EXCHANGE IN MULTI-COUPLING
+  // ======================================
+  // Initial data exchange phase. Behavior depends on coupling configuration:
+  //
+  // Pure explicit: Exchange with all schemes
+  // Multi-coupling: 
+  //   - Iteration 1: Implicit exchanges, then explicit (if not on hold)
+  //   - Iterations 2+: Only implicit exchanges (explicit frozen)
 
   if (!isImplicitCouplingScheme()) {
+    // Pure explicit: exchange with all
     for (auto &scheme : _explicitSchemes) {
       scheme->firstExchange();
     }
     return;
   }
 
-  // The implicit scheme either just reached the end of the first time window, or is already iterating.
+  // Multi-coupling: implicit always exchanges
   _implicitScheme->firstExchange();
+  
+  // Explicit only exchanges if not iterating implicit convergence
   if (_explicitOnHold) {
     return;
   }
 
-  // The implicit scheme hasn't reached the end of the first time window yet.
+  // First iteration: explicit exchanges in parallel with implicit
   for (auto &scheme : _explicitSchemes) {
     scheme->firstExchange();
   }
@@ -192,28 +249,48 @@ CouplingScheme::ChangedMeshes CompositionalCouplingScheme::secondSynchronization
 void CompositionalCouplingScheme::secondExchange()
 {
   PRECICE_TRACE();
+  // SECOND DATA EXCHANGE AND CONVERGENCE SYNCHRONIZATION
+  // ======================================================
+  // Handles convergence detection and explicit scheme activation.
+  //
+  // Multi-coupling flow:
+  //   1. Implicit completes time window → check convergence
+  //   2. If NOT converged (iterating):
+  //      - Explicit remains on hold
+  //      - Loop continues with implicit scheme
+  //   3. If converged:
+  //      - Run explicit schemes (they were frozen)
+  //      - Bring explicit up to same time as implicit
+  //      - Synchronize all schemes for next time window
 
   if (!isImplicitCouplingScheme()) {
+    // Pure explicit: all schemes exchange
     for (auto &scheme : _explicitSchemes) {
       scheme->secondExchange();
     }
     return;
   }
 
-  // First complete the time window of the implicit scheme to determine if the scheme has converged
+  // Multi-coupling: Check if implicit scheme has converged
   _implicitScheme->secondExchange();
 
+  // Convergence criterion: implicit time >= explicit time
+  // (implicit has dominated the coupling loop)
   double implicitTime = _implicitScheme->getTime();
   double explicitTime = _explicitSchemes.front()->getTime();
-  bool   iterating    = implicitTime < explicitTime; // TODO numeric check?
+  bool   iterating    = implicitTime < explicitTime;
 
   if (iterating) {
+    // Implicit still converging: explicit remains frozen
     PRECICE_DEBUG("Implicit scheme hasn't converged. Explicit schemes remain on hold.");
     PRECICE_ASSERT(_explicitOnHold, "Iterative scheme hasn't converged yet");
     return;
   }
+  
+  // Implicit converged: release explicit schemes to catch up
   PRECICE_DEBUG("Implicit scheme converged. Running explicit schemes.");
 
+  // Run all exchange phases for explicit schemes to complete their time window
   for (auto &scheme : _explicitSchemes) {
     scheme->firstExchange();
   }
@@ -225,6 +302,7 @@ void CompositionalCouplingScheme::secondExchange()
   }
   PRECICE_DEBUG("Explicit schemes caught up. All schemes are in sync.");
 
+  // Ready for next time window
   _explicitOnHold = false;
   updateActiveSchemes();
 }
@@ -463,11 +541,17 @@ void CompositionalCouplingScheme::updateActiveSchemes()
 
 std::vector<CouplingScheme *> CompositionalCouplingScheme::allSchemes() const
 {
-  std::vector<CouplingScheme *> cpls(_explicitSchemes.size());
+  std::vector<CouplingScheme *> cpls;
+  cpls.reserve(_explicitSchemes.size() + (_implicitScheme ? 1 : 0));
+  
+  // Add explicit schemes
+  std::transform(_explicitSchemes.begin(), _explicitSchemes.end(), std::back_inserter(cpls), 
+                 std::mem_fn(&PtrCouplingScheme::get));
+  
+  // Add implicit scheme if it exists
   if (_implicitScheme) {
     cpls.push_back(_implicitScheme.get());
   }
-  std::transform(_explicitSchemes.begin(), _explicitSchemes.end(), cpls.begin(), std::mem_fn(&PtrCouplingScheme::get));
   return cpls;
 }
 
