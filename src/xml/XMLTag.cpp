@@ -243,10 +243,10 @@ void XMLTag::areAllSubtagsConfigured() const
 
     if ((not configured) && (occurOnce || occurOnceOrMore)) {
 
-      if (tag->getNamespace().empty()) {
+    if (tag->getNamespace().empty()) {
         PRECICE_ERROR("Tag <{}> was not found but is required to occur at least once.", tag->getName());
-      } else {
-        PRECICE_ERROR("Tag <{}:... > was not found but is required to occur at least once.", tag->getNamespace());
+    } else { 
+        PRECICE_ERROR("Tag <{}:{}> was not found but is required to occur at least once.", tag->getNamespace(), tag->getName());
       }
     }
   }
@@ -309,6 +309,8 @@ std::string_view XMLTag::getOccurrenceString(XMLTag::Occurrence occurrence)
     return "1";
   } else if (occurrence == XMLTag::OCCUR_ONCE_OR_MORE) {
     return "1..*";
+  } else if (occurrence == XMLTag::OCCUR_ARBITRARY_NESTED) {
+    return "0..* (nested)";
   }
   return "";
 }
