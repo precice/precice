@@ -24,8 +24,7 @@ public:
   /// Struct holding the read tag from xml file
   struct CTag {
     std::string m_Name;
-    std::string m_Prefix;
-    bool        m_Used = false;
+    std::string m_Prefix; 
 
     using AttributePair = std::map<std::string, std::string>;
     AttributePair                      m_aAttributes;
