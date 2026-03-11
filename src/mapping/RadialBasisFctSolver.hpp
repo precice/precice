@@ -1,5 +1,33 @@
 #pragma once
 
+/**
+ * @file RadialBasisFctSolver.hpp
+ * @brief Dense CPU solver for Radial Basis Function (RBF) interpolation.
+ *
+ * ## Purpose
+ * `RadialBasisFctSolver<RBF_T>` assembles and caches the RBF interpolation matrices
+ * during mapping setup (once, O(n^3)) and performs fast backward-substitution
+ * during each data exchange (reuse, O(n^2)).
+ *
+ * ## Workflow
+ * 1. **Setup (Constructor)**:
+ *    - Assemble the symmetric kernel matrix C: C_ij = phi(||x_i - x_j||)
+ *    - Decompose C: Cholesky for SPD kernels, QR for general kernels
+ *    - Assemble the evaluation matrix A: A_ij = phi(||y_i - x_j||)
+ *    - Optionally assemble polynomial matrices Q (input) and V (output)
+ *
+ * 2. **Mapping (solveConsistent / solveConservative)**:
+ *    - Consistent:   compute lambda = C^{-1} * data, then output = A * lambda
+ *    - Conservative: compute Au = A^T * data, then output = C^{-T} * Au
+ *
+ * ## Just-In-Time (JIT) Caching
+ * For on-the-fly mapping (when the receiving mesh isn't known at setup time),
+ * the solver exposes `computeCacheData`, `interpolateAt`, `addWriteDataToCache`,
+ * and `evaluateConservativeCache`. These split the solve into a precomputation step
+ * (independent of query locations) and a per-query evaluation step, allowing
+ * efficient repeated evaluation at arbitrary points after a single matrix solve.
+ */
+
 #include <Eigen/Cholesky>
 #include <Eigen/QR>
 #include <Eigen/SVD>
@@ -573,106 +601,215 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
   }
 }
 
+/**
+ * CONSERVATIVE SOLVE
+ *
+ * Maps data *conservatively* from output vertices (input data) to input vertices (output data).
+ * Unlike consistent, conservative preserves the global integral (or sum) of the field.
+ *
+ * Mathematical derivation:
+ *   Consistent mapping:    output = A * C^{-1} * input
+ *   Conservative mapping:  output = (A * C^{-1})^T * input  = C^{-T} * A^T * input
+ *   (since C is symmetric: C^{-T} = C^{-1})
+ *
+ * Algorithm:
+ *   Step 1 (Polynomial, SEPARATE only):
+ *     epsilon = V^T * inputData
+ *     tau     = epsilon - Q^T * mu   (after step 2)
+ *     sigma   = C^{-T} * tau        (correction term)
+ *
+ *   Step 2 (Core conservative solve):
+ *     Au  = A^T * inputData        (project input onto RBF basis)
+ *     mu  = C^{-1} * Au           (RBF coefficients for conservative mapping)
+ *
+ *   Step 3 (Correction, SEPARATE only):
+ *     out = mu + sigma             (add polynomial correction)
+ *
+ * @note inputData must be a column-major matrix with rows = getOutputSize() (N_out vertices)
+ * @param polynomial Polynomial handling mode (ON, OFF, SEPARATE)
+ * @return Eigen::MatrixXd  Mapped values at input vertices
+ */
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::MatrixXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const Eigen::MatrixXd &inputData, Polynomial polynomial) const
 {
   PRECICE_ASSERT((_matrixV.size() > 0 && polynomial == Polynomial::SEPARATE) || _matrixV.size() == 0, _matrixV.size());
-  // TODO: Avoid temporary allocations
-  // Au is equal to the eta in our PETSc implementation
   PRECICE_ASSERT(inputData.rows() == _matrixA.rows());
+
+  // STEP 2a: Au = A^T * inputData
+  //   This projects the output-mesh values back onto the RBF basis coefficients.
+  //   Au has shape (inputSize + polyparams) x dataDims.
   Eigen::MatrixXd Au = _matrixA.transpose() * inputData;
   PRECICE_ASSERT(Au.rows() == _matrixA.cols());
 
-  // mu in the PETSc implementation
+  // STEP 2b: mu = C^{-1} * Au  (RBF coefficients)
   Eigen::MatrixXd out = _decMatrixC.solve(Au);
 
   if (polynomial == Polynomial::SEPARATE) {
+    // STEP 3 (SEPARATE polynomial correction):
+    // epsilon = V^T * inputData  — polynomial moments of the input values
     Eigen::MatrixXd epsilon = _matrixV.transpose() * inputData;
     PRECICE_ASSERT(epsilon.rows() == _matrixV.cols());
 
-    // epsilon = Q^T * mu - epsilon (tau in the PETSc impl)
+    // tau = epsilon - Q^T * mu  — polynomial residual after RBF projection
     epsilon -= _matrixQ.transpose() * out;
     PRECICE_ASSERT(epsilon.rows() == _matrixQ.cols());
 
-    // out  = out - solveTranspose tau (sigma in the PETSc impl)
+    // sigma = C_poly^{-T} * tau  — correction via transposed polynomial QR
+    // Subtracted (note the negative sign) to yield the final conservative coefficients
     out -= static_cast<Eigen::MatrixXd>(_qrMatrixQ.transpose().solve(-epsilon));
   }
   return out;
 }
 
-// @todo: change the signature to Eigen::MatrixXd and process all components at once, the solve function of eigen can handle that
+/**
+ * CONSISTENT SOLVE
+ *
+ * Interpolates data from input to output vertices using the precomputed decomposition.
+ *
+ * Two-phase algorithm:
+ *
+ * Phase 1 (Polynomial subtraction — only if polynomial=SEPARATE):
+ *   - Solve Q * poly_coeffs = inputData  using the precomputed QR of Q
+ *   - Subtract the polynomial fit from input:  inputData -= Q * poly_coeffs
+ *   - This removes the polynomial trend from the data before RBF interpolation.
+ *
+ * Phase 2 (RBF solve + evaluate):
+ *   - Solve C * lambda = inputData  using the precomputed Cholesky or QR of C
+ *   - Evaluate at output locations: output = A * lambda
+ *
+ * Phase 3 (Polynomial restoration — only if polynomial=SEPARATE):
+ *   - Re-add the polynomial contribution at output locations: output += V * poly_coeffs
+ *
+ * @note inputData is modified in-place (polynomial subtracted if SEPARATE).
+ *       The caller must not rely on its value after this call.
+ * @param polynomial Polynomial handling mode (ON, OFF, SEPARATE)
+ * @return Eigen::MatrixXd  Mapped values at output vertices; rows = outputSize
+ */
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::MatrixXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(Eigen::MatrixXd &inputData, Polynomial polynomial) const
 {
   PRECICE_ASSERT((_matrixQ.size() > 0 && polynomial == Polynomial::SEPARATE) || _matrixQ.size() == 0);
   Eigen::MatrixXd polynomialContribution;
-  // Solve polynomial QR and subtract it from the input data
+
+  // PHASE 1 (polynomial=SEPARATE only):
+  // Factor out the polynomial part so the RBF system only sees the residual.
+  // poly_coeffs = Q^{+} * inputData  (least-squares: best polynomial fit to input data)
+  // residual    = inputData - Q * poly_coeffs
   if (polynomial == Polynomial::SEPARATE) {
     polynomialContribution = _qrMatrixQ.solve(inputData);
     inputData -= (_matrixQ * polynomialContribution);
   }
 
-  // Integrated polynomial (and separated)
+  // PHASE 2: Solve C * lambda = inputData (residual after polynomial removal)
+  //   integrated polynomial (polynomial=ON): data already includes polynomial columns
+  //   no polynomial (polynomial=OFF): straightforward RBF-only solve
   PRECICE_ASSERT(inputData.rows() == _matrixA.cols());
   Eigen::MatrixXd p = _decMatrixC.solve(inputData);
 
+  // LOOCV cross-validation check (if enabled). Logs a warning if the mapping
+  // is of poor quality based on the Rippa leave-one-out error estimate.
   if (polynomial != Polynomial::ON && computeCrossValidation) {
     precice::profiling::Event e("map.rbf.evaluateLOOCV");
     PRECICE_INFO("Cross validation error (LOOCV): {}", evaluateRippaLOOCVerror(p));
   }
+
+  // Evaluate at output locations: output = A * lambda
   PRECICE_ASSERT(p.rows() == _matrixA.cols());
   Eigen::MatrixXd out = _matrixA * p;
 
-  // Add the polynomial part again for separated polynomial
+  // PHASE 3 (polynomial=SEPARATE only):
+  // Restore the polynomial contribution at output locations using matrix V:
+  //   output += V * poly_coeffs
   if (polynomial == Polynomial::SEPARATE) {
     out += (_matrixV * polynomialContribution);
   }
   return out;
 }
 
+/**
+ * COMPUTE CACHE DATA (JIT precomputation)
+ *
+ * Splits the consistent solve into a reusable precomputation step and a
+ * per-query evaluation step. Called once per time step; the results (polyOut, coeffsOut)
+ * are reused for multiple `interpolateAt()` calls at different query locations.
+ *
+ * This is the JIT equivalent of `solveConsistent`, but without the final A*lambda step.
+ *
+ * @param[in,out] inputData  Input values at input vertices (modified in-place; polynomial subtracted)
+ * @param[in]     polynomial Polynomial handling mode
+ * @param[out]    polyOut    Polynomial coefficients (meaningful only if SEPARATE)
+ * @param[out]    coeffsOut  RBF lambda coefficients = C^{-1} * (inputData - Q * polyOut)
+ */
 template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::computeCacheData(Eigen::MatrixXd &inputData, Polynomial polynomial, Eigen::MatrixXd &polyOut, Eigen::MatrixXd &coeffsOut) const
 {
   PRECICE_ASSERT((_matrixQ.size() > 0 && polynomial == Polynomial::SEPARATE) || _matrixQ.size() == 0);
-  // Solve polynomial QR and subtract it from the input data
+
+  // Step 1 (polynomial=SEPARATE only): factor out polynomial part from the input.
+  // polyOut = Q^{+} * inputData, then subtract Q * polyOut from input (residual).
   if (polynomial == Polynomial::SEPARATE) {
     polyOut = _qrMatrixQ.solve(inputData);
     inputData -= (_matrixQ * polyOut);
   }
 
-  // Integrated polynomial (and separated)
+  // Step 2: Solve C * coeffsOut = inputData  (precomputed decomposition, O(n^2))
+  // coeffsOut holds the RBF lambda coefficients for the current input field.
   coeffsOut = _decMatrixC.solve(inputData);
 }
 
+/**
+ * INTERPOLATE AT (JIT per-query evaluation — consistent)
+ *
+ * Given precomputed RBF coefficients (`coeffs`) and optional polynomial
+ * coefficients (`poly`), evaluate the RBF interpolant at a single query vertex `v`.
+ *
+ * Formula:
+ *   result = sum_j coeffs[j] * phi(||v - x_j||)     [RBF part]
+ *          + poly[0]                                 [constant polynomial term]
+ *          + sum_d poly[1+k] * v.coord[d]            [linear polynomial terms]
+ *
+ * This is the per-query evaluation partner to `computeCacheData`. Call
+ * `computeCacheData` once per time step, then call `interpolateAt` for each query.
+ *
+ * @note Dead axes are NOT applied here because vertex coordinates are already
+ *  in the correct 3D representation and no user-facing dead-axis option exists
+ *  inside the PartitionOfUnity solver.
+ *
+ * @param v          Query vertex (location where we want the interpolated value)
+ * @param poly       Polynomial coefficients from computeCacheData (empty if no SEPARATE poly)
+ * @param coeffs     RBF lambda coefficients from computeCacheData
+ * @param function   The RBF kernel (same as used in the constructor)
+ * @param inputIDs   IDs of input vertices in `inMesh` (defines column ordering of coeffs)
+ * @param inMesh     The input mesh containing the RBF source vertices
+ * @return Eigen::VectorXd  Interpolated values at query vertex v (length = dataDims)
+ */
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::interpolateAt(const mesh::Vertex &v, const Eigen::MatrixXd &poly, const Eigen::MatrixXd &coeffs,
-                                                                             const RADIAL_BASIS_FUNCTION_T &basisFunction, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const
+                                                                              const RADIAL_BASIS_FUNCTION_T &basisFunction, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const
 {
   PRECICE_TRACE();
-  // We ignore the dead axis here for the evaluation matrix (matrixA), as the vertex coordinates are zero for a potential 2d case and there is no option in PUM to set them from the user
 
-  // Two cases we have to distinguish here:
-  // 1. there is no polynomial given, then the result is out = _matrixA * p;
   Eigen::VectorXd result(coeffs.cols());
   result.setZero();
 
-  // Compute RBF values for matrix A
+  // RBF part: evaluate each input vertex's RBF contribution at query location v.
+  // result += phi(||v - x_j||) * lambda_j  for each input vertex j.
   const auto &out = v.rawCoords();
   for (const auto &j : inputIDs | boost::adaptors::indexed()) {
     const auto &in                = inMesh.vertex(j.value()).rawCoords();
     double      squaredDifference = computeSquaredDifference(out, in);
     double      eval              = basisFunction.evaluate(std::sqrt(squaredDifference));
-
     result += eval * coeffs.row(j.index()).transpose();
   }
 
-  // 2. we have a separate polynomial, then we have to add it again here;
-  //   out += (_matrixV * polynomialContribution);
+  // Polynomial part (SEPARATE mode only): add polynomial contribution at query point.
+  //   poly.row(0): constant term coefficient  → multiplied by 1
+  //   poly.row(k): linear term coefficient in dimension d → multiplied by v.coord[d]
   if (poly.size() > 0) {
     // constant polynomial
     result += 1 * poly.row(0).transpose();
-    // the linear contributions
+    // the linear contributions — one per active dimension
     int k = 1;
     for (std::size_t d = 0; d < _localActiveAxis.size(); ++d) {
       if (_localActiveAxis[d]) {
@@ -684,16 +821,37 @@ Eigen::VectorXd RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::interpolateAt(con
   return result;
 }
 
+/**
+ * ADD WRITE DATA TO CACHE (JIT precomputation — conservative)
+ *
+ * Accumulates the conservative contribution of a single query vertex `v`
+ * with load vector `load` into the running cache buffers `Au` and `epsilon`.
+ *
+ * This is the per-query step of the JIT conservative mapping. Call this for
+ * every write vertex, then call `evaluateConservativeCache` once at the end.
+ *
+ * Mathematical role:
+ *   Au_j      += phi(||v - x_j||) * load   for each input vertex j   [RBF column of A^T]
+ *   epsilon_0 += 1 * load                                              [constant poly term]
+ *   epsilon_k += v.coord[d] * load                                    [linear poly terms]
+ *
+ * @param v            Query vertex at which write data was prescribed
+ * @param load         Data values at query vertex (scalar or vector per component)
+ * @param[out] epsilon Accumulated polynomial moment matrix (rows = polyParams, cols = dataDims)
+ * @param[out] Au      Accumulated A^T * load matrix (rows = inputIDs.size(), cols = dataDims)
+ * @param basisFunction The RBF kernel
+ * @param inputIDs     IDs of input vertices in inMesh
+ * @param inMesh       Input mesh with RBF source vertices
+ */
 template <typename RADIAL_BASIS_FUNCTION_T>
 template <typename IndexContainer>
 void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const mesh::Vertex &v, const Eigen::VectorXd &load, Eigen::MatrixXd &epsilon, Eigen::MatrixXd &Au,
-                                                                        const RADIAL_BASIS_FUNCTION_T &basisFunction, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const
+                                                                         const RADIAL_BASIS_FUNCTION_T &basisFunction, const IndexContainer &inputIDs, const mesh::Mesh &inMesh) const
 {
   PRECICE_TRACE();
-  // We ignore the dead axis here for the evaluation matrix (matrixA), as the vertex coordinates are zero for a potential 2d case and there is no option in PUM to set them from the user
 
-  // 1. The matrix contribution
-  // Compute RBF values for matrix A
+  // RBF part: for each input vertex j, add phi(||v - x_j||) * load to Au[j].
+  // Au accumulates A^T * inputData; each query vertex contributes one row of A^T.
   PRECICE_ASSERT(Au.rows() == static_cast<Eigen::Index>(inputIDs.size()));
   PRECICE_ASSERT(Au.cols() == load.size());
 
@@ -702,18 +860,19 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const me
     const auto &in                = inMesh.vertex(j.value()).rawCoords();
     double      squaredDifference = computeSquaredDifference(out, in);
     double      eval              = basisFunction.evaluate(std::sqrt(squaredDifference));
-
     Au.row(j.index()) += eval * load.transpose();
   }
 
-  // 2. we have a separate polynomial, then we have to add it again here;
-  // Eigen::VectorXd epsilon = _matrixV.transpose() * inputData;
+  // Polynomial part (SEPARATE mode only):
+  // epsilon accumulates V^T * inputData  (polynomial moments of the write data).
+  // row 0: constant term contribution  = 1 * load
+  // row k: linear term in dimension d  = v.coord[d] * load
   if (epsilon.size() > 0) {
     PRECICE_ASSERT(epsilon.rows() == getNumberOfPolynomials());
     PRECICE_ASSERT(epsilon.cols() == load.size());
     // constant polynomial
     epsilon.row(0) += 1 * load.transpose();
-    // the linear contributions
+    // the linear contributions — one per active dimension
     int k = 1;
     for (std::size_t d = 0; d < _localActiveAxis.size(); ++d) {
       if (_localActiveAxis[d]) {
@@ -724,15 +883,36 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const me
   }
 }
 
+/**
+ * EVALUATE CONSERVATIVE CACHE (JIT finalization — conservative)
+ *
+ * Completes the JIT conservative mapping by solving the linear system using
+ * the accumulated buffer `Au` (= A^T * inputData) and the polynomial buffer `epsilon`.
+ *
+ * This is the single-call finalization step after all per-query `addWriteDataToCache`
+ * calls for one time step.
+ *
+ * Algorithm:
+ *   1. out = C^{-1} * Au        (RBF conservative coefficients, "mu" in PETSc notation)
+ *   2. (SEPARATE polynomial only):
+ *      tau = epsilon - Q^T * out   (polynomial residual)
+ *      out -= C_poly^{-T} * tau   (polynomial correction)
+ *
+ * @param[in,out] epsilon  Polynomial moment buffer (accumulated V^T * writes); overwritten during solve.
+ * @param[in]     Au       RBF accumulation buffer (= sum of A[col_j] * load_j)
+ * @param[out]    out      Final mapped values at input mesh vertices
+ */
 template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::evaluateConservativeCache(Eigen::MatrixXd &epsilon, const Eigen::MatrixXd &Au, Eigen::MatrixXd &out) const
 {
-  // mu in the PETSc implementation
+  // Step 1: Solve for the conservative RBF coefficients.
+  // out = C^{-1} * Au  (equivalent to solveConservative's "mu" step)
   out = _decMatrixC.solve(Au);
 
   if (epsilon.size() > 0) {
+    // Step 2a: Compute polynomial residual tau = epsilon - Q^T * mu
     epsilon -= _matrixQ.transpose() * out;
-    // out  = out - solveTranspose tau (sigma in the PETSc impl)
+    // Step 2b: Apply polynomial correction: out -= C_poly^{-T} * (-tau) = out + solve(tau)
     out -= static_cast<Eigen::MatrixXd>(_qrMatrixQ.transpose().solve(-epsilon));
   }
 }

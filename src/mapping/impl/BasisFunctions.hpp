@@ -1,5 +1,44 @@
 #pragma once
 
+/**
+ * @file BasisFunctions.hpp
+ * @brief Radial Basis Function (RBF) kernel definitions for data mapping in preCICE.
+ *
+ * ## What are Radial Basis Functions?
+ * An RBF kernel phi(r) is a function that depends only on the Euclidean distance r = ||x - x_i||
+ * between two points x and x_i. Given input data values f(x_i) at a set of N input vertices,
+ * the RBF interpolant is:
+ *
+ *   s(x) = sum_{i=1}^{N} lambda_i * phi(||x - x_i||) + p(x)
+ *
+ * where:
+ *   - lambda_i are the interpolation coefficients (solved from a linear system)
+ *   - phi is the chosen radial basis function (defined in this file)
+ *   - p(x) is a low-order polynomial (constant + linear terms for conditionally positive definite RBFs)
+ *
+ * ## Choosing a Basis Function
+ * - **Compact-support RBFs** (Gaussian, Wendland C0/C2/C4/C6/C8, CompactTPS-C2):
+ *   Only interact with nearby vertices ⟹ sparse RBF matrix ⟹ faster for large meshes.
+ *   Require a `support-radius` attribute in the preCICE config.
+ *
+ * - **Global-support RBFs** (ThinPlateSplines, VolumeSplines, Multiquadrics, InverseMultiquadrics):
+ *   Interact with ALL vertices ⟹ dense RBF matrix ⟹ accurate but slow for large meshes.
+ *   No support radius needed.
+ *
+ * - **Strictly positive definite RBFs** (InverseMultiquadrics, Gaussian, Wendland families):
+ *   The RBF matrix C is symmetric positive definite ⟹ efficient Cholesky decomposition can be used.
+ *   These functions do NOT support the integrated polynomial option (polynomial="on").
+ *
+ * - **Conditionally positive definite RBFs** (ThinPlateSplines, VolumeSplines, Multiquadrics):
+ *   Require an additional polynomial for well-posedness.
+ *   The RBF matrix is decomposed via QR factorization (more general, slightly slower).
+ *
+ * ## GPU Compatibility
+ * All basis function evaluation operators are annotated with `PRECICE_HOST_DEVICE`,
+ * making them callable both on the CPU and on GPU device kernels (CUDA/HIP).
+ * The platform-specific intrinsics (fma, log) are abstracted via PRECICE_FMA and PRECICE_LOG macros.
+ */
+
 #include <stdexcept>
 
 #ifdef __CUDACC__
@@ -49,12 +88,22 @@ namespace precice::mapping {
  *
  */
 struct RadialBasisParameters {
+  /// parameter1: shape parameter squared (Multiquadrics, InverseMultiquadrics),
+  ///             shape parameter (Gaussian), or 1/supportRadius (compact Wendland/TPS families).
   double parameter1{};
+  /// parameter2: support radius (Gaussian only — stores effective cutoff radius after threshold).
   double parameter2{};
+  /// parameter3: deltaY shift (Gaussian only — vertical offset to ensure phi(supportRadius) → 0 smoothly).
   double parameter3{};
 };
 
-/// Base class for RBF with compact support
+/**
+ * @brief Trait base class: marks an RBF as having compact (local) support.
+ *
+ * Compact-support RBFs evaluate to exactly zero beyond a finite support radius.
+ * This produces a sparse interpolation matrix, which is significantly faster for large meshes.
+ * Derived classes must also provide a `getSupportRadius()` method.
+ */
 struct CompactSupportBase {
   static constexpr bool hasCompactSupport()
   {
@@ -62,7 +111,14 @@ struct CompactSupportBase {
   }
 };
 
-/// Base class for RBF without compact support
+/**
+ * @brief Trait base class: marks an RBF as having global (unbounded) support.
+ *
+ * Global-support RBFs are non-zero everywhere in the domain.
+ * This leads to a fully dense kernel matrix — expensive for large meshes,
+ * but can be more accurate for small-to-medium problems.
+ * getSupportRadius() returns the maximum double value to signal "no cutoff".
+ */
 struct NoCompactSupportBase {
   static constexpr bool hasCompactSupport()
   {
@@ -76,9 +132,17 @@ struct NoCompactSupportBase {
 };
 
 /**
- * @brief Base class for RBF functions to distinguish positive definite functions
+ * @brief Trait base class: encodes whether the RBF is strictly positive definite.
  *
- * @tparam isDefinite
+ * @tparam isDefinite true if the kernel produces a symmetric positive definite (SPD) matrix.
+ *
+ * This distinction determines which matrix decomposition is used in RadialBasisFctSolver:
+ * - `isDefinite = true`  → Cholesky decomposition (LLT): fast, numerically stable for SPD matrices.
+ * - `isDefinite = false` → QR decomposition (ColPivHouseholderQR): works for non-SPD, requires polynomial.
+ *
+ * Strictly positive definite kernels (InverseMultiquadrics, Gaussian, Wendland families)
+ * do NOT support the integrated polynomial mode (polynomial="on"), as the augmented system
+ * loses its positive definiteness structure.
  */
 template <bool isDefinite>
 struct DefiniteFunction {
@@ -89,11 +153,19 @@ struct DefiniteFunction {
 };
 
 /**
- * @brief Radial basis function with global support.
+ * @brief Thin-Plate Spline (TPS) — globally supported, conditionally positive definite.
  *
- * To be used as template parameter for RadialBasisFctMapping.
+ * Use as a template parameter for RadialBasisFctMapping.
  *
- * Evaluates to: radius^2 * log(radius).
+ * Formula:  phi(r) = r^2 * log(r)
+ *
+ * Properties:
+ * - Global support: interacts with ALL vertices → dense matrix.
+ * - Conditionally positive definite (order 2) → requires a polynomial (use polynomial="separate" or "on").
+ * - No shape/support-radius parameter needed.
+ * - Smooth (C^inf away from r=0), well-suited for smooth fields.
+ *
+ * Note: log(0) is handled by clamping r to NUMERICAL_ZERO_DIFFERENCE_DEVICE before evaluation.
  */
 class ThinPlateSplines : public NoCompactSupportBase,
                          public DefiniteFunction<false> {
@@ -119,11 +191,17 @@ private:
 };
 
 /**
- * @brief Radial basis function with global support.
+ * @brief Multiquadric — globally supported, conditionally positive definite.
  *
- * To be used as template parameter for RadialBasisFctMapping.
+ * Use as a template parameter for RadialBasisFctMapping.
  *
- * Evaluates to: sqrt(shape^2 + radius^2).
+ * Formula:  phi(r) = sqrt(c^2 + r^2),   c = shape parameter > 0
+ *
+ * Properties:
+ * - Global support → dense matrix.
+ * - Conditionally positive definite → requires polynomial (use polynomial="separate" or "on").
+ * - Config attribute: `shape-parameter` (stored as c^2 in parameter1).
+ * - Larger c → smoother interpolant; smaller c → more local behaviour.
  */
 class Multiquadrics : public NoCompactSupportBase,
                       public DefiniteFunction<false> {
@@ -156,12 +234,18 @@ private:
 };
 
 /**
- * @brief Radial basis function with global support.
+ * @brief Inverse Multiquadric — globally supported, strictly positive definite.
  *
- * To be used as template parameter for RadialBasisFctMapping.
- * Takes a shape parameter (shape > 0.0) on construction.
+ * Use as a template parameter for RadialBasisFctMapping.
  *
- * Evaluates to: 1 / (shape^2 + radius^2).
+ * Formula:  phi(r) = 1 / sqrt(c^2 + r^2),   c = shape parameter > 0
+ *
+ * Properties:
+ * - Global support → dense matrix.
+ * - Strictly positive definite → Cholesky decomposition can be used (efficient).
+ * - Config attribute: `shape-parameter` (stored as c^2 in parameter1).
+ * - Does NOT support polynomial="on" (integrated polynomial) due to SPD requirement.
+ * - Decays to 0 as r → ∞, unlike Multiquadrics which grows.
  */
 class InverseMultiquadrics : public NoCompactSupportBase,
                              public DefiniteFunction<true> {
@@ -198,11 +282,17 @@ private:
 };
 
 /**
- * @brief Radial basis function with global support.
+ * @brief Volume Spline — globally supported, conditionally positive definite.
  *
- * To be used as template parameter for RadialBasisFctMapping.
+ * Use as a template parameter for RadialBasisFctMapping.
  *
- * Evaluates to: radius.
+ * Formula:  phi(r) = |r|
+ *
+ * Properties:
+ * - Global support → dense matrix.
+ * - Conditionally positive definite (order 1) → requires polynomial.
+ * - No shape/support-radius parameter needed.
+ * - Simpler than TPS but less smooth (only C^1); useful for piecewise-linear-like behaviour.
  */
 class VolumeSplines : public NoCompactSupportBase,
                       public DefiniteFunction<false> {
@@ -227,12 +317,23 @@ private:
 };
 
 /**
- * @brief Radial basis function with global and compact support.
+ * @brief Gaussian — can be compact or global, strictly positive definite.
  *
- * To be used as template parameter for RadialBasisFctMapping.
- * Takes a shape parameter (shape > 0.0) on construction.
+ * Use as a template parameter for RadialBasisFctMapping.
  *
- * Evaluates to: exp(-1 * (shape * radius)^2).
+ * Formula:  phi(r) = exp(-(shape * r)^2) - deltaY
+ *   where deltaY = phi(supportRadius) ensures the function smoothly reaches 0 at the boundary.
+ *
+ * Config attributes:
+ *   - `shape-parameter` (shape > 0): controls the width of the Gaussian bell.
+ *     Large shape → narrow bell (local behaviour); small shape → wide bell (global-like).
+ *   - `support-radius` (optional): if given, the Gaussian is truncated at this radius.
+ *     If not given, the cutoff threshold (1e-9) is used to automatically determine the radius.
+ *
+ * Properties:
+ * - Strictly positive definite → Cholesky decomposition. Does NOT support polynomial="on".
+ * - parameter1 = shape, parameter2 = effective support radius, parameter3 = deltaY shift.
+ * - Very smooth (C^inf) but can be sensitive to the shape parameter choice.
  */
 class Gaussian : public CompactSupportBase,
                  public DefiniteFunction<true> {
@@ -303,15 +404,21 @@ private:
 };
 
 /**
- * @brief Radial basis function with compact support.
+ * @brief Compact Thin-Plate Spline C2 — compact support, strictly positive definite.
  *
- * To be used as template parameter for RadialBasisFctMapping.
- * Takes the support radius (> 0.0) on construction.
+ * Use as a template parameter for RadialBasisFctMapping.
  *
+ * Formula (rn = r / supportRadius, only evaluated for rn < 1):
+ *   phi(r) = 1 - 30*rn^2 - 10*rn^3 + 45*rn^4 - 6*rn^5 - 60*rn^3 * log(rn)
  *
- * Evaluates to: 1 - 30*rn^2 - 10*rn^3 + 45*rn^4 - 6*rn^5 - 60*rn^3 * log(rn),
- * where rn is the radius r normalized over the support radius sr: rn = r/sr.
- * To work around the issue of log(0), the equation is formulated differently in the last term.
+ * The log(rn) term is carefully handled to avoid log(0) when r=0.
+ *
+ * Config attribute: `support-radius` (stored as 1/supportRadius = _r_inv in parameter1).
+ *
+ * Properties:
+ * - Compact support → sparse matrix for large meshes.
+ * - Strictly positive definite → Cholesky decomposition. Does NOT support polynomial="on".
+ * - C^2 continuity: second derivatives exist everywhere including at r=0.
  */
 class CompactThinPlateSplinesC2 : public CompactSupportBase,
                                   public DefiniteFunction<true> {
@@ -356,14 +463,20 @@ private:
 };
 
 /**
- * @brief Wendland radial basis function with compact support.
+ * @brief Wendland C0 — compact support, strictly positive definite.
  *
- * To be used as template parameter for RadialBasisFctMapping.
- * Takes the support radius (> 0.0) on construction.
+ * Use as a template parameter for RadialBasisFctMapping.
  *
+ * Formula (rn = r / supportRadius, only for rn < 1):
+ *   phi(r) = (1 - rn)^2
  *
- * Evaluates to: (1 - rn)^2,
- * where rn is the radius r normalized over the support radius sr: rn = r/sr.
+ * Config attribute: `support-radius` (stored as 1/supportRadius in parameter1).
+ *
+ * Properties:
+ * - Compact support → sparse matrix.
+ * - Strictly positive definite → Cholesky decomposition. Does NOT support polynomial="on".
+ * - C^0 continuity: continuous but NOT differentiable at r=0.
+ *   Suitable for non-smooth fields or for a simpler/cheaper kernel.
  */
 class CompactPolynomialC0 : public CompactSupportBase,
                             public DefiniteFunction<true> {
@@ -408,14 +521,20 @@ private:
 };
 
 /**
- * @brief Wendland radial basis function with compact support.
+ * @brief Wendland C2 — compact support, strictly positive definite.
  *
- * To be used as template parameter for RadialBasisFctMapping.
- * Takes the support radius (> 0.0) on construction.
+ * Use as a template parameter for RadialBasisFctMapping.
  *
+ * Formula (rn = r / supportRadius, only for rn < 1):
+ *   phi(r) = (1 - rn)^4 * (4*rn + 1)
  *
- * Evaluates to: (1 - rn)^4 * ( 4rn + 1),
- * where rn is the radius r normalized over the support radius sr: rn = r/sr.
+ * Config attribute: `support-radius` (stored as 1/supportRadius in parameter1).
+ *
+ * Properties:
+ * - Compact support → sparse matrix.
+ * - Strictly positive definite → Cholesky decomposition. Does NOT support polynomial="on".
+ * - C^2 continuity: smooth up to second derivatives everywhere.
+ *   Good default choice for smooth physical fields (temperature, pressure, displacement).
  */
 class CompactPolynomialC2 : public CompactSupportBase,
                             public DefiniteFunction<true> {
@@ -461,14 +580,20 @@ private:
 };
 
 /**
- * @brief Wendland radial basis function with compact support.
+ * @brief Wendland C4 — compact support, strictly positive definite.
  *
- * To be used as template parameter for RadialBasisFctMapping.
- * Takes the support radius (> 0.0) on construction.
+ * Use as a template parameter for RadialBasisFctMapping.
  *
+ * Formula (rn = r / supportRadius, only for rn < 1):
+ *   phi(r) = (1 - rn)^6 * (35*rn^2 + 18*rn + 3)
  *
- * Evaluates to: (1 - rn)^6 * ( 35 * (rn)^2 + 18rn + 3),
- * where rn is the radius r normalized over the support radius sr: rn = r/sr.
+ * Config attribute: `support-radius` (stored as 1/supportRadius in parameter1).
+ *
+ * Properties:
+ * - Compact support → sparse matrix.
+ * - Strictly positive definite → Cholesky decomposition. Does NOT support polynomial="on".
+ * - C^4 continuity: four times continuously differentiable.
+ *   Smoother than C2; use when interpolating highly smooth fields.
  */
 class CompactPolynomialC4 : public CompactSupportBase,
                             public DefiniteFunction<true> {
@@ -514,14 +639,20 @@ private:
 };
 
 /**
- * @brief Wendland radial basis function with compact support.
+ * @brief Wendland C6 — compact support, strictly positive definite.
  *
- * To be used as template parameter for RadialBasisFctMapping.
- * Takes the support radius (> 0.0) on construction.
+ * Use as a template parameter for RadialBasisFctMapping.
  *
+ * Formula (rn = r / supportRadius, only for rn < 1):
+ *   phi(r) = (1 - rn)^8 * (32*rn^3 + 25*rn^2 + 8*rn + 1)
  *
- * Evaluates to: (1 - rn)^8 * (32*rn^3 + 25*rn^2 + 8*rn + 1),
- * where rn is the radius r normalized over the support radius sr: rn = r/sr.
+ * Config attribute: `support-radius` (stored as 1/supportRadius in parameter1).
+ *
+ * Properties:
+ * - Compact support → sparse matrix.
+ * - Strictly positive definite → Cholesky decomposition. Does NOT support polynomial="on".
+ * - C^6 continuity: six times continuously differentiable.
+ *   Very smooth; use for highly smooth fields when maximal regularity is needed.
  */
 class CompactPolynomialC6 : public CompactSupportBase,
                             public DefiniteFunction<true> {
@@ -566,14 +697,21 @@ private:
 };
 
 /**
- * @brief Wendland radial basis function with compact support.
+ * @brief Wendland C8 — compact support, strictly positive definite.
  *
- * To be used as template parameter for RadialBasisFctMapping.
- * Takes the support radius (> 0.0) on construction.
+ * Use as a template parameter for RadialBasisFctMapping.
  *
+ * Formula (rn = r / supportRadius, only for rn < 1):
+ *   phi(r) = (1 - rn)^10 * (1287*rn^4 + 1350*rn^3 + 630*rn^2 + 150*rn + 15)
  *
- * Evaluates to: (1 - rn)^10 * (1287*rn^4 + 1350*rn^3 + 630*rn^2 + 150*rn + 15),
- * where rn is the radius r normalized over the support radius sr: rn = r/sr.
+ * Config attribute: `support-radius` (stored as 1/supportRadius in parameter1).
+ *
+ * Properties:
+ * - Compact support → sparse matrix.
+ * - Strictly positive definite → Cholesky decomposition. Does NOT support polynomial="on".
+ * - C^8 continuity: eight times continuously differentiable.
+ *   The smoothest of the Wendland family implemented here.
+ *   Use for very smooth fields or when high-order accuracy is critical.
  */
 class CompactPolynomialC8 : public CompactSupportBase,
                             public DefiniteFunction<true> {
