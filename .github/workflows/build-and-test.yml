@@ -135,12 +135,16 @@ jobs:
           venv/bin/pip list
       - name: Precompute hwloc topology
         run: |
-          TOPO="$(mktemp --suffix=TOPO -d)/topo.xml"
+          TOPODIR="$(mktemp --suffix=TOPO -d)"
+          TOPO="$TOPODIR/topo.xml"
+
+          chmod a+rx "$TOPODIR"
           echo "TOPO file $TOPO"
           lstopo --of xml "$TOPO"
-          chmod a+r "$TOPO"
           echo "HWLOC_XMLFILE=$TOPO" >> "$GITHUB_ENV"
           cat "$TOPO"
+          echo "Testing user access"
+          su -c "cat $TOPO" "$PRECICE_USER"
       - name: Configure
         working-directory: build
         env:
