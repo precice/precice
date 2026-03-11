@@ -165,7 +165,33 @@ template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
 Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                                std::array<bool, 3> activeAxis, Polynomial polynomial)
 {
+  /**
+   * BUILD RBF INTERPOLATION MATRIX (Matrix C or CLU)
+   *
+   * Constructs the core matrix for RBF interpolation. This is the Gram matrix of the
+   * radial basis function evaluated at all input data points.
+   *
+   * Mathematical formulation:
+   * For strictly positive definite functions:
+   *   C_ij = phi(||x_i - x_j||)  for all input vertices i,j
+   *   This matrix is symmetric (C = C^T) and positive definite.
+   *
+   * If polynomial="on":
+   *   Extended system augments C with polynomial basis:
+   *   | C  P |
+   *   | P^T 0 |
+   *   where P contains polynomial evaluations (1, x, y, z for each vertex)
+   *
+   * If polynomial="separate":
+   *   Only builds C; polynomial handled separately in dedicated matrices Q and V.
+   *
+   * Dead axis handling:
+   * For 2D problems, one axis is "dead" (all vertices have same coordinate).
+   * Distance computation ignores dead axes to avoid numerical issues.
+   */
+
   // Treat the 2D case as 3D case with dead axis
+  // This simplifies logic: compute in 3D but ignore zero-extent dimensions
   const unsigned int deadDimensions = std::count(activeAxis.begin(), activeAxis.end(), false);
   const unsigned int dimensions     = 3;
   const unsigned int polyparams     = polynomial == Polynomial::ON ? 1 + dimensions - deadDimensions : 0;
@@ -184,7 +210,20 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
     matrixCLU.setZero();
   }
 
-  // Compute RBF matrix entries
+  /**
+   * COMPUTE RBF KERNEL MATRIX ENTRIES
+   *
+   * Evaluate the radial basis function phi for all pairs of input vertices:
+   * C_ij = phi(r_ij) where r_ij = ||x_i - x_j|| (Euclidean distance)
+   *
+   * Kernel examples:
+   * - Multiquadric: phi(r) = sqrt(r^2 + c^2)
+   * - Inverse multiquadric: phi(r) = 1 / sqrt(r^2 + c^2)
+   * - Thin-plate spline: phi(r) = r^2 log(r)
+   * - Gaussian: phi(r) = exp(-c*r^2)
+   *
+   * Symmetry optimization: Only compute upper triangle, copy to lower.
+   */
   auto         i_iter  = inputIDs.begin();
   Eigen::Index i_index = 0;
   for (; i_iter != inputIDs.end(); ++i_iter, ++i_index) {
@@ -193,15 +232,35 @@ Eigen::MatrixXd buildMatrixCLU(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh
     auto        j_index = i_index;
     for (; j_iter != inputIDs.end(); ++j_iter, ++j_index) {
       const auto &v                 = inputMesh.vertex(*j_iter).rawCoords();
+      // Compute squared distance, respecting dead axes (ignore dimensions with zero extent)
       double      squaredDifference = computeSquaredDifference(u, v, activeAxis);
+      // Evaluate kernel at this distance
       matrixCLU(i_index, j_index)   = basisFunction.evaluate(std::sqrt(squaredDifference));
     }
   }
 
+  /**
+   * ADD POLYNOMIAL BASIS ROWS/COLUMNS (if integrated polynomial is enabled)
+   *
+   * The polynomial part adds linear degrees of freedom to the RBF system.
+   * This allows the interpolant to exactly reproduce linear functions.
+   *
+   * Polynomial contributions:
+   * P = [p_0, p_1, ..., p_k]  for each vertex, where:
+   *   p_0(x) = 1 (constant)
+   *   p_1(x) = x_1 (linear in first active dimension)
+   *   p_2(x) = x_2 (linear in second active dimension)
+   *   ... (only for active axes, dead axes are skipped)
+   *
+   * Block structure of extended matrix C_ext:
+   * | RBF_part   Poly_part |   <- RBF evaluations, then polynomial columns
+   * | Poly_part^T    0     |   <- Polynomial rows, zero in lower-right (singular submatrix)
+   */
   // Add potentially the polynomial contribution in the matrix
   if (polynomial == Polynomial::ON) {
     fillPolynomialEntries(matrixCLU, inputMesh, inputIDs, inputSize, activeAxis);
   }
+  // Symmetry: copy upper triangle to lower triangle (matrix is symmetric)
   matrixCLU.triangularView<Eigen::Lower>() = matrixCLU.transpose();
   return matrixCLU;
 }
@@ -210,6 +269,20 @@ template <typename RADIAL_BASIS_FUNCTION_T, typename IndexContainer>
 Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                              const mesh::Mesh &outputMesh, const IndexContainer outputIDs, std::array<bool, 3> activeAxis, Polynomial polynomial)
 {
+  /**
+   * BUILD RBF EVALUATION MATRIX (Matrix A)
+   *
+   * This matrix evaluates the RBF basis functions at output locations using input data.
+   * Dimensions: (num_output_vertices) x (num_input_vertices + num_polynomial_params)
+   *
+   * Mathematical role:
+   * Once we solve for RBF coefficients lambda from: C * [lambda; poly_coeff] = [data; 0]
+   * We evaluate the RBF at output points using: A * [lambda; poly_coeff] = output
+   *
+   * A_ij = phi(||y_i - x_j||)  for output vertex i and input vertex j
+   * where phi is the radial basis function (same as used in matrix C).
+   */
+
   // Treat the 2D case as 3D case with dead axis
   const unsigned int deadDimensions = std::count(activeAxis.begin(), activeAxis.end(), false);
   const unsigned int dimensions     = 3;
@@ -224,16 +297,28 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
 
   Eigen::MatrixXd matrixA(outputSize, n);
 
-  // Compute RBF values for matrix A
+  /**
+   * COMPUTE RBF VALUES FOR ALL OUTPUT-INPUT PAIRS
+   *
+   * For each output vertex, evaluate the basis function at each input vertex.
+   * A_ij = phi(distance between output_i and input_j)
+   */
   for (const auto &i : outputIDs | boost::adaptors::indexed()) {
     const auto &u = outputMesh.vertex(i.value()).rawCoords();
     for (const auto &j : inputIDs | boost::adaptors::indexed()) {
       const auto &v                 = inputMesh.vertex(j.value()).rawCoords();
+      // Compute squared distance, respecting dead axes
       double      squaredDifference = computeSquaredDifference(u, v, activeAxis);
       matrixA(i.index(), j.index()) = basisFunction.evaluate(std::sqrt(squaredDifference));
     }
   }
 
+  /**
+   * ADD POLYNOMIAL BASIS COLUMNS (if integrated polynomial is enabled)
+   *
+   * Similar to matrix C, we add polynomial columns to enable exact reproduction
+   * of linear functions at output locations.
+   */
   // Add potentially the polynomial contribution in the matrix
   if (polynomial == Polynomial::ON) {
     fillPolynomialEntries(matrixA, outputMesh, outputIDs, inputSize, activeAxis);
@@ -241,35 +326,38 @@ Eigen::MatrixXd buildMatrixA(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::
   return matrixA;
 }
 
-// Variant operating on the Cholesky decopmosition
+// Variant operating on the Cholesky decomposition
 inline Eigen::VectorXd computeInverseDiagonal(Eigen::LLT<Eigen::MatrixXd> decMatrixC)
 {
-  // 1. Compute the diagonal entries of the inverse kernel matrix:
-  // We already have the Cholesky decomposition. So instead of solving for the
-  // kernel matrix directly, we invert the lower triangular matrix of the
-  // decomposition:
-  // using A^{-1} = (L^T)^{-1}L^{-1} enables the computation of the diagonal
-  // entries of A^{-1} by evaluating the product above:
-  // A^{-1}_{ii} = sum_{k=1}^n L^{-T}_{ik} L^{-1}_{ki}
+  /**
+   * EFFICIENT COMPUTATION OF INVERSE MATRIX DIAGONAL (Cholesky variant)
+   *
+   * For Leave-One-Out Cross Validation (LOOCV) error estimation, we need the
+   * diagonal of C^{-1}. Computing the full inverse is O(n^3); this method
+   * computes only the diagonal in O(n^2) using the Cholesky decomposition.
+   *
+   * Mathematical approach:
+   * If C = L*L^T (Cholesky decomposition), then:
+   *   C^{-1} = (L^T)^{-1} * L^{-1}
+   *
+   * Diagonal entries:
+   *   [C^{-1}]_ii = sum_k [L^{-T}]_ik * [L^{-1}]_ki = sum_k [L^{-1}]_ki^2
+   *
+   * Algorithm:
+   * 1. Compute L^{-1} by solving L*X = I (blockwise for efficiency)
+   * 2. Sum squares of each column to get diagonal entries
+   *
+   * Complexity: O(n^2) vs O(n^3) for full inverse
+   * Benefit: Only 4 values per LOOCV computation needed.
+   */
 
-  // 1a: Compute the inverse of the lower triangular matrix L
-  // Eigen::MatrixXd L_inv = L.inverse(); is not supported by Eigen (linker errors)
-  // However, Eigen provides triangular solver (LAPACK::trsm), which can be used
-  // to solve L * Linv = I
-  // Eigen::MatrixXd L_inv = Eigen::MatrixXd::Identity(inSize, inSize);
-  // _decMatrixC.matrixL().solveInPlace(L_inv);
-  // which yields cubic complexity (BLAS level 3).
-
-  // Here, we use our own implementation to compute the triangular inverse
-  // (similar to LAPACK:trtri) more efficient, given that the RHS is also
-  // triangular was unfortunately slower.
-
-  // Solve L * Linv = I
-  // Eigen::MatrixXd L_inv = Eigen::MatrixXd::Identity(n, n);
-  // decMatrixC.matrixL().solveInPlace(L_inv);
+  // Compute the inverse of the lower triangular matrix L
+  // We use a blockwise triangular inverse (more efficient than dense inverse)
+  // This solves L * L_inv = I using an optimized triangular solution algorithm
   Eigen::MatrixXd L_inv = utils::invertLowerTriangularBlockwise(decMatrixC.matrixL());
 
-  // 1b: Compute the diagonal elements of A^{-1} by evaluating (L^T)^{-1}L^{-1}
+  // Compute the diagonal elements of A^{-1} by evaluating (L^T)^{-1}L^{-1}
+  // Each diagonal entry is the sum of squares along the corresponding column
   Eigen::VectorXd inverseDiagonal = (L_inv.array().square().colwise().sum()).transpose();
 
   return inverseDiagonal;
@@ -342,17 +430,57 @@ template <typename IndexContainer>
 RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS_FUNCTION_T basisFunction, const mesh::Mesh &inputMesh, const IndexContainer &inputIDs,
                                                                     const mesh::Mesh &outputMesh, const IndexContainer &outputIDs, std::vector<bool> deadAxis, Polynomial polynomial)
 {
-  PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON), "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. Please select another radial-basis function or change the polynomial configuration.");
-  // Convert dead axis vector into an active axis array so that we can handle the reduction more easily
-  std::array<bool, 3> activeAxis({{false, false, false}});
-  std::transform(deadAxis.begin(), deadAxis.end(), activeAxis.begin(), [](const auto ax) { return !ax; });
+  /**
+   * RBF SOLVER CONSTRUCTOR - SYSTEM ASSEMBLY AND DECOMPOSITION
+   *
+   * This constructor is the core of RBF setup. It:
+   * 1. Assembles the interpolation matrix C from input data points
+   * 2. Decomposes C into a form efficient for solving
+   * 3. Assembles the evaluation matrix A for later interpolation
+   * 4. Handles polynomial terms (if enabled)
+   * 5. Validates numerical properties (invertibility, condition numbers)
+   *
+   * Key design:
+   * - Matrix decompositions are performed once in constructor
+   * - During mapping, we only perform fast backward-substitution (O(n^2))
+   * - This amortizes expensive O(n^3) decomposition cost over many evaluations
+   */
 
-  // First, assemble the interpolation matrix and check the invertability
+  PRECICE_ASSERT(!(RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite() && polynomial == Polynomial::ON),
+                 "The integrated polynomial (polynomial=\"on\") is not supported for the selected radial-basis function. "
+                 "Please select another radial-basis function or change the polynomial configuration.");
+
+  // Convert dead axis vector into an active axis array for cleaner indexing
+  // activeAxis[i] = true means dimension i has varying coordinates (active)
+  // activeAxis[i] = false means dimension i is constant across all vertices (dead)
+  std::array<bool, 3> activeAxis({{false, false, false}});
+  std::transform(deadAxis.begin(), deadAxis.end(), activeAxis.begin(),
+    [](const auto ax) { return !ax; });
+
+  /**
+   * STEP 1: ASSEMBLE AND DECOMPOSE INTERPOLATION MATRIX
+   *
+   * Build the RBF kernel matrix C from input vertices and choose appropriate decomposition:
+   *
+   * For strictly positive definite basis functions:
+   *   - Use Cholesky decomposition (C = L*L^T)
+   *   - Assumes C is symmetric positive definite
+   *   - Fast: O(n^3) but with small constants
+   *   - Solves: L*L^T*lambda = data (two triangular solves)
+   *
+   * For other basis functions (e.g., thin-plate spline):
+   *   - Use QR decomposition with column pivoting
+   *   - Handles rank-deficient or singular matrices
+   *   - More robust to ill-conditioning
+   *   - Used when C is not guaranteed positive definite
+   */
   bool decompositionSuccessful = false;
   if constexpr (RADIAL_BASIS_FUNCTION_T::isStrictlyPositiveDefinite()) {
+    // Cholesky decomposition for positive definite kernels
     _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).llt();
     decompositionSuccessful = _decMatrixC.info() == Eigen::ComputationInfo::Success;
   } else {
+    // QR decomposition with column pivoting for general kernels
     _decMatrixC             = buildMatrixCLU(basisFunction, inputMesh, inputIDs, activeAxis, polynomial).colPivHouseholderQr();
     decompositionSuccessful = _decMatrixC.isInvertible();
   }
@@ -364,48 +492,83 @@ RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::RadialBasisFctSolver(RADIAL_BASIS
                 "your basis-function (e.g. reduce the support-radius).",
                 inputMesh.getName(), outputMesh.getName());
 
-  // For polynomial on, the algorithm might fail in determining the size of the system
+  /**
+   * OPTIONAL STEP: COMPUTE INVERSE DIAGONAL FOR CROSS-VALIDATION
+   *
+   * Leave-One-Out Cross Validation (LOOCV) estimates RBF quality without test data.
+   * Rippa(1999) formula allows efficient LOOCV using only the inverse diagonal:
+   *   error_i = lambda_i / [C^{-1}]_ii
+   *
+   * Disabled for integrated polynomials (system size becomes ambiguous).
+   */
   if (polynomial != Polynomial::ON && computeCrossValidation) {
-    // TODO: Disable synchronization
     precice::profiling::Event e("map.rbf.computeLOOCV");
     _inverseDiagonal = computeInverseDiagonal(_decMatrixC);
   }
-  // Second, assemble evaluation matrix
+
+  /**
+   * STEP 2: ASSEMBLE EVALUATION MATRIX
+   *
+   * Build matrix A that maps RBF coefficients to output vertex values.
+   * This is computed once; during mapping we evaluate A*lambda efficiently.
+   */
   _matrixA = buildMatrixA(basisFunction, inputMesh, inputIDs, outputMesh, outputIDs, activeAxis, polynomial);
 
+  /**
+   * STEP 3: HANDLE POLYNOMIAL TERMS (if polynomial="separate")
+   *
+   * For separated polynomial handling:
+   * - Build matrix Q from polynomial basis evaluated at input vertices
+   * - Build matrix V from polynomial basis evaluated at output vertices
+   * - Decompose Q using QR for efficient polynomial solving
+   *
+   * Separated vs integrated polynomial:
+   * - Integrated: polynomial added to RBF system (augmented matrix)
+   * - Separated: polynomial solved independently, subtracted from data before RBF
+   *            then added back to result after RBF evaluation
+   *
+   * Advantage of separated: Avoids ill-conditioning of augmented matrix blocks
+   * (RBF block and polynomial block have very different scales)
+   *
+   * Condition number check:
+   * If polynomial basis has high condition number (> 1e5), one axis is disabled
+   * (e.g., in 2D, use constant + x term, drop y term for degenerate cases)
+   */
   // In case we deal with separated polynomials, we need dedicated matrices for the polynomial contribution
   if (polynomial == Polynomial::SEPARATE) {
-
     // 4 = 1 + dimensions(3) = maximum number of polynomial parameters
     _localActiveAxis        = activeAxis;
     unsigned int polyParams = getNumberOfPolynomials();
 
+    // Iteratively check polynomial conditioning, disabling axes as needed
     do {
-      // First, build matrix Q and check for the condition number
+      // Build polynomial matrix Q for input vertices
       _matrixQ.resize(inputIDs.size(), polyParams);
       fillPolynomialEntries(_matrixQ, inputMesh, inputIDs, 0, _localActiveAxis);
 
-      // Compute the condition number
+      // Check condition number: ratio of max to min singular values
+      // High condition number indicates numerical instability
       Eigen::JacobiSVD<Eigen::MatrixXd> svd(_matrixQ);
       PRECICE_ASSERT(svd.singularValues().size() > 0);
       PRECICE_DEBUG("Singular values in polynomial solver: {}", svd.singularValues());
-      const double conditionNumber = svd.singularValues()(0) / std::max(svd.singularValues()(svd.singularValues().size() - 1), math::NUMERICAL_ZERO_DIFFERENCE);
+      const double conditionNumber = svd.singularValues()(0) /
+                                     std::max(svd.singularValues()(svd.singularValues().size() - 1), math::NUMERICAL_ZERO_DIFFERENCE);
       PRECICE_DEBUG("Condition number: {}", conditionNumber);
 
-      // Disable one axis
+      // If condition number too high, disable the axis with smallest span
       if (conditionNumber > 1e5) {
         reduceActiveAxis(inputMesh, inputIDs, _localActiveAxis);
         polyParams = getNumberOfPolynomials();
       } else {
-        break;
+        break;  // Condition number acceptable
       }
     } while (true);
 
-    // allocate and fill matrix V for the outputMesh
+    // Build polynomial matrix V for output vertices
     _matrixV.resize(outputIDs.size(), polyParams);
     fillPolynomialEntries(_matrixV, outputMesh, outputIDs, 0, _localActiveAxis);
 
-    // 3. compute decomposition
+    // Decompose Q for later polynomial solving
     _qrMatrixQ = _matrixQ.colPivHouseholderQr();
   }
 }

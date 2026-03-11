@@ -17,6 +17,18 @@
 namespace precice::cplscheme {
 
 namespace {
+/**
+ * CHECK TIME WINDOW COMPATIBILITY
+ *
+ * Verifies that explicit and implicit coupling schemes use compatible time window sizes.
+ * In a compositional setup, the implicit scheme (e.g., FSI with Aitken acceleration) and
+ * explicit schemes (e.g., sequential coupling) must coordinate their time steps.
+ *
+ * Requirement: explicit time window size must be an integer multiple of implicit time window size.
+ * Example: implicit Dt=0.01 with explicit Dt=0.03 means explicit advances 3x per implicit window.
+ *
+ * This ensures synchronization points where data can be properly exchanged between schemes.
+ */
 bool compatibleTimeWindowSizes(const CouplingScheme &impl, const CouplingScheme &expl)
 {
   if (!impl.hasTimeWindowSize() || !expl.hasTimeWindowSize()) {
@@ -103,8 +115,30 @@ bool CompositionalCouplingScheme::isInitialized() const
 
 bool CompositionalCouplingScheme::addComputedTime(double timeToAdd)
 {
+  /**
+   * ORCHESTRATED TIME STEPPING FOR MIXED COUPLING SCHEMES
+   *
+   * This is the core algorithm for managing composite coupling with implicit and explicit schemes.
+   * It orchestrates how time steps are divided between:
+   * - IMPLICIT scheme: iterative scheme that converges within a time window (e.g., FSI with Aitken)
+   * - EXPLICIT schemes: sequential/parallel schemes that execute one time step (e.g., serial coupling)
+   *
+   * Key concept: SYNCHRONIZATION POINTS
+   * When implicit scheme reaches convergence (end of time window), explicit schemes must pause
+   * and wait. Once implicit converges, explicit schemes "catch up" to the same time.
+   *
+   * State machine:
+   * 1. EXPLICIT PHASE (first iteration): Both implicit and explicit advance together
+   * 2. IMPLICIT ITERATION: When implicit reaches time window end, it repeats. Explicit holds.
+   * 3. CONVERGENCE: Implicit converges (times match). Explicit catches up.
+   * 4. SYNC: All schemes synchronized at same time.
+   *
+   * Return: true if ANY scheme reaches end of time window in this step.
+   */
   PRECICE_TRACE(timeToAdd);
 
+  // Case 1: NO IMPLICIT SCHEME (pure explicit coupling)
+  // Just advance all explicit schemes together and report when any reaches window end
   if (!isImplicitCouplingScheme()) {
     auto explicitAtWindowEnd = false;
     for (auto &scheme : _explicitSchemes) {
@@ -113,31 +147,40 @@ bool CompositionalCouplingScheme::addComputedTime(double timeToAdd)
     return explicitAtWindowEnd;
   }
 
-  // Reaching the timewindow end of the implicit scheme requires explicit coupling schemes to freeze
+  // Case 2: WITH IMPLICIT SCHEME (composite coupling)
+  // Step 1: Advance the implicit scheme (may iterate multiple times in this window)
   auto implicitAtWindowEnd = _implicitScheme->addComputedTime(timeToAdd);
 
-  // We are done if the implicit scheme is iterating
+  // Step 2: Check if explicit schemes are currently on hold (implicit is iterating)
+  // If so, we don't advance them. Implicit iteration is more important.
   if (_explicitOnHold) {
+    // Explicit schemes are frozen. Implicit scheme continues iterating.
     // No explicit schemes run in later iterations
     PRECICE_DEBUG("Explicit schemes are still on hold");
-    return implicitAtWindowEnd;
+    return implicitAtWindowEnd;  // Report only implicit scheme's status
   }
 
-  // We are in the first iteration so explicit schemes need to step forward
+  // Step 3: FIRST ITERATION - both schemes advance in parallel
+  // In the first iteration through a time window, implicit and explicit both advance.
+  // This provides the initial guess for implicit convergence.
   auto explicitAtWindowEnd = false;
   for (auto &scheme : _explicitSchemes) {
     explicitAtWindowEnd |= scheme->addComputedTime(timeToAdd);
   }
 
+  // Step 4: CHECK FOR IMPLICIT CONVERGENCE
+  // If implicit scheme just reached end of its time window, put explicit schemes on hold.
+  // The implicit scheme will now iterate to convergence.
   if (implicitAtWindowEnd) {
     PRECICE_DEBUG("Implicit scheme reached the end of the first iteration at t={}. "
                   "Explicit schemes are on hold until convergence achieved.",
                   _implicitScheme->getTime());
-    // explicit schemes are on hold until converged
+    // Explicit schemes are now on hold until the implicit scheme converges
     _explicitOnHold = true;
-    updateActiveSchemes();
+    updateActiveSchemes();  // Update which schemes are actively participating
   }
 
+  // Report if ANY scheme reached window end (either implicit or explicit)
   return implicitAtWindowEnd || explicitAtWindowEnd;
 }
 
@@ -191,8 +234,29 @@ CouplingScheme::ChangedMeshes CompositionalCouplingScheme::secondSynchronization
 
 void CompositionalCouplingScheme::secondExchange()
 {
+  /**
+   * COMPOSITE COUPLING SYNCHRONIZATION POINT
+   *
+   * This is the second data exchange phase where convergence is checked and schemes are
+   * synchronized. The logic handles three distinct phases of a composite coupling iteration:
+   *
+   * PHASE 1: IMPLICIT COMPLETION
+   * - Implicit scheme completes its time window (may involve multiple sub-iterations)
+   * - Check if convergence has been achieved
+   *
+   * PHASE 2: CONVERGENCE CHECK
+   * - Compare implicit and explicit times:
+   *   - If implicit_time < explicit_time: NOT CONVERGED, implicit iterates, explicit waits
+   *   - If implicit_time == explicit_time: CONVERGED, explicit can catch up
+   *
+   * PHASE 3: EXPLICIT SYNCHRONIZATION
+   * - Once implicit converges, explicit schemes "fast-forward" to same time
+   * - This ensures all participants synchronized before advancing to next window
+   */
   PRECICE_TRACE();
 
+  // Case 1: NO IMPLICIT SCHEME (pure explicit coupling)
+  // All explicit schemes already advanced together, so just complete their exchange
   if (!isImplicitCouplingScheme()) {
     for (auto &scheme : _explicitSchemes) {
       scheme->secondExchange();
@@ -200,33 +264,66 @@ void CompositionalCouplingScheme::secondExchange()
     return;
   }
 
-  // First complete the time window of the implicit scheme to determine if the scheme has converged
+  /**
+   * Case 2: WITH IMPLICIT SCHEME (composite coupling)
+   *
+   * CONVERGENCE DETECTION LOGIC:
+   * Implicit scheme can lag behind explicit during iterations because when it reaches
+   * time window end, it stops and starts iterating while explicit continues.
+   *
+   * Metaphor: Think of implicit as a runner doing laps (iterations within a window)
+   * and explicit as a runner going straight. When implicit finishes a lap,
+   * explicit might be ahead. Implicit then does laps until catching up.
+   */
+
+  // Step 1: Complete implicit scheme's current time window
+  // This may involve sub-iterations if using iterative acceleration (e.g., Aitken)
   _implicitScheme->secondExchange();
 
+  // Step 2: CHECK CONVERGENCE by comparing simulation times
   double implicitTime = _implicitScheme->getTime();
-  double explicitTime = _explicitSchemes.front()->getTime();
-  bool   iterating    = implicitTime < explicitTime; // TODO numeric check?
+  double explicitTime = _explicitSchemes.front()->getTime();  // All explicit schemes in sync
+  bool   iterating    = implicitTime < explicitTime;  // Implicit hasn't caught up to explicit
 
   if (iterating) {
+    // Implicit scheme hasn't converged, implicit time is still behind explicit time
+    // The implicit scheme will perform sub-iterations to bring itself forward
+    // Explicit schemes must remain on hold
     PRECICE_DEBUG("Implicit scheme hasn't converged. Explicit schemes remain on hold.");
     PRECICE_ASSERT(_explicitOnHold, "Iterative scheme hasn't converged yet");
-    return;
+    return;  // Exit early, no need to sync explicit schemes yet
   }
+
+  /**
+   * CONVERGENCE ACHIEVED
+   * Implicit scheme has caught up (implicit_time >= explicit_time).
+   * Now synchronize explicit schemes to match this converged state.
+   */
   PRECICE_DEBUG("Implicit scheme converged. Running explicit schemes.");
 
+  // Step 3: SYNCHRONIZE EXPLICIT SCHEMES
+  // Execute the full 3-phase cycle for explicit schemes to catch up to implicit
+  // Phase 1: First exchange (receive remote data)
   for (auto &scheme : _explicitSchemes) {
     scheme->firstExchange();
   }
+  // Phase 2: Second synchronization point
   for (auto &scheme : _explicitSchemes) {
     scheme->secondSynchronization();
   }
+  // Phase 3: Second exchange (send computed data)
   for (auto &scheme : _explicitSchemes) {
     scheme->secondExchange();
   }
+
   PRECICE_DEBUG("Explicit schemes caught up. All schemes are in sync.");
 
+  // Step 4: PREPARE FOR NEXT WINDOW
+  // Explicit schemes are no longer on hold
+  // Both implicit and explicit will advance together into the next time window
   _explicitOnHold = false;
-  updateActiveSchemes();
+  updateActiveSchemes();  // Determine which schemes participate next
+}
 }
 
 void CompositionalCouplingScheme::finalize()
@@ -332,25 +429,43 @@ double CompositionalCouplingScheme::getTimeWindowSize() const
 
 double CompositionalCouplingScheme::getNextTimeStepMaxSize() const
 {
-  PRECICE_TRACE();
-  PRECICE_ASSERT(!_activeSchemes.empty(), "Call initialize first");
-
-  /* For compositional schemes with mixed time window sizes, this is the max time step size to the next end of a time window.
+  /**
+   * COMPOSITE TIME WINDOW MANAGEMENT - SYNCHRONIZATION SCHEDULING
    *
-   * As a concrete example we have 3 solvers A,B,C which are coupled A-B with Dt=2 and B-C with Dt=3.
+   * In a compositional scheme with multiple coupling pairs having different time window sizes,
+   * we must synchronize at all unique time windows across all couples.
    *
-   * Then the synchronization points for A-B are (2, 4, 6, 8, ...) and for B-C are (3, 6, 9, ...) .
-   * The compositional scheme has to synchronize at the union of all these points (2, 3, 4, 6, 8, 9, ...)
+   * CONCRETE EXAMPLE:
+   * Three participants A, B, C
+   * - Couple A-B (implicit): Dt_AB = 2.0 → sync points: [2, 4, 6, 8, ...]
+   * - Couple B-C (explicit): Dt_BC = 3.0 → sync points: [3, 6, 9, ...]
    *
-   * Hence the getNextTimeStepMaxSize() is the difference between these points.
-   * Starting at t=0 and always advancing the full getNextTimeStepMaxSize() will lead to time steps of sizes (2,1,1,2,2,1,...)
+   * Required sync points (union): [2, 3, 4, 6, 8, 9, ...]
    *
-   * Exception is when the implicit scheme is iterating. In that moment the explicit schemes are on hold and the implicit scheme may advance its full max time step size.
+   * Time step sizes to reach consecutive sync points:
+   * Starting at t=0:
+   *   Step 1: advance 2.0 → reach t=2 (first sync point for A-B)
+   *   Step 2: advance 1.0 → reach t=3 (first sync point for B-C)
+   *   Step 3: advance 1.0 → reach t=4 (second sync point for A-B)
+   *   Step 4: advance 2.0 → reach t=6 (both schemes synchronize)
+   *
+   * This algorithm returns the maximum step size that can be taken before hitting
+   * ANY scheme's synchronization point, ensuring no missed synchronizations.
+   *
+   * SPECIAL CASE: When implicit scheme is iterating
+   * - Explicit schemes are on hold, so only consider implicit scheme
+   * - Implicit can advance its full maximum step size
+   * - This avoids artificial fragmentation during implicit iterations
    */
 
+  PRECICE_ASSERT(!_activeSchemes.empty(), "Call initialize first");
+
+  // Return the minimum of all active schemes' max time step sizes
+  // This ensures we don't overshoot any scheme's synchronization point
   double maxLength = std::transform_reduce(
-      _activeSchemes.begin(), _activeSchemes.end(), std::numeric_limits<double>::max(),
-      [](double a, double b) { return std::min(a, b); },
+      _activeSchemes.begin(), _activeSchemes.end(),
+      std::numeric_limits<double>::max(),
+      [](double a, double b) { return std::min(a, b); },  // Take minimum across all schemes
       std::mem_fn(&CouplingScheme::getNextTimeStepMaxSize));
   PRECICE_DEBUG("return {}", maxLength);
   return maxLength;

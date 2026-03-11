@@ -184,9 +184,26 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   precice::profiling::Event e("map.pou.computeMapping.From" + this->input()->getName() + "To" + this->output()->getName(), profiling::Synchronize);
 
+  /**
+   * PARTITION OF UNITY (PUM) ALGORITHM OVERVIEW:
+   *
+   * The Partition of Unity Method decomposes a complex interpolation problem into multiple
+   * overlapping local problems, each solved independently over smaller regions called clusters.
+   * This makes the problem more manageable and improves computational efficiency.
+   *
+   * The algorithm consists of:
+   * 1. Spatial clustering: Divide the domain into overlapping spherical clusters
+   * 2. Local RBF systems: Each cluster builds its own RBF interpolant
+   * 3. Weight computation: Assign normalized weights (Shepard's method) to blend local solutions
+   * 4. Data mapping: Combine weighted contributions from all clusters containing a point
+   */
+
   // Recompute the whole clustering
   PRECICE_ASSERT(!this->_hasComputedMapping, "Please clear the mapping before recomputing.");
 
+  // Determine mesh roles based on mapping constraint type.
+  // For conservative mappings: inMesh receives data, outMesh sends data (reversed roles).
+  // For consistent mappings: inMesh is source, outMesh is target (normal roles).
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
   if (this->hasConstraint(Mapping::CONSERVATIVE)) {
@@ -198,7 +215,20 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
 
   precice::profiling::Event eClusters("map.pou.computeMapping.createClustering.From" + this->input()->getName() + "To" + this->output()->getName());
-  // Step 1: get a tentative clustering consisting of centers and a radius from one of the available algorithms
+
+  /**
+   * STEP 1: SPATIAL CLUSTERING
+   *
+   * Create a set of overlapping spherical clusters that will partition the domain.
+   * - Cluster centers are placed to optimally distribute vertices from the input mesh
+   * - Cluster radius is computed to contain approximately _verticesPerCluster vertices
+   * - Relative overlap controls cluster overlap: 0 (non-overlapping) to 1 (maximal overlap)
+   *
+   * Mathematical basis:
+   * - Cluster radius r is determined such that each cluster contains ~verticesPerCluster points
+   * - Distance between cluster centers is adjusted as: d = 2*r*(1-relativeOverlap)
+   *   where relativeOverlap ∈ [0,1)
+   */
   auto [clusterRadius, centerCandidates] = impl::createClustering(inMesh, outMesh, _relativeOverlap, _verticesPerCluster, _projectToInput);
   eClusters.stop();
   // Due to the aggressive filtering in the createClustering stage, the canddidates here are already final
@@ -225,22 +255,43 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::_computeCPU(mesh::PtrMesh inMesh, mesh::PtrMesh outMesh, double clusterRadius, const std::vector<mesh::Vertex> &centerCandidates)
 {
-  // Step 1: check, which of the resulting clusters are non-empty and register the cluster centers in a mesh
-  // Here, the VertexCluster computes the matrix decompositions directly in case the cluster is non-empty
+  /**
+   * CPU VARIANT OF PUM COMPUTATION
+   *
+   * This method handles the single-threaded CPU execution of the partition of unity setup.
+   * It creates SphericalVertexCluster objects that each:
+   * - Build a local RBF interpolation matrix
+   * - Compute matrix decompositions (Cholesky or QR) for efficient solving
+   * - Store the decomposition for runtime evaluation
+   */
+
+  // STEP 1: CREATE CLUSTER INFRASTRUCTURE
+  // Build a mesh to track cluster centers. Each cluster center becomes a mesh vertex.
+  // Cluster ID = vertex ID in the center mesh (critical for indexing during mapping)
   _centerMesh        = std::make_unique<mesh::Mesh>("pou-centers-" + inMesh->getName(), this->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
   auto &meshVertices = _centerMesh->vertices();
 
   meshVertices.clear();
   _clusters.clear();
   _clusters.reserve(centerCandidates.size());
+
+  // Iterate through all proposed cluster centers and create clusters.
+  // CRITICAL INVARIANT: cluster ID must equal its index in _clusters vector.
+  // This ensures O(1) lookup during the mapping phase later.
   for (const auto &c : centerCandidates) {
-    // We cannot simply copy the vertex from the container in order to fill the vertices of the centerMesh, as the vertexID of each center needs to match the index
-    // of the cluster within the _clusters vector. That's required for the indexing further down and asserted below
+    // Create a new vertex for the cluster center with ID = current cluster count.
+    // We cannot use c directly because its ID might not match our cluster vector index.
     const VertexID                                  vertexID = meshVertices.size();
     mesh::Vertex                                    center(c.getCoords(), vertexID);
+
+    // Construct the SphericalVertexCluster which:
+    // - Collects all input vertices within distance _clusterRadius
+    // - Collects all output vertices within distance _clusterRadius
+    // - Builds and decomposes the local RBF interpolation matrix
     SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T> cluster(center, _clusterRadius, _basisFunction, _polynomial, inMesh, outMesh);
 
-    // Consider only non-empty clusters (more of a safeguard here)
+    // Only keep non-empty clusters (a cluster with no vertices is unusable).
+    // This safeguard handles degenerate geometry or extreme parameter combinations.
     if (!cluster.empty()) {
       PRECICE_ASSERT(center.getID() == static_cast<int>(_clusters.size()), center.getID(), _clusters.size());
       meshVertices.emplace_back(std::move(center));
@@ -265,12 +316,26 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::_computeCPU(mesh::PtrMesh
   _centerMesh->computeBoundingBox();
   PRECICE_DEBUG("Bounding Box of the cluster centers {}", _centerMesh->getBoundingBox());
 
-  // Step 2: Determine PU weights
+  /**
+   * STEP 2: COMPUTE PARTITION OF UNITY WEIGHTS (Shepard's Method)
+   *
+   * For each output vertex, we compute normalized weights for all clusters that contain it.
+   * This is essential for blending the local RBF solutions from overlapping clusters.
+   *
+   * Mathematical formula (Shepard's method):
+   * - For each cluster j, compute weight function w_j(x) = φ((R - dist(x, center_j))/R)
+   *   where R = cluster radius, φ is a smooth cutoff (typically distance-based)
+   * - Normalize: W_j(x) = w_j(x) / Σ_k w_k(x)
+   * - This ensures Σ_j W_j(x) = 1 (partition of unity property)
+   */
   PRECICE_DEBUG("Computing cluster-vertex association");
   for (const auto &vertex : outMesh->vertices()) {
-    // we use a helper function, as we need the same functionality for just-in-time mapping
+    // For each output vertex, find all clusters containing it and compute weights.
+    // This establishes the vertex-to-cluster mapping needed for runtime evaluation.
     auto [clusterIDs, normalizedWeights] = computeNormalizedWeight(vertex, outMesh->getName());
-    // Step 3: store the normalized weight in all associated clusters
+
+    // Store the normalized weight in each associated cluster.
+    // Each cluster will use its weight to scale its local RBF contribution during mapping.
     for (unsigned int i = 0; i < clusterIDs.size(); ++i) {
       PRECICE_ASSERT(clusterIDs[i] < static_cast<int>(_clusters.size()));
       _clusters[clusterIDs[i]].setNormalizedWeight(normalizedWeights[i], vertex.getID());
@@ -290,19 +355,33 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::_computeCPU(mesh::PtrMesh
 template <typename RADIAL_BASIS_FUNCTION_T>
 std::pair<std::vector<int>, std::vector<double>> PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::computeNormalizedWeight(const mesh::Vertex &vertex, std::string_view mesh)
 {
+  /**
+   * COMPUTE NORMALIZED PARTITION OF UNITY WEIGHTS
+   *
+   * This function implements Shepard's interpolation weights for blending local RBF solutions.
+   * For a query point (vertex), it:
+   * 1. Finds all clusters whose domains contain the point
+   * 2. Computes an individual weight for each cluster
+   * 3. Normalizes weights to sum to 1 (partition of unity constraint)
+   *
+   * This enables smooth blending of overlapping local approximations.
+   */
 
-  // Step 1: index the clusters / the center mesh in order to define the output vertex -> cluster ownership
-  // the ownership is required to compute the normalized partition of unity weights (Step 2)
-  // query::Index clusterIndex(*_centerMesh.get());
+  // STEP 1: SPATIAL INDEXING
+  // Use an R-tree spatial index built on cluster centers for efficient range queries.
+  // The index structure allows O(log n) lookup instead of O(n) linear search.
   PRECICE_ASSERT(_centerMesh);
   query::Index &clusterIndex = _centerMesh->index();
 
-  // Step 2: find all clusters the output vertex lies in, i.e., find all cluster centers which have the distance of a cluster radius from the given output vertex
-  // Here, we do this using the RTree on the centerMesh: VertexID (queried from the centersMesh) == clusterID, by construction above. The loop uses
-  // the vertices to compute the weights required for the partition of unity data mapping.
-  // Note: this could also be done on-the-fly in the map data phase for dynamic queries, which would require to make the mesh as well as the indexTree member variables.
-
-  // Step 2a: get the relevant clusters for the output vertex
+  /**
+   * STEP 2: RANGE QUERY FOR RELEVANT CLUSTERS
+   *
+   * Find all cluster centers that are exactly _clusterRadius away from the query vertex.
+   * This defines which clusters' RBF interpolants contribute to the mapping at this point.
+   *
+   * By construction (see _computeCPU), cluster ID == index in _clusters vector,
+   * so returned indices directly access the correct cluster objects.
+   */
   auto       clusterIDs            = clusterIndex.getVerticesInsideBox(vertex, _clusterRadius);
   const auto localNumberOfClusters = clusterIDs.size();
 
@@ -317,15 +396,29 @@ std::pair<std::vector<int>, std::vector<double>> PartitionOfUnityMapping<RADIAL_
                 "These options are only valid for the <mapping:rbf-pum-direct/> tag.",
                 vertex.getCoords(), mesh);
 
-  // Next we compute the normalized weights of each output vertex for each partition
+  // Ensure we found at least one cluster (error condition if mesh doesn't match geometry)
   PRECICE_ASSERT(localNumberOfClusters > 0, "No cluster found for vertex {}", vertex.getCoords());
 
-  // Step 2b: compute the weight in each partition individually and store them in 'weights'
+  /**
+   * STEP 2b: COMPUTE LOCAL WEIGHTS
+   *
+   * For each relevant cluster, compute its individual weight using the cluster's weight function.
+   * The weight function typically measures proximity to the cluster center with smooth falloff.
+   * Common choice: w_j(x) = (R - dist(x, c_j))^3 (cubic function on [0, R])
+   */
   std::vector<double> weights(localNumberOfClusters);
-  std::transform(clusterIDs.cbegin(), clusterIDs.cend(), weights.begin(), [&](const auto &ids) { return _clusters[ids].computeWeight(vertex); });
+  std::transform(clusterIDs.cbegin(), clusterIDs.cend(), weights.begin(),
+    [&](const auto &ids) { return _clusters[ids].computeWeight(vertex); });
+
   double weightSum = std::accumulate(weights.begin(), weights.end(), static_cast<double>(0.));
-  // TODO: This covers the edge case of vertices being at the edge of (several) clusters
-  // In case the sum is equal to zero, we assign equal weights for all clusters
+
+  /**
+   * EDGE CASE HANDLING: Zero Weight Sum
+   *
+   * This occurs when a vertex lies exactly at cluster boundaries where all weights
+   * simultaneously approach zero. For numerical stability, assign equal weights to all
+   * contributing clusters. This maintains the partition of unity property.
+   */
   if (weightSum <= 0) {
     PRECICE_ASSERT(weights.size() > 0);
     std::for_each(weights.begin(), weights.end(), [&weights](auto &w) { w = 1. / weights.size(); });
@@ -333,49 +426,99 @@ std::pair<std::vector<int>, std::vector<double>> PartitionOfUnityMapping<RADIAL_
   }
   PRECICE_ASSERT(weightSum > 0);
 
-  // Step 2c: Normalize weights
-  std::transform(weights.begin(), weights.end(), weights.begin(), [weightSum](double w) { return w / weightSum; });
+  /**
+   * STEP 2c: NORMALIZE WEIGHTS TO PARTITION OF UNITY
+   *
+   * Divide each weight by the sum: N_j(x) = w_j(x) / Σ_k w_k(x)
+   * Result: Σ_j N_j(x) = 1 (partition of unity constraint guaranteed)
+   *
+   * This normalization ensures exact reproduction of constant functions and
+   * enables proper blending of data at cluster boundaries.
+   */
+  std::transform(weights.begin(), weights.end(), weights.begin(),
+    [weightSum](double w) { return w / weightSum; });
 
-  // Return both the cluster IDs and the normalized weights
   return {clusterIDs, weights};
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData)
 {
+  /**
+   * CONSERVATIVE DATA MAPPING WITH PARTITION OF UNITY
+   *
+   * Maps data from source mesh to target mesh while conserving total quantity.
+   * For each output vertex, aggregates weighted contributions from all overlapping clusters.
+   *
+   * Algorithm:
+   * For each cluster c:
+   *   - Evaluate RBF interpolant using cluster's input vertices
+   *   - Weight result by normalized partition of unity weight
+   *   - Accumulate weighted result into output vector
+   *
+   * Result: output_value = Σ_c W_c(x) * RBF_c(input_data)
+   */
   PRECICE_TRACE();
 
   precice::profiling::Event e("map.pou.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
 
-  // Execute the actual mapping evaluation in all clusters
-  // 1. Assert that all output data values were reset, as we accumulate data in all clusters independently
+  // PRECONDITION: output must be zero before accumulation.
+  // Each cluster contributes additively, so we need a clean slate.
   PRECICE_ASSERT(outData.isZero());
 
   if (_useBatchedSolver) {
     PRECICE_ASSERT(false, "Not implemented");
   } else {
-    // 2. Iterate over all clusters and accumulate the result in the output data
-    std::for_each(_clusters.begin(), _clusters.end(), [&](auto &cluster) { cluster.mapConservative(inData, outData); });
+    // Evaluate mapping by accumulating contributions from all clusters.
+    // Each cluster:
+    // 1. Evaluates its local RBF interpolant
+    // 2. Applies its partition of unity weight
+    // 3. Adds weighted result to output (accumulation)
+    std::for_each(_clusters.begin(), _clusters.end(),
+      [&](auto &cluster) { cluster.mapConservative(inData, outData); });
   }
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData)
 {
+  /**
+   * CONSISTENT DATA MAPPING WITH PARTITION OF UNITY
+   *
+   * Maps data from source mesh to target mesh with pointwise interpolation.
+   * Each output vertex receives data from the weighted blend of all cluster interpolants.
+   *
+   * Algorithm:
+   * For each cluster c:
+   *   - Evaluate RBF interpolant at output vertex locations
+   *   - Weight result by normalized partition of unity weight
+   *   - Accumulate weighted result into output vector
+   *
+   * Result: output_value(vertex) = Σ_c W_c(vertex) * RBF_c(input_data)
+   *
+   * Key difference from conservative:
+   * - Consistent evaluates at output vertex positions (location-based)
+   * - Conservative preserves global quantities (integral-based)
+   */
   PRECICE_TRACE();
 
   precice::profiling::Event e("map.pou.mapData.From" + input()->getName() + "To" + output()->getName(), profiling::Synchronize);
 
-  // Execute the actual mapping evaluation in all clusters
-  // 1. Assert that all output data values were reset, as we accumulate data in all clusters independently
+  // PRECONDITION: output must be zero before accumulation.
+  // Each cluster contributes additively to the final result.
   PRECICE_ASSERT(outData.isZero());
 
   if (_useBatchedSolver) {
     PRECICE_ASSERT(_batchedSolver, "Not initialized");
     _batchedSolver->solveConsistent(inData, outData);
   } else {
-    // 2. Execute the actual mapping evaluation in all vertex clusters and accumulate the data
-    std::for_each(_clusters.begin(), _clusters.end(), [&](auto &clusters) { clusters.mapConsistent(inData, outData); });
+    // Evaluate mapping by accumulating contributions from all clusters.
+    // Each cluster:
+    // 1. Evaluates its local RBF interpolant at output vertex coordinates
+    // 2. Applies its partition of unity weight
+    // 3. Adds weighted result to output (accumulation)
+    std::for_each(_clusters.begin(), _clusters.end(),
+      [&](auto &clusters) { clusters.mapConsistent(inData, outData); });
   }
 }
 
