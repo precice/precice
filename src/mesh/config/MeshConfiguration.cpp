@@ -79,10 +79,19 @@ void MeshConfiguration::xmlTagCallback(
         break;
       }
     }
+    std::vector<std::string> availableData;
+    for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
+      availableData.push_back(data.name);
+    }
     PRECICE_CHECK(found,
-                  "Data with name \"{}\" used by mesh \"{}\" is not defined. "
-                  "Please define a data tag with name=\"{}\".",
-                  name, _meshes.back()->getName(), name);
+                  "Data \"{}\" used by mesh \"{}\" is not defined. "
+                  "Currently defined data tags are: {}. "
+                  "Please add <data:scalar name=\"{}\"/> or <data:vector name=\"{}\"/> to your configuration.",
+                  name,
+                  _meshes.back()->getName(),
+                  fmt::join(availableData, ", "),
+                  name,
+                  name);
   }
 }
 
@@ -113,7 +122,21 @@ void MeshConfiguration::addMesh(
         break;
       }
     }
-    PRECICE_CHECK(found, "Data {0} is not defined. Please define a data tag with name=\"{0}\".", dataNewMesh->getName());
+    // Collect available data names for helpful error output
+    std::vector<std::string> availableData;
+    for (const DataConfiguration::ConfiguredData &data : _dataConfig->data()) {
+      availableData.push_back(data.name);
+    }
+
+    PRECICE_CHECK(found,
+                  "Data \"{}\" used by mesh \"{}\" is not defined. "
+                  "Currently defined data tags are: {}. "
+                  "Please add <data:scalar name=\"{}\"/> or <data:vector name=\"{}\"/> to your configuration.",
+                  dataNewMesh->getName(),
+                  mesh->getName(),
+                  fmt::join(availableData, ", "),
+                  dataNewMesh->getName(),
+                  dataNewMesh->getName());
   }
   _meshes.push_back(mesh);
 }
