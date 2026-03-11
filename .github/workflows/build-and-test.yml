@@ -185,7 +185,7 @@ jobs:
           FI_PROVIDER: ${{ matrix.IMAGE == 'Intel' && 'tcp' || 'sockets' }} # use sockets on fedora and tcp on intel
           PSM3_HAL: loopback # required for fedora
         working-directory: build
-        run: su -c ". ../venv/bin/activate && ctest -j" "$PRECICE_USER"
+        run: su -c "cat $HWLOC_XMLFILE && . ../venv/bin/activate && ctest -j" "$PRECICE_USER"
       - name: Coverage Report
         working-directory: build
         if: ${{ matrix.COVFLAGS }}
