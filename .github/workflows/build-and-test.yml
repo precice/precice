@@ -142,9 +142,13 @@ jobs:
           echo "TOPO file $TOPO"
           lstopo --of xml "$TOPO"
           echo "HWLOC_XMLFILE=$TOPO" >> "$GITHUB_ENV"
+          echo "::group::Content"
           cat "$TOPO"
-          echo "Testing user access"
+          echo "::endgroup::"
+
+          echo "::group::Testing access"
           su -c "cat $TOPO" "$PRECICE_USER"
+          echo "::endgroup::"
       - name: Configure
         working-directory: build
         env:
@@ -190,7 +194,7 @@ jobs:
           FI_PROVIDER: ${{ matrix.IMAGE == 'Intel' && 'tcp' || 'sockets' }} # use sockets on fedora and tcp on intel
           PSM3_HAL: loopback # required for fedora
         working-directory: build
-        run: su -c "cat $HWLOC_XMLFILE && . ../venv/bin/activate && ctest -j" "$PRECICE_USER"
+        run: su -c ". ../venv/bin/activate && ctest -j" "$PRECICE_USER"
       - name: Coverage Report
         working-directory: build
         if: ${{ matrix.COVFLAGS }}
