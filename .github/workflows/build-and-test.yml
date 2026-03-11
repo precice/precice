@@ -251,6 +251,15 @@ jobs:
       run: brew install --overwrite --quiet eigen libxml2 boost petsc openmpi ninja
     - name: Generate build directory
       run: mkdir -p build
+    - name: Precompute hwloc topology
+      run: |
+        lstopo --of xml topo.xml
+        TOPO="$(readlink -f topo.xml)"
+        echo "TOPO file $TOPO"
+        echo "HWLOC_XMLFILE=$TOPO" >> "$GITHUB_ENV"
+        echo "::group::Content"
+        cat "$TOPO"
+        echo "::endgroup::"
     - name: Configure
       working-directory: build
       env:
