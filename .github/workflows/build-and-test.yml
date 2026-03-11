@@ -138,6 +138,7 @@ jobs:
           TOPO="$(mktemp --suffix=TOPO -d)/topo.xml"
           echo "TOPO file $TOPO"
           lstopo --of xml "$TOPO"
+          chmod a+r "$TOPO"
           echo "HWLOC_XMLFILE=$TOPO" >> "$GITHUB_ENV"
           cat "$TOPO"
       - name: Configure
