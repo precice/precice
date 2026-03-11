@@ -608,18 +608,26 @@ void ParticipantImpl::finalize()
   if (_hasError) {
     PRECICE_WARN("Finalizing participant \"{}\" in an erroneous state. Attempting best-effort cleanup.", _accessorName);
     // Best-effort cleanup: release resources without relying on valid internal state
+
+    // Release ownership
     _couplingScheme.reset();
     _participants.clear();
     _accessor.reset();
-    if (utils::IntraComm::isParallel()) { // drops the intra-communicator
+
+    // Close Connections
+    if (utils::IntraComm::isParallel()) {
       utils::IntraComm::getCommunication() = nullptr;
     }
     _m2ns.clear();
+
+    // Finalize PETSc and Events first
     utils::Petsc::finalize();
 #if !defined(PRECICE_NO_GINKGO) || !defined(PRECICE_NO_KOKKOS_KERNELS)
     device::Device::finalize();
 #endif
     profiling::EventRegistry::instance().finalize();
+
+    // Clear events and finalize MPI
     utils::Parallel::finalizeOrCleanupMPI();
     _state = State::Finalized;
     return;
