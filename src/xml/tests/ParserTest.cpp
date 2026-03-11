@@ -248,4 +248,20 @@ BOOST_AUTO_TEST_CASE(MissingRequiredAttributeIncludesTagName)
       ::precice::testing::errorContains("The tag <test-missing-attr> in the configuration is missing required attribute \"required-attr\"."));
 }
 
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(ParserRejectsNonexistentFile)
+{
+  PRECICE_TEST();
+  // Verify the ConfigParser raises an error for a non-existent config file.
+  // This exercises the PRECICE_CHECK guard introduced to protect against a
+  // null xmlParserCtxtPtr (issue #2500).
+  CallbackHostAttr cb;
+  XMLTag           rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
+
+  BOOST_CHECK_EXCEPTION(
+      configure(rootTag, ConfigurationContext{}, "/nonexistent/path/config.xml"),
+      ::precice::Error,
+      ::precice::testing::errorContains("XML parser was unable to open configuration file"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

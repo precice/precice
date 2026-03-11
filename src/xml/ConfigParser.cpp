@@ -188,11 +188,15 @@ int ConfigParser::readXmlFile(std::string const &filePath)
 
   _hash = utils::preciceHash(content);
 
-  xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
-                                                  content.c_str(), content.size(), nullptr);
+  auto ctxtDeleter = [](xmlParserCtxt *p) { xmlFreeParserCtxt(p); };
+  std::unique_ptr<xmlParserCtxt, decltype(ctxtDeleter)> ctxt(
+      xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
+                              content.c_str(), content.size(), nullptr),
+      ctxtDeleter);
 
-  xmlParseChunk(ctxt, nullptr, 0, 1);
-  xmlFreeParserCtxt(ctxt);
+  PRECICE_CHECK(ctxt != nullptr, "libxml2 failed to create a parser context for \"{}\".", filePath);
+
+  xmlParseChunk(ctxt.get(), nullptr, 0, 1);
   xmlCleanupParser();
 
   return 0;
