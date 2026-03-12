@@ -22,6 +22,7 @@
 #include "partition/Partition.hpp"
 #include "partition/ProvidedPartition.hpp"
 #include "partition/ReceivedPartition.hpp"
+#include "precice/Exceptions.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 #include "utils/assertion.hpp"
@@ -862,6 +863,20 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
     part.communicate();
     part.compute();
   }
+}
+
+PRECICE_TEST_SETUP("NASTIN"_on(1_rank), Require::Events)
+BOOST_AUTO_TEST_CASE(TestGloballyEmptyMeshError)
+{
+  using namespace precice;
+  PRECICE_TEST();
+
+  int           dimensions = 2;
+  mesh::PtrMesh pMesh(new mesh::Mesh("EmptyMesh", dimensions, testing::nextMeshID()));
+  pMesh->computeBoundingBox();
+
+  ProvidedPartition part(pMesh);
+  BOOST_CHECK_THROW(part.communicate(), ::precice::Error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
