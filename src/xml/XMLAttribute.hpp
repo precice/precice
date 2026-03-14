@@ -30,7 +30,7 @@ public:
   };
 
   XMLAttribute(std::string name, ATTRIBUTE_T defaultValue)
-      : _name(std::move(name)), _hasDefaultValue(true), _defaultValue(std::move(defaultValue))
+      : _name(std::move(name)), _hasDefaultValue(true), _isRequired(false), _defaultValue(std::move(defaultValue))
   {
     PRECICE_ASSERT(utils::isKebabStyle(_name), _name);
   };
@@ -78,6 +78,20 @@ public:
     return _hasValidation;
   };
 
+  /// Marks this attribute as optional without a default value.
+  /// When missing in the XML, no error is raised and wasProvided() will be false.
+  XMLAttribute &setOptional()
+  {
+    _isRequired = false;
+    return *this;
+  }
+
+  /// Returns false only when the attribute is optional-without-default and was not present in the XML.
+  bool wasProvided() const
+  {
+    return _wasProvided;
+  }
+
   void readValue(std::string_view tagName, const std::map<std::string, std::string> &aAttributes);
 
   const std::string &getName() const
@@ -112,6 +126,10 @@ private:
   ATTRIBUTE_T _value{};
 
   bool _hasDefaultValue = false;
+
+  bool _isRequired = true;
+
+  bool _wasProvided = true;
 
   ATTRIBUTE_T _defaultValue{};
 
@@ -165,9 +183,16 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::string_view tagName, const std::m
 
   const auto position = aAttributes.find(getName());
   if (position == aAttributes.end()) {
-    PRECICE_CHECK(_hasDefaultValue, "The tag <{}> in the configuration is missing required attribute \"{}\".", tagName, _name);
-    set(_value, _defaultValue);
+    if (_hasDefaultValue) {
+      set(_value, _defaultValue);
+      _wasProvided = true;
+    } else if (_isRequired) {
+      PRECICE_CHECK(false, "The tag <{}> in the configuration is missing required attribute \"{}\".", tagName, _name);
+    } else {
+      _wasProvided = false;
+    }
   } else {
+    _wasProvided = true;
     try {
       readValueSpecific(position->second, _value);
     } catch (const std::exception &e) {
