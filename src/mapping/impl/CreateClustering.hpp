@@ -1,5 +1,41 @@
 #pragma once
 
+/**
+ * @file CreateClustering.hpp
+ * @brief Spatial clustering utilities for the Partition-of-Unity RBF mapping.
+ *
+ * ## Purpose
+ * The Partition-of-Unity Method (PUM) decomposes a large RBF interpolation
+ * problem into many small, overlapping local sub-problems called "clusters".
+ * This file provides the helper functions that **build the cluster layout**:
+ * it determines where to place cluster centers and what radius to use.
+ *
+ * ## Algorithm Overview (createClustering)
+ *
+ * 1. **Estimate cluster radius** (`estimateClusterRadius`):
+ *    - Sample k-nearest neighbours at a few points in the domain.
+ *    - Use the median k-NN radius across samples as the cluster radius.
+ *    - Ensures each cluster contains approximately `verticesPerCluster` vertices.
+ *
+ * 2. **Lay a Cartesian grid** of cluster centers over the bounding box.
+ *    - Grid spacing = cluster_radius * (1 - relativeOverlap) * sqrt(4/dim)
+ *    - This guarantees the required overlap between adjacent clusters.
+ *
+ * 3. **Optionally project** cluster centers to the closest input-mesh vertex
+ *    (`projectClustersToInput`). Useful for shell/surface meshes where the
+ *    interior of the bounding-box contains no mesh vertices.
+ *
+ * 4. **Filter out** empty clusters (no input or output vertices inside them)
+ *    and duplicate centers that became too close after projection.
+ *
+ * ## Index Scheme (zCurve)
+ * Cluster centers are stored in a flat array indexed by a row-major (C-order)
+ * integer: ID = x * (ny * nz) + y * nz + z.
+ * This is called `zCurve` here (confusingly — it is NOT a space-filling Z-curve;
+ * it is simply a dimension-major flat index). Neighbour offsets in the flat
+ * array can be pre-computed for all 8 (2D) or 26 (3D) adjacent cells.
+ */
+
 #include <Eigen/Core>
 
 #include <algorithm>
@@ -24,58 +60,81 @@ using Vertices = std::vector<mesh::Vertex>;
 namespace {
 
 /**
- * @brief Transforms a multi-dimensional index into a unique index. The formula here corresponds to a
- * dimension-major scheme. The index is used to put all generated cluster centers into a unique and
- * and accessible place. The following functions @ref zCurveNeighborOffsets also allow to immediately
- * access (spatially) adjacent clusters.
+ * @brief Maps a 3D Cartesian grid index (x, y, z) to a unique flat 1D index.
  *
- * @param[in] ids The multi-dimensional index of the cluster center (x, y, z)
- * @param[in] nCells The maximum size of each index (x_max, y_max, z_max)
- * @return VertexID The serialized unique ID
+ * This is a standard C-order (row-major) index:
+ *   ID = x * (nCells[1] * nCells[2]) + y * nCells[2] + z
+ *
+ * The function is called "zCurve" because it produces a Z-order-like traversal,
+ * but it is actually a simple dimension-major (row-major) flat index, NOT a
+ * true Morton / Z-order space-filling curve.
+ *
+ * Used to:
+ *   - Give each cluster center a unique integer ID that matches its position
+ *     in the `centers` flat array.
+ *   - Pre-compute relative neighbour offsets (see `zCurveNeighborOffsets`).
+ *
+ * @param[in] ids     The (x, y, z) multi-dimensional index of the cluster center.
+ * @param[in] nCells  The grid size in each direction (nx, ny, nz).
+ * @return VertexID   The unique 1D flat index for this grid cell.
  */
 constexpr VertexID zCurve(std::array<unsigned int, 3> ids, std::array<unsigned int, 3> nCells)
 {
   return (ids[0] * nCells[1] + ids[1]) * nCells[2] + ids[2];
 }
 
-// Overload to handle the offsets (via ints) properly
+// Overload accepting signed int offsets (used for neighbour offset computation).
 constexpr VertexID zCurve(std::array<int, 3> ids, std::array<unsigned int, 3> nCells)
 {
   return (ids[0] * nCells[1] + ids[1]) * nCells[2] + ids[2];
 }
 
 /**
- * @brief Computes the index offsets of all spatially adjacent cluster centers
+ * @brief Pre-computes the flat-index offsets of all spatially adjacent cluster centers.
  *
- * @tparam dim spatial dimension of the multi-dimensional index
- * @param nCells the maximum size of each index (x_max, y_max, z_max)
- * @return The serialized unique neighbor ids
+ * In a Cartesian grid of cluster centers, every interior cell has either:
+ *   - **2D**: 8 neighbours (left, right, top, bottom, and 4 diagonal cells)
+ *   - **3D**: 26 neighbours (all face-, edge-, and corner-adjacent cells)
+ *
+ * Rather than computing neighbour IDs at query time, we pre-compute the flat-index
+ * offsets once. Adding an offset to a cluster's flat ID gives the flat ID of that
+ * neighbour (with a bounds check to handle boundary cells).
+ *
+ * Example (2D, nCells = [3, 4, 1]):
+ *   Cell (1,2) has flat ID = 1*4+2 = 6.
+ *   Its left neighbour (1,1) has flat ID = 5  → offset = -1.
+ *   Its top-left (0,1)  has flat ID = 1       → offset = -5.
+ *   ...and so on for all 8 directions.
+ *
+ * @tparam dim   Spatial dimension (2 or 3).
+ * @param nCells Grid size in (x, y, z).
+ * @return Array of (3^dim - 1) flat-index offsets for all neighbour directions.
  */
 template <int dim>
 std::array<int, math::pow_int<dim>(3) - 1> zCurveNeighborOffsets(std::array<unsigned int, 3> nCells);
 
-/// 2D implementation
+/// 2D specialisation: 8 face+edge+corner neighbours in the XY plane (z fixed).
 template <>
 std::array<int, 8> zCurveNeighborOffsets<2>(std::array<unsigned int, 3> nCells)
 {
-  // All  neighbor directions
+  // All 8 neighbour directions in 2D: (dx, dy, 0), dx/dy in {-1, 0, +1}, excluding (0,0).
   const std::array<std::array<int, 3>, 8> neighbors2DIndex = {{{-1, -1, 0}, {-1, 0, 0}, {-1, 1, 0}, {0, -1, 0}, {0, 1, 0}, {1, -1, 0}, {1, 0, 0}, {1, 1, 0}}};
   std::array<int, 8>                      neighbors2D{{}};
-  // Uses the int overload of the zCurve
+  // Convert each (dx, dy, 0) direction vector to a flat-index offset via zCurve.
   // @todo: mark the function as constexpr, when moving to C++20 (transform is non-constexpr)
   std::transform(neighbors2DIndex.begin(), neighbors2DIndex.end(), neighbors2D.begin(), [&nCells](auto &v) { return zCurve(v, nCells); });
 
   return neighbors2D;
 }
 
-/// 3D implementation
+/// 3D specialisation: 26 face+edge+corner neighbours (all (dx,dy,dz) in {-1,0,+1}^3 except (0,0,0)).
 template <>
 std::array<int, 26> zCurveNeighborOffsets<3>(std::array<unsigned int, 3> nCells)
 {
-  // All  neighbor directions
+  // All 26 neighbour directions in 3D: (dx, dy, dz), excluding (0, 0, 0).
   const std::array<std::array<int, 3>, 26> neighbors3DIndex = {{{-1, -1, -1}, {-1, -1, 0}, {-1, -1, 1}, {-1, 0, 0}, {-1, 0, 1}, {-1, 0, -1}, {-1, 1, 0}, {-1, 1, 1}, {-1, 1, -1}, {0, -1, -1}, {0, -1, 0}, {0, -1, 1}, {0, 0, 1}, {0, 0, -1}, {0, 1, 0}, {0, 1, 1}, {0, 1, -1}, {1, -1, -1}, {1, -1, 0}, {1, -1, 1}, {1, 0, 0}, {1, 0, 1}, {1, 0, -1}, {1, 1, 0}, {1, 1, 1}, {1, 1, -1}}};
   std::array<int, 26>                      neighbors3D{{}};
-  // Uses the int overload of the zCurve
+  // Convert each direction vector to a flat-index offset via zCurve.
   std::transform(neighbors3DIndex.begin(), neighbors3DIndex.end(), neighbors3D.begin(), [&nCells](auto &v) { return zCurve(v, nCells); });
 
   return neighbors3D;
@@ -209,31 +268,46 @@ void removeTaggedVertices(Vertices &container)
 } // namespace
 
 /**
- * @brief Computes an estimate for the cluster radius, which results in approximately \p verticesPerCluster vertices inside
- * of each cluster. The algorithm generates random samples in the domain and queries the \p verticesPerCluster nearest-neighbors
- * from the mesh index tree. The cluster radius is then estimated through the distance between the center vertex (random sample)
- * and the vertex the furthest away from the center (being on the edge of the cluster).
+ * @brief Estimates a cluster radius such that each cluster contains approximately
+ *        `verticesPerCluster` input-mesh vertices.
  *
- * @param[in] verticesPerCluster target number of vertices in each cluster.
- * @param[in] inMesh mesh we want to create the clustering on
- * @param[in] bb bounding box of the domain. Used to place the random samples in the domain.
+ * ## Algorithm (k-NN sampling)
  *
- * @return The estimate for the cluster radius.
+ * Instead of computing the exact average inter-vertex spacing (expensive on large
+ * meshes), we take a small set of representative sample points, query the
+ * `verticesPerCluster` nearest neighbours for each, and use the median of the
+ * resulting k-NN radii as the estimate.
+ *
+ * **Why the median?**
+ * The median is robust to outliers (e.g., a sample near a coarse region would
+ * give a large radius, biasing the mean). The median reflects the "typical" mesh
+ * density across the domain.
+ *
+ * **Why map samples to the nearest mesh vertex?**
+ * Random samples inside the bounding box may fall far from a shell-like mesh
+ * (e.g., a surface mesh embedded in 3D). Snapping to the nearest mesh vertex
+ * ensures we always query from a realistic part of the mesh.
+ *
+ * @param[in] verticesPerCluster  Target number of vertices per cluster.
+ * @param[in] inMesh              Input mesh on which the clustering is built.
+ * @param[in] bb                  Bounding box used to generate sample locations.
+ * @return double                 Estimated cluster radius.
  */
 inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMesh inMesh, const mesh::BoundingBox &bb)
 {
-  // Step 1: Generate random samples from the input mesh
+  // STEP 1: Generate representative sample locations inside the domain.
+  // We use 1 + 2*dim samples: one at the center, and two per dimension (at ±0.25 of the edge length).
   std::vector<VertexID> randomSamples;
 
   PRECICE_ASSERT(!bb.isDefault(), "Invalid bounding box.");
-  // All samples are 'moved' to the closest vertex from the input mesh in order
-  // to avoid empty clusters when we have shell-like meshes (as in surface coupling)
-  // The first sample: the vertex closest to the bounding box center
+  // All samples are snapped to the closest mesh vertex to avoid empty clusters
+  // for shell-shaped or surface meshes (where the interior of the BB has no vertices).
+  // Sample 0: vertex closest to the bounding-box center.
   const auto bbCenter = bb.center();
   randomSamples.emplace_back(inMesh->index().getClosestVertex(bbCenter).index);
-  // Now we place samples for each space dimension above and below the bounding box center
-  // and look for the closest vertex in the input mesh
-  // In 2D the sampling would like this
+
+  // Samples 1..2*dim: placed above and below the BB center along each axis.
+  // In 2D this gives a "cross" pattern:
   // +---------------------+
   // |          x          |
   // |                     |
@@ -241,38 +315,41 @@ inline double estimateClusterRadius(unsigned int verticesPerCluster, mesh::PtrMe
   // |                     |
   // |          x          |
   // +---------------------+
-
+  // (where c = center, x = samples at ±0.25 * edgeLength)
   for (int d = 0; d < inMesh->getDimensions(); ++d) {
     auto sample = bbCenter;
-    // Lower as the center
+    // Lower sample: 0.25 * edge_length below center in dimension d.
     sample[d] -= bb.getEdgeLength(d) * 0.25;
     randomSamples.emplace_back(inMesh->index().getClosestVertex(sample).index);
-    // Higher than the center
-    sample[d] += bb.getEdgeLength(d) * 0.5;
+    // Upper sample: 0.25 * edge_length above center in dimension d.
+    sample[d] += bb.getEdgeLength(d) * 0.5; // net = +0.25 from center
     randomSamples.emplace_back(inMesh->index().getClosestVertex(sample).index);
   }
 
-  // Step 2: Compute the radius of the randomSamples ('centers'), which would have verticesPerCluster vertices
+  // STEP 2: For each sample, query the k nearest neighbours (k = verticesPerCluster)
+  // and record the distance to the *furthest* neighbour as the local cluster radius.
   std::vector<double> sampledClusterRadii;
   for (auto s : randomSamples) {
-    // ask the index tree for the k-nearest neighbors  in order to estimate the point density
+    // k-nearest-neighbour query: returns verticesPerCluster vertex IDs closest to sample s.
     auto kNearestVertexIDs = inMesh->index().getClosestVertices(inMesh->vertex(s).getCoords(), verticesPerCluster);
-    // compute the distance of each point to the center
+    // Compute the squared distance from each k-NN to the sample center.
     std::vector<double> squaredRadius(kNearestVertexIDs.size());
     std::transform(kNearestVertexIDs.begin(), kNearestVertexIDs.end(), squaredRadius.begin(), [&inMesh, s](auto i) {
       return computeSquaredDifference(inMesh->vertex(i).rawCoords(), inMesh->vertex(s).rawCoords());
     });
-    // Store the maximum distance
+    // The maximum distance is the radius of a sphere centred at s containing all k neighbours.
     auto maxRadius = std::max_element(squaredRadius.begin(), squaredRadius.end());
     sampledClusterRadii.emplace_back(std::sqrt(*maxRadius));
   }
 
-  // Step 3: Sort (using nth_element) the sampled radii and select the median as cluster radius
+  // STEP 3: Use the median of all sampled radii as the cluster radius estimate.
+  // nth_element partially sorts so that the median is at position `middle`.
+  // This is O(n) average, more efficient than a full sort.
   PRECICE_ASSERT(sampledClusterRadii.size() % 2 != 0, "Median calculation is only valid for odd number of elements.");
   PRECICE_ASSERT(sampledClusterRadii.size() > 0);
   unsigned int middle = sampledClusterRadii.size() / 2;
   std::nth_element(sampledClusterRadii.begin(), sampledClusterRadii.begin() + middle, sampledClusterRadii.end());
-  double clusterRadius = sampledClusterRadii[middle];
+  double clusterRadius = sampledClusterRadii[middle]; // median
 
   return clusterRadius;
 }

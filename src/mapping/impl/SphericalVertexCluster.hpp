@@ -1,5 +1,46 @@
 #pragma once
 
+/**
+ * @file SphericalVertexCluster.hpp
+ * @brief A single spherical partition in the Partition-of-Unity (PUM) RBF mapping.
+ *
+ * ## What is a SphericalVertexCluster?
+ * The Partition-of-Unity Method (PUM) decomposes a large interpolation problem
+ * into many small, overlapping local sub-problems — each called a "cluster".
+ * This class represents **one cluster**: a sphere of radius `_radius` centred at
+ * `_center`, which:
+ *   1. Collects all input mesh vertices inside the sphere  (_inputIDs).
+ *   2. Collects all output mesh vertices inside the sphere (_outputIDs).
+ *   3. Builds a dense local RBF interpolation system on those vertices.
+ *   4. Stores Shepard (partition-of-unity) weights for the output vertices.
+ *
+ * ## Role in PartitionOfUnityMapping
+ * `PartitionOfUnityMapping` owns a `std::vector<SphericalVertexCluster>` and
+ * orchestrates them:
+ *   - **computeMapping()** constructs each cluster and assigns PU weights.
+ *   - **mapConsistent() / mapConservative()** iterate over all clusters and
+ *     accumulate their weighted local RBF results into the global output.
+ *
+ * ## Data-Flow Summary
+ *
+ * ### Consistent mapping (interpolation):
+ *   global_input[inputIDs] → local_in (nInput × nDims)
+ *       → RBF solve → local_result (nOutput × nDims)
+ *           → global_output[outputIDs] += result * normalizedWeights
+ *
+ * ### Conservative mapping (load-spreading):
+ *   global_input[outputIDs] * normalizedWeights → local_in (nOutput × nDims)
+ *       → RBF conservative solve → local_result (nInput × nDims)
+ *           → global_output[inputIDs] += local_result
+ *
+ * ## Weighting Function
+ * The per-cluster Shepard weight is evaluated using `CompactPolynomialC2`
+ * (Wendland C2 kernel), giving smooth, non-negative weights that taper to zero
+ * at the cluster boundary. Normalizing them across all clusters that cover a
+ * given output vertex ensures the Partition-of-Unity (PU) property:
+ *   Σ_c w_c(x) = 1  for every x in the domain.
+ */
+
 #include <Eigen/Core>
 
 #include <boost/container/flat_set.hpp>
@@ -185,13 +226,22 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::setNormalizedWeight(double normalizedWeight, VertexID id)
 {
   PRECICE_ASSERT(_outputIDs.size() > 0);
+  // The given global vertex ID must belong to this cluster's output set.
   PRECICE_ASSERT(_outputIDs.contains(id), id);
+  // Normalized weights must be strictly positive — zero would mean the cluster
+  // contributes nothing at this vertex (it should not be in this cluster at all).
   PRECICE_ASSERT(normalizedWeight > 0);
 
+  // Lazy initialization: allocate the weight vector on first use.
+  // Size = number of output vertices in this cluster (local indexing, not global).
   if (_normalizedWeights.size() == 0)
     _normalizedWeights.resize(_outputIDs.size());
 
-  // The find method of boost flat_set comes with O(log(N)) complexity (the more expensive part here)
+  // boost::container::flat_set stores elements in sorted order and provides
+  // O(log N) lookup. `index_of` converts the iterator to a 0-based position,
+  // giving us the local index that matches `_normalizedWeights` ordering.
+  // This is the only time we pay O(log N) per vertex — the actual mapping
+  // loop uses sequential access (O(1) per step via nth()).
   auto localID = _outputIDs.index_of(_outputIDs.find(id));
 
   PRECICE_ASSERT(static_cast<Eigen::Index>(localID) < _normalizedWeights.size(), localID, _normalizedWeights.size());
@@ -201,40 +251,65 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::setNormalizedWeight(double
 template <typename RADIAL_BASIS_FUNCTION_T>
 void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConservative(const time::Sample &inData, Eigen::VectorXd &outData) const
 {
-  // First, a few sanity checks. Empty partitions shouldn't be stored at all
+  /**
+   * LOCAL CONSERVATIVE MAPPING FOR ONE CLUSTER
+   *
+   * Conservative mapping means the *total quantity* (integral / sum) is
+   * preserved across the mapping. Mathematically:
+   *   Σ_j outData[j] == Σ_i inData[i]  (weighted by the PU weights)
+   *
+   * The cluster's contribution to the global conservative solve is:
+   *   out[inputIDs] += C^{-T} * A^T * (inData[outputIDs] * w)   (RBF formula)
+   * where w = normalizedWeights (Shepard PU weights for this cluster).
+   *
+   * Key: weights are applied to the INPUT data (output mesh side) BEFORE
+   * the solve, so each cluster only "sees" its share of the total load.
+   * Multiple clusters accumulate into the global outData with +=.
+   */
+
+  // Guards: empty partitions are never stored; mapping must be pre-computed.
   PRECICE_ASSERT(!empty());
   PRECICE_ASSERT(_hasComputedMapping);
   PRECICE_ASSERT(_normalizedWeights.size() == static_cast<Eigen::Index>(_outputIDs.size()));
 
-  // Define an alias for data dimension in order to avoid ambiguity
-  const unsigned int nComponents = inData.dataDims;
-  const auto        &localInData = inData.values;
+  const unsigned int nComponents = inData.dataDims; // e.g. 1 for scalar, 3 for 3D vector
+  const auto        &localInData = inData.values;   // flat global array: vertex * nComponents
 
+  // Allocate a dense local matrix (nOutputInCluster × nComponents).
+  // `getOutputSize()` == _outputIDs.size() (+ polynomial rows, already zero-padded).
   // TODO: We can probably reduce the temporary allocations here
   Eigen::MatrixXd in(_rbfSolver.getOutputSize(), nComponents);
 
-  // Now we perform the data mapping component-wise
-  // Step 1: extract the relevant input data from the global input data and store
-  // it in a contiguous array, which is required for the RBF solver
+  // STEP 1: Extract & weight the relevant portion of the global input data.
+  // For conservative mapping, the "input" to the local solver is the OUTPUT mesh data
+  // (note the reversed naming: the global outMesh == local inputMesh for conservative).
+  // We multiply each row by the normalized Shepard weight so that overlapping clusters
+  // collectively sum to the original unweighted value.
   for (unsigned int i = 0; i < _outputIDs.size(); ++i) {
     for (unsigned int c = 0; c < nComponents; ++c) {
-      const auto dataIndex = *(_outputIDs.nth(i));
+      const auto dataIndex = *(_outputIDs.nth(i)); // global vertex ID → flat array offset
       PRECICE_ASSERT(dataIndex * nComponents + c < localInData.size(), dataIndex * nComponents + c, localInData.size());
       PRECICE_ASSERT(_normalizedWeights[i] > 0, _normalizedWeights[i], i);
-      // here, we also directly apply the weighting, i.e., we split the input data
+      // Apply partition-of-unity weight: each cluster only contributes its
+      // fraction of the load. This ensures Σ_clusters contribution = full load.
       in(i, c) = localInData[dataIndex * nComponents + c] * _normalizedWeights[i];
     }
   }
-  // Step 2: solve the system using a conservative constraint
+
+  // STEP 2: Solve the local RBF system conservatively.
+  // Internally: result = C^{-1} * A^T * in  (conservative solve via RadialBasisFctSolver)
+  // result has shape (nInputInCluster × nComponents).
   Eigen::MatrixXd result = _rbfSolver.solveConservative(in, _polynomial);
   PRECICE_ASSERT(result.rows() == static_cast<Eigen::Index>(_inputIDs.size()));
 
-  // Step 3: now accumulate the result into our global output data
+  // STEP 3: Accumulate the local result into the global output vector.
+  // += is critical: multiple clusters will add their contributions to the same
+  // global input vertex, and their sum gives the final conservative mapped value.
   for (unsigned int i = 0; i < _inputIDs.size(); ++i) {
     for (unsigned int c = 0; c < nComponents; ++c) {
-      const auto dataIndex = *(_inputIDs.nth(i));
+      const auto dataIndex = *(_inputIDs.nth(i)); // local row i → global vertex ID
       PRECICE_ASSERT(dataIndex * nComponents + c < outData.size(), dataIndex * nComponents + c, outData.size());
-      outData[dataIndex * nComponents + c] += result(i, c);
+      outData[dataIndex * nComponents + c] += result(i, c); // accumulate
     }
   }
 }
@@ -287,48 +362,98 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::addWriteDataToCache(const 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::initializeCacheData(Eigen::MatrixXd &poly, Eigen::MatrixXd &coeffs, const int nComponents)
 {
+  /**
+   * INITIALIZE JIT CACHE BUFFERS FOR THIS CLUSTER
+   *
+   * Called once before the just-in-time (JIT) mapping loop begins.
+   * Pre-allocates the two buffers that will hold the precomputed RBF solution
+   * for one time step, so that per-query evaluations (interpolateAt /
+   * addWriteDataToCache) can proceed without further allocation.
+   *
+   * - `poly`  : polynomial coefficients matrix.
+   *             Only meaningful when polynomial=SEPARATE; otherwise left at
+   *             size 0 (checked in the solver via PRECICE_ASSERT).
+   *             Shape: (nPolynomialParams × nComponents)
+   *
+   * - `coeffs`: RBF lambda coefficients ("C^{-1} * inputData" for consistent).
+   *             Shape: (nInputVerticesInCluster × nComponents)
+   *             Each column corresponds to one data component.
+   */
   if (Polynomial::SEPARATE == _polynomial) {
+    // Allocate polynomial coefficient buffer: one row per polynomial basis term
+    // (1 constant + number_of_active_dimensions linear terms).
     poly.resize(_rbfSolver.getNumberOfPolynomials(), nComponents);
   }
+  // Allocate RBF coefficient buffer: one row per input vertex in this cluster.
   coeffs.resize(_inputIDs.size(), nComponents);
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::Sample &inData, Eigen::VectorXd &outData) const
 {
-  // First, a few sanity checks. Empty partitions shouldn't be stored at all
+  /**
+   * LOCAL CONSISTENT MAPPING FOR ONE CLUSTER
+   *
+   * Consistent (interpolation) mapping evaluates the RBF interpolant at output
+   * vertex positions. For this cluster, the formula is:
+   *
+   *   outData[outputIDs] += w * (A * C^{-1} * inData[inputIDs])
+   *
+   * where:
+   *   - C = RBF kernel matrix at input vertices (assembled in constructor)
+   *   - A = evaluation matrix at output vertices (assembled in constructor)
+   *   - w = normalizedWeights (Shepard PU weight for this cluster)
+   *
+   * The weight `w` is applied AFTER interpolation (to the result), so each
+   * cluster contributes a fraction of the final interpolated value. Summing
+   * contributions from all clusters that cover an output vertex gives the
+   * final mapped value (guaranteed by the PU normalization: Σ w_c = 1).
+   *
+   * Multiple clusters accumulate with += into the global outData.
+   */
+
+  // Guards: empty partitions are never stored; mapping must be pre-computed.
   PRECICE_ASSERT(!empty());
   PRECICE_ASSERT(_hasComputedMapping);
   PRECICE_ASSERT(_normalizedWeights.size() == static_cast<Eigen::Index>(_outputIDs.size()));
 
-  // Define an alias for data dimension in order to avoid ambiguity
-  const unsigned int nComponents = inData.dataDims;
-  const auto        &localInData = inData.values;
+  const unsigned int nComponents = inData.dataDims; // e.g. 1 for scalar, 3 for 3D vector
+  const auto        &localInData = inData.values;   // flat global array: vertex * nComponents
 
+  // Allocate the local input matrix (nInputInCluster × nComponents).
+  // getInputSize() >= _inputIDs.size() because the solver may have extra rows
+  // for the polynomial system (those rows stay zero for the RBF-only part).
   Eigen::MatrixXd in(_rbfSolver.getInputSize(), nComponents);
 
-  // Now we perform the data mapping component-wise
+  // STEP 1: Extract the relevant global input data into a dense local matrix.
+  // We only pull values for vertices that belong to this cluster (_inputIDs),
+  // ignoring all other global vertices. The polynomial rows (beyond inputIDs)
+  // remain zero-initialized — the solver expects zeros there.
   for (unsigned int i = 0; i < _inputIDs.size(); i++) {
-    // Step 1: extract the relevant input data from the global input data and store
-    // it in a contiguous array, which is required for the RBF solver (last polyparams entries remain zero)
     for (unsigned int c = 0; c < nComponents; ++c) {
-      const auto dataIndex = *(_inputIDs.nth(i));
+      const auto dataIndex = *(_inputIDs.nth(i)); // global vertex ID → flat array offset
       PRECICE_ASSERT(dataIndex * nComponents + c < localInData.size(), dataIndex * nComponents + c, localInData.size());
       in(i, c) = localInData[dataIndex * nComponents + c];
     }
   }
 
-  // Step 2: solve the system using a consistent constraint
+  // STEP 2: Solve the local RBF system (consistent).
+  // Internally: coeffs = C^{-1} * in, result = A * coeffs
+  // result has shape (nOutputInCluster × nComponents).
   Eigen::MatrixXd result = _rbfSolver.solveConsistent(in, _polynomial);
   PRECICE_ASSERT(static_cast<Eigen::Index>(_outputIDs.size() * nComponents) == result.size());
 
-  // Step 3: now accumulate the result into our global output data
+  // STEP 3: Scale each local result by this cluster's PU weight, then accumulate
+  // into the global output vector at the correct global vertex positions.
+  // The PU weight ensures that overlapping cluster contributions sum to 1.
   for (unsigned int i = 0; i < _outputIDs.size(); ++i) {
     for (unsigned int c = 0; c < nComponents; ++c) {
-      const auto dataIndex = *(_outputIDs.nth(i));
+      const auto dataIndex = *(_outputIDs.nth(i)); // local row i → global vertex ID
       PRECICE_ASSERT(dataIndex * nComponents + c < outData.size(), dataIndex * nComponents + c, outData.size());
       PRECICE_ASSERT(_normalizedWeights[i] > 0);
-      // here, we also directly apply the weighting, i.e., split the result data
+      // Multiply by the normalized Shepard weight before accumulation.
+      // When all clusters have done this, the sum at each output vertex equals
+      // the fully weighted interpolated value (PU property guaranteed).
       outData[dataIndex * nComponents + c] += result(i, c) * _normalizedWeights[i];
     }
   }
@@ -337,9 +462,32 @@ void SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::mapConsistent(const time::
 template <typename RADIAL_BASIS_FUNCTION_T>
 double SphericalVertexCluster<RADIAL_BASIS_FUNCTION_T>::computeWeight(const mesh::Vertex &v) const
 {
-  // Assume that the local interpolant and the weighting function are the same
-  // TODO: We don't need to reduce the dead coordinates here as the values should reduce anyway
+  /**
+   * SHEPARD WEIGHT COMPUTATION
+   *
+   * Returns the unnormalized weight w_c(v) for vertex v in this cluster.
+   * The weight is evaluated using the cluster's `_weightingFunction`, which
+   * is a `CompactPolynomialC2` (Wendland C2) kernel with support radius = _radius:
+   *
+   *   w_c(v) = phi_C2(dist(v, center) / radius)
+   *          = (1 - r)^4 * (4r + 1),   r = dist / radius
+   *
+   * Properties:
+   * - w_c(v) == 0 exactly when dist(v, center) >= radius  (compact support).
+   * - w_c(v) > 0 for all v strictly inside the sphere.
+   * - Smooth (C^2): two continuous derivatives, ensuring smooth blending.
+   *
+   * These weights are later normalized by PartitionOfUnityMapping::computeNormalizedWeight():
+   *   W_c(v) = w_c(v) / Σ_{k} w_k(v),  so that Σ_c W_c(v) = 1 (PU property).
+   *
+   * Note: dead axes are not considered here — because all 3 components of the
+   * 3D coordinates are used, and a dead axis has identical values for all vertices,
+   * so the coordinate difference along that axis is 0 anyway.
+   */
+  // Compute squared Euclidean distance from query vertex to the cluster center.
+  // We use all 3 components (dead axes contribute 0 difference automatically).
   auto res = computeSquaredDifference(_center.rawCoords(), v.rawCoords(), {{true, true, true}});
+  // Evaluate the Wendland C2 weight function at this distance.
   return _weightingFunction.evaluate(std::sqrt(res));
 }
 

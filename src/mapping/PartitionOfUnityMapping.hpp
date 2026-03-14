@@ -21,6 +21,59 @@ extern bool syncMode;
 namespace mapping {
 
 /**
+ * @file PartitionOfUnityMapping.hpp
+ * @brief RBF mapping using the Partition-of-Unity Method (PUM).
+ *
+ * ## Why Partition-of-Unity?
+ * A global RBF mapping (see `RadialBasisFctMapping`) builds ONE large interpolation
+ * matrix from ALL vertices in the domain. This becomes expensive (O(n^3) setup,
+ * O(n^2) solve) for large meshes. PUM decomposes the problem into many small,
+ * overlapping **local sub-problems** (clusters), each solved independently.
+ *
+ * ## How It Works (3 Phases)
+ *
+ * ### Phase 1 — Spatial Clustering (`computeMapping`)
+ * The domain is partitioned into overlapping spherical clusters:
+ *   - `impl::createClustering()` places cluster centers on a Cartesian grid.
+ *   - Each cluster has radius `_clusterRadius`, chosen so that each sphere
+ *     contains roughly `_verticesPerCluster` input vertices.
+ *   - Clusters overlap by `_relativeOverlap` × radius.
+ *
+ * ### Phase 2 — Local RBF Systems (`SphericalVertexCluster` constructor)
+ * For every cluster, a `SphericalVertexCluster` is constructed, which:
+ *   - Collects input and output vertices inside its sphere.
+ *   - Builds a **dense** local RBF matrix C (small, ≈ verticesPerCluster × verticesPerCluster).
+ *   - Decomposes C (Cholesky or QR) for efficient repeated solves.
+ *
+ * ### Phase 3 — Blending with Shepard Weights (`computeNormalizedWeight`)
+ * Each output vertex can belong to multiple overlapping clusters. We blend their
+ * local interpolation results using normalized Shepard weights (W_c):
+ *
+ *   W_c(x) = phi_c(x) / Σ_k phi_k(x),  where phi_c is a Wendland C2 weight
+ *
+ * This guarantees **partition-of-unity**: Σ_c W_c(x) = 1.
+ * The final mapped value at output vertex x is:
+ *   f(x) = Σ_c W_c(x) * s_c(x)
+ * where s_c(x) is the local RBF interpolant of cluster c.
+ *
+ * ## Choosing Between PUM and Global RBF
+ * | Criterion             | Global RBF           | PUM                     |
+ * |-----------------------|----------------------|-------------------------|
+ * | Mesh size             | Small (< ~5k pts)    | Large (> ~5k pts)       |
+ * | Memory                | O(n^2)               | O(n * vertPerCluster)   |
+ * | Setup cost            | O(n^3)               | O(n * k^3/vertPerCluster)|
+ * | Accuracy              | High                 | Slightly lower at seams |
+ * | GPU support           | Via Ginkgo           | Via Kokkos              |
+ *
+ * ## Class Hierarchy
+ * `PartitionOfUnityMapping<RBF>` → `Mapping`
+ *   owns: `std::vector<SphericalVertexCluster<RBF>>`
+ *     each cluster owns: `RadialBasisFctSolver<RBF>`
+ *
+ * This class handles only orchestration; all math is inside `SphericalVertexCluster`.
+ */
+
+/**
  * Mapping using partition of unity decomposition strategies: The class here inherits from the Mapping
  * class and orchestrates the partitions (called vertex clusters) in order to represent a partition of unity.
  * This means in particular that the class computes the weights for the evaluation vertices and the necessary
@@ -621,57 +674,74 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistentAt(const Eig
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
+  /**
+   * PARALLEL RE-PARTITIONING — ROUND 1 (PUM variant)
+   *
+   * Purpose: In a parallel run each MPI rank only holds a subset of the mesh.
+   * Before computeMapping() runs, preCICE must ensure every rank has all remote
+   * vertices whose cluster might need them. We "tag" those vertices so the
+   * partitioning layer knows to ship them over.
+   *
+   * Why PUM does NOT use the geometric pre-filter (unlike global RBF):
+   * -------------------------------------------------------------------
+   * Global RBF uses a bounding-box safety-factor filter to send only a local
+   * fraction of the remote mesh to each rank. For PUM this is UNSAFE because:
+   *   - PUM needs enough vertices per cluster (~verticesPerCluster).
+   *   - If we pre-filter too aggressively, some clusters may end up with too few
+   *     input vertices, causing singular RBF sub-systems or poor accuracy.
+   *   - The safety-factor is hard to set correctly for irregular/shell-like meshes.
+   *
+   * Decision: Always tag ALL remote vertices within a generous radius (2×cluster
+   * radius) of the local bounding box. This is more data than strictly needed,
+   * but it is guaranteed to be safe regardless of mesh geometry or partitioning.
+   *
+   * Tradeoff: The R*-tree used in `estimateClusterRadius` is built on the full
+   * (unfiltered) global mesh, which has O(N log N) cost. Acceptable because this
+   * runs only once during setup (not at every time step).
+   *
+   * See: https://github.com/precice/precice/pull/1912#issuecomment-2551143620
+   */
   PRECICE_TRACE();
+
+  // Determine the role of each mesh: which is "remote" (to be tagged) and which
+  // is "local" (drives the spatial filter). For conservative mappings the roles
+  // are swapped relative to consistent mappings.
   mesh::PtrMesh filterMesh, outMesh;
   if (this->hasConstraint(Mapping::CONSERVATIVE)) {
-    filterMesh = this->output(); // remote
-    outMesh    = this->input();  // local
+    filterMesh = this->output(); // remote mesh — tag vertices here
+    outMesh    = this->input();  // local mesh  — its bounding box drives the filter
   } else {
-    filterMesh = this->input();  // remote
-    outMesh    = this->output(); // local
+    filterMesh = this->input();  // remote mesh — tag vertices here
+    outMesh    = this->output(); // local mesh  — its bounding box drives the filter
   }
 
+  // Ranks with no local interface vertices do not participate in the RBF system.
   if (outMesh->empty())
     return; // Ranks not at the interface should never hold interface vertices
 
-  // The geometric filter of the repartitioning is always disabled for the PU-RBF.
-  // The main rationale: if we use only a fraction of the mesh then we might end up
-  // with too few vertices per rank and we cannot prevent too few vertices from being
-  // tagged, if we have filtered too much vertices beforehand. When using the filtering,
-  // the user could increase the safety-factor or disable the filtering, but that's
-  // a bit hard to understand for users. When no geometric filter is applid,
-  // vertices().size() is here the same as getGlobalNumberOfVertices. Hence, it is much
-  // safer to make use of the unfiltered mesh for the parallel tagging.
-  //
-  // Drawback: the "estimateClusterRadius" below makes use of the mesh R* index tree, and
-  // constructing the tree on the (unfiltered) global mesh is computationally expensive (O( N logN)).
-  // We could pre-filter the global mesh to a local fraction (using our own geometric filtering,
-  // maybe with an increased safety margin or even an iterative increase of the safety margin),
-  // but then there is again the question on how to do this in a safe way, without risking
-  // failures depending on the partitioning. So we stick here to the computationally more
-  // demanding, but safer version.
-  // See also https://github.com/precice/precice/pull/1912#issuecomment-2551143620
-
-  // Get the local bounding boxes
+  // Compute the bounding box of the local (owned) mesh.
   auto localBB = outMesh->getBoundingBox();
-  // we cannot check for empty'ness here, as a single output mesh vertex
-  // would lead to a 0D box with zero volume (considered empty). Thus, we
-  // simply check here for default'ness, which is equivalent to outMesh->empty()
-  // further above
+  // Note: a mesh with a single vertex has a 0D bounding box (zero volume, not
+  // considered "empty"), so we check for default'ness rather than emptiness.
   PRECICE_ASSERT(!localBB.isDefault());
 
+  // If this is the first call (before computeMapping set _clusterRadius),
+  // estimate the cluster radius from the mesh density.
   if (_clusterRadius == 0)
     _clusterRadius = impl::estimateClusterRadius(_verticesPerCluster, filterMesh, localBB);
 
   PRECICE_DEBUG("Cluster radius estimate: {}", _clusterRadius);
   PRECICE_ASSERT(_clusterRadius > 0);
 
-  // Now we extend the bounding box by the radius
+  // Expand the bounding box by 2× the cluster radius.
+  // Factor of 2: clusters centered at the local BB boundary can extend up to
+  // _clusterRadius into the remote mesh, and the remote cluster centers themselves
+  // can be up to another _clusterRadius from the BB edge — hence 2× total.
   localBB.expandBy(2 * _clusterRadius);
 
-  // ... and tag all affected vertices
+  // Tag all remote vertices that fall inside the expanded bounding box.
+  // These are the vertices each rank may need during local cluster construction.
   auto verticesNew = filterMesh->index().getVerticesInsideBox(localBB);
-
   std::for_each(verticesNew.begin(), verticesNew.end(), [&filterMesh](VertexID v) { filterMesh->vertex(v).tag(); });
 }
 
