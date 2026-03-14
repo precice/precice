@@ -126,13 +126,25 @@ private:
 
 // ------- Non-Member Functions ---------
 
-/// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
+/// Computes the squared Euclidean distance between two 3D coordinate arrays,
+/// optionally ignoring "dead" dimensions (dimensions with zero or negligible extent).
+///
+/// A dead axis is one where all vertices share the same coordinate value
+/// (e.g., the z-axis in a 2D planar problem). By zeroing out dead-axis
+/// contributions before squaring, the RBF kernel becomes a true 2D kernel
+/// operating only in the active plane, which is numerically better conditioned.
+///
+/// @param u         First coordinate (3 elements).
+/// @param v         Second coordinate (3 elements, passed by value to allow in-place diff).
+/// @param activeAxis Boolean mask: activeAxis[d] = true means dimension d is active.
+/// @return          Squared Euclidean distance in active dimensions only.
 inline double computeSquaredDifference(
     const std::array<double, 3> &u,
     std::array<double, 3>        v,
     const std::array<bool, 3>   &activeAxis = {{true, true, true}})
 {
-  // Subtract the values and multiply out dead dimensions
+  // Zero out dead dimensions by multiplying by 0 (static_cast<int>(false) == 0).
+  // Active dimensions keep their difference; dead dimensions contribute 0.
   for (unsigned int d = 0; d < v.size(); ++d) {
     v[d] = (u[d] - v[d]) * static_cast<int>(activeAxis[d]);
   }
@@ -140,7 +152,26 @@ inline double computeSquaredDifference(
   return std::inner_product(v.begin(), v.end(), v.begin(), 0.0);
 }
 
-/// given the active axis, computes sets the axis with the lowest spatial expansion to dead
+/// Detects and disables the axis with the smallest spatial span in the input mesh.
+///
+/// Background: In degenerate input point sets (e.g., a 2D mesh embedded in 3D,
+/// or a 3D mesh that is actually planar), the corresponding polynomial column
+/// (e.g., the z-column in the polynomial matrix Q) has near-zero variance.
+/// This leads to a very high condition number in the polynomial QR solve,
+/// causing numerical instability.
+///
+/// Strategy:
+///   1. For each currently active dimension, compute the range (max - min) of
+///      coordinate values across all input vertices.
+///   2. Sort dimensions by ascending range magnitude.
+///   3. Disable (mark dead) the dimension with the smallest range.
+///
+/// By iteratively calling this function until the condition number is acceptable,
+/// the solver automatically adapts to the intrinsic dimensionality of the data.
+///
+/// @param mesh  Input mesh providing vertex coordinates.
+/// @param IDs   Indices of the relevant vertices in the mesh.
+/// @param axis  [in/out] Boolean array; the entry for the smallest-range dimension is set to false.
 template <typename IndexContainer>
 constexpr void reduceActiveAxis(const mesh::Mesh &mesh, const IndexContainer &IDs, std::array<bool, 3> &axis)
 {
@@ -164,7 +195,24 @@ constexpr void reduceActiveAxis(const mesh::Mesh &mesh, const IndexContainer &ID
   axis[differences[0].first] = false;
 }
 
-// Fill in the polynomial entries
+/// Fills polynomial basis columns in a pre-allocated Eigen matrix.
+///
+/// The polynomial basis used here is a linear basis: {1, x, y, z} evaluated
+/// at each mesh vertex. Only active (non-dead) axes contribute linear terms.
+///
+/// For vertex i with coordinate (x, y, z), columns are filled starting at `startIndex`:
+///   matrix(i, startIndex + 0) = 1          // constant term
+///   matrix(i, startIndex + 1) = x          // linear term in first active axis
+///   matrix(i, startIndex + 2) = y          // linear term in second active axis
+///   matrix(i, startIndex + 3) = z          // linear term in third active axis  (if active)
+///
+/// Dead axes are skipped so the column count = 1 + count(activeAxis == true).
+///
+/// @param matrix     Matrix to fill (rows = nVertices, columns >= startIndex + polyParams).
+/// @param mesh       Mesh containing vertex coordinates.
+/// @param IDs        Vertex ID list defining row ordering.
+/// @param startIndex Column index at which polynomial columns begin.
+/// @param activeAxis Boolean mask identifying active dimensions.
 template <typename IndexContainer>
 inline void fillPolynomialEntries(Eigen::MatrixXd &matrix, const mesh::Mesh &mesh, const IndexContainer &IDs, Eigen::Index startIndex, std::array<bool, 3> activeAxis)
 {
@@ -434,7 +482,30 @@ inline Eigen::VectorXd computeInverseDiagonal(Eigen::ColPivHouseholderQR<Eigen::
 template <typename RADIAL_BASIS_FUNCTION_T>
 double RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::evaluateRippaLOOCVerror(const Eigen::VectorXd &lambda) const
 {
-  // Implementation of LOOCV according to Rippa(1999), DOI: 10.1023/a:1018975909870
+  /**
+   * LEAVE-ONE-OUT CROSS VALIDATION (LOOCV) USING RIPPA'S FORMULA
+   *
+   * Rippa (1999) showed that for RBF interpolation, the leave-one-out error
+   * at each input point i can be computed cheaply as:
+   *
+   *     e_i = lambda_i / [C^{-1}]_ii
+   *
+   * where:
+   *   - lambda_i : the i-th RBF coefficient from the solve C * lambda = inputData
+   *   - [C^{-1}]_ii : the i-th diagonal entry of the inverse kernel matrix C^{-1}
+   *                   (precomputed and stored in _inverseDiagonal)
+   *
+   * Interpretation: e_i estimates how much the interpolant at point i would change
+   * if that point had been left out of the fit. Large e_i means the mapping may
+   * have poor generalization quality at point i.
+   *
+   * The aggregated error is the RMS (root mean square) of all per-point estimates:
+   *   LOOCV = sqrt( (1/n) * sum_i (lambda_i / [C^{-1}]_ii)^2 )
+   *
+   * Reference: Rippa, S. (1999). An algorithm for selecting a good value for
+   * the parameter c in radial basis function interpolation. Advances in Computational
+   * Mathematics, 11(2-3), 193-210. DOI: 10.1023/A:1018975909870
+   */
   double             loocv = 0;
   const Eigen::Index n     = lambda.size();
   // 2: Next, compute the RBF coefficient. These are exactly the same as computed during
@@ -920,6 +991,9 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::evaluateConservativeCache(Ei
 template <typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::clear()
 {
+  // Release memory held by the evaluation matrix and the matrix decomposition.
+  // After clear(), the solver must not be used until re-initialized via the constructor.
+  // Assigning a default-constructed object is the idiomatic Eigen way to free memory.
   _matrixA    = Eigen::MatrixXd();
   _decMatrixC = DecompositionType();
 }
@@ -927,18 +1001,27 @@ void RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::clear()
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::Index RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getInputSize() const
 {
+  /// Returns the number of columns in the decomposed kernel matrix C.
+  /// This equals the number of input vertices (plus polynomial parameters if polynomial=ON).
+  /// It determines the length of the RBF coefficient vector lambda.
   return _decMatrixC.cols();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::Index RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getOutputSize() const
 {
+  /// Returns the number of rows of the evaluation matrix A.
+  /// This equals the number of output vertices at which we evaluate the RBF interpolant.
   return _matrixA.rows();
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
 Eigen::Index RadialBasisFctSolver<RADIAL_BASIS_FUNCTION_T>::getNumberOfPolynomials() const
 {
+  /// Returns the total number of polynomial basis terms for the SEPARATE polynomial mode.
+  /// Formula: 1 (constant term) + number of active dimensions (linear terms).
+  /// Example: for a 3D problem with all axes active: 1 + 3 = 4.
+  ///          for a 2D problem (one dead axis):       1 + 2 = 3.
   return 1 + std::count(_localActiveAxis.begin(), _localActiveAxis.end(), true);
 }
 

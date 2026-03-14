@@ -63,17 +63,33 @@ void CompositionalCouplingScheme::checkCompatibleTimeWindowSizes(const CouplingS
 void CompositionalCouplingScheme::addCouplingScheme(
     const PtrCouplingScheme &couplingScheme)
 {
+  /**
+   * REGISTER A COUPLING SUB-SCHEME
+   *
+   * The compositional scheme maintains exactly ONE implicit sub-scheme and any number
+   * of explicit sub-schemes.  Constraints:
+   *   - Only one implicit scheme is allowed (PRECICE_ASSERT guards this).
+   *   - Explicit and implicit time window sizes must be compatible immediately
+   *     upon registration so that mismatches are caught early.
+   *
+   * Registration order doesn't matter: whether explicit schemes are registered
+   * before or after the implicit scheme, compatibility is checked both ways.
+   */
   PRECICE_TRACE();
   if (!couplingScheme->isImplicitCouplingScheme()) {
+    // Register explicit scheme and verify its time window aligns with the
+    // implicit scheme (if one is already registered).
     _explicitSchemes.emplace_back(couplingScheme);
 
     if (_implicitScheme) {
       checkCompatibleTimeWindowSizes(*_implicitScheme, *couplingScheme);
     }
   } else {
+    // Register the implicit scheme. Ensure no duplicate implicit scheme.
     PRECICE_ASSERT(_implicitScheme == nullptr);
     _implicitScheme = couplingScheme;
 
+    // Verify compatibility against all previously registered explicit schemes.
     for (const auto &scheme : _explicitSchemes) {
       checkCompatibleTimeWindowSizes(*_implicitScheme, *scheme);
     }
@@ -82,6 +98,14 @@ void CompositionalCouplingScheme::addCouplingScheme(
 
 void CompositionalCouplingScheme::initialize()
 {
+  /**
+   * INITIALIZE ALL SUB-SCHEMES AND SET UP THE ACTIVE SCHEME LIST
+   *
+   * On startup, ALL sub-schemes (implicit and explicit) are both initialized
+   * and placed into _activeSchemes. They advance together during the first
+   * time window iteration. The implicit scheme may later put explicit schemes
+   * on hold (via _explicitOnHold) if it needs to iterate for convergence.
+   */
   PRECICE_TRACE();
   PRECICE_ASSERT(_activeSchemes.empty());
   for (const auto scheme : allSchemes()) {
@@ -98,6 +122,12 @@ void CompositionalCouplingScheme::reinitialize()
 
 bool CompositionalCouplingScheme::sendsInitializedData() const
 {
+  /**
+   * Returns true if ANY sub-scheme sends initialized data.
+   * A compositional scheme is considered to send initialized data when at least
+   * one of its constituent schemes does (e.g., the implicit scheme initializes
+   * data while explicit schemes do not).
+   */
   PRECICE_TRACE();
   auto schemes              = allSchemes();
   bool sendsInitializedData = std::any_of(schemes.begin(), schemes.end(), std::mem_fn(&CouplingScheme::sendsInitializedData));
@@ -107,6 +137,11 @@ bool CompositionalCouplingScheme::sendsInitializedData() const
 
 bool CompositionalCouplingScheme::isInitialized() const
 {
+  /**
+   * Returns true if ANY sub-scheme has been initialized.
+   * Uses short-circuit OR logic: the first initialized scheme is sufficient
+   * to consider the composite scheme initialized.
+   */
   PRECICE_TRACE();
   auto schemes       = allSchemes();
   bool isInitialized = std::any_of(schemes.begin(), schemes.end(), std::mem_fn(&CouplingScheme::isInitialized));
@@ -199,6 +234,18 @@ CouplingScheme::ChangedMeshes CompositionalCouplingScheme::firstSynchronization(
 
 void CompositionalCouplingScheme::firstExchange()
 {
+  /**
+   * FIRST DATA EXCHANGE FOR ALL ACTIVE SUB-SCHEMES
+   *
+   * The exchange order follows the implicit-first rule:
+   *   1. If there is an implicit scheme, it always exchanges first, regardless
+   *      of whether explicit schemes are on hold.
+   *   2. If explicit schemes are currently on hold (implicit is still iterating),
+   *      we return immediately after the implicit exchange — explicit schemes
+   *      must not exchange until convergence is achieved.
+   *   3. Otherwise (first iteration through the window), both implicit and
+   *      explicit schemes exchange in sequence.
+   */
   PRECICE_TRACE();
 
   if (!isImplicitCouplingScheme()) {
@@ -336,6 +383,13 @@ void CompositionalCouplingScheme::finalize()
 
 std::vector<std::string> CompositionalCouplingScheme::getCouplingPartners() const
 {
+  /**
+   * Returns all coupling partners across every sub-scheme.
+   *
+   * Each sub-scheme may couple the local participant to one or more remote
+   * participants. This function collects them all into a flat list, giving
+   * callers a unified view of every participant this node is coupled to.
+   */
   PRECICE_TRACE();
   std::vector<std::string> partners;
   for (const auto scheme : allSchemes()) {
@@ -347,6 +401,14 @@ std::vector<std::string> CompositionalCouplingScheme::getCouplingPartners() cons
 
 std::string CompositionalCouplingScheme::localParticipant() const
 {
+  /**
+   * Returns the local participant name.
+   *
+   * We use the first explicit scheme as the reference because every participant
+   * in the composition shares the same local identity. If no explicit scheme
+   * is registered, this case should not arise (PRECICE_ASSERT guards it).
+   * The implicit scheme could also be used, but explicit is always present.
+   */
   PRECICE_TRACE();
   PRECICE_ASSERT(!_explicitSchemes.empty());
   return _explicitSchemes.front()->localParticipant();
@@ -473,6 +535,16 @@ double CompositionalCouplingScheme::getNextTimeStepMaxSize() const
 
 bool CompositionalCouplingScheme::isCouplingOngoing() const
 {
+  /**
+   * Reports whether the overall coupling simulation is still running.
+   *
+   * When an implicit scheme is present it is always the authority: it may be
+   * mid-iteration (behind the explicit time) or fully in sync, but in either
+   * case its "ongoing" flag correctly reflects the global simulation state.
+   * All explicit schemes are always time-synchronized once the implicit scheme
+   * converges, so querying just the implicit scheme (or the first explicit
+   * scheme when there is no implicit) is sufficient.
+   */
   PRECICE_TRACE();
   if (_implicitScheme) {
     // The implicit scheme is either the one that has to catch up, or all schemes are in sync
@@ -552,6 +624,23 @@ std::string CompositionalCouplingScheme::printCouplingState() const
 
 void CompositionalCouplingScheme::updateActiveSchemes()
 {
+  /**
+   * MAINTAIN THE ACTIVE SCHEME SET
+   *
+   * _activeSchemes controls which sub-schemes participate in the current
+   * time step. It is updated whenever implicit-convergence status changes:
+   *
+   *   Case 1: No implicit scheme
+   *     → Explicit schemes are always in sync and always active.
+   *       Nothing to do.
+   *
+   *   Case 2: Implicit scheme present, _explicitOnHold == true
+   *     → Implicit scheme is iterating. Only it remains active.
+   *       Explicit schemes are excluded until convergence.
+   *
+   *   Case 3: Implicit scheme present, _explicitOnHold == false
+   *     → All schemes (implicit + explicit) are active and in sync.
+   */
   if (_implicitScheme == nullptr) {
     // We only have explicit schemes, which are always in sync and thus always run together
     // Active schemes never change, so there is nothing to do
@@ -578,6 +667,16 @@ void CompositionalCouplingScheme::updateActiveSchemes()
 
 std::vector<CouplingScheme *> CompositionalCouplingScheme::allSchemes() const
 {
+  /**
+   * Returns a flat list of all registered sub-schemes (implicit + explicit).
+   *
+   * The implicit scheme, if present, is appended at the back of the explicit
+   * list. Callers that need to visit every sub-scheme regardless of hold-state
+   * (e.g., finalize(), getCouplingPartners()) use this function.
+   *
+   * Contrast with activeOrAllSchemes(): that function returns only the schemes
+   * that are currently advancing (may exclude explicit schemes when on hold).
+   */
   std::vector<CouplingScheme *> cpls(_explicitSchemes.size());
   if (_implicitScheme) {
     cpls.push_back(_implicitScheme.get());
@@ -588,6 +687,18 @@ std::vector<CouplingScheme *> CompositionalCouplingScheme::allSchemes() const
 
 std::vector<CouplingScheme *> CompositionalCouplingScheme::activeOrAllSchemes() const
 {
+  /**
+   * Returns the currently active sub-schemes, or all schemes if none are active yet.
+   *
+   * _activeSchemes is managed by updateActiveSchemes() and reflects which
+   * sub-schemes are advancing in the current time step:
+   *   - Before initialize():  empty → falls back to allSchemes().
+   *   - During implicit hold: only the implicit scheme is active.
+   *   - Normal advance:       all schemes (implicit + explicit) are active.
+   *
+   * This function is used by methods that should only act on schemes that are
+   * currently participating (e.g., isActionRequired, markActionFulfilled).
+   */
   return _activeSchemes.empty() ? allSchemes() : _activeSchemes;
 }
 
@@ -598,6 +709,15 @@ bool CompositionalCouplingScheme::isImplicitCouplingScheme() const
 
 bool CompositionalCouplingScheme::hasConverged() const
 {
+  /**
+   * Convergence status of the composite scheme.
+   *
+   * A compositional scheme without an implicit sub-scheme is always considered
+   * converged (explicit coupling never iterates). When an implicit scheme is
+   * present, convergence is entirely determined by whether it has converged.
+   * Explicit schemes are temporarily frozen during implicit iterations, so
+   * they contribute no independent convergence criterion.
+   */
   if (!isImplicitCouplingScheme()) {
     return true;
   }
@@ -607,6 +727,14 @@ bool CompositionalCouplingScheme::hasConverged() const
 
 bool CompositionalCouplingScheme::requiresSubsteps() const
 {
+  /**
+   * Returns true if ANY sub-scheme requires substeps within a time window.
+   *
+   * Substeps are needed when a solver uses sub-cycling (smaller internal
+   * time steps than the coupling window). If at least one constituent scheme
+   * requires substeps, the composite scheme must also support them so that
+   * intermediate data exchange happens at each sub-step boundary.
+   */
   for (auto scheme : allSchemes()) {
     if (scheme->requiresSubsteps()) {
       return true;
@@ -617,6 +745,16 @@ bool CompositionalCouplingScheme::requiresSubsteps() const
 
 ImplicitData CompositionalCouplingScheme::implicitDataToReceive() const
 {
+  /**
+   * Returns the implicit data that the local participant expects to receive.
+   *
+   * Only the implicit sub-scheme participates in iterative data exchange,
+   * so only its implicit data specification is relevant here. Explicit
+   * sub-schemes exchange data once per time window without iteration,
+   * so they contribute nothing to implicit-receive bookkeeping.
+   *
+   * Returns an empty ImplicitData if no implicit scheme is registered.
+   */
   if (_implicitScheme) {
     return _implicitScheme->implicitDataToReceive();
   }

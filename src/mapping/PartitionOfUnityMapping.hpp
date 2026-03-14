@@ -526,6 +526,24 @@ template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservativeAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const Eigen::Ref<const Eigen::MatrixXd> &source,
                                                                          impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd>)
 {
+  /**
+   * JUST-IN-TIME CONSERVATIVE MAPPING (per-query accumulation phase)
+   *
+   * This function is the per-query write side of the JIT conservative mapping.
+   * Rather than building a full evaluation matrix A upfront, the mapping accumulates
+   * contributions into a cache (Au, polynomialContributions) vertex by vertex.
+   *
+   * For each incoming write vertex:
+   *   1. Find all clusters whose domains contain this vertex.
+   *   2. Scale the source data by the normalized partition of unity weight.
+   *   3. Accumulate the weighted contribution into each relevant cluster's cache entry.
+   *
+   * The accumulated cache is later finalized by completeJustInTimeMapping(),
+   * which solves the RBF system and writes results to the output mesh.
+   *
+   * NOTE: The target (Eigen::Ref<Eigen::MatrixXd>) parameter is intentionally unused
+   * here — intermediate results are stored directly in the cache until finalized.
+   */
   precice::profiling::Event e("map.pou.mapConservativeAt.From" + input()->getName());
   // @todo: it would most probably be more efficient to first group the vertices we receive here according to the clusters and then compute the solution
 
@@ -535,16 +553,21 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservativeAt(const E
   PRECICE_ASSERT(cache.polynomialContributions.size() == _clusters.size());
   PRECICE_ASSERT(!_useBatchedSolver, "Not implemented"); // The PRECICE_CHECK is earlier
 
+  // Reuse a single Vertex object across the loop to avoid repeated heap allocations.
   mesh::Vertex vertex(coordinates.col(0), -1);
   for (Eigen::Index v = 0; v < coordinates.cols(); ++v) {
     vertex.setCoords(coordinates.col(v));
+
+    // Determine which clusters contain this vertex and obtain Shepard normalized weights.
     auto [clusterIDs, normalizedWeights] = computeNormalizedWeight(vertex, this->input()->getName());
-    // Use the weight to interpolate the solution
+
+    // For each covering cluster, add the weighted write data into the cluster's cache.
+    // cache.p[id]                    stores the accumulated A^T * (weight * source) terms.
+    // cache.polynomialContributions[id] stores the polynomial moment accumulations.
     for (std::size_t i = 0; i < clusterIDs.size(); ++i) {
       PRECICE_ASSERT(clusterIDs[i] < static_cast<int>(_clusters.size()));
-      auto id = clusterIDs[i];
-      // the input mesh refers here to a consistent constraint
-      Eigen::VectorXd res = normalizedWeights[i] * source.col(v);
+      auto            id  = clusterIDs[i];
+      Eigen::VectorXd res = normalizedWeights[i] * source.col(v); // scale by PU weight
       _clusters[id].addWriteDataToCache(vertex, res, cache.polynomialContributions[id], cache.p[id], *this->output().get());
     }
   }
@@ -553,13 +576,29 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConservativeAt(const E
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::completeJustInTimeMapping(impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> buffer)
 {
+  /**
+   * FINALIZE JUST-IN-TIME CONSERVATIVE MAPPING
+   *
+   * This function is the complement of mapConservativeAt(). After all per-query
+   * write data has been accumulated into the cache, this function finalizes the
+   * mapping by solving each cluster's linear system and writing results to `buffer`.
+   *
+   * For each cluster with non-zero accumulated data:
+   *   1. Solve:  out_c = C_c^{-1} * Au_c   (RBF coefficients for cluster c)
+   *   2. Apply optional polynomial correction (if SEPARATE polynomial mode)
+   *   3. Accumulate result into the shared output buffer.
+   *
+   * The zero-norm check avoids unnecessary solves for clusters that received
+   * no write data during this time window (e.g., clusters far from the write vertices).
+   */
   PRECICE_TRACE();
   PRECICE_ASSERT(!cache.p.empty());
   PRECICE_ASSERT(!cache.polynomialContributions.empty());
   precice::profiling::Event e("map.pou.completeJustInTimeMapping.From" + input()->getName());
 
   for (std::size_t c = 0; c < _clusters.size(); ++c) {
-    // If there is no contribution, we don't have to evaluate
+    // Skip clusters with no accumulated data (squaredNorm == 0 ⇔ all-zeros cache).
+    // This avoids a redundant solve for clusters that were never written to.
     if (cache.p[c].squaredNorm() > 0) {
       _clusters[c].evaluateConservativeCache(cache.polynomialContributions[c], cache.p[c], buffer);
     }
@@ -569,10 +608,27 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::completeJustInTimeMapping
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::initializeMappingDataCache(impl::MappingDataCache &cache)
 {
+  /**
+   * INITIALIZE JIT MAPPING CACHE
+   *
+   * Prepares per-cluster cache buffers used by the just-in-time (JIT) mapping path.
+   * This must be called once after computeMapping() and before any JIT mapping calls.
+   *
+   * For each cluster:
+   *   - cache.p[c]:                     accumulation buffer for A^T * data  (size: inputVertices x dataDims)
+   *   - cache.polynomialContributions[c]: accumulation buffer for polynomial moments (size: polyParams x dataDims)
+   *
+   * Both buffers are zero-initialized so that per-query addWriteDataToCache() calls
+   * accumulate correctly into a clean slate each time window.
+   */
   PRECICE_TRACE();
   PRECICE_ASSERT(_hasComputedMapping);
+
+  // Resize the per-cluster cache vectors to match the current cluster count.
   cache.p.resize(_clusters.size());
   cache.polynomialContributions.resize(_clusters.size());
+
+  // Let each cluster size and zero-initialize its own cache sub-buffers.
   for (std::size_t c = 0; c < _clusters.size(); ++c) {
     _clusters[c].initializeCacheData(cache.polynomialContributions[c], cache.p[c], cache.getDataDimensions());
   }
@@ -581,11 +637,31 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::initializeMappingDataCach
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(impl::MappingDataCache &cache, const Eigen::Ref<const Eigen::VectorXd> &in)
 {
-  // We cannot synchronize this event, as the call to this function is rank-local only
+  /**
+   * UPDATE MAPPING DATA CACHE (JIT consistent precomputation)
+   *
+   * Precomputes and caches the RBF coefficients (lambda) for the current input data.
+   * This is the precomputation phase of the JIT consistent mapping:
+   *   - Solve:  C_c * lambda_c = in_c   for each cluster c
+   *   - Store lambda_c in cache.p[c] for reuse across multiple query calls.
+   *
+   * The flat input vector `in` is reshaped into a (dataDims x nVertices) matrix
+   * because each cluster's solve operates on multiple data components simultaneously.
+   *
+   * Called once per time step (when new input data arrives).
+   * Queries at arbitrary output locations then use mapConsistentAt() to evaluate.
+   *
+   * NOTE: This event is NOT synchronized across ranks because the call is rank-local.
+   */
   precice::profiling::Event e("map.pou.updateMappingDataCache.From" + input()->getName());
   PRECICE_ASSERT(cache.p.size() == _clusters.size());
   PRECICE_ASSERT(cache.polynomialContributions.size() == _clusters.size());
+
+  // Reshape the flat input vector into (dataDimensions x nInputVertices) matrix.
+  // This allows each cluster to process all data dimensions simultaneously.
   Eigen::Map<const Eigen::MatrixXd> inMatrix(in.data(), cache.getDataDimensions(), in.size() / cache.getDataDimensions());
+
+  // For each cluster: solve the local RBF system and store coefficients in cache.
   for (std::size_t c = 0; c < _clusters.size(); ++c) {
     _clusters[c].computeCacheData(inMatrix, cache.polynomialContributions[c], cache.p[c]);
   }
@@ -594,24 +670,45 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::updateMappingDataCache(im
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistentAt(const Eigen::Ref<const Eigen::MatrixXd> &coordinates, const impl::MappingDataCache &cache, Eigen::Ref<Eigen::MatrixXd> values)
 {
+  /**
+   * JUST-IN-TIME CONSISTENT MAPPING (per-query evaluation phase)
+   *
+   * Evaluates the RBF interpolant at arbitrary query locations using precomputed
+   * RBF coefficients stored in `cache` (filled by updateMappingDataCache()).
+   *
+   * For each query point:
+   *   1. Find all clusters whose domains contain the query point.
+   *   2. Compute the Shepard normalized PU weight for each covering cluster.
+   *   3. Evaluate the cluster's local RBF interpolant at the query location.
+   *   4. Accumulate the weighted contribution into the output vector.
+   *
+   * Result at query v:  values(v) = Σ_c  W_c(v) * RBF_c(precomputed_lambda_c, v)
+   *
+   * This partner function to updateMappingDataCache() enables efficient repeated
+   * evaluation at different query locations without re-solving the linear system.
+   */
   precice::profiling::Event e("map.pou.mapConsistentAt.From" + input()->getName());
   // @todo: it would most probably be more efficient to first group the vertices we receive here according to the clusters and then compute the solution
   PRECICE_TRACE();
   PRECICE_ASSERT(_centerMesh);
   PRECICE_ASSERT(!_useBatchedSolver, "Not implemented"); // The PRECICE_CHECK is earlier
 
-  // First, make sure that everything is reset before we start
+  // Zero the output buffer before accumulating cluster contributions.
   values.setZero();
 
+  // Reuse a single Vertex object to avoid repeated heap allocations in the loop.
   mesh::Vertex vertex(coordinates.col(0), -1);
   for (Eigen::Index v = 0; v < values.cols(); ++v) {
     vertex.setCoords(coordinates.col(v));
+
+    // Find covering clusters and their normalized PU weights for this query point.
     auto [clusterIDs, normalizedWeights] = computeNormalizedWeight(vertex, this->output()->getName());
-    // Use the weight to interpolate the solution
+
+    // Blend contributions from all covering clusters (weighted sum).
     for (std::size_t i = 0; i < clusterIDs.size(); ++i) {
       PRECICE_ASSERT(clusterIDs[i] < static_cast<int>(_clusters.size()));
-      auto id = clusterIDs[i];
-      // the input mesh refers here to a consistent constraint
+      auto            id       = clusterIDs[i];
+      // Evaluate cluster's RBF interpolant at query vertex, then scale by PU weight.
       Eigen::VectorXd localRes = normalizedWeights[i] * _clusters[id].interpolateAt(vertex, cache.polynomialContributions[id], cache.p[id], *this->input().get());
       values.col(v) += localRes;
     }
@@ -621,7 +718,32 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::mapConsistentAt(const Eig
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshFirstRound()
 {
+  /**
+   * MESH TAGGING — FIRST ROUND (decide which remote vertices are needed locally)
+   *
+   * preCICE uses a two-round tagging mechanism to determine which remote mesh vertices
+   * each rank needs to receive. In the first round, each rank tags the remote vertices
+   * that fall within its local region of interest.
+   *
+   * For PUM-RBF mappings the strategy is:
+   *   1. Compute (or estimate) the cluster radius for the local output mesh.
+   *   2. Expand the local bounding box by 2 × clusterRadius in every direction.
+   *      This inflation ensures we capture all input vertices that could belong to
+   *      a cluster centered on, or near, the local output region.
+   *   3. Tag every remote vertex that falls inside the expanded bounding box.
+   *
+   * WHY NO GEOMETRIC FILTER HERE?
+   * The standard repartitioning geometric filter is intentionally disabled for PUM-RBF.
+   * If we pre-filter the remote mesh too aggressively, some ranks may end up with too
+   * few tagged vertices, leading to under-populated clusters. Tagging from the full
+   * unfiltered global mesh is computationally heavier (O(N log N) index build) but is
+   * the only safe approach. See the detailed rationale in the long comment below and:
+   * https://github.com/precice/precice/pull/1912#issuecomment-2551143620
+   */
   PRECICE_TRACE();
+
+  // Assign filterMesh (remote) and outMesh (local) depending on constraint type.
+  // For conservative mappings the roles of input and output are swapped.
   mesh::PtrMesh filterMesh, outMesh;
   if (this->hasConstraint(Mapping::CONSERVATIVE)) {
     filterMesh = this->output(); // remote
@@ -684,11 +806,31 @@ void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::tagMeshSecondRound()
 template <typename RADIAL_BASIS_FUNCTION_T>
 void PartitionOfUnityMapping<RADIAL_BASIS_FUNCTION_T>::exportClusterCentersAsVTU(mesh::Mesh &centerMesh)
 {
+  /**
+   * EXPORT CLUSTER CENTERS AS VTU (debug visualization)
+   *
+   * Exports the cluster center positions along with per-cluster metadata as a VTU file
+   * for offline visualization (e.g., in ParaView). Only active in debug builds.
+   *
+   * Each cluster center vertex carries two data fields:
+   *   - "radius":            uniform cluster radius (_clusterRadius) for all clusters.
+   *   - "number-of-vertices": how many input mesh vertices belong to each cluster.
+   *
+   * PARALLEL EXPORT LOGIC:
+   * VTU export requires globally consistent vertex offsets so that each rank knows
+   * where its vertices sit in the global array. The protocol is:
+   *   - Secondary ranks send their local vertex count to rank 0.
+   *   - Rank 0 computes prefix-sum offsets and broadcasts them back to all ranks.
+   *   - Every rank sets the shared offsets on its centerMesh before calling doExport().
+   */
   PRECICE_TRACE();
 
+  // Create per-cluster data arrays on the center mesh.
   auto dataRadius      = centerMesh.createData("radius", 1, -1);
   auto dataCardinality = centerMesh.createData("number-of-vertices", 1, -1);
   centerMesh.allocateDataValues();
+
+  // Fill radius (same for all clusters) and cardinality (input vertex count per cluster).
   dataRadius->values().fill(_clusterRadius);
   for (unsigned int i = 0; i < _clusters.size(); ++i) {
     dataCardinality->values()[i] = static_cast<double>(_clusters[i].getNumberOfInputVertices());
