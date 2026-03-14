@@ -19,6 +19,11 @@ constexpr const char *MODE_FUNDAMENTAL   = "fundamental";
 constexpr const char *MODE_API           = "api";
 constexpr const char *MODE_ALL           = "all";
 
+// Runtime profiling controls
+void startProfiling();
+void stopProfiling();
+bool isProfilingActive();
+
 /**
  * @brief Configuration class for exports.
  */

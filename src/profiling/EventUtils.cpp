@@ -20,6 +20,7 @@
 #include "logging/LogMacros.hpp"
 #include "profiling/Event.hpp"
 #include "profiling/EventUtils.hpp"
+#include "profiling/config/ProfilingConfiguration.hpp"
 #include "utils/assertion.hpp"
 #include "utils/fmt.hpp"
 
@@ -224,6 +225,10 @@ void EventRegistry::clear()
 
 void EventRegistry::put(PendingEntry pe)
 {
+  if (!isProfilingActive()) {
+    return;
+  }
+
   PRECICE_ASSERT(_mode != Mode::Off, "The profiling is off.");
 
   // avoid flushing the queue when we start measuring but only if we don't explicitly want to write every entry
@@ -237,6 +242,10 @@ void EventRegistry::put(PendingEntry pe)
 
 void EventRegistry::putCritical(PendingEntry pe)
 {
+  if (!isProfilingActive()) {
+    return;
+  }
+
   PRECICE_ASSERT(_mode != Mode::Off, "The profiling is off.");
   _writeQueue.emplace_back(std::move(pe));
 }

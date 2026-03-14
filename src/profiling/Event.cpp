@@ -1,5 +1,6 @@
 #include "profiling/Event.hpp"
 #include "profiling/EventUtils.hpp"
+#include "profiling/config/ProfilingConfiguration.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
@@ -28,7 +29,10 @@ Event::~Event()
 void Event::start()
 {
   PRECICE_ASSERT(_state == State::STOPPED, _eid);
-  _state         = State::RUNNING;
+  _state = State::RUNNING;
+  if (!isProfilingActive()) {
+    return;
+  }
   auto &registry = EventRegistry::instance();
   if (!registry.accepting(_group)) {
     return;
@@ -53,7 +57,9 @@ void Event::stop()
   auto timestamp = Clock::now();
   PRECICE_ASSERT(_state == State::RUNNING, _eid);
   _state = State::STOPPED;
-
+  if (!isProfilingActive()) {
+    return;
+  }
   if (auto &er = EventRegistry::instance();
       er.accepting(_group)) {
     er.put(StopEntry{_eid, timestamp});

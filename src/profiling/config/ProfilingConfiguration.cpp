@@ -1,4 +1,5 @@
 #include "profiling/config/ProfilingConfiguration.hpp"
+#include <atomic>
 #include <cstdlib>
 #include <filesystem>
 #include <string_view>
@@ -12,6 +13,23 @@
 bool precice::syncMode = false;
 
 namespace precice::profiling {
+// Runtime profiling state
+static std::atomic<bool> profilingActive{false};
+
+void startProfiling()
+{
+  profilingActive.store(true, std::memory_order_relaxed);
+}
+
+void stopProfiling()
+{
+  profilingActive.store(false, std::memory_order_relaxed);
+}
+
+bool isProfilingActive()
+{
+  return profilingActive.load(std::memory_order_relaxed);
+}
 
 namespace {
 profiling::Mode fromString(std::string_view mode)
@@ -86,6 +104,13 @@ void ProfilingConfiguration::xmlTagCallback(
   er.setDirectory(directory.string());
 
   er.setMode(fromString(mode));
+
+  auto parsedMode = fromString(mode);
+  if (parsedMode == profiling::Mode::Off) {
+    stopProfiling();
+  } else {
+    startProfiling();
+  }
 }
 
 void applyDefaults()
@@ -100,6 +125,13 @@ void applyDefaults()
   er.setDirectory(directory.string());
 
   er.setMode(fromString(DEFAULT_MODE));
+
+  auto parsedMode = fromString(DEFAULT_MODE);
+  if (parsedMode == profiling::Mode::Off) {
+    stopProfiling();
+  } else {
+    startProfiling();
+  }
 }
 
 } // namespace precice::profiling
