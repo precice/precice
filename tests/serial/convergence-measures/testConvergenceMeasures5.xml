@@ -48,8 +48,6 @@
     <exchange data="Data1" mesh="MeshOne" from="SolverOne" to="SolverTwo" />
     <exchange data="Data2" mesh="MeshOne" from="SolverTwo" to="SolverOne" />
     <max-iterations value="100" />
-    <!-- Data3 is written by SolverTwo on its provided MeshTwo but NOT exchanged.
-         This tests issue #2442: convergence measures using non-exchanged data. -->
     <absolute-convergence-measure limit="1e-1" data="Data3" mesh="MeshTwo" />
   </coupling-scheme:serial-implicit>
 </precice-configuration>
