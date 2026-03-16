@@ -181,10 +181,10 @@ MappingConfiguration::MappingConfiguration(
   // First, we create the available tags
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag>  projectionTags{
-      XMLTag{*this, TYPE_NEAREST_NEIGHBOR, occ, TAG}.setDocumentation("Nearest-neighbour mapping which uses a rstar-spacial index tree to index meshes and run nearest-neighbour queries."),
-      XMLTag{*this, TYPE_NEAREST_PROJECTION, occ, TAG}.setDocumentation("Nearest-projection mapping which uses a rstar-spacial index tree to index meshes and locate the nearest projections."),
+      XMLTag{*this, TYPE_NEAREST_NEIGHBOR, occ, TAG}.setDocumentation("Nearest-neighbour mapping which uses a rstar-spatial index tree to index meshes and run nearest-neighbour queries."),
+      XMLTag{*this, TYPE_NEAREST_PROJECTION, occ, TAG}.setDocumentation("Nearest-projection mapping which uses a rstar-spatial index tree to index meshes and locate the nearest projections."),
       XMLTag{*this, TYPE_NEAREST_NEIGHBOR_GRADIENT, occ, TAG}.setDocumentation("Nearest-neighbor-gradient mapping which uses nearest-neighbor mapping with an additional linear approximation using gradient data."),
-      XMLTag{*this, TYPE_LINEAR_CELL_INTERPOLATION, occ, TAG}.setDocumentation("Linear cell interpolation mapping which uses a rstar-spacial index tree to index meshes and locate the nearest cell. Only supports 2D meshes.")};
+      XMLTag{*this, TYPE_LINEAR_CELL_INTERPOLATION, occ, TAG}.setDocumentation("Linear cell interpolation mapping which uses a rstar-spatial index tree to index meshes and locate the nearest cell. Only supports 2D meshes.")};
   std::list<XMLTag> rbfDirectTags{
       XMLTag{*this, TYPE_RBF_GLOBAL_DIRECT, occ, TAG}.setDocumentation("Radial-basis-function mapping using a direct solver with a gather-scatter parallelism.")};
   std::list<XMLTag> rbfIterativeTags{

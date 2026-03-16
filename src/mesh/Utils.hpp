@@ -60,7 +60,7 @@ struct Chain {
 
 /** Generates a chain for an array of edges.
  *
- * The resulting verices and edges are undefined if the chain is not connected.
+ * The resulting vertices and edges are undefined if the chain is not connected.
  * If the edges form a chain, then the first edge of the resulting chain is the first edge of the argument.
  * Also, the first and last vertex of the chain will be the vertices of the first edge of the argument.
  *

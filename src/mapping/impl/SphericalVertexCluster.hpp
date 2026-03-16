@@ -36,7 +36,7 @@ public:
    * The constructor uses the index RTree of the input mesh and output mesh in order to collect
    * the vertexIDs of the input mesh and the output mesh lying within the spherical domain of the cluster.
    * Note that the index trees of the meshes are constructed in case they are empty.
-   * If there are no input vertices or output verices in the given domain ( \p center and \p radius ),
+   * If there are no input vertices or output vertices in the given domain ( \p center and \p radius ),
    * the cluster is considered empty ( see also \ref empty() ) and the constructor returns immediately.
    * If the cluster is non-empty, an RBF solver is constructed. The RBF solver assembles the mapping
    * matrices and computes the matrix decomposition directly.

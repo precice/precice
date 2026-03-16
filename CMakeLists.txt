@@ -65,7 +65,7 @@ option(PRECICE_CONFIGURE_PACKAGE_GENERATION "Configure package generation." ON)
 option(PRECICE_FEATURE_GINKGO_MAPPING "Enable use of Ginkgo for accelerated data mapping." OFF)
 option(PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING "Enable use of Kokkos kernels for accelerated PU-RBF data mapping." OFF)
 option(BUILD_TESTING "Build tests" ON)
-option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
+option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validation succeeded." OFF)
 option(PRECICE_BINDINGS_C "Enable the native C bindings" ON)
 option(PRECICE_BINDINGS_FORTRAN "Enable the native Fortran bindings" ON)
 option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
@@ -178,7 +178,7 @@ add_feature_info(PRECICE_BUILD_TOOLS PRECICE_BUILD_TOOLS
    This feature can be enabled/disabled by setting the PRECICE_BUILD_TOOLS CMake option.
   ")
   add_feature_info(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES
-  "Enables libbacktrace for stracktrace generation.
+  "Enables libbacktrace for stacktrace generation.
 
    preCICE assertions are helpful during development, however, the default stacktraces may not be sufficient.
    This feature enables the support for libbacktrace in boost.stacktrace.
@@ -186,11 +186,11 @@ add_feature_info(PRECICE_BUILD_TOOLS PRECICE_BUILD_TOOLS
    This feature can be enabled/disabled by setting the PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES CMake option.
   ")
   add_feature_info(PRECICE_FEATURE_PROFILING_COMPRESSION PRECICE_FEATURE_PROFILING_COMPRESSION
-  "Enables LZAM compression of profiling data.
+  "Enables LZMA compression of profiling data.
 
    preCICE profiling information can be useful, but in some cases the size of the rank files can become too large.
    This feature enables LZMA compression of the records with the fastest preset to reduce the output sizes.
-   Not that this feature introduces some profiling overhead when flushing the buffered records to file.
+   Note that this feature introduces some profiling overhead when flushing the buffered records to file.
 
    This feature can be enabled/disabled by setting the PRECICE_FEATURE_PROFILING_COMPRESSION CMake option.
   ")

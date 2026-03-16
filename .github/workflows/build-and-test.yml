@@ -133,6 +133,22 @@ jobs:
           python3 -m venv --system-site-packages venv
           venv/bin/pip install polars
           venv/bin/pip list
+      - name: Precompute hwloc topology
+        run: |
+          TOPODIR="$(mktemp --suffix=TOPO -d)"
+          TOPO="$TOPODIR/topo.xml"
+
+          chmod a+rx "$TOPODIR"
+          echo "TOPO file $TOPO"
+          lstopo --of xml "$TOPO"
+          echo "HWLOC_XMLFILE=$TOPO" >> "$GITHUB_ENV"
+          echo "::group::Content"
+          cat "$TOPO"
+          echo "::endgroup::"
+
+          echo "::group::Testing access"
+          su -c "cat $TOPO" "$PRECICE_USER"
+          echo "::endgroup::"
       - name: Configure
         working-directory: build
         env:
@@ -232,9 +248,18 @@ jobs:
     - name: Install pip packages
       run: pip3 install numpy polars
     - name: Install preCICE dependencies
-      run: brew install --overwrite --quiet eigen libxml2 boost petsc openmpi ninja
+      run: brew install --build-from-source --only-dependencies --overwrite precice
     - name: Generate build directory
       run: mkdir -p build
+    - name: Precompute hwloc topology
+      run: |
+        lstopo --of xml topo.xml
+        TOPO="$(readlink -f topo.xml)"
+        echo "TOPO file $TOPO"
+        echo "HWLOC_XMLFILE=$TOPO" >> "$GITHUB_ENV"
+        echo "::group::Content"
+        cat "$TOPO"
+        echo "::endgroup::"
     - name: Configure
       working-directory: build
       env:

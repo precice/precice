@@ -13,10 +13,10 @@ ConstantPreconditioner::ConstantPreconditioner(std::vector<double> factors)
 {
 }
 
-void ConstantPreconditioner::initialize(std::vector<size_t> &svs)
+void ConstantPreconditioner::initialize(std::vector<size_t> svs, std::vector<std::string> svNames)
 {
   PRECICE_TRACE();
-  Preconditioner::initialize(svs);
+  Preconditioner::initialize(std::move(svs), std::move(svNames));
 
   // is always constant by definition
   _frozen = true;
