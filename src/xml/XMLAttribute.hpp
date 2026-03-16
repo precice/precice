@@ -4,6 +4,7 @@
 #include <exception>
 #include <initializer_list>
 #include <map>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <type_traits>
@@ -79,17 +80,11 @@ public:
   };
 
   /// Marks this attribute as optional without a default value.
-  /// When missing in the XML, no error is raised and wasProvided() will be false.
+  /// When missing in the XML, no error is raised and the stored value remains disengaged.
   XMLAttribute &setOptional()
   {
     _isRequired = false;
     return *this;
-  }
-
-  /// Returns false only when the attribute is optional-without-default and was not present in the XML.
-  bool wasProvided() const
-  {
-    return _wasProvided;
   }
 
   void readValue(std::string_view tagName, const std::map<std::string, std::string> &aAttributes);
@@ -99,10 +94,20 @@ public:
     return _name;
   };
 
+  /// Returns the attribute value.
+  /// For required attributes this is always engaged; for optional ones callers
+  /// should ensure a value is present (e.g. via getOptionalValue()).
   const ATTRIBUTE_T &getValue() const
   {
-    return _value;
+    PRECICE_ASSERT(_value.has_value());
+    return *_value;
   };
+
+  /// Returns the optional attribute value.
+  const std::optional<ATTRIBUTE_T> &getOptionalValue() const
+  {
+    return _value;
+  }
 
   void setRead(bool read)
   {
@@ -123,13 +128,11 @@ private:
 
   bool _read = false;
 
-  ATTRIBUTE_T _value{};
+  std::optional<ATTRIBUTE_T> _value;
 
   bool _hasDefaultValue = false;
 
   bool _isRequired = true;
-
-  bool _wasProvided = true;
 
   ATTRIBUTE_T _defaultValue{};
 
@@ -184,24 +187,25 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::string_view tagName, const std::m
   const auto position = aAttributes.find(getName());
   if (position == aAttributes.end()) {
     if (_hasDefaultValue) {
-      set(_value, _defaultValue);
-      _wasProvided = true;
+      ATTRIBUTE_T valueWithDefault{};
+      set(valueWithDefault, _defaultValue);
+      _value = std::move(valueWithDefault);
     } else if (_isRequired) {
       PRECICE_CHECK(false, "The tag <{}> in the configuration is missing required attribute \"{}\".", tagName, _name);
     } else {
-      _wasProvided = false;
+      _value.reset();
     }
   } else {
-    _wasProvided = true;
+    ATTRIBUTE_T parsedValue{};
     try {
-      readValueSpecific(position->second, _value);
+      readValueSpecific(position->second, parsedValue);
     } catch (const std::exception &e) {
       PRECICE_ERROR(e.what());
     }
     if (_hasValidation) {
-      if (std::find(_options.begin(), _options.end(), _value) == _options.end()) {
+      if (std::find(_options.begin(), _options.end(), parsedValue) == _options.end()) {
         std::ostringstream stream;
-        stream << "Invalid value \"" << _value << "\" of attribute \""
+        stream << "Invalid value \"" << parsedValue << "\" of attribute \""
                << getName() << "\": ";
         // print first
         auto first = _options.begin();
@@ -215,8 +219,13 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::string_view tagName, const std::m
         PRECICE_ERROR(stream.str());
       }
     }
+    _value = std::move(parsedValue);
   }
-  PRECICE_DEBUG("Read valid attribute \"{}\" value = {}", getName(), _value);
+  if (_value.has_value()) {
+    PRECICE_DEBUG("Read valid attribute \"{}\" value = {}", getName(), *_value);
+  } else {
+    PRECICE_DEBUG("Attribute \"{}\" not provided and has no default value", getName());
+  }
 }
 
 template <typename ATTRIBUTE_T>
