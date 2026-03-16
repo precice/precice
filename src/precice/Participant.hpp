@@ -167,7 +167,6 @@ using string_view = ::precice::span<const char>;
  */
 class PRECICE_API Participant {
 public:
-
   /**
    * @name Construction and Configuration
    *
@@ -186,8 +185,6 @@ public:
    *
    * @{
    */
-
-
 
   /**
    * @brief Constructs a Participant for the given participant
