@@ -186,12 +186,14 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::string_view tagName, const std::m
 
   const auto position = aAttributes.find(getName());
   if (position == aAttributes.end()) {
+    PRECICE_CHECK(!_isRequired || _hasDefaultValue,
+                  "The tag <{}> in the configuration is missing required attribute \"{}\".",
+                  tagName, _name);
+
     if (_hasDefaultValue) {
       ATTRIBUTE_T valueWithDefault{};
       set(valueWithDefault, _defaultValue);
       _value = std::move(valueWithDefault);
-    } else if (_isRequired) {
-      PRECICE_CHECK(false, "The tag <{}> in the configuration is missing required attribute \"{}\".", tagName, _name);
     } else {
       _value.reset();
     }
