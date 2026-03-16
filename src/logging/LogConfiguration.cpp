@@ -166,6 +166,38 @@ const std::string BackendConfiguration::default_formatter = "(%Rank%) %TimeStamp
 const std::string BackendConfiguration::default_type      = "stream";
 const std::string BackendConfiguration::default_output    = "stdout";
 
+static boost::log::formatter createDefaultFormatter()
+{
+  namespace expr    = boost::log::expressions;
+  namespace trivial = boost::log::trivial;
+  auto severity     = expr::attr<trivial::severity_level>("Severity");
+  return expr::stream
+         << "("
+         << expr::attr<int>("Rank")
+         << ") "
+         << expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S")
+         << " ["
+         << expr::attr<std::string>("Module")
+         << "]:"
+         << expr::attr<int>("Line")
+         << " in "
+         << expr::attr<std::string>("Function")
+         << ": "
+         << expr::if_(severity == trivial::error)[expr::stream << "\033[31mERROR: "]
+         << expr::if_(severity == trivial::warning)[expr::stream << "\033[36mWARNING: ]"]
+         << "\033[0m"
+         << expr::smessage;
+}
+
+static boost::log::filter createDefaultFilter()
+{
+  namespace expr    = boost::log::expressions;
+  namespace trivial = boost::log::trivial;
+  auto severity     = trivial::severity;
+  auto rank         = expr::attr<int>("Rank");
+  return expr::has_attr("preCICE") && expr::attr<bool>("preCICE") && (severity > trivial::debug) && !((severity == trivial::info) && (rank != 0));
+}
+
 void BackendConfiguration::setOption(std::string key, std::string value)
 {
   boost::algorithm::to_lower(key);
@@ -263,10 +295,19 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
 
     // Setup sink
     auto sink = boost::make_shared<boost::log::sinks::synchronous_sink<StreamBackend>>(backend);
-    sink->set_formatter(boost::log::parse_formatter(config.format));
 
+    // Set formatter
+    if (config.format == BackendConfiguration::default_formatter) {
+      sink->set_formatter(createDefaultFormatter());
+    } else {
+      sink->set_formatter(boost::log::parse_formatter(config.format));
+    }
+
+    // Set filter
     if (config.filter.empty()) {
       sink->set_filter(boost::log::expressions::attr<bool>("preCICE") == true);
+    } else if (config.filter == BackendConfiguration::default_filter) {
+      sink->set_filter(createDefaultFilter());
     } else {
       // We extend the filter here to filter all log entries not originating from preCICE.
       sink->set_filter(boost::log::parse_filter("%preCICE% & ( " + config.filter + " )"));
