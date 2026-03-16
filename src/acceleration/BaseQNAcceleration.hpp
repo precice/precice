@@ -112,9 +112,13 @@ public:
    */
   std::vector<DataID> checkBoundViolation(Eigen::VectorXd &data, DataMap &cplData) const;
   /**
-   * @brief Handles bound violations after QN update.
+   * @brief Handles bound violations after QN update by clamping.
    */
-  void onBoundViolations(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &violatingIDs, OnBoundViolation onBoundViolation, Eigen::VectorXd &xUpdate);
+  void onBoundViolationsClamp(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &violatingIDs);
+  /**
+   * @brief Handles bound violations after QN update by scaling the QN step.
+   */
+  void onBoundViolationsScale(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &violatingIDs, Eigen::VectorXd &xUpdate);
   /**
    * @brief Clamp data to their bounds.
    */

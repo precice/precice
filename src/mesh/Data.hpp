@@ -148,10 +148,10 @@ private:
   /// Sample storage of this Data.
   time::Waveform _waveform;
 
-  /// Lower bound for data values.
+  /// Lower bound for data values. This vector with optional elements has size of 1 for scalar data and 3 for vector data. The elements only have values if the user has configured relevant attributes.
   std::vector<std::optional<double>> _lowerBound;
 
-  /// Upper bound for data values.
+  /// Upper bound for data values. This vector with optional elements has size of 1 for scalar data and 3 for vector data. The elements only have values if the user has configured relevant attributes.
   std::vector<std::optional<double>> _upperBound;
 
   /// Name of the data set.

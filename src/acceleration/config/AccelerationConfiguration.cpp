@@ -114,7 +114,7 @@ void AccelerationConfiguration::connectTags(xml::XMLTag &parent)
                                  .setDocumentation("Whether only the last time step of each time window is used to construct the Jacobian.");
     tag.addAttribute(reducedTimeGridQN);
 
-    auto onBoundViolation = makeXMLAttribute(ATTR_ON_BOUND_VIOLATION, VALUE_DISCARD)
+    auto onBoundViolation = makeXMLAttribute(ATTR_ON_BOUND_VIOLATION, VALUE_IGNORE)
                                 .setOptions({VALUE_IGNORE,
                                              VALUE_CLAMP,
                                              VALUE_DISCARD,

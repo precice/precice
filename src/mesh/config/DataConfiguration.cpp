@@ -18,53 +18,54 @@ DataConfiguration::DataConfiguration(xml::XMLTag &parent)
   attrDegree.setDocumentation("Polynomial degree of waveform that is used for time interpolation.");
 
   XMLTag tagScalar(*this, VALUE_SCALAR, XMLTag::OCCUR_ARBITRARY, TAG);
-  tagScalar.setDocumentation("Defines a scalar data set to be assigned to meshes.");
+  tagScalar.setDocumentation("Defines a scalar data set to be assigned to meshes. Lower and upper bound of the data can be specified to prevent acceleration methods of IQN family violating the physical value range.");
   tagScalar.addAttribute(attrName);
   tagScalar.addAttribute(attrDegree);
   auto attrLowerBound = XMLAttribute<double>(ATTR_LOWER_BOUND)
                             .setDefaultValue(-std::numeric_limits<double>::infinity())
-                            .setDocumentation("Lower bound for the scalar data to check violations.");
+                            .setDocumentation("Lower bound for the scalar data. Example is 0 for temperature in Kelvin.");
   tagScalar.addAttribute(attrLowerBound);
 
   auto attrUpperBound = XMLAttribute<double>(ATTR_UPPER_BOUND)
                             .setDefaultValue(std::numeric_limits<double>::infinity())
-                            .setDocumentation("Upper bound for the scalar data to check violations.");
+                            .setDocumentation("Upper bound for the scalar data. Example is 1 for volumetric phase fraction");
   tagScalar.addAttribute(attrUpperBound);
   parent.addSubtag(tagScalar);
 
   XMLTag tagVector(*this, VALUE_VECTOR, XMLTag::OCCUR_ARBITRARY, TAG);
   tagVector.setDocumentation("Defines a vector data set to be assigned to meshes. The number of "
-                             "components of each data entry depends on the spatial dimensions of the mesh.");
+                             "components of each data entry depends on the spatial dimensions of the mesh."
+                             "Lower and upper bound for each component can be specified to prevent acceleration methods of IQN family violating the physical value range.");
   tagVector.addAttribute(attrName);
   tagVector.addAttribute(attrDegree);
   auto attrLowerBoundX = XMLAttribute<double>(ATTR_LOWER_BOUND_X)
                              .setDefaultValue(-std::numeric_limits<double>::infinity())
-                             .setDocumentation("Lower bound for the x-component of the vector data to check violations.");
+                             .setDocumentation("Lower bound for the x-component of the vector data.");
   tagVector.addAttribute(attrLowerBoundX);
 
   auto attrLowerBoundY = XMLAttribute<double>(ATTR_LOWER_BOUND_Y)
                              .setDefaultValue(-std::numeric_limits<double>::infinity())
-                             .setDocumentation("Lower bound for the y-component of the vector data to check violations.");
+                             .setDocumentation("Lower bound for the y-component of the vector data.");
   tagVector.addAttribute(attrLowerBoundY);
 
   auto attrLowerBoundZ = XMLAttribute<double>(ATTR_LOWER_BOUND_Z)
                              .setDefaultValue(-std::numeric_limits<double>::infinity())
-                             .setDocumentation("Lower bound for the z-component of the vector data to check violations.");
+                             .setDocumentation("Lower bound for the z-component of the vector data.");
   tagVector.addAttribute(attrLowerBoundZ);
 
   auto attrUpperBoundX = XMLAttribute<double>(ATTR_UPPER_BOUND_X)
                              .setDefaultValue(std::numeric_limits<double>::infinity())
-                             .setDocumentation("Upper bound for the x-component of the vector data to check violations.");
+                             .setDocumentation("Upper bound for the x-component of the vector data.");
   tagVector.addAttribute(attrUpperBoundX);
 
   auto attrUpperBoundY = XMLAttribute<double>(ATTR_UPPER_BOUND_Y)
                              .setDefaultValue(std::numeric_limits<double>::infinity())
-                             .setDocumentation("Upper bound for the y-component of the vector data to check violations.");
+                             .setDocumentation("Upper bound for the y-component of the vector data.");
   tagVector.addAttribute(attrUpperBoundY);
 
   auto attrUpperBoundZ = XMLAttribute<double>(ATTR_UPPER_BOUND_Z)
                              .setDefaultValue(std::numeric_limits<double>::infinity())
-                             .setDocumentation("Upper bound for the z-component of the vector data to check violations.");
+                             .setDocumentation("Upper bound for the z-component of the vector data.");
   tagVector.addAttribute(attrUpperBoundZ);
   parent.addSubtag(tagVector);
 }
@@ -103,8 +104,8 @@ void DataConfiguration::xmlTagCallback(
     PRECICE_CHECK(!(waveformDegree < time::Time::MIN_WAVEFORM_DEGREE),
                   "You tried to configure the data with name \"{}\" to use the waveform-degree=\"{}\", but the degree must be at least \"{}\".", name, waveformDegree, time::Time::MIN_WAVEFORM_DEGREE);
     if (tag.getName() == "scalar") {
-      const double lowerBound = tag.getDoubleAttributeValue(ATTR_LOWER_BOUND, -std::numeric_limits<double>::infinity());
-      const double upperBound = tag.getDoubleAttributeValue(ATTR_UPPER_BOUND, std::numeric_limits<double>::infinity());
+      const double lowerBound = tag.getDoubleAttributeValue(ATTR_LOWER_BOUND);
+      const double upperBound = tag.getDoubleAttributeValue(ATTR_UPPER_BOUND);
 
       std::vector<std::optional<double>> lowerBoundVec(1);
       std::vector<std::optional<double>> upperBoundVec(1);
@@ -117,12 +118,12 @@ void DataConfiguration::xmlTagCallback(
                     name, lowerBound, upperBound);
       addData(name, typeName, waveformDegree, lowerBoundVec, upperBoundVec);
     } else if (tag.getName() == "vector") {
-      const double lowerBoundX = tag.getDoubleAttributeValue(ATTR_LOWER_BOUND_X, -std::numeric_limits<double>::infinity());
-      const double lowerBoundY = tag.getDoubleAttributeValue(ATTR_LOWER_BOUND_Y, -std::numeric_limits<double>::infinity());
-      const double lowerBoundZ = tag.getDoubleAttributeValue(ATTR_LOWER_BOUND_Z, -std::numeric_limits<double>::infinity());
-      const double upperBoundX = tag.getDoubleAttributeValue(ATTR_UPPER_BOUND_X, std::numeric_limits<double>::infinity());
-      const double upperBoundY = tag.getDoubleAttributeValue(ATTR_UPPER_BOUND_Y, std::numeric_limits<double>::infinity());
-      const double upperBoundZ = tag.getDoubleAttributeValue(ATTR_UPPER_BOUND_Z, std::numeric_limits<double>::infinity());
+      const double lowerBoundX = tag.getDoubleAttributeValue(ATTR_LOWER_BOUND_X);
+      const double lowerBoundY = tag.getDoubleAttributeValue(ATTR_LOWER_BOUND_Y);
+      const double lowerBoundZ = tag.getDoubleAttributeValue(ATTR_LOWER_BOUND_Z);
+      const double upperBoundX = tag.getDoubleAttributeValue(ATTR_UPPER_BOUND_X);
+      const double upperBoundY = tag.getDoubleAttributeValue(ATTR_UPPER_BOUND_Y);
+      const double upperBoundZ = tag.getDoubleAttributeValue(ATTR_UPPER_BOUND_Z);
 
       std::vector<std::optional<double>> lowerBoundVec(3);
       std::vector<std::optional<double>> upperBoundVec(3);

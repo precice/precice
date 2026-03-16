@@ -108,6 +108,7 @@ target_sources(testprecice
     tests/quasi-newton/parallel/ILSSerialScheme.cpp
     tests/quasi-newton/parallel/ILSSerialSchemeEmptyPartition.cpp
     tests/quasi-newton/parallel/ILSWaveform.cpp
+    tests/quasi-newton/parallel/ILSWithBound.cpp
     tests/quasi-newton/parallel/IMVJAlwaysJacob.cpp
     tests/quasi-newton/parallel/IMVJAlwaysJacobEmptyPartition.cpp
     tests/quasi-newton/parallel/IMVJNoRs.cpp

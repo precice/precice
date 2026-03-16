@@ -150,6 +150,27 @@ Tetrahedron &Mesh::createTetrahedron(
 }
 
 PtrData &Mesh::createData(
+    const std::string &name,
+    int                dimension,
+    DataID             id,
+    int                waveformDegree)
+{
+  PRECICE_TRACE(name, dimension);
+  for (const PtrData &data : _data) {
+    PRECICE_CHECK(data->getName() != name,
+                  "Data \"{}\" cannot be created twice for mesh \"{}\". "
+                  "Please rename or remove one of the use-data tags with name \"{}\".",
+                  name, _name, name);
+  }
+  // #rows = dimensions of current mesh #columns = dimensions of corresponding data set
+  std::vector<std::optional<double>> lowerBound = std::vector<std::optional<double>>(dimension);
+  std::vector<std::optional<double>> upperBound = std::vector<std::optional<double>>(dimension);
+  PtrData                            data(new Data(name, id, dimension, _dimensions, waveformDegree, lowerBound, upperBound));
+  _data.push_back(data);
+  return _data.back();
+}
+
+PtrData &Mesh::createData(
     const std::string                 &name,
     int                                dimension,
     DataID                             id,
