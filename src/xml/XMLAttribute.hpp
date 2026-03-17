@@ -146,6 +146,12 @@ private:
       std::is_same<VALUE_T, ATTRIBUTE_T>::value && not std::is_same<VALUE_T, Eigen::VectorXd>::value, void>::type
   set(ATTRIBUTE_T &toSet, const VALUE_T &setter);
 
+  /// Sets non Eigen::VectorXd type values into an std::optional.
+  template <typename VALUE_T>
+  typename std::enable_if<
+      std::is_same<VALUE_T, ATTRIBUTE_T>::value && not std::is_same<VALUE_T, Eigen::VectorXd>::value, void>::type
+  set(std::optional<ATTRIBUTE_T> &toSet, const VALUE_T &setter);
+
   /// Sets Eigen::VectorXd type values by clearing and copy.
   template <typename VALUE_T>
   typename std::enable_if<
@@ -191,9 +197,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(std::string_view tagName, const std::m
                   tagName, _name);
 
     if (_hasDefaultValue) {
-      ATTRIBUTE_T valueWithDefault{};
-      set(valueWithDefault, _defaultValue);
-      _value = std::move(valueWithDefault);
+      set(_value, _defaultValue);
     } else {
       _value.reset();
     }
@@ -248,6 +252,17 @@ typename std::enable_if<
 XMLAttribute<ATTRIBUTE_T>::set(
     ATTRIBUTE_T   &toSet,
     const VALUE_T &setter)
+{
+  toSet = setter;
+}
+
+template <typename ATTRIBUTE_T>
+template <typename VALUE_T>
+typename std::enable_if<
+    std::is_same<VALUE_T, ATTRIBUTE_T>::value && not std::is_same<VALUE_T, Eigen::VectorXd>::value, void>::type
+XMLAttribute<ATTRIBUTE_T>::set(
+    std::optional<ATTRIBUTE_T> &toSet,
+    const VALUE_T              &setter)
 {
   toSet = setter;
 }
