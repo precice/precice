@@ -110,8 +110,8 @@ void DataConfiguration::xmlTagCallback(
       std::vector<std::optional<double>> lowerBoundVec(1);
       std::vector<std::optional<double>> upperBoundVec(1);
 
-      lowerBound != -std::numeric_limits<double>::infinity() ? lowerBoundVec[0] = lowerBound : lowerBoundVec[0] = std::nullopt;
-      upperBound != std::numeric_limits<double>::infinity() ? upperBoundVec[0] = upperBound : upperBoundVec[0] = std::nullopt;
+      std::isfinite(lowerBound) ? lowerBoundVec[0] = lowerBound : lowerBoundVec[0] = std::nullopt;
+      std::isfinite(upperBound) ? upperBoundVec[0] = upperBound : upperBoundVec[0] = std::nullopt;
 
       PRECICE_CHECK(lowerBound <= upperBound,
                     "You tried to configure the data with name \"{}\" to have a lower-bound=\"{}\" that is larger than the upper-bound=\"{}\".",
@@ -128,12 +128,12 @@ void DataConfiguration::xmlTagCallback(
       std::vector<std::optional<double>> lowerBoundVec(3);
       std::vector<std::optional<double>> upperBoundVec(3);
 
-      lowerBoundX != -std::numeric_limits<double>::infinity() ? lowerBoundVec[0] = lowerBoundX : lowerBoundVec[0] = std::nullopt;
-      lowerBoundY != -std::numeric_limits<double>::infinity() ? lowerBoundVec[1] = lowerBoundY : lowerBoundVec[1] = std::nullopt;
-      lowerBoundZ != -std::numeric_limits<double>::infinity() ? lowerBoundVec[2] = lowerBoundZ : lowerBoundVec[2] = std::nullopt;
-      upperBoundX != std::numeric_limits<double>::infinity() ? upperBoundVec[0] = upperBoundX : upperBoundVec[0] = std::nullopt;
-      upperBoundY != std::numeric_limits<double>::infinity() ? upperBoundVec[1] = upperBoundY : upperBoundVec[1] = std::nullopt;
-      upperBoundZ != std::numeric_limits<double>::infinity() ? upperBoundVec[2] = upperBoundZ : upperBoundVec[2] = std::nullopt;
+      std::isfinite(lowerBoundX) ? lowerBoundVec[0] = lowerBoundX : lowerBoundVec[0] = std::nullopt;
+      std::isfinite(lowerBoundY) ? lowerBoundVec[1] = lowerBoundY : lowerBoundVec[1] = std::nullopt;
+      std::isfinite(lowerBoundZ) ? lowerBoundVec[2] = lowerBoundZ : lowerBoundVec[2] = std::nullopt;
+      std::isfinite(upperBoundX) ? upperBoundVec[0] = upperBoundX : upperBoundVec[0] = std::nullopt;
+      std::isfinite(upperBoundY) ? upperBoundVec[1] = upperBoundY : upperBoundVec[1] = std::nullopt;
+      std::isfinite(upperBoundZ) ? upperBoundVec[2] = upperBoundZ : upperBoundVec[2] = std::nullopt;
 
       if (lowerBoundVec[0].has_value() && upperBoundVec[0].has_value()) {
         PRECICE_CHECK(lowerBoundVec[0].value() <= upperBoundVec[0].value(),
