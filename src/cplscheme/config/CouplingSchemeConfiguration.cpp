@@ -13,6 +13,7 @@
 #include "cplscheme/BaseCouplingScheme.hpp"
 #include "cplscheme/BiCouplingScheme.hpp"
 #include "cplscheme/CompositionalCouplingScheme.hpp"
+#include "cplscheme/CouplingData.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/MultiCouplingScheme.hpp"
 #include "cplscheme/ParallelCouplingScheme.hpp"
@@ -1198,6 +1199,33 @@ void CouplingSchemeConfiguration::addConvergenceMeasures(
   for (auto &elem : convergenceMeasureDefinitions) {
     _meshConfig->addNeededMesh(participant, elem.meshName);
     checkConvergenceMeasureDataAvailable(elem.data->getID(), participant, elem.data->getName(), elem.meshName);
+
+    // checkConvergenceMeasureDataAvailable verified that the participant writes data.
+    // If data is not exchanged, add it to the scheme's _allData (memory bank for convergence iterations).
+    const DataID dataID = elem.data->getID();
+
+    // Check if data is exchanged (existing behavior)
+    const auto match = std::find_if(_config.exchanges.begin(),
+                                    _config.exchanges.end(),
+                                    [dataID, &participant](const Config::Exchange &exchange) {
+                                      if (exchange.from != participant && exchange.to != participant) {
+                                        return false;
+                                      }
+                                      return exchange.data->getID() == dataID;
+                                    });
+
+    if (match == _config.exchanges.end()) {
+      // Data is not exchanged.
+      if (scheme->localParticipant() != participant) {
+        // If current participant is not the one computing this convergence measure, skip it safely.
+        continue;
+      }
+
+      // Add it to the scheme's _allData.
+      const mesh::PtrMesh &mesh = _meshConfig->getMesh(elem.meshName);
+      scheme->addCouplingData(elem.data, mesh, false, false, CouplingData::Direction::Send);
+    }
+
     scheme->addConvergenceMeasure(elem.data->getID(), elem.suffices, elem.strict, elem.measure);
   }
 }
