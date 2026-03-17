@@ -92,8 +92,6 @@ BOOST_AUTO_TEST_CASE(CheckBoundViolation)
   testData << 2.0, -0.1, 2.0, 0.1, -0.1, 1.1, 0.1, 0.1, 1.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, -0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 1.1, 0.1, 1.1, 0.1, 0.1, 0.1, 0.1, 0.1;
   auto violatingIDs = acceleration.checkBoundViolation(testData, cplData);
 
-  for (int i = 0; i < violatingIDs.size(); i++) {
-  }
   std::vector<int> expectedViolations{0, 1, 2, 3, 4, 5, 6};
   BOOST_TEST(violatingIDs == expectedViolations, boost::test_tools::per_element());
 }
@@ -105,23 +103,23 @@ BOOST_AUTO_TEST_CASE(testOnBoundViolationClamp)
 
   Eigen::VectorXd _data(6);
   _data << 0.1, 0.3, 0.4, -0.4, 1.2, 0.5;
-  Eigen::Map<Eigen::MatrixXd> dataMap(_data.data(), 3, 2);
+  Eigen::Map<Eigen::MatrixXd> dataMap(_data.data(), 2, 3);
 
   Eigen::VectorXd _dataAfterUpdate(6);
-  _dataAfterUpdate << 0.1, 0.3, 0.4, 0.0, 1.0, 0.5;
-  Eigen::Map<Eigen::MatrixXd> dataAfterUpdateMap(_dataAfterUpdate.data(), 3, 2);
+  _dataAfterUpdate << 0.1, 0.3, 0.4, 0.0, 0.5, 0.5;
+  Eigen::Map<Eigen::MatrixXd> dataAfterUpdateMap(_dataAfterUpdate.data(), 2, 3);
 
   std::vector<std::optional<double>> _lowerBound(2);
   _lowerBound[0] = 0;
   _lowerBound[1] = 0;
   std::vector<std::optional<double>> _upperBound(2);
-  _upperBound[0] = 1;
+  _upperBound[0] = 0.5;
   _upperBound[1] = 1;
 
   IQNILSAcceleration acceleration(1.0, false, 10, 0, 0, 1e-10, {0}, acceleration::Acceleration::OnBoundViolation::Clamp, nullptr, false);
   acceleration.clampToBounds(dataMap, _lowerBound, _upperBound);
 
-  // check if the over small single values have been correctly truncated
+  // check if the violating values have been correctly truncated
   BOOST_TEST(testing::equals(dataMap, dataAfterUpdateMap, 1e-10));
 }
 
@@ -131,30 +129,23 @@ BOOST_AUTO_TEST_CASE(testOnBoundViolationScale)
   PRECICE_TEST();
 
   Eigen::VectorXd _data(6);
-  _data << 0.1, 0.3, 0.4, -0.4, 1.3, 0.5;
-  Eigen::Map<Eigen::MatrixXd> dataMap(_data.data(), 3, 2);
+  _data << 0.1, 0.3, 0.4, -0.4, 1.2, 0.5;
+  Eigen::Map<Eigen::MatrixXd> dataMap(_data.data(), 2, 3);
 
   Eigen::VectorXd _dataUpdate(6);
-  _dataUpdate << -0.6, -0.3, 0.3, -0.6, 0.9, 0.12;
-  Eigen::Map<Eigen::MatrixXd> dataUpdateMap(_dataUpdate.data(), 3, 2);
-
-  Eigen::VectorXd _dataAfterUpdate(6);
-  _dataAfterUpdate << 0.5, 0.5, 0.2, 0.0, 0.7, 0.42;
-  Eigen::Map<Eigen::MatrixXd> dataAfterUpdateMap(_dataAfterUpdate.data(), 3, 2);
+  _dataUpdate << -0.6, -0.3, 0.3, -0.6, 0.8, 0.12;
+  Eigen::Map<Eigen::MatrixXd> dataUpdateMap(_dataUpdate.data(), 2, 3);
 
   std::vector<std::optional<double>> _lowerBound(2);
   _lowerBound[0] = 0;
   _lowerBound[1] = 0;
   std::vector<std::optional<double>> _upperBound(2);
-  _upperBound[0] = 1;
+  _upperBound[0] = 0.5;
   _upperBound[1] = 1;
 
   IQNILSAcceleration acceleration(1.0, false, 10, 0, 0, 1e-10, {0}, acceleration::Acceleration::OnBoundViolation::ScaleToBound, nullptr, false);
   auto               scaleFactor = acceleration.scaleToBounds(dataMap, dataUpdateMap, _lowerBound, _upperBound);
-  dataMap -= dataUpdateMap * scaleFactor;
-
-  // check if the over small single values have been correctly truncated
-  BOOST_TEST(testing::equals(dataMap, dataAfterUpdateMap, 1e-10));
+  BOOST_TEST(testing::equals(scaleFactor, 0.875, 1e-10));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

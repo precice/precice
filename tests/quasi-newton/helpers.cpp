@@ -551,6 +551,7 @@ void runTestQNWithBound(bool includeSecondaryData, std::string const &config, Te
     }
     iterations++;
   }
+  BOOST_TEST(iterations < 100);
 
   interface.finalize();
 }

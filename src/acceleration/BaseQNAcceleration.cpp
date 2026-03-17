@@ -165,7 +165,7 @@ void BaseQNAcceleration::onBoundViolationsClamp(Eigen::VectorXd &data, DataMap &
     auto dataPerEntry  = data.segment(offset, size);
 
     const Eigen::Index          nEntries = dataPerEntry.size() / dataDimension;
-    Eigen::Map<Eigen::MatrixXd> dataPerDimension(dataPerEntry.data(), nEntries, dataDimension);
+    Eigen::Map<Eigen::MatrixXd> dataPerDimension(dataPerEntry.data(), dataDimension, nEntries);
 
     clampToBounds(dataPerDimension, lowerBound, upperBound);
 
@@ -193,8 +193,8 @@ void BaseQNAcceleration::onBoundViolationsScale(Eigen::VectorXd &data, DataMap &
     auto updatePerEntry = xUpdate.segment(offset, size);
 
     const Eigen::Index          nEntries = dataPerEntry.size() / dataDimension;
-    Eigen::Map<Eigen::MatrixXd> dataMat(dataPerEntry.data(), nEntries, dataDimension);
-    Eigen::Map<Eigen::MatrixXd> updMat(updatePerEntry.data(), nEntries, dataDimension);
+    Eigen::Map<Eigen::MatrixXd> dataMat(dataPerEntry.data(), dataDimension, nEntries);
+    Eigen::Map<Eigen::MatrixXd> updMat(updatePerEntry.data(), dataDimension, nEntries);
 
     scaleStep = std::max(scaleStep, scaleToBounds(dataMat, updMat, lowerBound, upperBound));
     offset += size;
@@ -224,12 +224,12 @@ void BaseQNAcceleration::onBoundViolationsScale(Eigen::VectorXd &data, DataMap &
 
 void BaseQNAcceleration::clampToBounds(Eigen::Map<Eigen::MatrixXd> &data, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound)
 {
-  for (int j = 0; j < data.cols(); j++) {
+  for (int j = 0; j < data.rows(); j++) {
     if (lowerBound[j].has_value()) {
-      data.col(j) = data.col(j).cwiseMax(lowerBound[j].value());
+      data.row(j) = data.row(j).cwiseMax(lowerBound[j].value());
     }
     if (upperBound[j].has_value()) {
-      data.col(j) = data.col(j).cwiseMin(upperBound[j].value());
+      data.row(j) = data.row(j).cwiseMin(upperBound[j].value());
     }
   }
 }
@@ -237,15 +237,15 @@ void BaseQNAcceleration::clampToBounds(Eigen::Map<Eigen::MatrixXd> &data, const 
 double BaseQNAcceleration::scaleToBounds(Eigen::Map<Eigen::MatrixXd> &data, Eigen::Map<Eigen::MatrixXd> &update, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound)
 {
   double scaleStep = 0.0;
-  for (int j = 0; j < data.cols(); j++) {
+  for (int j = 0; j < data.rows(); j++) {
     if (lowerBound[j].has_value()) {
-      Eigen::ArrayXd numerator   = (data.col(j).array() - lowerBound[j].value());
-      Eigen::ArrayXd denominator = -(update.col(j).array()).abs();
+      Eigen::ArrayXd numerator   = (data.row(j).array() - lowerBound[j].value());
+      Eigen::ArrayXd denominator = -(update.row(j).array()).abs();
       scaleStep                  = std::max(scaleStep, (numerator / denominator).maxCoeff());
     }
     if (upperBound[j].has_value()) {
-      Eigen::ArrayXd numerator   = (data.col(j).array() - upperBound[j].value());
-      Eigen::ArrayXd denominator = (update.col(j).array()).abs();
+      Eigen::ArrayXd numerator   = (data.row(j).array() - upperBound[j].value());
+      Eigen::ArrayXd denominator = (update.row(j).array()).abs();
       scaleStep                  = std::max(scaleStep, (numerator / denominator).maxCoeff());
     }
   }
@@ -476,7 +476,7 @@ void BaseQNAcceleration::performAcceleration(
     auto             violatingIDs = checkBoundViolation(_values, cplData);
 
     for (auto id : violatingIDs) {
-      PRECICE_WARN("The coupling data {} has violated its bound after the quasi-Newton acceleration. The quasi-Newton update will be scaled to avoid the bound violation.", cplData.at(id)->getDataName());
+      PRECICE_WARN("The coupling data {} has violated its bound after the quasi-Newton acceleration.", cplData.at(id)->getDataName());
     }
 
     if (violatingIDs.size() > 0 && _onBoundViolation == OnBoundViolation::Clamp) {
@@ -489,6 +489,7 @@ void BaseQNAcceleration::performAcceleration(
       utils::IntraComm::allreduceSum(localViolatingSize, violatingSizeSum);
 
       if (violatingSizeSum > 0 && _onBoundViolation == OnBoundViolation::Discard) {
+        PRECICE_WARN("The violating quasi-Newton step will be discarded.");
         _values -= xUpdate;
       }
       if (violatingSizeSum > 0 && _onBoundViolation == OnBoundViolation::ScaleToBound) {

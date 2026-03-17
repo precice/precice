@@ -59,7 +59,7 @@
     <max-iterations value="100" />
     <relative-convergence-measure limit="1e-7" data="Data21" mesh="MeshOne" />
     <relative-convergence-measure limit="1e-7" data="Data22" mesh="MeshOne" />
-    <acceleration:IQN-ILS on-bound-violation="discard">
+    <acceleration:IQN-ILS on-bound-violation="scale">
       <data name="Data21" mesh="MeshOne" />
       <filter type="QR2" limit="1e-1" />
       <initial-relaxation value="0.5" />
