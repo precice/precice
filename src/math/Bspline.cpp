@@ -1,13 +1,14 @@
 #include "math/Bspline.hpp"
-#include "math/differences.hpp"
-#include "utils/assertion.hpp"
-#include "profiling/Event.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 #include <algorithm>
 #include <cstdlib>
 #include <unsupported/Eigen/Splines>
+
+#include "math/differences.hpp"
+#include "profiling/Event.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice::math {
 
@@ -24,14 +25,10 @@ Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree
   auto relativeTime = [tsMin = _tsMin, tsMax = _tsMax](double t) -> double { return (t - tsMin) / (tsMax - tsMin); };
   ts                = ts.unaryExpr(relativeTime);
 
-  // Start timing if profiling enabled
-  profiling::Event eTotal("bspline.total");
-
   // 1. Compute the knot vector
-  {
-    profiling::Event eKnot("bspline.knots");
-    Eigen::KnotAveraging(ts, splineDegree, _knots);
-  }
+ // The code for computing the knots and control points is based on Eigen's B-spline interpolation
+// https://gitlab.com/libeigen/eigen/-/blob/master/unsupported/Eigen/src/Splines/SplineFitting.h
+  Eigen::KnotAveraging(ts, splineDegree, _knots);
 
   // 2. Compute the control points
   // We use a nxn sparse matrix with 2 + (n-2) * (d+1) entries and thus a fill-factor < 0.5.
@@ -40,21 +37,20 @@ Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree
   matrixEntries.reserve(2 + (n - 2) * (splineDegree + 1));
 
   // Build matrix entries
-  {
-    profiling::Event eConstruct("bspline.construction");
+  profiling::Event eControl("bspline.control");
 
-    matrixEntries.emplace_back(0, 0, 1.0);
-    for (Eigen::DenseIndex i = 1; i < n - 1; ++i) {
-      const Eigen::DenseIndex span      = Eigen::Spline<double, 1>::Span(ts[i], splineDegree, _knots);
-      auto                    basisFunc = Eigen::Spline<double, 1>::BasisFunctions(ts[i], splineDegree, _knots);
+  matrixEntries.emplace_back(0, 0, 1.0);
+  for (Eigen::DenseIndex i = 1; i < n - 1; ++i) {
+    const Eigen::DenseIndex span      = Eigen::Spline<double, 1>::Span(ts[i], splineDegree, _knots);
+    auto                    basisFunc = Eigen::Spline<double, 1>::BasisFunctions(ts[i], splineDegree, _knots);
 
-      for (Eigen::DenseIndex j = 0; j < splineDegree + 1; ++j) {
-        matrixEntries.emplace_back(i, span - splineDegree + j, basisFunc(j));
-      }
+    for (Eigen::DenseIndex j = 0; j < splineDegree + 1; ++j) {
+      matrixEntries.emplace_back(i, span - splineDegree + j, basisFunc(j));
     }
-    matrixEntries.emplace_back(n - 1, n - 1, 1.0);
-    PRECICE_ASSERT(matrixEntries.capacity() == matrixEntries.size(), matrixEntries.capacity(), matrixEntries.size(), n, splineDegree);
   }
+  matrixEntries.emplace_back(n - 1, n - 1, 1.0);
+  PRECICE_ASSERT(matrixEntries.capacity() == matrixEntries.size(),
+                 matrixEntries.capacity(), matrixEntries.size(), n, splineDegree);
 
   // Create sparse matrix
   Eigen::SparseMatrix<double> A(n, n);
@@ -63,17 +59,11 @@ Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree
 
   // Solve system
   Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> qr;
-  
-  {
-    profiling::Event eFactor("bspline.factorization");
-    qr.analyzePattern(A);
-    qr.factorize(A);
-  } 
-  
-  {
-    profiling::Event eSolve("bspline.solve");
-    _ctrls = qr.solve(xs.transpose());
-  }
+  qr.analyzePattern(A);
+  qr.factorize(A);
+  _ctrls = qr.solve(xs.transpose());
+
+  eControl.stop();
 }
 
 Eigen::VectorXd Bspline::interpolateAt(double t) const
