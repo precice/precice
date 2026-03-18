@@ -196,7 +196,7 @@ void BaseQNAcceleration::onBoundViolationsScale(Eigen::VectorXd &data, DataMap &
     Eigen::Map<Eigen::MatrixXd> dataMat(dataPerEntry.data(), dataDimension, nEntries);
     Eigen::Map<Eigen::MatrixXd> updMat(updatePerEntry.data(), dataDimension, nEntries);
 
-    scaleStep = std::max(scaleStep, scaleToBounds(dataMat, updMat, lowerBound, upperBound));
+    scaleStep = std::max(scaleStep, computeShorteningFactor(dataMat, updMat, lowerBound, upperBound));
     offset += size;
   }
 
@@ -234,7 +234,7 @@ void BaseQNAcceleration::clampToBounds(Eigen::Map<Eigen::MatrixXd> &data, const 
   }
 }
 
-double BaseQNAcceleration::scaleToBounds(Eigen::Map<Eigen::MatrixXd> &data, Eigen::Map<Eigen::MatrixXd> &update, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound)
+double BaseQNAcceleration::computeShorteningFactor(Eigen::Map<Eigen::MatrixXd> &data, Eigen::Map<Eigen::MatrixXd> &update, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound)
 {
   double scaleStep = 0.0;
 
@@ -243,15 +243,17 @@ double BaseQNAcceleration::scaleToBounds(Eigen::Map<Eigen::MatrixXd> &data, Eige
       Eigen::ArrayXd numerator   = (data.row(j).array() - *lowerBound[j]);
       Eigen::ArrayXd denominator = -(update.row(j).array()).abs();
 
-      scaleStep = std::max(scaleStep, (denominator != 0.0).select(numerator / denominator, -std::numeric_limits<double>::infinity()).maxCoeff());
+      scaleStep = std::max(scaleStep, (denominator != 0.0).select(numerator / denominator, 0.0).maxCoeff());
     }
     if (upperBound[j].has_value()) {
       Eigen::ArrayXd numerator   = (data.row(j).array() - *upperBound[j]);
       Eigen::ArrayXd denominator = (update.row(j).array()).abs();
 
-      scaleStep = std::max(scaleStep, (denominator != 0.0).select(numerator / denominator, -std::numeric_limits<double>::infinity()).maxCoeff());
+      scaleStep = std::max(scaleStep, (denominator != 0.0).select(numerator / denominator, 0.0).maxCoeff());
     }
   }
+  PRECICE_ASSERT(scaleStep >= 0.0);
+  PRECICE_ASSERT(scaleStep <= 1.0);
   return scaleStep;
 }
 /** ---------------------------------------------------------------------------------------------

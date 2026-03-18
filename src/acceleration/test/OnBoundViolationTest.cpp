@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(testOnBoundViolationScale)
   _upperBound[1] = 1;
 
   IQNILSAcceleration acceleration(1.0, false, 10, 0, 0, 1e-10, {0}, acceleration::Acceleration::OnBoundViolation::ScaleToBound, nullptr, false);
-  auto               scaleFactor = acceleration.scaleToBounds(dataMap, dataUpdateMap, _lowerBound, _upperBound);
+  auto               scaleFactor = acceleration.computeShorteningFactor(dataMap, dataUpdateMap, _lowerBound, _upperBound);
   BOOST_TEST(testing::equals(scaleFactor, 0.875, 1e-10));
 }
 
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(testOnBoundViolationScaleDivZero)
   _upperBound[1] = 0;
 
   IQNILSAcceleration acceleration(1.0, false, 10, 0, 0, 1e-10, {0}, acceleration::Acceleration::OnBoundViolation::ScaleToBound, nullptr, false);
-  auto               scaleFactor = acceleration.scaleToBounds(dataMap, dataUpdateMap, _lowerBound, _upperBound);
+  auto               scaleFactor = acceleration.computeShorteningFactor(dataMap, dataUpdateMap, _lowerBound, _upperBound);
   BOOST_TEST(testing::equals(scaleFactor, 0.5, 1e-10));
 }
 

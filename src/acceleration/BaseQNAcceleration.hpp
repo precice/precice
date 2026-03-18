@@ -124,9 +124,9 @@ public:
    */
   void clampToBounds(Eigen::Map<Eigen::MatrixXd> &data, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound);
   /**
-   * @brief calculate the scaling factor and fit the data to the bounds
+   * @brief calculate the shortening factor to fit the violating data to the bounds
    */
-  double scaleToBounds(Eigen::Map<Eigen::MatrixXd> &data, Eigen::Map<Eigen::MatrixXd> &update, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound);
+  double computeShorteningFactor(Eigen::Map<Eigen::MatrixXd> &data, Eigen::Map<Eigen::MatrixXd> &update, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound);
   /**
    * @brief Marks a iteration sequence as converged.
    *
