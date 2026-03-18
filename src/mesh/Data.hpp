@@ -49,13 +49,25 @@ public:
    * @brief Constructor
    */
   Data(
-      std::string                        name,
-      DataID                             id,
-      int                                dimension,
-      int                                spatialDimensions = -1,
-      int                                waveformDegree    = time::Time::DEFAULT_WAVEFORM_DEGREE,
-      std::vector<std::optional<double>> lowerBound        = std::vector<std::optional<double>>(3),
-      std::vector<std::optional<double>> upperBound        = std::vector<std::optional<double>>(3));
+      std::string name,
+      DataID      id,
+      int         dimension,
+      int         spatialDimensions = -1,
+      int         waveformDegree    = time::Time::DEFAULT_WAVEFORM_DEGREE);
+
+  /**
+   * @brief Constructor with data bounds
+   */
+  Data(
+      std::string name,
+      DataID      id,
+      int         dimension,
+      int         spatialDimensions,
+      int         waveformDegree,
+      std::vector<std::optional<double>>
+          lowerBound,
+      std::vector<std::optional<double>>
+          upperBound);
 
   /// Returns a reference to the data values.
   Eigen::VectorXd &values();

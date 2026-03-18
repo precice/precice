@@ -10,6 +10,24 @@
 namespace precice::mesh {
 
 Data::Data(
+    std::string name,
+    DataID      id,
+    int         dimensions,
+    int         spatialDimensions,
+    int         waveformDegree)
+    : _waveform(waveformDegree),
+      _name(std::move(name)),
+      _id(id),
+      _dimensions(dimensions),
+      _spatialDimensions(spatialDimensions),
+      _sample(_dimensions)
+{
+  PRECICE_ASSERT(dimensions > 0, dimensions);
+  _lowerBound = std::vector<std::optional<double>>(dimensions);
+  _upperBound = std::vector<std::optional<double>>(dimensions);
+}
+
+Data::Data(
     std::string                        name,
     DataID                             id,
     int                                dimensions,
@@ -27,8 +45,8 @@ Data::Data(
       _sample(_dimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
-  PRECICE_ASSERT(lowerBound.size() == dimensions);
-  PRECICE_ASSERT(upperBound.size() == dimensions);
+  PRECICE_ASSERT(lowerBound.size() == dimensions, lowerBound.size(), dimensions);
+  PRECICE_ASSERT(upperBound.size() == dimensions, upperBound.size(), dimensions);
 }
 
 Eigen::VectorXd &Data::values()
