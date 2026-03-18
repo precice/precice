@@ -9,22 +9,6 @@ set(PRECICE_TEST_TIMEOUT_SHORT 20 CACHE STRING "The timeout in seconds for short
 set(PRECICE_TEST_DIR "${preCICE_BINARY_DIR}/TestOutput")
 mark_as_advanced(PRECICE_TEST_DIR)
 
-
-# CDash setup
-
-set(CTEST_PROJECT_NAME preCICE)
-set(CTEST_NIGHTLY_START_TIME 00:00:00)
-
-if(CMAKE_VERSION VERSION_GREATER 3.14)
-  set(CTEST_SUBMIT_URL https://my.cdash.org/submit.php?project=preCICE)
-else()
-  set(CTEST_DROP_METHOD "https")
-  set(CTEST_DROP_SITE "my.cdash.org")
-  set(CTEST_DROP_LOCATION "/submit.php?project=preCICE")
-endif()
-
-set(CTEST_DROP_SITE_CDASH TRUE)
-
 # Solverdummies will be build in $PRECICE_SOLVERDUMMY_DIR/LANG
 set(PRECICE_SOLVERDUMMY_DIR "${preCICE_BINARY_DIR}/Solverdummies")
 
