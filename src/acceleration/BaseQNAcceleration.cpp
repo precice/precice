@@ -237,18 +237,19 @@ void BaseQNAcceleration::clampToBounds(Eigen::Map<Eigen::MatrixXd> &data, const 
 double BaseQNAcceleration::scaleToBounds(Eigen::Map<Eigen::MatrixXd> &data, Eigen::Map<Eigen::MatrixXd> &update, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound)
 {
   double scaleStep = 0.0;
-  double eps       = 1e-12;
 
   for (int j = 0; j < data.rows(); j++) {
     if (lowerBound[j].has_value()) {
       Eigen::ArrayXd numerator   = (data.row(j).array() - *lowerBound[j]);
-      Eigen::ArrayXd denominator = -(update.row(j).array()).abs() - eps;
-      scaleStep                  = std::max(scaleStep, (numerator / denominator).maxCoeff());
+      Eigen::ArrayXd denominator = -(update.row(j).array()).abs();
+
+      scaleStep = std::max(scaleStep, (denominator != 0.0).select(numerator / denominator, -std::numeric_limits<double>::infinity()).maxCoeff());
     }
     if (upperBound[j].has_value()) {
       Eigen::ArrayXd numerator   = (data.row(j).array() - *upperBound[j]);
-      Eigen::ArrayXd denominator = (update.row(j).array()).abs() + eps;
-      scaleStep                  = std::max(scaleStep, (numerator / denominator).maxCoeff());
+      Eigen::ArrayXd denominator = (update.row(j).array()).abs();
+
+      scaleStep = std::max(scaleStep, (denominator != 0.0).select(numerator / denominator, -std::numeric_limits<double>::infinity()).maxCoeff());
     }
   }
   return scaleStep;

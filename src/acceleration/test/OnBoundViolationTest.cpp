@@ -148,6 +148,31 @@ BOOST_AUTO_TEST_CASE(testOnBoundViolationScale)
   BOOST_TEST(testing::equals(scaleFactor, 0.875, 1e-10));
 }
 
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(testOnBoundViolationScaleDivZero)
+{
+  PRECICE_TEST();
+
+  Eigen::VectorXd _data(6);
+  _data << -1e-13, -0.3, 1e-13, -1e-13, 1e-13, 1e-13;
+  Eigen::Map<Eigen::MatrixXd> dataMap(_data.data(), 2, 3);
+
+  Eigen::VectorXd _dataUpdate(6);
+  _dataUpdate << -2e-13, -0.3, 0, 3e-13, -2e-13, 2e-13;
+  Eigen::Map<Eigen::MatrixXd> dataUpdateMap(_dataUpdate.data(), 2, 3);
+
+  std::vector<std::optional<double>> _lowerBound(2);
+  _lowerBound[0] = 0;
+  _lowerBound[1] = -1;
+  std::vector<std::optional<double>> _upperBound(2);
+  _upperBound[0] = 0.5;
+  _upperBound[1] = 0;
+
+  IQNILSAcceleration acceleration(1.0, false, 10, 0, 0, 1e-10, {0}, acceleration::Acceleration::OnBoundViolation::ScaleToBound, nullptr, false);
+  auto               scaleFactor = acceleration.scaleToBounds(dataMap, dataUpdateMap, _lowerBound, _upperBound);
+  BOOST_TEST(testing::equals(scaleFactor, 0.5, 1e-10));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 #endif
