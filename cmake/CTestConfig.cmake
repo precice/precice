@@ -165,8 +165,7 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
     )
 endfunction(add_precice_test_run_solverdummies)
 
-
-enable_testing()
+include(CTest) # calls enable_testing()
 
 # Autodiscovery of CTest
 
