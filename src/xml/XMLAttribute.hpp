@@ -79,7 +79,9 @@ public:
     return _hasValidation;
   };
 
-  void readValue(const std::map<std::string, std::string> &aAttributes);
+  void readValue(
+      const std::map<std::string, std::string> &aAttributes,
+      const XMLTag *tag = nullptr);
 
   const std::string &getName() const
   {
@@ -159,7 +161,9 @@ XMLAttribute<ATTRIBUTE_T> &XMLAttribute<ATTRIBUTE_T>::setDefaultValue(const ATTR
 }
 
 template <typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::string> &aAttributes)
+void XMLAttribute<ATTRIBUTE_T>::readValue(
+   const std::map<std::string, std::string> &aAttributes,
+   const XMLTag *tag = nullptr)
 {
   PRECICE_TRACE(_name);
   PRECICE_ASSERT(!_read, "Attribute \"" + _name + "\" has already been read.");
@@ -167,7 +171,7 @@ void XMLAttribute<ATTRIBUTE_T>::readValue(const std::map<std::string, std::strin
   const auto position = aAttributes.find(getName());
 
   auto addLocation = [&](const std::string &m) {
-    if (const XMLTag *tag = currentTagForError()) {
+    if (tag) {
       return tag->formatMessage(m);
     }
     return m;
