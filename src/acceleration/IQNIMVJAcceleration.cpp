@@ -45,7 +45,7 @@ IQNIMVJAcceleration::IQNIMVJAcceleration(
     double                         RSSVDtruncationEps,
     bool                           reducedTimeGrid)
     : BaseQNAcceleration(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, pastTimeWindowsReused,
-                         filter, singularityLimit, std::move(dataIDs), onBoundViolation, std::move(preconditioner), reducedTimeGrid),
+                         filter, singularityLimit, std::move(dataIDs), onBoundViolation, preconditioner, reducedTimeGrid),
       //  _secondaryOldXTildes(),
       _invJacobian(),
       _oldInvJacobian(),
