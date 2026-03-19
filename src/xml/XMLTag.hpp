@@ -248,8 +248,6 @@ private:
   const std::string *_contentPtr = nullptr;
 };
 
-const XMLTag *currentTagForError();
-
 /// Returns the name of an Attribute
 std::string getName(const XMLTag::Attribute &attribute);
 
