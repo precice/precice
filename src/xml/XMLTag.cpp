@@ -8,10 +8,6 @@
 
 namespace precice::xml {
 
-namespace {
-thread_local const XMLTag *s_currentTag = nullptr;
-} // namespace
-
 XMLTag::XMLTag(
     Listener   &listener,
     std::string tagName,
@@ -189,16 +185,12 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
 {
   PRECICE_TRACE();
 
-  s_currentTag = this;
-
-  // Check for unexpected attributes and hints
   for (const auto &element : aAttributes) {
     const auto &name = element.first;
     if (hasAttribute(name)) {
       continue;
     }
 
-    // check existing hints
     if (auto pos = _attributeHints.find(name);
         pos != _attributeHints.end()) {
       PRECICE_ERROR(formatMessage(
@@ -218,13 +210,12 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
         fmt::format("The tag <{}> in the configuration contains an unknown attribute \"{}\". Expected attributes are {}.", _fullName, name, fmt::join(expected, ", "))));
   }
 
-  // Read all attributes
+  
   for (auto &attribute : _attributes) {
     std::visit(
-        [&aAttributes](auto &attribute) { attribute.readValue(aAttributes); },
+        [&aAttributes, this](auto &attribute) { attribute.readValue(aAttributes, this); },
         attribute);
   }
-  s_currentTag = nullptr;
 }
 
 std::vector<std::string> XMLTag::getAttributeNames() const
@@ -365,14 +356,18 @@ std::string XMLTag::formatMessage(std::string_view message) const
 {
   std::string out{message};
   if (hasLocation()) {
-    out += "\n" + getLocationContext();
+    std::string location = getLocationContext();
+    std::string escapedLocation;
+    escapedLocation.reserve(location.capacity());
+    for (char c : location) {
+      if (c == '{' || c == '}') {
+        escapedLocation += c;
+      }
+      escapedLocation += c;
+    }
+    out += "\n" + escapedLocation;
   }
   return out;
-}
-
-const XMLTag *currentTagForError()
-{
-  return s_currentTag;
 }
 
 } // namespace precice::xml
