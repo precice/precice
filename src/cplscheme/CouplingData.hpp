@@ -110,6 +110,12 @@ public:
   /// get name of this CouplingData's mesh. See Mesh::getName().
   std::string getMeshName() const;
 
+  /// get configured lower bound(s) of the data
+  std::vector<std::optional<double>> getLowerBound() const;
+
+  /// get configured upper bound(s) of the data
+  std::vector<std::optional<double>> getUpperBound() const;
+
   /// get vertex offsets of this CouplingData's mesh. See Mesh::getVertexOffsets().
   std::vector<int> getVertexOffsets();
 
