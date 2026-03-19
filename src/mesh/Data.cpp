@@ -45,8 +45,8 @@ Data::Data(
       _sample(_dimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
-  PRECICE_ASSERT(lowerBound.size() == dimensions, lowerBound.size(), dimensions);
-  PRECICE_ASSERT(upperBound.size() == dimensions, upperBound.size(), dimensions);
+  PRECICE_ASSERT(static_cast<int>(lowerBound.size()) == dimensions, lowerBound.size(), dimensions);
+  PRECICE_ASSERT(static_cast<int>(upperBound.size()) == dimensions, upperBound.size(), dimensions);
 }
 
 Eigen::VectorXd &Data::values()
