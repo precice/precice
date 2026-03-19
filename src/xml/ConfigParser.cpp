@@ -188,12 +188,14 @@ int ConfigParser::readXmlFile(std::string const &filePath)
 
   _hash = utils::preciceHash(content);
 
-  xmlParserCtxtPtr ctxt = xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
-                                                  content.c_str(), content.size(), nullptr);
+  auto ctxt = std::unique_ptr<xmlParserCtxt, void (*)(xmlParserCtxtPtr)>(
+      xmlCreatePushParserCtxt(&SAXHandler, static_cast<void *>(this),
+                              content.c_str(), content.size(), nullptr),
+      xmlFreeParserCtxt);
 
-  xmlParseChunk(ctxt, nullptr, 0, 1);
-  xmlFreeParserCtxt(ctxt);
-  xmlCleanupParser();
+  PRECICE_CHECK(ctxt != nullptr, "XML parser was unable to create a push parser context for file \"{}\"", filePath);
+
+  xmlParseChunk(ctxt.get(), nullptr, 0, 1);
 
   return 0;
 }
