@@ -93,7 +93,10 @@ void BarycentricBaseMapping::mapConservative(const time::Sample &inData, Eigen::
     mapTemplatedConservative<3>(_operations, inValues, outValues);
     return;
   default:
-    PRECICE_UNREACHABLE("Implement for unknown dimension");
+    PRECICE_UNREACHABLE("Not implemented for unknown dimension");
+    // Required for https://github.com/precice/precice/issues/2085
+    // for (const auto &op : _operations) {
+    // outValues.segment(op.in * dimensions, dimensions) += op.weight * inValues.segment(op.out * dimensions, dimensions); }
   }
 }
 
@@ -118,7 +121,10 @@ void BarycentricBaseMapping::mapConsistent(const time::Sample &inData, Eigen::Ve
     mapTemplatedConsistent<3>(_operations, inValues, outValues);
     return;
   default:
-    PRECICE_UNREACHABLE("Implement for unknown dimension");
+    PRECICE_UNREACHABLE("Not implemented for unknown dimension");
+    // Required for https://github.com/precice/precice/issues/2085
+    // for (const auto &op : _operations) {
+    // outValues.segment(op.out * dimensions, dimensions) += op.weight * inValues.segment(op.in * dimensions, dimensions); }
   }
 }
 
