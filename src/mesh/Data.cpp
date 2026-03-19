@@ -23,6 +23,30 @@ Data::Data(
       _sample(_dimensions)
 {
   PRECICE_ASSERT(dimensions > 0, dimensions);
+  _lowerBound = std::vector<std::optional<double>>(dimensions);
+  _upperBound = std::vector<std::optional<double>>(dimensions);
+}
+
+Data::Data(
+    std::string                        name,
+    DataID                             id,
+    int                                dimensions,
+    int                                spatialDimensions,
+    int                                waveformDegree,
+    std::vector<std::optional<double>> lowerBound,
+    std::vector<std::optional<double>> upperBound)
+    : _waveform(waveformDegree),
+      _lowerBound(lowerBound),
+      _upperBound(upperBound),
+      _name(std::move(name)),
+      _id(id),
+      _dimensions(dimensions),
+      _spatialDimensions(spatialDimensions),
+      _sample(_dimensions)
+{
+  PRECICE_ASSERT(dimensions > 0, dimensions);
+  PRECICE_ASSERT(static_cast<int>(lowerBound.size()) == dimensions, lowerBound.size(), dimensions);
+  PRECICE_ASSERT(static_cast<int>(upperBound.size()) == dimensions, upperBound.size(), dimensions);
 }
 
 Eigen::VectorXd &Data::values()
@@ -58,6 +82,16 @@ int Data::getWaveformDegree() const
 time::Waveform &Data::waveform()
 {
   return _waveform;
+}
+
+std::vector<std::optional<double>> Data::getLowerBound() const
+{
+  return _lowerBound;
+}
+
+std::vector<std::optional<double>> Data::getUpperBound() const
+{
+  return _upperBound;
 }
 
 void Data::moveToNextWindow()

@@ -5,6 +5,7 @@ target_sources(testprecice
     PRIVATE
     src/acceleration/test/AccelerationIntraCommTest.cpp
     src/acceleration/test/AccelerationSerialTest.cpp
+    src/acceleration/test/OnBoundViolationTest.cpp
     src/acceleration/test/ParallelMatrixOperationsTest.cpp
     src/acceleration/test/PreconditionerTest.cpp
     src/acceleration/test/QRFactorizationTest.cpp

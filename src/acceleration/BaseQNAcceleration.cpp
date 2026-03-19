@@ -40,6 +40,7 @@ BaseQNAcceleration::BaseQNAcceleration(
     int                     filter,
     double                  singularityLimit,
     std::vector<int>        dataIDs,
+    OnBoundViolation        onBoundViolation,
     impl::PtrPreconditioner preconditioner,
     bool                    reducedTimeGrid)
     : _preconditioner(std::move(preconditioner)),
@@ -47,6 +48,7 @@ BaseQNAcceleration::BaseQNAcceleration(
       _maxIterationsUsed(maxIterationsUsed),
       _timeWindowsReused(timeWindowsReused),
       _primaryDataIDs(std::move(dataIDs)),
+      _onBoundViolation(onBoundViolation),
       _forceInitialRelaxation(forceInitialRelaxation),
       _reducedTimeGrid(reducedTimeGrid),
       _qrV(filter),
@@ -95,16 +97,165 @@ void BaseQNAcceleration::initialize(
   checkDataIDs(cplData);
   // store all data IDs in vector
   _dataIDs.clear();
+  _idsWithBounds.clear();
   for (const DataMap::value_type &pair : cplData) {
     _dataIDs.push_back(pair.first);
-  }
 
+    auto lowerBound = pair.second->getLowerBound();
+    auto upperBound = pair.second->getUpperBound();
+    if (std::any_of(lowerBound.begin(), lowerBound.end(), [](const auto &v) { return v.has_value(); }) ||
+        std::any_of(upperBound.begin(), upperBound.end(), [](const auto &v) { return v.has_value(); })) {
+      _idsWithBounds.push_back(pair.first);
+    }
+  }
   _matrixCols.clear();
   _matrixCols.push_front(0);
   _firstIteration  = true;
   _firstTimeWindow = true;
 }
 
+std::vector<DataID> BaseQNAcceleration::checkBoundViolation(Eigen::VectorXd &data, DataMap &cplData) const
+{
+  Eigen::Index        offset       = 0;
+  std::vector<DataID> violatingIDs = {};
+
+  // check for bound violations
+  for (auto id : _dataIDs) {
+    Eigen::Index size = cplData.at(id)->values().size();
+
+    if (std::find(_idsWithBounds.begin(), _idsWithBounds.end(), id) == _idsWithBounds.end()) {
+      offset += size;
+      continue;
+    }
+
+    auto lowerBound    = cplData.at(id)->getLowerBound();
+    auto upperBound    = cplData.at(id)->getUpperBound();
+    int  dataDimension = cplData.at(id)->getDimensions();
+
+    Eigen::VectorXd             dataPerEntry = data.segment(offset, size);
+    Eigen::Map<Eigen::MatrixXd> dataPerDimension(dataPerEntry.data(), dataDimension, dataPerEntry.size() / dataDimension);
+
+    for (int j = 0; j < dataDimension; j++) {
+      if ((lowerBound[j].has_value() && (dataPerDimension.row(j).array() < lowerBound[j].value()).any()) ||
+          (upperBound[j].has_value() && (dataPerDimension.row(j).array() > upperBound[j].value()).any())) {
+        violatingIDs.push_back(id);
+        break;
+      }
+    }
+    offset += size;
+  }
+
+  return violatingIDs;
+}
+
+void BaseQNAcceleration::onBoundViolationsClamp(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &violatingIDs)
+{
+  Eigen::Index offset = 0;
+  for (auto id : _dataIDs) {
+    Eigen::Index size = cplData.at(id)->values().size();
+
+    if (std::find(violatingIDs.begin(), violatingIDs.end(), id) == violatingIDs.end()) {
+      offset += size;
+      continue;
+    }
+
+    int  dataDimension = cplData.at(id)->getDimensions();
+    auto lowerBound    = cplData.at(id)->getLowerBound();
+    auto upperBound    = cplData.at(id)->getUpperBound();
+    auto dataPerEntry  = data.segment(offset, size);
+
+    const Eigen::Index          nEntries = dataPerEntry.size() / dataDimension;
+    Eigen::Map<Eigen::MatrixXd> dataPerDimension(dataPerEntry.data(), dataDimension, nEntries);
+
+    clampToBounds(dataPerDimension, lowerBound, upperBound);
+
+    offset += size;
+  }
+}
+
+void BaseQNAcceleration::onBoundViolationsScale(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &violatingIDs, Eigen::VectorXd &xUpdate)
+{
+  Eigen::Index offset    = 0;
+  double       scaleStep = 0.0;
+
+  for (auto id : _dataIDs) {
+    Eigen::Index size = cplData.at(id)->values().size();
+
+    if (std::find(violatingIDs.begin(), violatingIDs.end(), id) == violatingIDs.end()) {
+      offset += size;
+      continue;
+    }
+
+    int  dataDimension  = cplData.at(id)->getDimensions();
+    auto lowerBound     = cplData.at(id)->getLowerBound();
+    auto upperBound     = cplData.at(id)->getUpperBound();
+    auto dataPerEntry   = data.segment(offset, size);
+    auto updatePerEntry = xUpdate.segment(offset, size);
+
+    const Eigen::Index          nEntries = dataPerEntry.size() / dataDimension;
+    Eigen::Map<Eigen::MatrixXd> dataMat(dataPerEntry.data(), dataDimension, nEntries);
+    Eigen::Map<Eigen::MatrixXd> updMat(updatePerEntry.data(), dataDimension, nEntries);
+
+    scaleStep = std::max(scaleStep, computeShorteningFactor(dataMat, updMat, lowerBound, upperBound));
+    offset += size;
+  }
+
+  double scaleStepGlobal = scaleStep;
+  if (precice::utils::IntraComm::isParallel()) {
+    auto &comm = precice::utils::IntraComm::getCommunication();
+
+    if (precice::utils::IntraComm::isSecondary()) {
+      comm->send(scaleStep, 0);
+    }
+
+    if (precice::utils::IntraComm::isPrimary()) {
+      double recv = 0.0;
+
+      for (auto rank : precice::utils::IntraComm::allSecondaryRanks()) {
+        comm->receive(recv, rank);
+        scaleStepGlobal = std::max(scaleStepGlobal, recv);
+      }
+    }
+
+    utils::IntraComm::broadcast(scaleStepGlobal);
+  }
+  data -= xUpdate * scaleStepGlobal;
+}
+
+void BaseQNAcceleration::clampToBounds(Eigen::Map<Eigen::MatrixXd> &data, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound)
+{
+  for (int j = 0; j < data.rows(); j++) {
+    if (lowerBound[j].has_value()) {
+      data.row(j) = data.row(j).cwiseMax(*lowerBound[j]);
+    }
+    if (upperBound[j].has_value()) {
+      data.row(j) = data.row(j).cwiseMin(*upperBound[j]);
+    }
+  }
+}
+
+double BaseQNAcceleration::computeShorteningFactor(Eigen::Map<Eigen::MatrixXd> &data, Eigen::Map<Eigen::MatrixXd> &update, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound)
+{
+  double scaleStep = 0.0;
+
+  for (int j = 0; j < data.rows(); j++) {
+    if (lowerBound[j].has_value()) {
+      Eigen::ArrayXd numerator   = (data.row(j).array() - *lowerBound[j]);
+      Eigen::ArrayXd denominator = -(update.row(j).array()).abs();
+
+      scaleStep = std::max(scaleStep, (denominator != 0.0).select(numerator / denominator, 0.0).maxCoeff());
+    }
+    if (upperBound[j].has_value()) {
+      Eigen::ArrayXd numerator   = (data.row(j).array() - *upperBound[j]);
+      Eigen::ArrayXd denominator = (update.row(j).array()).abs();
+
+      scaleStep = std::max(scaleStep, (denominator != 0.0).select(numerator / denominator, 0.0).maxCoeff());
+    }
+  }
+  PRECICE_ASSERT(scaleStep >= 0.0);
+  PRECICE_ASSERT(scaleStep <= 1.0);
+  return scaleStep;
+}
 /** ---------------------------------------------------------------------------------------------
  *         updateDifferenceMatrices()
  *
@@ -323,6 +474,34 @@ void BaseQNAcceleration::performAcceleration(
 
   // Apply the quasi-Newton update
   _values += xUpdate;
+
+  // Check for bound violations
+  if (_idsWithBounds.size() > 0 && _onBoundViolation != OnBoundViolation::Ignore) {
+    profiling::Event e("CheckBoundViolationsInQN");
+    auto             violatingIDs = checkBoundViolation(_values, cplData);
+
+    for (auto id : violatingIDs) {
+      PRECICE_WARN("The coupling data {} has violated its bound after the quasi-Newton acceleration.", cplData.at(id)->getDataName());
+    }
+
+    if (violatingIDs.size() > 0 && _onBoundViolation == OnBoundViolation::Clamp) {
+      onBoundViolationsClamp(_values, cplData, violatingIDs);
+    }
+
+    if (_onBoundViolation == OnBoundViolation::Discard || _onBoundViolation == OnBoundViolation::ScaleToBound) {
+      int violatingSizeSum   = 0;
+      int localViolatingSize = violatingIDs.size();
+      utils::IntraComm::allreduceSum(localViolatingSize, violatingSizeSum);
+
+      if (violatingSizeSum > 0 && _onBoundViolation == OnBoundViolation::Discard) {
+        PRECICE_WARN("The violating quasi-Newton step will be discarded.");
+        _values -= xUpdate;
+      }
+      if (violatingSizeSum > 0 && _onBoundViolation == OnBoundViolation::ScaleToBound) {
+        onBoundViolationsScale(_values, cplData, violatingIDs, xUpdate);
+      }
+    }
+  }
 
   // pending deletion: delete old V, W matrices if timeWindowsReused = 0
   // those were only needed for the first iteration (instead of underrelax.)
