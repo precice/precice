@@ -446,7 +446,6 @@ void BaseQNAcceleration::performAcceleration(
       auto failAddedCols = _qrV.reset(_matrixV, getPrimaryLSSystemRows());
       for (int i : failAddedCols) {
         removeMatrixColumn(i);
-        PRECICE_WARN("Column {} can't ne added to the V matrix for it can't be orthogonalized, thus it is removed from V and W.");
       }
       PRECICE_ASSERT(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
     }
