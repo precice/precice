@@ -292,8 +292,8 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       PRECICE_ASSERT(getLSSystemCols() <= _maxIterationsUsed, getLSSystemCols(), _maxIterationsUsed);
 
       PRECICE_WARN_IF(
-          2 * getLSSystemCols() >= getLSSystemRows(),
-          "The number of columns in the least squares system exceeded half the number of unknowns at the interface. "
+          2 * getLSSystemCols() >= getPrimaryLSSystemRows(),
+          "The number of columns in the least squares system exceeded half the number of primary unknowns at the interface. "
           "The system will probably become bad or ill-conditioned and the quasi-Newton acceleration may not "
           "converge. Maybe the number of allowed columns (\"max-used-iterations\") should be limited.");
 
@@ -317,7 +317,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
           residualMagnitude);
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
-      bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
+      bool overdetermined     = getLSSystemCols() <= getPrimaryLSSystemRows();
       if (not columnLimitReached && overdetermined) {
 
         utils::appendFront(_matrixV, deltaR);
@@ -425,7 +425,7 @@ void BaseQNAcceleration::performAcceleration(
     // this occurs very rarely, to be precise, it occurs only if the coupling terminates
     // after the first iteration and the matrix data from time window t-2 has to be used
     _preconditioner->apply(_matrixV);
-    _qrV.reset(_matrixV, getLSSystemRows());
+    _qrV.reset(_matrixV, getPrimaryLSSystemRows());
     _preconditioner->revert(_matrixV);
     _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
   }
@@ -443,7 +443,12 @@ void BaseQNAcceleration::performAcceleration(
 
   if (_preconditioner->requireNewQR()) {
     if (not(_filter == Acceleration::QR2FILTER || _filter == Acceleration::QR3FILTER)) { // for QR2 and QR3 filter, there is no need to do this twice
-      _qrV.reset(_matrixV, getLSSystemRows());
+      auto failAddedCols = _qrV.reset(_matrixV, getPrimaryLSSystemRows());
+      for (int i : failAddedCols) {
+        removeMatrixColumn(i);
+        PRECICE_WARN("Column {} can't ne added to the V matrix for it can't be orthogonalized, thus it is removed from V and W.");
+      }
+      PRECICE_ASSERT(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
     }
     if (_filter == Acceleration::QR3FILTER) { // QR3 filter needs to recompute QR3 filter
       _qrV.requireQR3Fallback();
@@ -703,7 +708,7 @@ void BaseQNAcceleration::iterationsConverged(
 /** ---------------------------------------------------------------------------------------------
  *         removeMatrixColumn()
  *
- * @brief: removes a column from the least squares system, i. e., from the matrices F and C
+ * @brief: removes a column from the least squares system, i. e., from the matrices W and V
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::removeMatrixColumn(

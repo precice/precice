@@ -658,7 +658,7 @@ void IQNIMVJAcceleration::specializedIterationsConverged(
 
     if (_preconditioner->requireNewQR()) {
       if (not(_filter == Acceleration::QR2FILTER)) { // for QR2 filter, there is no need to do this twice
-        _qrV.reset(_matrixV, getLSSystemRows());
+        _qrV.reset(_matrixV, getPrimaryLSSystemRows());
       }
       _preconditioner->newQRfulfilled();
     }

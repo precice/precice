@@ -87,7 +87,7 @@ public:
   /**
    * @brief resets the QR factorization to be the factorization of A = QR
    */
-  void reset(
+  std::vector<int> reset(
       Eigen::MatrixXd const &A,
       int                    globalRows,
       double                 omega = 0,

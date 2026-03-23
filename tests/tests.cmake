@@ -105,6 +105,7 @@ target_sources(testprecice
     tests/quasi-newton/parallel/ILSMultiSchemeEmptyPartition.cpp
     tests/quasi-newton/parallel/ILSParallelScheme.cpp
     tests/quasi-newton/parallel/ILSParallelSchemeEmptyPartition.cpp
+    tests/quasi-newton/parallel/ILSQR1.cpp
     tests/quasi-newton/parallel/ILSSerialScheme.cpp
     tests/quasi-newton/parallel/ILSSerialSchemeEmptyPartition.cpp
     tests/quasi-newton/parallel/ILSWaveform.cpp
@@ -126,6 +127,7 @@ target_sources(testprecice
     tests/quasi-newton/serial/DefaultConfig.cpp
     tests/quasi-newton/serial/ILSMultiScheme.cpp
     tests/quasi-newton/serial/ILSParallelScheme.cpp
+    tests/quasi-newton/serial/ILSQR1.cpp
     tests/quasi-newton/serial/ILSSerialScheme.cpp
     tests/quasi-newton/serial/ILSWaveform.cpp
     tests/quasi-newton/serial/ILSWaveformReduced.cpp
