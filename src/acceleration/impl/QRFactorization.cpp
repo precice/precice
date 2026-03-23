@@ -754,7 +754,7 @@ void QRFactorization::reset(
   PRECICE_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
 }
 
-std::vector<int> QRFactorization::reset(
+[[nodiscard]] std::vector<int> QRFactorization::reset(
     Eigen::MatrixXd const &A,
     int                    globalRows,
     double                 omega,
