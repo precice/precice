@@ -76,7 +76,7 @@ public:
 
   /// Returns all configured mappings.
   const std::vector<ConfiguredMapping> &mappings() const;
-  std::vector<ConfiguredMapping> &mappings();
+  std::vector<ConfiguredMapping>       &mappings();
 
   // Only relevant for RBF related mappings
   // Being public here is only required for testing purposes

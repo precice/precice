@@ -508,7 +508,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     // Upon creation, the mapping should be empty
     PRECICE_ASSERT(mappingContext.mapping == nullptr);
     // 2. ... and the mappings
-    mappingContext.mapping                = participant->addMapping(std::move(confMapping.mapping));
+    mappingContext.mapping = participant->addMapping(std::move(confMapping.mapping));
     PRECICE_ASSERT(mappingContext.mapping == map);
     mappingContext.configuredWithAliasTag = confMapping.configuredWithAliasTag;
 

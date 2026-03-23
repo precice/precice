@@ -141,7 +141,6 @@ private:
       const mesh::PtrMesh &mesh,
       const std::string   &nameData) const;
 
-
   // Does this participant already define a primary tag?
   // This context information is needed in xmlEndTagCallback to create a default
   // primary com if required (i.e. no solution yet defined and parallel).
