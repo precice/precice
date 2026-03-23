@@ -670,8 +670,7 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
     // Lambda to create exporter for any mesh context (avoids code duplication)
     auto createExporter = [&](const impl::MeshContext &meshContext) {
-      io::ExportContext participantExportContext(exportConfig);
-      participantExportContext.meshName = meshContext.mesh->getName();
+      auto participantExportContext = io::makeExportContext(exportConfig, meshContext.mesh->getName());
 
       std::unique_ptr<io::Export> exporter;
       if (exportConfig.type == VALUE_VTK) {

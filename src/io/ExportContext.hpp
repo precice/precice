@@ -26,22 +26,18 @@ struct ConfiguredExport {
 };
 
 struct ExportContext : public ConfiguredExport {
-  ExportContext() = default;
-  explicit ExportContext(const ConfiguredExport &config)
-  : ConfiguredExport(config)
-  {
-  }
-  explicit ExportContext(ConfiguredExport &&config)
-  : ConfiguredExport(std::move(config))
-  {
-  }
-
   // @brief Exporters performing the actual export.
   std::unique_ptr<Export> exporter;
 
   // @brief Name of the mesh to export.
   std::string meshName;
 };
+
+/// Creates an ExportContext from configuration and mesh name.
+inline ExportContext makeExportContext(ConfiguredExport config, std::string meshName)
+{
+  return {std::move(config), {}, std::move(meshName)};
+}
 
 } // namespace precice::io
 
