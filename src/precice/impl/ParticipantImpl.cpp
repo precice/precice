@@ -250,7 +250,7 @@ void ParticipantImpl::configure(
 }
 
 void ParticipantImpl::initialize()
-{
+try {
   PRECICE_TRACE();
   PRECICE_CHECK(!_hasError, "initialize() cannot be called after an unrecoverable error. Participant \"{}\" is in an erroneous state.", _accessorName);
   PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().");
@@ -265,48 +265,46 @@ void ParticipantImpl::initialize()
   // Enforce that all user-created events are stopped to prevent incorrect nesting.
   PRECICE_CHECK(_userEvents.empty(), "There are unstopped user defined events. Please stop them using stopLastProfilingSection() before calling initialize().");
 
-  try {
-    _solverInitEvent.reset();
-    Event e("initialize", profiling::Fundamental, profiling::Synchronize);
+  _solverInitEvent.reset();
+  Event e("initialize", profiling::Fundamental, profiling::Synchronize);
 
-    for (const auto &context : _accessor->providedMeshContexts()) {
-      e.addData("meshSize" + context.mesh->getName(), context.mesh->nVertices());
-    }
-
-    setupCommunication();
-    setupWatcher();
-
-    _meshLock.lockAll();
-
-    for (auto &context : _accessor->writeDataContexts()) {
-      const double startTime = 0.0;
-      context.storeBufferedData(startTime);
-    }
-
-    mapInitialWrittenData();
-    performDataActions({action::Action::WRITE_MAPPING_POST});
-
-    PRECICE_DEBUG("Initialize coupling schemes");
-    Event e1("initalizeCouplingScheme", profiling::Fundamental);
-    _couplingScheme->initialize();
-    e1.stop();
-
-    mapInitialReadData();
-    performDataActions({action::Action::READ_MAPPING_POST});
-
-    handleExports(ExportTiming::Initial);
-
-    resetWrittenData();
-
-    e.stop();
-
-    _state = State::Initialized;
-    PRECICE_INFO(_couplingScheme->printCouplingState());
-    _solverAdvanceEvent = std::make_unique<profiling::Event>("solver.advance", profiling::Fundamental, profiling::Synchronize);
-  } catch (...) {
-    _hasError = true;
-    throw;
+  for (const auto &context : _accessor->providedMeshContexts()) {
+    e.addData("meshSize" + context.mesh->getName(), context.mesh->nVertices());
   }
+
+  setupCommunication();
+  setupWatcher();
+
+  _meshLock.lockAll();
+
+  for (auto &context : _accessor->writeDataContexts()) {
+    const double startTime = 0.0;
+    context.storeBufferedData(startTime);
+  }
+
+  mapInitialWrittenData();
+  performDataActions({action::Action::WRITE_MAPPING_POST});
+
+  PRECICE_DEBUG("Initialize coupling schemes");
+  Event e1("initalizeCouplingScheme", profiling::Fundamental);
+  _couplingScheme->initialize();
+  e1.stop();
+
+  mapInitialReadData();
+  performDataActions({action::Action::READ_MAPPING_POST});
+
+  handleExports(ExportTiming::Initial);
+
+  resetWrittenData();
+
+  e.stop();
+
+  _state = State::Initialized;
+  PRECICE_INFO(_couplingScheme->printCouplingState());
+  _solverAdvanceEvent = std::make_unique<profiling::Event>("solver.advance", profiling::Fundamental, profiling::Synchronize);
+} catch (...) {
+  _hasError = true;
+  throw;
 }
 
 void ParticipantImpl::reinitialize()
@@ -401,7 +399,7 @@ void ParticipantImpl::setupWatcher()
 
 void ParticipantImpl::advance(
     double computedTimeStepSize)
-{
+try {
 
   PRECICE_TRACE(computedTimeStepSize);
   PRECICE_CHECK(!_hasError, "advance() cannot be called after an unrecoverable error. Participant \"{}\" is in an erroneous state.", _accessorName);
@@ -426,59 +424,57 @@ void ParticipantImpl::advance(
   PRECICE_CHECK(!math::equals(computedTimeStepSize, 0.0), "advance() cannot be called with a time step size of 0.");
   PRECICE_CHECK(computedTimeStepSize > 0.0, "advance() cannot be called with a negative time step size {}.", computedTimeStepSize);
 
-  try {
-    _numberAdvanceCalls++;
+  _numberAdvanceCalls++;
 
 #ifndef NDEBUG
-    PRECICE_DEBUG("Synchronize time step size");
-    if (utils::IntraComm::isParallel()) {
-      syncTimestep(computedTimeStepSize);
-    }
+  PRECICE_DEBUG("Synchronize time step size");
+  if (utils::IntraComm::isParallel()) {
+    syncTimestep(computedTimeStepSize);
+  }
 #endif
 
-    // Update the coupling scheme time state. Necessary to get correct remainder.
-    const bool isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
+  // Update the coupling scheme time state. Necessary to get correct remainder.
+  const bool isAtWindowEnd = _couplingScheme->addComputedTime(computedTimeStepSize);
 
-    if (_allowsRemeshing) {
-      if (isAtWindowEnd) {
-        auto totalMeshChanges = getTotalMeshChanges();
-        clearStamplesOfChangedMeshes(totalMeshChanges);
+  if (_allowsRemeshing) {
+    if (isAtWindowEnd) {
+      auto totalMeshChanges = getTotalMeshChanges();
+      clearStamplesOfChangedMeshes(totalMeshChanges);
 
-        int sumOfChanges = std::accumulate(totalMeshChanges.begin(), totalMeshChanges.end(), 0);
-        if (reinitHandshake(sumOfChanges)) {
-          reinitialize();
-        }
-      } else {
-        PRECICE_CHECK(_meshLock.checkAll(), "The time window needs to end after remeshing.");
+      int sumOfChanges = std::accumulate(totalMeshChanges.begin(), totalMeshChanges.end(), 0);
+      if (reinitHandshake(sumOfChanges)) {
+        reinitialize();
       }
+    } else {
+      PRECICE_CHECK(_meshLock.checkAll(), "The time window needs to end after remeshing.");
     }
-
-    const double timeSteppedTo = _couplingScheme->getTime();
-    const auto   dataToReceive = _couplingScheme->implicitDataToReceive();
-
-    handleDataBeforeAdvance(isAtWindowEnd, timeSteppedTo);
-
-    advanceCouplingScheme();
-
-    // In clase if an implicit scheme, this may be before timeSteppedTo
-    const double timeAfterAdvance   = _couplingScheme->getTime();
-    const bool   timeWindowComplete = _couplingScheme->isTimeWindowComplete();
-
-    handleDataAfterAdvance(isAtWindowEnd, timeWindowComplete, timeSteppedTo, timeAfterAdvance, dataToReceive);
-
-    PRECICE_INFO(_couplingScheme->printCouplingState());
-
-    PRECICE_DEBUG("Mapped {} samples in write mappings and {} samples in read mappings",
-                  _executedWriteMappings, _executedReadMappings);
-
-    _meshLock.lockAll();
-
-    e.stop();
-    _solverAdvanceEvent->start();
-  } catch (...) {
-    _hasError = true;
-    throw;
   }
+
+  const double timeSteppedTo = _couplingScheme->getTime();
+  const auto   dataToReceive = _couplingScheme->implicitDataToReceive();
+
+  handleDataBeforeAdvance(isAtWindowEnd, timeSteppedTo);
+
+  advanceCouplingScheme();
+
+  // In clase if an implicit scheme, this may be before timeSteppedTo
+  const double timeAfterAdvance   = _couplingScheme->getTime();
+  const bool   timeWindowComplete = _couplingScheme->isTimeWindowComplete();
+
+  handleDataAfterAdvance(isAtWindowEnd, timeWindowComplete, timeSteppedTo, timeAfterAdvance, dataToReceive);
+
+  PRECICE_INFO(_couplingScheme->printCouplingState());
+
+  PRECICE_DEBUG("Mapped {} samples in write mappings and {} samples in read mappings",
+                _executedWriteMappings, _executedReadMappings);
+
+  _meshLock.lockAll();
+
+  e.stop();
+  _solverAdvanceEvent->start();
+} catch (...) {
+  _hasError = true;
+  throw;
 }
 
 void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo)
