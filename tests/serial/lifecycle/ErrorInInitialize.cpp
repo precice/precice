@@ -14,26 +14,26 @@ PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ErrorInInitialize)
 {
   PRECICE_TEST();
-  precice::Participant interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant p(context.name, context.config(), context.rank, context.size);
 
   if (context.isNamed("SolverOne")) {
     auto   meshName = "MeshOne";
     double coords[] = {0.1, 1.2, 2.3};
-    interface.setMeshVertex(meshName, coords);
+    p.setMeshVertex(meshName, coords);
     // intentionally skip writing initial data to trigger an error.
   } else {
     auto   meshName = "MeshTwo";
     double coords[] = {0.12, 1.21, 2.2};
-    interface.setMeshVertex(meshName, coords);
+    p.setMeshVertex(meshName, coords);
   }
 
   // initialize() should throw because initial data was not provided
-  BOOST_CHECK_THROW(interface.initialize(), ::precice::Error);
+  BOOST_CHECK_THROW(p.initialize(), ::precice::Error);
 
   // After the error, further API calls should be blocked
-  BOOST_CHECK_THROW(interface.isCouplingOngoing(), ::precice::Error);
+  BOOST_CHECK_THROW(p.isCouplingOngoing(), ::precice::Error);
 
-  interface.finalize();
+  p.finalize();
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Lifecycle

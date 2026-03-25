@@ -14,36 +14,36 @@ PRECICE_TEST_SETUP("SolverOne"_on(1_rank), "SolverTwo"_on(1_rank))
 BOOST_AUTO_TEST_CASE(ErrorInAdvance)
 {
   PRECICE_TEST();
-  precice::Participant interface(context.name, context.config(), context.rank, context.size);
+  precice::Participant p(context.name, context.config(), context.rank, context.size);
 
   if (context.isNamed("SolverOne")) {
     auto   meshName = "MeshOne";
     double coords[] = {0.1, 1.2, 2.3};
-    auto   vertexid = interface.setMeshVertex(meshName, coords);
+    auto   vertexid = p.setMeshVertex(meshName, coords);
 
     auto   dataName = "DataOne";
     double data[]   = {3.4, 4.5, 5.6};
-    interface.writeData(meshName, dataName, {&vertexid, 1}, data);
+    p.writeData(meshName, dataName, {&vertexid, 1}, data);
   } else {
     auto   meshName = "MeshTwo";
     double coords[] = {0.12, 1.21, 2.2};
-    auto   vertexid = interface.setMeshVertex(meshName, coords);
+    auto   vertexid = p.setMeshVertex(meshName, coords);
 
     auto   dataName = "DataTwo";
     double data[]   = {7.8};
-    interface.writeData(meshName, dataName, {&vertexid, 1}, data);
+    p.writeData(meshName, dataName, {&vertexid, 1}, data);
   }
 
-  interface.initialize();
-  BOOST_TEST(interface.isCouplingOngoing());
+  p.initialize();
+  BOOST_TEST(p.isCouplingOngoing());
 
   // Call advance() with a negative time step size to trigger an error
-  BOOST_CHECK_THROW(interface.advance(-1.0), ::precice::Error);
+  BOOST_CHECK_THROW(p.advance(-1.0), ::precice::Error);
 
   // After the error, further API calls should be blocked
-  BOOST_CHECK_THROW(interface.isCouplingOngoing(), ::precice::Error);
+  BOOST_CHECK_THROW(p.isCouplingOngoing(), ::precice::Error);
 
-  interface.finalize();
+  p.finalize();
 }
 
 BOOST_AUTO_TEST_SUITE_END() // Lifecycle
