@@ -86,6 +86,8 @@ public:
 
   /**
    * @brief resets the QR factorization to be the factorization of A = QR
+   *
+   * @return the indices of the columns that fail to be inserted. These need to be remove the relevant columns from A such that the QR factorization system and A have the same column count.
    */
   [[nodiscard]] std::vector<int> reset(
       Eigen::MatrixXd const &A,

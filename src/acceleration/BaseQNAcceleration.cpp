@@ -425,11 +425,14 @@ void BaseQNAcceleration::performAcceleration(
     // this occurs very rarely, to be precise, it occurs only if the coupling terminates
     // after the first iteration and the matrix data from time window t-2 has to be used
     _preconditioner->apply(_matrixV);
+
+    // the columns that fail to be inserted into the QR factorization while resetting need to be removed from V and W for consistency
     auto failAddedCols = _qrV.reset(_matrixV, getPrimaryLSSystemRows());
     for (int i : failAddedCols) {
       removeMatrixColumn(i);
     }
     PRECICE_ASSERT(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
+
     _preconditioner->revert(_matrixV);
     _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
   }

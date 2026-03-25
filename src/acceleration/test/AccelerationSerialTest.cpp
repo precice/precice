@@ -139,8 +139,7 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testILSQR1WithSecondaryData)
 {
   PRECICE_TEST();
-  using DataMap = AccelerationSerialTestsFixture::DataMap;
-  // use two vectors and see if underrelaxation works
+  using DataMap                         = AccelerationSerialTestsFixture::DataMap;
   double       initialRelaxation        = 0.01;
   int          maxIterationsUsed        = 50;
   int          timeWindowsReused        = 6;
@@ -158,6 +157,7 @@ BOOST_AUTO_TEST_CASE(testILSQR1WithSecondaryData)
   PtrPreconditioner prec(new ResidualSumPreconditioner(-1, false));
   auto              dummyMesh = testing::makeDummy2DMesh(4);
 
+  // only the data with ID 0 is used as primary data for IQNILSAcceleration
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                         timeWindowsReused, filter, singularityLimit, primaryDataIDs, Acceleration::OnBoundViolation::Ignore, prec, false);
 
@@ -201,6 +201,7 @@ BOOST_AUTO_TEST_CASE(testILSQR1WithSecondaryData)
   displacements->emplaceSampleAtTime(windowEnd, {10, 10, 10, 10});
   forces->setSampleAtTime(windowEnd, forces->sample());
 
+  // QR1 triggers QRFactorization reset here. Assertions makes sure the reset function get correct data shape also when secondary data is involved.
   pp.performAcceleration(data, windowStart, windowEnd);
 
   BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(0), -0.565217391304349));
