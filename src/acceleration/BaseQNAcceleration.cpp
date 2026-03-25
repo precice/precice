@@ -451,6 +451,7 @@ void BaseQNAcceleration::performAcceleration(
   if (_preconditioner->requireNewQR()) {
     if (not(_filter == Acceleration::QR2FILTER || _filter == Acceleration::QR3FILTER)) { // for QR2 and QR3 filter, there is no need to do this twice
       auto failAddedCols = _qrV.reset(_matrixV, getPrimaryLSSystemRows());
+      // the columns that fail to be inserted into the QR factorization while resetting need to be removed from V and W for consistency
       for (int i : failAddedCols) {
         removeMatrixColumn(i);
       }

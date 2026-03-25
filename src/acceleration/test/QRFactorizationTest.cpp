@@ -7,7 +7,6 @@
 #include "cplscheme/Constants.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
-#include "utils/assertion.hpp"
 
 BOOST_AUTO_TEST_SUITE(AccelerationTests)
 
