@@ -146,7 +146,7 @@ public:
   }
 
   /// Gathers an array of ints per process.
-  void gather(span<const int> itemToSend, std::vector<std::vector<int>> itemsToReceive, std::vector<int> recvcounts) override
+  void gather(span<const int> itemToSend, std::vector<std::vector<int>>& itemsToReceive, const std::vector<int>& recvcounts) override
   {
     PRECICE_ASSERT(false, "Not implemented!");
   }

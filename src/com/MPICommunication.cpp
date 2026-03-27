@@ -9,6 +9,7 @@
 #include "logging/LogMacros.hpp"
 #include "precice/impl/Types.hpp"
 #include "utils/span_tools.hpp"
+#include "utils/IntraComm.hpp"
 
 template <size_t>
 struct MPI_Select_unsigned_integer_datatype;
@@ -345,28 +346,45 @@ void MPICommunication::gather(int itemToSend, std::vector<int> &itemsToReceive)
   );
 }
 
-void MPICommunication::gather(span<const int> itemToSend, std::vector<std::vector<int>> itemsToReceive, std::vector<int> recvcounts)
+void MPICommunication::gather(span<const int> itemToSend, std::vector<std::vector<int>>& itemsToReceive, const std::vector<int>& recvcounts)
 {
-  std::vector<int> displs(recvcounts.size());
-
-  std::exclusive_scan(
-      recvcounts.begin(),
-      recvcounts.end(),
-      displs.begin(),
-      0);
-
   Rank rootRank = adjustRank(0);
+  bool isPrimary = utils::IntraComm::isPrimary();
+
+  std::vector<int> flatBuffer;
+  std::vector<int> displs;
+
+  if (isPrimary) {
+    displs.resize(recvcounts.size());
+    int totalSize = std::accumulate(recvcounts.begin(), recvcounts.end(), 0);
+
+    std::exclusive_scan(
+        recvcounts.begin(),
+        recvcounts.end(),
+        displs.begin(),
+        0);
+    flatBuffer.resize(totalSize);
+  }
 
   MPI_Gatherv(itemToSend.data(),
               itemToSend.size(),
               MPI_INT,
-              &itemsToReceive,
-              recvcounts.data(),
-              displs.data(),
+              isPrimary ? flatBuffer.data() : nullptr,
+              isPrimary ? recvcounts.data() : nullptr,
+              isPrimary ? displs.data() : nullptr,
               MPI_INT,
               rootRank,
               communicator(rootRank) // TODO: We cannot just assume that the communicator is the same for all!
   );
+
+  if (isPrimary) {
+    for (int i = 0; i < recvcounts.size(); i++) {
+      itemsToReceive[i] = std::vector<int>(
+        flatBuffer.begin() + displs[i],
+        flatBuffer.begin() + displs[i] + recvcounts[i]
+      );
+    }
+  }
 }
 
 } // namespace precice::com

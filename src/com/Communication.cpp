@@ -8,6 +8,7 @@
 #include "logging/LogMacros.hpp"
 #include "precice/impl/Types.hpp"
 #include "profiling/Event.hpp"
+#include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
 
 using precice::profiling::Event;
@@ -369,19 +370,20 @@ std::vector<double> Communication::receiveRange(Rank rankSender, AsVectorTag<dou
 std::vector<std::vector<int>> Communication::gatherRanges(span<const int> itemToSend, AsVectorTag<int>)
 {
   std::vector<int> sizes;
+  std::vector<std::vector<int>> result;
+
   gather(itemToSend.size(), sizes);
 
-  std::vector<std::vector<int>> result;
-  result.resize(sizes.size());
+  if (utils::IntraComm::isPrimary()) {
+    result.resize(sizes.size());
 
-  for (int i = 0; i < sizes.size(); i++) {
-    PRECICE_ASSERT(sizes[i] >= 0);
-    result[i].resize(sizes[i]);
+    for (int i = 0; i < sizes.size(); i++) {
+      PRECICE_ASSERT(sizes[i] >= 0);
+      result[i].resize(sizes[i]);
+    }
   }
 
-  if (sizes.size() > 0) {
-    gather(itemToSend, result, sizes);
-  }
+  gather(itemToSend, result, sizes);
 
   return result;
 }
