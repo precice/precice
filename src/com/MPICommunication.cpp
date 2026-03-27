@@ -336,6 +336,14 @@ void MPICommunication::gather(int itemToSend, std::vector<int> &itemsToReceive)
   PRECICE_TRACE(itemToSend, itemsToReceive.size());
 
   Rank rootRank = adjustRank(0);
+  MPI_Comm comm = communicator(rootRank); // TODO: We cannot just assume that the communicator is the same for all!
+
+  if (utils::IntraComm::isPrimary()) {
+    int commSize;
+    MPI_Comm_size(comm, &commSize);
+
+    itemsToReceive.resize(commSize);
+  }
 
   MPI_Gather(&itemToSend,
              1,
@@ -344,7 +352,7 @@ void MPICommunication::gather(int itemToSend, std::vector<int> &itemsToReceive)
              1,
              MPI_INT,
              rootRank,
-             communicator(rootRank) // TODO: We cannot just assume that the communicator is the same for all!
+             comm
   );
 }
 
