@@ -369,6 +369,7 @@ std::vector<double> Communication::receiveRange(Rank rankSender, AsVectorTag<dou
 
 std::vector<std::vector<int>> Communication::gatherRanges(span<const int> itemToSend, AsVectorTag<int>)
 {
+  PRECICE_TRACE(itemToSend.size());
   std::vector<int> sizes;
   std::vector<std::vector<int>> result;
 

@@ -333,12 +333,14 @@ PtrRequest MPICommunication::aReceive(bool &itemToReceive, Rank rankSender)
 
 void MPICommunication::gather(int itemToSend, std::vector<int> &itemsToReceive)
 {
+  PRECICE_TRACE(itemToSend);
+
   Rank rootRank = adjustRank(0);
 
   MPI_Gather(&itemToSend,
              1,
              MPI_INT,
-             &itemsToReceive,
+             itemsToReceive.data(),
              1,
              MPI_INT,
              rootRank,
@@ -348,6 +350,8 @@ void MPICommunication::gather(int itemToSend, std::vector<int> &itemsToReceive)
 
 void MPICommunication::gather(span<const int> itemToSend, std::vector<std::vector<int>>& itemsToReceive, const std::vector<int>& recvcounts)
 {
+  PRECICE_TRACE(itemToSend.size(), recvcounts);
+
   Rank rootRank = adjustRank(0);
   bool isPrimary = utils::IntraComm::isPrimary();
 
@@ -365,6 +369,8 @@ void MPICommunication::gather(span<const int> itemToSend, std::vector<std::vecto
         0);
     flatBuffer.resize(totalSize);
   }
+
+  PRECICE_WARN("This gather only works if all ranks are in the same communicator. It will likely crash when using mpi-multiple-ports (MPIPortsCommunication instead of MPISinglePortsCommunication)");
 
   MPI_Gatherv(itemToSend.data(),
               itemToSend.size(),
