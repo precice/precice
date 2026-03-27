@@ -333,7 +333,7 @@ PtrRequest MPICommunication::aReceive(bool &itemToReceive, Rank rankSender)
 
 void MPICommunication::gather(int itemToSend, std::vector<int> &itemsToReceive)
 {
-  PRECICE_TRACE(itemToSend);
+  PRECICE_TRACE(itemToSend, itemsToReceive.size());
 
   Rank rootRank = adjustRank(0);
 
@@ -350,7 +350,7 @@ void MPICommunication::gather(int itemToSend, std::vector<int> &itemsToReceive)
 
 void MPICommunication::gather(span<const int> itemToSend, std::vector<std::vector<int>>& itemsToReceive, const std::vector<int>& recvcounts)
 {
-  PRECICE_TRACE(itemToSend.size(), recvcounts);
+  PRECICE_TRACE(itemToSend.size(), itemsToReceive.size(), recvcounts);
 
   Rank rootRank = adjustRank(0);
   bool isPrimary = utils::IntraComm::isPrimary();
