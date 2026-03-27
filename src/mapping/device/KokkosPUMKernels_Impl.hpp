@@ -529,9 +529,6 @@ void do_batched_solve(
   using ScratchMatrix = std::conditional_t<!evaluation_op_available || polynomial, ScratchView4d, ScratchView1d>;
   using ScratchMesh   = Kokkos::View<double **, Kokkos::LayoutRight, ScratchSpace, UnmanagedMemory>;
 
-  // TODO: Add checks for the matrices (extent() > 0 with the template params)
-  // PRECICE_ASSERT()
-
   const auto rbf_params = f.getFunctionParameters();
   // We define the lambda here such that we can query the recommended team size from Kokkos
   // Launch policy is then handled below
@@ -812,6 +809,321 @@ void do_batched_solve(
                         /* level = */ 1, Kokkos::PerTeam(outBytes));
 
   Kokkos::parallel_for("do_batched_solve", policy, kernel);
+}
+
+/// polynomial: bool whether to evaluate the polynomial or not
+/// evaluation_op_available: bool whether to compute the evaluation on the fly (merged)
+/// or whether these entries are already precomputed, i.e., evalMat may be a dummy argument
+/// in case evaluation_op_available = false
+// note: since input and output meshes are here swapped, the in data vector belongs to all output data structures
+template <bool polynomial, bool evaluation_op_available, typename EvalFunctionType, typename MemorySpace>
+void do_batched_conservative_solve(
+    int                                  nCluster,
+    int                                  dim,
+    int                                  avgInClusterSize,
+    int                                  maxInClusterSize,
+    int                                  maxOutClusterSize,
+    EvalFunctionType                     f,
+    const VectorOffsetView<MemorySpace> &rhsOffsets,
+    const GlobalIDView<MemorySpace>     &globalRhsIDs,
+    VectorView<MemorySpace>              rhsdst, // output data, but belongs to input mesh/structures
+    const MatrixOffsetView<MemorySpace> &matrixOffsets,
+    const VectorView<MemorySpace>       &matrices,
+    const VectorView<MemorySpace>       &normalizedWeights,
+    const MatrixOffsetView<MemorySpace> &evalOffsets,
+    const VectorView<MemorySpace>       &evalMat,
+    const VectorOffsetView<MemorySpace> &outOffsets,
+    const GlobalIDView<MemorySpace>     &globalOutIDs,
+    VectorView<MemorySpace>              src, // input data, but belongs to output mesh/structures
+    // For the polynomial required in addition
+    const MeshView<MemorySpace>   &inMesh,
+    const MeshView<MemorySpace>   &outMesh,
+    const VectorView<MemorySpace> &qrMatrix,
+    const VectorView<MemorySpace> &qrTau,
+    const PivotView<MemorySpace>  &qrP)
+{
+  using ExecSpace  = typename MemorySpace::execution_space;
+  using TeamPolicy = Kokkos::TeamPolicy<ExecSpace>;
+  using MemberType = typename TeamPolicy::member_type;
+
+  using ScratchSpace = typename MemorySpace::scratch_memory_space;
+  // Layout is important for how we use these matrices: we need to ensure that cols are contiguous in memory
+  // We use the scratch memory for the input data and potentially for workspace required for the
+  // polynomial or for the input mesh in case we have to compute the evaluation on the fly
+  using ScratchView1d = Kokkos::View<double *[1], Kokkos::LayoutLeft, ScratchSpace, UnmanagedMemory>;
+  using ScratchView4d = Kokkos::View<double *[4], Kokkos::LayoutLeft, ScratchSpace, UnmanagedMemory>;
+  using ScratchVector = Kokkos::View<double *, ScratchSpace, UnmanagedMemory>;
+  using ScratchMatrix = std::conditional_t<!evaluation_op_available || polynomial, ScratchView4d, ScratchView1d>;
+  using ScratchMesh   = Kokkos::View<double **, Kokkos::LayoutRight, ScratchSpace, UnmanagedMemory>;
+
+  // TODO: Add checks for the matrices (extent() > 0 with the template params)
+  // PRECICE_ASSERT()
+
+  const auto rbf_params = f.getFunctionParameters();
+  // We define the lambda here such that we can query the recommended team size from Kokkos
+  // Launch policy is then handled below
+  auto kernel = KOKKOS_LAMBDA(const MemberType &team)
+  {
+    // Required for correct capturing (mostly by device compilers), as these variables are only conditionally used further down
+    impl::capture_conditional_variables(dim, qrMatrix, qrTau, qrP, inMesh, outMesh, evalOffsets, evalMat, globalOutIDs, f, rbf_params, normalizedWeights, src);
+
+    // Step 1: Define some pointers
+    const int batch = team.league_rank();
+
+    const auto inBegin = rhsOffsets(batch);
+    const int  inSize  = rhsOffsets(batch + 1) - inBegin;
+
+    const auto outBegin = outOffsets(batch);
+    const int  outSize  = outOffsets(batch + 1) - outBegin;
+
+    // Step 2: Define the data structures to work with
+    // The scratch memory (shared memory for the device)
+    ScratchMatrix work(team.team_scratch(0), Kokkos::max(4, inSize));
+    auto          Au = Kokkos::subview(work, std::pair<int, int>(0, inSize), 0);
+
+    // Step 3: Extract the input data using the PU weights and
+    // compute the matrix vector product A^T * inputData
+    // Eigen::MatrixXd Au = _matrixA.transpose() * inputData;
+    std::optional<Kokkos::Array<double, 4>> qrCoeffs;
+    if constexpr (evaluation_op_available) {
+      ScratchVector in(team.team_scratch(1), outSize);
+      // For the minimal compute variant
+      Kokkos::parallel_for(
+          Kokkos::TeamThreadRange(team, outSize), [&](int r) {
+            auto globalID = globalOutIDs(r + outBegin);
+            auto w        = normalizedWeights(r + outBegin);
+            in(r)         = src(globalID) * w;
+          });
+      team.team_barrier();
+      auto                     startEval = evalOffsets(batch);
+      BatchMatrix<MemorySpace> eval(&evalMat(startEval), outSize, inSize);
+      // Au := 1.0 * eval^T * in + 0.0 * Au
+      KokkosBlas::Experimental::Gemv<
+          KokkosBlas::Mode::Team,
+          KokkosBlas::Algo::Gemv::Blocked>::invoke(team, 'T', 1.0, eval, in, 0.0, Au);
+
+      if (polynomial) {
+        qrCoeffs = Kokkos::Array<double, 4>{0.0, 0.0, 0.0, 0.0};
+        // double y0 = 0.0, y1 = 0.0, y2 = 0.0, y3 = 0.0;
+        Kokkos::parallel_reduce(
+            Kokkos::TeamThreadRange(team, outSize),
+            [&](const int k, double &s0, double &s1, double &s2, double &s3) {
+              const double val      = in(k);
+              auto         globalID = globalOutIDs(k + outBegin);
+
+              s0 += outMesh(globalID, 0) * val;
+              s1 += outMesh(globalID, 1) * val;
+              if (dim == 3)
+                s2 += outMesh(globalID, 2) * val;
+              s3 += val;
+            },
+            (*qrCoeffs)[0], (*qrCoeffs)[1], (*qrCoeffs)[2], (*qrCoeffs)[3]);
+
+        // Ince the above is computes, the in vector is not needed anymore
+        //    Kokkos::single(Kokkos::PerTeam(team), [&] {
+        //   in(0) = y0; in(1) = y1; in(2) = y2; in(3) = y3;
+        // });
+      }
+      // If a polynomial is involved, apply the output mesh mesh vertices here somewhere
+    } else {
+      // Step 3a: each thread takes care of one output vertex
+      // Alternative: cache the input mesh in shared memory first and let the loop run over outSize
+      // Kokkos::parallel_for(
+      //     Kokkos::TeamThreadRange(team, outSize), [&](int r) {
+      //       auto   globalID = globalOutIDs(r + outBegin);
+      //       auto   w        = normalizedWeights(r + outBegin);
+      //       double in       = src(globalID) * w;
+
+      //       // we first extract the vertex coordinates
+      //       Kokkos::Array<double, 3> outVertex = {0., 0., 0.};
+      //       for (int d = 0; d < dim; ++d) {
+      //         outVertex[d] = outMesh(globalID, d);
+      //       }
+
+      //       // Step 3b: The matrix vector multiplication res = A * in
+      //       // Accumulate partial dot product in a thread-parallel manner
+      //       double sum = 0.0;
+      //       Kokkos::parallel_reduce(
+      //           Kokkos::ThreadVectorRange(team, inSize),
+      //           [&](int c, double &localSum) {
+      //             // compute the local output coefficients
+      //             double dist = 0;
+      //             for (int d = 0; d < dim; ++d) {
+      //               double diff = outVertex[d] - localInMesh->operator()(c, d);
+      //               dist += diff * diff;
+      //             }
+      //             dist = Kokkos::sqrt(dist);
+      //             // Evaluate the RBF
+      //             double val = f(dist, rbf_params);
+      //             localSum += val * in(c);
+      //           },
+      //           sum); // ThreadVectorRange
+      //       // Au(r) = sum; -> needs inSize
+      //     });
+    }
+    team.team_barrier();
+
+    // Step 3: Solve for the RBF coefficients
+    // The lu inplace lu decomposition computed with KokkosBatched
+    // There is also a convenience routine for the LU solve, but it
+    // uses Trsm under the hood, which is quite a bit slower
+    auto                     matStart = matrixOffsets(batch);
+    BatchMatrix<MemorySpace> A(&matrices(matStart), inSize, inSize);
+
+    // Forward substitution: solve L * y = b and
+    KokkosBatched::Trsv<
+        MemberType,
+        KokkosBatched::Uplo::Lower,
+        KokkosBatched::Trans::NoTranspose,
+        KokkosBatched::Diag::Unit,
+        KokkosBatched::Mode::Team,
+        KokkosBatched::Algo::Trsv::Blocked>::invoke(team, 1.0, A, Au);
+
+    team.team_barrier();
+
+    // Backward substitution: solve U * x = y
+    KokkosBatched::Trsv<
+        MemberType,
+        KokkosBatched::Uplo::Upper,
+        KokkosBatched::Trans::NoTranspose,
+        KokkosBatched::Diag::NonUnit,
+        KokkosBatched::Mode::Team,
+        KokkosBatched::Algo::Trsv::Blocked>::invoke(team, 1.0, A, Au);
+    team.team_barrier();
+
+    // Step 4: take care of the polynomial part
+    auto rhstmp = Kokkos::subview(work, std::pair<int, int>(0, inSize), std::pair<int, int>(1, 2));
+    if constexpr (polynomial) {
+
+      //   Eigen::MatrixXd epsilon = _matrixV.transpose() * inputData;
+      //   PRECICE_ASSERT(epsilon.rows() == _matrixV.cols());
+      double y0 = 0.0, y1 = 0.0, y2 = 0.0, y3 = 0.0;
+      Kokkos::parallel_reduce(
+          Kokkos::TeamThreadRange(team, inSize),
+          [&](const int k, double &s0, double &s1, double &s2, double &s3) {
+            const double val      = Au(k);
+            auto         globalID = globalRhsIDs(k + inBegin);
+
+            s0 += inMesh(globalID, 0) * val;
+            s1 += inMesh(globalID, 1) * val;
+            if (dim == 3)
+              s2 += inMesh(globalID, 2) * val;
+            s3 += val;
+          },
+          y0, y1, y2, y3);
+
+      qrCoeffs->operator[](0) = y0 - qrCoeffs->operator[](0);
+      qrCoeffs->operator[](1) = y1 - qrCoeffs->operator[](1);
+      if (dim == 3) {
+        qrCoeffs->operator[](2) = y2 - qrCoeffs->operator[](2);
+        qrCoeffs->operator[](3) = y3 - qrCoeffs->operator[](3);
+      } else {
+        qrCoeffs->operator[](2) = y3 - qrCoeffs->operator[](3);
+      }
+      //   epsilon -= _matrixQ.transpose() * out; // We can cache Q
+      //   PRECICE_ASSERT(epsilon.rows() == _matrixQ.cols());
+
+      //   // out  = out - solveTranspose tau (sigma in the PETSc impl)
+      //   out -= static_cast<Eigen::MatrixXd>(_qrMatrixQ.transpose().solve(-epsilon));
+
+      const int            matrixCols = dim + 1;
+      const offset_1d_type qrBegin    = inBegin * matrixCols;
+      const offset_1d_type tauBegin   = batch * matrixCols;
+      const offset_1d_type PBegin     = batch * (matrixCols + 1);
+      const int            rank       = qrP(PBegin + matrixCols);
+
+      BatchMatrix<MemorySpace>           qr(&qrMatrix(qrBegin), inSize, matrixCols);
+      BatchVector<double *, MemorySpace> tau(&qrTau(tauBegin), matrixCols);
+      BatchVector<int *, MemorySpace>    P(&qrP(PBegin), matrixCols);
+
+      Kokkos::parallel_for(
+          Kokkos::TeamThreadRange(team, inSize), [&](int i) { rhstmp(i, 0) = 0; });
+      team.team_barrier();
+
+      if (team.team_rank() == 0) {
+
+        auto R      = Kokkos::subview(qr, std::pair<int, int>(0, rank), std::pair<int, int>(0, rank));
+        auto rhs_re = Kokkos::subview(rhstmp, std::pair<int, int>(0, matrixCols), 0);
+
+        for (int i = 0; i < matrixCols; ++i) {
+          rhs_re(i) = qrCoeffs->operator[](i);
+        }
+        KokkosBatched::TeamVectorApplyPivot<MemberType,
+                                            KokkosBatched::Side::Left,
+                                            KokkosBatched::Direct::Forward>::invoke(team, P, rhs_re);
+
+        auto rhs_r = Kokkos::subview(rhstmp, std::pair<int, int>(0, rank), 0);
+
+        // Solve (R^T) * rhs_r = rhs_r in-place
+        KokkosBatched::Trsv<
+            MemberType,
+            KokkosBatched::Uplo::Upper,
+            KokkosBatched::Trans::Transpose,
+            KokkosBatched::Diag::NonUnit,
+            KokkosBatched::Mode::Serial,
+            KokkosBatched::Algo::Trsv::Unblocked>::invoke(team, 1.0, R, rhs_r);
+
+        // Use ApplyQ with NoTranspose to apply Q
+        auto tmp = Kokkos::subview(work, Kokkos::ALL(), 2);
+        // auto Au = Kokkos::subview(work, std::pair<int, int>(0, inSize), 0);
+
+        KokkosBatched::ApplyQ<MemberType,
+                              KokkosBatched::Side::Left,
+                              KokkosBatched::Trans::NoTranspose,
+                              KokkosBatched::Mode::Serial,
+                              KokkosBatched::Algo::ApplyQ::Unblocked>::invoke(team, qr, tau, rhstmp, tmp);
+      }
+
+      team.team_barrier();
+      ///////////////////////////////
+    }
+
+    // Step 5: Accumulate the result into the output vector
+    Kokkos::parallel_for(
+        Kokkos::TeamThreadRange(team, inSize), [&](int i) {
+          auto   globalID = globalRhsIDs(i + inBegin);
+          double val      = Au(i);
+          if constexpr (polynomial) {
+            val -= rhstmp(i, 0);
+          }
+          Kokkos::atomic_add(&rhsdst(globalID), val);
+          // If a polynomial is involved, apply the output mesh mesh vertices here somewhere
+        });
+  };
+
+  // We allocate one vector for indata and once for outdata
+  // We need at least four entries for the polynomial, seems unlikely for maxInClusterSize to be lower
+  // but we should be certain
+  auto inBytes  = ScratchVector::shmem_size(std::max(4, maxInClusterSize));
+  auto outBytes = ScratchVector::shmem_size(maxOutClusterSize);
+  if (!evaluation_op_available || polynomial) {
+    // and additional storage if we have the polynomial
+    inBytes = 4 * inBytes;
+  }
+  // We use the outBytes only for the per-cluster output vector, which
+  // we don't need if we evaluate everything on the fly
+  if (!evaluation_op_available) {
+    outBytes = 0;
+  }
+
+  // We put the solution and the in data values into shared memory
+  // TODO: Avoid the duplicate memory definitions here, currently needed as we
+  // cannot change the Kokkos::AUTO to the actual recommendataion later
+  auto tmpPol = TeamPolicy(nCluster, Kokkos::AUTO)
+                    .set_scratch_size(
+                        /* level = */ 0, Kokkos::PerTeam(inBytes))
+                    .set_scratch_size(
+                        /* level = */ 1, Kokkos::PerTeam(outBytes));
+
+  auto teamSize = impl::findTeamSize<ExecSpace>(avgInClusterSize, impl::Pow2Mode::Smaller, kernel, tmpPol);
+
+  auto policy = TeamPolicy(nCluster, teamSize)
+                    .set_scratch_size(
+                        /* level = */ 0, Kokkos::PerTeam(inBytes))
+                    .set_scratch_size(
+                        /* level = */ 1, Kokkos::PerTeam(outBytes));
+
+  Kokkos::parallel_for("do_batched_conservative_solve", policy, kernel);
 }
 
 // Currently not used at all, solves the QR decomposition used for the polynomial
