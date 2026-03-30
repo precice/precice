@@ -1851,7 +1851,7 @@ void performReferenceTesting(Mapping &testMapping, Mapping &referenceMapping, in
   BOOST_TEST(testMapping.hasComputedMapping() == false);
 
   auto &val = testInData->values();
-  for (int i = 0; i < inMesh->nVertices(); ++i) {
+  for (std::size_t i = 0; i < inMesh->nVertices(); ++i) {
     // base value ramps from 0.0 to 1.0
     double base = double(i) / double(inMesh->nVertices() - 1);
     for (int c = 0; c < nComponents; ++c) {

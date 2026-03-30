@@ -55,13 +55,13 @@ BOOST_AUTO_TEST_CASE(WithSubsteps)
   Eigen::MatrixXd savedValues(nSubsteps, 2); // save the solution to check for correctness after it has converged
 
   interface.initialize();
-  double maxDt         = interface.getMaxTimeStepSize();
-  double inValues[2]   = {0.0, 0.0};
-  double outValues[2]  = {0.0, 0.0};
-  double dt            = maxDt / nSubsteps; // Do 5 substeps to check if QN and Waveform iterations work together
-  int    nSubStepsDone = 0;                 // Counts the number of substeps that are done
-  double t             = 0;
-  double timeCheckpoint;
+  double maxDt          = interface.getMaxTimeStepSize();
+  double inValues[2]    = {0.0, 0.0};
+  double outValues[2]   = {0.0, 0.0};
+  double dt             = maxDt / nSubsteps; // Do 5 substeps to check if QN and Waveform iterations work together
+  int    nSubStepsDone  = 0;                 // Counts the number of substeps that are done
+  double t              = 0;
+  double timeCheckpoint = 0;
   while (interface.isCouplingOngoing()) {
 
     if (interface.requiresWritingCheckpoint()) {

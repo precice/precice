@@ -37,8 +37,6 @@ void check_support_5x5x5(const Eigen::MatrixXd &values,
 
   BOOST_TEST(static_cast<int>(values.cols()) == N);
 
-  const double r2 = radius * radius;
-
   for (int k = 0; k < Nz; ++k) {
     for (int j = 0; j < Ny; ++j) {
       for (int i = 0; i < Nx; ++i) {
