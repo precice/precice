@@ -15,6 +15,6 @@ void runTestQNWithWaveforms(std::string const &config, TestContext const &contex
 
 void runTestQNWithWaveformsReducedTimeGrid(std::string const &config, TestContext const &context);
 
-void runTestQNWithBound(std::string const &config, TestContext const &context);
+void runTestQNWithBound(bool includeSecondaryData, std::string const &config, TestContext const &context);
 
 #endif
