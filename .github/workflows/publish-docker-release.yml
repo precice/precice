@@ -42,6 +42,7 @@ jobs:
   package:
     name: 'Release docker precice/precice for ${{ inputs.version }}'
     runs-on: ubuntu-latest
+    if: github.repository == 'precice/precice'
     env:
         docker_username: precice
     steps:
