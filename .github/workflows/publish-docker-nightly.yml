@@ -21,6 +21,7 @@ jobs:
   dockerfile:
     name: "Build precice:nightly"
     runs-on: ubuntu-latest
+    if: github.repository == 'precice/precice'
     env:
         docker_username: precice
     steps:
