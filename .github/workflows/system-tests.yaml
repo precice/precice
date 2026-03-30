@@ -12,6 +12,7 @@ jobs:
     outputs:
       ref-python-bindings: ${{ steps.ref-python-bindings.outputs.shorthash }}
       ref-calculix-adapter: ${{ steps.ref-calculix-adapter.outputs.shorthash }}
+      ref-dumux-adapter: ${{ steps.ref-dumux-adapter.outputs.shorthash }}
       ref-fenics-adapter: ${{ steps.ref-fenics-adapter.outputs.shorthash }}
       ref-openfoam-adapter: ${{ steps.ref-openfoam-adapter.outputs.shorthash }}
       ref-su2-adapter: ${{ steps.ref-su2-adapter.outputs.shorthash }}
@@ -30,6 +31,13 @@ jobs:
         with:
           owner: precice
           repo: calculix-adapter
+          branch: develop
+      - id: ref-dumux-adapter
+        name: Get DuMux adapter ref
+        uses: nmbgeek/github-action-get-latest-commit@main
+        with:
+          owner: precice
+          repo: dumux-adapter
           branch: develop
       - id: ref-fenics-adapter
         name: Get FEniCS adapter ref
@@ -64,6 +72,7 @@ jobs:
         run: |
           printf 'Python bindings: ${{ steps.ref-python-bindings.outputs.shorthash }}\n ${{ steps.ref-python-bindings.outputs.description }}\n----------\n'
           printf 'CalculiX adapter: ${{ steps.ref-calculix-adapter.outputs.shorthash }}\n ${{ steps.ref-calculix-adapter.outputs.description }}\n----------\n'
+          printf 'DuMux adapter: ${{ steps.ref-dumux-adapter.outputs.shorthash }}\n ${{ steps.ref-dumux-adapter.outputs.description }}\n----------\n'
           printf 'FEniCS adapter: ${{ steps.ref-fenics-adapter.outputs.shorthash }}\n ${{ steps.ref-fenics-adapter.outputs.description }}\n----------\n'
           printf 'OpenFOAM adapter: ${{ steps.ref-openfoam-adapter.outputs.shorthash }} ${{ steps.ref-openfoam-adapter.outputs.description }}\n----------\n'
           printf 'SU2 adapter: ${{ steps.ref-su2-adapter.outputs.shorthash }}\n ${{ steps.ref-su2-adapter.outputs.description }}\n----------\n'
@@ -86,6 +95,12 @@ jobs:
           echo "Description:"
           echo "\`\`\`"
           echo '${{ steps.ref-calculix-adapter.outputs.description }}'
+          echo "\`\`\`"
+          echo "### DuMux adapter"
+          echo "Reference: [\`${{ steps.ref-dumux-adapter.outputs.shorthash }}\`](https://github.com/precice/dumux-adapter/commit/${{ steps.ref-dumux-adapter.outputs.shorthash }})"
+          echo "Description:"
+          echo "\`\`\`"
+          echo '${{ steps.ref-dumux-adapter.outputs.description }}'
           echo "\`\`\`"
           echo "### FEniCS adapter"
           echo "Reference: [\`${{ steps.ref-fenics-adapter.outputs.shorthash }}\`](https://github.com/precice/fenics-adapter/commit/${{ steps.ref-fenics-adapter.outputs.shorthash }})"
@@ -126,6 +141,7 @@ jobs:
         PYTHON_BINDINGS_REF:${{ needs.gather-refs.outputs.ref-python-bindings }},\
         CALCULIX_VERSION:2.20,\
         CALCULIX_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-calculix-adapter }},\
+        DUMUX_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-dumux-adapter }},\
         FENICS_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-fenics-adapter }},\
         OPENFOAM_EXECUTABLE:openfoam2312,\
         OPENFOAM_ADAPTER_REF:${{ needs.gather-refs.outputs.ref-openfoam-adapter }},\
