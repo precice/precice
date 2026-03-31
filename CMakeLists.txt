@@ -525,10 +525,9 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
       src/mapping/device/GinkgoRBFKernels.cpp
     )
 
-    target_link_libraries(preciceCore PRIVATE Ginkgo::ginkgo)
     if (NOT PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING)
       # Otherwise, linking to Kokkos is handled through the kernels interface
-      target_link_libraries(preciceCore PRIVATE Kokkos::kokkos)
+      target_link_libraries(preciceCore PUBLIC Kokkos::kokkos)
     endif()
 
   # Now we setup cuSolver and hipSOLVER for preCICE
