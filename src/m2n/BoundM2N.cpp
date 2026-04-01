@@ -72,7 +72,7 @@ void BoundM2N::preConnectSecondaryRanks()
     // Gather connection info and communicate it
     if (utils::IntraComm::isSecondary()) {
       Event e1("bound-m2n.gatherSendConnectionInfo");
-      com::sendConnectionInfo(*utils::IntraComm::getCommunication(), 0, connectionInfo);
+      utils::IntraComm::getCommunication()->gatherRanges(connectionInfo);
       e1.stop();
     } else { // Primary
       // Gather connection info
