@@ -151,6 +151,12 @@ public:
     PRECICE_ASSERT(false, "Not implemented!");
   }
 
+  /// Gathers a string of specified length per process.
+  void gather(std::string itemToSend, std::vector<std::string>& itemsToReceive, const std::vector<int>& recvcounts) override
+  {
+    PRECICE_ASSERT(false, "Not implemented!");
+  }
+
   void prepareEstablishment(std::string const &acceptorName,
                             std::string const &requesterName) override;
 
