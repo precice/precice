@@ -389,6 +389,28 @@ std::vector<std::vector<int>> Communication::gatherRanges(span<const int> itemTo
   return result;
 }
 
+std::vector<std::string> Communication::gatherRanges(std::string itemToSend)
+{
+  PRECICE_TRACE(itemToSend.size());
+  std::vector<int> sizes;
+  std::vector<std::string> result;
+
+  gather(itemToSend.size(), sizes);
+
+  if (utils::IntraComm::isPrimary()) {
+    result.resize(sizes.size());
+
+    for (int i = 0; i < sizes.size(); i++) {
+      PRECICE_ASSERT(sizes[i] >= 0);
+      result[i].resize(sizes[i]);
+    }
+  }
+
+  gather(itemToSend, result, sizes);
+
+  return result;
+}
+
 int Communication::adjustRank(Rank rank) const
 {
   return rank - _rankOffset;

@@ -125,6 +125,9 @@ public:
   /// Gathers an array of ints per process.
   void gather(span<const int> itemToSend, std::vector<std::vector<int>>& itemsToReceive, const std::vector<int>& recvcounts) override;
 
+  /// Gathers a string of specified length per process.
+  void gather(std::string itemToSend, std::vector<std::string>& itemsToReceive, const std::vector<int>& recvcounts) override;
+
 protected:
   /// Returns the communicator.
   virtual MPI_Comm &communicator(Rank rank) = 0;

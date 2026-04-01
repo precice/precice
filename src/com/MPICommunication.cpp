@@ -400,6 +400,50 @@ void MPICommunication::gather(span<const int> itemToSend, std::vector<std::vecto
     }
   }
 }
+void MPICommunication::gather(std::string itemToSend, std::vector<std::string> &itemsToReceive, const std::vector<int> &recvcounts)
+{
+  PRECICE_TRACE(itemToSend.size(), itemsToReceive.size(), recvcounts);
+
+  Rank rootRank = adjustRank(0);
+  bool isPrimary = utils::IntraComm::isPrimary();
+
+  std::vector<char> flatBuffer;
+  std::vector<int> displs;
+
+  if (isPrimary) {
+    displs.resize(recvcounts.size());
+    int totalSize = std::accumulate(recvcounts.begin(), recvcounts.end(), 0);
+
+    std::exclusive_scan(
+        recvcounts.begin(),
+        recvcounts.end(),
+        displs.begin(),
+        0);
+    flatBuffer.resize(totalSize);
+  }
+
+  PRECICE_WARN("This gather only works if all ranks are in the same communicator. It will likely crash when using mpi-multiple-ports (MPIPortsCommunication instead of MPISinglePortsCommunication)");
+
+  MPI_Gatherv(itemToSend.data(),
+              static_cast<int>(itemToSend.size()),
+              MPI_CHAR,
+              isPrimary ? flatBuffer.data() : nullptr,
+              isPrimary ? recvcounts.data() : nullptr,
+              isPrimary ? displs.data() : nullptr,
+              MPI_CHAR,
+              rootRank,
+              communicator(rootRank) // TODO: We cannot just assume that the communicator is the same for all!
+  );
+
+  if (isPrimary) {
+    for (int i = 0; i < recvcounts.size(); i++) {
+      itemsToReceive[i] = std::string(
+        flatBuffer.data() + displs[i],
+        recvcounts[i]
+      );
+    }
+  }
+}
 
 } // namespace precice::com
 

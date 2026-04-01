@@ -373,6 +373,9 @@ public:
   /// Gathers an array of ints per process.
   virtual void gather(span<const int> itemToSend, std::vector<std::vector<int>>& itemsToReceive, const std::vector<int>& recvcounts) = 0;
 
+  /// Gathers a string of specified length per process.
+  virtual void gather(std::string itemToSend, std::vector<std::string>& itemsToReceive, const std::vector<int>& recvcounts) = 0;
+
   /// @}
 
   /// @name Range communication
@@ -400,6 +403,9 @@ public:
 
   /// Sends and receives a range of ints for each connected rank
   std::vector<std::vector<int>> gatherRanges(span<const int> itemToSend, AsVectorTag<int>);
+
+  /// Sends and receives a string for each connected rank
+  std::vector<std::string> gatherRanges(std::string itemToSend);
 
   /// @}
 

@@ -80,15 +80,14 @@ void BoundM2N::preConnectSecondaryRanks()
 
       std::map<Rank, std::string> connectionInfoMap;
 
+      std::vector<std::string> allConnectionInfos = utils::IntraComm::getCommunication()->gatherRanges(connectionInfo);
+
       // Store the primary rank's connection info as well
-      connectionInfoMap.emplace(0, connectionInfo);
+      connectionInfoMap.emplace(0, allConnectionInfos[0]);
 
       for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
-        connectionInfoMap.emplace(secondaryRank, "");
-
-        Event e2("bound-m2n.gatherReceiveConnectionInfo");
-        com::receiveConnectionInfo(*utils::IntraComm::getCommunication(), secondaryRank, connectionInfoMap.at(secondaryRank));
-        e2.stop();
+        PRECICE_ASSERT(secondaryRank < allConnectionInfos.size(), "Connection information from secondary rank not received");
+        connectionInfoMap.emplace(secondaryRank, allConnectionInfos[secondaryRank]);
       }
 
       e1.stop();
