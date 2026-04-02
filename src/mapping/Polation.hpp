@@ -46,6 +46,11 @@ public:
   /// Returns the projection distance
   double distance() const;
 
+  bool operator<(const Polation &other) const
+  {
+    return _distance < other._distance;
+  }
+
 private:
   boost::container::static_vector<WeightedElement, 4> _weightedElements;
   double                                              _distance;
