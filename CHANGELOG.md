@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 3.4.0
+
+- Added a conservative just-in-time coarse-graining mapping variant. (https://github.com/precice/precice/pull/2301)
+- Added compatibility with SYCL, supported in the batched PU-RBF solver. (https://github.com/precice/precice/pull/2346)
+- Added general configurable lower and upper bounds for scalar and vector data, currently only used by quasi-Newton accelerations, see option `on-bound-violation`. (https://github.com/precice/precice/pull/1952)
+- Added configurable multiscale-spread-profile option to axial geometric multiscale mapping, allowing users to select between `uniform` and `parabolic` field distributions when spreading 1D data to 3D. (https://github.com/precice/precice/pull/2386)
+- Added 1D-2D and 2D-3D options to the axial geometric multiscale mapping, as well as a square cross-section option for the 1D-3D and 2D-3D mappings. (https://github.com/precice/precice/pull/2453)
+- Added configuration validation error when neither max-time nor max-time-windows is defined in a coupling scheme. (https://github.com/precice/precice/pull/2459)
+- Added consistently named Fortran functions `precicef_set_mesh_vertex_`, `precicef_set_mesh_vertices_`, `precicef_set_mesh_edge_`, `precicef_set_mesh_triangle_`, `precicef_set_mesh_quad_`, and `precicef_set_mesh_tetrahedron_` to match the C/C++ API naming convention. (https://github.com/precice/precice/pull/2487)
+- Added post-processing methods to quasi-Newton acceleration to handle steps that would violate defined data bounds. Options for `on-bound-violation` are `discard`, `clamp` or `scale` QN steps. Default is to `ignore` violations. (https://github.com/precice/precice/pull/1952)
+- Added support for a batched RBF-PUM solver for consistent mappings using Kokkos and Kokkos-Kernels, which can be enabled using the CMake option `PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING`. The solver can leverage OpenMP, CUDA, HIP, and SYCL as executors. (https://github.com/precice/precice/pull/2346)
+- Changed iteration log files to only include QN-specific columns when using quasi-Newton acceleration schemes. Non-QN accelerations no longer write these columns with placeholder zeros. (https://github.com/precice/precice/pull/2420)
+- Changed preconditioner warnings to include the data name when sub-vectors become zero. (https://github.com/precice/precice/pull/2473)
+- Changed the write data buffer of received meshes to be reset after repartitioning. (https://github.com/precice/precice/pull/2234)
+- Deprecated Fortran functions `precicef_set_vertex_`, `precicef_set_vertices_`, `precicef_set_edge_`, `precicef_set_triangle_`, `precicef_set_quad_`, and `precicef_set_tetrahedron`. Use the new `precicef_set_mesh_*` variants instead. (https://github.com/precice/precice/pull/2487)
+- Fixed `QR1` filter in IQN acceleration schemes crashing on reset. This bug was introduced in preCICE version 3.2.0. (https://github.com/precice/precice/pull/2532)
+- Fixed a race condition in the two-level initialization that can cause a crash. This bug was introduced with the initial version of the feature. (https://github.com/precice/precice/pull/2446)
+- Fixed applying the safety factor when merging the bounding boxes during the repartitioning. (https://github.com/precice/precice/pull/2330)
+- Fixed deprecation warning for PETSc 3.24 and newer. (https://github.com/precice/precice/pull/2398)
+- Fixed invalid indexing for scalar data in axial geometric multiscale mapping by introducing explicit scalar handling. (https://github.com/precice/precice/pull/2377)
+- Changed `boost::asio::deadline_timer` to `boost::asio::system_timer`, which was deprecated in Boost 1.87.0. (https://github.com/precice/precice/pull/2428)
+- Improved computation and mapping speed of nearest-projection and linear-cell-interpolation mappings. (https://github.com/precice/precice/pull/2406)
+- Improved configuration reading to use a single call if possible. This avoids the partially multi-second latency on slow filesystems used on clusters and supercomputers. (https://github.com/precice/precice/pull/2448)
+
 ## 3.3.1
 
 - Added CMake option `Boost_USE_STATIC_LIBS` defaulting to OFF which forces Boost to find shared library by default. (https://github.com/precice/precice/pull/2415)
