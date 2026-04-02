@@ -1,34 +1,34 @@
 ## How to work with this template
 
-* [ ] assign a release manager, who takes care of the process
-* [ ] assign each point below to a responsible person, before you continue. Use `@member`.
+* assign a release manager, who takes care of the process
+* assign each point below to a responsible person, before you continue. Use `@member`.
 
 Only the release manager should update this post (even tickboxes, due to race conditions in editing). Everybody else should comment on the PR with the progress.
 
 ## Pre-PR steps
 
-* [ ] Make sure you have the latest `main` branch locally.
-* [ ] Create branch `hotfix-vX.Y.Z` from `main`. If needed, `git rebase main`.
-* [ ] Commit fixes to the hotfix branch
-* [ ] Check code base w.r.t code formatting (run `pre-commit run -va`)
-* [ ] Update the list of operating systems for the package generation in `.github/workflows/release.yml`
-* [ ] Bump the version: `tools/releasing/bumpversion.sh MAJOR.MINOR.PATCH`
-* [ ] Look over the updated `CHANGELOG.md` of the hotfix branch (all)
+* Make sure you have the latest `main` branch locally.
+* Create branch `hotfix-vX.Y.Z` from `main`. If needed, `git rebase main`.
+* Commit fixes to the hotfix branch
+* Check code base w.r.t code formatting (run `pre-commit run -va`)
+* Update the list of operating systems for the package generation in `.github/workflows/release.yml`
+* Bump the version: `tools/releasing/bumpversion.sh MAJOR.MINOR.PATCH`
+* Look over the updated `CHANGELOG.md` of the hotfix branch (all)
    * Check for merged lines
    * Add things, if necessary
    * Fix wording and tense
    * Sort the entries lexicographically
    * Extract summary
-* [ ] Verify the version changes in:
-   * [ ] `CHANGELOG`
-   * [ ] `CMakeLists.txt`
-   * [ ] `tools/releasing/packaging/debian/changelog`
-* [ ] Commit the version bump: `git commit -m "Bump version to X.Y.Z"`
-* [ ] Push the hotfix branch to the precice repository: `git push -u upstream hotfix-vX.Y.Z`
+* Verify the version changes in:
+   * `CHANGELOG`
+   * `CMakeLists.txt`
+   * `tools/releasing/packaging/debian/changelog`
+* Commit the version bump: `git commit -m "Bump version to X.Y.Z"`
+* Push the hotfix branch to the precice repository: `git push -u upstream hotfix-vX.Y.Z`
 
 ## Step by step guide
 
-* [ ] Open PR from `hotfix-vX.Y.Z` to `main` (use [this template](https://github.com/precice/precice/blob/develop/tools/releasing/PULL_REQUEST_TEMPLATE/hotfix_pull_request_template.md))
+* Open PR from `hotfix-vX.Y.Z` to `main` (use [this template](https://github.com/precice/precice/blob/develop/tools/releasing/PULL_REQUEST_TEMPLATE/hotfix_pull_request_template.md))
 * [ ] Trigger the system tests using the `trigger-system-tests` label ([`release_test` suite](https://github.com/precice/tutorials/blob/develop/tools/tests/tests.yaml)). After any force-push, remove and add the label again.
 * [ ] Fix potential problems on the hotfix branch (all)
 * [ ] Reorder the commits for the version bump to be the latest. `git rebase -i main`
