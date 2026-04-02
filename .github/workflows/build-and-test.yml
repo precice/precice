@@ -195,7 +195,7 @@ jobs:
           PSM3_HAL: loopback # required for fedora
           UCX_MEM_EVENTS: n # reduces the ucx/ucs load times
         working-directory: build
-        run: su -c ". ../venv/bin/activate && ctest -j" "$PRECICE_USER"
+        run: su -c ". ../venv/bin/activate && ctest -D Experimental -j" "$PRECICE_USER"
       - name: Coverage Report
         working-directory: build
         if: ${{ matrix.COVFLAGS }}
@@ -297,7 +297,7 @@ jobs:
         OMPI_MCA_btl: self,vader
         OMPI_MCA_pml: ob1
       working-directory: build
-      run: ctest -j
+      run: ctest -D Experimental -j
     - uses: actions/upload-artifact@v7
       if: failure()
       with:
@@ -352,7 +352,7 @@ jobs:
         working-directory: build
         run: |
           # Allow each test to rerun to iron out sporadic MPI failures
-          ctest -j --repeat until-pass:3
+          ctest -D Experimental -j --repeat until-pass:3
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
