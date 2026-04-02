@@ -30,6 +30,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 
 * Open PR from `hotfix-vX.Y.Z` to `main` (use [this template](https://github.com/precice/precice/blob/develop/tools/releasing/PULL_REQUEST_TEMPLATE/hotfix_pull_request_template.md))
 * [ ] Trigger the system tests using the `trigger-system-tests` label ([`release_test` suite](https://github.com/precice/tutorials/blob/develop/tools/tests/tests.yaml)). After any force-push, remove and add the label again.
+* [ ] Review the changelog and use review comments with suggestions for feedback (all)
 * [ ] Fix potential problems on the hotfix branch (all)
 * [ ] Reorder the commits for the version bump to be the latest. `git rebase -i main`
 * [ ] Draft release notes

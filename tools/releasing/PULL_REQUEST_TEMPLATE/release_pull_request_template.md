@@ -40,6 +40,7 @@ Only the release manager should update this post (even tickboxes, due to race co
 
 * Open PR from `release-vX.Y.Z` to `main` (use [this template](https://github.com/precice/precice/blob/develop/tools/releasing/PULL_REQUEST_TEMPLATE/release_pull_request_template.md))
 * [ ] Trigger the system tests using the `trigger-system-tests` label ([`release_test` suite](https://github.com/precice/tutorials/blob/develop/tools/tests/tests.yaml)). After any force-push, remove and add the label again.
+* [ ] Review the changelog and use review comments with suggestions for feedback (all)
 * [ ] Do any additional regression tests using the release branch (specific revision) _list below :arrow_down:_ (all)
 * [ ] Fix potential problems in develop (all)
 * [ ] Rebase the release branch on develop to pull in fixes
