@@ -145,14 +145,9 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testResPreconditioner)
 {
   PRECICE_TEST();
-  std::vector<size_t> svs;
-  svs.push_back(2);
-  svs.push_back(4);
-  svs.push_back(2);
-
   ResidualPreconditioner precond(-1);
 
-  precond.initialize(svs);
+  precond.initialize({2, 4, 2}, {"Data0", "Data1", "Data2"});
   Eigen::VectorXd backup = _data;
 
   // should change
@@ -177,14 +172,9 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testResSumPreconditioner)
 {
   PRECICE_TEST();
-  std::vector<size_t> svs;
-  svs.push_back(2);
-  svs.push_back(4);
-  svs.push_back(2);
-
   ResidualSumPreconditioner precond(-1, false);
 
-  precond.initialize(svs);
+  precond.initialize({2, 4, 2}, {"Data0", "Data1", "Data2"});
   Eigen::VectorXd backup = _data;
 
   // should change, update twice to really test the summation
@@ -211,14 +201,9 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testResSumPreconditionerUpdate)
 {
   PRECICE_TEST();
-  std::vector<size_t> svs;
-  svs.push_back(2);
-  svs.push_back(4);
-  svs.push_back(2);
-
   ResidualSumPreconditioner precond(-1, true);
 
-  precond.initialize(svs);
+  precond.initialize({2, 4, 2}, {"Data0", "Data1", "Data2"});
   Eigen::VectorXd backup = _data;
 
   // should change, update twice to really test the summation
@@ -274,14 +259,9 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testValuePreconditioner)
 {
   PRECICE_TEST();
-  std::vector<size_t> svs;
-  svs.push_back(2);
-  svs.push_back(4);
-  svs.push_back(2);
-
   ValuePreconditioner precond(-1);
 
-  precond.initialize(svs);
+  precond.initialize({2, 4, 2}, {"Data0", "Data1", "Data2"});
   Eigen::VectorXd backup = _data;
 
   // should change, since this is the first time window
@@ -311,11 +291,6 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testConstPreconditioner)
 {
   PRECICE_TEST();
-  std::vector<size_t> svs;
-  svs.push_back(2);
-  svs.push_back(4);
-  svs.push_back(2);
-
   std::vector<double> factors;
   factors.push_back(1e3);
   factors.push_back(2.0);
@@ -323,7 +298,7 @@ BOOST_AUTO_TEST_CASE(testConstPreconditioner)
 
   ConstantPreconditioner precond(factors);
 
-  precond.initialize(svs); // new weights already computed here
+  precond.initialize({2, 4, 2}, {"Data0", "Data1", "Data2"}); // new weights already computed here
   Eigen::VectorXd backup = _data;
 
   // should have no effect
@@ -347,14 +322,9 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testPreconditionerLargerDataSize)
 {
   PRECICE_TEST();
-  std::vector<size_t> svs;
-  svs.push_back(2);
-  svs.push_back(4);
-  svs.push_back(2);
-
   ResidualSumPreconditioner precond(-1, false);
 
-  precond.initialize(svs);
+  precond.initialize({2, 4, 2}, {"Data0", "Data1", "Data2"});
   Eigen::VectorXd backup = _dataLargerSize;
 
   // should change, update twice to really test the summation
@@ -381,14 +351,9 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testPreconditionerLargerResSize)
 {
   PRECICE_TEST();
-  std::vector<size_t> svs;
-  svs.push_back(2);
-  svs.push_back(4);
-  svs.push_back(2);
-
   ResidualSumPreconditioner precond(-1, false);
 
-  precond.initialize(svs);
+  precond.initialize({2, 4, 2}, {"Data0", "Data1", "Data2"});
   Eigen::VectorXd backup = _dataSmallerSize;
 
   // should change, update twice to really test the summation
@@ -415,13 +380,9 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(testMultilpleMeshes)
 {
   PRECICE_TEST();
-  std::vector<size_t> svs;
-  svs.push_back(3);
-  svs.push_back(5);
-
   ResidualSumPreconditioner precond(-1, false);
 
-  precond.initialize(svs);
+  precond.initialize({3, 5}, {"Data0", "Data1"});
   Eigen::VectorXd backup = _data;
 
   // should change
@@ -506,11 +467,8 @@ BOOST_AUTO_TEST_CASE(testParallelMatrixScaling)
   M_back = M;
   x_back = x;
 
-  std::vector<size_t> svs;
-  svs.push_back(localN);
-
   ValuePreconditioner precond(-1);
-  precond.initialize(svs);
+  precond.initialize({static_cast<size_t>(localN)}, {"Data0"});
   precond.update(true, x, x);
   BOOST_TEST(precond.requireNewQR());
 

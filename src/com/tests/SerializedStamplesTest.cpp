@@ -110,11 +110,11 @@ BOOST_AUTO_TEST_CASE(DeserializeValues)
   expectedValues.push_back(insert05);
   expectedValues.push_back(insert1);
 
-  BOOST_TEST(toDataPtr->timeStepsStorage().stamples().size() == nTimeSteps);
+  BOOST_TEST(toDataPtr->waveform().stamples().size() == nTimeSteps);
   for (int t = 0; t < nTimeSteps; t++) {
-    BOOST_TEST(testing::equals(toDataPtr->timeStepsStorage().stamples()[t].timestamp, timeStamps[t]));
+    BOOST_TEST(testing::equals(toDataPtr->waveform().stamples()[t].timestamp, timeStamps[t]));
     for (int i = 0; i < nValues; i++) {
-      BOOST_TEST(testing::equals(toDataPtr->timeStepsStorage().stamples()[t].sample.values(i), expectedValues[t](i)));
+      BOOST_TEST(testing::equals(toDataPtr->waveform().stamples()[t].sample.values(i), expectedValues[t](i)));
     }
   }
 }
@@ -267,14 +267,14 @@ BOOST_AUTO_TEST_CASE(DeserializeValuesAndGradients)
   expectedGradients.push_back(insertGradients05);
   expectedGradients.push_back(insertGradients1);
 
-  BOOST_TEST(toDataPtr->timeStepsStorage().stamples().size() == nTimeSteps);
+  BOOST_TEST(toDataPtr->waveform().stamples().size() == nTimeSteps);
   for (int t = 0; t < nTimeSteps; t++) {
-    BOOST_TEST(testing::equals(toDataPtr->timeStepsStorage().stamples()[t].timestamp, timeStamps[t]));
+    BOOST_TEST(testing::equals(toDataPtr->waveform().stamples()[t].timestamp, timeStamps[t]));
     for (int i = 0; i < nValues; i++) {
-      BOOST_TEST(testing::equals(toDataPtr->timeStepsStorage().stamples()[t].sample.values(i), expectedValues[t](i)));
+      BOOST_TEST(testing::equals(toDataPtr->waveform().stamples()[t].sample.values(i), expectedValues[t](i)));
     }
     for (int i = 0; i < meshDimensions * nValues; i++) {
-      BOOST_TEST(testing::equals(toDataPtr->timeStepsStorage().stamples()[t].sample.gradients(i), expectedGradients[t](i)));
+      BOOST_TEST(testing::equals(toDataPtr->waveform().stamples()[t].sample.gradients(i), expectedGradients[t](i)));
     }
   }
 }

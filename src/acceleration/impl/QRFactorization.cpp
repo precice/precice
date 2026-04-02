@@ -48,7 +48,7 @@ QRFactorization::QRFactorization(
 }
 
 /**
- * Constructor
+ * Constructor, only used in test.
  */
 QRFactorization::QRFactorization(
     Eigen::MatrixXd A,
@@ -754,7 +754,7 @@ void QRFactorization::reset(
   PRECICE_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
 }
 
-void QRFactorization::reset(
+[[nodiscard]] std::vector<int> QRFactorization::reset(
     Eigen::MatrixXd const &A,
     int                    globalRows,
     double                 omega,
@@ -771,13 +771,18 @@ void QRFactorization::reset(
   _sigma      = sigma;
   _globalRows = globalRows;
 
-  int m   = A.cols();
-  int col = 0, k = 0;
+  // m is the number of columns in A
+  int m = A.cols();
+  // col tracks each column in A, k stores the target (column) position for inserting the col
+  // k can be smaller than col when some columns fail to be inserted
+  int              col = 0, k = 0;
+  std::vector<int> nonorthogonalizedCols;
   for (; col < m; k++, col++) {
     Eigen::VectorXd v        = A.col(col);
     bool            inserted = insertColumn(k, v);
     if (not inserted) {
       k--;
+      nonorthogonalizedCols.push_back(col);
       PRECICE_DEBUG("column {} has not been inserted in the QR-factorization, failed to orthogonalize.", col);
     }
   }
@@ -785,7 +790,9 @@ void QRFactorization::reset(
   PRECICE_ASSERT(_R.cols() == _cols, _R.cols(), _cols);
   PRECICE_ASSERT(_Q.cols() == _cols, _Q.cols(), _cols);
   PRECICE_ASSERT(_Q.rows() == _rows, _Q.rows(), _rows);
-  PRECICE_ASSERT(_cols == m, _cols, m);
+  // in the end, column count of the QR-system should equal k, which is equal to or less than m=A.cols()
+  PRECICE_ASSERT(_cols == k, _cols, k);
+  return nonorthogonalizedCols;
 }
 
 void QRFactorization::pushFront(const Eigen::VectorXd &v)

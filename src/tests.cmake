@@ -5,6 +5,7 @@ target_sources(testprecice
     PRIVATE
     src/acceleration/test/AccelerationIntraCommTest.cpp
     src/acceleration/test/AccelerationSerialTest.cpp
+    src/acceleration/test/OnBoundViolationTest.cpp
     src/acceleration/test/ParallelMatrixOperationsTest.cpp
     src/acceleration/test/PreconditionerTest.cpp
     src/acceleration/test/QRFactorizationTest.cpp
@@ -43,6 +44,7 @@ target_sources(testprecice
     src/m2n/tests/GatherScatterCommunicationTest.cpp
     src/m2n/tests/PointToPointCommunicationTest.cpp
     src/mapping/tests/AxialGeoMultiscaleMappingTest.cpp
+    src/mapping/tests/CoarseGrainingMappingTest.cpp
     src/mapping/tests/GinkgoRadialBasisFctSolverTest.cpp
     src/mapping/tests/LinearCellInterpolationMappingTest.cpp
     src/mapping/tests/MappingConfigurationTest.cpp
@@ -96,11 +98,8 @@ target_sources(testprecice
     src/testing/TestContext.hpp
     src/testing/Testing.cpp
     src/testing/Testing.hpp
-    src/testing/WaveformFixture.cpp
-    src/testing/WaveformFixture.hpp
     src/testing/main.cpp
     src/testing/tests/ExampleTests.cpp
-    src/time/tests/StorageTest.cpp
     src/time/tests/TimeGridsTest.cpp
     src/time/tests/WaveformTest.cpp
     src/utils/tests/AlgorithmTest.cpp

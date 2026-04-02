@@ -120,6 +120,28 @@ BOOST_AUTO_TEST_CASE(RBFPUMConfiguration)
   }
 }
 
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(CGConfiguration)
+{
+  PRECICE_TEST();
+
+  std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
+  std::string file(pathToTests + "mapping-config-cg.xml");
+  using xml::XMLTag;
+  XMLTag                        tag = xml::getRootTag();
+  mesh::PtrDataConfiguration    dataConfig(new mesh::DataConfiguration(tag));
+  mesh::PtrMeshConfiguration    meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
+  mapping::MappingConfiguration mappingConfig(tag, meshConfig);
+  mappingConfig.setExperimental(true);
+  xml::configure(tag, xml::ConfigurationContext{}, file);
+
+  BOOST_TEST(meshConfig->meshes().size() == 1);
+  BOOST_TEST(mappingConfig.mappings().size() == 1);
+  BOOST_TEST(mappingConfig.mappings().at(0).toMesh == meshConfig->meshes().at(0));
+  BOOST_TEST(mappingConfig.mappings().at(0).direction == MappingConfiguration::WRITE);
+  BOOST_TEST(mappingConfig.mappings().at(0).requiresBasisFunction == false);
+}
+
 #ifndef PRECICE_NO_PETSC
 
 PRECICE_TEST_SETUP(1_rank, Require::PETSc)
@@ -329,6 +351,126 @@ BOOST_AUTO_TEST_CASE(RBFGinkgoOMPConfiguration)
     BOOST_TEST(mappingConfig.rbfConfig().deadAxis[1] == false);
     BOOST_TEST(mappingConfig.rbfConfig().deadAxis[2] == true);
     BOOST_TEST(mappingConfig.rbfConfig().solverRtol == 1e-6);
+  }
+}
+#endif
+#endif
+
+#ifndef PRECICE_NO_KOKKOS_KERNELS
+
+#ifdef PRECICE_WITH_CUDA
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(RBFPUMCudaConfiguration)
+{
+  PRECICE_TEST();
+
+  std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
+  std::string file(pathToTests + "mapping-rbf-pum-direct-cuda-config.xml");
+  using xml::XMLTag;
+  XMLTag                        tag = xml::getRootTag();
+  mesh::PtrDataConfiguration    dataConfig(new mesh::DataConfiguration(tag));
+  mesh::PtrMeshConfiguration    meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
+  mapping::MappingConfiguration mappingConfig(tag, meshConfig);
+  xml::configure(tag, xml::ConfigurationContext{}, file);
+
+  BOOST_TEST(meshConfig->meshes().size() == 5);
+  BOOST_TEST(mappingConfig.mappings().size() == 4);
+  for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
+    BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
+    BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
+    BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
+    BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::READ);
+    BOOST_TEST(mappingConfig.mappings().at(i).requiresBasisFunction == true);
+    BOOST_TEST(mappingConfig.mappings().at(i).configuredWithAliasTag == false);
+  }
+  {
+    // last configured RBF
+    bool solverSelection = mappingConfig.rbfConfig().solver == MappingConfiguration::RBFConfiguration::SystemSolver::PUMDirect;
+    BOOST_TEST(solverSelection);
+    bool poly = mappingConfig.rbfConfig().polynomial == Polynomial::SEPARATE;
+    BOOST_TEST(poly);
+    BOOST_TEST(mappingConfig.rbfConfig().solverRtol == 1e-9);
+    BOOST_TEST(mappingConfig.rbfConfig().verticesPerCluster == 10);
+    BOOST_TEST(mappingConfig.rbfConfig().relativeOverlap == 0.4);
+    BOOST_TEST(mappingConfig.rbfConfig().projectToInput == false);
+  }
+}
+#endif
+
+#ifdef PRECICE_WITH_HIP
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(RBFPUMHipConfiguration)
+{
+  PRECICE_TEST();
+
+  std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
+  std::string file(pathToTests + "mapping-rbf-pum-direct-hip-config.xml");
+  using xml::XMLTag;
+  XMLTag                        tag = xml::getRootTag();
+  mesh::PtrDataConfiguration    dataConfig(new mesh::DataConfiguration(tag));
+  mesh::PtrMeshConfiguration    meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
+  mapping::MappingConfiguration mappingConfig(tag, meshConfig);
+  xml::configure(tag, xml::ConfigurationContext{}, file);
+
+  BOOST_TEST(meshConfig->meshes().size() == 5);
+  BOOST_TEST(mappingConfig.mappings().size() == 4);
+  for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
+    BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
+    BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
+    BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
+    BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::READ);
+    BOOST_TEST(mappingConfig.mappings().at(i).requiresBasisFunction == true);
+    BOOST_TEST(mappingConfig.mappings().at(i).configuredWithAliasTag == false);
+  }
+  {
+    // last configured RBF
+    bool solverSelection = mappingConfig.rbfConfig().solver == MappingConfiguration::RBFConfiguration::SystemSolver::PUMDirect;
+    BOOST_TEST(solverSelection);
+    bool poly = mappingConfig.rbfConfig().polynomial == Polynomial::SEPARATE;
+    BOOST_TEST(poly);
+    BOOST_TEST(mappingConfig.rbfConfig().solverRtol == 1e-9);
+    BOOST_TEST(mappingConfig.rbfConfig().verticesPerCluster == 10);
+    BOOST_TEST(mappingConfig.rbfConfig().relativeOverlap == 0.4);
+    BOOST_TEST(mappingConfig.rbfConfig().projectToInput == false);
+  }
+}
+#endif
+
+#ifdef PRECICE_WITH_OPENMP
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(RBFPUMOpenMPConfiguration)
+{
+  PRECICE_TEST();
+
+  std::string pathToTests = testing::getPathToSources() + "/mapping/tests/";
+  std::string file(pathToTests + "mapping-rbf-pum-direct-omp-config.xml");
+  using xml::XMLTag;
+  XMLTag                        tag = xml::getRootTag();
+  mesh::PtrDataConfiguration    dataConfig(new mesh::DataConfiguration(tag));
+  mesh::PtrMeshConfiguration    meshConfig(new mesh::MeshConfiguration(tag, dataConfig));
+  mapping::MappingConfiguration mappingConfig(tag, meshConfig);
+  xml::configure(tag, xml::ConfigurationContext{}, file);
+
+  BOOST_TEST(meshConfig->meshes().size() == 5);
+  BOOST_TEST(mappingConfig.mappings().size() == 4);
+  for (unsigned int i = 0; i < mappingConfig.mappings().size(); ++i) {
+    BOOST_TEST(mappingConfig.mappings().at(i).mapping != nullptr);
+    BOOST_TEST(mappingConfig.mappings().at(i).fromMesh == meshConfig->meshes().at(i + 1));
+    BOOST_TEST(mappingConfig.mappings().at(i).toMesh == meshConfig->meshes().at(i));
+    BOOST_TEST(mappingConfig.mappings().at(i).direction == MappingConfiguration::READ);
+    BOOST_TEST(mappingConfig.mappings().at(i).requiresBasisFunction == true);
+    BOOST_TEST(mappingConfig.mappings().at(i).configuredWithAliasTag == false);
+  }
+  {
+    // last configured RBF
+    bool solverSelection = mappingConfig.rbfConfig().solver == MappingConfiguration::RBFConfiguration::SystemSolver::PUMDirect;
+    BOOST_TEST(solverSelection);
+    bool poly = mappingConfig.rbfConfig().polynomial == Polynomial::SEPARATE;
+    BOOST_TEST(poly);
+    BOOST_TEST(mappingConfig.rbfConfig().solverRtol == 1e-9);
+    BOOST_TEST(mappingConfig.rbfConfig().verticesPerCluster == 10);
+    BOOST_TEST(mappingConfig.rbfConfig().relativeOverlap == 0.4);
+    BOOST_TEST(mappingConfig.rbfConfig().projectToInput == false);
   }
 }
 #endif

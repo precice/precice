@@ -18,7 +18,7 @@
 
 namespace precice::testing {
 
-DataID operator"" _dataID(unsigned long long n)
+DataID operator""_dataID(unsigned long long n)
 {
   PRECICE_ASSERT(n < std::numeric_limits<DataID>::max(), "DataID is too big");
   return static_cast<DataID>(n);

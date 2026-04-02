@@ -35,7 +35,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup python
         uses: actions/setup-python@v6
         with:
@@ -88,6 +88,10 @@ jobs:
             CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Debug
+          - IMAGE: 'ubuntu-2604'
+            CONFIG: MPIPETSc
+            CXX: 'g++'
+            TYPE: Debug
           - IMAGE: 'archlinux'
             CONFIG: MPIPETSc
             CXX: 'g++'
@@ -105,11 +109,11 @@ jobs:
             CXX: 'clang++'
             TYPE: Release
           - IMAGE: 'fedora'
-            CONFIG: MPIPETScGinkgo
+            CONFIG: MPIPETScGinkgoKokkosKernels
             CXX: 'g++'
             TYPE: Debug
           - IMAGE: 'fedora'
-            CONFIG: MPIPETScGinkgo
+            CONFIG: MPIPETScGinkgoKokkosKernels
             CXX: 'g++'
             TYPE: Release
           - IMAGE: 'intel'
@@ -121,7 +125,7 @@ jobs:
             CXX: 'icpx'
             TYPE: Release
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Generate build directory
         run: mkdir -p build
       - name: Install polars in venv
@@ -129,6 +133,22 @@ jobs:
           python3 -m venv --system-site-packages venv
           venv/bin/pip install polars
           venv/bin/pip list
+      - name: Precompute hwloc topology
+        run: |
+          TOPODIR="$(mktemp --suffix=TOPO -d)"
+          TOPO="$TOPODIR/topo.xml"
+
+          chmod a+rx "$TOPODIR"
+          echo "TOPO file $TOPO"
+          lstopo --of xml "$TOPO"
+          echo "HWLOC_XMLFILE=$TOPO" >> "$GITHUB_ENV"
+          echo "::group::Content"
+          cat "$TOPO"
+          echo "::endgroup::"
+
+          echo "::group::Testing access"
+          su -c "cat $TOPO" "$PRECICE_USER"
+          echo "::endgroup::"
       - name: Configure
         working-directory: build
         env:
@@ -137,22 +157,23 @@ jobs:
           MPI: ${{ contains(matrix.CONFIG, 'MPI') }}
           PETSc: ${{ contains(matrix.CONFIG, 'PETSc') }}
           Ginkgo: ${{ contains(matrix.CONFIG, 'Ginkgo') }}
+          KokkosKernels: ${{ contains(matrix.CONFIG, 'KokkosKernels') }}
           COMPRESS: ${{ contains(matrix.CONFIG, 'LZMA') }}
         run: |
           . ../venv/bin/activate # There is always a venv present
           cmake --version
-          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DPRECICE_FEATURE_GINKGO_MAPPING=${{ env.Ginkgo }} -DPRECICE_FEATURE_PROFILING_COMPRESSION=${{ env.COMPRESS }} -DPRECICE_FEATURE_LIBBACKTRACE_STACKTRACES=ON -DPRECICE_BUILD_BENCHMARKS=ON  -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" ..
-      - uses: actions/upload-artifact@v4
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DPRECICE_FEATURE_GINKGO_MAPPING=${{ env.Ginkgo }} -DPRECICE_FEATURE_KOKKOS_KERNELS_MAPPING=${{ env.KokkosKernels }} -DPRECICE_FEATURE_PROFILING_COMPRESSION=${{ env.COMPRESS }} -DPRECICE_FEATURE_LIBBACKTRACE_STACKTRACES=ON -DPRECICE_BUILD_BENCHMARKS=ON  -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" ..
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeCache
           path: build/CMakeCache.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeLogs
           path: 'build/CMakeFiles/*.log'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CompileCommands
@@ -165,15 +186,16 @@ jobs:
         run: |
           cmake --build .
       - name: Adjust user rights
-        run: chown -R $PRECICE_USER build
+        run: chown -R "$PRECICE_USER" build
       - name: Tests
         env:
           OMPI_MCA_btl: self,vader
           OMPI_MCA_pml: ob1
           FI_PROVIDER: ${{ matrix.IMAGE == 'Intel' && 'tcp' || 'sockets' }} # use sockets on fedora and tcp on intel
           PSM3_HAL: loopback # required for fedora
+          UCX_MEM_EVENTS: n # reduces the ucx/ucs load times
         working-directory: build
-        run: su -c ". ../venv/bin/activate && ctest -j" $PRECICE_USER
+        run: su -c ". ../venv/bin/activate && ctest -j" "$PRECICE_USER"
       - name: Coverage Report
         working-directory: build
         if: ${{ matrix.COVFLAGS }}
@@ -196,8 +218,8 @@ jobs:
         if: ${{ contains(matrix.IMAGE, 'ubuntu') }}
         run: |
           cpack
-          lintian -i --suppress-tags control-file-has-bad-permissions *.deb
-      - uses: actions/upload-artifact@v4
+          lintian -i --suppress-tags control-file-has-bad-permissions ./*.deb
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: ${{ format('{0} {1} {2} {3}', matrix.IMAGE, matrix.CXX, matrix.CONFIG, matrix.TYPE) }} TestOutput
@@ -218,7 +240,7 @@ jobs:
             CXX: 'clang++'
             TYPE: Release
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Setup python
       uses: actions/setup-python@v6
       with:
@@ -227,9 +249,18 @@ jobs:
     - name: Install pip packages
       run: pip3 install numpy polars
     - name: Install preCICE dependencies
-      run: brew install --overwrite --quiet eigen libxml2 boost petsc openmpi ninja
+      run: brew install --build-from-source --only-dependencies --overwrite precice
     - name: Generate build directory
       run: mkdir -p build
+    - name: Precompute hwloc topology
+      run: |
+        lstopo --of xml topo.xml
+        TOPO="$(readlink -f topo.xml)"
+        echo "TOPO file $TOPO"
+        echo "HWLOC_XMLFILE=$TOPO" >> "$GITHUB_ENV"
+        echo "::group::Content"
+        cat "$TOPO"
+        echo "::endgroup::"
     - name: Configure
       working-directory: build
       env:
@@ -240,17 +271,17 @@ jobs:
       run: |
         cmake --version
         cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} ..
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: failure()
       with:
         name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeCache
         path: build/CMakeCache.txt
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: failure()
       with:
         name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CMakeLogs
         path: 'build/CMakeFiles/*.log'
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: failure()
       with:
         name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} CompileCommands
@@ -267,7 +298,7 @@ jobs:
         OMPI_MCA_pml: ob1
       working-directory: build
       run: ctest -j
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       if: failure()
       with:
         name: ${{ format('{0} {1} {2}', matrix.CXX, matrix.CONFIG, matrix.TYPE) }} TestOutput
@@ -306,7 +337,7 @@ jobs:
           update: true
           path-type: inherit
           install: git mingw-w64-ucrt-x86_64-gcc-libs mingw-w64-ucrt-x86_64-boost-libs mingw-w64-ucrt-x86_64-libxml2 mingw-w64-ucrt-x86_64-python mingw-w64-ucrt-x86_64-python-numpy mingw-w64-ucrt-x86_64-cc mingw-w64-ucrt-x86_64-cmake mingw-w64-ucrt-x86_64-msmpi mingw-w64-ucrt-x86_64-ninja mingw-w64-ucrt-x86_64-boost mingw-w64-ucrt-x86_64-eigen3 mingw-w64-ucrt-x86_64-crt mingw-w64-ucrt-x86_64-msmpi
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Make build directory
         run: mkdir -p build
       - name: Configure
@@ -320,9 +351,9 @@ jobs:
       - name: Test
         working-directory: build
         run: |
-          # Allow each test to run twice to iron out sporadic MPI failures
-          ctest -j --repeat until-pass:2
-      - uses: actions/upload-artifact@v4
+          # Allow each test to rerun to iron out sporadic MPI failures
+          ctest -j --repeat until-pass:3
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: debugdump

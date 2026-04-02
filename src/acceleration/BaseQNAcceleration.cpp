@@ -10,6 +10,7 @@
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "cplscheme/CouplingData.hpp"
+#include "io/TXTTableWriter.hpp"
 #include "logging/LogMacros.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -39,6 +40,7 @@ BaseQNAcceleration::BaseQNAcceleration(
     int                     filter,
     double                  singularityLimit,
     std::vector<int>        dataIDs,
+    OnBoundViolation        onBoundViolation,
     impl::PtrPreconditioner preconditioner,
     bool                    reducedTimeGrid)
     : _preconditioner(std::move(preconditioner)),
@@ -46,6 +48,7 @@ BaseQNAcceleration::BaseQNAcceleration(
       _maxIterationsUsed(maxIterationsUsed),
       _timeWindowsReused(timeWindowsReused),
       _primaryDataIDs(std::move(dataIDs)),
+      _onBoundViolation(onBoundViolation),
       _forceInitialRelaxation(forceInitialRelaxation),
       _reducedTimeGrid(reducedTimeGrid),
       _qrV(filter),
@@ -94,16 +97,165 @@ void BaseQNAcceleration::initialize(
   checkDataIDs(cplData);
   // store all data IDs in vector
   _dataIDs.clear();
+  _idsWithBounds.clear();
   for (const DataMap::value_type &pair : cplData) {
     _dataIDs.push_back(pair.first);
-  }
 
+    auto lowerBound = pair.second->getLowerBound();
+    auto upperBound = pair.second->getUpperBound();
+    if (std::any_of(lowerBound.begin(), lowerBound.end(), [](const auto &v) { return v.has_value(); }) ||
+        std::any_of(upperBound.begin(), upperBound.end(), [](const auto &v) { return v.has_value(); })) {
+      _idsWithBounds.push_back(pair.first);
+    }
+  }
   _matrixCols.clear();
   _matrixCols.push_front(0);
   _firstIteration  = true;
   _firstTimeWindow = true;
 }
 
+std::vector<DataID> BaseQNAcceleration::checkBoundViolation(Eigen::VectorXd &data, DataMap &cplData) const
+{
+  Eigen::Index        offset       = 0;
+  std::vector<DataID> violatingIDs = {};
+
+  // check for bound violations
+  for (auto id : _dataIDs) {
+    Eigen::Index size = cplData.at(id)->values().size();
+
+    if (std::find(_idsWithBounds.begin(), _idsWithBounds.end(), id) == _idsWithBounds.end()) {
+      offset += size;
+      continue;
+    }
+
+    auto lowerBound    = cplData.at(id)->getLowerBound();
+    auto upperBound    = cplData.at(id)->getUpperBound();
+    int  dataDimension = cplData.at(id)->getDimensions();
+
+    Eigen::VectorXd             dataPerEntry = data.segment(offset, size);
+    Eigen::Map<Eigen::MatrixXd> dataPerDimension(dataPerEntry.data(), dataDimension, dataPerEntry.size() / dataDimension);
+
+    for (int j = 0; j < dataDimension; j++) {
+      if ((lowerBound[j].has_value() && (dataPerDimension.row(j).array() < lowerBound[j].value()).any()) ||
+          (upperBound[j].has_value() && (dataPerDimension.row(j).array() > upperBound[j].value()).any())) {
+        violatingIDs.push_back(id);
+        break;
+      }
+    }
+    offset += size;
+  }
+
+  return violatingIDs;
+}
+
+void BaseQNAcceleration::onBoundViolationsClamp(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &violatingIDs)
+{
+  Eigen::Index offset = 0;
+  for (auto id : _dataIDs) {
+    Eigen::Index size = cplData.at(id)->values().size();
+
+    if (std::find(violatingIDs.begin(), violatingIDs.end(), id) == violatingIDs.end()) {
+      offset += size;
+      continue;
+    }
+
+    int  dataDimension = cplData.at(id)->getDimensions();
+    auto lowerBound    = cplData.at(id)->getLowerBound();
+    auto upperBound    = cplData.at(id)->getUpperBound();
+    auto dataPerEntry  = data.segment(offset, size);
+
+    const Eigen::Index          nEntries = dataPerEntry.size() / dataDimension;
+    Eigen::Map<Eigen::MatrixXd> dataPerDimension(dataPerEntry.data(), dataDimension, nEntries);
+
+    clampToBounds(dataPerDimension, lowerBound, upperBound);
+
+    offset += size;
+  }
+}
+
+void BaseQNAcceleration::onBoundViolationsScale(Eigen::VectorXd &data, DataMap &cplData, const std::vector<DataID> &violatingIDs, Eigen::VectorXd &xUpdate)
+{
+  Eigen::Index offset    = 0;
+  double       scaleStep = 0.0;
+
+  for (auto id : _dataIDs) {
+    Eigen::Index size = cplData.at(id)->values().size();
+
+    if (std::find(violatingIDs.begin(), violatingIDs.end(), id) == violatingIDs.end()) {
+      offset += size;
+      continue;
+    }
+
+    int  dataDimension  = cplData.at(id)->getDimensions();
+    auto lowerBound     = cplData.at(id)->getLowerBound();
+    auto upperBound     = cplData.at(id)->getUpperBound();
+    auto dataPerEntry   = data.segment(offset, size);
+    auto updatePerEntry = xUpdate.segment(offset, size);
+
+    const Eigen::Index          nEntries = dataPerEntry.size() / dataDimension;
+    Eigen::Map<Eigen::MatrixXd> dataMat(dataPerEntry.data(), dataDimension, nEntries);
+    Eigen::Map<Eigen::MatrixXd> updMat(updatePerEntry.data(), dataDimension, nEntries);
+
+    scaleStep = std::max(scaleStep, computeShorteningFactor(dataMat, updMat, lowerBound, upperBound));
+    offset += size;
+  }
+
+  double scaleStepGlobal = scaleStep;
+  if (precice::utils::IntraComm::isParallel()) {
+    auto &comm = precice::utils::IntraComm::getCommunication();
+
+    if (precice::utils::IntraComm::isSecondary()) {
+      comm->send(scaleStep, 0);
+    }
+
+    if (precice::utils::IntraComm::isPrimary()) {
+      double recv = 0.0;
+
+      for (auto rank : precice::utils::IntraComm::allSecondaryRanks()) {
+        comm->receive(recv, rank);
+        scaleStepGlobal = std::max(scaleStepGlobal, recv);
+      }
+    }
+
+    utils::IntraComm::broadcast(scaleStepGlobal);
+  }
+  data -= xUpdate * scaleStepGlobal;
+}
+
+void BaseQNAcceleration::clampToBounds(Eigen::Map<Eigen::MatrixXd> &data, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound)
+{
+  for (int j = 0; j < data.rows(); j++) {
+    if (lowerBound[j].has_value()) {
+      data.row(j) = data.row(j).cwiseMax(*lowerBound[j]);
+    }
+    if (upperBound[j].has_value()) {
+      data.row(j) = data.row(j).cwiseMin(*upperBound[j]);
+    }
+  }
+}
+
+double BaseQNAcceleration::computeShorteningFactor(Eigen::Map<Eigen::MatrixXd> &data, Eigen::Map<Eigen::MatrixXd> &update, const std::vector<std::optional<double>> &lowerBound, const std::vector<std::optional<double>> &upperBound)
+{
+  double scaleStep = 0.0;
+
+  for (int j = 0; j < data.rows(); j++) {
+    if (lowerBound[j].has_value()) {
+      Eigen::ArrayXd numerator   = (data.row(j).array() - *lowerBound[j]);
+      Eigen::ArrayXd denominator = -(update.row(j).array()).abs();
+
+      scaleStep = std::max(scaleStep, (denominator != 0.0).select(numerator / denominator, 0.0).maxCoeff());
+    }
+    if (upperBound[j].has_value()) {
+      Eigen::ArrayXd numerator   = (data.row(j).array() - *upperBound[j]);
+      Eigen::ArrayXd denominator = (update.row(j).array()).abs();
+
+      scaleStep = std::max(scaleStep, (denominator != 0.0).select(numerator / denominator, 0.0).maxCoeff());
+    }
+  }
+  PRECICE_ASSERT(scaleStep >= 0.0);
+  PRECICE_ASSERT(scaleStep <= 1.0);
+  return scaleStep;
+}
 /** ---------------------------------------------------------------------------------------------
  *         updateDifferenceMatrices()
  *
@@ -140,8 +292,8 @@ void BaseQNAcceleration::updateDifferenceMatrices(
       PRECICE_ASSERT(getLSSystemCols() <= _maxIterationsUsed, getLSSystemCols(), _maxIterationsUsed);
 
       PRECICE_WARN_IF(
-          2 * getLSSystemCols() >= getLSSystemRows(),
-          "The number of columns in the least squares system exceeded half the number of unknowns at the interface. "
+          2 * getLSSystemCols() >= getPrimaryLSSystemRows(),
+          "The number of columns in the least squares system exceeded half the number of primary unknowns at the interface. "
           "The system will probably become bad or ill-conditioned and the quasi-Newton acceleration may not "
           "converge. Maybe the number of allowed columns (\"max-used-iterations\") should be limited.");
 
@@ -165,7 +317,7 @@ void BaseQNAcceleration::updateDifferenceMatrices(
           residualMagnitude);
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
-      bool overdetermined     = getLSSystemCols() <= getLSSystemRows();
+      bool overdetermined     = getLSSystemCols() <= getPrimaryLSSystemRows();
       if (not columnLimitReached && overdetermined) {
 
         utils::appendFront(_matrixV, deltaR);
@@ -273,7 +425,14 @@ void BaseQNAcceleration::performAcceleration(
     // this occurs very rarely, to be precise, it occurs only if the coupling terminates
     // after the first iteration and the matrix data from time window t-2 has to be used
     _preconditioner->apply(_matrixV);
-    _qrV.reset(_matrixV, getLSSystemRows());
+
+    // the columns that fail to be inserted into the QR factorization while resetting need to be removed from V and W for consistency
+    auto failAddedCols = _qrV.reset(_matrixV, getPrimaryLSSystemRows());
+    for (int i : failAddedCols) {
+      removeMatrixColumn(i);
+    }
+    PRECICE_ASSERT(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
+
     _preconditioner->revert(_matrixV);
     _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
   }
@@ -291,7 +450,12 @@ void BaseQNAcceleration::performAcceleration(
 
   if (_preconditioner->requireNewQR()) {
     if (not(_filter == Acceleration::QR2FILTER || _filter == Acceleration::QR3FILTER)) { // for QR2 and QR3 filter, there is no need to do this twice
-      _qrV.reset(_matrixV, getLSSystemRows());
+      auto failAddedCols = _qrV.reset(_matrixV, getPrimaryLSSystemRows());
+      // the columns that fail to be inserted into the QR factorization while resetting need to be removed from V and W for consistency
+      for (int i : failAddedCols) {
+        removeMatrixColumn(i);
+      }
+      PRECICE_ASSERT(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
     }
     if (_filter == Acceleration::QR3FILTER) { // QR3 filter needs to recompute QR3 filter
       _qrV.requireQR3Fallback();
@@ -322,6 +486,34 @@ void BaseQNAcceleration::performAcceleration(
 
   // Apply the quasi-Newton update
   _values += xUpdate;
+
+  // Check for bound violations
+  if (_idsWithBounds.size() > 0 && _onBoundViolation != OnBoundViolation::Ignore) {
+    profiling::Event e("CheckBoundViolationsInQN");
+    auto             violatingIDs = checkBoundViolation(_values, cplData);
+
+    for (auto id : violatingIDs) {
+      PRECICE_WARN("The coupling data {} has violated its bound after the quasi-Newton acceleration.", cplData.at(id)->getDataName());
+    }
+
+    if (violatingIDs.size() > 0 && _onBoundViolation == OnBoundViolation::Clamp) {
+      onBoundViolationsClamp(_values, cplData, violatingIDs);
+    }
+
+    if (_onBoundViolation == OnBoundViolation::Discard || _onBoundViolation == OnBoundViolation::ScaleToBound) {
+      int violatingSizeSum   = 0;
+      int localViolatingSize = violatingIDs.size();
+      utils::IntraComm::allreduceSum(localViolatingSize, violatingSizeSum);
+
+      if (violatingSizeSum > 0 && _onBoundViolation == OnBoundViolation::Discard) {
+        PRECICE_WARN("The violating quasi-Newton step will be discarded.");
+        _values -= xUpdate;
+      }
+      if (violatingSizeSum > 0 && _onBoundViolation == OnBoundViolation::ScaleToBound) {
+        onBoundViolationsScale(_values, cplData, violatingIDs, xUpdate);
+      }
+    }
+  }
 
   // pending deletion: delete old V, W matrices if timeWindowsReused = 0
   // those were only needed for the first iteration (instead of underrelax.)
@@ -400,7 +592,7 @@ void BaseQNAcceleration::updateCouplingData(
     size_t dataSize     = couplingData.getSize();
 
     Eigen::VectorXd timeGrid = _timeGrids->getTimeGridAfter(id, windowStart);
-    couplingData.timeStepsStorage().trimAfter(windowStart);
+    couplingData.waveform().trimAfter(windowStart);
     for (int i = 0; i < timeGrid.size(); i++) {
 
       Eigen::VectorXd temp = Eigen::VectorXd::Zero(dataSize);
@@ -523,7 +715,7 @@ void BaseQNAcceleration::iterationsConverged(
 /** ---------------------------------------------------------------------------------------------
  *         removeMatrixColumn()
  *
- * @brief: removes a column from the least squares system, i. e., from the matrices F and C
+ * @brief: removes a column from the least squares system, i. e., from the matrices W and V
  *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNAcceleration::removeMatrixColumn(
@@ -642,7 +834,7 @@ void BaseQNAcceleration::concatenateCouplingData(Eigen::VectorXd &data, Eigen::V
 
     for (int i = 0; i < timeGrid.size(); i++) {
 
-      auto current = cplData.at(id)->timeStepsStorage().sample(timeGrid(i));
+      auto current = cplData.at(id)->waveform().sample(timeGrid(i));
       auto old     = cplData.at(id)->getPreviousValuesAtTime(timeGrid(i));
 
       PRECICE_ASSERT(data.size() >= offset + dataSize, "the values were not initialized correctly");
@@ -745,9 +937,25 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
 
   std::vector<size_t> subVectorSizes; // needed for preconditioner
   std::transform(_primaryDataIDs.cbegin(), _primaryDataIDs.cend(), std::back_inserter(subVectorSizes), [&cplData, windowStart, this](const auto &d) { return _primaryTimeGrids.value().getTimeGridAfter(d, windowStart).size() * cplData.at(d)->getSize(); });
-  _preconditioner->initialize(subVectorSizes);
+  std::vector<std::string> subVectorNames;
+  std::transform(_primaryDataIDs.cbegin(), _primaryDataIDs.cend(), std::back_inserter(subVectorNames), [&cplData](const auto &d) { return cplData.at(d)->getDataName(); });
+  _preconditioner->initialize(std::move(subVectorSizes), std::move(subVectorNames));
 
   specializedInitializeVectorsAndPreconditioner(cplData);
+}
+
+void BaseQNAcceleration::addLogEntries(io::TXTTableWriter &writer) const
+{
+  writer.addData("QNColumns", io::TXTTableWriter::INT);
+  writer.addData("DeletedQNColumns", io::TXTTableWriter::INT);
+  writer.addData("DroppedQNColumns", io::TXTTableWriter::INT);
+}
+
+void BaseQNAcceleration::writeLogEntries(io::TXTTableWriter &writer) const
+{
+  writer.writeData("QNColumns", getLSSystemCols());
+  writer.writeData("DeletedQNColumns", getDeletedColumns());
+  writer.writeData("DroppedQNColumns", getDroppedColumns());
 }
 
 } // namespace acceleration

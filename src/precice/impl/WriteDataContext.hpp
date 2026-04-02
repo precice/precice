@@ -84,7 +84,7 @@ public:
    */
   void writeGradientsIntoDataBuffer(::precice::span<const VertexID> vertices, ::precice::span<const double> gradients);
 
-  void resizeBufferTo(int size);
+  void resizeBufferTo(int size, bool invalidateBufferedData = false);
 
   /**
    * @brief Store data from _writeDataBuffer in persistent storage
@@ -116,7 +116,7 @@ public:
 private:
   static logging::Logger _log;
 
-  /// @brief Buffer to store written data until it is copied to _providedData->timeStepsStorage()
+  /// @brief Buffer to store written data until it is copied to _providedData->waveform()
   time::Sample _writeDataBuffer;
 };
 

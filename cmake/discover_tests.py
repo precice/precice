@@ -109,6 +109,8 @@ for name, ranks in get_tests():
         '"OMP_NUM_THREADS=2;OMP_PROC_BIND=false"',
         "TIMEOUT",
         '"30"',
+        '"SKIP_REGULAR_EXPRESSION"',
+        '"error 1175;failed to communicate with smpd manager on"',  # smpd post error
         "WORKING_DIRECTORY",
         f'"{dir.as_posix()}"',
         "LABELS",

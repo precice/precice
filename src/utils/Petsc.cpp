@@ -20,6 +20,7 @@
 #include "petscsystypes.h"
 #include "petscvec.h"
 #include "petscviewertypes.h"
+#include "precice/impl/versions.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/assertion.hpp"
 
@@ -691,11 +692,19 @@ std::string KSPSolver::summaryFor(Vector &b)
 
   switch (convReason) {
   case (KSP_CONVERGED_RTOL):
+#if (PETSC_MAJOR == 3) && (PETSC_MINOR < 24)
   case (KSP_CONVERGED_RTOL_NORMAL):
+#else
+  case (KSP_CONVERGED_RTOL_NORMAL_EQUATIONS):
+#endif
     oss << " sufficient relative convergence";
     break;
   case (KSP_CONVERGED_ATOL):
+#if (PETSC_MAJOR == 3) && (PETSC_MINOR < 24)
   case (KSP_CONVERGED_ATOL_NORMAL):
+#else
+  case (KSP_CONVERGED_ATOL_NORMAL_EQUATIONS):
+#endif
     oss << " sufficient absolute convergence";
     break;
   case (KSP_DIVERGED_ITS):

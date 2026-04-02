@@ -20,7 +20,6 @@
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mapping/RadialBasisFctSolver.hpp"
 #include "mapping/RadialGeoMultiscaleMapping.hpp"
-#include "mapping/device/Ginkgo.hpp"
 #include "mapping/impl/BasisFunctions.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -182,10 +181,10 @@ MappingConfiguration::MappingConfiguration(
   // First, we create the available tags
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag>  projectionTags{
-      XMLTag{*this, TYPE_NEAREST_NEIGHBOR, occ, TAG}.setDocumentation("Nearest-neighbour mapping which uses a rstar-spacial index tree to index meshes and run nearest-neighbour queries."),
-      XMLTag{*this, TYPE_NEAREST_PROJECTION, occ, TAG}.setDocumentation("Nearest-projection mapping which uses a rstar-spacial index tree to index meshes and locate the nearest projections."),
+      XMLTag{*this, TYPE_NEAREST_NEIGHBOR, occ, TAG}.setDocumentation("Nearest-neighbour mapping which uses a rstar-spatial index tree to index meshes and run nearest-neighbour queries."),
+      XMLTag{*this, TYPE_NEAREST_PROJECTION, occ, TAG}.setDocumentation("Nearest-projection mapping which uses a rstar-spatial index tree to index meshes and locate the nearest projections."),
       XMLTag{*this, TYPE_NEAREST_NEIGHBOR_GRADIENT, occ, TAG}.setDocumentation("Nearest-neighbor-gradient mapping which uses nearest-neighbor mapping with an additional linear approximation using gradient data."),
-      XMLTag{*this, TYPE_LINEAR_CELL_INTERPOLATION, occ, TAG}.setDocumentation("Linear cell interpolation mapping which uses a rstar-spacial index tree to index meshes and locate the nearest cell. Only supports 2D meshes.")};
+      XMLTag{*this, TYPE_LINEAR_CELL_INTERPOLATION, occ, TAG}.setDocumentation("Linear cell interpolation mapping which uses a rstar-spatial index tree to index meshes and locate the nearest cell. Only supports 2D meshes.")};
   std::list<XMLTag> rbfDirectTags{
       XMLTag{*this, TYPE_RBF_GLOBAL_DIRECT, occ, TAG}.setDocumentation("Radial-basis-function mapping using a direct solver with a gather-scatter parallelism.")};
   std::list<XMLTag> rbfIterativeTags{
@@ -194,9 +193,15 @@ MappingConfiguration::MappingConfiguration(
       XMLTag{*this, TYPE_RBF_PUM_DIRECT, occ, TAG}.setDocumentation("Radial-basis-function mapping using a partition of unity method, which supports a distributed parallelism.")};
   std::list<XMLTag> rbfAliasTag{
       XMLTag{*this, TYPE_RBF_ALIAS, occ, TAG}.setDocumentation("Alias tag, which auto-selects a radial-basis-function mapping depending on the simulation parameter,")};
-  std::list<XMLTag> geoMultiscaleTags{
-      XMLTag{*this, TYPE_AXIAL_GEOMETRIC_MULTISCALE, occ, TAG}.setDocumentation("Axial geometric multiscale mapping between one 1D and multiple 3D vertices."),
-      XMLTag{*this, TYPE_RADIAL_GEOMETRIC_MULTISCALE, occ, TAG}.setDocumentation("Radial geometric multiscale mapping between multiple 1D and multiple 3D vertices, distributed along a principle axis.")};
+  std::list<XMLTag> coarseGrainingTags{
+      XMLTag{*this, TYPE_COARSE_GRAINING, occ, TAG}.setDocumentation("Coarse graining specifically designed for particle-mesh coupling to write data from the particles to the mesh. The mapping transforms an extensive quantity (e.g., volume, force) into an intensive quantity (e.g., porosity, force-density). "
+                                                                     " Currently implemented as just-in-time mapping. Although the constraint does not really fit here (the input is conservative, the output not), we classify it as \"conservative\" for the configuration.")};
+  std::list<XMLTag> axialGeoMultiscaleTags{
+      XMLTag{*this, TYPE_AXIAL_GEOMETRIC_MULTISCALE, occ, TAG}
+          .setDocumentation("Axial geometric multiscale mapping between one 1D and multiple 3D vertices.")};
+  std::list<XMLTag> radialGeoMultiscaleTags{
+      XMLTag{*this, TYPE_RADIAL_GEOMETRIC_MULTISCALE, occ, TAG}
+          .setDocumentation("Radial geometric multiscale mapping between multiple 1D and multiple 3D vertices, distributed along a principle axis.")};
 
   // List of all attributes with corresponding documentation
   auto attrDirection = XMLAttribute<std::string>(ATTR_DIRECTION)
@@ -226,6 +231,9 @@ MappingConfiguration::MappingConfiguration(
                                .setDocumentation("Toggles use a local (per cluster) polynomial")
                                .setOptions({POLYNOMIAL_OFF, POLYNOMIAL_SEPARATE});
 
+  auto attrcgRadius = makeXMLAttribute<double>(ATTR_CG_RADIUS, 0.)
+                          .setDocumentation("Radius or range of the coarsening function (Lucy function).");
+
   auto attrSolverRtol = makeXMLAttribute(ATTR_SOLVER_RTOL, 1e-9)
                             .setDocumentation("Solver relative tolerance for convergence");
   // TODO: Discuss whether we wanto to introduce this attribute
@@ -239,6 +247,9 @@ MappingConfiguration::MappingConfiguration(
   auto projectToInput = XMLAttribute<bool>(ATTR_PROJECT_TO_INPUT, true)
                             .setDocumentation("If enabled, places the cluster centers at the closest vertex of the input mesh. Should be enabled in case of non-uniform point distributions such as for shell structures.");
 
+  auto attrGeoMultiscaleDimension = XMLAttribute<std::string>(ATTR_GEOMETRIC_MULTISCALE_DIMENSION)
+                                        .setDocumentation("Specifies the dimensionality pairing used in geometric multiscale mapping. Options: '1D-3D', '1D-2D' or '2D-3D'.")
+                                        .setOptions({GEOMETRIC_MULTISCALE_DIMENSION_1D3D, GEOMETRIC_MULTISCALE_DIMENSION_1D2D, GEOMETRIC_MULTISCALE_DIMENSION_2D3D});
   auto attrGeoMultiscaleType = XMLAttribute<std::string>(ATTR_GEOMETRIC_MULTISCALE_TYPE)
                                    .setDocumentation("Type of geometric multiscale mapping. Either 'spread' or 'collect'.")
                                    .setOptions({GEOMETRIC_MULTISCALE_TYPE_SPREAD, GEOMETRIC_MULTISCALE_TYPE_COLLECT});
@@ -246,7 +257,15 @@ MappingConfiguration::MappingConfiguration(
                                    .setDocumentation("Principle axis along which geometric multiscale mapping is performed.")
                                    .setOptions({GEOMETRIC_MULTISCALE_AXIS_X, GEOMETRIC_MULTISCALE_AXIS_Y, GEOMETRIC_MULTISCALE_AXIS_Z});
   auto attrGeoMultiscaleRadius = XMLAttribute<double>(ATTR_GEOMETRIC_MULTISCALE_RADIUS)
-                                     .setDocumentation("Radius of the circular interface between the 1D and 3D participant.");
+                                     .setDocumentation("Radius of the cross-sectional interface between the participants.");
+  auto attrGeoMultiscaleCrossSectionProfile = XMLAttribute<std::string>(ATTR_GEOMETRIC_MULTISCALE_CROSS_SECTION_PROFILE)
+                                                  .setDocumentation("Profile of the mapped variable along the cross-sectional interface: 'uniform' or 'parabolic'")
+                                                  .setOptions({GEOMETRIC_MULTISCALE_CROSS_SECTION_PROFILE_UNIFORM, GEOMETRIC_MULTISCALE_CROSS_SECTION_PROFILE_PARABOLIC})
+                                                  .setDefaultValue(GEOMETRIC_MULTISCALE_CROSS_SECTION_PROFILE_UNIFORM);
+  auto attrGeoMultiscaleCrossSection = XMLAttribute<std::string>(ATTR_GEOMETRIC_MULTISCALE_CROSS_SECTION)
+                                           .setDocumentation("Cross section of the interface of the participants: 'circle' or 'square'")
+                                           .setOptions({GEOMETRIC_MULTISCALE_CROSS_SECTION_CIRCLE, GEOMETRIC_MULTISCALE_CROSS_SECTION_SQUARE})
+                                           .setDefaultValue(GEOMETRIC_MULTISCALE_CROSS_SECTION_CIRCLE);
 
   // Add the relevant attributes to the relevant tags
   addAttributes(projectionTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
@@ -254,13 +273,17 @@ MappingConfiguration::MappingConfiguration(
   addAttributes(rbfIterativeTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPolynomial, attrXDead, attrYDead, attrZDead, attrSolverRtol});
   addAttributes(pumDirectTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrPumPolynomial, verticesPerCluster, relativeOverlap, projectToInput});
   addAttributes(rbfAliasTag, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrXDead, attrYDead, attrZDead});
-  addAttributes(geoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius});
+  addAttributes(coarseGrainingTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint, attrcgRadius});
+  addAttributes(axialGeoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
+  addAttributes(radialGeoMultiscaleTags, {attrFromMesh, attrToMesh, attrDirection, attrConstraint});
+  addAttributes(axialGeoMultiscaleTags, {attrGeoMultiscaleDimension, attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius, attrGeoMultiscaleCrossSectionProfile, attrGeoMultiscaleCrossSection});
+  addAttributes(radialGeoMultiscaleTags, {attrGeoMultiscaleType, attrGeoMultiscaleAxis, attrGeoMultiscaleRadius});
 
   // Now we take care of the subtag executor. We repeat some of the subtags in order to add individual documentation
   XMLTag::Occurrence once = XMLTag::OCCUR_NOT_OR_ONCE;
   // TODO, make type an int
-  auto attrDeviceId = makeXMLAttribute(ATTR_DEVICE_ID, static_cast<int>(0))
-                          .setDocumentation("Specifies the ID of the GPU that should be used for the Ginkgo GPU backend.");
+  auto attrDeviceId = makeXMLAttribute(ATTR_DEVICE_ID, static_cast<std::string>("0"))
+                          .setDocumentation("Setting of the GPU device: Set \"auto\" to assign GPUs to each MPI rank in a round robin fashion or specify a number between 0 and the number of available GPUs-1 to assign all MPI ranks to one GPU device with the given ID.");
   auto attrNThreads = makeXMLAttribute(ATTR_N_THREADS, static_cast<int>(0))
                           .setDocumentation("Specifies the number of threads for the OpenMP executor that should be used for the Ginkgo OpenMP backend. If a value of \"0\" is set, preCICE doesn't set the number of threads and the default behavior of OpenMP applies.");
 
@@ -294,8 +317,24 @@ MappingConfiguration::MappingConfiguration(
   }
   {
     std::list<XMLTag> cpuExecutor{
-        XMLTag{*this, EXECUTOR_CPU, once, SUBTAG_EXECUTOR}.setDocumentation("The default (and currently only) executor using a CPU and a distributed memory parallelism via MPI.")};
+        XMLTag{*this, EXECUTOR_CPU, once, SUBTAG_EXECUTOR}.setDocumentation("The default executor using a CPU and a distributed memory parallelism via MPI.")};
+    std::list<XMLTag> deviceExecutors{
+        XMLTag{*this, EXECUTOR_CUDA, once, SUBTAG_EXECUTOR}.setDocumentation("Cuda (Nvidia) executor, which uses Kokkos-kernels, fully parallel"),
+        XMLTag{*this, EXECUTOR_HIP, once, SUBTAG_EXECUTOR}.setDocumentation("Hip (AMD/Nvidia) executor, which uses Kokkos-kernels, fully parallel."),
+        XMLTag{*this, EXECUTOR_SYCL, once, SUBTAG_EXECUTOR}.setDocumentation("SYCL (e.g. Intel) executor, which uses Kokkos-kernels, fully parallel.")};
+    std::list<XMLTag> ompExecutor{
+        XMLTag{*this, EXECUTOR_OMP, once, SUBTAG_EXECUTOR}.setDocumentation("OpenMP executor, which uses Kokkos-kernel, fully parallel.")};
+
+    auto attrExecutionMode = makeXMLAttribute(ATTR_EXECUTION_MODE, "minimal-memory")
+                                 .setDocumentation("Toggle to switch between a minimal-memory vs a minimal-compute algorithm. For option \"minimal-memory\", the RBF evaluation is recomputed for each data mapping on-the-fly, which saves approximately half the memory consumption (if meshes have a similar resolution), but may (!) be slower (depends heavily on the hardware). "
+                                                   "For the option \"minimal-compute\", the RBF evaluation is precomputed, which may be faster, but consumes more memory.")
+                                 .setOptions({"minimal-memory", "minimal-compute"});
+
+    addAttributes(deviceExecutors, {attrDeviceId, attrExecutionMode});
+    addAttributes(ompExecutor, {attrNThreads, attrExecutionMode});
     addSubtagsToParents(cpuExecutor, pumDirectTags);
+    addSubtagsToParents(deviceExecutors, pumDirectTags);
+    addSubtagsToParents(ompExecutor, pumDirectTags);
   }
   // The alias tag doesn't receive the subtag at all
 
@@ -359,7 +398,9 @@ MappingConfiguration::MappingConfiguration(
   parent.addSubtags(rbfDirectTags);
   parent.addSubtags(pumDirectTags);
   parent.addSubtags(rbfAliasTag);
-  parent.addSubtags(geoMultiscaleTags);
+  parent.addSubtags(coarseGrainingTags);
+  parent.addSubtags(axialGeoMultiscaleTags);
+  parent.addSubtags(radialGeoMultiscaleTags);
 }
 
 void MappingConfiguration::setExperimental(
@@ -402,16 +443,20 @@ void MappingConfiguration::xmlTagCallback(
     bool        xDead         = tag.getBooleanAttributeValue(ATTR_X_DEAD, false);
     bool        yDead         = tag.getBooleanAttributeValue(ATTR_Y_DEAD, false);
     bool        zDead         = tag.getBooleanAttributeValue(ATTR_Z_DEAD, false);
+    double      cgRadius      = tag.getDoubleAttributeValue(ATTR_CG_RADIUS, 0.);
     double      solverRtol    = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL, 1e-9);
     std::string strPolynomial = tag.getStringAttributeValue(ATTR_POLYNOMIAL, POLYNOMIAL_SEPARATE);
 
     // geometric multiscale related tags
-    std::string geoMultiscaleType = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_TYPE, "");
-    std::string geoMultiscaleAxis = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_AXIS, "");
-    double      multiscaleRadius  = tag.getDoubleAttributeValue(ATTR_GEOMETRIC_MULTISCALE_RADIUS, 1.0);
+    std::string geoMultiscaleDimension    = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_DIMENSION, "");
+    std::string geoMultiscaleType         = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_TYPE, "");
+    std::string geoMultiscaleAxis         = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_AXIS, "");
+    double      multiscaleRadius          = tag.getDoubleAttributeValue(ATTR_GEOMETRIC_MULTISCALE_RADIUS, 1.0);
+    std::string geoMultiscaleProfile      = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_CROSS_SECTION_PROFILE, "");
+    std::string geoMultiscaleCrossSection = tag.getStringAttributeValue(ATTR_GEOMETRIC_MULTISCALE_CROSS_SECTION, "");
 
-    if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE || type == TYPE_RADIAL_GEOMETRIC_MULTISCALE) {
-      PRECICE_CHECK(_experimental, "Axial geometric multiscale is experimental and the configuration can change between minor releases. Set experimental=\"on\" in the precice-configuration tag.");
+    if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE || type == TYPE_RADIAL_GEOMETRIC_MULTISCALE || type == TYPE_COARSE_GRAINING) {
+      PRECICE_CHECK(_experimental, "The configured mapping \"{}\" is experimental and the configuration can change between minor releases. Set experimental=\"on\" in the precice-configuration tag.", type);
     }
 
     if (type == TYPE_AXIAL_GEOMETRIC_MULTISCALE && context.size > 1) {
@@ -440,7 +485,7 @@ void MappingConfiguration::xmlTagCallback(
       PRECICE_UNREACHABLE("Unknown mapping constraint \"{}\".", constraint);
     }
 
-    ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh, geoMultiscaleType, geoMultiscaleAxis, multiscaleRadius);
+    ConfiguredMapping configuredMapping = createMapping(dir, type, fromMesh, toMesh, cgRadius, geoMultiscaleDimension, geoMultiscaleType, geoMultiscaleAxis, multiscaleRadius, geoMultiscaleProfile, geoMultiscaleCrossSection);
 
     _rbfConfig = configureRBFMapping(type, strPolynomial, xDead, yDead, zDead, solverRtol, verticesPerCluster, relativeOverlap, projectToInput);
 
@@ -486,12 +531,35 @@ void MappingConfiguration::xmlTagCallback(
       _executorConfig->executor = ExecutorConfiguration::Executor::CUDA;
     } else if (tag.getName() == EXECUTOR_HIP) {
       _executorConfig->executor = ExecutorConfiguration::Executor::HIP;
+    } else if (tag.getName() == EXECUTOR_SYCL) {
+      _executorConfig->executor = ExecutorConfiguration::Executor::SYCL;
     } else if (tag.getName() == EXECUTOR_OMP) {
       _executorConfig->executor = ExecutorConfiguration::Executor::OpenMP;
     }
 
-    _executorConfig->deviceId = tag.getIntAttributeValue(ATTR_DEVICE_ID, -1);
+    auto did = tag.getStringAttributeValue(ATTR_DEVICE_ID, "0");
+    if (did == "auto") {
+      _executorConfig->deviceId = -1;
+    } else {
+      try {
+        _executorConfig->deviceId = std::stoi(did);
+        PRECICE_CHECK(_executorConfig->deviceId >= 0, "The argument provided to \"gpu-device-id\" in the precice configuration file is invalid (negative device id)");
+      } catch (const std::invalid_argument &e) {
+        throw precice::Error("The argument provided to \"gpu-device-id\" in the precice configuration file is invalid (not a valid input).");
+      } catch (const std::out_of_range &e) {
+        throw precice::Error("The argument provided to \"gpu-device-id\" in the precice configuration file is invalid (out of range).");
+      }
+    }
+
     _executorConfig->nThreads = tag.getIntAttributeValue(ATTR_N_THREADS, 0);
+    auto mode                 = tag.getStringAttributeValue(ATTR_EXECUTION_MODE, "minimal-compute");
+    if (mode == "minimal-memory")
+      _executorConfig->computeEvaluationOffline = false;
+    else if (mode == "minimal-compute")
+      _executorConfig->computeEvaluationOffline = true;
+    else {
+      PRECICE_UNREACHABLE("Unknown execution mode");
+    }
   }
 }
 
@@ -544,9 +612,13 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     const std::string &type,
     const std::string &fromMeshName,
     const std::string &toMeshName,
+    const double       cgRadius,
+    const std::string &geoMultiscaleDimension,
     const std::string &geoMultiscaleType,
     const std::string &geoMultiscaleAxis,
-    const double      &multiscaleRadius) const
+    const double      &multiscaleRadius,
+    const std::string &geoMultiscaleProfile,
+    const std::string &geoMultiscaleCrossSection) const
 {
   PRECICE_TRACE(direction, type);
 
@@ -580,10 +652,10 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
                 toMeshName);
 
   PRECICE_CHECK((!toMesh->isJustInTime() && !fromMesh->isJustInTime()) ||
-                    ((toMesh->isJustInTime() || fromMesh->isJustInTime()) && (type == TYPE_NEAREST_NEIGHBOR || type == TYPE_RBF_PUM_DIRECT || type == TYPE_RBF_ALIAS)),
+                    ((toMesh->isJustInTime() || fromMesh->isJustInTime()) && (type == TYPE_NEAREST_NEIGHBOR || type == TYPE_RBF_PUM_DIRECT || type == TYPE_RBF_ALIAS || type == TYPE_COARSE_GRAINING)),
                 "A just-in-time mapping was configured from mesh \"{}\" to mesh \"{}\" using \"mapping:{}\", which is currently not implemented. "
-                "Available mapping types are \"mapping:{}\", \"mapping:{}\" and \"mapping:{}\".",
-                fromMesh->getName(), toMesh->getName(), type, TYPE_NEAREST_NEIGHBOR, TYPE_RBF_ALIAS, TYPE_RBF_PUM_DIRECT);
+                "Available mapping types are \"mapping:{}\", \"mapping:{}\", \"mapping:{}\" and  \"mapping:{}\".",
+                fromMesh->getName(), toMesh->getName(), type, TYPE_NEAREST_NEIGHBOR, TYPE_RBF_ALIAS, TYPE_RBF_PUM_DIRECT, TYPE_COARSE_GRAINING);
 
   // Check for compatible mesh dimensions
   PRECICE_CHECK(fromMesh->getDimensions() == toMesh->getDimensions(),
@@ -610,6 +682,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
     configuredMapping.mapping = PtrMapping(new NearestProjectionMapping(constraintValue, fromMesh->getDimensions()));
   } else if (type == TYPE_LINEAR_CELL_INTERPOLATION) {
     configuredMapping.mapping = PtrMapping(new LinearCellInterpolationMapping(constraintValue, fromMesh->getDimensions()));
+  } else if (type == TYPE_COARSE_GRAINING) {
+    configuredMapping.mapping = PtrMapping(new CoarseGrainingMapping(constraintValue, fromMesh->getDimensions(), cgRadius));
   } else if (type == TYPE_NEAREST_NEIGHBOR_GRADIENT) {
 
     // NNG is not applicable with the conservative constraint
@@ -638,6 +712,17 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       PRECICE_UNREACHABLE("Unknown geometric multiscale axis \"{}\".", geoMultiscaleAxis);
     }
 
+    AxialGeoMultiscaleMapping::MultiscaleDimension multiscaleDimension;
+    if (geoMultiscaleDimension == "1d-3d") {
+      multiscaleDimension = AxialGeoMultiscaleMapping::MultiscaleDimension::D1D3;
+    } else if (geoMultiscaleDimension == "1d-2d") {
+      multiscaleDimension = AxialGeoMultiscaleMapping::MultiscaleDimension::D1D2;
+    } else if (geoMultiscaleDimension == "2d-3d") {
+      multiscaleDimension = AxialGeoMultiscaleMapping::MultiscaleDimension::D2D3;
+    } else {
+      PRECICE_UNREACHABLE("Unknown dimension \"{}\".", geoMultiscaleDimension);
+    }
+
     AxialGeoMultiscaleMapping::MultiscaleType multiscaleType;
     if (geoMultiscaleType == "spread") {
       multiscaleType = AxialGeoMultiscaleMapping::MultiscaleType::SPREAD;
@@ -647,7 +732,25 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration::createMapping(
       PRECICE_UNREACHABLE("Unknown geometric multiscale type \"{}\".", geoMultiscaleType);
     }
 
-    configuredMapping.mapping = PtrMapping(new AxialGeoMultiscaleMapping(constraintValue, fromMesh->getDimensions(), multiscaleType, multiscaleAxis, multiscaleRadius));
+    AxialGeoMultiscaleMapping::MultiscaleProfile multiscaleProfile = AxialGeoMultiscaleMapping::MultiscaleProfile::PARABOLIC;
+    if (geoMultiscaleProfile == "parabolic") {
+      multiscaleProfile = AxialGeoMultiscaleMapping::MultiscaleProfile::PARABOLIC;
+    } else if (geoMultiscaleProfile == "uniform") {
+      multiscaleProfile = AxialGeoMultiscaleMapping::MultiscaleProfile::UNIFORM;
+    } else {
+      PRECICE_UNREACHABLE("Unknown cross-section profile \"{}\".", geoMultiscaleProfile);
+    }
+
+    AxialGeoMultiscaleMapping::MultiscaleCrossSection multiscaleCrossSection = AxialGeoMultiscaleMapping::MultiscaleCrossSection::CIRCLE;
+    if (geoMultiscaleCrossSection == "circle") {
+      multiscaleCrossSection = AxialGeoMultiscaleMapping::MultiscaleCrossSection::CIRCLE;
+    } else if (geoMultiscaleCrossSection == "square") {
+      multiscaleCrossSection = AxialGeoMultiscaleMapping::MultiscaleCrossSection::SQUARE;
+    } else {
+      PRECICE_UNREACHABLE("Unknown geometric cross section \"{}\".", geoMultiscaleCrossSection);
+    }
+
+    configuredMapping.mapping = PtrMapping(new AxialGeoMultiscaleMapping(constraintValue, fromMesh->getDimensions(), multiscaleDimension, multiscaleType, multiscaleAxis, multiscaleRadius, multiscaleProfile, multiscaleCrossSection));
 
   } else if (type == TYPE_RADIAL_GEOMETRIC_MULTISCALE) {
 
@@ -746,49 +849,67 @@ void MappingConfiguration::finishRBFConfiguration()
 
       mapping.mapping = getRBFMapping<RBFBackend::PETSc>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.solverRtol, _rbfConfig.polynomial);
 #else
-      PRECICE_CHECK(false, "The global-iterative RBF solver on a CPU requires a preCICE build with PETSc enabled.");
+      PRECICE_ERROR("The global-iterative RBF solver on a CPU requires a preCICE build with PETSc enabled.");
 #endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
-      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput);
+      _ginkgoParameter          = GinkgoParameter();
+      _ginkgoParameter.executor = "cpu";
+      mapping.mapping           = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _ginkgoParameter);
     } else {
       PRECICE_UNREACHABLE("Unknown RBF solver.");
     }
     // 2. any other executor is configured via Ginkgo
   } else {
-#ifndef PRECICE_NO_GINKGO
     _ginkgoParameter                   = GinkgoParameter();
     _ginkgoParameter.usePreconditioner = false;
     _ginkgoParameter.deviceId          = _executorConfig->deviceId;
     if (_executorConfig->executor == ExecutorConfiguration::Executor::CUDA) {
       _ginkgoParameter.executor = "cuda-executor";
 #ifndef PRECICE_WITH_CUDA
-      PRECICE_CHECK(false, "The cuda-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with Cuda enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+      PRECICE_ERROR("The cuda-executor (configured for the mapping from mesh {} to mesh {}) requires a Kokkos and preCICE build with Cuda enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
     } else if (_executorConfig->executor == ExecutorConfiguration::Executor::HIP) {
       _ginkgoParameter.executor = "hip-executor";
 #ifndef PRECICE_WITH_HIP
-      PRECICE_CHECK(false, "The hip-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with HIP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+      PRECICE_ERROR("The hip-executor (configured for the mapping from mesh {} to mesh {}) requires a Kokkos and preCICE build with HIP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
+    } else if (_executorConfig->executor == ExecutorConfiguration::Executor::SYCL) {
+      _ginkgoParameter.executor = "sycl-executor";
+#ifndef PRECICE_WITH_SYCL
+      PRECICE_ERROR("The sycl-executor (configured for the mapping from mesh {} to mesh {}) requires a Kokkos and preCICE build with SYCL enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
     } else if (_executorConfig->executor == ExecutorConfiguration::Executor::OpenMP) {
       _ginkgoParameter.executor = "omp-executor";
       _ginkgoParameter.nThreads = _executorConfig->nThreads;
 #ifndef PRECICE_WITH_OPENMP
-      PRECICE_CHECK(false, "The omp-executor (configured for the mapping from mesh {} to mesh {}) requires a Ginkgo and preCICE build with OpenMP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
+      PRECICE_ERROR("The omp-executor (configured for the mapping from mesh {} to mesh {}) requires a Kokkos and preCICE build with OpenMP enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
 #endif
     }
     if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalDirect) {
+#ifndef PRECICE_NO_GINKGO
       _ginkgoParameter.solver = "qr-solver";
+      mapping.mapping         = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
+#else
+      PRECICE_ERROR("The selected direct solver for the global RBF mapping on executor {} from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", _ginkgoParameter.executor, mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
     } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::GlobalIterative) {
+#ifndef PRECICE_NO_GINKGO
       _ginkgoParameter.solver       = "cg-solver";
       _ginkgoParameter.residualNorm = _rbfConfig.solverRtol;
+      mapping.mapping               = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
+#else
+      PRECICE_ERROR("The selected iterative solver for the global RBF mapping on executor {} from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", _ginkgoParameter.executor, mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
+    } else if (_rbfConfig.solver == RBFConfiguration::SystemSolver::PUMDirect) {
+#ifndef PRECICE_NO_KOKKOS_KERNELS
+      PRECICE_CHECK(!(mapping.fromMesh->isJustInTime() || mapping.toMesh->isJustInTime()), "Executor \"{}\" is not implemented as just-in-time mapping.", _ginkgoParameter.executor);
+      mapping.mapping = getRBFMapping<RBFBackend::PUM>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.polynomial, _rbfConfig.verticesPerCluster, _rbfConfig.relativeOverlap, _rbfConfig.projectToInput, _ginkgoParameter, _executorConfig->computeEvaluationOffline);
+#else
+      PRECICE_ERROR("The selected pu-rbf solver using executor \"{}\" for the mapping from mesh {} to mesh {} requires a preCICE build with Kokkos-kernels enabled.", _ginkgoParameter.executor, mapping.fromMesh->getName(), mapping.toMesh->getName());
+#endif
     } else {
       PRECICE_UNREACHABLE("Unknown solver type.");
     }
-
-    mapping.mapping = getRBFMapping<RBFBackend::Ginkgo>(_rbfConfig.basisFunction, constraintValue, mapping.fromMesh->getDimensions(), _rbfConfig.supportRadius, _rbfConfig.shapeParameter, _rbfConfig.deadAxis, _rbfConfig.polynomial, _ginkgoParameter);
-#else
-    PRECICE_CHECK(false, "The selected executor for the mapping from mesh {} to mesh {} requires a preCICE build with Ginkgo enabled.", mapping.fromMesh->getName(), mapping.toMesh->getName());
-#endif
   }
 }
 

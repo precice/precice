@@ -254,28 +254,16 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
 
     const int valueDim = inData.dataDims;
 
-    // Construct Eigen vectors
-    Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
-    Eigen::VectorXd             outputValues((this->output()->getGlobalNumberOfVertices()) * valueDim);
+    using RowMatrixXd = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+    using MapToMatrix = Eigen::Map<RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>;
 
-    Eigen::VectorXd in;                     // rows == outputSize
-    in.resize(_rbfSolver->getOutputSize()); // rows == outputSize
+    // copy of input data to Eigen matrix format, rows == outputSize
+    Eigen::MatrixXd in = MapToMatrix(globalInValues.data(), _rbfSolver->getOutputSize(), valueDim, Eigen::OuterStride(valueDim));
 
-    outputValues.setZero();
+    // copy all output values without polynomial entries from col-major to row-major format
+    RowMatrixXd out = _rbfSolver->solveConservative(in, _polynomial).block(0, 0, this->output()->getGlobalNumberOfVertices(), valueDim);
 
-    for (int dim = 0; dim < valueDim; dim++) {
-      for (int i = 0; i < in.size(); i++) { // Fill input data values
-        in[i] = inputValues(i * valueDim + dim);
-      }
-
-      Eigen::VectorXd out;
-      out = _rbfSolver->solveConservative(in, _polynomial);
-
-      // Copy mapped data to output data values
-      for (int i = 0; i < this->output()->getGlobalNumberOfVertices(); i++) {
-        outputValues[i * valueDim + dim] = out[i];
-      }
-    }
+    Eigen::Map<Eigen::VectorXd> outputValues(out.data(), (this->output()->getGlobalNumberOfVertices()) * valueDim);
 
     // Data scattering to secondary ranks
     if (utils::IntraComm::isPrimary()) {
@@ -369,43 +357,26 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
       outValuesSize.push_back(outData.size());
     }
 
-    Eigen::VectorXd in;
+    // copy of input data to Eigen matrix format
+    using RowMatrixXd = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+    using MapToMatrix = Eigen::Map<RowMatrixXd, Eigen::Unaligned, Eigen::OuterStride<Eigen::Dynamic>>;
 
-    in.resize(_rbfSolver->getInputSize()); // rows == n
-    in.setZero();
+    // input matrix with polynomial entries that remain zero
+    Eigen::MatrixXd in = Eigen::MatrixXd::Zero(_rbfSolver->getInputSize(), valueDim);
 
-    // Construct Eigen vectors
-    Eigen::Map<Eigen::VectorXd> inputValues(globalInValues.data(), globalInValues.size());
+    in.block(0, 0, this->input()->getGlobalNumberOfVertices(), valueDim) = MapToMatrix(globalInValues.data(), this->input()->getGlobalNumberOfVertices(), valueDim, Eigen::OuterStride(valueDim));
 
-    Eigen::VectorXd outputValues;
-    outputValues.resize((_rbfSolver->getOutputSize()) * valueDim);
-
-    Eigen::VectorXd out;
-    outputValues.setZero();
-
-    // For every data dimension, perform mapping
-    for (int dim = 0; dim < valueDim; dim++) {
-      // Fill input from input data values (last polyparams entries remain zero)
-      for (int i = 0; i < this->input()->getGlobalNumberOfVertices(); i++) {
-        in[i] = inputValues[i * valueDim + dim];
-      }
-
-      out = _rbfSolver->solveConsistent(in, _polynomial);
-
-      // Copy mapped data to output data values
-      for (int i = 0; i < out.size(); i++) {
-        outputValues[i * valueDim + dim] = out[i];
-      }
-    }
-
-    outData = Eigen::Map<Eigen::VectorXd>(outputValues.data(), outValuesSize.at(0));
+    // copy all output values from col-major to row-major format
+    RowMatrixXd out = _rbfSolver->solveConsistent(in, _polynomial);
+    // copy mapped data at correct position to output data values
+    outData = Eigen::Map<Eigen::VectorXd>(out.data(), outValuesSize.at(0));
 
     // Data scattering to secondary ranks
     int beginPoint = outValuesSize.at(0);
 
     if (utils::IntraComm::isPrimary()) {
       for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
-        precice::span<const double> toSend{outputValues.data() + beginPoint, static_cast<size_t>(outValuesSize.at(rank))};
+        precice::span<const double> toSend{out.data() + beginPoint, static_cast<size_t>(outValuesSize.at(rank))};
         utils::IntraComm::getCommunication()->sendRange(toSend, rank);
         beginPoint += outValuesSize.at(rank);
       }

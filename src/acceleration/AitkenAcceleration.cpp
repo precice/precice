@@ -52,7 +52,9 @@ void AitkenAcceleration::initialize(const DataMap &cplData)
   _values       = Eigen::VectorXd::Zero(entries);
   _oldValues    = Eigen::VectorXd::Zero(entries);
   if (_primaryDataIDs.size() > 1) {
-    _preconditioner->initialize(subVectorSizes);
+    std::vector<std::string> subVectorNames;
+    std::transform(_primaryDataIDs.cbegin(), _primaryDataIDs.cend(), std::back_inserter(subVectorNames), [&cplData](const auto &d) { return cplData.at(d)->getDataName(); });
+    _preconditioner->initialize(std::move(subVectorSizes), std::move(subVectorNames));
   }
 }
 
@@ -125,7 +127,7 @@ void AitkenAcceleration::concatenateCouplingData(
   for (auto id : dataIDs) {
     Eigen::Index size = cplData.at(id)->getSize();
 
-    auto valuesSample    = cplData.at(id)->timeStepsStorage().sample(windowEnd);
+    auto valuesSample    = cplData.at(id)->waveform().sample(windowEnd);
     auto oldValuesSample = cplData.at(id)->getPreviousValuesAtTime(windowEnd);
 
     PRECICE_ASSERT(valuesSample.values().size() == size, valuesSample.values().size(), size);
