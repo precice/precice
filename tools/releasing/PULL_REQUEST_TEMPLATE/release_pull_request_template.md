@@ -50,14 +50,15 @@ Only the release manager should update this post (even tickboxes, due to race co
    * [ ] Update [XML configuration reference](https://github.com/precice/precice.github.io/blob/master/_includes/xmlreference.md)
    * [ ] Update version in [precice/precice.github.io](https://github.com/precice/precice.github.io) `_config.yml`
 * [ ] Approve the PR with at least two reviews (all)
-* [ ] Merge PR to `main`: `git merge --no-ff -m "Release vX.Y.Z" release-vX.Y.Z`
+* [ ] Merge PR to `main`: `git switch main`, `git merge --no-ff -m "Release vX.Y.Z" release-vX.Y.Z`
 * [ ] Create an annotated tag on `main`: `git tag -a -m "preCICE version X.Y.Z" vX.Y.Z main`
 * [ ] Verify the tag: `git describe --tags main`. It should be exactly `vX.Y.Z`
-* [ ] Switch to `develop` and merge `main` back into it: `git merge --no-ff -m "Merge release back"`
+* [ ] Merge `main` back to `develop`: `git switch develop`, `git merge --no-ff -m "Merge release back" main`
 * [ ] Verify the tag on develop: `git describe --tags develop`. It should start with `vX.Y.Z-1-` (i.e. tag plus the merge commit).
 * [ ] Triple check that you haven't messed anything up. You can always discard local changes using `git reset --hard upstream BRANCH` or by cloning the precice repository again and start from scratch.
-* [ ] Push `main` and the `vX.Y.Z` tag: `git push upstream main`, `git push upstream v3.3.0`
-* [ ] Push `develop`: `git push upstream develop`
+* [ ] Push `main`: `git switch main` `git push upstream main`
+* [ ] Push the `vX.Y.Z` tag: `git push upstream vX.Y.Z`
+* [ ] Push `develop`: `git switch develop`, `git push upstream develop`
 * [ ] Wait for the release pipeline
   * [ ] [To create a new draft release on GitHub](https://github.com/precice/precice/releases)
   * [ ] To automatically generate packages for the latest Debian and the two latest Ubuntu LTS versions.
