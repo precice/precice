@@ -722,8 +722,8 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning2D)
 
     part.addM2N(m2n);
 
-    part.addFromMapping(boundingFromMapping);
-    part.addToMapping(boundingToMapping);
+    part.addFromMapping(boundingFromMapping.get());
+    part.addToMapping(boundingToMapping.get());
 
     part.compareBoundingBoxes();
 
@@ -852,8 +852,8 @@ BOOST_AUTO_TEST_CASE(TestTwoLevelRepartitioning3D)
     ReceivedPartition part(receivedMesh, ReceivedPartition::ON_SECONDARY_RANKS, safetyFactor);
     part.addM2N(m2n);
 
-    part.addFromMapping(boundingFromMapping);
-    part.addToMapping(boundingToMapping);
+    part.addFromMapping(boundingFromMapping.get());
+    part.addToMapping(boundingToMapping.get());
 
     part.compareBoundingBoxes();
 
