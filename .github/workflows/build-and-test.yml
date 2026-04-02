@@ -128,11 +128,6 @@ jobs:
       - uses: actions/checkout@v6
       - name: Generate build directory
         run: mkdir -p build
-      - name: Install polars in venv
-        run: |
-          python3 -m venv --system-site-packages venv
-          venv/bin/pip install polars
-          venv/bin/pip list
       - name: Precompute hwloc topology
         run: |
           TOPODIR="$(mktemp --suffix=TOPO -d)"
@@ -160,7 +155,6 @@ jobs:
           KokkosKernels: ${{ contains(matrix.CONFIG, 'KokkosKernels') }}
           COMPRESS: ${{ contains(matrix.CONFIG, 'LZMA') }}
         run: |
-          . ../venv/bin/activate # There is always a venv present
           cmake --version
           cmake -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${{ matrix.TYPE }} -DPRECICE_FEATURE_MPI_COMMUNICATION=${{ env.MPI }} -DPRECICE_FEATURE_PETSC_MAPPING=${{ env.PETSc }} -DPRECICE_FEATURE_GINKGO_MAPPING=${{ env.Ginkgo }} -DPRECICE_FEATURE_KOKKOS_KERNELS_MAPPING=${{ env.KokkosKernels }} -DPRECICE_FEATURE_PROFILING_COMPRESSION=${{ env.COMPRESS }} -DPRECICE_FEATURE_LIBBACKTRACE_STACKTRACES=ON -DPRECICE_BUILD_BENCHMARKS=ON  -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.COVFLAGS }}" ..
       - uses: actions/upload-artifact@v7
@@ -195,12 +189,14 @@ jobs:
           PSM3_HAL: loopback # required for fedora
           UCX_MEM_EVENTS: n # reduces the ucx/ucs load times
         working-directory: build
-        run: su -c ". ../venv/bin/activate && ctest -j" "$PRECICE_USER"
+        run: su -c "ctest -j" "$PRECICE_USER"
       - name: Coverage Report
         working-directory: build
         if: ${{ matrix.COVFLAGS }}
         run: |
-          . ../venv/bin/activate
+          # replace with pipx or uv
+          python3 -m venv venv
+          . venv/bin/activate
           pip install fastcov
           fastcov --lcov -e '/usr/' -e '/opt/'
       - uses: codecov/codecov-action@v5
@@ -246,8 +242,6 @@ jobs:
       with:
        python-version: '3.10'
        check-latest: true
-    - name: Install pip packages
-      run: pip3 install numpy polars
     - name: Install preCICE dependencies
       run: brew install --build-from-source --only-dependencies --overwrite precice
     - name: Generate build directory
