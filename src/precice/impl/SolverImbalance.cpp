@@ -29,9 +29,6 @@ void SolverImbalance::stopSolver(double solverTimeStepSize)
   double advanceTime = (currentTime - _startTime).count() * 1e-9;
   _solverAdvanceTime += advanceTime;
   _simulatedTime += solverTimeStepSize;
-  PRECICE_INFO("solver advance time: {}", advanceTime);
-  PRECICE_INFO("solver dt: {}", solverTimeStepSize);
-  PRECICE_INFO("time per time step: {}", advanceTime / solverTimeStepSize);
 }
 
 void SolverImbalance::computeSolverImbalance(const std::vector<double> &timesToAdvance)
