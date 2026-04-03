@@ -165,7 +165,11 @@ ParticipantImpl::ParticipantImpl(
 ParticipantImpl::~ParticipantImpl()
 {
   if (_state != State::Finalized) {
-    PRECICE_INFO("Implicitly finalizing in destructor");
+    if (_hasError) {
+      PRECICE_INFO("Implicitly finalizing in destructor after an erroneous state");
+    } else {
+      PRECICE_INFO("Implicitly finalizing in destructor");
+    }
     finalize();
   }
 }
@@ -246,8 +250,9 @@ void ParticipantImpl::configure(
 }
 
 void ParticipantImpl::initialize()
-{
+try {
   PRECICE_TRACE();
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_CHECK(_state != State::Finalized, "initialize() cannot be called after finalize().");
   PRECICE_CHECK(_state != State::Initialized, "initialize() may only be called once.");
   PRECICE_ASSERT(not _couplingScheme->isInitialized());
@@ -297,6 +302,9 @@ void ParticipantImpl::initialize()
   _state = State::Initialized;
   PRECICE_INFO(_couplingScheme->printCouplingState());
   _solverAdvanceEvent = std::make_unique<profiling::Event>("solver.advance", profiling::Fundamental, profiling::Synchronize);
+} catch (...) {
+  _hasError = true;
+  throw;
 }
 
 void ParticipantImpl::reinitialize()
@@ -391,9 +399,10 @@ void ParticipantImpl::setupWatcher()
 
 void ParticipantImpl::advance(
     double computedTimeStepSize)
-{
+try {
 
   PRECICE_TRACE(computedTimeStepSize);
+  PRECICE_VALIDATE_ERROR_STATE();
 
   // Enforce that all user-created events are stopped to prevent incorrect nesting.
   PRECICE_CHECK(_userEvents.empty(), "There are unstopped user defined events. Please stop them using stopLastProfilingSection() before calling advance().");
@@ -463,6 +472,9 @@ void ParticipantImpl::advance(
 
   e.stop();
   _solverAdvanceEvent->start();
+} catch (...) {
+  _hasError = true;
+  throw;
 }
 
 void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo)
@@ -589,6 +601,8 @@ void ParticipantImpl::finalize()
   PRECICE_TRACE();
   PRECICE_CHECK(_state != State::Finalized, "finalize() may only be called once.");
 
+  PRECICE_WARN_IF(_hasError, "Finalizing participant \"{}\" in an erroneous state.", _accessorName);
+
   // First we gracefully stop all existing user events and finally the last solver.advance event
   while (!_userEvents.empty()) {
     // Ensure reverse destruction order for correct nesting
@@ -639,6 +653,7 @@ void ParticipantImpl::finalize()
 int ParticipantImpl::getMeshDimensions(std::string_view meshName) const
 {
   PRECICE_TRACE(meshName);
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_VALIDATE_MESH_NAME(meshName);
   return _accessor->meshContext(meshName).mesh->getDimensions();
 }
@@ -646,6 +661,7 @@ int ParticipantImpl::getMeshDimensions(std::string_view meshName) const
 int ParticipantImpl::getDataDimensions(std::string_view meshName, std::string_view dataName) const
 {
   PRECICE_TRACE(meshName, dataName);
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_VALIDATE_MESH_NAME(meshName);
   PRECICE_VALIDATE_DATA_NAME(meshName, dataName);
   return _accessor->meshContext(meshName).mesh->data(dataName)->getDimensions();
@@ -654,6 +670,7 @@ int ParticipantImpl::getDataDimensions(std::string_view meshName, std::string_vi
 bool ParticipantImpl::isCouplingOngoing() const
 {
   PRECICE_TRACE();
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_CHECK(_state != State::Finalized, "isCouplingOngoing() cannot be called after finalize().");
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before isCouplingOngoing() can be evaluated.");
   return _couplingScheme->isCouplingOngoing();
@@ -662,6 +679,7 @@ bool ParticipantImpl::isCouplingOngoing() const
 bool ParticipantImpl::isTimeWindowComplete() const
 {
   PRECICE_TRACE();
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_CHECK(_state != State::Constructed, "initialize() has to be called before isTimeWindowComplete().");
   PRECICE_CHECK(_state != State::Finalized, "isTimeWindowComplete() cannot be called after finalize().");
   return _couplingScheme->isTimeWindowComplete();
@@ -669,6 +687,7 @@ bool ParticipantImpl::isTimeWindowComplete() const
 
 double ParticipantImpl::getMaxTimeStepSize() const
 {
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_CHECK(_state != State::Finalized, "getMaxTimeStepSize() cannot be called after finalize().");
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before getMaxTimeStepSize() can be evaluated.");
   const double nextTimeStepSize = _couplingScheme->getNextTimeStepMaxSize();
@@ -687,6 +706,7 @@ double ParticipantImpl::getMaxTimeStepSize() const
 bool ParticipantImpl::requiresInitialData()
 {
   PRECICE_TRACE();
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_CHECK(_state == State::Constructed, "requiresInitialData() has to be called before initialize().");
   bool required = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::InitializeData);
   if (required) {
@@ -698,6 +718,7 @@ bool ParticipantImpl::requiresInitialData()
 bool ParticipantImpl::requiresWritingCheckpoint()
 {
   PRECICE_TRACE();
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before requiresWritingCheckpoint().");
   bool required = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::WriteCheckpoint);
   if (required) {
@@ -709,6 +730,7 @@ bool ParticipantImpl::requiresWritingCheckpoint()
 bool ParticipantImpl::requiresReadingCheckpoint()
 {
   PRECICE_TRACE();
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before requiresReadingCheckpoint().");
   bool required = _couplingScheme->isActionRequired(cplscheme::CouplingScheme::Action::ReadCheckpoint);
   if (required) {
@@ -719,6 +741,7 @@ bool ParticipantImpl::requiresReadingCheckpoint()
 
 bool ParticipantImpl::requiresMeshConnectivityFor(std::string_view meshName) const
 {
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_VALIDATE_MESH_NAME(meshName);
   MeshContext &context = _accessor->meshContext(meshName);
   return context.meshRequirement == mapping::Mapping::MeshRequirement::FULL;
@@ -727,6 +750,7 @@ bool ParticipantImpl::requiresMeshConnectivityFor(std::string_view meshName) con
 bool ParticipantImpl::requiresGradientDataFor(std::string_view meshName,
                                               std::string_view dataName) const
 {
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_VALIDATE_DATA_NAME(meshName, dataName);
   // Read data never requires gradients
   if (!_accessor->isDataWrite(meshName, dataName))
@@ -740,6 +764,7 @@ int ParticipantImpl::getMeshVertexSize(
     std::string_view meshName) const
 {
   PRECICE_TRACE(meshName);
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_REQUIRE_MESH_USE(meshName);
   // In case we access received mesh data: check, if the requested mesh data has already been received.
   // Otherwise, the function call doesn't make any sense
@@ -776,6 +801,7 @@ void ParticipantImpl::resetMesh(
     std::string_view meshName)
 {
   PRECICE_EXPERIMENTAL_API();
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_CHECK(_allowsRemeshing, "Cannot reset meshes. This feature needs to be enabled using <precice-configuration experimental=\"1\" allow-remeshing=\"1\">.");
   PRECICE_CHECK(_state == State::Initialized, "initialize() has to be called before resetMesh().");
   PRECICE_TRACE(meshName);
@@ -794,6 +820,7 @@ VertexID ParticipantImpl::setMeshVertex(
     ::precice::span<const double> position)
 {
   PRECICE_TRACE(meshName);
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   auto                &mesh    = *context.mesh;
@@ -819,6 +846,7 @@ void ParticipantImpl::setMeshVertices(
     ::precice::span<VertexID>     ids)
 {
   PRECICE_TRACE(meshName, positions.size(), ids.size());
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   auto                &mesh    = *context.mesh;
@@ -852,6 +880,7 @@ void ParticipantImpl::setMeshEdge(
     VertexID         second)
 {
   PRECICE_TRACE(meshName, first, second);
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
@@ -873,6 +902,7 @@ void ParticipantImpl::setMeshEdges(
     ::precice::span<const VertexID> vertices)
 {
   PRECICE_TRACE(meshName, vertices.size());
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
@@ -911,6 +941,7 @@ void ParticipantImpl::setMeshTriangle(
     VertexID         third)
 {
   PRECICE_TRACE(meshName, first, second, third);
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
@@ -938,6 +969,7 @@ void ParticipantImpl::setMeshTriangles(
     ::precice::span<const VertexID> vertices)
 {
   PRECICE_TRACE(meshName, vertices.size());
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
@@ -981,6 +1013,7 @@ void ParticipantImpl::setMeshQuad(
 {
   PRECICE_TRACE(meshName, first,
                 second, third, fourth);
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
@@ -1031,6 +1064,7 @@ void ParticipantImpl::setMeshQuads(
     ::precice::span<const VertexID> vertices)
 {
   PRECICE_TRACE(meshName, vertices.size());
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   if (context.meshRequirement != mapping::Mapping::MeshRequirement::FULL) {
@@ -1099,6 +1133,7 @@ void ParticipantImpl::setMeshTetrahedron(
     VertexID         fourth)
 {
   PRECICE_TRACE(meshName, first, second, third, fourth);
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes. "
@@ -1128,6 +1163,7 @@ void ParticipantImpl::setMeshTetrahedra(
     ::precice::span<const VertexID> vertices)
 {
   PRECICE_TRACE(meshName, vertices.size());
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_REQUIRE_MESH_MODIFY(meshName);
   ProvidedMeshContext &context = _accessor->providedMeshContext(meshName);
   PRECICE_CHECK(context.mesh->getDimensions() == 3, "setMeshTetrahedron is only possible for 3D meshes. "
@@ -1173,6 +1209,7 @@ void ParticipantImpl::writeData(
     ::precice::span<const double>   values)
 {
   PRECICE_TRACE(meshName, dataName, vertices.size());
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_CHECK(_state != State::Finalized, "writeData(...) cannot be called after finalize().");
   PRECICE_CHECK(_state == State::Constructed || (_state == State::Initialized && isCouplingOngoing()), "Calling writeData(...) is forbidden if coupling is not ongoing, because the data you are trying to write will not be used anymore. You can fix this by always calling writeData(...) before the advance(...) call in your simulation loop or by using Participant::isCouplingOngoing() to implement a safeguard.");
   PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
@@ -1211,6 +1248,7 @@ void ParticipantImpl::readData(
     ::precice::span<double>         values) const
 {
   PRECICE_TRACE(meshName, dataName, vertices.size(), relativeReadTime);
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_CHECK(_state != State::Constructed, "readData(...) cannot be called before initialize().");
   PRECICE_CHECK(_state != State::Finalized, "readData(...) cannot be called after finalize().");
   PRECICE_CHECK(math::smallerEquals(relativeReadTime, _couplingScheme->getNextTimeStepMaxSize()), "readData(...) cannot sample data outside of current time window.");
@@ -1263,6 +1301,7 @@ void ParticipantImpl::mapAndReadData(
 {
   PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshName, dataName, coordinates.size(), relativeReadTime);
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_CHECK(_state != State::Constructed, "mapAndReadData(...) cannot be called before initialize().");
   PRECICE_CHECK(_state != State::Finalized, "mapAndReadData(...) cannot be called after finalize().");
   PRECICE_CHECK(math::smallerEquals(relativeReadTime, _couplingScheme->getNextTimeStepMaxSize()), "readData(...) cannot sample data outside of current time window.");
@@ -1330,6 +1369,7 @@ void ParticipantImpl::writeAndMapData(
 {
   PRECICE_EXPERIMENTAL_API();
   PRECICE_TRACE(meshName, dataName, coordinates.size());
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_CHECK(_state != State::Finalized, "writeAndMapData(...) cannot be called after finalize().");
   PRECICE_CHECK(_state != State::Constructed, "writeAndMapData(...) cannot be called before initialize(), because the mesh to map onto hasn't been received yet.");
   PRECICE_CHECK(_state == State::Initialized && isCouplingOngoing(), "Calling writeAndMapData(...) is forbidden if coupling is not ongoing, because the data you are trying to write will not be used anymore. You can fix this by always calling writeAndMapData(...) before the advance(...) call in your simulation loop or by using Participant::isCouplingOngoing() to implement a safeguard.");
@@ -1395,6 +1435,7 @@ void ParticipantImpl::writeGradientData(
 
   // Asserts and checks
   PRECICE_TRACE(meshName, dataName, vertices.size());
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_CHECK(_state != State::Finalized, "writeGradientData(...) cannot be called after finalize().");
   PRECICE_REQUIRE_DATA_WRITE(meshName, dataName);
 
@@ -1439,6 +1480,7 @@ void ParticipantImpl::setMeshAccessRegion(
     ::precice::span<const double> boundingBox) const
 {
   PRECICE_TRACE(meshName, boundingBox.size());
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_REQUIRE_MESH_USE(meshName);
   PRECICE_CHECK(_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName),
                 "This participant attempteded to set an access region (via \"setMeshAccessRegion\") on mesh \"{0}\", "
@@ -1481,6 +1523,7 @@ void ParticipantImpl::getMeshVertexIDsAndCoordinates(
     ::precice::span<double>   coordinates) const
 {
   PRECICE_TRACE(meshName, ids.size(), coordinates.size());
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_REQUIRE_MESH_USE(meshName);
   PRECICE_CHECK(_accessor->isMeshReceived(meshName) && _accessor->isDirectAccessAllowed(meshName),
                 "This participant attempteded to get mesh vertex IDs and coordinates (via \"getMeshVertexIDsAndCoordinates\") from mesh \"{0}\", "
@@ -1957,6 +2000,7 @@ bool ParticipantImpl::reinitHandshake(bool requestReinit) const
 
 void ParticipantImpl::startProfilingSection(std::string_view sectionName)
 {
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_CHECK(std::find(sectionName.begin(), sectionName.end(), '/') == sectionName.end(),
                 "The provided section name \"{}\" may not contain a forward-slash \"/\"",
                 sectionName);
@@ -1965,6 +2009,7 @@ void ParticipantImpl::startProfilingSection(std::string_view sectionName)
 
 void ParticipantImpl::stopLastProfilingSection()
 {
+  PRECICE_VALIDATE_ERROR_STATE();
   PRECICE_CHECK(!_userEvents.empty(), "There is no user-started event to stop.");
   _userEvents.pop_back();
 }
