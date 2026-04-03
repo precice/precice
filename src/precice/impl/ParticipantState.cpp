@@ -341,9 +341,9 @@ const std::vector<action::PtrAction> &ParticipantState::actions() const
 }
 
 void ParticipantState::addExportContext(
-    const io::ExportContext &exportContext)
+    io::ExportContext exportContext)
 {
-  _exportContexts.push_back(exportContext);
+  _exportContexts.push_back(std::move(exportContext));
 }
 
 const std::vector<io::ExportContext> &ParticipantState::exportContexts() const
