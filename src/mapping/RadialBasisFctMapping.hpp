@@ -3,8 +3,8 @@
 #include <Eigen/Cholesky>
 #include <Eigen/Core>
 
-#include "com/Communication.hpp"
 #include "com/Extra.hpp"
+#include "com/IntraCommunication.hpp"
 #include "config/MappingConfiguration.hpp"
 #include "mapping/RadialBasisFctBaseMapping.hpp"
 #include "mesh/Filter.hpp"
@@ -244,7 +244,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
     {
       int secondaryOutputValueSize;
       for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
-        std::vector<double> secondaryBuffer = utils::IntraComm::getCommunication()->receiveRange(rank, com::asVector<double>);
+        std::vector<double> secondaryBuffer = utils::IntraComm::getCommunication()->receiveRange(rank, com::intraAsVector<double>);
         globalInValues.insert(globalInValues.end(), secondaryBuffer.begin(), secondaryBuffer.end());
 
         utils::IntraComm::getCommunication()->receive(secondaryOutputValueSize, rank);
@@ -291,7 +291,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
     }
   }
   if (utils::IntraComm::isSecondary()) {
-    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, com::asVector<double>);
+    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, com::intraAsVector<double>);
 
     const int valueDim = inData.dataDims;
 
@@ -343,7 +343,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
       int secondaryOutDataSize{0};
 
       for (Rank rank : utils::IntraComm::allSecondaryRanks()) {
-        std::vector<double> secondaryBuffer = utils::IntraComm::getCommunication()->receiveRange(rank, com::asVector<double>);
+        std::vector<double> secondaryBuffer = utils::IntraComm::getCommunication()->receiveRange(rank, com::intraAsVector<double>);
         std::copy(secondaryBuffer.begin(), secondaryBuffer.end(), globalInValues.begin() + inputSizeCounter);
         inputSizeCounter += secondaryBuffer.size();
 
@@ -383,7 +383,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
     }
   }
   if (utils::IntraComm::isSecondary()) {
-    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, com::asVector<double>);
+    std::vector<double> receivedValues = utils::IntraComm::getCommunication()->receiveRange(0, com::intraAsVector<double>);
     outData                            = Eigen::Map<Eigen::VectorXd>(receivedValues.data(), receivedValues.size());
   }
 }

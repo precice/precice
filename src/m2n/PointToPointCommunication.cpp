@@ -15,6 +15,7 @@
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
 #include "com/Extra.hpp"
+#include "com/IntraCommunication.hpp"
 #include "com/Request.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/DistributedCommunication.hpp"
@@ -58,8 +59,8 @@ void receive(mesh::Mesh::VertexDistribution &m,
   }
 }
 
-void broadcastSend(mesh::Mesh::VertexDistribution const &m,
-                   const com::PtrCommunication          &communication = utils::IntraComm::getCommunication())
+void broadcastSend(mesh::Mesh::VertexDistribution const    &m,
+                   const com::PtrIntraCommunication          &communication = utils::IntraComm::getCommunication())
 {
   communication->broadcast(static_cast<int>(m.size()));
 
@@ -72,8 +73,8 @@ void broadcastSend(mesh::Mesh::VertexDistribution const &m,
 }
 
 void broadcastReceive(mesh::Mesh::VertexDistribution &m,
-                      int                             rankBroadcaster,
-                      const com::PtrCommunication    &communication = utils::IntraComm::getCommunication())
+                      int                              rankBroadcaster,
+                      const com::PtrIntraCommunication &communication = utils::IntraComm::getCommunication())
 {
   m.clear();
   int size = 0;

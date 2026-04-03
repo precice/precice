@@ -7,7 +7,7 @@
 #include "mesh/Mesh.hpp"
 
 namespace precice::com {
-class Communication;
+class IntraCommunication;
 
 namespace serialize {
 
@@ -28,15 +28,15 @@ public:
   /// asserts the content for correctness
   void assertValid() const;
 
-  void send(Communication &communication, int rankReceiver) const;
+  void send(IntraCommunication &communication, int rankReceiver) const;
 
   /// receives a SerializedConnectionMap and calls assertValid before returning
-  static SerializedConnectionMap receive(Communication &communication, int rankSender);
+  static SerializedConnectionMap receive(IntraCommunication &communication, int rankSender);
 
-  void broadcastSend(Communication &communication) const;
+  void broadcastSend(IntraCommunication &communication) const;
 
   /// receives a SerializedConnectionMap and calls assertValid before returning
-  static SerializedConnectionMap broadcastReceive(Communication &communication);
+  static SerializedConnectionMap broadcastReceive(IntraCommunication &communication);
 
 private:
   SerializedConnectionMap() = default;
@@ -61,10 +61,10 @@ public:
   /// asserts the content for correctness
   void assertValid() const;
 
-  void send(Communication &communication, int rankReceiver);
+  void send(IntraCommunication &communication, int rankReceiver);
 
   /// receives a SerializedBoundingBox and calls assertValid before returning
-  static SerializedBoundingBox receive(Communication &communication, int rankSender);
+  static SerializedBoundingBox receive(IntraCommunication &communication, int rankSender);
 
 private:
   SerializedBoundingBox() = default;
@@ -93,15 +93,15 @@ public:
   /// asserts the content for correctness
   void assertValid() const;
 
-  void send(Communication &communication, int rankReceiver);
+  void send(IntraCommunication &communication, int rankReceiver);
 
   /// receives a SerializedBoundingBoxMap and calls assertValid before returning
-  static SerializedBoundingBoxMap receive(Communication &communication, int rankSender);
+  static SerializedBoundingBoxMap receive(IntraCommunication &communication, int rankSender);
 
-  void broadcastSend(Communication &communication);
+  void broadcastSend(IntraCommunication &communication);
 
   /// receives a SerializedBoundingBoxMap and calls assertValid before returning
-  static SerializedBoundingBoxMap broadcastReceive(Communication &communication);
+  static SerializedBoundingBoxMap broadcastReceive(IntraCommunication &communication);
 
 private:
   SerializedBoundingBoxMap() = default;

@@ -7,7 +7,7 @@ namespace mesh {
 class Mesh;
 } // namespace mesh
 namespace com {
-class Communication;
+class IntraCommunication;
 
 namespace serialize {
 
@@ -29,15 +29,15 @@ public:
   /// asserts the content for correctness
   void assertValid() const;
 
-  void send(Communication &communication, int rankReceiver);
+  void send(IntraCommunication &communication, int rankReceiver);
 
   /// receives a SerializedMesh and calls assertValid before returning
-  static SerializedMesh receive(Communication &communication, int rankSender);
+  static SerializedMesh receive(IntraCommunication &communication, int rankSender);
 
-  void broadcastSend(Communication &communication);
+  void broadcastSend(IntraCommunication &communication);
 
   /// receives a SerializedMesh and calls assertValid before returning
-  static SerializedMesh broadcastReceive(Communication &communication);
+  static SerializedMesh broadcastReceive(IntraCommunication &communication);
 
 private:
   SerializedMesh() = default;

@@ -4,7 +4,7 @@
 #include <numeric>
 #include <utility>
 
-#include "com/Communication.hpp"
+#include "com/IntraCommunication.hpp"
 #include "com/SerializedPartitioning.hpp"
 #include "utils/assertion.hpp"
 
@@ -93,25 +93,25 @@ void SerializedConnectionMap::assertValid() const
   PRECICE_ASSERT(consumed == totalSize, "Not everything consumed");
 }
 
-void SerializedConnectionMap::send(Communication &communication, int rankReceiver) const
+void SerializedConnectionMap::send(IntraCommunication &communication, int rankReceiver) const
 {
   communication.sendRange(content, rankReceiver);
 }
 
-SerializedConnectionMap SerializedConnectionMap::receive(Communication &communication, int rankSender)
+SerializedConnectionMap SerializedConnectionMap::receive(IntraCommunication &communication, int rankSender)
 {
   SerializedConnectionMap scm;
-  scm.content = communication.receiveRange(rankSender, asVector<int>);
+  scm.content = communication.receiveRange(rankSender, intraAsVector<int>);
   scm.assertValid();
   return scm;
 }
 
-void SerializedConnectionMap::broadcastSend(Communication &communication) const
+void SerializedConnectionMap::broadcastSend(IntraCommunication &communication) const
 {
   communication.broadcast(content);
 }
 
-SerializedConnectionMap SerializedConnectionMap::broadcastReceive(Communication &communication)
+SerializedConnectionMap SerializedConnectionMap::broadcastReceive(IntraCommunication &communication)
 {
   SerializedConnectionMap scm;
   communication.broadcast(scm.content, 0);
@@ -168,15 +168,15 @@ void SerializedBoundingBox::assertValid() const
   PRECICE_ASSERT(coords.size() == 1 + dims * 2);
 }
 
-void SerializedBoundingBox::send(Communication &communication, int rankReceiver)
+void SerializedBoundingBox::send(IntraCommunication &communication, int rankReceiver)
 {
   communication.sendRange(coords, rankReceiver);
 }
 
-SerializedBoundingBox SerializedBoundingBox::receive(Communication &communication, int rankSender)
+SerializedBoundingBox SerializedBoundingBox::receive(IntraCommunication &communication, int rankSender)
 {
   SerializedBoundingBox sbb;
-  sbb.coords = communication.receiveRange(rankSender, asVector<double>);
+  sbb.coords = communication.receiveRange(rankSender, intraAsVector<double>);
   sbb.assertValid();
   return sbb;
 }
@@ -269,7 +269,7 @@ void SerializedBoundingBoxMap::assertValid() const
   }
 }
 
-void SerializedBoundingBoxMap::send(Communication &communication, int rankReceiver)
+void SerializedBoundingBoxMap::send(IntraCommunication &communication, int rankReceiver)
 {
   communication.sendRange(info, rankReceiver);
   if (info.size() > 1) {
@@ -277,18 +277,18 @@ void SerializedBoundingBoxMap::send(Communication &communication, int rankReceiv
   }
 }
 
-SerializedBoundingBoxMap SerializedBoundingBoxMap::receive(Communication &communication, int rankSender)
+SerializedBoundingBoxMap SerializedBoundingBoxMap::receive(IntraCommunication &communication, int rankSender)
 {
   SerializedBoundingBoxMap sbbm;
-  sbbm.info = communication.receiveRange(rankSender, asVector<int>);
+  sbbm.info = communication.receiveRange(rankSender, intraAsVector<int>);
   if (sbbm.info.size() > 1) {
-    sbbm.coords = communication.receiveRange(rankSender, asVector<double>);
+    sbbm.coords = communication.receiveRange(rankSender, intraAsVector<double>);
   }
   sbbm.assertValid();
   return sbbm;
 }
 
-void SerializedBoundingBoxMap::broadcastSend(Communication &communication)
+void SerializedBoundingBoxMap::broadcastSend(IntraCommunication &communication)
 {
   communication.broadcast(info);
   if (info.size() > 1) {
@@ -296,7 +296,7 @@ void SerializedBoundingBoxMap::broadcastSend(Communication &communication)
   }
 }
 
-SerializedBoundingBoxMap SerializedBoundingBoxMap::broadcastReceive(Communication &communication)
+SerializedBoundingBoxMap SerializedBoundingBoxMap::broadcastReceive(IntraCommunication &communication)
 {
   SerializedBoundingBoxMap sbbm;
   communication.broadcast(sbbm.info, 0);

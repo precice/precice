@@ -1,6 +1,6 @@
 #include <memory>
 
-#include "com/Communication.hpp"
+#include "com/IntraCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/BoundM2N.hpp"

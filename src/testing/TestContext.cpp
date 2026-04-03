@@ -6,11 +6,12 @@
 #include <ostream>
 #include <utility>
 
-#include "com/Communication.hpp"
-#include "com/MPIDirectCommunication.hpp"
+#include "com/IntraCommunication.hpp"
+#include "com/MPIIntraComm.hpp"
 #include "com/SharedPointer.hpp"
 #include "com/SocketCommunication.hpp"
 #include "com/SocketCommunicationFactory.hpp"
+#include "com/SocketIntraComm.hpp"
 #include "logging/LogConfiguration.hpp"
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
@@ -203,9 +204,9 @@ void TestContext::initializeIntraComm()
     return;
 
 #ifndef PRECICE_NO_MPI
-  precice::com::PtrCommunication intraComm = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
+  precice::com::PtrIntraCommunication intraComm = precice::com::PtrIntraCommunication(new precice::com::MPIIntraComm());
 #else
-  precice::com::PtrCommunication intraComm = precice::com::PtrCommunication(new precice::com::SocketCommunication());
+  precice::com::PtrIntraCommunication intraComm = precice::com::PtrIntraCommunication(new precice::com::SocketIntraComm());
 #endif
 
   intraComm->connectIntraComm(name, "", rank, size);

@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <map>
 
-#include "com/Communication.hpp"
+#include "com/IntraCommunication.hpp"
 #include "com/SerializedMesh.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
@@ -47,7 +47,7 @@ void SerializedMesh ::assertValid() const
   }
 }
 
-void SerializedMesh::send(Communication &communication, int rankReceiver)
+void SerializedMesh::send(IntraCommunication &communication, int rankReceiver)
 {
   communication.sendRange(sizes, rankReceiver);
   if (sizes[1] > 0) {
@@ -56,21 +56,21 @@ void SerializedMesh::send(Communication &communication, int rankReceiver)
   }
 }
 
-SerializedMesh SerializedMesh::receive(Communication &communication, int rankSender)
+SerializedMesh SerializedMesh::receive(IntraCommunication &communication, int rankSender)
 {
   SerializedMesh sm;
-  sm.sizes = communication.receiveRange(rankSender, asVector<int>);
+  sm.sizes = communication.receiveRange(rankSender, intraAsVector<int>);
   PRECICE_ASSERT(sm.sizes.size() == 5);
   auto nVertices = sm.sizes[1];
   if (nVertices > 0) {
-    sm.coords = communication.receiveRange(rankSender, asVector<double>);
-    sm.ids    = communication.receiveRange(rankSender, asVector<int>);
+    sm.coords = communication.receiveRange(rankSender, intraAsVector<double>);
+    sm.ids    = communication.receiveRange(rankSender, intraAsVector<int>);
   }
   sm.assertValid();
   return sm;
 }
 
-void SerializedMesh::broadcastSend(Communication &communication)
+void SerializedMesh::broadcastSend(IntraCommunication &communication)
 {
   communication.broadcast(sizes);
   if (sizes[1] > 0) {
@@ -79,7 +79,7 @@ void SerializedMesh::broadcastSend(Communication &communication)
   }
 }
 
-SerializedMesh SerializedMesh::broadcastReceive(Communication &communication)
+SerializedMesh SerializedMesh::broadcastReceive(IntraCommunication &communication)
 {
   constexpr int  broadcasterRank{0};
   SerializedMesh sm;
