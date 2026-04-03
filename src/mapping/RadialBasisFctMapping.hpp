@@ -2,6 +2,7 @@
 
 #include <Eigen/Cholesky>
 #include <Eigen/Core>
+#include <type_traits>
 
 #include "com/Communication.hpp"
 #include "com/Extra.hpp"
@@ -113,6 +114,16 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::computeMapping()
     outMesh = this->output();
   }
 
+  // We don't want the solver to have a pointer and ownership of the global input mesh.
+  // The default initialization of the RBF when using the tuner might also mess with the tagging.
+  if constexpr (0 < std::tuple_size_v<std::tuple<Args...>>) {
+    if constexpr (std::is_same_v<std::remove_reference_t<decltype(std::get<0>(optionalArgs))>, MappingConfiguration::AutotuningParams>) {
+      PRECICE_CHECK(!(utils::IntraComm::isPrimary() && std::get<0>(optionalArgs).autotuneShape), "The parameter tuner is not available for parallel global RBF mappings, "
+                                                                                                 "since it doesn't have access to the input mesh during the mapping stage and the optimized support radius is unknown during the repartitioning."
+                                                                                                 "Make sure to use a serial RBF mapping or the partition of unity (PUM) method.");
+    }
+  }
+
   if (utils::IntraComm::isSecondary()) {
 
     // Input mesh may have overlaps
@@ -125,41 +136,41 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::computeMapping()
 
   } else { // Parallel Primary rank or Serial
 
-    mesh::Mesh globalInMesh(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
-    mesh::Mesh globalOutMesh(outMesh->getName(), outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
+    mesh::PtrMesh globalInMesh  = std::make_shared<mesh::Mesh>(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
+    mesh::PtrMesh globalOutMesh = std::make_shared<mesh::Mesh>(outMesh->getName(), outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
 
     if (utils::IntraComm::isPrimary()) {
       {
         // Input mesh may have overlaps
         mesh::Mesh filteredInMesh("filteredInMesh", inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
         mesh::filterMesh(filteredInMesh, *inMesh, [&](const mesh::Vertex &v) { return v.isOwner(); });
-        globalInMesh.addMesh(filteredInMesh);
-        globalOutMesh.addMesh(*outMesh);
+        globalInMesh->addMesh(filteredInMesh);
+        globalOutMesh->addMesh(*outMesh);
       }
 
       // Receive mesh
       for (Rank secondaryRank : utils::IntraComm::allSecondaryRanks()) {
         mesh::Mesh secondaryInMesh(inMesh->getName(), inMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
         com::receiveMesh(*utils::IntraComm::getCommunication(), secondaryRank, secondaryInMesh);
-        globalInMesh.addMesh(secondaryInMesh);
+        globalInMesh->addMesh(secondaryInMesh);
 
         mesh::Mesh secondaryOutMesh(outMesh->getName(), outMesh->getDimensions(), mesh::Mesh::MESH_ID_UNDEFINED);
         com::receiveMesh(*utils::IntraComm::getCommunication(), secondaryRank, secondaryOutMesh);
-        globalOutMesh.addMesh(secondaryOutMesh);
+        globalOutMesh->addMesh(secondaryOutMesh);
       }
 
     } else { // Serial
-      globalInMesh.addMesh(*inMesh);
-      globalOutMesh.addMesh(*outMesh);
+      globalInMesh  = inMesh;
+      globalOutMesh = outMesh;
     }
 
     // Forwarding the tuples here requires some template magic I don't want to implement
     if constexpr (sizeof...(Args) > 0) {
-      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.nVertices()),
-                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.nVertices()), this->_deadAxis, _polynomial, std::get<0>(optionalArgs));
+      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh->nVertices()),
+                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh->nVertices()), this->_deadAxis, _polynomial, std::get<0>(optionalArgs));
     } else {
-      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh.nVertices()),
-                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh.nVertices()), this->_deadAxis, _polynomial);
+      _rbfSolver = std::make_unique<SOLVER_T>(this->_basisFunction, globalInMesh, boost::irange<Eigen::Index>(0, globalInMesh->nVertices()),
+                                              globalOutMesh, boost::irange<Eigen::Index>(0, globalOutMesh->nVertices()), this->_deadAxis, _polynomial);
     }
   }
   this->_hasComputedMapping = true;
@@ -174,20 +185,26 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::clear()
   this->_hasComputedMapping = false;
 }
 
+template <typename T, typename V = void>
+static constexpr bool definesExecutor = false;
+template <typename T>
+static constexpr bool definesExecutor<T, std::void_t<decltype(T::executor)>> = true;
+
 template <typename... Args>
 static std::string getNameWithArgs(const std::tuple<Args...> &optionalArgs)
 {
   if constexpr (sizeof...(Args) > 0) {
-    auto        param = std::get<0>(optionalArgs);
-    std::string exec  = param.executor;
-    if (param.solver == "qr-solver") {
-      return "global-direct RBF (" + exec + ")";
-    } else {
-      return "global-iterative RBF (" + exec + ")";
+    auto param = std::get<0>(optionalArgs);
+    if constexpr (definesExecutor<decltype(param)>) {
+      std::string exec = param.executor;
+      if (param.solver == "qr-solver") {
+        return "global-direct RBF (" + exec + ")";
+      } else {
+        return "global-iterative RBF (" + exec + ")";
+      }
     }
-  } else {
-    return "global-direct RBF (cpu-executor)";
   }
+  return "global-direct RBF (cpu-executor)";
 }
 
 template <typename SOLVER_T, typename... Args>
@@ -261,7 +278,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConservative(const time::Sampl
     Eigen::MatrixXd in = MapToMatrix(globalInValues.data(), _rbfSolver->getOutputSize(), valueDim, Eigen::OuterStride(valueDim));
 
     // copy all output values without polynomial entries from col-major to row-major format
-    RowMatrixXd out = _rbfSolver->solveConservative(in, _polynomial).block(0, 0, this->output()->getGlobalNumberOfVertices(), valueDim);
+    RowMatrixXd out = _rbfSolver->solveConservative(in, boost::irange<Eigen::Index>(0, in.rows()), _polynomial).block(0, 0, this->output()->getGlobalNumberOfVertices(), valueDim);
 
     Eigen::Map<Eigen::VectorXd> outputValues(out.data(), (this->output()->getGlobalNumberOfVertices()) * valueDim);
 
@@ -367,7 +384,7 @@ void RadialBasisFctMapping<SOLVER_T, Args...>::mapConsistent(const time::Sample 
     in.block(0, 0, this->input()->getGlobalNumberOfVertices(), valueDim) = MapToMatrix(globalInValues.data(), this->input()->getGlobalNumberOfVertices(), valueDim, Eigen::OuterStride(valueDim));
 
     // copy all output values from col-major to row-major format
-    RowMatrixXd out = _rbfSolver->solveConsistent(in, _polynomial);
+    RowMatrixXd out = _rbfSolver->solveConsistent(in, boost::irange<Eigen::Index>(0, in.rows()), _polynomial);
     // copy mapped data at correct position to output data values
     outData = Eigen::Map<Eigen::VectorXd>(out.data(), outValuesSize.at(0));
 

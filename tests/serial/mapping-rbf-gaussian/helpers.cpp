@@ -9,7 +9,7 @@
 #include "precice/impl/ParticipantImpl.hpp"
 #include "precice/precice.hpp"
 
-std::tuple<std::array<int, 12>, std::array<Eigen::Vector3d, 12>> generateMeshOne(Participant &interface, const std::string &meshOneID)
+std::tuple<std::array<int, 12>, std::array<Eigen::Vector3d, 12>> generateMeshOneGauss(Participant &interface, const std::string &meshOneID)
 {
   constexpr int    N = 12;
   constexpr double z = 0.3;
@@ -36,7 +36,7 @@ std::tuple<std::array<int, 12>, std::array<Eigen::Vector3d, 12>> generateMeshOne
   return {ids, mesh};
 }
 
-std::tuple<std::array<int, 3>, std::array<Eigen::Vector3d, 3>> generateMeshTwo(Participant &interface, const std::string &meshTwoID)
+std::tuple<std::array<int, 3>, std::array<Eigen::Vector3d, 3>> generateMeshTwoGauss(Participant &interface, const std::string &meshTwoID)
 {
   constexpr int    N = 3;
   constexpr double z = 0.3;
@@ -55,7 +55,7 @@ std::tuple<std::array<int, 3>, std::array<Eigen::Vector3d, 3>> generateMeshTwo(P
 }
 
 template <size_t N>
-std::array<double, N * 3> evaluateFunction(const std::array<Eigen::Vector3d, N> &mesh)
+std::array<double, N * 3> evaluateFunctionGauss(const std::array<Eigen::Vector3d, N> &mesh)
 {
   std::array<double, N * 3> values;
 
@@ -80,13 +80,13 @@ void testRBFMappingVectorial(const std::string configFile, const TestContext &co
   if (context.isNamed("SolverOne")) {
     Participant interfaceA("SolverOne", configFile, 0, 1);
 
-    auto [idsOne, meshOne] = generateMeshOne(interfaceA, meshOneID);
+    auto [idsOne, meshOne] = generateMeshOneGauss(interfaceA, meshOneID);
     interfaceA.initialize();
 
     while (interfaceA.isCouplingOngoing()) {
       double maxDt = interfaceA.getMaxTimeStepSize();
 
-      std::array<double, numIn * dim> inputValues = evaluateFunction(meshOne);
+      std::array<double, numIn * dim> inputValues = evaluateFunctionGauss(meshOne);
       interfaceA.writeData(meshOneID, dataOneID, idsOne, inputValues);
       interfaceA.advance(maxDt);
     }
@@ -95,14 +95,14 @@ void testRBFMappingVectorial(const std::string configFile, const TestContext &co
   } else {
     Participant interfaceB("SolverTwo", configFile, 0, 1);
 
-    auto [idsTwo, meshTwo] = generateMeshTwo(interfaceB, meshTwoID);
+    auto [idsTwo, meshTwo] = generateMeshTwoGauss(interfaceB, meshTwoID);
     interfaceB.initialize();
 
     std::array<double, numOut * dim> expectedValues;
     if (mappingIsConservative) {
       expectedValues = {-0.6, -0.6, -0.6, 0.853333, 4.85333, 8.85333, 3.70667, 11.7067, 19.7067};
     } else {
-      expectedValues = evaluateFunction(meshTwo);
+      expectedValues = evaluateFunctionGauss(meshTwo);
     }
 
     double maxDt = interfaceB.getMaxTimeStepSize();
@@ -137,7 +137,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     auto meshOneID = "MeshOne";
 
     // Setup mesh one.
-    auto [ids, _] = generateMeshOne(interface, meshOneID);
+    auto [ids, _] = generateMeshOneGauss(interface, meshOneID);
 
     // Initialize, thus sending the mesh.
     interface.initialize();
@@ -160,7 +160,7 @@ void testRBFMapping(const std::string configFile, const TestContext &context)
     auto meshTwoID = "MeshTwo";
 
     // Setup receiving mesh.
-    auto [ids, _] = generateMeshTwo(interface, meshTwoID);
+    auto [ids, _] = generateMeshTwoGauss(interface, meshTwoID);
 
     // Initialize, thus receive the data and map.
     interface.initialize();
