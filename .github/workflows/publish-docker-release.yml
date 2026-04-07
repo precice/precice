@@ -52,7 +52,12 @@ jobs:
           echo "${{ inputs.version }}" | grep -Pq '^v?\d+\.\d+\.\d+$'
           version="${{ inputs.version }}"
           echo "version=${version#v}" >> "$GITHUB_OUTPUT"
-
+      - name: Checkout sources
+        uses: actions/checkout@v6
+      - name: Get release artifacts
+        run: |
+          gh release download "v${{ steps.version.outputs.version }}"
+          ls -l
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
       - name: Login to DockerHub
@@ -64,16 +69,14 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           push: true
+          context: .
           file: "./tools/releasing/packaging/docker/release.dockerfile"
           tags: ${{ env.docker_username }}/precice:${{ steps.version.outputs.version }}
-          build-args: |
-            version=${{ steps.version.outputs.version }}
       - name: Build and push latest tag
         if: ${{ inputs.latest == 'true' }}
         uses: docker/build-push-action@v6
         with:
           push: true
+          context: .
           file: "./tools/releasing/packaging/docker/release.dockerfile"
           tags: ${{ env.docker_username }}/precice:latest
-          build-args: |
-            version=${{ steps.version.outputs.version }}
