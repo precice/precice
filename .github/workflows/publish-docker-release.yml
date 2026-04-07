@@ -51,7 +51,6 @@ jobs:
           params: "${{ tojson(inputs) }}"
         run: |
           echo "${params}" | jq .
-          echo ${{ inputs.latest == 'true' }}
       - name: Check and clean version
         id: version
         run: |
@@ -81,7 +80,7 @@ jobs:
           file: "./tools/releasing/packaging/docker/release.dockerfile"
           tags: ${{ env.docker_username }}/precice:${{ steps.version.outputs.version }}
       - name: Build and push latest tag
-        if: ${{ inputs.latest == 'true' }}
+        if: ${{ inputs.latest == 'true' || inputs.latest == true }}
         uses: docker/build-push-action@v7
         with:
           push: true
