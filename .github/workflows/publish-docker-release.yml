@@ -49,7 +49,9 @@ jobs:
       - name: Print input
         env:
           params: "${{ tojson(inputs) }}"
-        run: 'echo "${params}" | jq .'
+        run: |
+          echo "${params}" | jq .
+          echo ${{ inputs.latest == 'true' }}
       - name: Check and clean version
         id: version
         run: |
