@@ -72,7 +72,7 @@ jobs:
           username: ${{ env.docker_username }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push version tag
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           push: true
           context: .
@@ -80,7 +80,7 @@ jobs:
           tags: ${{ env.docker_username }}/precice:${{ steps.version.outputs.version }}
       - name: Build and push latest tag
         if: ${{ inputs.latest == 'true' }}
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           push: true
           context: .
