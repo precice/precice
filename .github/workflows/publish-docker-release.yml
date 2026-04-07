@@ -46,6 +46,10 @@ jobs:
     env:
         docker_username: precice
     steps:
+      - name: Print input
+        env:
+          params: "${{ tojson(inputs) }}"
+        run: 'echo "${params}" | jq .'
       - name: Check and clean version
         id: version
         run: |
