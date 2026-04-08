@@ -27,6 +27,9 @@ PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm());
 BOOST_AUTO_TEST_CASE(ExportScalar)
 {
   PRECICE_TEST();
+  std::string filename = "Mesh-io-VTPExport.init.vtp";
+  testing::removeFile(filename);
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
@@ -35,13 +38,18 @@ BOOST_AUTO_TEST_CASE(ExportScalar)
 
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
-  testing::expectFiles("Mesh-io-VTPExport.init.vtp");
+  testing::expectFiles(filename);
+
+  BOOST_TEST(testing::validateVTPFile(filename));
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm());
 BOOST_AUTO_TEST_CASE(ExportVector)
 {
   PRECICE_TEST();
+  std::string filename = "Mesh-io-VTPExport.init.vtp";
+  testing::removeFile(filename);
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
@@ -50,13 +58,18 @@ BOOST_AUTO_TEST_CASE(ExportVector)
 
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
-  testing::expectFiles("Mesh-io-VTPExport.init.vtp");
+  testing::expectFiles(filename);
+
+  BOOST_TEST(testing::validateVTPFile(filename));
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm());
 BOOST_AUTO_TEST_CASE(ExportMissing)
 {
   PRECICE_TEST();
+  std::string filename = "Mesh-io-VTPExport.init.vtp";
+  testing::removeFile(filename);
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
@@ -64,13 +77,20 @@ BOOST_AUTO_TEST_CASE(ExportMissing)
   // no sample
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
-  testing::expectFiles("Mesh-io-VTPExport.init.vtp");
+  testing::expectFiles(filename);
+
+  BOOST_TEST(testing::validateVTPFile(filename));
 }
 
 PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportScalarParallel)
 {
   PRECICE_TEST();
+  testing::removeFile(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank));
+  if (context.isPrimary()) {
+    testing::removeFile("Mesh-io-VTPExport.init.pvtp");
+  }
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   if (context.isPrimary()) {
     mesh.createVertex(Eigen::Vector2d::Zero());
@@ -95,6 +115,11 @@ PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportVectorParallel)
 {
   PRECICE_TEST();
+  testing::removeFile(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank));
+  if (context.isPrimary()) {
+    testing::removeFile("Mesh-io-VTPExport.init.pvtp");
+  }
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   if (context.isPrimary()) {
     mesh.createVertex(Eigen::Vector2d::Zero());
@@ -119,6 +144,11 @@ PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportMissingParallel)
 {
   PRECICE_TEST();
+  testing::removeFile(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank));
+  if (context.isPrimary()) {
+    testing::removeFile("Mesh-io-VTPExport.init.pvtp");
+  }
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   if (context.isPrimary()) {
     mesh.createVertex(Eigen::Vector2d::Zero());
@@ -143,6 +173,11 @@ PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportScalarAndMissingParallel)
 {
   PRECICE_TEST();
+  testing::removeFile(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank));
+  if (context.isPrimary()) {
+    testing::removeFile("Mesh-io-VTPExport.init.pvtp");
+  }
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   if (context.isPrimary()) {
     mesh.createVertex(Eigen::Vector2d::Zero());
@@ -169,6 +204,9 @@ PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm());
 BOOST_AUTO_TEST_CASE(ExportDataWithGradient2D)
 {
   PRECICE_TEST();
+  testing::removeFile("Mesh-io-VTPExport.init.vtp");
+  testing::removeFile("Mesh-io-VTPExport.dt1.vtp");
+
   const int dimensions = 2;
   // Create mesh to map from
   mesh::Mesh    mesh("Mesh", dimensions, testing::nextMeshID());
@@ -199,6 +237,9 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExportDataWithGradient3D)
 {
   PRECICE_TEST();
+  testing::removeFile("Mesh-io-VTPExport.init.vtp");
+  testing::removeFile("Mesh-io-VTPExport.dt1.vtp");
+
   const int dimensions = 3;
   // Create mesh to map from
   mesh::Mesh    mesh("Mesh", dimensions, testing::nextMeshID());
@@ -229,6 +270,9 @@ PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportPolygonalMeshSerial)
 {
   PRECICE_TEST();
+  testing::removeFile("Mesh-io-VTPExport.init.vtp");
+  testing::removeFile("Mesh-io-VTPExport.dt1.vtp");
+
   int           dim = 2;
   mesh::Mesh    mesh("Mesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Zero());
@@ -249,6 +293,13 @@ PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   PRECICE_TEST();
+  testing::removeFile(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank));
+  testing::removeFile(fmt::format("Mesh-io-VTPExport.dt1_{}.vtp", context.rank));
+  if (context.isPrimary()) {
+    testing::removeFile("Mesh-io-VTPExport.init.pvtp");
+    testing::removeFile("Mesh-io-VTPExport.dt1.pvtp");
+  }
+
   int        dim = 2;
   mesh::Mesh mesh("Mesh", dim, testing::nextMeshID());
 
@@ -291,6 +342,13 @@ PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   PRECICE_TEST();
+  testing::removeFile(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank));
+  testing::removeFile(fmt::format("Mesh-io-VTPExport.dt1_{}.vtp", context.rank));
+  if (context.isPrimary()) {
+    testing::removeFile("Mesh-io-VTPExport.init.pvtp");
+    testing::removeFile("Mesh-io-VTPExport.dt1.pvtp");
+  }
+
   int        dim = 3;
   mesh::Mesh mesh("Mesh", dim, testing::nextMeshID());
 
@@ -336,6 +394,13 @@ PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportSplitSquare)
 {
   PRECICE_TEST();
+  testing::removeFile(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank));
+  testing::removeFile(fmt::format("Mesh-io-VTPExport.dt1_{}.vtp", context.rank));
+  if (context.isPrimary()) {
+    testing::removeFile("Mesh-io-VTPExport.init.pvtp");
+    testing::removeFile("Mesh-io-VTPExport.dt1.pvtp");
+  }
+
   int        dim = 3;
   mesh::Mesh mesh("Mesh", dim, testing::nextMeshID());
 
