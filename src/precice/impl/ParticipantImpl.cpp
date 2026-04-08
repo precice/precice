@@ -32,7 +32,6 @@
 #include "m2n/SharedPointer.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "mapping/Mapping.hpp"
-#include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfiguration.hpp"
 #include "mapping/device/Device.hpp"
 #include "math/differences.hpp"
