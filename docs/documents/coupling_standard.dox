@@ -1,0 +1,39 @@
+/** 
+
+@page coupling_api_standard Coupling Library Api Standard
+
+@section word_usage Word Usage
+The word "shall" indicates a requirement that is mandatory and must be satisfied by all coupling
+libraries that implement this standard.
+
+The word "may" indicates additional requirements that coupling libraries
+can additionally satisfy but are not necessarily required.
+
+@section coupling_advance advance()
+
+@subsection coupling_advance_syntax Syntax
+@code{.cpp}
+void advance(double computedTimeStepSize);
+@endcode
+
+@copydetails precice::Participant::advance()
+
+@section coupling_getMeshDimensions getMeshDimensions()
+
+@subsection coupling_getMeshDimensions_syntax Syntax
+@code{.cpp}
+int getMeshDimensions(::precice::string_view meshName) const;
+@endcode
+
+@copydetails precice::Participant::getMeshDimensions()
+
+@section coupling_initialize initialize()
+
+@subsection coupling_initialize_syntax Syntax
+@code{.cpp}
+void initialize();
+@endcode
+
+@copydetails precice::Participant::initialize()
+*/
+
