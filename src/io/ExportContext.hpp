@@ -2,6 +2,7 @@
 #define PRECICE_IO_EXPORTCONTEXT_HPP_
 
 #include <string>
+#include <vector>
 #include "io/SharedPointer.hpp"
 
 namespace precice::io {
@@ -27,6 +28,9 @@ struct ExportContext {
 
   // @brief type of the exporter (e.g. vtk).
   std::string type;
+
+  // @brief List of meshes to export (Optional).
+  std::vector<std::string> selectedMeshes;
 };
 
 } // namespace precice::io
