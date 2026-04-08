@@ -6,7 +6,7 @@
 #include <utility>
 
 #include "WatchPoint.hpp"
-#include "com/Communication.hpp"
+#include "com/IntraCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "mapping/Polation.hpp"

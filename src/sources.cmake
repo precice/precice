@@ -56,10 +56,14 @@ target_sources(preciceCore
     src/com/ConnectionInfoPublisher.hpp
     src/com/Extra.cpp
     src/com/Extra.hpp
+    src/com/IntraCommunication.cpp
+    src/com/IntraCommunication.hpp
     src/com/MPICommunication.cpp
     src/com/MPICommunication.hpp
     src/com/MPIDirectCommunication.cpp
     src/com/MPIDirectCommunication.hpp
+    src/com/MPIIntraComm.cpp
+    src/com/MPIIntraComm.hpp
     src/com/MPIPortsCommunication.cpp
     src/com/MPIPortsCommunication.hpp
     src/com/MPIPortsCommunicationFactory.cpp
@@ -83,6 +87,8 @@ target_sources(preciceCore
     src/com/SocketCommunication.hpp
     src/com/SocketCommunicationFactory.cpp
     src/com/SocketCommunicationFactory.hpp
+    src/com/SocketIntraComm.cpp
+    src/com/SocketIntraComm.hpp
     src/com/SocketRequest.cpp
     src/com/SocketRequest.hpp
     src/com/SocketSendQueue.cpp

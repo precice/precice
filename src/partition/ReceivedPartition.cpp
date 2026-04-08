@@ -6,8 +6,8 @@
 #include <utility>
 #include <vector>
 
-#include "com/Communication.hpp"
 #include "com/Extra.hpp"
+#include "com/IntraCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/M2N.hpp"
@@ -219,7 +219,7 @@ void ReceivedPartition::compute()
 
       for (int secondaryRank : utils::IntraComm::allSecondaryRanks()) {
         PRECICE_DEBUG("Receive partition feedback from the secondary rank {}", secondaryRank);
-        vertexDistribution[secondaryRank] = utils::IntraComm::getCommunication()->receiveRange(secondaryRank, com::asVector<VertexID>);
+        vertexDistribution[secondaryRank] = utils::IntraComm::getCommunication()->receiveRange(secondaryRank, com::intraAsVector<VertexID>);
       }
       PRECICE_ASSERT(_mesh->getVertexDistribution().empty());
       _mesh->setVertexDistribution(std::move(vertexDistribution));
@@ -445,7 +445,7 @@ void ReceivedPartition::compareBoundingBoxes()
 
     // receive connected ranks from secondary ranks and add them to the connection map
     for (int rank : utils::IntraComm::allSecondaryRanks()) {
-      std::vector<Rank> secondaryConnectedRanks = utils::IntraComm::getCommunication()->receiveRange(rank, com::asVector<Rank>);
+      std::vector<Rank> secondaryConnectedRanks = utils::IntraComm::getCommunication()->receiveRange(rank, com::intraAsVector<Rank>);
       if (!secondaryConnectedRanks.empty()) {
         connectedRanksList.push_back(rank);
         connectionMap.emplace(rank, std::move(secondaryConnectedRanks));
@@ -774,7 +774,7 @@ void ReceivedPartition::createOwnerInformation()
         utils::IntraComm::getCommunication()->send(atInterface, 0);
 
         PRECICE_DEBUG("Receive owner information");
-        std::vector<VertexID> ownerVec = utils::IntraComm::getCommunication()->receiveRange(0, com::asVector<VertexID>);
+        std::vector<VertexID> ownerVec = utils::IntraComm::getCommunication()->receiveRange(0, com::intraAsVector<VertexID>);
         PRECICE_DEBUG("My owner information: {}", ownerVec);
         PRECICE_ASSERT(ownerVec.size() == static_cast<std::size_t>(numberOfVertices));
         setOwnerInformation(ownerVec);
@@ -821,8 +821,8 @@ void ReceivedPartition::createOwnerInformation()
 
         if (localNumberOfVertices != 0) {
           PRECICE_DEBUG("Receive tags from secondary rank {}", rank);
-          secondaryTags[rank]      = utils::IntraComm::getCommunication()->receiveRange(rank, com::asVector<int>);
-          secondaryGlobalIDs[rank] = utils::IntraComm::getCommunication()->receiveRange(rank, com::asVector<VertexID>);
+          secondaryTags[rank]      = utils::IntraComm::getCommunication()->receiveRange(rank, com::intraAsVector<int>);
+          secondaryGlobalIDs[rank] = utils::IntraComm::getCommunication()->receiveRange(rank, com::intraAsVector<VertexID>);
           PRECICE_DEBUG("Rank {} has tags {}", rank, secondaryTags[rank]);
           PRECICE_DEBUG("Rank {} has global IDs {}", rank, secondaryGlobalIDs[rank]);
           bool atInterface = false;

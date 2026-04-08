@@ -3,7 +3,7 @@
 #include <Eigen/Core>
 #include <numeric>
 
-#include "com/Communication.hpp"
+#include "com/IntraCommunication.hpp"
 #include "io/ExportVTU.hpp"
 #include "mapping/BatchedRBFSolver.hpp"
 #include "mapping/impl/CreateClustering.hpp"

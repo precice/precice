@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "com/Communication.hpp"
+#include "com/IntraCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "com/Request.hpp"
 #include "com/SharedPointer.hpp"

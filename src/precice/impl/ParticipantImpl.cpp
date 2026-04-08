@@ -17,7 +17,7 @@
 
 #include "ParticipantImpl.hpp"
 #include "action/SharedPointer.hpp"
-#include "com/Communication.hpp"
+#include "com/IntraCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "cplscheme/Constants.hpp"
 #include "cplscheme/CouplingScheme.hpp"
