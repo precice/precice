@@ -71,6 +71,7 @@ function(add_precice_test_build_solverdummy PAT_LANG)
     FIXTURES_SETUP "${PAT_LANG}-solverdummy"
     LABELS "solverdummy"
     TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
+    ENVIRONMENT_MODIFICATION "PATH=path_list_append:$<TARGET_RUNTIME_DLL_DIRS:precice>"
     )
 endfunction(add_precice_test_build_solverdummy)
 
@@ -146,6 +147,7 @@ function(add_precice_test_run_solverdummies PAT_LANG_A PAT_LANG_B)
     FIXTURES_REQUIRED "${PAT_LANG_A}-solverdummy;${PAT_LANG_B}-solverdummy"
     LABELS "solverdummy"
     TIMEOUT ${PRECICE_TEST_TIMEOUT_LONG}
+    ENVIRONMENT_MODIFICATION "PATH=path_list_append:$<TARGET_RUNTIME_DLL_DIRS:precice>"
     )
 endfunction(add_precice_test_run_solverdummies)
 
@@ -179,6 +181,7 @@ if(PRECICE_FEATURE_MPI_COMMUNICATION)
     "--mpi-extra=${PRECICE_CTEST_MPI_FLAGS}"
     "--mpi-pre=${MPIEXEC_PREFLAGS}"
     "--mpi-post=${MPIEXEC_POSTFLAGS}"
+    "--paths=$<TARGET_RUNTIME_DLL_DIRS:testprecice>"
     DEPENDS testprecice
     COMMENT "Generating list of tests"
     VERBATIM)
@@ -224,7 +227,7 @@ if(PRECICE_BUILD_TOOLS)
       NAME ${PAT_FULL_NAME}
       COMMAND ${PAT_COMMAND}
       )
-    set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT} LABELS "tools;bin")
+    set_tests_properties(${PAT_FULL_NAME} PROPERTIES TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT} LABELS "tools;bin" ENVIRONMENT_MODIFICATION "PATH=path_list_append:$<TARGET_RUNTIME_DLL_DIRS:precice>")
     if(PAT_WILL_FAIL)
       set_tests_properties(${PAT_FULL_NAME} PROPERTIES WILL_FAIL YES)
     endif()
@@ -373,7 +376,9 @@ if(PRECICE_BUILD_TOOLS)
     set_tests_properties(${name}
       PROPERTIES
       TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
-      LABELS "tools;bin;config;valid")
+      LABELS "tools;bin;config;valid"
+      ENVIRONMENT_MODIFICATION "PATH=path_list_append:$<TARGET_RUNTIME_DLL_DIRS:precice-config-validate>"
+    )
   endfunction()
 
   function(precice_test_config_invalid path expression)
@@ -397,7 +402,9 @@ if(PRECICE_BUILD_TOOLS)
       PROPERTIES
       TIMEOUT ${PRECICE_TEST_TIMEOUT_SHORT}
       PASS_REGULAR_EXPRESSION "${expression}"
-      LABELS "tools;bin;config;invalid")
+      LABELS "tools;bin;config;invalid"
+      ENVIRONMENT_MODIFICATION "PATH=path_list_append:$<TARGET_RUNTIME_DLL_DIRS:precice-config-validate>"
+    )
   endfunction()
 
   include(${PROJECT_SOURCE_DIR}/tests/config/tests.cmake)

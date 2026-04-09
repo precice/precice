@@ -2,11 +2,19 @@ import argparse
 import pathlib
 import subprocess
 import re
+import os
 
 
-def get_tests():
+def get_tests(extra_paths):
+    env = os.environ.copy()
+    if extra_paths:
+        if "PATH" in env:
+            env["PATH"] = os.pathsep.join([env["PATH"], extra_paths])
+        else:
+            env["PATH"] = extra_paths
+
     out = subprocess.run(
-        [args.executable, "--list_units"], stdout=subprocess.PIPE, check=True
+        [args.executable, "--list_units"], env=env, stdout=subprocess.PIPE, check=True
     ).stdout
     for line in out.strip().splitlines():
         name, ranks = line.decode().split()
@@ -51,10 +59,11 @@ parser.add_argument("--mpi-extra")
 parser.add_argument("--mpi-np")
 parser.add_argument("--mpi-pre")
 parser.add_argument("--mpi-post")
+parser.add_argument("--paths")
 
 args = parser.parse_args()
 
-for name, ranks in get_tests():
+for name, ranks in get_tests(args.paths):
 
     print(f"# {name} {ranks}", file=args.output)
 
@@ -116,5 +125,9 @@ for name, ranks in get_tests():
         "LABELS",
         f'"{";".join(labels)}"',
     ]
+
+    if args.paths:
+        pargs += ["ENVIRONMENT_MODIFICATION", f'"PATH=path_list_append:{args.paths}"']
+
     add_command(args.output, "set_tests_properties", pargs)
     print(file=args.output)
