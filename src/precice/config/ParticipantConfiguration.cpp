@@ -662,6 +662,11 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
     // Lambda to create exporter for any mesh context (avoids code duplication)
     auto createExporter = [&](const impl::MeshContext &meshContext) {
+      // Skip meshes that don't match the configured mesh filter
+      if (!exportContext.configuredMeshName.empty() &&
+          exportContext.configuredMeshName != meshContext.mesh->getName()) {
+        return;
+      }
       exportContext.meshName = meshContext.mesh->getName();
 
       io::PtrExport exporter;
@@ -721,14 +726,30 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     };
 
     // Create one exporter per provided mesh
+    bool meshFound = exportContext.configuredMeshName.empty();
     for (const auto &meshContext : participant->providedMeshContexts()) {
+      if (!exportContext.configuredMeshName.empty() &&
+          exportContext.configuredMeshName == meshContext.mesh->getName()) {
+        meshFound = true;
+      }
       createExporter(meshContext);
     }
 
     // Create one exporter per received mesh
     for (const auto &meshContext : participant->receivedMeshContexts()) {
+      if (!exportContext.configuredMeshName.empty() &&
+          exportContext.configuredMeshName == meshContext.mesh->getName()) {
+        meshFound = true;
+      }
       createExporter(meshContext);
     }
+
+    PRECICE_CHECK(meshFound,
+                  "Participant \"{}\" defines an <export:{} mesh=\"{}\" /> tag, "
+                  "but mesh \"{}\" is not available to this participant. "
+                  "Please check the mesh name or remove the mesh attribute to export all meshes.",
+                  participant->getName(), exportContext.type,
+                  exportContext.configuredMeshName, exportContext.configuredMeshName);
 
     PRECICE_WARN_IF(exportContext.everyNTimeWindows > 1 && exportContext.everyIteration,
                     "Participant {} defines an exporter of type {} which exports every iteration. "
