@@ -228,6 +228,8 @@ void ParticipantImpl::configure(
   config.configurePartitionsFor(_accessorName);
   _couplingScheme = config.getCouplingSchemeConfiguration()->getCouplingScheme(_accessorName);
 
+  _solverImbalance = std::make_shared<SolverImbalance>();
+
   PRECICE_ASSERT(_accessorCommunicatorSize == 1 || _accessor->useIntraComm(),
                  "A parallel participant needs an intra-participant communication");
   PRECICE_CHECK(not(_accessorCommunicatorSize == 1 && _accessor->useIntraComm()),
@@ -401,6 +403,7 @@ void ParticipantImpl::advance(
   // Events for the solver time, stopped when we enter, restarted when we leave advance
   PRECICE_ASSERT(_solverAdvanceEvent, "The advance event is created in initialize");
   _solverAdvanceEvent->stop();
+  _solverImbalance->stopSolver(computedTimeStepSize);
 
   Event e("advance", profiling::Fundamental, profiling::Synchronize);
 
@@ -462,7 +465,41 @@ void ParticipantImpl::advance(
   _meshLock.lockAll();
 
   e.stop();
+  if (isAtWindowEnd) {
+    double timeToAdvance = _solverImbalance->getSolverTimeToAdvance();
+    PRECICE_INFO("Avg. time to advance: {}", timeToAdvance);
+    double              receiveValue = 0.0;
+    std::vector<double> timesToAdvance;
+    timesToAdvance.reserve(_m2ns.size() + 1);
+    timesToAdvance.push_back(timeToAdvance);
+    for (auto &iter : _m2ns) {
+      auto bm2n = iter.second;
+      auto comm = bm2n.m2n;
+      if (bm2n.isRequesting) {
+        comm->send(timeToAdvance);
+        comm->receive(receiveValue);
+      } else {
+        comm->receive(receiveValue);
+        comm->send(timeToAdvance);
+      }
+      timesToAdvance.push_back(receiveValue);
+    }
+    _solverImbalance->computeSolverImbalance(timesToAdvance);
+    PRECICE_INFO("Solver imbalance: {}, factor: {}", _solverImbalance->getImbalance(), _solverImbalance->getImbalanceFactor());
+    _solverImbalance->reset();
+  }
+  _solverImbalance->startSolver();
   _solverAdvanceEvent->start();
+}
+
+double ParticipantImpl::getImbalanceFactor()
+{
+  return _solverImbalance->getImbalanceFactor();
+}
+
+double ParticipantImpl::getSolverImbalance()
+{
+  return _solverImbalance->getImbalance();
 }
 
 void ParticipantImpl::handleDataBeforeAdvance(bool reachedTimeWindowEnd, double timeSteppedTo)
