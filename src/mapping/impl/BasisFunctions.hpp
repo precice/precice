@@ -2,28 +2,17 @@
 
 #include <stdexcept>
 
-#ifdef __CUDACC__
-#include <cuda_runtime.h>
-#endif
+#if !defined(PRECICE_NO_GINKGO) || !defined(PRECICE_NO_KOKKOS_KERNELS)
 
-#ifdef __HIPCC__
-#include <hip/hip_runtime.h>
-#endif
+#include <Kokkos_Core.hpp>
 
-#if defined(__CUDACC__) || defined(__HIPCC__)
-
-#include <ginkgo/extensions/kokkos.hpp>
-#include <ginkgo/ginkgo.hpp>
-
-#define PRECICE_HOST_DEVICE __host__ __device__
-#define PRECICE_MEMORY_SPACE __device__
+#define PRECICE_HOST_DEVICE KOKKOS_FUNCTION
 #define PRECICE_FMA Kokkos::fma
 #define PRECICE_LOG Kokkos::log
 
 #else
 
 #define PRECICE_HOST_DEVICE
-#define PRECICE_MEMORY_SPACE
 #define PRECICE_FMA std::fma
 #define PRECICE_LOG std::log
 
@@ -619,7 +608,6 @@ private:
 
 #undef PRECICE_FMA
 #undef PRECICE_LOG
-#undef PRECICE_MEMORY_SPACE
 #undef PRECICE_HOST_DEVICE
 #undef NUMERICAL_ZERO_DIFFERENCE_DEVICE
 
