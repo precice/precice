@@ -79,7 +79,13 @@ option(PRECICE_RELEASE_WITH_DEBUG_LOG "Enable debug logging in release builds" O
 option(PRECICE_RELEASE_WITH_TRACE_LOG "Enable trace logging in release builds" OFF)
 option(PRECICE_RELEASE_WITH_ASSERTIONS "Enable assertions in release builds" OFF)
 
-set(PRECICE_CXX_STANDARD "17" CACHE STRING "CXX Standard for all preCICE targets" )
+if(NOT CMAKE_CXX_STANDARD)
+  set(PRECICE_CXX_STANDARD "17" CACHE STRING "CXX Standard for all preCICE targets" )
+else()
+  set(PRECICE_CXX_STANDARD ${CMAKE_CXX_STANDARD})
+endif()
+message(STATUS "Setting preCICE CXX standard to ${PRECICE_CXX_STANDARD}")
+
 option(PRECICE_HIDE_SYMBOLS "Hide non-API symbols in preCICE library" ON)
 mark_as_advanced(PRECICE_HIDE_SYMBOLS PRECICE_CXX_STANDARD)
 
