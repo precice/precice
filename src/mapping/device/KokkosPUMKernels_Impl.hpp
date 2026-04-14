@@ -136,7 +136,7 @@ bool compute_weights(const int                     nCenters,
           dist       = Kokkos::sqrt(dist);
           double val = w(dist, rbf_params);
           // is NUMERICAL_ZERO_DIFFERENCE_DEVICE
-          double res           = std::max(val, 1.0e-14);
+          double res           = Kokkos::fmax(val, 1.0e-14);
           normalizedWeights(i) = res;
 
           Kokkos::atomic_add(&weightSum(globalID), res);
@@ -550,7 +550,7 @@ void do_batched_solve(
     // Step 2: Allocate shared memory for the team and fill it with the inData of this cluster
     // The scratch memory (shared memory for the device)
     ScratchMatrix work(team.team_scratch(0), Kokkos::max(4, inSize));
-    auto          in = Kokkos::subview(work, std::pair<int, int>(0, inSize), 0);
+    auto          in = Kokkos::subview(work, Kokkos::pair<int, int>(0, inSize), 0);
 
     Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, inSize), [&](int i) {
@@ -567,7 +567,7 @@ void do_batched_solve(
       // Step 3a: Backup the current in data, since we solve the QR in place
       // In principle, we need a vector here (just as in), but the ApplyQ routine expects a Rank2 matrix,
       // so we have to stick to this particular syntax (keeping it rank 2 with one column)
-      auto in_cp = Kokkos::subview(work, std::pair<int, int>(0, inSize), std::pair<int, int>(1, 2));
+      auto in_cp = Kokkos::subview(work, Kokkos::pair<int, int>(0, inSize), Kokkos::pair<int, int>(1, 2));
       Kokkos::parallel_for(
           Kokkos::TeamThreadRange(team, inSize), [&](int i) { in_cp(i, 0) = in(i); });
       team.team_barrier();
@@ -596,8 +596,8 @@ void do_batched_solve(
                               KokkosBatched::Algo::ApplyQ::Unblocked>::invoke(team, qr, tau, in_cp, tmp);
 
         // Step 3d: Solve triangular solve R z = y
-        auto in_r = Kokkos::subview(in_cp, std::pair<int, int>(0, rank), 0);
-        auto R    = Kokkos::subview(qr, std::pair<int, int>(0, rank), std::pair<int, int>(0, rank));
+        auto in_r = Kokkos::subview(in_cp, Kokkos::pair<int, int>(0, rank), 0);
+        auto R    = Kokkos::subview(qr, Kokkos::pair<int, int>(0, rank), Kokkos::pair<int, int>(0, rank));
 
         KokkosBatched::Trsv<
             MemberType,
@@ -886,8 +886,8 @@ void do_qr_solve(int                           nCluster,
                                                          KokkosBatched::Algo::ApplyQ::Unblocked>::invoke(team, qr, tau, in, work);
                          team.team_barrier();
 
-                         auto in_r = Kokkos::subview(in, std::pair<int, int>(0, rank));
-                         auto R    = Kokkos::subview(qr, std::pair<int, int>(0, rank), std::pair<int, int>(0, rank));
+                         auto in_r = Kokkos::subview(in, Kokkos::pair<int, int>(0, rank));
+                         auto R    = Kokkos::subview(qr, Kokkos::pair<int, int>(0, rank), Kokkos::pair<int, int>(0, rank));
 
                          // Step 4b: Solve triangular solve R z = y
                          KokkosBatched::Trsv<
@@ -899,7 +899,7 @@ void do_qr_solve(int                           nCluster,
                              KokkosBatched::Algo::Trsv::Blocked>::invoke(team, 1.0, R, in_r);
                          team.team_barrier();
 
-                         auto res = Kokkos::subview(in, std::pair<int, int>(0, matrixCols));
+                         auto res = Kokkos::subview(in, Kokkos::pair<int, int>(0, matrixCols));
 
                          // Steo 4c: zero out the entries which are not within the rank region
                          Kokkos::parallel_for(
