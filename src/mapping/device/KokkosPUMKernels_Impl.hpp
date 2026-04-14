@@ -11,7 +11,6 @@
 #include "math/math.hpp"
 
 #include <functional>
-#include <optional>
 
 using precice::mapping::RadialBasisParameters;
 using precice::math::pow_int;
