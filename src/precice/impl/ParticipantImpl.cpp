@@ -467,7 +467,6 @@ void ParticipantImpl::advance(
   e.stop();
   if (isAtWindowEnd) {
     double timeToAdvance = _solverImbalance->getSolverTimeToAdvance();
-    PRECICE_INFO("Avg. time to advance: {}", timeToAdvance);
     double              receiveValue = 0.0;
     std::vector<double> timesToAdvance;
     timesToAdvance.reserve(_m2ns.size() + 1);
@@ -485,7 +484,6 @@ void ParticipantImpl::advance(
       timesToAdvance.push_back(receiveValue);
     }
     _solverImbalance->computeSolverImbalance(timesToAdvance);
-    PRECICE_INFO("Solver imbalance: {}, factor: {}", _solverImbalance->getImbalance(), _solverImbalance->getImbalanceFactor());
     _solverImbalance->reset();
   }
   _solverImbalance->startSolver();
