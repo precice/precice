@@ -271,4 +271,14 @@ void Participant::stopLastProfilingSection()
   _impl->stopLastProfilingSection();
 }
 
+double Participant::getSolverImbalance()
+{
+  return _impl->getSolverImbalance();
+}
+
+double Participant::getImbalanceFactor()
+{
+  return _impl->getImbalanceFactor();
+}
+
 } // namespace precice
