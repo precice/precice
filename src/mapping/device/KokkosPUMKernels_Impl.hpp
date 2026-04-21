@@ -11,7 +11,6 @@
 #include "math/math.hpp"
 
 #include <functional>
-#include <optional>
 
 using precice::mapping::RadialBasisParameters;
 using precice::math::pow_int;
@@ -634,13 +633,13 @@ void do_batched_solve(
     // but its layout is different (LayoutRight to have the coordinates aligned in memory).
     // We have to declare it here outsie the "if" to be able to use it further down then.
     // The memory here might point to null (or rather the end of "work"), in case polynomial = false
-    // and the evaluation_op is available but then it also remains unused. We make it here an optional
-    // to prevent Kokkos throwing errors about out-of-bounds accesses, the view is instantiated in the "if"
+    // and the evaluation_op is available but then it also remains unused. Using a std::optional
+    // is not portable, so the view here is unintitalized and only assigned in the "if"
     // branch below
-    std::optional<ScratchMesh> localInMesh;
+    ScratchMesh localInMesh;
 
     if constexpr (!evaluation_op_available || polynomial) {
-      localInMesh.emplace(&work(0, 1), inSize, dim);
+      localInMesh = ScratchMesh(&work(0, 1), inSize, dim);
 
       Kokkos::parallel_for(
           Kokkos::TeamThreadRange(team, inSize),
@@ -653,7 +652,7 @@ void do_batched_solve(
             for (int d = 0; d < dim; ++d) {
               sum += inMesh(globalID, d) * qrCoeffs[d];
               // Put it in shared memory as we later need it in the output evaluation
-              localInMesh->operator()(i, d) = inMesh(globalID, d);
+              localInMesh(i, d) = inMesh(globalID, d);
             }
             in(i) -= sum;
           });
@@ -751,7 +750,7 @@ void do_batched_solve(
                   // compute the local output coefficients
                   double dist = 0;
                   for (int d = 0; d < dim; ++d) {
-                    double diff = outVertex[d] - localInMesh->operator()(c, d);
+                    double diff = outVertex[d] - localInMesh(c, d);
                     dist += diff * diff;
                   }
                   dist = Kokkos::sqrt(dist);
