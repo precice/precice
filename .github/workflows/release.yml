@@ -43,6 +43,7 @@ jobs:
     secrets: inherit
 
   docker-release:
+    if: github.repository == 'precice/precice'
     name: "Release Dockerfile"
     needs: package-deb
     uses: ./.github/workflows/publish-docker-release.yml
@@ -52,6 +53,7 @@ jobs:
     secrets: inherit
 
   docker-nightly:
+    if: github.repository == 'precice/precice'
     name: "Release Nightly"
     needs: release-draft
     uses: ./.github/workflows/publish-docker-nightly.yml

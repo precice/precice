@@ -11,6 +11,7 @@ jobs:
   latest:
     runs-on: ubuntu-latest
     container: 'precice/ci-ubuntu-2204:latest'
+    if: github.repository == 'precice/precice'
     steps:
       - name: Download Coverity Build Tool
         run: |
