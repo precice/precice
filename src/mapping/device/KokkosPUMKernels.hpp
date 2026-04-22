@@ -113,6 +113,30 @@ void do_batched_solve(
     const VectorView<MemorySpace>       &qrTau,
     const PivotView<MemorySpace>        &qrP);
 
+template <bool polynomial, bool evaluation_op_available, typename EvalFunctionType, typename MemorySpace>
+void do_batched_conservative_solve(
+    int                                  nCluster,
+    int                                  dim,
+    int                                  avgInClusterSize,
+    int                                  maxInClusterSize,
+    int                                  maxOutClusterSize,
+    EvalFunctionType                     f,
+    const VectorOffsetView<MemorySpace> &rhsOffsets,
+    const GlobalIDView<MemorySpace>     &globalRhsIDs,
+    VectorView<MemorySpace>              rhs,
+    const MatrixOffsetView<MemorySpace> &matrixOffsets,
+    const VectorView<MemorySpace>       &matrices,
+    const VectorView<MemorySpace>       &normalizedWeights,
+    const MatrixOffsetView<MemorySpace> &evalOffsets,
+    const VectorView<MemorySpace>       &evalMat,
+    const VectorOffsetView<MemorySpace> &outOffsets,
+    const GlobalIDView<MemorySpace>     &globalOutIDs,
+    VectorView<MemorySpace>              out,
+    const MeshView<MemorySpace>         &inMesh,
+    const MeshView<MemorySpace>         &outMesh,
+    const VectorView<MemorySpace>       &qrMatrix,
+    const VectorView<MemorySpace>       &qrTau,
+    const PivotView<MemorySpace>        &qrP);
 } // namespace precice::mapping::kernel
 
 #include "mapping/device/KokkosPUMKernels_Impl.hpp"

@@ -48,6 +48,8 @@ public:
 
   void solveConsistent(const time::Sample &globalIn, Eigen::VectorXd &globalOut);
 
+  void solveConservative(const time::Sample &globalIn, Eigen::VectorXd &globalOut);
+
 private:
   mutable precice::logging::Logger _log{"mapping::BatchedRBFSolver"};
 
@@ -352,6 +354,11 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
 template <typename RADIAL_BASIS_FUNCTION_T>
 void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Sample &globalIn, Eigen::VectorXd &globalOut)
 {
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const time::Sample &globalIn, Eigen::VectorXd &globalOut)
+{
   auto solve_component =
       [&](const double *inPtr, Eigen::Index inSize, double *outPtr, Eigen::Index outSize) {
         // Step 1: Wrap memory into an unmanaged view
@@ -360,14 +367,17 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Samp
 
         // Step 2: Copy over
         precice::profiling::Event e1("solver.copyHostToDevice");
-        Kokkos::deep_copy(_inData, inView);
-        Kokkos::deep_copy(_outData, 0.0); // Reset output data
+        // Looks odd, but is a result of the swapped in/out data in the conservative constraint
+        // The _outData matches the output mesh, which is (from the data perspective) the input here
+        Kokkos::deep_copy(_outData, inView);
+        Kokkos::deep_copy(_inData, 0.0); // Reset output data
 
         Kokkos::fence();
         e1.stop();
 
         // Step 3: Launch the kernel
         precice::profiling::Event e2("solver.kernel.batchedSolve");
+        // NOTE THE SWAPPED IN AND OUT DATA
         _dispatch_solve_kernel(_polynomial == Polynomial::SEPARATE, _computeEvaluationOffline,
                                _nCluster, _dim, _avgClusterSize, _maxInClusterSize, _maxOutClusterSize, _basisFunction,
                                _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
@@ -381,7 +391,7 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Samp
         precice::profiling::Event e3("solver.copyDeviceToHost");
         Kokkos::View<double *, Kokkos::HostSpace, UnmanagedMemory>
             outView(outPtr, outSize);
-        Kokkos::deep_copy(outView, _outData);
+        Kokkos::deep_copy(outView, _inData);
         Kokkos::fence();
         e3.stop();
       };
@@ -415,14 +425,14 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::_dispatch_solve_kernel(bool poly
 {
   if (polynomial) {
     if (evaluation_op_available)
-      kernel::do_batched_solve<true, true>(std::forward<Args>(args)...);
+      kernel::do_batched_conservative_solve<true, true>(std::forward<Args>(args)...);
     else
-      kernel::do_batched_solve<true, false>(std::forward<Args>(args)...);
+      kernel::do_batched_conservative_solve<true, false>(std::forward<Args>(args)...);
   } else {
     if (evaluation_op_available)
-      kernel::do_batched_solve<false, true>(std::forward<Args>(args)...);
+      kernel::do_batched_conservative_solve<false, true>(std::forward<Args>(args)...);
     else
-      kernel::do_batched_solve<false, false>(std::forward<Args>(args)...);
+      kernel::do_batched_conservative_solve<false, false>(std::forward<Args>(args)...);
   }
 }
 } // namespace precice::mapping
@@ -445,6 +455,7 @@ public:
                    bool,
                    MappingConfiguration::GinkgoParameter) {}
 
+  void solveConservative(const time::Sample &, Eigen::VectorXd &) {}
   void solveConsistent(const time::Sample &, Eigen::VectorXd &) {}
 };
 } // namespace precice::mapping
