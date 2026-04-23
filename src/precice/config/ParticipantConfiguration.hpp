@@ -1,10 +1,11 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <memory>
 #include <string>
 #include <vector>
 #include "action/SharedPointer.hpp"
-#include "io/SharedPointer.hpp"
+#include "io/config/ExportConfiguration.hpp"
 #include "logging/Logger.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "mapping/config/MappingConfigurationTypes.hpp"
@@ -125,7 +126,7 @@ private:
 
   action::PtrActionConfiguration _actionConfig;
 
-  io::PtrExportConfiguration _exportConfig;
+  std::unique_ptr<io::ExportConfiguration> _exportConfig;
 
   std::vector<impl::PtrParticipant> _participants;
 
