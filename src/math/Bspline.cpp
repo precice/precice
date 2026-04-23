@@ -1,20 +1,19 @@
 #include "math/Bspline.hpp"
-#include "math/differences.hpp"
-#include "utils/assertion.hpp"
 
 #include <Eigen/Core>
 #include <Eigen/Sparse>
 #include <algorithm>
 #include <cstdlib>
 #include <unsupported/Eigen/Splines>
+
 #include "math/differences.hpp"
+#include "profiling/Event.hpp"
 #include "utils/assertion.hpp"
 
 namespace precice::math {
 
 Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree)
 {
-
   PRECICE_ASSERT(ts.size() >= 2, "Interpolation requires at least 2 samples");
   PRECICE_ASSERT(std::is_sorted(ts.begin(), ts.end()), "Timestamps must be sorted");
 
@@ -26,10 +25,9 @@ Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree
   auto relativeTime = [tsMin = _tsMin, tsMax = _tsMax](double t) -> double { return (t - tsMin) / (tsMax - tsMin); };
   ts                = ts.unaryExpr(relativeTime);
 
-  // The code for computing the knots and the control points is copied from Eigens bspline interpolation with some modifications
-  // https://gitlab.com/libeigen/eigen/-/blob/master/unsupported/Eigen/src/Splines/SplineFitting.h
-
   // 1. Compute the knot vector
+ // The code for computing the knots and control points is based on Eigen's B-spline interpolation
+// https://gitlab.com/libeigen/eigen/-/blob/master/unsupported/Eigen/src/Splines/SplineFitting.h
   Eigen::KnotAveraging(ts, splineDegree, _knots);
 
   // 2. Compute the control points
@@ -37,6 +35,9 @@ Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree
   Eigen::DenseIndex                   n = xs.cols();
   std::vector<Eigen::Triplet<double>> matrixEntries;
   matrixEntries.reserve(2 + (n - 2) * (splineDegree + 1));
+
+  // Build matrix entries
+  profiling::Event eControl("bspline.control");
 
   matrixEntries.emplace_back(0, 0, 1.0);
   for (Eigen::DenseIndex i = 1; i < n - 1; ++i) {
@@ -48,17 +49,21 @@ Bspline::Bspline(Eigen::VectorXd ts, const Eigen::MatrixXd &xs, int splineDegree
     }
   }
   matrixEntries.emplace_back(n - 1, n - 1, 1.0);
-  PRECICE_ASSERT(matrixEntries.capacity() == matrixEntries.size(), matrixEntries.capacity(), matrixEntries.size(), n, splineDegree);
+  PRECICE_ASSERT(matrixEntries.capacity() == matrixEntries.size(),
+                 matrixEntries.capacity(), matrixEntries.size(), n, splineDegree);
 
+  // Create sparse matrix
   Eigen::SparseMatrix<double> A(n, n);
   A.setFromTriplets(matrixEntries.begin(), matrixEntries.end());
   A.makeCompressed();
 
+  // Solve system
   Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::COLAMDOrdering<int>> qr;
   qr.analyzePattern(A);
   qr.factorize(A);
-
   _ctrls = qr.solve(xs.transpose());
+
+  eControl.stop();
 }
 
 Eigen::VectorXd Bspline::interpolateAt(double t) const
@@ -75,4 +80,5 @@ Eigen::VectorXd Bspline::interpolateAt(double t) const
 
   return interpolated;
 }
+
 } // namespace precice::math
