@@ -7,7 +7,7 @@
 
 #include "acceleration/impl/Preconditioner.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
-#include "com/Communication.hpp"
+#include "com/IntraCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "io/TXTTableWriter.hpp"

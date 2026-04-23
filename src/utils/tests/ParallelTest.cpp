@@ -1,7 +1,7 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "com/Communication.hpp"
+#include "com/IntraCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"

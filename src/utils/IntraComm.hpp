@@ -28,7 +28,7 @@ public:
   static int getSize();
 
   /// Intra-participant communication.
-  static com::PtrCommunication &getCommunication()
+  static com::PtrIntraCommunication &getCommunication()
   {
     return _communication;
   }
@@ -112,7 +112,7 @@ private:
   static bool _isSecondaryRank;
 
   /// Intra-participant communication.
-  static com::PtrCommunication _communication;
+  static com::PtrIntraCommunication _communication;
 };
 
 } // namespace utils

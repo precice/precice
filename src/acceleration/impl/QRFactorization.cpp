@@ -10,7 +10,7 @@
 
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/impl/QRFactorization.hpp"
-#include "com/Communication.hpp"
+#include "com/IntraCommunication.hpp"
 #include "com/SharedPointer.hpp"
 #include "logging/LogMacros.hpp"
 #include "precice/impl/Types.hpp"

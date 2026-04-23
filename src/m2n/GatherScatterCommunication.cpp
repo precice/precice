@@ -7,6 +7,7 @@
 
 #include "GatherScatterCommunication.hpp"
 #include "com/Communication.hpp"
+#include "com/IntraCommunication.hpp"
 #include "logging/LogMacros.hpp"
 #include "m2n/DistributedCommunication.hpp"
 #include "mesh/Mesh.hpp"
@@ -156,7 +157,7 @@ void GatherScatterCommunication::receive(precice::span<double> itemsToReceive, i
   // Secondary ranks receive scattered data
   if (utils::IntraComm::isSecondary()) { // Secondary rank
     if (!itemsToReceive.empty()) {
-      auto received = utils::IntraComm::getCommunication()->receiveRange(0, com::asVector<double>);
+      auto received = utils::IntraComm::getCommunication()->receiveRange(0, com::intraAsVector<double>);
       PRECICE_ASSERT(!received.empty());
       PRECICE_DEBUG("Received scattered data starting with {}", received[0]);
       std::copy(received.begin(), received.end(), itemsToReceive.begin());

@@ -2,18 +2,20 @@
 #include <memory>
 #include <ostream>
 #include "com/MPIDirectCommunication.hpp"
+#include "com/MPIIntraComm.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "com/SocketCommunication.hpp"
+#include "com/SocketIntraComm.hpp"
 #include "logging/LogMacros.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"
 #include "xml/XMLTag.hpp"
 
 namespace precice::com {
-PtrCommunication CommunicationConfiguration::createCommunication(
+PtrIntraCommunication CommunicationConfiguration::createIntraCommunication(
     const xml::XMLTag &tag) const
 {
-  com::PtrCommunication com;
+  PtrIntraCommunication comm;
   if (tag.getName() == "sockets") {
     std::string network = tag.getStringAttributeValue("network");
     int         port    = tag.getIntAttributeValue("port");
@@ -24,18 +26,17 @@ PtrCommunication CommunicationConfiguration::createCommunication(
                   port);
 
     std::string dir = tag.getStringAttributeValue("exchange-directory");
-    com             = std::make_shared<com::SocketCommunication>(port, false, network, dir);
+    comm            = std::make_shared<com::SocketIntraComm>(port, false, network, dir);
   } else if (tag.getName() == "mpi") {
-    std::string dir = tag.getStringAttributeValue("exchange-directory");
 #ifdef PRECICE_NO_MPI
     PRECICE_ERROR("Communication type \"mpi\" can only be used if preCICE was compiled with MPI support enabled. "
                   "Either switch to a \"sockets\" communication or recompile preCICE with \"PRECICE_MPICommunication=ON\".");
 #else
-    com = std::make_shared<com::MPIPortsCommunication>(dir);
+    comm = std::make_shared<com::MPIIntraComm>();
 #endif
   }
-  PRECICE_ASSERT(com != nullptr);
-  return com;
+  PRECICE_ASSERT(comm != nullptr);
+  return comm;
 }
 
 } // namespace precice::com
