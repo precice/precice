@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+  <mesh name="TestMeshA" dimensions="3" />
+  <mesh name="TestMeshB" dimensions="3" />
+  <mesh name="TestMeshC" dimensions="3" />
+  <mesh name="TestMeshD" dimensions="3" />
+  <mesh name="TestMeshE" dimensions="3" />
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshB"
+    to="TestMeshA"
+    constraint="consistent">
+    <basis-function:gaussian shape-parameter="4.55" />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshC"
+    to="TestMeshB"
+    constraint="consistent">
+    <basis-function:gaussian support-radius="1.5" />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshD"
+    to="TestMeshC"
+    constraint="consistent">
+    <basis-function:gaussian support-radius="1.5" cutoff-threshold="1e-6" />
+  </mapping:rbf-global-direct>
+
+  <mapping:rbf-global-direct
+    direction="read"
+    from="TestMeshE"
+    to="TestMeshD"
+    constraint="consistent">
+    <basis-function:gaussian shape-parameter="4.55" cutoff-threshold="1e-6" />
+  </mapping:rbf-global-direct>
+
+</configuration>
