@@ -1,4 +1,6 @@
 #include "ExportConfiguration.hpp"
+#include <sstream>
+#include "logging/LogMacros.hpp"
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
@@ -44,11 +46,19 @@ ExportConfiguration::ExportConfiguration(xml::XMLTag &parent)
   auto attrUpdateSeries = makeXMLAttribute(ATTR_UPDATE_SERIES, false)
                               .setDocumentation("Update the series file after every export instead of at the end of the simulation.");
 
+  auto attrMesh = makeXMLAttribute("mesh", std::string(""))
+                      .setDocumentation("Export only a specific mesh.");
+
+  auto attrMeshes = makeXMLAttribute("meshes", std::string(""))
+                        .setDocumentation("Export multiple meshes separated by ':'");
+
   for (XMLTag &tag : tags) {
     tag.addAttribute(attrLocation);
     tag.addAttribute(attrEveryNTimeWindows);
     tag.addAttribute(attrEveryIteration);
     tag.addAttribute(attrUpdateSeries);
+    tag.addAttribute(attrMesh);
+    tag.addAttribute(attrMeshes);
     parent.addSubtag(tag);
   }
 }
@@ -64,6 +74,29 @@ void ExportConfiguration::xmlTagCallback(
     econtext.everyIteration    = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
     econtext.updateSeries      = tag.getBooleanAttributeValue(ATTR_UPDATE_SERIES);
     econtext.type              = tag.getName();
+
+    std::string meshAttr   = tag.getStringAttributeValue("mesh");
+    std::string meshesAttr = tag.getStringAttributeValue("meshes");
+
+    // Both mesh and meshes can't be present at the same time.
+    if (!meshAttr.empty() && !meshesAttr.empty()) {
+      PRECICE_ERROR("<export:vtu> cannot define both \"mesh\" and \"meshes\" attributes.");
+    }
+
+    if (!meshAttr.empty()) {
+      econtext.selectedMeshes.push_back(meshAttr);
+    }
+
+    if (!meshesAttr.empty()) {
+      std::stringstream ss(meshesAttr);
+      std::string       item;
+      while (std::getline(ss, item, ':')) {
+        if (!item.empty()) {
+          econtext.selectedMeshes.push_back(item);
+        }
+      }
+    }
+
     _contexts.push_back(econtext);
   }
 }
