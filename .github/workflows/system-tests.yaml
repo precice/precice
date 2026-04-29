@@ -117,12 +117,12 @@ jobs:
           echo "\`\`\`"
           echo '${{ steps.ref-fenics-adapter.outputs.description }}'
           echo "\`\`\`"
-          echo "### Micro-Manager" >> $GITHUB_STEP_SUMMARY
-          echo "Reference: [\`${{ steps.ref-micro-manager.outputs.shorthash }}\`](https://github.com/precice/micro-manager/commit/${{ steps.ref-micro-manager.outputs.shorthash }})" >> $GITHUB_STEP_SUMMARY
-          echo "Description:" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.ref-micro-manager.outputs.description }}" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "### Micro-Manager"
+          echo "Reference: [\`${{ steps.ref-micro-manager.outputs.shorthash }}\`](https://github.com/precice/micro-manager/commit/${{ steps.ref-micro-manager.outputs.shorthash }})"
+          echo "Description:"
+          echo "\`\`\`"
+          echo "${{ steps.ref-micro-manager.outputs.description }}"
+          echo "\`\`\`"
           echo "### OpenFOAM adapter"
           echo "Reference: [\`${{ steps.ref-openfoam-adapter.outputs.shorthash }}\`](https://github.com/precice/openfoam-adapter/commit/${{ steps.ref-openfoam-adapter.outputs.shorthash }})"
           echo "Description:"
