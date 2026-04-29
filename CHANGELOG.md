@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file. For future plans, see our [Roadmap](https://www.precice.org/fundamentals-roadmap.html).
 
+## 3.4.1
+
+- Fixed `std::optional` usage in Kokkos kernel implementations. (https://github.com/precice/precice/pull/2551)
+- Fixed include bug where compiling with Kokkos-Kernels depends on Ginkgo. (https://github.com/precice/precice/pull/2549)
+
 ## 3.4.0
 
 - Added a conservative just-in-time coarse-graining mapping variant. (https://github.com/precice/precice/pull/2301)
