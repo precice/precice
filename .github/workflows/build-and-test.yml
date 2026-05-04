@@ -215,6 +215,7 @@ jobs:
         run: |
           cpack
           lintian -i --suppress-tags control-file-has-bad-permissions ./*.deb
+          apt-get install --simulate ./*.deb
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
