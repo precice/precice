@@ -30,9 +30,9 @@ jobs:
       matrix:
         include:
         - distro: ubuntu
-          version: "22.04"
-        - distro: ubuntu
           version: "24.04"
+        - distro: ubuntu
+          version: "26.04"
         - distro: debian
           version: "13"
     uses: ./.github/workflows/request-deb-package.yml

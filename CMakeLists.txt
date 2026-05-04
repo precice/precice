@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.22.1)
+cmake_minimum_required (VERSION 3.28.3)
 project(preCICE VERSION 3.4.1 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
@@ -220,7 +220,7 @@ if(POLICY CMP0167)
 endif()
 
 option(Boost_USE_STATIC_LIBS "Force BoostConfig.cmake to find static libraries." OFF)
-find_package(Boost 1.74.0 REQUIRED CONFIG
+find_package(Boost 1.83.0 REQUIRED CONFIG
   COMPONENTS log log_setup program_options thread unit_test_framework
   )
 mark_as_advanced(Boost_INCLUDE_DIR Boost_LOG_LIBRARY_RELEASE Boost_LOG_SETUP_LIBRARY_RELEASE Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE Boost_SYSTEM_LIBRARY_RELEASE Boost_THREAD_LIBRARY_RELEASE Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE)
@@ -268,7 +268,7 @@ if (PRECICE_FEATURE_PETSC_MAPPING)
     xsdk_tpl_require(PETSC PETSC_DIR PETSC_ARCH)
     # PETSc detection uses primarily these ENVs
   endif()
-  find_package(PETSc 3.15 REQUIRED)
+  find_package(PETSc 3.19 REQUIRED)
   # No validation required as PETSc does this internally
   message(STATUS "Found PETSc ${PETSc_VERSION}")
 else()
