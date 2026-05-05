@@ -57,37 +57,33 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - IMAGE: 'ubuntu-2204'
+          - IMAGE: 'ubuntu-2404'
             CONFIG: Bare
             CXX: 'g++'
             TYPE: Debug
             COVFLAGS: '--coverage'
-          - IMAGE: 'ubuntu-2204'
+          - IMAGE: 'ubuntu-2404'
             CONFIG: MPI
             CXX: 'g++'
             TYPE: Debug
             COVFLAGS: '--coverage'
-          - IMAGE: 'ubuntu-2204'
+          - IMAGE: 'ubuntu-2404'
             CONFIG: MPIPETScLZMA
             CXX: 'g++'
             TYPE: Debug
             COVFLAGS: '--coverage'
-          - IMAGE: 'ubuntu-2204'
+          - IMAGE: 'ubuntu-2404'
             CONFIG: Bare
             CXX: 'g++'
             TYPE: Release
-          - IMAGE: 'ubuntu-2204'
+          - IMAGE: 'ubuntu-2404'
             CONFIG: MPI
-            CXX: 'g++'
-            TYPE: Release
-          - IMAGE: 'ubuntu-2204'
-            CONFIG: MPIPETSc
             CXX: 'g++'
             TYPE: Release
           - IMAGE: 'ubuntu-2404'
             CONFIG: MPIPETSc
             CXX: 'g++'
-            TYPE: Debug
+            TYPE: Release
           - IMAGE: 'ubuntu-2604'
             CONFIG: MPIPETSc
             CXX: 'g++'
