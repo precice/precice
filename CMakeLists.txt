@@ -245,9 +245,6 @@ find_package(LibXml2 REQUIRED)
 message(STATUS "Found LibXml2 ${LIBXML2_VERSION_STRING}")
 precice_validate_libxml2()
 
-# libfmt
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/fmt)
-
 #
 # Find Configurable Dependencies
 #
@@ -458,9 +455,6 @@ target_compile_definitions(preciceCore PUBLIC "$<$<CONFIG:DEBUG>:EIGEN_INITIALIZ
 
 # Setup LIBXML2
 target_link_libraries(preciceCore PUBLIC LibXml2::LibXml2)
-
-# Setup FMT
-target_link_libraries(preciceCore PUBLIC fmtlib-static)
 
 # Setup MPI
 if (PRECICE_FEATURE_MPI_COMMUNICATION)
