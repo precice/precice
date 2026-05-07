@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <algorithm>
+#include <format>
 #include <map>
 #include <string>
 #include "com/SharedPointer.hpp"
@@ -83,7 +84,7 @@ BOOST_AUTO_TEST_CASE(ExportScalarParallel)
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
 
-  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
+  testing::expectFiles(std::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
   if (context.isPrimary()) {
     testing::expectFiles("Mesh-io-VTUExport.init.pvtu");
   }
@@ -105,7 +106,7 @@ BOOST_AUTO_TEST_CASE(ExportVectorParallel)
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
 
-  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
+  testing::expectFiles(std::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
   if (context.isPrimary()) {
     testing::expectFiles("Mesh-io-VTUExport.init.pvtu");
   }
@@ -127,7 +128,7 @@ BOOST_AUTO_TEST_CASE(ExportMissingParallel)
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
 
-  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
+  testing::expectFiles(std::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
   if (context.isPrimary()) {
     testing::expectFiles("Mesh-io-VTUExport.init.pvtu");
   }
@@ -151,7 +152,7 @@ BOOST_AUTO_TEST_CASE(ExportScalarAndMissingParallel)
   io::ExportVTU exportVTU{"io-VTUExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTU.doExport(0, 0.0);
 
-  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
+  testing::expectFiles(std::format("Mesh-io-VTUExport.init_{}.vtu", context.rank));
   if (context.isPrimary()) {
     testing::expectFiles("Mesh-io-VTUExport.init.pvtu");
   }
@@ -275,7 +276,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
 
-  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), fmt::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
+  testing::expectFiles(std::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), std::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
   if (context.isPrimary()) {
     testing::expectFiles("Mesh-io-VTUExport.init.pvtu", "Mesh-io-VTUExport.dt1.pvtu");
   }
@@ -319,7 +320,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
 
-  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), fmt::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
+  testing::expectFiles(std::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), std::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
   if (context.isPrimary()) {
     testing::expectFiles("Mesh-io-VTUExport.init.pvtu", "Mesh-io-VTUExport.dt1.pvtu");
   }
@@ -385,7 +386,7 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
 
-  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), fmt::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
+  testing::expectFiles(std::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), std::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
   if (context.isPrimary()) {
     testing::expectFiles("Mesh-io-VTUExport.init.pvtu", "Mesh-io-VTUExport.dt1.pvtu");
   }
@@ -454,7 +455,7 @@ BOOST_AUTO_TEST_CASE(ExportPartitionedCube)
   exportVTU.doExport(0, 0.0);
   exportVTU.doExport(1, 1.0);
 
-  testing::expectFiles(fmt::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), fmt::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
+  testing::expectFiles(std::format("Mesh-io-VTUExport.init_{}.vtu", context.rank), std::format("Mesh-io-VTUExport.dt1_{}.vtu", context.rank));
   if (context.isPrimary()) {
     testing::expectFiles("Mesh-io-VTUExport.init.pvtu", "Mesh-io-VTUExport.dt1.pvtu");
   }

@@ -1,4 +1,6 @@
 #include <Eigen/Core>
+#include <format>
+
 #include "../geometry.hpp"
 #include "logging/LogMacros.hpp"
 #include "logging/Logger.hpp"
@@ -646,7 +648,7 @@ BOOST_AUTO_TEST_CASE(ComputeUnitQuadConvexity)
 
   BOOST_TEST(result.convex);
   BOOST_TEST(utils::unique_elements(result.vertexOrder));
-  BOOST_TEST_MESSAGE(fmt::format("Vertex Order {}", result.vertexOrder));
+  BOOST_TEST_MESSAGE(std::format("Vertex Order {}", result.vertexOrder));
   BOOST_TEST(result.vertexOrder.at(0) == 0);
   BOOST_TEST(result.vertexOrder.at(1) == 3);
   BOOST_TEST(result.vertexOrder.at(2) == 2);
@@ -672,7 +674,7 @@ BOOST_AUTO_TEST_CASE(ComputeReversedUnitQuadConvexity)
 
   BOOST_TEST(result.convex);
   BOOST_TEST(utils::unique_elements(result.vertexOrder));
-  BOOST_TEST_MESSAGE(fmt::format("Vertex Order {}", result.vertexOrder));
+  BOOST_TEST_MESSAGE(std::format("Vertex Order {}", result.vertexOrder));
   BOOST_TEST(result.vertexOrder.at(0) == 0);
   BOOST_TEST(result.vertexOrder.at(1) == 3);
   BOOST_TEST(result.vertexOrder.at(2) == 2);
@@ -698,7 +700,7 @@ BOOST_AUTO_TEST_CASE(ComputeValidQuadConvexity)
 
   BOOST_TEST(result.convex);
   BOOST_TEST(utils::unique_elements(result.vertexOrder));
-  BOOST_TEST_MESSAGE(fmt::format("Vertex Order {}", result.vertexOrder));
+  BOOST_TEST_MESSAGE(std::format("Vertex Order {}", result.vertexOrder));
   BOOST_TEST(result.vertexOrder.at(0) == 3);
   BOOST_TEST(result.vertexOrder.at(1) == 2);
   BOOST_TEST(result.vertexOrder.at(2) == 1);
@@ -791,7 +793,7 @@ BOOST_AUTO_TEST_CASE(ComputeUnit2dQuadConvexity)
 
   BOOST_TEST(result.convex);
   BOOST_TEST(utils::unique_elements(result.vertexOrder));
-  BOOST_TEST_MESSAGE(fmt::format("Vertex Order {}", result.vertexOrder));
+  BOOST_TEST_MESSAGE(std::format("Vertex Order {}", result.vertexOrder));
   BOOST_TEST(result.vertexOrder.at(0) == 0);
   BOOST_TEST(result.vertexOrder.at(1) == 3);
   BOOST_TEST(result.vertexOrder.at(2) == 2);
@@ -817,7 +819,7 @@ BOOST_AUTO_TEST_CASE(ComputeReversedUnit2dQuadConvexity)
 
   BOOST_TEST(result.convex);
   BOOST_TEST(utils::unique_elements(result.vertexOrder));
-  BOOST_TEST_MESSAGE(fmt::format("Vertex Order {}", result.vertexOrder));
+  BOOST_TEST_MESSAGE(std::format("Vertex Order {}", result.vertexOrder));
   BOOST_TEST(result.vertexOrder.at(0) == 0);
   BOOST_TEST(result.vertexOrder.at(1) == 3);
   BOOST_TEST(result.vertexOrder.at(2) == 2);
@@ -843,7 +845,7 @@ BOOST_AUTO_TEST_CASE(ComputeValid2dQuadConvexity)
 
   BOOST_TEST(result.convex);
   BOOST_TEST(utils::unique_elements(result.vertexOrder));
-  BOOST_TEST_MESSAGE(fmt::format("Vertex Order {}", result.vertexOrder));
+  BOOST_TEST_MESSAGE(std::format("Vertex Order {}", result.vertexOrder));
   BOOST_TEST(result.vertexOrder.at(0) == 3);
   BOOST_TEST(result.vertexOrder.at(1) == 2);
   BOOST_TEST(result.vertexOrder.at(2) == 1);

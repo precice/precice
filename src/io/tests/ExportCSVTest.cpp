@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <algorithm>
+#include <format>
 #include <map>
 #include <string>
 #include "com/SharedPointer.hpp"
@@ -82,7 +83,7 @@ BOOST_AUTO_TEST_CASE(ExportScalarParallel)
 
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+  testing::expectFiles(std::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
 }
 
 PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
@@ -100,7 +101,7 @@ BOOST_AUTO_TEST_CASE(ExportVectorParallel)
 
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+  testing::expectFiles(std::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
 }
 
 PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
@@ -118,7 +119,7 @@ BOOST_AUTO_TEST_CASE(ExportMissingParallel)
   // no sample
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+  testing::expectFiles(std::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
 }
 
 PRECICE_TEST_SETUP(""_on(2_ranks).setupIntraComm())
@@ -138,7 +139,7 @@ BOOST_AUTO_TEST_CASE(ExportScalarAndMissingParallel)
   // no sample
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+  testing::expectFiles(std::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
@@ -192,7 +193,7 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+  testing::expectFiles(std::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -230,7 +231,7 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+  testing::expectFiles(std::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
 }
 
 PRECICE_TEST_SETUP(""_on(4_ranks).setupIntraComm())
@@ -291,7 +292,7 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
 
   io::ExportCSV exportCSV{"io-CSVExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles(fmt::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
+  testing::expectFiles(std::format("Mesh-io-CSVExport.{}_init.csv", context.rank));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // IOTests

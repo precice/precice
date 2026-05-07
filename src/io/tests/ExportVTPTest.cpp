@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <algorithm>
+#include <format>
 #include <map>
 #include <string>
 #include "com/SharedPointer.hpp"
@@ -278,8 +279,8 @@ BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
   exportVTP.doExport(1, 1.0);
-  testing::expectFiles(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank),
-                       fmt::format("Mesh-io-VTPExport.dt1_{}.vtp", context.rank));
+  testing::expectFiles(std::format("Mesh-io-VTPExport.init_{}.vtp", context.rank),
+                       std::format("Mesh-io-VTPExport.dt1_{}.vtp", context.rank));
   if (context.isPrimary()) {
     testing::expectFiles(
         "Mesh-io-VTPExport.init.pvtp",
@@ -323,8 +324,8 @@ BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
   exportVTP.doExport(1, 1.0);
-  testing::expectFiles(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank),
-                       fmt::format("Mesh-io-VTPExport.dt1_{}.vtp", context.rank));
+  testing::expectFiles(std::format("Mesh-io-VTPExport.init_{}.vtp", context.rank),
+                       std::format("Mesh-io-VTPExport.dt1_{}.vtp", context.rank));
   if (context.isPrimary()) {
     testing::expectFiles(
         "Mesh-io-VTPExport.init.pvtp",
@@ -391,8 +392,8 @@ BOOST_AUTO_TEST_CASE(ExportSplitSquare)
   io::ExportVTP exportVTP{"io-VTPExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTP.doExport(0, 0.0);
   exportVTP.doExport(1, 1.0);
-  testing::expectFiles(fmt::format("Mesh-io-VTPExport.init_{}.vtp", context.rank),
-                       fmt::format("Mesh-io-VTPExport.dt1_{}.vtp", context.rank));
+  testing::expectFiles(std::format("Mesh-io-VTPExport.init_{}.vtp", context.rank),
+                       std::format("Mesh-io-VTPExport.dt1_{}.vtp", context.rank));
   if (context.isPrimary()) {
     testing::expectFiles(
         "Mesh-io-VTPExport.init.pvtp",
