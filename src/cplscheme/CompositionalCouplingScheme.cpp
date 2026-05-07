@@ -13,6 +13,7 @@
 #include "cplscheme/tests/DummyCouplingScheme.hpp"
 #include "logging/LogMacros.hpp"
 #include "utils/assertion.hpp"
+#include "utils/fmtJoin.hpp"
 
 namespace precice::cplscheme {
 
@@ -430,9 +431,9 @@ std::string CompositionalCouplingScheme::printCouplingState() const
 {
   std::vector<std::string> states;
   for (const auto scheme : allSchemes()) {
-    states.push_back(std::format("partner: {}, {}", "" /*fmt::join(scheme->getCouplingPartners(), " & ")*/, scheme->printCouplingState()));
+    states.push_back(std::format("partner: {}, {}", utils::join(scheme->getCouplingPartners(), " & "), scheme->printCouplingState()));
   }
-  return std::format("{}", ""); // fmt::join(states, "; "));
+  return std::format("{}", utils::join(states, "; "));
 }
 
 void CompositionalCouplingScheme::updateActiveSchemes()

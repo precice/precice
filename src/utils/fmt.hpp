@@ -21,7 +21,7 @@ inline std::string format_or_error(std::string_view str)
 }
 
 template <class... A>
-std::string format_or_error(std::string_view fmt, A &&...args)
+inline std::string format_or_error(std::string_view fmt, A &&...args)
 {
   try {
     return std::vformat(fmt, std::make_format_args(args...));

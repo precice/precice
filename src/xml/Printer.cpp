@@ -12,6 +12,7 @@
 #include <vector>
 #include "utils/String.hpp"
 #include "utils/TypeNames.hpp"
+#include "utils/fmtJoin.hpp"
 #include "xml/XMLAttribute.hpp"
 #include "xml/XMLTag.hpp"
 
@@ -80,7 +81,7 @@ std::ostream &printMD(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &attr)
   if (options.empty()) {
     out << " none |";
   } else {
-    std::print(out, " `{}` |", ""); // fmt::join(options, "`, `"));
+    std::print(out, " `{}` |", utils::join(options, "`, `"));
   }
   return out;
 }

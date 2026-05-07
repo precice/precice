@@ -4,6 +4,7 @@
 #include "logging/LogMacros.hpp"
 #include "utils/String.hpp"
 #include "utils/assertion.hpp"
+#include "utils/fmtJoin.hpp"
 #include "xml/ConfigParser.hpp"
 
 namespace precice::xml {
@@ -204,9 +205,9 @@ void XMLTag::readAttributes(const std::map<std::string, std::string> &aAttribute
       matches.erase(std::remove_if(matches.begin(), matches.end(), [](auto &m) { return m.distance > 2; }), matches.end());
       std::vector<std::string> stringMatches;
       std::transform(matches.begin(), matches.end(), std::back_inserter(stringMatches), [](auto &m) { return m.name; });
-      PRECICE_ERROR("The tag <{}> in the configuration contains an unknown attribute \"{}\". Did you mean \"{}\"?", _fullName, name, ""); // fmt::join(stringMatches, ", "));
+      PRECICE_ERROR("The tag <{}> in the configuration contains an unknown attribute \"{}\". Did you mean \"{}\"?", _fullName, name, utils::join(stringMatches, ", "));
     }
-    PRECICE_ERROR("The tag <{}> in the configuration contains an unknown attribute \"{}\". Expected attributes are {}.", _fullName, name, ""); // fmt::join(expected, ", "));
+    PRECICE_ERROR("The tag <{}> in the configuration contains an unknown attribute \"{}\". Expected attributes are {}.", _fullName, name, utils::join(expected, ", "));
   }
 
   // Read all attributes

@@ -23,6 +23,7 @@
 #include "utils/ManageUniqueIDs.hpp"
 #include "utils/String.hpp"
 #include "utils/assertion.hpp"
+#include "utils/fmtJoin.hpp"
 
 namespace precice::impl {
 
@@ -463,7 +464,7 @@ std::string ParticipantState::hintForMesh(std::string_view mesh) const
   if (matches.front().distance < 3) {
     return " Did you mean mesh \"" + matches.front().name + "\"?";
   } else {
-    return std::format(" Available meshes are: {}", ""); // fmt::join(_meshContexts | boost::adaptors::map_keys, ", "));
+    return std::format(" Available meshes are: {}", utils::join(_meshContexts | boost::adaptors::map_keys, ", "));
   }
 }
 
@@ -494,7 +495,7 @@ std::string ParticipantState::hintForMeshData(std::string_view mesh, std::string
     return " Did you mean data \"" + matches.front().name + "\"?";
   }
 
-  return std::format(" Available data are: {}", ""); // fmt::join(localData, ", "));
+  return std::format(" Available data are: {}", utils::join(localData, ", "));
 }
 
 void ParticipantState::initializeMappingDataCache(std::string_view mappingType)

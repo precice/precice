@@ -336,6 +336,7 @@ target_sources(preciceCore
     src/utils/assertion.hpp
     src/utils/fmt.hpp
     src/utils/fmtEigen.hpp
+    src/utils/fmtJoin.hpp
     src/utils/fmtSTL.hpp
     src/utils/ignore.hpp
     src/utils/networking.cpp

@@ -33,6 +33,7 @@
 #include "precice/impl/WatchPoint.hpp"
 #include "utils/IntraComm.hpp"
 #include "utils/assertion.hpp"
+#include "utils/fmtJoin.hpp"
 #include "utils/networking.hpp"
 #include "xml/ConfigParser.hpp"
 #include "xml/XMLAttribute.hpp"
@@ -396,7 +397,7 @@ std::string ParticipantConfiguration::hintFor(std::string_view wrongName) const
     return std::format("Did you mean: \"{}\"?", matches.front().name);
   }
 
-  return std::format("Available participants are: {}.", "" /*fmt::join(names, ", ")*/);
+  return std::format("Available participants are: {}.", utils::join(names, ", "));
 }
 
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFilter(const std::string &geoFilter) const
