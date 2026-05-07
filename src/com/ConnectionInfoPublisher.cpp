@@ -2,8 +2,8 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <chrono>
 #include <filesystem>
+#include <format>
 #include <fstream>
-#include <print>
 #include <stdexcept>
 #include <thread>
 
@@ -134,9 +134,10 @@ void ConnectionInfoWriter::write(std::string_view info) const
     }
 
     PRECICE_CHECK(ofs, "Unable to establish connection as the temporary connection file \"{}\" couldn't be opened.", tmp.generic_string());
-    std::print(ofs,
-               "{}\nAcceptor: {}, Requester: {}, Tag: {}, Rank: {}",
-               info, acceptorName, requesterName, tag, rank);
+
+    auto content = std::format("{}\nAcceptor: {}, Requester: {}, Tag: {}, Rank: {}",
+                               info, acceptorName, requesterName, tag, rank);
+    ofs.write(content.data(), content.size());
   }
   PRECICE_CHECK(fs::exists(tmp),
                 "Unable to establish connection as the temporary connection file \"{}\" was written, but doesn't exist on disk. "

@@ -9,7 +9,6 @@
 #include <iterator>
 #include <memory>
 #include <optional>
-#include <print>
 #include <ratio>
 #include <sstream>
 #include <string>
@@ -158,16 +157,16 @@ void EventRegistry::startBackend()
 #endif
 
   // write header
-  std::println(_output,
-               R"({{"name":"{}","rank":{},"size":{},"unix_us":"{}","tinit":"{}","mode":"{}","compression":{},"file_version":{}}})",
-               _applicationName,
-               _rank,
-               _size,
-               std::chrono::duration_cast<std::chrono::microseconds>(_initTime.time_since_epoch()).count(),
-               timepoint_to_string(_initTime),
-               toString(_mode),
-               compression,
-               ::precice::profiling::file_version);
+  _output << std::format(
+      R"({{"name":"{}","rank":{},"size":{},"unix_us":"{}","tinit":"{}","mode":"{}","compression":{},"file_version":{}}})",
+      _applicationName,
+      _rank,
+      _size,
+      std::chrono::duration_cast<std::chrono::microseconds>(_initTime.time_since_epoch()).count(),
+      timepoint_to_string(_initTime),
+      toString(_mode),
+      compression,
+      ::precice::profiling::file_version);
 
   _output.flush();
   _isBackendRunning = true;

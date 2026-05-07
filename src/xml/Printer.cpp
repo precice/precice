@@ -3,7 +3,6 @@
 #include <cctype>
 #include <format>
 #include <map>
-#include <print>
 #include <regex>
 #include <set>
 #include <sstream>
@@ -65,14 +64,13 @@ std::ostream &printDTD(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &attr,
 template <typename ATTRIBUTE_T>
 std::ostream &printMD(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &attr)
 {
-  std::print(out,
-             "| {} | {} | {} |",
-             attr.getName(),
-             utils::getTypeName(attr.getDefaultValue()),
-             attr.getUserDocumentation());
+  out << std::format("| {} | {} | {} |",
+                     attr.getName(),
+                     utils::getTypeName(attr.getDefaultValue()),
+                     attr.getUserDocumentation());
 
   if (attr.hasDefaultValue()) {
-    std::print(out, " `{}` |", attr.getDefaultValue());
+    out << std::format(" `{}` |", attr.getDefaultValue());
   } else {
     out << " _none_ |";
   }
@@ -81,7 +79,7 @@ std::ostream &printMD(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &attr)
   if (options.empty()) {
     out << " none |";
   } else {
-    std::print(out, " `{}` |", utils::join(options, "`, `"));
+    out << std::format(" `{}` |", utils::join(options, "`, `"));
   }
   return out;
 }
@@ -92,7 +90,7 @@ std::ostream &printExample(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &a
 {
   out << attr.getName() << "=\"";
   if (attr.hasDefaultValue()) {
-    std::print(out, "{}", attr.getDefaultValue());
+    out << std::format("{}", attr.getDefaultValue());
   } else {
     out << '{' << utils::getTypeName(attr.getDefaultValue()) << '}';
   }
@@ -264,10 +262,10 @@ std::ostream &printMD(std::ostream &out, const XMLTag &tag, int level, std::map<
 
       const auto ns = subtag->getNamespace();
       if (ns.empty()) {
-        std::print(out, "* [{}]({}) `{}`\n",
-                   heading,
-                   link,
-                   subtag->getOccurrenceString(subtag->getOccurrence()));
+        out << std::format("* [{}]({}) `{}`\n",
+                           heading,
+                           link,
+                           subtag->getOccurrenceString(subtag->getOccurrence()));
       } else {
         auto &tags = groupedTags[ns];
         tags.emplace_back(std::format("[{}]({}) `{}`",

@@ -1,6 +1,6 @@
 #include "precice/Tooling.hpp"
 
-#include <print>
+#include <iostream>
 #include "precice/config/Configuration.hpp"
 #include "precice/impl/versions.hpp"
 #include "utils/Parallel.hpp"
@@ -45,7 +45,7 @@ void checkConfiguration(const std::string &filename, const std::string &particip
   // Lock the logging configuration to prevent the parser from changing it
   logging::lockConf();
 
-  std::println("Checking {} for syntax and basic setup issues...", filename);
+  std::cout << "Checking " << filename << " for syntax and basic setup issues...\n";
   config::Configuration config;
   logging::setMPIRank(0);
   const auto wasInitialized = utils::Parallel::isMPIInitialized();
@@ -58,7 +58,7 @@ void checkConfiguration(const std::string &filename, const std::string &particip
       size};
   xml::configure(config.getXMLTag(), context, filename);
   // fmt::print(fmt::emphasis::bold | fg(fmt::color::green), "No major issues detected\n");
-  std::println("No major issues detected");
+  std::cout << "No major issues detected\n";
   if (!wasInitialized) {
     utils::Petsc::finalize();
     utils::Parallel::finalizeTestingMPI();
