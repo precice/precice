@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <algorithm>
+#include <format>
 #include <map>
 #include <memory>
 #include <set>
@@ -498,7 +499,7 @@ private:
 
     std::string logHeader() const
     {
-      return fmt::format("Res{}({}:{})", measure->getAbbreviation(), couplingData->getMeshName(), couplingData->getDataName());
+      return std::format("Res{}({}:{})", measure->getAbbreviation(), couplingData->getMeshName(), couplingData->getDataName());
     }
   };
 

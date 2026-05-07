@@ -3,6 +3,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <print>
 #include <stdexcept>
 #include <thread>
 
@@ -133,7 +134,7 @@ void ConnectionInfoWriter::write(std::string_view info) const
     }
 
     PRECICE_CHECK(ofs, "Unable to establish connection as the temporary connection file \"{}\" couldn't be opened.", tmp.generic_string());
-    fmt::print(ofs,
+    std::print(ofs,
                "{}\nAcceptor: {}, Requester: {}, Tag: {}, Rank: {}",
                info, acceptorName, requesterName, tag, rank);
   }

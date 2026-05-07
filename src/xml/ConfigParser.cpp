@@ -271,9 +271,9 @@ void ConfigParser::connectTags(const ConfigurationContext &context, std::vector<
         matches.erase(std::remove_if(matches.begin(), matches.end(), [](auto &m) { return m.distance > 2; }), matches.end());
         std::vector<std::string> stringMatches;
         std::transform(matches.begin(), matches.end(), std::back_inserter(stringMatches), [](auto &m) { return m.name; });
-        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Did you mean <{}>?", expectedName, fmt::join(stringMatches, ">,<"));
+        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Did you mean <{}>?", expectedName, ""); // fmt::join(stringMatches, ">,<"));
       } else {
-        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Expected tags are {}.", expectedName, fmt::join(names, ", "));
+        PRECICE_ERROR("The configuration contains an unknown tag <{}>. Expected tags are {}.", expectedName, ""); // fmt::join(names, ", "));
       }
     }
 

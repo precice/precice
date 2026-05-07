@@ -3,11 +3,13 @@
 #include <cassert>
 #include <ctime>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <iomanip>
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <print>
 #include <ratio>
 #include <sstream>
 #include <string>
@@ -21,7 +23,6 @@
 #include "profiling/Event.hpp"
 #include "profiling/EventUtils.hpp"
 #include "utils/assertion.hpp"
-#include "utils/fmt.hpp"
 
 #ifdef PRECICE_COMPRESSION
 #include <lzma.h>
@@ -137,7 +138,7 @@ void EventRegistry::startBackend()
       std::filesystem::create_directories(_directory);
     }
   }
-  auto filename = fmt::format("{}/{}-{}-{}.txt", _directory, _applicationName, _rank, _size);
+  auto filename = std::format("{}/{}-{}-{}.txt", _directory, _applicationName, _rank, _size);
   PRECICE_DEBUG("Starting backend with events-file: \"{}\"", filename);
   _output.open(filename);
   PRECICE_CHECK(_output, "Unable to open the events-file: \"{}\"", filename);
@@ -157,7 +158,7 @@ void EventRegistry::startBackend()
 #endif
 
   // write header
-  fmt::println(_output,
+  std::println(_output,
                R"({{"name":"{}","rank":{},"size":{},"unix_us":"{}","tinit":"{}","mode":"{}","compression":{},"file_version":{}}})",
                _applicationName,
                _rank,
@@ -256,28 +257,28 @@ struct EventWriter {
 
   void operator()(const StartEntry &se)
   {
-    fmt::format_to(out,
+    std::format_to(out,
                    "B{}:{}\n",
                    se.eid, sinceInit(se.clock));
   }
 
   void operator()(const StopEntry &se)
   {
-    fmt::format_to(out,
+    std::format_to(out,
                    "E{}:{}\n",
                    se.eid, sinceInit(se.clock));
   }
 
   void operator()(const DataEntry &de)
   {
-    fmt::format_to(out,
+    std::format_to(out,
                    "D{}:{}:{}:{}\n",
                    de.eid, sinceInit(de.clock), de.did, de.dvalue);
   }
 
   void operator()(const NameEntry &ne)
   {
-    fmt::format_to(out,
+    std::format_to(out,
                    "N{}:{}\n",
                    ne.id, ne.name);
   }

@@ -5,11 +5,10 @@
 
 #pragma once
 
+#include <format>
 #include <string>
 #include <string_view>
 
-#include "fmt/format.h"
-#include "fmt/ostream.h"
 #include "utils/fmtEigen.hpp"
 #include "utils/fmtSTL.hpp"
 
@@ -25,8 +24,8 @@ template <class... A>
 std::string format_or_error(std::string_view fmt, A &&...args)
 {
   try {
-    return fmt::vformat(fmt, fmt::make_format_args(args...));
-  } catch (const fmt::format_error &e) {
+    return std::vformat(fmt, std::make_format_args(args...));
+  } catch (const std::format_error &e) {
     return std::string{"fmt_error: "} + e.what();
   }
 }

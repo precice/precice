@@ -1,8 +1,9 @@
 #include "xml/Printer.hpp"
 #include <algorithm>
 #include <cctype>
-#include <fmt/format.h>
+#include <format>
 #include <map>
+#include <print>
 #include <regex>
 #include <set>
 #include <sstream>
@@ -63,14 +64,14 @@ std::ostream &printDTD(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &attr,
 template <typename ATTRIBUTE_T>
 std::ostream &printMD(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &attr)
 {
-  fmt::print(out,
+  std::print(out,
              "| {} | {} | {} |",
              attr.getName(),
              utils::getTypeName(attr.getDefaultValue()),
              attr.getUserDocumentation());
 
   if (attr.hasDefaultValue()) {
-    fmt::print(out, " `{}` |", attr.getDefaultValue());
+    std::print(out, " `{}` |", attr.getDefaultValue());
   } else {
     out << " _none_ |";
   }
@@ -79,7 +80,7 @@ std::ostream &printMD(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &attr)
   if (options.empty()) {
     out << " none |";
   } else {
-    fmt::print(out, " `{}` |", fmt::join(options, "`, `"));
+    std::print(out, " `{}` |", ""); // fmt::join(options, "`, `"));
   }
   return out;
 }
@@ -90,7 +91,7 @@ std::ostream &printExample(std::ostream &out, const XMLAttribute<ATTRIBUTE_T> &a
 {
   out << attr.getName() << "=\"";
   if (attr.hasDefaultValue()) {
-    fmt::print(out, "{}", attr.getDefaultValue());
+    std::print(out, "{}", attr.getDefaultValue());
   } else {
     out << '{' << utils::getTypeName(attr.getDefaultValue()) << '}';
   }
@@ -262,13 +263,13 @@ std::ostream &printMD(std::ostream &out, const XMLTag &tag, int level, std::map<
 
       const auto ns = subtag->getNamespace();
       if (ns.empty()) {
-        fmt::print(out, "* [{}]({}) `{}`\n",
+        std::print(out, "* [{}]({}) `{}`\n",
                    heading,
                    link,
                    subtag->getOccurrenceString(subtag->getOccurrence()));
       } else {
         auto &tags = groupedTags[ns];
-        tags.emplace_back(fmt::format("[{}]({}) `{}`",
+        tags.emplace_back(std::format("[{}]({}) `{}`",
                                       subtag->getName(),
                                       link,
                                       subtag->getOccurrenceString(subtag->getOccurrence())));

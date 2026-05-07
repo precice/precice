@@ -2,6 +2,7 @@
 #include <Eigen/Core>
 #include <algorithm>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -61,7 +62,7 @@ void ExportXML::exportSeries() const
     return;
 
   auto ext = isParallel() ? getParallelExtension() : getPieceExtension();
-  writeSeriesFile(fmt::format("{}-{}.{}.series", _mesh->getName(), _participantName, ext));
+  writeSeriesFile(std::format("{}-{}.{}.series", _mesh->getName(), _participantName, ext));
 }
 
 void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
@@ -98,13 +99,13 @@ void ExportXML::processDataNamesAndDimensions(const mesh::Mesh &mesh)
 std::string ExportXML::parallelPieceFilenameFor(int index, int rank) const
 {
   PRECICE_ASSERT(isParallel());
-  return fmt::format("{}-{}.{}_{}.{}", _mesh->getName(), _participantName, formatIndex(index), rank, getPieceExtension());
+  return std::format("{}-{}.{}_{}.{}", _mesh->getName(), _participantName, formatIndex(index), rank, getPieceExtension());
 }
 
 std::string ExportXML::serialPieceFilename(int index) const
 {
   PRECICE_ASSERT(!isParallel());
-  return fmt::format("{}-{}.{}.{}", _mesh->getName(), _participantName, formatIndex(index), getPieceExtension());
+  return std::format("{}-{}.{}.{}", _mesh->getName(), _participantName, formatIndex(index), getPieceExtension());
 }
 
 void ExportXML::writeParallelFile(int index, double time)
@@ -113,7 +114,7 @@ void ExportXML::writeParallelFile(int index, double time)
 
   // Construct filename
   // Mesh-Participant.it_2.pvtu
-  auto filename = fmt::format("{}-{}.{}.{}", _mesh->getName(), _participantName, formatIndex(index), getParallelExtension());
+  auto filename = std::format("{}-{}.{}.{}", _mesh->getName(), _participantName, formatIndex(index), getParallelExtension());
   recordExport(filename, time);
 
   namespace fs = std::filesystem;

@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <array>
-#include <fmt/ostream.h>
+#include <format>
 #include <functional>
 #include <iterator>
 #include <set>
@@ -226,5 +226,17 @@ std::pair<InputIt, InputIt> find_first_range(InputIt first, InputIt last, Predic
 } // namespace precice::utils
 
 template <typename Iter>
-struct fmt::formatter<precice::utils::RangePreview<Iter>> : ostream_formatter {
+struct std::formatter<precice::utils::RangePreview<Iter>, char> {
+  constexpr auto parse(std::format_parse_context &ctx)
+  {
+    return ctx.begin();
+  }
+
+  template <class FmtContext>
+  FmtContext::iterator format(const precice::utils::RangePreview<Iter> &v, FmtContext &ctx) const
+  {
+    std::ostringstream oss;
+    oss << v;
+    return std::formatter<std::string>::format(oss.str(), ctx);
+  }
 };

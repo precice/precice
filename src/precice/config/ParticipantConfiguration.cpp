@@ -1,6 +1,7 @@
 #include "ParticipantConfiguration.hpp"
 #include <algorithm>
 #include <boost/range/adaptor/transformed.hpp>
+#include <format>
 #include <list>
 #include <memory>
 #include <stdexcept>
@@ -392,10 +393,10 @@ std::string ParticipantConfiguration::hintFor(std::string_view wrongName) const
 
   // Typo detection
   if (matches.front().distance < 3) {
-    return fmt::format("Did you mean: \"{}\"?", matches.front().name);
+    return std::format("Did you mean: \"{}\"?", matches.front().name);
   }
 
-  return fmt::format("Available participants are: {}.", fmt::join(names, ", "));
+  return std::format("Available participants are: {}.", "" /*fmt::join(names, ", ")*/);
 }
 
 partition::ReceivedPartition::GeometricFilter ParticipantConfiguration::getGeoFilter(const std::string &geoFilter) const

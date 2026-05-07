@@ -1,7 +1,9 @@
 #pragma once
 #include <Eigen/Core>
-#include <fmt/ostream.h>
+#include <format>
 #include <iosfwd>
+#include <ranges>
+#include <sstream>
 #include <vector>
 #include "logging/Logger.hpp"
 #include "mesh/Vertex.hpp"
@@ -135,5 +137,18 @@ std::ostream &operator<<(std::ostream &, const BoundingBox &);
 } // namespace precice
 
 template <>
-struct fmt::formatter<precice::mesh::BoundingBox> : ostream_formatter {
+struct std::formatter<precice::mesh::BoundingBox> {
+
+  constexpr auto parse(std::format_parse_context &ctx)
+  {
+    return ctx.begin();
+  }
+
+  template <class FmtContext>
+  FmtContext::iterator format(const precice::mesh::BoundingBox &v, FmtContext &ctx) const
+  {
+    std::ostringstream os;
+    v.print(os);
+    return std::ranges::copy(os.str(), ctx.out()).out;
+  }
 };

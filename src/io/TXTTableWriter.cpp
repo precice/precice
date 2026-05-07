@@ -160,23 +160,3 @@ void TXTTableWriter::reset()
 }
 
 } // namespace precice::io
-
-auto fmt::formatter<precice::io::TXTTableWriter::DataType>::format(precice::io::TXTTableWriter::DataType c, format_context &ctx) const
-{
-  std::string_view name = "unknown";
-  switch (c) {
-  case precice::io::TXTTableWriter::DataType::INT:
-    name = "int";
-    break;
-  case precice::io::TXTTableWriter::DataType::DOUBLE:
-    name = "double";
-    break;
-  case precice::io::TXTTableWriter::DataType::VECTOR2D:
-    name = "vector2D";
-    break;
-  case precice::io::TXTTableWriter::DataType::VECTOR3D:
-    name = "vector3D";
-    break;
-  }
-  return formatter<string_view>::format(name, ctx);
-}

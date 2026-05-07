@@ -1,10 +1,9 @@
 #include <array>
 #include <deque>
-#include <fmt/format.h>
 #include <map>
 #include <set>
 #include <vector>
-
+#if 0
 template <class T, class Allocator>
 struct fmt::formatter<std::vector<T, Allocator>> : formatter<string_view> {
   /// Formats vectors like [ l, i, s, t, s ]
@@ -64,3 +63,4 @@ struct fmt::formatter<std::pair<F, S>> : formatter<string_view> {
     return fmt::format_to(ctx.out(), "({}, {})", p.first, p.second);
   }
 };
+#endif

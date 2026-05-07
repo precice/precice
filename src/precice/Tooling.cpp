@@ -1,11 +1,10 @@
 #include "precice/Tooling.hpp"
 
-#include "fmt/color.h"
+#include <print>
 #include "precice/config/Configuration.hpp"
 #include "precice/impl/versions.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
-#include "utils/fmt.hpp"
 #include "xml/Printer.hpp"
 
 namespace precice {
@@ -46,7 +45,7 @@ void checkConfiguration(const std::string &filename, const std::string &particip
   // Lock the logging configuration to prevent the parser from changing it
   logging::lockConf();
 
-  fmt::print("Checking {} for syntax and basic setup issues...\n", filename);
+  std::println("Checking {} for syntax and basic setup issues...", filename);
   config::Configuration config;
   logging::setMPIRank(0);
   const auto wasInitialized = utils::Parallel::isMPIInitialized();
@@ -58,7 +57,8 @@ void checkConfiguration(const std::string &filename, const std::string &particip
       0,
       size};
   xml::configure(config.getXMLTag(), context, filename);
-  fmt::print(fmt::emphasis::bold | fg(fmt::color::green), "No major issues detected\n");
+  // fmt::print(fmt::emphasis::bold | fg(fmt::color::green), "No major issues detected\n");
+  std::println("No major issues detected");
   if (!wasInitialized) {
     utils::Petsc::finalize();
     utils::Parallel::finalizeTestingMPI();

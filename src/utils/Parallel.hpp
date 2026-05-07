@@ -252,5 +252,18 @@ std::ostream &operator<<(std::ostream &out, const Parallel::CommState &value);
 } // namespace precice
 
 template <>
-struct fmt::formatter<precice::utils::Parallel::CommState> : ostream_formatter {
+struct std::formatter<precice::utils::Parallel::CommState, char> {
+
+  constexpr auto parse(std::format_parse_context &ctx)
+  {
+    return ctx.begin();
+  }
+
+  template <class FmtContext>
+  FmtContext::iterator format(const precice::utils::Parallel::CommState &v, FmtContext &ctx) const
+  {
+    std::ostringstream oss;
+    oss << v;
+    return std::ranges::copy(oss.str(), ctx.out()).out;
+  }
 };

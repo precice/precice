@@ -2,6 +2,7 @@
 #include <Eigen/Core>
 #include <boost/range/adaptor/map.hpp>
 #include <cmath>
+#include <format>
 #include <memory>
 #include <utility>
 
@@ -919,7 +920,7 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
 
     PRECICE_DEBUG("Number of unknowns at the interface (global): {}", _dimOffsets.back());
     if (utils::IntraComm::isPrimary()) {
-      _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n offsets: {}\n", _dimOffsets.back(), _dimOffsets);
+      _infostringstream << std::format("\n--------\n DOFs (global): {}\n offsets: {}\n", _dimOffsets.back(), _dimOffsets);
     }
 
     // test that the computed number of unknown per proc equals the number of primaryDataSize actually present on that proc
@@ -928,7 +929,7 @@ void BaseQNAcceleration::initializeVectorsAndPreconditioner(const DataMap &cplDa
     const size_t primaryUnknowns = _dimOffsetsPrimary[utils::IntraComm::getRank() + 1] - _dimOffsetsPrimary[utils::IntraComm::getRank()];
     PRECICE_ASSERT(primaryDataSize == primaryUnknowns, primaryDataSize, primaryUnknowns);
   } else {
-    _infostringstream << fmt::format("\n--------\n DOFs (global): {}\n", dataSize);
+    _infostringstream << std::format("\n--------\n DOFs (global): {}\n", dataSize);
   }
 
   // set the number of global rows in the QRFactorization.

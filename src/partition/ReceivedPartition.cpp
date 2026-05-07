@@ -1,5 +1,6 @@
 #include "partition/ReceivedPartition.hpp"
 #include <algorithm>
+#include <format>
 #include <map>
 #include <memory>
 #include <ostream>
@@ -24,7 +25,6 @@
 #include "utils/IntraComm.hpp"
 #include "utils/algorithm.hpp"
 #include "utils/assertion.hpp"
-#include "utils/fmt.hpp"
 
 using precice::profiling::Event;
 
@@ -271,7 +271,7 @@ void ReceivedPartition::compute()
 namespace {
 auto errorMeshFilteredOut(const std::string &meshName, const int rank)
 {
-  return fmt::format("The re-partitioning completely filtered out the mesh \"{0}\" received on rank {1} "
+  return std::format("The re-partitioning completely filtered out the mesh \"{0}\" received on rank {1} "
                      "at the coupling interface, although the provided mesh partition on this rank is "
                      "non-empty. Most probably, the coupling interfaces of your coupled participants do "
                      "not match geometry-wise. Please check your geometry setup again. Small overlaps or "

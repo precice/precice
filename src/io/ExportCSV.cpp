@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <iomanip>
 #include <memory>
@@ -58,10 +59,10 @@ void ExportCSV::doExport(int index, double time)
   std::string filename;
   if (isParallel()) {
     // Mesh-Participant.r2.it2
-    filename = fmt::format("{}-{}.{}_{}.csv", _mesh->getName(), _participantName, _rank, formatIndex(index));
+    filename = std::format("{}-{}.{}_{}.csv", _mesh->getName(), _participantName, _rank, formatIndex(index));
   } else {
     // Mesh-Participant.it2
-    filename = fmt::format("{}-{}.{}.csv", _mesh->getName(), _participantName, formatIndex(index));
+    filename = std::format("{}-{}.{}.csv", _mesh->getName(), _participantName, formatIndex(index));
   }
 
   namespace fs = std::filesystem;

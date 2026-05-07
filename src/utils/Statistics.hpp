@@ -7,7 +7,7 @@
 #include <boost/accumulators/statistics/min.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
-#include <fmt/ostream.h>
+#include <format>
 #include <iosfwd>
 
 namespace precice::utils::statistics {
@@ -85,5 +85,20 @@ inline std::ostream &operator<<(std::ostream &out, const DistanceAccumulator &ac
 } // namespace precice::utils::statistics
 
 template <>
-struct fmt::formatter<precice::utils::statistics::DistanceAccumulator> : ostream_formatter {
+struct std::formatter<precice::utils::statistics::DistanceAccumulator, char> {
+
+  constexpr auto parse(std::format_parse_context &ctx)
+  {
+    return ctx.begin();
+  }
+
+  template <class FmtContext>
+  FmtContext::iterator format(const precice::utils::statistics::DistanceAccumulator &acc, FmtContext &ctx) const
+  {
+    if (acc.empty()) {
+      return std::format_to(ctx.out(), "empty");
+    } else {
+      return std::format_to(ctx.out(), "min:{} max:{} avg:{} var:{} cnt:{}", acc.min(), acc.max(), acc.mean(), acc.variance(), acc.count());
+    }
+  }
 };

@@ -3,6 +3,7 @@
 #include <boost/range/adaptor/map.hpp>
 #include <cmath>
 #include <cstddef>
+#include <format>
 #include <functional>
 #include <iterator>
 #include <limits>
@@ -584,7 +585,7 @@ void BaseCouplingScheme::requireAction(
 std::string BaseCouplingScheme::printCouplingState() const
 {
   if (!isCouplingOngoing()) {
-    return fmt::format("Reached end at: final time-window: {}, final time: {}", (_timeWindows - 1), getTime());
+    return std::format("Reached end at: final time-window: {}, final time: {}", (_timeWindows - 1), getTime());
   }
   std::string str;
   auto        out = std::back_inserter(str);
@@ -594,26 +595,26 @@ std::string BaseCouplingScheme::printCouplingState() const
     auto hasMin = _minIterations != UNDEFINED_MIN_ITERATIONS;
 
     if (hasMax && hasMin) {
-      fmt::format_to(out, "it {} (min: {}, max: {}), ", _iterations, _minIterations, _maxIterations);
+      std::format_to(out, "it {} (min: {}, max: {}), ", _iterations, _minIterations, _maxIterations);
     } else if (hasMax) {
-      fmt::format_to(out, "it {} (max: {}), ", _iterations, _maxIterations);
+      std::format_to(out, "it {} (max: {}), ", _iterations, _maxIterations);
     } else if (hasMin) {
-      fmt::format_to(out, "it {} (min: {}), ", _iterations, _minIterations);
+      std::format_to(out, "it {} (min: {}), ", _iterations, _minIterations);
     } else {
-      fmt::format_to(out, "it {}, ", _iterations);
+      std::format_to(out, "it {}, ", _iterations);
     }
   }
 
-  fmt::format_to(out, "time-window {}", _timeWindows);
+  std::format_to(out, "time-window {}", _timeWindows);
   if (_maxTimeWindows != UNDEFINED_TIME_WINDOWS) {
-    fmt::format_to(out, " (max: {})", _maxTimeWindows);
+    std::format_to(out, " (max: {})", _maxTimeWindows);
   }
-  fmt::format_to(out, ", t {}", getTime());
+  std::format_to(out, ", t {}", getTime());
   if (_maxTime != UNDEFINED_MAX_TIME) {
-    fmt::format_to(out, " (max: {})", _maxTime);
+    std::format_to(out, " (max: {})", _maxTime);
   }
   if (hasTimeWindowSize()) {
-    fmt::format_to(out, ", Dt {}, max-dt {}", _timeWindowSize, getNextTimeStepMaxSize());
+    std::format_to(out, ", Dt {}, max-dt {}", _timeWindowSize, getNextTimeStepMaxSize());
   }
   return str;
 }

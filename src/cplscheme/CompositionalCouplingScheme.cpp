@@ -430,9 +430,9 @@ std::string CompositionalCouplingScheme::printCouplingState() const
 {
   std::vector<std::string> states;
   for (const auto scheme : allSchemes()) {
-    states.push_back(fmt::format("partner: {}, {}", fmt::join(scheme->getCouplingPartners(), " & "), scheme->printCouplingState()));
+    states.push_back(std::format("partner: {}, {}", "" /*fmt::join(scheme->getCouplingPartners(), " & ")*/, scheme->printCouplingState()));
   }
-  return fmt::format("{}", fmt::join(states, "; "));
+  return std::format("{}", ""); // fmt::join(states, "; "));
 }
 
 void CompositionalCouplingScheme::updateActiveSchemes()
