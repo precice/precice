@@ -67,6 +67,8 @@ inline void contract_violation(const char* msg)
 }
 
 #elif defined(PRECICE_SPAN_TERMINATE_ON_CONTRACT_VIOLATION)
+
+#include <exception>
 [[noreturn]] inline void contract_violation(const char* /*unused*/)
 {
     std::terminate();
