@@ -1,6 +1,7 @@
 #include "TXTTableWriter.hpp"
 #include <algorithm>
 #include <iomanip>
+#include <string_view>
 #include "logging/LogMacros.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/assertion.hpp"

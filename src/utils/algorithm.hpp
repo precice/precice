@@ -237,6 +237,6 @@ struct std::formatter<precice::utils::RangePreview<Iter>, char> {
   {
     std::ostringstream oss;
     oss << v;
-    return std::formatter<std::string>::format(oss.str(), ctx);
+    return std::ranges::copy(oss.str(), ctx.out()).out;
   }
 };

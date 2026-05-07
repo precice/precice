@@ -1,9 +1,12 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <format>
 #include <fstream>
 #include <string>
+#include <utility>
 #include <vector>
+
 #include "logging/Logger.hpp"
 
 namespace precice::io {
@@ -100,3 +103,29 @@ private:
 };
 
 } // namespace precice::io
+
+template <>
+struct std::formatter<precice::io::TXTTableWriter::DataType> {
+
+  constexpr auto parse(std::format_parse_context &ctx)
+  {
+    return ctx.begin();
+  }
+
+  template <class FmtContext>
+  FmtContext::iterator format(precice::io::TXTTableWriter::DataType dt, FmtContext &ctx) const
+  {
+    using enum precice::io::TXTTableWriter::DataType;
+    switch (dt) {
+    case INT:
+      return std::format_to(ctx.out(), "int");
+    case DOUBLE:
+      return std::format_to(ctx.out(), "double");
+    case VECTOR2D:
+      return std::format_to(ctx.out(), "vec2d");
+    case VECTOR3D:
+      return std::format_to(ctx.out(), "vec3d");
+    }
+    std::unreachable();
+  }
+};
