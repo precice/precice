@@ -14,8 +14,29 @@
 #include <precice/Exceptions.hpp>
 #include <precice/Tooling.hpp>
 #include <precice/Types.hpp>
+#include <precice/impl/versions.hpp>
 #include <precice/span.hpp>
 #include "utils/fmt.hpp"
+
+namespace {
+
+std::string buildMockVersionInformation()
+{
+  std::string info = "precice-mock;version=" PRECICE_VERSION;
+#ifdef __VERSION__
+  info += ";compiler=";
+  info += __VERSION__;
+#endif
+#if defined(__cplusplus)
+  info += ";cxx=";
+  info += std::to_string(static_cast<long long>(__cplusplus));
+#endif
+  return info;
+}
+
+const std::string mockVersionInformation = buildMockVersionInformation();
+
+} // namespace
 
 // API declaration
 namespace precice {
@@ -171,22 +192,28 @@ public:
   struct ConfigData {
     std::map<std::string, MeshInfo> meshes;
     std::vector<DataInfo>           dataItems;
-    bool                            isImplicitCoupling    = false;
-    bool                            hasConvergenceMeasure = false;
-    int                             maxIterations         = 1;
-    int                             configMaxIterations   = 1; // Stores the value from preCICE config
-    int                             maxIterationsOverride = 2; // Default override (2), -1 use config, >0 override
-    int                             currentIteration      = 0;
-    bool                            iterationConverged    = false;
-    double                          maxTime               = -1.0; // -1 means not set
-    int                             maxTimeWindows        = -1;   // -1 means not set
-    double                          timeWindowSize        = -1.0; // -1 means not set
+    bool                            isImplicitCoupling             = false;
+    bool                            hasConvergenceMeasure          = false;
+    int                             maxIterations                  = 1;
+    int                             configMaxIterations            = 1;     // Stores the value from preCICE config
+    int                             maxIterationsOverride          = 2;     // Default override (2), -1 use config, >0 override
+    bool                            maxIterationsOverrideSpecified = false; // True if mock-config explicitly sets override
+    int                             currentIteration               = 0;
+    bool                            iterationConverged             = false;
+    double                          maxTime                        = -1.0; // -1 means not set
+    int                             maxTimeWindows                 = -1;   // -1 means not set
+    double                          timeWindowSize                 = -1.0; // -1 means not set
   };
 
   enum class DataMode {
     Random,      // Mode 1: Random data
     Buffer,      // Mode 2: Return written data buffer (default)
     ScaledBuffer // Mode 3: Return written data buffer scaled/multiplied
+  };
+
+  enum class LoggingMode {
+    Mock,   // Mock-only: minimal logging, only essential mock behavior
+    PrecICE // PrecICE-style: verbose logging mimicking real preCICE
   };
 
   struct MockDataConfig {
@@ -206,8 +233,9 @@ public:
     double                                defaultScalarMultiplier = 1.0;
     double                                defaultRandomLower      = 0.0;
     double                                defaultRandomUpper      = 1.0;
-    uint32_t                              defaultRandomSeed       = 0; // 0 means use default seed from rank
-    std::vector<double>                   defaultVectorMultiplier;     // Empty means use scalar
+    uint32_t                              defaultRandomSeed       = 0;     // 0 means use default seed from rank
+    std::vector<double>                   defaultVectorMultiplier;         // Empty means use scalar
+    LoggingMode                           loggingMode = LoggingMode::Mock; // Default to mock mode
   };
 
   // Minimal internal state
@@ -224,9 +252,10 @@ public:
   double                       timeWindowSize  = 0.0;
   mutable std::recursive_mutex mtx;
 
-  uint32_t    seed        = 0;
-  std::size_t currentStep = 0;
-  double      currentTime = 0.0;
+  uint32_t    seed              = 0;
+  std::size_t currentStep       = 0;
+  double      currentTime       = 0.0;
+  double      currentWindowTime = 0.0;
 
   ConfigData configData;
   bool       configParsed = false;
@@ -234,6 +263,8 @@ public:
   MockConfig mockConfig;
   bool       mockConfigParsed = false;
   bool       mockConfigExists = false;
+
+  std::size_t activeProfilingSections = 0;
 
   // Write data buffer shared across all meshes/data names
   std::vector<double> writeBuffer;
@@ -268,9 +299,10 @@ public:
   } mockParseState;
 
   // Configuration parsing methods
-  void parseConfig();
-  void parseMockConfig();
-  void applyMaxIterationsOverride();
+  void        parseConfig();
+  void        parseMockConfig();
+  void        applyMaxIterationsOverride();
+  std::string logPrefix() const;
 
   // Helper method for XML parsing
   void parseXMLFile(const std::string &filePath,
@@ -318,6 +350,11 @@ impl::ParticipantImpl::ParticipantImpl(::precice::string_view participantName,
   }
   // Initialize seed for random data generation 0x9e3779b9u is the fractional part of the golden ratio scaled to 32 bits used as an arbitrary constant
   seed = static_cast<uint32_t>(rank) ^ 0x9e3779b9u;
+}
+
+std::string impl::ParticipantImpl::logPrefix() const
+{
+  return (mockConfig.loggingMode == LoggingMode::PrecICE) ? "---[precice]  " : "[precice-mock]  ";
 }
 
 // SAX callback handlers for config parsing
@@ -573,11 +610,12 @@ void impl::ParticipantImpl::parseConfig()
     if (configData.isImplicitCoupling) {
       // Only print warning if no convergence measure was found
       if (!configData.hasConvergenceMeasure) {
-        throw precice::Error(precice::utils::format_or_error(
-            "---[precice]  WARNING: No convergence measures were defined for an implicit coupling scheme. "
-            "It will always iterate the maximum amount iterations, which is {}. "
-            "You may want to add a convergence measure in your <coupling-scheme:.../> in your configuration.",
-            configData.maxIterations));
+        std::cout << precice::utils::format_or_error(
+                         "{}WARNING: No convergence measures were defined for an implicit coupling scheme. "
+                         "It will always iterate the maximum amount iterations, which is {}. "
+                         "You may want to add a convergence measure in your <coupling-scheme:.../> in your configuration.",
+                         logPrefix(), configData.maxIterations)
+                  << std::endl;
       }
     }
 
@@ -597,8 +635,8 @@ void impl::ParticipantImpl::parseConfig()
     throw;
   } catch (const std::exception &e) {
     throw precice::Error(precice::utils::format_or_error(
-        "---[precice]  Warning: Could not parse configuration file '{}': {}. Using limited mock behavior.",
-        config, e.what()));
+        "{}Warning: Could not parse configuration file '{}': {}. Using limited mock behavior.",
+        logPrefix(), config, e.what()));
   }
 }
 
@@ -620,13 +658,24 @@ void impl::ParticipantImpl::onMockStartElement(void *ctx, const xmlChar *localna
     attrs[attrName]        = std::string(valueBegin, valueEnd - valueBegin);
   }
 
+  // Handle logging-mode at root level
+  if (elemName == "logging-mode") {
+    std::string modeStr = attrs["mode"];
+    if (modeStr == "precice") {
+      impl->mockConfig.loggingMode = LoggingMode::PrecICE;
+    } else if (modeStr == "mock") {
+      impl->mockConfig.loggingMode = LoggingMode::Mock;
+    }
+    return;
+  }
   // Handle max-iterations-override at root level
   if (elemName == "max-iterations-override") {
     std::string valueStr = attrs["value"];
     if (!valueStr.empty()) {
       int override = std::stoi(valueStr);
       if (override == -1 || override > 0) {
-        impl->configData.maxIterationsOverride = override;
+        impl->configData.maxIterationsOverride          = override;
+        impl->configData.maxIterationsOverrideSpecified = true;
       }
     }
   } else if (elemName == "mocked-data-default") {
@@ -749,12 +798,12 @@ void impl::ParticipantImpl::onMockEndElement(void *ctx, const xmlChar *localname
         }
       }
       if ((impl->mockParseState.currentVector.empty() && impl->mockParseState.currentScalar == 1.0) || allOnes) {
-        std::cout << "---[precice]  WARNING: mock-config default uses mode 'scaled' but the multiplier is effectively 1 (no scaling)." << std::endl;
+        std::cout << impl->logPrefix() << "WARNING: mock-config default uses mode 'scaled' but the multiplier is effectively 1 (no scaling)." << std::endl;
       }
     }
     if (impl->mockConfig.defaultMode == DataMode::Buffer &&
         (impl->mockParseState.currentScalar != 1.0 || !impl->mockParseState.currentVector.empty())) {
-      std::cout << "---[precice]  WARNING: mock-config default uses mode 'buffer' but also specifies scalar/vector multipliers; multipliers are ignored for buffer mode." << std::endl;
+      std::cout << impl->logPrefix() << "WARNING: mock-config default uses mode 'buffer' but also specifies scalar/vector multipliers; multipliers are ignored for buffer mode." << std::endl;
     }
     impl->mockParseState.inDefault = false;
   } else if (elemName == "mocked-data" && impl->mockParseState.inMockedData) {
@@ -792,13 +841,13 @@ void impl::ParticipantImpl::onMockEndElement(void *ctx, const xmlChar *localname
           }
         }
         if ((config.vectorMultiplier.empty() && config.scalarMultiplier == 1.0) || allOnes) {
-          std::cout << "---[precice]  WARNING: mock-config for mesh '" << config.meshName << "' data '" << config.dataName
+          std::cout << impl->logPrefix() << "WARNING: mock-config for mesh '" << config.meshName << "' data '" << config.dataName
                     << "' uses mode 'scaled' but the multiplier is effectively 1 (no scaling)." << std::endl;
         }
       }
       if (config.mode == DataMode::Buffer &&
           (config.scalarMultiplier != 1.0 || !config.vectorMultiplier.empty())) {
-        std::cout << "---[precice]  WARNING: mock-config for mesh '" << config.meshName << "' data '" << config.dataName
+        std::cout << impl->logPrefix() << "WARNING: mock-config for mesh '" << config.meshName << "' data '" << config.dataName
                   << "' uses mode 'buffer' but also specifies scalar/vector multipliers; multipliers are ignored for buffer mode." << std::endl;
       }
       impl->mockConfig.dataConfigs[key] = config;
@@ -849,14 +898,21 @@ void impl::ParticipantImpl::parseMockConfig()
 
   } catch (const std::exception &e) {
     throw precice::Error(precice::utils::format_or_error(
-        "---[precice]  Warning: Could not parse mock configuration file: {}. Using default buffer mode.",
-        e.what()));
+        "{}Warning: Could not parse mock configuration file: {}. Using default buffer mode.",
+        logPrefix(), e.what()));
   }
 }
 
 void impl::ParticipantImpl::applyMaxIterationsOverride()
 {
   int override = configData.maxIterationsOverride;
+
+  // If mock-config did not explicitly specify an override and the preCICE
+  // config sets max-iterations to 1, keep the config value (do not override).
+  if (!configData.maxIterationsOverrideSpecified && configData.configMaxIterations == 1) {
+    configData.maxIterations = configData.configMaxIterations;
+    return;
+  }
 
   if (override == 0) {
     // No override specified; keep config value
@@ -871,7 +927,7 @@ void impl::ParticipantImpl::applyMaxIterationsOverride()
 
   if (override > 0) {
     if (configData.configMaxIterations > 0 && override > configData.configMaxIterations) {
-      std::cerr << "[precice-mock] WARNING: max-iterations-override (" << override
+      std::cerr << logPrefix() << "WARNING: max-iterations-override (" << override
                 << ") is higher than max-iterations from preCICE config ("
                 << configData.configMaxIterations << "). Using override value." << std::endl;
     }
@@ -895,8 +951,8 @@ Participant::Participant(
   // Parse configuration at construction time so that mesh/data queries
   // (and bindings) can work before initialize() is called — matching
   // behavior of the real preCICE library.
-  _impl->parseConfig();
   _impl->parseMockConfig();
+  _impl->parseConfig();
 }
 
 Participant::Participant(
@@ -911,8 +967,8 @@ Participant::Participant(
                                                     solverProcessSize,
                                                     communicator))
 {
-  _impl->parseConfig();
   _impl->parseMockConfig();
+  _impl->parseConfig();
 }
 
 Participant::~Participant() = default;
@@ -931,27 +987,53 @@ void Participant::initialize()
 
   // Print startup banner (only on rank 0)
   if (_impl->primary) {
-    std::cout << "---[precice]  This is preCICE version 3.3.0 (mock)" << std::endl;
-    std::cout << "---[precice]  Revision info: mock-implementation" << std::endl;
-    std::cout << "---[precice]  Build type: Release (mock)" << std::endl;
+    const std::string prefix = _impl->logPrefix();
+    if (_impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
+      std::cout << prefix << "This is preCICE version 3.3.0 (mock)" << std::endl;
+      std::cout << prefix << "Revision info: mock-implementation" << std::endl;
+      std::cout << prefix << "Build type: Release (mock)" << std::endl;
+    }
     try {
-      std::cout << "---[precice]  Working directory \"" << std::filesystem::current_path().string() << "\"" << std::endl;
+      std::cout << prefix << "Working directory \"" << std::filesystem::current_path().string() << "\"" << std::endl;
     } catch (std::filesystem::filesystem_error &fse) {
-      std::cout << "---[precice]  Working directory unknown due to error \"" << fse.what() << "\"" << std::endl;
+      std::cout << prefix << "Working directory unknown due to error \"" << fse.what() << "\"" << std::endl;
     }
     if (_impl->mockConfigExists) {
-      std::cout << "---[precice]  Configuring preCICE (mock) with configuration \"" << std::filesystem::absolute(_impl->config).string() << "\" and mock configuration \"" << std::filesystem::absolute(_impl->mockConfigPath).string() << "\"" << std::endl;
+      std::cout << prefix << "Configuring preCICE (mock) with configuration \"" << std::filesystem::absolute(_impl->config).string() << "\" and mock configuration \"" << std::filesystem::absolute(_impl->mockConfigPath).string() << "\"" << std::endl;
     } else {
-      std::cout << "---[precice]  Configuring preCICE (mock) with configuration \"" << std::filesystem::absolute(_impl->config).string() << "\" and default mock configuration. See the mock-README about how to adjust this." << std::endl;
+      std::cout << prefix << "Configuring preCICE (mock) with configuration \"" << std::filesystem::absolute(_impl->config).string() << "\" and default mock configuration. See the mock-README about how to adjust this." << std::endl;
     }
-    std::cout << "---[precice]  I am participant \"" << _impl->name << "\"" << std::endl;
+    if (_impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
+      std::cout << prefix << "I am participant \"" << _impl->name << "\"" << std::endl;
+    } else {
+      std::cout << prefix << "Initialized with participant \"" << _impl->name << "\"" << std::endl;
+      // Print configuration summary in mock mode
+      std::string modeStr;
+      if (_impl->mockConfig.defaultMode == impl::ParticipantImpl::DataMode::Random) {
+        modeStr = "random";
+      } else if (_impl->mockConfig.defaultMode == impl::ParticipantImpl::DataMode::ScaledBuffer) {
+        modeStr = "scaled";
+      } else {
+        modeStr = "buffer";
+      }
+      std::cout << prefix << "Configuration: default-data-mode=" << modeStr;
+      if (_impl->configData.isImplicitCoupling) {
+        std::cout << " max-iterations=" << _impl->configData.maxIterations;
+      }
+      std::cout << " time-window-size=" << _impl->timeWindowSize;
+      if (_impl->mockConfigExists) {
+        std::cout << " mock-config=yes";
+      }
+      std::cout << std::endl;
+    }
   }
 
   // Communication setup prints
-  if (_impl->primary) {
-    std::cout << "---[precice]  Setting up primary communication to coupling partner/s" << std::endl;
-    std::cout << "---[precice]  Primary ranks are connected" << std::endl;
-    std::cout << "---[precice]  Setting up preliminary secondary communication to coupling partner/s" << std::endl;
+  if (_impl->primary && _impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
+    const std::string prefix = _impl->logPrefix();
+    std::cout << prefix << "Setting up primary communication to coupling partner/s" << std::endl;
+    std::cout << prefix << "Primary ranks are connected" << std::endl;
+    std::cout << prefix << "Setting up preliminary secondary communication to coupling partner/s" << std::endl;
   }
 
   // Mesh preparation prints and empty-mesh detection for provided meshes
@@ -961,10 +1043,11 @@ void Participant::initialize()
       continue;
     }
 
-    if (_impl->primary) {
-      std::cout << "---[precice]  Prepare partition for mesh " << meshInfo.name << std::endl;
-      std::cout << "---[precice]  Gather mesh " << meshInfo.name << std::endl;
-      std::cout << "---[precice]  Send global mesh " << meshInfo.name << std::endl;
+    if (_impl->primary && _impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
+      const std::string prefix = _impl->logPrefix();
+      std::cout << prefix << "Prepare partition for mesh " << meshInfo.name << std::endl;
+      std::cout << prefix << "Gather mesh " << meshInfo.name << std::endl;
+      std::cout << prefix << "Send global mesh " << meshInfo.name << std::endl;
     }
 
     std::size_t count = 0;
@@ -982,9 +1065,10 @@ void Participant::initialize()
   _impl->initialized     = true;
   _impl->couplingOngoing = true;
   // Set timeWindowSize from parsed time-window-size, or use a default if not set
-  _impl->timeWindowSize = (_impl->configData.timeWindowSize > 0) ? _impl->configData.timeWindowSize : 1.0;
-  _impl->currentStep    = 0;
-  _impl->currentTime    = 0.0;
+  _impl->timeWindowSize    = (_impl->configData.timeWindowSize > 0) ? _impl->configData.timeWindowSize : 1.0;
+  _impl->currentStep       = 0;
+  _impl->currentTime       = 0.0;
+  _impl->currentWindowTime = 0.0;
 
   // Initialize implicit coupling state
   if (_impl->configData.isImplicitCoupling) {
@@ -1028,36 +1112,29 @@ void Participant::advance(double computedTimeStepSize)
   if (_impl->configData.isImplicitCoupling) {
 
     _impl->configData.currentIteration++;
+    _impl->currentTime += computedTimeStepSize;
+    _impl->currentWindowTime += computedTimeStepSize;
 
     // Converge when reaching maxIterations (respects max-iterations-override from mock config)
     if (_impl->configData.currentIteration >= _impl->configData.maxIterations) {
       _impl->configData.iterationConverged = true;
       _impl->configData.currentIteration   = 0;
-      _impl->currentStep += 1;
-      // For implicit coupling, time advances by one time window from config
-      _impl->currentTime += _impl->timeWindowSize;
-
-      // Check termination at end of time window (after convergence)
-      bool shouldTerminate = false;
-      if (_impl->configData.maxTimeWindows > 0 && _impl->currentStep >= static_cast<std::size_t>(_impl->configData.maxTimeWindows)) {
-        shouldTerminate = true;
-      }
-      if (_impl->configData.maxTime > 0 && _impl->currentTime >= _impl->configData.maxTime) {
-        shouldTerminate = true;
-      }
-      if (shouldTerminate) {
-        _impl->couplingOngoing = false;
-      }
     } else {
       // Not converged yet - iteration did not reach maxIterations
       _impl->configData.iterationConverged = false;
     }
   } else {
     // Explicit coupling: always advance
-    _impl->currentStep += 1;
     _impl->currentTime += computedTimeStepSize;
+    _impl->currentWindowTime += computedTimeStepSize;
 
     // Check termination based on precice config
+  }
+
+  if (_impl->currentWindowTime >= _impl->timeWindowSize) {
+    _impl->currentWindowTime = 0.0;
+    _impl->currentStep += 1;
+
     bool shouldTerminate = false;
     if (_impl->configData.maxTimeWindows > 0 && _impl->currentStep >= static_cast<std::size_t>(_impl->configData.maxTimeWindows)) {
       shouldTerminate = true;
@@ -1080,7 +1157,12 @@ void Participant::finalize()
 
   // Print finalize message (only on rank 0)
   if (_impl->primary) {
-    std::cout << "---[precice]  Finalizing preCICE (mock)" << std::endl;
+    const std::string prefix = _impl->logPrefix();
+    if (_impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
+      std::cout << prefix << "Finalizing preCICE (mock)" << std::endl;
+    } else {
+      std::cout << prefix << "Finalized" << std::endl;
+    }
   }
 
   _impl->initialized     = false;
@@ -1229,7 +1311,7 @@ double Participant::getMaxTimeStepSize() const
   if (!_impl->initialized) {
     throw precice::Error("initialize() has to be called before getMaxTimeStepSize() can be evaluated.");
   }
-  return _impl->timeWindowSize;
+  return _impl->timeWindowSize - _impl->currentWindowTime;
 }
 
 // Mesh access
@@ -1459,11 +1541,11 @@ void Participant::writeData(
 
   std::string meshNameStr(meshName.data(), meshName.size());
   std::string dataNameStr(dataName.data(), dataName.size());
+  int         expectedDims = 1;
 
   // Validate against config if parsed
   if (_impl->configParsed) {
-    bool found        = false;
-    int  expectedDims = 1;
+    bool found = false;
 
     for (const auto &dataInfo : _impl->configData.dataItems) {
       if (dataInfo.name == dataNameStr && dataInfo.meshName == meshNameStr) {
@@ -1523,11 +1605,11 @@ void Participant::readData(
 
   std::string meshNameStr(meshName.data(), meshName.size());
   std::string dataNameStr(dataName.data(), dataName.size());
+  int         expectedDims = 1;
 
   // Validate against config if parsed
   if (_impl->configParsed) {
-    bool found        = false;
-    int  expectedDims = 1;
+    bool found = false;
 
     for (const auto &dataInfo : _impl->configData.dataItems) {
       if (dataInfo.name == dataNameStr && dataInfo.meshName == meshNameStr) {
@@ -1567,24 +1649,31 @@ void Participant::readData(
   }
 
   // Determine data mode from mock config
-  std::string                                  key            = meshNameStr + ":" + dataNameStr;
-  impl::ParticipantImpl::DataMode              mode           = _impl->mockConfig.defaultMode;
-  const impl::ParticipantImpl::MockDataConfig *mockDataConfig = nullptr;
-  double                                       scalarMult     = _impl->mockConfig.defaultScalarMultiplier;
-  double                                       randLower      = _impl->mockConfig.defaultRandomLower;
-  double                                       randUpper      = _impl->mockConfig.defaultRandomUpper;
-  uint32_t                                     randSeed       = _impl->mockConfig.defaultRandomSeed;
-  std::vector<double>                          vectorMult     = _impl->mockConfig.defaultVectorMultiplier;
+  std::string                     key        = meshNameStr + ":" + dataNameStr;
+  impl::ParticipantImpl::DataMode mode       = _impl->mockConfig.defaultMode;
+  double                          scalarMult = _impl->mockConfig.defaultScalarMultiplier;
+  double                          randLower  = _impl->mockConfig.defaultRandomLower;
+  double                          randUpper  = _impl->mockConfig.defaultRandomUpper;
+  uint32_t                        randSeed   = _impl->mockConfig.defaultRandomSeed;
+  std::vector<double>             vectorMult = _impl->mockConfig.defaultVectorMultiplier;
 
   auto mockIt = _impl->mockConfig.dataConfigs.find(key);
   if (mockIt != _impl->mockConfig.dataConfigs.end()) {
-    mode           = mockIt->second.mode;
-    mockDataConfig = &mockIt->second;
-    scalarMult     = mockIt->second.scalarMultiplier;
-    randLower      = mockIt->second.randomLower;
-    randUpper      = mockIt->second.randomUpper;
-    randSeed       = mockIt->second.randomSeed;
-    vectorMult     = mockIt->second.vectorMultiplier;
+    mode       = mockIt->second.mode;
+    scalarMult = mockIt->second.scalarMultiplier;
+    randLower  = mockIt->second.randomLower;
+    randUpper  = mockIt->second.randomUpper;
+    randSeed   = mockIt->second.randomSeed;
+    vectorMult = mockIt->second.vectorMultiplier;
+  }
+
+  if (mode == impl::ParticipantImpl::DataMode::ScaledBuffer && !vectorMult.empty()) {
+    const auto expectedVectorMultiplierSize = (expectedDims > 1) ? static_cast<std::size_t>(expectedDims) : n;
+    if (vectorMult.size() != expectedVectorMultiplierSize) {
+      throw precice::Error(precice::utils::format_or_error(
+          "vector-multiplier for data '{}' on mesh '{}' must contain {} values, but contains {}.",
+          dataNameStr, meshNameStr, expectedVectorMultiplierSize, vectorMult.size()));
+    }
   }
 
   // Validate read size against last write for the same mesh/data (if available)
@@ -1631,11 +1720,10 @@ void Participant::readData(
   }
 
   case impl::ParticipantImpl::DataMode::ScaledBuffer: {
-    // Mode 3: Return buffered write data with scaling (shared buffer, cyclic if shorter)
+    // Mode 3: Return buffered write data with strict scaling (one multiplier per component/value)
     if (!_impl->writeBuffer.empty()) {
       const auto &buffer = _impl->writeBuffer;
       if (!vectorMult.empty()) {
-        // Element-wise multiplication with vector multiplier (also cycled if needed)
         for (std::size_t i = 0; i < n; ++i) {
           values[i] = buffer[i % buffer.size()] * vectorMult[i % vectorMult.size()];
         }
@@ -1701,16 +1789,19 @@ void Participant::mapAndReadData(
 // Direct access
 
 void Participant::setMeshAccessRegion(
-    ::precice::string_view /*meshName*/,
+    ::precice::string_view      meshName,
     precice::span<const double> boundingBox) const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
   if (!_impl->initialized) {
     throw precice::Error("initialize() has to be called before setMeshAccessRegion().");
   }
-  // bounding box: min/max for each dimension -> 3D: 6 entries
-  if (boundingBox.size() != 6) {
-    throw precice::Error(precice::utils::format_or_error("setMeshAccessRegion() was called with {} bounding box coordinates, but expects 6 coordinates (min and max for each dimension in 3D).", boundingBox.size()));
+  const auto meshDimensions = getMeshDimensions(meshName);
+  const auto expectedSize   = static_cast<std::size_t>(2 * meshDimensions);
+  if (boundingBox.size() != expectedSize) {
+    throw precice::Error(precice::utils::format_or_error(
+        "setMeshAccessRegion() was called with {} bounding box coordinates, but expects {} coordinates (min and max for each dimension in {}D).",
+        boundingBox.size(), expectedSize, meshDimensions));
   }
   // no-op
 }
@@ -1740,8 +1831,8 @@ bool Participant::requiresGradientDataFor(::precice::string_view /*meshName*/,
 }
 
 void Participant::writeGradientData(
-    ::precice::string_view /*meshName*/,
-    ::precice::string_view /*dataName*/,
+    ::precice::string_view        meshName,
+    ::precice::string_view        dataName,
     precice::span<const VertexID> ids,
     precice::span<const double>   gradients)
 {
@@ -1749,9 +1840,13 @@ void Participant::writeGradientData(
   if (!_impl->initialized) {
     throw precice::Error("initialize() has to be called before writeGradientData().");
   }
-  // gradients expected as 3 components per id for vector gradient in 3D
-  if (gradients.size() != ids.size() * 3) {
-    throw precice::Error(precice::utils::format_or_error("writeGradientData() was called with {} vertices and {} gradient components, but needs {} components ({} x 3).", ids.size(), gradients.size(), ids.size() * 3, ids.size()));
+  const auto meshDimensions = getMeshDimensions(meshName);
+  const auto dataDimensions = getDataDimensions(meshName, dataName);
+  const auto expectedArity  = static_cast<std::size_t>(meshDimensions * dataDimensions);
+  if (gradients.size() != ids.size() * expectedArity) {
+    throw precice::Error(precice::utils::format_or_error(
+        "writeGradientData() was called with {} vertices and {} gradient values, but needs {} values ({} x {} x {}).",
+        ids.size(), gradients.size(), ids.size() * expectedArity, ids.size(), meshDimensions, dataDimensions));
   }
   // no-op
 }
@@ -1760,17 +1855,22 @@ void Participant::writeGradientData(
 
 void Participant::startProfilingSection(::precice::string_view /*sectionName*/)
 {
-  // no-op
+  std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
+  ++_impl->activeProfilingSections;
 }
 
 void Participant::stopLastProfilingSection()
 {
-  // no-op
+  std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
+  if (_impl->activeProfilingSections == 0) {
+    throw precice::Error("stopLastProfilingSection() cannot be called before startProfilingSection().");
+  }
+  --_impl->activeProfilingSections;
 }
 
 // Missing Symbols
 
-extern char const *const versionInformation __attribute__((visibility("default"))) = "precice-mock;revision=mock;features=MPI:OFF,PETSC:OFF,PYTHON:OFF"; // Tooling API
+extern char const *const versionInformation __attribute__((visibility("default"))) = mockVersionInformation.c_str(); // Tooling API
 
 namespace tooling {
 
@@ -1782,7 +1882,7 @@ void printConfigReference(std::ostream &out, ConfigReferenceType reftype)
 void checkConfiguration(const std::string &filename, const std::string &participant, int size)
 {
   throw precice::Error(precice::utils::format_or_error(
-      "---[precice]  precice mock: checkConfiguration called for file '{}' participant '{}' size {}",
+      "[precice-mock]  precice mock: checkConfiguration called for file '{}' participant '{}' size {}",
       filename, participant, size));
 }
 
@@ -1790,7 +1890,7 @@ void checkConfiguration(const std::string &filename, const std::string &particip
 
 std::string getVersionInformation()
 {
-  return std::string("precice-mock;revision=mock;features=MPI:OFF,PETSC:OFF,PYTHON:OFF");
+  return mockVersionInformation;
 }
 
 } // namespace precice

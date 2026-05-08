@@ -10,11 +10,38 @@ A lightweight mock implementation of the preCICE Participant API for testing and
 - **Flexible Data Exchange**: Three modes for handling read/write data operations
 - **Error Handling**: Throws proper preCICE exceptions with helpful error messages
 
+## Logging Modes
+
+The mock supports two logging modes, configured via the optional `precice-mock-config.xml` file:
+
+### Mock Mode (Default)
+Minimal output showing only essential mock behavior with simple messages prefixed by `[precice-mock]`.
+
+```xml
+<logging-mode mode="mock" />
+```
+
+### PrecICE Mode
+Verbose output that mimics the real preCICE library, showing detailed initialization, mesh setup, and shutdown messages with the `---[precice]` prefix.
+
+```xml
+<logging-mode mode="precice" />
+```
+
+If no `logging-mode` is specified, the mock defaults to **mock mode** for cleaner output during testing.
+
 ## Data Exchange Modes
 
 The mock participant supports three modes for `readData()` operations, configured via an optional `precice-mock-config.xml` file:
 
-### 1. Random Mode
+### 1. Buffer Mode (Default)
+Returns the data previously written via `writeData()`. This is the default if no mock-config is provided.
+
+```xml
+<mocked-data mesh="MeshName" data="DataName" mode="buffer" />
+```
+
+### 2. Random Mode
 Returns random seeded data (useful for testing error handling). Optional bounds and seed can be specified with nested elements (bounds defaults: 0.0 to 1.0, seed defaults to rank-based value).
 
 ```xml
@@ -22,13 +49,6 @@ Returns random seeded data (useful for testing error handling). Optional bounds 
   <bounds lower="-1.0" upper="1.0" />
   <seed value="42" />
 </mocked-data>
-```
-
-### 2. Buffer Mode (Default)
-Returns the data previously written via `writeData()`. This is the default if no mock-config is provided.
-
-```xml
-<mocked-data mesh="MeshName" data="DataName" mode="buffer" />
 ```
 
 ### 3. Scaled Buffer Mode
@@ -47,6 +67,7 @@ Returns the buffered write data multiplied by a scalar or element-wise by a vect
   <vector-multiplier values="1.0;2.0;3.0" />
 </mocked-data>
 ```
+The vector multiplier must match the data arity exactly: use one value per component for vector data, or one value per scalar entry for scalar data.
 
 ### Global Default Configuration
 
@@ -54,7 +75,7 @@ You can set a global default mode and multipliers that apply to all data items n
 
 ```xml
 <mock-config>
-  <!-- Set default mode for all unmapped data -->
+  <!-- Set default mode for all unconfigured data -->
   <mocked-data-default mode="scaled">
     <scalar-multiplier value="1.5" />
   </mocked-data-default>
@@ -126,18 +147,22 @@ Place `precice-mock-config.xml` in the same directory as your preCICE config fil
 <!--
   Mock Configuration for preCICE Mock Participant
 
-  This file configures how the mock participant handles readData() calls.
+  This file configures how the mock participant handles readData() calls and logging.
   Place this file in the same directory as your precice-config.xml file.
 
-  Three modes are supported:
-  1. "random" - Returns random data (seeded)
-  2. "buffer" - Returns data written by writeData() (default if no mock-config)
-  3. "scaled" - Returns data written by writeData() multiplied by a scalar or vector
+  Features:
+  1. Logging modes: "mock" (minimal, default) or "precice" (verbose)
+  2. Data modes: "random", "buffer", "scaled"
+  3. Iteration override for implicit coupling
 -->
 <mock-config>
 
+  <!-- LOGGING MODE (optional) -->
+  <!-- Defaults to "mock" for minimal output. Use "precice" for verbose preCICE-style output. -->
+  <logging-mode mode="mock" />
+
   <!-- MAX ITERATIONS OVERRIDE (optional, for implicit coupling only) -->
-    <!-- Override max-iterations from preCICE config to reduce runtime during testing.
+  <!-- Override max-iterations from preCICE config to reduce runtime during testing.
       If omitted, the mock defaults to 2 iterations. Use -1 to respect the preCICE config value. -->
   <max-iterations-override value="2" />
 
@@ -145,7 +170,7 @@ Place `precice-mock-config.xml` in the same directory as your preCICE config fil
   <!-- If specified, this mode applies to all data items not explicitly configured.
        If omitted, defaults to buffer mode. -->
   <mocked-data-default mode="buffer">
-    <!-- Optional: default scalar multiplier for scaled mode -->
+    <!-- Optional: scalar multiplier for scaled mode -->
     <scalar-multiplier value="1.0" />
   </mocked-data-default>
 
@@ -165,13 +190,12 @@ Place `precice-mock-config.xml` in the same directory as your preCICE config fil
 
   <!-- Example 4: Scaled buffer with element-wise vector multiplier -->
   <mocked-data mesh="MeshTwo" data="Velocity" mode="scaled">
-    <!-- For 3D vector data: multiply component-wise -->
+    <!-- For 3D vector data: one multiplier per component -->
     <vector-multiplier values="1.0;2.0;3.0" />
   </mocked-data>
 
-  <!-- Example 5: Multiple scalar values can use semicolons too -->
+  <!-- Example 5: Scalar data can use semicolons too, but the list must match the number of values -->
   <mocked-data mesh="MeshThree" data="Heat-Flux" mode="scaled">
-    <!-- Will cycle through multipliers for each value -->
     <vector-multiplier values="0.5;1.0;1.5;2.0" />
   </mocked-data>
 

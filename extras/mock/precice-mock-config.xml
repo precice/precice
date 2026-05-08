@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <mock-config>
+  <!-- LOGGING MODE (optional) -->
+  <!-- Controls verbosity of mock output. Defaults to "mock" for minimal logging.
+       Use "precice" to mimic real preCICE output with detailed initialization messages.
+       Use "mock" for cleaner output showing only essential mock behavior. -->
+  <logging-mode mode="mock" />
+
   <!-- MAX ITERATIONS OVERRIDE (optional, for implicit coupling only) -->
   <!-- Override max-iterations from preCICE config to reduce runtime during testing.
       If specified, this value will be used instead of the max-iterations from the coupling-scheme.
@@ -11,12 +17,15 @@
   <!-- If specified, this mode applies to all data items not explicitly configured.
        If omitted, defaults to buffer mode. -->
   <mocked-data-default mode="scaled">
-    <!-- Optional: default scalar multiplier for scaled mode -->
+    <!-- Optional: scalar multiplier for scaled mode -->
     <scalar-multiplier value="5.0" />
   </mocked-data-default>
 
-  <!-- Example 1: Random data mode (no multipliers) -->
-  <mocked-data mesh="FluidMesh" data="Temperature" mode="random" />
+  <!-- Example 1: Random data mode with custom bounds and seed -->
+  <mocked-data mesh="FluidMesh" data="Temperature" mode="random">
+    <bounds lower="-1.0" upper="1.0" />
+    <seed value="42" />
+  </mocked-data>
 
   <!-- Example 2: Buffer mode (returns writeData values as-is) -->
   <mocked-data mesh="MeshTwo" data="Displacement" mode="buffer" />
@@ -28,13 +37,12 @@
 
   <!-- Example 4: Scaled buffer with element-wise vector multiplier -->
   <mocked-data mesh="MeshTwo" data="Velocity" mode="scaled">
-    <!-- For 3D vector data: multiply component-wise -->
+    <!-- For 3D vector data: one multiplier per component -->
     <vector-multiplier values="1.0;2.0;3.0" />
   </mocked-data>
 
-  <!-- Example 5: Multiple scalar values can use semicolons too -->
+  <!-- Example 5: Scalar data can use semicolons too, but the list must match the number of values -->
   <mocked-data mesh="MeshThree" data="Heat-Flux" mode="scaled">
-    <!-- Will cycle through multipliers for each value -->
     <vector-multiplier values="0.5;1.0;1.5;2.0" />
   </mocked-data>
 </mock-config>
