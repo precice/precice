@@ -203,9 +203,9 @@ void TestContext::initializeIntraComm()
     return;
 
 #ifndef PRECICE_NO_MPI
-  precice::com::PtrCommunication intraComm = precice::com::PtrCommunication(new precice::com::MPIDirectCommunication());
+  auto intraComm = std::make_shared<precice::com::MPIDirectCommunication>();
 #else
-  precice::com::PtrCommunication intraComm = precice::com::PtrCommunication(new precice::com::SocketCommunication());
+  auto intraComm = std::make_shared<precice::com::SocketCommunication>();
 #endif
 
   intraComm->connectIntraComm(name, "", rank, size);
@@ -250,7 +250,7 @@ void TestContext::initializeKokkos()
 
 m2n::PtrM2N TestContext::connectPrimaryRanks(const std::string &acceptor, const std::string &connector, const ConnectionOptions &options) const
 {
-  auto participantCom = com::PtrCommunication(new com::SocketCommunication());
+  auto participantCom = std::make_shared<com::SocketCommunication>();
 
   m2n::DistributedComFactory::SharedPointer distrFactory;
   switch (options.type) {
