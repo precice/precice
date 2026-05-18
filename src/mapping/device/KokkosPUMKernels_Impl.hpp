@@ -882,11 +882,15 @@ void do_batched_conservative_solve(
 
     // Step 3: Extract the input data using the PU weights and
     // compute the matrix vector product A^T * inputData
+
     // Eigen::MatrixXd Au = _matrixA.transpose() * inputData;
-    std::optional<Kokkos::Array<double, 4>> qrCoeffs;
+    Kokkos::Array<double, 4> qrCoeffs = {0., 0., 0., 0.};
+
+    // minimal compute variant
     if constexpr (evaluation_op_available) {
+
       ScratchVector in(team.team_scratch(1), outSize);
-      // For the minimal compute variant
+      // Step 3a: Extract input data
       Kokkos::parallel_for(
           Kokkos::TeamThreadRange(team, outSize), [&](int r) {
             auto globalID = globalOutIDs(r + outBegin);
@@ -896,11 +900,12 @@ void do_batched_conservative_solve(
       team.team_barrier();
       auto                     startEval = evalOffsets(batch);
       BatchMatrix<MemorySpace> eval(&evalMat(startEval), outSize, inSize);
-      // Au := 1.0 * eval^T * in + 0.0 * Au
+      // Step 3b: Au := 1.0 * eval^T * in + 0.0 * Au
       KokkosBlas::Experimental::Gemv<
           KokkosBlas::Mode::Team,
           KokkosBlas::Algo::Gemv::Blocked>::invoke(team, 'T', 1.0, eval, in, 0.0, Au);
 
+      // Step 3c: compute polynomial contribution: V^T * in
       if (polynomial) {
         qrCoeffs = Kokkos::Array<double, 4>{0.0, 0.0, 0.0, 0.0};
         // double y0 = 0.0, y1 = 0.0, y2 = 0.0, y3 = 0.0;
@@ -916,15 +921,16 @@ void do_batched_conservative_solve(
                 s2 += outMesh(globalID, 2) * val;
               s3 += val;
             },
-            (*qrCoeffs)[0], (*qrCoeffs)[1], (*qrCoeffs)[2], (*qrCoeffs)[3]);
+            qrCoeffs[0], qrCoeffs[1], qrCoeffs[2], qrCoeffs[3]);
 
-        // Ince the above is computes, the in vector is not needed anymore
+        // Once the above is computes, the in vector is not needed anymore
         //    Kokkos::single(Kokkos::PerTeam(team), [&] {
         //   in(0) = y0; in(1) = y1; in(2) = y2; in(3) = y3;
         // });
       }
       // If a polynomial is involved, apply the output mesh mesh vertices here somewhere
     } else {
+      // minimal memory
       // Step 3a: each thread takes care of one output vertex
       // Alternative: cache the input mesh in shared memory first and let the loop run over outSize
       // Kokkos::parallel_for(
@@ -962,8 +968,8 @@ void do_batched_conservative_solve(
     }
     team.team_barrier();
 
-    // Step 3: Solve for the RBF coefficients
-    // The lu inplace lu decomposition computed with KokkosBatched
+    // Step 4: Solve for the RBF coefficients
+    // The inplace lu decomposition computed with KokkosBatched
     // There is also a convenience routine for the LU solve, but it
     // uses Trsm under the hood, which is quite a bit slower
     auto                     matStart = matrixOffsets(batch);
@@ -990,12 +996,12 @@ void do_batched_conservative_solve(
         KokkosBatched::Algo::Trsv::Blocked>::invoke(team, 1.0, A, Au);
     team.team_barrier();
 
-    // Step 4: take care of the polynomial part
+    // Step 5: take care of the polynomial part, the solution is stored in rhstmp
     auto rhstmp = Kokkos::subview(work, std::pair<int, int>(0, inSize), std::pair<int, int>(1, 2));
     if constexpr (polynomial) {
 
-      //   Eigen::MatrixXd epsilon = _matrixV.transpose() * inputData;
-      //   PRECICE_ASSERT(epsilon.rows() == _matrixV.cols());
+      // Step 5a: compute the matrix vector product epsilon = Q^T * Au (in Eigen Au = out)
+      // Eigen::MatrixXd epsilon = _matrixV.transpose() * inputData;
       double y0 = 0.0, y1 = 0.0, y2 = 0.0, y3 = 0.0;
       Kokkos::parallel_reduce(
           Kokkos::TeamThreadRange(team, inSize),
@@ -1011,13 +1017,14 @@ void do_batched_conservative_solve(
           },
           y0, y1, y2, y3);
 
-      qrCoeffs->operator[](0) = y0 - qrCoeffs->operator[](0);
-      qrCoeffs->operator[](1) = y1 - qrCoeffs->operator[](1);
+      // Subtract the result
+      qrCoeffs[0] = y0 - qrCoeffs[0];
+      qrCoeffs[1] = y1 - qrCoeffs[1];
       if (dim == 3) {
-        qrCoeffs->operator[](2) = y2 - qrCoeffs->operator[](2);
-        qrCoeffs->operator[](3) = y3 - qrCoeffs->operator[](3);
+        qrCoeffs[2] = y2 - qrCoeffs[2];
+        qrCoeffs[3] = y3 - qrCoeffs[3];
       } else {
-        qrCoeffs->operator[](2) = y3 - qrCoeffs->operator[](3);
+        qrCoeffs[2] = y3 - qrCoeffs[3];
       }
       //   epsilon -= _matrixQ.transpose() * out; // We can cache Q
       //   PRECICE_ASSERT(epsilon.rows() == _matrixQ.cols());
@@ -1039,13 +1046,15 @@ void do_batched_conservative_solve(
           Kokkos::TeamThreadRange(team, inSize), [&](int i) { rhstmp(i, 0) = 0; });
       team.team_barrier();
 
+      // Step 5c: Solve the QR system to compute the polynomial coefficients
       if (team.team_rank() == 0) {
 
+        // _qrMatrixQ.transpose().solve(
         auto R      = Kokkos::subview(qr, std::pair<int, int>(0, rank), std::pair<int, int>(0, rank));
         auto rhs_re = Kokkos::subview(rhstmp, std::pair<int, int>(0, matrixCols), 0);
 
         for (int i = 0; i < matrixCols; ++i) {
-          rhs_re(i) = qrCoeffs->operator[](i);
+          rhs_re(i) = qrCoeffs[i];
         }
         KokkosBatched::TeamVectorApplyPivot<MemberType,
                                             KokkosBatched::Side::Left,
@@ -1074,19 +1083,18 @@ void do_batched_conservative_solve(
       }
 
       team.team_barrier();
-      ///////////////////////////////
-    }
+    } // end polynomial part
 
-    // Step 5: Accumulate the result into the output vector
+    // Step 6 (final): Accumulate the result into the output vector, without weights in this case
     Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, inSize), [&](int i) {
           auto   globalID = globalRhsIDs(i + inBegin);
           double val      = Au(i);
           if constexpr (polynomial) {
+            // rhstmp carries the solution of the polynomial contribution, it has only a single column and inSize rows
             val -= rhstmp(i, 0);
           }
           Kokkos::atomic_add(&rhsdst(globalID), val);
-          // If a polynomial is involved, apply the output mesh mesh vertices here somewhere
         });
   };
 
@@ -1107,7 +1115,7 @@ void do_batched_conservative_solve(
 
   // We put the solution and the in data values into shared memory
   // TODO: Avoid the duplicate memory definitions here, currently needed as we
-  // cannot change the Kokkos::AUTO to the actual recommendataion later
+  // cannot change the Kokkos::AUTO to the actual recommendation later
   auto tmpPol = TeamPolicy(nCluster, Kokkos::AUTO)
                     .set_scratch_size(
                         /* level = */ 0, Kokkos::PerTeam(inBytes))
