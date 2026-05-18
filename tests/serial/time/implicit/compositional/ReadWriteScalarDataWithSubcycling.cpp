@@ -53,6 +53,7 @@ BOOST_AUTO_TEST_CASE(ReadWriteScalarDataWithSubcycling)
     BOOST_TEST(context.isNamed("SolverThree"));
     meshName      = "MeshThree";
     writeDataName = "";
+    writeFunction = nullptr;
     readDataName  = "DataOne";
     readFunction  = dataOneFunction;
   }

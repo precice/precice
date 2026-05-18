@@ -70,7 +70,6 @@ mesh::PtrMesh getDistributedMesh(const TestContext &context,
                                  bool               meshIsSmaller     = false)
 {
   mesh::PtrMesh distributedMesh(new mesh::Mesh(meshSpec.meshName, meshSpec.meshDimension, testing::nextMeshID()));
-  int           i = 0;
   for (auto &vertex : meshSpec.vertices) {
     if (vertex.rank == context.rank or vertex.rank == -1) {
       if (vertex.position.size() == 3) // 3-dimensional
@@ -82,8 +81,6 @@ mesh::PtrMesh getDistributedMesh(const TestContext &context,
         distributedMesh->vertices().back().setOwner(true);
       else
         distributedMesh->vertices().back().setOwner(false);
-
-      i++;
     }
   }
   addGlobalIndex(distributedMesh, globalIndexOffset);

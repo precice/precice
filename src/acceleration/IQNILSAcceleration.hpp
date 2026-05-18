@@ -32,6 +32,7 @@ public:
       int                     filter,
       double                  singularityLimit,
       std::vector<int>        dataIDs,
+      OnBoundViolation        onBoundViolation,
       impl::PtrPreconditioner preconditioner,
       bool                    reducedTimeGrid);
 

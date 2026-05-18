@@ -46,7 +46,7 @@ PROGRAM main
     vertexIDs(i) = i-1
   enddo
 
-  CALL precicef_set_vertices(meshName, numberOfVertices, vertices, vertexIDs)
+  CALL precicef_set_mesh_vertices(meshName, numberOfVertices, vertices, vertexIDs)
   DEALLOCATE(vertices)
 
   CALL precicef_requires_initial_data(bool)

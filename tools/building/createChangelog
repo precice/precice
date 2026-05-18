@@ -6,9 +6,8 @@
 #
 
 if command -v gh > /dev/null ; then
-  INFO="$(gh pr view)"
+  PR="$(gh pr view --json number -q .number)"
   if [ $? -eq 0 ]; then
-    PR="$(echo "$INFO" | grep "number:" | grep -o "[0-9]\+")"
     FILE="`git rev-parse --show-toplevel`/docs/changelog/$PR.md"
     if [ -f $FILE ]; then
       echo "Changelog file for PR $PR already exists."

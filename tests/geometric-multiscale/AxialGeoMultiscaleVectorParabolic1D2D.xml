@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<precice-configuration experimental="on">
+  <data:vector name="VelocityLike" />
+  <data:scalar name="PressureLike" />
+
+  <mesh name="Mesh1D" dimensions="3">
+    <use-data name="VelocityLike" />
+    <use-data name="PressureLike" />
+  </mesh>
+
+  <mesh name="Mesh2D" dimensions="3">
+    <use-data name="VelocityLike" />
+    <use-data name="PressureLike" />
+  </mesh>
+
+  <participant name="Fluid1D">
+    <provide-mesh name="Mesh1D" />
+    <receive-mesh name="Mesh2D" from="Fluid2D" />
+    <mapping:axial-geometric-multiscale
+      direction="read"
+      multiscale-dimension="1d-2d"
+      multiscale-type="collect"
+      multiscale-radius="1.0"
+      multiscale-axis="z"
+      from="Mesh2D"
+      to="Mesh1D"
+      constraint="consistent" />
+    <write-data name="VelocityLike" mesh="Mesh1D" />
+    <read-data name="PressureLike" mesh="Mesh1D" />
+  </participant>
+
+  <participant name="Fluid2D">
+    <receive-mesh name="Mesh1D" from="Fluid1D" />
+    <provide-mesh name="Mesh2D" />
+    <mapping:axial-geometric-multiscale
+      direction="read"
+      multiscale-dimension="1d-2d"
+      multiscale-type="spread"
+      multiscale-radius="1.0"
+      multiscale-axis="z"
+      multiscale-cross-section-profile="parabolic"
+      from="Mesh1D"
+      to="Mesh2D"
+      constraint="consistent" />
+    <write-data name="PressureLike" mesh="Mesh2D" />
+    <read-data name="VelocityLike" mesh="Mesh2D" />
+  </participant>
+
+  <m2n:sockets acceptor="Fluid1D" connector="Fluid2D" />
+
+  <coupling-scheme:serial-explicit>
+    <participants first="Fluid1D" second="Fluid2D" />
+    <max-time-windows value="5" />
+    <time-window-size value="1.0" />
+    <exchange data="VelocityLike" mesh="Mesh1D" from="Fluid1D" to="Fluid2D" />
+    <exchange data="PressureLike" mesh="Mesh2D" from="Fluid2D" to="Fluid1D" initialize="on" />
+  </coupling-scheme:serial-explicit>
+</precice-configuration>

@@ -8,29 +8,29 @@ Only the release manager should update this post (even tickboxes, due to race co
 
 ## Pre-PR steps
 
-* [ ] Look over [PRs](https://github.com/precice/precice/pulls?q=is%3Apr+no%3Amilestone+is%3Aclosed) and [Issues](https://github.com/precice/precice/issues?q=is%3Aissue+no%3Amilestone+is%3Aclosed) without an assigned version. (all)
-* [ ] Look over entries in [`docs/changelog`](https://github.com/precice/precice/blob/develop/docs/changelog) (all)
+* Look over [PRs](https://github.com/precice/precice/pulls?q=is%3Apr+no%3Amilestone+is%3Aclosed) and [Issues](https://github.com/precice/precice/issues?q=is%3Aissue+no%3Amilestone+is%3Aclosed) without an assigned version. (all)
+* Look over entries in [`docs/changelog`](https://github.com/precice/precice/blob/develop/docs/changelog) (all)
    * Add missing entries, if necessary
    * Fix wording and tense
-* [ ] Make sure you have the latest `develop` and `main` branches locally.
-* [ ] Merge `main` to `develop` ( This should result in no commits )
-* [ ] Check code base w.r.t code formatting (run `pre-commit run -va`)
-* [ ] Update the list of operating systems for the package generation in `.github/workflows/release.yml`
-* [ ] Create branch `release-vX.Y.Z` from develop: `git switch -c release-vX.Y.Z develop`
-* [ ] Bump the version: `tools/releasing/bumpversion.sh MAJOR.MINOR.PATCH`
-* [ ] Look over the updated `CHANGELOG.md` of the release branch (all)
+* Make sure you have the latest `develop` and `main` branches locally.
+* Merge `main` to `develop` ( This should result in no commits )
+* Check code base w.r.t code formatting (run `pre-commit run -va`)
+* Update the list of operating systems for the package generation in `.github/workflows/release.yml`
+* Create branch `release-vX.Y.Z` from develop: `git switch -c release-vX.Y.Z develop`
+* Bump the version: `tools/releasing/bumpversion.sh MAJOR.MINOR.PATCH`
+* Look over the updated `CHANGELOG.md` of the release branch (all)
    * Check for merged lines
    * Add things, if necessary
    * Fix wording and tense
    * Sort the entries lexicographically
    * Merge or remove entries that are fully contained in the release
    * Extract summary
-* [ ] Verify the version changes in:
-   * [ ] `CHANGELOG`
-   * [ ] `CMakeLists.txt`
-   * [ ] `tools/releasing/packaging/debian/changelog`
-* [ ] Commit the version bump: `git commit -m "Bump version to X.Y.Z"`
-* [ ] Push the release branch to the precice repository: `git push -u upstream release-vX.Y.Z`
+* Verify the version changes in:
+   * `CHANGELOG`
+   * `CMakeLists.txt`
+   * `tools/releasing/packaging/debian/changelog`
+* Commit the version bump: `git commit -m "Bump version to X.Y.Z"`
+* Push the release branch to the precice repository: `git push -u upstream release-vX.Y.Z`
 * Prepare independent releases
    * [ ] [Python bindings](https://github.com/precice/python-bindings/blob/develop/docs/ReleaseGuide.md)
    * [ ] (if necessary!) [MATLAB bindings](https://github.com/precice/matlab-bindings/blob/develop/docs/ReleaseGuide.md)
@@ -38,8 +38,9 @@ Only the release manager should update this post (even tickboxes, due to race co
 
 ## Step by step guide
 
-* [ ] Open PR from `release-vX.Y.Z` to `main` (use [this template](https://github.com/precice/precice/blob/develop/tools/releasing/PULL_REQUEST_TEMPLATE/release_pull_request_template.md))
+* Open PR from `release-vX.Y.Z` to `main` (use [this template](https://github.com/precice/precice/blob/develop/tools/releasing/PULL_REQUEST_TEMPLATE/release_pull_request_template.md))
 * [ ] Trigger the system tests using the `trigger-system-tests` label ([`release_test` suite](https://github.com/precice/tutorials/blob/develop/tools/tests/tests.yaml)). After any force-push, remove and add the label again.
+* [ ] Review the changelog and use review comments with suggestions for feedback (all)
 * [ ] Do any additional regression tests using the release branch (specific revision) _list below :arrow_down:_ (all)
 * [ ] Fix potential problems in develop (all)
 * [ ] Rebase the release branch on develop to pull in fixes
@@ -49,14 +50,15 @@ Only the release manager should update this post (even tickboxes, due to race co
    * [ ] Update [XML configuration reference](https://github.com/precice/precice.github.io/blob/master/_includes/xmlreference.md)
    * [ ] Update version in [precice/precice.github.io](https://github.com/precice/precice.github.io) `_config.yml`
 * [ ] Approve the PR with at least two reviews (all)
-* [ ] Merge PR to `main`: `git merge --no-ff -m "Release vX.Y.Z" release-vX.Y.Z`
+* [ ] Merge PR to `main`: `git switch main`, `git merge --no-ff -m "Release vX.Y.Z" release-vX.Y.Z`
 * [ ] Create an annotated tag on `main`: `git tag -a -m "preCICE version X.Y.Z" vX.Y.Z main`
 * [ ] Verify the tag: `git describe --tags main`. It should be exactly `vX.Y.Z`
-* [ ] Switch to `develop` and merge `main` back into it: `git merge --no-ff -m "Merge release back"`
+* [ ] Merge `main` back to `develop`: `git switch develop`, `git merge --no-ff -m "Merge release back" main`
 * [ ] Verify the tag on develop: `git describe --tags develop`. It should start with `vX.Y.Z-1-` (i.e. tag plus the merge commit).
 * [ ] Triple check that you haven't messed anything up. You can always discard local changes using `git reset --hard upstream BRANCH` or by cloning the precice repository again and start from scratch.
-* [ ] Push `main` and the `vX.Y.Z` tag: `git push upstream main`, `git push upstream v3.3.0`
-* [ ] Push `develop`: `git push upstream develop`
+* [ ] Push `main`: `git switch main` `git push upstream main`
+* [ ] Push the `vX.Y.Z` tag: `git push upstream vX.Y.Z`
+* [ ] Push `develop`: `git switch develop`, `git push upstream develop`
 * [ ] Wait for the release pipeline
   * [ ] [To create a new draft release on GitHub](https://github.com/precice/precice/releases)
   * [ ] To automatically generate packages for the latest Debian and the two latest Ubuntu LTS versions.

@@ -1,5 +1,5 @@
-cmake_minimum_required (VERSION 3.22.1)
-project(preCICE VERSION 3.3.1 LANGUAGES CXX)
+cmake_minimum_required (VERSION 3.28.3)
+project(preCICE VERSION 3.4.1 LANGUAGES CXX)
 set(preCICE_SOVERSION ${preCICE_VERSION_MAJOR})
 
 #
@@ -65,7 +65,7 @@ option(PRECICE_CONFIGURE_PACKAGE_GENERATION "Configure package generation." ON)
 option(PRECICE_FEATURE_GINKGO_MAPPING "Enable use of Ginkgo for accelerated data mapping." OFF)
 option(PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING "Enable use of Kokkos kernels for accelerated PU-RBF data mapping." OFF)
 option(BUILD_TESTING "Build tests" ON)
-option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validatation succeeded." OFF)
+option(PRECICE_ALWAYS_VALIDATE_LIBS "Validate libraries even after the validation succeeded." OFF)
 option(PRECICE_BINDINGS_C "Enable the native C bindings" ON)
 option(PRECICE_BINDINGS_FORTRAN "Enable the native Fortran bindings" ON)
 option(PRECICE_BUILD_TOOLS "Build the \"precice-tools\" executable" ON)
@@ -178,7 +178,7 @@ add_feature_info(PRECICE_BUILD_TOOLS PRECICE_BUILD_TOOLS
    This feature can be enabled/disabled by setting the PRECICE_BUILD_TOOLS CMake option.
   ")
   add_feature_info(PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES
-  "Enables libbacktrace for stracktrace generation.
+  "Enables libbacktrace for stacktrace generation.
 
    preCICE assertions are helpful during development, however, the default stacktraces may not be sufficient.
    This feature enables the support for libbacktrace in boost.stacktrace.
@@ -186,11 +186,11 @@ add_feature_info(PRECICE_BUILD_TOOLS PRECICE_BUILD_TOOLS
    This feature can be enabled/disabled by setting the PRECICE_FEATURE_LIBBACKTRACE_STACKTRACES CMake option.
   ")
   add_feature_info(PRECICE_FEATURE_PROFILING_COMPRESSION PRECICE_FEATURE_PROFILING_COMPRESSION
-  "Enables LZAM compression of profiling data.
+  "Enables LZMA compression of profiling data.
 
    preCICE profiling information can be useful, but in some cases the size of the rank files can become too large.
    This feature enables LZMA compression of the records with the fastest preset to reduce the output sizes.
-   Not that this feature introduces some profiling overhead when flushing the buffered records to file.
+   Note that this feature introduces some profiling overhead when flushing the buffered records to file.
 
    This feature can be enabled/disabled by setting the PRECICE_FEATURE_PROFILING_COMPRESSION CMake option.
   ")
@@ -220,7 +220,7 @@ if(POLICY CMP0167)
 endif()
 
 option(Boost_USE_STATIC_LIBS "Force BoostConfig.cmake to find static libraries." OFF)
-find_package(Boost 1.74.0 REQUIRED CONFIG
+find_package(Boost 1.83.0 REQUIRED CONFIG
   COMPONENTS log log_setup program_options thread unit_test_framework
   )
 mark_as_advanced(Boost_INCLUDE_DIR Boost_LOG_LIBRARY_RELEASE Boost_LOG_SETUP_LIBRARY_RELEASE Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE Boost_SYSTEM_LIBRARY_RELEASE Boost_THREAD_LIBRARY_RELEASE Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE)
@@ -268,7 +268,7 @@ if (PRECICE_FEATURE_PETSC_MAPPING)
     xsdk_tpl_require(PETSC PETSC_DIR PETSC_ARCH)
     # PETSc detection uses primarily these ENVs
   endif()
-  find_package(PETSc 3.15 REQUIRED)
+  find_package(PETSc 3.19 REQUIRED)
   # No validation required as PETSc does this internally
   message(STATUS "Found PETSc ${PETSc_VERSION}")
 else()
@@ -525,10 +525,9 @@ if (PRECICE_FEATURE_GINKGO_MAPPING)
       src/mapping/device/GinkgoRBFKernels.cpp
     )
 
-    target_link_libraries(preciceCore PRIVATE Ginkgo::ginkgo)
     if (NOT PRECICE_FEATURE_KOKKOS_KERNELS_MAPPING)
       # Otherwise, linking to Kokkos is handled through the kernels interface
-      target_link_libraries(preciceCore PRIVATE Kokkos::kokkos)
+      target_link_libraries(preciceCore PUBLIC Kokkos::kokkos)
     endif()
 
   # Now we setup cuSolver and hipSOLVER for preCICE

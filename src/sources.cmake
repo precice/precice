@@ -299,7 +299,6 @@ target_sources(preciceCore
     src/time/Sample.hpp
     src/time/SampleResult.hpp
     src/time/Stample.hpp
-    src/time/Time.cpp
     src/time/Time.hpp
     src/time/TimeGrids.cpp
     src/time/TimeGrids.hpp

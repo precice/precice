@@ -64,7 +64,7 @@ BOOST_DATA_TEST_CASE(testVIQNILSppWithoutSubsteps, boost::unit_test::data::make(
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                        timeWindowsReused, filter, singularityLimit, dataIDs, prec, !exchangeSubsteps);
+                        timeWindowsReused, filter, singularityLimit, dataIDs, Acceleration::OnBoundViolation::Ignore, prec, !exchangeSubsteps);
 
   Eigen::VectorXd dcol1;
   Eigen::VectorXd fcol1;
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(testVIQNIMVJppWithoutSubsteps)
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                         timeWindowsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
+                         timeWindowsReused, filter, singularityLimit, dataIDs, Acceleration::OnBoundViolation::Ignore, prec, alwaysBuildJacobian,
                          restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps, !exchangeSubsteps);
 
   Eigen::VectorXd dcol1;
@@ -564,7 +564,7 @@ BOOST_AUTO_TEST_CASE(testIMVJ_effUpdate_ppWithoutSubsteps)
   dummyMesh->setVertexOffsets(vertexOffsets);
 
   IQNIMVJAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                         timeWindowsReused, filter, singularityLimit, dataIDs, _preconditioner, alwaysBuildJacobian,
+                         timeWindowsReused, filter, singularityLimit, dataIDs, Acceleration::OnBoundViolation::Ignore, _preconditioner, alwaysBuildJacobian,
                          restartType, chunkSize, reusedTimeWindowsAtRestart, svdTruncationEps, !exchangeSubsteps);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 2));
@@ -1080,7 +1080,7 @@ BOOST_AUTO_TEST_CASE(testColumnsLoggingWithoutSubsteps)
   }
 
   IQNILSAcceleration acc(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                         timeWindowsReused, filter, singularityLimit, dataIDs, prec, !exchangeSubsteps);
+                         timeWindowsReused, filter, singularityLimit, dataIDs, Acceleration::OnBoundViolation::Ignore, prec, !exchangeSubsteps);
 
   mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
 
