@@ -861,7 +861,7 @@ void do_batched_conservative_solve(
   auto kernel = KOKKOS_LAMBDA(const MemberType &team)
   {
     // Required for correct capturing (mostly by device compilers), as these variables are only conditionally used further down
-    impl::capture_conditional_variables(dim, qrMatrix, qrTau, qrP, inMesh, outMesh, evalOffsets, evalMat, globalOutIDs, f, rbf_params, normalizedWeights, src);
+    impl::capture_conditional_variables(dim, qrMatrix, qrTau, qrP, inMesh, outMesh, evalOffsets, evalMat, globalOutIDs, f, rbf_params, normalizedWeights, src, globalRhsIDs);
 
     // Step 1: Define some pointers
     const int batch = team.league_rank();
