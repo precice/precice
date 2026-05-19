@@ -849,11 +849,13 @@ void do_batched_conservative_solve(
   // Layout is important for how we use these matrices: we need to ensure that cols are contiguous in memory
   // We use the scratch memory for the input data and potentially for workspace required for the
   // polynomial or for the input mesh in case we have to compute the evaluation on the fly
-  using ScratchView1d = Kokkos::View<double *[1], Kokkos::LayoutLeft, ScratchSpace, UnmanagedMemory>;
-  using ScratchView4d = Kokkos::View<double *[4], Kokkos::LayoutLeft, ScratchSpace, UnmanagedMemory>;
-  using ScratchVector = Kokkos::View<double *, ScratchSpace, UnmanagedMemory>;
-  using ScratchMatrix = std::conditional_t<!evaluation_op_available || polynomial, ScratchView4d, ScratchView1d>;
-  using ScratchMesh   = Kokkos::View<double **, Kokkos::LayoutRight, ScratchSpace, UnmanagedMemory>;
+  using ScratchView1d  = Kokkos::View<double *[1], Kokkos::LayoutLeft, ScratchSpace, UnmanagedMemory>;
+  using ScratchView4d  = Kokkos::View<double *[4], Kokkos::LayoutLeft, ScratchSpace, UnmanagedMemory>;
+  using ScratchView3d  = Kokkos::View<double *[3], Kokkos::LayoutLeft, ScratchSpace, UnmanagedMemory>;
+  using ScratchVector  = Kokkos::View<double *, ScratchSpace, UnmanagedMemory>;
+  using ScratchMatrix4 = std::conditional_t<!evaluation_op_available || polynomial, ScratchView4d, ScratchView1d>;
+  using ScratchMatrix3 = std::conditional_t<!evaluation_op_available || polynomial, ScratchView3d, ScratchView1d>;
+  using ScratchMesh    = Kokkos::View<double **, Kokkos::LayoutRight, ScratchSpace, UnmanagedMemory>;
 
   const auto rbf_params = f.getFunctionParameters();
   // We define the lambda here such that we can query the recommended team size from Kokkos
@@ -874,21 +876,20 @@ void do_batched_conservative_solve(
 
     // Step 2: Define the data structures to work with
     // The scratch memory (shared memory for the device)
-    // TODO: We don't need that much work memory here, one column + qr coefficients would be sufficient
-    ScratchMatrix work(team.team_scratch(0), Kokkos::max(4, inSize));
-    auto          Au = Kokkos::subview(work, std::pair<int, int>(0, inSize), 0);
+    ScratchMatrix3 work(team.team_scratch(0), Kokkos::max(4, inSize));
+    auto           Au = Kokkos::subview(work, std::pair<int, int>(0, inSize), 0);
 
     // Step 3: Extract the input data using the PU weights and
     // compute the matrix vector product A^T * inputData
 
-    // Step 3a: Extract input data
-    ScratchMatrix localIn(team.team_scratch(1), outSize);
-    auto          in = Kokkos::subview(localIn, std::pair<int, int>(0, outSize), 0);
-    ScratchMesh   localMesh;
+    ScratchMatrix4 localIn(team.team_scratch(1), outSize);
+    auto           in = Kokkos::subview(localIn, std::pair<int, int>(0, outSize), 0);
+    ScratchMesh    localMesh;
 
     if constexpr (!evaluation_op_available || polynomial)
       localMesh = ScratchMesh(&localIn(0, 1), outSize, dim);
 
+    // Step 3a: Extract input data
     Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, outSize), [&](int r) {
           auto globalID = globalOutIDs(r + outBegin);
@@ -920,6 +921,7 @@ void do_batched_conservative_solve(
 
       // The inner loop runs cleanly die to the cached mesh
       // Alternative would be to have the mesh access in the inner loop
+      // Step 3b: compute eval^T * in on-the-fly
       Kokkos::parallel_for(
           Kokkos::TeamThreadRange(team, inSize), [&](int r) {
             auto                     globalRhsID = globalRhsIDs(r + inBegin);
@@ -983,9 +985,9 @@ void do_batched_conservative_solve(
     team.team_barrier();
 
     // Step 5: take care of the polynomial part, the solution is stored in qrSolution
-    auto qrSolution = Kokkos::subview(work, std::pair<int, int>(0, inSize), std::pair<int, int>(1, 2));
-
+    ScratchView1d qrSolution;
     if constexpr (polynomial) {
+      qrSolution = Kokkos::subview(work, std::pair<int, int>(0, inSize), std::pair<int, int>(1, 2));
       // Step 5a: compute polynomial contribution: V^T * in
       if constexpr (polynomial) {
         Kokkos::parallel_reduce(
@@ -1073,8 +1075,6 @@ void do_batched_conservative_solve(
             KokkosBatched::Algo::Trsv::Unblocked>::invoke(team, 1.0, R, rhs_r);
 
         // Use ApplyQ with NoTranspose to apply Q
-        // auto Au = Kokkos::subview(work, std::pair<int, int>(0, inSize), 0);
-
         KokkosBatched::ApplyQ<MemberType,
                               KokkosBatched::Side::Left,
                               KokkosBatched::Trans::NoTranspose,
@@ -1103,16 +1103,13 @@ void do_batched_conservative_solve(
   // but we should be certain
   auto inBytes  = ScratchVector::shmem_size(std::max(4, maxInClusterSize));
   auto outBytes = ScratchVector::shmem_size(maxOutClusterSize);
-  if (!evaluation_op_available || polynomial) {
-    // and additional storage if we have the polynomial
-    // currently too much: we need inBytes and four entries (or maybe eight) for the QR
-    // and one extra full column for the QR decomposition
-    // TODO: Check the if condition again, and should be 3, not 4, but then we need to adjust the datatype
-    inBytes = 4 * inBytes;
+  if (polynomial) {
+    // We use one column for the solution, and two for the QR decomposition (intermediate results and final solution)
+    inBytes = 3 * inBytes;
   }
-  // We use the outBytes only for the per-cluster output vector, which
-  // we don't need if we evaluate everything on the fly
+
   // In the conservative case, we cache the outMesh and the outvector, if we have to compute the evaluation on-the-fly
+  // or in case we have a polynomial
   if (!evaluation_op_available || polynomial) {
     outBytes = 4 * outBytes;
   }
