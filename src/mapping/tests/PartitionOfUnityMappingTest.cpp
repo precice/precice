@@ -1846,27 +1846,54 @@ void performReferenceTesting(Mapping &testMapping, Mapping &referenceMapping, in
   addGlobalIndex(outMesh);
 
   // Setup mapping with mapping coordinates and geometry used
-  testMapping.setMeshes(inMesh, outMesh);
-  referenceMapping.setMeshes(inMesh, outMesh);
-  BOOST_TEST(testMapping.hasComputedMapping() == false);
+  if (testMapping.getConstraint() == Mapping::CONSISTENT) {
+    testMapping.setMeshes(inMesh, outMesh);
+    referenceMapping.setMeshes(inMesh, outMesh);
+    BOOST_TEST(testMapping.hasComputedMapping() == false);
 
-  auto &val = testInData->values();
-  for (std::size_t i = 0; i < inMesh->nVertices(); ++i) {
-    // base value ramps from 0.0 to 1.0
-    double base = double(i) / double(inMesh->nVertices() - 1);
-    for (int c = 0; c < nComponents; ++c) {
-      // (2*c + 1) = 1, 3, 5, = make data components linear dependent
-      val[i * nComponents + c] = (2 * c + 1) * base;
+    auto &val = testInData->values();
+    for (std::size_t i = 0; i < inMesh->nVertices(); ++i) {
+      // base value ramps from 0.0 to 1.0
+      double base = double(i) / double(inMesh->nVertices() - 1);
+      for (int c = 0; c < nComponents; ++c) {
+        // (2*c + 1) = 1, 3, 5, = make data components linear dependent
+        val[i * nComponents + c] = (2 * c + 1) * base;
+      }
     }
-  }
-  refInData->values() = testInData->values();
+    refInData->values() = testInData->values();
 
-  testMapping.computeMapping();
-  testMapping.map(testInDataID, testOutDataID);
-  referenceMapping.computeMapping();
-  referenceMapping.map(refInDataID, refOutDataID);
-  BOOST_TEST(testMapping.hasComputedMapping() == true);
-  BOOST_TEST(testOutData->values() == refOutData->values(), boost::test_tools::per_element());
+    testMapping.computeMapping();
+
+    testMapping.map(testInDataID, testOutDataID);
+    referenceMapping.computeMapping();
+    referenceMapping.map(refInDataID, refOutDataID);
+    BOOST_TEST(testMapping.hasComputedMapping() == true);
+    BOOST_TEST(testOutData->values() == refOutData->values(), boost::test_tools::per_element());
+
+  } else {
+    testMapping.setMeshes(outMesh, inMesh);
+    referenceMapping.setMeshes(outMesh, inMesh);
+    BOOST_TEST(testMapping.hasComputedMapping() == false);
+
+    auto &val = testOutData->values();
+    for (int i = 0; i < outMesh->nVertices(); ++i) {
+      // base value ramps from 0.0 to 1.0
+      double base = double(i) / double(outMesh->nVertices() - 1);
+      for (int c = 0; c < nComponents; ++c) {
+        // (2*c + 1) = 1, 3, 5, = make data components linear dependent
+        val[i * nComponents + c] = (2 * c + 1) * base;
+      }
+    }
+    refOutData->values() = testOutData->values();
+
+    testMapping.computeMapping();
+    testMapping.map(testOutDataID, testInDataID);
+    referenceMapping.computeMapping();
+    referenceMapping.map(refOutDataID, refInDataID);
+    BOOST_TEST(testMapping.hasComputedMapping() == true);
+    BOOST_TEST(testInData->values() == refInData->values(), boost::test_tools::per_element());
+  }
+
   // The remaining parts should already be covered by the other 3D/2D tests
   testMapping.clear();
   referenceMapping.clear();
