@@ -53,8 +53,17 @@ public:
 private:
   mutable precice::logging::Logger _log{"mapping::BatchedRBFSolver"};
 
+  // Only used internally in the solve function to aid with the dispatch
+  enum class SolverConstraint {
+    Consistent,
+    Conservative
+  };
+
+  template <BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::SolverConstraint Constraint>
+  void _solveImpl(const time::Sample &globalIn, Eigen::VectorXd &globalOut);
+
   // Helper to dispatch the actual kernel. Needed to help with the template parameters
-  template <typename... Args>
+  template <SolverConstraint Constraint, typename... Args>
   void _dispatch_solve_kernel(bool polynomial, bool evaluation_op_available, Args &&...args);
 
   // Linear offsets for each cluster, i.e., all cluster sizes
@@ -352,13 +361,13 @@ BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::BatchedRBFSolver(RBF_T               
 }
 
 template <typename RADIAL_BASIS_FUNCTION_T>
-void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Sample &globalIn, Eigen::VectorXd &globalOut)
+template <BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::SolverConstraint Constraint>
+void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::_solveImpl(const time::Sample &globalIn, Eigen::VectorXd &globalOut)
 {
-}
+  // Determine target views based on the solver mode
+  auto &deviceIn  = (Constraint == SolverConstraint::Consistent) ? _inData : _outData;
+  auto &deviceOut = (Constraint == SolverConstraint::Consistent) ? _outData : _inData;
 
-template <typename RADIAL_BASIS_FUNCTION_T>
-void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const time::Sample &globalIn, Eigen::VectorXd &globalOut)
-{
   auto solve_component =
       [&](const double *inPtr, Eigen::Index inSize, double *outPtr, Eigen::Index outSize) {
         // Step 1: Wrap memory into an unmanaged view
@@ -367,22 +376,19 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const time::Sa
 
         // Step 2: Copy over
         precice::profiling::Event e1("solver.copyHostToDevice");
-        // Looks odd, but is a result of the swapped in/out data in the conservative constraint
-        // The _outData matches the output mesh, which is (from the data perspective) the input here
-        Kokkos::deep_copy(_outData, inView);
-        Kokkos::deep_copy(_inData, 0.0); // Reset output data
+        Kokkos::deep_copy(deviceIn, inView);
+        Kokkos::deep_copy(deviceOut, 0.0); // Reset output data
 
         Kokkos::fence();
         e1.stop();
 
         // Step 3: Launch the kernel
         precice::profiling::Event e2("solver.kernel.batchedSolve");
-        // NOTE THE SWAPPED IN AND OUT DATA
-        _dispatch_solve_kernel(_polynomial == Polynomial::SEPARATE, _computeEvaluationOffline,
-                               _nCluster, _dim, _avgClusterSize, _maxInClusterSize, _maxOutClusterSize, _basisFunction,
-                               _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
-                               _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData,
-                               _inMesh, _outMesh, _qrMatrix, _qrTau, _qrP);
+        _dispatch_solve_kernel<Constraint>(_polynomial == Polynomial::SEPARATE, _computeEvaluationOffline,
+                                           _nCluster, _dim, _avgClusterSize, _maxInClusterSize, _maxOutClusterSize, _basisFunction,
+                                           _inOffsets, _globalInIDs, _inData, _kernelOffsets, _kernelMatrices, _normalizedWeights,
+                                           _evaluationOffsets, _evalMatrices, _outOffsets, _globalOutIDs, _outData,
+                                           _inMesh, _outMesh, _qrMatrix, _qrTau, _qrP);
 
         Kokkos::fence();
         e2.stop();
@@ -391,7 +397,7 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const time::Sa
         precice::profiling::Event e3("solver.copyDeviceToHost");
         Kokkos::View<double *, Kokkos::HostSpace, UnmanagedMemory>
             outView(outPtr, outSize);
-        Kokkos::deep_copy(outView, _inData);
+        Kokkos::deep_copy(outView, deviceOut);
         Kokkos::fence();
         e3.stop();
       };
@@ -417,22 +423,43 @@ void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const time::Sa
   }
 }
 
+template <typename RADIAL_BASIS_FUNCTION_T>
+void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConsistent(const time::Sample &globalIn, Eigen::VectorXd &globalOut)
+{
+  this->_solveImpl<BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::SolverConstraint::Consistent>(globalIn, globalOut);
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::solveConservative(const time::Sample &globalIn, Eigen::VectorXd &globalOut)
+{
+  this->_solveImpl<BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::SolverConstraint::Conservative>(globalIn, globalOut);
+}
+
 // Forwarding dispatcher for the actual implementation to help with the template parameters:
 template <typename RADIAL_BASIS_FUNCTION_T>
-template <typename... Args>
+template <BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::SolverConstraint Constraint, typename... Args>
 void BatchedRBFSolver<RADIAL_BASIS_FUNCTION_T>::_dispatch_solve_kernel(bool polynomial, bool evaluation_op_available,
                                                                        Args &&...args)
 {
+  // Helper lambda to map runtime bools to compile-time template arguments
+  auto call = [&](auto poly, auto eval) {
+    if constexpr (Constraint == SolverConstraint::Consistent) {
+      kernel::do_batched_solve<poly.value, eval.value>(std::forward<Args>(args)...);
+    } else {
+      kernel::do_batched_conservative_solve<poly.value, eval.value>(std::forward<Args>(args)...);
+    }
+  };
+
   if (polynomial) {
     if (evaluation_op_available)
-      kernel::do_batched_conservative_solve<true, true>(std::forward<Args>(args)...);
+      call(std::true_type{}, std::true_type{});
     else
-      kernel::do_batched_conservative_solve<true, false>(std::forward<Args>(args)...);
+      call(std::true_type{}, std::false_type{});
   } else {
     if (evaluation_op_available)
-      kernel::do_batched_conservative_solve<false, true>(std::forward<Args>(args)...);
+      call(std::false_type{}, std::true_type{});
     else
-      kernel::do_batched_conservative_solve<false, false>(std::forward<Args>(args)...);
+      call(std::false_type{}, std::false_type{});
   }
 }
 } // namespace precice::mapping
