@@ -2049,28 +2049,42 @@ BOOST_AUTO_TEST_CASE(TestSingleClusterPartitionOfUnity)
 
 #ifndef PRECICE_NO_KOKKOS_KERNELS
 
-#define PERFORM_REFERENCE_TEST(EXECUTOR, type, function, dim)                                                                                 \
-  {                                                                                                                                           \
-    MappingConfiguration::GinkgoParameter gpm;                                                                                                \
-    gpm.executor                                  = EXECUTOR;                                                                                 \
-    gpm.deviceId                                  = 0;                                                                                        \
-    gpm.nThreads                                  = 2;                                                                                        \
-    int                                    scalar = 1;                                                                                        \
-    int                                    vector = dim;                                                                                      \
-    mapping::PartitionOfUnityMapping<type> testOff(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false, gpm, true);          \
-    mapping::PartitionOfUnityMapping<type> testOn(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false, gpm, false);          \
-    mapping::PartitionOfUnityMapping<type> ref(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false);                         \
-    performReferenceTesting(testOff, ref, dim, scalar);                                                                                       \
-    performReferenceTesting(testOn, ref, dim, scalar);                                                                                        \
-    performReferenceTesting(testOff, ref, dim, vector);                                                                                       \
-    performReferenceTesting(testOn, ref, dim, vector);                                                                                        \
-    mapping::PartitionOfUnityMapping<type> testPolyOff(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false, gpm, true); \
-    mapping::PartitionOfUnityMapping<type> testPolyOn(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false, gpm, false); \
-    mapping::PartitionOfUnityMapping<type> refPoly(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false);                \
-    performReferenceTesting(testPolyOff, refPoly, dim, scalar);                                                                               \
-    performReferenceTesting(testPolyOn, refPoly, dim, scalar);                                                                                \
-    performReferenceTesting(testPolyOff, refPoly, dim, vector);                                                                               \
-    performReferenceTesting(testPolyOn, refPoly, dim, vector);                                                                                \
+#define PERFORM_REFERENCE_TEST(EXECUTOR, type, function, dim)                                                                                                \
+  {                                                                                                                                                          \
+    MappingConfiguration::GinkgoParameter gpm;                                                                                                               \
+    gpm.executor                                  = EXECUTOR;                                                                                                \
+    gpm.deviceId                                  = 0;                                                                                                       \
+    gpm.nThreads                                  = 1;                                                                                                       \
+    int                                    scalar = 1;                                                                                                       \
+    int                                    vector = dim;                                                                                                     \
+    mapping::PartitionOfUnityMapping<type> testOff(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false, gpm, true);                         \
+    mapping::PartitionOfUnityMapping<type> testOn(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false, gpm, false);                         \
+    mapping::PartitionOfUnityMapping<type> ref(Mapping::CONSISTENT, dim, function, Polynomial::OFF, 25, 0.15, false);                                        \
+    performReferenceTesting(testOff, ref, dim, scalar);                                                                                                      \
+    performReferenceTesting(testOn, ref, dim, scalar);                                                                                                       \
+    performReferenceTesting(testOff, ref, dim, vector);                                                                                                      \
+    performReferenceTesting(testOn, ref, dim, vector);                                                                                                       \
+    mapping::PartitionOfUnityMapping<type> testPolyOff(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false, gpm, true);                \
+    mapping::PartitionOfUnityMapping<type> testPolyOn(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false, gpm, false);                \
+    mapping::PartitionOfUnityMapping<type> refPoly(Mapping::CONSISTENT, dim, function, Polynomial::SEPARATE, 25, 0.15, false);                               \
+    performReferenceTesting(testPolyOff, refPoly, dim, scalar);                                                                                              \
+    performReferenceTesting(testPolyOn, refPoly, dim, scalar);                                                                                               \
+    performReferenceTesting(testPolyOff, refPoly, dim, vector);                                                                                              \
+    performReferenceTesting(testPolyOn, refPoly, dim, vector);                                                                                               \
+    mapping::PartitionOfUnityMapping<type> testConservativeOn(Mapping::CONSERVATIVE, dim, function, Polynomial::OFF, 25, 0.15, false, gpm, true);            \
+    mapping::PartitionOfUnityMapping<type> testConservativeOff(Mapping::CONSERVATIVE, dim, function, Polynomial::OFF, 25, 0.15, false, gpm, false);          \
+    mapping::PartitionOfUnityMapping<type> refConservative(Mapping::CONSERVATIVE, dim, function, Polynomial::OFF, 25, 0.15, false);                          \
+    performReferenceTesting(testConservativeOn, refConservative, dim, scalar);                                                                               \
+    performReferenceTesting(testConservativeOff, refConservative, dim, scalar);                                                                              \
+    performReferenceTesting(testConservativeOn, refConservative, dim, vector);                                                                               \
+    performReferenceTesting(testConservativeOff, refConservative, dim, vector);                                                                              \
+    mapping::PartitionOfUnityMapping<type> testConservativePolyOn(Mapping::CONSERVATIVE, dim, function, Polynomial::SEPARATE, 25, 0.15, false, gpm, true);   \
+    mapping::PartitionOfUnityMapping<type> testConservativePolyOff(Mapping::CONSERVATIVE, dim, function, Polynomial::SEPARATE, 25, 0.15, false, gpm, false); \
+    mapping::PartitionOfUnityMapping<type> refConservativePoly(Mapping::CONSERVATIVE, dim, function, Polynomial::SEPARATE, 25, 0.15, false);                 \
+    performReferenceTesting(testConservativePolyOn, refConservativePoly, dim, scalar);                                                                       \
+    performReferenceTesting(testConservativePolyOff, refConservativePoly, dim, vector);                                                                      \
+    performReferenceTesting(testConservativePolyOn, refConservativePoly, dim, scalar);                                                                       \
+    performReferenceTesting(testConservativePolyOff, refConservativePoly, dim, vector);                                                                      \
   }
 
 #define TEST_CPU_REFERENCE_FOR_SPD_RBFS(EXECUTOR)                        \
