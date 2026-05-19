@@ -886,7 +886,7 @@ void do_batched_conservative_solve(
     // Eigen::MatrixXd Au = _matrixA.transpose() * inputData;
     Kokkos::Array<double, 4> qrCoeffs = {0., 0., 0., 0.};
 
-    // minimal compute variant
+    // ... minimal compute variant
     if constexpr (evaluation_op_available) {
 
       ScratchVector in(team.team_scratch(1), outSize);
@@ -930,7 +930,7 @@ void do_batched_conservative_solve(
       }
       // If a polynomial is involved, apply the output mesh mesh vertices here somewhere
     } else {
-      // minimal memory
+      // ...minimal memory variant
       // Step 3a: each thread takes care of one output vertex
       // Alternative: cache the input mesh in shared memory first and let the loop run over outSize
       // Kokkos::parallel_for(
@@ -965,6 +965,69 @@ void do_batched_conservative_solve(
       //           sum); // ThreadVectorRange
       //       // Au(r) = sum; -> needs inSize
       //     });
+
+      // Variant 1: outer parallel_for over inSize and inner reduction over outSize
+      // -> each thread is responsible for one inMesh vertex
+      // -> suboptimal in terms of data access
+
+      // ScratchMesh localInMesh = ScratchMesh(&work(0, 1), inSize, dim);
+      // ScratchVector in(team.team_scratch(1), outSize);
+      // Step 3a: Extract input data
+
+      // Probably better idea: cache outMesh and the outvalues such that the inner loop runs cleanly
+      // then we can also merge the polynomial contribution into the preprocessing step
+      Kokkos::parallel_for(
+          Kokkos::TeamThreadRange(team, inSize), [&](int r) {
+            // Step 3a:
+            auto                     globalRhsID = globalRhsIDs(r + inBegin);
+            Kokkos::Array<double, 3> vertex      = {0., 0., 0.};
+            for (int d = 0; d < dim; ++d) {
+              vertex[d] = inMesh(globalRhsID, d);
+            }
+
+            double sum = 0.0;
+            Kokkos::parallel_reduce(
+                Kokkos::ThreadVectorRange(team, outSize),
+                [&](int c, double &localSum) {
+                  // compute the local output coefficients
+                  auto globalID = globalOutIDs(c + outBegin);
+
+                  double dist = 0;
+                  for (int d = 0; d < dim; ++d) {
+                    double diff = vertex[d] - outMesh(globalID, d);
+                    dist += diff * diff;
+                  }
+                  dist = Kokkos::sqrt(dist);
+                  // Evaluate the RBF
+                  double val = f(dist, rbf_params);
+                  auto   w   = normalizedWeights(c + outBegin);
+                  double in  = src(globalID) * w; // = in(r)
+                  localSum += val * in;
+                },
+                sum); // ThreadVectorRange
+            Au(r) = sum;
+          });
+
+      // Kokkos::parallel_reduce(
+      //     Kokkos::ThreadVectorRange(team, outSize),
+      //     [&](const int k, double &s0, double &s1, double &s2, double &s3) {
+
+      // const double val      = Au(k);
+      // auto         globalID = globalRhsIDs(k + inBegin);
+
+      // s0 += inMesh(globalID, 0) * val;
+      // s1 += inMesh(globalID, 1) * val;
+      // if (dim == 3)
+      //   s2 += inMesh(globalID, 2) * val;
+      // s3 += val;
+      //       },
+      //       y0, y1, y2, y3);
+      // });
+      // team.team_barrier();
+
+      // Variant 2: outer parallel reduction over outsize and inner parallel_for over inSize
+      // -> each thread is responsible for one outMesh vertex
+      // -> better data access pattern, because we can cache, but the the parallelization creates a dependency across the inner loops
     }
     team.team_barrier();
 
