@@ -877,6 +877,7 @@ void do_batched_conservative_solve(
 
     // Step 2: Define the data structures to work with
     // The scratch memory (shared memory for the device)
+    // TODO: We don't need that much work memory here, one column + qr coefficients would be sufficient
     ScratchMatrix work(team.team_scratch(0), Kokkos::max(4, inSize));
     auto          Au = Kokkos::subview(work, std::pair<int, int>(0, inSize), 0);
 
@@ -906,7 +907,7 @@ void do_batched_conservative_solve(
           KokkosBlas::Algo::Gemv::Blocked>::invoke(team, 'T', 1.0, eval, in, 0.0, Au);
 
       // Step 3c: compute polynomial contribution: V^T * in
-      if (polynomial) {
+      if constexpr (polynomial) {
         qrCoeffs = Kokkos::Array<double, 4>{0.0, 0.0, 0.0, 0.0};
         // double y0 = 0.0, y1 = 0.0, y2 = 0.0, y3 = 0.0;
         Kokkos::parallel_reduce(
@@ -931,48 +932,28 @@ void do_batched_conservative_solve(
       // If a polynomial is involved, apply the output mesh mesh vertices here somewhere
     } else {
       // ...minimal memory variant
-      // Step 3a: each thread takes care of one output vertex
-      // Alternative: cache the input mesh in shared memory first and let the loop run over outSize
-      // Kokkos::parallel_for(
-      //     Kokkos::TeamThreadRange(team, outSize), [&](int r) {
-      //       auto   globalID = globalOutIDs(r + outBegin);
-      //       auto   w        = normalizedWeights(r + outBegin);
-      //       double in       = src(globalID) * w;
-
-      //       // we first extract the vertex coordinates
-      //       Kokkos::Array<double, 3> outVertex = {0., 0., 0.};
-      //       for (int d = 0; d < dim; ++d) {
-      //         outVertex[d] = outMesh(globalID, d);
-      //       }
-
-      //       // Step 3b: The matrix vector multiplication res = A * in
-      //       // Accumulate partial dot product in a thread-parallel manner
-      //       double sum = 0.0;
-      //       Kokkos::parallel_reduce(
-      //           Kokkos::ThreadVectorRange(team, inSize),
-      //           [&](int c, double &localSum) {
-      //             // compute the local output coefficients
-      //             double dist = 0;
-      //             for (int d = 0; d < dim; ++d) {
-      //               double diff = outVertex[d] - localInMesh->operator()(c, d);
-      //               dist += diff * diff;
-      //             }
-      //             dist = Kokkos::sqrt(dist);
-      //             // Evaluate the RBF
-      //             double val = f(dist, rbf_params);
-      //             localSum += val * in(c);
-      //           },
-      //           sum); // ThreadVectorRange
-      //       // Au(r) = sum; -> needs inSize
-      //     });
 
       // Variant 1: outer parallel_for over inSize and inner reduction over outSize
       // -> each thread is responsible for one inMesh vertex
       // -> suboptimal in terms of data access
-
-      // ScratchMesh localInMesh = ScratchMesh(&work(0, 1), inSize, dim);
-      // ScratchVector in(team.team_scratch(1), outSize);
       // Step 3a: Extract input data
+      // TODO: Change the data structure here: The matrix is LayoutLeft and the Mesh is LayoutRight, which may bite
+      ScratchMatrix localIn(team.team_scratch(1), outSize);
+      auto          in        = Kokkos::subview(localIn, std::pair<int, int>(0, outSize), 0);
+      ScratchMesh   localMesh = ScratchMesh(&localIn(0, 1), outSize, dim);
+
+      // Could also be merged into the reduction below, but by pre-loading it, we prevent the
+      // random and global memory access and within the reduction
+      Kokkos::parallel_for(
+          Kokkos::TeamThreadRange(team, outSize), [&](int r) {
+            auto globalID = globalOutIDs(r + outBegin);
+            auto w        = normalizedWeights(r + outBegin);
+            in(r)         = src(globalID) * w;
+            for (int d = 0; d < dim; ++d) {
+              localMesh(r, d) = outMesh(globalID, d);
+            }
+          });
+      team.team_barrier();
 
       // Probably better idea: cache outMesh and the outvalues such that the inner loop runs cleanly
       // then we can also merge the polynomial contribution into the preprocessing step
@@ -990,40 +971,42 @@ void do_batched_conservative_solve(
                 Kokkos::ThreadVectorRange(team, outSize),
                 [&](int c, double &localSum) {
                   // compute the local output coefficients
-                  auto globalID = globalOutIDs(c + outBegin);
 
                   double dist = 0;
                   for (int d = 0; d < dim; ++d) {
-                    double diff = vertex[d] - outMesh(globalID, d);
+                    double diff = vertex[d] - localMesh(c, d);
                     dist += diff * diff;
                   }
                   dist = Kokkos::sqrt(dist);
                   // Evaluate the RBF
                   double val = f(dist, rbf_params);
-                  auto   w   = normalizedWeights(c + outBegin);
-                  double in  = src(globalID) * w; // = in(r)
-                  localSum += val * in;
+                  localSum += val * in(c);
                 },
                 sum); // ThreadVectorRange
             Au(r) = sum;
           });
 
-      // Kokkos::parallel_reduce(
-      //     Kokkos::ThreadVectorRange(team, outSize),
-      //     [&](const int k, double &s0, double &s1, double &s2, double &s3) {
+      if constexpr (polynomial) {
+        qrCoeffs = Kokkos::Array<double, 4>{0.0, 0.0, 0.0, 0.0};
+        // double y0 = 0.0, y1 = 0.0, y2 = 0.0, y3 = 0.0;
+        Kokkos::parallel_reduce(
+            Kokkos::TeamThreadRange(team, outSize),
+            [&](const int c, double &s0, double &s1, double &s2, double &s3) {
+              const double tmp = in(c);
 
-      // const double val      = Au(k);
-      // auto         globalID = globalRhsIDs(k + inBegin);
+              s0 += localMesh(c, 0) * tmp;
+              s1 += localMesh(c, 1) * tmp;
+              if (dim == 3)
+                s2 += localMesh(c, 2) * tmp;
+              s3 += tmp;
+            },
+            qrCoeffs[0], qrCoeffs[1], qrCoeffs[2], qrCoeffs[3]);
 
-      // s0 += inMesh(globalID, 0) * val;
-      // s1 += inMesh(globalID, 1) * val;
-      // if (dim == 3)
-      //   s2 += inMesh(globalID, 2) * val;
-      // s3 += val;
-      //       },
-      //       y0, y1, y2, y3);
-      // });
-      // team.team_barrier();
+        // Once the above is computes, the in vector is not needed anymore
+        //    Kokkos::single(Kokkos::PerTeam(team), [&] {
+        //   in(0) = y0; in(1) = y1; in(2) = y2; in(3) = y3;
+        // });
+      }
 
       // Variant 2: outer parallel reduction over outsize and inner parallel_for over inSize
       // -> each thread is responsible for one outMesh vertex
@@ -1060,6 +1043,7 @@ void do_batched_conservative_solve(
     team.team_barrier();
 
     // Step 5: take care of the polynomial part, the solution is stored in rhstmp
+    // rhstmp is here only used for the qr entries
     auto rhstmp = Kokkos::subview(work, std::pair<int, int>(0, inSize), std::pair<int, int>(1, 2));
     if constexpr (polynomial) {
 
@@ -1090,9 +1074,6 @@ void do_batched_conservative_solve(
         qrCoeffs[2] = y3 - qrCoeffs[3];
       }
       //   epsilon -= _matrixQ.transpose() * out; // We can cache Q
-      //   PRECICE_ASSERT(epsilon.rows() == _matrixQ.cols());
-
-      //   // out  = out - solveTranspose tau (sigma in the PETSc impl)
       //   out -= static_cast<Eigen::MatrixXd>(_qrMatrixQ.transpose().solve(-epsilon));
 
       const int            matrixCols = dim + 1;
@@ -1168,12 +1149,14 @@ void do_batched_conservative_solve(
   auto outBytes = ScratchVector::shmem_size(maxOutClusterSize);
   if (!evaluation_op_available || polynomial) {
     // and additional storage if we have the polynomial
+    // currently too much: we need inBytes and four entries (or maybe eight) for the QR
     inBytes = 4 * inBytes;
   }
   // We use the outBytes only for the per-cluster output vector, which
   // we don't need if we evaluate everything on the fly
+  // In the conservative case, we cache the outMesh and the outvector, if we have to compute the evaluation on-the-fly
   if (!evaluation_op_available) {
-    outBytes = 0;
+    outBytes = 4 * outBytes;
   }
 
   // We put the solution and the in data values into shared memory
