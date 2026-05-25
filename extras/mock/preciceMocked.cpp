@@ -988,6 +988,15 @@ void Participant::initialize()
   // Print startup banner (only on rank 0)
   if (_impl->primary) {
     const std::string prefix = _impl->logPrefix();
+    const double      effectiveTimeWindowSize = (_impl->configData.timeWindowSize > 0) ? _impl->configData.timeWindowSize : 1.0;
+    std::string       modeStr;
+    if (_impl->mockConfig.defaultMode == impl::ParticipantImpl::DataMode::Random) {
+      modeStr = "random";
+    } else if (_impl->mockConfig.defaultMode == impl::ParticipantImpl::DataMode::ScaledBuffer) {
+      modeStr = "scaled";
+    } else {
+      modeStr = "buffer";
+    }
     if (_impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
       std::cout << prefix << "This is preCICE version 3.3.0 (mock)" << std::endl;
       std::cout << prefix << "Revision info: mock-implementation" << std::endl;
@@ -1008,19 +1017,11 @@ void Participant::initialize()
     } else {
       std::cout << prefix << "Initialized with participant \"" << _impl->name << "\"" << std::endl;
       // Print configuration summary in mock mode
-      std::string modeStr;
-      if (_impl->mockConfig.defaultMode == impl::ParticipantImpl::DataMode::Random) {
-        modeStr = "random";
-      } else if (_impl->mockConfig.defaultMode == impl::ParticipantImpl::DataMode::ScaledBuffer) {
-        modeStr = "scaled";
-      } else {
-        modeStr = "buffer";
-      }
       std::cout << prefix << "Configuration: default-data-mode=" << modeStr;
       if (_impl->configData.isImplicitCoupling) {
         std::cout << " max-iterations=" << _impl->configData.maxIterations;
       }
-      std::cout << " time-window-size=" << _impl->timeWindowSize;
+      std::cout << " time-window-size=" << effectiveTimeWindowSize;
       if (_impl->mockConfigExists) {
         std::cout << " mock-config=yes";
       }
@@ -1062,9 +1063,8 @@ void Participant::initialize()
     }
   }
 
-  _impl->initialized     = true;
-  _impl->couplingOngoing = true;
-  // Set timeWindowSize from parsed time-window-size, or use a default if not set
+  _impl->initialized       = true;
+  _impl->couplingOngoing   = true;
   _impl->timeWindowSize    = (_impl->configData.timeWindowSize > 0) ? _impl->configData.timeWindowSize : 1.0;
   _impl->currentStep       = 0;
   _impl->currentTime       = 0.0;
