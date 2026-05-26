@@ -194,12 +194,16 @@ public:
     std::vector<DataInfo>           dataItems;
     bool                            isImplicitCoupling             = false;
     bool                            hasConvergenceMeasure          = false;
+    int                             minIterations                  = 1;
+    int                             configMinIterations            = 1;
     int                             maxIterations                  = 1;
     int                             configMaxIterations            = 1;     // Stores the value from preCICE config
     int                             maxIterationsOverride          = 2;     // Default override (2), -1 use config, >0 override
     bool                            maxIterationsOverrideSpecified = false; // True if mock-config explicitly sets override
     int                             currentIteration               = 0;
     bool                            iterationConverged             = false;
+    bool                            writeCheckpointRequired        = false;
+    bool                            readCheckpointRequired         = false;
     double                          maxTime                        = -1.0; // -1 means not set
     int                             maxTimeWindows                 = -1;   // -1 means not set
     double                          timeWindowSize                 = -1.0; // -1 means not set
@@ -254,6 +258,7 @@ public:
 
   uint32_t    seed              = 0;
   std::size_t currentStep       = 0;
+  double      currentWindowStartTime = 0.0;
   double      currentTime       = 0.0;
   double      currentWindowTime = 0.0;
 
@@ -490,6 +495,13 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
       impl->configData.maxIterations       = maxIter;
       impl->configData.configMaxIterations = maxIter;
     }
+  } else if (impl->configParseState.inCouplingScheme && elemName == "min-iterations") {
+    std::string minIterStr = getAttr("value");
+    if (!minIterStr.empty()) {
+      int minIter                          = std::stoi(minIterStr);
+      impl->configData.minIterations       = minIter;
+      impl->configData.configMinIterations = minIter;
+    }
   } else if (impl->configParseState.inCouplingScheme &&
              (elemName == "relative-convergence-measure" || elemName == "absolute-convergence-measure" ||
               elemName == "residual-relative-convergence-measure" || elemName == "min-iteration-convergence-measure")) {
@@ -629,6 +641,10 @@ void impl::ParticipantImpl::parseConfig()
     }
 
     applyMaxIterationsOverride();
+
+    if (configData.maxIterations > 0 && configData.minIterations > configData.maxIterations) {
+      configData.minIterations = configData.maxIterations;
+    }
 
     configParsed = true;
   } catch (const precice::Error &) {
@@ -1067,13 +1083,16 @@ void Participant::initialize()
   _impl->couplingOngoing   = true;
   _impl->timeWindowSize    = (_impl->configData.timeWindowSize > 0) ? _impl->configData.timeWindowSize : 1.0;
   _impl->currentStep       = 0;
+  _impl->currentWindowStartTime = 0.0;
   _impl->currentTime       = 0.0;
   _impl->currentWindowTime = 0.0;
 
   // Initialize implicit coupling state
   if (_impl->configData.isImplicitCoupling) {
-    _impl->configData.currentIteration   = 0;
-    _impl->configData.iterationConverged = false;
+    _impl->configData.currentIteration        = 1;
+    _impl->configData.iterationConverged      = false;
+    _impl->configData.writeCheckpointRequired = true;
+    _impl->configData.readCheckpointRequired  = false;
   }
 
   // Validate that termination criteria are provided
@@ -1083,6 +1102,31 @@ void Participant::initialize()
         "to prevent infinite execution. Please add one of these attributes:\n"
         "  <max-time value=\"...\"/>\n"
         "  <max-time-windows value=\"...\"/>");
+  }
+
+  if (_impl->primary && _impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
+    std::ostringstream state;
+    if (_impl->configData.isImplicitCoupling) {
+      state << "it " << _impl->configData.currentIteration;
+      if (_impl->configData.minIterations > 0 && _impl->configData.maxIterations > 0) {
+        state << " (min: " << _impl->configData.minIterations << ", max: " << _impl->configData.maxIterations << ")";
+      } else if (_impl->configData.maxIterations > 0) {
+        state << " (max: " << _impl->configData.maxIterations << ")";
+      } else if (_impl->configData.minIterations > 0) {
+        state << " (min: " << _impl->configData.minIterations << ")";
+      }
+      state << ", ";
+    }
+    state << "time-window " << (_impl->currentStep + 1);
+    if (_impl->configData.maxTimeWindows > 0) {
+      state << " (max: " << _impl->configData.maxTimeWindows << ")";
+    }
+    state << ", t " << _impl->currentTime;
+    if (_impl->configData.maxTime > 0) {
+      state << " (max: " << _impl->configData.maxTime << ")";
+    }
+    state << ", Dt " << _impl->timeWindowSize << ", max-dt " << (_impl->timeWindowSize - _impl->currentWindowTime);
+    std::cout << _impl->logPrefix() << state.str() << std::endl;
   }
 }
 
@@ -1108,31 +1152,45 @@ void Participant::advance(double computedTimeStepSize)
     throw precice::Error(precice::utils::format_or_error("advance() cannot be called with a negative time step size {}.", computedTimeStepSize));
   }
 
-  // Handle implicit coupling iterations
-  if (_impl->configData.isImplicitCoupling) {
-
-    _impl->configData.currentIteration++;
-    _impl->currentTime += computedTimeStepSize;
-    _impl->currentWindowTime += computedTimeStepSize;
-
-    // Converge when reaching maxIterations (respects max-iterations-override from mock config)
-    if (_impl->configData.currentIteration >= _impl->configData.maxIterations) {
-      _impl->configData.iterationConverged = true;
-      _impl->configData.currentIteration   = 0;
-    } else {
-      // Not converged yet - iteration did not reach maxIterations
-      _impl->configData.iterationConverged = false;
+  bool windowCompleted = false;
+  auto printCouplingState = [&]() {
+    if (!_impl->primary || _impl->mockConfig.loggingMode != impl::ParticipantImpl::LoggingMode::PrecICE) {
+      return;
     }
-  } else {
-    // Explicit coupling: always advance
-    _impl->currentTime += computedTimeStepSize;
-    _impl->currentWindowTime += computedTimeStepSize;
 
-    // Check termination based on precice config
-  }
+    std::ostringstream state;
+    if (_impl->configData.isImplicitCoupling) {
+      const bool hasMin = _impl->configData.minIterations > 0;
+      const bool hasMax = _impl->configData.maxIterations > 0;
+      state << "it " << _impl->configData.currentIteration;
+      if (hasMin && hasMax) {
+        state << " (min: " << _impl->configData.minIterations << ", max: " << _impl->configData.maxIterations << ")";
+      } else if (hasMax) {
+        state << " (max: " << _impl->configData.maxIterations << ")";
+      } else if (hasMin) {
+        state << " (min: " << _impl->configData.minIterations << ")";
+      }
+      state << ", ";
+    }
 
-  if (_impl->currentWindowTime >= _impl->timeWindowSize) {
+    const std::size_t timeWindowIndex = _impl->currentStep + 1;
+    state << "time-window " << timeWindowIndex;
+    if (_impl->configData.maxTimeWindows > 0) {
+      state << " (max: " << _impl->configData.maxTimeWindows << ")";
+    }
+    state << ", t " << _impl->currentTime;
+    if (_impl->configData.maxTime > 0) {
+      state << " (max: " << _impl->configData.maxTime << ")";
+    }
+    state << ", Dt " << _impl->timeWindowSize << ", max-dt " << (_impl->timeWindowSize - _impl->currentWindowTime);
+    std::cout << _impl->logPrefix() << state.str() << std::endl;
+  };
+
+  auto handleTimeWindowCompletion = [&]() {
+    windowCompleted = true;
+    _impl->currentWindowStartTime += _impl->timeWindowSize;
     _impl->currentWindowTime = 0.0;
+    _impl->currentTime = _impl->currentWindowStartTime;
     _impl->currentStep += 1;
 
     bool shouldTerminate = false;
@@ -1142,8 +1200,55 @@ void Participant::advance(double computedTimeStepSize)
     if (_impl->configData.maxTime > 0 && _impl->currentTime >= _impl->configData.maxTime) {
       shouldTerminate = true;
     }
+
     if (shouldTerminate) {
       _impl->couplingOngoing = false;
+    }
+  };
+
+  // Handle implicit coupling iterations
+  if (_impl->configData.isImplicitCoupling) {
+
+    _impl->currentWindowTime += computedTimeStepSize;
+    _impl->currentTime = _impl->currentWindowStartTime + _impl->currentWindowTime;
+
+    if (_impl->currentWindowTime >= _impl->timeWindowSize) {
+      if (_impl->configData.currentIteration < _impl->configData.maxIterations) {
+        // Start the next implicit coupling iteration within the same time window.
+        _impl->configData.currentIteration++;
+        _impl->configData.iterationConverged    = false;
+        _impl->configData.readCheckpointRequired = true;
+        _impl->currentWindowTime = 0.0;
+        _impl->currentTime = _impl->currentWindowStartTime;
+      } else {
+        // The last implicit iteration completed the time window.
+        _impl->configData.iterationConverged      = true;
+        _impl->configData.currentIteration        = 1;
+        _impl->configData.writeCheckpointRequired = true;
+        handleTimeWindowCompletion();
+      }
+    }
+  } else {
+    // Explicit coupling: always advance
+    _impl->currentWindowTime += computedTimeStepSize;
+    _impl->currentTime = _impl->currentWindowStartTime + _impl->currentWindowTime;
+
+    if (_impl->currentWindowTime >= _impl->timeWindowSize) {
+      handleTimeWindowCompletion();
+    }
+  }
+
+  if (_impl->primary && _impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
+    const std::string prefix = _impl->logPrefix();
+    if (windowCompleted) {
+      std::cout << prefix << "Time window completed" << std::endl;
+    }
+
+    if (!_impl->couplingOngoing) {
+      std::cout << prefix << "Reached end at: final time-window: " << _impl->currentStep << ", final time: "
+                << _impl->currentTime << std::endl;
+    } else {
+      printCouplingState();
     }
   }
 }
@@ -1181,8 +1286,9 @@ bool Participant::requiresWritingCheckpoint()
 
   // For implicit coupling, require checkpoint at start of iteration
   if (_impl->configData.isImplicitCoupling) {
-    // Checkpoint needed at beginning of time window (iteration 0, before first advance)
-    return _impl->configData.currentIteration == 0;
+    const bool required = _impl->configData.writeCheckpointRequired;
+    _impl->configData.writeCheckpointRequired = false;
+    return required;
   }
 
   return false;
@@ -1197,8 +1303,9 @@ bool Participant::requiresReadingCheckpoint()
 
   // For implicit coupling, require reading checkpoint when not converged
   if (_impl->configData.isImplicitCoupling) {
-    // Read checkpoint needed when iteration hasn't converged and we're past iteration 0
-    return _impl->configData.currentIteration > 0 && !_impl->configData.iterationConverged;
+    const bool required = _impl->configData.readCheckpointRequired;
+    _impl->configData.readCheckpointRequired = false;
+    return required;
   }
 
   return false;
