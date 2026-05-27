@@ -7,7 +7,9 @@
 #include <memory>
 #include <mutex>
 #include <random>
+#include <sstream>
 #include <string>
+#include <vector>
 
 #include <libxml/SAX2.h>
 
@@ -308,6 +310,8 @@ public:
   void        parseMockConfig();
   void        applyMaxIterationsOverride();
   std::string logPrefix() const;
+  std::string formatCouplingState() const;
+  std::vector<std::string> buildInitializeLogMessages() const;
 
   // Helper method for XML parsing
   void parseXMLFile(const std::string &filePath,
@@ -360,6 +364,109 @@ impl::ParticipantImpl::ParticipantImpl(::precice::string_view participantName,
 std::string impl::ParticipantImpl::logPrefix() const
 {
   return (mockConfig.loggingMode == LoggingMode::PrecICE) ? "---[precice]  " : "[precice-mock]  ";
+}
+
+std::string impl::ParticipantImpl::formatCouplingState() const
+{
+  std::ostringstream state;
+  if (configData.isImplicitCoupling) {
+    state << "it " << configData.currentIteration;
+    if (configData.minIterations > 0 && configData.maxIterations > 0) {
+      state << " (min: " << configData.minIterations << ", max: " << configData.maxIterations << ")";
+    } else if (configData.maxIterations > 0) {
+      state << " (max: " << configData.maxIterations << ")";
+    } else if (configData.minIterations > 0) {
+      state << " (min: " << configData.minIterations << ")";
+    }
+    state << ", ";
+  }
+
+  const std::size_t timeWindowIndex = currentStep + 1;
+  state << "time-window " << timeWindowIndex;
+  if (configData.maxTimeWindows > 0) {
+    state << " (max: " << configData.maxTimeWindows << ")";
+  }
+  state << ", t " << currentTime;
+  if (configData.maxTime > 0) {
+    state << " (max: " << configData.maxTime << ")";
+  }
+  state << ", Dt " << timeWindowSize << ", max-dt " << (timeWindowSize - currentWindowTime);
+  return state.str();
+}
+
+std::vector<std::string> impl::ParticipantImpl::buildInitializeLogMessages() const
+{
+  std::vector<std::string> messages;
+  const double effectiveTimeWindowSize = (configData.timeWindowSize > 0) ? configData.timeWindowSize : 1.0;
+
+  if (mockConfig.loggingMode == LoggingMode::PrecICE) {
+    messages.push_back("This is preCICE version 3.3.0 (mock)");
+    messages.push_back("Revision info: mock-implementation");
+    messages.push_back("Build type: Release (mock)");
+  }
+
+  try {
+    messages.push_back(std::string("Working directory \"") + std::filesystem::current_path().string() + "\"");
+  } catch (const std::filesystem::filesystem_error &fse) {
+    messages.push_back(std::string("Working directory unknown due to error \"") + fse.what() + "\"");
+  }
+
+  if (mockConfigExists) {
+    messages.push_back(std::string("Configuring preCICE (mock) with configuration \"") +
+                       std::filesystem::absolute(config).string() + "\" and mock configuration \"" +
+                       std::filesystem::absolute(mockConfigPath).string() + "\"");
+  } else {
+    messages.push_back(std::string("Configuring preCICE (mock) with configuration \"") +
+                       std::filesystem::absolute(config).string() +
+                       "\" and default mock configuration. See the mock-README about how to adjust this.");
+  }
+
+  if (mockConfig.loggingMode == LoggingMode::PrecICE) {
+    messages.push_back(std::string("I am participant \"") + name + "\"");
+  } else {
+    std::ostringstream summary;
+    summary << "Initialized with participant \"" << name << "\"";
+    messages.push_back(summary.str());
+
+    std::ostringstream configSummary;
+    configSummary << "Configuration: default-data-mode=";
+    if (mockConfig.defaultMode == DataMode::Random) {
+      configSummary << "random";
+    } else if (mockConfig.defaultMode == DataMode::ScaledBuffer) {
+      configSummary << "scaled";
+    } else {
+      configSummary << "buffer";
+    }
+    if (configData.isImplicitCoupling) {
+      configSummary << " max-iterations=" << configData.maxIterations;
+    }
+    configSummary << " time-window-size=" << effectiveTimeWindowSize;
+    if (mockConfigExists) {
+      configSummary << " mock-config=yes";
+    }
+    messages.push_back(configSummary.str());
+  }
+
+  if (mockConfig.loggingMode == LoggingMode::PrecICE) {
+    messages.push_back("Setting up primary communication to coupling partner/s");
+    messages.push_back("Primary ranks are connected");
+    messages.push_back("Setting up preliminary secondary communication to coupling partner/s");
+
+    for (const auto &meshEntry : configData.meshes) {
+      const auto &meshInfo = meshEntry.second;
+      if (!meshInfo.provided) {
+        continue;
+      }
+
+      messages.push_back(std::string("Prepare partition for mesh ") + meshInfo.name);
+      messages.push_back(std::string("Gather mesh ") + meshInfo.name);
+      messages.push_back(std::string("Send global mesh ") + meshInfo.name);
+    }
+
+    messages.push_back(formatCouplingState());
+  }
+
+  return messages;
 }
 
 // SAX callback handlers for config parsing
@@ -1001,70 +1108,11 @@ void Participant::initialize()
     throw precice::Error("initialize() may only be called once.");
   }
 
-  // Print startup banner (only on rank 0)
-  if (_impl->primary) {
-    const std::string prefix = _impl->logPrefix();
-    const double      effectiveTimeWindowSize = (_impl->configData.timeWindowSize > 0) ? _impl->configData.timeWindowSize : 1.0;
-    std::string       modeStr;
-    if (_impl->mockConfig.defaultMode == impl::ParticipantImpl::DataMode::Random) {
-      modeStr = "random";
-    } else if (_impl->mockConfig.defaultMode == impl::ParticipantImpl::DataMode::ScaledBuffer) {
-      modeStr = "scaled";
-    } else {
-      modeStr = "buffer";
-    }
-    if (_impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
-      std::cout << prefix << "This is preCICE version 3.3.0 (mock)" << std::endl;
-      std::cout << prefix << "Revision info: mock-implementation" << std::endl;
-      std::cout << prefix << "Build type: Release (mock)" << std::endl;
-    }
-    try {
-      std::cout << prefix << "Working directory \"" << std::filesystem::current_path().string() << "\"" << std::endl;
-    } catch (std::filesystem::filesystem_error &fse) {
-      std::cout << prefix << "Working directory unknown due to error \"" << fse.what() << "\"" << std::endl;
-    }
-    if (_impl->mockConfigExists) {
-      std::cout << prefix << "Configuring preCICE (mock) with configuration \"" << std::filesystem::absolute(_impl->config).string() << "\" and mock configuration \"" << std::filesystem::absolute(_impl->mockConfigPath).string() << "\"" << std::endl;
-    } else {
-      std::cout << prefix << "Configuring preCICE (mock) with configuration \"" << std::filesystem::absolute(_impl->config).string() << "\" and default mock configuration. See the mock-README about how to adjust this." << std::endl;
-    }
-    if (_impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
-      std::cout << prefix << "I am participant \"" << _impl->name << "\"" << std::endl;
-    } else {
-      std::cout << prefix << "Initialized with participant \"" << _impl->name << "\"" << std::endl;
-      // Print configuration summary in mock mode
-      std::cout << prefix << "Configuration: default-data-mode=" << modeStr;
-      if (_impl->configData.isImplicitCoupling) {
-        std::cout << " max-iterations=" << _impl->configData.maxIterations;
-      }
-      std::cout << " time-window-size=" << effectiveTimeWindowSize;
-      if (_impl->mockConfigExists) {
-        std::cout << " mock-config=yes";
-      }
-      std::cout << std::endl;
-    }
-  }
-
-  // Communication setup prints
-  if (_impl->primary && _impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
-    const std::string prefix = _impl->logPrefix();
-    std::cout << prefix << "Setting up primary communication to coupling partner/s" << std::endl;
-    std::cout << prefix << "Primary ranks are connected" << std::endl;
-    std::cout << prefix << "Setting up preliminary secondary communication to coupling partner/s" << std::endl;
-  }
-
-  // Mesh preparation prints and empty-mesh detection for provided meshes
+  // Mesh preparation checks for provided meshes
   for (const auto &meshEntry : _impl->configData.meshes) {
     const auto &meshInfo = meshEntry.second;
     if (!meshInfo.provided) {
       continue;
-    }
-
-    if (_impl->primary && _impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
-      const std::string prefix = _impl->logPrefix();
-      std::cout << prefix << "Prepare partition for mesh " << meshInfo.name << std::endl;
-      std::cout << prefix << "Gather mesh " << meshInfo.name << std::endl;
-      std::cout << prefix << "Send global mesh " << meshInfo.name << std::endl;
     }
 
     std::size_t count = 0;
@@ -1104,29 +1152,12 @@ void Participant::initialize()
         "  <max-time-windows value=\"...\"/>");
   }
 
-  if (_impl->primary && _impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
-    std::ostringstream state;
-    if (_impl->configData.isImplicitCoupling) {
-      state << "it " << _impl->configData.currentIteration;
-      if (_impl->configData.minIterations > 0 && _impl->configData.maxIterations > 0) {
-        state << " (min: " << _impl->configData.minIterations << ", max: " << _impl->configData.maxIterations << ")";
-      } else if (_impl->configData.maxIterations > 0) {
-        state << " (max: " << _impl->configData.maxIterations << ")";
-      } else if (_impl->configData.minIterations > 0) {
-        state << " (min: " << _impl->configData.minIterations << ")";
-      }
-      state << ", ";
+  // Print startup banner (only on rank 0) at the end of the setup block.
+  if (_impl->primary) {
+    const std::string prefix = _impl->logPrefix();
+    for (const auto &message : _impl->buildInitializeLogMessages()) {
+      std::cout << prefix << message << std::endl;
     }
-    state << "time-window " << (_impl->currentStep + 1);
-    if (_impl->configData.maxTimeWindows > 0) {
-      state << " (max: " << _impl->configData.maxTimeWindows << ")";
-    }
-    state << ", t " << _impl->currentTime;
-    if (_impl->configData.maxTime > 0) {
-      state << " (max: " << _impl->configData.maxTime << ")";
-    }
-    state << ", Dt " << _impl->timeWindowSize << ", max-dt " << (_impl->timeWindowSize - _impl->currentWindowTime);
-    std::cout << _impl->logPrefix() << state.str() << std::endl;
   }
 }
 
@@ -1154,36 +1185,9 @@ void Participant::advance(double computedTimeStepSize)
 
   bool windowCompleted = false;
   auto printCouplingState = [&]() {
-    if (!_impl->primary || _impl->mockConfig.loggingMode != impl::ParticipantImpl::LoggingMode::PrecICE) {
-      return;
+    if (_impl->primary && _impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
+      std::cout << _impl->logPrefix() << _impl->formatCouplingState() << std::endl;
     }
-
-    std::ostringstream state;
-    if (_impl->configData.isImplicitCoupling) {
-      const bool hasMin = _impl->configData.minIterations > 0;
-      const bool hasMax = _impl->configData.maxIterations > 0;
-      state << "it " << _impl->configData.currentIteration;
-      if (hasMin && hasMax) {
-        state << " (min: " << _impl->configData.minIterations << ", max: " << _impl->configData.maxIterations << ")";
-      } else if (hasMax) {
-        state << " (max: " << _impl->configData.maxIterations << ")";
-      } else if (hasMin) {
-        state << " (min: " << _impl->configData.minIterations << ")";
-      }
-      state << ", ";
-    }
-
-    const std::size_t timeWindowIndex = _impl->currentStep + 1;
-    state << "time-window " << timeWindowIndex;
-    if (_impl->configData.maxTimeWindows > 0) {
-      state << " (max: " << _impl->configData.maxTimeWindows << ")";
-    }
-    state << ", t " << _impl->currentTime;
-    if (_impl->configData.maxTime > 0) {
-      state << " (max: " << _impl->configData.maxTime << ")";
-    }
-    state << ", Dt " << _impl->timeWindowSize << ", max-dt " << (_impl->timeWindowSize - _impl->currentWindowTime);
-    std::cout << _impl->logPrefix() << state.str() << std::endl;
   };
 
   auto handleTimeWindowCompletion = [&]() {
