@@ -86,7 +86,6 @@ Tests covered by the system tests: see `release_test` in [`tests.yaml`](https://
 | State | Tester | Test |
 | --- | --- | --- |
 | | | [perpendicular-flap](https://github.com/precice/tutorials/tree/master/perpendicular-flap) fluid-openfoam - solid-dune |
-| | | [perpendicular-flap](https://github.com/precice/tutorials/tree/master/perpendicular-flap) fluid-nutils - solid-calculix |
 | | | MATLAB / MATLAB [ODEs](https://github.com/precice/matlab-bindings/tree/develop/tutorial) |
 | | | Solverdummy [Fortran module](https://github.com/precice/fortran-module/tree/develop/examples/solverdummy) |
 | | | Solverdummy [Python](https://github.com/precice/python-bindings/tree/develop/solverdummy) |
