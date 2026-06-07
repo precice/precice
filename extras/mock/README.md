@@ -2,6 +2,22 @@
 
 A lightweight mock implementation of the preCICE Participant API for testing and development.
 
+## Building
+
+The mock is built as part of the preCICE library.
+
+Build normally and use LD_PRELOAD to load the mock at runtime
+
+```
+LD_PRELOAD=/path/to/precicedir/precice/build/libpreciceMocked.so.3.3.0
+```
+
+Alternatively link against `libpreciceMocked.so` instead of `libprecice.so`:
+
+```cmake
+target_link_libraries(your_solver preciceMocked)
+```
+
 ## Features
 
 - **Full API Coverage**: Implements the complete preCICE Participant API
@@ -42,7 +58,7 @@ Returns the data previously written via `writeData()`. This is the default if no
 ```
 
 ### 2. Random Mode
-Returns random seeded data (useful for testing error handling). Optional bounds and seed can be specified with nested elements (bounds defaults: 0.0 to 1.0, seed defaults to rank-based value).
+Returns random seeded data (useful for testing error handling). Optional bounds and seed can be specified with nested elements (bounds defaults: 0.0 to 1.0).
 
 ```xml
 <mocked-data mesh="MeshName" data="DataName" mode="random">
@@ -141,71 +157,7 @@ Use any standard preCICE configuration file. The mock will:
 ### Mock Configuration (Optional)
 Place `precice-mock-config.xml` in the same directory as your preCICE config file.
 
-**Example precice-mock-config.xml:**
-```xml
-<?xml version="1.0" encoding="UTF-8" ?>
-<!--
-  Mock Configuration for preCICE Mock Participant
-
-  This file configures how the mock participant handles readData() calls and logging.
-  Place this file in the same directory as your precice-config.xml file.
-
-  Features:
-  1. Logging modes: "mock" (minimal, default) or "precice" (verbose)
-  2. Data modes: "random", "buffer", "scaled"
-  3. Iteration override for implicit coupling
--->
-<mock-config>
-
-  <!-- LOGGING MODE (optional) -->
-  <!-- Defaults to "mock" for minimal output. Use "precice" for verbose preCICE-style output. -->
-  <logging-mode mode="mock" />
-
-  <!-- MAX ITERATIONS OVERRIDE (optional, for implicit coupling only) -->
-  <!-- Override max-iterations from preCICE config to reduce runtime during testing.
-      If omitted, the mock defaults to 2 iterations. Use -1 to respect the preCICE config value. -->
-  <max-iterations-override value="2" />
-
-  <!-- GLOBAL DEFAULT (optional) -->
-  <!-- If specified, this mode applies to all data items not explicitly configured.
-       If omitted, defaults to buffer mode. -->
-  <mocked-data-default mode="buffer">
-    <!-- Optional: scalar multiplier for scaled mode -->
-    <scalar-multiplier value="1.0" />
-  </mocked-data-default>
-
-  <!-- Example 1: Random data mode with bounds -->
-  <mocked-data mesh="FluidMesh" data="Temperature" mode="random">
-    <bounds lower="0.0" upper="1.0" />
-    <seed value="99" />
-  </mocked-data>
-
-  <!-- Example 2: Buffer mode (returns writeData values as-is) -->
-  <mocked-data mesh="MeshTwo" data="Displacement" mode="buffer" />
-
-  <!-- Example 3: Scaled buffer with scalar multiplier -->
-  <mocked-data mesh="MeshOne" data="Pressure" mode="scaled">
-    <scalar-multiplier value="2.0" />
-  </mocked-data>
-
-  <!-- Example 4: Scaled buffer with element-wise vector multiplier -->
-  <mocked-data mesh="MeshTwo" data="Velocity" mode="scaled">
-    <!-- For 3D vector data: one multiplier per component -->
-    <vector-multiplier values="1.0;2.0;3.0" />
-  </mocked-data>
-
-  <!-- Example 5: Scalar data can use semicolons too, but the list must match the number of values -->
-  <mocked-data mesh="MeshThree" data="Heat-Flux" mode="scaled">
-    <vector-multiplier values="0.5;1.0;1.5;2.0" />
-  </mocked-data>
-
-  <!-- Example 6: Random data with custom seed -->
-  <mocked-data mesh="MeshFour" data="NoiseData" mode="random">
-    <bounds lower="-10.0" upper="10.0" />
-    <seed value="12345" />
-  </mocked-data>
-</mock-config>
-```
+**Example precice-mock-config.xml can be found in the folder /extras/mock/**
 
 ## Usage Example
 
@@ -242,29 +194,6 @@ int main() {
 }
 ```
 
-## Implicit Coupling
-
-For implicit coupling schemes, the mock automatically:
-- Returns `true` from `requiresWritingCheckpoint()` at the start of each iteration
-- Returns `true` from `requiresReadingCheckpoint()` when iterating (not converged)
-- Tracks iteration count and convergence status
-- Reports time window completion correctly
-
-## Building
-
-The mock is built as part of the preCICE library.
-
-Build normally and use LD_PRELOAD to load the mock at runtime
-
-```
-LD_PRELOAD=/path/to/precicedir/precice/build/libpreciceMocked.so.3.3.0
-```
-
-Alternatively link against `libpreciceMocked.so` instead of `libprecice.so`:
-
-```cmake
-target_link_libraries(your_solver preciceMocked)
-```
 ## Error Handling
 
 The mock validates all API calls against the configuration and throws `precice::Error` with descriptive messages:
