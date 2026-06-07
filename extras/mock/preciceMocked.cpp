@@ -202,13 +202,41 @@ public:
     int                             configMaxIterations            = 1;     // Stores the value from preCICE config
     int                             maxIterationsOverride          = 2;     // Default override (2), -1 use config, >0 override
     bool                            maxIterationsOverrideSpecified = false; // True if mock-config explicitly sets override
-    int                             currentIteration               = 0;
-    bool                            iterationConverged             = false;
-    bool                            writeCheckpointRequired        = false;
-    bool                            readCheckpointRequired         = false;
-    double                          maxTime                        = -1.0; // -1 means not set
-    int                             maxTimeWindows                 = -1;   // -1 means not set
-    double                          timeWindowSize                 = -1.0; // -1 means not set
+    double                          maxTime                        = -1.0;  // -1 means not set
+    int                             maxTimeWindows                 = -1;    // -1 means not set
+    double                          timeWindowSize                 = -1.0;  // -1 means not set
+  };
+
+  // Internal runtime state separated from configuration
+  struct RuntimeState {
+    // Iteration/convergence
+    int  currentIteration   = 0;
+    bool iterationConverged = false;
+    // Checkpoint flags
+    bool writeCheckpointRequired = false;
+    bool readCheckpointRequired  = false;
+    // Participant lifecycle
+    bool initialized     = false;
+    bool finalized       = false;
+    bool couplingOngoing = false;
+    // Timekeeping
+    double      timeWindowSize         = 0.0; // effective runtime time-window size
+    std::size_t currentStep            = 0;
+    double      currentWindowStartTime = 0.0;
+    double      currentTime            = 0.0;
+    double      currentWindowTime      = 0.0;
+    // RNG seed
+    uint32_t seed = 0;
+    // Parsing/state flags
+    bool configParsed     = false;
+    bool mockConfigParsed = false;
+    bool mockConfigExists = false;
+    // Profiling
+    std::size_t activeProfilingSections = 0;
+    // Runtime containers
+    std::vector<double>                writeBuffer;
+    std::map<std::string, std::size_t> lastWriteSizes;
+    std::map<std::string, std::size_t> meshVertexCounts;
   };
 
   enum class DataMode {
@@ -248,37 +276,16 @@ public:
   std::string                  name;
   std::string                  config;
   std::string                  mockConfigPath;
-  int                          rank            = 0;
-  bool                         primary         = false;
-  int                          size            = 1;
-  void                        *comm            = nullptr;
-  bool                         initialized     = false;
-  bool                         finalized       = false;
-  bool                         couplingOngoing = false;
-  double                       timeWindowSize  = 0.0;
+  int                          rank    = 0;
+  bool                         primary = false;
+  int                          size    = 1;
+  void                        *comm    = nullptr;
   mutable std::recursive_mutex mtx;
 
-  uint32_t    seed              = 0;
-  std::size_t currentStep       = 0;
-  double      currentWindowStartTime = 0.0;
-  double      currentTime       = 0.0;
-  double      currentWindowTime = 0.0;
-
-  ConfigData configData;
-  bool       configParsed = false;
+  ConfigData   configData;
+  RuntimeState runtimeState;
 
   MockConfig mockConfig;
-  bool       mockConfigParsed = false;
-  bool       mockConfigExists = false;
-
-  std::size_t activeProfilingSections = 0;
-
-  // Write data buffer shared across all meshes/data names
-  std::vector<double> writeBuffer;
-  // Track last written value count per mesh/data for read-size validation
-  std::map<std::string, std::size_t> lastWriteSizes;
-  // Vertex counts per mesh to detect empty provided meshes
-  std::map<std::string, std::size_t> meshVertexCounts;
 
   enum class DataType { Scalar = 1,
                         Vector = 3 };
@@ -306,11 +313,11 @@ public:
   } mockParseState;
 
   // Configuration parsing methods
-  void        parseConfig();
-  void        parseMockConfig();
-  void        applyMaxIterationsOverride();
-  std::string logPrefix() const;
-  std::string formatCouplingState() const;
+  void                     parseConfig();
+  void                     parseMockConfig();
+  void                     applyMaxIterationsOverride();
+  std::string              logPrefix() const;
+  std::string              formatCouplingState() const;
   std::vector<std::string> buildInitializeLogMessages() const;
 
   // Helper method for XML parsing
@@ -358,7 +365,7 @@ impl::ParticipantImpl::ParticipantImpl(::precice::string_view participantName,
     throw precice::Error(precice::utils::format_or_error("solverProcessIndex={} must be smaller than solverProcessSize={}.", solverProcessIndex, solverProcessSize));
   }
   // Initialize seed for random data generation 0x9e3779b9u is the fractional part of the golden ratio scaled to 32 bits used as an arbitrary constant
-  seed = static_cast<uint32_t>(rank) ^ 0x9e3779b9u;
+  runtimeState.seed = static_cast<uint32_t>(rank) ^ 0x9e3779b9u;
 }
 
 std::string impl::ParticipantImpl::logPrefix() const
@@ -370,7 +377,7 @@ std::string impl::ParticipantImpl::formatCouplingState() const
 {
   std::ostringstream state;
   if (configData.isImplicitCoupling) {
-    state << "it " << configData.currentIteration;
+    state << "it " << runtimeState.currentIteration;
     if (configData.minIterations > 0 && configData.maxIterations > 0) {
       state << " (min: " << configData.minIterations << ", max: " << configData.maxIterations << ")";
     } else if (configData.maxIterations > 0) {
@@ -381,23 +388,23 @@ std::string impl::ParticipantImpl::formatCouplingState() const
     state << ", ";
   }
 
-  const std::size_t timeWindowIndex = currentStep + 1;
+  const std::size_t timeWindowIndex = runtimeState.currentStep + 1;
   state << "time-window " << timeWindowIndex;
   if (configData.maxTimeWindows > 0) {
     state << " (max: " << configData.maxTimeWindows << ")";
   }
-  state << ", t " << currentTime;
+  state << ", t " << runtimeState.currentTime;
   if (configData.maxTime > 0) {
     state << " (max: " << configData.maxTime << ")";
   }
-  state << ", Dt " << timeWindowSize << ", max-dt " << (timeWindowSize - currentWindowTime);
+  state << ", Dt " << runtimeState.timeWindowSize << ", max-dt " << (runtimeState.timeWindowSize - runtimeState.currentWindowTime);
   return state.str();
 }
 
 std::vector<std::string> impl::ParticipantImpl::buildInitializeLogMessages() const
 {
   std::vector<std::string> messages;
-  const double effectiveTimeWindowSize = (configData.timeWindowSize > 0) ? configData.timeWindowSize : 1.0;
+  const double             effectiveTimeWindowSize = (configData.timeWindowSize > 0) ? configData.timeWindowSize : 1.0;
 
   if (mockConfig.loggingMode == LoggingMode::PrecICE) {
     messages.push_back("This is preCICE version 3.3.0 (mock)");
@@ -411,7 +418,7 @@ std::vector<std::string> impl::ParticipantImpl::buildInitializeLogMessages() con
     messages.push_back(std::string("Working directory unknown due to error \"") + fse.what() + "\"");
   }
 
-  if (mockConfigExists) {
+  if (runtimeState.mockConfigExists) {
     messages.push_back(std::string("Configuring preCICE (mock) with configuration \"") +
                        std::filesystem::absolute(config).string() + "\" and mock configuration \"" +
                        std::filesystem::absolute(mockConfigPath).string() + "\"");
@@ -441,7 +448,7 @@ std::vector<std::string> impl::ParticipantImpl::buildInitializeLogMessages() con
       configSummary << " max-iterations=" << configData.maxIterations;
     }
     configSummary << " time-window-size=" << effectiveTimeWindowSize;
-    if (mockConfigExists) {
+    if (runtimeState.mockConfigExists) {
       configSummary << " mock-config=yes";
     }
     messages.push_back(configSummary.str());
@@ -679,7 +686,7 @@ void impl::ParticipantImpl::parseXMLFile(const std::string &filePath,
 
 void impl::ParticipantImpl::parseConfig()
 {
-  if (configParsed)
+  if (runtimeState.configParsed)
     return;
 
   try {
@@ -753,7 +760,7 @@ void impl::ParticipantImpl::parseConfig()
       configData.minIterations = configData.maxIterations;
     }
 
-    configParsed = true;
+    runtimeState.configParsed = true;
   } catch (const precice::Error &) {
     throw;
   } catch (const std::exception &e) {
@@ -981,7 +988,7 @@ void impl::ParticipantImpl::onMockEndElement(void *ctx, const xmlChar *localname
 
 void impl::ParticipantImpl::parseMockConfig()
 {
-  if (mockConfigParsed)
+  if (runtimeState.mockConfigParsed)
     return;
 
   try {
@@ -1005,19 +1012,19 @@ void impl::ParticipantImpl::parseMockConfig()
     std::ifstream mockFile(mockConfigPath);
     if (!mockFile.good()) {
       // No mock config - use defaults
-      mockConfig.defaultMode = DataMode::Buffer;
-      mockConfigParsed       = true;
-      mockConfigExists       = false;
+      mockConfig.defaultMode        = DataMode::Buffer;
+      runtimeState.mockConfigParsed = true;
+      runtimeState.mockConfigExists = false;
       return;
     }
     mockFile.close();
-    mockConfigExists = true;
+    runtimeState.mockConfigExists = true;
 
     // Parse mock configuration file
     parseXMLFile(mockConfigPath, onMockStartElement, onMockEndElement);
 
     applyMaxIterationsOverride();
-    mockConfigParsed = true;
+    runtimeState.mockConfigParsed = true;
 
   } catch (const std::exception &e) {
     throw precice::Error(precice::utils::format_or_error(
@@ -1101,10 +1108,10 @@ Participant::~Participant() = default;
 void Participant::initialize()
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->finalized) {
+  if (_impl->runtimeState.finalized) {
     throw precice::Error("initialize() cannot be called after finalize().");
   }
-  if (_impl->initialized) {
+  if (_impl->runtimeState.initialized) {
     throw precice::Error("initialize() may only be called once.");
   }
 
@@ -1116,8 +1123,8 @@ void Participant::initialize()
     }
 
     std::size_t count = 0;
-    auto        it    = _impl->meshVertexCounts.find(meshInfo.name);
-    if (it != _impl->meshVertexCounts.end()) {
+    auto        it    = _impl->runtimeState.meshVertexCounts.find(meshInfo.name);
+    if (it != _impl->runtimeState.meshVertexCounts.end()) {
       count = it->second;
     }
     if (count == 0) {
@@ -1127,20 +1134,20 @@ void Participant::initialize()
     }
   }
 
-  _impl->initialized       = true;
-  _impl->couplingOngoing   = true;
-  _impl->timeWindowSize    = (_impl->configData.timeWindowSize > 0) ? _impl->configData.timeWindowSize : 1.0;
-  _impl->currentStep       = 0;
-  _impl->currentWindowStartTime = 0.0;
-  _impl->currentTime       = 0.0;
-  _impl->currentWindowTime = 0.0;
+  _impl->runtimeState.initialized            = true;
+  _impl->runtimeState.couplingOngoing        = true;
+  _impl->runtimeState.timeWindowSize         = (_impl->configData.timeWindowSize > 0) ? _impl->configData.timeWindowSize : 1.0;
+  _impl->runtimeState.currentStep            = 0;
+  _impl->runtimeState.currentWindowStartTime = 0.0;
+  _impl->runtimeState.currentTime            = 0.0;
+  _impl->runtimeState.currentWindowTime      = 0.0;
 
   // Initialize implicit coupling state
   if (_impl->configData.isImplicitCoupling) {
-    _impl->configData.currentIteration        = 1;
-    _impl->configData.iterationConverged      = false;
-    _impl->configData.writeCheckpointRequired = true;
-    _impl->configData.readCheckpointRequired  = false;
+    _impl->runtimeState.currentIteration        = 1;
+    _impl->runtimeState.iterationConverged      = false;
+    _impl->runtimeState.writeCheckpointRequired = true;
+    _impl->runtimeState.readCheckpointRequired  = false;
   }
 
   // Validate that termination criteria are provided
@@ -1164,10 +1171,10 @@ void Participant::initialize()
 void Participant::advance(double computedTimeStepSize)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (!_impl->initialized) {
+  if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before advance().");
   }
-  if (_impl->finalized) {
+  if (_impl->runtimeState.finalized) {
     throw precice::Error("advance() cannot be called after finalize().");
   }
   if (!isCouplingOngoing()) {
@@ -1183,7 +1190,7 @@ void Participant::advance(double computedTimeStepSize)
     throw precice::Error(precice::utils::format_or_error("advance() cannot be called with a negative time step size {}.", computedTimeStepSize));
   }
 
-  bool windowCompleted = false;
+  bool windowCompleted    = false;
   auto printCouplingState = [&]() {
     if (_impl->primary && _impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
       std::cout << _impl->logPrefix() << _impl->formatCouplingState() << std::endl;
@@ -1192,52 +1199,52 @@ void Participant::advance(double computedTimeStepSize)
 
   auto handleTimeWindowCompletion = [&]() {
     windowCompleted = true;
-    _impl->currentWindowStartTime += _impl->timeWindowSize;
-    _impl->currentWindowTime = 0.0;
-    _impl->currentTime = _impl->currentWindowStartTime;
-    _impl->currentStep += 1;
+    _impl->runtimeState.currentWindowStartTime += _impl->runtimeState.timeWindowSize;
+    _impl->runtimeState.currentWindowTime = 0.0;
+    _impl->runtimeState.currentTime       = _impl->runtimeState.currentWindowStartTime;
+    _impl->runtimeState.currentStep += 1;
 
     bool shouldTerminate = false;
-    if (_impl->configData.maxTimeWindows > 0 && _impl->currentStep >= static_cast<std::size_t>(_impl->configData.maxTimeWindows)) {
+    if (_impl->configData.maxTimeWindows > 0 && _impl->runtimeState.currentStep >= static_cast<std::size_t>(_impl->configData.maxTimeWindows)) {
       shouldTerminate = true;
     }
-    if (_impl->configData.maxTime > 0 && _impl->currentTime >= _impl->configData.maxTime) {
+    if (_impl->configData.maxTime > 0 && _impl->runtimeState.currentTime >= _impl->configData.maxTime) {
       shouldTerminate = true;
     }
 
     if (shouldTerminate) {
-      _impl->couplingOngoing = false;
+      _impl->runtimeState.couplingOngoing = false;
     }
   };
 
   // Handle implicit coupling iterations
   if (_impl->configData.isImplicitCoupling) {
 
-    _impl->currentWindowTime += computedTimeStepSize;
-    _impl->currentTime = _impl->currentWindowStartTime + _impl->currentWindowTime;
+    _impl->runtimeState.currentWindowTime += computedTimeStepSize;
+    _impl->runtimeState.currentTime = _impl->runtimeState.currentWindowStartTime + _impl->runtimeState.currentWindowTime;
 
-    if (_impl->currentWindowTime >= _impl->timeWindowSize) {
-      if (_impl->configData.currentIteration < _impl->configData.maxIterations) {
+    if (_impl->runtimeState.currentWindowTime >= _impl->runtimeState.timeWindowSize) {
+      if (_impl->runtimeState.currentIteration < _impl->configData.maxIterations) {
         // Start the next implicit coupling iteration within the same time window.
-        _impl->configData.currentIteration++;
-        _impl->configData.iterationConverged    = false;
-        _impl->configData.readCheckpointRequired = true;
-        _impl->currentWindowTime = 0.0;
-        _impl->currentTime = _impl->currentWindowStartTime;
+        _impl->runtimeState.currentIteration++;
+        _impl->runtimeState.iterationConverged     = false;
+        _impl->runtimeState.readCheckpointRequired = true;
+        _impl->runtimeState.currentWindowTime      = 0.0;
+        _impl->runtimeState.currentTime            = _impl->runtimeState.currentWindowStartTime;
       } else {
         // The last implicit iteration completed the time window.
-        _impl->configData.iterationConverged      = true;
-        _impl->configData.currentIteration        = 1;
-        _impl->configData.writeCheckpointRequired = true;
+        _impl->runtimeState.iterationConverged      = true;
+        _impl->runtimeState.currentIteration        = 1;
+        _impl->runtimeState.writeCheckpointRequired = true;
         handleTimeWindowCompletion();
       }
     }
   } else {
     // Explicit coupling: always advance
-    _impl->currentWindowTime += computedTimeStepSize;
-    _impl->currentTime = _impl->currentWindowStartTime + _impl->currentWindowTime;
+    _impl->runtimeState.currentWindowTime += computedTimeStepSize;
+    _impl->runtimeState.currentTime = _impl->runtimeState.currentWindowStartTime + _impl->runtimeState.currentWindowTime;
 
-    if (_impl->currentWindowTime >= _impl->timeWindowSize) {
+    if (_impl->runtimeState.currentWindowTime >= _impl->runtimeState.timeWindowSize) {
       handleTimeWindowCompletion();
     }
   }
@@ -1248,9 +1255,9 @@ void Participant::advance(double computedTimeStepSize)
       std::cout << prefix << "Time window completed" << std::endl;
     }
 
-    if (!_impl->couplingOngoing) {
-      std::cout << prefix << "Reached end at: final time-window: " << _impl->currentStep << ", final time: "
-                << _impl->currentTime << std::endl;
+    if (!_impl->runtimeState.couplingOngoing) {
+      std::cout << prefix << "Reached end at: final time-window: " << _impl->runtimeState.currentStep << ", final time: "
+                << _impl->runtimeState.currentTime << std::endl;
     } else {
       printCouplingState();
     }
@@ -1260,7 +1267,7 @@ void Participant::advance(double computedTimeStepSize)
 void Participant::finalize()
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->finalized) {
+  if (_impl->runtimeState.finalized) {
     throw precice::Error("finalize() may only be called once.");
   }
 
@@ -1274,9 +1281,9 @@ void Participant::finalize()
     }
   }
 
-  _impl->initialized     = false;
-  _impl->couplingOngoing = false;
-  _impl->finalized       = true;
+  _impl->runtimeState.initialized     = false;
+  _impl->runtimeState.couplingOngoing = false;
+  _impl->runtimeState.finalized       = true;
 }
 
 // Implicit coupling
@@ -1284,14 +1291,14 @@ void Participant::finalize()
 bool Participant::requiresWritingCheckpoint()
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (!_impl->initialized) {
+  if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before requiresWritingCheckpoint().");
   }
 
   // For implicit coupling, require checkpoint at start of iteration
   if (_impl->configData.isImplicitCoupling) {
-    const bool required = _impl->configData.writeCheckpointRequired;
-    _impl->configData.writeCheckpointRequired = false;
+    const bool required                         = _impl->runtimeState.writeCheckpointRequired;
+    _impl->runtimeState.writeCheckpointRequired = false;
     return required;
   }
 
@@ -1301,14 +1308,14 @@ bool Participant::requiresWritingCheckpoint()
 bool Participant::requiresReadingCheckpoint()
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (!_impl->initialized) {
+  if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before requiresReadingCheckpoint().");
   }
 
   // For implicit coupling, require reading checkpoint when not converged
   if (_impl->configData.isImplicitCoupling) {
-    const bool required = _impl->configData.readCheckpointRequired;
-    _impl->configData.readCheckpointRequired = false;
+    const bool required                        = _impl->runtimeState.readCheckpointRequired;
+    _impl->runtimeState.readCheckpointRequired = false;
     return required;
   }
 
@@ -1324,7 +1331,7 @@ int Participant::getMeshDimensions(::precice::string_view meshName) const
   std::string meshNameStr(meshName.data(), meshName.size());
 
   // Check if config was parsed and mesh exists
-  if (_impl->configParsed) {
+  if (_impl->runtimeState.configParsed) {
     auto it = _impl->configData.meshes.find(meshNameStr);
     if (it != _impl->configData.meshes.end()) {
       return it->second.dimensions;
@@ -1366,7 +1373,7 @@ int Participant::getDataDimensions(::precice::string_view meshName,
   std::string dataNameStr(dataName.data(), dataName.size());
 
   // Check if config was parsed and data exists
-  if (_impl->configParsed) {
+  if (_impl->runtimeState.configParsed) {
     for (const auto &dataInfo : _impl->configData.dataItems) {
       if (dataInfo.name == dataNameStr && dataInfo.meshName == meshNameStr) {
         return dataInfo.dimensions;
@@ -1386,43 +1393,43 @@ int Participant::getDataDimensions(::precice::string_view meshName,
 bool Participant::isCouplingOngoing() const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->finalized) {
+  if (_impl->runtimeState.finalized) {
     throw precice::Error("isCouplingOngoing() cannot be called after finalize().");
   }
-  if (!_impl->initialized) {
+  if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before isCouplingOngoing() can be evaluated.");
   }
-  return _impl->couplingOngoing;
+  return _impl->runtimeState.couplingOngoing;
 }
 
 bool Participant::isTimeWindowComplete() const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (!_impl->initialized) {
+  if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before isTimeWindowComplete().");
   }
-  if (_impl->finalized) {
+  if (_impl->runtimeState.finalized) {
     throw precice::Error("isTimeWindowComplete() cannot be called after finalize().");
   }
 
   // For implicit coupling, time window is complete when converged
   if (_impl->configData.isImplicitCoupling) {
-    return _impl->configData.iterationConverged;
+    return _impl->runtimeState.iterationConverged;
   }
 
-  return !_impl->couplingOngoing;
+  return !_impl->runtimeState.couplingOngoing;
 }
 
 double Participant::getMaxTimeStepSize() const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->finalized) {
+  if (_impl->runtimeState.finalized) {
     throw precice::Error("getMaxTimeStepSize() cannot be called after finalize().");
   }
-  if (!_impl->initialized) {
+  if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before getMaxTimeStepSize() can be evaluated.");
   }
-  return _impl->timeWindowSize - _impl->currentWindowTime;
+  return _impl->runtimeState.timeWindowSize - _impl->runtimeState.currentWindowTime;
 }
 
 // Mesh access
@@ -1434,12 +1441,12 @@ bool Participant::requiresMeshConnectivityFor(::precice::string_view /*meshName*
 
 void Participant::resetMesh(::precice::string_view meshName)
 {
-  if (!_impl->initialized) {
+  if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before resetMesh().");
   }
   std::string                           meshNameStr(meshName.data(), meshName.size());
   std::lock_guard<std::recursive_mutex> lkm(_impl->mtx);
-  _impl->meshVertexCounts[meshNameStr] = 0;
+  _impl->runtimeState.meshVertexCounts[meshNameStr] = 0;
 }
 
 VertexID Participant::setMeshVertex(
@@ -1447,7 +1454,7 @@ VertexID Participant::setMeshVertex(
     precice::span<const double> position)
 {
   std::lock_guard<std::recursive_mutex> lkm(_impl->mtx);
-  if (_impl->initialized) {
+  if (_impl->runtimeState.initialized) {
     throw precice::Error("setMeshVertex() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
   std::string meshNameStr(meshName.data(), meshName.size());
@@ -1460,7 +1467,7 @@ VertexID Participant::setMeshVertex(
   if (position.size() != static_cast<std::size_t>(expectedDims)) {
     throw precice::Error(precice::utils::format_or_error("setMeshVertex() was called with {} coordinates, but expects {} coordinates for this mesh.", position.size(), expectedDims));
   }
-  auto &count = _impl->meshVertexCounts[meshNameStr];
+  auto &count = _impl->runtimeState.meshVertexCounts[meshNameStr];
   ++count;
   return VertexID(count - 1);
 }
@@ -1469,8 +1476,8 @@ int Participant::getMeshVertexSize(::precice::string_view meshName) const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
   std::string                           meshNameStr(meshName.data(), meshName.size());
-  auto                                  it = _impl->meshVertexCounts.find(meshNameStr);
-  if (it != _impl->meshVertexCounts.end()) {
+  auto                                  it = _impl->runtimeState.meshVertexCounts.find(meshNameStr);
+  if (it != _impl->runtimeState.meshVertexCounts.end()) {
     return static_cast<int>(it->second);
   }
   return 0;
@@ -1482,7 +1489,7 @@ void Participant::setMeshVertices(
     precice::span<VertexID>     ids)
 {
   std::lock_guard<std::recursive_mutex> lkm(_impl->mtx);
-  if (_impl->initialized) {
+  if (_impl->runtimeState.initialized) {
     throw precice::Error("setMeshVertices() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
   std::string meshNameStr(meshName.data(), meshName.size());
@@ -1496,7 +1503,7 @@ void Participant::setMeshVertices(
   if (coordinates.size() != ids.size() * expectedDims) {
     throw precice::Error(precice::utils::format_or_error("setMeshVertices() was called with {} vertices and {} coordinates ({}D), but needs {} coordinates ({} x {}).", ids.size(), coordinates.size(), expectedDims, ids.size() * expectedDims, ids.size(), expectedDims));
   }
-  _impl->meshVertexCounts[meshNameStr] += ids.size();
+  _impl->runtimeState.meshVertexCounts[meshNameStr] += ids.size();
 }
 
 void Participant::setMeshEdge(
@@ -1505,7 +1512,7 @@ void Participant::setMeshEdge(
     VertexID second)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->initialized) {
+  if (_impl->runtimeState.initialized) {
     throw precice::Error("setMeshEdge() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
   // basic check: edge endpoints should not be identical
@@ -1520,7 +1527,7 @@ void Participant::setMeshEdges(
     precice::span<const VertexID> ids)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->initialized) {
+  if (_impl->runtimeState.initialized) {
     throw precice::Error("setMeshEdges() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
   // expect pairs of vertex ids
@@ -1537,7 +1544,7 @@ void Participant::setMeshTriangle(
     VertexID third)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->initialized) {
+  if (_impl->runtimeState.initialized) {
     throw precice::Error("setMeshTriangle() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
   // triangle vertices should be distinct
@@ -1552,7 +1559,7 @@ void Participant::setMeshTriangles(
     precice::span<const VertexID> ids)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->initialized) {
+  if (_impl->runtimeState.initialized) {
     throw precice::Error("setMeshTriangles() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
   // expect triples of ids
@@ -1570,7 +1577,7 @@ void Participant::setMeshQuad(
     VertexID fourth)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->initialized) {
+  if (_impl->runtimeState.initialized) {
     throw precice::Error("setMeshQuad() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
   // quad vertices should be distinct
@@ -1585,7 +1592,7 @@ void Participant::setMeshQuads(
     precice::span<const VertexID> ids)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->initialized) {
+  if (_impl->runtimeState.initialized) {
     throw precice::Error("setMeshQuads() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
   // expect groups of 4 vertex ids
@@ -1603,7 +1610,7 @@ void Participant::setMeshTetrahedron(
     VertexID fourth)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->initialized) {
+  if (_impl->runtimeState.initialized) {
     throw precice::Error("setMeshTetrahedron() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
   // tetrahedron vertices should be distinct
@@ -1618,7 +1625,7 @@ void Participant::setMeshTetrahedra(
     precice::span<const VertexID> ids)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->initialized) {
+  if (_impl->runtimeState.initialized) {
     throw precice::Error("setMeshTetrahedra() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
   }
   // expect groups of 4 vertex ids
@@ -1633,7 +1640,7 @@ void Participant::setMeshTetrahedra(
 bool Participant::requiresInitialData()
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->initialized) {
+  if (_impl->runtimeState.initialized) {
     throw precice::Error("requiresInitialData() has to be called before initialize().");
   }
   return false;
@@ -1646,7 +1653,7 @@ void Participant::writeData(
     precice::span<const double>   values)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (!_impl->initialized) {
+  if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before writeData().");
   }
 
@@ -1655,7 +1662,7 @@ void Participant::writeData(
   int         expectedDims = 1;
 
   // Validate against config if parsed
-  if (_impl->configParsed) {
+  if (_impl->runtimeState.configParsed) {
     bool found = false;
 
     for (const auto &dataInfo : _impl->configData.dataItems) {
@@ -1696,9 +1703,9 @@ void Participant::writeData(
   }
 
   // Store written data in global buffer (shared across all meshes/data)
-  _impl->writeBuffer.assign(values.begin(), values.end());
+  _impl->runtimeState.writeBuffer.assign(values.begin(), values.end());
   // Track last write size for this mesh+data to validate future reads
-  _impl->lastWriteSizes[meshNameStr + ":" + dataNameStr] = values.size();
+  _impl->runtimeState.lastWriteSizes[meshNameStr + ":" + dataNameStr] = values.size();
 }
 
 void Participant::readData(
@@ -1710,7 +1717,7 @@ void Participant::readData(
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
   const std::size_t                     n = values.size();
-  if (!_impl->initialized) {
+  if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before readData().");
   }
 
@@ -1719,7 +1726,7 @@ void Participant::readData(
   int         expectedDims = 1;
 
   // Validate against config if parsed
-  if (_impl->configParsed) {
+  if (_impl->runtimeState.configParsed) {
     bool found = false;
 
     for (const auto &dataInfo : _impl->configData.dataItems) {
@@ -1788,8 +1795,8 @@ void Participant::readData(
   }
 
   // Validate read size against last write for the same mesh/data (if available)
-  auto sizeIt = _impl->lastWriteSizes.find(meshNameStr + ":" + dataNameStr);
-  if (sizeIt != _impl->lastWriteSizes.end() && sizeIt->second != n) {
+  auto sizeIt = _impl->runtimeState.lastWriteSizes.find(meshNameStr + ":" + dataNameStr);
+  if (sizeIt != _impl->runtimeState.lastWriteSizes.end() && sizeIt->second != n) {
     throw precice::Error(precice::utils::format_or_error(
         "readData() was called with {} values for data '{}' on mesh '{}', but the last write had {} values for this mesh/data.",
         n, dataNameStr, meshNameStr, sizeIt->second));
@@ -1805,7 +1812,7 @@ void Participant::readData(
           dataNameStr, meshNameStr, randUpper, randLower));
     }
     // Use custom seed if provided (non-zero), otherwise use default seed
-    uint32_t                               effectiveSeed = (randSeed != 0) ? randSeed : (static_cast<uint32_t>(_impl->seed + static_cast<uint32_t>(_impl->currentStep)));
+    uint32_t                               effectiveSeed = (randSeed != 0) ? randSeed : (static_cast<uint32_t>(_impl->runtimeState.seed + static_cast<uint32_t>(_impl->runtimeState.currentStep)));
     std::mt19937                           gen(effectiveSeed);
     std::uniform_real_distribution<double> dist(randLower, randUpper);
     for (std::size_t i = 0; i < n; ++i) {
@@ -1816,8 +1823,8 @@ void Participant::readData(
 
   case impl::ParticipantImpl::DataMode::Buffer: {
     // Mode 2: Return buffered write data (shared buffer, cyclic if shorter)
-    if (!_impl->writeBuffer.empty()) {
-      const auto &buffer = _impl->writeBuffer;
+    if (!_impl->runtimeState.writeBuffer.empty()) {
+      const auto &buffer = _impl->runtimeState.writeBuffer;
       for (std::size_t i = 0; i < n; ++i) {
         values[i] = buffer[i % buffer.size()];
       }
@@ -1832,8 +1839,8 @@ void Participant::readData(
 
   case impl::ParticipantImpl::DataMode::ScaledBuffer: {
     // Mode 3: Return buffered write data with strict scaling (one multiplier per component/value)
-    if (!_impl->writeBuffer.empty()) {
-      const auto &buffer = _impl->writeBuffer;
+    if (!_impl->runtimeState.writeBuffer.empty()) {
+      const auto &buffer = _impl->runtimeState.writeBuffer;
       if (!vectorMult.empty()) {
         for (std::size_t i = 0; i < n; ++i) {
           values[i] = buffer[i % buffer.size()] * vectorMult[i % vectorMult.size()];
@@ -1864,7 +1871,7 @@ void Participant::writeAndMapData(
     precice::span<const double> values)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (!_impl->initialized) {
+  if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before writeAndMapData().");
   }
   // coordinates are 3*N, values are N for scalar data
@@ -1885,7 +1892,7 @@ void Participant::mapAndReadData(
     precice::span<double> values) const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (!_impl->initialized) {
+  if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before mapAndReadData().");
   }
   if (coordinates.size() % 3 != 0) {
@@ -1904,7 +1911,7 @@ void Participant::setMeshAccessRegion(
     precice::span<const double> boundingBox) const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (!_impl->initialized) {
+  if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before setMeshAccessRegion().");
   }
   const auto meshDimensions = getMeshDimensions(meshName);
@@ -1923,7 +1930,7 @@ void Participant::getMeshVertexIDsAndCoordinates(
     precice::span<double>   coordinates) const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (!_impl->initialized) {
+  if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before getMeshVertexIDsAndCoordinates().");
   }
   // coordinates are 3 * ids.size()
@@ -1948,7 +1955,7 @@ void Participant::writeGradientData(
     precice::span<const double>   gradients)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (!_impl->initialized) {
+  if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before writeGradientData().");
   }
   const auto meshDimensions = getMeshDimensions(meshName);
@@ -1967,16 +1974,16 @@ void Participant::writeGradientData(
 void Participant::startProfilingSection(::precice::string_view /*sectionName*/)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  ++_impl->activeProfilingSections;
+  ++_impl->runtimeState.activeProfilingSections;
 }
 
 void Participant::stopLastProfilingSection()
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->activeProfilingSections == 0) {
+  if (_impl->runtimeState.activeProfilingSections == 0) {
     throw precice::Error("stopLastProfilingSection() cannot be called before startProfilingSection().");
   }
-  --_impl->activeProfilingSections;
+  --_impl->runtimeState.activeProfilingSections;
 }
 
 // Missing Symbols
