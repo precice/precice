@@ -18,7 +18,7 @@ public:
   /**
    * @brief Returns the configured export context
    */
-  std::list<ExportContext> &exportContexts()
+  std::list<ConfiguredExport> &exportContexts()
   {
     return _contexts;
   }
@@ -51,7 +51,7 @@ private:
   const std::string ATTR_EVERY_ITERATION      = "every-iteration";
   const std::string ATTR_UPDATE_SERIES        = "update-series";
 
-  std::list<ExportContext> _contexts;
+  std::list<ConfiguredExport> _contexts;
 };
 
 } // namespace precice::io

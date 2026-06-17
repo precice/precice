@@ -140,7 +140,7 @@ public:
   void addAction(action::PtrAction &&action);
 
   /// Adds a configured \ref ExportContext to export meshes and data.
-  void addExportContext(const io::ExportContext &context);
+  void addExportContext(io::ExportContext context);
 
   /// Adds a mesh to be provided by the participant.
   void provideMesh(mesh::PtrMesh mesh);
