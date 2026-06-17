@@ -24,6 +24,9 @@ PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportScalar)
 {
   PRECICE_TEST();
+  std::string filename = "Mesh-io-VTKExport.init.vtk";
+  testing::removeFile(filename);
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
@@ -32,13 +35,35 @@ BOOST_AUTO_TEST_CASE(ExportScalar)
 
   io::ExportVTK exportCSV{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportCSV.doExport(0, 0.0);
-  testing::expectFiles("Mesh-io-VTKExport.init.vtk");
+  testing::expectFiles(filename);
+
+  std::string expected =
+      "# vtk DataFile Version 2.0\n\n"
+      "ASCII\n\n"
+      "DATASET UNSTRUCTURED_GRID\n\n"
+      "POINTS 2 double \n\n"
+      "0.00000000000000000e+00  0.00000000000000000e+00  0.00000000000000000e+00\n"
+      "1.00000000000000000e+00  1.00000000000000000e+00  0.00000000000000000e+00\n\n"
+      "CELLS 0 0\n\n\n"
+      "CELL_TYPES 0\n\n\n"
+      "POINT_DATA 2\n\n"
+      "SCALARS Rank unsigned_int\n"
+      "LOOKUP_TABLE default\n"
+      "0 0 \n\n"
+      "SCALARS data double\n"
+      "LOOKUP_TABLE default\n"
+      "0.00000000000000000e+00\n"
+      "0.00000000000000000e+00\n\n";
+  BOOST_TEST(testing::readFile(filename) == expected);
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportVector)
 {
   PRECICE_TEST();
+  std::string filename = "Mesh-io-VTKExport.init.vtk";
+  testing::removeFile(filename);
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
@@ -47,13 +72,35 @@ BOOST_AUTO_TEST_CASE(ExportVector)
 
   io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTK.doExport(0, 0.0);
-  testing::expectFiles("Mesh-io-VTKExport.init.vtk");
+  testing::expectFiles(filename);
+
+  std::string expected =
+      "# vtk DataFile Version 2.0\n\n"
+      "ASCII\n\n"
+      "DATASET UNSTRUCTURED_GRID\n\n"
+      "POINTS 2 double \n\n"
+      "0.00000000000000000e+00  0.00000000000000000e+00  0.00000000000000000e+00\n"
+      "1.00000000000000000e+00  1.00000000000000000e+00  0.00000000000000000e+00\n\n"
+      "CELLS 0 0\n\n\n"
+      "CELL_TYPES 0\n\n\n"
+      "POINT_DATA 2\n\n"
+      "SCALARS Rank unsigned_int\n"
+      "LOOKUP_TABLE default\n"
+      "0 0 \n\n"
+      "VECTORS data double\n"
+      "0.00000000000000000e+00 0.00000000000000000e+00 0\n"
+      "0.00000000000000000e+00 0.00000000000000000e+00 0\n\n";
+
+  BOOST_TEST(testing::readFile(filename) == expected);
 }
 
 PRECICE_TEST_SETUP(""_on(1_rank).setupIntraComm())
 BOOST_AUTO_TEST_CASE(ExportMissing)
 {
   PRECICE_TEST();
+  std::string filename = "Mesh-io-VTKExport.init.vtk";
+  testing::removeFile(filename);
+
   mesh::Mesh mesh("Mesh", 2, testing::nextMeshID());
   mesh.createVertex(Eigen::Vector2d::Zero());
   mesh.createVertex(Eigen::Vector2d::Constant(1));
@@ -61,13 +108,32 @@ BOOST_AUTO_TEST_CASE(ExportMissing)
   // no sample
   io::ExportVTK exportVTK{"io-VTKExport", ".", mesh, io::Export::ExportKind::TimeWindows, 1, context.rank, context.size};
   exportVTK.doExport(0, 0.0);
-  testing::expectFiles("Mesh-io-VTKExport.init.vtk");
+  testing::expectFiles(filename);
+
+  // Missing data is skipped in output
+  std::string expected =
+      "# vtk DataFile Version 2.0\n\n"
+      "ASCII\n\n"
+      "DATASET UNSTRUCTURED_GRID\n\n"
+      "POINTS 2 double \n\n"
+      "0.00000000000000000e+00  0.00000000000000000e+00  0.00000000000000000e+00\n"
+      "1.00000000000000000e+00  1.00000000000000000e+00  0.00000000000000000e+00\n\n"
+      "CELLS 0 0\n\n\n"
+      "CELL_TYPES 0\n\n\n"
+      "POINT_DATA 2\n\n"
+      "SCALARS Rank unsigned_int\n"
+      "LOOKUP_TABLE default\n"
+      "0 0 \n\n";
+
+  BOOST_TEST(testing::readFile(filename) == expected);
 }
 
 PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExportDataWithGradient)
 {
   PRECICE_TEST();
+  testing::removeFile("Mesh-io-VTKExport.init.vtk");
+  testing::removeFile("Mesh-io-VTKExport.dt1.vtk");
   int dimensions = 2;
   // Create mesh to map from
   mesh::Mesh    mesh("Mesh", dimensions, testing::nextMeshID());
@@ -98,6 +164,8 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExportPolygonalMesh)
 {
   PRECICE_TEST();
+  testing::removeFile("Mesh-io-VTKExport.init.vtk");
+  testing::removeFile("Mesh-io-VTKExport.dt1.vtk");
   int           dim = 2;
   mesh::Mesh    mesh("Mesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector2d::Constant(0.0));
@@ -118,6 +186,8 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExportTriangulatedMesh)
 {
   PRECICE_TEST();
+  testing::removeFile("Mesh-io-VTKExport.init.vtk");
+  testing::removeFile("Mesh-io-VTKExport.dt1.vtk");
   int           dim = 3;
   mesh::Mesh    mesh("Mesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Constant(0.0));
@@ -139,6 +209,7 @@ PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ExportTetrahedron)
 {
   PRECICE_TEST();
+  testing::removeFile("Mesh-io-VTKExport.init.vtk");
   int           dim = 3;
   mesh::Mesh    mesh("Mesh", dim, testing::nextMeshID());
   mesh::Vertex &v1 = mesh.createVertex(Eigen::Vector3d::Constant(0.0));
