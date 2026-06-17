@@ -658,10 +658,26 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
   // Add export contexts
   for (const io::ConfiguredExport &exportConfig : _exportConfig->exportContexts()) {
-    auto kind = exportConfig.everyIteration ? io::Export::ExportKind::Iterations : io::Export::ExportKind::TimeWindows;
+    // Check if meshes to export even exist
+    if (!exportConfig.configuredMeshName.empty()) {
+      PRECICE_CHECK(
+          participant->hasMesh(exportConfig.configuredMeshName),
+          "Participant \"{}\" defines an <export:{} mesh=\"{}\" ... /> tag, but mesh \"{}\" is not known to this participant. "
+          "Please check the mesh name or remove the mesh attribute to export all meshes.",
+          participant->getName(), exportConfig.type,
+          exportConfig.configuredMeshName, exportConfig.configuredMeshName);
+    }
 
-    // Lambda to create exporter for any mesh context (avoids code duplication)
+    // Lambda to create exporter for any mesh context if the name matches
     auto createExporter = [&](const impl::MeshContext &meshContext) {
+      // Skip meshes that don't match the configured mesh filter
+      if (!exportConfig.configuredMeshName.empty() &&
+          exportConfig.configuredMeshName != meshContext.mesh->getName()) {
+        return;
+      }
+
+      auto kind = exportConfig.everyIteration ? io::Export::ExportKind::Iterations : io::Export::ExportKind::TimeWindows;
+
       std::unique_ptr<io::Export> exporter;
       if (exportConfig.type == VALUE_VTK) {
         // This is handled with respect to the current configuration context.
@@ -720,12 +736,12 @@ void ParticipantConfiguration::finishParticipantConfiguration(
           io::makeExportContext(exportConfig, std::move(exporter), meshContext.mesh->getName()));
     };
 
-    // Create one exporter per provided mesh
+    // Create exporter for provided meshes
     for (const auto &meshContext : participant->providedMeshContexts()) {
       createExporter(meshContext);
     }
 
-    // Create one exporter per received mesh
+    // Create exporter for received meshes
     for (const auto &meshContext : participant->receivedMeshContexts()) {
       createExporter(meshContext);
     }

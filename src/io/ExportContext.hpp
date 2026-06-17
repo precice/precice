@@ -23,6 +23,9 @@ struct ConfiguredExport {
 
   // @brief type of the exporter (e.g. vtk).
   std::string type;
+
+  // @brief Configured mesh name to export (empty means export all meshes).
+  std::string configuredMeshName;
 };
 
 struct ExportContext : public ConfiguredExport {
