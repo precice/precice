@@ -12,11 +12,11 @@ on:
       target_ref:
         description: 'Target ref to compare (branch, tag, or SHA)'
         required: false
-        default: 'main'
+        default: 'develop'
       base_ref:
         description: 'Base ref to compare against (branch, tag, or SHA)'
         required: false
-        default: 'develop'
+        default: 'main'
 
 concurrency:
   group: perf-${{ github.event.pull_request.number || github.ref }}
@@ -57,7 +57,11 @@ jobs:
             echo "HEAD_REF=${{ github.event.inputs.target_ref }}" >> "$GITHUB_ENV"
           fi
 
-      - uses: actions/checkout@v4
+
+
+      - name: Fix location rights
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -68,7 +72,7 @@ jobs:
           cmake --preset production -DPRECICE_BUILD_BENCHMARKS=ON -DBUILD_TESTING=OFF
           cmake --build build --target precice-bench
           cd build
-          ./precice-bench --benchmark_out=base.json --benchmark_out_format=json --benchmark_repetitions=3
+          ./precice-bench --benchmark_out=base.json --benchmark_out_format=json --benchmark_repetitions=9
 
       - name: Build and benchmark target
         run: |
@@ -76,13 +80,13 @@ jobs:
           cmake --preset production -DPRECICE_BUILD_BENCHMARKS=ON -DBUILD_TESTING=OFF
           cmake --build build --target precice-bench
           cd build
-          ./precice-bench --benchmark_out=target.json --benchmark_out_format=json --benchmark_repetitions=3
+          ./precice-bench --benchmark_out=target.json --benchmark_out_format=json --benchmark_repetitions=9
 
       - name: Compare results
         run: |
           python3 -m venv venv
           venv/bin/pip install numpy scipy
-          venv/bin/python3 /usr/share/googlebenchmark/tools/compare.py benchmarks build/base.json build/target.json | tee comparison.txt
+          venv/bin/python3 /usr/share/googlebenchmark/tools/compare.py -a --no-color benchmarks build/base.json build/target.json | tee comparison.txt
 
       - name: Job summary
         if: always()
@@ -94,7 +98,7 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: benchmark-results
