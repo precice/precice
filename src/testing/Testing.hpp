@@ -168,6 +168,12 @@ void expectFiles(Args... args)
   (expectFile(args), ...);
 }
 
+void expectDirectoryContent(std::string_view dir, std::vector<std::string> filenames);
+
+void expectNoDirectory(std::string_view dir);
+
+void removeDirectory(std::string_view name);
+
 using ErrorPredicate = std::function<bool(::precice::Error)>;
 
 /// Checks if the message of a given precice::Error contains a substring
