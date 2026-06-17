@@ -60,6 +60,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          set-safe-directory: ${{ github.workspace }}
 
       # Both run on the same machine so the comparison is fair.
       - name: Build and benchmark base
