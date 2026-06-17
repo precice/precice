@@ -46,6 +46,7 @@ private:
   const std::string VALUE_VTP     = "vtp";
   const std::string VALUE_CSV     = "csv";
 
+  const std::string ATTR_MESH                 = "mesh";
   const std::string ATTR_EVERY_N_TIME_WINDOWS = "every-n-time-windows";
   const std::string ATTR_NEIGHBORS            = "neighbors";
   const std::string ATTR_EVERY_ITERATION      = "every-iteration";
