@@ -40,7 +40,7 @@
     <read-data name="VelocityDeltas" mesh="PeanoNodes" />
     <export:vtk every-n-time-windows="100" directory="output/" />
     <export:vtk every-n-time-windows="100" directory="" />
-    <watch-point name="pointa" mesh="PeanoNodes" coordinate="1.0; 1.0" />
+    <watch-point name="Point-A" mesh="PeanoNodes" coordinate="1.0; 1.0" />
   </participant>
 
   <participant name="Comsol">

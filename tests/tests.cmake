@@ -21,10 +21,26 @@ target_sources(testprecice
     tests/fundamental/profiling/NotAllStopped.cpp
     tests/fundamental/profiling/NotStoppedAtFinalize.cpp
     tests/fundamental/profiling/UserProfiling.cpp
-    tests/geometric-multiscale/AxialGeoMultiscaleScalarParabolic.cpp
-    tests/geometric-multiscale/AxialGeoMultiscaleScalarUniform.cpp
-    tests/geometric-multiscale/AxialGeoMultiscaleVectorParabolic.cpp
-    tests/geometric-multiscale/AxialGeoMultiscaleVectorUniform.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleParabolic2D3D.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleParabolic2D3DReverse.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarParabolic1D2D.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarParabolic1D3D.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarParabolic1D3D_Square.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarParabolic2D3D_Square.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarUniform1D2D.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarUniform1D3D.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarUniform1D3D_Square.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleScalarUniform2D3D_Square.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleUniform2D3D.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleUniform2D3DReverse.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorParabolic1D2D.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorParabolic1D3D.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorParabolic1D3D_Square.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorParabolic2D3D_Square.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorUniform1D2D.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorUniform1D3D.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorUniform1D3D_Square.cpp
+    tests/geometric-multiscale/AxialGeoMultiscaleVectorUniform2D3D_Square.cpp
     tests/geometric-multiscale/RadialGeoMultiscale.cpp
     tests/parallel/CouplingOnLine.cpp
     tests/parallel/GlobalRBFPartitioning.cpp
@@ -89,9 +105,11 @@ target_sources(testprecice
     tests/quasi-newton/parallel/ILSMultiSchemeEmptyPartition.cpp
     tests/quasi-newton/parallel/ILSParallelScheme.cpp
     tests/quasi-newton/parallel/ILSParallelSchemeEmptyPartition.cpp
+    tests/quasi-newton/parallel/ILSQR1.cpp
     tests/quasi-newton/parallel/ILSSerialScheme.cpp
     tests/quasi-newton/parallel/ILSSerialSchemeEmptyPartition.cpp
     tests/quasi-newton/parallel/ILSWaveform.cpp
+    tests/quasi-newton/parallel/ILSWithBound.cpp
     tests/quasi-newton/parallel/IMVJAlwaysJacob.cpp
     tests/quasi-newton/parallel/IMVJAlwaysJacobEmptyPartition.cpp
     tests/quasi-newton/parallel/IMVJNoRs.cpp
@@ -109,9 +127,11 @@ target_sources(testprecice
     tests/quasi-newton/serial/DefaultConfig.cpp
     tests/quasi-newton/serial/ILSMultiScheme.cpp
     tests/quasi-newton/serial/ILSParallelScheme.cpp
+    tests/quasi-newton/serial/ILSQR1.cpp
     tests/quasi-newton/serial/ILSSerialScheme.cpp
     tests/quasi-newton/serial/ILSWaveform.cpp
     tests/quasi-newton/serial/ILSWaveformReduced.cpp
+    tests/quasi-newton/serial/ILSWithBound.cpp
     tests/quasi-newton/serial/IMVJAlwaysJacob.cpp
     tests/quasi-newton/serial/IMVJNoRs.cpp
     tests/quasi-newton/serial/IMVJQR3.cpp

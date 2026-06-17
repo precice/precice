@@ -441,10 +441,6 @@ void ParticipantConfiguration::finishParticipantConfiguration(
     // sanity checks
     if (confMapping.direction == mapping::MappingConfiguration::Direction::READ) {
       // A read mapping maps from received to provided
-      PRECICE_CHECK(participant->isMeshReceived(fromMesh) || confMapping.toMesh->isJustInTime() || participant->isMeshProvided(toMesh),
-                    "A read mapping of participant \"{}\" needs to map from a received to a provided mesh, but in this case they are swapped. "
-                    "Did you intent to map from mesh \"{}\" to mesh \"{}\", or use a write mapping instead?",
-                    participant->getName(), confMapping.toMesh->getName(), confMapping.fromMesh->getName());
       PRECICE_CHECK(participant->isMeshReceived(fromMesh),
                     "Participant \"{}\" has a read mapping from mesh \"{}\", without receiving it. "
                     "Please add a receive-mesh tag with name=\"{}\"",
@@ -456,10 +452,6 @@ void ParticipantConfiguration::finishParticipantConfiguration(
                     participant->getName(), toMesh, toMesh);
     } else {
       // A write mapping maps from provided to received
-      PRECICE_CHECK(confMapping.fromMesh->isJustInTime() || participant->isMeshProvided(fromMesh) || participant->isMeshReceived(toMesh),
-                    "A write mapping of participant \"{}\" needs to map from a provided to a received mesh, but in this case they are swapped. "
-                    "Did you intent to map from mesh \"{}\" to mesh \"{}\", or use a read mapping instead?",
-                    participant->getName(), confMapping.toMesh->getName(), confMapping.fromMesh->getName());
       // The just-in-time mesh cannot be on the "to" mesh, as only the combinations read-consistent and write-conservative are allowed
       PRECICE_CHECK(confMapping.fromMesh->isJustInTime() || participant->isMeshProvided(fromMesh),
                     "Participant \"{}\" has a write mapping from mesh \"{}\", without providing it. "

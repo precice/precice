@@ -24,6 +24,14 @@ public:
   static const int PODFILTER     = 4;
   static const int QR3FILTER     = 5;
 
+  /// Options for handling bound violations
+  enum struct OnBoundViolation {
+    Ignore,
+    Clamp,
+    Discard,
+    ScaleToBound
+  };
+
   /// Map from data ID to data values.
   using DataMap = std::map<int, cplscheme::PtrCouplingData>;
 

@@ -228,4 +228,24 @@ BOOST_AUTO_TEST_CASE(Decode)
   BOOST_TEST(decodeXML("&quot; &lt; &gt; &gt; &lt; &amp; &quot; &amp; &apos;") == "\" < > > < & \" & '");
 }
 
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(MissingRequiredAttributeIncludesTagName)
+{
+  PRECICE_TEST();
+  std::string filename(getPathToSources() + "/xml/tests/config_xmltest_missing_attribute.xml");
+
+  CallbackHostAttr cb;
+  XMLTag           rootTag(cb, "configuration", XMLTag::OCCUR_ONCE);
+  XMLTag           testTag(cb, "test-missing-attr", XMLTag::OCCUR_ONCE);
+
+  XMLAttribute<std::string> requiredAttr("required-attr");
+  testTag.addAttribute(requiredAttr);
+  rootTag.addSubtag(testTag);
+
+  BOOST_CHECK_EXCEPTION(
+      configure(rootTag, ConfigurationContext{}, filename),
+      ::precice::Error,
+      ::precice::testing::errorContains("The tag <test-missing-attr> in the configuration is missing required attribute \"required-attr\"."));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
