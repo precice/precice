@@ -1,0 +1,108 @@
+name: Performance Regression Test
+# Compare precice-bench results between base and PR branch.
+# Uses the production CMakePreset and Google Benchmark's compare.py.
+
+on:
+  pull_request:
+    types: [labeled]
+  schedule:
+    - cron: '0 4 * * 1'  # weekly on Monday
+  workflow_dispatch:
+    inputs:
+      target_ref:
+        description: 'Target ref to compare (branch, tag, or SHA)'
+        required: false
+        default: 'develop'
+      base_ref:
+        description: 'Base ref to compare against (branch, tag, or SHA)'
+        required: false
+        default: 'main'
+
+concurrency:
+  group: perf-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CMAKE_GENERATOR: Ninja
+
+jobs:
+  benchmark:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'schedule' ||
+      github.event.label.name == 'trigger-perf-test'
+    runs-on: ubuntu-latest
+    container:
+      image: 'precice/ci-archlinux:latest'
+      options: --shm-size=2gb
+    defaults:
+      run:
+        shell: "bash --login -eo pipefail {0}"
+
+    steps:
+      # Figure out which commits to compare.
+      # PRs: base.sha vs head.sha
+      # Schedule: main vs develop
+      # Manual: user-provided base_ref and target_ref
+      - name: Set refs
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "BASE_REF=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_ENV"
+            echo "HEAD_REF=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_ENV"
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "BASE_REF=main" >> "$GITHUB_ENV"
+            echo "HEAD_REF=develop" >> "$GITHUB_ENV"
+          else
+            echo "BASE_REF=${{ github.event.inputs.base_ref }}" >> "$GITHUB_ENV"
+            echo "HEAD_REF=${{ github.event.inputs.target_ref }}" >> "$GITHUB_ENV"
+          fi
+
+
+
+      - name: Fix location rights
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # Both run on the same machine so the comparison is fair.
+      - name: Build and benchmark base
+        run: |
+          git checkout "$BASE_REF"
+          cmake --preset production -DPRECICE_BUILD_BENCHMARKS=ON -DBUILD_TESTING=OFF
+          cmake --build build --target precice-bench
+          cd build
+          ./precice-bench --benchmark_out=base.json --benchmark_out_format=json --benchmark_repetitions=9
+
+      - name: Build and benchmark target
+        run: |
+          git checkout "$HEAD_REF"
+          cmake --preset production -DPRECICE_BUILD_BENCHMARKS=ON -DBUILD_TESTING=OFF
+          cmake --build build --target precice-bench
+          cd build
+          ./precice-bench --benchmark_out=target.json --benchmark_out_format=json --benchmark_repetitions=9
+
+      - name: Compare results
+        run: |
+          python3 -m venv venv
+          venv/bin/pip install numpy scipy
+          venv/bin/python3 /usr/share/googlebenchmark/tools/compare.py -a --no-color benchmarks build/base.json build/target.json | tee comparison.txt
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## Benchmark comparison"
+            echo '```'
+            cat comparison.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: benchmark-results
+          path: |
+            build/base.json
+            build/target.json
+            comparison.txt

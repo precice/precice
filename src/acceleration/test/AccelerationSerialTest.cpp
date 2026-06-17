@@ -10,6 +10,7 @@
 #include "acceleration/config/AccelerationConfiguration.hpp"
 #include "acceleration/impl/ConstantPreconditioner.hpp"
 #include "acceleration/impl/ResidualPreconditioner.hpp"
+#include "acceleration/impl/ResidualSumPreconditioner.hpp"
 #include "acceleration/impl/SharedPointer.hpp"
 #include "acceleration/test/helper.hpp"
 #include "cplscheme/CouplingData.hpp"
@@ -131,6 +132,86 @@ BOOST_AUTO_TEST_CASE(testIQNIMVJPPWithoutSubsteps)
 {
   PRECICE_TEST();
   testIQNIMVJPP(false);
+}
+
+// Test if QR1 works correctly by existence of secondary data
+PRECICE_TEST_SETUP(1_rank)
+BOOST_AUTO_TEST_CASE(testILSQR1WithSecondaryData)
+{
+  PRECICE_TEST();
+  using DataMap                         = AccelerationSerialTestsFixture::DataMap;
+  double       initialRelaxation        = 0.01;
+  int          maxIterationsUsed        = 50;
+  int          timeWindowsReused        = 6;
+  int          filter                   = Acceleration::QR1FILTER;
+  double       singularityLimit         = 1e-3;
+  bool         enforceInitialRelaxation = false;
+  const double windowStart              = 0;
+  const double windowEnd                = 1;
+
+  std::vector<int> dataIDs;
+  std::vector<int> primaryDataIDs;
+  dataIDs.push_back(0);
+  dataIDs.push_back(1);
+  primaryDataIDs.push_back(0);
+  PtrPreconditioner prec(new ResidualSumPreconditioner(-1, false));
+  auto              dummyMesh = testing::makeDummy2DMesh(4);
+
+  // only the data with ID 0 is used as primary data for IQNILSAcceleration
+  IQNILSAcceleration pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
+                        timeWindowsReused, filter, singularityLimit, primaryDataIDs, Acceleration::OnBoundViolation::Ignore, prec, false);
+
+  Eigen::VectorXd fcol1;
+
+  mesh::PtrData displacements(new mesh::Data("dvalues", -1, 1));
+  mesh::PtrData forces(new mesh::Data("fvalues", -1, 1));
+
+  // init displacements & forces
+  displacements->emplaceSampleAtTime(windowStart, {1.0, 1.0, 1.0, 1.0});
+  displacements->emplaceSampleAtTime(windowEnd, {1.0, 1.0, 1.0, 1.0});
+  forces->emplaceSampleAtTime(windowStart, {0.2, 0.2, 0.2, 0.2});
+  forces->emplaceSampleAtTime(windowEnd, {0.2, 0.2, 0.2, 0.2});
+
+  cplscheme::PtrCouplingData dpcd = makeCouplingData(displacements, dummyMesh, false);
+  cplscheme::PtrCouplingData fpcd = makeCouplingData(forces, dummyMesh, false);
+
+  DataMap data;
+  data.insert(std::pair<int, cplscheme::PtrCouplingData>(0, dpcd));
+  data.insert(std::pair<int, cplscheme::PtrCouplingData>(1, fpcd));
+  dpcd->storeIteration();
+  fpcd->storeIteration();
+
+  pp.initialize(data);
+
+  displacements->emplaceSampleAtTime(windowEnd, {1.0, 2.0, 3.0, 4.0});
+  forces->emplaceSampleAtTime(windowEnd, {0.1, 0.1, 0.1, 0.1});
+
+  pp.performAcceleration(data, windowStart, windowEnd);
+
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(0), 1.00000000000000000000));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(1), 1.01000000000000000888));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(2), 1.02000000000000001776));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(3), 1.03000000000000002665));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(0), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(1), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(2), 0.199000000000000010214));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(3), 0.199000000000000010214));
+
+  // Update the waveform as well
+  displacements->emplaceSampleAtTime(windowEnd, {10, 10, 10, 10});
+  forces->setSampleAtTime(windowEnd, forces->sample());
+
+  // QR1 triggers QRFactorization reset here. Assertions makes sure the reset function get correct data shape also when secondary data is involved.
+  pp.performAcceleration(data, windowStart, windowEnd);
+
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(0), -0.565217391304349));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(1), 0.608695652173912));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(2), 1.78260869565217));
+  BOOST_TEST(testing::equals(data.at(0)->waveform().sample(windowEnd)(3), 2.95652173913043));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(0), 0.0827826086956522));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(1), 0.0827826086956522));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(2), 0.0827826086956522));
+  BOOST_TEST(testing::equals(data.at(1)->waveform().sample(windowEnd)(3), 0.0827826086956522));
 }
 
 void testVIQNPP(bool exchangeSubsteps)

@@ -21,6 +21,7 @@ jobs:
   dockerfile:
     name: "Build precice:nightly"
     runs-on: ubuntu-latest
+    if: github.repository == 'precice/precice'
     env:
         docker_username: precice
     steps:
@@ -32,7 +33,7 @@ jobs:
           username: ${{ env.docker_username }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push Dockerfile
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           push: true
           file: "./tools/releasing/packaging/docker/nightly.dockerfile"

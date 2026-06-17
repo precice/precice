@@ -5,6 +5,9 @@
 
 #include "acceleration/Acceleration.hpp"
 #include "acceleration/IQNILSAcceleration.hpp"
+#include "acceleration/test/helper.hpp"
+#include "cplscheme/CouplingScheme.hpp"
+#include "testing/Meshes.hpp"
 #include "testing/TestContext.hpp"
 #include "testing/Testing.hpp"
 
@@ -77,7 +80,7 @@ BOOST_AUTO_TEST_CASE(CheckBoundViolation)
     cd->storeIteration();
   }
 
-  DataMap cplData{
+  cplscheme::DataMap cplData{
       {0, lowerBoundedPtr},
       {1, upperBoundedPtr},
       {2, lowerUpperBoundedPtr},

@@ -3,6 +3,11 @@
 #
 target_sources(testprecice
     PRIVATE
+    tests/exporter/filter/All.cpp
+    tests/exporter/filter/Provided.cpp
+    tests/exporter/filter/Received.cpp
+    tests/exporter/filter/helpers.cpp
+    tests/exporter/filter/helpers.hpp
     tests/exporter/timeseries/ExportTimeseries.cpp
     tests/exporter/timeseries/FinalTimeseries.cpp
     tests/exporter/timeseries/UpdatedTimeseries.cpp
@@ -105,6 +110,7 @@ target_sources(testprecice
     tests/quasi-newton/parallel/ILSMultiSchemeEmptyPartition.cpp
     tests/quasi-newton/parallel/ILSParallelScheme.cpp
     tests/quasi-newton/parallel/ILSParallelSchemeEmptyPartition.cpp
+    tests/quasi-newton/parallel/ILSQR1.cpp
     tests/quasi-newton/parallel/ILSSerialScheme.cpp
     tests/quasi-newton/parallel/ILSSerialSchemeEmptyPartition.cpp
     tests/quasi-newton/parallel/ILSWaveform.cpp
@@ -126,6 +132,7 @@ target_sources(testprecice
     tests/quasi-newton/serial/DefaultConfig.cpp
     tests/quasi-newton/serial/ILSMultiScheme.cpp
     tests/quasi-newton/serial/ILSParallelScheme.cpp
+    tests/quasi-newton/serial/ILSQR1.cpp
     tests/quasi-newton/serial/ILSSerialScheme.cpp
     tests/quasi-newton/serial/ILSWaveform.cpp
     tests/quasi-newton/serial/ILSWaveformReduced.cpp

@@ -86,6 +86,7 @@ jobs:
     name: 'Upload DEB package for ${{ inputs.distro }}:${{ inputs.version }} to release ${{ inputs.release }}'
     needs: package
     runs-on: ubuntu-latest
+    if: github.repository == 'precice/precice'
     permissions:
       id-token: write
       contents: write
