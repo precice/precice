@@ -12,11 +12,11 @@ on:
       target_ref:
         description: 'Target ref to compare (branch, tag, or SHA)'
         required: false
-        default: 'main'
+        default: 'develop'
       base_ref:
         description: 'Base ref to compare against (branch, tag, or SHA)'
         required: false
-        default: 'develop'
+        default: 'main'
 
 concurrency:
   group: perf-${{ github.event.pull_request.number || github.ref }}
