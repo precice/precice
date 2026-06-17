@@ -34,9 +34,9 @@ struct ExportContext : public ConfiguredExport {
 };
 
 /// Creates an ExportContext from configuration and mesh name.
-inline ExportContext makeExportContext(ConfiguredExport config, std::string meshName)
+inline ExportContext makeExportContext(ConfiguredExport config, std::unique_ptr<io::Export> exporter, std::string meshName)
 {
-  return {std::move(config), {}, std::move(meshName)};
+  return {std::move(config), std::move(exporter), std::move(meshName)};
 }
 
 } // namespace precice::io

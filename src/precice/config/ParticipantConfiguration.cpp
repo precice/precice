@@ -662,8 +662,6 @@ void ParticipantConfiguration::finishParticipantConfiguration(
 
     // Lambda to create exporter for any mesh context (avoids code duplication)
     auto createExporter = [&](const impl::MeshContext &meshContext) {
-      auto participantExportContext = io::makeExportContext(exportConfig, meshContext.mesh->getName());
-
       std::unique_ptr<io::Export> exporter;
       if (exportConfig.type == VALUE_VTK) {
         // This is handled with respect to the current configuration context.
@@ -716,8 +714,10 @@ void ParticipantConfiguration::finishParticipantConfiguration(
         PRECICE_ERROR("Participant {} defines an <export/> tag of unknown type \"{}\".",
                       _participants.back()->getName(), exportConfig.type);
       }
-      participantExportContext.exporter = std::move(exporter);
-      _participants.back()->addExportContext(std::move(participantExportContext));
+
+      // Create and save the export context
+      _participants.back()->addExportContext(
+          io::makeExportContext(exportConfig, std::move(exporter), meshContext.mesh->getName()));
     };
 
     // Create one exporter per provided mesh
