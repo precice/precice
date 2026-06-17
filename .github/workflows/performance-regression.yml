@@ -9,6 +9,10 @@ on:
     - cron: '0 4 * * 1'  # weekly on Monday
   workflow_dispatch:
     inputs:
+      target_ref:
+        description: 'Target ref to compare (branch, tag, or SHA)'
+        required: false
+        default: 'main'
       base_ref:
         description: 'Base ref to compare against (branch, tag, or SHA)'
         required: false
@@ -36,56 +40,59 @@ jobs:
         shell: "bash --login -eo pipefail {0}"
 
     steps:
+      # Figure out which commits to compare.
+      # PRs: base.sha vs head.sha
+      # Schedule: main vs develop
+      # Manual: user-provided base_ref and target_ref
+      - name: Set refs
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "BASE_REF=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_ENV"
+            echo "HEAD_REF=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_ENV"
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "BASE_REF=main" >> "$GITHUB_ENV"
+            echo "HEAD_REF=develop" >> "$GITHUB_ENV"
+          else
+            echo "BASE_REF=${{ github.event.inputs.base_ref }}" >> "$GITHUB_ENV"
+            echo "HEAD_REF=${{ github.event.inputs.target_ref }}" >> "$GITHUB_ENV"
+          fi
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Figure out which commits to compare.
-      # PRs: base.sha vs head.sha
-      # Schedule: main vs develop
-      # Manual: user-provided base_ref vs current SHA
-      - name: Set refs
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "BASE_REF=${{ github.event.pull_request.base.sha }}" >> $GITHUB_ENV
-            echo "HEAD_REF=${{ github.event.pull_request.head.sha }}" >> $GITHUB_ENV
-          elif [ "${{ github.event_name }}" = "schedule" ]; then
-            echo "BASE_REF=main" >> $GITHUB_ENV
-            echo "HEAD_REF=develop" >> $GITHUB_ENV
-          else
-            echo "BASE_REF=${{ github.event.inputs.base_ref || 'develop' }}" >> $GITHUB_ENV
-            echo "HEAD_REF=${{ github.sha }}" >> $GITHUB_ENV
-          fi
-
       # Both run on the same machine so the comparison is fair.
       - name: Build and benchmark base
         run: |
-          git checkout $BASE_REF
+          git checkout "$BASE_REF"
           cmake --preset production -DPRECICE_BUILD_BENCHMARKS=ON -DBUILD_TESTING=OFF
           cmake --build build --target precice-bench
           cd build
           ./precice-bench --benchmark_out=base.json --benchmark_out_format=json --benchmark_repetitions=3
 
-      - name: Build and benchmark head
+      - name: Build and benchmark target
         run: |
-          git checkout $HEAD_REF
+          git checkout "$HEAD_REF"
           cmake --preset production -DPRECICE_BUILD_BENCHMARKS=ON -DBUILD_TESTING=OFF
           cmake --build build --target precice-bench
           cd build
-          ./precice-bench --benchmark_out=head.json --benchmark_out_format=json --benchmark_repetitions=3
+          ./precice-bench --benchmark_out=target.json --benchmark_out_format=json --benchmark_repetitions=3
 
       - name: Compare results
         run: |
-          pip install scipy
-          python3 /usr/share/googlebenchmark/tools/compare.py benchmarks build/base.json build/head.json | tee comparison.txt
+          python3 -m venv venv
+          venv/bin/pip install numpy scipy
+          venv/bin/python3 /usr/share/googlebenchmark/tools/compare.py benchmarks build/base.json build/target.json | tee comparison.txt
 
       - name: Job summary
         if: always()
         run: |
-          echo "## Benchmark comparison" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat comparison.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## Benchmark comparison"
+            echo '```'
+            cat comparison.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -93,5 +100,5 @@ jobs:
           name: benchmark-results
           path: |
             build/base.json
-            build/head.json
+            build/target.json
             comparison.txt
