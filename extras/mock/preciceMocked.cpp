@@ -1785,15 +1785,6 @@ void Participant::readData(
     vectorMult = mockIt->second.vectorMultiplier;
   }
 
-  if (mode == impl::ParticipantImpl::DataMode::ScaledBuffer && !vectorMult.empty()) {
-    const auto expectedVectorMultiplierSize = (expectedDims > 1) ? static_cast<std::size_t>(expectedDims) : n;
-    if (vectorMult.size() != expectedVectorMultiplierSize) {
-      throw precice::Error(precice::utils::format_or_error(
-          "vector-multiplier for data '{}' on mesh '{}' must contain {} values, but contains {}.",
-          dataNameStr, meshNameStr, expectedVectorMultiplierSize, vectorMult.size()));
-    }
-  }
-
   // Validate read size against last write for the same mesh/data (if available)
   auto sizeIt = _impl->runtimeState.lastWriteSizes.find(meshNameStr + ":" + dataNameStr);
   if (sizeIt != _impl->runtimeState.lastWriteSizes.end() && sizeIt->second != n) {

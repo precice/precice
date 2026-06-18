@@ -83,7 +83,7 @@ Returns the buffered write data multiplied by a scalar or element-wise by a vect
   <vector-multiplier values="1.0;2.0;3.0" />
 </mocked-data>
 ```
-The vector multiplier must match the data arity exactly: use one value per component for vector data, or one value per scalar entry for scalar data.
+The vector multiplier is applied cyclically when it is shorter than the data arity, so you can provide one value per component or a shorter repeating pattern.
 
 ### Global Default Configuration
 
