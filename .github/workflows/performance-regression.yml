@@ -109,7 +109,3 @@ jobs:
       - name: Job summary
         if: always()
         uses: precice/notify-action@v0
-        with:
-          homeserver: ${{ secrets.MATRIX_BOT_HOMESERVER }}
-          access_token: ${{ secrets.MATRIX_BOT_TOKEN }}
-          room_id: ${{ secrets.MATRIX_BOT_ROOMID }}
