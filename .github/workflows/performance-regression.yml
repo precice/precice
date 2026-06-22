@@ -107,7 +107,7 @@ jobs:
             build/target.json
             comparison.txt
       - name: Notification
-        if: always()
+        if: if: ${{ always() && github.event_name == 'schedule' }}
         uses: precice/notify-action@v0
         with:
           homeserver: ${{ secrets.MATRIX_BOT_HOMESERVER }}
