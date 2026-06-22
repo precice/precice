@@ -14,11 +14,7 @@ on:
     secrets:
       DOCKERHUB_TOKEN:
         required: true
-      MATRIX_BOT_HOMESERVER:
-        required: true
-      MATRIX_BOT_TOKEN:
-        required: true
-      MATRIX_BOT_ROOMID:
+      MATRIX_BOT_PASSWORD:
         required: true
   schedule:
     - cron: '0 3 * * *'
@@ -48,8 +44,9 @@ jobs:
             BRANCH=${{ inputs.branch || 'develop' }}
       - name: Failure Notification
         if: failure()
-        uses: precice/notify-action@v0
+        uses: precice/notify-action@v1
         with:
           homeserver: ${{ vars.MATRIX_BOT_HOMESERVER }}
-          access_token: ${{ secrets.MATRIX_BOT_TOKEN }}
+          login: ${{ vars.MATRIX_BOT_LOGIN }}
+          password: ${{ secrets.MATRIX_BOT_PASSWORD }}
           room_id: ${{ vars.MATRIX_BOT_ROOMID }}
