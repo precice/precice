@@ -50,6 +50,6 @@ jobs:
         if: failure()
         uses: precice/notify-action@v0
         with:
-          homeserver: ${{ secrets.MATRIX_BOT_HOMESERVER }}
+          homeserver: ${{ vars.MATRIX_BOT_HOMESERVER }}
           access_token: ${{ secrets.MATRIX_BOT_TOKEN }}
-          room_id: ${{ secrets.MATRIX_BOT_ROOMID }}
+          room_id: ${{ vars.MATRIX_BOT_ROOMID }}
