@@ -61,7 +61,7 @@ jobs:
 
       - name: Fix location rights
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
