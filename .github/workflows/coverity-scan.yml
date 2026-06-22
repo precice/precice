@@ -51,8 +51,9 @@ jobs:
           EMAIL: ${{ secrets.COVERITY_SUBMITTER_EMAIL }}
       - name: Notification
         if: always()
-        uses: precice/notify-action@v0
+        uses: precice/notify-action@v1
         with:
           homeserver: ${{ vars.MATRIX_BOT_HOMESERVER }}
-          access_token: ${{ secrets.MATRIX_BOT_TOKEN }}
+          login: ${{ vars.MATRIX_BOT_LOGIN }}
+          password: ${{ secrets.MATRIX_BOT_PASSWORD }}
           room_id: ${{ vars.MATRIX_BOT_ROOMID }}
