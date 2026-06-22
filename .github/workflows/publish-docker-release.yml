@@ -58,7 +58,7 @@ jobs:
           version="${{ inputs.version }}"
           echo "version=${version#v}" >> "$GITHUB_OUTPUT"
       - name: Checkout sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Get release artifacts
         run: |
           gh release download "v${{ steps.version.outputs.version }}"
