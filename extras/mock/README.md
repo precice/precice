@@ -53,6 +53,8 @@ The mock participant supports three modes for `readData()` operations, configure
 ### 1. Buffer Mode (Default)
 Returns the data previously written via `writeData()`. This is the default if no mock-config is provided.
 
+Buffers are kept per mesh/data pair. A read looks up the buffer for the same mesh and data first, then falls back to the same data name written on another mesh, then to the last written data of any kind (values repeat cyclically if the buffer is shorter than the read).
+
 ```xml
 <mocked-data mesh="MeshName" data="DataName" mode="buffer" />
 ```
@@ -127,6 +129,8 @@ Both explicit and implicit coupling schemes require termination criteria to be s
 - `max-time`: Terminates at the end of a time window when the accumulated time reaches or exceeds the limit (does not terminate during sub-cycling)
 
 Both coupling schemes will throw an error if neither termination criterion is provided.
+
+With `<time-window-size method="first-participant" />`, every `advance()` completes a time window and `getMaxTimeStepSize()` returns the remaining time until `max-time`, for all participants (the mock has no partner that could prescribe the window size).
 
 ### Reducing Runtime for Testing (Implicit Coupling)
 
@@ -207,11 +211,12 @@ This helps catch configuration mistakes early in development.
 
 ## Limitations
 
-- Does not perform actual mesh mapping or data interpolation
-- Does not communicate between participants (single-process only)
-- Simplified convergence logic for implicit coupling (converges after N iterations)
-- No gradient data support (returns zeros)
-- No mesh connectivity validation
+- Does not perform actual mesh mapping or data interpolation (`relativeReadTime` is ignored)
+- Does not communicate between participants (single-process only); `getMeshVertexSize()` on a plain received mesh returns 0
+- Simplified convergence logic for implicit coupling (converges after N iterations, convergence measures are not evaluated)
+- No gradient data support (written gradients are discarded)
+- Connectivity (edges/triangles/...) is validated but not stored
+- With several coupling schemes in one config, the schemes this participant belongs to are merged (largest termination bounds win)
 
 ## Testing Your Adapter
 

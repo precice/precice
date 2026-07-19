@@ -1,12 +1,15 @@
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <random>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -24,7 +27,10 @@ namespace {
 
 std::string buildMockVersionInformation()
 {
-  std::string info = "precice-mock;version=" PRECICE_VERSION;
+  // Lead with the version number to match real preCICE's format
+  // (<version>;...). Tools such as the FMI runner parse the first character to
+  // detect the major version, so a "precice-mock" prefix breaks them.
+  std::string info = PRECICE_VERSION ";precice-mock";
 #ifdef __VERSION__
   info += ";compiler=";
   info += __VERSION__;
@@ -37,6 +43,41 @@ std::string buildMockVersionInformation()
 }
 
 const std::string mockVersionInformation = buildMockVersionInformation();
+
+// Tolerance used for time comparisons, matching preCICE's math::NUMERICAL_ZERO_DIFFERENCE.
+// Like real preCICE (DoubleAggregator), the mock uses compensated summation for time
+// accumulation, so the same tight tolerance is safe even with heavy subcycling.
+constexpr double timeTolerance = 1e-14;
+
+// Kahan (compensated) summation, mirroring preCICE's DoubleAggregator: keeps time
+// accumulation errors at machine precision independent of the number of substeps.
+struct KahanAccumulator {
+  double sum  = 0.0;
+  double comp = 0.0;
+
+  void reset(double v = 0.0)
+  {
+    sum  = v;
+    comp = 0.0;
+  }
+  void add(double v)
+  {
+    double y = v - comp;
+    double t = sum + y;
+    comp     = (t - sum) - y;
+    sum      = t;
+  }
+};
+
+std::string toStr(::precice::span<const char> sv)
+{
+  std::string s(sv.data(), sv.size());
+  auto        pos = s.find('\0');
+  if (pos != std::string::npos) {
+    s.resize(pos);
+  }
+  return s;
+}
 
 } // namespace
 
@@ -178,9 +219,11 @@ public:
   // Configuration data structures
   struct MeshInfo {
     std::string name;
-    int         dimensions = 3;
-    bool        provided   = false;
-    bool        received   = false;
+    int         dimensions           = 3;
+    bool        provided             = false;
+    bool        received             = false;
+    bool        requiresConnectivity = false;
+    bool        apiAccess            = false;
   };
 
   struct DataInfo {
@@ -191,9 +234,28 @@ public:
     bool        isWrite    = false;
   };
 
+  struct ExchangeInfo {
+    std::string dataName;
+    std::string meshName;
+    std::string fromParticipant;
+    bool        initialize = false;
+  };
+
+  struct MappingInfo {
+    std::string direction; // "read" or "write"
+    std::string type;      // element name, e.g. "nearest-neighbor", "nearest-projection"
+    std::string constraint;
+    std::string fromMesh;
+    std::string toMesh;
+    bool        requiresGradient = false;
+    bool        isJit            = false; // missing from/to attribute
+  };
+
   struct ConfigData {
     std::map<std::string, MeshInfo> meshes;
     std::vector<DataInfo>           dataItems;
+    std::vector<ExchangeInfo>       exchanges;
+    std::vector<MappingInfo>        mappings;
     bool                            isImplicitCoupling             = false;
     bool                            hasConvergenceMeasure          = false;
     int                             minIterations                  = 1;
@@ -205,6 +267,11 @@ public:
     double                          maxTime                        = -1.0;  // -1 means not set
     int                             maxTimeWindows                 = -1;    // -1 means not set
     double                          timeWindowSize                 = -1.0;  // -1 means not set
+    // <time-window-size method="first-participant" />: the solver prescribes the
+    // window size; every advance() completes a time window.
+    bool timeWindowSizeFirstParticipant = false;
+    bool allowsExperimental             = false;
+    bool allowsRemeshing                = false;
   };
 
   // Internal runtime state separated from configuration
@@ -216,27 +283,41 @@ public:
     bool writeCheckpointRequired = false;
     bool readCheckpointRequired  = false;
     // Participant lifecycle
-    bool initialized     = false;
-    bool finalized       = false;
-    bool couplingOngoing = false;
-    // Timekeeping
-    double      timeWindowSize         = 0.0; // effective runtime time-window size
-    std::size_t currentStep            = 0;
-    double      currentWindowStartTime = 0.0;
-    double      currentTime            = 0.0;
-    double      currentWindowTime      = 0.0;
+    bool initialized         = false;
+    bool finalized           = false;
+    bool couplingOngoing     = false;
+    bool timeWindowCompleted = false;
+    // Timekeeping (compensated accumulation like preCICE's TimeHandler)
+    double           timeWindowSize = 0.0; // effective runtime time-window size
+    std::size_t      currentStep    = 0;
+    KahanAccumulator windowStartTime;   // start time of the current window
+    KahanAccumulator windowTime;        // time progressed inside the current window
+    double           currentTime = 0.0; // windowStartTime + windowTime
+    // Direct-access configuration
+    std::map<std::string, std::vector<double>> meshAccessRegions;
+    // Synthetic vertex coordinates handed out for direct-access meshes (whose
+    // vertices come from the partner, not from local setMeshVertices()).
+    std::map<std::string, std::vector<double>> directAccessCoords;
     // RNG seed
     uint32_t seed = 0;
     // Parsing/state flags
     bool configParsed     = false;
     bool mockConfigParsed = false;
     bool mockConfigExists = false;
+    // Initial data
+    bool initialDataRequired  = false;
+    bool initialDataFulfilled = false;
     // Profiling
     std::size_t activeProfilingSections = 0;
+    // Mesh lock: meshes are locked after initialize(), unlocked per-mesh by resetMesh()
+    std::set<std::string> lockedMeshes;
     // Runtime containers
-    std::vector<double>                writeBuffer;
-    std::map<std::string, std::size_t> lastWriteSizes;
-    std::map<std::string, std::size_t> meshVertexCounts;
+    // Write buffers keyed by "mesh:data". Reads look up the exact key first, then fall
+    // back to the same data name on another mesh, then to the globally last-written data.
+    std::map<std::string, std::vector<double>> writeBuffers;
+    std::vector<double>                        lastWriteBuffer;
+    std::map<std::string, std::size_t>         lastWriteSizes;
+    std::map<std::string, std::size_t>         meshVertexCounts;
   };
 
   enum class DataMode {
@@ -298,6 +379,22 @@ public:
     bool                            inCouplingScheme = false; // Track if we're inside a coupling-scheme element
   } configParseState;
 
+  // Per-coupling-scheme accumulation. A config may contain several coupling schemes
+  // (3+ participants); only schemes this participant is a member of are applied.
+  struct SchemeParseState {
+    bool                      isImplicit            = false;
+    bool                      hasConvergenceMeasure = false;
+    bool                      sawParticipants       = false; // scheme lists its participants
+    bool                      isMember              = false; // this participant is listed
+    int                       minIterations         = -1;
+    int                       maxIterations         = -1;
+    double                    maxTime               = -1.0;
+    int                       maxTimeWindows        = -1;
+    double                    timeWindowSize        = -1.0;
+    bool                      twsFirstParticipant   = false;
+    std::vector<ExchangeInfo> exchanges;
+  } schemeParseState;
+
   // SAX parsing state for mock config
   struct MockParseState {
     bool                inMockedData = false;
@@ -316,9 +413,18 @@ public:
   void                     parseConfig();
   void                     parseMockConfig();
   void                     applyMaxIterationsOverride();
+  void                     mergeCouplingScheme();
   std::string              logPrefix() const;
   std::string              formatCouplingState() const;
   std::vector<std::string> buildInitializeLogMessages() const;
+
+  // Validation / query helpers
+  bool isMeshUsed(const std::string &meshName) const;
+  // Throws the real-preCICE "unknown mesh" error if this participant does not use the mesh.
+  void requireMeshUsed(const std::string &meshName) const;
+  // Time until the end of the current window (truncated by max-time), 0 once coupling
+  // ended; mirrors BaseCouplingScheme::getNextTimeStepMaxSize.
+  double nextTimeStepMaxSize() const;
 
   // Helper method for XML parsing
   void parseXMLFile(const std::string &filePath,
@@ -344,15 +450,15 @@ impl::ParticipantImpl::ParticipantImpl(::precice::string_view participantName,
                                        int                    solverProcessIndex,
                                        int                    solverProcessSize,
                                        void                  *communicator)
-    : name(std::string(participantName.data(), participantName.size())),
-      config(std::string(configurationFileName.data(), configurationFileName.size())),
+    : name(toStr(participantName)),
+      config(toStr(configurationFileName)),
       rank(solverProcessIndex),
       primary(rank == 0),
       size(solverProcessSize),
       comm(communicator)
 {
   // Basic invariant checks for the mock participant
-  if (participantName.empty()) {
+  if (name.empty()) {
     throw precice::Error("Participant name is empty.");
   }
   if (solverProcessSize <= 0) {
@@ -397,7 +503,11 @@ std::string impl::ParticipantImpl::formatCouplingState() const
   if (configData.maxTime > 0) {
     state << " (max: " << configData.maxTime << ")";
   }
-  state << ", Dt " << runtimeState.timeWindowSize << ", max-dt " << (runtimeState.timeWindowSize - runtimeState.currentWindowTime);
+  if (configData.timeWindowSizeFirstParticipant) {
+    state << ", Dt first-participant";
+  } else {
+    state << ", Dt " << runtimeState.timeWindowSize << ", max-dt " << (runtimeState.timeWindowSize - runtimeState.windowTime.sum);
+  }
   return state.str();
 }
 
@@ -447,7 +557,11 @@ std::vector<std::string> impl::ParticipantImpl::buildInitializeLogMessages() con
     if (configData.isImplicitCoupling) {
       configSummary << " max-iterations=" << configData.maxIterations;
     }
-    configSummary << " time-window-size=" << effectiveTimeWindowSize;
+    if (configData.timeWindowSizeFirstParticipant) {
+      configSummary << " time-window-size=first-participant";
+    } else {
+      configSummary << " time-window-size=" << effectiveTimeWindowSize;
+    }
     if (runtimeState.mockConfigExists) {
       configSummary << " mock-config=yes";
     }
@@ -507,6 +621,14 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
     return it->second == "yes" || it->second == "true" || it->second == "1";
   };
 
+  // Handle precice-configuration root element. Its name contains a hyphen, not a
+  // colon, so libxml2 reports it as a prefix-less element named "precice-configuration".
+  if ((nsPrefix.empty() && elemName == "precice-configuration") ||
+      (nsPrefix == "precice" && elemName == "configuration")) {
+    impl->configData.allowsExperimental = attrIsTrue("experimental");
+    impl->configData.allowsRemeshing    = attrIsTrue("allow-remeshing");
+  }
+
   // Handle data type declarations
   if (nsPrefix == "data" && elemName == "scalar") {
     std::string dataName = getAttr("name");
@@ -530,8 +652,9 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
       impl->configData.meshes[meshName] = meshInfo;
     }
   }
-  // Handle participant
-  else if (elemName == "participant") {
+  // Handle participant (the <participant> tags inside coupling-scheme:multi are
+  // membership markers, handled in the coupling-scheme chain below)
+  else if (elemName == "participant" && !impl->configParseState.inCouplingScheme) {
     std::string participantName = getAttr("name");
     if (participantName == impl->name) {
       impl->configParseState.inParticipant   = true;
@@ -546,8 +669,13 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
       if (it != impl->configData.meshes.end()) {
         if (elemName == "provide-mesh" || attrIsTrue("provide"))
           it->second.provided = true;
-        if (elemName == "receive-mesh" || attrIsTrue("receive"))
+        if (elemName == "receive-mesh" || attrIsTrue("receive")) {
           it->second.received = true;
+          // "direct-access" is the deprecated alias for "api-access" (still
+          // accepted by real preCICE 3.x, removed in v4); honor both.
+          if (attrIsTrue("api-access") || attrIsTrue("direct-access"))
+            it->second.apiAccess = true;
+        }
       }
     } else if (elemName == "write-data") {
       std::string dataName = getAttr("name");
@@ -593,49 +721,117 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
       }
     }
   }
-  // Handle coupling schemes - detect when we enter a coupling-scheme element
+  // Handle mapping tags of ALL participants (namespace prefix "mapping"): the
+  // connectivity requirement of a mesh may originate from the partner's mapping.
+  if (nsPrefix == "mapping") {
+    impl::ParticipantImpl::MappingInfo mi;
+    mi.direction        = getAttr("direction");
+    mi.type             = elemName;
+    mi.constraint       = getAttr("constraint");
+    mi.fromMesh         = getAttr("from");
+    mi.toMesh           = getAttr("to");
+    mi.requiresGradient = (elemName.find("gradient") != std::string::npos);
+    mi.isJit            = (mi.direction == "write" && mi.fromMesh.empty()) ||
+               (mi.direction == "read" && mi.toMesh.empty());
+
+    // Derive connectivity ("full mesh") requirements, mirroring the real mappings'
+    // MeshRequirement::FULL: projection-based mappings need connectivity on the input
+    // mesh (consistent), the output mesh (conservative), or both (scaled-consistent);
+    // scaled-consistent variants of all mappings need both.
+    auto markFull = [&impl](const std::string &meshName) {
+      if (meshName.empty())
+        return;
+      auto it = impl->configData.meshes.find(meshName);
+      if (it != impl->configData.meshes.end())
+        it->second.requiresConnectivity = true;
+    };
+    const bool scaled     = mi.constraint.find("scaled-consistent") != std::string::npos;
+    const bool projective = (elemName == "nearest-projection" || elemName == "linear-cell-interpolation");
+    if (projective) {
+      if (mi.constraint == "conservative") {
+        markFull(mi.toMesh);
+      } else if (scaled) {
+        markFull(mi.fromMesh);
+        markFull(mi.toMesh);
+      } else { // consistent (default)
+        markFull(mi.fromMesh);
+      }
+    } else if (scaled) {
+      markFull(mi.fromMesh);
+      markFull(mi.toMesh);
+    }
+
+    if (impl->configParseState.inParticipant) {
+      impl->configData.mappings.push_back(mi);
+    }
+  }
+  // Handle coupling schemes - detect when we enter a coupling-scheme element.
+  // Settings are accumulated per scheme and merged at the scheme's end element,
+  // but only if this participant is a member of the scheme (see mergeCouplingScheme).
+  // The "multi" scheme is always implicit and is used to couple more than two participants.
   if (elemName == "serial-implicit" || elemName == "parallel-implicit" ||
-      elemName == "serial-explicit" || elemName == "parallel-explicit") {
+      elemName == "serial-explicit" || elemName == "parallel-explicit" ||
+      elemName == "multi") {
     impl->configParseState.inCouplingScheme = true;
-    if (elemName == "serial-implicit" || elemName == "parallel-implicit") {
-      impl->configData.isImplicitCoupling = true;
-    } else {
-      impl->configData.isImplicitCoupling = false;
+    impl->schemeParseState                  = SchemeParseState{};
+    impl->schemeParseState.isImplicit       = (elemName == "serial-implicit" || elemName == "parallel-implicit" || elemName == "multi");
+  } else if (impl->configParseState.inCouplingScheme && elemName == "participants") {
+    impl->schemeParseState.sawParticipants = true;
+    if (getAttr("first") == impl->name || getAttr("second") == impl->name) {
+      impl->schemeParseState.isMember = true;
+    }
+  } else if (impl->configParseState.inCouplingScheme && elemName == "participant") {
+    // membership marker of a coupling-scheme:multi
+    impl->schemeParseState.sawParticipants = true;
+    if (getAttr("name") == impl->name) {
+      impl->schemeParseState.isMember = true;
     }
   } else if (impl->configParseState.inCouplingScheme && elemName == "max-iterations") {
     std::string maxIterStr = getAttr("value");
     if (!maxIterStr.empty()) {
-      int maxIter                          = std::stoi(maxIterStr);
-      impl->configData.maxIterations       = maxIter;
-      impl->configData.configMaxIterations = maxIter;
+      impl->schemeParseState.maxIterations = std::stoi(maxIterStr);
     }
   } else if (impl->configParseState.inCouplingScheme && elemName == "min-iterations") {
     std::string minIterStr = getAttr("value");
     if (!minIterStr.empty()) {
-      int minIter                          = std::stoi(minIterStr);
-      impl->configData.minIterations       = minIter;
-      impl->configData.configMinIterations = minIter;
+      impl->schemeParseState.minIterations = std::stoi(minIterStr);
     }
   } else if (impl->configParseState.inCouplingScheme &&
              (elemName == "relative-convergence-measure" || elemName == "absolute-convergence-measure" ||
               elemName == "residual-relative-convergence-measure" || elemName == "min-iteration-convergence-measure")) {
-    impl->configData.hasConvergenceMeasure = true;
+    impl->schemeParseState.hasConvergenceMeasure = true;
+  } else if (impl->configParseState.inCouplingScheme && elemName == "exchange") {
+    std::string dataName = getAttr("data");
+    std::string meshName = getAttr("mesh");
+    std::string fromPart = getAttr("from");
+    bool        init     = attrIsTrue("initialize");
+    if (!dataName.empty() && !fromPart.empty()) {
+      impl::ParticipantImpl::ExchangeInfo ei;
+      ei.dataName        = dataName;
+      ei.meshName        = meshName;
+      ei.fromParticipant = fromPart;
+      ei.initialize      = init;
+      impl->schemeParseState.exchanges.push_back(ei);
+    }
   }
   // Parse max-time, max-time-windows, and time-window-size (only inside coupling-scheme)
   if (impl->configParseState.inCouplingScheme && elemName == "max-time") {
     std::string maxTimeStr = getAttr("value");
     if (!maxTimeStr.empty()) {
-      impl->configData.maxTime = std::stod(maxTimeStr);
+      impl->schemeParseState.maxTime = std::stod(maxTimeStr);
     }
   } else if (impl->configParseState.inCouplingScheme && elemName == "max-time-windows") {
     std::string maxTimeWindowsStr = getAttr("value");
     if (!maxTimeWindowsStr.empty()) {
-      impl->configData.maxTimeWindows = std::stoi(maxTimeWindowsStr);
+      impl->schemeParseState.maxTimeWindows = std::stoi(maxTimeWindowsStr);
     }
   } else if (impl->configParseState.inCouplingScheme && elemName == "time-window-size") {
     std::string timeWindowSizeStr = getAttr("value");
     if (!timeWindowSizeStr.empty()) {
-      impl->configData.timeWindowSize = std::stod(timeWindowSizeStr);
+      impl->schemeParseState.timeWindowSize = std::stod(timeWindowSizeStr);
+    }
+    if (getAttr("method") == "first-participant") {
+      impl->schemeParseState.twsFirstParticipant = true;
     }
   }
 }
@@ -644,12 +840,55 @@ void impl::ParticipantImpl::onConfigEndElement(void *ctx, const xmlChar *localna
 {
   auto       *impl = static_cast<impl::ParticipantImpl *>(ctx);
   std::string elemName(reinterpret_cast<const char *>(localname));
-  if (elemName == "participant") {
+  if (elemName == "participant" && !impl->configParseState.inCouplingScheme) {
     impl->configParseState.inParticipant = false;
   } else if (elemName == "serial-implicit" || elemName == "parallel-implicit" ||
-             elemName == "serial-explicit" || elemName == "parallel-explicit") {
+             elemName == "serial-explicit" || elemName == "parallel-explicit" ||
+             elemName == "multi") {
+    impl->mergeCouplingScheme();
     impl->configParseState.inCouplingScheme = false;
   }
+}
+
+void impl::ParticipantImpl::mergeCouplingScheme()
+{
+  auto &s = schemeParseState;
+  // Schemes naming their participants only apply to members; schemes without a
+  // participant list (simplified configs) apply to everyone.
+  if (s.sawParticipants && !s.isMember) {
+    s = SchemeParseState{};
+    return;
+  }
+  if (s.isImplicit) {
+    // If this participant is part of several schemes (compositional coupling), any
+    // implicit membership requires checkpoint handling, like in real preCICE.
+    configData.isImplicitCoupling = true;
+    if (s.minIterations > 0) {
+      configData.minIterations       = s.minIterations;
+      configData.configMinIterations = s.minIterations;
+    }
+    if (s.maxIterations > 0) {
+      configData.maxIterations       = s.maxIterations;
+      configData.configMaxIterations = s.maxIterations;
+    }
+  }
+  configData.hasConvergenceMeasure = configData.hasConvergenceMeasure || s.hasConvergenceMeasure;
+  // A compositional simulation runs until every member scheme reached its end,
+  // so keep the largest termination bounds.
+  if (s.maxTime > 0) {
+    configData.maxTime = std::max(configData.maxTime, s.maxTime);
+  }
+  if (s.maxTimeWindows > 0) {
+    configData.maxTimeWindows = std::max(configData.maxTimeWindows, s.maxTimeWindows);
+  }
+  if (s.timeWindowSize > 0) {
+    configData.timeWindowSize = s.timeWindowSize;
+  }
+  if (s.twsFirstParticipant) {
+    configData.timeWindowSizeFirstParticipant = true;
+  }
+  configData.exchanges.insert(configData.exchanges.end(), s.exchanges.begin(), s.exchanges.end());
+  s = SchemeParseState{};
 }
 
 // Helper method to parse XML files using SAX
@@ -725,7 +964,10 @@ void impl::ParticipantImpl::parseConfig()
         mi.received                          = dataInfo.isRead;
         configData.meshes[dataInfo.meshName] = mi;
       } else {
-        if (dataInfo.isWrite)
+        // Writing data does not make a direct-access (received + api-access)
+        // mesh a provided one: its vertices come from the partner via
+        // getMeshVertexIDsAndCoordinates(), not from local setMeshVertices().
+        if (dataInfo.isWrite && !(it->second.received && it->second.apiAccess))
           it->second.provided = true;
         if (dataInfo.isRead)
           it->second.received = true;
@@ -758,6 +1000,14 @@ void impl::ParticipantImpl::parseConfig()
 
     if (configData.maxIterations > 0 && configData.minIterations > configData.maxIterations) {
       configData.minIterations = configData.maxIterations;
+    }
+
+    // Determine if initial data is required (exchange with initialize="true" from this participant)
+    for (const auto &ex : configData.exchanges) {
+      if (ex.initialize && ex.fromParticipant == name) {
+        runtimeState.initialDataRequired = true;
+        break;
+      }
     }
 
     runtimeState.configParsed = true;
@@ -1065,6 +1315,58 @@ void impl::ParticipantImpl::applyMaxIterationsOverride()
   }
 }
 
+bool impl::ParticipantImpl::isMeshUsed(const std::string &meshName) const
+{
+  auto it = configData.meshes.find(meshName);
+  return it != configData.meshes.end() && (it->second.provided || it->second.received);
+}
+
+void impl::ParticipantImpl::requireMeshUsed(const std::string &meshName) const
+{
+  if (isMeshUsed(meshName)) {
+    return;
+  }
+  // Mirrors the real library's PRECICE_VALIDATE_MESH_NAME error including the hint.
+  std::vector<std::string> used;
+  for (const auto &m : configData.meshes) {
+    if (m.second.provided || m.second.received) {
+      used.push_back(m.first);
+    }
+  }
+  std::string hint;
+  if (used.size() == 1) {
+    hint = " This participant only knows mesh \"" + used.front() + "\".";
+  } else if (!used.empty()) {
+    hint = " Available meshes are: ";
+    for (std::size_t i = 0; i < used.size(); ++i) {
+      if (i > 0)
+        hint += ", ";
+      hint += used[i];
+    }
+  }
+  throw precice::Error(precice::utils::format_or_error(
+      "The mesh named \"{}\" is unknown to preCICE.{}", meshName, hint));
+}
+
+double impl::ParticipantImpl::nextTimeStepMaxSize() const
+{
+  if (!runtimeState.couplingOngoing) {
+    return 0.0;
+  }
+  double maxDt;
+  if (configData.timeWindowSizeFirstParticipant) {
+    // The solver prescribes the window size: only max-time limits the step.
+    maxDt = (configData.maxTime > 0) ? configData.maxTime - runtimeState.currentTime
+                                     : std::numeric_limits<double>::max();
+  } else {
+    maxDt = runtimeState.timeWindowSize - runtimeState.windowTime.sum;
+    if (configData.maxTime > 0) {
+      maxDt = std::min(maxDt, configData.maxTime - runtimeState.currentTime);
+    }
+  }
+  return maxDt;
+}
+
 // Participant constructors / destructor
 
 Participant::Participant(
@@ -1097,11 +1399,20 @@ Participant::Participant(
                                                     solverProcessSize,
                                                     communicator))
 {
+  if (communicator == nullptr) {
+    throw precice::Error("Passing \"nullptr\" as \"communicator\" to Participant constructor is not allowed. "
+                         "Please use the Participant constructor without the \"communicator\" argument, if you don't want to pass an MPI communicator.");
+  }
   _impl->parseMockConfig();
   _impl->parseConfig();
 }
 
-Participant::~Participant() = default;
+Participant::~Participant()
+{
+  if (!_impl->runtimeState.finalized) {
+    finalize();
+  }
+}
 
 // Steering methods
 
@@ -1113,6 +1424,14 @@ void Participant::initialize()
   }
   if (_impl->runtimeState.initialized) {
     throw precice::Error("initialize() may only be called once.");
+  }
+  if (_impl->runtimeState.activeProfilingSections > 0) {
+    throw precice::Error("There are unstopped user defined events. Please stop them using stopLastProfilingSection() before calling initialize().");
+  }
+
+  if (_impl->runtimeState.initialDataRequired && !_impl->runtimeState.initialDataFulfilled) {
+    throw precice::Error("Initial data has to be written to preCICE before calling initialize(). "
+                         "After defining your mesh, call requiresInitialData() to check if the participant is required to write initial data using the writeData() function.");
   }
 
   // Mesh preparation checks for provided meshes
@@ -1134,13 +1453,16 @@ void Participant::initialize()
     }
   }
 
-  _impl->runtimeState.initialized            = true;
-  _impl->runtimeState.couplingOngoing        = true;
-  _impl->runtimeState.timeWindowSize         = (_impl->configData.timeWindowSize > 0) ? _impl->configData.timeWindowSize : 1.0;
-  _impl->runtimeState.currentStep            = 0;
-  _impl->runtimeState.currentWindowStartTime = 0.0;
-  _impl->runtimeState.currentTime            = 0.0;
-  _impl->runtimeState.currentWindowTime      = 0.0;
+  _impl->runtimeState.initialized         = true;
+  _impl->runtimeState.couplingOngoing     = true;
+  _impl->runtimeState.timeWindowCompleted = false;
+  // With method="first-participant" the solver prescribes the window size; the stored
+  // value is unused then (see nextTimeStepMaxSize()).
+  _impl->runtimeState.timeWindowSize = (_impl->configData.timeWindowSize > 0) ? _impl->configData.timeWindowSize : 1.0;
+  _impl->runtimeState.currentStep    = 0;
+  _impl->runtimeState.windowStartTime.reset();
+  _impl->runtimeState.windowTime.reset();
+  _impl->runtimeState.currentTime = 0.0;
 
   // Initialize implicit coupling state
   if (_impl->configData.isImplicitCoupling) {
@@ -1159,6 +1481,11 @@ void Participant::initialize()
         "  <max-time-windows value=\"...\"/>");
   }
 
+  // Lock all meshes after initialization
+  for (const auto &meshEntry : _impl->configData.meshes) {
+    _impl->runtimeState.lockedMeshes.insert(meshEntry.first);
+  }
+
   // Print startup banner (only on rank 0) at the end of the setup block.
   if (_impl->primary) {
     const std::string prefix = _impl->logPrefix();
@@ -1171,11 +1498,14 @@ void Participant::initialize()
 void Participant::advance(double computedTimeStepSize)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (!_impl->runtimeState.initialized) {
-    throw precice::Error("initialize() has to be called before advance().");
+  if (_impl->runtimeState.activeProfilingSections > 0) {
+    throw precice::Error("There are unstopped user defined events. Please stop them using stopLastProfilingSection() before calling advance().");
   }
   if (_impl->runtimeState.finalized) {
     throw precice::Error("advance() cannot be called after finalize().");
+  }
+  if (!_impl->runtimeState.initialized) {
+    throw precice::Error("initialize() has to be called before advance().");
   }
   if (!isCouplingOngoing()) {
     throw precice::Error("advance() cannot be called when isCouplingOngoing() returns false.");
@@ -1183,32 +1513,74 @@ void Participant::advance(double computedTimeStepSize)
   if (!std::isfinite(computedTimeStepSize)) {
     throw precice::Error("advance() cannot be called with an infinite time step size.");
   }
-  if (computedTimeStepSize == 0.0) {
+  if (std::abs(computedTimeStepSize) < 1e-15) {
     throw precice::Error("advance() cannot be called with a time step size of 0.");
   }
   if (computedTimeStepSize < 0.0) {
     throw precice::Error(precice::utils::format_or_error("advance() cannot be called with a negative time step size {}.", computedTimeStepSize));
   }
+  if (_impl->configData.timeWindowSizeFirstParticipant &&
+      computedTimeStepSize >= std::numeric_limits<double>::max()) {
+    throw precice::Error(
+        "advance() was called with the max value of double which is not allowed. "
+        "As this participant prescribes the time-window size using <time-window-size method=\"first-participant\" />, directly using getMaxTimeStepSize() is not permitted. "
+        "Make sure to pass your own desired time-step size or use the recommended limiting \"dt = min(solver_dt, getMaxTimeStepSize())\".");
+  }
 
-  bool windowCompleted    = false;
-  auto printCouplingState = [&]() {
+  const double remaining = _impl->nextTimeStepMaxSize();
+  // Uses a tolerance like preCICE's math::greaterEquals to permit dt == remaining.
+  if (computedTimeStepSize - remaining > timeTolerance) {
+    throw precice::Error(precice::utils::format_or_error(
+        "The time step size given to preCICE in \"advance\" {} exceeds the maximum allowed time step size {} "
+        "in the remaining of this time window. "
+        "Did you restrict your time step size, \"dt = min(preciceDt, solverDt)\"? "
+        "For more information, consult the adapter example in the preCICE documentation.",
+        computedTimeStepSize, remaining));
+  }
+
+  // Enforce that required checkpoint actions were acknowledged via the requires*()
+  // API before advancing, mirroring BaseCouplingScheme::checkCompletenessRequiredActions.
+  if (_impl->configData.isImplicitCoupling) {
+    if (_impl->runtimeState.readCheckpointRequired) {
+      throw precice::Error("The iteration checkpoint wasn't read. Did you forget to call \"requiresReadingCheckpoint()\"?");
+    }
+    if (_impl->runtimeState.writeCheckpointRequired) {
+      throw precice::Error("The iteration checkpoint wasn't written. Did you forget to call \"requiresWritingCheckpoint()\"?");
+    }
+  }
+
+  // Re-lock all meshes (unlocked by resetMesh during this window)
+  for (const auto &meshEntry : _impl->configData.meshes) {
+    _impl->runtimeState.lockedMeshes.insert(meshEntry.first);
+  }
+
+  _impl->runtimeState.timeWindowCompleted = false;
+  // isTimeWindowComplete() reports whether the *last* advance completed a window,
+  // so the implicit-coupling flag has to be cleared here as well (it would otherwise
+  // stay true throughout subcycled steps of the following window).
+  _impl->runtimeState.iterationConverged = false;
+  auto printCouplingState                = [&]() {
     if (_impl->primary && _impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
       std::cout << _impl->logPrefix() << _impl->formatCouplingState() << std::endl;
     }
   };
 
   auto handleTimeWindowCompletion = [&]() {
-    windowCompleted = true;
-    _impl->runtimeState.currentWindowStartTime += _impl->runtimeState.timeWindowSize;
-    _impl->runtimeState.currentWindowTime = 0.0;
-    _impl->runtimeState.currentTime       = _impl->runtimeState.currentWindowStartTime;
+    _impl->runtimeState.timeWindowCompleted = true;
+    // Advance the window start by the actual progress. For regular windows this equals
+    // timeWindowSize; for a truncated final window (when max-time is reached and is not a
+    // multiple of the window size) this is smaller, matching TimeHandler::completeTimeWindow.
+    _impl->runtimeState.windowStartTime.add(_impl->runtimeState.windowTime.sum);
+    _impl->runtimeState.windowTime.reset();
+    _impl->runtimeState.currentTime = _impl->runtimeState.windowStartTime.sum;
     _impl->runtimeState.currentStep += 1;
 
     bool shouldTerminate = false;
     if (_impl->configData.maxTimeWindows > 0 && _impl->runtimeState.currentStep >= static_cast<std::size_t>(_impl->configData.maxTimeWindows)) {
       shouldTerminate = true;
     }
-    if (_impl->configData.maxTime > 0 && _impl->runtimeState.currentTime >= _impl->configData.maxTime) {
+    // Reached max-time: compare with tolerance like TimeHandler::reachedEnd.
+    if (_impl->configData.maxTime > 0 && _impl->configData.maxTime - _impl->runtimeState.currentTime <= timeTolerance) {
       shouldTerminate = true;
     }
 
@@ -1217,20 +1589,30 @@ void Participant::advance(double computedTimeStepSize)
     }
   };
 
+  // A time window ends when no time remains until its end (within tolerance), mirroring
+  // TimeHandler::reachedEndOfWindow which also accounts for truncation by max-time.
+  // When the solver prescribes the window size (first-participant), every step ends one.
+  auto reachedEndOfWindow = [&]() {
+    if (_impl->configData.timeWindowSizeFirstParticipant) {
+      return true;
+    }
+    return _impl->nextTimeStepMaxSize() <= timeTolerance;
+  };
+
   // Handle implicit coupling iterations
   if (_impl->configData.isImplicitCoupling) {
 
-    _impl->runtimeState.currentWindowTime += computedTimeStepSize;
-    _impl->runtimeState.currentTime = _impl->runtimeState.currentWindowStartTime + _impl->runtimeState.currentWindowTime;
+    _impl->runtimeState.windowTime.add(computedTimeStepSize);
+    _impl->runtimeState.currentTime = _impl->runtimeState.windowStartTime.sum + _impl->runtimeState.windowTime.sum;
 
-    if (_impl->runtimeState.currentWindowTime >= _impl->runtimeState.timeWindowSize) {
+    if (reachedEndOfWindow()) {
       if (_impl->runtimeState.currentIteration < _impl->configData.maxIterations) {
         // Start the next implicit coupling iteration within the same time window.
         _impl->runtimeState.currentIteration++;
         _impl->runtimeState.iterationConverged     = false;
         _impl->runtimeState.readCheckpointRequired = true;
-        _impl->runtimeState.currentWindowTime      = 0.0;
-        _impl->runtimeState.currentTime            = _impl->runtimeState.currentWindowStartTime;
+        _impl->runtimeState.windowTime.reset();
+        _impl->runtimeState.currentTime = _impl->runtimeState.windowStartTime.sum;
       } else {
         // The last implicit iteration completed the time window.
         _impl->runtimeState.iterationConverged      = true;
@@ -1241,17 +1623,17 @@ void Participant::advance(double computedTimeStepSize)
     }
   } else {
     // Explicit coupling: always advance
-    _impl->runtimeState.currentWindowTime += computedTimeStepSize;
-    _impl->runtimeState.currentTime = _impl->runtimeState.currentWindowStartTime + _impl->runtimeState.currentWindowTime;
+    _impl->runtimeState.windowTime.add(computedTimeStepSize);
+    _impl->runtimeState.currentTime = _impl->runtimeState.windowStartTime.sum + _impl->runtimeState.windowTime.sum;
 
-    if (_impl->runtimeState.currentWindowTime >= _impl->runtimeState.timeWindowSize) {
+    if (reachedEndOfWindow()) {
       handleTimeWindowCompletion();
     }
   }
 
   if (_impl->primary && _impl->mockConfig.loggingMode == impl::ParticipantImpl::LoggingMode::PrecICE) {
     const std::string prefix = _impl->logPrefix();
-    if (windowCompleted) {
+    if (_impl->runtimeState.timeWindowCompleted) {
       std::cout << prefix << "Time window completed" << std::endl;
     }
 
@@ -1291,6 +1673,9 @@ void Participant::finalize()
 bool Participant::requiresWritingCheckpoint()
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
+  if (_impl->runtimeState.finalized) {
+    throw precice::Error("requiresWritingCheckpoint() cannot be called after finalize().");
+  }
   if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before requiresWritingCheckpoint().");
   }
@@ -1308,6 +1693,9 @@ bool Participant::requiresWritingCheckpoint()
 bool Participant::requiresReadingCheckpoint()
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
+  if (_impl->runtimeState.finalized) {
+    throw precice::Error("requiresReadingCheckpoint() cannot be called after finalize().");
+  }
   if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before requiresReadingCheckpoint().");
   }
@@ -1328,26 +1716,12 @@ int Participant::getMeshDimensions(::precice::string_view meshName) const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
 
-  std::string meshNameStr(meshName.data(), meshName.size());
+  std::string meshNameStr = toStr(meshName);
 
   // Check if config was parsed and mesh exists
   if (_impl->runtimeState.configParsed) {
-    auto it = _impl->configData.meshes.find(meshNameStr);
-    if (it != _impl->configData.meshes.end()) {
-      return it->second.dimensions;
-    } else {
-      throw precice::Error(precice::utils::format_or_error(
-          "Mesh '{}' is not used by participant '{}'. Available meshes: {}",
-          meshNameStr, _impl->name, [&]() {
-            std::string meshes;
-            for (const auto &m : _impl->configData.meshes) {
-              if (!meshes.empty())
-                meshes += ", ";
-              meshes += m.first;
-            }
-            return meshes.empty() ? "none" : meshes;
-          }()));
-    }
+    _impl->requireMeshUsed(meshNameStr);
+    return _impl->configData.meshes.at(meshNameStr).dimensions;
   }
 
   // If configuration wasn't parsed or mesh wasn't found in parsed config,
@@ -1369,11 +1743,12 @@ int Participant::getDataDimensions(::precice::string_view meshName,
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
 
-  std::string meshNameStr(meshName.data(), meshName.size());
-  std::string dataNameStr(dataName.data(), dataName.size());
+  std::string meshNameStr = toStr(meshName);
+  std::string dataNameStr = toStr(dataName);
 
   // Check if config was parsed and data exists
   if (_impl->runtimeState.configParsed) {
+    _impl->requireMeshUsed(meshNameStr);
     for (const auto &dataInfo : _impl->configData.dataItems) {
       if (dataInfo.name == dataNameStr && dataInfo.meshName == meshNameStr) {
         return dataInfo.dimensions;
@@ -1412,12 +1787,11 @@ bool Participant::isTimeWindowComplete() const
     throw precice::Error("isTimeWindowComplete() cannot be called after finalize().");
   }
 
-  // For implicit coupling, time window is complete when converged
   if (_impl->configData.isImplicitCoupling) {
     return _impl->runtimeState.iterationConverged;
   }
 
-  return !_impl->runtimeState.couplingOngoing;
+  return _impl->runtimeState.timeWindowCompleted;
 }
 
 double Participant::getMaxTimeStepSize() const
@@ -1429,23 +1803,48 @@ double Participant::getMaxTimeStepSize() const
   if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before getMaxTimeStepSize() can be evaluated.");
   }
-  return _impl->runtimeState.timeWindowSize - _impl->runtimeState.currentWindowTime;
+  // Matches BaseCouplingScheme::getNextTimeStepMaxSize: zero once coupling has ended, otherwise
+  // the time until the end of the window, truncated by max-time. With
+  // <time-window-size method="first-participant" /> the solver prescribes the step,
+  // so only max-time limits it.
+  return _impl->nextTimeStepMaxSize();
 }
 
 // Mesh access
 
-bool Participant::requiresMeshConnectivityFor(::precice::string_view /*meshName*/) const
+bool Participant::requiresMeshConnectivityFor(::precice::string_view meshName) const
 {
-  return false;
+  std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
+  std::string                           meshNameStr = toStr(meshName);
+  _impl->requireMeshUsed(meshNameStr);
+  return _impl->configData.meshes.at(meshNameStr).requiresConnectivity;
 }
 
 void Participant::resetMesh(::precice::string_view meshName)
 {
+  std::lock_guard<std::recursive_mutex> lkm(_impl->mtx);
+  if (!_impl->configData.allowsExperimental) {
+    throw precice::Error("You called the API function \"resetMesh\", which is part of the experimental API. "
+                         "You may unlock the full API by specifying <precice-configuration experimental=\"true\" ... > in the configuration. Please be aware that experimental features may change in any future version (even minor or bugfix).");
+  }
+  if (!_impl->configData.allowsRemeshing) {
+    throw precice::Error("Cannot reset meshes. This feature needs to be enabled using <precice-configuration experimental=\"1\" allow-remeshing=\"1\">.");
+  }
+  if (_impl->runtimeState.finalized) {
+    throw precice::Error("resetMesh() cannot be called after finalize().");
+  }
   if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before resetMesh().");
   }
-  std::string                           meshNameStr(meshName.data(), meshName.size());
-  std::lock_guard<std::recursive_mutex> lkm(_impl->mtx);
+  if (!_impl->runtimeState.couplingOngoing) {
+    throw precice::Error("Cannot remesh after the last time window has been completed.");
+  }
+  if (_impl->configData.isImplicitCoupling && !_impl->runtimeState.iterationConverged) {
+    throw precice::Error("Cannot remesh while subcycling or iterating. Remeshing is only allowed when the time window is completed.");
+  }
+  std::string meshNameStr = toStr(meshName);
+  _impl->requireMeshUsed(meshNameStr);
+  _impl->runtimeState.lockedMeshes.erase(meshNameStr);
   _impl->runtimeState.meshVertexCounts[meshNameStr] = 0;
 }
 
@@ -1454,16 +1853,15 @@ VertexID Participant::setMeshVertex(
     precice::span<const double> position)
 {
   std::lock_guard<std::recursive_mutex> lkm(_impl->mtx);
-  if (_impl->runtimeState.initialized) {
-    throw precice::Error("setMeshVertex() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
+  std::string                           meshNameStr = toStr(meshName);
+  _impl->requireMeshUsed(meshNameStr);
+  if (_impl->runtimeState.lockedMeshes.count(meshNameStr)) {
+    throw precice::Error(precice::utils::format_or_error(
+        "This participant attempted to modify the Mesh \"{}\" while locked. "
+        "Mesh modification is only allowed before calling initialize().",
+        meshNameStr));
   }
-  std::string meshNameStr(meshName.data(), meshName.size());
-  // Determine expected dimensionality from configuration if available
-  int  expectedDims = 3;
-  auto meshIt       = _impl->configData.meshes.find(meshNameStr);
-  if (meshIt != _impl->configData.meshes.end()) {
-    expectedDims = meshIt->second.dimensions;
-  }
+  const int expectedDims = _impl->configData.meshes.at(meshNameStr).dimensions;
   if (position.size() != static_cast<std::size_t>(expectedDims)) {
     throw precice::Error(precice::utils::format_or_error("setMeshVertex() was called with {} coordinates, but expects {} coordinates for this mesh.", position.size(), expectedDims));
   }
@@ -1475,8 +1873,16 @@ VertexID Participant::setMeshVertex(
 int Participant::getMeshVertexSize(::precice::string_view meshName) const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  std::string                           meshNameStr(meshName.data(), meshName.size());
-  auto                                  it = _impl->runtimeState.meshVertexCounts.find(meshNameStr);
+  std::string                           meshNameStr = toStr(meshName);
+  _impl->requireMeshUsed(meshNameStr);
+  // Received meshes only carry data after initialize(), like in the real library.
+  const auto &meshInfo = _impl->configData.meshes.at(meshNameStr);
+  if (!_impl->runtimeState.initialized && meshInfo.received && !meshInfo.provided) {
+    throw precice::Error(precice::utils::format_or_error(
+        "initialize() has to be called before accessing data of the received mesh \"{}\" on participant \"{}\".",
+        meshNameStr, _impl->name));
+  }
+  auto it = _impl->runtimeState.meshVertexCounts.find(meshNameStr);
   if (it != _impl->runtimeState.meshVertexCounts.end()) {
     return static_cast<int>(it->second);
   }
@@ -1489,131 +1895,261 @@ void Participant::setMeshVertices(
     precice::span<VertexID>     ids)
 {
   std::lock_guard<std::recursive_mutex> lkm(_impl->mtx);
-  if (_impl->runtimeState.initialized) {
-    throw precice::Error("setMeshVertices() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
+  std::string                           meshNameStr = toStr(meshName);
+  _impl->requireMeshUsed(meshNameStr);
+  if (_impl->runtimeState.lockedMeshes.count(meshNameStr)) {
+    throw precice::Error(precice::utils::format_or_error(
+        "This participant attempted to modify the Mesh \"{}\" while locked. "
+        "Mesh modification is only allowed before calling initialize().",
+        meshNameStr));
   }
-  std::string meshNameStr(meshName.data(), meshName.size());
-  // Determine expected dimensionality from configuration if available
-  int  expectedDims = 3;
-  auto meshIt       = _impl->configData.meshes.find(meshNameStr);
-  if (meshIt != _impl->configData.meshes.end()) {
-    expectedDims = meshIt->second.dimensions;
-  }
+  const int expectedDims = _impl->configData.meshes.at(meshNameStr).dimensions;
   // Expect coordinates as expectedDims * N entries for N VertexIDs
   if (coordinates.size() != ids.size() * expectedDims) {
     throw precice::Error(precice::utils::format_or_error("setMeshVertices() was called with {} vertices and {} coordinates ({}D), but needs {} coordinates ({} x {}).", ids.size(), coordinates.size(), expectedDims, ids.size() * expectedDims, ids.size(), expectedDims));
   }
-  _impl->runtimeState.meshVertexCounts[meshNameStr] += ids.size();
+  auto &count = _impl->runtimeState.meshVertexCounts[meshNameStr];
+  for (std::size_t i = 0; i < ids.size(); ++i) {
+    ids[i] = VertexID(count + i);
+  }
+  count += ids.size();
 }
 
 void Participant::setMeshEdge(
-    ::precice::string_view /*meshName*/,
-    VertexID first,
-    VertexID second)
+    ::precice::string_view meshName,
+    VertexID               first,
+    VertexID               second)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->runtimeState.initialized) {
-    throw precice::Error("setMeshEdge() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
+  std::string                           meshNameStr = toStr(meshName);
+  _impl->requireMeshUsed(meshNameStr);
+  if (_impl->runtimeState.lockedMeshes.count(meshNameStr)) {
+    throw precice::Error(precice::utils::format_or_error(
+        "This participant attempted to modify the Mesh \"{}\" while locked. "
+        "Mesh modification is only allowed before calling initialize().",
+        meshNameStr));
   }
-  // basic check: edge endpoints should not be identical
-  if (first == second) {
-    throw precice::Error(precice::utils::format_or_error("setMeshEdge() was called with vertices [{}, {}], but both vertices are equal.", first, second));
+  if (!_impl->configData.meshes.at(meshNameStr).requiresConnectivity) {
+    return;
+  }
+  auto countIt = _impl->runtimeState.meshVertexCounts.find(meshNameStr);
+  auto count   = (countIt != _impl->runtimeState.meshVertexCounts.end()) ? static_cast<VertexID>(countIt->second) : VertexID(0);
+  if (first < 0 || first >= count) {
+    throw precice::Error(precice::utils::format_or_error("setMeshEdge() was called with an invalid vertex ID {}.", first));
+  }
+  if (second < 0 || second >= count) {
+    throw precice::Error(precice::utils::format_or_error("setMeshEdge() was called with an invalid vertex ID {}.", second));
   }
   // no-op
 }
 
 void Participant::setMeshEdges(
-    ::precice::string_view /*meshName*/,
+    ::precice::string_view        meshName,
     precice::span<const VertexID> ids)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->runtimeState.initialized) {
-    throw precice::Error("setMeshEdges() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
+  std::string                           meshNameStr = toStr(meshName);
+  _impl->requireMeshUsed(meshNameStr);
+  if (_impl->runtimeState.lockedMeshes.count(meshNameStr)) {
+    throw precice::Error(precice::utils::format_or_error(
+        "This participant attempted to modify the Mesh \"{}\" while locked. "
+        "Mesh modification is only allowed before calling initialize().",
+        meshNameStr));
   }
-  // expect pairs of vertex ids
+  // Like the real library, all further validation is skipped when the mesh does not
+  // require connectivity (the call is a no-op then).
+  if (!_impl->configData.meshes.at(meshNameStr).requiresConnectivity) {
+    return;
+  }
   if (ids.size() % 2 != 0) {
     throw precice::Error(precice::utils::format_or_error("setMeshEdges() was called with {} vertices, but needs an even number of vertices (2 per edge).", ids.size()));
+  }
+  auto countIt = _impl->runtimeState.meshVertexCounts.find(meshNameStr);
+  auto count   = (countIt != _impl->runtimeState.meshVertexCounts.end()) ? static_cast<VertexID>(countIt->second) : VertexID(0);
+  for (std::size_t i = 0; i < ids.size(); ++i) {
+    if (ids[i] < 0 || ids[i] >= count) {
+      throw precice::Error(precice::utils::format_or_error("setMeshEdges() was called with an invalid vertex ID {} at index {}.", ids[i], i));
+    }
   }
   // no-op
 }
 
 void Participant::setMeshTriangle(
-    ::precice::string_view /*meshName*/,
-    VertexID first,
-    VertexID second,
-    VertexID third)
+    ::precice::string_view meshName,
+    VertexID               first,
+    VertexID               second,
+    VertexID               third)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->runtimeState.initialized) {
-    throw precice::Error("setMeshTriangle() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
+  std::string                           meshNameStr = toStr(meshName);
+  _impl->requireMeshUsed(meshNameStr);
+  if (_impl->runtimeState.lockedMeshes.count(meshNameStr)) {
+    throw precice::Error(precice::utils::format_or_error(
+        "This participant attempted to modify the Mesh \"{}\" while locked. "
+        "Mesh modification is only allowed before calling initialize().",
+        meshNameStr));
   }
-  // triangle vertices should be distinct
+  if (!_impl->configData.meshes.at(meshNameStr).requiresConnectivity) {
+    return;
+  }
+  auto countIt = _impl->runtimeState.meshVertexCounts.find(meshNameStr);
+  auto count   = (countIt != _impl->runtimeState.meshVertexCounts.end()) ? static_cast<VertexID>(countIt->second) : VertexID(0);
+  if (first < 0 || first >= count) {
+    throw precice::Error(precice::utils::format_or_error("setMeshTriangle() was called with an invalid vertex ID {}.", first));
+  }
+  if (second < 0 || second >= count) {
+    throw precice::Error(precice::utils::format_or_error("setMeshTriangle() was called with an invalid vertex ID {}.", second));
+  }
+  if (third < 0 || third >= count) {
+    throw precice::Error(precice::utils::format_or_error("setMeshTriangle() was called with an invalid vertex ID {}.", third));
+  }
   if (first == second || first == third || second == third) {
-    throw precice::Error(precice::utils::format_or_error("setMeshTriangle() was called with vertices [{}, {}, {}], but some vertices are equal.", first, second, third));
+    throw precice::Error(precice::utils::format_or_error("setMeshTriangle() was called with repeated Vertex IDs ({}, {}, {}).", first, second, third));
   }
   // no-op
 }
 
 void Participant::setMeshTriangles(
-    ::precice::string_view /*meshName*/,
+    ::precice::string_view        meshName,
     precice::span<const VertexID> ids)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->runtimeState.initialized) {
-    throw precice::Error("setMeshTriangles() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
+  std::string                           meshNameStr = toStr(meshName);
+  _impl->requireMeshUsed(meshNameStr);
+  if (_impl->runtimeState.lockedMeshes.count(meshNameStr)) {
+    throw precice::Error(precice::utils::format_or_error(
+        "This participant attempted to modify the Mesh \"{}\" while locked. "
+        "Mesh modification is only allowed before calling initialize().",
+        meshNameStr));
   }
-  // expect triples of ids
+  if (!_impl->configData.meshes.at(meshNameStr).requiresConnectivity) {
+    return;
+  }
   if (ids.size() % 3 != 0) {
     throw precice::Error(precice::utils::format_or_error("setMeshTriangles() was called with {} vertices, but needs a number of vertices divisible by 3 (3 per triangle).", ids.size()));
+  }
+  auto countIt = _impl->runtimeState.meshVertexCounts.find(meshNameStr);
+  auto count   = (countIt != _impl->runtimeState.meshVertexCounts.end()) ? static_cast<VertexID>(countIt->second) : VertexID(0);
+  for (std::size_t i = 0; i < ids.size(); ++i) {
+    if (ids[i] < 0 || ids[i] >= count) {
+      throw precice::Error(precice::utils::format_or_error("setMeshTriangles() was called with an invalid vertex ID {} at index {}.", ids[i], i));
+    }
   }
   // no-op
 }
 
 void Participant::setMeshQuad(
-    ::precice::string_view /*meshName*/,
-    VertexID first,
-    VertexID second,
-    VertexID third,
-    VertexID fourth)
+    ::precice::string_view meshName,
+    VertexID               first,
+    VertexID               second,
+    VertexID               third,
+    VertexID               fourth)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->runtimeState.initialized) {
-    throw precice::Error("setMeshQuad() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
+  std::string                           meshNameStr = toStr(meshName);
+  _impl->requireMeshUsed(meshNameStr);
+  if (_impl->runtimeState.lockedMeshes.count(meshNameStr)) {
+    throw precice::Error(precice::utils::format_or_error(
+        "This participant attempted to modify the Mesh \"{}\" while locked. "
+        "Mesh modification is only allowed before calling initialize().",
+        meshNameStr));
   }
-  // quad vertices should be distinct
+  if (!_impl->configData.meshes.at(meshNameStr).requiresConnectivity) {
+    return;
+  }
+  auto countIt = _impl->runtimeState.meshVertexCounts.find(meshNameStr);
+  auto count   = (countIt != _impl->runtimeState.meshVertexCounts.end()) ? static_cast<VertexID>(countIt->second) : VertexID(0);
+  if (first < 0 || first >= count) {
+    throw precice::Error(precice::utils::format_or_error("setMeshQuad() was called with an invalid vertex ID {}.", first));
+  }
+  if (second < 0 || second >= count) {
+    throw precice::Error(precice::utils::format_or_error("setMeshQuad() was called with an invalid vertex ID {}.", second));
+  }
+  if (third < 0 || third >= count) {
+    throw precice::Error(precice::utils::format_or_error("setMeshQuad() was called with an invalid vertex ID {}.", third));
+  }
+  if (fourth < 0 || fourth >= count) {
+    throw precice::Error(precice::utils::format_or_error("setMeshQuad() was called with an invalid vertex ID {}.", fourth));
+  }
   if (first == second || first == third || first == fourth || second == third || second == fourth || third == fourth) {
-    throw precice::Error(precice::utils::format_or_error("setMeshQuad() was called with vertices [{}, {}, {}, {}], but some vertices are equal.", first, second, third, fourth));
+    throw precice::Error("The four vertex ID's are not unique. Please check that the vertices that form the quad are correct.");
   }
   // no-op
 }
 
 void Participant::setMeshQuads(
-    ::precice::string_view /*meshName*/,
+    ::precice::string_view        meshName,
     precice::span<const VertexID> ids)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->runtimeState.initialized) {
-    throw precice::Error("setMeshQuads() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
+  std::string                           meshNameStr = toStr(meshName);
+  _impl->requireMeshUsed(meshNameStr);
+  if (_impl->runtimeState.lockedMeshes.count(meshNameStr)) {
+    throw precice::Error(precice::utils::format_or_error(
+        "This participant attempted to modify the Mesh \"{}\" while locked. "
+        "Mesh modification is only allowed before calling initialize().",
+        meshNameStr));
   }
-  // expect groups of 4 vertex ids
+  if (!_impl->configData.meshes.at(meshNameStr).requiresConnectivity) {
+    return;
+  }
   if (ids.size() % 4 != 0) {
     throw precice::Error(precice::utils::format_or_error("setMeshQuads() was called with {} vertices, but needs a number of vertices divisible by 4 (4 per quad).", ids.size()));
+  }
+  auto countIt = _impl->runtimeState.meshVertexCounts.find(meshNameStr);
+  auto count   = (countIt != _impl->runtimeState.meshVertexCounts.end()) ? static_cast<VertexID>(countIt->second) : VertexID(0);
+  for (std::size_t i = 0; i < ids.size(); ++i) {
+    if (ids[i] < 0 || ids[i] >= count) {
+      throw precice::Error(precice::utils::format_or_error("setMeshQuads() was called with an invalid vertex ID {} at index {}.", ids[i], i));
+    }
+  }
+  for (std::size_t i = 0; i < ids.size() / 4; ++i) {
+    auto a = ids[4 * i], b = ids[4 * i + 1], c = ids[4 * i + 2], d = ids[4 * i + 3];
+    if (a == b || a == c || a == d || b == c || b == d || c == d) {
+      throw precice::Error(precice::utils::format_or_error("The four vertex ID's of the quad nr {} are not unique. Please check that the vertices that form the quad are correct.", i));
+    }
   }
   // no-op
 }
 
 void Participant::setMeshTetrahedron(
-    ::precice::string_view /*meshName*/,
-    VertexID first,
-    VertexID second,
-    VertexID third,
-    VertexID fourth)
+    ::precice::string_view meshName,
+    VertexID               first,
+    VertexID               second,
+    VertexID               third,
+    VertexID               fourth)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->runtimeState.initialized) {
-    throw precice::Error("setMeshTetrahedron() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
+  std::string                           meshNameStr = toStr(meshName);
+  _impl->requireMeshUsed(meshNameStr);
+  if (_impl->runtimeState.lockedMeshes.count(meshNameStr)) {
+    throw precice::Error(precice::utils::format_or_error(
+        "This participant attempted to modify the Mesh \"{}\" while locked. "
+        "Mesh modification is only allowed before calling initialize().",
+        meshNameStr));
   }
-  // tetrahedron vertices should be distinct
+  const auto &meshInfo = _impl->configData.meshes.at(meshNameStr);
+  if (meshInfo.dimensions != 3) {
+    throw precice::Error("setMeshTetrahedron is only possible for 3D meshes. "
+                         "Please set the mesh dimension to 3 in the preCICE configuration file.");
+  }
+  if (!meshInfo.requiresConnectivity) {
+    return;
+  }
+  auto countIt = _impl->runtimeState.meshVertexCounts.find(meshNameStr);
+  auto count   = (countIt != _impl->runtimeState.meshVertexCounts.end()) ? static_cast<VertexID>(countIt->second) : VertexID(0);
+  if (first < 0 || first >= count) {
+    throw precice::Error(precice::utils::format_or_error("setMeshTetrahedron() was called with an invalid vertex ID {}.", first));
+  }
+  if (second < 0 || second >= count) {
+    throw precice::Error(precice::utils::format_or_error("setMeshTetrahedron() was called with an invalid vertex ID {}.", second));
+  }
+  if (third < 0 || third >= count) {
+    throw precice::Error(precice::utils::format_or_error("setMeshTetrahedron() was called with an invalid vertex ID {}.", third));
+  }
+  if (fourth < 0 || fourth >= count) {
+    throw precice::Error(precice::utils::format_or_error("setMeshTetrahedron() was called with an invalid vertex ID {}.", fourth));
+  }
   if (first == second || first == third || first == fourth || second == third || second == fourth || third == fourth) {
     throw precice::Error(precice::utils::format_or_error("setMeshTetrahedron() was called with vertices [{}, {}, {}, {}], but some vertices are equal.", first, second, third, fourth));
   }
@@ -1621,16 +2157,35 @@ void Participant::setMeshTetrahedron(
 }
 
 void Participant::setMeshTetrahedra(
-    ::precice::string_view /*meshName*/,
+    ::precice::string_view        meshName,
     precice::span<const VertexID> ids)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (_impl->runtimeState.initialized) {
-    throw precice::Error("setMeshTetrahedra() cannot be called after initialize(). Mesh modification is only allowed before calling initialize().");
+  std::string                           meshNameStr = toStr(meshName);
+  _impl->requireMeshUsed(meshNameStr);
+  if (_impl->runtimeState.lockedMeshes.count(meshNameStr)) {
+    throw precice::Error(precice::utils::format_or_error(
+        "This participant attempted to modify the Mesh \"{}\" while locked. "
+        "Mesh modification is only allowed before calling initialize().",
+        meshNameStr));
   }
-  // expect groups of 4 vertex ids
+  const auto &meshInfo = _impl->configData.meshes.at(meshNameStr);
+  if (meshInfo.dimensions != 3) {
+    throw precice::Error("setMeshTetrahedron is only possible for 3D meshes. "
+                         "Please set the mesh dimension to 3 in the preCICE configuration file.");
+  }
+  if (!meshInfo.requiresConnectivity) {
+    return;
+  }
   if (ids.size() % 4 != 0) {
     throw precice::Error(precice::utils::format_or_error("setMeshTetrahedra() was called with {} vertices, but needs a number of vertices divisible by 4 (4 per tetrahedron).", ids.size()));
+  }
+  auto countIt = _impl->runtimeState.meshVertexCounts.find(meshNameStr);
+  auto count   = (countIt != _impl->runtimeState.meshVertexCounts.end()) ? static_cast<VertexID>(countIt->second) : VertexID(0);
+  for (std::size_t i = 0; i < ids.size(); ++i) {
+    if (ids[i] < 0 || ids[i] >= count) {
+      throw precice::Error(precice::utils::format_or_error("setMeshTetrahedra() was called with an invalid vertex ID {} at index {}.", ids[i], i));
+    }
   }
   // no-op
 }
@@ -1643,6 +2198,11 @@ bool Participant::requiresInitialData()
   if (_impl->runtimeState.initialized) {
     throw precice::Error("requiresInitialData() has to be called before initialize().");
   }
+
+  if (_impl->runtimeState.initialDataRequired) {
+    _impl->runtimeState.initialDataFulfilled = true;
+    return true;
+  }
   return false;
 }
 
@@ -1653,16 +2213,22 @@ void Participant::writeData(
     precice::span<const double>   values)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (!_impl->runtimeState.initialized) {
-    throw precice::Error("initialize() has to be called before writeData().");
+  if (_impl->runtimeState.finalized) {
+    throw precice::Error("writeData() cannot be called after finalize().");
+  }
+  if (_impl->runtimeState.initialized && !_impl->runtimeState.couplingOngoing) {
+    throw precice::Error("Calling writeData(...) is forbidden if coupling is not ongoing, because the data you are trying to write will not be used anymore. "
+                         "You can fix this by always calling writeData(...) before the advance(...) call in your simulation loop "
+                         "or by using Participant::isCouplingOngoing() to implement a safeguard.");
   }
 
-  std::string meshNameStr(meshName.data(), meshName.size());
-  std::string dataNameStr(dataName.data(), dataName.size());
+  std::string meshNameStr  = toStr(meshName);
+  std::string dataNameStr  = toStr(dataName);
   int         expectedDims = 1;
 
   // Validate against config if parsed
   if (_impl->runtimeState.configParsed) {
+    _impl->requireMeshUsed(meshNameStr);
     bool found = false;
 
     for (const auto &dataInfo : _impl->configData.dataItems) {
@@ -1702,8 +2268,35 @@ void Participant::writeData(
     }
   }
 
-  // Store written data in global buffer (shared across all meshes/data)
-  _impl->runtimeState.writeBuffer.assign(values.begin(), values.end());
+  if (ids.empty() && values.empty()) {
+    return;
+  }
+
+  // Validate vertex IDs
+  auto countIt = _impl->runtimeState.meshVertexCounts.find(meshNameStr);
+  auto count   = (countIt != _impl->runtimeState.meshVertexCounts.end()) ? static_cast<VertexID>(countIt->second) : VertexID(0);
+  for (std::size_t i = 0; i < ids.size(); ++i) {
+    if (ids[i] < 0 || ids[i] >= count) {
+      throw precice::Error(precice::utils::format_or_error(
+          "Cannot write data \"{}\" to mesh \"{}\" due to invalid Vertex ID at vertices[{}]. "
+          "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+          dataNameStr, meshNameStr, i));
+    }
+  }
+
+  // Validate data values (no NaN or Inf). Real preCICE only performs this check in debug
+  // builds (PRECICE_VALIDATE_DATA is a no-op under NDEBUG), so we mirror that to avoid being
+  // stricter than the release library that tutorials run against.
+#ifndef NDEBUG
+  if (!std::all_of(values.begin(), values.end(), [](double v) { return std::isfinite(v); })) {
+    throw precice::Error("One of the given data values is either plus or minus infinity or NaN.");
+  }
+#endif
+
+  // Store written data per mesh:data pair; also keep the globally last-written
+  // data as a fallback for reads of data that is never written by this participant.
+  _impl->runtimeState.writeBuffers[meshNameStr + ":" + dataNameStr].assign(values.begin(), values.end());
+  _impl->runtimeState.lastWriteBuffer.assign(values.begin(), values.end());
   // Track last write size for this mesh+data to validate future reads
   _impl->runtimeState.lastWriteSizes[meshNameStr + ":" + dataNameStr] = values.size();
 }
@@ -1712,18 +2305,48 @@ void Participant::readData(
     ::precice::string_view        meshName,
     ::precice::string_view        dataName,
     precice::span<const VertexID> ids,
-    double /*relativeReadTime*/,
-    precice::span<double> values) const
+    double                        relativeReadTime,
+    precice::span<double>         values) const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
   const std::size_t                     n = values.size();
+  if (_impl->runtimeState.finalized) {
+    throw precice::Error("readData(...) cannot be called after finalize().");
+  }
   if (!_impl->runtimeState.initialized) {
-    throw precice::Error("initialize() has to be called before readData().");
+    throw precice::Error("readData(...) cannot be called before initialize().");
+  }
+  if (relativeReadTime < 0.0) {
+    throw precice::Error("readData(...) cannot sample data before the current time.");
+  }
+  // Maximum sample time = time until end of window, truncated by max-time, or 0 once coupling
+  // ended (mirrors getNextTimeStepMaxSize). Compared with tolerance like math::smallerEquals.
+  const double maxDt = _impl->nextTimeStepMaxSize();
+  if (relativeReadTime - maxDt > timeTolerance) {
+    throw precice::Error("readData(...) cannot sample data outside of current time window.");
+  }
+  if (!_impl->runtimeState.couplingOngoing && relativeReadTime != 0.0) {
+    throw precice::Error(precice::utils::format_or_error(
+        "Calling readData(...) with relativeReadTime = {} is forbidden if coupling is not ongoing. "
+        "If coupling finished, only data for relativeReadTime = 0 is available. "
+        "Please always use precice.getMaxTimeStepSize() to obtain the maximum allowed relativeReadTime.",
+        relativeReadTime));
   }
 
-  std::string meshNameStr(meshName.data(), meshName.size());
-  std::string dataNameStr(dataName.data(), dataName.size());
+  std::string meshNameStr  = toStr(meshName);
+  std::string dataNameStr  = toStr(dataName);
   int         expectedDims = 1;
+
+  if (_impl->runtimeState.configParsed) {
+    _impl->requireMeshUsed(meshNameStr);
+  }
+
+  // Check mesh is not in reset state
+  if (_impl->runtimeState.initialized && _impl->runtimeState.lockedMeshes.count(meshNameStr) == 0) {
+    throw precice::Error(precice::utils::format_or_error(
+        "Cannot read from mesh \"{}\" after it has been reset. Please read data before calling resetMesh().",
+        meshNameStr));
+  }
 
   // Validate against config if parsed
   if (_impl->runtimeState.configParsed) {
@@ -1766,6 +2389,24 @@ void Participant::readData(
     }
   }
 
+  if (ids.empty() && values.empty()) {
+    return;
+  }
+
+  // Validate vertex IDs
+  {
+    auto countIt = _impl->runtimeState.meshVertexCounts.find(meshNameStr);
+    auto count   = (countIt != _impl->runtimeState.meshVertexCounts.end()) ? static_cast<VertexID>(countIt->second) : VertexID(0);
+    for (std::size_t i = 0; i < ids.size(); ++i) {
+      if (ids[i] < 0 || ids[i] >= count) {
+        throw precice::Error(precice::utils::format_or_error(
+            "Cannot read data \"{}\" from mesh \"{}\" due to invalid Vertex ID at vertices[{}]. "
+            "Please make sure you only use the results from calls to setMeshVertex/Vertices().",
+            dataNameStr, meshNameStr, i));
+      }
+    }
+  }
+
   // Determine data mode from mock config
   std::string                     key        = meshNameStr + ":" + dataNameStr;
   impl::ParticipantImpl::DataMode mode       = _impl->mockConfig.defaultMode;
@@ -1793,6 +2434,29 @@ void Participant::readData(
         n, dataNameStr, meshNameStr, sizeIt->second));
   }
 
+  // Resolve the buffer to echo back: exact mesh:data buffer first, then the same
+  // data name written on another mesh, then the globally last-written data.
+  const std::vector<double> *sourceBuffer = nullptr;
+  {
+    auto bufIt = _impl->runtimeState.writeBuffers.find(key);
+    if (bufIt != _impl->runtimeState.writeBuffers.end() && !bufIt->second.empty()) {
+      sourceBuffer = &bufIt->second;
+    } else {
+      const std::string suffix = ":" + dataNameStr;
+      for (const auto &entry : _impl->runtimeState.writeBuffers) {
+        if (entry.first.size() > suffix.size() &&
+            entry.first.compare(entry.first.size() - suffix.size(), suffix.size(), suffix) == 0 &&
+            !entry.second.empty()) {
+          sourceBuffer = &entry.second;
+          break;
+        }
+      }
+      if (sourceBuffer == nullptr && !_impl->runtimeState.lastWriteBuffer.empty()) {
+        sourceBuffer = &_impl->runtimeState.lastWriteBuffer;
+      }
+    }
+  }
+
   // Apply the selected mode
   switch (mode) {
   case impl::ParticipantImpl::DataMode::Random: {
@@ -1813,9 +2477,9 @@ void Participant::readData(
   }
 
   case impl::ParticipantImpl::DataMode::Buffer: {
-    // Mode 2: Return buffered write data (shared buffer, cyclic if shorter)
-    if (!_impl->runtimeState.writeBuffer.empty()) {
-      const auto &buffer = _impl->runtimeState.writeBuffer;
+    // Mode 2: Return buffered write data (cyclic if shorter)
+    if (sourceBuffer != nullptr) {
+      const auto &buffer = *sourceBuffer;
       for (std::size_t i = 0; i < n; ++i) {
         values[i] = buffer[i % buffer.size()];
       }
@@ -1830,8 +2494,8 @@ void Participant::readData(
 
   case impl::ParticipantImpl::DataMode::ScaledBuffer: {
     // Mode 3: Return buffered write data with strict scaling (one multiplier per component/value)
-    if (!_impl->runtimeState.writeBuffer.empty()) {
-      const auto &buffer = _impl->runtimeState.writeBuffer;
+    if (sourceBuffer != nullptr) {
+      const auto &buffer = *sourceBuffer;
       if (!vectorMult.empty()) {
         for (std::size_t i = 0; i < n; ++i) {
           values[i] = buffer[i % buffer.size()] * vectorMult[i % vectorMult.size()];
@@ -1856,41 +2520,145 @@ void Participant::readData(
 // Just-in-time mapping (experimental)
 
 void Participant::writeAndMapData(
-    ::precice::string_view /*meshName*/,
-    ::precice::string_view /*dataName*/,
+    ::precice::string_view      meshName,
+    ::precice::string_view      dataName,
     precice::span<const double> coordinates,
     precice::span<const double> values)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
+  if (!_impl->configData.allowsExperimental) {
+    throw precice::Error("You called the API function \"writeAndMapData\", which is part of the experimental API. "
+                         "You may unlock the full API by specifying <precice-configuration experimental=\"true\" ... > in the configuration. Please be aware that experimental features may change in any future version (even minor or bugfix).");
+  }
+  if (_impl->runtimeState.finalized) {
+    throw precice::Error("writeAndMapData() cannot be called after finalize().");
+  }
   if (!_impl->runtimeState.initialized) {
-    throw precice::Error("initialize() has to be called before writeAndMapData().");
+    throw precice::Error("writeAndMapData() cannot be called before initialize(), because the mesh to map onto hasn't been received yet.");
   }
-  // coordinates are 3*N, values are N for scalar data
-  if (coordinates.size() % 3 != 0) {
-    throw precice::Error(precice::utils::format_or_error("writeAndMapData() was called with {} coordinates, but needs a multiple of 3 coordinates.", coordinates.size()));
+  if (!_impl->runtimeState.couplingOngoing) {
+    throw precice::Error("writeAndMapData() is forbidden if coupling is not ongoing.");
   }
-  if (values.size() != coordinates.size() / 3) {
-    throw precice::Error(precice::utils::format_or_error("writeAndMapData() was called with {} coordinates and {} values, but needs {} values ({} / 3).", coordinates.size(), values.size(), coordinates.size() / 3, coordinates.size()));
+  std::string meshNameStr = toStr(meshName);
+  std::string dataNameStr = toStr(dataName);
+  // Check received mesh with api-access
+  auto meshIt = _impl->configData.meshes.find(meshNameStr);
+  if (meshIt == _impl->configData.meshes.end() || !meshIt->second.received || !meshIt->second.apiAccess) {
+    throw precice::Error(precice::utils::format_or_error(
+        "This participant attempted to map and write data (via \"writeAndMapData\") to mesh \"{0}\", "
+        "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
+        "writeAndMapData({0}, ...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
+        meshNameStr));
+  }
+  // Check JIT mapping
+  {
+    bool hasJit = false;
+    for (const auto &m : _impl->configData.mappings) {
+      if (m.direction == "write" && m.isJit && m.toMesh == meshNameStr) {
+        hasJit = true;
+        break;
+      }
+    }
+    if (!hasJit) {
+      throw precice::Error(precice::utils::format_or_error(
+          "The function \"writeAndMapData\" was called on mesh \"{0}\", but no matching just-in-time mapping was configured. "
+          "Please define a mapping in write direction to the mesh \"{0}\" and omit the \"from\" attribute from the definition.",
+          meshNameStr));
+    }
+  }
+  if (_impl->runtimeState.meshAccessRegions.find(meshNameStr) == _impl->runtimeState.meshAccessRegions.end()) {
+    throw precice::Error(precice::utils::format_or_error(
+        "The function \"writeAndMapData\" was called on mesh \"{}\", but no access region was defined. Please define an access region using \"setMeshAccessRegion()\" before calling \"writeAndMapData()\".",
+        meshNameStr));
+  }
+  const int dim = getMeshDimensions(meshName);
+  if (dim <= 0) {
+    throw precice::Error(precice::utils::format_or_error("writeAndMapData() was called for unknown mesh '{}'.", meshNameStr));
+  }
+  if (coordinates.size() % static_cast<std::size_t>(dim) != 0) {
+    throw precice::Error(precice::utils::format_or_error("writeAndMapData() was called with {} coordinates, but needs a multiple of {} coordinates.", coordinates.size(), dim));
+  }
+  const std::size_t nVertices      = coordinates.size() / static_cast<std::size_t>(dim);
+  const int         dataDims       = getDataDimensions(meshName, dataName);
+  const std::size_t expectedValues = nVertices * static_cast<std::size_t>(dataDims);
+  if (values.size() != expectedValues) {
+    throw precice::Error(precice::utils::format_or_error(
+        "Input sizes are inconsistent attempting to write {}D data to mesh. "
+        "You passed {} vertex indices and {} data components, but we expected {} data components ({} x {}).",
+        dataDims, nVertices, values.size(), expectedValues, dataDims, nVertices));
   }
   // no-op
 }
 
 void Participant::mapAndReadData(
-    ::precice::string_view /*meshName*/,
-    ::precice::string_view /*dataName*/,
+    ::precice::string_view      meshName,
+    ::precice::string_view      dataName,
     precice::span<const double> coordinates,
-    double /*relativeReadTime*/,
-    precice::span<double> values) const
+    double                      relativeReadTime,
+    precice::span<double>       values) const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
+  if (!_impl->configData.allowsExperimental) {
+    throw precice::Error("You called the API function \"mapAndReadData\", which is part of the experimental API. "
+                         "You may unlock the full API by specifying <precice-configuration experimental=\"true\" ... > in the configuration. Please be aware that experimental features may change in any future version (even minor or bugfix).");
+  }
+  if (_impl->runtimeState.finalized) {
+    throw precice::Error("mapAndReadData() cannot be called after finalize().");
+  }
   if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before mapAndReadData().");
   }
-  if (coordinates.size() % 3 != 0) {
-    throw precice::Error(precice::utils::format_or_error("mapAndReadData() was called with {} coordinates, but needs a multiple of 3 coordinates.", coordinates.size()));
+  if (!_impl->runtimeState.couplingOngoing && relativeReadTime != 0.0) {
+    throw precice::Error(precice::utils::format_or_error(
+        "Calling mapAndReadData() with relativeReadTime = {} is forbidden if coupling is not ongoing. If coupling finished, only data for relativeReadTime = 0 is available.",
+        relativeReadTime));
   }
-  if (values.size() != coordinates.size() / 3) {
-    throw precice::Error(precice::utils::format_or_error("mapAndReadData() was called with {} coordinates and {} values, but needs {} values ({} / 3).", coordinates.size(), values.size(), coordinates.size() / 3, coordinates.size()));
+  std::string meshNameStr = toStr(meshName);
+  // Check received mesh with api-access
+  auto meshIt = _impl->configData.meshes.find(meshNameStr);
+  if (meshIt == _impl->configData.meshes.end() || !meshIt->second.received || !meshIt->second.apiAccess) {
+    throw precice::Error(precice::utils::format_or_error(
+        "This participant attempted to map and read data (via \"mapAndReadData\") from mesh \"{0}\", "
+        "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
+        "mapAndReadData({0}, ...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
+        meshNameStr));
+  }
+  // Check JIT mapping
+  {
+    bool hasJit = false;
+    for (const auto &m : _impl->configData.mappings) {
+      if (m.direction == "read" && m.isJit && m.fromMesh == meshNameStr) {
+        hasJit = true;
+        break;
+      }
+    }
+    if (!hasJit) {
+      throw precice::Error(precice::utils::format_or_error(
+          "The function \"mapAndReadData\" was called on mesh \"{0}\", but no matching just-in-time mapping was configured. "
+          "Please define a mapping in read direction from the mesh \"{0}\" and omit the \"to\" attribute from the definition.",
+          meshNameStr));
+    }
+  }
+  if (_impl->runtimeState.meshAccessRegions.find(meshNameStr) == _impl->runtimeState.meshAccessRegions.end()) {
+    throw precice::Error(precice::utils::format_or_error(
+        "The function \"mapAndReadData\" was called on mesh \"{}\", but no access region was defined. Please define an access region using \"setMeshAccessRegion()\" before calling \"mapAndReadData()\".",
+        meshNameStr));
+  }
+  const int dim = getMeshDimensions(meshName);
+  if (dim <= 0) {
+    throw precice::Error(precice::utils::format_or_error("mapAndReadData() was called for unknown mesh '{}'.", meshNameStr));
+  }
+  if (coordinates.size() % static_cast<std::size_t>(dim) != 0) {
+    throw precice::Error(precice::utils::format_or_error("mapAndReadData() was called with {} coordinates, but needs a multiple of {} coordinates.", coordinates.size(), dim));
+  }
+  const std::size_t nVertices      = coordinates.size() / static_cast<std::size_t>(dim);
+  const int         dataDims       = getDataDimensions(meshName, dataName);
+  const std::size_t expectedValues = nVertices * static_cast<std::size_t>(dataDims);
+  if (values.size() != expectedValues) {
+    throw precice::Error(precice::utils::format_or_error(
+        "Input/Output sizes are inconsistent attempting to read {}D data from mesh. "
+        "You passed {} vertex indices and {} data components, but we expected {} data components ({} x {}).",
+        dataDims, nVertices, values.size(), expectedValues, dataDims, nVertices));
   }
   // no-op
 }
@@ -1902,40 +2670,163 @@ void Participant::setMeshAccessRegion(
     precice::span<const double> boundingBox) const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-  if (!_impl->runtimeState.initialized) {
-    throw precice::Error("initialize() has to be called before setMeshAccessRegion().");
+  std::string                           meshNameStr = toStr(meshName);
+  auto                                  meshIt      = _impl->configData.meshes.find(meshNameStr);
+  if (meshIt == _impl->configData.meshes.end() || !meshIt->second.received || !meshIt->second.apiAccess) {
+    throw precice::Error(precice::utils::format_or_error(
+        "This participant attempted to set an access region (via \"setMeshAccessRegion\") on mesh \"{0}\", "
+        "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
+        "setMeshAccessRegion(...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
+        meshNameStr));
+  }
+  if (_impl->runtimeState.finalized) {
+    throw precice::Error("setMeshAccessRegion() cannot be called after finalize().");
+  }
+  if (_impl->runtimeState.initialized) {
+    throw precice::Error("setMeshAccessRegion() needs to be called before initialize().");
+  }
+  if (_impl->runtimeState.meshAccessRegions.find(meshNameStr) != _impl->runtimeState.meshAccessRegions.end()) {
+    throw precice::Error(precice::utils::format_or_error(
+        "A mesh access region was already defined for mesh '{}'. setMeshAccessRegion may only be called once per mesh.",
+        meshNameStr));
   }
   const auto meshDimensions = getMeshDimensions(meshName);
-  const auto expectedSize   = static_cast<std::size_t>(2 * meshDimensions);
+  if (meshDimensions <= 0) {
+    throw precice::Error(precice::utils::format_or_error(
+        "setMeshAccessRegion() was called for unknown mesh '{}'.", meshNameStr));
+  }
+  const auto expectedSize = static_cast<std::size_t>(2 * meshDimensions);
   if (boundingBox.size() != expectedSize) {
     throw precice::Error(precice::utils::format_or_error(
         "setMeshAccessRegion() was called with {} bounding box coordinates, but expects {} coordinates (min and max for each dimension in {}D).",
         boundingBox.size(), expectedSize, meshDimensions));
   }
-  // no-op
+  for (int d = 0; d < meshDimensions; ++d) {
+    if (boundingBox[2 * d] > boundingBox[2 * d + 1]) {
+      throw precice::Error("Your bounding box is ill defined, i.e. it has a negative volume. The required format is [x_min, x_max...]");
+    }
+  }
+  _impl->runtimeState.meshAccessRegions[meshNameStr] = std::vector<double>(boundingBox.begin(), boundingBox.end());
+
+  // The partner's mesh is not available in the mock, so synthesize a small set of
+  // vertices inside the access region. Access regions are typically a thin box that
+  // straddles the coupling interface: wide along the interface, thin along its normal.
+  // Spreading points along the box diagonal pushes them across the thin dimension and
+  // past the interface, landing outside the partner's domain — so solvers that locate
+  // these points on their own mesh (e.g. nutils) fail (LocateError). Instead, spread the
+  // points only along the widest box dimension and place every other dimension at the box
+  // center: the thin dimension then lands on the interface plane, where the partner's
+  // mesh actually lives, keeping the points locatable.
+  constexpr std::size_t kSyntheticVertices = 10;
+  // Keep the spread within the interior band of the box: the access region is usually a
+  // superset of the partner's domain, so points near the ends often fall just outside it.
+  constexpr double kMargin = 0.25; // map t into [kMargin, 1 - kMargin]
+
+  int    widestDim   = 0;
+  double widestWidth = -1.0;
+  for (int d = 0; d < meshDimensions; ++d) {
+    const double width = boundingBox[2 * d + 1] - boundingBox[2 * d];
+    if (width > widestWidth) {
+      widestWidth = width;
+      widestDim   = d;
+    }
+  }
+
+  std::vector<double> coords;
+  coords.reserve(kSyntheticVertices * meshDimensions);
+  for (std::size_t v = 0; v < kSyntheticVertices; ++v) {
+    const double raw = (kSyntheticVertices == 1) ? 0.5 : static_cast<double>(v) / (kSyntheticVertices - 1);
+    const double t   = kMargin + raw * (1.0 - 2.0 * kMargin);
+    for (int d = 0; d < meshDimensions; ++d) {
+      const double lo   = boundingBox[2 * d];
+      const double hi   = boundingBox[2 * d + 1];
+      const double frac = (d == widestDim) ? t : 0.5; // spread along widest, center the rest
+      coords.push_back(lo + frac * (hi - lo));
+    }
+  }
+  _impl->runtimeState.directAccessCoords[meshNameStr] = std::move(coords);
+  _impl->runtimeState.meshVertexCounts[meshNameStr]   = kSyntheticVertices;
 }
 
 void Participant::getMeshVertexIDsAndCoordinates(
-    ::precice::string_view /*meshName*/,
+    ::precice::string_view  meshName,
     precice::span<VertexID> ids,
     precice::span<double>   coordinates) const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
+  std::string                           meshNameStr = toStr(meshName);
+  auto                                  meshIt      = _impl->configData.meshes.find(meshNameStr);
+  if (meshIt == _impl->configData.meshes.end() || !meshIt->second.received || !meshIt->second.apiAccess) {
+    throw precice::Error(precice::utils::format_or_error(
+        "This participant attempted to get mesh vertex IDs and coordinates (via \"getMeshVertexIDsAndCoordinates\") from mesh \"{0}\", "
+        "but mesh \"{0}\" is either not a received mesh or its api access was not enabled in the configuration. "
+        "getMeshVertexIDsAndCoordinates(...) is only valid for (<receive-mesh name=\"{0}\" ... api-access=\"true\"/>).",
+        meshNameStr));
+  }
   if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before getMeshVertexIDsAndCoordinates().");
   }
-  // coordinates are 3 * ids.size()
-  if (coordinates.size() != ids.size() * 3) {
-    throw precice::Error(precice::utils::format_or_error("getMeshVertexIDsAndCoordinates() was called with {} vertices and {} coordinates, but needs {} coordinates ({} x 3).", ids.size(), coordinates.size(), ids.size() * 3, ids.size()));
+  if (_impl->runtimeState.meshAccessRegions.find(meshNameStr) == _impl->runtimeState.meshAccessRegions.end()) {
+    throw precice::Error("Please define an access region using \"setMeshAccessRegion()\" before calling \"getMeshVertexIDsAndCoordinates()\".");
   }
-  // no-op
+  const auto meshDimensions = getMeshDimensions(meshName);
+  if (meshDimensions <= 0) {
+    throw precice::Error(precice::utils::format_or_error(
+        "getMeshVertexIDsAndCoordinates() was called for unknown mesh '{}'.", meshNameStr));
+  }
+  const auto expectedCoordinates = ids.size() * static_cast<std::size_t>(meshDimensions);
+  if (coordinates.size() != expectedCoordinates) {
+    throw precice::Error(precice::utils::format_or_error("getMeshVertexIDsAndCoordinates() was called with {} vertices and {} coordinates, but needs {} coordinates ({} x {}).", ids.size(), coordinates.size(), expectedCoordinates, ids.size(), meshDimensions));
+  }
+
+  const auto vertexCount = static_cast<std::size_t>(getMeshVertexSize(meshName));
+  if (ids.size() != vertexCount) {
+    throw precice::Error(precice::utils::format_or_error("getMeshVertexIDsAndCoordinates() was called with {} vertex IDs, but the mesh contains {} vertices.", ids.size(), vertexCount));
+  }
+
+  for (std::size_t i = 0; i < ids.size(); ++i) {
+    ids[i] = static_cast<VertexID>(i);
+  }
+  auto coordIt = _impl->runtimeState.directAccessCoords.find(meshNameStr);
+  if (coordIt != _impl->runtimeState.directAccessCoords.end() && coordIt->second.size() == coordinates.size()) {
+    std::copy(coordIt->second.begin(), coordIt->second.end(), coordinates.begin());
+  } else {
+    std::fill(coordinates.begin(), coordinates.end(), 0.0);
+  }
 }
 
 // Gradient data (experimental)
 
-bool Participant::requiresGradientDataFor(::precice::string_view /*meshName*/,
-                                          ::precice::string_view /*dataName*/) const
+bool Participant::requiresGradientDataFor(::precice::string_view meshName,
+                                          ::precice::string_view dataName) const
 {
+  std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
+  std::string                           meshNameStr = toStr(meshName);
+  std::string                           dataNameStr = toStr(dataName);
+
+  _impl->requireMeshUsed(meshNameStr);
+  bool dataKnown = false;
+
+  // Read data never requires gradients
+  for (const auto &dataInfo : _impl->configData.dataItems) {
+    if (dataInfo.name == dataNameStr && dataInfo.meshName == meshNameStr) {
+      dataKnown = true;
+      if (dataInfo.isRead) {
+        return false;
+      }
+    }
+  }
+  if (!dataKnown) {
+    throw precice::Error(precice::utils::format_or_error(
+        "The given data \"{}\" is unknown to preCICE mesh \"{}\".", dataNameStr, meshNameStr));
+  }
+
+  // Check if any write mapping from this mesh requires gradient data
+  for (const auto &m : _impl->configData.mappings) {
+    if (m.direction == "write" && m.fromMesh == meshNameStr && m.requiresGradient) {
+      return true;
+    }
+  }
   return false;
 }
 
@@ -1946,8 +2837,25 @@ void Participant::writeGradientData(
     precice::span<const double>   gradients)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
+  if (!_impl->configData.allowsExperimental) {
+    throw precice::Error("You called the API function \"writeGradientData\", which is part of the experimental API. "
+                         "You may unlock the full API by specifying <precice-configuration experimental=\"true\" ... > in the configuration. Please be aware that experimental features may change in any future version (even minor or bugfix).");
+  }
+  if (_impl->runtimeState.finalized) {
+    throw precice::Error("writeGradientData() cannot be called after finalize().");
+  }
   if (!_impl->runtimeState.initialized) {
     throw precice::Error("initialize() has to be called before writeGradientData().");
+  }
+  // Check that gradient data is actually enabled for this data
+  if (!requiresGradientDataFor(meshName, dataName)) {
+    std::string dataNameStr = toStr(dataName);
+    throw precice::Error(precice::utils::format_or_error(
+        "Data \"{}\" has no gradient values available. Please set the gradient flag to true under the data attribute in the configuration file.",
+        dataNameStr));
+  }
+  if (ids.empty() && gradients.empty()) {
+    return;
   }
   const auto meshDimensions = getMeshDimensions(meshName);
   const auto dataDimensions = getDataDimensions(meshName, dataName);
@@ -1962,9 +2870,14 @@ void Participant::writeGradientData(
 
 // Profiling
 
-void Participant::startProfilingSection(::precice::string_view /*sectionName*/)
+void Participant::startProfilingSection(::precice::string_view sectionName)
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
+  std::string                           name = toStr(sectionName);
+  if (name.find('/') != std::string::npos) {
+    throw precice::Error(precice::utils::format_or_error(
+        "The provided section name \"{}\" may not contain a forward-slash \"/\"", name));
+  }
   ++_impl->runtimeState.activeProfilingSections;
 }
 
@@ -1972,7 +2885,7 @@ void Participant::stopLastProfilingSection()
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
   if (_impl->runtimeState.activeProfilingSections == 0) {
-    throw precice::Error("stopLastProfilingSection() cannot be called before startProfilingSection().");
+    throw precice::Error("There is no user-started event to stop.");
   }
   --_impl->runtimeState.activeProfilingSections;
 }
