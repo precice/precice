@@ -373,7 +373,7 @@ public:
 
   // SAX parsing state for config
   struct ConfigParseState {
-    bool                            inParticipant = false;
+    bool                            inParticipant = false; // Track if we're inside a participant element
     std::string                     participantName;
     std::map<std::string, DataType> dataType;                 // type marker: scalar or vector
     bool                            inCouplingScheme = false; // Track if we're inside a coupling-scheme element
