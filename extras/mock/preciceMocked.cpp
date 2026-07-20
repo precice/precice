@@ -353,8 +353,8 @@ public:
     LoggingMode                           loggingMode = LoggingMode::Mock; // Default to mock mode
   };
 
-  // Minimal internal state
-  std::string                  name;
+  // Internal state
+  std::string                  participantName;
   std::string                  config;
   std::string                  mockConfigPath;
   int                          rank    = 0;
@@ -456,7 +456,7 @@ impl::ParticipantImpl::ParticipantImpl(::precice::string_view participantName,
                                        int                    solverProcessIndex,
                                        int                    solverProcessSize,
                                        void                  *communicator)
-    : name(toStr(participantName)),
+    : participantName(toStr(participantName)),
       config(toStr(configurationFileName)),
       rank(solverProcessIndex),
       primary(rank == 0),
@@ -464,7 +464,7 @@ impl::ParticipantImpl::ParticipantImpl(::precice::string_view participantName,
       comm(communicator)
 {
   // Basic invariant checks for the mock participant
-  if (name.empty()) {
+  if (participantName.empty()) {
     throw precice::Error("Participant name is empty.");
   }
   if (solverProcessSize <= 0) {
@@ -545,10 +545,10 @@ std::vector<std::string> impl::ParticipantImpl::buildInitializeLogMessages() con
   }
 
   if (mockConfig.loggingMode == LoggingMode::PrecICE) {
-    messages.push_back(std::string("I am participant \"") + name + "\"");
+    messages.push_back(std::string("I am participant \"") + participantName + "\"");
   } else {
     std::ostringstream summary;
-    summary << "Initialized with participant \"" << name << "\"";
+    summary << "Initialized with participant \"" << participantName << "\"";
     messages.push_back(summary.str());
 
     std::ostringstream configSummary;
@@ -662,7 +662,7 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
   // membership markers, handled in the coupling-scheme chain below)
   else if (elemName == "participant" && !impl->configParseState.inCouplingScheme) {
     std::string participantName = getAttr("name");
-    if (participantName == impl->name) {
+    if (participantName == impl->participantName) {
       impl->configParseState.inParticipant   = true;
       impl->configParseState.participantName = participantName;
     }
@@ -783,13 +783,13 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
     impl->schemeParseState.isImplicit       = (elemName == "serial-implicit" || elemName == "parallel-implicit" || elemName == "multi");
   } else if (impl->configParseState.inCouplingScheme && elemName == "participants") {
     impl->schemeParseState.sawParticipants = true;
-    if (getAttr("first") == impl->name || getAttr("second") == impl->name) {
+    if (getAttr("first") == impl->participantName || getAttr("second") == impl->participantName) {
       impl->schemeParseState.isMember = true;
     }
   } else if (impl->configParseState.inCouplingScheme && elemName == "participant") {
     // membership marker of a coupling-scheme:multi
     impl->schemeParseState.sawParticipants = true;
-    if (getAttr("name") == impl->name) {
+    if (getAttr("name") == impl->participantName) {
       impl->schemeParseState.isMember = true;
     }
   } else if (impl->configParseState.inCouplingScheme && elemName == "max-iterations") {
@@ -940,7 +940,7 @@ void impl::ParticipantImpl::parseConfig()
 
     if (!configParseState.inParticipant && configParseState.participantName.empty()) {
       throw precice::Error(precice::utils::format_or_error(
-          "Participant '{}' not found in configuration '{}'", name, config));
+          "Participant '{}' not found in configuration '{}'", participantName, config));
     }
 
     // If no mesh was explicitly marked as provided but meshes exist, assume all non-received meshes are provided (fallback for simplified configs)
@@ -1010,7 +1010,7 @@ void impl::ParticipantImpl::parseConfig()
 
     // Determine if initial data is required (exchange with initialize="true" from this participant)
     for (const auto &ex : configData.exchanges) {
-      if (ex.initialize && ex.fromParticipant == name) {
+      if (ex.initialize && ex.fromParticipant == participantName) {
         runtimeState.initialDataRequired = true;
         break;
       }
@@ -1871,7 +1871,7 @@ int Participant::getDataDimensions(::precice::string_view meshName,
     // Data not found - throw error
     throw precice::Error(precice::utils::format_or_error(
         "Data '{}' on mesh '{}' is not used by participant '{}'",
-        dataNameStr, meshNameStr, _impl->name));
+        dataNameStr, meshNameStr, _impl->participantName));
   }
 
   // Fallback: mock as scalar
@@ -1993,7 +1993,7 @@ int Participant::getMeshVertexSize(::precice::string_view meshName) const
   if (!_impl->runtimeState.initialized && meshInfo.received && !meshInfo.provided) {
     throw precice::Error(precice::utils::format_or_error(
         "initialize() has to be called before accessing data of the received mesh \"{}\" on participant \"{}\".",
-        meshNameStr, _impl->name));
+        meshNameStr, _impl->participantName));
   }
   auto it = _impl->runtimeState.meshVertexCounts.find(meshNameStr);
   if (it != _impl->runtimeState.meshVertexCounts.end()) {
@@ -2350,7 +2350,7 @@ void Participant::writeData(
           throw precice::Error(precice::utils::format_or_error(
               "Data '{}' on mesh '{}' is not configured for writing by participant '{}'. "
               "Please add <write-data name=\"{}\" mesh=\"{}\" /> to the configuration.",
-              dataNameStr, meshNameStr, _impl->name, dataNameStr, meshNameStr));
+              dataNameStr, meshNameStr, _impl->participantName, dataNameStr, meshNameStr));
         }
         found        = true;
         expectedDims = dataInfo.dimensions;
@@ -2361,7 +2361,7 @@ void Participant::writeData(
     if (!found) {
       throw precice::Error(precice::utils::format_or_error(
           "Data '{}' on mesh '{}' is not used by participant '{}'",
-          dataNameStr, meshNameStr, _impl->name));
+          dataNameStr, meshNameStr, _impl->participantName));
     }
 
     // Check value count matches data dimensions
@@ -2471,7 +2471,7 @@ void Participant::readData(
           throw precice::Error(precice::utils::format_or_error(
               "Data '{}' on mesh '{}' is not configured for reading by participant '{}'. "
               "Please add <read-data name=\"{}\" mesh=\"{}\" /> to the configuration.",
-              dataNameStr, meshNameStr, _impl->name, dataNameStr, meshNameStr));
+              dataNameStr, meshNameStr, _impl->participantName, dataNameStr, meshNameStr));
         }
         found        = true;
         expectedDims = dataInfo.dimensions;
@@ -2482,7 +2482,7 @@ void Participant::readData(
     if (!found) {
       throw precice::Error(precice::utils::format_or_error(
           "Data '{}' on mesh '{}' is not used by participant '{}'",
-          dataNameStr, meshNameStr, _impl->name));
+          dataNameStr, meshNameStr, _impl->participantName));
     }
 
     // Check value count matches data dimensions
