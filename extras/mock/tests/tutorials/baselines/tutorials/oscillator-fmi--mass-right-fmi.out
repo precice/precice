@@ -1,0 +1,8 @@
+# exit=0
+[precice-mock]  Working directory "<REPO>/examples/tutorials/oscillator/mass-right-fmi"
+[precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/tutorials/oscillator/mass-right-fmi/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+[precice-mock]  Initialized with participant "Mass-Right"
+[precice-mock]  Configuration: default-data-mode=buffer max-iterations=2 time-window-size=0.01
+[precice-mock]  Finalized
+Error w.r.t analytical solution:
+0.87324279880709

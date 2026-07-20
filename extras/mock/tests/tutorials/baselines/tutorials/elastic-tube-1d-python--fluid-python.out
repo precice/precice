@@ -1,0 +1,33 @@
+# exit=0
+<REPO>/.venv/lib/python3.10/site-packages/matplotlib/projections/__init__.py:63: UserWarning: Unable to import Axes3D. This may be due to multiple versions of Matplotlib being installed (e.g. as a system package and as a pip package). As a result, the 3D projection is not available.
+  warnings.warn("Unable to import Axes3D. This may be due to multiple versions of "
+[precice-mock]  WARNING: max-iterations-override (2) is higher than max-iterations from preCICE config (1). Using override value.
+[precice-mock]  Working directory "<REPO>/examples/tutorials/elastic-tube-1d/fluid-python"
+[precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/tutorials/elastic-tube-1d/fluid-python/../precice-config.xml" and mock configuration "<REPO>/examples/tutorials/elastic-tube-1d/fluid-python/../precice-mock-config.xml"
+[precice-mock]  Initialized with participant "Fluid"
+[precice-mock]  Configuration: default-data-mode=buffer max-iterations=2 time-window-size=0.01 mock-config=yes
+Plotting Mode: PlottingModes.OFF
+Starting Fluid Solver...
+N: 100
+Configure preCICE...
+preCICE configured...
+Fluid: init precice...
+[1.09943696 1.08651147 0.92562489 1.0998081  0.9472178  0.97931615
+ 0.97758215 1.03394921 1.08710781 1.06926218 0.9626547  1.00490963
+ 0.98869058 0.94591544 1.00688278 1.0827924  0.99144096 0.98613971
+ 1.08782556 1.05567785 1.0431941  1.0605515  0.91856016 1.00363051
+ 1.07300405 1.06582938 1.06592067 0.95461    0.91184864 1.03410561
+ 1.0186131  1.03433082 0.98235758 0.93951018 0.95792593 0.92842403
+ 1.05666289 0.98250777 0.90683426 1.024806   1.03212714 0.95969906
+ 0.9892269  0.94442491 0.91467283 0.9938477  0.91923445 1.08067403
+ 0.92389809 1.00495988 0.9167246  1.08337227 1.08208968 0.95978602
+ 1.01687782 1.01318241 1.02278766 1.09130713 0.9521958  0.94620308
+ 1.0066897  1.08998763 0.99861192 1.0081201  1.05309702 0.90906915
+ 0.92799322 1.05848072 0.90596027 1.07662509 1.00815764 0.98959604
+ 1.07842717 0.97551687 1.00768494 1.03045978 0.9722522  1.01420171
+ 1.0275673  0.92526298 1.03804092 1.02954988 0.97078782 1.05264661
+ 0.97130634 1.05055767 1.07626837 0.90233384 0.99962181 0.9147584
+ 1.05739029 0.91281347 0.97106207 1.08836739 0.97596066 1.05258401
+ 1.054319   0.9602721  1.05454783 0.93058596 1.01572679]
+Exiting FluidSolver
+[precice-mock]  Finalized

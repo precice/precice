@@ -1,0 +1,311 @@
+# exit=0
+Starting Fluid Solver...
+[precice-mock]  WARNING: max-iterations-override (2) is higher than max-iterations from preCICE config (1). Using override value.
+preCICE configured...
+Initialize preCICE...
+[precice-mock]  Working directory "<REPO>/examples/tutorials/elastic-tube-1d/fluid-cpp"
+[precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/tutorials/elastic-tube-1d/fluid-cpp/../precice-config.xml" and mock configuration "<REPO>/examples/tutorials/elastic-tube-1d/fluid-cpp/../precice-mock-config.xml"
+[precice-mock]  Initialized with participant "Fluid"
+[precice-mock]  Configuration: default-data-mode=buffer max-iterations=2 time-window-size=0.01 mock-config=yes
+Nonlinear Solver break, iterations: 3, residual norm: 2.21925e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.21925e-16
+writing timestep at t=0.010000 to ./output/out_fluid_0.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.98773e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.98773e-16
+writing timestep at t=0.020000 to ./output/out_fluid_1.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.90993e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.90993e-16
+writing timestep at t=0.030000 to ./output/out_fluid_2.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.16123e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.16123e-16
+writing timestep at t=0.040000 to ./output/out_fluid_3.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.91932e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.91932e-16
+writing timestep at t=0.050000 to ./output/out_fluid_4.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 3.81425e-16
+Nonlinear Solver break, iterations: 3, residual norm: 3.81425e-16
+writing timestep at t=0.060000 to ./output/out_fluid_5.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.09054e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.09054e-16
+writing timestep at t=0.070000 to ./output/out_fluid_6.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.0287e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.0287e-16
+writing timestep at t=0.080000 to ./output/out_fluid_7.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 9.61294e-17
+Nonlinear Solver break, iterations: 3, residual norm: 9.61294e-17
+writing timestep at t=0.090000 to ./output/out_fluid_8.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.71512e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.71512e-16
+writing timestep at t=0.100000 to ./output/out_fluid_9.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 8.56713e-17
+Nonlinear Solver break, iterations: 3, residual norm: 8.56713e-17
+writing timestep at t=0.110000 to ./output/out_fluid_10.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 5.68098e-16
+Nonlinear Solver break, iterations: 3, residual norm: 5.68098e-16
+writing timestep at t=0.120000 to ./output/out_fluid_11.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.26801e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.26801e-16
+writing timestep at t=0.130000 to ./output/out_fluid_12.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 7.22188e-17
+Nonlinear Solver break, iterations: 3, residual norm: 7.22188e-17
+writing timestep at t=0.140000 to ./output/out_fluid_13.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 3.68239e-16
+Nonlinear Solver break, iterations: 3, residual norm: 3.68239e-16
+writing timestep at t=0.150000 to ./output/out_fluid_14.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 3.49225e-16
+Nonlinear Solver break, iterations: 3, residual norm: 3.49225e-16
+writing timestep at t=0.160000 to ./output/out_fluid_15.vtk
+Nonlinear Solver break, iterations: 4, residual norm: 1.08651e-16
+Nonlinear Solver break, iterations: 4, residual norm: 1.08651e-16
+writing timestep at t=0.170000 to ./output/out_fluid_16.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.2269e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.2269e-16
+writing timestep at t=0.180000 to ./output/out_fluid_17.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.72912e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.72912e-16
+writing timestep at t=0.190000 to ./output/out_fluid_18.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 5.76146e-16
+Nonlinear Solver break, iterations: 3, residual norm: 5.76146e-16
+writing timestep at t=0.200000 to ./output/out_fluid_19.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 5.5406e-16
+Nonlinear Solver break, iterations: 3, residual norm: 5.5406e-16
+writing timestep at t=0.210000 to ./output/out_fluid_20.vtk
+Nonlinear Solver break, iterations: 5, residual norm: 1.08531e-16
+Nonlinear Solver break, iterations: 5, residual norm: 1.08531e-16
+writing timestep at t=0.220000 to ./output/out_fluid_21.vtk
+Nonlinear Solver break, iterations: 4, residual norm: 1.81246e-16
+Nonlinear Solver break, iterations: 4, residual norm: 1.81246e-16
+writing timestep at t=0.230000 to ./output/out_fluid_22.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 3.09233e-16
+Nonlinear Solver break, iterations: 3, residual norm: 3.09233e-16
+writing timestep at t=0.240000 to ./output/out_fluid_23.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.04758e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.04758e-16
+writing timestep at t=0.250000 to ./output/out_fluid_24.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 8.66915e-16
+Nonlinear Solver break, iterations: 3, residual norm: 8.66915e-16
+writing timestep at t=0.260000 to ./output/out_fluid_25.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.14662e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.14662e-16
+writing timestep at t=0.270000 to ./output/out_fluid_26.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.25203e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.25203e-16
+writing timestep at t=0.280000 to ./output/out_fluid_27.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 4.85859e-16
+Nonlinear Solver break, iterations: 3, residual norm: 4.85859e-16
+writing timestep at t=0.290000 to ./output/out_fluid_28.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 9.58342e-17
+Nonlinear Solver break, iterations: 3, residual norm: 9.58342e-17
+writing timestep at t=0.300000 to ./output/out_fluid_29.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.35903e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.35903e-16
+writing timestep at t=0.310000 to ./output/out_fluid_30.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 9.98818e-17
+Nonlinear Solver break, iterations: 3, residual norm: 9.98818e-17
+writing timestep at t=0.320000 to ./output/out_fluid_31.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 7.92617e-17
+Nonlinear Solver break, iterations: 3, residual norm: 7.92617e-17
+writing timestep at t=0.330000 to ./output/out_fluid_32.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 6.36298e-17
+Nonlinear Solver break, iterations: 3, residual norm: 6.36298e-17
+writing timestep at t=0.340000 to ./output/out_fluid_33.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 4.92924e-16
+Nonlinear Solver break, iterations: 3, residual norm: 4.92924e-16
+writing timestep at t=0.350000 to ./output/out_fluid_34.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 4.06104e-16
+Nonlinear Solver break, iterations: 3, residual norm: 4.06104e-16
+writing timestep at t=0.360000 to ./output/out_fluid_35.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.86903e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.86903e-16
+writing timestep at t=0.370000 to ./output/out_fluid_36.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.5426e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.5426e-16
+writing timestep at t=0.380000 to ./output/out_fluid_37.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 3.04021e-16
+Nonlinear Solver break, iterations: 3, residual norm: 3.04021e-16
+writing timestep at t=0.390000 to ./output/out_fluid_38.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.1804e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.1804e-16
+writing timestep at t=0.400000 to ./output/out_fluid_39.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 8.66933e-16
+Nonlinear Solver break, iterations: 3, residual norm: 8.66933e-16
+writing timestep at t=0.410000 to ./output/out_fluid_40.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 3.09766e-16
+Nonlinear Solver break, iterations: 3, residual norm: 3.09766e-16
+writing timestep at t=0.420000 to ./output/out_fluid_41.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 8.21656e-16
+Nonlinear Solver break, iterations: 3, residual norm: 8.21656e-16
+writing timestep at t=0.430000 to ./output/out_fluid_42.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.35396e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.35396e-16
+writing timestep at t=0.440000 to ./output/out_fluid_43.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 3.95617e-16
+Nonlinear Solver break, iterations: 3, residual norm: 3.95617e-16
+writing timestep at t=0.450000 to ./output/out_fluid_44.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 6.63823e-16
+Nonlinear Solver break, iterations: 3, residual norm: 6.63823e-16
+writing timestep at t=0.460000 to ./output/out_fluid_45.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 9.40034e-17
+Nonlinear Solver break, iterations: 3, residual norm: 9.40034e-17
+writing timestep at t=0.470000 to ./output/out_fluid_46.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.20846e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.20846e-16
+writing timestep at t=0.480000 to ./output/out_fluid_47.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.56971e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.56971e-16
+writing timestep at t=0.490000 to ./output/out_fluid_48.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.11328e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.11328e-16
+writing timestep at t=0.500000 to ./output/out_fluid_49.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 4.25573e-16
+Nonlinear Solver break, iterations: 3, residual norm: 4.25573e-16
+writing timestep at t=0.510000 to ./output/out_fluid_50.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 7.80579e-17
+Nonlinear Solver break, iterations: 3, residual norm: 7.80579e-17
+writing timestep at t=0.520000 to ./output/out_fluid_51.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.25919e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.25919e-16
+writing timestep at t=0.530000 to ./output/out_fluid_52.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.45311e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.45311e-16
+writing timestep at t=0.540000 to ./output/out_fluid_53.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 3.68199e-16
+Nonlinear Solver break, iterations: 3, residual norm: 3.68199e-16
+writing timestep at t=0.550000 to ./output/out_fluid_54.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.22845e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.22845e-16
+writing timestep at t=0.560000 to ./output/out_fluid_55.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 3.31523e-16
+Nonlinear Solver break, iterations: 3, residual norm: 3.31523e-16
+writing timestep at t=0.570000 to ./output/out_fluid_56.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 3.99715e-16
+Nonlinear Solver break, iterations: 3, residual norm: 3.99715e-16
+writing timestep at t=0.580000 to ./output/out_fluid_57.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 7.9569e-16
+Nonlinear Solver break, iterations: 3, residual norm: 7.9569e-16
+writing timestep at t=0.590000 to ./output/out_fluid_58.vtk
+Nonlinear Solver break, iterations: 4, residual norm: 1.36309e-16
+Nonlinear Solver break, iterations: 4, residual norm: 1.36309e-16
+writing timestep at t=0.600000 to ./output/out_fluid_59.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.75571e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.75571e-16
+writing timestep at t=0.610000 to ./output/out_fluid_60.vtk
+Nonlinear Solver break, iterations: 4, residual norm: 1.04838e-16
+Nonlinear Solver break, iterations: 4, residual norm: 1.04838e-16
+writing timestep at t=0.620000 to ./output/out_fluid_61.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.57432e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.57432e-16
+writing timestep at t=0.630000 to ./output/out_fluid_62.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.89761e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.89761e-16
+writing timestep at t=0.640000 to ./output/out_fluid_63.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.30357e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.30357e-16
+writing timestep at t=0.650000 to ./output/out_fluid_64.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 3.28411e-16
+Nonlinear Solver break, iterations: 3, residual norm: 3.28411e-16
+writing timestep at t=0.660000 to ./output/out_fluid_65.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.40685e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.40685e-16
+writing timestep at t=0.670000 to ./output/out_fluid_66.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 3.5983e-16
+Nonlinear Solver break, iterations: 3, residual norm: 3.5983e-16
+writing timestep at t=0.680000 to ./output/out_fluid_67.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.61011e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.61011e-16
+writing timestep at t=0.690000 to ./output/out_fluid_68.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.62591e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.62591e-16
+writing timestep at t=0.700000 to ./output/out_fluid_69.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.0117e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.0117e-16
+writing timestep at t=0.710000 to ./output/out_fluid_70.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 6.44811e-16
+Nonlinear Solver break, iterations: 3, residual norm: 6.44811e-16
+writing timestep at t=0.720000 to ./output/out_fluid_71.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 3.41685e-16
+Nonlinear Solver break, iterations: 3, residual norm: 3.41685e-16
+writing timestep at t=0.730000 to ./output/out_fluid_72.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 7.80063e-16
+Nonlinear Solver break, iterations: 3, residual norm: 7.80063e-16
+writing timestep at t=0.740000 to ./output/out_fluid_73.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 9.11774e-16
+Nonlinear Solver break, iterations: 3, residual norm: 9.11774e-16
+writing timestep at t=0.750000 to ./output/out_fluid_74.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 9.12928e-16
+Nonlinear Solver break, iterations: 3, residual norm: 9.12928e-16
+writing timestep at t=0.760000 to ./output/out_fluid_75.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.34246e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.34246e-16
+writing timestep at t=0.770000 to ./output/out_fluid_76.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.0336e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.0336e-16
+writing timestep at t=0.780000 to ./output/out_fluid_77.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.87285e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.87285e-16
+writing timestep at t=0.790000 to ./output/out_fluid_78.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.0041e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.0041e-16
+writing timestep at t=0.800000 to ./output/out_fluid_79.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.80501e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.80501e-16
+writing timestep at t=0.810000 to ./output/out_fluid_80.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 3.14415e-16
+Nonlinear Solver break, iterations: 3, residual norm: 3.14415e-16
+writing timestep at t=0.820000 to ./output/out_fluid_81.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.65793e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.65793e-16
+writing timestep at t=0.830000 to ./output/out_fluid_82.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.14914e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.14914e-16
+writing timestep at t=0.840000 to ./output/out_fluid_83.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.5988e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.5988e-16
+writing timestep at t=0.850000 to ./output/out_fluid_84.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 3.77041e-16
+Nonlinear Solver break, iterations: 3, residual norm: 3.77041e-16
+writing timestep at t=0.860000 to ./output/out_fluid_85.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.5578e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.5578e-16
+writing timestep at t=0.870000 to ./output/out_fluid_86.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 9.42026e-17
+Nonlinear Solver break, iterations: 3, residual norm: 9.42026e-17
+writing timestep at t=0.880000 to ./output/out_fluid_87.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.70862e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.70862e-16
+writing timestep at t=0.890000 to ./output/out_fluid_88.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.89716e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.89716e-16
+writing timestep at t=0.900000 to ./output/out_fluid_89.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.33847e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.33847e-16
+writing timestep at t=0.910000 to ./output/out_fluid_90.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.20021e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.20021e-16
+writing timestep at t=0.920000 to ./output/out_fluid_91.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.41781e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.41781e-16
+writing timestep at t=0.930000 to ./output/out_fluid_92.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 1.56505e-16
+Nonlinear Solver break, iterations: 3, residual norm: 1.56505e-16
+writing timestep at t=0.940000 to ./output/out_fluid_93.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 9.39292e-17
+Nonlinear Solver break, iterations: 3, residual norm: 9.39292e-17
+writing timestep at t=0.950000 to ./output/out_fluid_94.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 4.66591e-16
+Nonlinear Solver break, iterations: 3, residual norm: 4.66591e-16
+writing timestep at t=0.960000 to ./output/out_fluid_95.vtk
+Nonlinear Solver break, iterations: 4, residual norm: 1.16058e-16
+Nonlinear Solver break, iterations: 4, residual norm: 1.16058e-16
+writing timestep at t=0.970000 to ./output/out_fluid_96.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.79653e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.79653e-16
+writing timestep at t=0.980000 to ./output/out_fluid_97.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 8.30168e-16
+Nonlinear Solver break, iterations: 3, residual norm: 8.30168e-16
+writing timestep at t=0.990000 to ./output/out_fluid_98.vtk
+Nonlinear Solver break, iterations: 3, residual norm: 2.26524e-16
+Nonlinear Solver break, iterations: 3, residual norm: 2.26524e-16
+writing timestep at t=1.000000 to ./output/out_fluid_99.vtk
+Exiting FluidSolver
+[precice-mock]  Finalized

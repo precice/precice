@@ -12,7 +12,7 @@
 # Environment: PRECICE_BUILD_DIR (default: <repo>/build)
 set -u
 ROOT="$(cd "$(dirname "$0")" && pwd)"
-REPO="$(cd "$ROOT/../../.." && pwd)"
+REPO="$(cd "$ROOT/../../../.." && pwd)"
 BUILD=${PRECICE_BUILD_DIR:-$REPO/build}
 MOCK=$BUILD/libpreciceMocked.so
 TMO=90

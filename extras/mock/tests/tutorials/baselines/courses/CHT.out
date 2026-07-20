@@ -1,0 +1,1189 @@
+# exit=0
+Running solutions with mock library: <REPO>/build/libpreciceMocked.so.3.3.0
+Python venv: <REPO>/.venv
+Course directory: <REPO>/examples/course
+==================================================
+Found 1 task directories to run
+
+Running task: CHT/solution/all
+Cleaning...
+Cleaning Fluid
+Cleaning case <REPO>/examples/course/CHT/solution/all/fluid-openfoam
+Cleaning Solid
+Cleaning complete!
+  Detected 2 participant(s):
+    - fluid-openfoam: bash ./run.sh
+    - solid-nutils: bash ./run.sh
+  Running sequentially (mock mode)
+  ----- output: fluid-openfoam (rc=0) -----
+    /*---------------------------------------------------------------------------*\
+    | =========                 |                                                 |
+    | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+    |  \\    /   O peration     | Version:  2412                                  |
+    |   \\  /    A nd           | Website:  www.openfoam.com                      |
+    |    \\/     M anipulation  |                                                 |
+    \*---------------------------------------------------------------------------*/
+    I/O    : uncollated
+    trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+    fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+    allowSystemOperations : Allowing user-supplied system call operations
+    
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+    Create time
+    
+    Creating block mesh from "system/blockMeshDict"
+    --> FOAM IOWarning :
+        Found [v1012] 'convertToMeters' entry instead of 'scale' in dictionary "system/blockMeshDict"
+    
+        This keyword is 168 months old.
+    
+    Creating block edges
+    No non-planar block faces defined
+    Creating topology blocks
+    
+    Creating topology patches - from boundary section
+    
+    Creating block mesh topology
+    --> FOAM Warning : 
+        From Foam::polyMesh::polyMesh(const Foam::IOobject&, Foam::pointField&&, const cellShapeList&, const faceListList&, const wordList&, const Foam::PtrList<Foam::dictionary>&, const Foam::word&, const Foam::word&, bool)
+        in file meshes/polyMesh/polyMeshFromShapeMesh.C at line 915
+        Found 6 undefined faces in mesh; adding to default patch defaultFaces
+    
+    Check topology
+    
+    	Basic statistics
+    		Number of internal faces : 2
+    		Number of boundary faces : 14
+    		Number of defined boundary faces : 14
+    		Number of undefined boundary faces : 0
+    	Checking patch -> block consistency
+    
+    Creating block offsets
+    Creating merge list (topological search)...
+    
+    Creating polyMesh from blockMesh
+    Creating patches
+    Creating cells
+    Creating points with scale (1 1 1)
+        Block 0 cell size :
+            i : 0.0123864 .. 0.00247728
+            j : 0.00232699 .. 0.0349049
+            k : 0.05 .. 0.05
+    
+        Block 1 cell size :
+            i : 0.0024959 .. 0.0124795
+            j : 0.00232699 .. 0.0349049
+            k : 0.05 .. 0.05
+    
+        Block 2 cell size :
+            i : 0.0392157 .. 0.0392157
+            j : 0.00232699 .. 0.0349049
+            k : 0.05 .. 0.05
+    
+    No patch pairs to merge
+    
+    Writing polyMesh with 0 cellZones
+    ----------------
+    Mesh Information
+    ----------------
+      boundingBox: (-0.5 0 0) (3 0.5 0.05)
+      nPoints: 24696
+      nCells: 12013
+      nFaces: 48386
+      nInternalFaces: 23692
+    ----------------
+    Patches
+    ----------------
+      patch 0 (start: 23692 size: 41) name: inlet
+      patch 1 (start: 23733 size: 41) name: outlet
+      patch 2 (start: 23774 size: 293) name: top
+      patch 3 (start: 24067 size: 81) name: slip-bottom
+      patch 4 (start: 24148 size: 51) name: bottom
+      patch 5 (start: 24199 size: 161) name: interface
+      patch 6 (start: 24360 size: 24026) name: defaultFaces
+    
+    End
+    
+    /*---------------------------------------------------------------------------*\
+    | =========                 |                                                 |
+    | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+    |  \\    /   O peration     | Version:  2412                                  |
+    |   \\  /    A nd           | Website:  www.openfoam.com                      |
+    |    \\/     M anipulation  |                                                 |
+    \*---------------------------------------------------------------------------*/
+    I/O    : uncollated
+    trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+    fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+    allowSystemOperations : Allowing user-supplied system call operations
+    
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+    Create time
+    
+    Create mesh for time = 0
+    
+    
+    PIMPLE: Operating solver in PISO mode
+    
+    Reading thermophysical properties
+    
+    Selecting thermodynamics package 
+    {
+        type            heRhoThermo;
+        mixture         pureMixture;
+        transport       const;
+        thermo          hConst;
+        equationOfState perfectGas;
+        specie          specie;
+        energy          sensibleEnthalpy;
+    }
+    
+    Reading field U
+    
+    Reading/calculating face flux field phi
+    
+    Creating turbulence model
+    
+    Selecting turbulence model type laminar
+    Selecting laminar stress model Stokes
+    
+    Reading g
+    
+    Reading hRef
+    Calculating field g.h
+    
+    Reading field p_rgh
+    
+    Creating field dpdt
+    
+    Creating field kinetic energy K
+    
+    No MRF models present
+    
+    Radiation model not active: radiationProperties not found
+    Selecting radiationModel none
+    No finite volume options present
+    Courant Number mean: 0.0837143 max: 0.403668
+    
+    Starting time loop
+    
+    ---[preciceAdapter] Loaded the OpenFOAM-preCICE adapter - v1.3.1.
+    ---[preciceAdapter] Reading preciceDict...
+    [precice-mock]  Working directory "<REPO>/examples/course/CHT/solution/all/fluid-openfoam"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/CHT/solution/all/fluid-openfoam/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Fluid"
+    [precice-mock]  Configuration: default-data-mode=buffer max-iterations=2 time-window-size=0.01
+    ---[preciceAdapter] preCICE was configured and initialized
+    ---[preciceAdapter] Setting the solver's endTime to infinity to prevent early exits. Only preCICE will control the simulation's endTime. Any functionObject's end() method will be triggered by the adapter. You may disable this behavior in the adapter's configuration.
+    Courant Number mean: 0.0837143 max: 0.403668
+    Time = 0.01
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 1, Final residual = 1.17224e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 1, Final residual = 9.27306e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 1, Final residual = 8.8372e-07, No Iterations 15
+    DICPCG:  Solving for p_rgh, Initial residual = 0.826826, Final residual = 0.00778075, No Iterations 87
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 6.94593e-05, global = -1.44839e-07, cumulative = -1.44839e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.31122, Final residual = 9.40663e-09, No Iterations 215
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 7.68221e-10, global = -6.23056e-10, cumulative = -1.45462e-07
+    
+    Courant Number mean: 0.0837143 max: 0.403668
+    Time = 0.01
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 1, Final residual = 1.17224e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 1, Final residual = 9.27306e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 1, Final residual = 8.17875e-07, No Iterations 20
+    DICPCG:  Solving for p_rgh, Initial residual = 0.826978, Final residual = 0.00772394, No Iterations 87
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 6.89502e-05, global = 8.00066e-07, cumulative = 6.54604e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.309534, Final residual = 9.21057e-09, No Iterations 215
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 7.66797e-10, global = -6.19048e-10, cumulative = 6.53985e-07
+    
+    Courant Number mean: 0.085441 max: 0.42119
+    Time = 0.02
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.362408, Final residual = 1.46748e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.215664, Final residual = 9.86392e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.108322, Final residual = 8.47801e-07, No Iterations 15
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0393082, Final residual = 0.000342343, No Iterations 145
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 9.30328e-07, global = 9.46117e-09, cumulative = 6.63446e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0291647, Final residual = 8.99635e-09, No Iterations 206
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 3.50871e-10, global = -2.23997e-10, cumulative = 6.63222e-07
+    
+    Courant Number mean: 0.085441 max: 0.42119
+    Time = 0.02
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.362408, Final residual = 1.46748e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.215664, Final residual = 9.86392e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.108326, Final residual = 8.48251e-07, No Iterations 15
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0393082, Final residual = 0.000342815, No Iterations 145
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 9.31606e-07, global = 9.46824e-09, cumulative = 6.7269e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0291651, Final residual = 9.61673e-09, No Iterations 205
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 3.49526e-10, global = -2.25632e-10, cumulative = 6.72464e-07
+    
+    Courant Number mean: 0.0851579 max: 0.421561
+    Time = 0.03
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.164313, Final residual = 1.53501e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.112053, Final residual = 3.88905e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.0414681, Final residual = 6.58653e-07, No Iterations 12
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0333672, Final residual = 0.000321713, No Iterations 148
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.17213e-07, global = 3.43807e-10, cumulative = 6.72808e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00237189, Final residual = 8.61055e-09, No Iterations 198
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.15097e-10, global = -3.19618e-11, cumulative = 6.72776e-07
+    
+    Courant Number mean: 0.0851579 max: 0.421561
+    Time = 0.03
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.164313, Final residual = 1.53501e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.112053, Final residual = 3.88905e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.0414695, Final residual = 6.54075e-07, No Iterations 12
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0333671, Final residual = 0.000317539, No Iterations 148
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.14395e-07, global = 3.38007e-10, cumulative = 6.73114e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00237132, Final residual = 8.39731e-09, No Iterations 198
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.09578e-10, global = -3.15542e-11, cumulative = 6.73083e-07
+    
+    Courant Number mean: 0.0843432 max: 0.420313
+    Time = 0.04
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.370694, Final residual = 3.02205e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.0129484, Final residual = 1.54586e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.0220601, Final residual = 6.55088e-07, No Iterations 12
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00670117, Final residual = 6.33555e-05, No Iterations 145
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 7.78937e-08, global = 7.70273e-10, cumulative = 6.73853e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00238191, Final residual = 9.98143e-09, No Iterations 198
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.23912e-10, global = 5.05222e-11, cumulative = 6.73903e-07
+    
+    Courant Number mean: 0.0843432 max: 0.420313
+    Time = 0.04
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.370694, Final residual = 3.02205e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.0129484, Final residual = 1.54586e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.022061, Final residual = 6.57115e-07, No Iterations 12
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00670119, Final residual = 6.38635e-05, No Iterations 145
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 7.85192e-08, global = 7.67881e-10, cumulative = 6.74671e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00238239, Final residual = 8.11461e-09, No Iterations 199
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.22978e-10, global = 5.1353e-11, cumulative = 6.74723e-07
+    
+    Courant Number mean: 0.0839866 max: 0.420151
+    Time = 0.05
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.121245, Final residual = 1.55334e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00772847, Final residual = 1.09785e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.018732, Final residual = 9.73103e-07, No Iterations 12
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0118408, Final residual = 0.000117594, No Iterations 146
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 5.50734e-08, global = 3.20495e-10, cumulative = 6.75043e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00381406, Final residual = 7.88857e-09, No Iterations 202
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.19399e-10, global = 4.11299e-11, cumulative = 6.75084e-07
+    
+    Courant Number mean: 0.0839866 max: 0.420151
+    Time = 0.05
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.121245, Final residual = 1.55334e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00772847, Final residual = 1.09785e-07, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.0187326, Final residual = 9.72824e-07, No Iterations 12
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0118409, Final residual = 9.71156e-05, No Iterations 147
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 4.5482e-08, global = 2.62517e-10, cumulative = 6.75347e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00379314, Final residual = 7.91514e-09, No Iterations 202
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.17752e-10, global = 4.06849e-11, cumulative = 6.75387e-07
+    
+    Courant Number mean: 0.0840522 max: 0.421085
+    Time = 0.06
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0386796, Final residual = 7.65293e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00709525, Final residual = 9.13463e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.0152291, Final residual = 9.29181e-07, No Iterations 12
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00747565, Final residual = 6.4459e-05, No Iterations 147
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.10654e-08, global = 6.39721e-11, cumulative = 6.75451e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000573586, Final residual = 8.55762e-09, No Iterations 192
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.04688e-10, global = 7.10523e-12, cumulative = 6.75459e-07
+    
+    Courant Number mean: 0.0840522 max: 0.421085
+    Time = 0.06
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0386796, Final residual = 7.65293e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00709525, Final residual = 9.13463e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.0152296, Final residual = 9.28963e-07, No Iterations 12
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00747585, Final residual = 6.40457e-05, No Iterations 147
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.09923e-08, global = 6.42579e-11, cumulative = 6.75523e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000573499, Final residual = 8.57117e-09, No Iterations 192
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.05253e-10, global = 7.1541e-12, cumulative = 6.7553e-07
+    
+    Courant Number mean: 0.084205 max: 0.422206
+    Time = 0.07
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0509207, Final residual = 6.81756e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00667039, Final residual = 7.85219e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.0121495, Final residual = 8.85872e-07, No Iterations 12
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00409485, Final residual = 3.99896e-05, No Iterations 147
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.16784e-08, global = -1.04653e-10, cumulative = 6.75425e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00131461, Final residual = 9.71682e-09, No Iterations 190
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.05598e-10, global = -8.92686e-12, cumulative = 6.75416e-07
+    
+    Courant Number mean: 0.084205 max: 0.422206
+    Time = 0.07
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0509207, Final residual = 6.81756e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00667039, Final residual = 7.85219e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.0121499, Final residual = 8.85657e-07, No Iterations 12
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00409477, Final residual = 3.85076e-05, No Iterations 147
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.1249e-08, global = -1.08544e-10, cumulative = 6.75308e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0013158, Final residual = 9.74215e-09, No Iterations 190
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.03391e-10, global = -8.66325e-12, cumulative = 6.75299e-07
+    
+    Courant Number mean: 0.0842734 max: 0.423056
+    Time = 0.08
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0281271, Final residual = 5.53193e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00644884, Final residual = 7.00037e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.0106, Final residual = 7.09038e-07, No Iterations 12
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0067628, Final residual = 6.6096e-05, No Iterations 147
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.02288e-08, global = -9.33436e-11, cumulative = 6.75206e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00734541, Final residual = 8.91715e-09, No Iterations 203
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.04223e-10, global = -7.93608e-12, cumulative = 6.75198e-07
+    
+    Courant Number mean: 0.0842734 max: 0.423056
+    Time = 0.08
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0281271, Final residual = 5.53193e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00644884, Final residual = 7.00037e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.0106003, Final residual = 7.08927e-07, No Iterations 12
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00676262, Final residual = 5.84857e-05, No Iterations 148
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 9.05036e-09, global = -8.34524e-11, cumulative = 6.75114e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00732697, Final residual = 8.72451e-09, No Iterations 203
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.00362e-10, global = -7.72796e-12, cumulative = 6.75107e-07
+    
+    Courant Number mean: 0.084264 max: 0.423662
+    Time = 0.09
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0101374, Final residual = 3.91319e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00633855, Final residual = 6.38836e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00950796, Final residual = 5.9172e-07, No Iterations 12
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0103291, Final residual = 9.20802e-05, No Iterations 147
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.73694e-09, global = -5.90517e-12, cumulative = 6.75101e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00585366, Final residual = 9.5098e-09, No Iterations 202
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.01458e-10, global = -2.36942e-12, cumulative = 6.75098e-07
+    
+    Courant Number mean: 0.084264 max: 0.423662
+    Time = 0.09
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0101374, Final residual = 3.91319e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00633855, Final residual = 6.38836e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.0095082, Final residual = 5.91687e-07, No Iterations 12
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0103287, Final residual = 9.66048e-05, No Iterations 147
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.86714e-09, global = -6.62402e-12, cumulative = 6.75092e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00585731, Final residual = 9.50856e-09, No Iterations 202
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.00672e-10, global = -1.79636e-12, cumulative = 6.7509e-07
+    
+    Courant Number mean: 0.0842355 max: 0.424187
+    Time = 0.1
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00746855, Final residual = 3.04451e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00628588, Final residual = 5.93462e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00861943, Final residual = 9.09257e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0337497, Final residual = 0.000318003, No Iterations 148
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.21004e-09, global = 4.9554e-12, cumulative = 6.75095e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00212457, Final residual = 8.99204e-09, No Iterations 200
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.98563e-10, global = 2.14189e-12, cumulative = 6.75097e-07
+    
+    Courant Number mean: 0.0842355 max: 0.424187
+    Time = 0.1
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00746855, Final residual = 3.04451e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00628588, Final residual = 5.93462e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00861964, Final residual = 9.09286e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0337526, Final residual = 0.000315265, No Iterations 148
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.18768e-09, global = 6.92397e-12, cumulative = 6.75104e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00212549, Final residual = 9.90202e-09, No Iterations 199
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.97112e-10, global = 2.07981e-12, cumulative = 6.75106e-07
+    
+    Courant Number mean: 0.0842214 max: 0.424725
+    Time = 0.11
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00714582, Final residual = 2.91146e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00627006, Final residual = 5.58418e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00795736, Final residual = 8.30436e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0128961, Final residual = 0.00012166, No Iterations 148
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.1398e-09, global = 5.11293e-12, cumulative = 6.75111e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000910109, Final residual = 9.41172e-09, No Iterations 195
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.00206e-10, global = 1.48947e-12, cumulative = 6.75113e-07
+    
+    Courant Number mean: 0.0842214 max: 0.424725
+    Time = 0.11
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00714582, Final residual = 2.91146e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00627006, Final residual = 5.58418e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00795754, Final residual = 8.30509e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0128973, Final residual = 0.000105657, No Iterations 149
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.85993e-09, global = 2.41023e-12, cumulative = 6.75115e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000908704, Final residual = 9.10333e-09, No Iterations 195
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.06159e-10, global = 1.30366e-12, cumulative = 6.75116e-07
+    
+    Courant Number mean: 0.0842222 max: 0.425276
+    Time = 0.12
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0088977, Final residual = 3.16673e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00627187, Final residual = 5.29437e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00738446, Final residual = 9.38252e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00268415, Final residual = 2.15884e-05, No Iterations 149
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 8.72541e-10, global = -1.62829e-11, cumulative = 6.751e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000444751, Final residual = 8.45117e-09, No Iterations 183
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.99634e-10, global = 3.89983e-13, cumulative = 6.75101e-07
+    
+    Courant Number mean: 0.0842222 max: 0.425276
+    Time = 0.12
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0088977, Final residual = 3.16673e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00627187, Final residual = 5.29437e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00738463, Final residual = 9.38354e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00268439, Final residual = 2.11317e-05, No Iterations 149
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 8.52117e-10, global = -1.6241e-11, cumulative = 6.75084e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000444869, Final residual = 8.44244e-09, No Iterations 183
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.93579e-10, global = 8.36318e-14, cumulative = 6.75084e-07
+    
+    Courant Number mean: 0.0842274 max: 0.425816
+    Time = 0.13
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00886339, Final residual = 2.98881e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00628311, Final residual = 5.04629e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00688431, Final residual = 8.82367e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00175976, Final residual = 1.58697e-05, No Iterations 143
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 7.31185e-10, global = -9.66765e-12, cumulative = 6.75075e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00044695, Final residual = 9.03673e-09, No Iterations 191
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.965e-10, global = -2.89908e-13, cumulative = 6.75074e-07
+    
+    Courant Number mean: 0.0842274 max: 0.425816
+    Time = 0.13
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00886339, Final residual = 2.98881e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00628311, Final residual = 5.04629e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00688446, Final residual = 8.82475e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00175971, Final residual = 1.56821e-05, No Iterations 143
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 7.2047e-10, global = -9.36483e-12, cumulative = 6.75065e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000447227, Final residual = 8.975e-09, No Iterations 191
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.93698e-10, global = -3.09654e-13, cumulative = 6.75065e-07
+    
+    Courant Number mean: 0.0842304 max: 0.426327
+    Time = 0.14
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00785537, Final residual = 2.70787e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00630607, Final residual = 4.82909e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00646215, Final residual = 8.34701e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00190159, Final residual = 1.81743e-05, No Iterations 139
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 7.3414e-10, global = 4.56876e-12, cumulative = 6.75069e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000499203, Final residual = 9.24153e-09, No Iterations 191
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.99466e-10, global = -5.01687e-13, cumulative = 6.75069e-07
+    
+    Courant Number mean: 0.0842304 max: 0.426327
+    Time = 0.14
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00785537, Final residual = 2.70787e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00630607, Final residual = 4.82909e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00646228, Final residual = 8.34808e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00190141, Final residual = 1.80326e-05, No Iterations 139
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 7.30236e-10, global = 4.41907e-12, cumulative = 6.75073e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00049946, Final residual = 9.26325e-09, No Iterations 191
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.00026e-10, global = -1.06478e-14, cumulative = 6.75073e-07
+    
+    Courant Number mean: 0.0842306 max: 0.42681
+    Time = 0.15
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00689242, Final residual = 9.60632e-07, No Iterations 1
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00633958, Final residual = 4.63954e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00610265, Final residual = 7.92012e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00169458, Final residual = 1.49241e-05, No Iterations 143
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 5.39579e-10, global = 2.128e-12, cumulative = 6.75075e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000420239, Final residual = 8.82254e-09, No Iterations 191
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 2.00143e-10, global = -4.15479e-13, cumulative = 6.75075e-07
+    
+    Courant Number mean: 0.0842306 max: 0.42681
+    Time = 0.15
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00689242, Final residual = 9.60632e-07, No Iterations 1
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00633958, Final residual = 4.63954e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00610277, Final residual = 7.92113e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00169454, Final residual = 1.49876e-05, No Iterations 143
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 5.44891e-10, global = 1.93976e-12, cumulative = 6.75077e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000420357, Final residual = 8.65008e-09, No Iterations 191
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.99244e-10, global = 3.6858e-13, cumulative = 6.75077e-07
+    
+    Courant Number mean: 0.08423 max: 0.427271
+    Time = 0.16
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00630992, Final residual = 8.89274e-07, No Iterations 1
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00638186, Final residual = 4.47414e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00578946, Final residual = 7.52431e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00160646, Final residual = 1.57989e-05, No Iterations 150
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 5.30468e-10, global = -6.42595e-12, cumulative = 6.75071e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000371291, Final residual = 9.77264e-09, No Iterations 188
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.92736e-10, global = -3.85244e-14, cumulative = 6.75071e-07
+    
+    Courant Number mean: 0.08423 max: 0.427271
+    Time = 0.16
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00630992, Final residual = 8.89274e-07, No Iterations 1
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00638186, Final residual = 4.47414e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00578957, Final residual = 7.52523e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00160649, Final residual = 1.40136e-05, No Iterations 150
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 4.81702e-10, global = -6.65696e-12, cumulative = 6.75064e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000370956, Final residual = 9.98191e-09, No Iterations 188
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.94919e-10, global = -6.11869e-13, cumulative = 6.75064e-07
+    
+    Courant Number mean: 0.0842298 max: 0.427713
+    Time = 0.17
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00597842, Final residual = 8.30403e-07, No Iterations 1
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00642638, Final residual = 4.32371e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00551208, Final residual = 7.15251e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00153516, Final residual = 1.49486e-05, No Iterations 150
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 5.03343e-10, global = -6.95192e-12, cumulative = 6.75057e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000342881, Final residual = 9.78394e-09, No Iterations 186
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.96061e-10, global = 7.81547e-13, cumulative = 6.75057e-07
+    
+    Courant Number mean: 0.0842298 max: 0.427713
+    Time = 0.17
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00597842, Final residual = 8.30403e-07, No Iterations 1
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00642638, Final residual = 4.32371e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00551218, Final residual = 7.15333e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00153517, Final residual = 1.35392e-05, No Iterations 150
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 4.65472e-10, global = -7.24839e-12, cumulative = 6.7505e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000342735, Final residual = 9.8473e-09, No Iterations 186
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.93959e-10, global = 1.85943e-13, cumulative = 6.7505e-07
+    
+    Courant Number mean: 0.0842302 max: 0.428139
+    Time = 0.18
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00570996, Final residual = 7.78118e-07, No Iterations 1
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00647301, Final residual = 4.18804e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00526404, Final residual = 6.80127e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.0013604, Final residual = 1.20166e-05, No Iterations 150
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 4.2695e-10, global = -6.98331e-12, cumulative = 6.75043e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000323694, Final residual = 9.83057e-09, No Iterations 185
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.9495e-10, global = -3.93035e-13, cumulative = 6.75043e-07
+    
+    Courant Number mean: 0.0842302 max: 0.428139
+    Time = 0.18
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00570996, Final residual = 7.78118e-07, No Iterations 1
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00647301, Final residual = 4.18804e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00526413, Final residual = 6.80199e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00136038, Final residual = 1.32801e-05, No Iterations 150
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 4.52456e-10, global = -6.79715e-12, cumulative = 6.75036e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000323606, Final residual = 9.83292e-09, No Iterations 185
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.96494e-10, global = -1.59438e-13, cumulative = 6.75036e-07
+    
+    Courant Number mean: 0.0842308 max: 0.428548
+    Time = 0.19
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00543042, Final residual = 7.30383e-07, No Iterations 1
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00652018, Final residual = 4.06244e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00504085, Final residual = 6.4686e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00129077, Final residual = 1.08049e-05, No Iterations 150
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 3.82524e-10, global = -6.61508e-12, cumulative = 6.75029e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000314497, Final residual = 9.72888e-09, No Iterations 185
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.946e-10, global = 2.68662e-13, cumulative = 6.7503e-07
+    
+    Courant Number mean: 0.0842308 max: 0.428548
+    Time = 0.19
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00543042, Final residual = 7.30383e-07, No Iterations 1
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00652018, Final residual = 4.06244e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00504094, Final residual = 6.46924e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00129071, Final residual = 1.08497e-05, No Iterations 150
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 3.82452e-10, global = -6.37187e-12, cumulative = 6.75023e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00031438, Final residual = 9.76465e-09, No Iterations 185
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.97354e-10, global = 3.44246e-13, cumulative = 6.75024e-07
+    
+    Courant Number mean: 0.0842314 max: 0.42894
+    Time = 0.2
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00514797, Final residual = 6.86823e-07, No Iterations 1
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00656895, Final residual = 3.9459e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.00483952, Final residual = 6.155e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00125633, Final residual = 1.06647e-05, No Iterations 150
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 3.74965e-10, global = -6.3275e-12, cumulative = 6.75017e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.000306847, Final residual = 9.86996e-09, No Iterations 184
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.95669e-10, global = 3.33969e-13, cumulative = 6.75018e-07
+    
+    Courant Number mean: 0.0842314 max: 0.42894
+    Time = 0.2
+    
+    PIMPLE: iteration 1
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00514797, Final residual = 6.86823e-07, No Iterations 1
+    DILUPBiCGStab:  Solving for Uy, Initial residual = 0.00656895, Final residual = 3.9459e-08, No Iterations 2
+    DILUPBiCGStab:  Solving for h, Initial residual = 0.0048396, Final residual = 6.15555e-07, No Iterations 11
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00125622, Final residual = 1.10354e-05, No Iterations 150
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 3.78608e-10, global = -6.71541e-12, cumulative = 6.75011e-07
+    DICPCG:  Solving for p_rgh, Initial residual = 0.00030676, Final residual = 9.90157e-09, No Iterations 184
+    diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
+    time step continuity errors : sum local = 1.93323e-10, global = -3.06227e-13, cumulative = 6.75011e-07
+    
+    ---[preciceAdapter] The coupling timestep completed. Writing the updated results.
+    ---[preciceAdapter] The coupling completed.
+    [precice-mock]  Finalized
+    ---[preciceAdapter] The simulation was ended by preCICE. Calling the end() methods of any functionObject explicitly.
+    ---[preciceAdapter] Great that you are using the OpenFOAM-preCICE adapter! Next to the preCICE library and any other components, please also cite this adapter. Find how on https://precice.org/adapter-openfoam-overview.html.
+    End
+    
+    Looking for any time directories without results (e.g., stray functionObjectProperties files)...
+    /*---------------------------------------------------------------------------*\
+    | =========                 |                                                 |
+    | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+    |  \\    /   O peration     | Version:  2412                                  |
+    |   \\  /    A nd           | Website:  www.openfoam.com                      |
+    |    \\/     M anipulation  |                                                 |
+    \*---------------------------------------------------------------------------*/
+    I/O    : uncollated
+    trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+    fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+    allowSystemOperations : Allowing user-supplied system call operations
+    
+    // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+    Create time
+    
+    Create mesh for time = 0
+    
+    VTK mesh topology: <TIME_MEM>
+        volScalar    : T p p_rgh
+        volVector    : U
+        Internal  : "VTK/fluid-openfoam_0/internal.vtu"
+        Boundary  : "VTK/fluid-openfoam_0/boundary/inlet.vtp"
+        Boundary  : "VTK/fluid-openfoam_0/boundary/outlet.vtp"
+        Boundary  : "VTK/fluid-openfoam_0/boundary/top.vtp"
+        Boundary  : "VTK/fluid-openfoam_0/boundary/slip-bottom.vtp"
+        Boundary  : "VTK/fluid-openfoam_0/boundary/bottom.vtp"
+        Boundary  : "VTK/fluid-openfoam_0/boundary/interface.vtp"
+    Wrote in <TIME_MEM>
+        volScalar    : T p p_rgh
+        volVector    : U
+        Internal  : "VTK/fluid-openfoam_20/internal.vtu"
+        Boundary  : "VTK/fluid-openfoam_20/boundary/inlet.vtp"
+        Boundary  : "VTK/fluid-openfoam_20/boundary/outlet.vtp"
+        Boundary  : "VTK/fluid-openfoam_20/boundary/top.vtp"
+        Boundary  : "VTK/fluid-openfoam_20/boundary/slip-bottom.vtp"
+        Boundary  : "VTK/fluid-openfoam_20/boundary/bottom.vtp"
+        Boundary  : "VTK/fluid-openfoam_20/boundary/interface.vtp"
+    Wrote in <TIME_MEM>
+    
+    End: <TIME_MEM> (peak)
+    
+  ----- output: solid-nutils (rc=0) -----
+    [precice-mock]  Working directory "<REPO>/examples/course/CHT/solution/all/solid-nutils"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/CHT/solution/all/solid-nutils/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Solid"
+    [precice-mock]  Configuration: default-data-mode=buffer max-iterations=2 time-window-size=0.01
+    nutils v7.0 "hiyamugi" (git:f3750938+)
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 6e-15
+    optimize > constrained 21/126 dofs
+    optimize > optimum value 0.00e+00
+    optimize > solve > solving 126 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 6e-13
+    optimize > optimum value 0.00e+00
+    Solid_0.vtk
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 0.00e+00
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e-10
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > RuntimeWarning: divide by zero encountered in scalar divide
+      In <REPO>/examples/course/CHT/solution/all/solid-nutils/.venv/lib/python3.10/site-packages/nutils/matrix/_base.py:246
+    solve > solver returned with residual 0e+00
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 3e-10
+    optimize > constrained 42/126 dofs
+    optimize > optimum value -9.77e-04
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 5e-07
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 5e-08
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 1e-06
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 4.10e+03
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 8e-04
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 1e-04
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 1e-03
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 0.00e+00
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+00
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 3e-02
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 0e+00
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 7.21e+16
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 5e+03
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+02
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 5e+03
+    optimize > constrained 42/126 dofs
+    optimize > optimum value -6.04e+23
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 7e+06
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 3e+05
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 1e+07
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 1.27e+30
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 1e+10
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 4e+08
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 3e+10
+    optimize > constrained 42/126 dofs
+    optimize > optimum value -1.06e+37
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 4e+13
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 6e+11
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 4e+13
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 0.00e+00
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 8e+16
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+15
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 0e+00
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 9.35e+49
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 1e+20
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 1e+19
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 2e+20
+    optimize > constrained 42/126 dofs
+    optimize > optimum value -3.92e+56
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+23
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 5e+21
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 3e+23
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 0.00e+00
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 7e+26
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 1e+25
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 1e+27
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 0.00e+00
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 9e+29
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 3e+29
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 2e+31
+    optimize > constrained 42/126 dofs
+    optimize > optimum value -4.63e+77
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+33
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+34
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 7e+35
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 0.00e+00
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 1e+38
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 7e+38
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 2e+40
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 0.00e+00
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 6e+42
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 4e+43
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 9e+44
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 9.17e+105
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 3e+47
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 1e+48
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 4e+49
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 1.97e+115
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 1e+52
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 6e+52
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 4e+54
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 4.23e+124
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 4e+56
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 4e+57
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 1e+59
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 1.82e+134
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 1e+61
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 1e+62
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 6e+63
+    optimize > constrained 42/126 dofs
+    optimize > optimum value -1.95e+143
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 1e+66
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 8e+66
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 4e+68
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 0.00e+00
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 4e+70
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 3e+71
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 2e+73
+    optimize > constrained 42/126 dofs
+    optimize > optimum value -9.00e+161
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+75
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 7e+75
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 7e+77
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 0.00e+00
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+80
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 1e+81
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 3e+82
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 0.00e+00
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 8e+84
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 5e+85
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 2e+87
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 0.00e+00
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+89
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+90
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 8e+91
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 3.83e+199
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 4e+94
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 1e+95
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 4e+96
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 0.00e+00
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+99
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+99
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 3e+101
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 1.77e+218
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+103
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 3e+104
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 1e+106
+    optimize > constrained 42/126 dofs
+    optimize > optimum value -3.79e+227
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+108
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+109
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 6e+110
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 0.00e+00
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 7e+112
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 4e+113
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 3e+115
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 0.00e+00
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 4e+117
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 4e+118
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 1e+120
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 1.50e+256
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+122
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 1e+123
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 6e+124
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 0.00e+00
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 5e+126
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 5e+127
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 4e+129
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 3.46e+274
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 4e+131
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 5e+132
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 2e+134
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 1.49e+284
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+136
+    [precice-mock]  Finalized
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 2e+137
+    optimize > RuntimeWarning: overflow encountered in reduce
+      In <REPO>/examples/course/CHT/solution/all/solid-nutils/.venv/lib/python3.10/site-packages/numpy/core/fromnumeric.py:88
+    optimize > solve > RuntimeWarning: overflow encountered in reduce
+      In <REPO>/examples/course/CHT/solution/all/solid-nutils/.venv/lib/python3.10/site-packages/numpy/linalg/linalg.py:2583
+    optimize > solve > RuntimeWarning: invalid value encountered in scalar multiply
+      In <REPO>/examples/course/CHT/solution/all/solid-nutils/.venv/lib/python3.10/site-packages/nutils/matrix/_base.py:202
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > RuntimeWarning: overflow encountered in reduce
+      In <REPO>/examples/course/CHT/solution/all/solid-nutils/.venv/lib/python3.10/site-packages/numpy/core/_methods.py:49
+    optimize > solve > RuntimeWarning: invalid value encountered in scalar divide
+      In <REPO>/examples/course/CHT/solution/all/solid-nutils/.venv/lib/python3.10/site-packages/nutils/matrix/_base.py:240
+    optimize > solve > solver returned with residual inf
+    optimize > constrained 42/126 dofs
+    optimize > optimum value inf
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 3e+132
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 3e+132
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 2e+134
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 1.49e+284
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 3e+136
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 3e+137
+    Solid_20.vtk
+    optimize > solve > RuntimeWarning: overflow encountered in multiply
+      In <REPO>/examples/course/CHT/solution/all/solid-nutils/.venv/lib/python3.10/site-packages/numpy/linalg/linalg.py:2582
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > RuntimeWarning: overflow encountered in square
+      In <REPO>/examples/course/CHT/solution/all/solid-nutils/.venv/lib/python3.10/site-packages/nutils/matrix/_base.py:345
+    optimize > solve > RuntimeWarning: overflow encountered in multiply
+      In <REPO>/examples/course/CHT/solution/all/solid-nutils/.venv/lib/python3.10/site-packages/nutils/matrix/_base.py:349
+    optimize > solve > solver returned with residual inf
+    optimize > constrained 42/126 dofs
+    optimize > optimum value inf
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 1e+132
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 9e+132
+    optimize > solve > solving 21 dof system to machine precision using arnoldi solver
+    optimize > solve > solver returned with residual 4e+134
+    optimize > constrained 42/126 dofs
+    optimize > optimum value 2.97e+284
+    solve > solving 84 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 8e+136
+    solve > solving 21 dof system to machine precision using arnoldi solver
+    solve > solver returned with residual 4e+137
+  ✓ PASSED
+
+==================================================
+SUMMARY
+==================================================
+Passed: 1
+Failed: 0
+Timeout: 0
+Skipped: 0
+Total: 1
+PASSED SOLUTIONS:
+  - CHT/solution/all

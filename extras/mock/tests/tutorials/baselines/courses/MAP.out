@@ -1,0 +1,194 @@
+# exit=1
+Running solutions with mock library: <REPO>/build/libpreciceMocked.so.3.3.0
+Python venv: <REPO>/.venv
+Course directory: <REPO>/examples/course
+==================================================
+Found 5 task directories to run
+
+Running task: MAP/solution/T1
+Cleaning...
+Cleaning complete!
+  Detected 2 participant(s):
+    - generator: python3 generator.py
+    - propagator: python3 propagator.py
+  Running sequentially (mock mode)
+  ----- output: generator (rc=0) -----
+    [precice-mock]  Working directory "<REPO>/examples/course/MAP/solution/T1/generator"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/MAP/solution/T1/generator/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Generator"
+    [precice-mock]  Configuration: default-data-mode=buffer time-window-size=0.01
+    [precice-mock]  Finalized
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+  ----- output: propagator (rc=0) -----
+    <REPO>/.venv/lib/python3.10/site-packages/matplotlib/projections/__init__.py:63: UserWarning: Unable to import Axes3D. This may be due to multiple versions of Matplotlib being installed (e.g. as a system package and as a pip package). As a result, the 3D projection is not available.
+      warnings.warn("Unable to import Axes3D. This may be due to multiple versions of "
+    [precice-mock]  Working directory "<REPO>/examples/course/MAP/solution/T1/propagator"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/MAP/solution/T1/propagator/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Propagator"
+    [precice-mock]  Configuration: default-data-mode=buffer time-window-size=0.01
+    <REPO>/examples/course/MAP/solution/T1/propagator/propagator.py:39: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
+    <REPO>/examples/course/MAP/solution/T1/propagator/propagator.py:62: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.pause(0.2)
+    [precice-mock]  Finalized
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+  ✓ PASSED
+
+Running task: MAP/solution/T2
+Cleaning...
+Cleaning complete!
+  Detected 2 participant(s):
+    - generator: python3 generator.py
+    - propagator: python3 propagator.py
+  Running sequentially (mock mode)
+  ----- output: generator (rc=0) -----
+    [precice-mock]  Working directory "<REPO>/examples/course/MAP/solution/T2/generator"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/MAP/solution/T2/generator/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Generator"
+    [precice-mock]  Configuration: default-data-mode=buffer time-window-size=0.01
+    [precice-mock]  Finalized
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+  ----- output: propagator (rc=0) -----
+    <REPO>/.venv/lib/python3.10/site-packages/matplotlib/projections/__init__.py:63: UserWarning: Unable to import Axes3D. This may be due to multiple versions of Matplotlib being installed (e.g. as a system package and as a pip package). As a result, the 3D projection is not available.
+      warnings.warn("Unable to import Axes3D. This may be due to multiple versions of "
+    [precice-mock]  Working directory "<REPO>/examples/course/MAP/solution/T2/propagator"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/MAP/solution/T2/propagator/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Propagator"
+    [precice-mock]  Configuration: default-data-mode=buffer time-window-size=0.01
+    <REPO>/examples/course/MAP/solution/T2/propagator/propagator.py:39: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
+    <REPO>/examples/course/MAP/solution/T2/propagator/propagator.py:62: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.pause(0.2)
+    [precice-mock]  Finalized
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+  ✓ PASSED
+
+Running task: MAP/solution/T3
+Cleaning...
+Cleaning complete!
+  Detected 2 participant(s):
+    - generator: python3 generator.py
+    - propagator: python3 propagator.py
+  Running sequentially (mock mode)
+  ----- output: generator (rc=1) -----
+    Traceback (most recent call last):
+      File "<REPO>/examples/course/MAP/solution/T3/generator/generator.py", line 17, in <module>
+        participant = precice.Participant(participant_name, config_file_name, solver_process_index, solver_process_size)
+      File "cyprecice/cyprecice.pyx", line 90, in cyprecice.Participant.__cinit__
+    RuntimeError: Participant 'Generator' not found in configuration '../precice-config.xml'
+  ----- output: propagator (rc=1) -----
+    <REPO>/.venv/lib/python3.10/site-packages/matplotlib/projections/__init__.py:63: UserWarning: Unable to import Axes3D. This may be due to multiple versions of Matplotlib being installed (e.g. as a system package and as a pip package). As a result, the 3D projection is not available.
+      warnings.warn("Unable to import Axes3D. This may be due to multiple versions of "
+    Traceback (most recent call last):
+      File "<REPO>/examples/course/MAP/solution/T3/propagator/propagator.py", line 21, in <module>
+        participant = precice.Participant(participant_name, config_file_name, solver_process_index, solver_process_size)
+      File "cyprecice/cyprecice.pyx", line 90, in cyprecice.Participant.__cinit__
+    RuntimeError: Participant 'Propagator' not found in configuration '../precice-config.xml'
+  ✗ FAILED
+
+Running task: MAP/solution/T4
+Cleaning...
+Cleaning complete!
+  Detected 2 participant(s):
+    - generator: python3 generator.py
+    - propagator: python3 propagator.py
+  Running sequentially (mock mode)
+  ----- output: generator (rc=0) -----
+    [precice-mock]  Working directory "<REPO>/examples/course/MAP/solution/T4/generator"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/MAP/solution/T4/generator/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Generator"
+    [precice-mock]  Configuration: default-data-mode=buffer time-window-size=0.01
+    [precice-mock]  Finalized
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+  ----- output: propagator (rc=0) -----
+    <REPO>/.venv/lib/python3.10/site-packages/matplotlib/projections/__init__.py:63: UserWarning: Unable to import Axes3D. This may be due to multiple versions of Matplotlib being installed (e.g. as a system package and as a pip package). As a result, the 3D projection is not available.
+      warnings.warn("Unable to import Axes3D. This may be due to multiple versions of "
+    [precice-mock]  Working directory "<REPO>/examples/course/MAP/solution/T4/propagator"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/MAP/solution/T4/propagator/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Propagator"
+    [precice-mock]  Configuration: default-data-mode=buffer time-window-size=0.01
+    <REPO>/examples/course/MAP/solution/T4/propagator/propagator.py:39: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
+    <REPO>/examples/course/MAP/solution/T4/propagator/propagator.py:62: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.pause(0.2)
+    [precice-mock]  Finalized
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+  ✓ PASSED
+
+Running task: MAP/solution/T5
+Cleaning...
+Cleaning complete!
+  ⤼ SKIPPED (no runnable participants found)
+
+==================================================
+SUMMARY
+==================================================
+Passed: 3
+Failed: 1
+Timeout: 0
+Skipped: 1
+Total: 5
+FAILED SOLUTIONS:
+  - MAP/solution/T3
+
+SKIPPED SOLUTIONS (no runnable participants):
+  - MAP/solution/T5
+
+PASSED SOLUTIONS:
+  - MAP/solution/T1
+  - MAP/solution/T2
+  - MAP/solution/T4

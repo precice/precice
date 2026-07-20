@@ -1,0 +1,14 @@
+validated: 2026-07-20T05:20Z on pop-os
+precice: 3.3.0;v3.3.0-104-gf3750938-dirty;PRECICE_FEATURE_MPI_COMMUNICATION=Y;PRECICE_FEATURE_PETSC_MAPPING=Y;PRECICE_FEATURE_GINKGO_MAPPING=N;PRECICE_FEATURE_PYTHON_ACTIONS=Y;PRECICE_BINDINGS_C=Y;PRECICE_BINDINGS_FORTRAN=Y;CXX=GNU;CXXFLAGS= -O3 -DNDEBUG;LDFLAGS=
+tutorial elastic-tube-1d-cpp: pass
+tutorial elastic-tube-1d-python: pass
+tutorial oscillator-python: pass
+tutorial oscillator-fmi: pass
+tutorial oscillator-overlap: pass
+tutorial quickstart: TIMEOUT(>600s:fluid-openfoam)
+tutorial perpendicular-flap: FAIL(rc=134:solid-openfoam)
+tutorial partitioned-heat-conduction: pass
+course B: Passed: 4 Failed: 1 Timeout: 0 Skipped: 0 
+course T: Passed: 5 Failed: 0 Timeout: 0 Skipped: 0 
+course CHT: Passed: 1 Failed: 0 Timeout: 0 Skipped: 0 
+course MAP: Passed: 3 Failed: 1 Timeout: 0 Skipped: 1 
