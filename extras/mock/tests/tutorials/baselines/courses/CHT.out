@@ -27,40 +27,40 @@ Cleaning complete!
     trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
     fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
     allowSystemOperations : Allowing user-supplied system call operations
-    
+
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
     Create time
-    
+
     Creating block mesh from "system/blockMeshDict"
     --> FOAM IOWarning :
         Found [v1012] 'convertToMeters' entry instead of 'scale' in dictionary "system/blockMeshDict"
-    
+
         This keyword is 168 months old.
-    
+
     Creating block edges
     No non-planar block faces defined
     Creating topology blocks
-    
+
     Creating topology patches - from boundary section
-    
+
     Creating block mesh topology
-    --> FOAM Warning : 
+    --> FOAM Warning :
         From Foam::polyMesh::polyMesh(const Foam::IOobject&, Foam::pointField&&, const cellShapeList&, const faceListList&, const wordList&, const Foam::PtrList<Foam::dictionary>&, const Foam::word&, const Foam::word&, bool)
         in file meshes/polyMesh/polyMeshFromShapeMesh.C at line 915
         Found 6 undefined faces in mesh; adding to default patch defaultFaces
-    
+
     Check topology
-    
+
     	Basic statistics
     		Number of internal faces : 2
     		Number of boundary faces : 14
     		Number of defined boundary faces : 14
     		Number of undefined boundary faces : 0
     	Checking patch -> block consistency
-    
+
     Creating block offsets
     Creating merge list (topological search)...
-    
+
     Creating polyMesh from blockMesh
     Creating patches
     Creating cells
@@ -69,19 +69,19 @@ Cleaning complete!
             i : 0.0123864 .. 0.00247728
             j : 0.00232699 .. 0.0349049
             k : 0.05 .. 0.05
-    
+
         Block 1 cell size :
             i : 0.0024959 .. 0.0124795
             j : 0.00232699 .. 0.0349049
             k : 0.05 .. 0.05
-    
+
         Block 2 cell size :
             i : 0.0392157 .. 0.0392157
             j : 0.00232699 .. 0.0349049
             k : 0.05 .. 0.05
-    
+
     No patch pairs to merge
-    
+
     Writing polyMesh with 0 cellZones
     ----------------
     Mesh Information
@@ -101,9 +101,9 @@ Cleaning complete!
       patch 4 (start: 24148 size: 51) name: bottom
       patch 5 (start: 24199 size: 161) name: interface
       patch 6 (start: 24360 size: 24026) name: defaultFaces
-    
+
     End
-    
+
     /*---------------------------------------------------------------------------*\
     | =========                 |                                                 |
     | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
@@ -115,18 +115,18 @@ Cleaning complete!
     trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
     fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
     allowSystemOperations : Allowing user-supplied system call operations
-    
+
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
     Create time
-    
+
     Create mesh for time = 0
-    
-    
+
+
     PIMPLE: Operating solver in PISO mode
-    
+
     Reading thermophysical properties
-    
-    Selecting thermodynamics package 
+
+    Selecting thermodynamics package
     {
         type            heRhoThermo;
         mixture         pureMixture;
@@ -136,36 +136,36 @@ Cleaning complete!
         specie          specie;
         energy          sensibleEnthalpy;
     }
-    
+
     Reading field U
-    
+
     Reading/calculating face flux field phi
-    
+
     Creating turbulence model
-    
+
     Selecting turbulence model type laminar
     Selecting laminar stress model Stokes
-    
+
     Reading g
-    
+
     Reading hRef
     Calculating field g.h
-    
+
     Reading field p_rgh
-    
+
     Creating field dpdt
-    
+
     Creating field kinetic energy K
-    
+
     No MRF models present
-    
+
     Radiation model not active: radiationProperties not found
     Selecting radiationModel none
     No finite volume options present
     Courant Number mean: 0.0837143 max: 0.403668
-    
+
     Starting time loop
-    
+
     ---[preciceAdapter] Loaded the OpenFOAM-preCICE adapter - v1.3.1.
     ---[preciceAdapter] Reading preciceDict...
     [precice-mock]  Working directory "<REPO>/examples/course/CHT/solution/all/fluid-openfoam"
@@ -176,7 +176,7 @@ Cleaning complete!
     ---[preciceAdapter] Setting the solver's endTime to infinity to prevent early exits. Only preCICE will control the simulation's endTime. Any functionObject's end() method will be triggered by the adapter. You may disable this behavior in the adapter's configuration.
     Courant Number mean: 0.0837143 max: 0.403668
     Time = 0.01
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 1, Final residual = 1.17224e-07, No Iterations 2
@@ -188,10 +188,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.31122, Final residual = 9.40663e-09, No Iterations 215
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 7.68221e-10, global = -6.23056e-10, cumulative = -1.45462e-07
-    
+
     Courant Number mean: 0.0837143 max: 0.403668
     Time = 0.01
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 1, Final residual = 1.17224e-07, No Iterations 2
@@ -203,10 +203,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.309534, Final residual = 9.21057e-09, No Iterations 215
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 7.66797e-10, global = -6.19048e-10, cumulative = 6.53985e-07
-    
+
     Courant Number mean: 0.085441 max: 0.42119
     Time = 0.02
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.362408, Final residual = 1.46748e-07, No Iterations 2
@@ -218,10 +218,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.0291647, Final residual = 8.99635e-09, No Iterations 206
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 3.50871e-10, global = -2.23997e-10, cumulative = 6.63222e-07
-    
+
     Courant Number mean: 0.085441 max: 0.42119
     Time = 0.02
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.362408, Final residual = 1.46748e-07, No Iterations 2
@@ -233,10 +233,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.0291651, Final residual = 9.61673e-09, No Iterations 205
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 3.49526e-10, global = -2.25632e-10, cumulative = 6.72464e-07
-    
+
     Courant Number mean: 0.0851579 max: 0.421561
     Time = 0.03
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.164313, Final residual = 1.53501e-07, No Iterations 2
@@ -248,10 +248,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00237189, Final residual = 8.61055e-09, No Iterations 198
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.15097e-10, global = -3.19618e-11, cumulative = 6.72776e-07
-    
+
     Courant Number mean: 0.0851579 max: 0.421561
     Time = 0.03
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.164313, Final residual = 1.53501e-07, No Iterations 2
@@ -263,10 +263,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00237132, Final residual = 8.39731e-09, No Iterations 198
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.09578e-10, global = -3.15542e-11, cumulative = 6.73083e-07
-    
+
     Courant Number mean: 0.0843432 max: 0.420313
     Time = 0.04
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.370694, Final residual = 3.02205e-07, No Iterations 2
@@ -278,10 +278,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00238191, Final residual = 9.98143e-09, No Iterations 198
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.23912e-10, global = 5.05222e-11, cumulative = 6.73903e-07
-    
+
     Courant Number mean: 0.0843432 max: 0.420313
     Time = 0.04
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.370694, Final residual = 3.02205e-07, No Iterations 2
@@ -293,10 +293,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00238239, Final residual = 8.11461e-09, No Iterations 199
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.22978e-10, global = 5.1353e-11, cumulative = 6.74723e-07
-    
+
     Courant Number mean: 0.0839866 max: 0.420151
     Time = 0.05
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.121245, Final residual = 1.55334e-07, No Iterations 2
@@ -308,10 +308,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00381406, Final residual = 7.88857e-09, No Iterations 202
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.19399e-10, global = 4.11299e-11, cumulative = 6.75084e-07
-    
+
     Courant Number mean: 0.0839866 max: 0.420151
     Time = 0.05
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.121245, Final residual = 1.55334e-07, No Iterations 2
@@ -323,10 +323,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00379314, Final residual = 7.91514e-09, No Iterations 202
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.17752e-10, global = 4.06849e-11, cumulative = 6.75387e-07
-    
+
     Courant Number mean: 0.0840522 max: 0.421085
     Time = 0.06
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0386796, Final residual = 7.65293e-08, No Iterations 2
@@ -338,10 +338,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000573586, Final residual = 8.55762e-09, No Iterations 192
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.04688e-10, global = 7.10523e-12, cumulative = 6.75459e-07
-    
+
     Courant Number mean: 0.0840522 max: 0.421085
     Time = 0.06
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0386796, Final residual = 7.65293e-08, No Iterations 2
@@ -353,10 +353,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000573499, Final residual = 8.57117e-09, No Iterations 192
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.05253e-10, global = 7.1541e-12, cumulative = 6.7553e-07
-    
+
     Courant Number mean: 0.084205 max: 0.422206
     Time = 0.07
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0509207, Final residual = 6.81756e-08, No Iterations 2
@@ -368,10 +368,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00131461, Final residual = 9.71682e-09, No Iterations 190
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.05598e-10, global = -8.92686e-12, cumulative = 6.75416e-07
-    
+
     Courant Number mean: 0.084205 max: 0.422206
     Time = 0.07
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0509207, Final residual = 6.81756e-08, No Iterations 2
@@ -383,10 +383,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.0013158, Final residual = 9.74215e-09, No Iterations 190
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.03391e-10, global = -8.66325e-12, cumulative = 6.75299e-07
-    
+
     Courant Number mean: 0.0842734 max: 0.423056
     Time = 0.08
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0281271, Final residual = 5.53193e-08, No Iterations 2
@@ -398,10 +398,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00734541, Final residual = 8.91715e-09, No Iterations 203
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.04223e-10, global = -7.93608e-12, cumulative = 6.75198e-07
-    
+
     Courant Number mean: 0.0842734 max: 0.423056
     Time = 0.08
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0281271, Final residual = 5.53193e-08, No Iterations 2
@@ -413,10 +413,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00732697, Final residual = 8.72451e-09, No Iterations 203
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.00362e-10, global = -7.72796e-12, cumulative = 6.75107e-07
-    
+
     Courant Number mean: 0.084264 max: 0.423662
     Time = 0.09
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0101374, Final residual = 3.91319e-08, No Iterations 2
@@ -428,10 +428,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00585366, Final residual = 9.5098e-09, No Iterations 202
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.01458e-10, global = -2.36942e-12, cumulative = 6.75098e-07
-    
+
     Courant Number mean: 0.084264 max: 0.423662
     Time = 0.09
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0101374, Final residual = 3.91319e-08, No Iterations 2
@@ -443,10 +443,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00585731, Final residual = 9.50856e-09, No Iterations 202
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.00672e-10, global = -1.79636e-12, cumulative = 6.7509e-07
-    
+
     Courant Number mean: 0.0842355 max: 0.424187
     Time = 0.1
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00746855, Final residual = 3.04451e-08, No Iterations 2
@@ -458,10 +458,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00212457, Final residual = 8.99204e-09, No Iterations 200
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.98563e-10, global = 2.14189e-12, cumulative = 6.75097e-07
-    
+
     Courant Number mean: 0.0842355 max: 0.424187
     Time = 0.1
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00746855, Final residual = 3.04451e-08, No Iterations 2
@@ -473,10 +473,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00212549, Final residual = 9.90202e-09, No Iterations 199
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.97112e-10, global = 2.07981e-12, cumulative = 6.75106e-07
-    
+
     Courant Number mean: 0.0842214 max: 0.424725
     Time = 0.11
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00714582, Final residual = 2.91146e-08, No Iterations 2
@@ -488,10 +488,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000910109, Final residual = 9.41172e-09, No Iterations 195
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.00206e-10, global = 1.48947e-12, cumulative = 6.75113e-07
-    
+
     Courant Number mean: 0.0842214 max: 0.424725
     Time = 0.11
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00714582, Final residual = 2.91146e-08, No Iterations 2
@@ -503,10 +503,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000908704, Final residual = 9.10333e-09, No Iterations 195
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.06159e-10, global = 1.30366e-12, cumulative = 6.75116e-07
-    
+
     Courant Number mean: 0.0842222 max: 0.425276
     Time = 0.12
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0088977, Final residual = 3.16673e-08, No Iterations 2
@@ -518,10 +518,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000444751, Final residual = 8.45117e-09, No Iterations 183
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.99634e-10, global = 3.89983e-13, cumulative = 6.75101e-07
-    
+
     Courant Number mean: 0.0842222 max: 0.425276
     Time = 0.12
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.0088977, Final residual = 3.16673e-08, No Iterations 2
@@ -533,10 +533,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000444869, Final residual = 8.44244e-09, No Iterations 183
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.93579e-10, global = 8.36318e-14, cumulative = 6.75084e-07
-    
+
     Courant Number mean: 0.0842274 max: 0.425816
     Time = 0.13
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00886339, Final residual = 2.98881e-08, No Iterations 2
@@ -548,10 +548,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00044695, Final residual = 9.03673e-09, No Iterations 191
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.965e-10, global = -2.89908e-13, cumulative = 6.75074e-07
-    
+
     Courant Number mean: 0.0842274 max: 0.425816
     Time = 0.13
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00886339, Final residual = 2.98881e-08, No Iterations 2
@@ -563,10 +563,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000447227, Final residual = 8.975e-09, No Iterations 191
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.93698e-10, global = -3.09654e-13, cumulative = 6.75065e-07
-    
+
     Courant Number mean: 0.0842304 max: 0.426327
     Time = 0.14
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00785537, Final residual = 2.70787e-08, No Iterations 2
@@ -578,10 +578,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000499203, Final residual = 9.24153e-09, No Iterations 191
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.99466e-10, global = -5.01687e-13, cumulative = 6.75069e-07
-    
+
     Courant Number mean: 0.0842304 max: 0.426327
     Time = 0.14
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00785537, Final residual = 2.70787e-08, No Iterations 2
@@ -593,10 +593,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00049946, Final residual = 9.26325e-09, No Iterations 191
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.00026e-10, global = -1.06478e-14, cumulative = 6.75073e-07
-    
+
     Courant Number mean: 0.0842306 max: 0.42681
     Time = 0.15
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00689242, Final residual = 9.60632e-07, No Iterations 1
@@ -608,10 +608,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000420239, Final residual = 8.82254e-09, No Iterations 191
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 2.00143e-10, global = -4.15479e-13, cumulative = 6.75075e-07
-    
+
     Courant Number mean: 0.0842306 max: 0.42681
     Time = 0.15
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00689242, Final residual = 9.60632e-07, No Iterations 1
@@ -623,10 +623,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000420357, Final residual = 8.65008e-09, No Iterations 191
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.99244e-10, global = 3.6858e-13, cumulative = 6.75077e-07
-    
+
     Courant Number mean: 0.08423 max: 0.427271
     Time = 0.16
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00630992, Final residual = 8.89274e-07, No Iterations 1
@@ -638,10 +638,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000371291, Final residual = 9.77264e-09, No Iterations 188
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.92736e-10, global = -3.85244e-14, cumulative = 6.75071e-07
-    
+
     Courant Number mean: 0.08423 max: 0.427271
     Time = 0.16
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00630992, Final residual = 8.89274e-07, No Iterations 1
@@ -653,10 +653,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000370956, Final residual = 9.98191e-09, No Iterations 188
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.94919e-10, global = -6.11869e-13, cumulative = 6.75064e-07
-    
+
     Courant Number mean: 0.0842298 max: 0.427713
     Time = 0.17
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00597842, Final residual = 8.30403e-07, No Iterations 1
@@ -668,10 +668,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000342881, Final residual = 9.78394e-09, No Iterations 186
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.96061e-10, global = 7.81547e-13, cumulative = 6.75057e-07
-    
+
     Courant Number mean: 0.0842298 max: 0.427713
     Time = 0.17
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00597842, Final residual = 8.30403e-07, No Iterations 1
@@ -683,10 +683,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000342735, Final residual = 9.8473e-09, No Iterations 186
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.93959e-10, global = 1.85943e-13, cumulative = 6.7505e-07
-    
+
     Courant Number mean: 0.0842302 max: 0.428139
     Time = 0.18
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00570996, Final residual = 7.78118e-07, No Iterations 1
@@ -698,10 +698,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000323694, Final residual = 9.83057e-09, No Iterations 185
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.9495e-10, global = -3.93035e-13, cumulative = 6.75043e-07
-    
+
     Courant Number mean: 0.0842302 max: 0.428139
     Time = 0.18
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00570996, Final residual = 7.78118e-07, No Iterations 1
@@ -713,10 +713,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000323606, Final residual = 9.83292e-09, No Iterations 185
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.96494e-10, global = -1.59438e-13, cumulative = 6.75036e-07
-    
+
     Courant Number mean: 0.0842308 max: 0.428548
     Time = 0.19
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00543042, Final residual = 7.30383e-07, No Iterations 1
@@ -728,10 +728,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000314497, Final residual = 9.72888e-09, No Iterations 185
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.946e-10, global = 2.68662e-13, cumulative = 6.7503e-07
-    
+
     Courant Number mean: 0.0842308 max: 0.428548
     Time = 0.19
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00543042, Final residual = 7.30383e-07, No Iterations 1
@@ -743,10 +743,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00031438, Final residual = 9.76465e-09, No Iterations 185
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.97354e-10, global = 3.44246e-13, cumulative = 6.75024e-07
-    
+
     Courant Number mean: 0.0842314 max: 0.42894
     Time = 0.2
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00514797, Final residual = 6.86823e-07, No Iterations 1
@@ -758,10 +758,10 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.000306847, Final residual = 9.86996e-09, No Iterations 184
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.95669e-10, global = 3.33969e-13, cumulative = 6.75018e-07
-    
+
     Courant Number mean: 0.0842314 max: 0.42894
     Time = 0.2
-    
+
     PIMPLE: iteration 1
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     DILUPBiCGStab:  Solving for Ux, Initial residual = 0.00514797, Final residual = 6.86823e-07, No Iterations 1
@@ -773,14 +773,14 @@ Cleaning complete!
     DICPCG:  Solving for p_rgh, Initial residual = 0.00030676, Final residual = 9.90157e-09, No Iterations 184
     diagonal:  Solving for rho, Initial residual = 0, Final residual = 0, No Iterations 0
     time step continuity errors : sum local = 1.93323e-10, global = -3.06227e-13, cumulative = 6.75011e-07
-    
+
     ---[preciceAdapter] The coupling timestep completed. Writing the updated results.
     ---[preciceAdapter] The coupling completed.
     [precice-mock]  Finalized
     ---[preciceAdapter] The simulation was ended by preCICE. Calling the end() methods of any functionObject explicitly.
     ---[preciceAdapter] Great that you are using the OpenFOAM-preCICE adapter! Next to the preCICE library and any other components, please also cite this adapter. Find how on https://precice.org/adapter-openfoam-overview.html.
     End
-    
+
     Looking for any time directories without results (e.g., stray functionObjectProperties files)...
     /*---------------------------------------------------------------------------*\
     | =========                 |                                                 |
@@ -793,12 +793,12 @@ Cleaning complete!
     trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
     fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
     allowSystemOperations : Allowing user-supplied system call operations
-    
+
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
     Create time
-    
+
     Create mesh for time = 0
-    
+
     VTK mesh topology: <TIME_MEM>
         volScalar    : T p p_rgh
         volVector    : U
@@ -820,15 +820,15 @@ Cleaning complete!
         Boundary  : "VTK/fluid-openfoam_20/boundary/bottom.vtp"
         Boundary  : "VTK/fluid-openfoam_20/boundary/interface.vtp"
     Wrote in <TIME_MEM>
-    
+
     End: <TIME_MEM> (peak)
-    
+
   ----- output: solid-nutils (rc=0) -----
     [precice-mock]  Working directory "<REPO>/examples/course/CHT/solution/all/solid-nutils"
     [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/CHT/solution/all/solid-nutils/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
     [precice-mock]  Initialized with participant "Solid"
     [precice-mock]  Configuration: default-data-mode=buffer max-iterations=2 time-window-size=0.01
-    nutils v7.0 "hiyamugi" (git:f3750938+)
+    nutils v7.0 "hiyamugi" (git:<REV>)
     optimize > solve > solving 21 dof system to machine precision using arnoldi solver
     optimize > solve > solver returned with residual 6e-15
     optimize > constrained 21/126 dofs

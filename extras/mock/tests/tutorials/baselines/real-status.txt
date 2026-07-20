@@ -8,7 +8,7 @@ tutorial oscillator-overlap: pass
 tutorial quickstart: TIMEOUT(>600s:fluid-openfoam)
 tutorial perpendicular-flap: FAIL(rc=134:solid-openfoam)
 tutorial partitioned-heat-conduction: pass
-course B: Passed: 4 Failed: 1 Timeout: 0 Skipped: 0 
-course T: Passed: 5 Failed: 0 Timeout: 0 Skipped: 0 
-course CHT: Passed: 1 Failed: 0 Timeout: 0 Skipped: 0 
-course MAP: Passed: 3 Failed: 1 Timeout: 0 Skipped: 1 
+course B: Passed: 4 Failed: 1 Timeout: 0 Skipped: 0
+course T: Passed: 5 Failed: 0 Timeout: 0 Skipped: 0
+course CHT: Passed: 1 Failed: 0 Timeout: 0 Skipped: 0
+course MAP: Passed: 3 Failed: 1 Timeout: 0 Skipped: 1

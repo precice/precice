@@ -21,11 +21,11 @@ static void logline(const std::string &s)
   std::cout << "T> " << s << std::endl;
 }
 
-#define LOG(expr)                 \
-  do {                            \
-    std::ostringstream _os;       \
-    _os << expr;                  \
-    logline(_os.str());           \
+#define LOG(expr)           \
+  do {                      \
+    std::ostringstream _os; \
+    _os << expr;            \
+    logline(_os.str());     \
   } while (0)
 
 static std::string fmtv(const std::vector<double> &v)
@@ -201,16 +201,25 @@ static int runErrors(const std::string &name, const std::string &config, const s
     expectError("getDataDimensions-unknown", [&] { p.getDataDimensions(s.myMesh, "NopeData"); });
     expectError("getDataDimensions-unknownmesh", [&] { p.getDataDimensions("NopeMesh", s.writeData); });
     LOG("getMeshVertexSize-unknown-result: " << [&]() -> std::string {
-      try { return std::to_string(p.getMeshVertexSize("NopeMesh")); }
-      catch (const std::exception &e) { return std::string("EXC ") + e.what(); }
+      try {
+        return std::to_string(p.getMeshVertexSize("NopeMesh"));
+      } catch (const std::exception &e) {
+        return std::string("EXC ") + e.what();
+      }
     }());
     LOG("requiresMeshConnectivityFor-unknown-result: " << [&]() -> std::string {
-      try { return std::to_string(p.requiresMeshConnectivityFor("NopeMesh")); }
-      catch (const std::exception &e) { return std::string("EXC ") + e.what(); }
+      try {
+        return std::to_string(p.requiresMeshConnectivityFor("NopeMesh"));
+      } catch (const std::exception &e) {
+        return std::string("EXC ") + e.what();
+      }
     }());
     LOG("getMeshVertexSize-received-preinit: " << [&]() -> std::string {
-      try { return std::to_string(p.getMeshVertexSize(s.otherMesh)); }
-      catch (const std::exception &e) { return std::string("EXC ") + e.what(); }
+      try {
+        return std::to_string(p.getMeshVertexSize(s.otherMesh));
+      } catch (const std::exception &e) {
+        return std::string("EXC ") + e.what();
+      }
     }());
     expectError("setMeshVertex-wrongdims", [&] {
       std::vector<double> pos = {1.0, 2.0, 3.0}; // mesh is 2D

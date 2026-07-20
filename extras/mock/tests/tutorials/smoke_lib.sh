@@ -56,8 +56,10 @@ smoke_normalize() {
         -e '/^[[:space:]]*(Date|Time|Host|PID|Case|nProcs|Build|Exec|Arch)[[:space:]]*:/d' \
         -e '/^[[:space:]]*(opened log at|log written to)/d' \
         -e '/^[[:space:]]*(start|finish) [A-Z][a-z]{2} [A-Z][a-z]{2} /d' \
+        -e 's/\(git:[0-9a-f]+\+?\)/(git:<REV>)/g' \
         -e '/Initial memory [0-9]+ kB/d' \
         -e "/^[[:space:]]*removed (directory )?'/d" \
+        -e 's/[ \t]+$//' \
         -e 's/[0-9]+\.[0-9]+ s, [0-9]+ kB/<TIME_MEM>/g' \
         -e '/^[[:space:]]*(Requirement already satisfied|Collecting |Installing collected|Successfully installed|Downloading |Using cached |Preparing metadata|Building wheel|Created wheel|Stored in directory|Attempting uninstall|Found existing installation|Uninstalling )/d' \
         -e '/^[[:space:]]*\[notice\]/d' \

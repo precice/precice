@@ -3,7 +3,7 @@
 [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/tutorials/partitioned-heat-conduction/dirichlet-nutils/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
 [precice-mock]  Initialized with participant "Dirichlet"
 [precice-mock]  Configuration: default-data-mode=buffer max-iterations=2 time-window-size=0.1
-nutils v7.0 "hiyamugi" (git:98a78fe+)
+nutils v7.0 "hiyamugi" (git:<REV>)
 optimize > constrained 10/100 dofs
 optimize > optimum value 0.00e+00
 optimize > solve > solving 2 dof system to machine precision using arnoldi solver

@@ -4,7 +4,7 @@
 [precice-mock]  Initialized with participant "Neumann"
 [precice-mock]  Configuration: default-data-mode=buffer max-iterations=2 time-window-size=0.1
 [precice-mock]  Finalized
-nutils v7.0 "hiyamugi" (git:98a78fe+)
+nutils v7.0 "hiyamugi" (git:<REV>)
 optimize > solve > solving 100 dof system to machine precision using arnoldi solver
 optimize > solve > solver returned with residual 8e-15
 optimize > optimum value -2.27e-13

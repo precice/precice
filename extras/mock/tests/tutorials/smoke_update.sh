@@ -81,7 +81,7 @@ if [ "$SKIP_REAL" -eq 0 ]; then
         raw=$(mktemp)
         bash "$SCRIPT_DIR/run_course_solutions.sh" --course-dir "$COURSE_DIR" \
             --course-number "$num" --timeout "$REAL_TIMEOUT" > "$raw" 2>&1
-        summary=$(grep -E "^(Passed|Failed|Timeout|Skipped):" "$raw" | tr '\n' ' ')
+        summary=$(grep -E "^(Passed|Failed|Timeout|Skipped):" "$raw" | tr '\n' ' ' | sed 's/ $//')
         echo "course $cname: $summary" >> "$BASELINE_DIR/real-status.txt"
         echo "   -> $summary"
         rm -f "$raw"
