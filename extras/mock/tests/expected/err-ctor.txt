@@ -1,0 +1,6 @@
+T> ERR ctor-badrank: solverProcessIndex=2 must be smaller than solverProcessSize=1.
+T> ERR ctor-badsize: solverProcessSize must be > 0, but is 0.
+T> ERR ctor-negrank: solverProcessIndex must be >= 0, but is -1.
+T> ERR ctor-nullcomm: Passing "nullptr" as "communicator" to Participant constructor is not allowed. Please use the Participant constructor without the "communicator" argument, if you don't want to pass an MPI communicator.
+T> ERR ctor-emptyname: Participant name is empty.
+T> ERR ctor-unknown-participant: Participant 'NoSuchSolver' not found in configuration '<CONFIG>'

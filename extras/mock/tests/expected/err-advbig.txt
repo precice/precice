@@ -1,0 +1,2 @@
+T> initialize done
+T> ERR advance-toolarge: The time step size given to preCICE in "advance" 1.5 exceeds the maximum allowed time step size 1 in the remaining of this time window. Did you restrict your time step size, "dt = min(preciceDt, solverDt)"? For more information, consult the adapter example in the preCICE documentation.

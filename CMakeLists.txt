@@ -883,6 +883,12 @@ if (BUILD_TESTING)
   include(${CMAKE_CURRENT_LIST_DIR}/cmake/CTestConfig.cmake)
 
   #
+  # Golden tests for the mocked interface
+  #
+
+  include(${CMAKE_CURRENT_LIST_DIR}/extras/mock/tests/tests.cmake)
+
+  #
   # Add test_install
   #
 

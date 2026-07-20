@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<mock-config>
+  <max-iterations-override value="-1" />
+</mock-config>
