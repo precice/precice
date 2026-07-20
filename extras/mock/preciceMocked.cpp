@@ -425,6 +425,12 @@ public:
   // Time until the end of the current window (truncated by max-time), 0 once coupling
   // ended; mirrors BaseCouplingScheme::getNextTimeStepMaxSize.
   double nextTimeStepMaxSize() const;
+  // Fills values according to the data mode (random/buffer/scaled) configured for
+  // mesh:data in the mock config, resolving the source buffer via the exact
+  // "mesh:data" key, then the same data name on another mesh, then the globally
+  // last-written data. Shared by readData and mapAndReadData.
+  void fillReadValues(const std::string &meshName, const std::string &dataName,
+                      precice::span<double> values) const;
 
   // Helper method for XML parsing
   void parseXMLFile(const std::string &filePath,
@@ -1365,6 +1371,113 @@ double impl::ParticipantImpl::nextTimeStepMaxSize() const
     }
   }
   return maxDt;
+}
+
+void impl::ParticipantImpl::fillReadValues(const std::string &meshName, const std::string &dataName,
+                                           precice::span<double> values) const
+{
+  const std::size_t n = values.size();
+
+  // Determine data mode from mock config
+  const std::string   key        = meshName + ":" + dataName;
+  DataMode            mode       = mockConfig.defaultMode;
+  double              scalarMult = mockConfig.defaultScalarMultiplier;
+  double              randLower  = mockConfig.defaultRandomLower;
+  double              randUpper  = mockConfig.defaultRandomUpper;
+  uint32_t            randSeed   = mockConfig.defaultRandomSeed;
+  std::vector<double> vectorMult = mockConfig.defaultVectorMultiplier;
+
+  auto mockIt = mockConfig.dataConfigs.find(key);
+  if (mockIt != mockConfig.dataConfigs.end()) {
+    mode       = mockIt->second.mode;
+    scalarMult = mockIt->second.scalarMultiplier;
+    randLower  = mockIt->second.randomLower;
+    randUpper  = mockIt->second.randomUpper;
+    randSeed   = mockIt->second.randomSeed;
+    vectorMult = mockIt->second.vectorMultiplier;
+  }
+
+  // Resolve the buffer to echo back: exact mesh:data buffer first, then the same
+  // data name written on another mesh, then the globally last-written data.
+  const std::vector<double> *sourceBuffer = nullptr;
+  {
+    auto bufIt = runtimeState.writeBuffers.find(key);
+    if (bufIt != runtimeState.writeBuffers.end() && !bufIt->second.empty()) {
+      sourceBuffer = &bufIt->second;
+    } else {
+      const std::string suffix = ":" + dataName;
+      for (const auto &entry : runtimeState.writeBuffers) {
+        if (entry.first.size() > suffix.size() &&
+            entry.first.compare(entry.first.size() - suffix.size(), suffix.size(), suffix) == 0 &&
+            !entry.second.empty()) {
+          sourceBuffer = &entry.second;
+          break;
+        }
+      }
+      if (sourceBuffer == nullptr && !runtimeState.lastWriteBuffer.empty()) {
+        sourceBuffer = &runtimeState.lastWriteBuffer;
+      }
+    }
+  }
+
+  // Apply the selected mode
+  switch (mode) {
+  case DataMode::Random: {
+    // Mode 1: Random data with configurable bounds and optional seed
+    if (!std::isfinite(randLower) || !std::isfinite(randUpper) || randUpper <= randLower) {
+      throw precice::Error(precice::utils::format_or_error(
+          "Invalid random bounds for data '{}' on mesh '{}': upper={} must be greater than lower={} and both must be finite.",
+          dataName, meshName, randUpper, randLower));
+    }
+    // Use custom seed if provided (non-zero), otherwise use default seed
+    uint32_t                               effectiveSeed = (randSeed != 0) ? randSeed : (static_cast<uint32_t>(runtimeState.seed + static_cast<uint32_t>(runtimeState.currentStep)));
+    std::mt19937                           gen(effectiveSeed);
+    std::uniform_real_distribution<double> dist(randLower, randUpper);
+    for (std::size_t i = 0; i < n; ++i) {
+      values[i] = dist(gen);
+    }
+    break;
+  }
+
+  case DataMode::Buffer: {
+    // Mode 2: Return buffered write data (cyclic if shorter)
+    if (sourceBuffer != nullptr) {
+      const auto &buffer = *sourceBuffer;
+      for (std::size_t i = 0; i < n; ++i) {
+        values[i] = buffer[i % buffer.size()];
+      }
+    } else {
+      // No buffer available - return zeros
+      for (std::size_t i = 0; i < n; ++i) {
+        values[i] = 0.0;
+      }
+    }
+    break;
+  }
+
+  case DataMode::ScaledBuffer: {
+    // Mode 3: Return buffered write data with strict scaling (one multiplier per component/value)
+    if (sourceBuffer != nullptr) {
+      const auto &buffer = *sourceBuffer;
+      if (!vectorMult.empty()) {
+        for (std::size_t i = 0; i < n; ++i) {
+          values[i] = buffer[i % buffer.size()] * vectorMult[i % vectorMult.size()];
+        }
+      } else {
+        // Scalar multiplication
+        for (std::size_t i = 0; i < n; ++i) {
+          values[i] = buffer[i % buffer.size()] * scalarMult;
+        }
+      }
+    } else {
+      // No buffer available - return zeros
+      for (std::size_t i = 0; i < n; ++i) {
+        values[i] = 0.0;
+      }
+    }
+    break;
+  }
+  }
 }
 
 // Participant constructors / destructor
@@ -2407,25 +2520,6 @@ void Participant::readData(
     }
   }
 
-  // Determine data mode from mock config
-  std::string                     key        = meshNameStr + ":" + dataNameStr;
-  impl::ParticipantImpl::DataMode mode       = _impl->mockConfig.defaultMode;
-  double                          scalarMult = _impl->mockConfig.defaultScalarMultiplier;
-  double                          randLower  = _impl->mockConfig.defaultRandomLower;
-  double                          randUpper  = _impl->mockConfig.defaultRandomUpper;
-  uint32_t                        randSeed   = _impl->mockConfig.defaultRandomSeed;
-  std::vector<double>             vectorMult = _impl->mockConfig.defaultVectorMultiplier;
-
-  auto mockIt = _impl->mockConfig.dataConfigs.find(key);
-  if (mockIt != _impl->mockConfig.dataConfigs.end()) {
-    mode       = mockIt->second.mode;
-    scalarMult = mockIt->second.scalarMultiplier;
-    randLower  = mockIt->second.randomLower;
-    randUpper  = mockIt->second.randomUpper;
-    randSeed   = mockIt->second.randomSeed;
-    vectorMult = mockIt->second.vectorMultiplier;
-  }
-
   // Validate read size against last write for the same mesh/data (if available)
   auto sizeIt = _impl->runtimeState.lastWriteSizes.find(meshNameStr + ":" + dataNameStr);
   if (sizeIt != _impl->runtimeState.lastWriteSizes.end() && sizeIt->second != n) {
@@ -2434,87 +2528,7 @@ void Participant::readData(
         n, dataNameStr, meshNameStr, sizeIt->second));
   }
 
-  // Resolve the buffer to echo back: exact mesh:data buffer first, then the same
-  // data name written on another mesh, then the globally last-written data.
-  const std::vector<double> *sourceBuffer = nullptr;
-  {
-    auto bufIt = _impl->runtimeState.writeBuffers.find(key);
-    if (bufIt != _impl->runtimeState.writeBuffers.end() && !bufIt->second.empty()) {
-      sourceBuffer = &bufIt->second;
-    } else {
-      const std::string suffix = ":" + dataNameStr;
-      for (const auto &entry : _impl->runtimeState.writeBuffers) {
-        if (entry.first.size() > suffix.size() &&
-            entry.first.compare(entry.first.size() - suffix.size(), suffix.size(), suffix) == 0 &&
-            !entry.second.empty()) {
-          sourceBuffer = &entry.second;
-          break;
-        }
-      }
-      if (sourceBuffer == nullptr && !_impl->runtimeState.lastWriteBuffer.empty()) {
-        sourceBuffer = &_impl->runtimeState.lastWriteBuffer;
-      }
-    }
-  }
-
-  // Apply the selected mode
-  switch (mode) {
-  case impl::ParticipantImpl::DataMode::Random: {
-    // Mode 1: Random data with configurable bounds and optional seed
-    if (!std::isfinite(randLower) || !std::isfinite(randUpper) || randUpper <= randLower) {
-      throw precice::Error(precice::utils::format_or_error(
-          "Invalid random bounds for data '{}' on mesh '{}': upper={} must be greater than lower={} and both must be finite.",
-          dataNameStr, meshNameStr, randUpper, randLower));
-    }
-    // Use custom seed if provided (non-zero), otherwise use default seed
-    uint32_t                               effectiveSeed = (randSeed != 0) ? randSeed : (static_cast<uint32_t>(_impl->runtimeState.seed + static_cast<uint32_t>(_impl->runtimeState.currentStep)));
-    std::mt19937                           gen(effectiveSeed);
-    std::uniform_real_distribution<double> dist(randLower, randUpper);
-    for (std::size_t i = 0; i < n; ++i) {
-      values[i] = dist(gen);
-    }
-    break;
-  }
-
-  case impl::ParticipantImpl::DataMode::Buffer: {
-    // Mode 2: Return buffered write data (cyclic if shorter)
-    if (sourceBuffer != nullptr) {
-      const auto &buffer = *sourceBuffer;
-      for (std::size_t i = 0; i < n; ++i) {
-        values[i] = buffer[i % buffer.size()];
-      }
-    } else {
-      // No buffer available - return zeros
-      for (std::size_t i = 0; i < n; ++i) {
-        values[i] = 0.0;
-      }
-    }
-    break;
-  }
-
-  case impl::ParticipantImpl::DataMode::ScaledBuffer: {
-    // Mode 3: Return buffered write data with strict scaling (one multiplier per component/value)
-    if (sourceBuffer != nullptr) {
-      const auto &buffer = *sourceBuffer;
-      if (!vectorMult.empty()) {
-        for (std::size_t i = 0; i < n; ++i) {
-          values[i] = buffer[i % buffer.size()] * vectorMult[i % vectorMult.size()];
-        }
-      } else {
-        // Scalar multiplication
-        for (std::size_t i = 0; i < n; ++i) {
-          values[i] = buffer[i % buffer.size()] * scalarMult;
-        }
-      }
-    } else {
-      // No buffer available - return zeros
-      for (std::size_t i = 0; i < n; ++i) {
-        values[i] = 0.0;
-      }
-    }
-    break;
-  }
-  }
+  _impl->fillReadValues(meshNameStr, dataNameStr, values);
 }
 
 // Just-in-time mapping (experimental)
@@ -2587,7 +2601,17 @@ void Participant::writeAndMapData(
         "You passed {} vertex indices and {} data components, but we expected {} data components ({} x {}).",
         dataDims, nVertices, values.size(), expectedValues, dataDims, nVertices));
   }
-  // no-op
+
+  if (values.empty()) {
+    return;
+  }
+
+  // Store written data like writeData does, but do not record into lastWriteSizes:
+  // JIT calls may legitimately use a different vertex count on every call, and a
+  // recorded size would make a later direct readData on the same mesh/data falsely
+  // fail its size check.
+  _impl->runtimeState.writeBuffers[meshNameStr + ":" + dataNameStr].assign(values.begin(), values.end());
+  _impl->runtimeState.lastWriteBuffer.assign(values.begin(), values.end());
 }
 
 void Participant::mapAndReadData(
@@ -2614,6 +2638,7 @@ void Participant::mapAndReadData(
         relativeReadTime));
   }
   std::string meshNameStr = toStr(meshName);
+  std::string dataNameStr = toStr(dataName);
   // Check received mesh with api-access
   auto meshIt = _impl->configData.meshes.find(meshNameStr);
   if (meshIt == _impl->configData.meshes.end() || !meshIt->second.received || !meshIt->second.apiAccess) {
@@ -2660,7 +2685,10 @@ void Participant::mapAndReadData(
         "You passed {} vertex indices and {} data components, but we expected {} data components ({} x {}).",
         dataDims, nVertices, values.size(), expectedValues, dataDims, nVertices));
   }
-  // no-op
+
+  // No lastWriteSizes check here: JIT calls may use a different vertex count on
+  // every call; the cyclic echo in fillReadValues handles size mismatches.
+  _impl->fillReadValues(meshNameStr, dataNameStr, values);
 }
 
 // Direct access

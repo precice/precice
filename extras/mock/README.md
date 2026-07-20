@@ -48,7 +48,7 @@ If no `logging-mode` is specified, the mock defaults to **mock mode** for cleane
 
 ## Data Exchange Modes
 
-The mock participant supports three modes for `readData()` operations, configured via an optional `precice-mock-config.xml` file:
+The mock participant supports three modes for `readData()` operations, configured via an optional `precice-mock-config.xml` file. The just-in-time mapping API participates in the same machinery: `mapAndReadData()` follows the same modes as `readData()`, and `writeAndMapData()` fills the same per mesh/data buffers as `writeData()` (but is exempt from the read-size check, since just-in-time calls may use a different vertex count on every call).
 
 ### 1. Buffer Mode (Default)
 Returns the data previously written via `writeData()`. This is the default if no mock-config is provided.
