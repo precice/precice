@@ -16,6 +16,12 @@
 
 #include <libxml/SAX2.h>
 
+// The mock re-implements the Participant API and does not link against
+// libprecice. These headers are all it uses from preCICE: the exception types
+// (Exceptions.hpp), the tooling interface it re-implements (Tooling.hpp), type
+// aliases (Types.hpp), version constants (impl/versions.hpp), the span shim
+// (span.hpp), and the fmt wrapper (utils/fmt.hpp, backed by the bundled fmt
+// library).
 #include <precice/Exceptions.hpp>
 #include <precice/Tooling.hpp>
 #include <precice/Types.hpp>
@@ -316,7 +322,6 @@ public:
     // back to the same data name on another mesh, then to the globally last-written data.
     std::map<std::string, std::vector<double>> writeBuffers;
     std::vector<double>                        lastWriteBuffer;
-    std::map<std::string, std::size_t>         lastWriteSizes;
     std::map<std::string, std::size_t>         meshVertexCounts;
   };
 
@@ -354,7 +359,11 @@ public:
   };
 
   // Internal state
-  std::string                  participantName;
+  std::string participantName;
+  // Path to the preCICE configuration file, as passed to the constructor.
+  // Kept because it is needed after construction: parseConfig() reads the file,
+  // parseMockConfig() derives the mock-config location from it, and log/error
+  // messages report its absolute path.
   std::string                  config;
   std::string                  mockConfigPath;
   int                          rank    = 0;
@@ -463,18 +472,31 @@ impl::ParticipantImpl::ParticipantImpl(::precice::string_view participantName,
       size(solverProcessSize),
       comm(communicator)
 {
-  // Basic invariant checks for the mock participant
-  if (participantName.empty()) {
-    throw precice::Error("Participant name is empty.");
-  }
-  if (solverProcessSize <= 0) {
-    throw precice::Error(precice::utils::format_or_error("solverProcessSize must be > 0, but is {}.", solverProcessSize));
+  // Basic invariant checks for the mock participant, mirroring real preCICE.
+  // The constructor parameter shadows the member, so check the stored
+  // (null-stripped) name explicitly via this->participantName.
+  if (this->participantName.empty()) {
+    throw precice::Error("This participant's name is an empty string. "
+                         "When constructing a preCICE interface you need to pass the name of the "
+                         "participant as first argument to the constructor.");
   }
   if (solverProcessIndex < 0) {
-    throw precice::Error(precice::utils::format_or_error("solverProcessIndex must be >= 0, but is {}.", solverProcessIndex));
+    throw precice::Error(precice::utils::format_or_error(
+        "The solver process index needs to be a non-negative number, not: {}. "
+        "Please check the value given when constructing a preCICE interface.",
+        solverProcessIndex));
+  }
+  if (solverProcessSize < 1) {
+    throw precice::Error(precice::utils::format_or_error(
+        "The solver process size needs to be a positive number, not: {}. "
+        "Please check the value given when constructing a preCICE interface.",
+        solverProcessSize));
   }
   if (solverProcessIndex >= solverProcessSize) {
-    throw precice::Error(precice::utils::format_or_error("solverProcessIndex={} must be smaller than solverProcessSize={}.", solverProcessIndex, solverProcessSize));
+    throw precice::Error(precice::utils::format_or_error(
+        "The solver process index, currently: {}  needs to be smaller than the solver process size, currently: {}. "
+        "Please check the values given when constructing a preCICE interface.",
+        solverProcessIndex, solverProcessSize));
   }
   // Initialize seed for random data generation 0x9e3779b9u is the fractional part of the golden ratio scaled to 32 bits used as an arbitrary constant
   runtimeState.seed = static_cast<uint32_t>(rank) ^ 0x9e3779b9u;
@@ -635,28 +657,24 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
     impl->configData.allowsRemeshing    = attrIsTrue("allow-remeshing");
   }
 
-  // Handle data type declarations
+  // Handle data type declarations. The config checker guarantees the required
+  // "name" attribute, so no empty-name guard is needed.
   if (nsPrefix == "data" && elemName == "scalar") {
-    std::string dataName = getAttr("name");
-    if (!dataName.empty())
-      impl->configParseState.dataType[dataName] = DataType::Scalar;
+    impl->configParseState.dataType[getAttr("name")] = DataType::Scalar;
   } else if (nsPrefix == "data" && elemName == "vector") {
-    std::string dataName = getAttr("name");
-    if (!dataName.empty())
-      impl->configParseState.dataType[dataName] = DataType::Vector;
+    impl->configParseState.dataType[getAttr("name")] = DataType::Vector;
   }
-  // Handle mesh declarations
+  // Handle mesh declarations. The config checker guarantees the required "name"
+  // and "dimensions" (2 or 3) attributes, so no empty-name guard or dimensions
+  // fallback is needed.
   else if (elemName == "mesh") {
-    std::string meshName = getAttr("name");
-    if (!meshName.empty()) {
-      impl::ParticipantImpl::MeshInfo meshInfo;
-      meshInfo.name                     = meshName;
-      std::string dimsStr               = getAttr("dimensions");
-      meshInfo.dimensions               = dimsStr.empty() ? 3 : std::stoi(dimsStr);
-      meshInfo.provided                 = attrIsTrue("provide");
-      meshInfo.received                 = attrIsTrue("receive");
-      impl->configData.meshes[meshName] = meshInfo;
-    }
+    std::string                     meshName = getAttr("name");
+    impl::ParticipantImpl::MeshInfo meshInfo;
+    meshInfo.name                     = meshName;
+    meshInfo.dimensions               = std::stoi(getAttr("dimensions"));
+    meshInfo.provided                 = attrIsTrue("provide");
+    meshInfo.received                 = attrIsTrue("receive");
+    impl->configData.meshes[meshName] = meshInfo;
   }
   // Handle participant (the <participant> tags inside coupling-scheme:multi are
   // membership markers, handled in the coupling-scheme chain below)
@@ -684,47 +702,26 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
         }
       }
     } else if (elemName == "write-data") {
-      std::string dataName = getAttr("name");
-      std::string meshName = getAttr("mesh");
-      if (!dataName.empty() && !meshName.empty()) {
-        impl::ParticipantImpl::DataInfo dataInfo;
-        dataInfo.name     = dataName;
-        dataInfo.meshName = meshName;
-        dataInfo.isWrite  = true;
-        // Determine data dimensions: for vectors, use mesh dimensions; for scalars, use 1
-        auto typeIt   = impl->configParseState.dataType.find(dataName);
-        bool isVector = (typeIt != impl->configParseState.dataType.end() && typeIt->second == DataType::Vector);
-        if (isVector) {
-          // Vector data: use mesh dimensions
-          auto meshIt         = impl->configData.meshes.find(meshName);
-          dataInfo.dimensions = (meshIt != impl->configData.meshes.end()) ? meshIt->second.dimensions : 3;
-        } else {
-          // Scalar data: always 1D
-          dataInfo.dimensions = 1;
-        }
-        impl->configData.dataItems.push_back(dataInfo);
-      }
+      // The config checker guarantees the required "name"/"mesh" attributes and
+      // that the referenced mesh exists, so no empty-name guard or mesh-dimension
+      // fallback is needed. Vector data has mesh dimensions; scalar data is 1D.
+      impl::ParticipantImpl::DataInfo dataInfo;
+      dataInfo.name       = getAttr("name");
+      dataInfo.meshName   = getAttr("mesh");
+      dataInfo.isWrite    = true;
+      auto typeIt         = impl->configParseState.dataType.find(dataInfo.name);
+      bool isVector       = (typeIt != impl->configParseState.dataType.end() && typeIt->second == DataType::Vector);
+      dataInfo.dimensions = isVector ? impl->configData.meshes.at(dataInfo.meshName).dimensions : 1;
+      impl->configData.dataItems.push_back(dataInfo);
     } else if (elemName == "read-data") {
-      std::string dataName = getAttr("name");
-      std::string meshName = getAttr("mesh");
-      if (!dataName.empty() && !meshName.empty()) {
-        impl::ParticipantImpl::DataInfo dataInfo;
-        dataInfo.name     = dataName;
-        dataInfo.meshName = meshName;
-        dataInfo.isRead   = true;
-        // Determine data dimensions: for vectors, use mesh dimensions; for scalars, use 1
-        auto typeIt   = impl->configParseState.dataType.find(dataName);
-        bool isVector = (typeIt != impl->configParseState.dataType.end() && typeIt->second == DataType::Vector);
-        if (isVector) {
-          // Vector data: use mesh dimensions
-          auto meshIt         = impl->configData.meshes.find(meshName);
-          dataInfo.dimensions = (meshIt != impl->configData.meshes.end()) ? meshIt->second.dimensions : 3;
-        } else {
-          // Scalar data: always 1D
-          dataInfo.dimensions = 1;
-        }
-        impl->configData.dataItems.push_back(dataInfo);
-      }
+      impl::ParticipantImpl::DataInfo dataInfo;
+      dataInfo.name       = getAttr("name");
+      dataInfo.meshName   = getAttr("mesh");
+      dataInfo.isRead     = true;
+      auto typeIt         = impl->configParseState.dataType.find(dataInfo.name);
+      bool isVector       = (typeIt != impl->configParseState.dataType.end() && typeIt->second == DataType::Vector);
+      dataInfo.dimensions = isVector ? impl->configData.meshes.at(dataInfo.meshName).dimensions : 1;
+      impl->configData.dataItems.push_back(dataInfo);
     }
   }
   // Handle mapping tags of ALL participants (namespace prefix "mapping"): the
@@ -793,45 +790,32 @@ void impl::ParticipantImpl::onConfigStartElement(void *ctx, const xmlChar *local
       impl->schemeParseState.isMember = true;
     }
   } else if (impl->configParseState.inCouplingScheme && elemName == "max-iterations") {
-    std::string maxIterStr = getAttr("value");
-    if (!maxIterStr.empty()) {
-      impl->schemeParseState.maxIterations = std::stoi(maxIterStr);
-    }
+    // The config checker guarantees the required "value" attribute when the tag is present.
+    impl->schemeParseState.maxIterations = std::stoi(getAttr("value"));
   } else if (impl->configParseState.inCouplingScheme && elemName == "min-iterations") {
-    std::string minIterStr = getAttr("value");
-    if (!minIterStr.empty()) {
-      impl->schemeParseState.minIterations = std::stoi(minIterStr);
-    }
+    impl->schemeParseState.minIterations = std::stoi(getAttr("value"));
   } else if (impl->configParseState.inCouplingScheme &&
              (elemName == "relative-convergence-measure" || elemName == "absolute-convergence-measure" ||
               elemName == "residual-relative-convergence-measure" || elemName == "min-iteration-convergence-measure")) {
     impl->schemeParseState.hasConvergenceMeasure = true;
   } else if (impl->configParseState.inCouplingScheme && elemName == "exchange") {
-    std::string dataName = getAttr("data");
-    std::string meshName = getAttr("mesh");
-    std::string fromPart = getAttr("from");
-    bool        init     = attrIsTrue("initialize");
-    if (!dataName.empty() && !fromPart.empty()) {
-      impl::ParticipantImpl::ExchangeInfo ei;
-      ei.dataName        = dataName;
-      ei.meshName        = meshName;
-      ei.fromParticipant = fromPart;
-      ei.initialize      = init;
-      impl->schemeParseState.exchanges.push_back(ei);
-    }
+    // The config checker guarantees the required "data"/"mesh"/"from" attributes.
+    impl::ParticipantImpl::ExchangeInfo ei;
+    ei.dataName        = getAttr("data");
+    ei.meshName        = getAttr("mesh");
+    ei.fromParticipant = getAttr("from");
+    ei.initialize      = attrIsTrue("initialize");
+    impl->schemeParseState.exchanges.push_back(ei);
   }
   // Parse max-time, max-time-windows, and time-window-size (only inside coupling-scheme)
   if (impl->configParseState.inCouplingScheme && elemName == "max-time") {
-    std::string maxTimeStr = getAttr("value");
-    if (!maxTimeStr.empty()) {
-      impl->schemeParseState.maxTime = std::stod(maxTimeStr);
-    }
+    // The config checker guarantees the required "value" attribute when the tag is present.
+    impl->schemeParseState.maxTime = std::stod(getAttr("value"));
   } else if (impl->configParseState.inCouplingScheme && elemName == "max-time-windows") {
-    std::string maxTimeWindowsStr = getAttr("value");
-    if (!maxTimeWindowsStr.empty()) {
-      impl->schemeParseState.maxTimeWindows = std::stoi(maxTimeWindowsStr);
-    }
+    impl->schemeParseState.maxTimeWindows = std::stoi(getAttr("value"));
   } else if (impl->configParseState.inCouplingScheme && elemName == "time-window-size") {
+    // The "value" attribute is optional here: with method="first-participant" the solver
+    // prescribes the window size and the tag carries no value, so the guard stays.
     std::string timeWindowSizeStr = getAttr("value");
     if (!timeWindowSizeStr.empty()) {
       impl->schemeParseState.timeWindowSize = std::stod(timeWindowSizeStr);
@@ -943,41 +927,18 @@ void impl::ParticipantImpl::parseConfig()
           "Participant '{}' not found in configuration '{}'", participantName, config));
     }
 
-    // If no mesh was explicitly marked as provided but meshes exist, assume all non-received meshes are provided (fallback for simplified configs)
-    bool anyProvided = false;
-    for (const auto &m : configData.meshes) {
-      if (m.second.provided) {
-        anyProvided = true;
-        break;
-      }
-    }
-    if (!anyProvided) {
-      for (auto &m : configData.meshes) {
-        if (!m.second.received) {
-          m.second.provided = true;
-        }
-      }
-    }
-
-    // Ensure meshes referenced by data items exist
+    // Mark each mesh's provided/received role from the data direction. The config
+    // checker guarantees write-/read-data reference a mesh the participant declared
+    // via <provide-mesh>/<receive-mesh>, so the mesh always exists here.
     for (const auto &dataInfo : configData.dataItems) {
-      auto it = configData.meshes.find(dataInfo.meshName);
-      if (it == configData.meshes.end()) {
-        impl::ParticipantImpl::MeshInfo mi;
-        mi.name                              = dataInfo.meshName;
-        mi.dimensions                        = 3;
-        mi.provided                          = dataInfo.isWrite;
-        mi.received                          = dataInfo.isRead;
-        configData.meshes[dataInfo.meshName] = mi;
-      } else {
-        // Writing data does not make a direct-access (received + api-access)
-        // mesh a provided one: its vertices come from the partner via
-        // getMeshVertexIDsAndCoordinates(), not from local setMeshVertices().
-        if (dataInfo.isWrite && !(it->second.received && it->second.apiAccess))
-          it->second.provided = true;
-        if (dataInfo.isRead)
-          it->second.received = true;
-      }
+      auto &mesh = configData.meshes.at(dataInfo.meshName);
+      // Writing data does not make a direct-access (received + api-access) mesh a
+      // provided one: its vertices come from the partner via
+      // getMeshVertexIDsAndCoordinates(), not from local setMeshVertices().
+      if (dataInfo.isWrite && !(mesh.received && mesh.apiAccess))
+        mesh.provided = true;
+      if (dataInfo.isRead)
+        mesh.received = true;
     }
 
     // Set defaults for implicit coupling
@@ -993,13 +954,19 @@ void impl::ParticipantImpl::parseConfig()
       }
     }
 
-    // Validate termination configuration
+    // Real preCICE accepts a coupling scheme without max-time or max-time-windows
+    // (it would run until stopped externally), so the config checker does not
+    // require a termination criterion. The mock has no external stop, so to avoid
+    // running forever it falls back to a finite number of time windows and warns.
     if (configData.maxTime < 0 && configData.maxTimeWindows < 0) {
-      throw precice::Error(precice::utils::format_or_error(
-          "No termination configuration found in preCICE config '{}'. "
-          "Please add <max-time value=\"...\"/> or <max-time-windows value=\"...\"/> "
-          "to your <coupling-scheme:.../> to prevent infinite execution.",
-          config));
+      constexpr int fallbackMaxTimeWindows = 100;
+      configData.maxTimeWindows            = fallbackMaxTimeWindows;
+      if (primary) {
+        std::cout << logPrefix()
+                  << "WARNING: The configuration defines neither max-time nor max-time-windows. "
+                     "The mock added max-time-windows="
+                  << fallbackMaxTimeWindows << " to prevent infinite execution." << std::endl;
+      }
     }
 
     applyMaxIterationsOverride();
@@ -1585,14 +1552,8 @@ void Participant::initialize()
     _impl->runtimeState.readCheckpointRequired  = false;
   }
 
-  // Validate that termination criteria are provided
-  if (_impl->configData.maxTime <= 0 && _impl->configData.maxTimeWindows <= 0) {
-    throw precice::Error(
-        "The preCICE configuration must specify either max-time or max-time-windows in the coupling-scheme \n"
-        "to prevent infinite execution. Please add one of these attributes:\n"
-        "  <max-time value=\"...\"/>\n"
-        "  <max-time-windows value=\"...\"/>");
-  }
+  // A termination criterion is guaranteed at this point: parseConfig() either read
+  // max-time/max-time-windows from the config or installed a finite fallback.
 
   // Lock all meshes after initialization
   for (const auto &meshEntry : _impl->configData.meshes) {
@@ -1828,54 +1789,28 @@ bool Participant::requiresReadingCheckpoint()
 int Participant::getMeshDimensions(::precice::string_view meshName) const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-
-  std::string meshNameStr = toStr(meshName);
-
-  // Check if config was parsed and mesh exists
-  if (_impl->runtimeState.configParsed) {
-    _impl->requireMeshUsed(meshNameStr);
-    return _impl->configData.meshes.at(meshNameStr).dimensions;
-  }
-
-  // If configuration wasn't parsed or mesh wasn't found in parsed config,
-  // try to return a previously inferred mesh dimension (e.g. from earlier
-  // setMeshVertex/setMeshVertices calls). If none is available, return 0
-  // to indicate unknown dimensionality so higher-level bindings can infer
-  // dimensions from the provided vertex data (matching real preCICE behavior).
-  auto it2 = _impl->configData.meshes.find(meshNameStr);
-  if (it2 != _impl->configData.meshes.end()) {
-    return it2->second.dimensions;
-  }
-
-  // Unknown mesh dimensionality
-  return 0;
+  std::string                           meshNameStr = toStr(meshName);
+  // The constructor always parses the config (throwing on failure), so the mesh
+  // set is known here; requireMeshUsed enforces that this participant uses it.
+  _impl->requireMeshUsed(meshNameStr);
+  return _impl->configData.meshes.at(meshNameStr).dimensions;
 }
 
 int Participant::getDataDimensions(::precice::string_view meshName,
                                    ::precice::string_view dataName) const
 {
   std::lock_guard<std::recursive_mutex> lk(_impl->mtx);
-
-  std::string meshNameStr = toStr(meshName);
-  std::string dataNameStr = toStr(dataName);
-
-  // Check if config was parsed and data exists
-  if (_impl->runtimeState.configParsed) {
-    _impl->requireMeshUsed(meshNameStr);
-    for (const auto &dataInfo : _impl->configData.dataItems) {
-      if (dataInfo.name == dataNameStr && dataInfo.meshName == meshNameStr) {
-        return dataInfo.dimensions;
-      }
+  std::string                           meshNameStr = toStr(meshName);
+  std::string                           dataNameStr = toStr(dataName);
+  _impl->requireMeshUsed(meshNameStr);
+  for (const auto &dataInfo : _impl->configData.dataItems) {
+    if (dataInfo.name == dataNameStr && dataInfo.meshName == meshNameStr) {
+      return dataInfo.dimensions;
     }
-
-    // Data not found - throw error
-    throw precice::Error(precice::utils::format_or_error(
-        "Data '{}' on mesh '{}' is not used by participant '{}'",
-        dataNameStr, meshNameStr, _impl->participantName));
   }
-
-  // Fallback: mock as scalar
-  return 1;
+  throw precice::Error(precice::utils::format_or_error(
+      "Data '{}' on mesh '{}' is not used by participant '{}'",
+      dataNameStr, meshNameStr, _impl->participantName));
 }
 
 bool Participant::isCouplingOngoing() const
@@ -1999,6 +1934,9 @@ int Participant::getMeshVertexSize(::precice::string_view meshName) const
   if (it != _impl->runtimeState.meshVertexCounts.end()) {
     return static_cast<int>(it->second);
   }
+  // A used mesh with no vertices set yet returns 0, mirroring real preCICE's
+  // mesh->nVertices(). Unknown/unused meshes were already rejected by
+  // requireMeshUsed() above, so this is not an error case.
   return 0;
 }
 
@@ -2339,46 +2277,37 @@ void Participant::writeData(
   std::string dataNameStr  = toStr(dataName);
   int         expectedDims = 1;
 
-  // Validate against config if parsed
-  if (_impl->runtimeState.configParsed) {
-    _impl->requireMeshUsed(meshNameStr);
-    bool found = false;
+  // The config is always parsed by the constructor, so validate against it directly.
+  _impl->requireMeshUsed(meshNameStr);
+  bool found = false;
 
-    for (const auto &dataInfo : _impl->configData.dataItems) {
-      if (dataInfo.name == dataNameStr && dataInfo.meshName == meshNameStr) {
-        if (!dataInfo.isWrite) {
-          throw precice::Error(precice::utils::format_or_error(
-              "Data '{}' on mesh '{}' is not configured for writing by participant '{}'. "
-              "Please add <write-data name=\"{}\" mesh=\"{}\" /> to the configuration.",
-              dataNameStr, meshNameStr, _impl->participantName, dataNameStr, meshNameStr));
-        }
-        found        = true;
-        expectedDims = dataInfo.dimensions;
-        break;
+  for (const auto &dataInfo : _impl->configData.dataItems) {
+    if (dataInfo.name == dataNameStr && dataInfo.meshName == meshNameStr) {
+      if (!dataInfo.isWrite) {
+        throw precice::Error(precice::utils::format_or_error(
+            "Data '{}' on mesh '{}' is not configured for writing by participant '{}'. "
+            "Please add <write-data name=\"{}\" mesh=\"{}\" /> to the configuration.",
+            dataNameStr, meshNameStr, _impl->participantName, dataNameStr, meshNameStr));
       }
+      found        = true;
+      expectedDims = dataInfo.dimensions;
+      break;
     }
+  }
 
-    if (!found) {
-      throw precice::Error(precice::utils::format_or_error(
-          "Data '{}' on mesh '{}' is not used by participant '{}'",
-          dataNameStr, meshNameStr, _impl->participantName));
-    }
+  if (!found) {
+    throw precice::Error(precice::utils::format_or_error(
+        "Data '{}' on mesh '{}' is not used by participant '{}'",
+        dataNameStr, meshNameStr, _impl->participantName));
+  }
 
-    // Check value count matches data dimensions
-    if (values.size() != ids.size() * expectedDims) {
-      throw precice::Error(precice::utils::format_or_error(
-          "writeData() was called with {} vertices and {} values for {}-dimensional data '{}', "
-          "but needs {} values ({} x {}).",
-          ids.size(), values.size(), expectedDims, dataNameStr,
-          ids.size() * expectedDims, ids.size(), expectedDims));
-    }
-  } else {
-    // Fallback validation without config
-    if (values.size() != ids.size()) {
-      throw precice::Error(precice::utils::format_or_error(
-          "writeData() was called with {} vertices and {} values, but the number of vertices and values must match.",
-          ids.size(), values.size()));
-    }
+  // Check value count matches data dimensions
+  if (values.size() != ids.size() * expectedDims) {
+    throw precice::Error(precice::utils::format_or_error(
+        "writeData() was called with {} vertices and {} values for {}-dimensional data '{}', "
+        "but needs {} values ({} x {}).",
+        ids.size(), values.size(), expectedDims, dataNameStr,
+        ids.size() * expectedDims, ids.size(), expectedDims));
   }
 
   if (ids.empty() && values.empty()) {
@@ -2410,8 +2339,6 @@ void Participant::writeData(
   // data as a fallback for reads of data that is never written by this participant.
   _impl->runtimeState.writeBuffers[meshNameStr + ":" + dataNameStr].assign(values.begin(), values.end());
   _impl->runtimeState.lastWriteBuffer.assign(values.begin(), values.end());
-  // Track last write size for this mesh+data to validate future reads
-  _impl->runtimeState.lastWriteSizes[meshNameStr + ":" + dataNameStr] = values.size();
 }
 
 void Participant::readData(
@@ -2450,9 +2377,8 @@ void Participant::readData(
   std::string dataNameStr  = toStr(dataName);
   int         expectedDims = 1;
 
-  if (_impl->runtimeState.configParsed) {
-    _impl->requireMeshUsed(meshNameStr);
-  }
+  // The config is always parsed by the constructor.
+  _impl->requireMeshUsed(meshNameStr);
 
   // Check mesh is not in reset state
   if (_impl->runtimeState.initialized && _impl->runtimeState.lockedMeshes.count(meshNameStr) == 0) {
@@ -2461,45 +2387,36 @@ void Participant::readData(
         meshNameStr));
   }
 
-  // Validate against config if parsed
-  if (_impl->runtimeState.configParsed) {
-    bool found = false;
+  // Validate against the parsed config.
+  bool found = false;
 
-    for (const auto &dataInfo : _impl->configData.dataItems) {
-      if (dataInfo.name == dataNameStr && dataInfo.meshName == meshNameStr) {
-        if (!dataInfo.isRead) {
-          throw precice::Error(precice::utils::format_or_error(
-              "Data '{}' on mesh '{}' is not configured for reading by participant '{}'. "
-              "Please add <read-data name=\"{}\" mesh=\"{}\" /> to the configuration.",
-              dataNameStr, meshNameStr, _impl->participantName, dataNameStr, meshNameStr));
-        }
-        found        = true;
-        expectedDims = dataInfo.dimensions;
-        break;
+  for (const auto &dataInfo : _impl->configData.dataItems) {
+    if (dataInfo.name == dataNameStr && dataInfo.meshName == meshNameStr) {
+      if (!dataInfo.isRead) {
+        throw precice::Error(precice::utils::format_or_error(
+            "Data '{}' on mesh '{}' is not configured for reading by participant '{}'. "
+            "Please add <read-data name=\"{}\" mesh=\"{}\" /> to the configuration.",
+            dataNameStr, meshNameStr, _impl->participantName, dataNameStr, meshNameStr));
       }
+      found        = true;
+      expectedDims = dataInfo.dimensions;
+      break;
     }
+  }
 
-    if (!found) {
-      throw precice::Error(precice::utils::format_or_error(
-          "Data '{}' on mesh '{}' is not used by participant '{}'",
-          dataNameStr, meshNameStr, _impl->participantName));
-    }
+  if (!found) {
+    throw precice::Error(precice::utils::format_or_error(
+        "Data '{}' on mesh '{}' is not used by participant '{}'",
+        dataNameStr, meshNameStr, _impl->participantName));
+  }
 
-    // Check value count matches data dimensions
-    if (n != ids.size() * expectedDims) {
-      throw precice::Error(precice::utils::format_or_error(
-          "readData() was called with {} vertices and {} values for {}-dimensional data '{}', "
-          "but needs {} values ({} x {}).",
-          ids.size(), values.size(), expectedDims, dataNameStr,
-          ids.size() * expectedDims, ids.size(), expectedDims));
-    }
-  } else {
-    // Fallback validation without config
-    if (n != ids.size()) {
-      throw precice::Error(precice::utils::format_or_error(
-          "readData() was called with {} vertices and {} values, but the number of vertices and values must match.",
-          ids.size(), values.size()));
-    }
+  // Check value count matches data dimensions
+  if (n != ids.size() * expectedDims) {
+    throw precice::Error(precice::utils::format_or_error(
+        "readData() was called with {} vertices and {} values for {}-dimensional data '{}', "
+        "but needs {} values ({} x {}).",
+        ids.size(), values.size(), expectedDims, dataNameStr,
+        ids.size() * expectedDims, ids.size(), expectedDims));
   }
 
   if (ids.empty() && values.empty()) {
@@ -2520,14 +2437,8 @@ void Participant::readData(
     }
   }
 
-  // Validate read size against last write for the same mesh/data (if available)
-  auto sizeIt = _impl->runtimeState.lastWriteSizes.find(meshNameStr + ":" + dataNameStr);
-  if (sizeIt != _impl->runtimeState.lastWriteSizes.end() && sizeIt->second != n) {
-    throw precice::Error(precice::utils::format_or_error(
-        "readData() was called with {} values for data '{}' on mesh '{}', but the last write had {} values for this mesh/data.",
-        n, dataNameStr, meshNameStr, sizeIt->second));
-  }
-
+  // Like real preCICE, the read size is validated only against ids.size() * dataDims
+  // (checked above); there is no cross-check against a previous write size.
   _impl->fillReadValues(meshNameStr, dataNameStr, values);
 }
 
@@ -2585,10 +2496,9 @@ void Participant::writeAndMapData(
         "The function \"writeAndMapData\" was called on mesh \"{}\", but no access region was defined. Please define an access region using \"setMeshAccessRegion()\" before calling \"writeAndMapData()\".",
         meshNameStr));
   }
+  // getMeshDimensions() has already validated the mesh (throwing otherwise) and
+  // returns a positive dimension.
   const int dim = getMeshDimensions(meshName);
-  if (dim <= 0) {
-    throw precice::Error(precice::utils::format_or_error("writeAndMapData() was called for unknown mesh '{}'.", meshNameStr));
-  }
   if (coordinates.size() % static_cast<std::size_t>(dim) != 0) {
     throw precice::Error(precice::utils::format_or_error("writeAndMapData() was called with {} coordinates, but needs a multiple of {} coordinates.", coordinates.size(), dim));
   }
@@ -2606,10 +2516,7 @@ void Participant::writeAndMapData(
     return;
   }
 
-  // Store written data like writeData does, but do not record into lastWriteSizes:
-  // JIT calls may legitimately use a different vertex count on every call, and a
-  // recorded size would make a later direct readData on the same mesh/data falsely
-  // fail its size check.
+  // Store written data like writeData does.
   _impl->runtimeState.writeBuffers[meshNameStr + ":" + dataNameStr].assign(values.begin(), values.end());
   _impl->runtimeState.lastWriteBuffer.assign(values.begin(), values.end());
 }
@@ -2669,10 +2576,9 @@ void Participant::mapAndReadData(
         "The function \"mapAndReadData\" was called on mesh \"{}\", but no access region was defined. Please define an access region using \"setMeshAccessRegion()\" before calling \"mapAndReadData()\".",
         meshNameStr));
   }
+  // getMeshDimensions() has already validated the mesh (throwing otherwise) and
+  // returns a positive dimension.
   const int dim = getMeshDimensions(meshName);
-  if (dim <= 0) {
-    throw precice::Error(precice::utils::format_or_error("mapAndReadData() was called for unknown mesh '{}'.", meshNameStr));
-  }
   if (coordinates.size() % static_cast<std::size_t>(dim) != 0) {
     throw precice::Error(precice::utils::format_or_error("mapAndReadData() was called with {} coordinates, but needs a multiple of {} coordinates.", coordinates.size(), dim));
   }
@@ -2686,8 +2592,8 @@ void Participant::mapAndReadData(
         dataDims, nVertices, values.size(), expectedValues, dataDims, nVertices));
   }
 
-  // No lastWriteSizes check here: JIT calls may use a different vertex count on
-  // every call; the cyclic echo in fillReadValues handles size mismatches.
+  // The cyclic echo in fillReadValues handles any size difference between the
+  // coordinates queried here and whatever was last written.
   _impl->fillReadValues(meshNameStr, dataNameStr, values);
 }
 
@@ -2718,12 +2624,10 @@ void Participant::setMeshAccessRegion(
         "A mesh access region was already defined for mesh '{}'. setMeshAccessRegion may only be called once per mesh.",
         meshNameStr));
   }
+  // getMeshDimensions() has already validated the mesh (throwing otherwise) and
+  // returns a positive dimension.
   const auto meshDimensions = getMeshDimensions(meshName);
-  if (meshDimensions <= 0) {
-    throw precice::Error(precice::utils::format_or_error(
-        "setMeshAccessRegion() was called for unknown mesh '{}'.", meshNameStr));
-  }
-  const auto expectedSize = static_cast<std::size_t>(2 * meshDimensions);
+  const auto expectedSize   = static_cast<std::size_t>(2 * meshDimensions);
   if (boundingBox.size() != expectedSize) {
     throw precice::Error(precice::utils::format_or_error(
         "setMeshAccessRegion() was called with {} bounding box coordinates, but expects {} coordinates (min and max for each dimension in {}D).",
@@ -2797,11 +2701,9 @@ void Participant::getMeshVertexIDsAndCoordinates(
   if (_impl->runtimeState.meshAccessRegions.find(meshNameStr) == _impl->runtimeState.meshAccessRegions.end()) {
     throw precice::Error("Please define an access region using \"setMeshAccessRegion()\" before calling \"getMeshVertexIDsAndCoordinates()\".");
   }
-  const auto meshDimensions = getMeshDimensions(meshName);
-  if (meshDimensions <= 0) {
-    throw precice::Error(precice::utils::format_or_error(
-        "getMeshVertexIDsAndCoordinates() was called for unknown mesh '{}'.", meshNameStr));
-  }
+  // getMeshDimensions() has already validated the mesh (throwing otherwise) and
+  // returns a positive dimension.
+  const auto meshDimensions      = getMeshDimensions(meshName);
   const auto expectedCoordinates = ids.size() * static_cast<std::size_t>(meshDimensions);
   if (coordinates.size() != expectedCoordinates) {
     throw precice::Error(precice::utils::format_or_error("getMeshVertexIDsAndCoordinates() was called with {} vertices and {} coordinates, but needs {} coordinates ({} x {}).", ids.size(), coordinates.size(), expectedCoordinates, ids.size(), meshDimensions));
@@ -2926,13 +2828,13 @@ namespace tooling {
 
 void printConfigReference(std::ostream &out, ConfigReferenceType reftype)
 {
-  out << "preCICE mock config reference; type=" << static_cast<int>(reftype) << "\n";
+  out << "preCICE mock config reference; type=" << static_cast<int>(reftype) << "The mock does not support this feature. Please use the real preCICE library for this functionality.\n";
 }
 
 void checkConfiguration(const std::string &filename, const std::string &participant, int size)
 {
   throw precice::Error(precice::utils::format_or_error(
-      "[precice-mock]  precice mock: checkConfiguration called for file '{}' participant '{}' size {}",
+      "[precice-mock]  precice mock: checkConfiguration called for file '{}' participant '{}' size {}. The mock does not support configuration checking, please use the real preCICE library for this feature.",
       filename, participant, size));
 }
 
