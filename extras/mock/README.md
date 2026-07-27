@@ -1,169 +1,69 @@
 # preCICE Mock Participant
 
-A lightweight mock implementation of the preCICE Participant API for testing and development.
+A lightweight mock implementation of the preCICE Participant API for testing and developing adapters: run your solver against the mock — without a coupling partner and without the full preCICE stack — to validate API usage, exercise error paths, and run adapter tests in CI.
 
 ## Building
 
-The mock is built as part of the preCICE library.
+The mock is built as part of the normal preCICE build and produces the shared library `libpreciceMocked.so`.
 
-Build normally and use LD_PRELOAD to load the mock at runtime
+To build only the mock, but not `libprecice`, `testprecice`, etc.:
 
+```bash
+cmake --build . --target preciceMocked   # or: make preciceMocked
 ```
-LD_PRELOAD=/path/to/precicedir/precice/build/libpreciceMocked.so.3.3.0
+
+### Dependencies
+
+The mock needs a proper subset of the [dependencies of preCICE](https://precice.org/installation-source-dependencies.html):
+
+- CMake and a C++17 compiler
+- Eigen
+- libxml2
+- MPI (optional, following the `PRECICE_FEATURE_MPI_COMMUNICATION` option)
+
+Boost, PETSc, and network communication libraries are not needed.
+
+The mock does not link against `libprecice`; it re-implements the `Participant` API in [preciceMocked.cpp](preciceMocked.cpp). From preCICE itself it only uses a few headers (exception types, type aliases, the `span` shim, version constants) and the bundled fmt library.
+
+## How to use
+
+The mock reads your standard preCICE configuration file. The configuration must be valid — the mock assumes a configuration that passes `precice-tools check` and reports undefined behavior on invalid ones.
+
+There are two ways to run a solver against the mock:
+
+### Option 1: LD_PRELOAD (no rebuild needed)
+
+Build your solver against the real preCICE as usual, then preload the mock at runtime. This also works for solvers using the language bindings, since these load `libprecice` underneath.
+
+Running a Python solver (e.g. a FEniCS case using the FEniCS adapter):
+
+```bash
+LD_PRELOAD=/path/to/precice/build/libpreciceMocked.so python3 solver.py
 ```
 
-Alternatively link against `libpreciceMocked.so` instead of `libprecice.so`:
+Running an OpenFOAM case via its run script:
+
+```bash
+LD_PRELOAD=/path/to/precice/build/libpreciceMocked.so ./run.sh
+```
+
+### Option 2: Link against the mock
+
+Link `libpreciceMocked.so` instead of `libprecice.so`:
 
 ```cmake
 target_link_libraries(your_solver preciceMocked)
 ```
 
-## Features
+### Testing workflow
 
-- **Full API Coverage**: Implements the complete preCICE Participant API
-- **Caller Validation**: Parses preCICE XML configs and validates that an adapter sends API calls matching the given config
-- **Implicit Coupling Support**: Handles checkpoint requirements for implicit coupling schemes
-- **Flexible Data Exchange**: Three modes for handling read/write data operations
-- **Error Handling**: Throws proper preCICE exceptions with helpful error messages
+1. Run your adapter with your preCICE configuration against the mock
+2. Verify correct API usage patterns
+3. Test error handling by introducing configuration mistakes
+4. Validate checkpoint handling for implicit coupling
+5. Optionally, add a `precice-mock-config.xml` to control the returned data (see [Configuration](#configuration))
 
-## Logging Modes
-
-The mock supports two logging modes, configured via the optional `precice-mock-config.xml` file:
-
-### Mock Mode (Default)
-Minimal output showing only essential mock behavior with simple messages prefixed by `[precice-mock]`.
-
-```xml
-<logging-mode mode="mock" />
-```
-
-### PrecICE Mode
-Verbose output that mimics the real preCICE library, showing detailed initialization, mesh setup, and shutdown messages with the `---[precice]` prefix.
-
-```xml
-<logging-mode mode="precice" />
-```
-
-If no `logging-mode` is specified, the mock defaults to **mock mode** for cleaner output during testing.
-
-## Data Exchange Modes
-
-The mock participant supports three modes for `readData()` operations, configured via an optional `precice-mock-config.xml` file. The just-in-time mapping API participates in the same machinery: `mapAndReadData()` follows the same modes as `readData()`, and `writeAndMapData()` fills the same per mesh/data buffers as `writeData()` (but is exempt from the read-size check, since just-in-time calls may use a different vertex count on every call).
-
-### 1. Buffer Mode (Default)
-Returns the data previously written via `writeData()`. This is the default if no mock-config is provided.
-
-Buffers are kept per mesh/data pair. A read looks up the buffer for the same mesh and data first, then falls back to the same data name written on another mesh, then to the last written data of any kind (values repeat cyclically if the buffer is shorter than the read).
-
-```xml
-<mocked-data mesh="MeshName" data="DataName" mode="buffer" />
-```
-
-### 2. Random Mode
-Returns random seeded data (useful for testing error handling). Optional bounds and seed can be specified with nested elements (bounds defaults: 0.0 to 1.0).
-
-```xml
-<mocked-data mesh="MeshName" data="DataName" mode="random">
-  <bounds lower="-1.0" upper="1.0" />
-  <seed value="42" />
-</mocked-data>
-```
-
-### 3. Scaled Buffer Mode
-Returns the buffered write data multiplied by a scalar or element-wise by a vector.
-
-**Scalar multiplication:**
-```xml
-<mocked-data mesh="MeshName" data="DataName" mode="scaled">
-  <scalar-multiplier value="2.0" />
-</mocked-data>
-```
-
-**Element-wise vector multiplication:**
-```xml
-<mocked-data mesh="MeshName" data="DataName" mode="scaled">
-  <vector-multiplier values="1.0;2.0;3.0" />
-</mocked-data>
-```
-The vector multiplier is applied cyclically when it is shorter than the data arity, so you can provide one value per component or a shorter repeating pattern.
-
-### Global Default Configuration
-
-You can set a global default mode and multipliers that apply to all data items not explicitly configured:
-
-```xml
-<mock-config>
-  <!-- Set default mode for all unconfigured data -->
-  <mocked-data-default mode="scaled">
-    <scalar-multiplier value="1.5" />
-  </mocked-data-default>
-
-  <!-- Specific configs override the global default -->
-  <mocked-data mesh="MeshOne" data="SpecialData" mode="random">
-    <bounds lower="0.0" upper="5.0" />
-    <seed value="123" />
-  </mocked-data>
-</mock-config>
-```
-
-In this example:
-- `SpecialData` uses random mode with custom bounds and seed
-- Random mode honors optional `bounds` element (defaults to 0.0-1.0) and optional `seed` element (defaults to rank-based)
-- All other data items use scaled mode with 1.5 multiplier
-- If no `<mocked-data-default>` is specified, the global default is buffer mode
-
-## Simulation Termination
-
-Both explicit and implicit coupling schemes require termination criteria to be specified in the preCICE configuration file using `<max-time value="..."/>` or `<max-time-windows value="..."/>` in the `<coupling-scheme:.../>`.
-
-**The mock requires at least one of these to be present to prevent infinite execution.**
-
-### Behavior by Coupling Type
-
-**Explicit Coupling:**
-- Termination is checked after each time window
-- Simulation ends when max-time or max-time-windows is reached
-
-**Implicit Coupling:**
-- `max-time-windows`: Terminates after completing the specified number of time windows (each time window may involve multiple sub-iterations)
-- `max-time`: Terminates at the end of a time window when the accumulated time reaches or exceeds the limit (does not terminate during sub-cycling)
-
-Both coupling schemes will throw an error if neither termination criterion is provided.
-
-With `<time-window-size method="first-participant" />`, every `advance()` completes a time window and `getMaxTimeStepSize()` returns the remaining time until `max-time`, for all participants (the mock has no partner that could prescribe the window size).
-
-### Reducing Runtime for Testing (Implicit Coupling)
-
-For implicit coupling, you can override the `max-iterations` value from the preCICE config using the precice-mock-config.xml:
-
-```xml
-<mock-config>
-  <!-- Override max-iterations to converge faster (useful for testing) -->
-  <!-- Value: positive integer for custom iterations, -1 to use config value -->
-  <max-iterations-override value="2" />
-
-  <!-- ... rest of mock config ... -->
-</mock-config>
-```
-
-This allows you to test with fewer iterations without modifying the preCICE configuration file. If you omit the tag entirely, the mock defaults to `2` iterations. If you set the value to `-1`, the mock will use the `max-iterations` value from the preCICE config. If the override value is higher than the config value, a warning will be printed but the override will still be respected.
-
-## Configuration Files
-
-### preCICE Configuration
-Use any standard preCICE configuration file. The mock will:
-- Validate that the participant name exists
-- Check mesh and data declarations
-- Enforce read/write permissions
-- Detect implicit vs explicit coupling
-- Return correct dimensions for meshes and data
-
-### Mock Configuration (Optional)
-Place `precice-mock-config.xml` in the same directory as your preCICE config file.
-
-**Example precice-mock-config.xml can be found in the folder /extras/mock/**
-
-## Usage Example
+### Usage example
 
 ```cpp
 #include <precice/precice.hpp>
@@ -198,47 +98,127 @@ int main() {
 }
 ```
 
-## Error Handling
+## Behavior
+
+- **Full API coverage**: Implements the complete preCICE Participant API
+- **Caller validation**: Validates every API call against the preCICE configuration — participant, mesh, and data names must exist, read/write directions must match, and steering calls must arrive in a legal order
+- **Data exchange**: `readData()` returns buffered, scaled, or random data depending on the mock configuration (see [Configuration](#configuration)); `relativeReadTime` is ignored
+- **Implicit coupling**: Checkpoint requirements are enforced; convergence measures are not evaluated — the scheme converges after a fixed number of iterations (default 2, see [Iteration override](#iteration-override))
+- **Termination**: The mock terminates based on `max-time` / `max-time-windows` from the configuration. If the configuration defines neither (which is valid — real preCICE would run until stopped by the coupling partner), the mock has no partner to stop it, so it adds `max-time-windows="100"` and prints a warning. With `<time-window-size method="first-participant" />`, every participant prescribes the window size, since the mock has no partner that could prescribe it
+
+### Error handling
 
 The mock validates all API calls against the configuration and throws `precice::Error` with descriptive messages:
 
-```
+```text
 Error: Data 'Temperature' on mesh 'FluidMesh' is not configured for writing by participant 'SolverOne'.
 Please add <write-data name="Temperature" mesh="FluidMesh" /> to the configuration.
 ```
 
 This helps catch configuration mistakes early in development.
 
+## Configuration
+
+### preCICE configuration
+
+Use your standard, valid preCICE configuration file — the mock needs no dedicated configuration.
+
+### Mock configuration (optional)
+
+The mock behavior can be adjusted with an optional file `precice-mock-config.xml`, placed in the same directory as the preCICE configuration file. An example can be found in this folder: [precice-mock-config.xml](precice-mock-config.xml).
+
+#### Logging modes
+
+The mock supports two logging modes:
+
+- **Mock mode (default)**: Minimal output showing only essential mock behavior with simple messages prefixed by `[precice-mock]`.
+
+  ```xml
+  <logging-mode mode="mock" />
+  ```
+
+- **PrecICE mode**: Verbose output that mimics the real preCICE library, showing detailed initialization, mesh setup, and shutdown messages with the `---[precice]` prefix.
+
+  ```xml
+  <logging-mode mode="precice" />
+  ```
+
+#### Data exchange modes
+
+The mock participant supports three modes for `readData()` operations. The just-in-time mapping API participates in the same machinery: `mapAndReadData()` follows the same modes as `readData()`, and `writeAndMapData()` fills the same per mesh/data buffers as `writeData()` (but is exempt from the read-size check, since just-in-time calls may use a different vertex count on every call).
+
+**1. Buffer mode (default)**: Returns the data previously written via `writeData()`. This is the default if no mock-config is provided.
+
+Buffers are kept per mesh/data pair. A read looks up the buffer for the same mesh and data first, then falls back to the same data name written on another mesh, then to the last written data of any kind (values repeat cyclically if the buffer is shorter than the read).
+
+```xml
+<mocked-data mesh="MeshName" data="DataName" mode="buffer" />
+```
+
+**2. Random mode**: Returns random seeded data (useful for testing error handling). Optional bounds and seed can be specified with nested elements (bounds defaults: 0.0 to 1.0, seed defaults to rank-based).
+
+```xml
+<mocked-data mesh="MeshName" data="DataName" mode="random">
+  <bounds lower="-1.0" upper="1.0" />
+  <seed value="42" />
+</mocked-data>
+```
+
+**3. Scaled buffer mode**: Returns the buffered write data multiplied by a scalar or element-wise by a vector.
+
+Scalar multiplication:
+
+```xml
+<mocked-data mesh="MeshName" data="DataName" mode="scaled">
+  <scalar-multiplier value="2.0" />
+</mocked-data>
+```
+
+Element-wise vector multiplication:
+
+```xml
+<mocked-data mesh="MeshName" data="DataName" mode="scaled">
+  <vector-multiplier values="1.0;2.0;3.0" />
+</mocked-data>
+```
+
+The vector multiplier is applied cyclically when it is shorter than the data arity, so you can provide one value per component or a shorter repeating pattern.
+
+A global default mode and multipliers can be set for all data items not explicitly configured:
+
+```xml
+<mock-config>
+  <!-- Set default mode for all unconfigured data -->
+  <mocked-data-default mode="scaled">
+    <scalar-multiplier value="1.5" />
+  </mocked-data-default>
+
+  <!-- Specific configs override the global default -->
+  <mocked-data mesh="MeshOne" data="SpecialData" mode="random">
+    <bounds lower="0.0" upper="5.0" />
+    <seed value="123" />
+  </mocked-data>
+</mock-config>
+```
+
+In this example, `SpecialData` uses random mode with custom bounds and seed, while all other data items use scaled mode with multiplier 1.5. If no `<mocked-data-default>` is specified, the global default is buffer mode.
+
+#### Iteration override
+
+For implicit coupling, you can override the `max-iterations` value from the preCICE configuration to converge faster during testing, without modifying the preCICE configuration file:
+
+```xml
+<mock-config>
+  <!-- Value: positive integer for custom iterations, -1 to use config value -->
+  <max-iterations-override value="2" />
+</mock-config>
+```
+
+If you omit the tag entirely, the mock defaults to `2` iterations. If you set the value to `-1`, the mock uses the `max-iterations` value from the preCICE configuration. If the override value is higher than the configured value, a warning is printed but the override is still respected.
+
 ## Limitations
 
-- Does not perform actual mesh mapping or data interpolation (`relativeReadTime` is ignored)
-- Does not communicate between participants (single-process only); `getMeshVertexSize()` on a plain received mesh returns 0
-- Simplified convergence logic for implicit coupling (converges after N iterations, convergence measures are not evaluated)
-- No gradient data support (written gradients are discarded)
-- Connectivity (edges/triangles/...) is validated but not stored
-- With several coupling schemes in one config, the schemes this participant belongs to are merged (largest termination bounds win)
-
-## Testing Your Adapter
-
-1. Create a simple preCICE config with your participant
-2. Optionally, create a 'precice-mock-config.xml' for specific data behavior
-3. Run your adapter against the mock
-4. Verify correct API usage patterns
-5. Test error handling by introducing configuration mistakes
-6. Validate checkpoint handling for implicit coupling
-
-The mock is ideal for:
-- Unit testing adapters without running full simulations
-- Testing error handling code paths
-- Developing adapters without a coupling partner
-- CI/CD integration testing
-
-
-## Recommendations
-
-For practitioners adopting the mock:
-  - Use the mock as the default testing environment during development for fast feedback loops.
-  - Integrate mock-based tests into CI pipelines to enable tight feedback on commits.
-  - Augment mock tests with full-stack validation before production deployment.
-  - Exploit mock configuration files for scenario-based robustness testing.
-  - Keep the mock synchronized with preCICE releases.
+- **No real communication**: Each rank mocks the coupling independently — data read back comes from the rank-local buffers. An MPI communicator passed to the constructor is accepted (and validated), but not used for communication. Consequently, `getMeshVertexSize()` on a received mesh without API access returns 0.
+- **Gradient data is discarded**: `writeGradientData()` validates its arguments, but the gradients are not stored — there is no read counterpart in the preCICE API (yet) that could return them.
+- **Connectivity is not stored**: `setMeshEdges()`, `setMeshTriangles()`, and related calls validate their arguments but are otherwise no-ops.
+- **Multiple coupling schemes are merged**: With several coupling schemes in one configuration, the schemes this participant belongs to are merged into one (largest termination bounds win).
