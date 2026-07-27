@@ -1,0 +1,199 @@
+# exit=0
+[precice-mock]  Working directory "<REPO>/examples/tutorials/partitioned-heat-conduction/dirichlet-nutils"
+[precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/tutorials/partitioned-heat-conduction/dirichlet-nutils/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+[precice-mock]  Initialized with participant "Dirichlet"
+[precice-mock]  Configuration: default-data-mode=buffer max-iterations=2 time-window-size=0.1
+nutils v7.0 "hiyamugi" (git:<REV>)
+optimize > constrained 10/100 dofs
+optimize > optimum value 0.00e+00
+optimize > solve > solving 2 dof system to machine precision using arnoldi solver
+optimize > solve > RuntimeWarning: divide by zero encountered in scalar divide
+  In <REPO>/examples/tutorials/partitioned-heat-conduction/dirichlet-nutils/.venv/lib/python3.10/site-packages/nutils/matrix/_base.py:246
+optimize > solve > solver returned with residual 0e+00
+optimize > constrained 92/100 dofs
+optimize > optimum value 0.00e+00
+optimize > solve > solving 100 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 4e-15
+optimize > optimum value -1.14e-13
+Dirichlet-0.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 4e-16
+optimize > constrained 36/100 dofs
+optimize > optimum value 4.92e-01
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 6e-15
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 4e-16
+Dirichlet-0.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 5e-16
+optimize > constrained 36/100 dofs
+optimize > optimum value 1.56e-01
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 4e-15
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 2e-14
+Dirichlet-1.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 1e-14
+optimize > constrained 36/100 dofs
+optimize > optimum value 1.69e-01
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-13
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 3e-14
+Dirichlet-1.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 5e-13
+optimize > constrained 36/100 dofs
+optimize > optimum value 1.69e-01
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 2e-12
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 9e-12
+Dirichlet-2.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 5e-12
+optimize > constrained 36/100 dofs
+optimize > optimum value 1.83e-01
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 4e-11
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 9e-10
+Dirichlet-2.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 5e-10
+optimize > constrained 36/100 dofs
+optimize > optimum value 1.25e-01
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-09
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 0e+00
+Dirichlet-3.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 4e-08
+optimize > constrained 36/100 dofs
+optimize > optimum value -3.20e+01
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 4e-08
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 5e-07
+Dirichlet-3.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 7e-07
+optimize > constrained 36/100 dofs
+optimize > optimum value -6.55e+04
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 7e-06
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 2e-05
+Dirichlet-4.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 2e-05
+optimize > constrained 36/100 dofs
+optimize > optimum value -1.34e+08
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-04
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-03
+Dirichlet-4.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 7e-04
+optimize > constrained 36/100 dofs
+optimize > optimum value -1.37e+11
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 4e-03
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 2e-02
+Dirichlet-5.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 7e-02
+optimize > constrained 36/100 dofs
+optimize > optimum value -1.41e+14
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 2e-01
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 7e-01
+Dirichlet-5.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 3e+00
+optimize > constrained 36/100 dofs
+optimize > optimum value -5.76e+17
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 7e-01
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 0e+00
+Dirichlet-6.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 8e+01
+optimize > constrained 36/100 dofs
+optimize > optimum value -2.95e+20
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 5e+01
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 3e+03
+Dirichlet-6.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 4e+03
+optimize > constrained 36/100 dofs
+optimize > optimum value 0.00e+00
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 2e+03
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 5e+04
+Dirichlet-7.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 1e+05
+optimize > constrained 36/100 dofs
+optimize > optimum value -1.24e+27
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 6e+05
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 2e+06
+Dirichlet-7.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 3e+06
+optimize > constrained 36/100 dofs
+optimize > optimum value -1.27e+30
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 2e+07
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e+08
+Dirichlet-8.vtk
+[precice-mock]  Finalized
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 4e+08
+optimize > constrained 36/100 dofs
+optimize > optimum value -2.60e+33
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e+09
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 4e+09
+Dirichlet-8.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 9e+09
+optimize > constrained 36/100 dofs
+optimize > optimum value 0.00e+00
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 3e+10
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 2e+11
+Dirichlet-9.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 8e+11
+optimize > constrained 36/100 dofs
+optimize > optimum value -1.09e+40
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e+12
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 2e+13
+Dirichlet-9.vtk
+optimize > solve > solving 36 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 1e+13
+optimize > constrained 36/100 dofs
+optimize > optimum value -2.23e+43
+solve > solving 64 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 4e+13
+solve > solving 8 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 4e+14
+Dirichlet-10.vtk

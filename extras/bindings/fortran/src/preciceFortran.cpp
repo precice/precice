@@ -76,7 +76,7 @@ try {
       *solverProcessSize,
       &c_communicator);
 #else
-  PRECICE_WARN("preCICE was configured without MPI but you passed an MPI communicator. preCICE ignores the communicator and continues.");
+  std::cerr << "WARNING: preCICE was configured without MPI but you passed an MPI communicator. preCICE ignores the communicator and continues.\n";
   impl = std::make_unique<precice::Participant>(
       precice::impl::strippedStringView(participantName, participantNameLength),
       precice::impl::strippedStringView(configFileName, configFileNameLength),

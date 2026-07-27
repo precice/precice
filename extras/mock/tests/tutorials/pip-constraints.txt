@@ -1,0 +1,11 @@
+# Build/runtime constraint applied via PIP_CONSTRAINT when the harness runs
+# tutorials that create their own venv (nutils). nutils 6/7/9 use numpy APIs
+# removed in numpy 2.0 (e.g. numpy.product), and pyprecice's sdist must compile
+# against the same numpy it runs against. Forcing numpy<2 here also propagates
+# into pip's isolated build environment, which a plain requirements.txt pin does
+# not. Keep until the tutorials move to numpy>=2.
+#
+# treelog<2: nutils 6/7 call treelog with the pre-2.0 HtmlLog.write signature at
+# runtime; treelog 2.x raises "unexpected keyword argument 'escape'".
+numpy<2
+treelog<2

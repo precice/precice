@@ -1,0 +1,151 @@
+# exit=0
+[precice-mock]  Working directory "<REPO>/examples/tutorials/partitioned-heat-conduction/neumann-nutils"
+[precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/tutorials/partitioned-heat-conduction/neumann-nutils/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+[precice-mock]  Initialized with participant "Neumann"
+[precice-mock]  Configuration: default-data-mode=buffer max-iterations=2 time-window-size=0.1
+[precice-mock]  Finalized
+nutils v7.0 "hiyamugi" (git:<REV>)
+optimize > solve > solving 100 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 8e-15
+optimize > optimum value -2.27e-13
+Neumann-0.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 1e-15
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-14
+Neumann-0.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 1e-15
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 2e-14
+Neumann-1.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 1e-15
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-14
+Neumann-1.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 1e-15
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-14
+Neumann-2.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 1e-15
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-14
+Neumann-2.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 1e-15
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-14
+Neumann-3.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 5e-16
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-14
+Neumann-3.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 5e-16
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-14
+Neumann-4.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 2e-16
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-14
+Neumann-4.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 2e-16
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-14
+Neumann-5.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 4e-16
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-14
+Neumann-5.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 4e-16
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-14
+Neumann-6.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 6e-16
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-14
+Neumann-6.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 6e-16
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-14
+Neumann-7.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 4e-16
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 2e-14
+Neumann-7.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 4e-16
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-14
+Neumann-8.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 4e-16
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 2e-14
+Neumann-8.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 4e-16
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 1e-14
+Neumann-9.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 2e-15
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 2e-14
+Neumann-9.vtk
+optimize > solve > solving 28 dof system to machine precision using arnoldi solver
+optimize > solve > solver returned with residual 2e-15
+optimize > constrained 28/100 dofs
+optimize > optimum value 5.43e-07
+solve > solving 72 dof system to machine precision using arnoldi solver
+solve > solver returned with residual 2e-14
+Neumann-10.vtk

@@ -1,0 +1,13 @@
+# exit=0
+Starting Solid Solver...
+N: 100
+inputs: 2
+[precice-mock]  WARNING: max-iterations-override (2) is higher than max-iterations from preCICE config (1). Using override value.
+preCICE configured...
+Initialize preCICE...
+[precice-mock]  Working directory "<REPO>/examples/tutorials/elastic-tube-1d/solid-cpp"
+[precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/tutorials/elastic-tube-1d/solid-cpp/../precice-config.xml" and mock configuration "<REPO>/examples/tutorials/elastic-tube-1d/solid-cpp/../precice-mock-config.xml"
+[precice-mock]  Initialized with participant "Solid"
+[precice-mock]  Configuration: default-data-mode=buffer max-iterations=2 time-window-size=0.01 mock-config=yes
+Exiting SolidSolver
+[precice-mock]  Finalized

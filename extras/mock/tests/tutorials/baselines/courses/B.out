@@ -1,0 +1,547 @@
+# exit=1
+Running solutions with mock library: <REPO>/build/libpreciceMocked.so.3.3.0
+Python venv: <REPO>/.venv
+Course directory: <REPO>/examples/course
+==================================================
+Found 5 task directories to run
+
+Running task: B/solution/T1
+Cleaning...
+Cleaning complete!
+  Detected 2 participant(s):
+    - generator: python3 generator.py
+    - propagator: python3 propagator.py
+  Running sequentially (mock mode)
+  ----- output: generator (rc=1) -----
+    Traceback (most recent call last):
+      File "<REPO>/examples/course/B/solution/T1/generator/generator.py", line 18, in <module>
+        participant.initialize()
+      File "cyprecice/cyprecice.pyx", line 119, in cyprecice.Participant.initialize
+    RuntimeError: The provided mesh "Generator-Mesh" is empty. Please set the mesh using setMeshVertex()/setMeshVertices() prior to calling initialize().
+    [precice-mock]  Finalized
+  ----- output: propagator (rc=1) -----
+    <REPO>/.venv/lib/python3.10/site-packages/matplotlib/projections/__init__.py:63: UserWarning: Unable to import Axes3D. This may be due to multiple versions of Matplotlib being installed (e.g. as a system package and as a pip package). As a result, the 3D projection is not available.
+      warnings.warn("Unable to import Axes3D. This may be due to multiple versions of "
+    Traceback (most recent call last):
+      File "<REPO>/examples/course/B/solution/T1/propagator/propagator.py", line 21, in <module>
+        participant.initialize()
+      File "cyprecice/cyprecice.pyx", line 119, in cyprecice.Participant.initialize
+    RuntimeError: The provided mesh "Propagator-Mesh" is empty. Please set the mesh using setMeshVertex()/setMeshVertices() prior to calling initialize().
+    [precice-mock]  Finalized
+  ✗ FAILED
+
+Running task: B/solution/T2
+Cleaning...
+Cleaning complete!
+  Detected 2 participant(s):
+    - generator: python3 generator.py
+    - propagator: python3 propagator.py
+  Running sequentially (mock mode)
+  ----- output: generator (rc=0) -----
+    [precice-mock]  Working directory "<REPO>/examples/course/B/solution/T2/generator"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/B/solution/T2/generator/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Generator"
+    [precice-mock]  Configuration: default-data-mode=buffer time-window-size=0.01
+    [precice-mock]  Finalized
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+  ----- output: propagator (rc=0) -----
+    <REPO>/.venv/lib/python3.10/site-packages/matplotlib/projections/__init__.py:63: UserWarning: Unable to import Axes3D. This may be due to multiple versions of Matplotlib being installed (e.g. as a system package and as a pip package). As a result, the 3D projection is not available.
+      warnings.warn("Unable to import Axes3D. This may be due to multiple versions of "
+    [precice-mock]  Working directory "<REPO>/examples/course/B/solution/T2/propagator"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/B/solution/T2/propagator/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Propagator"
+    [precice-mock]  Configuration: default-data-mode=buffer time-window-size=0.01
+    <REPO>/examples/course/B/solution/T2/propagator/propagator.py:38: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
+    <REPO>/examples/course/B/solution/T2/propagator/propagator.py:62: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.pause(0.2)
+    [precice-mock]  Finalized
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+  ✓ PASSED
+
+Running task: B/solution/T3
+Cleaning...
+Cleaning complete!
+  Detected 2 participant(s):
+    - generator: python3 generator.py
+    - propagator: python3 propagator.py
+  Running sequentially (mock mode)
+  ----- output: generator (rc=0) -----
+    [precice-mock]  Working directory "<REPO>/examples/course/B/solution/T3/generator"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/B/solution/T3/generator/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Generator"
+    [precice-mock]  Configuration: default-data-mode=buffer time-window-size=0.01
+    [precice-mock]  Finalized
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+  ----- output: propagator (rc=0) -----
+    <REPO>/.venv/lib/python3.10/site-packages/matplotlib/projections/__init__.py:63: UserWarning: Unable to import Axes3D. This may be due to multiple versions of Matplotlib being installed (e.g. as a system package and as a pip package). As a result, the 3D projection is not available.
+      warnings.warn("Unable to import Axes3D. This may be due to multiple versions of "
+    [precice-mock]  Working directory "<REPO>/examples/course/B/solution/T3/propagator"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/B/solution/T3/propagator/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Propagator"
+    [precice-mock]  Configuration: default-data-mode=buffer time-window-size=0.01
+    <REPO>/examples/course/B/solution/T3/propagator/propagator.py:38: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
+    <REPO>/examples/course/B/solution/T3/propagator/propagator.py:62: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.pause(0.2)
+    [precice-mock]  Finalized
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+  ✓ PASSED
+
+Running task: B/solution/T4
+Cleaning...
+Cleaning complete!
+  Detected 2 participant(s):
+    - generator: python3 generator.py
+    - propagator: python3 propagator.py
+  Running sequentially (mock mode)
+  ----- output: generator (rc=0) -----
+    [precice-mock]  Working directory "<REPO>/examples/course/B/solution/T4/generator"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/B/solution/T4/generator/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Generator"
+    [precice-mock]  Configuration: default-data-mode=buffer time-window-size=0.01
+    [precice-mock]  Finalized
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+  ----- output: propagator (rc=0) -----
+    <REPO>/.venv/lib/python3.10/site-packages/matplotlib/projections/__init__.py:63: UserWarning: Unable to import Axes3D. This may be due to multiple versions of Matplotlib being installed (e.g. as a system package and as a pip package). As a result, the 3D projection is not available.
+      warnings.warn("Unable to import Axes3D. This may be due to multiple versions of "
+    [precice-mock]  Working directory "<REPO>/examples/course/B/solution/T4/propagator"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/B/solution/T4/propagator/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Propagator"
+    [precice-mock]  Configuration: default-data-mode=buffer time-window-size=0.01
+    <REPO>/examples/course/B/solution/T4/propagator/propagator.py:38: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
+    <REPO>/examples/course/B/solution/T4/propagator/propagator.py:64: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.pause(0.2)
+    [precice-mock]  Finalized
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+  ✓ PASSED
+
+Running task: B/solution/T5
+Cleaning...
+Cleaning complete!
+  Detected 2 participant(s):
+    - generator: python3 generator.py
+    - propagator: python3 propagator.py
+  Running sequentially (mock mode)
+  ----- output: generator (rc=0) -----
+    [precice-mock]  Working directory "<REPO>/examples/course/B/solution/T5/generator"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/B/solution/T5/generator/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Generator"
+    [precice-mock]  Configuration: default-data-mode=buffer time-window-size=0.01
+    [precice-mock]  Finalized
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+    Generating data
+  ----- output: propagator (rc=0) -----
+    <REPO>/.venv/lib/python3.10/site-packages/matplotlib/projections/__init__.py:63: UserWarning: Unable to import Axes3D. This may be due to multiple versions of Matplotlib being installed (e.g. as a system package and as a pip package). As a result, the 3D projection is not available.
+      warnings.warn("Unable to import Axes3D. This may be due to multiple versions of "
+    [precice-mock]  Working directory "<REPO>/examples/course/B/solution/T5/propagator"
+    [precice-mock]  Configuring preCICE (mock) with configuration "<REPO>/examples/course/B/solution/T5/propagator/../precice-config.xml" and default mock configuration. See the mock-README about how to adjust this.
+    [precice-mock]  Initialized with participant "Propagator"
+    [precice-mock]  Configuration: default-data-mode=buffer time-window-size=0.01
+    <REPO>/examples/course/B/solution/T5/propagator/propagator.py:38: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
+    <REPO>/examples/course/B/solution/T5/propagator/propagator.py:63: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.pause(0.2)
+    [precice-mock]  Finalized
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+    Propagating data
+  ✓ PASSED
+
+==================================================
+SUMMARY
+==================================================
+Passed: 4
+Failed: 1
+Timeout: 0
+Skipped: 0
+Total: 5
+FAILED SOLUTIONS:
+  - B/solution/T1
+
+PASSED SOLUTIONS:
+  - B/solution/T2
+  - B/solution/T3
+  - B/solution/T4
+  - B/solution/T5
