@@ -11,45 +11,58 @@ namespace precice::xml {
 namespace {
 constexpr static const char *PARSING_LOCALE = "en_US.UTF-8";
 
-double parseDouble(const std::string &rawValue)
+/// Extracts a single arithmetic value, requiring the entire string to be consumed.
+template <typename T>
+T parseArithmetic(const std::string &rawValue, const char *typeName)
 {
   std::istringstream iss{rawValue};
   try {
     iss.imbue(std::locale(PARSING_LOCALE));
   } catch (...) {
   }
-  double value;
+  T value{};
   iss >> value;
-  if (!iss.eof()) {
-    throw std::runtime_error{"Could not fully parse value \"" + rawValue + "\" as a double."};
+  // An empty or whitespace-only string makes the sentry fail, which sets eofbit alongside
+  // failbit and leaves value untouched. Checking eof() alone therefore misses these.
+  if (iss.fail() || !iss.eof()) {
+    throw std::runtime_error{"Could not fully parse value \"" + rawValue + "\" as " + typeName + "."};
   }
   return value;
+}
+
+double parseDouble(const std::string &rawValue)
+{
+  return parseArithmetic<double>(rawValue, "a double");
 }
 } // namespace
 
 void readValueSpecific(const std::string &rawValue, double &value)
 {
-  if (rawValue.find('/') != std::string::npos) {
-    std::string left  = rawValue.substr(0, rawValue.find('/'));
-    std::string right = rawValue.substr(rawValue.find('/') + 1, rawValue.size() - rawValue.find('/') - 1);
-
-    value = parseDouble(left) / parseDouble(right);
-  } else {
+  const auto pos = rawValue.find('/');
+  if (pos == std::string::npos) {
     value = parseDouble(rawValue);
+    return;
   }
+
+  double numerator   = 0.0;
+  double denominator = 0.0;
+  try {
+    numerator   = parseDouble(rawValue.substr(0, pos));
+    denominator = parseDouble(rawValue.substr(pos + 1));
+  } catch (const std::runtime_error &) {
+    // Report the value the user actually wrote, not the offending operand.
+    throw std::runtime_error{"Could not fully parse value \"" + rawValue + "\" as a fraction of two doubles."};
+  }
+
+  if (denominator == 0.0) {
+    throw std::runtime_error{"Could not parse value \"" + rawValue + "\" as a double: the denominator is zero."};
+  }
+  value = numerator / denominator;
 }
 
 void readValueSpecific(const std::string &rawValue, int &value)
 {
-  std::istringstream iss{rawValue};
-  try {
-    iss.imbue(std::locale(PARSING_LOCALE));
-  } catch (...) {
-  }
-  iss >> value;
-  if (!iss.eof()) {
-    throw std::runtime_error{"Could not fully parse value \"" + rawValue + "\" as an int."};
-  }
+  value = parseArithmetic<int>(rawValue, "an int");
 }
 
 void readValueSpecific(const std::string &rawValue, Eigen::VectorXd &value)
