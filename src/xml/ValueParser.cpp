@@ -1,5 +1,4 @@
 #include "xml/ValueParser.hpp"
-#include <boost/algorithm/string/constants.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <ostream>
 #include <sstream>
@@ -68,12 +67,14 @@ void readValueSpecific(const std::string &rawValue, int &value)
 void readValueSpecific(const std::string &rawValue, Eigen::VectorXd &value)
 {
   std::vector<std::string> components;
+  // Do NOT use token_compress_on: it would silently drop an empty-string input,
+  // producing zero components and bypassing the error check in parseDouble.
   boost::split(
-      components, rawValue, [](char c) { return c == ';'; }, boost::algorithm::token_compress_on);
-  const int size = components.size();
+      components, rawValue, [](char c) { return c == ';'; });
+  const Eigen::Index size = static_cast<Eigen::Index>(components.size());
 
   Eigen::VectorXd vec(size);
-  for (int i = 0; i != size; ++i) {
+  for (Eigen::Index i = 0; i != size; ++i) {
     vec(i) = parseDouble(components[i]);
   }
   value = vec;
