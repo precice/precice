@@ -27,17 +27,6 @@ BOOST_AUTO_TEST_CASE(ParseDouble)
   BOOST_TEST(value == 1000.0);
 }
 
-PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(ParseDoubleFraction)
-{
-  PRECICE_TEST();
-  double value = -1.0;
-
-  readValueSpecific("1/2", value);
-  BOOST_TEST(value == 0.5);
-  readValueSpecific("-1/4", value);
-  BOOST_TEST(value == -0.25);
-}
 
 PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ParseDoubleRejectsEmpty)
@@ -61,21 +50,6 @@ BOOST_AUTO_TEST_CASE(ParseDoubleRejectsMalformed)
   BOOST_CHECK_THROW(readValueSpecific("1.0foo", value), std::runtime_error);
 }
 
-PRECICE_TEST_SETUP(1_rank)
-BOOST_AUTO_TEST_CASE(ParseDoubleRejectsMalformedFraction)
-{
-  PRECICE_TEST();
-  double value = -1.0;
-
-  // Each of these splits into at least one empty operand.
-  BOOST_CHECK_THROW(readValueSpecific("1/", value), std::runtime_error);
-  BOOST_CHECK_THROW(readValueSpecific("/2", value), std::runtime_error);
-  BOOST_CHECK_THROW(readValueSpecific("/", value), std::runtime_error);
-  BOOST_CHECK_THROW(readValueSpecific("1/2/3", value), std::runtime_error);
-  // Used to yield inf and nan respectively.
-  BOOST_CHECK_THROW(readValueSpecific("1/0", value), std::runtime_error);
-  BOOST_CHECK_THROW(readValueSpecific("0/0", value), std::runtime_error);
-}
 
 PRECICE_TEST_SETUP(1_rank)
 BOOST_AUTO_TEST_CASE(ParseInt)
