@@ -37,26 +37,7 @@ double parseDouble(const std::string &rawValue)
 
 void readValueSpecific(const std::string &rawValue, double &value)
 {
-  const auto pos = rawValue.find('/');
-  if (pos == std::string::npos) {
-    value = parseDouble(rawValue);
-    return;
-  }
-
-  double numerator   = 0.0;
-  double denominator = 0.0;
-  try {
-    numerator   = parseDouble(rawValue.substr(0, pos));
-    denominator = parseDouble(rawValue.substr(pos + 1));
-  } catch (const std::runtime_error &) {
-    // Report the value the user actually wrote, not the offending operand.
-    throw std::runtime_error{"Could not fully parse value \"" + rawValue + "\" as a fraction of two doubles."};
-  }
-
-  if (denominator == 0.0) {
-    throw std::runtime_error{"Could not parse value \"" + rawValue + "\" as a double: the denominator is zero."};
-  }
-  value = numerator / denominator;
+  value = parseDouble(rawValue);
 }
 
 void readValueSpecific(const std::string &rawValue, int &value)
