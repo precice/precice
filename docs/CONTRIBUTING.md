@@ -7,7 +7,7 @@ In order to get your contributions into the code base as smoothly as possible, p
 * Make sure you have a GitHub account.
 * [Open an issue][newissue], assuming one does not already exist.
   * Clearly describe the issue including steps to reproduce when it is a bug.
-  * Make sure you fill in the earliest version that you know has the issue.
+  * Make sure you fill in the earliest version that you know has the issue. 
 * Fork the repository on GitHub.
 * Create a feature branch, based on `develop`, from where you want to base your work. For simplicity, prefix the branch name either with `add-` or `fix-`.
 * Make commits of logical units.
@@ -36,3 +36,17 @@ Please contact the maintainers before integrating non-trivial amount of code fro
 [workflow]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests
 [devtools]: https://precice.org/dev-docs-dev-tooling.html
 [githubcli]: https://cli.github.com/
+
+## Contributing with the help of GenAI agents
+
+All contributions to this project are ultimately reviewed by humans, and we want to understand every contribution in detail.
+We welcome using any kind of tools that help contributors prepare and improve contributions, with the following requests:
+
+* Describe the contribution youself and do not use GenAI to generate your responses to our messages.
+  We believe that the writing process is a valuable form of self-review, and that human-written descriptions are more concise and useful than generated ones.
+  Generated commit messages are fine. Language edits with GenAI tools are fine.
+  Autonomous PRs are not allowed.
+* We want to see that you understand and trust your contribution, and we expect you to be able to defend it in review.
+  Communicate clearly what you might not understand or have doubts about, so that we can focus our review on that.
+* In your PR description, specify what parts have been generated, and feel free to mention how, but do not add agents as commit co-authors.
+
