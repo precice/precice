@@ -33,6 +33,7 @@ Please contact the maintainers before integrating non-trivial amount of code fro
 All contributions to this project are ultimately reviewed by humans, and we want to understand every contribution in detail.
 We welcome using any kind of tools that help contributors prepare and improve contributions, with the following requests:
 
+* Fully autonomous PRs and issues are not allowed.
 * Describe the contribution yourself and do not use GenAI to generate your responses to our messages.
   We believe that the writing process is a valuable form of self-review, and that human-written descriptions are more concise and useful than generated ones.
   Language edits and translations with GenAI tools are fine.
