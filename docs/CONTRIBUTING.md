@@ -35,7 +35,7 @@ We welcome using any kind of tools that help contributors prepare and improve co
 
 * Describe the contribution yourself and do not use GenAI to generate your responses to our messages.
   We believe that the writing process is a valuable form of self-review, and that human-written descriptions are more concise and useful than generated ones.
-  Generated commit messages are fine. Language edits with GenAI tools are fine.
+  Language edits and translations with GenAI tools are fine.
   Autonomous PRs are not allowed.
 * We want to see that you understand and trust your contribution, and we expect you to be able to defend it in review.
   Communicate clearly what you might not understand or have doubts about, so that we can focus our review on that.
