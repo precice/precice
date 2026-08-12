@@ -28,15 +28,6 @@ We believe in the power of Open Source or Free Software to share and reuse code 
 
 Please contact the maintainers before integrating non-trivial amount of code from other projects, so we can ensure the compatibility of licences. Same holds true for additional dependencies, libraries etc.
 
-[newissue]: https://github.com/precice/precice/issues/new/choose
-[boosttest]: https://www.boost.org/doc/libs/1_65_1/libs/test/doc/html/index.html
-[commit]: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
-[pullrequest]: https://help.github.com/articles/creating-a-pull-request
-[style]: https://precice.org/dev-docs-dev-conventions.html
-[workflow]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests
-[devtools]: https://precice.org/dev-docs-dev-tooling.html
-[githubcli]: https://cli.github.com/
-
 ## Contributing with the help of GenAI agents
 
 All contributions to this project are ultimately reviewed by humans, and we want to understand every contribution in detail.
@@ -49,3 +40,12 @@ We welcome using any kind of tools that help contributors prepare and improve co
 * We want to see that you understand and trust your contribution, and we expect you to be able to defend it in review.
   Communicate clearly what you might not understand or have doubts about, so that we can focus our review on that.
 * In your PR description, specify what parts have been generated, and feel free to mention how, but do not add agents as commit co-authors.
+
+[newissue]: https://github.com/precice/precice/issues/new/choose
+[boosttest]: https://www.boost.org/doc/libs/1_65_1/libs/test/doc/html/index.html
+[commit]: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
+[pullrequest]: https://help.github.com/articles/creating-a-pull-request
+[style]: https://precice.org/dev-docs-dev-conventions.html
+[workflow]: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests
+[devtools]: https://precice.org/dev-docs-dev-tooling.html
+[githubcli]: https://cli.github.com/
