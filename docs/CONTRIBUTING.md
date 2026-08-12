@@ -39,7 +39,8 @@ We welcome using any kind of tools that help contributors prepare and improve co
   Language edits and translations with GenAI tools are fine.
 * We want to see that you understand and trust your contribution, and we expect you to be able to defend it in review.
   Communicate clearly what you might not understand or have doubts about, so that we can focus our review on that.
-* In your PR description, specify what parts have been generated, and feel free to mention how, but do not add agents as commit co-authors.
+* Generated commit messages are tolerated. Agents must not appear as author or co-author of commits.
+* In your PR description, specify what parts have been generated, and feel free to mention how.
 
 [newissue]: https://github.com/precice/precice/issues/new/choose
 [boosttest]: https://www.boost.org/doc/libs/1_65_1/libs/test/doc/html/index.html
