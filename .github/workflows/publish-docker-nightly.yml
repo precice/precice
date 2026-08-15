@@ -14,6 +14,8 @@ on:
     secrets:
       DOCKERHUB_TOKEN:
         required: true
+      MATRIX_BOT_PASSWORD:
+        required: true
   schedule:
     - cron: '0 3 * * *'
 
@@ -21,6 +23,7 @@ jobs:
   dockerfile:
     name: "Build precice:nightly"
     runs-on: ubuntu-latest
+    if: github.repository == 'precice/precice'
     env:
         docker_username: precice
     steps:
@@ -32,10 +35,18 @@ jobs:
           username: ${{ env.docker_username }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build and push Dockerfile
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           push: true
           file: "./tools/releasing/packaging/docker/nightly.dockerfile"
           tags: ${{ env.docker_username }}/precice:nightly
           build-args: |
             BRANCH=${{ inputs.branch || 'develop' }}
+      - name: Failure Notification
+        if: failure()
+        uses: precice/notify-action@v1
+        with:
+          homeserver: ${{ vars.MATRIX_BOT_HOMESERVER }}
+          login: ${{ vars.MATRIX_BOT_LOGIN }}
+          password: ${{ secrets.MATRIX_BOT_PASSWORD }}
+          room_id: ${{ vars.MATRIX_BOT_ROOMID }}

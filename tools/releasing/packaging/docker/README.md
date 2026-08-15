@@ -6,13 +6,15 @@ All images contain the user `precice`, allowing them to run executables using MP
 
 ## Release images `release.dockerfile`
 
-This Dockerfile uses named releases of preCICE such as `3.1.2` and installs the attached debian package in the container.
+This Dockerfile uses the matching debian package of preCICE from the build context and installs the debian package in the container.
 
 Use the following to build the `3.1.2` image locally:
 ```
-cd tools/releasing/packaging/docker/
-docker build -f release.dockerfile  -t precice/precice:3.1.2 --build-arg=version=3.1.2 .
+gh release download v3.1.2
+docker build -f release.dockerfile  -t precice/precice:3.1.2 .
 ```
+
+To upgrade the Ubuntu version, change the version of the baseimage `FROM ubuntu` and the `CODENAME` (output of `lsb_release -sc)`.
 
 ## Nightly release images `nightly.dockerfile`
 

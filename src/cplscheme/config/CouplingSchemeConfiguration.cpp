@@ -748,7 +748,7 @@ void CouplingSchemeConfiguration::addRelativeConvergenceMeasure(
   PRECICE_WARN_IF(
       limit < 10 * math::NUMERICAL_ZERO_DIFFERENCE,
       "The relative convergence limit=\"{}\" is close to the hard-coded numerical resolution=\"{}\" of preCICE. "
-      "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"  ",
+      "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"",
       limit, math::NUMERICAL_ZERO_DIFFERENCE, 10 * math::NUMERICAL_ZERO_DIFFERENCE);
 
   ConvergenceMeasureDefintion convMeasureDef;
@@ -770,13 +770,13 @@ void CouplingSchemeConfiguration::addResidualRelativeConvergenceMeasure(
   PRECICE_TRACE();
   PRECICE_CHECK(math::greater(limit, 0.0) && math::greaterEquals(1.0, limit),
                 "Relative convergence limit has to be in ]0;1]. "
-                "Please check the <residul-relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
+                "Please check the <residual-relative-convergence-measure limit=\"{}\" data=\"{}\" mesh=\"{}\" /> subtag "
                 "in your <coupling-scheme ... /> in the preCICE configuration file.",
                 limit, dataName, meshName);
   PRECICE_WARN_IF(
       limit < 10 * math::NUMERICAL_ZERO_DIFFERENCE,
       "The relative convergence limit=\"{}\" is close to the hard-coded numerical resolution=\"{}\" of preCICE. "
-      "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"  ",
+      "This may lead to instabilities. The minimum relative convergence limit should be > \"{}\"",
       limit, math::NUMERICAL_ZERO_DIFFERENCE, 10 * math::NUMERICAL_ZERO_DIFFERENCE);
 
   ConvergenceMeasureDefintion convMeasureDef;
@@ -820,7 +820,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createSerialExplicitCouplingSchem
   for (const auto &exchange : _config.exchanges) {
     if ((exchange.from == _config.participants[1]) && exchange.exchangeSubsteps) {
       PRECICE_WARN(
-          "Exchange of substeps is activated in the serial-explicit coupling between the second participant \"{}\" and first participant \"{}\". This is inefficient as these substeps will never be used. You can turn this off in your preCICE configuration setting substeps=\"False\" in <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" substeps=\"False\" />", exchange.from, exchange.to, exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
+          "Exchange of substeps is activated in the serial-explicit coupling between the second participant \"{}\" and first participant \"{}\". This is inefficient as these substeps will never be used. You can turn this off in your preCICE configuration setting substeps=\"false\" in <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" substeps=\"false\" />", exchange.from, exchange.to, exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
     }
   }
 
@@ -841,7 +841,7 @@ PtrCouplingScheme CouplingSchemeConfiguration::createParallelExplicitCouplingSch
   for (const auto &exchange : _config.exchanges) {
     if (exchange.exchangeSubsteps) {
       PRECICE_WARN(
-          "Exchange of substeps is activated in the parallel-explicit coupling between \"{}\" and \"{}\". This is inefficient as these substeps will never be used. You can turn this off in your preCICE configuration setting substeps=\"False\" in <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" substeps=\"False\" />", exchange.from, exchange.to, exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
+          "Exchange of substeps is activated in the parallel-explicit coupling between \"{}\" and \"{}\". This is inefficient as these substeps will never be used. You can turn this off in your preCICE configuration setting substeps=\"false\" in <exchange data=\"{}\" mesh=\"{}\" from=\"{}\" to=\"{}\" substeps=\"false\" />", exchange.from, exchange.to, exchange.data->getName(), exchange.mesh->getName(), exchange.from, exchange.to);
     }
   }
 
