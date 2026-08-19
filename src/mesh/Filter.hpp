@@ -25,10 +25,8 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate &&p)
 template <typename UnaryPredicate>
 void filterMeshWithConnectivity(Mesh &destination, const Mesh &source, UnaryPredicate p)
 {
-  // Create a flat_map which can contain all vertices of the original mesh.
-  // This prevents resizes during the map build-up.
-  boost::container::flat_map<VertexID, Vertex *> vertexMap;
-  vertexMap.reserve(source.nVertices());
+  // Create a lookup table which can contain all vertices of the original mesh.
+  std::vector<Vertex *> vertexMap(source.nVertices(), nullptr);
 
   for (const Vertex &vertex : source.vertices()) {
     if (p(vertex)) {
@@ -41,39 +39,47 @@ void filterMeshWithConnectivity(Mesh &destination, const Mesh &source, UnaryPred
     }
   }
 
+  auto fetch = [&vertexMap](int vid) -> Vertex * {
+#ifndef NDEBUG
+    return vertexMap.at(vid);
+#else
+    return vertexMap[vid];
+#endif
+  };
+
   // Add all edges formed by the contributing vertices
   for (const Edge &edge : source.edges()) {
-    VertexID vertexIndex1 = edge.vertex(0).getID();
-    VertexID vertexIndex2 = edge.vertex(1).getID();
-    if (vertexMap.count(vertexIndex1) == 1 &&
-        vertexMap.count(vertexIndex2) == 1) {
-      destination.createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
+    auto vertex1 = fetch(edge.vertex(0).getID());
+    auto vertex2 = fetch(edge.vertex(1).getID());
+    if (vertex1 &&
+        vertex2) {
+      destination.createEdge(*vertex1, *vertex2);
     }
   }
 
   // Add all triangles formed by the contributing vertices
   for (const Triangle &triangle : source.triangles()) {
-    VertexID vertexIndex1 = triangle.vertex(0).getID();
-    VertexID vertexIndex2 = triangle.vertex(1).getID();
-    VertexID vertexIndex3 = triangle.vertex(2).getID();
-    if (vertexMap.count(vertexIndex1) == 1 &&
-        vertexMap.count(vertexIndex2) == 1 &&
-        vertexMap.count(vertexIndex3) == 1) {
-      destination.createTriangle(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3]);
+    auto vertex1 = fetch(triangle.vertex(0).getID());
+    auto vertex2 = fetch(triangle.vertex(1).getID());
+    auto vertex3 = fetch(triangle.vertex(2).getID());
+    if (vertex1 &&
+        vertex2 &&
+        vertex3) {
+      destination.createTriangle(*vertex1, *vertex2, *vertex3);
     }
   }
 
   // Add all tetrahedra formed by the contributing vertices
   for (const Tetrahedron &tetra : source.tetrahedra()) {
-    VertexID vertexIndex1 = tetra.vertex(0).getID();
-    VertexID vertexIndex2 = tetra.vertex(1).getID();
-    VertexID vertexIndex3 = tetra.vertex(2).getID();
-    VertexID vertexIndex4 = tetra.vertex(3).getID();
-    if (vertexMap.count(vertexIndex1) == 1 &&
-        vertexMap.count(vertexIndex2) == 1 &&
-        vertexMap.count(vertexIndex3) == 1 &&
-        vertexMap.count(vertexIndex4) == 1) {
-      destination.createTetrahedron(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3], *vertexMap[vertexIndex4]);
+    auto vertex1 = fetch(tetra.vertex(0).getID());
+    auto vertex2 = fetch(tetra.vertex(1).getID());
+    auto vertex3 = fetch(tetra.vertex(2).getID());
+    auto vertex4 = fetch(tetra.vertex(3).getID());
+    if (vertex1 &&
+        vertex2 &&
+        vertex3 &&
+        vertex4) {
+      destination.createTetrahedron(*vertex1, *vertex2, *vertex3, *vertex4);
     }
   }
 }
