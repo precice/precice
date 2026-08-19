@@ -16,7 +16,8 @@
 [![Coverity](https://scan.coverity.com/projects/19312/badge.svg)](https://scan.coverity.com/projects/precice-precice)
 
 **Downstream Components**  
-[![System tests (latest components)](https://github.com/precice/tutorials/actions/workflows/system-tests-latest-components.yml/badge.svg)](https://github.com/precice/tutorials/actions/workflows/system-tests-latest-components.yml)
+[![System tests (nightly)](https://github.com/precice/tutorials/actions/workflows/system-tests-nightly.yml/badge.svg)](https://github.com/precice/tutorials/actions/workflows/system-tests-nightly.yml)
+[![System tests (weekly - extra)](https://github.com/precice/tutorials/actions/workflows/system-tests-weekly.yml/badge.svg)](https://github.com/precice/tutorials/actions/workflows/system-tests-weekly.yml)
 [![preCICE distribution](https://img.shields.io/badge/preCICE_Distribution-10.18419%2Fdarus--4167-d45815.svg)](https://doi.org/10.18419/darus-4167)
 [![preCICE website status](https://img.shields.io/website-up-down-green-red/https/precice.org.svg?label=website)](https://precice.org/)
 
