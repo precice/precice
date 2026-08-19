@@ -13,7 +13,17 @@ namespace precice::mesh {
  * @param[in] p the filter as a UnaryPredicate on mesh::Vertex
  */
 template <typename UnaryPredicate>
-void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
+void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate &&p)
+{
+  if (source.hasConnectivity()) {
+    filterMeshWithConnectivity(destination, source, std::forward<UnaryPredicate>(p));
+  } else {
+    filterMeshWithoutConnectivity(destination, source, std::forward<UnaryPredicate>(p));
+  }
+}
+
+template <typename UnaryPredicate>
+void filterMeshWithConnectivity(Mesh &destination, const Mesh &source, UnaryPredicate p)
 {
   // Create a flat_map which can contain all vertices of the original mesh.
   // This prevents resizes during the map build-up.
@@ -64,6 +74,20 @@ void filterMesh(Mesh &destination, const Mesh &source, UnaryPredicate p)
         vertexMap.count(vertexIndex3) == 1 &&
         vertexMap.count(vertexIndex4) == 1) {
       destination.createTetrahedron(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2], *vertexMap[vertexIndex3], *vertexMap[vertexIndex4]);
+    }
+  }
+}
+
+template <typename UnaryPredicate>
+void filterMeshWithoutConnectivity(Mesh &destination, const Mesh &source, UnaryPredicate p)
+{
+  for (const Vertex &vertex : source.vertices()) {
+    if (p(vertex)) {
+      Vertex &v = destination.createVertex(vertex.getCoords());
+      v.setGlobalIndex(vertex.getGlobalIndex());
+      if (vertex.isTagged())
+        v.tag();
+      v.setOwner(vertex.isOwner());
     }
   }
 }
