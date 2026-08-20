@@ -463,15 +463,19 @@ bool BaseCouplingScheme::addComputedTime(
                   "Make sure to pass your own desired time-step size or use the recommended limiting \"dt = min(solver_dt, getMaxTimeStepSize())\".");
   }
 
-  // Clamp timeToAdd to guard against sub-ULP floating-point rounding errors
-  // that can make timeToAdd spuriously exceed getNextTimeStepMaxSize() at large
-  // absolute simulation times (t >= 256 s). This is a belt-and-suspenders fix
-  // that works in tandem with the magnitude-scaled tolerances in differences.hpp.
-  const double maxStepSize = getNextTimeStepMaxSize();
-  const double clampedTimeToAdd = std::min(timeToAdd, maxStepSize);
+  // Clamp timeToAdd to guard against sub-ULP floating-point rounding errors.
+  // At large absolute simulation times (t >= 256 s), the subtraction
+  // timeToAdd = time - time_old carries ~ULP(t) error. The step sizes
+  // themselves are small (e.g. 5e-3), so the magnitude-based scaling in
+  // differences.hpp would use scale=1 and not help here. We therefore scale
+  // the tolerance explicitly by the current simulation time, matching the
+  // magnitude of the rounding error, and clamp the value used for progressBy().
+  const double maxStepSize       = getNextTimeStepMaxSize();
+  const double timeTolerance     = math::NUMERICAL_ZERO_DIFFERENCE * std::max(1.0, getTime());
+  const double clampedTimeToAdd  = std::min(timeToAdd, maxStepSize);
 
-  // Check validness
-  bool valid = math::greaterEquals(maxStepSize, timeToAdd);
+  // Check validness using the time-scaled tolerance
+  bool valid = math::greaterEquals(maxStepSize, timeToAdd, timeTolerance);
   PRECICE_CHECK(valid,
                 "The time step size given to preCICE in \"advance\" {} exceeds the maximum allowed time step size {} "
                 "in the remaining of this time window. "
