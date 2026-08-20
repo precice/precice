@@ -17,10 +17,14 @@ constexpr bool equals(const Eigen::MatrixBase<DerivedA> &A,
 }
 
 /// Compares two scalar (arithmetic) types
+/// The tolerance is scaled by the magnitude of the operands so that comparisons
+/// remain robust for large absolute values (e.g. long simulation times).
+/// For |a|, |b| <= 1 (e.g. mesh coordinates) the behaviour is unchanged.
 template <class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type equals(const Scalar a, const Scalar b, const Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
 {
-  return std::abs(a - b) <= tolerance;
+  const Scalar scale = std::max(Scalar(1), std::max(std::abs(a), std::abs(b)));
+  return std::abs(a - b) <= tolerance * scale;
 }
 
 template <class DerivedA, class DerivedB>
@@ -70,25 +74,29 @@ bool allGreaterEquals(const Eigen::MatrixBase<DerivedA> &A,
 template <class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type greater(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
 {
-  return A - B > tolerance;
+  const Scalar scale = std::max(Scalar(1), std::max(std::abs(A), std::abs(B)));
+  return A - B > tolerance * scale;
 }
 
 template <class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type greaterEquals(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
 {
-  return A - B >= -tolerance;
+  const Scalar scale = std::max(Scalar(1), std::max(std::abs(A), std::abs(B)));
+  return A - B >= -tolerance * scale;
 }
 
 template <class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type smaller(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
 {
-  return A - B < -tolerance;
+  const Scalar scale = std::max(Scalar(1), std::max(std::abs(A), std::abs(B)));
+  return A - B < -tolerance * scale;
 }
 
 template <class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>::type smallerEquals(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
 {
-  return A - B <= tolerance;
+  const Scalar scale = std::max(Scalar(1), std::max(std::abs(A), std::abs(B)));
+  return A - B <= tolerance * scale;
 }
 
 } // namespace precice::math

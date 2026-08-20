@@ -463,17 +463,24 @@ bool BaseCouplingScheme::addComputedTime(
                   "Make sure to pass your own desired time-step size or use the recommended limiting \"dt = min(solver_dt, getMaxTimeStepSize())\".");
   }
 
+  // Clamp timeToAdd to guard against sub-ULP floating-point rounding errors
+  // that can make timeToAdd spuriously exceed getNextTimeStepMaxSize() at large
+  // absolute simulation times (t >= 256 s). This is a belt-and-suspenders fix
+  // that works in tandem with the magnitude-scaled tolerances in differences.hpp.
+  const double maxStepSize = getNextTimeStepMaxSize();
+  const double clampedTimeToAdd = std::min(timeToAdd, maxStepSize);
+
   // Check validness
-  bool valid = math::greaterEquals(getNextTimeStepMaxSize(), timeToAdd);
+  bool valid = math::greaterEquals(maxStepSize, timeToAdd);
   PRECICE_CHECK(valid,
                 "The time step size given to preCICE in \"advance\" {} exceeds the maximum allowed time step size {} "
                 "in the remaining of this time window. "
                 "Did you restrict your time step size, \"dt = min(preciceDt, solverDt)\"? "
                 "For more information, consult the adapter example in the preCICE documentation.",
-                timeToAdd, getNextTimeStepMaxSize());
+                timeToAdd, maxStepSize);
 
   // add time interval that has been computed in the solver to get the correct time remainder
-  _time.progressBy(timeToAdd);
+  _time.progressBy(clampedTimeToAdd);
 
   return reachedEndOfTimeWindow();
 }
