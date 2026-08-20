@@ -97,18 +97,41 @@ BOOST_AUTO_TEST_CASE(ScalarLargeTimestamps)
 
   // -----------------------------------------------------------------------
   // Reproduce the t = 256 s crossover (Issue #2592, second crash site).
-  // timeToAdd = time - time_old carries ~ULP(t) error; the greaterEquals
-  // check in addComputedTime() spuriously fails.
+  //
+  // The addComputedTime() failure is NOT about comparing two large timestamps.
+  // It compares two small step sizes (maxStepSize vs timeToAdd ~= 5e-3) where
+  // timeToAdd = time - time_old carries ~ULP(256) error from the large absolute
+  // simulation time. The magnitude-scaled tolerance in differences.hpp uses
+  // scale = max(1, ~5e-3, ~5e-3) = 1 and does NOT cover this case.
+  //
+  // The fix in BaseCouplingScheme::addComputedTime passes an explicit
+  // timeTolerance = NUMERICAL_ZERO_DIFFERENCE * max(1, getTime()) so that the
+  // check correctly allows the sub-ULP excess.
   // -----------------------------------------------------------------------
   {
-    const double t256    = 256.0;
-    const double t256ulp = t256 + std::numeric_limits<double>::epsilon() * t256; // 1 ULP above
+    const double absoluteTime = 256.0;
+    const double dt           = 5e-3; // typical time-window size
 
-    // maxStepSize should be >= a value that is 1 ULP larger (with scaled tol)
+    // ULP(256) is the floating-point rounding error that timeToAdd = time - time_old
+    // can carry when accumulated at t = 256 s.
+    const double ulpError    = std::numeric_limits<double>::epsilon() * absoluteTime;
+    const double maxStepSize = dt;
+    const double timeToAdd   = dt + ulpError; // slightly over due to large-t subtraction error
+
+    // With default tolerance (scale = max(1, dt, dt+err) = 1), the check fails.
+    // This is exactly the crash that occurred before the fix.
     BOOST_CHECK_MESSAGE(
-        greaterEquals(t256, t256ulp, eps),
-        "greaterEquals() returned false for a 1-ULP difference at t=256s: "
-        "this would cause a spurious \"time step exceeds maximum\" abort (Issue #2592).");
+        not greaterEquals(maxStepSize, timeToAdd, eps),
+        "Pre-fix: greaterEquals() with default tolerance should fail for a ULP(256)-sized "
+        "excess in a small step size — confirming the bug existed.");
+
+    // With time-scaled tolerance, greaterEquals must pass.
+    // This is what BaseCouplingScheme::addComputedTime now uses.
+    const double timeTolerance = eps * std::max(1.0, absoluteTime);
+    BOOST_CHECK_MESSAGE(
+        greaterEquals(maxStepSize, timeToAdd, timeTolerance),
+        "Post-fix: greaterEquals() with time-scaled tolerance must pass for a ULP(256)-sized "
+        "excess (Issue #2592, second crash site).");
   }
 
   // -----------------------------------------------------------------------
